@@ -86,6 +86,31 @@ call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_li
 findstr /i "PROP_APP_IDENTIFIER" "%TEST_TMP_DIR%\BrandApp.wxs" >nul || (echo [FAIL] MSI missing PROP_APP_IDENTIFIER & exit /b 1)
 echo [PASS] Windows MSI branding assertions passed
 
+if exist "%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript" (
+    for %%A in (
+        "openedx\assets\openedx.ico"
+        "openedx\assets\openedx_banner_side.bmp"
+        "openedx\assets\openedx_banner_top.bmp"
+        "openedx\assets\openedx_eula.rtf"
+        "openedx\assets\openedx_lms.ico"
+        "openedx\assets\openedx_studio.ico"
+        "wordpress\assets\wordpress.ico"
+        "wordpress\assets\wordpress_backup.ico"
+        "wordpress\assets\wordpress_banner_side.bmp"
+        "wordpress\assets\wordpress_banner_top.bmp"
+        "wordpress\assets\wordpress_cli.ico"
+        "wordpress\assets\wordpress_db.ico"
+        "wordpress\assets\wordpress_eula.rtf"
+        "wordpress\assets\wordpress_health.ico"
+    ) do (
+        if not exist "%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\%%~A" (
+            echo [FAIL] Missing cc0-assets file: %%~A
+            exit /b 1
+        )
+    )
+    echo [PASS] Companion cc0-assets branding assets verified
+)
+
 echo === All Windows branding tests passed! ===
 rmdir /s /q "%TEST_TMP_DIR%"
 exit /b 0

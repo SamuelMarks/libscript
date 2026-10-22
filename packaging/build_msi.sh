@@ -256,10 +256,10 @@ if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
   [ -z "$APP_VERSION" ] && [ -n "$_pkg_ver" ] && APP_VERSION="$_pkg_ver"
   [ -n "$_pkg_pub" ] && APP_PUBLISHER="$_pkg_pub"
   [ -z "$UPGRADE_CODE" ] && [ -n "$_pkg_guid" ] && UPGRADE_CODE="$_pkg_guid"
-  [ -z "$ICON_PATH" ] && [ -n "$_pkg_icon" ] && ICON_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_icon}"
-  [ -z "$BANNER_TOP_PATH" ] && [ -n "$_pkg_btop" ] && BANNER_TOP_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_btop}"
-  [ -z "$BANNER_SIDE_PATH" ] && [ -n "$_pkg_bside" ] && BANNER_SIDE_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_bside}"
-  [ -z "$LICENSE_PATH" ] && [ -n "$_pkg_lic" ] && LICENSE_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_lic}"
+  [ -z "$ICON_PATH" ] && [ -n "$_pkg_icon" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/${_pkg_icon}" ] && ICON_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_icon}"
+  [ -z "$BANNER_TOP_PATH" ] && [ -n "$_pkg_btop" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/${_pkg_btop}" ] && BANNER_TOP_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_btop}"
+  [ -z "$BANNER_SIDE_PATH" ] && [ -n "$_pkg_bside" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/${_pkg_bside}" ] && BANNER_SIDE_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_bside}"
+  [ -z "$LICENSE_PATH" ] && [ -n "$_pkg_lic" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/${_pkg_lic}" ] && LICENSE_PATH="${LIBSCRIPT_ROOT_DIR}/${_pkg_lic}"
   [ -z "$INSTALL_DIR" ] && [ -n "$_pkg_appdir" ] && INSTALL_DIR="$_pkg_appdir"
   [ -z "$DATA_DIR" ] && [ -n "$_pkg_datadir" ] && DATA_DIR="$_pkg_datadir"
   [ -z "$LOGS_DIR" ] && [ -n "$_pkg_logsdir" ] && LOGS_DIR="$_pkg_logsdir"
@@ -472,11 +472,11 @@ ensure_branding_assets() {
     ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
   elif [ -f "${TMP_WORK_DIR}/app.ico" ]; then
     ICON_PATH="${TMP_WORK_DIR}/app.ico"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" ]; then
-    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" "${TMP_WORK_DIR}/openedx.ico" 2>/dev/null || true
-    ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
   elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx.ico" ]; then
     cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx.ico" "${TMP_WORK_DIR}/openedx.ico" 2>/dev/null || true
+    ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" "${TMP_WORK_DIR}/openedx.ico" 2>/dev/null || true
     ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
   fi
 
@@ -489,11 +489,11 @@ ensure_branding_assets() {
     BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
   elif [ -f "${TMP_WORK_DIR}/banner_top.bmp" ]; then
     BANNER_TOP_PATH="${TMP_WORK_DIR}/banner_top.bmp"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" ]; then
-    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" "${TMP_WORK_DIR}/openedx_banner_top.bmp" 2>/dev/null || true
-    BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
   elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_top.bmp" ]; then
     cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_top.bmp" "${TMP_WORK_DIR}/openedx_banner_top.bmp" 2>/dev/null || true
+    BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" "${TMP_WORK_DIR}/openedx_banner_top.bmp" 2>/dev/null || true
     BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
   fi
 
@@ -506,11 +506,11 @@ ensure_branding_assets() {
     BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
   elif [ -f "${TMP_WORK_DIR}/banner_side.bmp" ]; then
     BANNER_SIDE_PATH="${TMP_WORK_DIR}/banner_side.bmp"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" ]; then
-    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" "${TMP_WORK_DIR}/openedx_banner_side.bmp" 2>/dev/null || true
-    BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
   elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_side.bmp" ]; then
     cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_side.bmp" "${TMP_WORK_DIR}/openedx_banner_side.bmp" 2>/dev/null || true
+    BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" "${TMP_WORK_DIR}/openedx_banner_side.bmp" 2>/dev/null || true
     BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
   fi
 
@@ -523,11 +523,11 @@ ensure_branding_assets() {
     LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
   elif [ -f "${TMP_WORK_DIR}/license.rtf" ]; then
     LICENSE_PATH="${TMP_WORK_DIR}/license.rtf"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" ]; then
-    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" "${TMP_WORK_DIR}/openedx_eula.rtf" 2>/dev/null || true
-    LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
   elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_eula.rtf" ]; then
     cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_eula.rtf" "${TMP_WORK_DIR}/openedx_eula.rtf" 2>/dev/null || true
+    LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" "${TMP_WORK_DIR}/openedx_eula.rtf" 2>/dev/null || true
     LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
   else
     printf '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\\fs20 %s End-User License Agreement\\par}\n' "$APP_NAME" > "${TMP_WORK_DIR}/openedx_eula.rtf"
@@ -682,8 +682,8 @@ EOF_MEDIA
         IgnoreRemoveFailure="no" />
 
     <Icon Id="AppIcon.ico" SourceFile="$ICON_PATH" />
-    <Icon Id="LmsIcon.ico" SourceFile="$([ -f "packaging/assets/openedx_lms.ico" ] && printf 'packaging/assets/openedx_lms.ico' || printf '%s' "$ICON_PATH")" />
-    <Icon Id="StudioIcon.ico" SourceFile="$([ -f "packaging/assets/openedx_studio.ico" ] && printf 'packaging/assets/openedx_studio.ico' || printf '%s' "$ICON_PATH")" />
+    <Icon Id="LmsIcon.ico" SourceFile="$(if [ -f "${TMP_WORK_DIR}/openedx_lms.ico" ]; then strip_root "${TMP_WORK_DIR}/openedx_lms.ico" "$LIBSCRIPT_ROOT_DIR"; elif [ -f "packaging/assets/openedx_lms.ico" ]; then printf 'packaging/assets/openedx_lms.ico'; else printf '%s' "$ICON_PATH"; fi)" />
+    <Icon Id="StudioIcon.ico" SourceFile="$(if [ -f "${TMP_WORK_DIR}/openedx_studio.ico" ]; then strip_root "${TMP_WORK_DIR}/openedx_studio.ico" "$LIBSCRIPT_ROOT_DIR"; elif [ -f "packaging/assets/openedx_studio.ico" ]; then printf 'packaging/assets/openedx_studio.ico'; else printf '%s' "$ICON_PATH"; fi)" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="$APP_URL" />
     <Property Id="PROP_OPENEDX_OFFLINE" Value="$PROP_OPENEDX_OFFLINE" Secure="yes" />

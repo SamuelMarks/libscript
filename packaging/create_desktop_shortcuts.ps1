@@ -12,12 +12,17 @@ param(
 $desktop = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
 $wsh = New-Object -ComObject WScript.Shell
 
-if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscript\packaging\assets\wordpress.ico") -and -not (Test-Path "C:\libscript\packaging\assets\openedx.ico"))) {
-    $iconPath = "C:\libscript\packaging\assets\wordpress.ico"
-    $cliIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_cli.ico") { "C:\libscript\packaging\assets\wordpress_cli.ico" } else { $iconPath }
-    $healthIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_health.ico") { "C:\libscript\packaging\assets\wordpress_health.ico" } else { $iconPath }
-    $dbIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_db.ico") { "C:\libscript\packaging\assets\wordpress_db.ico" } else { $iconPath }
-    $bkpIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_backup.ico") { "C:\libscript\packaging\assets\wordpress_backup.ico" } else { $iconPath }
+$scriptRoot = if ($PSScriptRoot) { (Resolve-Path (Join-Path $PSScriptRoot "..")).Path } else { "C:\libscript" }
+$cc0WpAssets = Join-Path $scriptRoot "..\cc0-assets\libscript\wordpress\assets"
+$cc0EdxAssets = Join-Path $scriptRoot "..\cc0-assets\libscript\openedx\assets"
+$localAssets = if (Test-Path "C:\libscript\packaging\assets") { "C:\libscript\packaging\assets" } else { Join-Path $scriptRoot "packaging\assets" }
+
+if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and ((Test-Path "$localAssets\wordpress.ico") -or (Test-Path "$cc0WpAssets\wordpress.ico")) -and -not (Test-Path "$localAssets\openedx.ico"))) {
+    $iconPath = if (Test-Path "$cc0WpAssets\wordpress.ico") { "$cc0WpAssets\wordpress.ico" } else { "$localAssets\wordpress.ico" }
+    $cliIcon = if (Test-Path "$cc0WpAssets\wordpress_cli.ico") { "$cc0WpAssets\wordpress_cli.ico" } elseif (Test-Path "$localAssets\wordpress_cli.ico") { "$localAssets\wordpress_cli.ico" } else { $iconPath }
+    $healthIcon = if (Test-Path "$cc0WpAssets\wordpress_health.ico") { "$cc0WpAssets\wordpress_health.ico" } elseif (Test-Path "$localAssets\wordpress_health.ico") { "$localAssets\wordpress_health.ico" } else { $iconPath }
+    $dbIcon = if (Test-Path "$cc0WpAssets\wordpress_db.ico") { "$cc0WpAssets\wordpress_db.ico" } elseif (Test-Path "$localAssets\wordpress_db.ico") { "$localAssets\wordpress_db.ico" } else { $iconPath }
+    $bkpIcon = if (Test-Path "$cc0WpAssets\wordpress_backup.ico") { "$cc0WpAssets\wordpress_backup.ico" } elseif (Test-Path "$localAssets\wordpress_backup.ico") { "$localAssets\wordpress_backup.ico" } else { $iconPath }
     $wpDir = "C:\Program Files\WordPress"
     if (-not (Test-Path $wpDir)) { [void](New-Item -ItemType Directory -Path $wpDir -Force) }
     
@@ -53,10 +58,10 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscri
     $s4.Description = "WordPress Backup and Disaster Recovery Utility"
     $s4.Save()
 } else {
-    $iconPath = "C:\libscript\packaging\assets\openedx.ico"
-    $lmsIconPath = "C:\libscript\packaging\assets\openedx_lms.ico"
-    $cmsIconPath = "C:\libscript\packaging\assets\openedx_studio.ico"
-    if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = "C:\libscript\packaging\assets\openedx_cms.ico" }
+    $iconPath = if (Test-Path "$cc0EdxAssets\openedx.ico") { "$cc0EdxAssets\openedx.ico" } else { "$localAssets\openedx.ico" }
+    $lmsIconPath = if (Test-Path "$cc0EdxAssets\openedx_lms.ico") { "$cc0EdxAssets\openedx_lms.ico" } else { "$localAssets\openedx_lms.ico" }
+    $cmsIconPath = if (Test-Path "$cc0EdxAssets\openedx_studio.ico") { "$cc0EdxAssets\openedx_studio.ico" } else { "$localAssets\openedx_studio.ico" }
+    if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = "$localAssets\openedx_cms.ico" }
     if (-not (Test-Path $lmsIconPath)) { $lmsIconPath = $iconPath }
     if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = $iconPath }
 

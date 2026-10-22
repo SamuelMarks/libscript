@@ -10,7 +10,7 @@ maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and 
 ## 1. Native Toolchain Version Management (Tier 1)
 
 LibScript natively replaces external version managers like `nvm`, `fnm`, `pyenv`, `rustup`, `rvm`,
-and `sdkman`. It provides five universal lifecycle operations across all 160+ supported runtimes and
+and `sdkman`. It provides five universal lifecycle operations across all 299+ supported runtimes and
 databases.
 
 ### The Universal Lifecycle Verbs
@@ -332,14 +332,14 @@ Deploy stacks and custom synthesized OS images across public clouds, hypervisors
 
 ### Reverse Proxy & Ingress Management (`netctl`)
 
-Use the standalone `netctl` routing abstraction to emit configurations directly:
+Use the `netctl` routing abstraction to emit configurations directly:
 
 ```sh
 # Emit an Nginx reverse proxy configuration with upstream SSL termination
-./netctl.sh --listen 80 --listen 443 --proxy /api http://localhost:8000 --static / /var/www --emit nginx
+./libscript.sh netctl --listen 80 --listen 443 --proxy /api http://localhost:8000 --static / /var/www --emit nginx
 
 # Emit an Apache virtualhost configuration
-./netctl.sh --listen 80 --proxy / http://localhost:3000 --emit apache
+./libscript.sh netctl --listen 80 --proxy / http://localhost:3000 --emit apache
 ```
 
 ### Programmatic Orchestration via REST API (`libscript-rest-api`)
@@ -368,22 +368,22 @@ APIs, stateful services, distributed ML training, search-engine reindexing, and 
 
 ```sh
 # Compile a workload definition into a target scheduler manifest (YAML/JSON/HCL/systemd)
-./libscript.sh payload compile payloads/web/stateless-api/payload.json --scheduler kubernetes
-./libscript.sh payload compile payloads/web/stateless-api/payload.json --scheduler mesos
-./libscript.sh payload compile payloads/web/stateless-api/payload.json --scheduler nomad
+./libscript.sh payload compile payloads/web/openedx/payload.json --scheduler kubernetes
+./libscript.sh payload compile payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh payload compile payloads/web/openedx/payload.json --scheduler nomad
 
 # Submit workloads across multi-node schedulers
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler kubernetes
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler mesos
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler nomad
-./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler nomad
-./libscript.sh payload submit payloads/unikernel/osv-microservice/payload.json --scheduler microvm
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler kubernetes
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/ai/ollama/payload.json --scheduler microvm
 
 # Inspect workload status, tail logs, or stop/destroy deployments
-./libscript.sh payload status stateless-api --scheduler kubernetes
-./libscript.sh payload logs stateless-api --scheduler nomad
-./libscript.sh payload stop stateless-api --scheduler mesos
-./libscript.sh payload destroy stateless-api --scheduler kubernetes
+./libscript.sh payload status openedx --scheduler kubernetes
+./libscript.sh payload logs openedx --scheduler nomad
+./libscript.sh payload stop openedx --scheduler mesos
+./libscript.sh payload destroy openedx --scheduler kubernetes
 ```
 
 ---
@@ -398,6 +398,7 @@ and automated split-brain fencing (`topologies/`):
 ./libscript.sh topology up topologies/postgres-ha/topology.json
 ./libscript.sh topology up topologies/redis-cluster/topology.json
 ./libscript.sh topology up topologies/valkey-cluster/topology.json
+./libscript.sh topology up topologies/openedx-ha/topology.json
 ./libscript.sh topology up topologies/mesos-marathon-ha/topology.json
 ./libscript.sh topology up topologies/k8s-marathon-paas/topology.json
 ./libscript.sh topology up topologies/k0s-ha/topology.json

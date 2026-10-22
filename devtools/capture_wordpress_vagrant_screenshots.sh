@@ -256,12 +256,22 @@ vagrant@127.0.0.1:C:/libscript/packaging/
 
   vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets" -Force -ErrorAction SilentlyContinue | Out-Null'
 
-  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
+  if [ -d "${REPO_ROOT}/../cc0-assets/libscript/wordpress/assets" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
+"${REPO_ROOT}/../cc0-assets/libscript/wordpress/assets/"* \
+vagrant@127.0.0.1:C:/libscript/packaging/assets/
+  else
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
 "${REPO_ROOT}/packaging/assets/wordpress.ico" \
+"${REPO_ROOT}/packaging/assets/wordpress_backup.ico" \
 "${REPO_ROOT}/packaging/assets/wordpress_banner_side.bmp" \
 "${REPO_ROOT}/packaging/assets/wordpress_banner_top.bmp" \
+"${REPO_ROOT}/packaging/assets/wordpress_cli.ico" \
+"${REPO_ROOT}/packaging/assets/wordpress_db.ico" \
 "${REPO_ROOT}/packaging/assets/wordpress_eula.rtf" \
+"${REPO_ROOT}/packaging/assets/wordpress_health.ico" \
 vagrant@127.0.0.1:C:/libscript/packaging/assets/
+  fi
 
   vm_run 'New-Item -ItemType Directory -Path "C:/libscript/_lib/web-apps/wordpress" -Force -ErrorAction SilentlyContinue | Out-Null'
 

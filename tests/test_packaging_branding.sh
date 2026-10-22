@@ -81,5 +81,30 @@ grep -q 'Dialog Id="Dlg_DatabaseConfig"' "$WXS_FILE" || { echo "[FAIL] MSI missi
 grep -q 'PROP_APP_IDENTIFIER' "$WXS_FILE" || { echo "[FAIL] MSI missing PROP_APP_IDENTIFIER"; exit 1; }
 printf '[PASS] WiX MSI branding assertions passed\n'
 
+# 5. Verify companion cc0-assets branding assets if repository is present
+if [ -d "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript" ]; then
+  for _asset in \
+    openedx/assets/openedx.ico \
+    openedx/assets/openedx_banner_side.bmp \
+    openedx/assets/openedx_banner_top.bmp \
+    openedx/assets/openedx_eula.rtf \
+    openedx/assets/openedx_lms.ico \
+    openedx/assets/openedx_studio.ico \
+    wordpress/assets/wordpress.ico \
+    wordpress/assets/wordpress_backup.ico \
+    wordpress/assets/wordpress_banner_side.bmp \
+    wordpress/assets/wordpress_banner_top.bmp \
+    wordpress/assets/wordpress_cli.ico \
+    wordpress/assets/wordpress_db.ico \
+    wordpress/assets/wordpress_eula.rtf \
+    wordpress/assets/wordpress_health.ico; do
+    if [ ! -s "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/${_asset}" ]; then
+      printf '[FAIL] Missing or empty cc0-assets file: %s\n' "${_asset}" >&2
+      exit 1
+    fi
+  done
+  printf '[PASS] Companion cc0-assets branding assets verified\n'
+fi
+
 printf '=== All branding tests completed successfully! ===\n'
 exit 0

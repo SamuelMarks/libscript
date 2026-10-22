@@ -25,7 +25,7 @@ the entire lifecycle through a single, idempotent interface.
 flowchart TD
     subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["160+ Recipes..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["299+ Recipes..."]
     end
 
     subgraph T1["1. Native Installers & Container Packages (package-as)"]
@@ -103,7 +103,7 @@ everything from **Node.js**, **Python**, **Rust**, and **Ruby** to **PostgreSQL*
 | :----------------------- | :----------------------------------------------------------- | :---------------------------------------------------------------- |
 | **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch) |
 | **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`) and PowerShell (`.ps1`)**    |
-| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 160+ tools**                      |
+| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 299+ tools**                      |
 | **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**   |
 | **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **Per-shell dynamic path injection via `use` or `env`**           |
 
@@ -168,6 +168,24 @@ the global orchestrator or directly within each component's directory:
 ./_lib/languages/python/cli.sh use 3.12
 ./_lib/databases/postgres/cli.sh install 16
 ./_lib/databases/postgres/cli.sh start
+```
+
+### 🔧 Generic 3-Mode Build Substrate & Multi-Compiler C/C++ Matrix
+
+Every component supports three universal installation modes—isolated native binary/sandbox staging,
+on-demand ecosystem package manager delegation (`--pkg-mgr=<pm>`), and source compilation
+(`--from-source`) across selectable C/C++ toolchains (`gcc`, `clang`, `tcc`, `edgcpp` v7.0.1, or
+`--custom-cc=/path/to/cc`):
+
+```sh
+# 1. Delegate to any OS or ecosystem package manager (auto-bootstrapping if missing)
+./libscript.sh install sqlite latest --pkg-mgr=brew
+./libscript.sh install sqlite latest --pkg-mgr=apt-get
+
+# 2. Compile from source with a selectable C/C++ compiler toolchain
+./libscript.sh install sqlite 3.46.1 --from-source --toolchain=edgcpp
+./libscript.sh install sqlite 3.46.1 --from-source --toolchain=tcc
+./libscript.sh install sqlite 3.46.1 --custom-cc=/path/to/my-c-compiler
 ```
 
 ---
@@ -283,6 +301,11 @@ Package any software stack or runtime into native OS installers and container de
 ./libscript.sh package-as tui            # Interactive Terminal UI installer
 ```
 
+Supports both lightweight **Online (`--online`)** and self-contained **Air-Gapped Offline
+(`--offline`)** installer bundles, plus automated cross-platform GUI screenshot capture and running
+system verification via `SamuelMarks/msi-rs` (`./devtools/capture_msi_vagrant_matrix.sh` and
+`./devtools/verify_screenshots.sh`).
+
 #### 2. Export to Virtual Machine & Raw Disk Images (Stage 2)
 
 ```sh
@@ -312,7 +335,8 @@ operating system kernels:
     `profiles/unikraft-nginx-redis.json`, and `profiles/firecracker-microvm-appliance.json`.
 - **Linux Kernel Engine (`_lib/kernel/linux/` & `_lib/kernel/initramfs/`)**:
   - Cryptographically verifies kernel sources, merges modular `.cfg` fragments (`virtio.cfg`,
-    `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs`, packs a `zstd -19`
+    `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs` across selectable
+    compilers (`profiles/linux-kernel-{gcc,clang,tcc,edgcpp,custom-cc}-*.json`), packs a `zstd -19`
     initramfs, and signs single-file `.efi` Unified Kernel Images (UKI) with GRUB2, `systemd-boot`,
     or Limine.
 - **FreeBSD Kernel & World Engine (`_lib/freebsd/`)**:
@@ -414,9 +438,9 @@ cluster managers and the Tier 4 declarative payload compiler (`payloads/engine.s
 ./libscript.sh topology up topologies/k0s-ha/topology.json
 
 # Compile and submit the exact same workload payload to Kubernetes, Mesos, or Nomad
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler kubernetes
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler mesos
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler kubernetes
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler nomad
 ```
 
 #### 6. Deploying Distributed Jobs: ML Training & Search-Engine Reindexing (Stage 6)
@@ -433,20 +457,21 @@ Google Cloud TPU Pods (`xpk`):
     [TensorBoard](https://www.tensorflow.org/tensorboard) telemetry, and high-throughput serving via
     [`vLLM`](https://github.com/vllm-project/vllm),
     [`JetStream`](https://github.com/google/JetStream), and [`Ollama`](https://ollama.com/).
-- **Search-Engine Reindexing & Batch Pipelines**:
+- **Search-Engine Reindexing & Full-Stack Web Payloads**:
   - Provisions and manages **Elasticsearch** (`_lib/search/elasticsearch`) and **Meilisearch**
-    (`_lib/search/meilisearch`), executing zero-downtime index rebuilds, alias swaps, and batch ETL
-    workers (`payloads/batch/etl-worker/payload.json`) across Kubernetes, Nomad, or Mesos.
+    (`_lib/search/meilisearch`), executing zero-downtime index rebuilds, alias swaps, and multi-tier
+    application workloads (`payloads/web/openedx/payload.json`, `payloads/ai/vllm/payload.json`)
+    across Kubernetes, Nomad, or Mesos.
 
 ```sh
 # Submit a distributed ML training job to GKE TPU slices (XPK), Slurm/Ray, or Nomad
 ./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler xpk
 ./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler slurm_ray
 
-# Submit batch worker & search-engine reindexing jobs to Nomad, Kubernetes, or Mesos
-./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler nomad
-./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler kubernetes
-./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler mesos
+# Submit AI inference & web application payloads to Nomad, Kubernetes, or Mesos
+./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler kubernetes
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
 ```
 
 #### 7. Stateful Backup & Restore (Stage 7)
@@ -517,15 +542,17 @@ split-brain fencing (`cloud-api-poweroff`, `cloud-api-detach-nic`, `firewall-iso
   over encrypted WireGuard peering.
 - **RabbitMQ HA (`_lib/message-brokers/rabbitmq/` + HA Topologies)**: Multi-node Erlang cookie
   clustering, Raft-backed **Quorum Queues**, mirrored exchanges, and `netctl` AMQP load balancing.
-- **Distributed Storage & Compute Topologies**: Turnkey blueprints for `minio-distributed`
+- **Distributed Storage, Enterprise Web & Compute Topologies**: Turnkey blueprints for `openedx-ha`
+  (multi-node Open edX LMS/CMS + Celery + MariaDB/MongoDB/Redis/Meilisearch HA), `minio-distributed`
   (erasure-coded object storage), `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, and
   `gke-tpu-cluster`.
 
 ```sh
-# Provision High-Availability PostgreSQL, Redis, and Valkey clusters
+# Provision High-Availability PostgreSQL, Redis, Valkey, and Open edX clusters
 ./libscript.sh topology up topologies/postgres-ha/topology.json
 ./libscript.sh topology up topologies/redis-cluster/topology.json
 ./libscript.sh topology up topologies/valkey-cluster/topology.json
+./libscript.sh topology up topologies/openedx-ha/topology.json
 
 # Provision and cluster RabbitMQ HA nodes
 ./libscript.sh install rabbitmq latest
@@ -537,20 +564,22 @@ split-brain fencing (`cloud-api-poweroff`, `cloud-api-detach-nic`, `firewall-iso
 ./libscript.sh topology failover topologies/postgres-ha/topology.json pg-replicas-1
 ```
 
-#### 🌐 Built-in PaaS & Universal Routing (`netctl`)
+#### 🌐 Built-in PaaS, Universal Routing (`netctl`) & REST API (`libscript-rest-api`)
 
 Turn raw virtual machines or bare-metal servers into self-healing application platforms:
 
 - **Universal Reverse Proxy**: Define routes, static directories, and proxy passes once; emit
-  configurations for Nginx, Caddy, Apache, or Windows IIS.
+  configurations for Nginx, Caddy, Apache, Traefik, or Windows IIS.
 - **Automatic TLS**: Automated certificate acquisition and renewal via Let's Encrypt / Certbot.
 - **Native OS Daemon Supervision**: Automatically generates and registers system services
   (`systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit` on Linux/BSD, `launchd` on macOS, `smf`
   on illumos, and Windows Service Manager on Windows).
+- **HTTP REST API Daemon (`libscript-rest-api/`)**: Native C HTTP server (`c-rest-framework`) for
+  programmatic component provisioning, background job tracking, and OpenAPI-governed orchestration.
 
 ```sh
 # Define ingress routes and emit an Nginx configuration instantly
-./netctl.sh --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit nginx
+./libscript.sh netctl --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit nginx
 ```
 
 ---
@@ -599,11 +628,14 @@ LibScript is built for mission-critical, enterprise, and air-gapped environments
 6. **Git Safety Invariant**: Automated test suites and CI pipelines are strictly prohibited from
    invoking `git push`.
 
-Verify all standards locally using the built-in audit harness:
+Verify all standards locally using the built-in audit harnesses:
 
 ```sh
-# Run static compliance and audit check across all repository scripts
-./devtools/audit/audit_standards.sh
+# Run static engineering standards, POSIX compliance, version manager contract, and 100% doc coverage audits
+./devtools/audit/audit_standards.sh --all
+./devtools/audit/doc_coverage.sh --strict
+./devtools/audit/audit_version_manager.sh
+./devtools/audit/audit_posix.sh --all
 ```
 
 ---
@@ -628,7 +660,7 @@ cd libscript
 ./libscript.sh package-as qcow2
 
 # 5. Deploy workloads across Kubernetes, Mesos, or Nomad and bring up HA topologies
-./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler nomad
 ./libscript.sh topology up topologies/postgres-ha/topology.json
 
 # 6. Run automated QEMU headless verification
@@ -643,24 +675,32 @@ cd libscript
   principles.
 - [WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md](WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md):
   Specification for native toolchain version isolation.
+- [USAGE.md](USAGE.md): Full CLI command reference, flags, and execution modes.
 - [topologies/README.md](topologies/README.md): Tier 3.5 multi-node HA consensus topologies, lease
   locking, and split-brain fencing.
 - [payloads/README.md](payloads/README.md): Tier 4 declarative workload payloads and scheduler
   drivers (Kubernetes, Mesos/Marathon, Nomad, Slurm/Ray, XPK, MicroVM).
 - [traits/README.md](traits/README.md): Cross-cutting node traits (`storage`, `secrets`, `mesh`,
   `firewall`, `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`, `maintenance`).
-- [ROADMAP.md](ROADMAP.md): Master development roadmap across all tiers and release phases.
-- [TODO_PLAN.md](TODO_PLAN.md): Engineering roadmap for universal database discovery and
-  multi-tenant packaging.
-- [USAGE.md](USAGE.md): Full CLI command reference, flags, and execution modes.
-- [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and solver mechanics.
+- [libscript-rest-api/README.md](libscript-rest-api/README.md): Native C HTTP REST API server daemon
+  for programmatic LibScript orchestration.
+- [PACKAGING_BRANDING_GUIDE.md](PACKAGING_BRANDING_GUIDE.md): Cross-platform installer branding,
+  online/offline variants, and automated GUI screenshot verification.
+- [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md): Native GUI Live Installer and multiboot ISO
+  architecture.
+- [WINDOWS.md](WINDOWS.md) & [WINDOWS_MSI.md](WINDOWS_MSI.md): Native Windows Batch/PowerShell
+  architecture and modular Windows Installer (`.msi`) generation.
 - [PAAS.md](PAAS.md): Universal PaaS orchestration, reverse proxy (`netctl`), and daemon
   supervision.
-- [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md): Native GUI Live Installer and branding
-  architecture.
-- [WINDOWS_MSI.md](WINDOWS_MSI.md): Modular Windows Installer (`.msi`) generation and runtime
-  detection.
-- [DEVELOPING.md](DEVELOPING.md): Developer contribution guidelines and standards.
+- [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and Tarjan SCC solver mechanics.
+- [TEST.md](TEST.md) & [VAGRANT.md](VAGRANT.md): Multi-OS testing architecture, QEMU boot harnesses,
+  and Vagrant verification matrix.
+- [ROADMAP.md](ROADMAP.md) & [DOCS_ROADMAP.md](DOCS_ROADMAP.md): Master development and
+  documentation roadmaps across all tiers.
+- [TODO_PLAN.md](TODO_PLAN.md): Open edX & WordPress reusable component delegation and verification
+  checklist.
+- [WHY.md](WHY.md), [DEVELOPING.md](DEVELOPING.md) & [AGENTS.md](AGENTS.md): Project philosophy,
+  contributor guidelines, and agent engineering standards.
 
 ---
 

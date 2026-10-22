@@ -278,6 +278,10 @@ if exist "%TARGET_DIR%\packaging.json" (
 if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
 set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript\%STACK_NAME%\assets"
 if not exist "%CC0_ASSETS%" if exist "!LIBSCRIPT_ROOT_DIR!\cc0-assets\libscript\%STACK_NAME%\assets" set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\cc0-assets\libscript\%STACK_NAME%\assets"
+if defined ICON_PATH if not exist "!ICON_PATH!" set "ICON_PATH="
+if defined BANNER_TOP_PATH if not exist "!BANNER_TOP_PATH!" set "BANNER_TOP_PATH="
+if defined BANNER_SIDE_PATH if not exist "!BANNER_SIDE_PATH!" set "BANNER_SIDE_PATH="
+if defined LICENSE_PATH if not exist "!LICENSE_PATH!" set "LICENSE_PATH="
 if "%ICON_PATH%"=="" (
     if exist "%CC0_ASSETS%\%STACK_NAME%.ico" (
         set "ICON_PATH=%CC0_ASSETS%\%STACK_NAME%.ico"
@@ -425,6 +429,7 @@ if defined ICON_PATH set "ICON_PATH=!ICON_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
 if defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!BANNER_TOP_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
 if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
 if defined LICENSE_PATH set "LICENSE_PATH=!LICENSE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
+set "REL_CC0_ASSETS=!CC0_ASSETS:%LIBSCRIPT_ROOT_DIR%\=!"
 
 :: ## write_wxs
 :: Performs the write_wxs operation and updates component state.
@@ -449,12 +454,16 @@ setlocal DisableDelayedExpansion
         echo     ^<Icon Id="AppIcon.ico" SourceFile="%ICON_PATH%" /^>
         echo     ^<Property Id="ARPPRODUCTICON" Value="AppIcon.ico" /^>
     )
-    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" (
+    if exist "%CC0_ASSETS%\openedx_lms.ico" (
+        echo     ^<Icon Id="LmsIcon.ico" SourceFile="%REL_CC0_ASSETS%\openedx_lms.ico" /^>
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" (
         echo     ^<Icon Id="LmsIcon.ico" SourceFile="packaging\assets\openedx_lms.ico" /^>
     ) else if not "%ICON_PATH%"=="" (
         echo     ^<Icon Id="LmsIcon.ico" SourceFile="%ICON_PATH%" /^>
     )
-    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" (
+    if exist "%CC0_ASSETS%\openedx_studio.ico" (
+        echo     ^<Icon Id="StudioIcon.ico" SourceFile="%REL_CC0_ASSETS%\openedx_studio.ico" /^>
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" (
         echo     ^<Icon Id="StudioIcon.ico" SourceFile="packaging\assets\openedx_studio.ico" /^>
     ) else if not "%ICON_PATH%"=="" (
         echo     ^<Icon Id="StudioIcon.ico" SourceFile="%ICON_PATH%" /^>

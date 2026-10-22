@@ -225,15 +225,20 @@ sync_guest_environment() {
     "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" \
     vagrant@127.0.0.1:C:/libscript/packaging/
 
-  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-    "${REPO_ROOT}/packaging/assets/openedx.ico" \
-    "${REPO_ROOT}/packaging/assets/openedx_lms.ico" \
-    "${REPO_ROOT}/packaging/assets/openedx_cms.ico" \
-    "${REPO_ROOT}/packaging/assets/openedx_studio.ico" \
-    "${REPO_ROOT}/packaging/assets/openedx_banner_side.bmp" \
-    "${REPO_ROOT}/packaging/assets/openedx_banner_top.bmp" \
-    "${REPO_ROOT}/packaging/assets/openedx_eula.rtf" \
-    vagrant@127.0.0.1:C:/libscript/packaging/assets/
+  if [ -d "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
+      "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets/"* \
+      vagrant@127.0.0.1:C:/libscript/packaging/assets/
+  else
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
+      "${REPO_ROOT}/packaging/assets/openedx.ico" \
+      "${REPO_ROOT}/packaging/assets/openedx_lms.ico" \
+      "${REPO_ROOT}/packaging/assets/openedx_studio.ico" \
+      "${REPO_ROOT}/packaging/assets/openedx_banner_side.bmp" \
+      "${REPO_ROOT}/packaging/assets/openedx_banner_top.bmp" \
+      "${REPO_ROOT}/packaging/assets/openedx_eula.rtf" \
+      vagrant@127.0.0.1:C:/libscript/packaging/assets/
+  fi
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
     "${REPO_ROOT}/_lib/web-apps/openedx/packaging.json" \
