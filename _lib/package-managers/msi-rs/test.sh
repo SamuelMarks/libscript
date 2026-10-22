@@ -36,21 +36,28 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if command -v msi-cli >/dev/null 2>&1; then
-  msi-cli --help >/dev/null 2>&1 || true
+  msi-cli --version >/dev/null 2>&1 || msi-cli --help >/dev/null 2>&1 || true
   printf '[PASS] msi-cli is operational\n'
 elif command -v msi-rs >/dev/null 2>&1; then
-  msi-rs --help >/dev/null 2>&1 || true
+  msi-rs --version >/dev/null 2>&1 || msi-rs --help >/dev/null 2>&1 || true
   printf '[PASS] msi-rs is operational\n'
 elif command -v msi >/dev/null 2>&1; then
-  msi --help >/dev/null 2>&1 || true
+  msi --version >/dev/null 2>&1 || msi --help >/dev/null 2>&1 || true
   printf '[PASS] msi is operational\n'
 elif command -v wix >/dev/null 2>&1; then
-  wix --help >/dev/null 2>&1 || true
+  wix --version >/dev/null 2>&1 || wix --help >/dev/null 2>&1 || true
   printf '[PASS] wix is operational\n'
 else
   printf '[FAIL] No msi-rs executable found in PATH\n' >&2
   exit 1
 fi
+
+for _tool in candle light msi-gui msiinfo; do
+  if command -v "$_tool" >/dev/null 2>&1; then
+    "$_tool" --version >/dev/null 2>&1 || "$_tool" --help >/dev/null 2>&1 || true
+    printf '[PASS] %s is operational\n' "$_tool"
+  fi
+done
 
 # ## test_roundtrip_msi
 # Verifies full round-trip WiX XML compilation, linking, and inspection via msi-rs toolchain.

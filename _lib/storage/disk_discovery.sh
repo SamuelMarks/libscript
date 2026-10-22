@@ -156,7 +156,7 @@ probe_linux_disks() {
       _rota="1"
       [ -f "$block/queue/rotational" ] && _rota=$(cat "$block/queue/rotational")
       _model="Unknown"
-      [ -f "$block/device/model" ] && _model=$(cat "$block/device/model" | tr -s ' ')
+      [ -f "$block/device/model" ] && _model=$(tr -s ' ' < "$block/device/model")
       _tran="local"
       [ -f "$block/device/transport" ] && _tran=$(cat "$block/device/transport")
 

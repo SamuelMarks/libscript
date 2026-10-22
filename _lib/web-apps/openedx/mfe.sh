@@ -149,7 +149,7 @@ mfe_build() {
   # Idempotent npm install & build
   if command -v npm >/dev/null 2>&1 && [ -f "${_target}/package.json" ]; then
     log_info "Compiling JavaScript/Webpack bundle for '${_name}'..."
-    (cd "${_target}" && npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null || true)
+    (if cd "${_target}"; then npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null; fi) || true
   else
     # Create minimal dist placeholder if node/npm is absent in headless environment
     mkdir -p "${_target}/dist"

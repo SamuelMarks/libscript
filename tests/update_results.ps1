@@ -278,6 +278,9 @@ function Update-SupportedComponents {
         $shortComp = $e.Short
         $cat = $e.Category
         $mfile = $e.Manifest
+        $symCheck = [string][char]0x2705
+        $symCross = [string][char]0x274C
+        $symQuest = [string][char]0x2753
 
         $apkStatus = "-"
         $debStatus = "-"
@@ -288,19 +291,19 @@ function Update-SupportedComponents {
         $macosStatus = "-"
 
         if ($mfile) {
-            if (Check-ManifestSupport $mfile "alpine")  { $apkStatus = "❓" }
-            if (Check-ManifestSupport $mfile "debian")  { $debStatus = "❓" }
-            if (Check-ManifestSupport $mfile "rhel")    { $rpmStatus = "❓" }
-            if (Check-ManifestSupport $mfile "windows") { $winStatus = "❓" }
-            if (Check-ManifestSupport $mfile "sunos")   { $sunosStatus = "❓" }
-            if (Check-ManifestSupport $mfile "freebsd") { $freebsdStatus = "❓" }
-            if (Check-ManifestSupport $mfile "darwin")  { $macosStatus = "❓" }
+            if (Check-ManifestSupport $mfile "alpine")  { $apkStatus = $symQuest }
+            if (Check-ManifestSupport $mfile "debian")  { $debStatus = $symQuest }
+            if (Check-ManifestSupport $mfile "rhel")    { $rpmStatus = $symQuest }
+            if (Check-ManifestSupport $mfile "windows") { $winStatus = $symQuest }
+            if (Check-ManifestSupport $mfile "sunos")   { $sunosStatus = $symQuest }
+            if (Check-ManifestSupport $mfile "freebsd") { $freebsdStatus = $symQuest }
+            if (Check-ManifestSupport $mfile "darwin")  { $macosStatus = $symQuest }
         } elseif ($cat -eq "bootloaders") {
-            $apkStatus = "✅"; $debStatus = "✅"; $rpmStatus = "✅"; $freebsdStatus = "✅"
+            $apkStatus = $symCheck; $debStatus = $symCheck; $rpmStatus = $symCheck; $freebsdStatus = $symCheck
         } elseif ($cat -in @('storage','runtimes','ml-training','topologies','payloads','traits')) {
-            $apkStatus = "✅"; $debStatus = "✅"; $rpmStatus = "✅"; $winStatus = "✅"; $sunosStatus = "✅"; $freebsdStatus = "✅"; $macosStatus = "✅"
+            $apkStatus = $symCheck; $debStatus = $symCheck; $rpmStatus = $symCheck; $winStatus = $symCheck; $sunosStatus = $symCheck; $freebsdStatus = $symCheck; $macosStatus = $symCheck
         } else {
-            $apkStatus = "❓"; $debStatus = "❓"; $rpmStatus = "❓"; $winStatus = "❓"; $sunosStatus = "❓"; $freebsdStatus = "❓"; $macosStatus = "❓"
+            $apkStatus = $symQuest; $debStatus = $symQuest; $rpmStatus = $symQuest; $winStatus = $symQuest; $sunosStatus = $symQuest; $freebsdStatus = $symQuest; $macosStatus = $symQuest
         }
 
         $lookupKey = if ($existingMap.ContainsKey($comp)) { $comp } elseif (-not $comp.Contains("/") -and $existingMap.ContainsKey($shortComp)) { $shortComp } else { "" }
@@ -318,26 +321,26 @@ function Update-SupportedComponents {
         $idempotent = $false
         if (Test-Path -LiteralPath $testsTmpDir) {
             if (Test-AnyFilePattern $testsTmpDir "$shortComp.idempotent.success") { $idempotent = $true }
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.success")) { $apkStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.failure")) { $apkStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.success")) { $apkStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.failure")) { $apkStatus = $symCross }
 
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.success")) { $debStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.failure")) { $debStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.success")) { $debStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.failure")) { $debStatus = $symCross }
 
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.success")) { $rpmStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.failure")) { $rpmStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.success")) { $rpmStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.failure")) { $rpmStatus = $symCross }
 
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.success")) { $winStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.failure")) { $winStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.success")) { $winStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.failure")) { $winStatus = $symCross }
 
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.success")) { $sunosStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.failure")) { $sunosStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.success")) { $sunosStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.failure")) { $sunosStatus = $symCross }
 
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.success")) { $freebsdStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.failure")) { $freebsdStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.success")) { $freebsdStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.failure")) { $freebsdStatus = $symCross }
 
-            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.success")) { $macosStatus = "✅" }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.failure")) { $macosStatus = "❌" }
+            if ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.success")) { $macosStatus = $symCheck }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.failure")) { $macosStatus = $symCross }
         }
 
         $rows += [PSCustomObject]@{
@@ -366,7 +369,7 @@ function Update-SupportedComponents {
     $tableLines = @(
         "## Supported Components",
         "",
-        "Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECTURE.md`](ARCHITECTURE.md))."
+        'Components are organized into LibScript''s 5 architectural tiers (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).'
     )
     foreach ($tm in $tierMeta) {
         $tableLines += ""
@@ -392,8 +395,7 @@ function Update-SupportedComponents {
 
     if (Test-Path -LiteralPath $TargetReadme) {
         $content = [System.IO.File]::ReadAllText($TargetReadme, [System.Text.Encoding]::UTF8)
-        $pattern = '(?s)## Supported Components.*?(?=\r?
-## |\Z)'
+        $pattern = '(?s)## Supported Components.*?(?=\r?\n## |\Z)'
         if ($content -match $pattern) {
             $content = [regex]::Replace($content, $pattern, $tableBlock.TrimEnd("`r", "`n"))
         } elseif ($content -match '(?m)^## License') {
@@ -442,6 +444,7 @@ function Update-TodoPlan {
     }
 
     if (Test-Path -LiteralPath $todoFile) {
+        $symCheck = [string][char]0x2705
         $todoLines = [System.IO.File]::ReadAllLines($todoFile, [System.Text.Encoding]::UTF8)
         $newLines = @()
         foreach ($line in $todoLines) {
@@ -454,7 +457,7 @@ function Update-TodoPlan {
                     $hasRes = $true
                 } elseif ($compName -and $readmeMap.ContainsKey($compName)) {
                     $m = $readmeMap[$compName]
-                    if (($m.apk -eq "✅") -or ($m.deb -eq "✅") -or ($m.rpm -eq "✅") -or ($m.windows -eq "✅") -or ($m.sunos -eq "✅") -or ($m.freebsd -eq "✅")) {
+                    if (($m.apk -eq $symCheck) -or ($m.deb -eq $symCheck) -or ($m.rpm -eq $symCheck) -or ($m.windows -eq $symCheck) -or ($m.sunos -eq $symCheck) -or ($m.freebsd -eq $symCheck)) {
                         $hasRes = $true
                     }
                 }
@@ -473,6 +476,7 @@ function Update-TodoPlan {
 
     $testingFile = Join-Path $RootPath "TESTING_TODO_PLAN.md"
     if (Test-Path -LiteralPath $testingFile) {
+        $symCheck = [string][char]0x2705
         $testLines = [System.IO.File]::ReadAllLines($testingFile, [System.Text.Encoding]::UTF8)
         $outTestLines = @()
         foreach ($line in $testLines) {
@@ -493,22 +497,22 @@ function Update-TodoPlan {
                 elseif ($readmeMap.ContainsKey($compShort)) { $rEntry = $readmeMap[$compShort] }
 
                 $newLine = $line
-                if (($rEntry -and (($rEntry.sunos -eq "✅") -or ($rEntry.sunos -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.sunos*.skipped")))) {
+                if (($rEntry -and (($rEntry.sunos -eq $symCheck) -or ($rEntry.sunos -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.sunos*.skipped")))) {
                     $newLine = $newLine -replace '\[ \] OmniOS', '[x] OmniOS'
                 }
-                if (($rEntry -and (($rEntry.apk -eq "✅") -or ($rEntry.apk -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.*alpine*.skipped")))) {
+                if (($rEntry -and (($rEntry.apk -eq $symCheck) -or ($rEntry.apk -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.*alpine*.skipped")))) {
                     $newLine = $newLine -replace '\[ \] Alpine', '[x] Alpine'
                 }
-                if (($rEntry -and (($rEntry.deb -eq "✅") -or ($rEntry.deb -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.*debian*.skipped")))) {
+                if (($rEntry -and (($rEntry.deb -eq $symCheck) -or ($rEntry.deb -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.*debian*.skipped")))) {
                     $newLine = $newLine -replace '\[ \] Debian', '[x] Debian'
                 }
-                if (($rEntry -and (($rEntry.rpm -eq "✅") -or ($rEntry.rpm -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.*rocky*.skipped")))) {
+                if (($rEntry -and (($rEntry.rpm -eq $symCheck) -or ($rEntry.rpm -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.*rocky*.skipped")))) {
                     $newLine = $newLine -replace '\[ \] Rocky', '[x] Rocky'
                 }
-                if (($rEntry -and (($rEntry.freebsd -eq "✅") -or ($rEntry.freebsd -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.freebsd*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.freebsd*.skipped")))) {
+                if (($rEntry -and (($rEntry.freebsd -eq $symCheck) -or ($rEntry.freebsd -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.freebsd*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.freebsd*.skipped")))) {
                     $newLine = $newLine -replace '\[ \] FreeBSD', '[x] FreeBSD'
                 }
-                if (($rEntry -and (($rEntry.windows -eq "✅") -or ($rEntry.windows -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.windows*.skipped")))) {
+                if (($rEntry -and (($rEntry.windows -eq $symCheck) -or ($rEntry.windows -eq "-"))) -or ((Test-Path -LiteralPath $testsTmpDir) -and ((Test-AnyFilePattern $testsTmpDir "$compShort.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$compShort.windows*.skipped")))) {
                     $newLine = $newLine -replace '\[ \] Windows', '[x] Windows'
                 }
                 if (((Test-Path -LiteralPath $testsTmpDir) -and (Test-AnyFilePattern $testsTmpDir "$compShort.idempotent.success")) -or ($newLine -notmatch '\[ \] (OmniOS|Alpine|Debian|Rocky|FreeBSD|Windows)')) {

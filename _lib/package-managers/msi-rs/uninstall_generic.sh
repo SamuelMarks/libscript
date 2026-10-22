@@ -32,6 +32,16 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
+VERSION="${MSI_RS_VERSION:-${LIBSCRIPT_VERSION:-latest}}"
+if [ "$VERSION" = "latest" ] || [ "$VERSION" = "lts" ] || [ "$VERSION" = "stable" ] || [ "$VERSION" = "0.0.1" ] || [ -z "$VERSION" ]; then
+  EXACT_VERSION="v0.0.1"
+else
+  EXACT_VERSION="$VERSION"
+fi
+rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${EXACT_VERSION}" \
+       "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${VERSION}" \
+       "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default" 2>/dev/null || true
+
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/uninstall_generic.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

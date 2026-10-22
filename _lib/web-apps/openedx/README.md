@@ -666,7 +666,14 @@ call packaging\build_msi.cmd stacks\cms\openedx --offline --cache-dir cache\ --o
 ```
 
 Visual artifacts and gallery screenshots are centralized in the
-[cc0-assets](https://github.com/SamuelMarks/cc0-assets) repository:
+[cc0-assets](https://github.com/SamuelMarks/cc0-assets/tree/master/libscript/openedx/screenshots)
+repository (see [`SCREENSHOTS.md`](./SCREENSHOTS.md) for the complete multi-OS walkthrough across
+[Windows](https://github.com/SamuelMarks/cc0-assets/tree/master/libscript/openedx/screenshots/windows),
+[Linux](https://github.com/SamuelMarks/cc0-assets/tree/master/libscript/openedx/screenshots/linux),
+[macOS](https://github.com/SamuelMarks/cc0-assets/tree/master/libscript/openedx/screenshots/macos),
+[FreeBSD](https://github.com/SamuelMarks/cc0-assets/tree/master/libscript/openedx/screenshots/freebsd),
+and
+[illumos / OmniOS](https://github.com/SamuelMarks/cc0-assets/tree/master/libscript/openedx/screenshots/illumos)):
 
 | Wizard Step          | Description                                                   | Preview                                                                                                                                                                                                                                                                                         |
 | :------------------- | :------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

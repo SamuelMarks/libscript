@@ -197,6 +197,19 @@ if not errorlevel 1 (
     )
     rmdir /s /q "%TEMP%\msi_rs_extracted" >nul 2>&1
     call :install_binaries "%TARGET_DIR%\bin"
+    if /i "%WIN_ARCH%"=="x86_64" (
+        set "SDK_URL=%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!SDK_URL!" "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
+        if not errorlevel 1 if exist "%TEMP%\msi_rs_sdk.zip" (
+            if exist "%TEMP%\msi_rs_sdk_ext" rmdir /s /q "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
+            powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_sdk.zip' -DestinationPath '%TEMP%\msi_rs_sdk_ext' -Force" >nul 2>&1
+            del "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
+            if exist "%TEMP%\msi_rs_sdk_ext\msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc\" (
+                xcopy /e /y /q "%TEMP%\msi_rs_sdk_ext\msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc\*" "%TARGET_DIR%\" >nul 2>&1
+            )
+            rmdir /s /q "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
+        )
+    )
     goto link_aliases
 ) else (
     echo [WARN] Binary download failed. Falling back to source build...

@@ -197,6 +197,19 @@ if not errorlevel 1 (
     )
     rmdir /s /q "%TEMP%\msi_rs_extracted" >nul 2>&1
     call :install_binaries "%TARGET_DIR%\bin"
+    if /i "%WIN_ARCH%"=="x86_64" (
+        set "SDK_URL=%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!SDK_URL!" "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
+        if not errorlevel 1 if exist "%TEMP%\msi_rs_sdk.zip" (
+            if exist "%TEMP%\msi_rs_sdk_ext" rmdir /s /q "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
+            powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\msi_rs_sdk.zip' -DestinationPath '%TEMP%\msi_rs_sdk_ext' -Force" >nul 2>&1
+            del "%TEMP%\msi_rs_sdk.zip" >nul 2>&1
+            if exist "%TEMP%\msi_rs_sdk_ext\msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc\" (
+                xcopy /e /y /q "%TEMP%\msi_rs_sdk_ext\msi-c-sdk-%EXACT_VERSION%-x86_64-pc-windows-msvc\*" "%TARGET_DIR%\" >nul 2>&1
+            )
+            rmdir /s /q "%TEMP%\msi_rs_sdk_ext" >nul 2>&1
+        )
+    )
     goto link_aliases
 ) else (
     echo [WARN] Binary download failed. Falling back to source build...
@@ -236,11 +249,25 @@ set "CACHE_ZIP=%DOWNLOAD_DIR%\msi-rs\msi-rs-%EXACT_VERSION%.zip"
 set "BUILD_DIR=%TEMP%\msi_rs_build_%RANDOM%"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
-if exist "%CACHE_ZIP%" (
+if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
+    echo Building msi-rs ^(msi-cli and msi-gui^) from local checkout at !LIBSCRIPT_ROOT_DIR!\..\msi-rs...
+    pushd "!LIBSCRIPT_ROOT_DIR!\..\msi-rs"
+    cargo build --release -p msi-cli -p msi-gui
+    call :install_binaries "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\target\release"
+    popd
+    rmdir /s /q "%BUILD_DIR%" >nul 2>&1
+) else if exist "C:\msi-rs\Cargo.toml" (
+    echo Building msi-rs ^(msi-cli and msi-gui^) from local checkout at C:\msi-rs...
+    pushd "C:\msi-rs"
+    cargo build --release -p msi-cli -p msi-gui
+    call :install_binaries "C:\msi-rs\target\release"
+    popd
+    rmdir /s /q "%BUILD_DIR%" >nul 2>&1
+) else if exist "%CACHE_ZIP%" (
     echo Extracting msi-rs from cached zip...
     tar -xf "%CACHE_ZIP%" -C "%BUILD_DIR%" --strip-components=1
     cd /d "%BUILD_DIR%"
-    cargo build --release -p msi-cli
+    cargo build --release -p msi-cli -p msi-gui
     call :install_binaries "%BUILD_DIR%\target\release"
     cd /d "%~dp0"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
@@ -255,7 +282,7 @@ if exist "%CACHE_ZIP%" (
     cd /d "%BUILD_DIR%"
     git checkout %EXACT_VERSION%
     cd /d "%BUILD_DIR%"
-    cargo build --release -p msi-cli
+    cargo build --release -p msi-cli -p msi-gui
     call :install_binaries "%BUILD_DIR%\target\release"
     cd /d "%~dp0"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1

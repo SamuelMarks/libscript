@@ -146,7 +146,7 @@ case "$ACTION" in
       if command -v dnf >/dev/null 2>&1; then
         if ! command -v swift >/dev/null 2>&1; then
           priv dnf install -y epel-release || true
-          command -v crb >/dev/null 2>&1 && priv crb enable || true
+          if command -v crb >/dev/null 2>&1; then priv crb enable || true; fi
           priv dnf install -y swift-lang || true
         fi
       elif ! libscript_depends "swift"; then

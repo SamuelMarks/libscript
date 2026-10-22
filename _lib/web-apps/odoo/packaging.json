@@ -31,6 +31,118 @@
     "logs_default": "[CommonAppDataFolder]Odoo\\logs",
     "backups_default": "[CommonAppDataFolder]Odoo\\backups"
   },
+  "wizard_copy": {
+    "welcome_description_online": "The Setup Wizard will download and install Odoo ERP Platform and required runtimes on your computer.",
+    "welcome_description_offline": "The Setup Wizard will deploy Odoo ERP Platform and pre-bundled air-gapped runtimes on your computer.",
+    "exit_description": "Odoo ERP Platform services have been successfully installed and started.",
+    "non_optional_summary": "- Python 3.11+ (Odoo WSGI runtime & virtual environment)\n- PostgreSQL 15+ (Relational database engine)\n- Wkhtmltopdf (PDF report rendering engine)\n- Node.js / Less (Frontend asset compiler)",
+    "runtime_selection_description": "Configure Python and PostgreSQL execution runtime providers.",
+    "port_1_label": "Odoo HTTP Port:",
+    "port_1_default": "8069",
+    "port_2_label": "Longpolling Port:",
+    "port_2_default": "8072",
+    "default_admin_email": "admin@odoo.local",
+    "default_theme": "default"
+  },
+  "verification_screenshots": [
+    {
+      "id": "10b_desktop_icons",
+      "title": "Odoo ERP Desktop Shortcuts",
+      "capture_type": "desktop",
+      "crop_mode": "FULL",
+      "view_spec": {
+        "layout": "desktop_icons",
+        "desktop_icons": [
+          {
+            "badge": "ODOO",
+            "label": "Odoo ERP Portal",
+            "color": "#714B67"
+          },
+          {
+            "badge": "CLI",
+            "label": "Odoo Management CLI",
+            "color": "#017E84"
+          }
+        ]
+      }
+    },
+    {
+      "id": "11_browser_odoo_login",
+      "title": "Odoo ERP Sign-In Interface",
+      "capture_type": "browser_unauthenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 8069,
+      "healthcheck_path": "/web/login",
+      "url_template": "http://localhost:8069/web/login",
+      "view_spec": {
+        "layout": "login_card",
+        "active_tab_title": "Login | Odoo ERP Platform",
+        "inactive_tab_title": "Database Manager | Odoo",
+        "active_tab_index": 1,
+        "header_bg": "#714B67",
+        "header_brand": "Odoo 17.0",
+        "header_subtitle": "Enterprise Resource Planning & CRM",
+        "user_badge": "Sign In",
+        "heading": "Sign in to Odoo ERP",
+        "subheading": "Email: admin@odoo.local",
+        "cards": [
+          {
+            "title": "Email",
+            "subtitle": "admin@odoo.local",
+            "detail": "Database: odoo (PostgreSQL 15) — Active",
+            "badge": "Log in",
+            "color": "#017E84"
+          }
+        ]
+      }
+    },
+    {
+      "id": "12_browser_odoo_authenticated",
+      "title": "Odoo ERP Apps Dashboard (Authenticated)",
+      "capture_type": "browser_authenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 8069,
+      "healthcheck_path": "/web/login",
+      "url_template": "http://localhost:8069/web",
+      "auth_flow": {
+        "login_url": "http://localhost:8069/web/login",
+        "username_selector": "input[name='login']",
+        "password_selector": "input[name='password']",
+        "submit_selector": "button[type='submit']",
+        "username_value": "admin@odoo.local",
+        "password_value": "admin",
+        "ready_selector": ".o_main_navbar"
+      },
+      "view_spec": {
+        "layout": "course_dashboard",
+        "active_tab_title": "Apps | Odoo ERP Platform",
+        "inactive_tab_title": "Discuss | Odoo",
+        "active_tab_index": 1,
+        "header_bg": "#714B67",
+        "header_brand": "Odoo 17.0",
+        "header_subtitle": "Discuss   CRM   Sales   Inventory   Accounting   Apps",
+        "user_badge": "Mitchell Admin (odoo)",
+        "heading": "Installed Applications & Modules",
+        "subheading": "Odoo 17.0 ERP — Connected to PostgreSQL 15 (127.0.0.1:5432)",
+        "cards": [
+          {
+            "title": "CRM & Sales Pipeline",
+            "subtitle": "Odoo CRM | Leads, Opportunities & Quotations",
+            "detail": "Module: crm, sale_management",
+            "badge": "Installed",
+            "color": "#714B67"
+          },
+          {
+            "title": "Inventory & Accounting",
+            "subtitle": "Warehouse Management & Double-Entry Invoicing",
+            "detail": "Module: stock, account",
+            "badge": "Installed",
+            "color": "#017E84"
+          }
+        ]
+      }
+    }
+  ],
   "logical_resources": [
     {
       "type": "logical_database",

@@ -35,7 +35,7 @@ OUT_FILE="$(basename "$1")"
 sleep 2
 
 VAGRANT_DIR="${LIBSCRIPT_ROOT_DIR}/vagrant/windows-11"
-SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
+SSH_PORT=$(if cd "${VAGRANT_DIR}" 2>/dev/null; then vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}'; fi)
 : "${SSH_PORT:=50523}"
 SSH_KEY="${HOME}/.vagrant.d/insecure_private_key"
 SSH_CMD="ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i ${SSH_KEY} vagrant@127.0.0.1"

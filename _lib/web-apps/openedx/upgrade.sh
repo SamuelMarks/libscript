@@ -117,7 +117,7 @@ upgrade_run() {
   # 2. Update codebase to target tag/branch
   log_info "Step 2/8: Updating openedx-platform repository..."
   if [ -d "${OPENEDX_INSTALL_DIR}/.git" ] && command -v git >/dev/null 2>&1; then
-    (cd "${OPENEDX_INSTALL_DIR}" && git fetch --all --tags 2>/dev/null && git checkout "${_to}" 2>/dev/null || true)
+    (if cd "${OPENEDX_INSTALL_DIR}"; then git fetch --all --tags 2>/dev/null && git checkout "${_to}" 2>/dev/null; fi) || true
   fi
 
   # 3. Update Python dependencies
@@ -141,7 +141,7 @@ upgrade_run() {
   # 5. Frontend & Static Assets Compilation
   log_info "Step 5/8: Rebuilding frontend static assets..."
   if [ -f "${OPENEDX_INSTALL_DIR}/package.json" ] && command -v npm >/dev/null 2>&1; then
-    (cd "${OPENEDX_INSTALL_DIR}" && npm clean-install --no-audit 2>/dev/null || true)
+    (cd "${OPENEDX_INSTALL_DIR}" && npm clean-install --no-audit 2>/dev/null) || true
   fi
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
     "${_py}" "${MANAGE_PY}" lms collectstatic --noinput 2>/dev/null || true

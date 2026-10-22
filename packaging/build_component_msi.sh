@@ -471,7 +471,7 @@ build_single_variant() {
   fi
 
   _target_abs=$(cd -- "$(dirname "$TARGET_MSI")" && pwd)/$(basename "$TARGET_MSI")
-  _out_dir_abs=$(cd -- "$OUT_DIR" 2>/dev/null && pwd || true)
+  _out_dir_abs=$(if cd -- "$OUT_DIR" 2>/dev/null; then pwd; fi)
   if [ -n "$_out_dir_abs" ] && [ "$(dirname "$_target_abs")" != "$_out_dir_abs" ]; then
     mkdir -p "$OUT_DIR"
     cp -f "$TARGET_MSI" "$OUT_DIR/" 2>/dev/null || true

@@ -62,8 +62,8 @@ do_build() {
   fi
 
   if [ -f "${_target_dir}/package.json" ]; then
-    (cd "${_target_dir}" && npm install >/dev/null 2>&1 || true)
-    (cd "${_target_dir}" && npm run build >/dev/null 2>&1 || true)
+    (cd "${_target_dir}" && npm install >/dev/null 2>&1) || true
+    (cd "${_target_dir}" && npm run build >/dev/null 2>&1) || true
   fi
 
   _dist_dir="${_target_dir}/dist"

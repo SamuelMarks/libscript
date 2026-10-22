@@ -2,10 +2,11 @@
 :: # capture_wordpress_screenshots.cmd
 ::
 :: ## Overview
-:: Captures screenshots of WordPress 7.1.2 operations on Windows.
+:: Thin declarative caller that captures WordPress .msi wizard stages and post-install
+:: browser verification screenshots via devtools\capture_running_system.cmd.
 ::
 :: ## Usage
-::   call devtools\capture_wordpress_screenshots.cmd [--output-dir <dir>]
+::   call devtools\capture_wordpress_screenshots.cmd [OPTIONS]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,23 +52,22 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
-    for %%i in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
-)
+if /i "%~1"=="--help" goto :show_help
+if /i "%~1"=="-h" goto :show_help
+if /i "%~1"=="/?" goto :show_help
+if /i "%~1"=="-?" goto :show_help
 
-set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\wordpress\screenshots"
-if "%~1"=="--output-dir" (
-    set "OUT_DIR=%~2"
-)
+goto :main
 
-if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
-echo [INFO] Harvesting WordPress screenshots into %OUT_DIR%...
-
-where powershell >nul 2>&1
-if not errorlevel 1 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\capture_wordpress_screenshots.ps1" -OutputDir "%OUT_DIR%"
-    exit /b %ERRORLEVEL%
-)
-
-echo [OK] Screenshot capture completed.
+:: ## show_help
+:: Displays usage instructions for capture_wordpress_screenshots.cmd.
+:show_help
+echo Usage: %~nx0 [--help]
+echo Automates capturing screenshots of the WordPress MSI installer and browser interfaces.
 exit /b 0
+
+:: ## main
+:: Delegates WordPress screenshot capture to capture_running_system.cmd.
+:main
+call "!SCRIPT_DIR!\capture_running_system.cmd" --target _lib/web-apps/wordpress %*
+exit /b !ERRORLEVEL!

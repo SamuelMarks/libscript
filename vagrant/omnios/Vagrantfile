@@ -43,6 +43,11 @@ Vagrant.configure("2") do |config|
     # Sync the repository root directory (disabled during vagrant up when rsync is not preinstalled; run_omnios_tests.sh syncs over SSH)
     t.vm.synced_folder repo_root, "/opt/repos/libscript", disabled: true
 
+    msi_rs_root = ENV["MSI_RS_ROOT"] || File.expand_path("../../../msi-rs", __dir__)
+    if File.exist?(msi_rs_root)
+      t.vm.synced_folder msi_rs_root, "/opt/repos/msi-rs", disabled: true
+    end
+
     # Provision the VM and run the test
     t.vm.provision "shell", inline: <<-SHELL
       set -e

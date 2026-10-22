@@ -271,6 +271,9 @@ if exist "%TARGET_DIR%\packaging.json" (
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_top) { $j.branding.banner_top }"`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_side) { $j.branding.banner_side }"`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.license_rtf) { $j.branding.license_rtf }"`) do if not defined LICENSE_PATH set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+) else if exist "%TARGET_DIR%\manifest.json" (
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\manifest.json' -Raw | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "STACK_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\manifest.json' -Raw | ConvertFrom-Json; if ($j.title) { $j.title.Replace('&', 'and') } elseif ($j.name) { $j.name }"`) do set "APP_NAME=%%A"
 )
 if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
 set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript\%STACK_NAME%\assets"
@@ -352,15 +355,37 @@ if /I "%VARIANT%"=="offline" (
     if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Offline Air-Gapped)"
     if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
-    set "WELCOME_DESC=The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
+    set "WELCOME_DESC="
+    if exist "%TARGET_DIR%\packaging.json" (
+        for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.wizard_copy -and $j.wizard_copy.welcome_description_offline) { $j.wizard_copy.welcome_description_offline }"`) do set "WELCOME_DESC=%%A"
+    )
+    if "!WELCOME_DESC!"=="" set "WELCOME_DESC=The Setup Wizard will deploy %APP_NAME% and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
 ) else (
     set "PROP_OPENEDX_OFFLINE=0"
     if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Online)"
     if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
-    set "WELCOME_DESC=The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
+    set "WELCOME_DESC="
+    if exist "%TARGET_DIR%\packaging.json" (
+        for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.wizard_copy -and $j.wizard_copy.welcome_description_online) { $j.wizard_copy.welcome_description_online }"`) do set "WELCOME_DESC=%%A"
+    )
+    if "!WELCOME_DESC!"=="" set "WELCOME_DESC=The Setup Wizard will download and install %APP_NAME% and required runtimes on your computer."
     set "COMP_TAG="
+)
+
+set "EXIT_DESC=%APP_NAME% services have been successfully installed and started."
+set "SHORTCUT_1_TEXT=Create %APP_NAME% desktop shortcut"
+set "SHORTCUT_2_TEXT=Create %APP_NAME% management console shortcut"
+set "LAUNCH_1_TEXT=Launch %APP_NAME% in Web Browser"
+set "LAUNCH_2_TEXT=Launch %APP_NAME% Administration Dashboard"
+
+if exist "%TARGET_DIR%\packaging.json" (
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.wizard_copy -and $j.wizard_copy.exit_description) { $j.wizard_copy.exit_description }"`) do set "EXIT_DESC=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.shortcuts -and $j.shortcuts.Count -ge 1) { 'Create ' + $j.shortcuts[0].title + ' shortcut' }"`) do set "SHORTCUT_1_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.shortcuts -and $j.shortcuts.Count -ge 2) { 'Create ' + $j.shortcuts[1].title + ' shortcut' }"`) do set "SHORTCUT_2_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.browser_launch -and $j.browser_launch.targets -and $j.browser_launch.targets.Count -ge 1) { $j.browser_launch.targets[0].title }"`) do set "LAUNCH_1_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.browser_launch -and $j.browser_launch.targets -and $j.browser_launch.targets.Count -ge 2) { $j.browser_launch.targets[1].title }"`) do set "LAUNCH_2_TEXT=%%A"
 )
 
 set "WXS_FILE=%OUT_FILE%.wxs"
@@ -876,11 +901,11 @@ setlocal DisableDelayedExpansion
     if not "%BANNER_SIDE_PATH%"=="" echo         ^<Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" /^>
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
     echo         ^<Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Bigger}Completed [ProductName] Setup" /^>
-    echo         ^<Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." /^>
-    echo         ^<Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="Create Open edX LMS shortcut (LMS logo)" /^>
-    echo         ^<Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="Create Open edX Studio shortcut (CMS logo)" /^>
-    echo         ^<Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="155" Width="230" Height="15" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="Launch Open edX LMS in Web Browser" /^>
-    echo         ^<Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="175" Width="230" Height="15" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="Launch Open edX Studio in Web Browser" /^>
+    echo         ^<Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="%EXIT_DESC%" /^>
+    echo         ^<Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="%SHORTCUT_1_TEXT%" /^>
+    echo         ^<Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="%SHORTCUT_2_TEXT%" /^>
+    echo         ^<Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="155" Width="230" Height="15" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="%LAUNCH_1_TEXT%" /^>
+    echo         ^<Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="175" Width="230" Height="15" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="%LAUNCH_2_TEXT%" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="Back" /^>
     echo         ^<Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Finish"^>
     echo           ^<Publish Event="DoAction" Value="CA_LaunchBrowser"^>^<![CDATA[LAUNCH_BROWSER="1" AND NOT Installed]]^>^</Publish^>

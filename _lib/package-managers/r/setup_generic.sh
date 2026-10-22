@@ -146,7 +146,7 @@ case "$ACTION" in
     if [ "$R_INSTALL_METHOD" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true
-        command -v crb >/dev/null 2>&1 && priv crb enable || true
+        if command -v crb >/dev/null 2>&1; then priv crb enable || true; fi
       fi
       libscript_depends "r"
     elif [ "$R_INSTALL_METHOD" = "mise" ]; then
@@ -196,7 +196,7 @@ case "$ACTION" in
               log_info "No native binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for r..."
               if command -v dnf >/dev/null 2>&1; then
                 priv dnf install -y epel-release || true
-                command -v crb >/dev/null 2>&1 && priv crb enable || true
+                if command -v crb >/dev/null 2>&1; then priv crb enable || true; fi
               fi
               libscript_depends "r"
               mkdir -p "${TARGET_DIR}/bin"

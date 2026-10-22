@@ -48,7 +48,7 @@ discover_environment() {
   # shellcheck disable=SC2009
   SSH_PORT=$(ps auxww | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
   if [ -z "${SSH_PORT}" ] && [ -d "${VAGRANT_DIR}" ]; then
-    SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
+    SSH_PORT=$(if cd "${VAGRANT_DIR}" 2>/dev/null; then vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}'; fi)
   fi
   : "${SSH_PORT:=50523}"
 

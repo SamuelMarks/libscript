@@ -270,7 +270,7 @@ libscript_depends_via() {
   shift
   _saved_pm="${LIBSCRIPT_PKG_MGR:-}"
   export LIBSCRIPT_PKG_MGR="${_via_pm}"
-  detect_pkg_mgr
+  detect_pkg_mgr ""
   libscript_depends "$@"
   _rc=$?
   export LIBSCRIPT_PKG_MGR="${_saved_pm}"
@@ -285,7 +285,7 @@ libscript_depends() {
     return 0
   fi
   if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ]; then
-    detect_pkg_mgr
+    detect_pkg_mgr "${1:-}"
   fi
   pkgs_to_install=''
   for pkg in "$@"; do
@@ -405,7 +405,7 @@ libscript_depends() {
 }
 
 if [ "${PKG_MGR-}" ]; then
-  detect_pkg_mgr
+  detect_pkg_mgr ""
 fi
 
 # ## libscript_download
@@ -618,7 +618,7 @@ libscript_download() {
   # 6. Final Placement
   if [ -n "$dest" ] && [ "$dest" != "$cache_file" ]; then
     mkdir -p "$(dirname "$dest")"
-    if ! [ "$cache_file" -ef "$dest" ]; then
+    if [ "$cache_file" != "$dest" ] && ! cmp -s "$cache_file" "$dest"; then
       cp "$cache_file" "$dest"
     fi
   fi

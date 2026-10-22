@@ -190,6 +190,203 @@
     ],
     "supports_auth_token": true
   },
+  "wizard_copy": {
+    "welcome_description_online": "The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer.",
+    "welcome_description_offline": "The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer.",
+    "exit_description": "Open edX services have been successfully installed and started.",
+    "non_optional_summary": "- Python (Python 3.11+ runtime & virtual environment)\n- Node.js (Node.js & npm asset pipeline)\n- Meilisearch (Course search and catalog discovery engine)\n- MySQL (Relational database) & Redis (Cache & Celery broker)\n- MongoDB (Course document datastore)",
+    "runtime_selection_description": "Configure Python and Node.js execution runtime providers.",
+    "port_1_label": "LMS Web Port:",
+    "port_1_default": "8000",
+    "port_2_label": "Studio Web Port:",
+    "port_2_default": "8001",
+    "default_admin_email": "admin@openedx.local",
+    "default_theme": "none"
+  },
+  "verification_screenshots": [
+    {
+      "id": "10b_desktop_icons",
+      "title": "Open edX Desktop Shortcuts",
+      "capture_type": "desktop",
+      "crop_mode": "FULL",
+      "view_spec": {
+        "layout": "desktop_icons",
+        "desktop_icons": [
+          {
+            "badge": "LMS",
+            "label": "Open edX LMS",
+            "color": "#00263E"
+          },
+          {
+            "badge": "CMS",
+            "label": "Open edX Studio",
+            "color": "#0075B4"
+          },
+          {
+            "badge": "CLI",
+            "label": "Management CLI",
+            "color": "#1E293B"
+          }
+        ]
+      }
+    },
+    {
+      "id": "11_browser_lms_focused",
+      "title": "Open edX LMS Sign-In Interface",
+      "capture_type": "browser_unauthenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 8000,
+      "healthcheck_path": "/login",
+      "url_template": "http://localhost:8000/login",
+      "secondary_url_template": "http://localhost:8001/signin",
+      "view_spec": {
+        "layout": "login_card",
+        "active_tab_title": "Sign in | Open edX LMS",
+        "inactive_tab_title": "Sign in | Open edX Studio",
+        "active_tab_index": 1,
+        "header_bg": "#00263E",
+        "header_brand": "Open edX",
+        "header_subtitle": "Learning Management System (LMS)   Explore Courses   Catalog",
+        "user_badge": "Register   Sign In",
+        "heading": "Sign in to Open edX LMS",
+        "subheading": "Email or Username: admin@openedx.local",
+        "cards": [
+          {
+            "title": "Email or Username",
+            "subtitle": "admin@openedx.local",
+            "detail": "Open edX Verawood Release (Port 8000) — Active & Healthy",
+            "badge": "Sign in to LMS",
+            "color": "#0075B4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "12_browser_studio_focused",
+      "title": "Open edX Studio CMS Sign-In Interface",
+      "capture_type": "browser_unauthenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 8001,
+      "healthcheck_path": "/signin",
+      "url_template": "http://localhost:8001/signin",
+      "secondary_url_template": "http://localhost:8000/login",
+      "view_spec": {
+        "layout": "login_card",
+        "active_tab_title": "Sign in | Open edX Studio",
+        "inactive_tab_title": "Sign in | Open edX LMS",
+        "active_tab_index": 2,
+        "header_bg": "#1E293B",
+        "header_brand": "Open edX STUDIO",
+        "header_subtitle": "Course Authoring & Content Libraries",
+        "user_badge": "Studio CMS (Port 8001)",
+        "heading": "Sign in to Open edX Studio",
+        "subheading": "Course Creator & Staff Portal: staff@openedx.org",
+        "cards": [
+          {
+            "title": "Email",
+            "subtitle": "staff@openedx.org",
+            "detail": "Open edX Studio CMS (Port 8001) — Active & Connected to MongoDB / MySQL",
+            "badge": "Sign in to Studio",
+            "color": "#D97706"
+          }
+        ]
+      }
+    },
+    {
+      "id": "13_browser_lms_authenticated",
+      "title": "Open edX LMS Learner & Instructor Dashboard (Authenticated)",
+      "capture_type": "browser_authenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 8000,
+      "healthcheck_path": "/login",
+      "url_template": "http://localhost:8000/dashboard",
+      "secondary_url_template": "http://localhost:8001/home",
+      "auth_flow": {
+        "login_url": "http://localhost:8000/login",
+        "username_selector": "input[name='email']",
+        "password_selector": "input[name='password']",
+        "submit_selector": "button[type='submit']",
+        "username_value": "edx_admin",
+        "password_value": "edx_admin_pass",
+        "ready_selector": ".dashboard"
+      },
+      "view_spec": {
+        "layout": "course_dashboard",
+        "active_tab_title": "Dashboard | Open edX LMS",
+        "inactive_tab_title": "Studio Home | Open edX",
+        "active_tab_index": 1,
+        "header_bg": "#00263E",
+        "header_brand": "Open edX",
+        "header_subtitle": "My Courses   Discover New   Programs",
+        "user_badge": "edx_admin (Staff)",
+        "heading": "My Courses",
+        "subheading": "Authenticated Learner & Instructor Dashboard",
+        "cards": [
+          {
+            "title": "edX Demonstration Course",
+            "subtitle": "edX | DemoX.1 | Self-Paced",
+            "detail": "DemoX: Introduction to edX",
+            "badge": "View Course ->",
+            "color": "#0075B4"
+          },
+          {
+            "title": "Introduction to Computer Science & Programming",
+            "subtitle": "LibScript | CS101 | 2026_T1 (Instructor Mode)",
+            "detail": "CS101: Computer Science",
+            "badge": "Resume Course ->",
+            "color": "#0F766E"
+          }
+        ]
+      }
+    },
+    {
+      "id": "14_browser_studio_authenticated",
+      "title": "Open edX Studio CMS Course Authoring (Authenticated)",
+      "capture_type": "browser_authenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 8001,
+      "healthcheck_path": "/signin",
+      "url_template": "http://localhost:8001/home",
+      "secondary_url_template": "http://localhost:8000/dashboard",
+      "auth_flow": {
+        "login_url": "http://localhost:8001/signin",
+        "username_selector": "input[name='email']",
+        "password_selector": "input[name='password']",
+        "submit_selector": "button[type='submit']",
+        "username_value": "staff@openedx.org",
+        "password_value": "edx_admin_pass",
+        "ready_selector": ".studio-home"
+      },
+      "view_spec": {
+        "layout": "studio_table",
+        "active_tab_title": "Studio Home | Open edX",
+        "inactive_tab_title": "Dashboard | Open edX LMS",
+        "active_tab_index": 2,
+        "header_bg": "#1E293B",
+        "header_brand": "Open edX STUDIO",
+        "header_subtitle": "Courses   Libraries   Maintenance",
+        "user_badge": "staff@openedx.org (Admin)",
+        "heading": "My Courses & Libraries",
+        "subheading": "Courses (2)   Content Libraries (1)",
+        "cards": [
+          {
+            "title": "edX Demonstration Course",
+            "subtitle": "course-v1:edX+DemoX+Demo_Course",
+            "detail": "edX | DemoX",
+            "badge": "Published (Live)",
+            "color": "#166534"
+          },
+          {
+            "title": "Introduction to Computer Science",
+            "subtitle": "course-v1:LibScript+CS101+2026_T1",
+            "detail": "LibScript | CS101",
+            "badge": "In Authoring",
+            "color": "#A16207"
+          }
+        ]
+      }
+    }
+  ],
   "browser_launch": {
     "targets": [
       {

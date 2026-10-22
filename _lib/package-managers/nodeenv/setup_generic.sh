@@ -139,9 +139,9 @@ case "$ACTION" in
       rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${EXACT_VERSION}"
       rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${VERSION}"
     else
-      command -v uv >/dev/null 2>&1 && uv tool uninstall nodeenv 2>/dev/null || true
-      command -v pipx >/dev/null 2>&1 && pipx uninstall nodeenv 2>/dev/null || true
-      command -v pip3 >/dev/null 2>&1 && pip3 uninstall -y nodeenv 2>/dev/null || true
+      if command -v uv >/dev/null 2>&1; then uv tool uninstall nodeenv 2>/dev/null || true; fi
+      if command -v pipx >/dev/null 2>&1; then pipx uninstall nodeenv 2>/dev/null || true; fi
+      if command -v pip3 >/dev/null 2>&1; then pip3 uninstall -y nodeenv 2>/dev/null || true; fi
     fi
     exit 0
     ;;

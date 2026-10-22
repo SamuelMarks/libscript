@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-command -v uv >/dev/null 2>&1 && uv tool uninstall uvicorn 2>/dev/null || true
-command -v pipx >/dev/null 2>&1 && pipx uninstall uvicorn 2>/dev/null || true
-command -v pip3 >/dev/null 2>&1 && pip3 uninstall -y uvicorn 2>/dev/null || true
+if command -v uv >/dev/null 2>&1; then uv tool uninstall uvicorn 2>/dev/null || true; fi
+if command -v pipx >/dev/null 2>&1; then pipx uninstall uvicorn 2>/dev/null || true; fi
+if command -v pip3 >/dev/null 2>&1; then pip3 uninstall -y uvicorn 2>/dev/null || true; fi
 exit 0

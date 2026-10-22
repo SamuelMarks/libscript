@@ -281,7 +281,19 @@ case "$ACTION" in
             ln -sf "wix" "${TARGET_DIR}/bin/msi-rs" 2>/dev/null || cp -f "${TARGET_DIR}/bin/wix" "${TARGET_DIR}/bin/msi-rs" 2>/dev/null || true
             ln -sf "wix" "${TARGET_DIR}/bin/msi" 2>/dev/null || cp -f "${TARGET_DIR}/bin/wix" "${TARGET_DIR}/bin/msi" 2>/dev/null || true
           fi
-          
+
+          case "$target_tuple" in
+            aarch64-apple-darwin|x86_64-unknown-linux-gnu)
+              sdk_asset="msi-c-sdk-${EXACT_VERSION}-${target_tuple}.tar.gz"
+              sdk_url="${REPO_URL}/releases/download/${EXACT_VERSION}/${sdk_asset}"
+              tmp_sdk="${TMPDIR:-/tmp}/msi_rs_sdk_$$.tar.gz"
+              if libscript_download "${sdk_url}" "${tmp_sdk}" 2>/dev/null; then
+                tar -xzf "${tmp_sdk}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || true
+                rm -f "${tmp_sdk}"
+              fi
+              ;;
+          esac
+
           libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"
           libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
           log_info "msi-rs ${EXACT_VERSION} installed successfully from binary."

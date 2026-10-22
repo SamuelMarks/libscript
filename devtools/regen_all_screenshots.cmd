@@ -2,32 +2,28 @@
 :: # regen_all_screenshots.cmd
 ::
 :: ## Overview
-:: Regenerates all packaging and browser verification screenshots for Open edX Windows Installer (.msi).
+:: Thin declarative caller that regenerates all .msi wizard stages and post-install
+:: desktop and browser verification screenshots across all components and OS platforms
+:: via devtools\capture_running_system.cmd.
 ::
 :: ## Usage
-:: call devtoolsegen_all_screenshots.cmd
+:: call devtoolsegen_all_screenshots.cmd [OPTIONS]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2^>^&1
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" ^>^&2
+        echo [STOP] processing "%THIS_FILE%" >&2
         exit /b 0
     )
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-:: ## find_root
-:: Finds the root directory of the libscript repository.
-for %%I in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-
-:: ## find_root_loop
-:: Iterates upward through the directory tree looking for libscript.cmd.
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
     call :find_root
@@ -57,8 +53,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: ## show_help
-:: Displays command-line usage when help flags are passed.
 if /I "%~1"=="--help" goto :help
 if /I "%~1"=="-h" goto :help
 if /I "%~1"=="/?" goto :help
@@ -68,32 +62,11 @@ goto :main
 :: ## help
 :: Prints the help message and exits.
 :help
-echo Usage: %~nx0
-echo Regenerates WiX installer and browser verification screenshots.
+call "!SCRIPT_DIR!\capture_running_system.cmd" --help
 exit /b 0
 
 :: ## main
-:: Executes screenshot regeneration via PowerShell script companion.
+:: Delegates full screenshot regeneration to capture_running_system.cmd.
 :main
-set "PS_SCRIPT=%SCRIPT_DIR%egen_all_screenshots.ps1"
-
-where powershell.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
-)
-
-where pwsh.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
-)
-
-where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    pwsh -NoProfile -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
-)
-
-echo [ERROR] PowerShell or pwsh is required to regenerate screenshots on Windows. >&2
-exit /b 1
+call "!SCRIPT_DIR!\capture_running_system.cmd" --target all --os all --variant both --flow both --mode all %*
+exit /b !ERRORLEVEL!

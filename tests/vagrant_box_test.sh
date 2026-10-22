@@ -76,7 +76,7 @@ mkdir -p "$TEST_DIR"
 # shellcheck disable=SC2329
 cleanup() {
   if [ "$DRY_RUN" -eq 0 ] && command -v vagrant >/dev/null 2>&1; then
-    (cd "$TEST_DIR" && vagrant destroy -f 2>/dev/null || true)
+    (cd "$TEST_DIR" && vagrant destroy -f 2>/dev/null) || true
     vagrant box remove "$BOX_NAME" --provider "$PROVIDER" 2>/dev/null || true
   fi
   rm -rf "$TEST_DIR"

@@ -260,6 +260,14 @@ case "$ACTION" in
             target_tuple="x86_64-unknown-linux-gnu"
           fi
         fi
+      elif [ "$os_name" = "freebsd" ]; then
+        if [ "$arch_name" = "arm64" ] || [ "$arch_name" = "aarch64" ]; then
+          target_tuple="aarch64-unknown-freebsd"
+        else
+          target_tuple="x86_64-unknown-freebsd"
+        fi
+      elif [ "$os_name" = "sunos" ]; then
+        target_tuple="x86_64-unknown-illumos"
       fi
 
       if [ -n "$target_tuple" ]; then
@@ -281,7 +289,19 @@ case "$ACTION" in
             ln -sf "wix" "${TARGET_DIR}/bin/msi-rs" 2>/dev/null || cp -f "${TARGET_DIR}/bin/wix" "${TARGET_DIR}/bin/msi-rs" 2>/dev/null || true
             ln -sf "wix" "${TARGET_DIR}/bin/msi" 2>/dev/null || cp -f "${TARGET_DIR}/bin/wix" "${TARGET_DIR}/bin/msi" 2>/dev/null || true
           fi
-          
+
+          case "$target_tuple" in
+            aarch64-apple-darwin|x86_64-unknown-linux-gnu)
+              sdk_asset="msi-c-sdk-${EXACT_VERSION}-${target_tuple}.tar.gz"
+              sdk_url="${REPO_URL}/releases/download/${EXACT_VERSION}/${sdk_asset}"
+              tmp_sdk="${TMPDIR:-/tmp}/msi_rs_sdk_$$.tar.gz"
+              if libscript_download "${sdk_url}" "${tmp_sdk}" 2>/dev/null; then
+                tar -xzf "${tmp_sdk}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || true
+                rm -f "${tmp_sdk}"
+              fi
+              ;;
+          esac
+
           libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"
           libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
           log_info "msi-rs ${EXACT_VERSION} installed successfully from binary."
@@ -296,13 +316,25 @@ case "$ACTION" in
 
       cache_tarball="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/msi-rs/msi-rs-${EXACT_VERSION}.tar.gz"
       build_stage_dir="${TMPDIR:-/tmp}/msi_rs_build_$$"
+      local_repo_dir=""
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/../msi-rs/Cargo.toml" ]; then
+        local_repo_dir="${LIBSCRIPT_ROOT_DIR}/../msi-rs"
+      elif [ -f "/opt/repos/msi-rs/Cargo.toml" ]; then
+        local_repo_dir="/opt/repos/msi-rs"
+      elif [ -f "/Users/vagrant/msi-rs/Cargo.toml" ]; then
+        local_repo_dir="/Users/vagrant/msi-rs"
+      fi
 
-      if [ -f "$cache_tarball" ]; then
+      if [ -n "$local_repo_dir" ]; then
+        log_info "Building msi-rs (msi-cli and msi-gui) from local checkout at ${local_repo_dir}..."
+        (cd "${local_repo_dir}" && cargo build --release -p msi-cli -p msi-gui)
+        install_binaries_from_dir "${local_repo_dir}/target/release"
+      elif [ -f "$cache_tarball" ]; then
         log_info "Extracting from download cache..."
         mkdir -p "${build_stage_dir}"
         tar -xzf "$cache_tarball" -C "${build_stage_dir}" --strip-components=1 || true
         if [ -f "${build_stage_dir}/Cargo.toml" ]; then
-          (cd "${build_stage_dir}" && cargo build --release -p msi-cli)
+          (cd "${build_stage_dir}" && cargo build --release -p msi-cli -p msi-gui)
           install_binaries_from_dir "${build_stage_dir}/target/release"
           rm -rf "${build_stage_dir}"
         fi
@@ -316,7 +348,7 @@ case "$ACTION" in
         log_info "Cloning upstream repository from ${REPO_URL} at ${EXACT_VERSION}..."
         mkdir -p "${build_stage_dir}"
         git clone "${REPO_URL}" "${build_stage_dir}"
-        (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && cargo build --release -p msi-cli)
+        (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && cargo build --release -p msi-cli -p msi-gui)
         install_binaries_from_dir "${build_stage_dir}/target/release"
         rm -rf "${build_stage_dir}"
       fi

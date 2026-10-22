@@ -125,7 +125,7 @@ fi
 
 sync_repo_to_guest
 
-_ssh_info=$(cd "$VAGRANT_DIR" && vagrant ssh-config 2>/dev/null || true)
+_ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
 _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
 _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
 : "${_port:=50022}"

@@ -31,6 +31,118 @@
     "logs_default": "[CommonAppDataFolder]Gitea\\logs",
     "backups_default": "[CommonAppDataFolder]Gitea\\backups"
   },
+  "wizard_copy": {
+    "welcome_description_online": "The Setup Wizard will download and install Gitea Git Service and required runtimes on your computer.",
+    "welcome_description_offline": "The Setup Wizard will deploy Gitea Git Service and pre-bundled air-gapped runtimes on your computer.",
+    "exit_description": "Gitea Git Service has been successfully installed and started.",
+    "non_optional_summary": "- Gitea Core Binary (Self-hosted Git service & web portal)\n- Git VCS Engine (Distributed version control runtime)\n- PostgreSQL / SQLite (Repository metadata datastore)",
+    "runtime_selection_description": "Configure Git VCS and Database execution runtime providers.",
+    "port_1_label": "Gitea HTTP Port:",
+    "port_1_default": "3000",
+    "port_2_label": "SSH Git Port:",
+    "port_2_default": "2222",
+    "default_admin_email": "admin@gitea.local",
+    "default_theme": "gitea-auto"
+  },
+  "verification_screenshots": [
+    {
+      "id": "10b_desktop_icons",
+      "title": "Gitea Desktop Shortcuts",
+      "capture_type": "desktop",
+      "crop_mode": "FULL",
+      "view_spec": {
+        "layout": "desktop_icons",
+        "desktop_icons": [
+          {
+            "badge": "GIT",
+            "label": "Gitea Web Portal",
+            "color": "#609926"
+          },
+          {
+            "badge": "CLI",
+            "label": "Gitea Admin Console",
+            "color": "#2C4B13"
+          }
+        ]
+      }
+    },
+    {
+      "id": "11_browser_gitea_login",
+      "title": "Gitea Sign-In Interface",
+      "capture_type": "browser_unauthenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 3000,
+      "healthcheck_path": "/user/login",
+      "url_template": "http://localhost:3000/user/login",
+      "view_spec": {
+        "layout": "login_card",
+        "active_tab_title": "Sign In - Gitea: Git with a cup of tea",
+        "inactive_tab_title": "Explore - Gitea",
+        "active_tab_index": 1,
+        "header_bg": "#2C4B13",
+        "header_brand": "Gitea 1.21",
+        "header_subtitle": "Explore   Repositories   Organizations",
+        "user_badge": "Register   Sign In",
+        "heading": "Sign In to Gitea",
+        "subheading": "Username or Email Address: gitea_admin",
+        "cards": [
+          {
+            "title": "Username or Email Address",
+            "subtitle": "gitea_admin",
+            "detail": "Gitea 1.21.0 Git Service (Port 3000) — Active",
+            "badge": "Sign In",
+            "color": "#609926"
+          }
+        ]
+      }
+    },
+    {
+      "id": "12_browser_gitea_authenticated",
+      "title": "Gitea Repositories Dashboard (Authenticated)",
+      "capture_type": "browser_authenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 3000,
+      "healthcheck_path": "/user/login",
+      "url_template": "http://localhost:3000/",
+      "auth_flow": {
+        "login_url": "http://localhost:3000/user/login",
+        "username_selector": "input[name='user_name']",
+        "password_selector": "input[name='password']",
+        "submit_selector": "button.ui.primary.button",
+        "username_value": "gitea_admin",
+        "password_value": "gitea_admin_pass",
+        "ready_selector": ".dashboard"
+      },
+      "view_spec": {
+        "layout": "course_dashboard",
+        "active_tab_title": "Dashboard - Gitea: Git with a cup of tea",
+        "inactive_tab_title": "Site Administration - Gitea",
+        "active_tab_index": 1,
+        "header_bg": "#2C4B13",
+        "header_brand": "Gitea 1.21",
+        "header_subtitle": "Pull Requests   Issues   Explore   Milestones",
+        "user_badge": "gitea_admin (Site Admin)",
+        "heading": "Repositories & Activity Feed",
+        "subheading": "Authenticated Git Server Dashboard (HTTP :3000 / SSH :2222)",
+        "cards": [
+          {
+            "title": "gitea_admin / libscript-recipes",
+            "subtitle": "Autonomous multi-OS deployment recipes & MSI definitions",
+            "detail": "Branch: main | 12 Commits | CI Status: Passing",
+            "badge": "Clone Repository",
+            "color": "#609926"
+          },
+          {
+            "title": "gitea_admin / infrastructure-config",
+            "subtitle": "Declarative server topology and backup manifests",
+            "detail": "Branch: main | Private Repository",
+            "badge": "Manage Settings",
+            "color": "#2C4B13"
+          }
+        ]
+      }
+    }
+  ],
   "features": [
     {
       "id": "core",

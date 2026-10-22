@@ -58,7 +58,7 @@ trap 'rm -rf "$INIT_TMP_DIR"' EXIT INT TERM
 if [ -f "$TARGET_DIR/bin/busybox" ]; then
   cp -f "$TARGET_DIR/bin/busybox" "$INIT_TMP_DIR/bin/busybox"
   chmod 0755 "$INIT_TMP_DIR/bin/busybox"
-  ( cd "$INIT_TMP_DIR/bin" && ./busybox --install -s . 2>/dev/null || true )
+  ( if cd "$INIT_TMP_DIR/bin"; then ./busybox --install -s . 2>/dev/null || true; fi )
 elif [ -f "$TARGET_DIR/bin/sh" ]; then
   cp -f "$TARGET_DIR/bin/sh" "$INIT_TMP_DIR/bin/sh"
 fi

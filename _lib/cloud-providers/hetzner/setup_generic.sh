@@ -74,7 +74,7 @@ case "$ACTION" in
     printf '[CLOUD] Streaming disk image %s to %s on %s...\n' "$DISK_IMG" "$TARGET_DEV" "$SERVER"
     if command -v ssh >/dev/null 2>&1 && [ "$SERVER" != "127.0.0.1" ]; then
       # Stream compressed image directly to target block device over SSH
-      cat "$DISK_IMG" | ssh -o BatchMode=yes -o StrictHostKeyChecking=no "root@${SERVER}" "dd of=${TARGET_DEV} bs=4M status=progress conv=fsync && reboot" 2>/dev/null || true
+      ssh -o BatchMode=yes -o StrictHostKeyChecking=no "root@${SERVER}" "dd of=${TARGET_DEV} bs=4M status=progress conv=fsync && reboot" < "$DISK_IMG" 2>/dev/null || true
       printf '[OK] Successfully deployed and rebooted Hetzner server: %s\n' "$SERVER"
     else
       printf '[INFO] SSH connection unavailable or mock server specified. Deployment staged for: %s -> %s:%s\n' "$DISK_IMG" "$SERVER" "$TARGET_DEV"

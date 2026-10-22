@@ -81,9 +81,9 @@ case "$ACTION" in
     ;;
   uninstall)
     log_info "Uninstalling Uvicorn..."
-    command -v uv >/dev/null 2>&1 && uv tool uninstall uvicorn 2>/dev/null || true
-    command -v pipx >/dev/null 2>&1 && pipx uninstall uvicorn 2>/dev/null || true
-    command -v pip3 >/dev/null 2>&1 && pip3 uninstall -y uvicorn 2>/dev/null || true
+    if command -v uv >/dev/null 2>&1; then uv tool uninstall uvicorn 2>/dev/null || true; fi
+    if command -v pipx >/dev/null 2>&1; then pipx uninstall uvicorn 2>/dev/null || true; fi
+    if command -v pip3 >/dev/null 2>&1; then pip3 uninstall -y uvicorn 2>/dev/null || true; fi
     exit 0
     ;;
   test)

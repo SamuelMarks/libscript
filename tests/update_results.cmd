@@ -87,16 +87,16 @@ if not exist "%PS_SCRIPT%" (
     )
 )
 
-where powershell >nul 2>&1
-if %ERRORLEVEL% equ 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
-)
-
 where pwsh >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
+)
+
+where powershell >nul 2>&1
+if %ERRORLEVEL% equ 0 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
+    exit /b !ERRORLEVEL!
 )
 
 echo [ERROR] PowerShell or pwsh not found. Cannot update results on Windows. >&2

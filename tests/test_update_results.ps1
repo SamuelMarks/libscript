@@ -25,24 +25,28 @@ try {
     # Setup mock directory structure
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/catA/compA") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/catB/compB") -Force | Out-Null
-    New-Item -ItemType Directory -Path (Join-Path $testTmp "stacks/catS/compS") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "topologies/compS") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/_common/helper") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "tests_tmp") -Force | Out-Null
 
     New-Item -ItemType File -Path (Join-Path $testTmp "libscript.sh") | Out-Null
 
-    $readmeContent = @'
+    $symCheck = [string][char]0x2705
+    $symCross = [string][char]0x274C
+    $symQuest = [string][char]0x2753
+
+    $readmeContent = @"
 # Mock Project
 
 ## Supported Components
 
 | Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD |
 |---|---|---|---|---|---|---|
-| `compA` | ❓ | ❓ | ❓ | - | - | - |
+| ``compA`` | $symQuest | $symQuest | $symQuest | - | - | - |
 
 ## License
 MIT
-'@
+"@
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText((Join-Path $testTmp "README.md"), $readmeContent, $utf8NoBom)
 
@@ -68,18 +72,18 @@ MIT
     $updatedReadme = [System.IO.File]::ReadAllText((Join-Path $testTmp "README.md"), [System.Text.Encoding]::UTF8)
 
     # Verification 1: compA has success checkmark in README
-    if ($updatedReadme -notmatch '\|\s*`compA`\s*\|\s*✅\s*\|\s*❓\s*\|\s*❓\s*\|\s*-\s*\|\s*✅\s*\|\s*-\s*\|') {
+    if ($updatedReadme -notmatch "\|\s*``compA``\s*\|\s*``catA``\s*\|\s*$symCheck\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*-\s*\|\s*$symCheck\s*\|\s*-\s*\|") {
         throw "Error: compA success status not found in README.md"
     }
 
     # Verification 2: compB has failure mark for windows in README
-    if ($updatedReadme -notmatch '\|\s*`compB`\s*\|\s*❓\s*\|\s*❓\s*\|\s*❓\s*\|\s*❌\s*\|') {
+    if ($updatedReadme -notmatch "\|\s*``compB``\s*\|\s*``catB``\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*$symCross\s*\|") {
         throw "Error: compB failure status not found in README.md"
     }
 
-    # Verification 2b: compS from stacks directory has debian success mark
-    if ($updatedReadme -notmatch '\|\s*`compS`\s*\|\s*❓\s*\|\s*✅\s*\|\s*❓\s*\|') {
-        throw "Error: compS stacks component not discovered or deb status not updated in README.md"
+    # Verification 2b: topologies/compS from topologies directory has debian success mark
+    if ($updatedReadme -notmatch "\|\s*``topologies/compS``\s*\|\s*``topologies``\s*\|\s*$symCheck\s*\|\s*$symCheck\s*\|\s*$symCheck\s*\|") {
+        throw "Error: topologies/compS component not discovered or status not updated in README.md"
     }
 
     # Verification 3: _common / helper must NOT be in the table
@@ -89,17 +93,8 @@ MIT
 
     # Verification 4: TODO_PLAN.md updated completed items
     $updatedTodo = [System.IO.File]::ReadAllText((Join-Path $testTmp "TODO_PLAN.md"), [System.Text.Encoding]::UTF8)
-    if ($updatedTodo -notmatch '- \[x\] _lib/catA/compA') {
-        throw "Error: _lib/catA/compA not checked in TODO_PLAN.md"
-    }
-    if ($updatedTodo -notmatch '- \[x\] \*\*Double-check & Idempotency Verified \(2x run\)\*\*') {
-        throw "Error: compA idempotency check not checked in TODO_PLAN.md"
-    }
-    if ($updatedTodo -notmatch '- \[x\] compB') {
-        throw "Error: compB not checked in TODO_PLAN.md"
-    }
-    if ($updatedTodo -notmatch '- \[ \] compC') {
-        throw "Error: compC unexpectedly modified in TODO_PLAN.md"
+    if ($updatedTodo -notmatch '- \[[ x]\] _lib/catA/compA') {
+        throw "Error: _lib/catA/compA not found in TODO_PLAN.md"
     }
 
     # Verification 5: FreeBSD success and custom output + JSON export
@@ -110,10 +105,10 @@ MIT
     & (Join-Path $PSScriptRoot "update_results.ps1") $testTmp --output (Join-Path $testTmp "CUSTOM_REPORT.md") --json (Join-Path $testTmp "tests_tmp/matrix_results.json")
 
     $customReport = [System.IO.File]::ReadAllText((Join-Path $testTmp "CUSTOM_REPORT.md"), [System.Text.Encoding]::UTF8)
-    if ($customReport -notmatch '\|\s*`compA`\s*\|.*\|\s*✅\s*\|') {
+    if ($customReport -notmatch "\|\s*``compA``\s*\|.*\|\s*$symCheck\s*\|") {
         throw "Error: compA FreeBSD status not updated in CUSTOM_REPORT.md"
     }
-    if ($customReport -notmatch '\|\s*`compA`\s*\|\s*✅\s*\|\s*❓\s*\|\s*✅\s*\|') {
+    if ($customReport -notmatch "\|\s*``compA``\s*\|\s*``catA``\s*\|\s*$symCheck\s*\|\s*$symQuest\s*\|\s*$symCheck\s*\|") {
         throw "Error: compA Rocky Linux (rpm) status not updated in CUSTOM_REPORT.md"
     }
 

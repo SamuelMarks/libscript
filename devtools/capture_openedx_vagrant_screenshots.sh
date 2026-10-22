@@ -49,7 +49,7 @@ fi
 discover_environment() {
   SSH_PORT=""
   if [ -d "${VAGRANT_DIR}" ]; then
-    SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
+    SSH_PORT=$(if cd "${VAGRANT_DIR}" 2>/dev/null; then vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}'; fi)
   fi
   : "${SSH_PORT:=50523}"
 

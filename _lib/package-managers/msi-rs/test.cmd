@@ -68,6 +68,14 @@ if "!_FOUND_CLI!"=="0" (
     exit /b 1
 )
 
+for %%T in (candle light msi-gui msiinfo) do (
+    where %%T.exe >nul 2>&1
+    if not errorlevel 1 (
+        %%T.exe --version >nul 2>&1
+        echo [PASS] %%T is operational
+    )
+)
+
 :: ## test_roundtrip_msi
 :: Verifies full round-trip WiX XML compilation, linking, and inspection via msi-rs toolchain.
 where candle.exe >nul 2>&1

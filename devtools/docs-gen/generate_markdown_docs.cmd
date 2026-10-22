@@ -82,5 +82,5 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%generate_markdown_docs.ps1" %*
-exit /b %ERRORLEVEL%
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\generate_markdown_docs.ps1" %*
+exit /b !ERRORLEVEL!

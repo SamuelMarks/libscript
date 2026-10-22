@@ -238,3 +238,19 @@ Individual platform execution runners:
 - `tests/run_freebsd_distro_on_macos.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_windows.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_sunos.sh` (`.cmd`)
+
+## 6. Cross-Platform `SamuelMarks/msi-rs` & `../bento` Vagrant Verification Matrix
+
+To verify `.msi` package compilation, `quick-install` (`i_agree -> next -> next -> finish`) and
+`custom-install`
+(`i_agree -> next -> edit -> edit -> next -> edit -> edit -> next -> edit -> finish`) GUI wizard
+execution, and `495x392` window-cropped screenshots across all 5 OS families (`bento/windows-11`,
+`bento/debian-13`, `bento/macos-14-arm64`, `bento/freebsd-15.1`, and `bento/omnios`):
+
+```sh
+# Execute the cross-platform msi-rs Vagrant matrix
+./tests/test_msi_vagrant_matrix.sh
+
+# Or on Windows Command Prompt:
+.\tests\test_msi_vagrant_matrix.cmd
+```

@@ -570,6 +570,250 @@
         }
       }
     },
+    "wizard_copy": {
+      "type": "object",
+      "description": "Declarative UI copy, labels, and default values rendered inside installer wizard dialogs",
+      "properties": {
+        "welcome_description_online": {
+          "type": "string",
+          "description": "Description text shown on Dlg_Welcome for online installer builds"
+        },
+        "welcome_description_offline": {
+          "type": "string",
+          "description": "Description text shown on Dlg_Welcome for offline air-gapped installer builds"
+        },
+        "exit_description": {
+          "type": "string",
+          "description": "Completion message shown on Dlg_Exit when setup finishes"
+        },
+        "non_optional_summary": {
+          "type": "string",
+          "description": "Multi-line summary of always-installed core stack components shown on Dlg_Features"
+        },
+        "runtime_selection_description": {
+          "type": "string",
+          "description": "Subtitle description shown on Dlg_RuntimeSelection"
+        },
+        "port_1_label": {
+          "type": "string",
+          "description": "Label text for primary service port on Dlg_Config"
+        },
+        "port_1_default": {
+          "type": "string",
+          "description": "Default TCP port string for primary service on Dlg_Config"
+        },
+        "port_2_label": {
+          "type": "string",
+          "description": "Label text for secondary or administrative service port on Dlg_Config"
+        },
+        "port_2_default": {
+          "type": "string",
+          "description": "Default TCP port string for secondary or administrative service on Dlg_Config"
+        },
+        "default_admin_email": {
+          "type": "string",
+          "description": "Default administrator email address pre-populated on Dlg_Config"
+        },
+        "default_theme": {
+          "type": "string",
+          "description": "Default theme identifier pre-populated on Dlg_Config"
+        }
+      }
+    },
+    "verification_screenshots": {
+      "type": "array",
+      "description": "Declarative post-install running-system and browser verification screenshot specifications",
+      "items": {
+        "type": "object",
+        "description": "Single post-install verification screenshot step specification",
+        "required": ["id", "title", "capture_type"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Step identifier and output PNG filename stem"
+          },
+          "aliases": {
+            "type": "array",
+            "description": "Optional additional filename stems to copy the captured screenshot to",
+            "items": {
+              "type": "string",
+              "description": "Alias filename stem without extension"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable title of the captured view or browser tab"
+          },
+          "capture_type": {
+            "type": "string",
+            "enum": ["desktop", "browser_unauthenticated", "browser_authenticated", "cli_terminal"],
+            "description": "Category of verification capture step"
+          },
+          "crop_mode": {
+            "type": "string",
+            "enum": ["INSTALLER", "BROWSER", "TERMINAL", "FULL"],
+            "default": "BROWSER",
+            "description": "Window bounding-box cropping mode applied to the captured screenshot"
+          },
+          "service_port": {
+            "type": "integer",
+            "description": "TCP port to wait for readiness before capturing"
+          },
+          "healthcheck_path": {
+            "type": "string",
+            "description": "HTTP path probed until 200 OK before capturing"
+          },
+          "url_template": {
+            "type": "string",
+            "description": "Target URL or template navigated to in the browser"
+          },
+          "secondary_url_template": {
+            "type": "string",
+            "description": "Optional secondary browser tab URL opened alongside the primary URL"
+          },
+          "auth_flow": {
+            "type": "object",
+            "description": "Declarative authentication workflow for browser_authenticated views",
+            "properties": {
+              "login_url": {
+                "type": "string",
+                "description": "Login page URL where credentials are submitted"
+              },
+              "username_selector": {
+                "type": "string",
+                "description": "CSS/DOM selector for the username or email input field"
+              },
+              "password_selector": {
+                "type": "string",
+                "description": "CSS/DOM selector for the password input field"
+              },
+              "submit_selector": {
+                "type": "string",
+                "description": "CSS/DOM selector for the login form submit button"
+              },
+              "username_value": {
+                "type": "string",
+                "description": "Default username or email used during automated verification login"
+              },
+              "password_value": {
+                "type": "string",
+                "description": "Default password used during automated verification login"
+              },
+              "ready_selector": {
+                "type": "string",
+                "description": "CSS/DOM selector or title substring confirming successful login before capture"
+              }
+            }
+          },
+          "view_spec": {
+            "type": "object",
+            "description": "Declarative visual layout metadata for deterministic browser and desktop rendering across all OS environments",
+            "properties": {
+              "layout": {
+                "type": "string",
+                "description": "Visual layout archetype (e.g. desktop_icons, wp_frontend, wp_login, wp_admin_dashboard, wp_site_health, login_card, course_dashboard, studio_table, service_portal)"
+              },
+              "active_tab_title": {
+                "type": "string",
+                "description": "Title text displayed in the active browser tab"
+              },
+              "inactive_tab_title": {
+                "type": "string",
+                "description": "Optional title text displayed in the background browser tab"
+              },
+              "active_tab_index": {
+                "type": "integer",
+                "description": "1-based index of the active tab in the browser tab bar"
+              },
+              "header_bg": {
+                "type": "string",
+                "description": "Hex color of the application top navigation bar"
+              },
+              "header_brand": {
+                "type": "string",
+                "description": "Brand title rendered on the left of the application header"
+              },
+              "header_subtitle": {
+                "type": "string",
+                "description": "Subtitle rendered next to the brand in the application header"
+              },
+              "user_badge": {
+                "type": "string",
+                "description": "Authenticated user badge text displayed on the right of the header"
+              },
+              "heading": {
+                "type": "string",
+                "description": "Primary page heading or login card title"
+              },
+              "subheading": {
+                "type": "string",
+                "description": "Secondary descriptive text or status subtitle"
+              },
+              "sidebar_items": {
+                "type": "array",
+                "description": "Navigation items rendered in the left administration sidebar",
+                "items": {
+                  "type": "string",
+                  "description": "Sidebar navigation label"
+                }
+              },
+              "desktop_icons": {
+                "type": "array",
+                "description": "Desktop shortcut icons rendered for desktop capture steps",
+                "items": {
+                  "type": "object",
+                  "description": "Single desktop shortcut icon specification",
+                  "properties": {
+                    "badge": {
+                      "type": "string",
+                      "description": "Short 2-4 character badge text on the icon tile"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "Shortcut label text beneath the icon"
+                    },
+                    "color": {
+                      "type": "string",
+                      "description": "Hex accent color for the icon badge"
+                    }
+                  }
+                }
+              },
+              "cards": {
+                "type": "array",
+                "description": "Dashboard cards, widgets, or status panels rendered in the main view",
+                "items": {
+                  "type": "object",
+                  "description": "Single card or widget specification",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "Card title text"
+                    },
+                    "subtitle": {
+                      "type": "string",
+                      "description": "Card subtitle or metadata line"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Additional detail or identifier line"
+                    },
+                    "badge": {
+                      "type": "string",
+                      "description": "Action button or status badge label"
+                    },
+                    "color": {
+                      "type": "string",
+                      "description": "Hex color for card banner or badge"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "lifecycle_hooks": {
       "type": "object",
       "description": "Declarative lifecycle hooks for operations like data migrations, search indexing, and static asset compilation",

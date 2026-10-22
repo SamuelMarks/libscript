@@ -116,3 +116,17 @@ When exporting to containerized targets (`package-as docker` and `package-as doc
 - **Multi-Service Docker Compose Export**: Produces an isolated multi-service topology mounting a
   shared read-only cache volume (`libscript_offline_cache:/opt/libscript_cache:ro`), an internal
   isolated network (`internal: true`), and local socket healthcheck probes.
+
+---
+
+## Multi-OS Window-Cropped `.msi` GUI Screenshot Acquisition
+
+Every `.msi` package built with `SamuelMarks/msi-rs` (`packaging/build_msi.sh` /
+`packaging/build_msi.cmd`) supports automated stage-by-stage GUI screenshot capture cropped strictly
+to the `495x392` installer window across **Windows**, **Linux**, **macOS**, **FreeBSD**, and
+**illumos (OmniOS)**:
+
+```sh
+./devtools/capture_msi_vagrant_matrix.sh --target all --os all --variant both --flow both
+./devtools/verify_screenshots.sh --target all
+```

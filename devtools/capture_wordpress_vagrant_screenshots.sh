@@ -46,7 +46,7 @@ discover_environment() {
   printf '[INFO] Discovering Windows 11 Vagrant environment...\n'
   SSH_PORT=$(ps aux | awk '/[q]emu.*windows-11/' | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
   if [ -z "${SSH_PORT:-}" ] && [ -d "${VAGRANT_DIR}" ]; then
-    SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
+    SSH_PORT=$(if cd "${VAGRANT_DIR}" 2>/dev/null; then vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}'; fi)
   fi
   : "${SSH_PORT:=50452}"
   SSH_KEY="${HOME}/.vagrant.d/insecure_private_key"
@@ -92,11 +92,19 @@ wait_for_ssh() {
 }
 
 # ## capture_screen
-# Helper to capture QEMU screendump and convert to PNG.
+# Helper to capture QEMU screendump, crop to exact Win32 installer window bounds, and convert to PNG.
 capture_screen() {
   _name="$1"
+  _crop_mode="${2:-INSTALLER}"
   _ppm="${TEMP_DIR}/${_name}.ppm"
   _png="${TEMP_DIR}/${_name}.png"
+  _bounds=""
+  if [ "$_crop_mode" != "FULL" ]; then
+    vm_action "BOUNDS:${_crop_mode}" || true
+    _bounds=$($SSH_CMD "if (Test-Path 'C:/libscript/window_rect.txt') { (Get-Content 'C:/libscript/window_rect.txt' -Raw).Trim() }" 2>/dev/null | tr -d '\r\n' || true)
+  else
+    vm_action "BOUNDS:FULL" || true
+  fi
   sleep 1.2
   if [ -S "${MONITOR_SOCK}" ]; then
     python3 -c 'import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall((f"screendump {sys.argv[2]}" + chr(10)).encode()); time.sleep(0.3); s.close()' "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
@@ -107,11 +115,34 @@ capture_screen() {
     fi
     rm -f "$_ppm"
   fi
+  if [ -f "$_png" ] && [ -n "$_bounds" ] && [ "$_crop_mode" != "FULL" ]; then
+    python3 -c '
+import sys, subprocess
+png_path, bounds = sys.argv[1], sys.argv[2]
+parts = [int(x) for x in bounds.split(",")]
+if len(parts) >= 6:
+    x, y, w, h, desk_w, desk_h = parts[:6]
+    try:
+        from PIL import Image
+        im = Image.open(png_path)
+        img_w, img_h = im.size
+        sx = img_w / float(desk_w) if desk_w else 1.0
+        sy = img_h / float(desk_h) if desk_w else 1.0
+        left = max(0, int(round(x * sx)))
+        top = max(0, int(round(y * sy)))
+        right = min(img_w, int(round((x + w) * sx)))
+        bottom = min(img_h, int(round((y + h) * sy)))
+        if right - left > 100 and bottom - top > 100:
+            im.crop((left, top, right, bottom)).save(png_path)
+    except ImportError:
+        subprocess.run(["magick", png_path, "-crop", f"{w}x{h}+{x}+{y}", "+repage", png_path], check=False)
+' "$_png" "$_bounds"
+  fi
   if [ -f "$_png" ]; then
     cp -f "$_png" "${CC0_SCREENSHOTS_DIR}/${_name}.png"
     rm -f "$_png"
     if [ -f "${CC0_SCREENSHOTS_DIR}/${_name}.png" ]; then
-      printf '[CAPTURED] %s.png (%s bytes)\n' "$_name" "$(wc -c < "${CC0_SCREENSHOTS_DIR}/${_name}.png" | tr -d ' ')"
+      printf '[CAPTURED] %s.png (%s bytes, mode=%s, bounds=%s)\n' "$_name" "$(wc -c < "${CC0_SCREENSHOTS_DIR}/${_name}.png" | tr -d ' ')" "$_crop_mode" "${_bounds:-full}"
     fi
   fi
 }
@@ -232,22 +263,22 @@ vagrant@127.0.0.1:C:/libscript/packaging/
 "${REPO_ROOT}/packaging/assets/wordpress_eula.rtf" \
 vagrant@127.0.0.1:C:/libscript/packaging/assets/
 
-  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/stacks/cms/wordpress" -Force -ErrorAction SilentlyContinue | Out-Null'
+  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/_lib/web-apps/wordpress" -Force -ErrorAction SilentlyContinue | Out-Null'
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-"${REPO_ROOT}/stacks/cms/wordpress/packaging.json" \
-"${REPO_ROOT}/stacks/cms/wordpress/offline_bundle.json" \
-"${REPO_ROOT}/stacks/cms/wordpress/manifest.json" \
-"${REPO_ROOT}/stacks/cms/wordpress/vars.schema.json" \
-"${REPO_ROOT}/stacks/cms/wordpress/cli.cmd" \
-"${REPO_ROOT}/stacks/cms/wordpress/cli.sh" \
-"${REPO_ROOT}/stacks/cms/wordpress/service.cmd" \
-"${REPO_ROOT}/stacks/cms/wordpress/service.sh" \
-"${REPO_ROOT}/stacks/cms/wordpress/healthcheck.cmd" \
-"${REPO_ROOT}/stacks/cms/wordpress/healthcheck.sh" \
-"${REPO_ROOT}/stacks/cms/wordpress/setup_generic.cmd" \
-"${REPO_ROOT}/stacks/cms/wordpress/setup_generic.sh" \
-vagrant@127.0.0.1:C:/libscript/stacks/cms/wordpress/
+"${REPO_ROOT}/_lib/web-apps/wordpress/packaging.json" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/offline_bundle.json" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/manifest.json" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/vars.schema.json" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/cli.cmd" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/cli.sh" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/service.cmd" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/service.sh" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/healthcheck.cmd" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/healthcheck.sh" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/setup_generic.cmd" \
+"${REPO_ROOT}/_lib/web-apps/wordpress/setup_generic.sh" \
+vagrant@127.0.0.1:C:/libscript/_lib/web-apps/wordpress/
 
   # Sync MSIs if present on host and not already on guest
   if [ -f "${REPO_ROOT}/packaging/WordPress-Setup.msi" ]; then
@@ -433,7 +464,7 @@ run_installer_wizard() {
 
   # Step 10b: Desktop Icons
   vm_run 'cmd.exe /c call C:\libscript\packaging\create_desktop_shortcuts.cmd; Start-Sleep -Seconds 2'
-  capture_screen "${_prefix}10b_desktop_icons"
+  capture_screen "${_prefix}10b_desktop_icons" "FULL"
 
   # Confirm advanced mode installation works
   vm_run 'Get-ItemProperty "HKLM:\Software\LibScriptwordpress" -ErrorAction SilentlyContinue | Out-String | Write-Host'
@@ -505,20 +536,20 @@ vm_run 'powershell -NoProfile -Command "while ((Test-NetConnection localhost -Po
 # 4. browser tab (WordPress homepage)
 printf '[INFO] Step 4: Opening WordPress homepage (:80/) in Browser...\n'
 launch_browser_url "http://localhost:80/"
-capture_screen "11_browser_wordpress_home"
-capture_screen "11_browser_tab"
+capture_screen "11_browser_wordpress_home" "BROWSER"
+capture_screen "11_browser_tab" "BROWSER"
 
 # 5. logged in browser tab (WordPress Admin Dashboard)
 printf '[INFO] Step 5: Opening WordPress Admin Dashboard (:80/wp-admin/) in Browser...\n'
 launch_browser_url "http://localhost:80/wp-admin/"
-capture_screen "12_browser_wordpress_admin_authenticated"
-capture_screen "12_browser_logged_in"
+capture_screen "12_browser_wordpress_admin_authenticated" "BROWSER"
+capture_screen "12_browser_logged_in" "BROWSER"
 
 # 6. logged in health check admin interface (WordPress Site Health)
 printf '[INFO] Step 6: Opening WordPress Site Health (:80/wp-admin/site-health.php) in Browser...\n'
 launch_browser_url "http://localhost:80/wp-admin/site-health.php"
-capture_screen "13_browser_wordpress_site_health"
-capture_screen "13_browser_health_check"
+capture_screen "13_browser_wordpress_site_health" "BROWSER"
+capture_screen "13_browser_health_check" "BROWSER"
 
 # Clean up browser session
 vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'

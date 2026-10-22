@@ -116,6 +116,10 @@ if exist "devtools\audit\audit_standards.cmd" (
 if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     echo Regenerating markdown readme files interpolating the json...
     call "devtools\docs-gen\generate_markdown_docs.cmd"
+    if errorlevel 1 (
+        echo [ERROR] generate_markdown_docs.cmd failed.
+        exit /b 1
+    )
     for /f "delims=" %%F in ('git ls-files -m ^| findstr /E "README.md"') do (
         where npx >nul 2>&1
         if not errorlevel 1 (
@@ -128,6 +132,10 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
 if exist "tests\update_results.cmd" (
     echo Updating Supported Components in README.md...
     call "tests\update_results.cmd"
+    if errorlevel 1 (
+        echo [ERROR] update_results.cmd failed.
+        exit /b 1
+    )
     where npx >nul 2>&1
     if not errorlevel 1 (
         call npx --yes prettier --write README.md >nul 2>&1

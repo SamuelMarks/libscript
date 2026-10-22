@@ -59,8 +59,11 @@ foreach ($readme in $readmes) {
                 $key = $p.Name
                 $val = $p.Value
                 $desc = if ($val.description) { ($val.description -replace "`r?`n", " ") } else { "" }
-                $def = if ($null -ne $val.default -and "" -ne $val.default) {
-                    if ($val.default -is [bool]) { $val.default.ToString().ToLowerInvariant() } else { [string]$val.default }
+                $def = if ($null -ne $val.default -and ($val.default -isnot [bool] -or $val.default -eq $true)) {
+                    if ($val.default -is [bool]) { "true" }
+                    elseif ($val.default -is [array]) { if ($val.default.Count -eq 0) { "[]" } else { ConvertTo-Json -InputObject $val.default -Compress } }
+                    elseif ($val.default -is [System.Management.Automation.PSCustomObject]) { ConvertTo-Json -InputObject $val.default -Compress }
+                    else { [string]$val.default }
                 } else { "none" }
                 $aliases = @()
                 if ($val.version_aliases) { $aliases += $val.version_aliases }
@@ -77,8 +80,11 @@ foreach ($readme in $readmes) {
             $key = $p.Name
             $val = $p.Value
             $desc = if ($val.description) { ($val.description -replace "`r?`n", " ") } else { "" }
-            $def = if ($null -ne $val.default -and "" -ne $val.default) {
-                if ($val.default -is [bool]) { $val.default.ToString().ToLowerInvariant() } else { [string]$val.default }
+            $def = if ($null -ne $val.default -and ($val.default -isnot [bool] -or $val.default -eq $true)) {
+                if ($val.default -is [bool]) { "true" }
+                elseif ($val.default -is [array]) { if ($val.default.Count -eq 0) { "[]" } else { ConvertTo-Json -InputObject $val.default -Compress } }
+                elseif ($val.default -is [System.Management.Automation.PSCustomObject]) { ConvertTo-Json -InputObject $val.default -Compress }
+                else { [string]$val.default }
             } else { "none" }
             $aliases = @()
             if ($val.version_aliases) { $aliases += $val.version_aliases }
@@ -98,8 +104,10 @@ foreach ($readme in $readmes) {
     $platBlock = ($platLines -join "`n") + "`n"
 
     $oldContent = Get-Content $readme.FullName -Raw
-    $content = $oldContent -replace '(?is)(<!-- BEGIN_VARS -->).*?(<!-- END_VARS -->)', "`$1`n$varsBlock`$2"
-    $content = $content -replace '(?is)(<!-- BEGIN_PLATFORMS -->).*?(<!-- END_PLATFORMS -->)', "`$1`n$platBlock`$2"
+    $varsRegex = [regex]'(?is)(<!-- BEGIN_VARS -->).*?(<!-- END_VARS -->)'
+    $content = $varsRegex.Replace($oldContent, "`$1`n$varsBlock`$2", 1)
+    $platRegex = [regex]'(?is)(<!-- BEGIN_PLATFORMS -->).*?(<!-- END_PLATFORMS -->)'
+    $content = $platRegex.Replace($content, "`$1`n$platBlock`$2", 1)
 
     if ($content -ne $oldContent) {
         [IO.File]::WriteAllText($readme.FullName, $content, $utf8NoBom)

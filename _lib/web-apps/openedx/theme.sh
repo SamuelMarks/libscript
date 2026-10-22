@@ -117,7 +117,7 @@ theme_install() {
 
   if [ -d "${_dest}/.git" ]; then
     log_info "Theme '${_name}' directory already exists. Pulling latest revisions..."
-    (cd "${_dest}" && git pull 2>/dev/null || true)
+    (cd "${_dest}" && git pull 2>/dev/null) || true
   else
     rm -rf "${_dest}"
     if command -v git >/dev/null 2>&1; then
@@ -164,7 +164,7 @@ theme_build() {
 
   # Compile via npm if package.json exists in theme
   if [ -f "${_dest}/package.json" ]; then
-    (cd "${_dest}" && npm install 2>/dev/null && npm run build 2>/dev/null || true)
+    (if cd "${_dest}"; then npm install 2>/dev/null && npm run build 2>/dev/null; fi) || true
   fi
 
   # Run collectstatic with theme settings if Django is present

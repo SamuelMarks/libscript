@@ -87,5 +87,5 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%audit_standards.ps1" %*
-exit /b %ERRORLEVEL%
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_standards.ps1" %*
+exit /b !ERRORLEVEL!

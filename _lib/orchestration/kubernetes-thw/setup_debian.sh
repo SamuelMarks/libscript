@@ -65,7 +65,7 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server echo ok >/dev/
     elif command -v sudo >/dev/null 2>&1; then
       sudo mkdir -p /root/.ssh 2>/dev/null || true
       if ! sudo grep -q -f ~/.ssh/id_rsa.pub /root/.ssh/authorized_keys 2>/dev/null; then
-        cat ~/.ssh/id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys >/dev/null || true
+        sudo sh -c 'cat ~/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys' 2>/dev/null || true
       fi
     fi
   fi

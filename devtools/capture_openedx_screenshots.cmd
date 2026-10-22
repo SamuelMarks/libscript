@@ -2,14 +2,15 @@
 :: # capture_openedx_screenshots.cmd
 ::
 :: ## Overview
-:: Captures pixel-perfect screenshots of every step and enumeration in the Open edX
-:: Windows Installer (.msi) wizard using Vagrant Windows 11 and QEMU screendump.
+:: Thin declarative caller that captures Open edX .msi wizard stages and post-install
+:: browser verification screenshots via devtools\capture_running_system.cmd.
 ::
 :: ## Usage
-:: capture_openedx_screenshots.cmd devtools/capture_openedx_screenshots.cmd [OPTIONS]
+:: devtools\capture_openedx_screenshots.cmd [OPTIONS]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,7 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
 if /i "%~1"=="/?" goto :show_help
@@ -63,15 +63,11 @@ goto :main
 :: Displays usage and help information for the screenshot capture tool.
 :show_help
 echo Usage: %~nx0 [--help]
-echo.
-echo Automates capturing pixel-perfect screenshots of the Open edX MSI installer.
-echo.
-echo Options:
-echo   --help, -h, /?, -?  Show this help message and exit.
+echo Automates capturing screenshots of the Open edX MSI installer and browser interfaces.
 exit /b 0
 
 :: ## main
-:: Executes primary orchestration routine.
+:: Delegates Open edX screenshot capture to capture_running_system.cmd.
 :main
-call "%SCRIPT_DIR%capture_openedx_vagrant_screenshots.cmd" %*
-exit /b %ERRORLEVEL%
+call "!SCRIPT_DIR!\capture_running_system.cmd" --target _lib/web-apps/openedx %*
+exit /b !ERRORLEVEL!

@@ -72,7 +72,13 @@ Vagrant.configure("2") do |config|
 
     # Sync the repository root directory
     t.vm.synced_folder repo_root, "/Users/vagrant/libscript", type: "rsync",
-      rsync_exclude: [".git/", "tests_tmp/", "vagrant/", "cache/"]
+      rsync__exclude: [".git/", "tests_tmp/", "vagrant/", "build/", "dist/", "cache/"]
+
+    msi_rs_root = ENV["MSI_RS_ROOT"] || File.expand_path("../../../msi-rs", __dir__)
+    if File.exist?(msi_rs_root)
+      t.vm.synced_folder msi_rs_root, "/Users/vagrant/msi-rs", type: "rsync",
+        rsync__exclude: [".git/", "target/"]
+    end
 
     # Provision the VM and run the test
     t.vm.provision "shell", inline: <<-SHELL

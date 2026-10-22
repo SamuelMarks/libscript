@@ -265,6 +265,18 @@ if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
   [ -z "$LOGS_DIR" ] && [ -n "$_pkg_logsdir" ] && LOGS_DIR="$_pkg_logsdir"
   [ -z "$REPO_URL" ] && [ -n "$_pkg_repourl" ] && REPO_URL="$_pkg_repourl"
   [ -z "$REPO_BRANCH" ] && [ -n "$_pkg_repobranch" ] && REPO_BRANCH="$_pkg_repobranch"
+elif [ -f "$MANIFEST_JSON" ] && command -v jq >/dev/null 2>&1; then
+  _pkg_name=$(jq -r '.name // empty' "$MANIFEST_JSON")
+  _pkg_title=$(jq -r '.title // empty' "$MANIFEST_JSON")
+  _pkg_ver=$(jq -r '.default_version // .version // empty' "$MANIFEST_JSON")
+  [ -z "$_pkg_name" ] && _pkg_name=$(basename "$RESOLVED_TARGET_DIR")
+  [ -z "$_pkg_title" ] && _pkg_title="${_pkg_name} Component"
+  APP_IDENTIFIER="$_pkg_name"
+  APP_NAME="$_pkg_title"
+  case "${_pkg_ver:-}" in
+    [0-9]*.[0-9]*.[0-9]*) [ -z "$APP_VERSION" ] && APP_VERSION="${_pkg_ver}.0" ;;
+    *) [ -z "$APP_VERSION" ] && APP_VERSION="1.0.0.0" ;;
+  esac
 fi
 
 case "${APP_VERSION:-}" in
@@ -291,18 +303,114 @@ _clean_branch="${_clean_branch%.master}"
 
 if [ "$VARIANT" = "offline" ]; then
   PROP_OPENEDX_OFFLINE="1"
-  [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Offline Air-Gapped)"
+  case "$APP_NAME" in
+    *"(Offline"*) ;;
+    *) APP_NAME="${APP_NAME} (Offline Air-Gapped)" ;;
+  esac
   : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${TARGET_ARCH}-${_clean_branch}-${VARIANT}}"
   mkdir -p "${OUT_FILE%/*}" 2>/dev/null || true
-  WELCOME_DESC="The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
+  WELCOME_DESC=""
+  if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
+    WELCOME_DESC=$(jq -r '.wizard_copy.welcome_description_offline // empty' "$PACKAGING_JSON")
+  fi
+  : "${WELCOME_DESC:=The Setup Wizard will deploy ${APP_NAME} and pre-bundled air-gapped runtimes on your computer.}"
   COMP_TAG=" [Pre-bundled / Offline]"
 else
   PROP_OPENEDX_OFFLINE="0"
-  [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Online)"
+  case "$APP_NAME" in
+    *"(Online)"*) ;;
+    *) APP_NAME="${APP_NAME} (Online)" ;;
+  esac
   : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${TARGET_ARCH}-${_clean_branch}-${VARIANT}}"
   mkdir -p "${OUT_FILE%/*}" 2>/dev/null || true
-  WELCOME_DESC="The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
+  WELCOME_DESC=""
+  if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
+    WELCOME_DESC=$(jq -r '.wizard_copy.welcome_description_online // empty' "$PACKAGING_JSON")
+  fi
+  : "${WELCOME_DESC:=The Setup Wizard will download and install ${APP_NAME} and required runtimes on your computer.}"
   COMP_TAG=""
+fi
+
+EXIT_DESC="${APP_NAME} services have been successfully installed and started."
+SHORTCUT_1_TEXT="Create ${APP_NAME} desktop shortcut"
+SHORTCUT_2_TEXT="Create ${APP_NAME} management console shortcut"
+LAUNCH_1_TEXT="Launch ${APP_NAME} in Web Browser"
+LAUNCH_2_TEXT="Launch ${APP_NAME} Administration Dashboard"
+NON_OPT_LIST="- ${APP_NAME} Core Binary &amp; CLI Tools&#13;&#10;- LibScript Autonomous Version Manager Substrate&#13;&#10;- Service Daemon Supervisor (systemd / launchd / Windows Service)&#13;&#10;- Automated Healthcheck &amp; Diagnostic Suite"
+CHK_LMS_TEXT="${APP_NAME} Primary Service Daemon"
+CHK_CMS_TEXT="${APP_NAME} Management &amp; Telemetry Endpoint"
+CHK_WORKERS_TEXT="Launch Background Maintenance Workers"
+CHK_DEMO_TEXT="Initialize Default Sample Database &amp;&amp; Schema"
+CHK_MFES_TEXT="Register Environment Paths &amp;&amp; CLI Wrappers"
+RT_DESC="Configure ${APP_NAME} execution runtime and toolchain providers."
+GRP_RT1_TEXT="${APP_NAME} Primary Execution Runtime"
+RAD_RT1_EX="Reuse existing system runtime (Detected)"
+RAD_RT1_ISO="Install isolated private runtime via LibScript"
+GRP_RT2_TEXT="Auxiliary Toolchain &amp; Build Dependencies"
+RAD_RT2_EX="Reuse existing system toolchain (Detected)"
+RAD_RT2_ISO="Install isolated private toolchain via LibScript"
+LBL_PORT1="Primary Service Port:"
+LBL_PORT2="Management Port:"
+DEFAULT_PORT1="8000"
+DEFAULT_PORT2="8001"
+DEFAULT_ADMIN_EMAIL="admin@${APP_IDENTIFIER}.local"
+
+if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
+  _w_exit=$(jq -r '.wizard_copy.exit_description // empty' "$PACKAGING_JSON")
+  _w_non_opt=$(jq -r '.wizard_copy.non_optional_summary // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g' | awk '{printf "%s%s", (NR>1?"&#13;&#10;":""), $0}')
+  _w_rt_desc=$(jq -r '.wizard_copy.runtime_selection_description // empty' "$PACKAGING_JSON")
+  _w_p1_lbl=$(jq -r '.wizard_copy.port_1_label // empty' "$PACKAGING_JSON")
+  _w_p1_def=$(jq -r '.wizard_copy.port_1_default // empty' "$PACKAGING_JSON")
+  _w_p2_lbl=$(jq -r '.wizard_copy.port_2_label // empty' "$PACKAGING_JSON")
+  _w_p2_def=$(jq -r '.wizard_copy.port_2_default // empty' "$PACKAGING_JSON")
+  _w_email=$(jq -r '.wizard_copy.default_admin_email // empty' "$PACKAGING_JSON")
+
+  _sc1=$(jq -r '.shortcuts[0].title // empty' "$PACKAGING_JSON")
+  _sc2=$(jq -r '.shortcuts[1].title // empty' "$PACKAGING_JSON")
+  _bl1=$(jq -r '.browser_launch.targets[0].title // empty' "$PACKAGING_JSON")
+  _bl2=$(jq -r '.browser_launch.targets[1].title // empty' "$PACKAGING_JSON")
+
+  _f0=$(jq -r '.features[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _f1=$(jq -r '.features[1].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _f2=$(jq -r '.features[2].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _f3=$(jq -r '.features[3].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _f4=$(jq -r '.features[4].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+
+  _rt1_title=$(jq -r '.runtime_searches[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _rt1_name=$(jq -r '.runtime_searches[0].name // empty' "$PACKAGING_JSON")
+  _rt2_title=$(jq -r '.runtime_searches[1].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _rt2_name=$(jq -r '.runtime_searches[1].name // empty' "$PACKAGING_JSON")
+
+  [ -n "$_w_exit" ] && EXIT_DESC="$_w_exit"
+  [ -n "$_w_non_opt" ] && NON_OPT_LIST="$_w_non_opt"
+  [ -n "$_w_rt_desc" ] && RT_DESC="$_w_rt_desc"
+  [ -n "$_w_p1_lbl" ] && LBL_PORT1="$_w_p1_lbl"
+  [ -n "$_w_p1_def" ] && DEFAULT_PORT1="$_w_p1_def"
+  [ -n "$_w_p2_lbl" ] && LBL_PORT2="$_w_p2_lbl"
+  [ -n "$_w_p2_def" ] && DEFAULT_PORT2="$_w_p2_def"
+  [ -n "$_w_email" ] && DEFAULT_ADMIN_EMAIL="$_w_email"
+
+  [ -n "$_sc1" ] && SHORTCUT_1_TEXT="Create ${_sc1} shortcut"
+  [ -n "$_sc2" ] && SHORTCUT_2_TEXT="Create ${_sc2} shortcut"
+  [ -n "$_bl1" ] && LAUNCH_1_TEXT="$_bl1"
+  [ -n "$_bl2" ] && LAUNCH_2_TEXT="$_bl2"
+
+  [ -n "$_f0" ] && CHK_LMS_TEXT="$_f0"
+  [ -n "$_f1" ] && CHK_CMS_TEXT="$_f1"
+  [ -n "$_f2" ] && CHK_WORKERS_TEXT="$_f2"
+  [ -n "$_f3" ] && CHK_DEMO_TEXT="$_f3"
+  [ -n "$_f4" ] && CHK_MFES_TEXT="$_f4"
+
+  if [ -n "$_rt1_title" ]; then
+    GRP_RT1_TEXT="$_rt1_title"
+    RAD_RT1_EX="Reuse existing system ${_rt1_name} (Detected)"
+    RAD_RT1_ISO="Install isolated private ${_rt1_name} runtime via LibScript"
+  fi
+  if [ -n "$_rt2_title" ]; then
+    GRP_RT2_TEXT="$_rt2_title"
+    RAD_RT2_EX="Reuse existing system ${_rt2_name} (Detected)"
+    RAD_RT2_ISO="Install isolated private ${_rt2_name} runtime via LibScript"
+  fi
 fi
 
 TMP_WORK_DIR="${LIBSCRIPT_ROOT_DIR}/tmp/msi_build_$$"
@@ -342,7 +450,7 @@ ensure_branding_assets() {
      { [ -z "$BANNER_TOP_PATH" ] || [ ! -f "$BANNER_TOP_PATH" ]; } || \
      { [ -z "$BANNER_SIDE_PATH" ] || [ ! -f "$BANNER_SIDE_PATH" ]; } || \
      { [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; }; then
-    if [ -f "$synth_script" ] && [ -f "$PACKAGING_JSON" ]; then
+    if [ -f "$synth_script" ]; then
       "$synth_script" "$RESOLVED_TARGET_DIR" --output-dir "$TMP_WORK_DIR" >/dev/null 2>&1 || true
     fi
   fi
@@ -354,37 +462,72 @@ ensure_branding_assets() {
   if [ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ]; then
     cp -f "$ICON_PATH" "${TMP_WORK_DIR}/openedx.ico" 2>/dev/null || true
     ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
+  elif [ -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}.ico" ]; then
+    ICON_PATH="${TMP_WORK_DIR}/${APP_IDENTIFIER}.ico"
   elif [ -f "${TMP_WORK_DIR}/openedx.ico" ]; then
     ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
   elif [ -f "${TMP_WORK_DIR}/app.ico" ]; then
     ICON_PATH="${TMP_WORK_DIR}/app.ico"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" "${TMP_WORK_DIR}/openedx.ico" 2>/dev/null || true
+    ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx.ico" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx.ico" "${TMP_WORK_DIR}/openedx.ico" 2>/dev/null || true
+    ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
   fi
 
   if [ -n "$BANNER_TOP_PATH" ] && [ -f "$BANNER_TOP_PATH" ]; then
     cp -f "$BANNER_TOP_PATH" "${TMP_WORK_DIR}/openedx_banner_top.bmp" 2>/dev/null || true
     BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
+  elif [ -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}_banner_top.bmp" ]; then
+    BANNER_TOP_PATH="${TMP_WORK_DIR}/${APP_IDENTIFIER}_banner_top.bmp"
   elif [ -f "${TMP_WORK_DIR}/openedx_banner_top.bmp" ]; then
     BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
   elif [ -f "${TMP_WORK_DIR}/banner_top.bmp" ]; then
     BANNER_TOP_PATH="${TMP_WORK_DIR}/banner_top.bmp"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" "${TMP_WORK_DIR}/openedx_banner_top.bmp" 2>/dev/null || true
+    BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_top.bmp" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_top.bmp" "${TMP_WORK_DIR}/openedx_banner_top.bmp" 2>/dev/null || true
+    BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
   fi
 
   if [ -n "$BANNER_SIDE_PATH" ] && [ -f "$BANNER_SIDE_PATH" ]; then
     cp -f "$BANNER_SIDE_PATH" "${TMP_WORK_DIR}/openedx_banner_side.bmp" 2>/dev/null || true
     BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
+  elif [ -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}_banner_side.bmp" ]; then
+    BANNER_SIDE_PATH="${TMP_WORK_DIR}/${APP_IDENTIFIER}_banner_side.bmp"
   elif [ -f "${TMP_WORK_DIR}/openedx_banner_side.bmp" ]; then
     BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
   elif [ -f "${TMP_WORK_DIR}/banner_side.bmp" ]; then
     BANNER_SIDE_PATH="${TMP_WORK_DIR}/banner_side.bmp"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" "${TMP_WORK_DIR}/openedx_banner_side.bmp" 2>/dev/null || true
+    BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_side.bmp" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_banner_side.bmp" "${TMP_WORK_DIR}/openedx_banner_side.bmp" 2>/dev/null || true
+    BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
   fi
 
   if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
     cp -f "$LICENSE_PATH" "${TMP_WORK_DIR}/openedx_eula.rtf" 2>/dev/null || true
     LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
+  elif [ -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}_eula.rtf" ]; then
+    LICENSE_PATH="${TMP_WORK_DIR}/${APP_IDENTIFIER}_eula.rtf"
   elif [ -f "${TMP_WORK_DIR}/openedx_eula.rtf" ]; then
     LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
   elif [ -f "${TMP_WORK_DIR}/license.rtf" ]; then
     LICENSE_PATH="${TMP_WORK_DIR}/license.rtf"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" "${TMP_WORK_DIR}/openedx_eula.rtf" 2>/dev/null || true
+    LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_eula.rtf" ]; then
+    cp -f "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/openedx_eula.rtf" "${TMP_WORK_DIR}/openedx_eula.rtf" 2>/dev/null || true
+    LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
+  else
+    printf '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\\fs20 %s End-User License Agreement\\par}\n' "$APP_NAME" > "${TMP_WORK_DIR}/openedx_eula.rtf"
+    LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
   fi
 }
 
@@ -577,10 +720,10 @@ EOF_UPGRADE
 
     <!-- Open edX Stack Properties Synthesized from vars.schema.json -->
     <Property Id="PROP_LMS_HOST" Value="localhost" Secure="yes" />
-    <Property Id="PROP_LMS_PORT" Value="8000" Secure="yes" />
+    <Property Id="PROP_LMS_PORT" Value="${DEFAULT_PORT1}" Secure="yes" />
     <Property Id="PROP_CMS_HOST" Value="localhost" Secure="yes" />
-    <Property Id="PROP_CMS_PORT" Value="8001" Secure="yes" />
-    <Property Id="PROP_OPENEDX_ADMIN_EMAIL" Value="admin@openedx.local" Secure="yes" />
+    <Property Id="PROP_CMS_PORT" Value="${DEFAULT_PORT2}" Secure="yes" />
+    <Property Id="PROP_OPENEDX_ADMIN_EMAIL" Value="${DEFAULT_ADMIN_EMAIL}" Secure="yes" />
     <Property Id="PROP_OPENEDX_ADMIN_USERNAME" Value="admin" Secure="yes" />
     <Property Id="PROP_OPENEDX_ADMIN_PASSWORD" Value="admin" Hidden="yes" Secure="yes" />
     <Property Id="PROP_OPENEDX_SECRET_KEY" Value="insecure-secret-key-replace-in-production" Hidden="yes" Secure="yes" />
@@ -733,15 +876,15 @@ ${MULTI_LICENSE_XML}
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Component Selection &amp; Architecture" />
         <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Review required runtimes and configure optional services." />
         <Control Id="Lbl_NonOptHeader" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Non-Optional Components (always installed):" />
-        <Control Id="Lbl_NonOptList" Type="Text" X="28" Y="63" Width="320" Height="50" NoPrefix="yes" Text="- Python (Python 3.11+ runtime &amp; virtual environment)&#13;&#10;- Node.js (Node.js &amp; npm asset pipeline)&#13;&#10;- Meilisearch (Course search and catalog discovery engine)&#13;&#10;- MySQL (Relational database) &amp; Redis (Cache &amp; Celery broker)&#13;&#10;- MongoDB (Course document datastore)" />
+        <Control Id="Lbl_NonOptList" Type="Text" X="28" Y="63" Width="320" Height="50" NoPrefix="yes" Text="${NON_OPT_LIST}" />
         <Control Id="Lbl_OptHeader" Type="Text" X="20" Y="114" Width="330" Height="14" NoPrefix="yes" Text="Optional / Configurable Services:" />
-        <Control Id="Chk_LMS" Type="CheckBox" X="28" Y="128" Width="320" Height="14" Property="INSTALL_LMS" CheckBoxValue="1" Text="Open edX LMS Core Service (Port 8000)" />
-        <Control Id="Chk_CMS" Type="CheckBox" X="28" Y="142" Width="320" Height="14" Property="INSTALL_CMS" CheckBoxValue="1" Text="Open edX Studio / CMS Course Authoring (Port 8001)" />
+        <Control Id="Chk_LMS" Type="CheckBox" X="28" Y="128" Width="320" Height="14" Property="INSTALL_LMS" CheckBoxValue="1" Text="${CHK_LMS_TEXT}" />
+        <Control Id="Chk_CMS" Type="CheckBox" X="28" Y="142" Width="320" Height="14" Property="INSTALL_CMS" CheckBoxValue="1" Text="${CHK_CMS_TEXT}" />
         <Control Id="Chk_MySQL" Type="CheckBox" X="28" Y="156" Width="320" Height="14" Property="INSTALL_MYSQL" CheckBoxValue="1" Text="Install Local MySQL Service (uncheck if using DBaaS)" />
         <Control Id="Chk_Redis" Type="CheckBox" X="28" Y="170" Width="320" Height="14" Property="INSTALL_REDIS" CheckBoxValue="1" Text="Install Local Redis Service (uncheck if using Cloud Redis)" />
-        <Control Id="Chk_Workers" Type="CheckBox" X="28" Y="184" Width="320" Height="14" Property="INSTALL_WORKERS" CheckBoxValue="1" Text="Launch Celery Background Workers &amp;&amp; Scheduler" />
-        <Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="Import edX Demo Course &amp;&amp; Content Libraries" />
-        <Control Id="Chk_MFEs" Type="CheckBox" X="28" Y="212" Width="320" Height="14" Property="INSTALL_MFES" CheckBoxValue="1" Text="Build and Deploy Micro-Frontends (Learning, Authn, Account)" />
+        <Control Id="Chk_Workers" Type="CheckBox" X="28" Y="184" Width="320" Height="14" Property="INSTALL_WORKERS" CheckBoxValue="1" Text="${CHK_WORKERS_TEXT}" />
+        <Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="${CHK_DEMO_TEXT}" />
+        <Control Id="Chk_MFEs" Type="CheckBox" X="28" Y="212" Width="320" Height="14" Property="INSTALL_MFES" CheckBoxValue="1" Text="${CHK_MFES_TEXT}" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="NewDialog" Value="Dlg_SetupType">1</Publish>
         </Control>
@@ -808,21 +951,21 @@ ${MULTI_LICENSE_XML}
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
 
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Runtime Environments" />
-        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Configure Python and Node.js execution runtime providers." />
+        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="${RT_DESC}" />
 
-        <Control Id="Grp_Python" Type="GroupBox" X="20" Y="50" Width="330" Height="70" Text="Python 3.11+ Execution Runtime" />
+        <Control Id="Grp_Python" Type="GroupBox" X="20" Y="50" Width="330" Height="70" Text="${GRP_RT1_TEXT}" />
         <Control Id="Rad_PythonExisting" Type="RadioButtonGroup" X="28" Y="65" Width="310" Height="45" Property="USE_EXISTING_PYTHON">
           <RadioButtonGroup Property="USE_EXISTING_PYTHON">
-            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Python (Detected)" />
-            <RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="Install isolated private Python runtime via LibScript" />
+            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="${RAD_RT1_EX}" />
+            <RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="${RAD_RT1_ISO}" />
           </RadioButtonGroup>
         </Control>
 
-        <Control Id="Grp_Node" Type="GroupBox" X="20" Y="125" Width="330" Height="70" Text="Node.js 18/20+ Asset Pipeline Runtime" />
+        <Control Id="Grp_Node" Type="GroupBox" X="20" Y="125" Width="330" Height="70" Text="${GRP_RT2_TEXT}" />
         <Control Id="Rad_NodeExisting" Type="RadioButtonGroup" X="28" Y="140" Width="310" Height="45" Property="USE_EXISTING_NODE">
           <RadioButtonGroup Property="USE_EXISTING_NODE">
-            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Node.js (Detected)" />
-            <RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="Install isolated private Node.js runtime via LibScript" />
+            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="${RAD_RT2_EX}" />
+            <RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="${RAD_RT2_ISO}" />
           </RadioButtonGroup>
         </Control>
 
@@ -875,9 +1018,9 @@ ${MULTI_LICENSE_XML}
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Network &amp; Credentials" />
         <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Set service ports and administrator credentials." />
-        <Control Id="Lbl_LmsPort" Type="Text" X="20" Y="50" Width="150" Height="15" Text="LMS Web Port:" />
+        <Control Id="Lbl_LmsPort" Type="Text" X="20" Y="50" Width="150" Height="15" Text="${LBL_PORT1}" />
         <Control Id="Txt_LmsPort" Type="Edit" X="20" Y="65" Width="140" Height="18" Property="PROP_LMS_PORT" />
-        <Control Id="Lbl_CmsPort" Type="Text" X="180" Y="50" Width="150" Height="15" Text="Studio Web Port:" />
+        <Control Id="Lbl_CmsPort" Type="Text" X="180" Y="50" Width="150" Height="15" Text="${LBL_PORT2}" />
         <Control Id="Txt_CmsPort" Type="Edit" X="180" Y="65" Width="140" Height="18" Property="PROP_CMS_PORT" />
 
         <Control Id="Lbl_AdminUser" Type="Text" X="20" Y="90" Width="150" Height="15" Text="Superuser Username:" />
@@ -998,11 +1141,11 @@ ${MULTI_LICENSE_XML}
         <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Bigger}Completed [ProductName] Setup" />
-        <Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." />
-        <Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="Create Open edX LMS shortcut (LMS logo)" />
-        <Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="Create Open edX Studio shortcut (CMS logo)" />
-        <Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="155" Width="230" Height="15" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="Launch Open edX LMS in Web Browser" />
-        <Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="175" Width="230" Height="15" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="Launch Open edX Studio in Web Browser" />
+        <Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="${EXIT_DESC}" />
+        <Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="${SHORTCUT_1_TEXT}" />
+        <Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="${SHORTCUT_2_TEXT}" />
+        <Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="155" Width="230" Height="15" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="${LAUNCH_1_TEXT}" />
+        <Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="175" Width="230" Height="15" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="${LAUNCH_2_TEXT}" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="Back" />
         <Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Finish">
           <Publish Event="DoAction" Value="CA_LaunchBrowser"><![CDATA[LAUNCH_BROWSER="1" AND NOT Installed]]></Publish>
@@ -1156,7 +1299,7 @@ compile_msi() {
 
     if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
       if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
-        # "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>"${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true1 || true
+        "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
           . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
         fi

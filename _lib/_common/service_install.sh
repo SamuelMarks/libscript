@@ -60,8 +60,7 @@ libscript_install_service() {
       envsubst < "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/systemd/simple.service" > "$_tmp_file"
     else
       # basic fallback
-      cat "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/systemd/simple.service" | \
-        sed "s|\${DESCRIPTION}|${DESCRIPTION}|g" | \
+      sed "s|\${DESCRIPTION}|${DESCRIPTION}|g" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/systemd/simple.service" | \
         sed "s|\${EXEC_START}|${EXEC_START}|g" | \
         sed "s|\${WORKING_DIR}|${WORKING_DIR}|g" | \
         sed "s|\${ENV}|${ENV}|g" > "$_tmp_file"

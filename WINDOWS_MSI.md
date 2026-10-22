@@ -347,3 +347,38 @@ Multiple applications can safely share a single MySQL service on Windows without
    - The MySQL Windows service and WordPress database remain running and intact.
    - The MySQL Windows service is only removed when the last consuming application is uninstalled
      (ref count reaches 0).
+
+---
+
+## Cross-Platform `SamuelMarks/msi-rs` Building, Multi-OS GUI Testing & Window-Cropped Screenshots
+
+By default, `packaging/build_msi.sh` and `packaging/build_msi.cmd` compile and link `.msi` packages
+using **[`SamuelMarks/msi-rs`](https://github.com/SamuelMarks/msi-rs)** (`candle`, `light`,
+`msi-cli`, `msi-gui`, `msiinfo`, `msidiff`) across all 5 operating systems (**Windows**, **Linux**,
+**macOS**, **FreeBSD**, and **illumos / OmniOS**).
+
+Optional WiX Toolset support (`--use-wix`) is retained **strictly on Windows** (`vagrant/windows-11`
+or native Windows) for side-by-side differential comparison (`packaging/compare_msirs_wix.sh` /
+`packaging/compare_msirs_wix.cmd`).
+
+### Capturing & Verifying Window-Cropped Wizard Stage Screenshots
+
+```sh
+# Capture 495x392 window-cropped screenshots of every .msi GUI stage (quick-install & custom-install)
+# across Windows, Linux, macOS, FreeBSD, and illumos for Open edX, WordPress, and generalized targets:
+./devtools/capture_msi_vagrant_matrix.sh --target all --os all --variant both --flow both
+
+# Verify all generated PNGs in ../cc0-assets/libscript are valid and cropped to the installer window:
+./devtools/verify_screenshots.sh --target all
+
+# Run the unified cross-platform msi-rs & ../bento Vagrant test matrix:
+./tests/test_msi_vagrant_matrix.sh
+```
+
+### Multi-OS Window-Cropped Screenshot Archive (`../cc0-assets/libscript`)
+
+- **Open edX**: `../cc0-assets/libscript/openedx/screenshots/{windows,linux,macos,freebsd,illumos}/`
+- **WordPress**:
+  `../cc0-assets/libscript/wordpress/screenshots/{windows,linux,macos,freebsd,illumos}/`
+- **Generalized Components (e.g., SQLite)**:
+  `../cc0-assets/libscript/sqlite/screenshots/{windows,linux,macos,freebsd,illumos}/`

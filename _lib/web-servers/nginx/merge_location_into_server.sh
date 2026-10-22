@@ -212,7 +212,7 @@ AWKEOF
     >&2 printf 'Error: Failed to process configuration.\n'
     rm -rf -- "${LOCK_FILE}"
     rm -f -- "${AWK_SCRIPT_TMP}" "${TMP_CONFIG}"
-    [ -n "${NEW_LOCATION_TMP:-}" ] && rm -f -- "${NEW_LOCATION_TMP}" || true
+    if [ -n "${NEW_LOCATION_TMP:-}" ]; then rm -f -- "${NEW_LOCATION_TMP}" || true; fi
     return 1
   fi
 
@@ -222,7 +222,7 @@ AWKEOF
     if ! nginx -t -c "$TMP_NGINX_CONF" -q 2>/dev/null; then 
       >&2 printf "Error: Nginx syntax check failed for the modified configuration.\n" 
       rm -rf -- "${LOCK_FILE}"; rm -f -- "${AWK_SCRIPT_TMP}" "${TMP_CONFIG}" "${TMP_NGINX_CONF}" 
-      [ -n "${NEW_LOCATION_TMP:-}" ] && rm -f -- "${NEW_LOCATION_TMP}" || true 
+      if [ -n "${NEW_LOCATION_TMP:-}" ]; then rm -f -- "${NEW_LOCATION_TMP}" || true; fi
       return 1 
     fi 
     rm -f -- "$TMP_NGINX_CONF" 
@@ -234,5 +234,5 @@ AWKEOF
 
   rm -rf -- "${LOCK_FILE}"
   rm -f -- "${AWK_SCRIPT_TMP}" "${TMP_CONFIG}"
-  [ -n "${NEW_LOCATION_TMP:-}" ] && rm -f -- "${NEW_LOCATION_TMP}" || true
+  if [ -n "${NEW_LOCATION_TMP:-}" ]; then rm -f -- "${NEW_LOCATION_TMP}" || true; fi
 }

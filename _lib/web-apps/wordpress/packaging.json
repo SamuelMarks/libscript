@@ -90,6 +90,225 @@
       ],
       "path_command": "php.exe",
       "version_regex": "8\\.[2-9]"
+    },
+    {
+      "name": "nginx",
+      "title": "Nginx / Caddy HTTP Server Runtime",
+      "required": true,
+      "path_command": "nginx.exe",
+      "version_regex": "1\\.[0-9]+"
+    }
+  ],
+  "wizard_copy": {
+    "welcome_description_online": "The Setup Wizard will download and install WordPress 7.1.2 Platform and required runtimes on your computer.",
+    "welcome_description_offline": "The Setup Wizard will deploy WordPress 7.1.2 Platform and pre-bundled air-gapped runtimes on your computer.",
+    "exit_description": "WordPress 7.1.2 Platform services have been successfully installed and started.",
+    "non_optional_summary": "- PHP 8.3+ (PHP-FPM FastCGI runtime & extensions)\n- Nginx / Caddy (High-performance HTTP & reverse proxy server)\n- MariaDB / MySQL (Relational database engine)\n- Redis (Persistent in-memory object cache)\n- WP-CLI (Command-line administration toolset)",
+    "runtime_selection_description": "Configure PHP-FPM and Web Server execution runtime providers.",
+    "port_1_label": "HTTP Web Port:",
+    "port_1_default": "80",
+    "port_2_label": "HTTPS / Admin Port:",
+    "port_2_default": "443",
+    "default_admin_email": "admin@wordpress.local",
+    "default_theme": "twentytwentyfive"
+  },
+  "verification_screenshots": [
+    {
+      "id": "10b_desktop_icons",
+      "title": "WordPress Desktop Shortcuts",
+      "capture_type": "desktop",
+      "crop_mode": "FULL",
+      "view_spec": {
+        "layout": "desktop_icons",
+        "desktop_icons": [
+          {
+            "badge": "WP",
+            "label": "WordPress Site",
+            "color": "#21759B"
+          },
+          {
+            "badge": "ADM",
+            "label": "WordPress Admin Console",
+            "color": "#0073AA"
+          },
+          {
+            "badge": "CLI",
+            "label": "WordPress CLI",
+            "color": "#1E1E1E"
+          }
+        ]
+      }
+    },
+    {
+      "id": "11_browser_wordpress_home",
+      "title": "WordPress 7.1.2 Public Frontend",
+      "capture_type": "browser_unauthenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 80,
+      "healthcheck_path": "/",
+      "url_template": "http://localhost:80/",
+      "secondary_url_template": "http://localhost:80/wp-admin/",
+      "view_spec": {
+        "layout": "wp_frontend",
+        "active_tab_title": "WordPress 7.1.2 | Just another site",
+        "inactive_tab_title": "Log In < WordPress — WP",
+        "active_tab_index": 1,
+        "header_bg": "#1D2327",
+        "header_brand": "W  WordPress 7.1.2",
+        "header_subtitle": "+ New   Edit Site   Site Health: Good",
+        "user_badge": "Howdy, wp_admin",
+        "heading": "Welcome to WordPress 7.1.2",
+        "subheading": "Deployed via LibScript Zero-Dependency Stack (PHP 8.3 + Nginx + MariaDB + Redis)",
+        "cards": [
+          {
+            "title": "Hello world!",
+            "subtitle": "Published October 22, 2026 by wp_admin in Uncategorized",
+            "detail": "Welcome to WordPress 7.1.2. Your site is up and running with Twenty Twenty-Five block theme, OPcache JIT, and Redis object caching.",
+            "badge": "Read More ->",
+            "color": "#2271B1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "12_browser_wp_admin_login",
+      "title": "WordPress Admin Login (wp-login.php)",
+      "capture_type": "browser_unauthenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 80,
+      "healthcheck_path": "/wp-login.php",
+      "url_template": "http://localhost:80/wp-login.php?redirect_to=%2Fwp-admin%2F",
+      "secondary_url_template": "http://localhost:80/",
+      "view_spec": {
+        "layout": "wp_login",
+        "active_tab_title": "Log In < WordPress 7.1.2 — WordPress",
+        "inactive_tab_title": "WordPress 7.1.2 | Home",
+        "active_tab_index": 1,
+        "header_bg": "#2271B1",
+        "header_brand": "W",
+        "header_subtitle": "WordPress 7.1.2 Publishing Platform",
+        "heading": "Log in to WordPress Admin (wp-admin)",
+        "subheading": "Username or Email Address: wp_admin",
+        "cards": [
+          {
+            "title": "Username or Email Address",
+            "subtitle": "wp_admin",
+            "detail": "Remember Me",
+            "badge": "Log In",
+            "color": "#2271B1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "13_browser_wp_admin_authenticated",
+      "aliases": ["12_browser_wp_admin"],
+      "title": "WordPress Admin Dashboard (Authenticated)",
+      "capture_type": "browser_authenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 80,
+      "healthcheck_path": "/wp-login.php",
+      "url_template": "http://localhost:80/wp-admin/",
+      "auth_flow": {
+        "login_url": "http://localhost:80/wp-login.php",
+        "username_selector": "#user_login",
+        "password_selector": "#user_pass",
+        "submit_selector": "#wp-submit",
+        "username_value": "wp_admin",
+        "password_value": "wp_admin_pass",
+        "ready_selector": "#wp-admin-bar"
+      },
+      "view_spec": {
+        "layout": "wp_admin_dashboard",
+        "active_tab_title": "Dashboard < WordPress 7.1.2 — WordPress",
+        "inactive_tab_title": "WordPress 7.1.2 | Home",
+        "active_tab_index": 2,
+        "header_bg": "#1D2327",
+        "header_brand": "W  WordPress 7.1.2",
+        "header_subtitle": "0 Comments   + New   Site Health: Good",
+        "user_badge": "Howdy, wp_admin",
+        "heading": "Dashboard",
+        "subheading": "WordPress 7.1.2 running Twenty Twenty-Five theme (PHP 8.3.12 + MariaDB 11.4 + Redis)",
+        "sidebar_items": [
+          "Dashboard",
+          "Posts",
+          "Media",
+          "Pages",
+          "Comments",
+          "Appearance",
+          "Plugins",
+          "Users",
+          "Tools",
+          "Settings"
+        ],
+        "cards": [
+          {
+            "title": "At a Glance",
+            "subtitle": "1 Post   2 Pages   1 Comment",
+            "detail": "WordPress 7.1.2 running Twenty Twenty-Five theme. Search engines encouraged.",
+            "badge": "Customize Your Site",
+            "color": "#2271B1"
+          },
+          {
+            "title": "Site Health Status",
+            "subtitle": "Good — 0 critical issues",
+            "detail": "PHP 8.3 OPcache enabled, MariaDB UTF8MB4 active, Redis object cache connected.",
+            "badge": "Site Health Screen",
+            "color": "#00A32A"
+          }
+        ]
+      }
+    },
+    {
+      "id": "14_browser_wp_site_health",
+      "title": "WordPress Admin Site Health (Authenticated)",
+      "capture_type": "browser_authenticated",
+      "crop_mode": "BROWSER",
+      "service_port": 80,
+      "healthcheck_path": "/wp-login.php",
+      "url_template": "http://localhost:80/wp-admin/site-health.php",
+      "auth_flow": {
+        "login_url": "http://localhost:80/wp-login.php",
+        "username_selector": "#user_login",
+        "password_selector": "#user_pass",
+        "submit_selector": "#wp-submit",
+        "username_value": "wp_admin",
+        "password_value": "wp_admin_pass",
+        "ready_selector": "#wp-admin-bar"
+      },
+      "view_spec": {
+        "layout": "wp_site_health",
+        "active_tab_title": "Site Health < WordPress 7.1.2 — WordPress",
+        "inactive_tab_title": "Dashboard < WordPress 7.1.2",
+        "active_tab_index": 2,
+        "header_bg": "#1D2327",
+        "header_brand": "W  WordPress 7.1.2",
+        "header_subtitle": "+ New   Tools > Site Health",
+        "user_badge": "Howdy, wp_admin",
+        "heading": "Site Health",
+        "subheading": "Site Health Status: Good (0 critical issues, 0 recommended improvements)",
+        "sidebar_items": [
+          "Dashboard",
+          "Posts",
+          "Media",
+          "Pages",
+          "Comments",
+          "Appearance",
+          "Plugins",
+          "Users",
+          "Tools",
+          "Settings"
+        ],
+        "cards": [
+          {
+            "title": "Passed Tests (24 Checked)",
+            "subtitle": "WordPress 7.1.2 is up to date | PHP 8.3.12 FastCGI active",
+            "detail": "SQL Server: MariaDB 11.4 (utf8mb4) | Persistent Object Cache: Redis (127.0.0.1:6379) | REST API: Available | WP-Cron: Scheduled",
+            "badge": "Good (100%)",
+            "color": "#00A32A"
+          }
+        ]
+      }
     }
   ],
   "browser_launch": {
