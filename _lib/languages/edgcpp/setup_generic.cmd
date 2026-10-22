@@ -77,12 +77,12 @@ if not "%EDGCPP_DOWNLOAD_URL%"=="" (
     set "EDGCPP_ASSET_SHA256="
 ) else (
     set "EDGCPP_ASSET_URL=https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v%EXACT_VERSION%/%EDGCPP_ASSET_NAME%"
-    set "EDGCPP_ASSET_SHA256=e510d4524ad91ad9176aba991c927f9f7b84906ab059a0a4bb26f9bd59ea6e04"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=0e1ff77549d0b5bd27f7a85830003726bd35b021638428f16b7da9833be61c3e"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=c0c5677241d486baa4175a59a2e600a10aa21c56ff05069e47d842b06823c845"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=35d4bb3e048a0d3b45f78306801a10bcc6376ddd89792b46b2c61e834676790c"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=752f8654d33e7b7f7f092550c923f1668a2f3aef1a8cb7ba75127658e17332aa"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=031336accc2d6bcfe3d322b22a29dedcdf150cf479d113c2dd47b4c103d3c9e8"
+    set "EDGCPP_ASSET_SHA256=bc824476fd072dcd76409d8f0970c21ddb532976d378d1351adbf4bfea97d933"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=c8652f6631e2eda41611b84d7a930ee5f4898feb87b4b46e7009c081937e8a66"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=b883cb639dd306d676ca390e8effe8b7b284f3d91f8ac31cdb754c81a5fb80c8"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=c4773d7a1bbfba0c75d0ef09b6a250c96f706a0e7d5b21ace78ffe9b271ae7ef"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c"
 )
 
 if /i "%ACTION%"=="ls" goto :action_ls

@@ -153,16 +153,18 @@ if [ -x "devtools/audit/doc_coverage.sh" ]; then
     ./devtools/audit/doc_coverage.sh --update-readme
 fi
 
-if command -v dos2unix >/dev/null 2>&1; then
-    dos2unix -q README.md 2>/dev/null || true
-fi
-if command -v prettier >/dev/null 2>&1; then
-    prettier --write README.md >/dev/null 2>&1 || true
-elif [ -x "node_modules/.bin/prettier" ]; then
-    node_modules/.bin/prettier --write README.md >/dev/null 2>&1 || true
-elif command -v npx >/dev/null 2>&1; then
-    npx --yes prettier --write README.md >/dev/null 2>&1 || true
-fi
+if ! git diff --quiet -- README.md 2>/dev/null; then
+    if command -v dos2unix >/dev/null 2>&1; then
+        dos2unix -q README.md 2>/dev/null || true
+    fi
+    if command -v prettier >/dev/null 2>&1; then
+        prettier --write README.md >/dev/null 2>&1 || true
+    elif [ -x "node_modules/.bin/prettier" ]; then
+        node_modules/.bin/prettier --write README.md >/dev/null 2>&1 || true
+    elif command -v npx >/dev/null 2>&1; then
+        npx --yes prettier --write README.md >/dev/null 2>&1 || true
+    fi
 
-git add README.md
+    git add README.md
+fi
 printf '%s\n' "Pre-commit hook completed successfully."

@@ -547,45 +547,106 @@ HDR_T4
   fi
 
   if [ -f "${_readme_file}" ]; then
-    _tmp_readme=$(mktemp "${TMPDIR:-/tmp}/readme_update.XXXXXX")
-    if grep -q "## Supported Components" "${_readme_file}"; then
-      awk -v table_file="${_tmp_table}" '
-        /^## Supported Components/ {
-          in_table = 1;
-          while ((getline line < table_file) > 0) print line;
-          print "";
-          next;
-        }
-        /^## / && in_table {
-          in_table = 0;
-        }
-        !in_table {
-          print;
-        }
-      ' "${_readme_file}" >"${_tmp_readme}" && mv "${_tmp_readme}" "${_readme_file}"
-    elif grep -q "## License" "${_readme_file}"; then
-      awk -v table_file="${_tmp_table}" '
-        /^## License/ {
-          while ((getline line < table_file) > 0) print line;
-          print "";
-        }
-        { print; }
-      ' "${_readme_file}" >"${_tmp_readme}" && mv "${_tmp_readme}" "${_readme_file}"
-    else
+    _new_norm=$(awk '
       {
-        cat "${_readme_file}"
-        printf '
-'
-        cat "${_tmp_table}"
-        printf '
-'
-      } >"${_tmp_readme}"
-      mv "${_tmp_readme}" "${_readme_file}"
-    fi
-    if command -v prettier >/dev/null 2>&1; then
-      prettier --write "${_readme_file}" >/dev/null 2>&1 || true
-    elif [ -x "${_repo_root}/node_modules/.bin/prettier" ]; then
-      "${_repo_root}/node_modules/.bin/prettier" --write "${_readme_file}" >/dev/null 2>&1 || true
+        gsub(/\r/, "")
+        line = $0
+        sub(/^[ \t]+/, "", line)
+        sub(/[ \t]+$/, "", line)
+        if (line == "") next
+        if (line ~ /^\|[ \t\-:|]+\|$/) {
+          print "|---|---|---|---|---|---|---|---|---|"
+          next
+        }
+        if (substr(line, 1, 1) == "|" && substr(line, length(line), 1) == "|") {
+          inner = substr(line, 2, length(line) - 2)
+          n = split(inner, cells, "|")
+          out = "|"
+          for (i = 1; i <= n; i++) {
+            c = cells[i]
+            sub(/^[ \t]+/, "", c)
+            sub(/[ \t]+$/, "", c)
+            out = out " " c " |"
+          }
+          print out
+          next
+        }
+        if (substr(line, 1, 1) == "#") {
+          print line
+        }
+      }' "${_tmp_table}")
+    _old_norm=$(awk '
+      /^## Supported Components/ { in_sec = 1 }
+      /^## / && !/^## Supported Components/ && in_sec { in_sec = 0 }
+      in_sec {
+        gsub(/\r/, "")
+        line = $0
+        sub(/^[ \t]+/, "", line)
+        sub(/[ \t]+$/, "", line)
+        if (line == "") next
+        if (line ~ /^\|[ \t\-:|]+\|$/) {
+          print "|---|---|---|---|---|---|---|---|---|"
+          next
+        }
+        if (substr(line, 1, 1) == "|" && substr(line, length(line), 1) == "|") {
+          inner = substr(line, 2, length(line) - 2)
+          n = split(inner, cells, "|")
+          out = "|"
+          for (i = 1; i <= n; i++) {
+            c = cells[i]
+            sub(/^[ \t]+/, "", c)
+            sub(/[ \t]+$/, "", c)
+            out = out " " c " |"
+          }
+          print out
+          next
+        }
+        if (substr(line, 1, 1) == "#") {
+          print line
+        }
+      }' "${_readme_file}")
+
+    if [ "${_new_norm}" != "${_old_norm}" ]; then
+      _tmp_readme=$(mktemp "${TMPDIR:-/tmp}/readme_update.XXXXXX")
+      if grep -q "## Supported Components" "${_readme_file}"; then
+        awk -v table_file="${_tmp_table}" '
+          /^## Supported Components/ {
+            in_table = 1;
+            while ((getline line < table_file) > 0) print line;
+            print "";
+            next;
+          }
+          /^## / && in_table {
+            in_table = 0;
+          }
+          !in_table {
+            print;
+          }
+        ' "${_readme_file}" >"${_tmp_readme}" && mv "${_tmp_readme}" "${_readme_file}"
+      elif grep -q "## License" "${_readme_file}"; then
+        awk -v table_file="${_tmp_table}" '
+          /^## License/ {
+            while ((getline line < table_file) > 0) print line;
+            print "";
+          }
+          { print; }
+        ' "${_readme_file}" >"${_tmp_readme}" && mv "${_tmp_readme}" "${_readme_file}"
+      else
+        {
+          cat "${_readme_file}"
+          printf '\n'
+          cat "${_tmp_table}"
+          printf '\n'
+        } >"${_tmp_readme}"
+        mv "${_tmp_readme}" "${_readme_file}"
+      fi
+      if command -v prettier >/dev/null 2>&1; then
+        prettier --write "${_readme_file}" >/dev/null 2>&1 || true
+      elif [ -x "${_repo_root}/node_modules/.bin/prettier" ]; then
+        "${_repo_root}/node_modules/.bin/prettier" --write "${_readme_file}" >/dev/null 2>&1 || true
+      elif command -v npx >/dev/null 2>&1; then
+        npx --yes prettier --write "${_readme_file}" >/dev/null 2>&1 || true
+      fi
     fi
   fi
   rm -f "${_tmp_table}"

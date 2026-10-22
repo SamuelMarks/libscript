@@ -20,17 +20,23 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
     exit 0
 }
 
-$rootDir = if ($env:ROOT_DIR) { Resolve-Path $env:ROOT_DIR } else { Resolve-Path (Join-Path $PSScriptRoot '..\..') }
+$rootDir = if ($env:ROOT_DIR) { (Resolve-Path $env:ROOT_DIR).Path } else { (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-$libComps = Get-ChildItem -Path (Join-Path $rootDir '_lib') -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne '_lib' }
-$stackComps = Get-ChildItem -Path (Join-Path $rootDir 'stacks') -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'stacks' }
+$libDir = Join-Path $rootDir '_lib'
+$stacksDir = Join-Path $rootDir 'stacks'
+$libComps = if (Test-Path -LiteralPath $libDir) {
+    Get-ChildItem -Path $libDir -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne '_lib' -and $_.Name -ne '_common' }
+} else { @() }
+$stackComps = if (Test-Path -LiteralPath $stacksDir) {
+    Get-ChildItem -Path $stacksDir -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'stacks' }
+} else { @() }
 $components = @($libComps) + @($stackComps)
 
 foreach ($comp in $components) {
     $readmePath = Join-Path $comp.FullName 'README.md'
-    if (-Not (Test-Path $readmePath)) { continue }
+    if (-Not (Test-Path -LiteralPath $readmePath)) { continue }
 
-    $content = Get-Content $readmePath -Raw
+    $content = [System.IO.File]::ReadAllText($readmePath, [System.Text.Encoding]::UTF8)
     $modified = $false
 
     if ($content -notmatch '<!-- BEGIN_VARS -->') {

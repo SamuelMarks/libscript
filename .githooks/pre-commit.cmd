@@ -136,11 +136,6 @@ if exist "tests\update_results.cmd" (
         echo [ERROR] update_results.cmd failed.
         exit /b 1
     )
-    where npx >nul 2>&1
-    if not errorlevel 1 (
-        call npx --yes prettier --write README.md >nul 2>&1
-    )
-    git add README.md
 )
 
 if exist "devtools\audit\doc_coverage.cmd" (
@@ -150,6 +145,10 @@ if exist "devtools\audit\doc_coverage.cmd" (
         echo [ERROR] Documentation coverage audit failed. Please fix missing documentation before committing.
         exit /b 1
     )
+)
+
+git diff --quiet -- README.md >nul 2>&1
+if errorlevel 1 (
     where npx >nul 2>&1
     if not errorlevel 1 (
         call npx --yes prettier --write README.md >nul 2>&1

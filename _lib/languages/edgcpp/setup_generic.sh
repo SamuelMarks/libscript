@@ -107,21 +107,21 @@ resolve_edgcpp_release_asset() {
   EDGCPP_ASSET_SHA256=""
 
   case "${EDGCPP_ASSET_NAME}" in
-    "edgcpp+llvm+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="7875ade21dde8145be4b2b417f188ade7d1372ba77d631cea4b47fb69e48f3fa" ;;
-    "edgcpp+llvm+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="8c500fa97079b2999e8698b35ebfcd7538add7a47ac1d3d95345ff7c2d66c803" ;;
-    "edgcpp+llvm+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="2ee56e1447aae8bfd23f9d8f091755129b1a6b24ef59767b44b29a5066d7a8c2" ;;
-    "edgcpp+llvm+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="e510d4524ad91ad9176aba991c927f9f7b84906ab059a0a4bb26f9bd59ea6e04" ;;
-    "edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="0e1ff77549d0b5bd27f7a85830003726bd35b021638428f16b7da9833be61c3e" ;;
-    "edgcpp+llvm-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="d8a5277ab9bb99c97d787de37f078db790139efa4dba762added5434a3438bb6" ;;
-    "edgcpp+llvm-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="577a8b48b5566facb740ed6aef8d00c496e1066396a5f7ac344a9e956a4f319d" ;;
-    "edgcpp+llvm-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="d01507f41b158d8de152b6b2629b058f53f2ce65560dcf5f33d200aa537d4d32" ;;
-    "edgcpp+llvm-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="c0c5677241d486baa4175a59a2e600a10aa21c56ff05069e47d842b06823c845" ;;
-    "edgcpp+llvm-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="35d4bb3e048a0d3b45f78306801a10bcc6376ddd89792b46b2c61e834676790c" ;;
-    "edgcpp+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="32dbc1270052dd4646e35fc7345308f72ecb47dbfc86eb4403c2f901b660bd3f" ;;
-    "edgcpp+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="308d9388be05645a7a2204b2e8163c923509be7cb3165ee515d1f26d365f8d29" ;;
-    "edgcpp+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="31e29778d253009880475d9e6b5d82d0106cddd7edf1077b8096a6338053b40f" ;;
-    "edgcpp+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="752f8654d33e7b7f7f092550c923f1668a2f3aef1a8cb7ba75127658e17332aa" ;;
-    "edgcpp+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="031336accc2d6bcfe3d322b22a29dedcdf150cf479d113c2dd47b4c103d3c9e8" ;;
+    "edgcpp+llvm+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="a848a68c6e116eed2c06638bf5149aa727f95a359f192bd3ab8f423558aa94bc" ;;
+    "edgcpp+llvm+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="84b0bb06bfbe034e02b47a3d81b2ece99a75aee1336be666ded2885c212e133a" ;;
+    "edgcpp+llvm+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="ba9e214f590310eab92e8a7cc7a93fad90395d92c6df367f009a065e1234cb64" ;;
+    "edgcpp+llvm+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="bc824476fd072dcd76409d8f0970c21ddb532976d378d1351adbf4bfea97d933" ;;
+    "edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="c8652f6631e2eda41611b84d7a930ee5f4898feb87b4b46e7009c081937e8a66" ;;
+    "edgcpp+llvm-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="e56eee2cfdc43820e778a305cd8e6549c9b6b78ec82a4901a114a3ad79146aff" ;;
+    "edgcpp+llvm-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="e9b9dbb385c11a7a66afd94b567c0ad1b7ebdfb0177da172b93e351a69f8b708" ;;
+    "edgcpp+llvm-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="7caf4ff85567ed6c6bf2048881e46a7d9ee2c1a8b42604925331e334dd994809" ;;
+    "edgcpp+llvm-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="b883cb639dd306d676ca390e8effe8b7b284f3d91f8ac31cdb754c81a5fb80c8" ;;
+    "edgcpp+llvm-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="c4773d7a1bbfba0c75d0ef09b6a250c96f706a0e7d5b21ace78ffe9b271ae7ef" ;;
+    "edgcpp+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="e1fce29ebf4fec8d8f1338c94036e305fc0f95bc4b54f84e7a52aeacd8a9198a" ;;
+    "edgcpp+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="2fd3162a3c8cc4dd15728695d7e1b89845b3b916be198a8e9fd5278c2a869ac3" ;;
+    "edgcpp+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="8d5571d014e18e3b1d28e0a5a7cd9b5eb2973a58af0e4920381509250f3f9d52" ;;
+    "edgcpp+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a" ;;
+    "edgcpp+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c" ;;
   esac
   if [ -n "${EDGCPP_DOWNLOAD_URL:-}" ]; then
     EDGCPP_ASSET_SHA256=""

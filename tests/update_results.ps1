@@ -159,6 +159,27 @@ function Test-AnyFilePattern {
     return ($matched.Count -gt 0)
 }
 
+# ## Normalize-SupportedComponentsSection
+# Normalizes headings and table rows in the Supported Components block so Prettier padding and prose wrapping are ignored when checking if semantic content changed.
+function Normalize-SupportedComponentsSection {
+    param([string]$Block)
+    $out = @()
+    foreach ($rawLine in ($Block -split "`r?`n")) {
+        $line = $rawLine.Trim()
+        if ([string]::IsNullOrEmpty($line)) { continue }
+        if ($line -match '^\|[\s\-:|]+\|$') {
+            $out += '|---|---|---|---|---|---|---|---|---|'
+        } elseif ($line.StartsWith('|') -and $line.EndsWith('|')) {
+            $inner = $line.Substring(1, $line.Length - 2)
+            $cells = ($inner -split '\|') | ForEach-Object { $_.Trim() }
+            $out += ('| ' + ($cells -join ' | ') + ' |')
+        } elseif ($line.StartsWith('#')) {
+            $out += $line
+        }
+    }
+    return ($out -join "`n")
+}
+
 # ## Update-SupportedComponents
 # Aggregates component test markers and updates the tiered Supported Components tables in README.md.
 function Update-SupportedComponents {
@@ -396,19 +417,51 @@ function Update-SupportedComponents {
     if (Test-Path -LiteralPath $TargetReadme) {
         $content = [System.IO.File]::ReadAllText($TargetReadme, [System.Text.Encoding]::UTF8)
         $pattern = '(?s)## Supported Components.*?(?=\r?\n## |\Z)'
-        if ($content -match $pattern) {
-            $content = [regex]::Replace($content, $pattern, $tableBlock.TrimEnd("`r", "`n"))
+        $newNorm = Normalize-SupportedComponentsSection -Block $tableBlock
+        $needsReadmeWrite = $true
+
+        $existingMatch = [regex]::Match($content, $pattern)
+        if ($existingMatch.Success) {
+            $existingNorm = Normalize-SupportedComponentsSection -Block $existingMatch.Value
+            if ($existingNorm -eq $newNorm) {
+                $needsReadmeWrite = $false
+            } else {
+                $replacementBlock = $tableBlock.TrimEnd("`r", "`n")
+                $content = ([regex]$pattern).Replace($content, { param($m) $replacementBlock }, 1)
+            }
         } elseif ($content -match '(?m)^## License') {
-            $content = [regex]::Replace($content, '(?m)^## License', "$tableBlock`n## License")
+            $content = ([regex]'(?m)^## License').Replace($content, { param($m) "$tableBlock`n## License" }, 1)
         } else {
             $content = $content.TrimEnd("`r", "`n") + "`n`n" + $tableBlock
         }
 
-        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-        [System.IO.File]::WriteAllText($TargetReadme, $content, $utf8NoBom)
+        if ($needsReadmeWrite) {
+            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+            $lfContent = $content -replace "`r`n", "`n"
+            [System.IO.File]::WriteAllText($TargetReadme, $lfContent, $utf8NoBom)
 
-        if (Get-Command npx -ErrorAction SilentlyContinue) {
-            & npx --yes prettier --write $TargetReadme >$null 2>&1
+            $localPrettier = Join-Path $RootPath "node_modules\.bin\prettier.cmd"
+            $hasPrettierCmd = $null -ne (Get-Command prettier -ErrorAction SilentlyContinue)
+            $hasNpxCmd = $null -ne (Get-Command npx -ErrorAction SilentlyContinue)
+
+            $prevErrPref = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+            try {
+                if ($hasPrettierCmd) {
+                    & prettier --write $TargetReadme >$null 2>&1
+                } elseif (Test-Path -LiteralPath $localPrettier) {
+                    & $localPrettier --write $TargetReadme >$null 2>&1
+                } elseif ($hasNpxCmd) {
+                    & npx --yes prettier --write $TargetReadme >$null 2>&1
+                }
+            } finally {
+                $ErrorActionPreference = $prevErrPref
+            }
+
+            if (Test-Path -LiteralPath $TargetReadme) {
+                $formatted = [System.IO.File]::ReadAllText($TargetReadme, [System.Text.Encoding]::UTF8) -replace "`r`n", "`n"
+                [System.IO.File]::WriteAllText($TargetReadme, $formatted, $utf8NoBom)
+            }
         }
     }
 }
@@ -447,6 +500,7 @@ function Update-TodoPlan {
         $symCheck = [string][char]0x2705
         $todoLines = [System.IO.File]::ReadAllLines($todoFile, [System.Text.Encoding]::UTF8)
         $newLines = @()
+        $todoChanged = $false
         foreach ($line in $todoLines) {
             if ($line.StartsWith("- [ ] `_lib/")) {
                 $item = $line.Substring(6)
@@ -463,6 +517,7 @@ function Update-TodoPlan {
                 }
                 if ($hasRes) {
                     $newLines += "- [x] $item"
+                    $todoChanged = $true
                 } else {
                     $newLines += $line
                 }
@@ -470,8 +525,10 @@ function Update-TodoPlan {
                 $newLines += $line
             }
         }
-        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-        [System.IO.File]::WriteAllLines($todoFile, $newLines, $utf8NoBom)
+        if ($todoChanged) {
+            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+            [System.IO.File]::WriteAllText($todoFile, (($newLines -join "`n") + "`n"), $utf8NoBom)
+        }
     }
 
     $testingFile = Join-Path $RootPath "TESTING_TODO_PLAN.md"
@@ -479,6 +536,7 @@ function Update-TodoPlan {
         $symCheck = [string][char]0x2705
         $testLines = [System.IO.File]::ReadAllLines($testingFile, [System.Text.Encoding]::UTF8)
         $outTestLines = @()
+        $testingChanged = $false
         foreach ($line in $testLines) {
             if ($line -match '^- \[[ x]\] `([^`]+)`.*:.*OmniOS') {
                 $compRef = $Matches[1]
@@ -522,13 +580,16 @@ function Update-TodoPlan {
                 if ($afterColon -and ($afterColon -notmatch '\[ \]')) {
                     $newLine = $newLine -replace '^- \[ \] ', '- [x] '
                 }
+                if ($newLine -ne $line) { $testingChanged = $true }
                 $outTestLines += $newLine
             } else {
                 $outTestLines += $line
             }
         }
-        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-        [System.IO.File]::WriteAllLines($testingFile, $outTestLines, $utf8NoBom)
+        if ($testingChanged) {
+            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+            [System.IO.File]::WriteAllText($testingFile, (($outTestLines -join "`n") + "`n"), $utf8NoBom)
+        }
     }
 }
 
