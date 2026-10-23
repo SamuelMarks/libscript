@@ -3,7 +3,7 @@
 # Validates connectivity and responsiveness across databases, caches, and web services.
 #
 # ## Usage
-# powershell stacks/cms/openedx/health_helper.ps1 <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>
+# powershell _lib/web-apps/openedx/health_helper.ps1 <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>
 
 [CmdletBinding()]
 param(

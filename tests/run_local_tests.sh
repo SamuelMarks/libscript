@@ -100,13 +100,15 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
-    elif [ -d "$REPO_ROOT/stacks/$arg" ]; then
-        for dir in "$REPO_ROOT/stacks/$arg"/*; do
+    elif [ -d "$REPO_ROOT/topologies/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+    elif [ -d "$REPO_ROOT/payloads/$arg" ]; then
+        for dir in "$REPO_ROOT/payloads/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
     else
         found=0
-        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/stacks/*; do
+        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies "$REPO_ROOT"/payloads/*; do
             if [ -d "$cat_dir/$arg" ]; then
                 EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
                 found=1
@@ -163,8 +165,11 @@ for target in $UNIQUE_TARGETS; do
     if [ -d "$REPO_ROOT/_lib" ]; then
         MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 3 -type d -name "$target" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
     fi
-    if [ -z "$MANIFEST_PATH" ] && [ -d "$REPO_ROOT/stacks" ]; then
-        MANIFEST_PATH=$(find "$REPO_ROOT/stacks" -maxdepth 3 -type d -name "$target" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    if [ -z "$MANIFEST_PATH" ] && [ -d "$REPO_ROOT/topologies/$target" ]; then
+        MANIFEST_PATH="$REPO_ROOT/topologies/$target/topology.json"
+    fi
+    if [ -z "$MANIFEST_PATH" ] && [ -d "$REPO_ROOT/payloads" ]; then
+        MANIFEST_PATH=$(find "$REPO_ROOT/payloads" -maxdepth 3 -type d -name "$target" -exec echo "{}/payload.json" \; 2>/dev/null | head -n 1)
     fi
     if [ -f "$MANIFEST_PATH" ]; then
         SUPPORTED=$(awk -v os="$OS_ID" -v family="$OS_FAMILY" -v arch="$TARGET_ARCH" '

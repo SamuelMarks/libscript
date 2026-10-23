@@ -86,7 +86,7 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
       "mfe" "Build & deploy Micro-Frontends" \
       3>&1 1>&2 2>&3)
     if [ -n "$sub_act" ]; then
-      ./stacks/cms/openedx/cli.sh "$sub_act"
+      ./_lib/web-apps/openedx/cli.sh "$sub_act"
     fi
   elif [ -n "$action" ]; then
     offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; printf '%s\n' $?)

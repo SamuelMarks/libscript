@@ -14,4 +14,4 @@ Execute this script to run the test suite for serve-actix-diesel-auth-scaffold.
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/scaffolds/serve-actix-diesel-auth-scaffold test skipped"
+Write-Output "./_lib/web-apps/serve-actix-diesel-auth-scaffold test skipped"

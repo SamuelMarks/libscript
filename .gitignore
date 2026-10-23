@@ -148,8 +148,6 @@ standardize_*
 !tests/test_harvest_payload.*
 !tests/test_hydrate_offline_cache.*
 !tests/test_package_as_docker_offline.*
-!stacks/cms/openedx/test_harness.*
-!stacks/cms/openedx/test_server.*
 !_lib/web-apps/openedx/test_harness.*
 !_lib/web-apps/openedx/test_server.*
 !tests/test_packaging_branding.*

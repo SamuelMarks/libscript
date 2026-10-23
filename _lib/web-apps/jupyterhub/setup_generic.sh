@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" \
-            "_lib/languages/python/setup.sh" "stacks/data-science/jupyterhub/env.sh" \
+            "_lib/languages/python/setup.sh" "_lib/web-apps/jupyterhub/env.sh" \
             "_lib/languages/nodejs/setup.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -118,7 +118,7 @@ if [ -d '/etc/systemd/system' ]; then
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp00="$(mktemp "${TMPDIR:-/tmp}/${service_name}.systemd.service_XXXXXX")"
   trap 'rm -f -- "${tmp00}"' EXIT HUP INT QUIT TERM
-  envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/stacks/data-science/jupyterhub/conf/systemd/jupyverse.service' > "${tmp00}"
+  envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/web-apps/jupyterhub/conf/systemd/jupyverse.service' > "${tmp00}"
   if [ -f "${service}" ]; then priv  rm -f -- "${service}"; fi
   priv  install -m 0644 -- "${tmp00}" "${service}"
   if ! priv systemctl daemon-reload ; then

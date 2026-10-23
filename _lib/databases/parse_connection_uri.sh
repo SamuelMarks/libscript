@@ -120,7 +120,7 @@ if [ -n "$query" ]; then
 fi
 
 case "$mode" in
-  --eval)
+  --eval|--env)
     printf 'DB_ENGINE="%s"\nDB_HOST="%s"\nDB_PORT="%s"\nDB_USER="%s"\nDB_PASS="%s"\nDB_NAME="%s"\nDB_QUERY="%s"\nDB_USE_SSL="%s"\nDB_SSL_CA="%s"\nDB_SSL_CERT="%s"\nDB_SSL_KEY="%s"\nDB_SSL_MODE="%s"\nDB_TIMEOUT="%s"\nDB_CHARSET="%s"\n' \
       "$engine" "$host" "$port" "$user" "$pass" "$dbname" "$query" "$db_use_ssl" "$db_ssl_ca" "$db_ssl_cert" "$db_ssl_key" "$db_ssl_mode" "$db_timeout" "$db_charset"
     ;;

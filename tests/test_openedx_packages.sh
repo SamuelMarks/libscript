@@ -110,7 +110,7 @@ fi
 
 case "${TARGET_OS}" in
   debian-*|ubuntu-*)
-    vagrant ssh -c "sudo apt-get remove --purge -y openedx-setup-stacks-cms-openedx openedx-setup 2>/dev/null || true"
+    vagrant ssh -c "sudo apt-get remove --purge -y openedx-setup-lib-web-apps-openedx openedx-setup 2>/dev/null || true"
     ;;
   rockylinux-*|almalinux-*|fedora-*|centos-*)
     vagrant ssh -c "sudo dnf remove -y openedx-setup 2>/dev/null || true"
@@ -119,7 +119,7 @@ case "${TARGET_OS}" in
     vagrant ssh -c "sudo apk del openedx-setup 2>/dev/null || true"
     ;;
   omnios*|illumos*)
-    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall stacks/cms/openedx --purge-data 2>/dev/null || true"
+    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
     ;;
   windows-*)
     vagrant ssh -c 'cmd.exe /c "msiexec /x C:\libscript\build\OpenEdX-Setup.msi /qn 2>nul || exit /b 0"'
@@ -141,7 +141,7 @@ case "${TARGET_OS}" in
     vagrant ssh -c "sudo apk add --allow-untrusted /tmp/openedx-setup.apk"
     ;;
   omnios*|illumos*)
-    vagrant ssh -c "sudo mkdir -p /opt/libscript && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf /tmp/openedx-setup.tar.gz -C /opt/libscript || sudo tar -xzf /tmp/openedx-setup.tar.gz -C /opt/libscript; } && sudo /opt/libscript/libscript.sh install-service stacks/cms/openedx"
+    vagrant ssh -c "sudo mkdir -p /opt/libscript && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf /tmp/openedx-setup.tar.gz -C /opt/libscript || sudo tar -xzf /tmp/openedx-setup.tar.gz -C /opt/libscript; } && sudo /opt/libscript/libscript.sh install-service _lib/web-apps/openedx"
     ;;
   windows-*)
     vagrant ssh -c 'cmd.exe /c "msiexec /i C:\libscript\build\OpenEdX-Setup.msi /qn /l*v C:\libscript\install.log & exit /b 0"'
@@ -169,16 +169,16 @@ printf '[PASS] Smoke tests passed.\n'
 printf '=== Step 4: Uninstallation (%s) ===\n' "${TARGET_OS}"
 case "${TARGET_OS}" in
   debian-*|ubuntu-*)
-    vagrant ssh -c "sudo apt-get remove --purge -y openedx-setup-stacks-cms-openedx openedx-setup-meta 2>/dev/null || sudo apt-get remove --purge -y openedx-setup-stacks-cms-openedx 2>/dev/null || sudo apt-get remove --purge -y openedx-setup 2>/dev/null || true"
+    vagrant ssh -c "sudo apt-get remove --purge -y openedx-setup-lib-web-apps-openedx openedx-setup-meta 2>/dev/null || sudo apt-get remove --purge -y openedx-setup-lib-web-apps-openedx 2>/dev/null || sudo apt-get remove --purge -y openedx-setup 2>/dev/null || true"
     ;;
   rockylinux-*|almalinux-*|fedora-*|centos-*)
     vagrant ssh -c "sudo dnf remove -y openedx-setup"
     ;;
   alpine-*)
-    vagrant ssh -c "sudo apk del openedx-setup-stacks-cms-openedx openedx-setup 2>/dev/null || sudo apk del openedx-setup-stacks-cms-openedx || true"
+    vagrant ssh -c "sudo apk del openedx-setup-lib-web-apps-openedx openedx-setup 2>/dev/null || sudo apk del openedx-setup-lib-web-apps-openedx || true"
     ;;
   omnios*|illumos*)
-    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall stacks/cms/openedx --purge-data 2>/dev/null || true"
+    vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
     ;;
   windows-*)
     vagrant ssh -c 'cmd.exe /c "msiexec /x C:\libscript\build\OpenEdX-Setup.msi /qn 2>nul || exit /b 0"'

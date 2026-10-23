@@ -4,8 +4,8 @@
 # Creates consolidated compressed archives and applies restoration snapshots.
 #
 # ## Usage
-# ./stacks/cms/openedx/backup_helper.sh backup <backup_dir> <install_dir> [out_path]
-# ./stacks/cms/openedx/backup_helper.sh restore <archive> <install_dir> [force]
+# ./_lib/web-apps/openedx/backup_helper.sh backup <backup_dir> <install_dir> [out_path]
+# ./_lib/web-apps/openedx/backup_helper.sh restore <archive> <install_dir> [force]
 
 set -feu
 

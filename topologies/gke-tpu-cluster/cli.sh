@@ -67,11 +67,21 @@ case "$ACTION" in
       exit 0
     fi
     log_info "Creating GKE TPU cluster $CLUSTER_NAME via xpk in $GCP_ZONE..."
+    EXTRA_XPK_FLAGS=""
+    if [ "${TPU_SCHEDULING_TYPE:-}" = "spot" ]; then
+      EXTRA_XPK_FLAGS="$EXTRA_XPK_FLAGS --spot"
+    elif [ "${TPU_SCHEDULING_TYPE:-}" = "on-demand" ]; then
+      EXTRA_XPK_FLAGS="$EXTRA_XPK_FLAGS --on-demand"
+    fi
+    if [ -n "${TPU_SLICE_COUNT:-}" ]; then
+      EXTRA_XPK_FLAGS="$EXTRA_XPK_FLAGS --num-slices=${TPU_SLICE_COUNT}"
+    fi
+    # shellcheck disable=SC2086
     xpk cluster create \
       --cluster "$CLUSTER_NAME" \
       --zone "$GCP_ZONE" \
       --tpu-type "$TPU_ACCELERATOR_TYPE" \
-      ${PROJECT_FLAG:+"$PROJECT_FLAG"}
+      ${PROJECT_FLAG:+"$PROJECT_FLAG"} $EXTRA_XPK_FLAGS
     log_info "Cluster $CLUSTER_NAME created."
     ;;
   delete)

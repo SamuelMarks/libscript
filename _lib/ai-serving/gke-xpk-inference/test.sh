@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Test script for the stacks/ai-serving/gke-xpk-inference stack.
+# Test script for the _lib/ai-serving/gke-xpk-inference component.
 #
 # ## Usage
-# Run locally to verify the stack.
+# Run locally to verify the component.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,4 +28,4 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-printf '[INFO] stacks/ai-serving/gke-xpk-inference tests passed.\n'
+printf '[INFO] _lib/ai-serving/gke-xpk-inference tests passed.\n'

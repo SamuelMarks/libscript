@@ -78,6 +78,7 @@ if "%GCP_ZONE%"=="" (
 
 set "TPU_TYPE=%TPU_ACCELERATOR_TYPE%"
 if "%TPU_TYPE%"=="" set "TPU_TYPE=v4-8"
+if "%TPU_TENSOR_PARALLEL_SIZE%"=="" set "TPU_TENSOR_PARALLEL_SIZE=1"
 
 call xpk workload list --cluster "%CLUSTER_NAME%" --project "%GCP_PROJECT_ID%" --zone "%GCP_ZONE%" 2>nul | findstr /C:"%WORKLOAD_NAME%" >nul 2>&1
 if %errorlevel% equ 0 (
@@ -86,7 +87,7 @@ if %errorlevel% equ 0 (
 )
 
 echo [INFO] Deploying workload %WORKLOAD_NAME% to XPK cluster %CLUSTER_NAME%...
-call xpk workload create --cluster "%CLUSTER_NAME%" --workload "%WORKLOAD_NAME%" --command "python -m vllm.entrypoints.openai.api_server --model %MODEL_NAME% --tensor-parallel-size 1" --tpu-type "%TPU_TYPE%" --project "%GCP_PROJECT_ID%" --zone "%GCP_ZONE%" --docker-image "us-docker.pkg.dev/cloud-tpu-images/inference/vllm-tpu:latest"
+call xpk workload create --cluster "%CLUSTER_NAME%" --workload "%WORKLOAD_NAME%" --command "python -m vllm.entrypoints.openai.api_server --model %MODEL_NAME% --tensor-parallel-size %TPU_TENSOR_PARALLEL_SIZE%" --tpu-type "%TPU_TYPE%" --project "%GCP_PROJECT_ID%" --zone "%GCP_ZONE%" --docker-image "us-docker.pkg.dev/cloud-tpu-images/inference/vllm-tpu:latest"
 
 echo [INFO] Deploy complete.
 exit /b 0

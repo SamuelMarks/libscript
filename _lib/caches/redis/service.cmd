@@ -51,4 +51,34 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "ACTION=%~1"
+if "%ACTION%"=="" set "ACTION=status"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "REDIS_EXE=%LIBSCRIPT_HOME%\redis\latest\bin\redis-server.exe"
+if not exist "%REDIS_EXE%" set "REDIS_EXE=%LIBSCRIPT_HOME%\redis\latest\redis-server.exe"
+
+if /i "%ACTION%"=="start" (
+    sc.exe query Redis 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
+    sc.exe start Redis >nul 2>&1 && exit /b 0
+    if exist "%REDIS_EXE%" (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process redis-server -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%REDIS_EXE%' -WindowStyle Hidden }" 2>nul
+    )
+    exit /b 0
+)
+if /i "%ACTION%"=="stop" (
+    sc.exe stop Redis >nul 2>&1
+    taskkill /F /IM redis-server.exe >nul 2>&1
+    exit /b 0
+)
+if /i "%ACTION%"=="restart" (
+    call "%~f0" stop
+    call "%~f0" start
+    exit /b 0
+)
+if /i "%ACTION%"=="status" (
+    sc.exe query Redis 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] Redis & exit /b 0)
+    powershell -NoProfile -Command "if (Get-Process redis-server -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] redis-server.exe & exit /b 0)
+    echo [STOPPED] redis
+    exit /b 1
+)
 exit /b 0

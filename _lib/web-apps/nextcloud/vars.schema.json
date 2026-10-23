@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/collaboration/nextcloud/vars.schema.json",
+  "$id": "/_lib/web-apps/nextcloud/vars.schema.json",
   "title": "nextcloud vars",
   "description": "Variables for nextcloud vars",
   "type": "object",

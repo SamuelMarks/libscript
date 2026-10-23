@@ -1,13 +1,14 @@
 # GKE XPK Training
 
-Deploys a generic ML training job to a Google Cloud TPU or GPU Pod via XPK.
+Deploys a generic ML training job to a Google Cloud TPU or GPU Pod via XPK
+(`payloads/ai/gke-xpk-training` / `_lib/orchestration/gke-xpk-training`).
 
 ## Components
 
-- cloud-providers/gcp-cli
-- toolchains/python
-- orchestration/kubectl
-- toolchains/xpk
+- _lib/cloud-providers/gcp-cli
+- _lib/languages/python
+- _lib/orchestration/kubectl
+- _lib/toolchains/xpk
 
 ## Configuration Options
 

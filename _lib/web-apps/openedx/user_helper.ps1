@@ -3,9 +3,9 @@
 # Manages user account creation, credentials, staff roles, and catalog enumeration.
 #
 # ## Usage
-# powershell stacks/cms/openedx/user_helper.ps1 create <install_dir> <username> <email> <password> <is_staff> <is_superuser>
-# powershell stacks/cms/openedx/user_helper.ps1 set_password <install_dir> <username> <password>
-# powershell stacks/cms/openedx/user_helper.ps1 list <install_dir>
+# powershell _lib/web-apps/openedx/user_helper.ps1 create <install_dir> <username> <email> <password> <is_staff> <is_superuser>
+# powershell _lib/web-apps/openedx/user_helper.ps1 set_password <install_dir> <username> <password>
+# powershell _lib/web-apps/openedx/user_helper.ps1 list <install_dir>
 
 [CmdletBinding()]
 param(

@@ -3,8 +3,8 @@
 # Creates consolidated compressed archives and applies restoration snapshots.
 #
 # ## Usage
-# powershell stacks/cms/openedx/backup_helper.ps1 backup <backup_dir> <install_dir> [out_path]
-# powershell stacks/cms/openedx/backup_helper.ps1 restore <archive> <install_dir> [force]
+# powershell _lib/web-apps/openedx/backup_helper.ps1 backup <backup_dir> <install_dir> [out_path]
+# powershell _lib/web-apps/openedx/backup_helper.ps1 restore <archive> <install_dir> [force]
 
 [CmdletBinding()]
 param(

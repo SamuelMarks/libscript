@@ -192,7 +192,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost:7700/health || exit 1\"]"
             fi
           fi
-          if [ "$pkg" = "openedx" ]; then healthcheck="[\"CMD-SHELL\", \"/opt/libscript/stacks/cms/openedx/healthcheck.sh || exit 1\"]"; fi
+          if [ "$pkg" = "openedx" ]; then healthcheck="[\"CMD-SHELL\", \"/opt/libscript/_lib/web-apps/openedx/healthcheck.sh || exit 1\"]"; fi
 
           if [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
               custom_hc=$(jq -r ".deps[\"$pkg\"].healthcheck // .servers[\"$pkg\"].healthcheck // .databases[\"$pkg\"].healthcheck // .third_party[\"$pkg\"].healthcheck // .storage[\"$pkg\"].healthcheck // .toolchains[\"$pkg\"].healthcheck // empty | if type == \"object\" then .test | tojson elif type == \"string\" then \"[\\\"CMD-SHELL\\\", \\\"\" + . + \"\\\"]\" else empty end" libscript.json 2>/dev/null || true)
@@ -257,7 +257,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
             printf '%s\n' "    build:"
             printf '%s\n' "      context: ."
             printf '%s\n' "      dockerfile: $df"
-            printf '%s\n' "    command: [\"/opt/libscript/stacks/cms/openedx/workers.sh\", \"start\"]"
+            printf '%s\n' "    command: [\"/opt/libscript/_lib/web-apps/openedx/workers.sh\", \"start\"]"
             printf '%s\n' "    networks:"
             printf '%s\n' "      - internal_network"
             printf '%s\n' "    volumes:"
@@ -272,7 +272,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
             printf '%s\n' "    build:"
             printf '%s\n' "      context: ."
             printf '%s\n' "      dockerfile: $df"
-            printf '%s\n' "    command: [\"/opt/libscript/stacks/cms/openedx/workers.sh\", \"start\"]"
+            printf '%s\n' "    command: [\"/opt/libscript/_lib/web-apps/openedx/workers.sh\", \"start\"]"
             printf '%s\n' "    networks:"
             printf '%s\n' "      - internal_network"
             printf '%s\n' "    volumes:"

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/ml-training/gke-xpk-training/vars.schema.json",
+  "$id": "/_lib/orchestration/gke-xpk-training/vars.schema.json",
   "title": "gke-xpk-training vars",
   "description": "Variables for GKE XPK distributed ML training stack",
   "type": "object",

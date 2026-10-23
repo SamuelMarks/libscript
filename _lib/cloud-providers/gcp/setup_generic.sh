@@ -82,29 +82,72 @@ case "$ACTION" in
     case "$SUBACTION" in
       create)
         if [ -z "$RESOURCE_NAME" ]; then
-          printf '%s\n' "Usage: node create <name> [--machine-type TYPE] [--image IMAGE]"
+          printf '%s\n' "Usage: node create <name> [--machine-type TYPE] [--image IMAGE] [--network NET] [--labels LABELS] [--zone ZONE] [--project PROJECT]"
           exit 1
         fi
         TYPE="n1-standard-1"
         IMAGE="debian-11"
+        NETWORK=""
+        LABELS=""
+        ZONE="${GCP_ZONE:-}"
+        PROJECT_FLAG=""
+        if [ -n "${GCP_PROJECT_ID:-}" ]; then
+          PROJECT_FLAG="--project=${GCP_PROJECT_ID}"
+        fi
         shift 2
+        POS_IDX=0
         while [ $# -gt 0 ]; do
           case "$1" in
             --machine-type)
               TYPE="$2"; shift 2 ;;
-            --image)
+            --machine-type=*)
+              TYPE="${1#*=}"; shift ;;
+            --image|--image-family)
               IMAGE="$2"; shift 2 ;;
-            *)
+            --image=*|--image-family=*)
+              IMAGE="${1#*=}"; shift ;;
+            --network)
+              NETWORK="$2"; shift 2 ;;
+            --network=*)
+              NETWORK="${1#*=}"; shift ;;
+            --labels)
+              LABELS="$2"; shift 2 ;;
+            --labels=*)
+              LABELS="${1#*=}"; shift ;;
+            --zone)
+              ZONE="$2"; shift 2 ;;
+            --zone=*)
+              ZONE="${1#*=}"; shift ;;
+            --project)
+              PROJECT_FLAG="--project=$2"; shift 2 ;;
+            --project=*)
+              PROJECT_FLAG="--project=${1#*=}"; shift ;;
+            --*)
               printf '%s\n' "Unknown option: $1"; exit 1 ;;
+            *)
+              POS_IDX=$((POS_IDX + 1))
+              case "$POS_IDX" in
+                1) TYPE="$1" ;;
+                2) IMAGE="$1" ;;
+                3) NETWORK="$1" ;;
+                4) LABELS="$1" ;;
+              esac
+              shift ;;
           esac
         done
         printf '%s\n' "Creating GCP VM: $RESOURCE_NAME ($TYPE, $IMAGE)"
         TAGS_ARG="$(libscript_format_tags gcp)"
-        if gcloud compute instances describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+        EXTRA_ARGS=""
+        if [ -n "$NETWORK" ]; then EXTRA_ARGS="$EXTRA_ARGS --network=$NETWORK"; fi
+        if [ -n "$LABELS" ]; then EXTRA_ARGS="$EXTRA_ARGS --labels=$LABELS"; fi
+        if [ -n "$ZONE" ]; then EXTRA_ARGS="$EXTRA_ARGS --zone=$ZONE"; fi
+        if [ -n "$PROJECT_FLAG" ]; then EXTRA_ARGS="$EXTRA_ARGS $PROJECT_FLAG"; fi
+        # shellcheck disable=SC2086
+        if gcloud compute instances describe "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} ${PROJECT_FLAG:+"$PROJECT_FLAG"} >/dev/null 2>&1; then
           printf '%s\n' "Instance '$RESOURCE_NAME' already exists."
         else
           # shellcheck disable=SC2086
-          gcloud compute instances create "$RESOURCE_NAME" --machine-type="$TYPE" --image-family="$IMAGE" --image-project="debian-cloud" $TAGS_ARG
+          gcloud compute instances create "$RESOURCE_NAME" --machine-type="$TYPE" --image-family="$IMAGE" --image-project="debian-cloud" $EXTRA_ARGS $TAGS_ARG
         fi
         ;;
       delete)

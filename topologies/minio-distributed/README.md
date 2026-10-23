@@ -12,3 +12,16 @@ Turnkey multi-node high-availability topology blueprint for `minio-distributed` 
 ./topologies/minio-distributed/cli.sh status
 ./topologies/minio-distributed/cli.sh destroy
 ```
+
+## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
+
+## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
+<!-- END_PLATFORMS -->

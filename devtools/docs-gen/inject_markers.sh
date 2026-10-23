@@ -40,7 +40,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   exit 0
 fi
 : "${ROOT_DIR:=${LIBSCRIPT_ROOT_DIR}}"
-for component_dir in "$ROOT_DIR"/_lib/*/* "$ROOT_DIR"/_lib/*/*/* "$ROOT_DIR"/stacks/*/* "$ROOT_DIR"/stacks/*/*/*; do
+for component_dir in "$ROOT_DIR"/_lib/*/* "$ROOT_DIR"/_lib/*/*/* "$ROOT_DIR"/topologies/* "$ROOT_DIR"/payloads/*/*; do
     if [ ! -d "$component_dir" ]; then
         continue
     fi

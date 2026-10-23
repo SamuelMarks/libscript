@@ -39,8 +39,12 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 TPU_NAME="${TPU_NAME:-ml-eval-node}"
-BUCKET_NAME="${BUCKET_NAME:-}"
-ML_SCRIPT="${ML_SCRIPT:-python train.py}"
+BUCKET_NAME="${BUCKET_NAME:-${GCS_BUCKET:-}}"
+BUCKET_NAME="${BUCKET_NAME#gs://}"
+ML_SCRIPT="${ML_SCRIPT:-${TRAIN_CMD:-${TRAIN_SCRIPT:-python train.py}}}"
+TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-${DISK_SIZE_GB:-200}}"
+DISK_NAME="${DISK_NAME:-${TPU_NAME}-data}"
+export TPU_NAME BUCKET_NAME ML_SCRIPT TPU_DATA_DISK_SIZE DISK_NAME
 
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 TPU_ZONE="${TPU_ZONE:-}"

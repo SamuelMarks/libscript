@@ -51,4 +51,43 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "ACTION=%~1"
+if "%ACTION%"=="" set "ACTION=status"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "MYSQL_DIR=%LIBSCRIPT_HOME%\mysql\latest"
+if not exist "%MYSQL_DIR%\bin\mysqld.exe" (
+    for /d %%D in ("%LIBSCRIPT_HOME%\mysql\*") do (
+        if exist "%%~fD\bin\mysqld.exe" set "MYSQL_DIR=%%~fD"
+    )
+)
+set "DATA_DIR=%LIBSCRIPT_HOME%\mysql\data"
+
+if /i "%ACTION%"=="start" (
+    sc.exe query mysql 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
+    sc.exe start mysql >nul 2>&1 && exit /b 0
+    if exist "%MYSQL_DIR%\bin\mysqld.exe" (
+        if not exist "%DATA_DIR%\mysql" (
+            if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
+            "%MYSQL_DIR%\bin\mysqld.exe" --initialize-insecure --datadir="%DATA_DIR%" >nul 2>&1
+        )
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process mysqld -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%MYSQL_DIR%\bin\mysqld.exe' -ArgumentList '--datadir=\"%DATA_DIR%\"','--port=3306' -WindowStyle Hidden }" 2>nul
+    )
+    exit /b 0
+)
+if /i "%ACTION%"=="stop" (
+    sc.exe stop mysql >nul 2>&1
+    taskkill /F /IM mysqld.exe >nul 2>&1
+    exit /b 0
+)
+if /i "%ACTION%"=="restart" (
+    call "%~f0" stop
+    call "%~f0" start
+    exit /b 0
+)
+if /i "%ACTION%"=="status" (
+    sc.exe query mysql 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] mysql & exit /b 0)
+    powershell -NoProfile -Command "if (Get-Process mysqld -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] mysqld.exe & exit /b 0)
+    echo [STOPPED] mysql
+    exit /b 1
+)
 exit /b 0

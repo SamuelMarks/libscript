@@ -6,7 +6,7 @@
 :: Validates connectivity and responsiveness across databases, caches, and web services.
 ::
 :: ## Usage
-:: health_helper.cmd stacks/cms/openedx/health_helper.cmd <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>
+:: health_helper.cmd _lib/web-apps/openedx/health_helper.cmd <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

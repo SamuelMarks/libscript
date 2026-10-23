@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/scaffolds/serve-actix-diesel-auth-scaffold/vars.schema.json",
+  "$id": "/_lib/web-apps/serve-actix-diesel-auth-scaffold/vars.schema.json",
   "title": "serve-actix-diesel-auth-scaffold vars",
   "description": "Variables for serve-actix-diesel-auth-scaffold vars",
   "type": "object",

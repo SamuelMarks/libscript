@@ -88,6 +88,15 @@ if /i "%ACTION%"=="-v" (
     exit /b 0
 )
 
+set "IS_CLOUD_VERB=0"
+for %%V in (auth location network node dns firewall ssh backup restore diff list-managed storage aws azure gcp hetzner proxmox cleanup setup deploy) do (
+    if /i "%ACTION%"=="%%V" set "IS_CLOUD_VERB=1"
+)
+if "!IS_CLOUD_VERB!"=="1" (
+    shift
+    goto :routing
+)
+
 set "REQ_BASENAME=!REQ_PKG!"
 for %%I in ("!REQ_PKG:/=\!") do set "REQ_BASENAME=%%~nxI"
 
@@ -183,7 +192,28 @@ if /i "!ACTION!"=="restore"           goto :routing
 if /i "!ACTION!"=="diff"              goto :routing
 
 if /i "!arg!"=="--offline" (
+    set "_next_off=%~2"
+    if "!_next_off!"=="0" (
+        set "LIBSCRIPT_OFFLINE=0"
+        shift & shift
+        goto :parse_loop
+    )
+    if "!_next_off!"=="1" (
+        set "LIBSCRIPT_OFFLINE=1"
+        shift & shift
+        goto :parse_loop
+    )
     set "LIBSCRIPT_OFFLINE=1"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="--offline=1" (
+    set "LIBSCRIPT_OFFLINE=1"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="--offline=0" (
+    set "LIBSCRIPT_OFFLINE=0"
     shift
     goto :parse_loop
 )

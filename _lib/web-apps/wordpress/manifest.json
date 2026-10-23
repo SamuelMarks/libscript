@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "$schema": "../../_common/manifest.schema.json",
   "name": "wordpress",
   "category": "web-apps",
   "title": "WordPress 7.1.2 Platform",

@@ -120,7 +120,7 @@ printf '%s\n' "- Windows" >> "$plat_tmp"
 plat_norm=$(normalize_markdown_section < "$plat_tmp")
 
 # We need to process each component
-find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)" | while IFS= read -r readme; do
+find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologies|payloads)" | while IFS= read -r readme; do
     dir="$(dirname "$readme")"
     
     # Check if vars.schema.json exists

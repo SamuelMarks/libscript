@@ -164,7 +164,7 @@ echo       - openedx-redis
 echo       - openedx-mongodb
 echo       - openedx-meilisearch
 echo     healthcheck:
-echo       test: ["CMD-SHELL", "/opt/libscript/stacks/cms/openedx/healthcheck.sh || exit 1"]
+echo       test: ["CMD-SHELL", "/opt/libscript/_lib/web-apps/openedx/healthcheck.sh || exit 1"]
 echo       interval: 5s
 echo       retries: 5
 
@@ -196,7 +196,7 @@ echo   openedx-workers:
 echo     build:
 echo       context: .
 echo       dockerfile: docker/postgres.debian.Dockerfile
-echo     command: ["/opt/libscript/stacks/cms/openedx/workers.sh", "start"]
+echo     command: ["/opt/libscript/_lib/web-apps/openedx/workers.sh", "start"]
 echo     networks:
 echo       - internal_network
 echo     volumes:
@@ -218,7 +218,7 @@ echo   openedx-beat:
 echo     build:
 echo       context: .
 echo       dockerfile: docker/postgres.debian.Dockerfile
-echo     command: ["/opt/libscript/stacks/cms/openedx/workers.sh", "start"]
+echo     command: ["/opt/libscript/_lib/web-apps/openedx/workers.sh", "start"]
 echo     networks:
 echo       - internal_network
 echo     volumes:

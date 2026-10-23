@@ -116,13 +116,15 @@ for %%A in (!ARGS!) do (
         for /d %%D in ("%REPO_ROOT%\_lib\%%A\*") do (
             set "TARGETS=!TARGETS! %%~nxD"
         )
-    ) else if exist "%REPO_ROOT%\stacks\%%A\*" (
-        for /d %%D in ("%REPO_ROOT%\stacks\%%A\*") do (
+    ) else if exist "%REPO_ROOT%\topologies\%%A\*" (
+        set "TARGETS=!TARGETS! %%A"
+    ) else if exist "%REPO_ROOT%\payloads\%%A\*" (
+        for /d %%D in ("%REPO_ROOT%\payloads\%%A\*") do (
             set "TARGETS=!TARGETS! %%~nxD"
         )
     ) else (
         set "FOUND=0"
-        for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\stacks\*") do (
+        for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\topologies" "%REPO_ROOT%\payloads\*") do (
             if exist "%%C\%%A\*" (
                 set "TARGETS=!TARGETS! %%A"
                 set "FOUND=1"

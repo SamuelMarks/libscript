@@ -215,6 +215,8 @@ if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe
     if defined _PY_CACHED (
         echo Extracting Python from offline cache !_PY_CACHED!...
         tar -xf "!_PY_CACHED!" -C "%TARGET_DIR%\bin" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '!_PY_CACHED!' -DestinationPath '%TARGET_DIR%\bin' -Force"
+        powershell -NoProfile -Command "Get-ChildItem '%TARGET_DIR%\bin\python*._pth' -ErrorAction SilentlyContinue | ForEach-Object { $c = (Get-Content $_.FullName) -replace '#import site', 'import site'; if ($c -notcontains 'Lib\site-packages') { $c += 'Lib\site-packages'; $c += '..\Lib\site-packages' }; Set-Content $_.FullName -Value $c -Encoding Ascii }" 2>nul
+        if not exist "%TARGET_DIR%\bin\Lib\site-packages" mkdir "%TARGET_DIR%\bin\Lib\site-packages" 2>nul
         copy /y "%TARGET_DIR%\bin\python.exe" "%TARGET_DIR%\python.exe" >nul 2>&1
     ) else if exist "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip" (
         echo Extracting from cache...

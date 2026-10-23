@@ -57,6 +57,8 @@ goto :%1
 :libscript_storage_create
 set "provider=%~2"
 set "bucket=%~3"
+if /i "!bucket:~0,5!"=="gs://" set "bucket=!bucket:~5!"
+if /i "!bucket:~0,5!"=="s3://" set "bucket=!bucket:~5!"
 set "public_web=%~4"
 if "%public_web%"=="" set "public_web=false"
 
@@ -114,6 +116,8 @@ exit /b 0
 :libscript_storage_delete
 set "provider=%~2"
 set "bucket=%~3"
+if /i "!bucket:~0,5!"=="gs://" set "bucket=!bucket:~5!"
+if /i "!bucket:~0,5!"=="s3://" set "bucket=!bucket:~5!"
 
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" storage "%bucket%" "%LIBSCRIPT_AZURE_ACCOUNT_NAME%"
@@ -169,6 +173,8 @@ exit /b 0
 :libscript_storage_sync
 set "provider=%~2"
 set "bucket=%~3"
+if /i "!bucket:~0,5!"=="gs://" set "bucket=!bucket:~5!"
+if /i "!bucket:~0,5!"=="s3://" set "bucket=!bucket:~5!"
 set "local_dir=%~4"
 
 if not exist "%local_dir%\" (

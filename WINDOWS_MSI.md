@@ -160,7 +160,7 @@ Deferred elevated custom actions invoke the embedded engine directly from
 ```xml
 <CustomAction Id="InstallOpenEdXService"
               Directory="INSTALLFOLDER"
-              ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx ..."
+              ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install _lib/web-apps/openedx ..."
               Execute="deferred"
               Return="check"
               Impersonate="no" />
@@ -197,10 +197,10 @@ LibScript provides dual-distribution packaging architecture for Windows environm
 
 ```sh
 # POSIX / macOS / Linux build host
-./packaging/build_msi.sh stacks/cms/openedx --online --out OpenEdX-Online-Setup
+./packaging/build_msi.sh _lib/web-apps/openedx --online --out OpenEdX-Online-Setup
 
 # Windows build host
-call packaging\build_msi.cmd stacks\cms\openedx --online --out OpenEdX-Online-Setup
+call packaging\build_msi.cmd _lib\web-apps\openedx --online --out OpenEdX-Online-Setup
 ```
 
 #### 2. Hydrating the Offline Artifact Cache
@@ -211,14 +211,14 @@ bundle manifest:
 ```sh
 # POSIX build host
 ./packaging/hydrate_offline_cache.sh \
-  --manifest stacks/cms/openedx/offline_bundle.json \
+  --manifest _lib/web-apps/openedx/offline_bundle.json \
   --cache-dir cache/ \
   --wheels \
   --codebase
 
 # Windows build host
 call packaging\hydrate_offline_cache.cmd ^
-  --manifest stacks\cms\openedx\offline_bundle.json ^
+  --manifest _lib\web-apps\openedx\offline_bundle.json ^
   --cache-dir cache\ ^
   --wheels ^
   --codebase
@@ -228,17 +228,17 @@ call packaging\hydrate_offline_cache.cmd ^
 
 ```sh
 # POSIX build host (compiles with multi-cabinet partitioning)
-./packaging/build_msi.sh stacks/cms/openedx --offline --cache-dir cache/ --out OpenEdX-Offline-Setup
+./packaging/build_msi.sh _lib/web-apps/openedx --offline --cache-dir cache/ --out OpenEdX-Offline-Setup
 
 # Windows build host
-call packaging\build_msi.cmd stacks\cms\openedx --offline --cache-dir cache\ --out OpenEdX-Offline-Setup
+call packaging\build_msi.cmd _lib\web-apps\openedx --offline --cache-dir cache\ --out OpenEdX-Offline-Setup
 ```
 
 Alternatively, use the unified CLI dispatcher:
 
 ```sh
-./libscript.sh package-as msi stacks/cms/openedx --online
-./libscript.sh package-as msi stacks/cms/openedx --offline
+./libscript.sh package-as msi _lib/web-apps/openedx --online
+./libscript.sh package-as msi _lib/web-apps/openedx --offline
 ```
 
 ### Multi-Cabinet Partitioning Architecture

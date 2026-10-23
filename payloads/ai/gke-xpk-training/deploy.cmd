@@ -79,7 +79,12 @@ if %errorlevel% equ 0 (
 )
 
 echo [INFO] Deploying workload %WORKLOAD_NAME% to XPK cluster %XPK_CLUSTER_NAME%...
-call xpk workload create --cluster "%XPK_CLUSTER_NAME%" --workload "%WORKLOAD_NAME%" --command "%TRAIN_SCRIPT%" --tpu-type "%TPU_ACCELERATOR_TYPE%" --docker-image "%DOCKER_IMAGE%" --project "%GCP_PROJECT_ID%" --zone "%GCP_ZONE%"
+set "EXTRA_XPK_FLAGS="
+if /i "%TPU_SCHEDULING_TYPE%"=="spot" set "EXTRA_XPK_FLAGS=!EXTRA_XPK_FLAGS! --spot"
+if /i "%TPU_SCHEDULING_TYPE%"=="on-demand" set "EXTRA_XPK_FLAGS=!EXTRA_XPK_FLAGS! --on-demand"
+if not "%TPU_SLICE_COUNT%"=="" set "EXTRA_XPK_FLAGS=!EXTRA_XPK_FLAGS! --num-slices=%TPU_SLICE_COUNT%"
+
+call xpk workload create --cluster "%XPK_CLUSTER_NAME%" --workload "%WORKLOAD_NAME%" --command "%TRAIN_SCRIPT%" --tpu-type "%TPU_ACCELERATOR_TYPE%" --docker-image "%DOCKER_IMAGE%" --project "%GCP_PROJECT_ID%" --zone "%GCP_ZONE%" !EXTRA_XPK_FLAGS!
 
 echo [INFO] Deploy complete.
 exit /b 0

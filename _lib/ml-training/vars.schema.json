@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/ml-training/tpu-vm-eval-node/vars.schema.json",
+  "$id": "/_lib/ml-training/vars.schema.json",
   "title": "tpu-vm-eval-node vars",
   "description": "Variables for Cloud TPU VM Evaluation and Training Node",
   "type": "object",

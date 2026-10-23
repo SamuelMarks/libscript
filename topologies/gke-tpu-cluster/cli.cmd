@@ -93,7 +93,11 @@ if %errorlevel% equ 0 (
     exit /b 0
 )
 call "%LOG_CMD%" :log_info "Creating GKE cluster %CLUSTER_NAME% via xpk in %GCP_ZONE%..."
-call xpk cluster create --cluster "%CLUSTER_NAME%" --zone "%GCP_ZONE%" --tpu-type "%TPU_ACCELERATOR_TYPE%" %PROJECT_FLAG%
+set "EXTRA_XPK_FLAGS="
+if /i "%TPU_SCHEDULING_TYPE%"=="spot" set "EXTRA_XPK_FLAGS=!EXTRA_XPK_FLAGS! --spot"
+if /i "%TPU_SCHEDULING_TYPE%"=="on-demand" set "EXTRA_XPK_FLAGS=!EXTRA_XPK_FLAGS! --on-demand"
+if not "%TPU_SLICE_COUNT%"=="" set "EXTRA_XPK_FLAGS=!EXTRA_XPK_FLAGS! --num-slices=%TPU_SLICE_COUNT%"
+call xpk cluster create --cluster "%CLUSTER_NAME%" --zone "%GCP_ZONE%" --tpu-type "%TPU_ACCELERATOR_TYPE%" %PROJECT_FLAG% !EXTRA_XPK_FLAGS!
 call "%LOG_CMD%" :log_info "Cluster %CLUSTER_NAME% created."
 exit /b 0
 

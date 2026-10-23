@@ -1,4 +1,4 @@
-Host windows-11-test-sqlite
+Host windows-11-test-openedx
   HostName 127.0.0.1
   User vagrant
   Port 2250

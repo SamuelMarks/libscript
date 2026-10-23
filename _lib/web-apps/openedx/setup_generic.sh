@@ -294,6 +294,15 @@ case "$ACTION" in
       for _f in "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
         [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/codebase"
       done
+      if [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ]; then
+        for _sub in "${OPENEDX_INSTALL_DIR}/codebase"/*; do
+          if [ -d "$_sub" ] && [ -f "$_sub/manage.py" ]; then
+            cp -Rf "$_sub"/. "${OPENEDX_INSTALL_DIR}/codebase/" 2>/dev/null || true
+            rm -rf "$_sub" 2>/dev/null || true
+            break
+          fi
+        done
+      fi
     elif [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       if ! command -v git >/dev/null 2>&1; then
         libscript_depends "git" || true
@@ -355,7 +364,11 @@ case "$ACTION" in
       _sp_dir=$("${VENV_DIR}/bin/python" -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "${VENV_DIR}/lib/python3.13/site-packages")
       mkdir -p "${_sp_dir}" 2>/dev/null || true
       if [ ! -f "${_sp_dir}/imghdr.py" ]; then
-        libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" 2>/dev/null || true
+        if [ "$is_offline" -eq 1 ]; then
+          printf 'def what(file, h=None):\n    return None\n' > "${_sp_dir}/imghdr.py"
+        else
+          libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" 2>/dev/null || printf 'def what(file, h=None):\n    return None\n' > "${_sp_dir}/imghdr.py"
+        fi
       fi
     fi
 

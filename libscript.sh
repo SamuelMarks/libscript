@@ -104,7 +104,7 @@ show_help() {
 find_components() {
   find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" ! -path "*/tmp/*" ! -path "*/.*" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
-    if [ -f "$dir/vars.schema.json" ]; then
+    if [ -f "$dir/vars.schema.json" ] || [ -f "$dir/topology.json" ] || [ -f "$dir/payload.json" ]; then
       rel_dir="${dir#"$LIBSCRIPT_CLI_DIR"/}"
       if [ "$rel_dir" != "$dir" ]; then
         printf '%s\n' "$rel_dir"
@@ -117,7 +117,13 @@ find_components() {
 # Performs the get_desc operation and updates component state.
 get_desc() {
   schema="$LIBSCRIPT_CLI_DIR/$1/vars.schema.json"
-  if command -v jq >/dev/null 2>&1; then
+  if [ ! -f "$schema" ]; then
+    schema="$LIBSCRIPT_CLI_DIR/$1/topology.json"
+  fi
+  if [ ! -f "$schema" ]; then
+    schema="$LIBSCRIPT_CLI_DIR/$1/payload.json"
+  fi
+  if [ -f "$schema" ] && command -v jq >/dev/null 2>&1; then
     jq -r '
       def aliases: [ .properties[]? | select(.version_aliases) | .version_aliases[] ] | unique | join(", ");
       if .description then
@@ -125,6 +131,44 @@ get_desc() {
       else "" end
     ' "$schema" 2>/dev/null || true
   fi
+}
+
+# ## normalize_component_alias
+# Maps legacy and shorthand component paths to canonical repository paths.
+normalize_component_alias() {
+  case "${1:-}" in
+    cloud-providers/gcp/cli|gcp/cli) printf '%s\n' "_lib/cloud-providers/gcp-cli" ;;
+    cloud-providers/gcp/tpu-vm|gcp/tpu-vm) printf '%s\n' "_lib/cloud-providers/gcp-tpu-vm" ;;
+    cloud-providers/gcp/gpu-vm|gcp/gpu-vm) printf '%s\n' "_lib/cloud-providers/gcp-gpu-vm" ;;
+    cloud-providers/gcp/filestore|gcp/filestore) printf '%s\n' "_lib/cloud-providers/gcp-filestore" ;;
+    cloud-providers/gcp/gke-tpu-cluster|gcp/gke-tpu-cluster|gke-tpu-cluster) printf '%s\n' "topologies/gke-tpu-cluster" ;;
+    cloud/storage) printf '%s\n' "_lib/cloud/storage" ;;
+    cloud/cdn) printf '%s\n' "_lib/cloud/cdn" ;;
+    cloud/cert) printf '%s\n' "_lib/cloud/cert" ;;
+    cloud/volume) printf '%s\n' "_lib/cloud/volume" ;;
+    cloud/cloudinit) printf '%s\n' "_lib/cloud/cloudinit" ;;
+    stacks/ml-training/tpu-vm-eval-node|ml-training/tpu-vm-eval-node|tpu-vm-eval-node) printf '%s\n' "_lib/ml-training" ;;
+    stacks/ml-training/gke-xpk-training|ml-training/gke-xpk-training|gke-xpk-training) printf '%s\n' "_lib/orchestration/gke-xpk-training" ;;
+    stacks/ai-serving/tpu-vm-vllm|ai-serving/tpu-vm-vllm|tpu-vm-vllm) printf '%s\n' "_lib/ai-serving" ;;
+    stacks/ai-serving/gke-xpk-inference|ai-serving/gke-xpk-inference|gke-xpk-inference) printf '%s\n' "_lib/ai-serving/gke-xpk-inference" ;;
+    stacks/cms/openedx) printf '%s\n' "_lib/web-apps/openedx" ;;
+    stacks/cms/wordpress) printf '%s\n' "_lib/web-apps/wordpress" ;;
+    stacks/cms/drupal) printf '%s\n' "_lib/web-apps/drupal" ;;
+    stacks/cms/joomla) printf '%s\n' "_lib/web-apps/joomla" ;;
+    stacks/ecommerce/woocommerce) printf '%s\n' "_lib/web-apps/woocommerce" ;;
+    stacks/ecommerce/magento) printf '%s\n' "_lib/web-apps/magento" ;;
+    stacks/ecommerce/prestashop) printf '%s\n' "_lib/web-apps/prestashop" ;;
+    stacks/collaboration/nextcloud) printf '%s\n' "_lib/web-apps/nextcloud" ;;
+    stacks/crawlers/firecrawl) printf '%s\n' "_lib/web-apps/firecrawl" ;;
+    stacks/data-science/jupyterhub) printf '%s\n' "_lib/web-apps/jupyterhub" ;;
+    stacks/erp/odoo) printf '%s\n' "_lib/web-apps/odoo" ;;
+    stacks/forums/phpbb) printf '%s\n' "_lib/web-apps/phpbb" ;;
+    stacks/networking/openvpn) printf '%s\n' "_lib/networking/openvpn" ;;
+    stacks/scaffolds/serve-actix-diesel-auth-scaffold) printf '%s\n' "_lib/web-apps/serve-actix-diesel-auth-scaffold" ;;
+    stacks/task-queues/celery) printf '%s\n' "_lib/web-apps/celery" ;;
+    stacks/virtualization/bento-builder) printf '%s\n' "_lib/virtualization/bento-builder" ;;
+    *) printf '%s\n' "${1:-}" ;;
+  esac
 }
 
 # Pre-scan arguments for global offline and cache flags
@@ -283,11 +327,19 @@ if [ "$IS_ACTION" = "1" ]; then
   set -- "$CMD" "$@"
 fi
 
+ACTION_PKG="$(normalize_component_alias "$ACTION_PKG")"
+
 TARGET=""
 if [ "$ACTION_PKG" = "cloud" ]; then
   TARGET="$LIBSCRIPT_CLI_DIR/_lib/cloud/core"
 elif [ -f "$SCRIPT_DIR/$ACTION_PKG/cli.sh" ]; then
   TARGET="$LIBSCRIPT_CLI_DIR/$ACTION_PKG"
+elif [ -f "$SCRIPT_DIR/_lib/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/_lib/$ACTION_PKG"
+elif [ -f "$SCRIPT_DIR/topologies/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/topologies/$ACTION_PKG"
+elif [ -f "$SCRIPT_DIR/payloads/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/payloads/$ACTION_PKG"
 else
   if ! matches=$(find_components | grep -i "$ACTION_PKG"); then
     matches=""

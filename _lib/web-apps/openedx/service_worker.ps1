@@ -11,7 +11,18 @@ param(
 )
 
 $openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } elseif (Test-Path "C:\Users\vagrant\.libscript\openedx") { "C:\Users\vagrant\.libscript\openedx" } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
-$codebaseDir = if (Test-Path (Join-Path $openEdxDir "codebase\manage.py")) { Join-Path $openEdxDir "codebase" } else { $openEdxDir }
+$codebaseDir = $openEdxDir
+if (Test-Path (Join-Path $openEdxDir "codebase\manage.py")) {
+    $codebaseDir = Join-Path $openEdxDir "codebase"
+} else {
+    $nestedManage = Get-ChildItem -Path (Join-Path $openEdxDir "codebase") -Filter "manage.py" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($nestedManage) {
+        $codebaseDir = $nestedManage.DirectoryName
+    } else {
+        $rootNested = Get-ChildItem -Path $openEdxDir -Filter "manage.py" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($rootNested) { $codebaseDir = $rootNested.DirectoryName }
+    }
+}
 $logDir = Join-Path $openEdxDir "logs"
 $runDir = Join-Path $openEdxDir "run"
 
@@ -59,7 +70,9 @@ function Start-OpenEdxServices {
     $env:CMS_CFG = Join-Path $openEdxDir "config\cms.env.json"
 
     if (Test-Path $waitressExe) {
+        $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript"
         $lmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$LmsPort", "lms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
+        $env:DJANGO_SETTINGS_MODULE = "cms.envs.libscript"
         $cmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$CmsPort", "cms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
     } else {
         $lmsProc = Start-Process -FilePath $pyExe -ArgumentList "`"$managePy`"", "lms", "--settings=libscript", "runserver", "--insecure", "0.0.0.0:$LmsPort", "--noreload" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru

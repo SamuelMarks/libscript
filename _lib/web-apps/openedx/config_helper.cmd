@@ -6,10 +6,10 @@
 :: Provides key inspection, mutation, default generation, and syntax validation.
 ::
 :: ## Usage
-:: config_helper.cmd stacks/cms/openedx/config_helper.cmd get <conf_file> <key>
-:: config_helper.cmd stacks/cms/openedx/config_helper.cmd set <conf_file1> <conf_file2> <key> <val>
-:: config_helper.cmd stacks/cms/openedx/config_helper.cmd generate <conf_file1> <conf_file2>
-:: config_helper.cmd stacks/cms/openedx/config_helper.cmd validate <conf_file> <schema_file>
+:: config_helper.cmd _lib/web-apps/openedx/config_helper.cmd get <conf_file> <key>
+:: config_helper.cmd _lib/web-apps/openedx/config_helper.cmd set <conf_file1> <conf_file2> <key> <val>
+:: config_helper.cmd _lib/web-apps/openedx/config_helper.cmd generate <conf_file1> <conf_file2>
+:: config_helper.cmd _lib/web-apps/openedx/config_helper.cmd validate <conf_file> <schema_file>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

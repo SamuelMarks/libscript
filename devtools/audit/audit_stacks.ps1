@@ -22,7 +22,16 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
 
 $rootDir = if ($env:ROOT_DIR) { Resolve-Path $env:ROOT_DIR } else { Resolve-Path (Join-Path $PSScriptRoot '..\..') }
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-$stacks = Get-ChildItem -Path (Join-Path $rootDir 'stacks') -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'stacks' }
+$stacks = @()
+if (Test-Path (Join-Path $rootDir '_lib\web-apps')) {
+    $stacks += Get-ChildItem -Path (Join-Path $rootDir '_lib\web-apps') -Directory
+}
+if (Test-Path (Join-Path $rootDir 'topologies')) {
+    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'topologies') -Directory
+}
+if (Test-Path (Join-Path $rootDir 'payloads')) {
+    $stacks += Get-ChildItem -Path (Join-Path $rootDir 'payloads') -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'payloads' }
+}
 
 foreach ($stack in $stacks) {
     $readmePath = Join-Path $stack.FullName 'README.md'

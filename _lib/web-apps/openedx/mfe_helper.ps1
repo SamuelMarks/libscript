@@ -3,9 +3,9 @@
 # Manages frontend applications, asset compilation, and static distribution.
 #
 # ## Usage
-# powershell stacks/cms/openedx/mfe_helper.ps1 build <root_dir> <mfe_name> [version]
-# powershell stacks/cms/openedx/mfe_helper.ps1 deploy <root_dir> <dist_root> <mfe_name> [dest_path]
-# powershell stacks/cms/openedx/mfe_helper.ps1 list <root_dir>
+# powershell _lib/web-apps/openedx/mfe_helper.ps1 build <root_dir> <mfe_name> [version]
+# powershell _lib/web-apps/openedx/mfe_helper.ps1 deploy <root_dir> <dist_root> <mfe_name> [dest_path]
+# powershell _lib/web-apps/openedx/mfe_helper.ps1 list <root_dir>
 
 [CmdletBinding()]
 param(

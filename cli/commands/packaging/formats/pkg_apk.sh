@@ -78,17 +78,17 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
         printf '%s\n' "#!/bin/sh"
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi"
-        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ]; then
-          printf '%s\n' "mkdir -p /usr/local/bin && ln -sf /opt/libscript/stacks/cms/openedx/cli.sh /usr/local/bin/openedx"
-          printf '%s\n' "/opt/libscript/stacks/cms/openedx/healthcheck.sh || true"
+        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ] || [ "$pkg" = "_lib/web-apps/openedx" ]; then
+          printf '%s\n' "mkdir -p /usr/local/bin && ln -sf /opt/libscript/_lib/web-apps/openedx/cli.sh /usr/local/bin/openedx"
+          printf '%s\n' "/opt/libscript/_lib/web-apps/openedx/healthcheck.sh || true"
         fi
         printf '%s\n' "EOF"
         printf '%s\n' "chmod +x \"\$BUILD_DIR/${pkg_name}.post-install\""
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.pre-deinstall\""
 
         printf '%s\n' "#!/bin/sh"
-        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ]; then
-          printf '%s\n' "/opt/libscript/stacks/cms/openedx/workers.sh stop 2>/dev/null || true"
+        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ] || [ "$pkg" = "_lib/web-apps/openedx" ]; then
+          printf '%s\n' "/opt/libscript/_lib/web-apps/openedx/workers.sh stop 2>/dev/null || true"
           printf '%s\n' "rm -f /usr/local/bin/openedx"
         fi
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"

@@ -64,11 +64,17 @@ if "%ACTION%"=="install" (
         exit /b 0
     )
     if defined LIBSCRIPT_CACHE_DIR (
-        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\datastores\mysql*.zip") do (
-            echo [INFO] Extracting MySQL from offline cache %%~fZ...
-            if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%"
-            tar -xf "%%~fZ" -C "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" --strip-components=1 2>nul || tar -xf "%%~fZ" -C "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%"
-            exit /b 0
+        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\databases\mysql*.zip" "%LIBSCRIPT_CACHE_DIR%\datastores\mysql*.zip") do (
+            if exist "%%~fZ" (
+                echo [INFO] Extracting MySQL from offline cache %%~fZ...
+                if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%"
+                tar -xf "%%~fZ" -C "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" --strip-components=1 2>nul || tar -xf "%%~fZ" -C "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%"
+                if not "%MYSQL_VERSION%"=="latest" (
+                    if exist "%LIBSCRIPT_HOME%\mysql\latest" rmdir "%LIBSCRIPT_HOME%\mysql\latest" 2>nul
+                    mklink /J "%LIBSCRIPT_HOME%\mysql\latest" "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" >nul 2>&1
+                )
+                exit /b 0
+            )
         )
     )
     if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (

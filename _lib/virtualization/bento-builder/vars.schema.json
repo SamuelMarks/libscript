@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/virtualization/bento-builder/vars.schema.json",
+  "$id": "/_lib/virtualization/bento-builder/vars.schema.json",
   "title": "bento-builder vars",
   "description": "Variables for Bento builder virtualization environment",
   "type": "object",

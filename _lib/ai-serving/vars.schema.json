@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/ai-serving/tpu-vm-vllm/vars.schema.json",
+  "$id": "/_lib/ai-serving/vars.schema.json",
   "title": "tpu-vm-vllm vars",
   "description": "Variables for Cloud TPU VM vLLM AI model serving stack",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/cms/wordpress/vars.schema.json",
+  "$id": "/_lib/web-apps/wordpress/vars.schema.json",
   "title": "WordPress 7.1.2 Stack Variables",
   "description": "Configuration variables and deployment parameters for WordPress 7.1.2 enterprise WAMP/LAMP stack.",
   "type": "object",

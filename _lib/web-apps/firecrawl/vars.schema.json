@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/crawlers/firecrawl/vars.schema.json",
+  "$id": "/_lib/web-apps/firecrawl/vars.schema.json",
   "title": "firecrawl third-party vars",
   "description": "Variables for firecrawl third-party vars",
   "type": "object",

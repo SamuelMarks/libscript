@@ -3,10 +3,10 @@
 # Provides key inspection, mutation, default generation, and syntax validation.
 #
 # ## Usage
-# powershell stacks/cms/openedx/config_helper.ps1 get <conf_file> <key>
-# powershell stacks/cms/openedx/config_helper.ps1 set <conf_file1> <conf_file2> <key> <val>
-# powershell stacks/cms/openedx/config_helper.ps1 generate <conf_file1> <conf_file2>
-# powershell stacks/cms/openedx/config_helper.ps1 validate <conf_file> <schema_file>
+# powershell _lib/web-apps/openedx/config_helper.ps1 get <conf_file> <key>
+# powershell _lib/web-apps/openedx/config_helper.ps1 set <conf_file1> <conf_file2> <key> <val>
+# powershell _lib/web-apps/openedx/config_helper.ps1 generate <conf_file1> <conf_file2>
+# powershell _lib/web-apps/openedx/config_helper.ps1 validate <conf_file> <schema_file>
 
 [CmdletBinding()]
 param(

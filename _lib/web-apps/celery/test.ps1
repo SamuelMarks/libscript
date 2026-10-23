@@ -14,4 +14,4 @@ Execute this script to run the test suite for celery.
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/task-queues/celery test skipped"
+Write-Output "./_lib/web-apps/celery test skipped"

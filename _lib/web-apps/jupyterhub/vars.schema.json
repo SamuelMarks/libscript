@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/data-science/jupyterhub/vars.schema.json",
+  "$id": "/_lib/web-apps/jupyterhub/vars.schema.json",
   "title": "jupyterhub third-party vars",
   "description": "Variables for jupyterhub third-party vars",
   "type": "object",

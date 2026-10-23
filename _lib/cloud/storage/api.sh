@@ -36,6 +36,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 libscript_storage_create() {
   provider="$1"
   bucket="$2"
+  bucket="${bucket#gs://}"
+  bucket="${bucket#s3://}"
   public_web="${3:-false}"
   
   case "$provider" in
@@ -95,6 +97,8 @@ libscript_storage_create() {
 libscript_storage_delete() {
   provider="$1"
   bucket="$2"
+  bucket="${bucket#gs://}"
+  bucket="${bucket#s3://}"
 
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
     # shellcheck disable=SC1091
@@ -162,6 +166,8 @@ libscript_storage_list() {
 libscript_storage_sync() {
   provider="$1"
   bucket="$2"
+  bucket="${bucket#gs://}"
+  bucket="${bucket#s3://}"
   local_dir="$3"
   
   if [ ! -d "$local_dir" ]; then

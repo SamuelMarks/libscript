@@ -14,4 +14,4 @@ Execute this script to install and configure firecrawl on the local system.
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/crawlers/firecrawl setup skipped"
+Write-Output "./_lib/web-apps/firecrawl setup skipped"

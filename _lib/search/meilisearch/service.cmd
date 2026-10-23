@@ -51,4 +51,40 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "ACTION=%~1"
+if "%ACTION%"=="" set "ACTION=status"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "MEILI_EXE=%LIBSCRIPT_HOME%\meilisearch\latest\bin\meilisearch.exe"
+if not exist "%MEILI_EXE%" (
+    for /d %%D in ("%LIBSCRIPT_HOME%\meilisearch\*") do (
+        if exist "%%~fD\bin\meilisearch.exe" set "MEILI_EXE=%%~fD\bin\meilisearch.exe"
+    )
+)
+set "DATA_DIR=%LIBSCRIPT_HOME%\meilisearch\data"
+
+if /i "%ACTION%"=="start" (
+    sc.exe query meilisearch 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
+    sc.exe start meilisearch >nul 2>&1 && exit /b 0
+    if exist "%MEILI_EXE%" (
+        if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process meilisearch -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%MEILI_EXE%' -ArgumentList '--db-path','\"%DATA_DIR%\"','--http-addr','127.0.0.1:7700','--no-analytics' -WindowStyle Hidden }" 2>nul
+    )
+    exit /b 0
+)
+if /i "%ACTION%"=="stop" (
+    sc.exe stop meilisearch >nul 2>&1
+    taskkill /F /IM meilisearch.exe >nul 2>&1
+    exit /b 0
+)
+if /i "%ACTION%"=="restart" (
+    call "%~f0" stop
+    call "%~f0" start
+    exit /b 0
+)
+if /i "%ACTION%"=="status" (
+    sc.exe query meilisearch 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] meilisearch & exit /b 0)
+    powershell -NoProfile -Command "if (Get-Process meilisearch -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] meilisearch.exe & exit /b 0)
+    echo [STOPPED] meilisearch
+    exit /b 1
+)
 exit /b 0

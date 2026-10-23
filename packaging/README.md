@@ -114,11 +114,11 @@ Builds successfully without network access via `docker build --network none .`.
 
 ```sh
 # Online and Offline MSI builds
-./packaging/build_msi.sh stacks/cms/openedx --online
-./packaging/build_msi.sh stacks/cms/openedx --offline
+./packaging/build_msi.sh _lib/web-apps/openedx --online
+./packaging/build_msi.sh _lib/web-apps/openedx --offline
 
 # Docker and Compose exports
-./libscript.sh package-as docker stacks/cms/openedx --online
-./libscript.sh package-as docker stacks/cms/openedx --offline
-./libscript.sh package-as docker-compose stacks/cms/openedx --offline
+./libscript.sh package-as docker _lib/web-apps/openedx --online
+./libscript.sh package-as docker _lib/web-apps/openedx --offline
+./libscript.sh package-as docker-compose _lib/web-apps/openedx --offline
 ```

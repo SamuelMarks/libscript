@@ -3,9 +3,9 @@
 # Manages daemon lifecycle, status monitoring, and graceful termination of workers.
 #
 # ## Usage
-# powershell stacks/cms/openedx/workers_helper.ps1 start <run_dir> <log_dir> <py_bin> <install_dir>
-# powershell stacks/cms/openedx/workers_helper.ps1 stop <run_dir>
-# powershell stacks/cms/openedx/workers_helper.ps1 status <run_dir>
+# powershell _lib/web-apps/openedx/workers_helper.ps1 start <run_dir> <log_dir> <py_bin> <install_dir>
+# powershell _lib/web-apps/openedx/workers_helper.ps1 stop <run_dir>
+# powershell _lib/web-apps/openedx/workers_helper.ps1 status <run_dir>
 
 [CmdletBinding()]
 param(

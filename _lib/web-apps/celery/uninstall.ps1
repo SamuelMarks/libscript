@@ -14,4 +14,4 @@ Execute this script to remove celery and its associated configurations from the 
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/task-queues/celery uninstall skipped"
+Write-Output "./_lib/web-apps/celery uninstall skipped"

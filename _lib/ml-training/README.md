@@ -17,16 +17,17 @@ It accomplishes the following:
 
 ## Usage
 
-Refer to the component's setup and deploy scripts for specific operations.
+Refer to the component's setup and deploy scripts for specific operations (or
+`./payloads/ai/gcp-tpu-vm/deploy.sh`).
 
 ```bash
 # Provision the infrastructure
-./stacks/ml-training/tpu-vm-eval-node/setup.sh
+./_lib/ml-training/setup.sh
 
 # Deploy the ML loop
 export BUCKET_NAME="gs://my-bucket"
 export ML_SCRIPT="python -m my_train_script"
-./stacks/ml-training/tpu-vm-eval-node/deploy.sh
+./_lib/ml-training/deploy.sh
 ```
 
 ## Configuration Options

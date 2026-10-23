@@ -1,4 +1,4 @@
-# JupyterHub Systemd Configuration (`stacks/data-science/jupyterhub/conf/systemd`)
+# JupyterHub Systemd Configuration (`_lib/web-apps/jupyterhub/conf/systemd`)
 
 ## Overview
 
@@ -15,5 +15,5 @@ permissions, working directories, and process restart policies.
 Applied during generic setup or service installation:
 
 ```sh
-./stacks/data-science/jupyterhub/setup.sh install-service
+./_lib/web-apps/jupyterhub/setup.sh install-service
 ```

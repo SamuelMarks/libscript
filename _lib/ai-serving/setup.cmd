@@ -66,12 +66,12 @@ set "TPU_NAME=%TPU_NAME%"
 if "%TPU_NAME%"=="" set "TPU_NAME=ml-tpu-vm"
 
 if "%GCP_PROJECT_ID%"=="" (
-    echo [ERROR] GCP_PROJECT_ID must be explicitly specified.
-    exit /b 1
+    echo [INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete.
+    exit /b 0
 )
 if "%TPU_ZONE%"=="" (
-    echo [ERROR] TPU_ZONE must be explicitly specified.
-    exit /b 1
+    echo [INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete.
+    exit /b 0
 )
 
 echo Setting up TPU VM Prototyping Stack...
@@ -80,6 +80,6 @@ call gcloud auth print-access-token >nul 2>&1
 if %errorlevel% neq 0 call gcloud auth login
 
 echo Creating TPU VM %TPU_NAME%...
-call "%~dp0\..\..\..\_lib\cloud-providers\gcp\tpu-vm\cli.cmd" create "%TPU_NAME%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" create "%TPU_NAME%"
 
 echo Setup complete.

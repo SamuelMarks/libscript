@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/task-queues/celery/vars.schema.json",
+  "$id": "/_lib/web-apps/celery/vars.schema.json",
   "title": "celery storage vars",
   "description": "Variables for celery storage vars",
   "type": "object",

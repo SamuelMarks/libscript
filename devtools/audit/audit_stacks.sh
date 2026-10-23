@@ -39,7 +39,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   printf '%s\n' "  --help, -h, /?, -?  Show this help message."
   exit 0
 fi
-for stack_dir in "$LIBSCRIPT_ROOT_DIR"/stacks/*/*; do
+for stack_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/web-apps/* "$LIBSCRIPT_ROOT_DIR"/topologies/* "$LIBSCRIPT_ROOT_DIR"/payloads/*/*; do
     if [ ! -d "$stack_dir" ]; then continue; fi
     stack_name="$(basename "$stack_dir")"
     

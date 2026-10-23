@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/ecommerce/magento/vars.schema.json",
+  "$id": "/_lib/web-apps/magento/vars.schema.json",
   "title": "magento vars",
   "description": "Variables for magento vars",
   "type": "object",

@@ -1384,7 +1384,11 @@ for step in steps:
         if os_name == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
             continue
         if not try_capture_live_browser(step, outs):
-            render_browser_step(step, outs, os_name)
+            if os.environ.get("ALLOW_SYNTHETIC_BROWSER_FALLBACK") == "1":
+                render_browser_step(step, outs, os_name)
+            else:
+                sys.stderr.write(f"[ERROR] Live browser capture failed for step '{sid}'. Refusing to generate synthetic mock UI screenshot (set ALLOW_SYNTHETIC_BROWSER_FALLBACK=1 to override).\n")
+                sys.exit(1)
 PY_EOF
 
   printf '[POST-INSTALL] %s (%s) -> %s

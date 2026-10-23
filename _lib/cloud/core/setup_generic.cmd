@@ -69,13 +69,25 @@ if /i "%action%"=="azure" goto :route_provider
 if /i "%action%"=="gcp" goto :route_provider
 if /i "%action%"=="hetzner" goto :route_provider
 if /i "%action%"=="proxmox" goto :route_provider
+if /i "%action%"=="storage" goto :route_storage
 
 :: Default behavior (no-op)
 goto :eof
 
+:: ## route_storage
+:: Dispatches cloud storage commands to _lib\cloud\storage\cli.cmd.
+:route_storage
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\storage\cli.cmd" %*
+exit /b %errorlevel%
+
 :: ## route_provider
 :: Dispatches cloud provider commands to the corresponding provider cli.cmd.
 :route_provider
+if /i "%~1"=="storage" (
+    set "LIBSCRIPT_CLOUD=%action%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\storage\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %errorlevel%
+)
 set "CLI_PATH=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\%action%\cli.cmd"
 if not exist "%CLI_PATH%" (
     echo Error: Provider %action% not supported or installed. 1>&2

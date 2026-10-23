@@ -14,4 +14,4 @@ Execute this script to install and configure serve-actix-diesel-auth-scaffold on
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/scaffolds/serve-actix-diesel-auth-scaffold setup skipped"
+Write-Output "./_lib/web-apps/serve-actix-diesel-auth-scaffold setup skipped"

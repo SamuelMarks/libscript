@@ -6,9 +6,9 @@
 :: Manages daemon lifecycle, status monitoring, and graceful termination of workers.
 ::
 :: ## Usage
-:: workers_helper.cmd stacks/cms/openedx/workers_helper.cmd start <run_dir> <log_dir> <py_bin> <install_dir>
-:: workers_helper.cmd stacks/cms/openedx/workers_helper.cmd stop <run_dir>
-:: workers_helper.cmd stacks/cms/openedx/workers_helper.cmd status <run_dir>
+:: workers_helper.cmd _lib/web-apps/openedx/workers_helper.cmd start <run_dir> <log_dir> <py_bin> <install_dir>
+:: workers_helper.cmd _lib/web-apps/openedx/workers_helper.cmd stop <run_dir>
+:: workers_helper.cmd _lib/web-apps/openedx/workers_helper.cmd status <run_dir>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

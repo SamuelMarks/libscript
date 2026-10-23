@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/ecommerce/woocommerce/vars.schema.json",
+  "$id": "/_lib/web-apps/woocommerce/vars.schema.json",
   "title": "woocommerce vars",
   "description": "Variables for woocommerce vars",
   "type": "object",

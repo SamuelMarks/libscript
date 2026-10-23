@@ -65,7 +65,7 @@ You can deploy a full WooCommerce stack by simply installing this component:
 export WOOCOMMERCE_VERSION="latest"
 export WORDPRESS_DB_ENGINE="sqlite"
 export WORDPRESS_WEBSERVER="caddy"
-./libscript.sh install stacks/ecommerce/woocommerce
+./libscript.sh install _lib/web-apps/woocommerce
 ```
 
 ## Platform Support
@@ -82,7 +82,7 @@ export WORDPRESS_WEBSERVER="caddy"
 
 This stack orchestrates the following LibScript components:
 
-- `stacks/cms/wordpress`: Foundational WordPress CMS runtime
+- `_lib/web-apps/wordpress`: Foundational WordPress CMS runtime
 - `_lib/languages/php`: PHP runtime and WooCommerce extensions
 - `_lib/databases/mariadb`: MySQL/MariaDB database storage
 - `_lib/web-servers/nginx` (or `caddy`, `httpd`, `iis`): Web server and ingress

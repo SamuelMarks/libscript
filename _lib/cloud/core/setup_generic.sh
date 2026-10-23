@@ -91,6 +91,32 @@ case "$action" in
     ;;
   aws|azure|gcp|hetzner|proxmox)
     PROVIDER="$action"
+    if [ "${1:-}" = "storage" ]; then
+      shift
+      export LIBSCRIPT_CLOUD="$PROVIDER"
+      unset SCRIPT_NAME || true
+      exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/storage/cli.sh" "$@"
+    elif [ "${1:-}" = "volume" ]; then
+      shift
+      export LIBSCRIPT_CLOUD="$PROVIDER"
+      unset SCRIPT_NAME || true
+      exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/volume/cli.sh" "$@"
+    elif [ "${1:-}" = "cdn" ]; then
+      shift
+      export LIBSCRIPT_CLOUD="$PROVIDER"
+      unset SCRIPT_NAME || true
+      exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/cdn/cli.sh" "$@"
+    elif [ "${1:-}" = "cert" ]; then
+      shift
+      export LIBSCRIPT_CLOUD="$PROVIDER"
+      unset SCRIPT_NAME || true
+      exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/cert/cli.sh" "$@"
+    elif [ "${1:-}" = "cloudinit" ]; then
+      shift
+      export LIBSCRIPT_CLOUD="$PROVIDER"
+      unset SCRIPT_NAME || true
+      exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/cloudinit/cli.sh" "$@"
+    fi
     CLI_PATH="$LIBSCRIPT_ROOT_DIR/_lib/cloud-providers/$PROVIDER/cli.sh"
     if [ ! -f "$CLI_PATH" ]; then
       printf '%s\n' "Error: Provider $PROVIDER not supported or installed." >&2
@@ -98,6 +124,10 @@ case "$action" in
     fi
     unset SCRIPT_NAME || true
     exec "$CLI_PATH" "$@"
+    ;;
+  storage|volume|cdn|cert|cloudinit)
+    unset SCRIPT_NAME || true
+    exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/$action/cli.sh" "$@"
     ;;
   cleanup)
     printf '%s\n' "Cleaning up all cloud resources..."

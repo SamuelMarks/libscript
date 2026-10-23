@@ -242,15 +242,61 @@ if "%is_action%"=="1" (
     set "action_pkg=%~2"
     goto match_component
 ) else (
-    echo Error: Unknown command '%cmd%'.
-    goto show_help
+    set "action_pkg=%cmd%"
+    goto match_component
 )
 
 :: ## match_component
 :: Performs the match_component operation and updates component state.
 :match_component
 set "target="
-set "action_pkg=!action_pkg:/=\!"
+set "action_pkg_norm=!action_pkg:\=/!"
+if /i "!action_pkg_norm!"=="cloud-providers/gcp/cli" set "action_pkg_norm=_lib/cloud-providers/gcp-cli"
+if /i "!action_pkg_norm!"=="gcp/cli" set "action_pkg_norm=_lib/cloud-providers/gcp-cli"
+if /i "!action_pkg_norm!"=="cloud-providers/gcp/tpu-vm" set "action_pkg_norm=_lib/cloud-providers/gcp-tpu-vm"
+if /i "!action_pkg_norm!"=="gcp/tpu-vm" set "action_pkg_norm=_lib/cloud-providers/gcp-tpu-vm"
+if /i "!action_pkg_norm!"=="cloud-providers/gcp/gpu-vm" set "action_pkg_norm=_lib/cloud-providers/gcp-gpu-vm"
+if /i "!action_pkg_norm!"=="gcp/gpu-vm" set "action_pkg_norm=_lib/cloud-providers/gcp-gpu-vm"
+if /i "!action_pkg_norm!"=="cloud-providers/gcp/filestore" set "action_pkg_norm=_lib/cloud-providers/gcp-filestore"
+if /i "!action_pkg_norm!"=="gcp/filestore" set "action_pkg_norm=_lib/cloud-providers/gcp-filestore"
+if /i "!action_pkg_norm!"=="cloud-providers/gcp/gke-tpu-cluster" set "action_pkg_norm=topologies/gke-tpu-cluster"
+if /i "!action_pkg_norm!"=="gcp/gke-tpu-cluster" set "action_pkg_norm=topologies/gke-tpu-cluster"
+if /i "!action_pkg_norm!"=="gke-tpu-cluster" set "action_pkg_norm=topologies/gke-tpu-cluster"
+if /i "!action_pkg_norm!"=="cloud/storage" set "action_pkg_norm=_lib/cloud/storage"
+if /i "!action_pkg_norm!"=="cloud/cdn" set "action_pkg_norm=_lib/cloud/cdn"
+if /i "!action_pkg_norm!"=="cloud/cert" set "action_pkg_norm=_lib/cloud/cert"
+if /i "!action_pkg_norm!"=="cloud/volume" set "action_pkg_norm=_lib/cloud/volume"
+if /i "!action_pkg_norm!"=="cloud/cloudinit" set "action_pkg_norm=_lib/cloud/cloudinit"
+if /i "!action_pkg_norm!"=="stacks/ml-training/tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training"
+if /i "!action_pkg_norm!"=="ml-training/tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training"
+if /i "!action_pkg_norm!"=="tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training"
+if /i "!action_pkg_norm!"=="stacks/ml-training/gke-xpk-training" set "action_pkg_norm=_lib/orchestration/gke-xpk-training"
+if /i "!action_pkg_norm!"=="ml-training/gke-xpk-training" set "action_pkg_norm=_lib/orchestration/gke-xpk-training"
+if /i "!action_pkg_norm!"=="gke-xpk-training" set "action_pkg_norm=_lib/orchestration/gke-xpk-training"
+if /i "!action_pkg_norm!"=="stacks/ai-serving/tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving"
+if /i "!action_pkg_norm!"=="ai-serving/tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving"
+if /i "!action_pkg_norm!"=="tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving"
+if /i "!action_pkg_norm!"=="stacks/ai-serving/gke-xpk-inference" set "action_pkg_norm=_lib/ai-serving/gke-xpk-inference"
+if /i "!action_pkg_norm!"=="ai-serving/gke-xpk-inference" set "action_pkg_norm=_lib/ai-serving/gke-xpk-inference"
+if /i "!action_pkg_norm!"=="gke-xpk-inference" set "action_pkg_norm=_lib/ai-serving/gke-xpk-inference"
+if /i "!action_pkg_norm!"=="stacks/cms/openedx" set "action_pkg_norm=_lib/web-apps/openedx"
+if /i "!action_pkg_norm!"=="stacks/cms/wordpress" set "action_pkg_norm=_lib/web-apps/wordpress"
+if /i "!action_pkg_norm!"=="stacks/cms/drupal" set "action_pkg_norm=_lib/web-apps/drupal"
+if /i "!action_pkg_norm!"=="stacks/cms/joomla" set "action_pkg_norm=_lib/web-apps/joomla"
+if /i "!action_pkg_norm!"=="stacks/ecommerce/woocommerce" set "action_pkg_norm=_lib/web-apps/woocommerce"
+if /i "!action_pkg_norm!"=="stacks/ecommerce/magento" set "action_pkg_norm=_lib/web-apps/magento"
+if /i "!action_pkg_norm!"=="stacks/ecommerce/prestashop" set "action_pkg_norm=_lib/web-apps/prestashop"
+if /i "!action_pkg_norm!"=="stacks/collaboration/nextcloud" set "action_pkg_norm=_lib/web-apps/nextcloud"
+if /i "!action_pkg_norm!"=="stacks/crawlers/firecrawl" set "action_pkg_norm=_lib/web-apps/firecrawl"
+if /i "!action_pkg_norm!"=="stacks/data-science/jupyterhub" set "action_pkg_norm=_lib/web-apps/jupyterhub"
+if /i "!action_pkg_norm!"=="stacks/erp/odoo" set "action_pkg_norm=_lib/web-apps/odoo"
+if /i "!action_pkg_norm!"=="stacks/forums/phpbb" set "action_pkg_norm=_lib/web-apps/phpbb"
+if /i "!action_pkg_norm!"=="stacks/networking/openvpn" set "action_pkg_norm=_lib/networking/openvpn"
+if /i "!action_pkg_norm!"=="stacks/scaffolds/serve-actix-diesel-auth-scaffold" set "action_pkg_norm=_lib/web-apps/serve-actix-diesel-auth-scaffold"
+if /i "!action_pkg_norm!"=="stacks/task-queues/celery" set "action_pkg_norm=_lib/web-apps/celery"
+if /i "!action_pkg_norm!"=="stacks/virtualization/bento-builder" set "action_pkg_norm=_lib/virtualization/bento-builder"
+
+set "action_pkg=!action_pkg_norm:/=\!"
 if /i "!action_pkg!"=="cloud" (
     set "target=!SCRIPT_DIR!\_lib\cloud\core"
     goto run_target
@@ -263,13 +309,21 @@ if exist "!SCRIPT_DIR!\_lib\!action_pkg!\cli.cmd" (
     set "target=!SCRIPT_DIR!\_lib\!action_pkg!"
     goto run_target
 )
+if exist "!SCRIPT_DIR!\topologies\!action_pkg!\cli.cmd" (
+    set "target=!SCRIPT_DIR!\topologies\!action_pkg!"
+    goto run_target
+)
+if exist "!SCRIPT_DIR!\payloads\!action_pkg!\cli.cmd" (
+    set "target=!SCRIPT_DIR!\payloads\!action_pkg!"
+    goto run_target
+)
 if exist "!SCRIPT_DIR!\_lib\_common\!action_pkg!\cli.cmd" (
     set "target=!SCRIPT_DIR!\_lib\_common\!action_pkg!"
     goto run_target
 )
 
-:: Direct category search: _lib\<cat>\<pkg>\cli.cmd or stacks\<cat>\<pkg>\cli.cmd
-for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\stacks\*") do (
+:: Direct category search: _lib\<cat>\<pkg>\cli.cmd or topologies\<pkg>\cli.cmd or payloads\<cat>\<pkg>\cli.cmd
+for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\topologies\*" "!SCRIPT_DIR!\payloads\*") do (
     if exist "%%C\!action_pkg!\cli.cmd" (
         set "target=%%C\!action_pkg!"
         goto run_target
@@ -279,7 +333,19 @@ for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\stacks\*") do (
 set "match_count=0"
 set "last_match="
 
-for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\stacks\*") do (
+for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\topologies\*" "!SCRIPT_DIR!\payloads\*") do (
+    if exist "%%C\cli.cmd" (
+        set "cname=%%~nxC"
+        if "!cname!"=="!action_pkg!" (
+            set "target=%%C"
+            goto run_target
+        )
+        echo "!cname!" | findstr /i "!action_pkg!" >nul 2>&1
+        if not errorlevel 1 (
+            set /a match_count+=1
+            set "last_match=%%C"
+        )
+    )
     for /d %%D in ("%%C\*") do (
         if exist "%%D\cli.cmd" (
             set "cname=%%~nxD"
@@ -324,6 +390,12 @@ exit /b 1
 :: Performs the run_target operation and updates component state.
 :run_target
 if exist "!target!\cli.cmd" (
+    if "%is_action%"=="0" (
+        if not "%action_pkg%"=="cloud" (
+            call "!target!\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+            exit /b !errorlevel!
+        )
+    )
     call "!target!\cli.cmd" %*
     exit /b !errorlevel!
 ) else (

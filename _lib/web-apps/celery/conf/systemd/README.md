@@ -1,4 +1,4 @@
-# Celery Systemd Configuration (`stacks/task-queues/celery/conf/systemd`)
+# Celery Systemd Configuration (`_lib/web-apps/celery/conf/systemd`)
 
 ## Overview
 
@@ -15,5 +15,5 @@ runtime environment paths for Celery task worker instances.
 Applied during service installation:
 
 ```sh
-./stacks/task-queues/celery/setup.sh install-service
+./_lib/web-apps/celery/setup.sh install-service
 ```

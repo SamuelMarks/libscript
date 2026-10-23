@@ -186,7 +186,7 @@ case "${1:-}" in
     ACTION="${1:-}"
     shift
     ;;
-  ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
+  ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down|setup|deploy)
     ACTION="${1:-}"
     if [ -n "${3:-}" ] && ! printf '%s\n' "${3:-}" | grep -q '^-'; then
       PACKAGE_NAME="${2:-}"

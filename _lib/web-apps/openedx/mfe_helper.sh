@@ -4,9 +4,9 @@
 # Manages frontend applications, asset compilation, and static distribution.
 #
 # ## Usage
-# ./stacks/cms/openedx/mfe_helper.sh build <root_dir> <mfe_name> [version]
-# ./stacks/cms/openedx/mfe_helper.sh deploy <root_dir> <dist_root> <mfe_name> [dest_path]
-# ./stacks/cms/openedx/mfe_helper.sh list <root_dir>
+# ./_lib/web-apps/openedx/mfe_helper.sh build <root_dir> <mfe_name> [version]
+# ./_lib/web-apps/openedx/mfe_helper.sh deploy <root_dir> <dist_root> <mfe_name> [dest_path]
+# ./_lib/web-apps/openedx/mfe_helper.sh list <root_dir>
 
 set -feu
 

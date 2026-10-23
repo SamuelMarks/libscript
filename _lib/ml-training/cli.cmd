@@ -50,5 +50,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-exit /b 0
+set "PACKAGE_NAME=tpu-vm-eval-node"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*

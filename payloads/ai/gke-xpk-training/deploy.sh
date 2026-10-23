@@ -70,6 +70,17 @@ if xpk workload list --cluster "$CLUSTER_NAME" --project "$GCP_PROJECT_ID" --zon
 fi
 
 log_info "Deploying workload $WORKLOAD_NAME to XPK cluster $CLUSTER_NAME..."
+EXTRA_XPK_FLAGS=""
+if [ "${TPU_SCHEDULING_TYPE:-}" = "spot" ]; then
+  EXTRA_XPK_FLAGS="$EXTRA_XPK_FLAGS --spot"
+elif [ "${TPU_SCHEDULING_TYPE:-}" = "on-demand" ]; then
+  EXTRA_XPK_FLAGS="$EXTRA_XPK_FLAGS --on-demand"
+fi
+if [ -n "${TPU_SLICE_COUNT:-}" ]; then
+  EXTRA_XPK_FLAGS="$EXTRA_XPK_FLAGS --num-slices=${TPU_SLICE_COUNT}"
+fi
+
+# shellcheck disable=SC2086
 xpk workload create \
   --cluster "$CLUSTER_NAME" \
   --workload "$WORKLOAD_NAME" \
@@ -77,6 +88,6 @@ xpk workload create \
   --tpu-type "${TPU_ACCELERATOR_TYPE:-v4-8}" \
   --docker-image "$DOCKER_IMAGE" \
   --project "$GCP_PROJECT_ID" \
-  --zone "$GCP_ZONE"
+  --zone "$GCP_ZONE" $EXTRA_XPK_FLAGS
 
 log_info "Deploy complete."

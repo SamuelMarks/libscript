@@ -80,18 +80,24 @@ Write-Host "Generating markdown docs..."
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 
 $libDir = Join-Path $rootDir '_lib'
-$stacksDir = Join-Path $rootDir 'stacks'
+$topologiesDir = Join-Path $rootDir 'topologies'
+$payloadsDir = Join-Path $rootDir 'payloads'
 $libReadmes = if (Test-Path -LiteralPath $libDir) {
     Get-ChildItem -Path $libDir -Filter 'README.md' -Recurse -Depth 2 | Where-Object {
         Test-Path -LiteralPath (Join-Path $_.DirectoryName 'vars.schema.json')
     }
 } else { @() }
-$stackReadmes = if (Test-Path -LiteralPath $stacksDir) {
-    Get-ChildItem -Path $stacksDir -Filter 'README.md' -Recurse -Depth 2 | Where-Object {
+$topoReadmes = if (Test-Path -LiteralPath $topologiesDir) {
+    Get-ChildItem -Path $topologiesDir -Filter 'README.md' -Recurse -Depth 2 | Where-Object {
         Test-Path -LiteralPath (Join-Path $_.DirectoryName 'vars.schema.json')
     }
 } else { @() }
-$readmes = @($libReadmes) + @($stackReadmes)
+$payloadReadmes = if (Test-Path -LiteralPath $payloadsDir) {
+    Get-ChildItem -Path $payloadsDir -Filter 'README.md' -Recurse -Depth 2 | Where-Object {
+        Test-Path -LiteralPath (Join-Path $_.DirectoryName 'vars.schema.json')
+    }
+} else { @() }
+$readmes = @($libReadmes) + @($topoReadmes) + @($payloadReadmes)
 
 $baseSchema = Join-Path $rootDir '_lib\_common\base_vars.schema.json'
 $baseVarRows = @()

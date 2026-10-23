@@ -25,13 +25,13 @@ The `openedx` stack orchestrates the end-to-end topology for Open edX, provision
 ### POSIX (`/bin/sh`)
 
 ```sh
-./libscript.sh install stacks/cms/openedx
+./libscript.sh install _lib/web-apps/openedx
 ```
 
 ### Windows (`cmd.exe`)
 
 ```cmd
-call libscript.cmd install stacks\cms\openedx
+call libscript.cmd install _lib\web-apps\openedx
 ```
 
 ---
@@ -42,8 +42,8 @@ LibScript provides host-native commands achieving full functional parity with
 [Tutor](https://github.com/overhangio/tutor), adapted to native host execution, bare-metal runtime
 provisioning, and Windows MSI architecture.
 
-Commands can be invoked through the unified stack router (`stacks/cms/openedx/cli.sh` / `cli.cmd`),
-or via individual submodules.
+Commands can be invoked through the unified stack router (`_lib/web-apps/openedx/cli.sh` /
+`cli.cmd`), or via individual submodules.
 
 ```
   +-----------------------------------------------------------------------+
@@ -89,35 +89,35 @@ an account already exists, permissions and passwords are updated without error.
 
 ```sh
 # Create standard user
-./stacks/cms/openedx/cli.sh user create alice alice@example.com --password "SecretPass123"
+./_lib/web-apps/openedx/cli.sh user create alice alice@example.com --password "SecretPass123"
 
 # Create staff user or superuser
-./stacks/cms/openedx/cli.sh user create admin admin@example.com --password "AdminPass123" --superuser
+./_lib/web-apps/openedx/cli.sh user create admin admin@example.com --password "AdminPass123" --superuser
 
 # Interactive password prompt (when --password omitted in interactive TTY)
-./stacks/cms/openedx/cli.sh user create bob bob@example.com --staff
+./_lib/web-apps/openedx/cli.sh user create bob bob@example.com --staff
 
 # Update existing user's password
-./stacks/cms/openedx/cli.sh user set_password alice "NewSecurePass456"
+./_lib/web-apps/openedx/cli.sh user set_password alice "NewSecurePass456"
 
 # List all registered accounts and permission roles
-./stacks/cms/openedx/cli.sh user list
+./_lib/web-apps/openedx/cli.sh user list
 ```
 
 #### Windows
 
 ```cmd
 :: Create standard user
-call stacks\cms\openedx\cli.cmd user create alice alice@example.com --password "SecretPass123"
+call _lib\web-apps\openedx\cli.cmd user create alice alice@example.com --password "SecretPass123"
 
 :: Create superuser
-call stacks\cms\openedx\cli.cmd user create admin admin@example.com --password "AdminPass123" --superuser
+call _lib\web-apps\openedx\cli.cmd user create admin admin@example.com --password "AdminPass123" --superuser
 
 :: Reset user password
-call stacks\cms\openedx\cli.cmd user set_password alice "NewSecurePass456"
+call _lib\web-apps\openedx\cli.cmd user set_password alice "NewSecurePass456"
 
 :: List accounts
-call stacks\cms\openedx\cli.cmd user list
+call _lib\web-apps\openedx\cli.cmd user list
 ```
 
 ---
@@ -133,23 +133,23 @@ course store and LMS database. If a course ID is already present, the import is 
 
 ```sh
 # Ingest official edX Demo Course (course-v1:edX+DemoX+Demo_Course)
-./stacks/cms/openedx/cli.sh demo course
+./_lib/web-apps/openedx/cli.sh demo course
 
 # Ingest custom course from repository
-./stacks/cms/openedx/cli.sh demo course --course-id "course-v1:MyOrg+CS101+2026" --repo "https://github.com/my-org/cs101-course.git"
+./_lib/web-apps/openedx/cli.sh demo course --course-id "course-v1:MyOrg+CS101+2026" --repo "https://github.com/my-org/cs101-course.git"
 
 # Ingest demonstration component libraries into Studio
-./stacks/cms/openedx/cli.sh demo libraries --owner admin
+./_lib/web-apps/openedx/cli.sh demo libraries --owner admin
 ```
 
 #### Windows
 
 ```cmd
 :: Ingest standard demo course
-call stacks\cms\openedx\cli.cmd demo course
+call _lib\web-apps\openedx\cli.cmd demo course
 
 :: Ingest demo libraries
-call stacks\cms\openedx\cli.cmd demo libraries --owner admin
+call _lib\web-apps\openedx\cli.cmd demo libraries --owner admin
 ```
 
 ---
@@ -165,34 +165,34 @@ configured stack credentials and endpoints.
 
 ```sh
 # Launch interactive MySQL client
-./stacks/cms/openedx/cli.sh dbshell mysql
+./_lib/web-apps/openedx/cli.sh dbshell mysql
 
 # Execute a single SQL query non-interactively
-./stacks/cms/openedx/cli.sh dbshell query "SELECT id, username, email, is_staff FROM auth_user LIMIT 10;"
+./_lib/web-apps/openedx/cli.sh dbshell query "SELECT id, username, email, is_staff FROM auth_user LIMIT 10;"
 
 # Connect to MongoDB database
-./stacks/cms/openedx/cli.sh dbshell mongo
+./_lib/web-apps/openedx/cli.sh dbshell mongo
 # Or using the direct alias:
-./stacks/cms/openedx/cli.sh mongosh
+./_lib/web-apps/openedx/cli.sh mongosh
 
 # Connect to Redis CLI
-./stacks/cms/openedx/cli.sh dbshell redis
+./_lib/web-apps/openedx/cli.sh dbshell redis
 # Or using the direct alias:
-./stacks/cms/openedx/cli.sh redis-cli
+./_lib/web-apps/openedx/cli.sh redis-cli
 ```
 
 #### Windows
 
 ```cmd
 :: Interactive MySQL
-call stacks\cms\openedx\cli.cmd dbshell mysql
+call _lib\web-apps\openedx\cli.cmd dbshell mysql
 
 :: Non-interactive SQL query
-call stacks\cms\openedx\cli.cmd dbshell query "SELECT COUNT(*) FROM auth_user;"
+call _lib\web-apps\openedx\cli.cmd dbshell query "SELECT COUNT(*) FROM auth_user;"
 
 :: Interactive Mongo & Redis
-call stacks\cms\openedx\cli.cmd mongosh
-call stacks\cms\openedx\cli.cmd redis-cli
+call _lib\web-apps\openedx\cli.cmd mongosh
+call _lib\web-apps\openedx\cli.cmd redis-cli
 ```
 
 ---
@@ -209,20 +209,20 @@ relay.
 
 ```sh
 # Human-readable ANSI status report table
-./stacks/cms/openedx/cli.sh healthcheck
+./_lib/web-apps/openedx/cli.sh healthcheck
 
 # Machine-readable JSON output (ideal for monitoring & CI probes)
-./stacks/cms/openedx/cli.sh healthcheck --json
+./_lib/web-apps/openedx/cli.sh healthcheck --json
 ```
 
 #### Windows
 
 ```cmd
 :: Health diagnostics report
-call stacks\cms\openedx\cli.cmd healthcheck
+call _lib\web-apps\openedx\cli.cmd healthcheck
 
 :: JSON diagnostics
-call stacks\cms\openedx\cli.cmd healthcheck --json
+call _lib\web-apps\openedx\cli.cmd healthcheck --json
 ```
 
 ---
@@ -238,35 +238,35 @@ paths, deep merging, and schema validation against `vars.schema.json`.
 
 ```sh
 # Synthesize default configuration files (preserving existing overrides)
-./stacks/cms/openedx/cli.sh config generate
+./_lib/web-apps/openedx/cli.sh config generate
 
 # Read configuration setting (supports nested keys)
-./stacks/cms/openedx/cli.sh config get LMS_HOST
-./stacks/cms/openedx/cli.sh config get DATABASES.default.HOST
+./_lib/web-apps/openedx/cli.sh config get LMS_HOST
+./_lib/web-apps/openedx/cli.sh config get DATABASES.default.HOST
 
 # Update configuration key
-./stacks/cms/openedx/cli.sh config set SITE_NAME "My University Open edX"
-./stacks/cms/openedx/cli.sh config set LMS_HOST "courses.myuni.edu"
+./_lib/web-apps/openedx/cli.sh config set SITE_NAME "My University Open edX"
+./_lib/web-apps/openedx/cli.sh config set LMS_HOST "courses.myuni.edu"
 
 # View complete JSON configuration
-./stacks/cms/openedx/cli.sh config list
+./_lib/web-apps/openedx/cli.sh config list
 
 # Validate configuration against schema
-./stacks/cms/openedx/cli.sh config validate
+./_lib/web-apps/openedx/cli.sh config validate
 ```
 
 #### Windows
 
 ```cmd
 :: Generate configurations
-call stacks\cms\openedx\cli.cmd config generate
+call _lib\web-apps\openedx\cli.cmd config generate
 
 :: Read / write keys
-call stacks\cms\openedx\cli.cmd config get LMS_HOST
-call stacks\cms\openedx\cli.cmd config set SITE_NAME "My University Open edX"
+call _lib\web-apps\openedx\cli.cmd config get LMS_HOST
+call _lib\web-apps\openedx\cli.cmd config set SITE_NAME "My University Open edX"
 
 :: Schema validation
-call stacks\cms\openedx\cli.cmd config validate
+call _lib\web-apps\openedx\cli.cmd config validate
 ```
 
 ---
@@ -282,29 +282,29 @@ media uploads (`media/`), and configuration files, verified by SHA-256 checksums
 
 ```sh
 # Create full timestamped snapshot
-./stacks/cms/openedx/cli.sh backup create
+./_lib/web-apps/openedx/cli.sh backup create
 
 # Create snapshot with custom target archive path
-./stacks/cms/openedx/cli.sh backup create --out "/var/backups/openedx-weekly.tar.gz"
+./_lib/web-apps/openedx/cli.sh backup create --out "/var/backups/openedx-weekly.tar.gz"
 
 # List available backup archives
-./stacks/cms/openedx/cli.sh backup list
+./_lib/web-apps/openedx/cli.sh backup list
 
 # Restore system state from backup archive
-./stacks/cms/openedx/cli.sh restore apply "/var/backups/openedx-weekly.tar.gz" --yes
+./_lib/web-apps/openedx/cli.sh restore apply "/var/backups/openedx-weekly.tar.gz" --yes
 ```
 
 #### Windows
 
 ```cmd
 :: Create backup snapshot (.zip format on Windows)
-call stacks\cms\openedx\cli.cmd backup create
+call _lib\web-apps\openedx\cli.cmd backup create
 
 :: List backups
-call stacks\cms\openedx\cli.cmd backup list
+call _lib\web-apps\openedx\cli.cmd backup list
 
 :: Restore from backup
-call stacks\cms\openedx\cli.cmd restore apply "%USERPROFILE%\.libscript\openedx\backups\openedx_backup_20260920_125652.zip" --yes
+call _lib\web-apps\openedx\cli.cmd restore apply "%USERPROFILE%\.libscript\openedx\backups\openedx_backup_20260920_125652.zip" --yes
 ```
 
 ---
@@ -320,29 +320,29 @@ periodic task scheduler, maintaining PID files in `run/` and daemon logs in `log
 
 ```sh
 # Launch background workers
-./stacks/cms/openedx/cli.sh workers start
+./_lib/web-apps/openedx/cli.sh workers start
 
 # Inspect worker status and active PIDs
-./stacks/cms/openedx/cli.sh workers status
+./_lib/web-apps/openedx/cli.sh workers status
 
 # Restart workers
-./stacks/cms/openedx/cli.sh workers restart
+./_lib/web-apps/openedx/cli.sh workers restart
 
 # Stop all background workers
-./stacks/cms/openedx/cli.sh workers stop
+./_lib/web-apps/openedx/cli.sh workers stop
 ```
 
 #### Windows
 
 ```cmd
 :: Start background worker processes
-call stacks\cms\openedx\cli.cmd workers start
+call _lib\web-apps\openedx\cli.cmd workers start
 
 :: Check status
-call stacks\cms\openedx\cli.cmd workers status
+call _lib\web-apps\openedx\cli.cmd workers status
 
 :: Stop workers
-call stacks\cms\openedx\cli.cmd workers stop
+call _lib\web-apps\openedx\cli.cmd workers stop
 ```
 
 ---
@@ -358,33 +358,33 @@ asset bundling, and Django site configuration binding.
 
 ```sh
 # Install theme from Git repository
-./stacks/cms/openedx/cli.sh theme install indigo https://github.com/openedx/openedx-theme-indigo.git --branch master
+./_lib/web-apps/openedx/cli.sh theme install indigo https://github.com/openedx/openedx-theme-indigo.git --branch master
 
 # Compile SCSS and static assets for theme
-./stacks/cms/openedx/cli.sh theme build indigo
+./_lib/web-apps/openedx/cli.sh theme build indigo
 
 # Bind theme to Open edX site domain
-./stacks/cms/openedx/cli.sh theme apply indigo --site "openedx.local"
+./_lib/web-apps/openedx/cli.sh theme apply indigo --site "openedx.local"
 
 # List installed themes and active status
-./stacks/cms/openedx/cli.sh theme list
+./_lib/web-apps/openedx/cli.sh theme list
 
 # Remove an installed theme
-./stacks/cms/openedx/cli.sh theme remove indigo
+./_lib/web-apps/openedx/cli.sh theme remove indigo
 ```
 
 #### Windows
 
 ```cmd
 :: Install and build theme
-call stacks\cms\openedx\cli.cmd theme install indigo https://github.com/openedx/openedx-theme-indigo.git
-call stacks\cms\openedx\cli.cmd theme build indigo
+call _lib\web-apps\openedx\cli.cmd theme install indigo https://github.com/openedx/openedx-theme-indigo.git
+call _lib\web-apps\openedx\cli.cmd theme build indigo
 
 :: Apply theme to site
-call stacks\cms\openedx\cli.cmd theme apply indigo --site "openedx.local"
+call _lib\web-apps\openedx\cli.cmd theme apply indigo --site "openedx.local"
 
 :: List themes
-call stacks\cms\openedx\cli.cmd theme list
+call _lib\web-apps\openedx\cli.cmd theme list
 ```
 
 ---
@@ -400,27 +400,27 @@ installation, database migrations, and static asset collection.
 
 ```sh
 # Install XBlock from PyPI or Git repository
-./stacks/cms/openedx/cli.sh xblock install xblock-drag-and-drop-v2
-./stacks/cms/openedx/cli.sh xblock install git+https://github.com/edx/xblock-google-drive.git
+./_lib/web-apps/openedx/cli.sh xblock install xblock-drag-and-drop-v2
+./_lib/web-apps/openedx/cli.sh xblock install git+https://github.com/edx/xblock-google-drive.git
 
 # List discovered XBlocks via entry point metadata
-./stacks/cms/openedx/cli.sh xblock list
+./_lib/web-apps/openedx/cli.sh xblock list
 
 # Uninstall XBlock
-./stacks/cms/openedx/cli.sh xblock uninstall xblock-drag-and-drop-v2
+./_lib/web-apps/openedx/cli.sh xblock uninstall xblock-drag-and-drop-v2
 ```
 
 #### Windows
 
 ```cmd
 :: Install XBlock
-call stacks\cms\openedx\cli.cmd xblock install xblock-drag-and-drop-v2
+call _lib\web-apps\openedx\cli.cmd xblock install xblock-drag-and-drop-v2
 
 :: List XBlocks
-call stacks\cms\openedx\cli.cmd xblock list
+call _lib\web-apps\openedx\cli.cmd xblock list
 
 :: Uninstall XBlock
-call stacks\cms\openedx\cli.cmd xblock uninstall xblock-drag-and-drop-v2
+call _lib\web-apps\openedx\cli.cmd xblock uninstall xblock-drag-and-drop-v2
 ```
 
 ---
@@ -437,14 +437,14 @@ cache invalidation, and search reindexing.
 
 ```sh
 # Run upgrade pipeline to target release
-./stacks/cms/openedx/cli.sh upgrade run --to open-release/quince.master
+./_lib/web-apps/openedx/cli.sh upgrade run --to open-release/quince.master
 ```
 
 #### Windows
 
 ```cmd
 :: Run upgrade pipeline
-call stacks\cms\openedx\cli.cmd upgrade run --to open-release/quince.master
+call _lib\web-apps\openedx\cli.cmd upgrade run --to open-release/quince.master
 ```
 
 ---
@@ -464,24 +464,24 @@ Builds, configures, and serves production React Micro-Frontends:
 
 ```sh
 # Build production bundle for learning MFE
-./stacks/cms/openedx/cli.sh mfe build learning --version master
+./_lib/web-apps/openedx/cli.sh mfe build learning --version master
 
 # Deploy MFE dist and generate runtime env.config.js
-./stacks/cms/openedx/cli.sh mfe deploy learning
+./_lib/web-apps/openedx/cli.sh mfe deploy learning
 
 # List managed MFEs and build/deployment status
-./stacks/cms/openedx/cli.sh mfe list
+./_lib/web-apps/openedx/cli.sh mfe list
 ```
 
 #### Windows
 
 ```cmd
 :: Build and deploy MFE
-call stacks\cms\openedx\cli.cmd mfe build learning
-call stacks\cms\openedx\cli.cmd mfe deploy learning
+call _lib\web-apps\openedx\cli.cmd mfe build learning
+call _lib\web-apps\openedx\cli.cmd mfe deploy learning
 
 :: List MFEs
-call stacks\cms\openedx\cli.cmd mfe list
+call _lib\web-apps\openedx\cli.cmd mfe list
 ```
 
 ---
@@ -639,13 +639,13 @@ pure-Rust `msi-rs` toolchain (`candle` and `light` drop-ins):
 . _lib/package-managers/msi-rs/env.sh
 
 # 2. Build lightweight online installer (< 10 MB)
-./packaging/build_msi.sh stacks/cms/openedx \
+./packaging/build_msi.sh _lib/web-apps/openedx \
   --online \
   --out dist/msi/OpenEdX-Setup \
   --version 22.1.0
 
 # 3. Build air-gapped 100% offline installer with multi-cabinet caching
-./packaging/build_msi.sh stacks/cms/openedx \
+./packaging/build_msi.sh _lib/web-apps/openedx \
   --offline \
   --cache-dir cache/ \
   --out dist/msi/OpenEdX-Setup-Offline \
@@ -659,10 +659,10 @@ On Windows (`cmd.exe`):
 call _lib\package-managers\msi-rs\env.cmd
 
 :: Build online installer
-call packaging\build_msi.cmd stacks\cms\openedx --online --out dist\msi\OpenEdX-Setup --version 22.1.0
+call packaging\build_msi.cmd _lib\web-apps\openedx --online --out dist\msi\OpenEdX-Setup --version 22.1.0
 
 :: Build offline air-gapped installer
-call packaging\build_msi.cmd stacks\cms\openedx --offline --cache-dir cache\ --out dist\msi\OpenEdX-Setup-Offline --version 22.1.0
+call packaging\build_msi.cmd _lib\web-apps\openedx --offline --cache-dir cache\ --out dist\msi\OpenEdX-Setup-Offline --version 22.1.0
 ```
 
 Visual artifacts and gallery screenshots are centralized in the

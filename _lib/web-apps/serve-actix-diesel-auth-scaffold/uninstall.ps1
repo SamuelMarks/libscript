@@ -14,4 +14,4 @@ Execute this script to remove serve-actix-diesel-auth-scaffold and its associate
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/scaffolds/serve-actix-diesel-auth-scaffold uninstall skipped"
+Write-Output "./_lib/web-apps/serve-actix-diesel-auth-scaffold uninstall skipped"

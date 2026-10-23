@@ -14,4 +14,4 @@ Execute this script to run the test suite for firecrawl.
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/crawlers/firecrawl test skipped"
+Write-Output "./_lib/web-apps/firecrawl test skipped"

@@ -39,7 +39,11 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 TPU_NAME="${TPU_NAME:-ml-eval-node}"
-TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-200}"
+TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-${DISK_SIZE_GB:-200}}"
+export TPU_NAME TPU_DATA_DISK_SIZE
+if [ -n "${DISK_NAME:-}" ]; then
+  export DISK_NAME
+fi
 
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 TPU_ZONE="${TPU_ZONE:-}"

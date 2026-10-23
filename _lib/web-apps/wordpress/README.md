@@ -71,10 +71,10 @@ The WordPress platform includes a unified command router:
 
 ```sh
 # POSIX / Linux / macOS
-./stacks/cms/wordpress/cli.sh <subcommand> [args...]
+./_lib/web-apps/wordpress/cli.sh <subcommand> [args...]
 
 # Windows Command Prompt
-call stacks\cms\wordpress\cli.cmd <subcommand> [args...]
+call _lib\web-apps\wordpress\cli.cmd <subcommand> [args...]
 ```
 
 ### Subcommands
@@ -103,7 +103,7 @@ When Open edX is installed on the host, WordPress automatically detects the runn
 schema:
 
 ```sh
-./stacks/cms/wordpress/setup_generic.sh --reuse-openedx-db
+./_lib/web-apps/wordpress/setup_generic.sh --reuse-openedx-db
 ```
 
 This creates a dedicated database `wordpress` and user `wordpress` with least-privilege grants
@@ -115,7 +115,7 @@ scoped strictly to `wordpress.*`, guaranteeing zero collision with Open edX rela
 To connect to a managed cloud database:
 
 ```sh
-./stacks/cms/wordpress/setup_generic.sh
+./_lib/web-apps/wordpress/setup_generic.sh
   --mysql-url "mysql://wpuser:p%40ssword@db.cluster.rds.amazonaws.com:3306/wordpress_db?ssl-ca=/etc/ssl/rds-ca.pem&ssl-mode=REQUIRED"
 ```
 
@@ -128,7 +128,7 @@ If Open edX is not present and no remote DBaaS is specified, WordPress provision
 MariaDB/MySQL instance:
 
 ```sh
-./stacks/cms/wordpress/setup_generic.sh --skip-openedx-db
+./_lib/web-apps/wordpress/setup_generic.sh --skip-openedx-db
 ```
 
 ---

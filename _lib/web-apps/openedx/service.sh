@@ -93,6 +93,14 @@ start_services() {
   printf '[INFO] Starting Open edX platform services...\n'
 
   _codebase="${OPENEDX_INSTALL_DIR}/codebase"
+  if [ ! -f "${_codebase}/manage.py" ]; then
+    for _sub in "${OPENEDX_INSTALL_DIR}/codebase"/* "${OPENEDX_INSTALL_DIR}"/*; do
+      if [ -d "$_sub" ] && [ -f "$_sub/manage.py" ]; then
+        _codebase="$_sub"
+        break
+      fi
+    done
+  fi
   if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
     _codebase="${OPENEDX_INSTALL_DIR}"
   fi
@@ -107,7 +115,7 @@ start_services() {
   else
     printf '[INFO] Launching Open edX LMS on port %s...\n' "$LMS_PORT"
     if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -f "${_codebase}/manage.py" ]; then
-      (cd "${_codebase}" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+      (cd "${_codebase}" && DJANGO_SETTINGS_MODULE="lms.envs.libscript" "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
     elif [ -f "${_codebase}/manage.py" ]; then
       (cd "${_codebase}" && nohup "${_py}" manage.py lms --settings=libscript runserver --insecure "0.0.0.0:${LMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
     else
@@ -122,7 +130,7 @@ start_services() {
   else
     printf '[INFO] Launching Open edX Studio CMS on port %s...\n' "$CMS_PORT"
     if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -f "${_codebase}/manage.py" ]; then
-      (cd "${_codebase}" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+      (cd "${_codebase}" && DJANGO_SETTINGS_MODULE="cms.envs.libscript" "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
     elif [ -f "${_codebase}/manage.py" ]; then
       (cd "${_codebase}" && nohup "${_py}" manage.py cms --settings=libscript runserver --insecure "0.0.0.0:${CMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
     else

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/cms/drupal/vars.schema.json",
+  "$id": "/_lib/web-apps/drupal/vars.schema.json",
   "title": "drupal vars",
   "description": "Variables for drupal vars",
   "type": "object",

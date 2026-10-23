@@ -1,10 +1,10 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Test script for the stacks/ml-training/tpu-vm-eval-node stack.
+:: Test script for the _lib/ml-training component.
 ::
 :: ## Usage
-:: Run locally to verify the stack.
+:: Run locally to verify the component.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +50,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo [INFO] stacks/ml-training/tpu-vm-eval-node tests passed.
+echo [INFO] _lib/ml-training tests passed.

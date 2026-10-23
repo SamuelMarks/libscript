@@ -198,10 +198,21 @@ if "%NODEJS_INSTALL_METHOD%"=="pkgx" ( pkgx install "nodejs@%NODEJS_VERSION%" & 
 if "%NODEJS_INSTALL_METHOD%"=="vfox" ( vfox add nodejs & vfox install "nodejs@%NODEJS_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\node.exe" if not exist "%TARGET_DIR%\node.exe" (
     echo Installing nodejs %NODEJS_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-    if exist "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip" (
+    set "_NODE_CACHED="
+    if defined LIBSCRIPT_CACHE_DIR (
+        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\runtimes\node*.zip") do set "_NODE_CACHED=%%~fZ"
+    )
+    if exist "!LIBSCRIPT_ROOT_DIR!\cache\runtimes" (
+        for %%Z in ("!LIBSCRIPT_ROOT_DIR!\cache\runtimes\node*.zip") do set "_NODE_CACHED=%%~fZ"
+    )
+    if defined _NODE_CACHED (
+        echo Extracting Node.js from offline cache !_NODE_CACHED!...
+        tar -xf "!_NODE_CACHED!" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "!_NODE_CACHED!" -C "%TARGET_DIR%"
+        if exist "%TARGET_DIR%\node.exe" copy /y "%TARGET_DIR%\node.exe" "%TARGET_DIR%\bin\node.exe" >nul 2>&1
+    ) else if exist "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip" -C "%TARGET_DIR%"
     ) else if exist "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.tar.gz" (

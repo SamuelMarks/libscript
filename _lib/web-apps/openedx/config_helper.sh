@@ -4,10 +4,10 @@
 # Provides key inspection, mutation, default generation, and syntax validation.
 #
 # ## Usage
-# ./stacks/cms/openedx/config_helper.sh get <conf_file> <key>
-# ./stacks/cms/openedx/config_helper.sh set <conf_file1> <conf_file2> <key> <val>
-# ./stacks/cms/openedx/config_helper.sh generate <conf_file1> <conf_file2>
-# ./stacks/cms/openedx/config_helper.sh validate <conf_file> <schema_file>
+# ./_lib/web-apps/openedx/config_helper.sh get <conf_file> <key>
+# ./_lib/web-apps/openedx/config_helper.sh set <conf_file1> <conf_file2> <key> <val>
+# ./_lib/web-apps/openedx/config_helper.sh generate <conf_file1> <conf_file2>
+# ./_lib/web-apps/openedx/config_helper.sh validate <conf_file> <schema_file>
 
 set -feu
 

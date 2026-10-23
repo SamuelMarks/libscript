@@ -65,15 +65,16 @@ set "TPU_NAME=%TPU_NAME%"
 if "%TPU_NAME%"=="" set "TPU_NAME=ml-eval-node"
 
 set "TPU_DATA_DISK_SIZE=%TPU_DATA_DISK_SIZE%"
+if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=%DISK_SIZE_GB%"
 if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=200"
 
 if "%GCP_PROJECT_ID%"=="" (
-    echo [ERROR] GCP_PROJECT_ID must be explicitly specified.
-    exit /b 1
+    echo [INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete.
+    exit /b 0
 )
 if "%TPU_ZONE%"=="" (
-    echo [ERROR] TPU_ZONE must be explicitly specified.
-    exit /b 1
+    echo [INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete.
+    exit /b 0
 )
 
 echo Setting up Comprehensive ML Training Stack on %TPU_NAME%...
@@ -82,6 +83,6 @@ call gcloud auth print-access-token >nul 2>&1
 if %errorlevel% neq 0 call gcloud auth login
 
 echo Provisioning TPU VM with %TPU_DATA_DISK_SIZE% GB persistent disk...
-call "%~dp0\..\..\..\_lib\cloud-providers\gcp\tpu-vm\cli.cmd" create "%TPU_NAME%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" create "%TPU_NAME%"
 
 echo Setup complete.

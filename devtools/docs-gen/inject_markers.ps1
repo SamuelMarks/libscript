@@ -23,14 +23,18 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
 $rootDir = if ($env:ROOT_DIR) { (Resolve-Path $env:ROOT_DIR).Path } else { (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 $libDir = Join-Path $rootDir '_lib'
-$stacksDir = Join-Path $rootDir 'stacks'
+$topologiesDir = Join-Path $rootDir 'topologies'
+$payloadsDir = Join-Path $rootDir 'payloads'
 $libComps = if (Test-Path -LiteralPath $libDir) {
     Get-ChildItem -Path $libDir -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne '_lib' -and $_.Name -ne '_common' }
 } else { @() }
-$stackComps = if (Test-Path -LiteralPath $stacksDir) {
-    Get-ChildItem -Path $stacksDir -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'stacks' }
+$topoComps = if (Test-Path -LiteralPath $topologiesDir) {
+    Get-ChildItem -Path $topologiesDir -Directory
 } else { @() }
-$components = @($libComps) + @($stackComps)
+$payloadComps = if (Test-Path -LiteralPath $payloadsDir) {
+    Get-ChildItem -Path $payloadsDir -Directory -Recurse -Depth 1 | Where-Object { $_.Parent.Name -ne 'payloads' }
+} else { @() }
+$components = @($libComps) + @($topoComps) + @($payloadComps)
 
 foreach ($comp in $components) {
     $readmePath = Join-Path $comp.FullName 'README.md'

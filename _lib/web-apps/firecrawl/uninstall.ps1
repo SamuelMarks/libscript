@@ -14,4 +14,4 @@ Execute this script to remove firecrawl and its associated configurations from t
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/crawlers/firecrawl uninstall skipped"
+Write-Output "./_lib/web-apps/firecrawl uninstall skipped"

@@ -4,9 +4,9 @@
 # Manages daemon lifecycle, status monitoring, and graceful termination of workers.
 #
 # ## Usage
-# ./stacks/cms/openedx/workers_helper.sh start <run_dir> <log_dir> <py_bin> <install_dir>
-# ./stacks/cms/openedx/workers_helper.sh stop <run_dir>
-# ./stacks/cms/openedx/workers_helper.sh status <run_dir>
+# ./_lib/web-apps/openedx/workers_helper.sh start <run_dir> <log_dir> <py_bin> <install_dir>
+# ./_lib/web-apps/openedx/workers_helper.sh stop <run_dir>
+# ./_lib/web-apps/openedx/workers_helper.sh status <run_dir>
 
 set -feu
 

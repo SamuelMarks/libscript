@@ -190,10 +190,20 @@ if "%REDIS_INSTALL_METHOD%"=="pkgx" ( pkgx install "redis@%REDIS_VERSION%" & exi
 if "%REDIS_INSTALL_METHOD%"=="vfox" ( vfox add redis & vfox install "redis@%REDIS_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\redis\%REDIS_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\redis-server.exe" if not exist "%TARGET_DIR%\redis-server.exe" (
     echo Installing redis %REDIS_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-    if exist "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip" (
+    set "_REDIS_CACHED="
+    if defined LIBSCRIPT_CACHE_DIR (
+        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\databases\redis*.zip" "%LIBSCRIPT_CACHE_DIR%\datastores\redis*.zip") do (
+            if exist "%%~fZ" set "_REDIS_CACHED=%%~fZ"
+        )
+    )
+    if defined _REDIS_CACHED (
+        echo Extracting Redis from offline cache !_REDIS_CACHED!...
+        tar -xf "!_REDIS_CACHED!" -C "%TARGET_DIR%" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '!_REDIS_CACHED!' -DestinationPath '%TARGET_DIR%' -Force" 2>nul
+        if exist "%TARGET_DIR%\redis-server.exe" copy /y "%TARGET_DIR%\redis*.exe" "%TARGET_DIR%\bin\" >nul 2>&1
+    ) else if exist "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip" -C "%TARGET_DIR%"
     ) else if exist "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.tar.gz" (

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/forums/phpbb/vars.schema.json",
+  "$id": "/_lib/web-apps/phpbb/vars.schema.json",
   "title": "phpbb vars",
   "description": "Variables for phpbb vars",
   "type": "object",

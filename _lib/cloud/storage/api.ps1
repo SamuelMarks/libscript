@@ -19,9 +19,18 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
     }
 }
 
+$NormalizedArgs = @()
+foreach ($a in $args) {
+    if ($a -is [string] -and ($a.StartsWith("gs://") -or $a.StartsWith("s3://"))) {
+        $NormalizedArgs += $a.Substring(5)
+    } else {
+        $NormalizedArgs += $a
+    }
+}
+
 $CmdFile = Join-Path $PSScriptRoot 'api.cmd'
 if (Test-Path $CmdFile) {
-    & $CmdFile @args
+    & $CmdFile @NormalizedArgs
 } else {
     Write-Output 'api completed successfully.'
 }

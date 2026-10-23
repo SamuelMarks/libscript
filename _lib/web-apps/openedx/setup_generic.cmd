@@ -118,7 +118,13 @@ if /I "%~1"=="status" ( set "ACTION=status" & shift & goto parse_args )
 if /I "%~1"=="test" ( set "ACTION=test" & shift & goto parse_args )
 if /I "%~1"=="uninstall" ( set "ACTION=uninstall" & shift & goto parse_args )
 
-if /I "%~1"=="--offline" ( set "IS_OFFLINE=1" & shift & goto parse_args )
+if /I "%~1"=="--offline" (
+    if "%~2"=="0" ( set "IS_OFFLINE=0" & shift & shift & goto parse_args )
+    if "%~2"=="1" ( set "IS_OFFLINE=1" & shift & shift & goto parse_args )
+    set "IS_OFFLINE=1" & shift & goto parse_args
+)
+if /I "%~1"=="--offline=1" ( set "IS_OFFLINE=1" & shift & goto parse_args )
+if /I "%~1"=="--offline=0" ( set "IS_OFFLINE=0" & shift & goto parse_args )
 if /I "%~1"=="-o" ( set "IS_OFFLINE=1" & shift & goto parse_args )
 if /I "%~1"=="--online" ( set "IS_OFFLINE=0" & shift & goto parse_args )
 if /I "%~1"=="--cache-dir" ( set "OFFLINE_CACHE_DIR=%~2" & shift & shift & goto parse_args )
@@ -227,6 +233,13 @@ if "%ACTION%"=="install" (
             for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip" "!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip") do (
                 call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\codebase"
             )
+            if not exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
+                for /d %%S in ("%OPENEDX_INSTALL_DIR%\codebase\*") do (
+                    if exist "%%~fS\manage.py" (
+                        robocopy "%%~fS" "%OPENEDX_INSTALL_DIR%\codebase" /E /MOVE >nul 2>&1
+                    )
+                )
+            )
         )
 
         :: Step 3 (Virtualenv & Pip): Install wheels offline
@@ -300,9 +313,16 @@ if "%ACTION%"=="install" (
         "!PY_EXE!" -m venv "%OPENEDX_INSTALL_DIR%\.venv" 2>nul
         if not exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" (
             if not exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts" mkdir "%OPENEDX_INSTALL_DIR%\.venv\Scripts" 2>nul
+            if not exist "%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages" mkdir "%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages" 2>nul
             for %%D in ("!PY_EXE!") do (
                 xcopy /E /I /Y "%%~dpD*" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\" >nul 2>&1
             )
+            powershell -NoProfile -Command "Get-ChildItem '%OPENEDX_INSTALL_DIR%\.venv\Scripts\python*._pth' -ErrorAction SilentlyContinue | ForEach-Object { $c = (Get-Content $_.FullName) -replace '#import site', 'import site'; if ($c -notcontains '..\Lib\site-packages') { $c += '..\Lib\site-packages' }; Set-Content $_.FullName -Value $c -Encoding Ascii }" 2>nul
+        )
+    )
+    if exist "!OFFLINE_CACHE_DIR!\wheels" if exist "%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages" (
+        for %%W in ("!OFFLINE_CACHE_DIR!\wheels\*.whl") do (
+            tar -xf "%%~fW" -C "%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '%%~fW' -DestinationPath '%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages' -Force" 2>nul
         )
     )
 
@@ -310,12 +330,16 @@ if "%ACTION%"=="install" (
     if not defined _sp_dir set "_sp_dir=%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages"
     if not exist "!_sp_dir!\imghdr.py" (
         if not exist "!_sp_dir!" mkdir "!_sp_dir!" 2>nul
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "!_sp_dir!\imghdr.py"
-        powershell -NoProfile -Command "if (Test-Path '!_sp_dir!\imghdr.py') { (Get-Content '!_sp_dir!\imghdr.py') -replace 'warnings._deprecated.*', '' | Set-Content '!_sp_dir!\imghdr.py' }" 2>nul
+        if "!USE_OFFLINE!"=="1" (
+            powershell -NoProfile -Command "Set-Content -Path '!_sp_dir!\imghdr.py' -Value 'def what(file, h=None): return None' -Encoding Ascii" 2>nul
+        ) else (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "!_sp_dir!\imghdr.py"
+            powershell -NoProfile -Command "if (Test-Path '!_sp_dir!\imghdr.py') { (Get-Content '!_sp_dir!\imghdr.py') -replace 'warnings._deprecated.*', '' | Set-Content '!_sp_dir!\imghdr.py' }" 2>nul
+        )
     )
 
     :: Install Python Requirements if repo exists
-    if exist "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" (
+    if exist "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" if not "!USE_OFFLINE!"=="1" (
         echo [INFO] Installing Python dependencies...
         echo [INFO] Installing Python dependencies into virtualenv... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
         if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" (
@@ -332,11 +356,19 @@ if "%ACTION%"=="install" (
         if not "%BACKUP_DIR%"=="" call "!OPENEDX_SCRIPT_DIR!\config.cmd" set BACKUP_DIR "%BACKUP_DIR%" >nul 2>&1
     )
 
+    for %%D in ("%OPENEDX_INSTALL_DIR%" "%OPENEDX_INSTALL_DIR%\codebase") do (
+        if not exist "%%~fD\lms\envs" mkdir "%%~fD\lms\envs" 2>nul
+        if not exist "%%~fD\cms\envs" mkdir "%%~fD\cms\envs" 2>nul
+        powershell -NoProfile -Command "$lmsLines = @('import json, os', 'from .production import *', 'with open(r''%OPENEDX_INSTALL_DIR%\config\lms.env.json'') as f:', '    ENV_TOKENS = json.load(f)', 'SECRET_KEY = ENV_TOKENS.get(''SECRET_KEY'', ''unsafe-secret'')', 'ALLOWED_HOSTS = ENV_TOKENS.get(''ALLOWED_HOSTS'', [''*''])', 'DATABASES = ENV_TOKENS.get(''DATABASES'', {})', 'CACHES = ENV_TOKENS.get(''CACHES'', {})'); Set-Content -Path '%%~fD\lms\envs\libscript.py' -Value $lmsLines -Encoding Ascii; $cmsLines = @('import json, os', 'from .production import *', 'with open(r''%OPENEDX_INSTALL_DIR%\config\cms.env.json'') as f:', '    ENV_TOKENS = json.load(f)', 'SECRET_KEY = ENV_TOKENS.get(''SECRET_KEY'', ''unsafe-secret'')', 'ALLOWED_HOSTS = ENV_TOKENS.get(''ALLOWED_HOSTS'', [''*''])', 'DATABASES = ENV_TOKENS.get(''DATABASES'', {})', 'CACHES = ENV_TOKENS.get(''CACHES'', {})'); Set-Content -Path '%%~fD\cms\envs\libscript.py' -Value $cmsLines -Encoding Ascii" 2>nul
+    )
+
     :: Database Schema Provisioning via Reusable _lib\databases\provision_schema.cmd
     echo [INFO] Initializing databases via reusable schema provisioner...
     echo [INFO] Initializing MySQL database schema ^(%MYSQL_DB% utf8mb4^)... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
+    set "_DB_PASS=%MYSQL_PASS%"
+    if "!_DB_PASS!"=="" set "_DB_PASS=openedx_password"
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --schema "%MYSQL_DB%" --user "%MYSQL_USER%" --password "%MYSQL_PASS%" --host "%MYSQL_HOST%" --port "%MYSQL_PORT%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --schema "%MYSQL_DB%" --user "%MYSQL_USER%" --password "!_DB_PASS!" --host "%MYSQL_HOST%" --port "%MYSQL_PORT%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
     )
 
     :: Database Migrations & Static Asset Collection

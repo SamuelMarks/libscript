@@ -1,10 +1,10 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Test script for the stacks/ai-serving/gke-xpk-inference stack.
+:: Test script for the _lib/ai-serving/gke-xpk-inference component.
 ::
 :: ## Usage
-:: Run locally to verify the stack.
+:: Run locally to verify the component.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,4 +50,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo [INFO] stacks/ai-serving/gke-xpk-inference tests passed.
+echo [INFO] _lib/ai-serving/gke-xpk-inference tests passed.

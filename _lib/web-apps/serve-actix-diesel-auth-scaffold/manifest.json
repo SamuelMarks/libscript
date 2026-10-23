@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "$schema": "../../_common/manifest.schema.json",
   "name": "serve-actix-diesel-auth-scaffold",
   "category": "web-apps",
   "title": "serve-actix-diesel-auth-scaffold",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/erp/odoo/vars.schema.json",
+  "$id": "/_lib/web-apps/odoo/vars.schema.json",
   "title": "odoo vars",
   "description": "Variables for odoo vars",
   "type": "object",

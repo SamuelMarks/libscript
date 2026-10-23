@@ -112,7 +112,7 @@ popd
 
 if "%TARGETS%"=="all" (
     set "COMPONENTS="
-    for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\stacks\*") do (
+    for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\topologies\*" "%REPO_ROOT%\payloads\*") do (
         set "cat_name=%%~nxC"
         if not "!cat_name:~0,1!"=="_" (
             for /d %%D in ("%%C\*") do (

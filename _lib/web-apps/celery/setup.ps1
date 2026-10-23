@@ -14,4 +14,4 @@ Execute this script to install and configure celery on the local system.
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./stacks/task-queues/celery setup skipped"
+Write-Output "./_lib/web-apps/celery setup skipped"

@@ -164,10 +164,19 @@ if "%MONGODB_INSTALL_METHOD%"=="pkgx" ( pkgx install "mongodb@%MONGODB_VERSION%"
 if "%MONGODB_INSTALL_METHOD%"=="vfox" ( vfox add mongodb & vfox install "mongodb@%MONGODB_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\mongod.exe" (
     echo Installing mongodb %MONGODB_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-    if exist "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip" (
+    set "_MONGO_CACHED="
+    if defined LIBSCRIPT_CACHE_DIR (
+        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\databases\mongodb*.zip" "%LIBSCRIPT_CACHE_DIR%\datastores\mongodb*.zip") do (
+            if exist "%%~fZ" set "_MONGO_CACHED=%%~fZ"
+        )
+    )
+    if defined _MONGO_CACHED (
+        echo Extracting MongoDB from offline cache !_MONGO_CACHED!...
+        tar -xf "!_MONGO_CACHED!" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "!_MONGO_CACHED!" -C "%TARGET_DIR%"
+    ) else if exist "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip" -C "%TARGET_DIR%"
     ) else if exist "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.tar.gz" (

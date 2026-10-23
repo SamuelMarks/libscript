@@ -177,7 +177,7 @@ fi
 EXPANDED_TARGETS=""
 for arg in $TARGETS; do
     if [ "$arg" = "all" ]; then
-        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/stacks/*; do
+        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies/* "$REPO_ROOT"/payloads/*; do
             if [ -d "$cat_dir" ] && [ "$(basename "$cat_dir")" != "_common" ]; then
                 for dir in "$cat_dir"/*; do
                     [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
@@ -188,13 +188,15 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
-    elif [ -d "$REPO_ROOT/stacks/$arg" ]; then
-        for dir in "$REPO_ROOT/stacks/$arg"/*; do
+    elif [ -d "$REPO_ROOT/topologies/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+    elif [ -d "$REPO_ROOT/payloads/$arg" ]; then
+        for dir in "$REPO_ROOT/payloads/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
     else
         found=0
-        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/stacks/*; do
+        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies "$REPO_ROOT"/payloads/*; do
             if [ -d "$cat_dir/$arg" ]; then
                 EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
                 found=1
@@ -202,7 +204,7 @@ for arg in $TARGETS; do
             fi
         done
         if [ $found -eq 0 ]; then
-            echo "Warning: Target '$arg' not found in _lib/ or stacks/."
+            echo "Warning: Target '$arg' not found in _lib/, topologies/, or payloads/."
         fi
     fi
 done
@@ -262,7 +264,7 @@ while true; do
 
         # Check manifest for OS support
         MANIFEST_PATH=""
-        for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/stacks"/*/"$target/manifest.json"; do
+        for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$target/topology.json" "$REPO_ROOT/payloads"/*/"$target/payload.json"; do
             if [ -f "$_m" ]; then
                 MANIFEST_PATH="$_m"
                 break

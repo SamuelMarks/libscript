@@ -54,11 +54,15 @@ echo Available components:
 for /f "delims=" %%f in ('dir /s /b /a:-d "!SCRIPT_DIR!\cli.cmd" 2^>nul') do (
     set "dir_path=%%~dpf"
     set "dir_path=!dir_path:~0,-1!"
-    if exist "!dir_path!\vars.schema.json" (
+    set "schema_file="
+    if exist "!dir_path!\vars.schema.json" set "schema_file=!dir_path!\vars.schema.json"
+    if "!schema_file!"=="" if exist "!dir_path!\topology.json" set "schema_file=!dir_path!\topology.json"
+    if "!schema_file!"=="" if exist "!dir_path!\payload.json" set "schema_file=!dir_path!\payload.json"
+    if not "!schema_file!"=="" (
         set "rel_dir=!dir_path:!SCRIPT_DIR!\=!"
         if "!rel_dir!" neq "" (
             set "desc="
-            jq -r "if .description then .description else \"\" end" "!dir_path!\vars.schema.json" > "%temp%\desc.txt" 2^>nul
+            jq -r "if .description then .description else \"\" end" "!schema_file!" > "%temp%\desc.txt" 2^>nul
             if not errorlevel 1 (
                 set /p desc=^<"%temp%\desc.txt"
             )

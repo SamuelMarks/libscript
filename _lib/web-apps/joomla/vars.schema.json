@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/stacks/cms/joomla/vars.schema.json",
+  "$id": "/_lib/web-apps/joomla/vars.schema.json",
   "title": "joomla vars",
   "description": "Variables for joomla vars",
   "type": "object",

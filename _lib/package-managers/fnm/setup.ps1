@@ -17,7 +17,7 @@ $ErrorActionPreference = "Stop"
 if (-Not (Get-Command fnm -ErrorAction SilentlyContinue)) {
   Write-Host "Installing fnm..."
   $installer = Join-Path $env:TEMP "install-fnm.ps1"
-  Invoke-RestMethod -Uri "https://fnm.vercel.stacks/install" -OutFile $installer
+  Invoke-RestMethod -Uri "https://fnm.vercel.app/install" -OutFile $installer
   & $installer
   Remove-Item -Force $installer -ErrorAction SilentlyContinue
 }
