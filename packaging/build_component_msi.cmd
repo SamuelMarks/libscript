@@ -270,11 +270,39 @@ if /i "%CURR_VAR%"=="offline" (
         for %%F in ("%OFFLINE_SOURCE%\webservers\caddy\caddy*.exe" "%OFFLINE_SOURCE%\webservers\caddy*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
     )
+    if /i "%COMPONENT%"=="gunicorn" (
+        set "FOUND_ARC="
+        set "FOUND_WHL="
+        for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        for %%F in ("%OFFLINE_SOURCE%\wheels\gunicorn-*.whl") do if exist "%%~fF" set "FOUND_WHL=%%~fF"
+        if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
+        if "!FOUND_WHL!"=="" set "NEED_HYDRATE=1"
+    )
+    if /i "%COMPONENT%"=="nodeenv" (
+        set "FOUND_ARC="
+        set "FOUND_WHL="
+        for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        for %%F in ("%OFFLINE_SOURCE%\wheels\nodeenv-*.whl") do if exist "%%~fF" set "FOUND_WHL=%%~fF"
+        if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
+        if "!FOUND_WHL!"=="" set "NEED_HYDRATE=1"
+    )
+    if /i "%COMPONENT%"=="exim" (
+        set "FOUND_ARC="
+        set "FOUND_WHL="
+        for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        for %%F in ("%OFFLINE_SOURCE%\wheels\aiosmtpd-*.whl") do if exist "%%~fF" set "FOUND_WHL=%%~fF"
+        if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
+        if "!FOUND_WHL!"=="" set "NEED_HYDRATE=1"
+    )
 
     if "%HYDRATE%"=="1" set "NEED_HYDRATE=1"
     if "!NEED_HYDRATE!"=="1" (
         echo [INFO] Hydrating %COMPONENT% offline cache before build...
         call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
+        if !ERRORLEVEL! neq 0 (
+            echo [ERROR] Offline cache hydration failed for %COMPONENT%. >&2
+            exit /b 1
+        )
     )
 
     if /i "%COMPONENT%"=="mysql" (
@@ -283,9 +311,11 @@ if /i "%CURR_VAR%"=="offline" (
         if not "!FOUND_ARC!"=="" (
             powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
             for /d %%D in ("%STAGE_ROOT%\*") do (
-                if exist "%%~fD\bin" (
-                    xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
-                    rmdir /s /q "%%~fD" >nul 2>&1
+                if /i not "%%~nxD"=="bin" (
+                    if exist "%%~fD\bin" (
+                        xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
+                        rmdir /s /q "%%~fD" >nul 2>&1
+                    )
                 )
             )
         ) else (
@@ -312,8 +342,8 @@ if /i "%CURR_VAR%"=="offline" (
             )
             if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\redis-server.exe" if not exist "%STAGE_ROOT%\bin\redis-server.exe" (
-                copy /y "%STAGE_ROOT%\redis-server.exe" "%STAGE_ROOT%\bin" >nul 2>&1
-                copy /y "%STAGE_ROOT%\redis-cli.exe" "%STAGE_ROOT%\bin" >nul 2>&1
+                copy /y "%STAGE_ROOT%\redis-server.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
+                copy /y "%STAGE_ROOT%\redis-cli.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
             )
         ) else (
             echo [ERROR] Offline Redis archive missing from %OFFLINE_SOURCE% >&2
@@ -326,9 +356,11 @@ if /i "%CURR_VAR%"=="offline" (
         if not "!FOUND_ARC!"=="" (
             powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
             for /d %%D in ("%STAGE_ROOT%\*") do (
-                if exist "%%~fD\bin" (
-                    xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
-                    rmdir /s /q "%%~fD" >nul 2>&1
+                if /i not "%%~nxD"=="bin" (
+                    if exist "%%~fD\bin" (
+                        xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
+                        rmdir /s /q "%%~fD" >nul 2>&1
+                    )
                 )
             )
         ) else (
@@ -341,8 +373,9 @@ if /i "%CURR_VAR%"=="offline" (
         for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
             powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
-                copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin" >nul 2>&1
+                copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
             )
         ) else (
             echo [ERROR] Offline Python archive missing from %OFFLINE_SOURCE% >&2
@@ -355,11 +388,14 @@ if /i "%CURR_VAR%"=="offline" (
         if not "!FOUND_ARC!"=="" (
             powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
             for /d %%D in ("%STAGE_ROOT%\*") do (
-                xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
-                rmdir /s /q "%%~fD" >nul 2>&1
+                if /i not "%%~nxD"=="bin" (
+                    xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
+                    rmdir /s /q "%%~fD" >nul 2>&1
+                )
             )
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\node.exe" if not exist "%STAGE_ROOT%\bin\node.exe" (
-                copy /y "%STAGE_ROOT%\node.exe" "%STAGE_ROOT%\bin" >nul 2>&1
+                copy /y "%STAGE_ROOT%\node.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
             )
         ) else (
             echo [ERROR] Offline Node.js archive missing from %OFFLINE_SOURCE% >&2
@@ -370,6 +406,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_BIN="
         for %%F in ("%OFFLINE_SOURCE%\databases\meilisearch-*.exe") do if exist "%%~fF" set "FOUND_BIN=%%~fF"
         if not "!FOUND_BIN!"=="" (
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\bin\meilisearch.exe" >nul 2>&1
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\meilisearch.exe" >nul 2>&1
         ) else (
@@ -389,6 +426,7 @@ if /i "%CURR_VAR%"=="offline" (
             )
         )
         if not "!FOUND_BIN!"=="" (
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\bin\caddy.exe" >nul 2>&1
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\caddy.exe" >nul 2>&1
         ) else (
@@ -397,50 +435,115 @@ if /i "%CURR_VAR%"=="offline" (
         )
     )
     if /i "%COMPONENT%"=="gunicorn" (
+        set "FOUND_ARC="
+        for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        if not "!FOUND_ARC!"=="" (
+            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
+            if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
+                copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
+            )
+        ) else (
+            echo [ERROR] Offline Python runtime archive missing for gunicorn from %OFFLINE_SOURCE% >&2
+            exit /b 1
+        )
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\gunicorn" (
             xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\gunicorn\*" "%STAGE_ROOT%\" >nul 2>&1
         )
         if exist "%OFFLINE_SOURCE%\wheels" (
             if not exist "%STAGE_ROOT%\wheels" mkdir "%STAGE_ROOT%\wheels" 2>nul
-            for %%F in ("%OFFLINE_SOURCE%\wheels\gunicorn*.whl" "%OFFLINE_SOURCE%\wheels\waitress*.whl" "%OFFLINE_SOURCE%\wheels\uvicorn*.whl") do (
-                if exist "%%~fF" copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+            for %%F in ("%OFFLINE_SOURCE%\wheels\gunicorn*.whl" "%OFFLINE_SOURCE%\wheels\waitress*.whl" "%OFFLINE_SOURCE%\wheels\uvicorn*.whl" "%OFFLINE_SOURCE%\wheels\packaging*.whl" "%OFFLINE_SOURCE%\wheels\click*.whl" "%OFFLINE_SOURCE%\wheels\h11*.whl") do (
+                if exist "%%~fF" (
+                    copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+                    tar.exe -xf "%%~fF" -C "%STAGE_ROOT%" 2>nul
+                )
             )
         )
         (
             echo @echo off
-            echo python -m waitress %%*
+            echo "%%~dp0..\python.exe" -m waitress %%*
         ) > "%STAGE_ROOT%\bin\gunicorn.cmd"
         echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"offline"} > "%STAGE_ROOT%\component.json"
         echo LibScript %COMPONENT% Offline Standalone Installer > "%STAGE_ROOT%\README.txt"
     )
     if /i "%COMPONENT%"=="nodeenv" (
+        set "FOUND_ARC="
+        for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        if not "!FOUND_ARC!"=="" (
+            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
+            if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
+                copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
+            )
+        ) else (
+            echo [ERROR] Offline Python runtime archive missing for nodeenv from %OFFLINE_SOURCE% >&2
+            exit /b 1
+        )
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\nodeenv" (
             xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\nodeenv\*" "%STAGE_ROOT%\" >nul 2>&1
         )
         if exist "%OFFLINE_SOURCE%\wheels" (
             if not exist "%STAGE_ROOT%\wheels" mkdir "%STAGE_ROOT%\wheels" 2>nul
-            for %%F in ("%OFFLINE_SOURCE%\wheels\nodeenv*.whl") do (
-                if exist "%%~fF" copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+            for %%F in ("%OFFLINE_SOURCE%\wheels\nodeenv*.whl" "%OFFLINE_SOURCE%\wheels\packaging*.whl") do (
+                if exist "%%~fF" (
+                    copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+                    tar.exe -xf "%%~fF" -C "%STAGE_ROOT%" 2>nul
+                )
             )
         )
         (
             echo @echo off
-            echo python -m nodeenv %%*
+            echo "%%~dp0..\python.exe" -m nodeenv %%*
         ) > "%STAGE_ROOT%\bin\nodeenv.cmd"
         echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"offline"} > "%STAGE_ROOT%\component.json"
         echo LibScript %COMPONENT% Offline Standalone Installer > "%STAGE_ROOT%\README.txt"
     )
     if /i "%COMPONENT%"=="exim" (
+        set "FOUND_ARC="
+        for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        if not "!FOUND_ARC!"=="" (
+            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
+            if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
+                copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
+            )
+        ) else (
+            echo [ERROR] Offline Python runtime archive missing for exim from %OFFLINE_SOURCE% >&2
+            exit /b 1
+        )
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\exim" (
             xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\exim\*" "%STAGE_ROOT%\" >nul 2>&1
         )
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\hmailserver" (
+            if not exist "%STAGE_ROOT%\hmailserver" mkdir "%STAGE_ROOT%\hmailserver" 2>nul
+            xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\hmailserver\*" "%STAGE_ROOT%\hmailserver\" >nul 2>&1
+        )
+        if exist "%OFFLINE_SOURCE%\wheels" (
+            if not exist "%STAGE_ROOT%\wheels" mkdir "%STAGE_ROOT%\wheels" 2>nul
+            for %%F in ("%OFFLINE_SOURCE%\wheels\aiosmtpd*.whl" "%OFFLINE_SOURCE%\wheels\atpublic*.whl" "%OFFLINE_SOURCE%\wheels\attrs*.whl") do (
+                if exist "%%~fF" (
+                    copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+                    tar.exe -xf "%%~fF" -C "%STAGE_ROOT%" 2>nul
+                )
+            )
+        )
         (
             echo @echo off
-            echo call "%%~dp0..\cli.cmd" %%*
+            echo "%%~dp0..\python.exe" -m aiosmtpd -n -l 127.0.0.1:2525 %%*
         ) > "%STAGE_ROOT%\bin\exim.cmd"
         echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"offline"} > "%STAGE_ROOT%\component.json"
         echo LibScript %COMPONENT% Offline Standalone Installer > "%STAGE_ROOT%\README.txt"
     )
+    if /i "%COMPONENT%"=="mysql" if not exist "%STAGE_ROOT%\bin\mysqld.exe" ( echo [ERROR] Missing staged bin\mysqld.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="redis" if not exist "%STAGE_ROOT%\bin\redis-server.exe" ( echo [ERROR] Missing staged bin\redis-server.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="mongodb" if not exist "%STAGE_ROOT%\bin\mongod.exe" ( echo [ERROR] Missing staged bin\mongod.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="python" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="nodejs" if not exist "%STAGE_ROOT%\bin\node.exe" ( echo [ERROR] Missing staged bin\node.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="meilisearch" if not exist "%STAGE_ROOT%\bin\meilisearch.exe" ( echo [ERROR] Missing staged bin\meilisearch.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="caddy" if not exist "%STAGE_ROOT%\bin\caddy.exe" ( echo [ERROR] Missing staged bin\caddy.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="gunicorn" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="nodeenv" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
+    if /i "%COMPONENT%"=="exim" if not exist "%STAGE_ROOT%\bin\python.exe" ( echo [ERROR] Missing staged bin\python.exe >&2 & exit /b 1 )
 ) else (
     echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"online"} > "%STAGE_ROOT%\component.json"
     echo LibScript %COMPONENT% Online Standalone Installer > "%STAGE_ROOT%\README.txt"
@@ -505,6 +608,11 @@ if errorlevel 1 (
 )
 
 echo [INFO] Compiling standalone %CURR_VAR% MSI via msi-rs: %TARGET_MSI%
+powershell -NoProfile -Command "$wxs = Get-Content -Raw '%PAYLOAD_WXS%'; $m = [regex]::Matches($wxs, 'Source=\"([^\"]+)\"'); foreach ($x in $m) { $s = $x.Groups[1].Value; $p1 = Join-Path '%STAGE_ROOT%' $s; $p2 = Join-Path '!LIBSCRIPT_ROOT_DIR!' $s; if (-not (Test-Path $p1) -and -not (Test-Path $p2) -and -not (Test-Path $s)) { Write-Error \"Missing payload source: $s\"; exit 1 } }"
+if !ERRORLEVEL! neq 0 (
+    echo [ERROR] Harvested payload file missing on disk. >&2
+    goto compile_err
+)
 candle.exe -nologo -arch %TARGET_ARCH% -out "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs candle compilation failed for %MAIN_WXS%. >&2
@@ -515,7 +623,7 @@ if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs candle compilation failed for %PAYLOAD_WXS%. >&2
     goto compile_err
 )
-light.exe -nologo -sval -ext WixUIExtension -out "%TARGET_MSI%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
+light.exe -nologo -sval -ext WixUIExtension -b "%STAGE_ROOT%" -b "!LIBSCRIPT_ROOT_DIR!" -out "%TARGET_MSI%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs light linking failed. >&2
     goto compile_err
@@ -534,6 +642,20 @@ if not exist "%TARGET_MSI%" (
     echo [ERROR] Target MSI was not generated: %TARGET_MSI% >&2
     set "ERR=1"
     goto cleanup
+)
+for %%S in ("%TARGET_MSI%") do set "MSI_SIZE=%%~zS"
+if /i "%CURR_VAR%"=="offline" (
+    if !MSI_SIZE! LSS 1048576 (
+        echo [ERROR] Offline MSI validation failed: %TARGET_MSI% is abnormally small ^(!MSI_SIZE! bytes ^< 1048576 bytes^). >&2
+        set "ERR=1"
+        goto cleanup
+    )
+) else (
+    if !MSI_SIZE! LSS 16384 (
+        echo [ERROR] Online MSI validation failed: %TARGET_MSI% is abnormally small ^(!MSI_SIZE! bytes ^< 16384 bytes^). >&2
+        set "ERR=1"
+        goto cleanup
+    )
 )
 for %%I in ("%TARGET_MSI%") do (
     if /i not "%%~dpI"=="%OUT_DIR%\" (

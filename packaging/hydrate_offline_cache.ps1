@@ -68,11 +68,12 @@ $manifestContent = Get-Content -Raw -Path $Manifest | ConvertFrom-Json
 $runtimesDir = Join-Path $CacheDir "runtimes"
 $databasesDir = Join-Path $CacheDir "databases"
 $webserversDir = Join-Path $CacheDir "webservers"
+$applicationsDir = Join-Path $CacheDir "applications"
 $wheelsDir = Join-Path $CacheDir "wheels"
 $npmDir = Join-Path $CacheDir "npm"
 $codebaseDir = Join-Path $CacheDir "codebase"
 
-foreach ($dir in @($runtimesDir, $databasesDir, $webserversDir, $wheelsDir, $npmDir, $codebaseDir)) {
+foreach ($dir in @($runtimesDir, $databasesDir, $webserversDir, $applicationsDir, $wheelsDir, $npmDir, $codebaseDir)) {
     if (-not (Test-Path $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }
@@ -197,7 +198,11 @@ $totalErrors = 0
 # 1. Runtimes
 if ($manifestContent.runtimes) {
     foreach ($prop in $manifestContent.runtimes.PSObject.Properties) {
-        if ($Component -and $Component -ne "all" -and $prop.Name -ne $Component) { continue }
+        if ($Component -and $Component -ne "all" -and $prop.Name -ne $Component) {
+            if (-not ($prop.Name -eq "python" -and ($Component -eq "gunicorn" -or $Component -eq "nodeenv" -or $Component -eq "exim"))) {
+                continue
+            }
+        }
         $rt = $prop.Value
         $dest = Join-Path $runtimesDir $rt.filename
         if (-not (Process-Artifact -Url $rt.url -Destination $dest -ExpectedHash $rt.sha256 -Category "Runtime")) {
@@ -243,9 +248,21 @@ if ($manifestContent.webservers) {
     }
 }
 
+# 2c. Applications
+if ($manifestContent.applications) {
+    foreach ($prop in $manifestContent.applications.PSObject.Properties) {
+        if ($Component -and $Component -ne "all" -and $Component -ne "applications" -and $prop.Name -ne $Component) { continue }
+        $app = $prop.Value
+        $dest = Join-Path $applicationsDir $app.filename
+        if (-not (Process-Artifact -Url $app.url -Destination $dest -ExpectedHash $app.sha256 -Category "Application")) {
+            $totalErrors++
+        }
+    }
+}
+
 # 3. Wheels
 if ($manifestContent.wheels -and $manifestContent.wheels.packages) {
-    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Component -eq "gunicorn" -or $Component -eq "nodeenv" -or $Wheels) {
+    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Component -eq "gunicorn" -or $Component -eq "nodeenv" -or $Component -eq "exim" -or $Wheels) {
         foreach ($whl in $manifestContent.wheels.packages) {
             $dest = Join-Path $wheelsDir $whl.filename
             if (-not (Process-Artifact -Url $whl.url -Destination $dest -ExpectedHash $whl.sha256 -Category "Wheel")) {

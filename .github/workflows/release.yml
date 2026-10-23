@@ -192,6 +192,55 @@ jobs:
             name: Open edX Platform (Offline)
             target_dir: _lib/web-apps/openedx
             build_cmd: packaging\build_msi.cmd _lib\web-apps\openedx --variant offline
+          - id: wordpress
+            name: WordPress Platform (Online)
+            target_dir: _lib/web-apps/wordpress
+            build_cmd: packaging\build_msi.cmd _lib\web-apps\wordpress --variant online
+          - id: wordpress-offline
+            name: WordPress Platform (Offline)
+            target_dir: _lib/web-apps/wordpress
+            build_cmd:
+              packaging\build_msi.cmd _lib\web-apps\wordpress --variant offline --cache-dir
+              cache\wordpress
+          - id: gitea
+            name: Gitea Git Service (Online)
+            target_dir: _lib/git-servers/gitea
+            build_cmd: packaging\build_msi.cmd _lib\git-servers\gitea --variant online
+          - id: gitea-offline
+            name: Gitea Git Service (Offline)
+            target_dir: _lib/git-servers/gitea
+            build_cmd:
+              packaging\build_msi.cmd _lib\git-servers\gitea --variant offline --cache-dir
+              cache\gitea
+          - id: drupal
+            name: Drupal CMS Platform (Online)
+            target_dir: _lib/web-apps/drupal
+            build_cmd: packaging\build_msi.cmd _lib\web-apps\drupal --variant online
+          - id: drupal-offline
+            name: Drupal CMS Platform (Offline)
+            target_dir: _lib/web-apps/drupal
+            build_cmd:
+              packaging\build_msi.cmd _lib\web-apps\drupal --variant offline --cache-dir
+              cache\drupal
+          - id: nextcloud
+            name: Nextcloud Hub Platform (Online)
+            target_dir: _lib/web-apps/nextcloud
+            build_cmd: packaging\build_msi.cmd _lib\web-apps\nextcloud --variant online
+          - id: nextcloud-offline
+            name: Nextcloud Hub Platform (Offline)
+            target_dir: _lib/web-apps/nextcloud
+            build_cmd:
+              packaging\build_msi.cmd _lib\web-apps\nextcloud --variant offline --cache-dir
+              cache\nextcloud
+          - id: odoo
+            name: Odoo ERP Platform (Online)
+            target_dir: _lib/web-apps/odoo
+            build_cmd: packaging\build_msi.cmd _lib\web-apps\odoo --variant online
+          - id: odoo-offline
+            name: Odoo ERP Platform (Offline)
+            target_dir: _lib/web-apps/odoo
+            build_cmd:
+              packaging\build_msi.cmd _lib\web-apps\odoo --variant offline --cache-dir cache\odoo
     defaults:
       run:
         working-directory: libscript

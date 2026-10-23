@@ -204,6 +204,15 @@ fi
 
 : "${TARGET_ARCH:=x64}"
 
+case "$PRODUCT_CODE" in
+  "{"*"}"|"*") ;;
+  *) PRODUCT_CODE="{${PRODUCT_CODE}}" ;;
+esac
+case "$UPGRADE_CODE" in
+  "{"*"}") ;;
+  *) UPGRADE_CODE="{${UPGRADE_CODE}}" ;;
+esac
+
 cat << EOF_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -241,9 +250,7 @@ cat << EOF_DIR_TREE >> "$OUT_FILE"
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="LibScriptRootFolder" Name="LibScript">
-          <Directory Id="INSTALLFOLDER" Name="${DIR_NAME}">
-            <Directory Id="BIN_DIR" Name="bin" />
-          </Directory>
+          <Directory Id="INSTALLFOLDER" Name="${DIR_NAME}" />
         </Directory>
       </Directory>
       <Directory Id="CommonAppDataFolder">
@@ -299,23 +306,29 @@ fi
 if [ -n "$SERVICE_NAME" ]; then
   SERVICE_GUID=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "service.${COMPONENT}")
   cat << EOF_SVC_DEF >> "$OUT_FILE"
-    <DirectoryRef Id="BIN_DIR">
+    <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="ServiceRegistrationComponent" Guid="${SERVICE_GUID}"${SHARED_ATTR}>
         <RegistryValue Root="HKLM" Key="Software\\LibScript\\$COMPONENT\\Service" Name="ServiceName" Type="string" Value="[SERVICE_NAME]" KeyPath="yes" />
         <ServiceInstall Id="Install_${COMPONENT}_Service"
                         Name="${SERVICE_NAME}"
                         DisplayName="LibScript ${TITLE}"
                         Type="ownProcess"
-                        Start="auto"
-                        ErrorControl="normal"
+                        Start="demand"
+                        ErrorControl="ignore"
                         Description="Managed service daemon for LibScript ${TITLE}." />
         <ServiceControl Id="Control_${COMPONENT}_Service"
                         Name="${SERVICE_NAME}"
                         Stop="both"
                         Remove="uninstall"
-                        Wait="yes" />
+                        Wait="no" />
       </Component>
     </DirectoryRef>
+    <InstallExecuteSequence>
+      <StopServices Sequence="1900">REGISTER_WINDOWS_SERVICE="1"</StopServices>
+      <DeleteServices Sequence="2000">REGISTER_WINDOWS_SERVICE="1"</DeleteServices>
+      <InstallServices Sequence="5800">REGISTER_WINDOWS_SERVICE="1"</InstallServices>
+      <StartServices Sequence="5900">REGISTER_WINDOWS_SERVICE="1"</StartServices>
+    </InstallExecuteSequence>
 EOF_SVC_DEF
 fi
 

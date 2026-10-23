@@ -234,6 +234,9 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     )
 )
 
+if not "%PRODUCT_CODE:~0,1%"=="{" if not "%PRODUCT_CODE%"=="*" set "PRODUCT_CODE={%PRODUCT_CODE%}"
+if not "%UPGRADE_CODE:~0,1%"=="{" set "UPGRADE_CODE={%UPGRADE_CODE%}"
+
 (
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
@@ -287,9 +290,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo     ^<Directory Id="TARGETDIR" Name="SourceDir"^>
     echo       ^<Directory Id="ProgramFiles64Folder"^>
     echo         ^<Directory Id="LibScriptRootFolder" Name="LibScript"^>
-    echo           ^<Directory Id="INSTALLFOLDER" Name="%DIR_NAME%"^>
-    echo             ^<Directory Id="BIN_DIR" Name="bin" /^>
-    echo           ^</Directory^>
+    echo           ^<Directory Id="INSTALLFOLDER" Name="%DIR_NAME%" /^>
     echo         ^</Directory^>
     echo       ^</Directory^>
     echo       ^<Directory Id="CommonAppDataFolder"^>
@@ -341,7 +342,7 @@ if /i "%VARIANT%"=="online" if not "%DOWNLOAD_URL%"=="" (
 if not "%SERVICE_NAME%"=="" (
     for /f "usebackq delims=" %%A in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "service.%COMPONENT%"`) do set "SERVICE_GUID=%%A"
     (
-        echo     ^<DirectoryRef Id="BIN_DIR"^>
+        echo     ^<DirectoryRef Id="INSTALLFOLDER"^>
         if defined SHARED_ATTR (
             echo       ^<Component Id="ServiceRegistrationComponent" Guid="!SERVICE_GUID!" %SHARED_ATTR%^>
         ) else (
@@ -352,16 +353,22 @@ if not "%SERVICE_NAME%"=="" (
         echo                         Name="%SERVICE_NAME%"
         echo                         DisplayName="LibScript %TITLE%"
         echo                         Type="ownProcess"
-        echo                         Start="auto"
-        echo                         ErrorControl="normal"
+        echo                         Start="demand"
+        echo                         ErrorControl="ignore"
         echo                         Description="Managed service daemon for LibScript %TITLE%." /^>
         echo         ^<ServiceControl Id="Control_%COMPONENT%_Service"
         echo                         Name="%SERVICE_NAME%"
         echo                         Stop="both"
         echo                         Remove="uninstall"
-        echo                         Wait="yes" /^>
+        echo                         Wait="no" /^>
         echo       ^</Component^>
         echo     ^</DirectoryRef^>
+        echo     ^<InstallExecuteSequence^>
+        echo       ^<StopServices Sequence="1900"^>REGISTER_WINDOWS_SERVICE="1"^</StopServices^>
+        echo       ^<DeleteServices Sequence="2000"^>REGISTER_WINDOWS_SERVICE="1"^</DeleteServices^>
+        echo       ^<InstallServices Sequence="5800"^>REGISTER_WINDOWS_SERVICE="1"^</InstallServices^>
+        echo       ^<StartServices Sequence="5900"^>REGISTER_WINDOWS_SERVICE="1"^</StartServices^>
+        echo     ^</InstallExecuteSequence^>
     ) >> "%OUT_FILE%"
 )
 

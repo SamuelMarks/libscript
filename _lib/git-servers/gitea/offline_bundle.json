@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../packaging/offline.schema.json",
+  "name": "gitea",
+  "title": "Gitea Git Service Air-Gapped Offline Bundle",
+  "version": "1.21.11",
+  "target_platform": "windows-x64",
+  "runtimes": {},
+  "databases": {
+    "mysql": {
+      "name": "mysql",
+      "version": "8.0.39",
+      "filename": "mysql-8.0.39-winx64.zip",
+      "url": "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.39-winx64.zip",
+      "sha256": "e6a076113322469205a02c95c6120938b292f480ce82f72819a51c59db2d90d5",
+      "port": 3306,
+      "service_name": "GiteaMySQL",
+      "extract_dir": "databases/mysql"
+    }
+  },
+  "webservers": {
+    "caddy": {
+      "name": "caddy",
+      "version": "2.8.4",
+      "filename": "caddy_2.8.4_windows_amd64.zip",
+      "url": "https://github.com/caddyserver/caddy/releases/download/v2.8.4/caddy_2.8.4_windows_amd64.zip",
+      "sha256": "2631fbe1c4f6fb08783ed6dc6ac238d6655b4c923abe2bce1433dbd7fd079630",
+      "port": 80,
+      "service_name": "LibScript_Caddy",
+      "extract_dir": "webservers/caddy"
+    }
+  },
+  "applications": {
+    "gitea": {
+      "name": "gitea",
+      "version": "1.21.11",
+      "filename": "gitea-1.21.11-windows-4.0-amd64.exe",
+      "url": "https://github.com/go-gitea/gitea/releases/download/v1.21.11/gitea-1.21.11-windows-4.0-amd64.exe",
+      "sha256": "498e2e6d00ccd9c94dc1c6ce204df897722b4b6113524853829c6dcb48532e5c",
+      "type": "file",
+      "extract_dir": "bin"
+    }
+  }
+}

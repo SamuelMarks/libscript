@@ -46,8 +46,12 @@ function Prepare-SingleArtifact {
     }
 
     $item = Get-Item -LiteralPath $ArtifactPath
-    if ($item.Length -eq 0) {
-        Write-Error "Artifact file is empty: $ArtifactPath"
+    if ($item.Length -eq 0 -or $item.Length -lt 1024) {
+        Write-Error "[FAIL] Artifact file is empty or abnormally small ($($item.Length) bytes < 1 KB): $ArtifactPath"
+        return $false
+    }
+    if ($item.Name -match '(?i)offline.*\.msi$' -and $item.Length -lt 1048576) {
+        Write-Error "[FAIL] Offline MSI artifact is abnormally small ($($item.Length) bytes < 1 MB): $ArtifactPath"
         return $false
     }
 

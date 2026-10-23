@@ -88,6 +88,69 @@
         "filename": "waitress-3.0.0-py3-none-any.whl",
         "url": "https://files.pythonhosted.org/packages/5b/a9/485c953a1ac4cb98c28e41fd2c7184072df36bbf99734a51d44d04176878/waitress-3.0.0-py3-none-any.whl",
         "sha256": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669"
+      },
+      {
+        "name": "gunicorn",
+        "version": "23.0.0",
+        "filename": "gunicorn-23.0.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl",
+        "sha256": "ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"
+      },
+      {
+        "name": "uvicorn",
+        "version": "0.30.6",
+        "filename": "uvicorn-0.30.6-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/f5/8e/cdc7d6263db313030e4c257dd5ba3909ebc4e4fb53ad62d5f09b1a2f5458/uvicorn-0.30.6-py3-none-any.whl",
+        "sha256": "65fd46fe3fda5bdc1b03b94eb634923ff18cd35b2f084813ea79d1f103f711b5"
+      },
+      {
+        "name": "nodeenv",
+        "version": "1.9.1",
+        "filename": "nodeenv-1.9.1-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl",
+        "sha256": "ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9"
+      },
+      {
+        "name": "packaging",
+        "version": "24.1",
+        "filename": "packaging-24.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/08/aa/cc0199a5f0ad350994d660967a8efb233fe0416e4639146c089643407ce6/packaging-24.1-py3-none-any.whl",
+        "sha256": "5b8f2217dbdbd2f7f384c41c628544e6d52f2d0f53c6d0c3ea61aa5d1d7ff124"
+      },
+      {
+        "name": "click",
+        "version": "8.1.7",
+        "filename": "click-8.1.7-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/00/2e/d53fa4befbf2cfa713304affc7ca780ce4fc1fd8710527771b58311a3229/click-8.1.7-py3-none-any.whl",
+        "sha256": "ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"
+      },
+      {
+        "name": "h11",
+        "version": "0.14.0",
+        "filename": "h11-0.14.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl",
+        "sha256": "e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"
+      },
+      {
+        "name": "aiosmtpd",
+        "version": "1.4.6",
+        "filename": "aiosmtpd-1.4.6-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/ec/39/d401756df60a8344848477d54fdf4ce0f50531f6149f3b8eaae9c06ae3dc/aiosmtpd-1.4.6-py3-none-any.whl",
+        "sha256": "72c99179ba5aa9ae0abbda6994668239b64a5ce054471955fe75f581d2592475"
+      },
+      {
+        "name": "atpublic",
+        "version": "5.0",
+        "filename": "atpublic-5.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/6b/03/2cb0e5326e19b7d877bc9c3a7ef436a30a06835b638580d1f5e21a0409ed/atpublic-5.0-py3-none-any.whl",
+        "sha256": "b651dcd886666b1042d1e38158a22a4f2c267748f4e97fde94bc492a4a28a3f3"
+      },
+      {
+        "name": "attrs",
+        "version": "24.2.0",
+        "filename": "attrs-24.2.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl",
+        "sha256": "81921eb96de3191c8258c199618104dd27ac608d9366f5e35d011eae1867ede2"
       }
     ]
   },

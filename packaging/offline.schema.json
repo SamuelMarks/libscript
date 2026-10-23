@@ -154,6 +154,48 @@
         }
       }
     },
+    "applications": {
+      "type": "object",
+      "description": "Application release archives, PHAR tools, and standalone binaries pre-bundled for offline deployment.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Specification for an application release archive or executable file.",
+        "required": ["name", "version", "filename", "url", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier of the application artifact (e.g. 'wordpress', 'gitea', 'drupal', 'nextcloud')."
+          },
+          "version": {
+            "type": "string",
+            "description": "Exact release version of the application artifact."
+          },
+          "filename": {
+            "type": "string",
+            "description": "Local cached filename stored in cache/applications/."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Upstream download URL for the application archive or binary."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$",
+            "description": "SHA-256 integrity digest for application artifact verification."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["zip", "tar.gz", "tar.xz", "exe", "file"],
+            "description": "Format or file type of the application artifact."
+          },
+          "extract_dir": {
+            "type": "string",
+            "description": "Target extraction or placement directory relative to installation folder."
+          }
+        }
+      }
+    },
     "wheels": {
       "type": "object",
       "description": "Pre-downloaded Python wheel packages for air-gapped pip installation.",

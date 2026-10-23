@@ -261,11 +261,11 @@ try {
             $srcPath = Strip-Root $srcPath
 
             $diskId = '1'
-            if ($f -like 'cache/runtimes/*') {
+            if ($f -like 'cache/runtimes/*' -or $f -like 'cache/webservers/*') {
                 $diskId = '2'
             } elseif ($f -like 'cache/databases/*') {
                 $diskId = '3'
-            } elseif ($f -like 'cache/codebase/*' -or $f -like 'cache/wheels/*' -or $f -like 'cache/npm/*') {
+            } elseif ($f -like 'cache/codebase/*' -or $f -like 'cache/wheels/*' -or $f -like 'cache/npm/*' -or $f -like 'cache/applications/*') {
                 $diskId = '4'
             }
 

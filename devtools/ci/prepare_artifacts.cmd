@@ -107,6 +107,17 @@ if "%FILE_SIZE%"=="0" (
     echo [ERROR] Artifact file is empty: %TARGET_FILE% >&2
     exit /b 1
 )
+if !FILE_SIZE! LSS 1024 (
+    echo [FAIL] Artifact is abnormally small ^(!FILE_SIZE! bytes ^< 1 KB^): %TARGET_FILE% >&2
+    exit /b 1
+)
+echo "%FILE_NAME%" | findstr /I "offline" | findstr /I ".msi" >nul 2>&1
+if not errorlevel 1 (
+    if !FILE_SIZE! LSS 1048576 (
+        echo [FAIL] Offline MSI artifact is abnormally small ^(!FILE_SIZE! bytes ^< 1 MB^): %TARGET_FILE% >&2
+        exit /b 1
+    )
+)
 
 set "SHA256_HASH="
 :: Prefer PowerShell .NET SHA256 if available

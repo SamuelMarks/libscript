@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../packaging/offline.schema.json",
+  "name": "nextcloud",
+  "title": "Nextcloud Hub Platform Air-Gapped Offline Bundle",
+  "version": "28.0.6",
+  "target_platform": "windows-x64",
+  "runtimes": {
+    "php": {
+      "name": "php",
+      "version": "8.2.20",
+      "filename": "php-8.2.20-nts-Win32-vs16-x64.zip",
+      "url": "https://windows.php.net/downloads/releases/archives/php-8.2.20-nts-Win32-vs16-x64.zip",
+      "sha256": "6cb748f1e867d85e7de9ff0338a9c05e1ed9b4b4aeea76afd79aa208d44c2e9f",
+      "type": "zip",
+      "extract_dir": "runtimes/php"
+    }
+  },
+  "databases": {
+    "mariadb": {
+      "name": "mariadb",
+      "version": "11.4.2",
+      "filename": "mariadb-11.4.2-winx64.zip",
+      "url": "https://archive.mariadb.org/mariadb-11.4.2/winx64-packages/mariadb-11.4.2-winx64.zip",
+      "sha256": "27dac2ce34b12b812b2b672cb12c23ccbb4139d410c5b557e5f0958f0a693488",
+      "port": 3306,
+      "service_name": "NextcloudMariaDB",
+      "extract_dir": "databases/mariadb"
+    },
+    "redis": {
+      "name": "redis",
+      "version": "8.10.2",
+      "filename": "redis-8.10.2-win64.zip",
+      "url": "https://github.com/SamuelMarks/redis-windows/releases/download/8.10.2/redis-8.10.2-win64.zip",
+      "sha256": "1c166b61b1480211e238103d3aaaf1022e73a30fc5203438ae2bab01aaed84ba",
+      "port": 6379,
+      "service_name": "NextcloudRedis",
+      "extract_dir": "databases/redis"
+    }
+  },
+  "webservers": {
+    "caddy": {
+      "name": "caddy",
+      "version": "2.8.4",
+      "filename": "caddy_2.8.4_windows_amd64.zip",
+      "url": "https://github.com/caddyserver/caddy/releases/download/v2.8.4/caddy_2.8.4_windows_amd64.zip",
+      "sha256": "2631fbe1c4f6fb08783ed6dc6ac238d6655b4c923abe2bce1433dbd7fd079630",
+      "port": 80,
+      "service_name": "LibScript_Caddy",
+      "extract_dir": "webservers/caddy"
+    }
+  },
+  "applications": {
+    "nextcloud": {
+      "name": "nextcloud",
+      "version": "28.0.6",
+      "filename": "nextcloud-28.0.6.zip",
+      "url": "https://download.nextcloud.com/server/releases/nextcloud-28.0.6.zip",
+      "sha256": "aab2825ea4c23ee0fdb6adb6bccaa909ca5cf4a2f0f79fe253e11a0d00149247",
+      "type": "zip",
+      "extract_dir": "www/nextcloud"
+    }
+  }
+}

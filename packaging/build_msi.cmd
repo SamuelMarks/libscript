@@ -1020,6 +1020,24 @@ echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 :: Performs the Overview operation and updates component state.
 set "PAYLOAD_WXS=%OUT_FILE%_payload.wxs"
 if /I "%VARIANT%"=="offline" (
+    if exist "%TARGET_DIR%\offline_bundle.json" (
+        set "CACHE_FILE_COUNT=0"
+        if exist "%CACHE_DIR%" (
+            for /f "usebackq delims=" %%C in (`powershell -NoProfile -Command "@(Get-ChildItem -Path '%CACHE_DIR%' -Recurse -File | Where-Object { $_.Name -ne 'manifest.json' -and $_.Name -ne 'checksums.sha256' }).Count"`) do set "CACHE_FILE_COUNT=%%C"
+        )
+        if "!CACHE_FILE_COUNT!"=="0" (
+            echo [INFO] Auto-hydrating offline cache for %STACK_NAME% from %TARGET_DIR%\offline_bundle.json...
+            if /I "%STACK_NAME%"=="openedx" (
+                call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%TARGET_DIR%\offline_bundle.json" --cache-dir "%CACHE_DIR%" --component python
+            ) else (
+                call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%TARGET_DIR%\offline_bundle.json" --cache-dir "%CACHE_DIR%"
+            )
+            if errorlevel 1 (
+                echo [ERROR] Offline cache hydration failed for %STACK_NAME% >&2
+                exit /b 1
+            )
+        )
+    )
     call "!SCRIPT_DIR!\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
 ) else (
     call "!SCRIPT_DIR!\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents"
@@ -1093,10 +1111,27 @@ if errorlevel 1 (
     echo [ERROR] candle compiler failed on %PAYLOAD_WXS% >&2
     goto compile_err
 )
-light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+if /I "%VARIANT%"=="offline" if exist "%CACHE_DIR%" (
+    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "%CACHE_DIR%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+) else (
+    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+)
 if errorlevel 1 (
     echo [ERROR] light linker failed >&2
     goto compile_err
+)
+
+for %%S in ("%OUT_FILE%.msi") do set "MSI_SIZE=%%~zS"
+if /I "%VARIANT%"=="offline" (
+    if !MSI_SIZE! LSS 5242880 (
+        echo [ERROR] Offline MSI validation failed. The generated MSI is abnormally small ^(!MSI_SIZE! bytes ^< 5242880 bytes^). >&2
+        goto compile_err
+    )
+) else (
+    if !MSI_SIZE! LSS 100000 (
+        echo [ERROR] Online MSI validation failed. The generated MSI is abnormally small ^(!MSI_SIZE! bytes ^< 100000 bytes^). >&2
+        goto compile_err
+    )
 )
 
 if "%USE_WIX%"=="1" goto skip_msiinfo

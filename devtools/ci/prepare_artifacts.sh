@@ -78,10 +78,18 @@ prepare_single_artifact() {
   fi
 
   _size=$(wc -c < "$_file" 2>/dev/null | tr -d ' ' || printf '0')
-  if [ "$_size" = "0" ]; then
-    printf '[ERROR] Artifact file is empty: %s\n' "$_file" >&2
+  if [ "$_size" = "0" ] || [ "$_size" -lt 1024 ]; then
+    printf '[ERROR] Artifact file is empty or abnormally small (%s bytes < 1 KB): %s\n' "$_size" "$_file" >&2
     return 1
   fi
+  case "$_file" in
+    *offline*.msi|*Offline*.msi|*OFFLINE*.msi)
+      if [ "$_size" -lt 1048576 ]; then
+        printf '[FAIL] Offline MSI artifact is abnormally small (%s bytes < 1 MB): %s\n' "$_size" "$_file" >&2
+        return 1
+      fi
+      ;;
+  esac
 
   _base=$(basename "$_file")
   _hash=$(compute_sha256 "$_file")

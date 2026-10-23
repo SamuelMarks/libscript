@@ -1254,6 +1254,21 @@ printf '[PASS] Successfully created WiX manifest: %s\n' "$WXS_FILE"
 # Performs the Overview operation and updates component state.
 PAYLOAD_WXS="${OUT_FILE}_payload.wxs"
 if [ "$VARIANT" = "offline" ]; then
+  _bundle_manifest="${RESOLVED_TARGET_DIR}/offline_bundle.json"
+  if [ -f "$_bundle_manifest" ]; then
+    _cache_file_count=0
+    if [ -d "$CACHE_DIR" ]; then
+      _cache_file_count=$(find "$CACHE_DIR" -type f ! -name "manifest.json" ! -name "checksums.sha256" 2>/dev/null | wc -l | tr -d ' ')
+    fi
+    if [ "${_cache_file_count:-0}" -eq 0 ]; then
+      printf '[INFO] Auto-hydrating offline cache for %s from %s...\n' "$APP_IDENTIFIER" "$_bundle_manifest"
+      if [ "$APP_IDENTIFIER" = "openedx" ]; then
+        "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$_bundle_manifest" --cache-dir "$CACHE_DIR" --component python
+      else
+        "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$_bundle_manifest" --cache-dir "$CACHE_DIR"
+      fi
+    fi
+  fi
   "${SCRIPT_DIR}/harvest_payload.sh" \
     --wix-fragment "${PAYLOAD_WXS}" \
     --directory-id "LIBSCRIPT_FOLDER" \
@@ -1342,9 +1357,16 @@ compile_msi() {
     return 1
   fi
 
-  if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
-    printf '[ERROR] light linker failed for %s.msi\n' "${OUT_FILE}" >&2
-    return 1
+  if [ "$VARIANT" = "offline" ] && [ -d "$CACHE_DIR" ]; then
+    if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -b "$CACHE_DIR" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
+      printf '[ERROR] light linker failed for %s.msi\n' "${OUT_FILE}" >&2
+      return 1
+    fi
+  else
+    if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
+      printf '[ERROR] light linker failed for %s.msi\n' "${OUT_FILE}" >&2
+      return 1
+    fi
   fi
 
   _msi_tables=$(msiinfo tables "${OUT_FILE}.msi" 2>/dev/null || true)
@@ -1362,9 +1384,16 @@ compile_msi() {
   fi
   
   _msi_size=$(wc -c < "${OUT_FILE}.msi" | tr -d ' ')
-  if [ "$_msi_size" -lt 10240 ]; then
-    printf '[ERROR] MSI validation failed. The generated MSI is abnormally small (%s bytes).\n' "$_msi_size" >&2
-    return 1
+  if [ "$VARIANT" = "offline" ]; then
+    if [ "$_msi_size" -lt 5242880 ]; then
+      printf '[ERROR] Offline MSI validation failed. The generated MSI is abnormally small (%s bytes < 5242880 bytes).\n' "$_msi_size" >&2
+      return 1
+    fi
+  else
+    if [ "$_msi_size" -lt 100000 ]; then
+      printf '[ERROR] Online MSI validation failed. The generated MSI is abnormally small (%s bytes < 100000 bytes).\n' "$_msi_size" >&2
+      return 1
+    fi
   fi
 
   printf '[PASS] Successfully built %s.msi\n' "${OUT_FILE}"

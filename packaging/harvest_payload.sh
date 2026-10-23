@@ -201,8 +201,15 @@ while IFS= read -r _rel || [ -n "$_rel" ]; do
 done < "${TMP_LIST}"
 
 # If --include-cache is specified, harvest the offline cache files
-if [ -n "${INCLUDE_CACHE}" ] && [ -d "${INCLUDE_CACHE}" ]; then
-  _cache_real=$(cd -- "${INCLUDE_CACHE}" && pwd)
+_cache_real=""
+if [ -n "${INCLUDE_CACHE}" ]; then
+  if [ -d "${INCLUDE_CACHE}" ]; then
+    _cache_real=$(cd -- "${INCLUDE_CACHE}" && pwd)
+  elif [ -d "${ROOT_DIR}/${INCLUDE_CACHE}" ]; then
+    _cache_real=$(cd -- "${ROOT_DIR}/${INCLUDE_CACHE}" && pwd)
+  fi
+fi
+if [ -n "${_cache_real}" ] && [ -d "${_cache_real}" ]; then
   find "$_cache_real" -type f | while read -r _cfile; do
     _rel_c="${_cfile#"${_cache_real}"/}"
     _rel_c="${_rel_c#./}"
@@ -228,7 +235,7 @@ if [ -n "${OUTPUT_DIR}" ]; then
     [ -z "$_rel" ] && continue
     if [ "${_rel#cache/}" != "$_rel" ] && [ -n "${INCLUDE_CACHE}" ]; then
       _cache_sub="${_rel#cache/}"
-      _src="${INCLUDE_CACHE}/${_cache_sub}"
+      _src="${_cache_real:-${INCLUDE_CACHE}}/${_cache_sub}"
     else
       _src="${ROOT_DIR}/${_rel}"
     fi
@@ -247,7 +254,7 @@ if [ -n "${WIX_FRAGMENT}" ]; then
   [ -d "$_frag_dir" ] || mkdir -p "$_frag_dir"
 
   _tmp_wix="$(mktemp "${TMPDIR:-/tmp}/harvest_wix.XXXXXX")"
-  awk -v "root=${ROOT_DIR}" -v "dir_id=${DIRECTORY_ID}" -v "comp_group=${COMPONENT_GROUP}" -v "inc_cache=${INCLUDE_CACHE:-}" '
+  awk -v "root=${ROOT_DIR}" -v "dir_id=${DIRECTORY_ID}" -v "comp_group=${COMPONENT_GROUP}" -v "inc_cache=${_cache_real:-${INCLUDE_CACHE:-}}" '
 function sanitize(s,   res) {
     res = s
     gsub(/[^a-zA-Z0-9_]/, "_", res)
@@ -347,11 +354,11 @@ END {
         src = strip_root(src)
 
         disk_id = "1"
-        if (substr(f, 1, 15) == "cache/runtimes/") {
+        if (substr(f, 1, 15) == "cache/runtimes/" || substr(f, 1, 17) == "cache/webservers/") {
             disk_id = "2"
         } else if (substr(f, 1, 16) == "cache/databases/") {
             disk_id = "3"
-        } else if (substr(f, 1, 15) == "cache/codebase/" || substr(f, 1, 13) == "cache/wheels/" || substr(f, 1, 10) == "cache/npm/") {
+        } else if (substr(f, 1, 15) == "cache/codebase/" || substr(f, 1, 13) == "cache/wheels/" || substr(f, 1, 10) == "cache/npm/" || substr(f, 1, 19) == "cache/applications/") {
             disk_id = "4"
         }
 
