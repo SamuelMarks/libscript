@@ -68,7 +68,13 @@ call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\gcp_image.cmd" "%RAW_DISK%" "
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\aws_ami.cmd" "%RAW_DISK%" "%TEST_DIR%\aws.raw" 1
 call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\cloud\gen_nocloud_iso.cmd" "test-node" "" "%TEST_DIR%\cidata.iso"
 
-if exist "%TEST_DIR%\azure.vhd" if exist "%TEST_DIR%\gcp.tar.gz" if exist "%TEST_DIR%\aws.raw" if exist "%TEST_DIR%\cidata.iso" (
+set "ALL_CLOUD_OK=1"
+if not exist "%TEST_DIR%\azure.vhd" set "ALL_CLOUD_OK=0"
+if not exist "%TEST_DIR%\gcp.tar.gz" set "ALL_CLOUD_OK=0"
+if not exist "%TEST_DIR%\aws.raw" set "ALL_CLOUD_OK=0"
+if not exist "%TEST_DIR%\cidata.iso" set "ALL_CLOUD_OK=0"
+
+if "!ALL_CLOUD_OK!"=="1" (
     echo [PASS] Cloud images and NoCloud ISO verified.
 ) else (
     echo [FAIL] One or more cloud image artifacts missing. >&2

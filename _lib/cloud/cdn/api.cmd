@@ -64,7 +64,11 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     for /f "tokens=*" %%i in ('aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?Id=='S3-%bucket%']].DomainName | [0]" --output text 2^>nul') do set "existing_dist=%%i"
-    if not "!existing_dist!"=="" if not "!existing_dist!"=="None" (
+    set "has_existing_dist=0"
+    if not "!existing_dist!"=="" (
+        if not "!existing_dist!"=="None" set "has_existing_dist=1"
+    )
+    if "!has_existing_dist!"=="1" (
         echo CDN Distribution already exists for '%bucket%': !existing_dist!
         set "dist_domain=!existing_dist!"
     ) else (

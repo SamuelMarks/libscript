@@ -98,7 +98,11 @@ ping 127.0.0.1 -n 4 >nul
 REM Serial Install Phase
 echo Installing dependencies sequentially...
 for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
-    if not "%%c"=="" if not "%%c"=="null" (
+    set "has_override=0"
+    if not "%%c"=="" (
+        if not "%%c"=="null" set "has_override=1"
+    )
+    if "!has_override!"=="1" (
         echo Skipping installation of %%a ^(override provided: %%c^)
     ) else (
         echo Installing %%a %%b...

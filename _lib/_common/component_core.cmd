@@ -301,7 +301,11 @@ if "!arg:~0,2!"=="--" (
     )
     if "!val!"=="" (
         set "_next_arg=%~2"
-        if not "!_next_arg!"=="" if not "!_next_arg:~0,1!"=="-" (
+        set "_use_next=0"
+        if not "!_next_arg!"=="" (
+            if not "!_next_arg:~0,1!"=="-" set "_use_next=1"
+        )
+        if "!_use_next!"=="1" (
             set "val=!_next_arg!"
             shift
         ) else (

@@ -78,7 +78,11 @@ if not exist "%TMP_STAGING%" mkdir "%TMP_STAGING%"
     echo local-hostname: %HOSTNAME%
 ) > "%TMP_STAGING%\meta-data"
 
-if not "%USER_DATA%"=="" if exist "%USER_DATA%" (
+set "HAS_USER_DATA=0"
+if not "%USER_DATA%"=="" (
+    if exist "%USER_DATA%" set "HAS_USER_DATA=1"
+)
+if "!HAS_USER_DATA!"=="1" (
     copy /y "%USER_DATA%" "%TMP_STAGING%\user-data" >nul 2>&1
 ) else (
     (

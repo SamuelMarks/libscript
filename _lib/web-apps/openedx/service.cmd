@@ -133,12 +133,18 @@ if %ERRORLEVEL%==0 (
     echo [INFO] Open edX LMS is already listening on port %OPENEDX_LMS_PORT%
 ) else (
     echo [INFO] Launching Open edX LMS on port %OPENEDX_LMS_PORT%...
+    set "LMS_LAUNCHED=0"
     if exist "!SCRIPT_DIR!\service_worker.ps1" (
         powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\service_worker.ps1" start %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
-    ) else if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
-        cd /D "%OPENEDX_INSTALL_DIR%\codebase"
-        powershell -WindowStyle Hidden -Command "Start-Process '%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application' -RedirectStandardOutput '%LOG_DIR%\lms.log' -RedirectStandardError '%LOG_DIR%\lms_err.log' -WindowStyle Hidden"
-    ) else (
+        set "LMS_LAUNCHED=1"
+    ) else if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" (
+        if exist "%OPENEDX_INSTALL_DIR%\codebase" (
+            cd /D "%OPENEDX_INSTALL_DIR%\codebase"
+            powershell -WindowStyle Hidden -Command "Start-Process '%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application' -RedirectStandardOutput '%LOG_DIR%\lms.log' -RedirectStandardError '%LOG_DIR%\lms_err.log' -WindowStyle Hidden"
+            set "LMS_LAUNCHED=1"
+        )
+    )
+    if "!LMS_LAUNCHED!"=="0" (
         echo [ERROR] Genuine Open edX codebase or waitress not found for LMS. >&2
         exit /b 1
     )

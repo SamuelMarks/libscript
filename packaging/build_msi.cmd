@@ -1111,7 +1111,11 @@ if errorlevel 1 (
     echo [ERROR] candle compiler failed on %PAYLOAD_WXS% >&2
     goto compile_err
 )
-if /I "%VARIANT%"=="offline" if exist "%CACHE_DIR%" (
+set "USE_CACHE_BIND=0"
+if /I "%VARIANT%"=="offline" (
+    if exist "%CACHE_DIR%" set "USE_CACHE_BIND=1"
+)
+if "!USE_CACHE_BIND!"=="1" (
     light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "%CACHE_DIR%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 ) else (
     light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
@@ -1121,6 +1125,11 @@ if errorlevel 1 (
     goto compile_err
 )
 
+if not exist "%OUT_FILE%.msi" (
+    echo [ERROR] Target MSI was not generated: %OUT_FILE%.msi >&2
+    goto compile_err
+)
+set "MSI_SIZE=0"
 for %%S in ("%OUT_FILE%.msi") do set "MSI_SIZE=%%~zS"
 if /I "%VARIANT%"=="offline" (
     if !MSI_SIZE! LSS 5242880 (

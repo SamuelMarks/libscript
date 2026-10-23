@@ -84,11 +84,11 @@ sc.exe query MongoDB >nul 2>&1 && set "FOUND_MONGO=1"
 sc.exe query Redis >nul 2>&1 && set "FOUND_REDIS=1"
 
 if "%MODE%"=="check" (
-    if "%TARGET_ENGINE%"=="mysql" ( if "!FOUND_MYSQL!"=="1" exit /b 0 else exit /b 1 )
-    if "%TARGET_ENGINE%"=="mariadb" ( if "!FOUND_MYSQL!"=="1" exit /b 0 else exit /b 1 )
-    if "%TARGET_ENGINE%"=="postgres" ( if "!FOUND_PG!"=="1" exit /b 0 else exit /b 1 )
-    if "%TARGET_ENGINE%"=="mongodb" ( if "!FOUND_MONGO!"=="1" exit /b 0 else exit /b 1 )
-    if "%TARGET_ENGINE%"=="redis" ( if "!FOUND_REDIS!"=="1" exit /b 0 else exit /b 1 )
+    if "%TARGET_ENGINE%"=="mysql" ( if "!FOUND_MYSQL!"=="1" ( exit /b 0 ) else ( exit /b 1 ) )
+    if "%TARGET_ENGINE%"=="mariadb" ( if "!FOUND_MYSQL!"=="1" ( exit /b 0 ) else ( exit /b 1 ) )
+    if "%TARGET_ENGINE%"=="postgres" ( if "!FOUND_PG!"=="1" ( exit /b 0 ) else ( exit /b 1 ) )
+    if "%TARGET_ENGINE%"=="mongodb" ( if "!FOUND_MONGO!"=="1" ( exit /b 0 ) else ( exit /b 1 ) )
+    if "%TARGET_ENGINE%"=="redis" ( if "!FOUND_REDIS!"=="1" ( exit /b 0 ) else ( exit /b 1 ) )
     exit /b 1
 )
 

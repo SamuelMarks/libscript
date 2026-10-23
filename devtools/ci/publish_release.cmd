@@ -232,19 +232,11 @@ if %ERRORLEVEL% equ 0 (
     if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
 ) else (
     echo [INFO] Creating new release "%REL_TAG%"...
-    if "%IS_DRAFT%"=="true" if "%IS_PRERELEASE%"=="true" (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --draft --prerelease !ASSET_FILES!
-        if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
-    ) else if "%IS_DRAFT%"=="true" (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --draft !ASSET_FILES!
-        if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
-    ) else if "%IS_PRERELEASE%"=="true" (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --prerelease !ASSET_FILES!
-        if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
-    ) else (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes !ASSET_FILES!
-        if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
-    )
+    set "REL_FLAGS="
+    if "%IS_DRAFT%"=="true" set "REL_FLAGS=!REL_FLAGS! --draft"
+    if "%IS_PRERELEASE%"=="true" set "REL_FLAGS=!REL_FLAGS! --prerelease"
+    gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes !REL_FLAGS! !ASSET_FILES!
+    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
 )
 
 echo [SUCCESS] Release assets successfully published for %REL_TAG%

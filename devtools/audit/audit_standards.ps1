@@ -190,6 +190,21 @@ function Audit-File {
         if ($allContent -match 'SCRIPT_DIR[%!][^\\/"\s\)]') {
             Log-Violation -File $FilePath -Rule "BATCH_SCRIPT_DIR_SEPARATOR" -Details "Missing backslash separator after SCRIPT_DIR."
         }
+        $chainedIf = @{}
+        $lineIdx = 0
+        foreach ($bLine in ($allContent -split "`r?`n")) {
+            $lineIdx++
+            $ind = ($bLine -replace '^(\s*).*$', '$1').Length
+            if ($bLine -match '(?i)^\s*\)\s*else(\s|$)' -and $chainedIf.ContainsKey($ind)) {
+                Log-Violation -File $FilePath -Rule "BATCH_CHAINED_IF_ELSE" -Details "Chained 'if ... if ... ( ... ) else ( ... )' at line $($chainedIf[$ind])->$lineIdx skips else when outer if is false."
+                $chainedIf.Remove($ind)
+            } elseif ($bLine -match '^\s*\)\s*$') {
+                $chainedIf.Remove($ind)
+            }
+            if ($bLine -match '(?i)^\s*(\)\s*else\s+)?if\s+.*\s+if\s+.*\(\s*$' -and $bLine -notmatch '(?i)powershell|python|jq|sqlite3') {
+                $chainedIf[$ind] = $lineIdx
+            }
+        }
     }
 
     # 4. Ban eval checks

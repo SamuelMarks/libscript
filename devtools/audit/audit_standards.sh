@@ -282,7 +282,7 @@ audit_single_file() {
       BEGIN {
         has_echo_off = 0; has_delayed = 0; has_this_file = 0;
         has_overview = 0; has_usage = 0; has_dup_stack = 0;
-        mkdir_hits = ""; git_push_hits = ""; script_dir_hits = "";
+        mkdir_hits = ""; git_push_hits = ""; script_dir_hits = ""; chained_if_else_hits = "";
       }
       { sub(/\r$/, "", $0) }
       NR == 1 {
@@ -307,6 +307,17 @@ audit_single_file() {
         if ($0 ~ /SCRIPT_DIR[%!][^\\/"[:space:]\)]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
         }
+        match($0, /^[[:space:]]*/)
+        ind = RLENGTH
+        if (tolower($0) ~ /^[[:space:]]*[)][[:space:]]*else([[:space:]]|$)/ && (ind in chained_if)) {
+          chained_if_else_hits = (chained_if_else_hits ? chained_if_else_hits "; " : "") chained_if[ind] "->" NR ":" $0
+          delete chained_if[ind]
+        } else if (tolower($0) ~ /^[[:space:]]*[)][[:space:]]*$/) {
+          delete chained_if[ind]
+        }
+        if (tolower($0) ~ /^[[:space:]]*([)][[:space:]]*else[[:space:]]+)?if[[:space:]].*[[:space:]]if[[:space:]].*[(][[:space:]]*$/ && tolower($0) !~ /powershell|python|jq|sqlite3/) {
+          chained_if[ind] = NR
+        }
       }
       END {
         if (!has_echo_off) print "BATCH_ECHO_OFF|Missing @echo off on line 1."
@@ -318,6 +329,7 @@ audit_single_file() {
         if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir in batch script: " mkdir_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (script_dir_hits != "") print "BATCH_SCRIPT_DIR_SEPARATOR|Missing backslash after SCRIPT_DIR: " script_dir_hits
+        if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
       }
     ' "$file" 2>/dev/null || true)
     if [ -n "$cmd_violations" ]; then

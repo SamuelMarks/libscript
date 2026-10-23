@@ -220,27 +220,29 @@ if not "!STATE_PATHS!"=="" (
     )
 )
 
-if not "!DOMAIN!"=="" if "!RETAIN_IP!"=="0" (
-    call :log "DNS" "Unmapping DNS..."
-    if "!PROVIDER!"=="azure" (
-        for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
-        call "!CLI!" dns unmap-node "!NODE!" "!RG!" "!DOMAIN!" "!ZONE_NAME!" "!ZONE_NAME!-rg" >> "!LOG_FILE!" 2>&1
-    ) else if "!PROVIDER!"=="aws" (
-        if "!AWS_ZONE_ID!"=="" (
-            for /f "tokens=*" %%i in ('aws route53 list-hosted-zones-by-name --dns-name "!DOMAIN!" --query "HostedZones[0].Id" --output text 2^>nul') do set "RAW_ID=%%i"
-            if not "!RAW_ID!"=="None" (
-                for %%a in ("!RAW_ID:/=" "!") do set "AWS_ZONE_ID=%%~a"
+if not "!DOMAIN!"=="" (
+    if "!RETAIN_IP!"=="0" (
+        call :log "DNS" "Unmapping DNS..."
+        if "!PROVIDER!"=="azure" (
+            for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
+            call "!CLI!" dns unmap-node "!NODE!" "!RG!" "!DOMAIN!" "!ZONE_NAME!" "!ZONE_NAME!-rg" >> "!LOG_FILE!" 2>&1
+        ) else if "!PROVIDER!"=="aws" (
+            if "!AWS_ZONE_ID!"=="" (
+                for /f "tokens=*" %%i in ('aws route53 list-hosted-zones-by-name --dns-name "!DOMAIN!" --query "HostedZones[0].Id" --output text 2^>nul') do set "RAW_ID=%%i"
+                if not "!RAW_ID!"=="None" (
+                    for %%a in ("!RAW_ID:/=" "!") do set "AWS_ZONE_ID=%%~a"
+                )
             )
+            if not "!AWS_ZONE_ID!"=="" (
+                call "!CLI!" dns unmap-node "!NODE!" "!DOMAIN!" "!AWS_ZONE_ID!" >> "!LOG_FILE!" 2>&1
+            )
+        ) else if "!PROVIDER!"=="gcp" (
+            for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
+            call "!CLI!" dns unmap-node "!NODE!" "!LOC!" "!DOMAIN!" "!ZONE_NAME!" >> "!LOG_FILE!" 2>&1
         )
-        if not "!AWS_ZONE_ID!"=="" (
-            call "!CLI!" dns unmap-node "!NODE!" "!DOMAIN!" "!AWS_ZONE_ID!" >> "!LOG_FILE!" 2>&1
-        )
-    ) else if "!PROVIDER!"=="gcp" (
-        for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
-        call "!CLI!" dns unmap-node "!NODE!" "!LOC!" "!DOMAIN!" "!ZONE_NAME!" >> "!LOG_FILE!" 2>&1
+    ) else if "!RETAIN_IP!"=="1" (
+        call :log "DNS" "Skipping DNS unmapping because --retain-ip is set."
     )
-) else if not "!DOMAIN!"=="" if "!RETAIN_IP!"=="1" (
-    call :log "DNS" "Skipping DNS unmapping because --retain-ip is set."
 )
 
 if "!RETAIN_IP!"=="1" (
