@@ -68,7 +68,7 @@ if "%~1"=="-h" (
 set "TARGET_ARCH=%~1"
 set "TARGET_LIBC=%~2"
 set "TARGET_OS=%~3"
-set "REPO_ROOT=!SCRIPT_DIR!..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
 
 call "%REPO_ROOT%\_lib\toolchains\triplets.cmd" "%TARGET_ARCH%" "%TARGET_LIBC%" "%TARGET_OS%"
 

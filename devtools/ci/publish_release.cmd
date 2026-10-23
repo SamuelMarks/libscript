@@ -163,7 +163,7 @@ for %%F in ("%_SUMS_DIR%\*") do (
             set "FILE_HASH="
             where powershell >nul 2>&1
             if !ERRORLEVEL! equ 0 (
-                for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-FileHash -LiteralPath '%%F' -Algorithm SHA256).Hash.ToLower()"`) do (
+                for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('%%F');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do (
                     set "FILE_HASH=%%H"
                 )
             )

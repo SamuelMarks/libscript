@@ -65,7 +65,7 @@ if "%~2"=="" (
 
 set TARGET_HOST=%~1
 set TARGET_PATH=%~2
-set REPO_ROOT=%SCRIPT_DIR%..
+set REPO_ROOT=%SCRIPT_DIR%\..
 
 echo [INFO] Syncing libscript from %REPO_ROOT% to %TARGET_HOST%:%TARGET_PATH%...
 

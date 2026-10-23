@@ -109,6 +109,51 @@
         }
       }
     },
+    "webservers": {
+      "type": "object",
+      "description": "Web server and reverse proxy binaries pre-bundled for offline provisioning (e.g. Caddy, Nginx).",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Specification for a web server binary package.",
+        "required": ["name", "version", "filename", "url", "sha256", "port"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier of the web server service (e.g. 'caddy', 'nginx')."
+          },
+          "version": {
+            "type": "string",
+            "description": "Exact software version of the web server binary."
+          },
+          "filename": {
+            "type": "string",
+            "description": "Local cached filename stored in cache/webservers/."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Upstream download URL for the web server binary archive."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$",
+            "description": "SHA-256 integrity digest for web server archive verification."
+          },
+          "port": {
+            "type": "integer",
+            "description": "Default TCP listening port for the web server service."
+          },
+          "service_name": {
+            "type": "string",
+            "description": "Windows Service or daemon name used for service management."
+          },
+          "extract_dir": {
+            "type": "string",
+            "description": "Target extraction folder relative to installation folder."
+          }
+        }
+      }
+    },
     "wheels": {
       "type": "object",
       "description": "Pre-downloaded Python wheel packages for air-gapped pip installation.",

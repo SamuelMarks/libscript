@@ -63,7 +63,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=!SCRIPT_DIR!..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "FORMAT=qcow2"
@@ -123,29 +123,29 @@ call "%REPO_ROOT%\_lib\freebsd\distro\assemble.cmd" "%PROFILE%" "%SYSROOT%"
 
 if "%FORMAT%"=="raw" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\freebsd.raw"
-    call "!SCRIPT_DIR!freebsd_raw.cmd" "%SYSROOT%" "!OUTPUT!" 20
+    call "!SCRIPT_DIR!\freebsd_raw.cmd" "%SYSROOT%" "!OUTPUT!" 20
 )
 if "%FORMAT%"=="qcow2" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\freebsd.qcow2"
-    call "!SCRIPT_DIR!freebsd_qcow2.cmd" "%SYSROOT%" "!OUTPUT!" 20
+    call "!SCRIPT_DIR!\freebsd_qcow2.cmd" "%SYSROOT%" "!OUTPUT!" 20
 )
 if "%FORMAT%"=="box" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\freebsd.box"
     set "QCOW_TMP=%REPO_ROOT%\build\freebsd.qcow2"
-    call "!SCRIPT_DIR!freebsd_qcow2.cmd" "%SYSROOT%" "!QCOW_TMP!" 20
-    call "!SCRIPT_DIR!freebsd_vagrant_box.cmd" "!QCOW_TMP!" "!OUTPUT!" "qemu"
+    call "!SCRIPT_DIR!\freebsd_qcow2.cmd" "%SYSROOT%" "!QCOW_TMP!" 20
+    call "!SCRIPT_DIR!\freebsd_vagrant_box.cmd" "!QCOW_TMP!" "!OUTPUT!" "qemu"
 )
 if "%FORMAT%"=="vhd" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\freebsd.vhd"
-    call "!SCRIPT_DIR!freebsd_vhd.cmd" "%SYSROOT%" "!OUTPUT!" 20
+    call "!SCRIPT_DIR!\freebsd_vhd.cmd" "%SYSROOT%" "!OUTPUT!" 20
 )
 if "%FORMAT%"=="vmdk" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\freebsd.vmdk"
-    call "!SCRIPT_DIR!freebsd_vmdk.cmd" "%SYSROOT%" "!OUTPUT!" 20
+    call "!SCRIPT_DIR!\freebsd_vmdk.cmd" "%SYSROOT%" "!OUTPUT!" 20
 )
 if "%FORMAT%"=="iso" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\freebsd.iso"
-    call "!SCRIPT_DIR!freebsd_iso.cmd" "%SYSROOT%" "!OUTPUT!"
+    call "!SCRIPT_DIR!\freebsd_iso.cmd" "%SYSROOT%" "!OUTPUT!"
 )
 
 echo [OK]       FreeBSD distribution packaged successfully as %FORMAT%: %OUTPUT%

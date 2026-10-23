@@ -78,20 +78,20 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!..\..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 echo [MULTIBOOT] Starting Multiboot Orchestration on Windows...
 
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "!SCRIPT_DIR!multiboot_orchestrator.sh" %*
+    wsl sh "!SCRIPT_DIR!\multiboot_orchestrator.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "!SCRIPT_DIR!multiboot_orchestrator.sh" %*
+    sh "!SCRIPT_DIR!\multiboot_orchestrator.sh" %*
     exit /b !errorlevel!
 )
 

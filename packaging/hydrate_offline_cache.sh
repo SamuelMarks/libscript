@@ -127,7 +127,7 @@ if [ ! -f "$MANIFEST_PATH" ]; then
   exit 1
 fi
 
-mkdir -p "${CACHE_DIR}/runtimes" "${CACHE_DIR}/databases" "${CACHE_DIR}/wheels" "${CACHE_DIR}/npm" "${CACHE_DIR}/codebase"
+mkdir -p "${CACHE_DIR}/runtimes" "${CACHE_DIR}/databases" "${CACHE_DIR}/webservers" "${CACHE_DIR}/wheels" "${CACHE_DIR}/npm" "${CACHE_DIR}/codebase"
 
 # ## compute_sha256
 # Computes the 64-character lowercase SHA-256 checksum of a file.
@@ -272,8 +272,29 @@ if command -v jq >/dev/null 2>&1; then
     process_artifact "$_url" "${CACHE_DIR}/databases/${_fn}" "$_hash" "Database" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
   done
 
+  # 2b. Webservers
+  _ws_keys=$(jq -r '.webservers | keys[]' "$MANIFEST_PATH" 2>/dev/null || true)
+  for key in $_ws_keys; do
+    if [ -n "$TARGET_COMPONENT" ] && [ "$TARGET_COMPONENT" != "all" ] && [ "$TARGET_COMPONENT" != "$key" ]; then
+      continue
+    fi
+    _fn=$(jq -r --arg k "$key" '.webservers[$k].filename' "$MANIFEST_PATH")
+    _url=$(jq -r --arg k "$key" '.webservers[$k].url' "$MANIFEST_PATH")
+    _hash=$(jq -r --arg k "$key" '.webservers[$k].sha256' "$MANIFEST_PATH")
+    if process_artifact "$_url" "${CACHE_DIR}/webservers/${_fn}" "$_hash" "Webserver"; then
+      if [ "$key" = "caddy" ]; then
+        mkdir -p "${CACHE_DIR}/webservers/caddy"
+        if [ ! -f "${CACHE_DIR}/webservers/caddy/caddy.exe" ]; then
+          unzip -q -o "${CACHE_DIR}/webservers/${_fn}" -d "${CACHE_DIR}/webservers/caddy" 2>/dev/null || tar -xf "${CACHE_DIR}/webservers/${_fn}" -C "${CACHE_DIR}/webservers/caddy" 2>/dev/null || true
+        fi
+      fi
+    else
+      TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
+    fi
+  done
+
   # 3. Pre-declared Wheels
-  if [ -z "$TARGET_COMPONENT" ] || [ "$TARGET_COMPONENT" = "all" ] || [ "$TARGET_COMPONENT" = "wheels" ] || [ "$TARGET_COMPONENT" = "openedx-core" ] || [ "$TARGET_COMPONENT" = "openedx" ] || [ "$HYDRATE_WHEELS" -eq 1 ]; then
+  if [ -z "$TARGET_COMPONENT" ] || [ "$TARGET_COMPONENT" = "all" ] || [ "$TARGET_COMPONENT" = "wheels" ] || [ "$TARGET_COMPONENT" = "openedx-core" ] || [ "$TARGET_COMPONENT" = "openedx" ] || [ "$TARGET_COMPONENT" = "gunicorn" ] || [ "$TARGET_COMPONENT" = "nodeenv" ] || [ "$HYDRATE_WHEELS" -eq 1 ]; then
     _wheel_count=$(jq -r '.wheels.packages | length' "$MANIFEST_PATH" 2>/dev/null || printf '0')
     _idx=0
     while [ "$_idx" -lt "$_wheel_count" ]; do
@@ -312,7 +333,7 @@ cp -f "$MANIFEST_PATH" "${CACHE_DIR}/manifest.json"
 
 _hash_file="${CACHE_DIR}/checksums.sha256"
 : > "$_hash_file"
-for _f in "${CACHE_DIR}/runtimes"/* "${CACHE_DIR}/databases"/* "${CACHE_DIR}/wheels"/* "${CACHE_DIR}/codebase"/*; do
+for _f in "${CACHE_DIR}/runtimes"/* "${CACHE_DIR}/databases"/* "${CACHE_DIR}/webservers"/* "${CACHE_DIR}/wheels"/* "${CACHE_DIR}/codebase"/*; do
   if [ -f "$_f" ]; then
     _h=$(compute_sha256 "$_f" || true)
     if [ -n "$_h" ]; then

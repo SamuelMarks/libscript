@@ -63,7 +63,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=!SCRIPT_DIR!..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "SYSROOT=%~1"

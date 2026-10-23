@@ -77,7 +77,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!..\..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "TARGET_DEV=%~1"
@@ -95,13 +95,13 @@ echo [INSTALL-LINUX] Initiating Linux (%FLAVOR%) installation on Windows...
 
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "!SCRIPT_DIR!install_linux.sh" "%TARGET_DEV%" "%FLAVOR%" "%TARGET_DIR%"
+    wsl sh "!SCRIPT_DIR!\install_linux.sh" "%TARGET_DEV%" "%FLAVOR%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "!SCRIPT_DIR!install_linux.sh" "%TARGET_DEV%" "%FLAVOR%" "%TARGET_DIR%"
+    sh "!SCRIPT_DIR!\install_linux.sh" "%TARGET_DEV%" "%FLAVOR%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 

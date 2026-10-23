@@ -61,7 +61,7 @@ fi
 printf '[PASS] Verified guid_registry.json exists.\n'
 
 # 2. Build standalone component MSIs
-for comp in mysql redis mongodb python nodejs meilisearch; do
+for comp in mysql redis mongodb python nodejs meilisearch caddy gunicorn exim nodeenv; do
   printf '[INFO] Building standalone MSI for %s...\n' "$comp"
   "${LIBSCRIPT_ROOT_DIR}/packaging/build_component_msi.sh" --component "$comp" --variant online
   if ! find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -maxdepth 1 -name "libscript-${comp}-*.msi" | grep -q .; then
@@ -69,7 +69,14 @@ for comp in mysql redis mongodb python nodejs meilisearch; do
     exit 1
   fi
 done
-printf '[PASS] All 6 standalone component MSIs built successfully.\n'
+for comp in gunicorn exim nodeenv; do
+  "${LIBSCRIPT_ROOT_DIR}/packaging/build_component_msi.sh" --component "$comp" --variant offline
+  if ! find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -maxdepth 1 -name "${comp}-*-offline.msi" | grep -q .; then
+    printf '[FAIL] Missing expected offline standalone MSI for component %s\n' "$comp" >&2
+    exit 1
+  fi
+done
+printf '[PASS] All 10 standalone component MSIs built successfully.\n'
 
 # 3. Build Master Orchestrator MSIs (Online and Offline)
 printf '[INFO] Building Master Orchestrator MSIs...\n'

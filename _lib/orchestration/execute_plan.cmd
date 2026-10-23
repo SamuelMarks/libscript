@@ -75,7 +75,7 @@ set "PLAN_FILE=%~1"
 set "DRY_RUN=0"
 if "%~2"=="--dry-run" set "DRY_RUN=1"
 
-set "REPO_ROOT=!SCRIPT_DIR!..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\.."
 
 if not exist "%PLAN_FILE%" (
     echo [ERROR] Execution plan file not found: %PLAN_FILE%
@@ -138,7 +138,7 @@ if exist "!STAMP_FILE!" (
     if "!DRY_RUN!"=="1" (
         echo [DRYRUN] Would execute !TASK_ACTION! on !TASK_COMP! and touch !STAMP_FILE!
     ) else (
-        set "EXEC_CMD=%REPO_ROOT%!TASK_COMP!\setup.cmd"
+        set "EXEC_CMD=%REPO_ROOT%\!TASK_COMP!\setup.cmd"
         if exist "!EXEC_CMD!" (
             call "!EXEC_CMD!" !TASK_ACTION!
         ) else (

@@ -87,7 +87,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%.."
+set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "CC0_ROOT=%REPO_ROOT%\..\cc0-assets"
@@ -103,13 +103,13 @@ echo [INFO] Destination: %CC0_ROOT%
 :: If WSL or bash is available, delegate to POSIX script for unified execution
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "%SCRIPT_DIR%capture_msi_live_screenshots.sh" %*
+    wsl sh "%SCRIPT_DIR%\capture_msi_live_screenshots.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "%SCRIPT_DIR%capture_msi_live_screenshots.sh" %*
+    sh "%SCRIPT_DIR%\capture_msi_live_screenshots.sh" %*
     exit /b !errorlevel!
 )
 

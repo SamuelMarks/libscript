@@ -77,7 +77,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!..\..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 echo [GUI] Initializing msi-gui graphical installer subsystem on Windows...

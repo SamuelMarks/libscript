@@ -73,7 +73,7 @@ exit /b 0
 :: ## main
 :: Executes primary screenshot rendering routine.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%.."
+set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "CC0_ROOT=%REPO_ROOT%\..\cc0-assets"
@@ -83,7 +83,7 @@ set "CC0_LIVE_DIR=%CC0_ROOT%\libscript\live-installer\screenshots"
 if not exist "%CC0_MSI_DIR%" mkdir "%CC0_MSI_DIR%"
 if not exist "%CC0_LIVE_DIR%" mkdir "%CC0_LIVE_DIR%"
 
-set "PS_SCRIPT=%SCRIPT_DIR%render_actual_screenshots.ps1"
+set "PS_SCRIPT=%SCRIPT_DIR%\render_actual_screenshots.ps1"
 
 where powershell.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

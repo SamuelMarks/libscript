@@ -258,7 +258,7 @@ build_single_variant() {
         [ -n "$_bin" ] && [ -f "$_bin" ] || _need_hydrate=1
         ;;
       caddy)
-        _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe")
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe" "${OFFLINE_SOURCE}/webservers/caddy"*".zip")
         [ -n "$_bin" ] && [ -f "$_bin" ] || _need_hydrate=1
         ;;
     esac
@@ -364,6 +364,13 @@ build_single_variant() {
         ;;
       caddy)
         _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe")
+        if [ -z "$_bin" ] || [ ! -f "$_bin" ]; then
+          _arc=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy"*".zip")
+          if [ -n "$_arc" ] && [ -f "$_arc" ]; then
+            unzip -q -o "$_arc" -d "$STAGE_ROOT" 2>/dev/null || tar -xf "$_arc" -C "$STAGE_ROOT" 2>/dev/null || true
+            [ -f "$STAGE_ROOT/caddy.exe" ] && _bin="$STAGE_ROOT/caddy.exe"
+          fi
+        fi
         if [ -n "$_bin" ] && [ -f "$_bin" ]; then
           cp -f "$_bin" "$STAGE_ROOT/bin/caddy.exe"
           cp -f "$_bin" "$STAGE_ROOT/caddy.exe" 2>/dev/null || true
@@ -372,11 +379,46 @@ build_single_variant() {
           exit 1
         fi
         ;;
-      *)
-        if [ ! -f "$STAGE_ROOT/bin/${COMPONENT}.exe" ]; then
-          :
+      gunicorn)
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/gunicorn" ]; then
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/gunicorn"/* "$STAGE_ROOT/" 2>/dev/null || true
         fi
-
+        if [ -d "${OFFLINE_SOURCE}/wheels" ]; then
+          mkdir -p "$STAGE_ROOT/wheels"
+          for _whl in "${OFFLINE_SOURCE}/wheels/gunicorn"*".whl" "${OFFLINE_SOURCE}/wheels/waitress"*".whl" "${OFFLINE_SOURCE}/wheels/uvicorn"*".whl"; do
+            [ -f "$_whl" ] && cp -f "$_whl" "$STAGE_ROOT/wheels/"
+          done
+        fi
+        printf '@echo off\r\npython -m waitress %%*\r\n' > "$STAGE_ROOT/bin/gunicorn.cmd"
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        ;;
+      nodeenv)
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/nodeenv" ]; then
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/nodeenv"/* "$STAGE_ROOT/" 2>/dev/null || true
+        fi
+        if [ -d "${OFFLINE_SOURCE}/wheels" ]; then
+          mkdir -p "$STAGE_ROOT/wheels"
+          for _whl in "${OFFLINE_SOURCE}/wheels/nodeenv"*".whl"; do
+            [ -f "$_whl" ] && cp -f "$_whl" "$STAGE_ROOT/wheels/"
+          done
+        fi
+        printf '@echo off\r\npython -m nodeenv %%*\r\n' > "$STAGE_ROOT/bin/nodeenv.cmd"
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        ;;
+      exim)
+        if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim" ]; then
+          cp -R "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim"/* "$STAGE_ROOT/" 2>/dev/null || true
+        fi
+        printf '@echo off\r\ncall "%%~dp0..\\cli.cmd" %%*\r\n' > "$STAGE_ROOT/bin/exim.cmd"
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        ;;
+      *)
+        printf '{"component":"%s","version":"%s","variant":"offline"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+        printf 'LibScript %s Offline Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+        printf 'LibScript %s Offline Stub\n' "$COMPONENT" > "$STAGE_ROOT/bin/README.txt"
         ;;
     esac
     set -f

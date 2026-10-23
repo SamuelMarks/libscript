@@ -73,7 +73,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%.."
+set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "SUMMARY_FILE=%REPO_ROOT%\tests_tmp\live_installer_matrix_summary.json"
@@ -83,13 +83,13 @@ echo [VAGRANT-MATRIX] Starting Vagrant Multi-Platform Verification on Windows...
 
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "%SCRIPT_DIR%test_live_installer_matrix.sh" %*
+    wsl sh "%SCRIPT_DIR%\test_live_installer_matrix.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "%SCRIPT_DIR%test_live_installer_matrix.sh" %*
+    sh "%SCRIPT_DIR%\test_live_installer_matrix.sh" %*
     exit /b !errorlevel!
 )
 

@@ -73,7 +73,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!..\..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "TARGET_DIR=%~1"
@@ -84,13 +84,13 @@ if not exist "%TARGET_DIR%\opt\libscript\cache" mkdir "%TARGET_DIR%\opt\libscrip
 
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "!SCRIPT_DIR!preload_assets.sh" %*
+    wsl sh "!SCRIPT_DIR!\preload_assets.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "!SCRIPT_DIR!preload_assets.sh" %*
+    sh "!SCRIPT_DIR!\preload_assets.sh" %*
     exit /b !errorlevel!
 )
 

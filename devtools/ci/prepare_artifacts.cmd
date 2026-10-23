@@ -109,10 +109,10 @@ if "%FILE_SIZE%"=="0" (
 )
 
 set "SHA256_HASH="
-:: Prefer PowerShell Get-FileHash if available
+:: Prefer PowerShell .NET SHA256 if available
 where powershell >nul 2>&1
 if %ERRORLEVEL% equ 0 (
-    for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-FileHash -Path '%TARGET_FILE%' -Algorithm SHA256).Hash.ToLower()"`) do (
+    for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('%TARGET_FILE%');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do (
         set "SHA256_HASH=%%H"
     )
 )

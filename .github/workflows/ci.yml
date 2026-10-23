@@ -21,9 +21,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: libscript
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          path: libscript
+
+      - name: Checkout CC0 Assets
+        uses: actions/checkout@v7
+        with:
+          repository: SamuelMarks/cc0-assets
+          path: cc0-assets
 
       - name: Setup Node (for Prettier and cspell)
         uses: actions/setup-node@v7

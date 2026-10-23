@@ -68,7 +68,7 @@ set "ACTION=%~1"
 if "!ACTION!"=="" set "ACTION=compile"
 
 if "%LIBSCRIPT_TARGET_SYSROOT%"=="" (
-    for %%I in ("!SCRIPT_DIR!..\..\..\..") do set "REPO_ROOT=%%~fI"
+    for %%I in ("!SCRIPT_DIR!\..\..\..\..") do set "REPO_ROOT=%%~fI"
     set "TARGET_SYSROOT=!REPO_ROOT!\build\target-sysroot"
 ) else (
     set "TARGET_SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"

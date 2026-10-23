@@ -52,7 +52,7 @@ goto :find_root
 
 set "query=%~2"
 set "DB_FILE=!LIBSCRIPT_ROOT_DIR!\libscript.sqlite"
-if "!LIBSCRIPT_ROOT_DIR!"=="" set "DB_FILE=!SCRIPT_DIR!libscript.sqlite"
+if "!LIBSCRIPT_ROOT_DIR!"=="" set "DB_FILE=!SCRIPT_DIR!\libscript.sqlite"
 if not exist "!DB_FILE!" (
     echo Error: Database not found. Run update-db first. 1>&2
     exit /b 1

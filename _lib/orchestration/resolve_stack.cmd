@@ -73,8 +73,8 @@ if "%~1"=="" (
 
 set "CONFIG_FILE=%~1"
 set "OUTPUT_FILE=%~2"
-set "REPO_ROOT=!SCRIPT_DIR!..\.."
-set "LIB_DIR=%REPO_ROOT%_lib"
+set "REPO_ROOT=!SCRIPT_DIR!\..\.."
+set "LIB_DIR=%REPO_ROOT%\_lib"
 
 if not exist "%CONFIG_FILE%" (
     echo [ERROR] Configuration file does not exist: %CONFIG_FILE%
@@ -100,11 +100,11 @@ for /R "%LIB_DIR%" %%F in (manifest.json) do (
 )
 
 if "%OUTPUT_FILE%"=="" (
-    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%_lib\utilities" -L "!SCRIPT_DIR!." --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!resolve_stack.jq"
+    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!\." --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq"
 ) else (
     for %%P in ("%OUTPUT_FILE%") do set "OUT_DIR=%%~dpP"
     if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
-    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%_lib\utilities" -L "!SCRIPT_DIR!." --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!resolve_stack.jq" > "%OUTPUT_FILE%"
+    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!\." --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq" > "%OUTPUT_FILE%"
     echo [INFO] Execution plan generated at %OUTPUT_FILE%
 )
 

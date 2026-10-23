@@ -60,7 +60,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("!SCRIPT_DIR!..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "COMPONENT="
 set "VERSION="
@@ -267,14 +267,14 @@ if /i "%CURR_VAR%"=="offline" (
     )
     if /i "%COMPONENT%"=="caddy" (
         set "FOUND_ARC="
-        for %%F in ("%OFFLINE_SOURCE%\webservers\caddy\caddy*.exe") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        for %%F in ("%OFFLINE_SOURCE%\webservers\caddy\caddy*.exe" "%OFFLINE_SOURCE%\webservers\caddy*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
     )
 
     if "%HYDRATE%"=="1" set "NEED_HYDRATE=1"
     if "!NEED_HYDRATE!"=="1" (
         echo [INFO] Hydrating %COMPONENT% offline cache before build...
-        call "!SCRIPT_DIR!hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
+        call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
     )
 
     if /i "%COMPONENT%"=="mysql" (
@@ -380,6 +380,14 @@ if /i "%CURR_VAR%"=="offline" (
     if /i "%COMPONENT%"=="caddy" (
         set "FOUND_BIN="
         for %%F in ("%OFFLINE_SOURCE%\webservers\caddy\caddy*.exe") do if exist "%%~fF" set "FOUND_BIN=%%~fF"
+        if "!FOUND_BIN!"=="" (
+            for %%F in ("%OFFLINE_SOURCE%\webservers\caddy*.zip") do (
+                if exist "%%~fF" (
+                    powershell -NoProfile -Command "Expand-Archive -Path '%%~fF' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+                    if exist "%STAGE_ROOT%\caddy.exe" set "FOUND_BIN=%STAGE_ROOT%\caddy.exe"
+                )
+            )
+        )
         if not "!FOUND_BIN!"=="" (
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\bin\caddy.exe" >nul 2>&1
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\caddy.exe" >nul 2>&1
@@ -387,6 +395,51 @@ if /i "%CURR_VAR%"=="offline" (
             echo [ERROR] Offline Caddy binary missing from %OFFLINE_SOURCE% >&2
             exit /b 1
         )
+    )
+    if /i "%COMPONENT%"=="gunicorn" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\gunicorn" (
+            xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\gunicorn\*" "%STAGE_ROOT%\" >nul 2>&1
+        )
+        if exist "%OFFLINE_SOURCE%\wheels" (
+            if not exist "%STAGE_ROOT%\wheels" mkdir "%STAGE_ROOT%\wheels" 2>nul
+            for %%F in ("%OFFLINE_SOURCE%\wheels\gunicorn*.whl" "%OFFLINE_SOURCE%\wheels\waitress*.whl" "%OFFLINE_SOURCE%\wheels\uvicorn*.whl") do (
+                if exist "%%~fF" copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+            )
+        )
+        (
+            echo @echo off
+            echo python -m waitress %%*
+        ) > "%STAGE_ROOT%\bin\gunicorn.cmd"
+        echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"offline"} > "%STAGE_ROOT%\component.json"
+        echo LibScript %COMPONENT% Offline Standalone Installer > "%STAGE_ROOT%\README.txt"
+    )
+    if /i "%COMPONENT%"=="nodeenv" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\nodeenv" (
+            xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\nodeenv\*" "%STAGE_ROOT%\" >nul 2>&1
+        )
+        if exist "%OFFLINE_SOURCE%\wheels" (
+            if not exist "%STAGE_ROOT%\wheels" mkdir "%STAGE_ROOT%\wheels" 2>nul
+            for %%F in ("%OFFLINE_SOURCE%\wheels\nodeenv*.whl") do (
+                if exist "%%~fF" copy /y "%%~fF" "%STAGE_ROOT%\wheels\" >nul 2>&1
+            )
+        )
+        (
+            echo @echo off
+            echo python -m nodeenv %%*
+        ) > "%STAGE_ROOT%\bin\nodeenv.cmd"
+        echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"offline"} > "%STAGE_ROOT%\component.json"
+        echo LibScript %COMPONENT% Offline Standalone Installer > "%STAGE_ROOT%\README.txt"
+    )
+    if /i "%COMPONENT%"=="exim" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\exim" (
+            xcopy /E /Y /Q "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\exim\*" "%STAGE_ROOT%\" >nul 2>&1
+        )
+        (
+            echo @echo off
+            echo call "%%~dp0..\cli.cmd" %%*
+        ) > "%STAGE_ROOT%\bin\exim.cmd"
+        echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"offline"} > "%STAGE_ROOT%\component.json"
+        echo LibScript %COMPONENT% Offline Standalone Installer > "%STAGE_ROOT%\README.txt"
     )
 ) else (
     echo {"component":"%COMPONENT%","version":"%VERSION%","variant":"online"} > "%STAGE_ROOT%\component.json"
@@ -397,11 +450,11 @@ if /i "%CURR_VAR%"=="offline" (
 set "MAIN_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wxs"
 set "PAYLOAD_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wxs"
 
-call "!SCRIPT_DIR!template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant "%CURR_VAR%" --out "%MAIN_WXS%"
+call "!SCRIPT_DIR!\template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant "%CURR_VAR%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 copy /y "%MAIN_WXS%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_main.wxs" >nul 2>&1
 
-call "!SCRIPT_DIR!harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
+call "!SCRIPT_DIR!\harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 if defined OUT_FILE (

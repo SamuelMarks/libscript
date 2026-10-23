@@ -62,7 +62,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("!SCRIPT_DIR!..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "COMPONENT="
 set "VERSION=1.0.0"
@@ -206,6 +206,7 @@ if exist "%BUNDLE_JSON%" (
     if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.url"`) do set "DOWNLOAD_URL=%%A"
     if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mongodb.url"`) do set "DOWNLOAD_URL=%%A"
     if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).webservers.caddy.url"`) do set "DOWNLOAD_URL=%%A"
 )
 
 set "DIR_NAME=%COMPONENT%"
@@ -215,6 +216,10 @@ if /i "%COMPONENT%"=="mongodb" set "DIR_NAME=MongoDB"
 if /i "%COMPONENT%"=="python" set "DIR_NAME=Python311"
 if /i "%COMPONENT%"=="nodejs" set "DIR_NAME=Node20"
 if /i "%COMPONENT%"=="meilisearch" set "DIR_NAME=Meilisearch"
+if /i "%COMPONENT%"=="caddy" set "DIR_NAME=Caddy"
+if /i "%COMPONENT%"=="gunicorn" set "DIR_NAME=Gunicorn"
+if /i "%COMPONENT%"=="exim" set "DIR_NAME=Exim"
+if /i "%COMPONENT%"=="nodeenv" set "DIR_NAME=Nodeenv"
 
 set "WIX_VERSION=%VERSION%"
 for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (

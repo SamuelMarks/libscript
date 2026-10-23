@@ -177,11 +177,11 @@ set "provided_checksum=%~3"
 if "!dest!"=="" for %%F in ("!url!") do set "dest=%%~nxF"
 
 :: 1. Checksum Resolution
-set "checksum_db=!LIBSCRIPT_ROOT_DIR!\_lib/checksums.txt"
+set "checksum_db=!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt"
 set "expected_checksum=!provided_checksum!"
 if "!expected_checksum!"=="" (
         if exist "!checksum_db!" (
-                for /f "tokens=2" %%i in ('findstr /L /C:"!url!" "!checksum_db!"') do (
+                for /f "tokens=2" %%i in ('findstr /L /C:"!url!" "!checksum_db!" 2^>nul') do (
                         set "expected_checksum=%%i"
                         goto :found_checksum
                 )
@@ -321,7 +321,8 @@ if "!download_needed!"=="1" (
 if not "!expected_checksum!"=="" (
         if /i not "!expected_checksum!"=="SKIP" (
                 set "clean_expected=!expected_checksum:sha-256=!"
-                for /f "tokens=*" %%a in ('powershell -Command "(Get-FileHash -Path '!cache_file!' -Algorithm SHA256).Hash.ToLower()"') do set "actual_checksum=%%a"
+                set "actual_checksum="
+                for /f "usebackq tokens=*" %%a in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('!cache_file!');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do set "actual_checksum=%%a"
                 if not "!actual_checksum!"=="!clean_expected!" (
                         call "!LOG_CMD!" :log_error "Checksum mismatch for !cache_file!. Expected: !clean_expected!, Got: !actual_checksum!"
                         del "!cache_file!"
@@ -330,8 +331,11 @@ if not "!expected_checksum!"=="" (
         )
 ) else (
         if not "%LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB%"=="1" (
-                for /f "tokens=*" %%a in ('powershell -Command "(Get-FileHash -Path '!cache_file!' -Algorithm SHA256).Hash.ToLower()"') do set "actual_checksum=%%a"
-                findstr /c:"!url! !actual_checksum!" "!checksum_db!" >nul 2>&1 || echo !url! !actual_checksum!>> "!checksum_db!"
+                set "actual_checksum="
+                for /f "usebackq tokens=*" %%a in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('!cache_file!');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do set "actual_checksum=%%a"
+                if not "!actual_checksum!"=="" (
+                        findstr /c:"!url! !actual_checksum!" "!checksum_db!" >nul 2>&1 || echo !url! !actual_checksum!>> "!checksum_db!"
+                )
         )
 )
 

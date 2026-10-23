@@ -63,7 +63,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%.."
+set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 if not exist "%REPO_ROOT%/tests_tmp" mkdir "%REPO_ROOT%/tests_tmp"
@@ -71,11 +71,11 @@ set "SUMMARY_FILE=%REPO_ROOT%/tests_tmp/illumos_matrix_summary.json"
 
 echo [MATRIX]   Starting Unified illumos Multi-Platform Verification Matrix...
 
-call "%SCRIPT_DIR%run_illumos_distro_on_freebsd.cmd"
-call "%SCRIPT_DIR%run_illumos_distro_on_linux.cmd"
-call "%SCRIPT_DIR%run_illumos_distro_on_macos.cmd"
-call "%SCRIPT_DIR%run_illumos_distro_on_windows.cmd"
-call "%SCRIPT_DIR%run_illumos_distro_on_sunos.cmd"
+call "%SCRIPT_DIR%\run_illumos_distro_on_freebsd.cmd"
+call "%SCRIPT_DIR%\run_illumos_distro_on_linux.cmd"
+call "%SCRIPT_DIR%\run_illumos_distro_on_macos.cmd"
+call "%SCRIPT_DIR%\run_illumos_distro_on_windows.cmd"
+call "%SCRIPT_DIR%\run_illumos_distro_on_sunos.cmd"
 
 (
     echo {

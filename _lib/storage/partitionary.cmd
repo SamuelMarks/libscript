@@ -94,19 +94,19 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 :: Delegate to POSIX partitionary.sh via WSL or bash if available
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "!SCRIPT_DIR!partitionary.sh" %*
+    wsl sh "!SCRIPT_DIR!\partitionary.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "!SCRIPT_DIR!partitionary.sh" %*
+    sh "!SCRIPT_DIR!\partitionary.sh" %*
     exit /b !errorlevel!
 )
 

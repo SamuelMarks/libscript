@@ -42,20 +42,31 @@ jobs:
     name: Centralized Cache Hydration
     runs-on: windows-latest
     timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: libscript
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          path: libscript
           fetch-depth: 0
+
+      - name: Checkout CC0 Assets
+        uses: actions/checkout@v7
+        with:
+          repository: SamuelMarks/cc0-assets
+          path: cc0-assets
 
       - name: Restore Existing Offline Cache
         uses: actions/cache/restore@v6
         id: restore-cache
         with:
-          path: cache
+          path: libscript/cache
           key:
-            offline-cache-${{ runner.os }}-${{ hashFiles('stacks/cms/openedx/offline_bundle.json',
-            'packaging/hydrate_offline_cache.*') }}
+            offline-cache-${{ runner.os }}-${{
+            hashFiles('libscript/_lib/web-apps/openedx/offline_bundle.json',
+            'libscript/packaging/hydrate_offline_cache.*') }}
           restore-keys: |
             offline-cache-${{ runner.os }}-
 
@@ -68,16 +79,17 @@ jobs:
         uses: actions/cache/save@v6
         if: steps.restore-cache.outputs.cache-hit != 'true'
         with:
-          path: cache
+          path: libscript/cache
           key:
-            offline-cache-${{ runner.os }}-${{ hashFiles('stacks/cms/openedx/offline_bundle.json',
-            'packaging/hydrate_offline_cache.*') }}
+            offline-cache-${{ runner.os }}-${{
+            hashFiles('libscript/_lib/web-apps/openedx/offline_bundle.json',
+            'libscript/packaging/hydrate_offline_cache.*') }}
 
       - name: Upload Hydrated Cache Artifact
         uses: actions/upload-artifact@v7
         with:
           name: hydrated-offline-cache
-          path: cache/
+          path: libscript/cache/
           if-no-files-found: error
 
   # ============================================================================
@@ -174,34 +186,38 @@ jobs:
             build_cmd: packaging\build_component_msi.cmd --component nodeenv --variant offline
           - id: openedx
             name: Open edX Platform (Online)
-            target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_msi.cmd stacks\cms\openedx --variant online
+            target_dir: _lib/web-apps/openedx
+            build_cmd: packaging\build_msi.cmd _lib\web-apps\openedx --variant online
           - id: openedx-offline
             name: Open edX Platform (Offline)
-            target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_msi.cmd stacks\cms\openedx --variant offline
+            target_dir: _lib/web-apps/openedx
+            build_cmd: packaging\build_msi.cmd _lib\web-apps\openedx --variant offline
+    defaults:
+      run:
+        working-directory: libscript
 
     steps:
-      - name: Clone CC0 Assets
-        shell: pwsh
-        run: |
-          if (-not (Test-Path "../cc0-assets")) {
-            git clone --depth 1 https://github.com/SamuelMarks/cc0-assets.git ../cc0-assets
-          }
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          path: libscript
           fetch-depth: 0
+
+      - name: Checkout CC0 Assets
+        uses: actions/checkout@v7
+        with:
+          repository: SamuelMarks/cc0-assets
+          path: cc0-assets
 
       - name: Restore Hydrated Cache
         uses: actions/cache/restore@v6
         id: restore-cache
         with:
-          path: cache
+          path: libscript/cache
           key:
-            offline-cache-${{ runner.os }}-${{ hashFiles('stacks/cms/openedx/offline_bundle.json',
-            'packaging/hydrate_offline_cache.*') }}
+            offline-cache-${{ runner.os }}-${{
+            hashFiles('libscript/_lib/web-apps/openedx/offline_bundle.json',
+            'libscript/packaging/hydrate_offline_cache.*') }}
           restore-keys: |
             offline-cache-${{ runner.os }}-
 
@@ -210,7 +226,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: hydrated-offline-cache
-          path: cache
+          path: libscript/cache
 
       - name: Setup msi-rs Toolset
         shell: pwsh
@@ -256,7 +272,7 @@ jobs:
             $rawRef = "${{ github.ref_name }}".Trim()
           }
 
-          # 2. Extract package metadata if packaging.json exists
+          # 2. Extract package metadata if packaging.json or offline_bundle.json exists
           $pkgJsonVer = "22.1.0"
           $pkgDefaultBranch = ""
           if (Test-Path "${{ matrix.package.target_dir }}\packaging.json") {
@@ -265,6 +281,12 @@ jobs:
             if ($json.source_repository -and $json.source_repository.default_branch) {
               $pkgDefaultBranch = "$($json.source_repository.default_branch)".Trim()
             }
+          } elseif (Test-Path "_lib\web-apps\openedx\offline_bundle.json") {
+            $bundle = Get-Content -Raw "_lib\web-apps\openedx\offline_bundle.json" | ConvertFrom-Json
+            $compId = ("${{ matrix.package.id }}" -replace '-offline$', '').Trim()
+            if ($bundle.databases.$compId.version) { $pkgJsonVer = "$($bundle.databases.$compId.version)".TrimStart("v").Trim() }
+            elseif ($bundle.runtimes.$compId.version) { $pkgJsonVer = "$($bundle.runtimes.$compId.version)".TrimStart("v").Trim() }
+            elseif ($bundle.webservers.$compId.version) { $pkgJsonVer = "$($bundle.webservers.$compId.version)".TrimStart("v").Trim() }
           }
 
           # 3. Determine target ref for naming (use tag/branch, or package default_branch, or manifest version)
@@ -373,8 +395,8 @@ jobs:
         with:
           name: installer-msi-${{ matrix.package.id }}
           path: |
-            ${{ steps.version.outputs.out_name }}.msi
-            ${{ steps.version.outputs.out_name }}.msi.sha256
+            libscript/${{ steps.version.outputs.out_name }}.msi
+            libscript/${{ steps.version.outputs.out_name }}.msi.sha256
           if-no-files-found: error
 
   # ============================================================================

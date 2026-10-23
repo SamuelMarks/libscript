@@ -150,6 +150,10 @@ case "$COMPONENT" in
   python) DIR_NAME="Python311" ;;
   nodejs) DIR_NAME="Node20" ;;
   meilisearch) DIR_NAME="Meilisearch" ;;
+  caddy) DIR_NAME="Caddy" ;;
+  gunicorn) DIR_NAME="Gunicorn" ;;
+  exim) DIR_NAME="Exim" ;;
+  nodeenv) DIR_NAME="Nodeenv" ;;
 esac
 
 SHARED_ATTR=""
@@ -172,6 +176,7 @@ DOWNLOAD_URL=""
 if [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; then
   case "$COMPONENT" in
     python|nodejs) DOWNLOAD_URL=$(jq -r --arg c "$COMPONENT" '.runtimes[$c].url // empty' "$BUNDLE_JSON") ;;
+    caddy) DOWNLOAD_URL=$(jq -r --arg c "$COMPONENT" '.webservers[$c].url // empty' "$BUNDLE_JSON") ;;
     *) DOWNLOAD_URL=$(jq -r --arg c "$COMPONENT" '.databases[$c].url // empty' "$BUNDLE_JSON") ;;
   esac
 fi

@@ -73,7 +73,7 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!..\..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "TARGET_DIR=%~1"
@@ -83,13 +83,13 @@ echo [WORKLOAD-OPENEDX] Preloading Open edX stack on Windows...
 
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "!SCRIPT_DIR!openedx.sh" "%TARGET_DIR%"
+    wsl sh "!SCRIPT_DIR!\openedx.sh" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "!SCRIPT_DIR!openedx.sh" "%TARGET_DIR%"
+    sh "!SCRIPT_DIR!\openedx.sh" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 

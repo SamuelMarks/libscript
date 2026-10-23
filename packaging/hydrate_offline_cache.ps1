@@ -67,13 +67,30 @@ $manifestContent = Get-Content -Raw -Path $Manifest | ConvertFrom-Json
 
 $runtimesDir = Join-Path $CacheDir "runtimes"
 $databasesDir = Join-Path $CacheDir "databases"
+$webserversDir = Join-Path $CacheDir "webservers"
 $wheelsDir = Join-Path $CacheDir "wheels"
 $npmDir = Join-Path $CacheDir "npm"
 $codebaseDir = Join-Path $CacheDir "codebase"
 
-foreach ($dir in @($runtimesDir, $databasesDir, $wheelsDir, $npmDir, $codebaseDir)) {
+foreach ($dir in @($runtimesDir, $databasesDir, $webserversDir, $wheelsDir, $npmDir, $codebaseDir)) {
     if (-not (Test-Path $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    }
+}
+
+# ## Get-Sha256Hex
+# Computes the lowercase SHA-256 hex digest of a file using pure .NET streaming cryptography.
+function Get-Sha256Hex {
+    param (
+        [string]$FilePath
+    )
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($FilePath)
+    try {
+        return [System.BitConverter]::ToString($sha.ComputeHash($stream)).Replace("-", "").ToLower()
+    } finally {
+        $stream.Dispose()
+        $sha.Dispose()
     }
 }
 
@@ -133,7 +150,7 @@ function Process-Artifact {
             Write-Host "[VALID] [$Category] $filename (pruned archive verified)."
             return $true
         }
-        $fileHash = (Get-FileHash -Path $Destination -Algorithm SHA256).Hash.ToLower()
+        $fileHash = Get-Sha256Hex -FilePath $Destination
         if ($fileHash -eq $ExpectedHash.ToLower()) {
             Write-Host "[VALID] [$Category] $filename matches SHA-256."
             Prune-Archive -Destination $Destination -Category $Category
@@ -162,7 +179,7 @@ function Process-Artifact {
         return $false
     }
 
-    $fileHash = (Get-FileHash -Path $Destination -Algorithm SHA256).Hash.ToLower()
+    $fileHash = Get-Sha256Hex -FilePath $Destination
     if ($fileHash -ne $ExpectedHash.ToLower()) {
         Write-Error "[FAIL] SHA-256 mismatch for newly downloaded $filename."
         Remove-Item -Path $Destination -Force
@@ -201,9 +218,34 @@ if ($manifestContent.databases) {
     }
 }
 
+# 2b. Webservers
+if ($manifestContent.webservers) {
+    foreach ($prop in $manifestContent.webservers.PSObject.Properties) {
+        if ($Component -and $Component -ne "all" -and $prop.Name -ne $Component) { continue }
+        $ws = $prop.Value
+        $dest = Join-Path $webserversDir $ws.filename
+        if (-not (Process-Artifact -Url $ws.url -Destination $dest -ExpectedHash $ws.sha256 -Category "Webserver")) {
+            $totalErrors++
+        } else {
+            if ($prop.Name -eq "caddy" -and $dest -like "*.zip") {
+                $caddyExtractDir = Join-Path $webserversDir "caddy"
+                if (-not (Test-Path $caddyExtractDir)) {
+                    New-Item -ItemType Directory -Path $caddyExtractDir -Force | Out-Null
+                }
+                if (-not (Test-Path (Join-Path $caddyExtractDir "caddy.exe"))) {
+                    tar.exe -xf $dest -C $caddyExtractDir 2>$null
+                    if (-not (Test-Path (Join-Path $caddyExtractDir "caddy.exe"))) {
+                        Expand-Archive -Path $dest -DestinationPath $caddyExtractDir -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+        }
+    }
+}
+
 # 3. Wheels
 if ($manifestContent.wheels -and $manifestContent.wheels.packages) {
-    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Wheels) {
+    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Component -eq "gunicorn" -or $Component -eq "nodeenv" -or $Wheels) {
         foreach ($whl in $manifestContent.wheels.packages) {
             $dest = Join-Path $wheelsDir $whl.filename
             if (-not (Process-Artifact -Url $whl.url -Destination $dest -ExpectedHash $whl.sha256 -Category "Wheel")) {
@@ -242,7 +284,7 @@ Copy-Item -Path $Manifest -Destination (Join-Path $CacheDir "manifest.json") -Fo
 $checksumPath = Join-Path $CacheDir "checksums.sha256"
 $checksumLines = @()
 Get-ChildItem -Path $CacheDir -Recurse -File | Where-Object { $_.Name -ne "checksums.sha256" -and $_.Name -ne "manifest.json" } | ForEach-Object {
-    $h = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
+    $h = Get-Sha256Hex -FilePath $_.FullName
     $checksumLines += "$h  $($_.Name)"
 }
 $checksumLines | Out-File -FilePath $checksumPath -Encoding ascii

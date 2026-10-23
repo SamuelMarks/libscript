@@ -187,6 +187,9 @@ function Audit-File {
         if ($allContent -match '(?mi)^[ \t]*(mkdir|md)[ \t]+' -and $allContent -notmatch '(?mi)if[ \t]+not[ \t]+exist') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' in batch script. Wrap with 'if not exist <dir> mkdir <dir>'."
         }
+        if ($allContent -match 'SCRIPT_DIR[%!][^\\/"\s\)]') {
+            Log-Violation -File $FilePath -Rule "BATCH_SCRIPT_DIR_SEPARATOR" -Details "Missing backslash separator after SCRIPT_DIR."
+        }
     }
 
     # 4. Ban eval checks

@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!..\..\.."
+    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 set "json_file=%~2"
 if "!json_file!"=="" set "json_file=libscript.json"

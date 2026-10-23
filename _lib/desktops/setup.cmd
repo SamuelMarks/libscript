@@ -53,7 +53,7 @@ goto :find_root
 
 
 SET "SCRIPT_DIR=%~dp0"
-SET "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!..\.."
+SET "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\.."
 FOR %%i IN ("!LIBSCRIPT_ROOT_DIR!") DO SET "LIBSCRIPT_ROOT_DIR=%%~fi"
 
 IF "%~1"=="status" (

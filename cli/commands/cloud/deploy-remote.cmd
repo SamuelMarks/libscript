@@ -64,7 +64,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-for %%I in ("!SCRIPT_DIR!..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\deploy_remote.cmd" %*
 exit /b %ERRORLEVEL%

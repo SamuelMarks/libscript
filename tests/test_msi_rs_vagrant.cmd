@@ -59,7 +59,7 @@ if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help
 if "%~1"=="-?" goto show_help
 
-set "REPO_ROOT=%SCRIPT_DIR%.."
+set "REPO_ROOT=%SCRIPT_DIR%\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
@@ -67,20 +67,20 @@ set "SUMMARY_FILE=%REPO_ROOT%\tests_tmp\msi_rs_matrix_summary.json"
 
 echo [VAGRANT-MATRIX] Starting Vagrant Multi-Platform Verification for msi-rs...
 
-if exist "%SCRIPT_DIR%run_debian_tests.cmd" (
-    call "%SCRIPT_DIR%run_debian_tests.cmd" msi-rs
+if exist "%SCRIPT_DIR%\run_debian_tests.cmd" (
+    call "%SCRIPT_DIR%\run_debian_tests.cmd" msi-rs
 )
-if exist "%SCRIPT_DIR%run_freebsd_tests.cmd" (
-    call "%SCRIPT_DIR%run_freebsd_tests.cmd" msi-rs
+if exist "%SCRIPT_DIR%\run_freebsd_tests.cmd" (
+    call "%SCRIPT_DIR%\run_freebsd_tests.cmd" msi-rs
 )
-if exist "%SCRIPT_DIR%run_omnios_tests.cmd" (
-    call "%SCRIPT_DIR%run_omnios_tests.cmd" msi-rs
+if exist "%SCRIPT_DIR%\run_omnios_tests.cmd" (
+    call "%SCRIPT_DIR%\run_omnios_tests.cmd" msi-rs
 )
-if exist "%SCRIPT_DIR%run_macos_tests.cmd" (
-    call "%SCRIPT_DIR%run_macos_tests.cmd" msi-rs
+if exist "%SCRIPT_DIR%\run_macos_tests.cmd" (
+    call "%SCRIPT_DIR%\run_macos_tests.cmd" msi-rs
 )
-if exist "%SCRIPT_DIR%run_windows_tests.cmd" (
-    call "%SCRIPT_DIR%run_windows_tests.cmd" msi-rs
+if exist "%SCRIPT_DIR%\run_windows_tests.cmd" (
+    call "%SCRIPT_DIR%\run_windows_tests.cmd" msi-rs
 )
 
 (
