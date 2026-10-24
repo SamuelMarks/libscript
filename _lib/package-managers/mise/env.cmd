@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%MISE_VERSION%"=="" SET "MISE_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\mise\%MISE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "MISE_VERSION=%MISE_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

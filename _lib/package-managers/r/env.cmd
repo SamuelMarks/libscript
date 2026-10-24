@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%R_VERSION%"=="" SET "R_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\r\%R_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "R_VERSION=%R_VERSION%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%NIX_VERSION%"=="" SET "NIX_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\nix\%NIX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "NIX_VERSION=%NIX_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

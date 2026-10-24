@@ -61,3 +61,10 @@ if "%NODEJS_SERVER_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\nodejs-server\%NODEJS_SERVER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "NODEJS_SERVER_VERSION=%NODEJS_SERVER_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

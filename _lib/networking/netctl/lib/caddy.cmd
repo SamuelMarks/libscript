@@ -2,7 +2,8 @@
 :: # caddy.cmd
 ::
 :: ## Overview
-:: Network control library module for caddy.
+:: Network control library module for caddy on Windows.
+:: Supports SPA try_files, WebSockets, and static/proxy routes.
 :: 
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
@@ -70,7 +71,15 @@ for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.k
         echo         root * %%c
         echo         file_server
         echo     }
+    ) else if "%%b"=="spa" (
+        echo     handle %%a* {
+        echo         root * %%c
+        echo         try_files {path} {path}/ /index.html
+        echo         file_server
+        echo     }
     ) else if "%%b"=="proxy" (
+        echo     reverse_proxy %%a* %%c
+    ) else if "%%b"=="ws" (
         echo     reverse_proxy %%a* %%c
     ) else if "%%b"=="rewrite" (
         echo     rewrite %%a* %%d

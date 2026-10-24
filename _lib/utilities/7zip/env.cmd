@@ -61,3 +61,10 @@ if "%SEVENZIP_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "SEVENZIP_VERSION=%SEVENZIP_VERSION%"
+)
+exit /b 0

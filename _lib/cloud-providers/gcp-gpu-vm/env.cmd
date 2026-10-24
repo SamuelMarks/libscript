@@ -54,3 +54,10 @@ goto :find_root
 if "%GCP_GPU_VM_ENABLED%"=="" set "GCP_GPU_VM_ENABLED=1"
 if "%GPU_VM_VERSION%"=="" set "GPU_VM_VERSION=latest"
 set "PATH=%LIBSCRIPT_HOME%\gpu-vm\%GPU_VM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GCP_GPU_VM_ENABLED=%GCP_GPU_VM_ENABLED%"
+    set "GPU_VM_VERSION=%GPU_VM_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%CONDA_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\conda\%CONDA_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CONDA_VERSION=%CONDA_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

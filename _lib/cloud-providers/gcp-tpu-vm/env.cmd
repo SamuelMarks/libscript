@@ -54,3 +54,10 @@ goto :find_root
 if "%GCP_TPU_VM_ENABLED%"=="" set "GCP_TPU_VM_ENABLED=1"
 if "%TPU_VM_VERSION%"=="" set "TPU_VM_VERSION=latest"
 set "PATH=%LIBSCRIPT_HOME%\tpu-vm\%TPU_VM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GCP_TPU_VM_ENABLED=%GCP_TPU_VM_ENABLED%"
+    set "PATH=%PATH%"
+    set "TPU_VM_VERSION=%TPU_VM_VERSION%"
+)
+exit /b 0

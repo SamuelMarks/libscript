@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%SWUPD_VERSION%"=="" SET "SWUPD_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\swupd\%SWUPD_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "SWUPD_VERSION=%SWUPD_VERSION%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%STACK_VERSION%"=="" SET "STACK_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\stack\%STACK_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "STACK_VERSION=%STACK_VERSION%"
+)
+exit /b 0

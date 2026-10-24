@@ -61,3 +61,10 @@ if "%JETSTREAM_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\jetstream\%JETSTREAM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "JETSTREAM_VERSION=%JETSTREAM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

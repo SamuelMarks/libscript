@@ -160,20 +160,8 @@ case "$ACTION" in
     else
       # libscript_native implementation
       if [ -z "${REBAR3_DOWNLOAD_URL:-}" ]; then
-        if command -v dnf >/dev/null 2>&1; then
-          priv dnf install -y epel-release || true
-          priv dnf install -y erlang || true
-        elif command -v apt-get >/dev/null 2>&1; then
-          priv apt-get update -qq || true
-          priv apt-get install -y erlang-base || true
-        elif command -v pkg >/dev/null 2>&1; then
-          if ! command -v erl >/dev/null 2>&1; then
-            priv pkg install -y erlang || true
-          fi
-        elif command -v brew >/dev/null 2>&1; then
-          if ! command -v erl >/dev/null 2>&1; then
-            brew install erlang || true
-          fi
+        if ! command -v erl >/dev/null 2>&1; then
+          libscript_depends "erlang" || true
         fi
         REBAR3_DOWNLOAD_URL="https://s3.amazonaws.com/rebar3/rebar3"
       fi
@@ -219,7 +207,7 @@ case "$ACTION" in
                   ln -sf "$(command -v rebar3)" "${TARGET_DIR}/bin/rebar3"
                 fi
               else
-                curl -fsSL https://s3.amazonaws.com/rebar3/rebar3 -o "${TARGET_DIR}/bin/rebar3" || true
+                libscript_download "https://s3.amazonaws.com/rebar3/rebar3" "${TARGET_DIR}/bin/rebar3" || true
                 chmod +x "${TARGET_DIR}/bin/rebar3" || true
               fi
             fi

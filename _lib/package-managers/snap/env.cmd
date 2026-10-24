@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%SNAP_VERSION%"=="" SET "SNAP_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "SNAP_VERSION=%SNAP_VERSION%"
+)
+exit /b 0

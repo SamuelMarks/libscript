@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%MAS_VERSION%"=="" SET "MAS_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\mas\%MAS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "MAS_VERSION=%MAS_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

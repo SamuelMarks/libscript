@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%MIX_VERSION%"=="" SET "MIX_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\mix\%MIX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "MIX_VERSION=%MIX_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

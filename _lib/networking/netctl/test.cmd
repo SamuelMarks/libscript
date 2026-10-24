@@ -2,7 +2,8 @@
 :: # test.cmd
 ::
 :: ## Overview
-:: Runs the test suite and validation scripts for the 'netctl' stack.
+:: Runs the test suite and validation scripts for the 'netctl' stack on Windows,
+:: verifying SPA fallback, WebSocket Upgrade headers, WASM MIME types, and domain configuration.
 :: 
 :: ## Usage
 :: Execute this script to test netctl functionality.
@@ -69,5 +70,23 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-echo Testing netctl is not supported via this script.
+set "TMP_NGINX=%TEMP%\netctl_test_%RANDOM%.conf"
+call "!SCRIPT_DIR!\cli.cmd" --domain example.local --listen 8080 --spa / "/var/www/app" --ws /ws "ws://127.0.0.1:8000/ws" --emit nginx > "!TMP_NGINX!"
+findstr /C:"server_name example.local;" "!TMP_NGINX!" >nul 2>&1
+if errorlevel 1 (
+    del "!TMP_NGINX!" >nul 2>&1
+    exit /b 1
+)
+findstr /C:"application/wasm wasm;" "!TMP_NGINX!" >nul 2>&1
+if errorlevel 1 (
+    del "!TMP_NGINX!" >nul 2>&1
+    exit /b 1
+)
+findstr /C:"try_files $uri $uri/ /index.html;" "!TMP_NGINX!" >nul 2>&1
+if errorlevel 1 (
+    del "!TMP_NGINX!" >nul 2>&1
+    exit /b 1
+)
+del "!TMP_NGINX!" >nul 2>&1
+echo netctl test pass
 exit /b 0

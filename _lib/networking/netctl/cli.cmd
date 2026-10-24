@@ -3,10 +3,10 @@
 :: # netctl.cmd
 ::
 :: ## Overview
-:: Network control utility for managing local services and ports.
+:: Network control utility for managing local services, reverse proxies, SPAs, WebSockets, and declarative ingress.
 :: 
 :: ## Usage
-:: Execute this script to manage networking configurations.
+:: Execute this script to manage networking configurations or apply a libscript.json ingress definition.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -86,18 +86,30 @@ if /I "%~1"=="test" (
 if /I "%~1"=="init" (
     call "%NETCTL_DIR%lib\state.cmd" init
     exit /b %ERRORLEVEL%
+) else if /I "%~1"=="domain" (
+    call "%NETCTL_DIR%lib\state.cmd" domain "%~2"
+    exit /b %ERRORLEVEL%
 ) else if /I "%~1"=="listen" (
     call "%NETCTL_DIR%lib\state.cmd" listen "%~2"
     exit /b %ERRORLEVEL%
 ) else if /I "%~1"=="static" (
     call "%NETCTL_DIR%lib\state.cmd" static "%~2" "%~3"
     exit /b %ERRORLEVEL%
+) else if /I "%~1"=="spa" (
+    call "%NETCTL_DIR%lib\state.cmd" spa "%~2" "%~3"
+    exit /b %ERRORLEVEL%
 ) else if /I "%~1"=="proxy" (
     call "%NETCTL_DIR%lib\state.cmd" proxy "%~2" "%~3"
+    exit /b %ERRORLEVEL%
+) else if /I "%~1"=="ws" (
+    call "%NETCTL_DIR%lib\state.cmd" ws "%~2" "%~3"
     exit /b %ERRORLEVEL%
 ) else if /I "%~1"=="rewrite" (
     call "%NETCTL_DIR%lib\state.cmd" rewrite "%~2" "%~3"
     exit /b %ERRORLEVEL%
+) else if /I "%~1"=="apply" (
+    shift
+    goto :apply_manifest
 ) else if /I "%~1"=="emit" (
     call "%NETCTL_DIR%lib\%~2.cmd"
     exit /b %ERRORLEVEL%
@@ -121,6 +133,12 @@ if "!SINGULAR_MODE!"=="1" (
 :: Iterates through singular-mode CLI flags to populate temporary netctl state.
     :loop
     if "%~1"=="" goto done_loop
+    if /I "%~1"=="--domain" (
+        call "%NETCTL_DIR%lib\state.cmd" domain "%~2"
+        shift
+        shift
+        goto loop
+    )
     if /I "%~1"=="--listen" (
         call "%NETCTL_DIR%lib\state.cmd" listen "%~2"
         shift
@@ -134,8 +152,22 @@ if "!SINGULAR_MODE!"=="1" (
         shift
         goto loop
     )
+    if /I "%~1"=="--spa" (
+        call "%NETCTL_DIR%lib\state.cmd" spa "%~2" "%~3"
+        shift
+        shift
+        shift
+        goto loop
+    )
     if /I "%~1"=="--proxy" (
         call "%NETCTL_DIR%lib\state.cmd" proxy "%~2" "%~3"
+        shift
+        shift
+        shift
+        goto loop
+    )
+    if /I "%~1"=="--ws" (
+        call "%NETCTL_DIR%lib\state.cmd" ws "%~2" "%~3"
         shift
         shift
         shift
@@ -167,6 +199,75 @@ if "!SINGULAR_MODE!"=="1" (
 )
 exit /b 0
 
+:: ## apply_manifest
+:: Parses .ingress from libscript.json and emits or reloads the reverse proxy configuration.
+:apply_manifest
+set "APPLY_JSON=%~1"
+if "!APPLY_JSON!"=="" set "APPLY_JSON=libscript.json"
+shift
+set "APPLY_FORMAT="
+set "APPLY_OUT="
+set "APPLY_RELOAD=0"
+
+:: ## apply_arg_loop
+:: Parses optional flags for the apply subcommand.
+:apply_arg_loop
+if "%~1"=="" goto :apply_exec
+if /I "%~1"=="--format" (
+    set "APPLY_FORMAT=%~2"
+    shift
+    shift
+    goto :apply_arg_loop
+)
+if /I "%~1"=="--out" (
+    set "APPLY_OUT=%~2"
+    shift
+    shift
+    goto :apply_arg_loop
+)
+if /I "%~1"=="--reload" (
+    set "APPLY_RELOAD=1"
+    shift
+    goto :apply_arg_loop
+)
+shift
+goto :apply_arg_loop
+
+:: ## apply_exec
+:: Executes jq extraction of .ingress and invokes the target proxy emitter.
+:apply_exec
+if not exist "!APPLY_JSON!" (
+    echo Error: Manifest file not found: !APPLY_JSON! >&2
+    exit /b 1
+)
+jq -e ".ingress != null" "!APPLY_JSON!" >nul 2>&1
+if errorlevel 1 exit /b 0
+
+for %%P in ("!APPLY_JSON!") do set "MANIFEST_DIR=%%~dpP"
+if "!MANIFEST_DIR:~-1!"=="\" set "MANIFEST_DIR=!MANIFEST_DIR:~0,-1!"
+set "MANIFEST_DIR_FWD=!MANIFEST_DIR:\=/!"
+
+if "!APPLY_FORMAT!"=="" (
+    for /f "delims=" %%f in ('jq -r ".ingress.provider // .ingress.engine // \"nginx\"" "!APPLY_JSON!" 2^>nul') do set "APPLY_FORMAT=%%f"
+)
+if "!APPLY_FORMAT!"=="" set "APPLY_FORMAT=nginx"
+
+set "NETCTL_STATE_FILE=%TEMP%\netctl_apply_%RANDOM%.json"
+jq -n --arg mdir "!MANIFEST_DIR_FWD!" --slurpfile doc "!APPLY_JSON!" "($doc[0].ingress // {}) as $ing | def resolve_path(p): if p == null or p == \"\" then \"\" elif (p | startswith(\"/\")) then p elif (p | startswith(\"./\")) then ($mdir + \"/\" + (p | ltrimstr(\"./\"))) else ($mdir + \"/\" + p) end; { domain: ($ing.domain // $ing.server_name // \"_\"), listen: (if ($ing.listen | type) == \"array\" then [ $ing.listen[] | tostring ] elif ($ing.listen != null) then [ ($ing.listen | tostring) ] else [\"80\"] end), routes: (($ing.routes // {}) | if type == \"object\" then with_entries(.key as $k | .value as $v | if ($v | type) == \"string\" then (if ($v | startswith(\"http://\") or startswith(\"https://\")) then {key: $k, value: {type: \"proxy\", target: $v}} elif ($v | startswith(\"ws://\") or startswith(\"wss://\")) then {key: $k, value: {type: \"ws\", target: $v}} else {key: $k, value: {type: \"static\", target: resolve_path($v)}} end) elif ($v | type) == \"object\" then (if $v.ws then {key: $k, value: {type: \"ws\", target: $v.ws}} elif $v.proxy then {key: $k, value: {type: \"proxy\", target: $v.proxy}} elif $v.spa == true or $v.type == \"spa\" then {key: $k, value: {type: \"spa\", target: resolve_path($v.static // $v.target // \".\")}} elif $v.static then {key: $k, value: {type: \"static\", target: resolve_path($v.static)}} elif $v.type == \"ws\" then {key: $k, value: {type: \"ws\", target: $v.target}} elif $v.type == \"proxy\" then {key: $k, value: {type: \"proxy\", target: $v.target}} else {key: $k, value: {type: \"static\", target: resolve_path($v.target // \".\")}} end) else empty end) else {} end) }" > "!NETCTL_STATE_FILE!"
+
+if not "!APPLY_OUT!"=="" (
+    for %%D in ("!APPLY_OUT!") do if not exist "%%~dpD" mkdir "%%~dpD"
+    call "%NETCTL_DIR%lib\!APPLY_FORMAT!.cmd" > "!APPLY_OUT!"
+) else if "!APPLY_RELOAD!"=="1" (
+    set "ING_DIR=%TEMP%\data\ingress"
+    if not exist "!ING_DIR!" mkdir "!ING_DIR!"
+    call "%NETCTL_DIR%lib\!APPLY_FORMAT!.cmd" > "!ING_DIR!\!APPLY_FORMAT!.conf"
+) else (
+    call "%NETCTL_DIR%lib\!APPLY_FORMAT!.cmd"
+)
+if exist "!NETCTL_STATE_FILE!" del "!NETCTL_STATE_FILE!"
+exit /b 0
+
 :: ## usage
 :: Displays command-line usage instructions for netctl on Windows.
 :usage
@@ -178,20 +279,28 @@ echo   netctl [OPTIONS...]
 echo.
 echo Commands:
 echo   init                           Initialize .netctl.json
+echo   domain ^<server_name^>           Set domain / server_name
 echo   listen ^<port^>                  Add a listening port
 echo   static ^<path^> ^<target^>         Add a static file route
+echo   spa ^<path^> ^<target^>            Add a Single-Page Application static route
 echo   proxy ^<path^> ^<target^>          Add a reverse proxy route
+echo   ws ^<path^> ^<target^>             Add a WebSocket reverse proxy route
 echo   rewrite ^<path^> ^<pattern^>       Add a rewrite rule
+echo   apply ^<libscript.json^>         Generate config from .ingress block
 echo   emit ^<format^>                  Emit the configuration for a given format
 echo                                  Formats: nginx, caddy, apache, iis
 echo.
 echo Options (Singular mode):
+echo   --domain ^<server_name^>         Set domain / server_name
 echo   --listen ^<port^>                Add a listening port
 echo   --static ^<path^> ^<target^>       Add a static route
+echo   --spa ^<path^> ^<target^>          Add a SPA static route
 echo   --proxy ^<path^> ^<target^>        Add a proxy route
+echo   --ws ^<path^> ^<target^>           Add a WebSocket proxy route
 echo   --rewrite ^<path^> ^<pattern^>     Add a rewrite rule
 echo   --emit ^<format^>                Emit to specified format and exit
 exit /b 1
+
 :: ## noop
 :: Handles standard Version Manager Contract lifecycle verbs that are no-ops for netctl.
 :noop

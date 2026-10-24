@@ -170,17 +170,18 @@ case "$ACTION" in
           PY_BIN="python3.12"
         elif command -v python3.11 >/dev/null 2>&1; then
           PY_BIN="python3.11"
-        elif ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
-          if command -v dnf >/dev/null 2>&1; then
-            priv dnf install -y python3.11 || true
-            if command -v python3.11 >/dev/null 2>&1; then
-              PY_BIN="python3.11"
-            fi
+        elif ! (command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'); then
+          libscript_depends "python3.11" || true
+          if command -v python3.11 >/dev/null 2>&1; then
+            PY_BIN="python3.11"
           fi
         fi
         if [ ! -d "${TARGET_DIR}" ]; then
            mkdir -p "${TARGET_DIR}"
-           curl -sSL https://pdm-project.org/install-pdm.py | PDM_HOME="$TARGET_DIR" "$PY_BIN" - --version "$EXACT_VERSION"
+           _pdm_inst=$(mktemp)
+           libscript_download "https://pdm-project.org/install-pdm.py" "${_pdm_inst}"
+           PDM_HOME="$TARGET_DIR" "$PY_BIN" "${_pdm_inst}" --version "$EXACT_VERSION"
+           rm -f "${_pdm_inst}"
         fi
       else
         log_info "pdm ${VERSION} is already installed."

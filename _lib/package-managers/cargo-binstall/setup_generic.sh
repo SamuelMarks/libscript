@@ -182,7 +182,11 @@ case "$ACTION" in
         if [ "${EXACT_VERSION}" = "latest" ]; then
           EXACT_VERSION=$(curl -sL https://api.github.com/repos/cargo-bins/cargo-binstall/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
         fi
-        curl -sSL "https://github.com/cargo-bins/cargo-binstall/releases/download/v${EXACT_VERSION}/cargo-binstall-${arch_musl}.tgz" | tar -xzf - -C "${TARGET_DIR}/bin" || true
+        _cb_tar=$(mktemp)
+        if libscript_download "https://github.com/cargo-bins/cargo-binstall/releases/download/v${EXACT_VERSION}/cargo-binstall-${arch_musl}.tgz" "${_cb_tar}"; then
+          tar -xzf "${_cb_tar}" -C "${TARGET_DIR}/bin" || true
+        fi
+        rm -f "${_cb_tar}"
         chmod +x "${TARGET_DIR}/bin/cargo-binstall" || true
       else
         log_info "cargo-binstall ${VERSION} is already installed."

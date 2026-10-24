@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PIP_VERSION%"=="" SET "PIP_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pip\%PIP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PIP_VERSION=%PIP_VERSION%"
+)
+exit /b 0

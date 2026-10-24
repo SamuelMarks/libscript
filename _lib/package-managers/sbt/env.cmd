@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%SBT_VERSION%"=="" SET "SBT_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\sbt\%SBT_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "SBT_VERSION=%SBT_VERSION%"
+)
+exit /b 0

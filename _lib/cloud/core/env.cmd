@@ -61,3 +61,10 @@ if "%CORE_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\core\%CORE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CORE_VERSION=%CORE_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -33,7 +33,9 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+_DEPLOY_SCRIPT_DIR="$SCRIPT_DIR"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_DIR="$_DEPLOY_SCRIPT_DIR"
 
 
 IS_TPU=0
@@ -235,8 +237,8 @@ if [ -f "$JSON_FILE" ] && command -v jq >/dev/null 2>&1; then
   OS_IMAGE=$(jq -r '.infrastructure.node.os // ""' "$JSON_FILE")
   SIZE=$(jq -r '.infrastructure.node.size // ""' "$JSON_FILE")
   DISK_GB=$(jq -r '.infrastructure.node.disk_gb // ""' "$JSON_FILE")
-  JSON_PORTS=$(jq -r '.infrastructure.network.ports[]? // empty' "$JSON_FILE" | tr '\n' ' ')
-  if [ -n "$JSON_PORTS" ]; then PORTS="$JSON_PORTS"; fi
+  JSON_PORTS=$(jq -r '([.infrastructure.network.ports[]?, (.ingress.listen | if type == "array" then .[] elif type == "number" or type == "string" then . else empty end), (.services | if type == "object" then .[].port? elif type == "array" then .[].port? else empty end)] | map(select(. != null and . != "")) | unique)[]?' "$JSON_FILE" 2>/dev/null | tr '\n' ' ')
+  if [ -n "$JSON_PORTS" ]; then PORTS="22 80 443 $JSON_PORTS"; fi
   STATE_BUCKET=$(jq -r '.state.bucket // ""' "$JSON_FILE")
   STATE_ENDPOINT=$(jq -r '.state.endpoint // ""' "$JSON_FILE")
   STATE_PATHS=$(jq -r '.state.paths[]? // empty' "$JSON_FILE")
@@ -495,7 +497,7 @@ if [ -n "$DOMAIN" ]; then
   if [ "$PROVIDER" = "azure" ]; then
     ZONE_NAME=$(printf '%s\n' "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
     TARGET_DNS_RG="${DNS_RG:-$RG}"
-    with_retry "$CLI" dns map-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
+    with_retry "$CLI" dns map-node "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" "$NODE" || true
   elif [ "$PROVIDER" = "aws" ]; then
     if [ -z "$AWS_ZONE_ID" ]; then
       AWS_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "$DOMAIN" --query "HostedZones[0].Id" --output text 2>/dev/null | awk -F/ '{print $NF}')
@@ -527,8 +529,10 @@ fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 if [ "$IS_TPU" -eq 1 ]; then
+  with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/_lib/databases/provision_db.sh libscript.json"
   with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/_lib/orchestration/run_hooks.sh libscript.json install"
 else
+  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/_lib/databases/provision_db.sh libscript.json"
   with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/_lib/orchestration/run_hooks.sh libscript.json install"
 fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"

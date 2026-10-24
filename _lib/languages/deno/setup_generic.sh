@@ -196,13 +196,16 @@ case "$ACTION" in
               fi
             else
               log_info "No download URL provided for deno ${VERSION}. Using official installer..."
-            libscript_depends "curl" "unzip"
-            if [ "${EXACT_VERSION}" = "latest" ]; then
-              curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh
-            else
-              curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh -s "v${EXACT_VERSION}"
+              libscript_depends "curl" "unzip"
+              _deno_inst=$(mktemp)
+              libscript_download "https://deno.land/install.sh" "${_deno_inst}"
+              if [ "${EXACT_VERSION}" = "latest" ]; then
+                DENO_INSTALL="${TARGET_DIR}" sh "${_deno_inst}"
+              else
+                DENO_INSTALL="${TARGET_DIR}" sh "${_deno_inst}" "v${EXACT_VERSION}"
+              fi
+              rm -f "${_deno_inst}"
             fi
-          fi
         fi
 fi
       else

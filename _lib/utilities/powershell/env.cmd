@@ -61,3 +61,10 @@ if "%POWERSHELL_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\powershell\%POWERSHELL_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "POWERSHELL_VERSION=%POWERSHELL_VERSION%"
+)
+exit /b 0

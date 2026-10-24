@@ -50,7 +50,7 @@ if [ "${NODEJS_VERSION}" = 'lts' ]; then
   NODEJS_VERSION="${NODEJS_VERSION_LTS}"
 fi
 
-NODEJS_INSTALL_METHOD="system"
+NODEJS_INSTALL_METHOD="${NODEJS_INSTALL_METHOD:-libscript_native}"
 ACTION="${ACTION:-install}"
 
 # Parse offline and npm options
@@ -178,7 +178,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${VERSION:-latest}/bin/nodejs" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${VERSION:-latest}/bin/node" ]; then
       log_info "nodejs ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -205,6 +205,8 @@ case "$ACTION" in
         case "${version}" in
           v${EXACT_VERSION}*)
             libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${EXACT_VERSION}"
+            libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
+            libscript_symlink_alias "nodejs" "latest" "v${EXACT_VERSION}"
             exit 0
             ;;
         esac
@@ -241,6 +243,8 @@ case "$ACTION" in
       fi
 
       libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${EXACT_VERSION}"
+      libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
+      libscript_symlink_alias "nodejs" "latest" "v${EXACT_VERSION}"
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

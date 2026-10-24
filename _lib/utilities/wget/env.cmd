@@ -61,3 +61,10 @@ if "%WGET_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\wget\%WGET_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "WGET_VERSION=%WGET_VERSION%"
+)
+exit /b 0

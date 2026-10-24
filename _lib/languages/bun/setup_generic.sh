@@ -202,11 +202,14 @@ case "$ACTION" in
             if command -v bash >/dev/null 2>&1; then
               _installer_sh="bash"
             fi
+            _bun_inst=$(mktemp)
+            libscript_download "https://bun.sh/install" "${_bun_inst}"
             if [ "${VERSION}" = "latest" ]; then
-              curl -fsSL https://bun.sh/install | "$_installer_sh" || true
+              "$_installer_sh" "${_bun_inst}" || true
             else
-              curl -fsSL https://bun.sh/install | "$_installer_sh" -s "bun-v${VERSION}" || true
+              "$_installer_sh" "${_bun_inst}" "bun-v${VERSION}" || true
             fi
+            rm -f "${_bun_inst}"
             if [ -f "$HOME/.bun/bin/bun" ]; then
               cp "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun" || true
             fi

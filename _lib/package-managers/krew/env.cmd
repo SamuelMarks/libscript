@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%KREW_VERSION%"=="" SET "KREW_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\krew\%KREW_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "KREW_VERSION=%KREW_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

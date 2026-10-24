@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%VCPKG_VERSION%"=="" SET "VCPKG_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\vcpkg\%VCPKG_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "VCPKG_VERSION=%VCPKG_VERSION%"
+)
+exit /b 0

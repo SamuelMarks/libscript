@@ -78,7 +78,9 @@ if "!LIBSCRIPT_SECRETS!"=="" (
     )
 )
 
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_install"
+
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
 REM Parallel Download Phase
 echo Downloading dependencies in parallel...
 for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
@@ -89,10 +91,6 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
     )
 )
 
-REM Wait for background downloads. `start /wait /b` doesn't work, we'll just wait a bit or let it run.
-REM A simple sleep or loop for processes isn't strictly trivial without external tools.
-REM But we can check for running cmd.exe processes started with `download` via tasklist if needed.
-REM Actually, simple approach: wait 3 seconds to let them start and fetch.
 ping 127.0.0.1 -n 4 >nul
 
 REM Serial Install Phase
@@ -108,6 +106,26 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
         echo Installing %%a %%b...
         call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "%%a" "%%b"
     )
+    for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
+        if exist "%%C\%%a\env.cmd" (
+            set "STACK="
+            set "LIBSCRIPT_VERSION=%%b"
+            call "%%C\%%a\env.cmd"
+        )
+    )
 )
 if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
+
+for %%F in ("!json_file!") do set "_MANIFEST_DIR=%%~dpF"
+if "!_MANIFEST_DIR:~-1!"=="\" set "_MANIFEST_DIR=!_MANIFEST_DIR:~0,-1!"
+set "_ENV_OUT=!_MANIFEST_DIR!\.env.libscript"
+if exist "!_ENV_OUT!" (
+    findstr /v /b /c:"PATH=" "!_ENV_OUT!" > "!_ENV_OUT!.tmp" 2>nul
+    move /y "!_ENV_OUT!.tmp" "!_ENV_OUT!" >nul 2>&1
+)
+echo PATH=!PATH!>> "!_ENV_OUT!"
+
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_install"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
+endlocal & set "PATH=%PATH%"
 exit /b 0

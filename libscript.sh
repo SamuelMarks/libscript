@@ -300,6 +300,34 @@ case "$CMD" in
   payload) exec "$LIBSCRIPT_ROOT_DIR/payloads/engine.sh" "$@" ;;
   topology) exec "$LIBSCRIPT_ROOT_DIR/topologies/engine.sh" "$@" ;;
   trait) exec "$LIBSCRIPT_ROOT_DIR/traits/engine.sh" "$@" ;;
+  train|infer|serve-ml|eval-ml) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/ml/actions.sh" "$CMD" "$@" ;;
+  env)
+    if [ "${1:-}" = "--manifest" ] || [ -z "${1:-}" ] || [ -f "${1:-}" ]; then
+      _env_manifest="libscript.json"
+      _env_fmt="sh"
+      if [ "${1:-}" = "--manifest" ]; then
+        shift || true
+        if [ -n "${1:-}" ] && [ "${1#--}" = "$1" ]; then
+          _env_manifest="$1"
+          shift || true
+        fi
+      elif [ -n "${1:-}" ] && [ -f "${1:-}" ]; then
+        _env_manifest="$1"
+        shift || true
+      fi
+      for _e_arg in "$@"; do
+        case "$_e_arg" in
+          --format=*) _env_fmt="${_e_arg#*=}" ;;
+        esac
+      done
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "$SCRIPT_NAME"
+      libscript_print_manifest_env "$_env_fmt" "$_env_manifest"
+      exit 0
+    fi
+    ;;
 esac
 
 IS_ACTION=0

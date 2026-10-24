@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PDM_VERSION%"=="" SET "PDM_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pdm\%PDM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PDM_VERSION=%PDM_VERSION%"
+)
+exit /b 0

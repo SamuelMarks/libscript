@@ -56,3 +56,10 @@ if "%HELM_VERSION%"=="" (
     set "HELM_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\helm\%HELM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "HELM_VERSION=%HELM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

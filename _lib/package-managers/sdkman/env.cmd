@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%SDKMAN_VERSION%"=="" SET "SDKMAN_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "SDKMAN_VERSION=%SDKMAN_VERSION%"
+)
+exit /b 0

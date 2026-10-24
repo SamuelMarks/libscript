@@ -61,3 +61,10 @@ if "%AWS_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\aws\%AWS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "AWS_VERSION=%AWS_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -55,3 +55,10 @@ goto :find_root
 if "%UVICORN_PORT%"=="" set "UVICORN_PORT=8000"
 if "%UVICORN_HOST%"=="" set "UVICORN_HOST=0.0.0.0"
 if "%UVICORN_WORKERS%"=="" set "UVICORN_WORKERS=2"
+
+endlocal & (
+    set "UVICORN_HOST=%UVICORN_HOST%"
+    set "UVICORN_PORT=%UVICORN_PORT%"
+    set "UVICORN_WORKERS=%UVICORN_WORKERS%"
+)
+exit /b 0

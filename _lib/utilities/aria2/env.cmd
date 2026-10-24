@@ -61,3 +61,10 @@ if "%ARIA2_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "ARIA2_VERSION=%ARIA2_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

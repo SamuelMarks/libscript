@@ -95,50 +95,28 @@ if [ ! -f "$PKG_JSON" ]; then
   exit 1
 fi
 
-# Parse metadata from packaging.json using Python
-_pkg_props=$(python3 -c "
-import json
-with open('$PKG_JSON') as f:
-    d = json.load(f)
-
-name = d.get('name', 'app')
-title = d.get('title', name)
-version = '$VERSION_OVERRIDE' or d.get('version', '1.0.0')
-publisher = d.get('publisher', 'LibScript Open Source Project')
-upgrade_code = d.get('upgrade_code', 'A0B1C2D3-E4F5-6A7B-8C9D-0E1F2A3B4C5D')
-topology = d.get('topology', 'standalone')
-
-dirs = d.get('directories', {})
-app_dir = dirs.get('app_default', f'[ProgramFiles64Folder]{name}')
-data_dir = dirs.get('data_default', f'C:\\\\ProgramData\\\\{name}\\\\data')
-logs_dir = dirs.get('logs_default', f'C:\\\\ProgramData\\\\{name}\\\\logs')
-
-db_contract = d.get('database_contract')
-has_db = 'true' if db_contract else 'false'
-db_engine = db_contract.get('engine', 'mysql') if db_contract else ''
-db_port = str(db_contract.get('default_port', 3306)) if db_contract else '3306'
-db_schema = db_contract.get('default_schema_name', name) if db_contract else name
-db_user = db_contract.get('default_user_name', name) if db_contract else name
-
-chained = d.get('chained_packages', [])
-has_chainer = 'true' if len(chained) > 0 or topology == 'suite_orchestrator' else 'false'
-
-print(f'APP_NAME={name}')
-print(f'APP_TITLE={title}')
-print(f'APP_VERSION={version}')
-print(f'APP_PUBLISHER={publisher}')
-print(f'UPGRADE_CODE={upgrade_code}')
-print(f'TOPOLOGY={topology}')
-print(f'APP_DIR={app_dir}')
-print(f'DATA_DIR={data_dir}')
-print(f'LOGS_DIR={logs_dir}')
-print(f'HAS_DB={has_db}')
-print(f'DB_ENGINE={db_engine}')
-print(f'DB_PORT={db_port}')
-print(f'DB_SCHEMA={db_schema}')
-print(f'DB_USER={db_user}')
-print(f'HAS_CHAINER={has_chainer}')
-")
+# Parse metadata from packaging.json using jq
+_pkg_props=$(jq -r --arg ver_ovr "$VERSION_OVERRIDE" '
+  (.name // "app") as $name |
+  (.title // $name) as $title |
+  (if $ver_ovr != "" then $ver_ovr else (.version // "1.0.0") end) as $version |
+  (.publisher // "LibScript Open Source Project") as $publisher |
+  (.upgrade_code // "A0B1C2D3-E4F5-6A7B-8C9D-0E1F2A3B4C5D") as $upgrade_code |
+  (.topology // "standalone") as $topology |
+  (.directories // {}) as $dirs |
+  ($dirs.app_default // ("[ProgramFiles64Folder]" + $name)) as $app_dir |
+  ($dirs.data_default // ("C:\\ProgramData\\" + $name + "\\data")) as $data_dir |
+  ($dirs.logs_default // ("C:\\ProgramData\\" + $name + "\\logs")) as $logs_dir |
+  (.database_contract // null) as $dbc |
+  (if $dbc != null then "true" else "false" end) as $has_db |
+  (if $dbc != null then ($dbc.engine // "mysql") else "" end) as $db_engine |
+  (if $dbc != null then (($dbc.default_port // 3306) | tostring) else "3306" end) as $db_port |
+  (if $dbc != null then ($dbc.default_schema_name // $name) else $name end) as $db_schema |
+  (if $dbc != null then ($dbc.default_user_name // $name) else $name end) as $db_user |
+  ((.chained_packages // []) | length) as $chained_len |
+  (if ($chained_len > 0 or $topology == "suite_orchestrator") then "true" else "false" end) as $has_chainer |
+  "APP_NAME=\($name)\nAPP_TITLE=\($title)\nAPP_VERSION=\($version)\nAPP_PUBLISHER=\($publisher)\nUPGRADE_CODE=\($upgrade_code)\nTOPOLOGY=\($topology)\nAPP_DIR=\($app_dir)\nDATA_DIR=\($data_dir)\nLOGS_DIR=\($logs_dir)\nHAS_DB=\($has_db)\nDB_ENGINE=\($db_engine)\nDB_PORT=\($db_port)\nDB_SCHEMA=\($db_schema)\nDB_USER=\($db_user)\nHAS_CHAINER=\($has_chainer)"
+' "$PKG_JSON")
 
 while IFS='=' read -r _key _val; do
   case "$_key" in

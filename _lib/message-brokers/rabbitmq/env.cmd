@@ -61,3 +61,10 @@ if "%RABBITMQ_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\rabbitmq\%RABBITMQ_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "RABBITMQ_VERSION=%RABBITMQ_VERSION%"
+)
+exit /b 0

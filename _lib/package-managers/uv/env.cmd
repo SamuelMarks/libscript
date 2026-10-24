@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%UV_VERSION%"=="" SET "UV_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\uv\%UV_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "UV_VERSION=%UV_VERSION%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%WAIT4X_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\wait4x\%WAIT4X_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "WAIT4X_VERSION=%WAIT4X_VERSION%"
+)
+exit /b 0

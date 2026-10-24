@@ -61,3 +61,10 @@ if "%TMUX_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\tmux\%TMUX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "TMUX_VERSION=%TMUX_VERSION%"
+)
+exit /b 0

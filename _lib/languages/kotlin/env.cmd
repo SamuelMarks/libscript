@@ -55,3 +55,10 @@ if "%KOTLIN_VERSION%"=="latest" set KOTLIN_VERSION=1.9.20
 if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
 
 set PATH=%LIBSCRIPT_HOME%\kotlin\%KOTLIN_VERSION%\bin;%PATH%
+
+endlocal & (
+    set "KOTLIN_VERSION=%KOTLIN_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

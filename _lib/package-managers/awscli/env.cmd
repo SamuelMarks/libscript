@@ -61,3 +61,10 @@ if "%AWSCLI_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\awscli\%AWSCLI_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "AWSCLI_VERSION=%AWSCLI_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

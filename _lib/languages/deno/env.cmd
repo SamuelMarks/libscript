@@ -59,3 +59,10 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_BASE_DIR%\deno\%DENO_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "DENO_VERSION=%DENO_VERSION%"
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%RUSTUP_VERSION%"=="" SET "RUSTUP_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\rustup\%RUSTUP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "RUSTUP_VERSION=%RUSTUP_VERSION%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%RYE_VERSION%"=="" SET "RYE_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\rye\%RYE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "RYE_VERSION=%RYE_VERSION%"
+)
+exit /b 0

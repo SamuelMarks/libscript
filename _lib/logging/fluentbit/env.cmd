@@ -61,3 +61,10 @@ if "%FLUENTBIT_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "FLUENTBIT_VERSION=%FLUENTBIT_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

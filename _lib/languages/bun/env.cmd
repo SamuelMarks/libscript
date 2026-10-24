@@ -59,3 +59,10 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_BASE_DIR%\bun\%BUN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "BUN_VERSION=%BUN_VERSION%"
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+)
+exit /b 0

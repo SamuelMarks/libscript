@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%NVM_VERSION%"=="" SET "NVM_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\nvm\%NVM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "NVM_VERSION=%NVM_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

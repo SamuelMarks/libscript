@@ -726,6 +726,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | Component                             | Category           | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 | ------------------------------------- | ------------------ | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
 | `7zip`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `android-sdk`                         | `toolchains`       | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
 | `ansible-galaxy`                      | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `apk`                                 | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `apt`                                 | `package-managers` | -           | ✅          | -           | -       | -     | -       | -     |

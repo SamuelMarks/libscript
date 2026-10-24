@@ -55,3 +55,10 @@ if "%ZIG_VERSION%"=="latest" set ZIG_VERSION=0.12.0
 if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
 
 set PATH=%LIBSCRIPT_HOME%\zig\%ZIG_VERSION%\bin;%PATH%
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "ZIG_VERSION=%ZIG_VERSION%"
+)
+exit /b 0

@@ -59,3 +59,10 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_BASE_DIR%\php\%PHP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+    set "PHP_VERSION=%PHP_VERSION%"
+)
+exit /b 0

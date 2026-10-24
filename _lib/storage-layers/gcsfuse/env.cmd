@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%GCSFUSE_VERSION%"=="" SET "GCSFUSE_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\gcsfuse\%GCSFUSE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GCSFUSE_VERSION=%GCSFUSE_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

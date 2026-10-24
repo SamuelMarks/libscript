@@ -57,3 +57,10 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 set "PATH=%LIBSCRIPT_BASE_DIR%\ruby\%RUBY_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+    set "RUBY_VERSION=%RUBY_VERSION%"
+)
+exit /b 0

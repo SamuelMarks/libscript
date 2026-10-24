@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%RBENV_VERSION%"=="" SET "RBENV_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\rbenv\%RBENV_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "RBENV_VERSION=%RBENV_VERSION%"
+)
+exit /b 0

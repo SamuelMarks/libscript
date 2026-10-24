@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%LUAROCKS_VERSION%"=="" SET "LUAROCKS_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\luarocks\%LUAROCKS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LUAROCKS_VERSION=%LUAROCKS_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -4,6 +4,12 @@
   "words": [
     "AAULL",
     "AAVMF",
+    "htmlcov",
+    "ltrimstr",
+    "mdir",
+    "mypy",
+    "pytest",
+    "wasmjs",
     "absl",
     "ABSPATH",
     "ABUILD",
@@ -2262,7 +2268,17 @@
     "opensearch",
     "pymongo",
     "Sumac",
-    "sumac"
+    "sumac",
+    "commandlinetools",
+    "cmdtools",
+    "FSDP",
+    "gradlew",
+    "interp",
+    "litepod",
+    "pipenv",
+    "PYPATH",
+    "sdkmanager",
+    "WANDB"
   ],
   "ignorePaths": [
     "node_modules",

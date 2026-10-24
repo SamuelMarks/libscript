@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PARU_VERSION%"=="" SET "PARU_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\paru\%PARU_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PARU_VERSION=%PARU_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

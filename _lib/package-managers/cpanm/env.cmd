@@ -61,3 +61,10 @@ if "%CPANM_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CPANM_VERSION=%CPANM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

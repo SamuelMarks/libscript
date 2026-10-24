@@ -58,7 +58,7 @@ configure_virtualbox_repo_debian() {
   priv mkdir -p /usr/share/keyrings
 
   key_tmp=$(mktemp)
-  curl -fsSL https://www.virtualbox.org/download/oracle_vbox_2016.asc -o "$key_tmp"
+  libscript_download "https://www.virtualbox.org/download/oracle_vbox_2016.asc" "$key_tmp"
   priv gpg --dearmor -o /usr/share/keyrings/virtualbox-archive-keyring.gpg --yes < "$key_tmp"
   rm -f "$key_tmp"
 
@@ -95,7 +95,7 @@ install_extension_pack() {
   ext_dir=$(mktemp -d)
   ext_file="$ext_dir/Oracle_VM_VirtualBox_Extension_Pack-${vbox_ver}.vbox-extpack"
 
-  if curl -fsSL "$extpack_url" -o "$ext_file"; then
+  if libscript_download "$extpack_url" "$ext_file"; then
     echo "y" | priv VBoxManage extpack install --replace "$ext_file" || true
     rm -rf "$ext_dir"
   else

@@ -47,21 +47,20 @@ export SCRIPT_NAME
 if [ -n "${POSTGRES_VERSION:-}" ] && [ "${POSTGRES_VERSION}" != "latest" ]; then
   REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION:-9}")"
   VER="${REDHAT_SUPPORT_PRODUCT_VERSION%%.*}"
-  priv dnf install -y \
-    'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH}"'/pgdg-redhat-repo-latest.noarch.rpm' 2>/dev/null || true
+  pkg_mgr 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH}"'/pgdg-redhat-repo-latest.noarch.rpm' 2>/dev/null || true
   priv dnf -qy module disable 'postgresql' 2>/dev/null || true
-  if priv dnf install -y 'postgresql'"${POSTGRES_VERSION}"'-server' 2>/dev/null; then
+  if pkg_mgr 'postgresql'"${POSTGRES_VERSION}"'-server' 2>/dev/null; then
     SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRES_VERSION}}"
     if [ -x '/usr/pgsql-'"${POSTGRES_VERSION}"'/bin/postgresql-'"${POSTGRES_VERSION}"'-setup' ]; then
       priv '/usr/pgsql-'"${POSTGRES_VERSION}"'/bin/postgresql-'"${POSTGRES_VERSION}"'-setup' initdb || true
     fi
   else
-    priv dnf install -y postgresql-server postgresql-contrib
+    pkg_mgr postgresql-server postgresql-contrib
     SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql}"
     priv /usr/bin/postgresql-setup --initdb 2>/dev/null || true
   fi
 else
-  priv dnf install -y postgresql-server postgresql-contrib
+  pkg_mgr postgresql-server postgresql-contrib
   SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql}"
   priv /usr/bin/postgresql-setup --initdb 2>/dev/null || true
 fi

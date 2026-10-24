@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PUB_VERSION%"=="" SET "PUB_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pub\%PUB_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PUB_VERSION=%PUB_VERSION%"
+)
+exit /b 0

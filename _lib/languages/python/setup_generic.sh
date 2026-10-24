@@ -160,8 +160,9 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${VERSION:-latest}/bin/python" ]; then
-      log_info "python ${VERSION:-latest} is already installed."
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${PYTHON_VERSION:-${VERSION:-latest}}/bin/python" ]; then
+      log_info "python ${PYTHON_VERSION:-${VERSION:-latest}} is already installed."
+      libscript_symlink_alias "python" "default" "${PYTHON_VERSION:-${VERSION:-latest}}"
       exit 0
     fi
 
@@ -242,6 +243,8 @@ case "$ACTION" in
         fi
         
         libscript_symlink_alias "python" "${PYTHON_VERSION}" "${EXACT_VERSION}"
+        libscript_symlink_alias "python" "default" "${EXACT_VERSION}"
+        libscript_symlink_alias "python" "latest" "${EXACT_VERSION}"
       fi
 
       # VENV logic from old script

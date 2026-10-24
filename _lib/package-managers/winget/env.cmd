@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%WINGET_VERSION%"=="" SET "WINGET_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\winget\%WINGET_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "WINGET_VERSION=%WINGET_VERSION%"
+)
+exit /b 0

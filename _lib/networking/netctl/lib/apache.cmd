@@ -2,7 +2,8 @@
 :: # apache.cmd
 ::
 :: ## Overview
-:: Network control library module for apache.
+:: Network control library module for apache on Windows.
+:: Supports SPA FallbackResource and WebSocket RewriteEngine rules.
 :: 
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
@@ -75,7 +76,23 @@ for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.k
         echo     ^<Directory "%%c"^>
         echo         Require all granted
         echo     ^</Directory^>
+    ) else if "%%b"=="spa" (
+        echo     Alias "%%a" "%%c"
+        echo     ^<Directory "%%c"^>
+        echo         Require all granted
+        echo         FallbackResource /index.html
+        echo     ^</Directory^>
     ) else if "%%b"=="proxy" (
+        echo     ProxyPass "%%a" "%%c"
+        echo     ProxyPassReverse "%%a" "%%c"
+    ) else if "%%b"=="ws" (
+        set "ws_t=%%c"
+        set "ws_t=!ws_t:http://=ws://!"
+        set "ws_t=!ws_t:https://=wss://!"
+        echo     RewriteEngine On
+        echo     RewriteCond %%{HTTP:Upgrade} websocket [NC]
+        echo     RewriteCond %%{HTTP:Connection} upgrade [NC]
+        echo     RewriteRule ^%%a^(.*^) "!ws_t!$1" [P,L]
         echo     ProxyPass "%%a" "%%c"
         echo     ProxyPassReverse "%%a" "%%c"
     ) else if "%%b"=="rewrite" (

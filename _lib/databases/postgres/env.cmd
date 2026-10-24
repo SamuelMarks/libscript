@@ -2,12 +2,12 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Internal script for postgres on Windows.
+:: Environment initialization for PostgreSQL on Windows.
+:: Defines defaults such as `POSTGRES_VERSION`, `POSTGRES_URL`, and prepends bin to PATH.
 ::
 :: ## Usage
-:: Executes initialization, logic, or testing for postgres.
+:: call _lib\databases\postgres\env.cmd
 
-:: Windows env stub for postgres
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -52,12 +52,43 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_HOME%"=="" (
-    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%POSTGRES_VERSION%"=="" set "POSTGRES_VERSION=15"
+if /i "%POSTGRES_VERSION%"=="latest" set "POSTGRES_VERSION=15"
+set "POSTGRESQL_VERSION=%POSTGRES_VERSION%"
+if "%POSTGRES_USER%"=="" set "POSTGRES_USER=postgres"
+if "%POSTGRES_PASSWORD%"=="" set "POSTGRES_PASSWORD=password"
+if "%POSTGRES_HOST%"=="" set "POSTGRES_HOST=localhost"
+if "%POSTGRES_PORT%"=="" set "POSTGRES_PORT=5432"
+if "%POSTGRES_DB%"=="" set "POSTGRES_DB=%POSTGRES_USER%"
+if "%POSTGRES_URL%"=="" (
+    if "%POSTGRES_PORT%"=="5432" (
+        set "POSTGRES_URL=postgres://%POSTGRES_USER%:%POSTGRES_PASSWORD%@%POSTGRES_HOST%/%POSTGRES_DB%"
+    ) else (
+        set "POSTGRES_URL=postgres://%POSTGRES_USER%:%POSTGRES_PASSWORD%@%POSTGRES_HOST%:%POSTGRES_PORT%/%POSTGRES_DB%"
+    )
 )
 
-if "%POSTGRES_VERSION%"=="" (
-    set "POSTGRES_VERSION=latest"
+set "_NEW_PATH=!PATH!"
+for %%D in ("%ProgramFiles%\PostgreSQL\%POSTGRES_VERSION%\bin" "%ProgramFiles%\PostgreSQL\17\bin" "%ProgramFiles%\PostgreSQL\16\bin" "%ProgramFiles%\PostgreSQL\15\bin" "%LIBSCRIPT_HOME%\postgres\default\bin" "%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\bin") do (
+    if exist "%%~fD" (
+        echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fD;" >nul 2>&1
+        if errorlevel 1 set "_NEW_PATH=%%~fD;!_NEW_PATH!"
+    )
 )
+echo ";!_NEW_PATH!;" | findstr /I /C:";%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\bin;" >nul 2>&1
+if errorlevel 1 set "_NEW_PATH=%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\bin;!_NEW_PATH!"
 
-set "PATH=%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\bin;%PATH%"
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "POSTGRES_VERSION=%POSTGRES_VERSION%"
+    set "POSTGRESQL_VERSION=%POSTGRESQL_VERSION%"
+    set "POSTGRES_USER=%POSTGRES_USER%"
+    set "POSTGRES_PASSWORD=%POSTGRES_PASSWORD%"
+    set "POSTGRES_HOST=%POSTGRES_HOST%"
+    set "POSTGRES_PORT=%POSTGRES_PORT%"
+    set "POSTGRES_DB=%POSTGRES_DB%"
+    set "POSTGRES_URL=%POSTGRES_URL%"
+    set "PATH=%_NEW_PATH%"
+)
+exit /b 0

@@ -50,3 +50,6 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+
+endlocal
+exit /b 0

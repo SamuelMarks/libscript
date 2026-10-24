@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%XBPS_VERSION%"=="" SET "XBPS_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\xbps\%XBPS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "XBPS_VERSION=%XBPS_VERSION%"
+)
+exit /b 0

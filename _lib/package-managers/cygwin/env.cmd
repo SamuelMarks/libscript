@@ -61,3 +61,10 @@ if "%CYGWIN_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\cygwin\%CYGWIN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CYGWIN_VERSION=%CYGWIN_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

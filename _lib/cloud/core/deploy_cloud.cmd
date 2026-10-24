@@ -163,7 +163,7 @@ if exist "!REPO_PATH!\libscript.json" (
         for /f "delims=" %%I in ('jq -r ".infrastructure.node.os // \"\"" "!REPO_PATH!\libscript.json"') do set "OS_IMAGE=%%I"
         for /f "delims=" %%I in ('jq -r ".infrastructure.node.size // \"\"" "!REPO_PATH!\libscript.json"') do set "SIZE=%%I"
         for /f "delims=" %%I in ('jq -r ".infrastructure.node.disk_gb // \"\"" "!REPO_PATH!\libscript.json"') do set "DISK_GB=%%I"
-        for /f "delims=" %%I in ('jq -r "if .infrastructure.network.ports then (.infrastructure.network.ports | join(\" \")) else \"\" end" "!REPO_PATH!\libscript.json"') do set "PORTS=%%I"
+        for /f "delims=" %%I in ('jq -r "([22, 80, 443, .infrastructure.network.ports[]?, (.ingress.listen | if type == \"array\" then .[] elif type == \"number\" or type == \"string\" then . else empty end), (.services | if type == \"object\" then .[].port? elif type == \"array\" then .[].port? else empty end)] | map(select(. != null and . != \"\")) | map(tostring) | unique | join(\" \"))" "!REPO_PATH!\libscript.json" 2^>nul') do set "PORTS=%%I"
         if "!PORTS!"=="" set "PORTS=22 80 443"
         for /f "delims=" %%I in ('jq -r ".state.bucket // \"\"" "!REPO_PATH!\libscript.json"') do set "STATE_BUCKET=%%I"
         for /f "delims=" %%I in ('jq -r ".state.endpoint // \"\"" "!REPO_PATH!\libscript.json"') do set "STATE_ENDPOINT=%%I"
@@ -417,9 +417,11 @@ if "!IS_TPU!"=="1" (
         call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "sudo LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/traits/storage/nfs.sh !NFS_IP!:/vol1 /mnt/shared && sudo chmod a+w /mnt/shared"
     )
     call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
+    call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/_lib/databases/provision_db.sh libscript.json"
     call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
 ) else (
     call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
+    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/_lib/databases/provision_db.sh libscript.json"
     call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
 )
 

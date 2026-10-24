@@ -55,3 +55,10 @@ if "%ELIXIR_VERSION%"=="latest" set ELIXIR_VERSION=1.16.2
 if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
 
 set PATH=%LIBSCRIPT_HOME%\elixir\%ELIXIR_VERSION%\bin;%PATH%
+
+endlocal & (
+    set "ELIXIR_VERSION=%ELIXIR_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

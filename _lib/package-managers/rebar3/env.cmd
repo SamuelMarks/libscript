@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%REBAR3_VERSION%"=="" SET "REBAR3_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\rebar3\%REBAR3_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "REBAR3_VERSION=%REBAR3_VERSION%"
+)
+exit /b 0

@@ -397,19 +397,35 @@ else
   fi
 fi
 
-# 3. Cryptographically Secure Salts Synthesis
-SALT_1="$(generate_salt)"
-SALT_2="$(generate_salt)"
-SALT_3="$(generate_salt)"
-SALT_4="$(generate_salt)"
-SALT_5="$(generate_salt)"
-SALT_6="$(generate_salt)"
-SALT_7="$(generate_salt)"
-SALT_8="$(generate_salt)"
+# 3. Cryptographically Secure Salts Synthesis (preserve existing salts if wp-config.php exists)
+WP_CONFIG_PATH="${WORDPRESS_WWWROOT}/wp-config.php"
+# ## _extract_existing_salt
+# Extracts an existing salt value from wp-config.php for idempotent re-runs.
+_extract_existing_salt() {
+  _key="$1"
+  if [ -f "${WP_CONFIG_PATH}" ]; then
+    grep "define([[:space:]]*'${_key}'" "${WP_CONFIG_PATH}" 2>/dev/null | sed -E "s/.*define\([[:space:]]*'${_key}'[[:space:]]*,[[:space:]]*'([^']*)'.*/\1/" | head -n 1 || true
+  fi
+}
+SALT_1="$(_extract_existing_salt AUTH_KEY)"
+[ -z "$SALT_1" ] && SALT_1="$(generate_salt)"
+SALT_2="$(_extract_existing_salt SECURE_AUTH_KEY)"
+[ -z "$SALT_2" ] && SALT_2="$(generate_salt)"
+SALT_3="$(_extract_existing_salt LOGGED_IN_KEY)"
+[ -z "$SALT_3" ] && SALT_3="$(generate_salt)"
+SALT_4="$(_extract_existing_salt NONCE_KEY)"
+[ -z "$SALT_4" ] && SALT_4="$(generate_salt)"
+SALT_5="$(_extract_existing_salt AUTH_SALT)"
+[ -z "$SALT_5" ] && SALT_5="$(generate_salt)"
+SALT_6="$(_extract_existing_salt SECURE_AUTH_SALT)"
+[ -z "$SALT_6" ] && SALT_6="$(generate_salt)"
+SALT_7="$(_extract_existing_salt LOGGED_IN_SALT)"
+[ -z "$SALT_7" ] && SALT_7="$(generate_salt)"
+SALT_8="$(_extract_existing_salt NONCE_SALT)"
+[ -z "$SALT_8" ] && SALT_8="$(generate_salt)"
 
 # 4. Synthesize Canonical wp-config.php
 printf '[INFO] Generating hardened wp-config.php...\n'
-WP_CONFIG_PATH="${WORDPRESS_WWWROOT}/wp-config.php"
 
 cat << EOF_WP_CONFIG | safe_tee "${WP_CONFIG_PATH}" >/dev/null
 <?php
@@ -590,9 +606,11 @@ EOF_NGINX
   elif [ -d /etc/nginx/sites-available ]; then
     safe_cp "${NGINX_CONF_TMP}" "/etc/nginx/sites-available/${WORDPRESS_SERVER_NAME}.conf"
     priv ln -sf "/etc/nginx/sites-available/${WORDPRESS_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
+  elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --domain "${WORDPRESS_SERVER_NAME}" --listen "${WORDPRESS_LISTEN}" --static "/" "${WORDPRESS_WWWROOT}" --php "/" "${WORDPRESS_PHP_FPM_LISTEN}" --emit nginx >/dev/null 2>&1 || true
   fi
   rm -f "${NGINX_CONF_TMP}"
-  priv systemctl reload nginx 2>/dev/null || true
+  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/cli.sh" restart >/dev/null 2>&1 || priv systemctl reload nginx 2>/dev/null || true
 elif [ "${WORDPRESS_WEBSERVER}" = "httpd" ] || [ "${WORDPRESS_WEBSERVER}" = "apache2" ]; then
   cat << 'EOF_HTACCESS' | safe_tee "${WORDPRESS_WWWROOT}/.htaccess" >/dev/null
 # BEGIN WordPress
@@ -607,7 +625,7 @@ RewriteRule . /index.php [L]
 </IfModule>
 # END WordPress
 EOF_HTACCESS
-  priv systemctl reload httpd 2>/dev/null || priv systemctl reload apache2 2>/dev/null || true
+  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/cli.sh" restart >/dev/null 2>&1 || priv systemctl reload httpd 2>/dev/null || priv systemctl reload apache2 2>/dev/null || true
 elif [ "${WORDPRESS_WEBSERVER}" = "caddy" ]; then
   CADDY_CONF_TMP=$(mktemp)
   cat << EOF_CADDY > "${CADDY_CONF_TMP}"
@@ -620,9 +638,11 @@ ${WORDPRESS_SERVER_NAME}:${WORDPRESS_LISTEN} {
 EOF_CADDY
   if [ -d /etc/caddy/conf.d ]; then
     safe_cp "${CADDY_CONF_TMP}" "/etc/caddy/conf.d/${WORDPRESS_SERVER_NAME}.caddy"
+  elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --domain "${WORDPRESS_SERVER_NAME}" --listen "${WORDPRESS_LISTEN}" --static "/" "${WORDPRESS_WWWROOT}" --php "/" "${WORDPRESS_PHP_FPM_LISTEN}" --emit caddy >/dev/null 2>&1 || true
   fi
   rm -f "${CADDY_CONF_TMP}"
-  priv systemctl reload caddy 2>/dev/null || true
+  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/cli.sh" restart >/dev/null 2>&1 || priv systemctl reload caddy 2>/dev/null || true
 fi
 
 # 7. Optional Adminer Staging

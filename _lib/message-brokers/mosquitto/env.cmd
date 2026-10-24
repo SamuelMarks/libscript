@@ -61,3 +61,10 @@ if "%MOSQUITTO_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MOSQUITTO_VERSION=%MOSQUITTO_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

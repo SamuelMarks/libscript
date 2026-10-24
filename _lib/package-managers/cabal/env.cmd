@@ -61,3 +61,10 @@ if "%CABAL_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\cabal\%CABAL_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CABAL_VERSION=%CABAL_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

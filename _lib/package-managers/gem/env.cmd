@@ -56,3 +56,10 @@ if "%GEM_VERSION%"=="" (
     set "GEM_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\gem\%GEM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GEM_VERSION=%GEM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

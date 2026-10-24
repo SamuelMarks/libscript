@@ -61,3 +61,10 @@ if "%VLLM_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "VLLM_VERSION=%VLLM_VERSION%"
+)
+exit /b 0

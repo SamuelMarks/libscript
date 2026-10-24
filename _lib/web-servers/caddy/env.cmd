@@ -61,3 +61,10 @@ if "%CADDY_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\caddy\%CADDY_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CADDY_VERSION=%CADDY_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

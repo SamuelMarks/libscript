@@ -60,3 +60,10 @@ if exist "%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/Scripts" (
 ) else if exist "%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin" (
     set "PATH=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin;%PATH%"
 )
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "NODEENV_VERSION=%NODEENV_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -129,7 +129,7 @@ case "$ACTION" in
       log_info "Downloading xpk ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/xpk..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/xpk"
       if [ -n "${XPK_DOWNLOAD_URL:-}" ]; then
-        curl -sSL "${XPK_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/xpk/xpk-${VERSION:-}.tar.gz"
+        libscript_download "${XPK_DOWNLOAD_URL}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/xpk/xpk-${VERSION:-}.tar.gz"
       else
         printf '%s\n' "XPK_DOWNLOAD_URL is not defined. Skipping."
       fi
@@ -159,10 +159,8 @@ case "$ACTION" in
         if ! type libscript_python_venv >/dev/null 2>&1; then
           . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
-        if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
-          if command -v dnf >/dev/null 2>&1; then
-            priv dnf install -y python3.11 || true
-          fi
+        if ! (command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'); then
+          libscript_depends "python3.11" || true
         fi
         _py_ver=""
         if command -v python3.11 >/dev/null 2>&1; then

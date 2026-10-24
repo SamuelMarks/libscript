@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%MINIO_VERSION%"=="" SET "MINIO_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\minio\%MINIO_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "MINIO_VERSION=%MINIO_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

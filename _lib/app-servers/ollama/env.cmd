@@ -55,3 +55,11 @@ if "%OLLAMA_INSTALL_METHOD%"=="" set "OLLAMA_INSTALL_METHOD=libscript_native"
 if "%OLLAMA_VERSION%"=="" set "OLLAMA_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 set "PATH=%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "OLLAMA_INSTALL_METHOD=%OLLAMA_INSTALL_METHOD%"
+    set "OLLAMA_VERSION=%OLLAMA_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

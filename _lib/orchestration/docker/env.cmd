@@ -61,3 +61,10 @@ if "%DOCKER_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\docker\%DOCKER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "DOCKER_VERSION=%DOCKER_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%DASH_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\dash\%DASH_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "DASH_VERSION=%DASH_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

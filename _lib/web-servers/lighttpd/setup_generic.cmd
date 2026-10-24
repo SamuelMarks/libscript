@@ -144,7 +144,7 @@ if "%LIGHTTPD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading lighttpd %LIGHTTPD_VERSION% to %DOWNLOAD_DIR%\lighttpd...
     if not exist "%DOWNLOAD_DIR%\lighttpd" mkdir "%DOWNLOAD_DIR%\lighttpd"
     if not "%LIGHTTPD_DOWNLOAD_URL%"=="" (
-        curl -sSL "%LIGHTTPD_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LIGHTTPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.zip"
     ) else (
         echo LIGHTTPD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%LIGHTTPD_INSTALL_METHOD%"=="system" (
-    winget install lighttpd --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends lighttpd
     exit /b !errorlevel!
 )
 if "%LIGHTTPD_INSTALL_METHOD%"=="mise" ( mise install "lighttpd@%LIGHTTPD_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%LIGHTTPD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%LIGHTTPD_DOWNLOAD_URL%" -o "%TEMP%\lighttpd.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LIGHTTPD_DOWNLOAD_URL%" "%TEMP%\lighttpd.zip"
         tar -xf "%TEMP%\lighttpd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for lighttpd.

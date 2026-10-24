@@ -47,15 +47,10 @@ SCRIPT_DIR="${_sb_saved_script_dir}"
 # ## libscript_now_ms
 # Returns the current monotonic/epoch timestamp in milliseconds for build timing metrics.
 libscript_now_ms() {
-  if command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import time; print(int(time.time() * 1000))' 2>/dev/null && return 0
+  if [ -r /proc/uptime ]; then
+    awk '{printf "%d\n", $1 * 1000}' /proc/uptime 2>/dev/null && return 0
   fi
-  if command -v perl >/dev/null 2>&1; then
-    perl -MTime::HiRes=time -e 'printf "%d
-", int(time() * 1000)' 2>/dev/null && return 0
-  fi
-  printf '%s000
-' "$(date +%s)"
+  printf '%s000\n' "$(date +%s 2>/dev/null || printf '0')"
 }
 
 # ## libscript_resolve_build_toolchain
@@ -272,14 +267,14 @@ libscript_fetch_and_extract_source() {
       fi
       if command -v unzip >/dev/null 2>&1; then
         unzip -q -o "${_archive_file}" -d "${LIBSCRIPT_SOURCE_WORKDIR}"
-      elif command -v python3 >/dev/null 2>&1; then
-        python3 -c 'import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "${_archive_file}" "${LIBSCRIPT_SOURCE_WORKDIR}"
+      elif command -v 7z >/dev/null 2>&1; then
+        7z x "${_archive_file}" -o"${LIBSCRIPT_SOURCE_WORKDIR}" -y >/dev/null
       elif command -v bsdtar >/dev/null 2>&1; then
         bsdtar -xf "${_archive_file}" -C "${LIBSCRIPT_SOURCE_WORKDIR}"
       elif command -v tar >/dev/null 2>&1; then
         tar -xf "${_archive_file}" -C "${LIBSCRIPT_SOURCE_WORKDIR}"
       else
-        log_error "Neither unzip nor bsdtar available to extract ${_archive_file}"
+        log_error "Neither unzip, 7z, nor bsdtar available to extract ${_archive_file}"
         return 1
       fi
       ;;

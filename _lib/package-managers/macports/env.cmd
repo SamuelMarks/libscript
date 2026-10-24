@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%MACPORTS_VERSION%"=="" SET "MACPORTS_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\macports\%MACPORTS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "MACPORTS_VERSION=%MACPORTS_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

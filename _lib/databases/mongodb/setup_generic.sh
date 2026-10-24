@@ -199,7 +199,7 @@ case "$ACTION" in
               MONGO_ARCH="aarch64"
             fi
             TEMP_FILE=$(mktemp)
-            curl -fsSL "https://fastdl.mongodb.org/linux/mongodb-linux-${MONGO_ARCH}-ubuntu2404-8.0.32.tgz" -o "${TEMP_FILE}"
+            libscript_download "https://fastdl.mongodb.org/linux/mongodb-linux-${MONGO_ARCH}-ubuntu2404-8.0.32.tgz" "${TEMP_FILE}"
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=2 || true
             rm -f "${TEMP_FILE}"
           fi

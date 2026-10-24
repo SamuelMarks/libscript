@@ -57,3 +57,10 @@ if "%CMAKE_VERSION%"=="latest" set CMAKE_VERSION=3.31.2
 if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
 
 set PATH=%LIBSCRIPT_HOME%\cmake\%CMAKE_VERSION%\bin;%PATH%
+
+endlocal & (
+    set "CMAKE_VERSION=%CMAKE_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

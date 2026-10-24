@@ -60,3 +60,10 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+    set "RUST_VERSION=%RUST_VERSION%"
+)
+exit /b 0

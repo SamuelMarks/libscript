@@ -54,3 +54,9 @@ goto :find_root
 
 if "%EXIM_SMTP_PORT%"=="" set "EXIM_SMTP_PORT=25"
 if "%EXIM_RELAY_FROM_HOSTS%"=="" set "EXIM_RELAY_FROM_HOSTS=127.0.0.1"
+
+endlocal & (
+    set "EXIM_RELAY_FROM_HOSTS=%EXIM_RELAY_FROM_HOSTS%"
+    set "EXIM_SMTP_PORT=%EXIM_SMTP_PORT%"
+)
+exit /b 0

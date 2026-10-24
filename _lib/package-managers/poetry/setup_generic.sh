@@ -191,25 +191,28 @@ case "$ACTION" in
               PY_BIN="python3.12"
             elif command -v python3.11 >/dev/null 2>&1; then
               PY_BIN="python3.11"
-            elif ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
-              if command -v dnf >/dev/null 2>&1; then
-                priv dnf install -y python3.11 || true
-                if command -v python3.11 >/dev/null 2>&1; then
-                  PY_BIN="python3.11"
-                fi
+            elif ! (command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'); then
+              libscript_depends "python3.11" || true
+              if command -v python3.11 >/dev/null 2>&1; then
+                PY_BIN="python3.11"
               fi
             fi
+          _poetry_inst=$(mktemp)
+          libscript_download "https://install.python-poetry.org" "${_poetry_inst}"
           if [ "${EXACT_VERSION}" = "latest" ]; then
-             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" "$PY_BIN" -; then
+             if ! POETRY_HOME="${TARGET_DIR}" "$PY_BIN" "${_poetry_inst}"; then
+                rm -f "${_poetry_inst}"
                 log_error "Failed to install poetry."
                 exit 1
              fi
           else
-             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" "$PY_BIN" - --version "$EXACT_VERSION"; then
+             if ! POETRY_HOME="${TARGET_DIR}" "$PY_BIN" "${_poetry_inst}" --version "$EXACT_VERSION"; then
+                rm -f "${_poetry_inst}"
                 log_error "Failed to install poetry version $EXACT_VERSION."
                 exit 1
              fi
           fi
+          rm -f "${_poetry_inst}"
         fi
         if [ -x "${TARGET_DIR}/venv/bin/poetry" ] && [ ! -x "${TARGET_DIR}/bin/poetry" ]; then
           mkdir -p "${TARGET_DIR}/bin"

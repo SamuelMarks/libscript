@@ -61,3 +61,10 @@ if "%GITEA_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\gitea\%GITEA_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GITEA_VERSION=%GITEA_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

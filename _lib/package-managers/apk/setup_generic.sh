@@ -164,8 +164,12 @@ case "$ACTION" in
             armv7*) _apk_arch="armv7" ;;
             *) _apk_arch="$_arch" ;;
           esac
-          priv curl -fsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.9/${_apk_arch}/apk.static" -o /usr/local/bin/apk 2>/dev/null || true
-          priv chmod +x /usr/local/bin/apk 2>/dev/null || true
+          _apk_tmp=$(mktemp)
+          if libscript_download "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.9/${_apk_arch}/apk.static" "${_apk_tmp}"; then
+            priv cp "${_apk_tmp}" /usr/local/bin/apk 2>/dev/null || true
+            priv chmod +x /usr/local/bin/apk 2>/dev/null || true
+          fi
+          rm -f "${_apk_tmp}"
         fi
       else
         libscript_depends "apk"

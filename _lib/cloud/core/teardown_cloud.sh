@@ -32,7 +32,9 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+_DEPLOY_SCRIPT_DIR="$SCRIPT_DIR"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_DIR="$_DEPLOY_SCRIPT_DIR"
 
 if [ "${DRY_RUN:-}" = "true" ]; then
   log_info "[DRY_RUN] Simulated deprovision for $*"

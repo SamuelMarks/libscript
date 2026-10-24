@@ -61,3 +61,10 @@ if "%SYSTEMD_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\systemd\%SYSTEMD_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "SYSTEMD_VERSION=%SYSTEMD_VERSION%"
+)
+exit /b 0

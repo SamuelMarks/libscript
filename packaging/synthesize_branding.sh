@@ -74,26 +74,17 @@ fi
 
 mkdir -p "$OUTPUT_DIR"
 
-# Extract colors and metadata via python3 or fallback awk
-_branding_props=$(python3 -c "
-import json
-with open('$PKG_JSON') as f:
-    d = json.load(f)
-name = d.get('name', 'app')
-title = d.get('title', name)
-p = d.get('branding_palette', {})
-primary = p.get('primary_color', '#0078D4').lstrip('#')
-secondary = p.get('secondary_color', '#2B88D8').lstrip('#')
-dark = p.get('dark_color', '#101820').lstrip('#')
-eula_comps = ','.join(p.get('eula_components', [title]))
-
-print(f'APP_NAME={name}')
-print(f'APP_TITLE={title}')
-print(f'PRIMARY_HEX={primary}')
-print(f'SECONDARY_HEX={secondary}')
-print(f'DARK_HEX={dark}')
-print(f'EULA_COMPS={eula_comps}')
-")
+# Extract colors and metadata via jq
+_branding_props=$(jq -r '
+  (.name // "app") as $name |
+  (.title // $name) as $title |
+  (.branding_palette // {}) as $p |
+  (($p.primary_color // "#0078D4") | ltrimstr("#")) as $primary |
+  (($p.secondary_color // "#2B88D8") | ltrimstr("#")) as $secondary |
+  (($p.dark_color // "#101820") | ltrimstr("#")) as $dark |
+  (($p.eula_components // [$title]) | join(",")) as $eula_comps |
+  "APP_NAME=\($name)\nAPP_TITLE=\($title)\nPRIMARY_HEX=\($primary)\nSECONDARY_HEX=\($secondary)\nDARK_HEX=\($dark)\nEULA_COMPS=\($eula_comps)"
+' "$PKG_JSON")
 
 while IFS='=' read -r _key _val; do
   case "$_key" in

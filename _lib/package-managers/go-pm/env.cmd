@@ -56,3 +56,10 @@ if "%GO_PM_VERSION%"=="" (
     set "GO_PM_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\go-pm\%GO_PM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GO_PM_VERSION=%GO_PM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

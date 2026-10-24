@@ -59,3 +59,14 @@ if "%LMS_PORT%"=="" set "LMS_PORT=8000"
 if "%CMS_PORT%"=="" set "CMS_PORT=8001"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%OPENEDX_INSTALL_DIR%"=="" set "OPENEDX_INSTALL_DIR=%LIBSCRIPT_HOME%\openedx"
+
+endlocal & (
+    set "CMS_HOST=%CMS_HOST%"
+    set "CMS_PORT=%CMS_PORT%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "LMS_HOST=%LMS_HOST%"
+    set "LMS_PORT=%LMS_PORT%"
+    set "OPENEDX_INSTALL_DIR=%OPENEDX_INSTALL_DIR%"
+    set "OPENEDX_VERSION=%OPENEDX_VERSION%"
+)
+exit /b 0

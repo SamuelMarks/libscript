@@ -55,3 +55,10 @@ if "%SH_VERSION%"=="latest" set SH_VERSION=0.5.12
 if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
 
 set PATH=%LIBSCRIPT_HOME%\sh\%SH_VERSION%\bin;%PATH%
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "SH_VERSION=%SH_VERSION%"
+)
+exit /b 0

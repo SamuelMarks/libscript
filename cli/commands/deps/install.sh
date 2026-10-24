@@ -53,36 +53,69 @@ if [ "$CMD" = "install-deps" ]; then
     fi
   fi
 
+  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_install"
+
   deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
   if [ -z "$deps" ]; then
     printf '%s\n' "No dependencies found in $json_file."
-    exit 0
+  else
+    # Parallel Download Phase
+    printf '%s\n' "Downloading dependencies in parallel..."
+    printf '%s\n' "$deps" | while read -r pkg ver override; do
+      if [ -n "$pkg" ]; then
+        if [ "$ver" = "null" ]; then ver="latest"; fi
+        if [ -z "$override" ] || [ "$override" = "null" ]; then
+          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" download "$pkg" "$ver" &
+        fi
+      fi
+    done
+    wait
+
+    # Serial Install Phase
+    printf '%s\n' "Installing dependencies sequentially..."
+    printf '%s\n' "$deps" | while read -r pkg ver override; do
+      if [ -n "$pkg" ]; then
+        if [ "$ver" = "null" ]; then ver="latest"; fi
+        if [ -n "$override" ] && [ "$override" != "null" ]; then
+          printf '%s\n' "Skipping installation of $pkg (override provided: $override)"
+        else
+          printf '%s\n' "Installing $pkg $ver..."
+          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver"
+        fi
+      fi
+    done
+
+    # Export resolved component env.sh paths into current execution environment
+    tmp_deps_env=$(mktemp 2>/dev/null || printf '%s' "/tmp/libscript_deps_env.$$")
+    printf '%s\n' "$deps" > "$tmp_deps_env"
+    while read -r pkg ver _override; do
+      if [ -n "$pkg" ]; then
+        if [ "$ver" = "null" ] || [ -z "$ver" ]; then ver="latest"; fi
+        _pkg_up=$(printf '%s' "$pkg" | tr '[:lower:]-' '[:upper:]_')
+        export "${_pkg_up}_VERSION=${ver}"
+        for _cat_name in $(ls -1 "${LIBSCRIPT_ROOT_DIR:-.}/_lib" 2>/dev/null || true); do
+          _cat_dir="${LIBSCRIPT_ROOT_DIR:-.}/_lib/${_cat_name}"
+          if [ -f "${_cat_dir}/${pkg}/env.sh" ]; then
+            STACK=""
+            SCRIPT_NAME="${_cat_dir}/${pkg}/env.sh"
+            # shellcheck disable=SC1090
+            . "${SCRIPT_NAME}" || true
+          fi
+        done
+      fi
+    done < "$tmp_deps_env"
+    rm -f "$tmp_deps_env"
+
+    # Persist resolved PATH idempotently into .env.libscript alongside manifest
+    _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
+    _env_out="${_manifest_dir}/.env.libscript"
+    touch "$_env_out"
+    grep -v "^PATH=" "$_env_out" > "${_env_out}.tmp" 2>/dev/null || true
+    printf 'PATH="%s"\n' "$PATH" >> "${_env_out}.tmp"
+    mv "${_env_out}.tmp" "$_env_out"
   fi
 
-  # Parallel Download Phase
-  printf '%s\n' "Downloading dependencies in parallel..."
-  printf '%s\n' "$deps" | while read -r pkg ver override; do
-    if [ -n "$pkg" ]; then
-      if [ "$ver" = "null" ]; then ver="latest"; fi
-      if [ -z "$override" ] || [ "$override" = "null" ]; then
-        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" download "$pkg" "$ver" &
-      fi
-    fi
-  done
-  wait
-
-  # Serial Install Phase
-  printf '%s\n' "Installing dependencies sequentially..."
-  printf '%s\n' "$deps" | while read -r pkg ver override; do
-    if [ -n "$pkg" ]; then
-      if [ "$ver" = "null" ]; then ver="latest"; fi
-      if [ -n "$override" ] && [ "$override" != "null" ]; then
-        printf '%s\n' "Skipping installation of $pkg (override provided: $override)"
-      else
-        printf '%s\n' "Installing $pkg $ver..."
-        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver"
-      fi
-    fi
-  done
+  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"
+  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
   exit 0
 fi

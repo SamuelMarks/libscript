@@ -61,3 +61,10 @@ if "%COURSIER_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\coursier\%COURSIER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "COURSIER_VERSION=%COURSIER_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

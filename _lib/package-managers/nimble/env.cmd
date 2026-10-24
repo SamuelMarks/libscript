@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%NIMBLE_VERSION%"=="" SET "NIMBLE_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\nimble\%NIMBLE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "NIMBLE_VERSION=%NIMBLE_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

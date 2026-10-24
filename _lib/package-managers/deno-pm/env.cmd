@@ -67,3 +67,10 @@ if exist "%~dp0..\..\languages\deno\env.cmd" (
 ) else (
     set "PATH=%LIBSCRIPT_HOME%\deno\latest\bin;%PATH%"
 )
+
+endlocal & (
+    set "DENO_PM_VERSION=%DENO_PM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

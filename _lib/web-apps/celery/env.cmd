@@ -53,3 +53,9 @@ goto :find_root
 
 if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.11"
 if "%PYTHON_VENV%"=="" set "PYTHON_VENV=C:\venvs\celery-%PYTHON_VERSION%"
+
+endlocal & (
+    set "PYTHON_VENV=%PYTHON_VENV%"
+    set "PYTHON_VERSION=%PYTHON_VERSION%"
+)
+exit /b 0

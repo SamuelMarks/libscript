@@ -64,26 +64,6 @@ do_get() {
     return 0
   fi
 
-  if command -v node >/dev/null 2>&1; then
-    node -e '
-      const fs = require("fs");
-      try {
-        const d = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-        const parts = process.argv[2].split(".");
-        let cur = d;
-        for (const p of parts) {
-          if (cur && typeof cur === "object" && p in cur) cur = cur[p];
-          else { console.log("null"); process.exit(0); }
-        }
-        if (typeof cur === "object" && cur !== null) console.log(JSON.stringify(cur, null, 2));
-        else console.log(cur);
-      } catch (e) {
-        console.log("null");
-      }
-    ' "${_conf_file}" "${_key}"
-    return 0
-  fi
-
   # Basic POSIX sh/grep fallback for leaf properties
   _leaf="${_key##*.}"
   _match=$(grep -E "${_leaf}[[:space:]]*:" "${_conf_file}" 2>/dev/null | head -n 1 || true)
@@ -124,29 +104,10 @@ do_set() {
       else
         rm -f "$_tmp"
       fi
-    elif command -v node >/dev/null 2>&1; then
-      node -e '
-        const fs = require("fs");
-        const file = process.argv[1];
-        const key = process.argv[2];
-        const rawVal = process.argv[3];
-        let val;
-        try { val = JSON.parse(rawVal); } catch (_) { val = rawVal; }
-        let cfg = {};
-        if (fs.existsSync(file)) {
-          try { cfg = JSON.parse(fs.readFileSync(file, "utf8")); } catch (_) { cfg = {}; }
-        }
-        const parts = key.split(".");
-        let cur = cfg;
-        for (let i = 0; i < parts.length - 1; i++) {
-          const p = parts[i];
-          if (!cur[p] || typeof cur[p] !== "object") cur[p] = {};
-          cur = cur[p];
-        }
-        cur[parts[parts.length - 1]] = val;
-        fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + "
-");
-      ' "${_cf}" "${_key}" "${_val}"
+    else
+      if [ ! -f "${_cf}" ]; then
+        printf '{\n  "%s": "%s"\n}\n' "${_key}" "${_val}" > "${_cf}"
+      fi
     fi
   done
   printf 'Updated %s.\n' "${_key}"
@@ -233,11 +194,6 @@ do_validate() {
 
   if command -v jq >/dev/null 2>&1; then
     if ! jq empty "${_conf_file}" >/dev/null 2>&1; then
-      printf 'Error: Invalid JSON syntax in %s\n' "${_conf_file}" >&2
-      exit 1
-    fi
-  elif command -v node >/dev/null 2>&1; then
-    if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "${_conf_file}" >/dev/null 2>&1; then
       printf 'Error: Invalid JSON syntax in %s\n' "${_conf_file}" >&2
       exit 1
     fi

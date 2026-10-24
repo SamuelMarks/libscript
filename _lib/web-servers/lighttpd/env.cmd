@@ -61,3 +61,10 @@ if "%LIGHTTPD_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\lighttpd\%LIGHTTPD_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "LIGHTTPD_VERSION=%LIGHTTPD_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

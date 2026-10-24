@@ -61,3 +61,10 @@ if "%HTTPD_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\httpd\%HTTPD_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "HTTPD_VERSION=%HTTPD_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

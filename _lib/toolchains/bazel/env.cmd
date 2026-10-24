@@ -61,3 +61,10 @@ if "%BAZEL_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\bazel\%BAZEL_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "BAZEL_VERSION=%BAZEL_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

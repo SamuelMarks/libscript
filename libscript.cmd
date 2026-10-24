@@ -180,6 +180,22 @@ if /i "%cmd%"=="payload" ( call "!SCRIPT_DIR!\payloads\engine.cmd" %2 %3 %4 %5 %
 if /i "%cmd%"=="topology" ( call "!SCRIPT_DIR!\topologies\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "%cmd%"=="trait" ( call "!SCRIPT_DIR!\traits\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "%cmd%"=="cloud" ( call "!SCRIPT_DIR!\_lib\cloud\core\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="train" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="infer" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="serve-ml" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="eval-ml" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="env" (
+    if /i "%~2"=="--manifest" (
+        set "_env_manifest=%~3"
+        if "!_env_manifest!"=="" set "_env_manifest=libscript.json"
+        call "!SCRIPT_DIR!\_lib\_common\env_printer.cmd" --manifest "!_env_manifest!" "%~4"
+        exit /b !errorlevel!
+    )
+    if "%~2"=="" (
+        call "!SCRIPT_DIR!\_lib\_common\env_printer.cmd" --manifest "libscript.json" "cmd"
+        exit /b !errorlevel!
+    )
+)
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"

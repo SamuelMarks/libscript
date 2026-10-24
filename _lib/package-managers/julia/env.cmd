@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%JULIA_VERSION%"=="" SET "JULIA_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\julia\%JULIA_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "JULIA_VERSION=%JULIA_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

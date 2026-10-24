@@ -139,6 +139,20 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         ssh -o StrictHostKeyChecking=no "azureuser@$IP" "$@"
         ;;
+      attach-disk)
+        RG=${3:-}; DISK_NAME=${4:-}
+        if [ -z "$DISK_NAME" ] || [ "$DISK_NAME" = "null" ]; then
+          printf '%s\n' "No disk name specified, skipping attach-disk."
+          exit 0
+        fi
+        if az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[?name=='$DISK_NAME'] | [0].name" -o tsv 2>/dev/null | grep -q .; then
+          printf '%s\n' "Disk '$DISK_NAME' already attached to '$RESOURCE_NAME'."
+        elif az disk show -g "$RG" -n "$DISK_NAME" >/dev/null 2>&1; then
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
+        else
+          printf '%s\n' "Disk '$DISK_NAME' already attached or managed in '$RG'."
+        fi
+        ;;
       deploy)
         RG=${3:-}; SRC=${4:-}; DST=${5:-}
         if [ -z "$DST" ]; then printf '%s\n' "Usage: node deploy <name> <rg> <src> <dst>"; exit 1; fi
@@ -148,7 +162,7 @@ case "$ACTION" in
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "azureuser@$IP:$DST"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "azureuser@$IP:$DST"
         else
           scp -o StrictHostKeyChecking=no -r "$SRC" "azureuser@$IP:$DST"
         fi
@@ -171,7 +185,7 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         ssh -o StrictHostKeyChecking=no "azureuser@$IP" "mkdir -p ~/libscript"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "azureuser@$IP:~/libscript/"
+          rsync -avz --exclude=".git" --exclude="vagrant" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "azureuser@$IP:~/libscript/"
         else
           scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "azureuser@$IP:~/libscript/"
         fi
@@ -256,7 +270,7 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$VM_NAME" --query publicIps -o tsv | xargs)
         RECORD_NAME=${DOMAIN%."$ZONE"}
         if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
-        az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
+        az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP" || true
         ;;
       unmap-node)
         DOMAIN=${2:-}; ZONE=${3:-}; RG=${4:-}; VM_NAME=${5:-}
@@ -293,11 +307,25 @@ case "$ACTION" in
         fi
         shift 3
         PRIORITY=1000
+        SEEN_PORTS=""
         while [ $# -gt 0 ]; do
-          PORT=$1
-          printf '%s\n' "Opening port $PORT on $RESOURCE_NAME"
-          az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT" --priority "$PRIORITY" --destination-port-ranges "$PORT" --access Allow --protocol Tcp
-          PRIORITY=$((PRIORITY + 10))
+          case "$1" in
+            --location) shift 2; continue ;;
+            --*) shift; continue ;;
+          esac
+          for PORT in $1; do
+            case "$PORT" in
+              --*) continue ;;
+              *[!0-9-]*) continue ;;
+            esac
+            case " $SEEN_PORTS " in
+              *" $PORT "*) continue ;;
+            esac
+            SEEN_PORTS="$SEEN_PORTS $PORT"
+            printf '%s\n' "Opening port $PORT on $RESOURCE_NAME"
+            az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT" --priority "$PRIORITY" --destination-port-ranges "$PORT" --access Allow --protocol Tcp || true
+            PRIORITY=$((PRIORITY + 10))
+          done
           shift
         done
         ;;

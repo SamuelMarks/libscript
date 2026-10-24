@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PKG_VERSION%"=="" SET "PKG_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pkg\%PKG_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PKG_VERSION=%PKG_VERSION%"
+)
+exit /b 0

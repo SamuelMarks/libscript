@@ -61,3 +61,10 @@ if "%UTILS_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\utils\%UTILS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "UTILS_VERSION=%UTILS_VERSION%"
+)
+exit /b 0

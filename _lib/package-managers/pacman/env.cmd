@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PACMAN_VERSION%"=="" SET "PACMAN_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pacman\%PACMAN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PACMAN_VERSION=%PACMAN_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

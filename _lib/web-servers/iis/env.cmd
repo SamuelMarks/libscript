@@ -61,3 +61,10 @@ if "%IIS_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\iis\%IIS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "IIS_VERSION=%IIS_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%MEMCACHED_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MEMCACHED_VERSION=%MEMCACHED_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

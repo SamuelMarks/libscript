@@ -60,3 +60,12 @@ if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if exist "%LIBSCRIPT_HOME%\gunicorn\%GUNICORN_VERSION%\Scripts" (
     set "PATH=%LIBSCRIPT_HOME%\gunicorn\%GUNICORN_VERSION%\Scripts;%PATH%"
 )
+
+endlocal & (
+    set "GUNICORN_BIND=%GUNICORN_BIND%"
+    set "GUNICORN_VERSION=%GUNICORN_VERSION%"
+    set "GUNICORN_WORKERS=%GUNICORN_WORKERS%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

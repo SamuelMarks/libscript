@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%SPACK_VERSION%"=="" SET "SPACK_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\spack\%SPACK_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "SPACK_VERSION=%SPACK_VERSION%"
+)
+exit /b 0

@@ -60,3 +60,11 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 set "GOROOT=%LIBSCRIPT_BASE_DIR%\go\%GO_VERSION%"
 set "PATH=%GOROOT%\bin;%PATH%"
+
+endlocal & (
+    set "GO_VERSION=%GO_VERSION%"
+    set "GOROOT=%GOROOT%"
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+)
+exit /b 0

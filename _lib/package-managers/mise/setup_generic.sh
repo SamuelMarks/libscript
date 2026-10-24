@@ -168,10 +168,13 @@ case "$ACTION" in
         if [ "${VERSION}" = "latest" ]; then
           unset MISE_VERSION || true
         fi
-        if ! curl -sSLf https://mise.run | env MISE_INSTALL_FROM_GITHUB=1 MISE_INSTALL_PATH="${TARGET_DIR}/bin/mise" sh; then
+        _mise_inst=$(mktemp)
+        if ! libscript_download "https://mise.run" "${_mise_inst}" || ! env MISE_INSTALL_FROM_GITHUB=1 MISE_INSTALL_PATH="${TARGET_DIR}/bin/mise" sh "${_mise_inst}"; then
+           rm -f "${_mise_inst}"
            log_error "Failed to install mise"
            exit 1
         fi
+        rm -f "${_mise_inst}"
         if [ ! -f "${TARGET_DIR}/bin/mise" ] && [ -f "$HOME/.local/bin/mise" ]; then
           cp "$HOME/.local/bin/mise" "${TARGET_DIR}/bin/mise" || true
         fi

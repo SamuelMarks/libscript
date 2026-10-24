@@ -283,6 +283,230 @@
           }
         }
       }
+    },
+    "deps": {
+      "type": "object",
+      "description": "Flat dependency map specifying component names to version strings",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "string",
+          "description": "Requested semantic version or 'latest' for the dependency"
+        }
+      }
+    },
+    "services": {
+      "type": ["object", "array"],
+      "description": "Declarative application service daemon definitions (supports object map or array of service objects)",
+      "items": {
+        "type": "object",
+        "description": "Application service daemon specification",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique service daemon identifier"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command line executed to launch the service"
+          },
+          "working_dir": {
+            "type": "string",
+            "description": "Working directory relative to the manifest directory"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables injected into the service runtime",
+            "patternProperties": {
+              "^[A-Z0-9_]+$": {
+                "type": "string",
+                "description": "Environment variable value"
+              }
+            }
+          },
+          "env_files": {
+            "type": "array",
+            "description": "List of dotenv files sourced before starting the service",
+            "items": {
+              "type": "string",
+              "description": "Relative or absolute path to an environment file"
+            }
+          }
+        }
+      }
+    },
+    "databases": {
+      "type": ["object", "array"],
+      "description": "Declarative database and cache instances to initialize and wire into the application environment",
+      "items": {
+        "type": "object",
+        "description": "Single database provisioning specification",
+        "properties": {
+          "engine": {
+            "type": "string",
+            "description": "Database engine identifier (postgres, mysql, sqlite, duckdb, valkey)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Logical database name or file path"
+          },
+          "user": {
+            "type": "string",
+            "description": "Database role or user to create"
+          },
+          "host": {
+            "type": "string",
+            "description": "Database host address (defaults to 127.0.0.1)"
+          },
+          "port": {
+            "type": "integer",
+            "description": "Database TCP port"
+          }
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "description": "Declarative reverse proxy ingress routing configuration applied via netctl",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Target reverse proxy engine (nginx, caddy, apache, iis)"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Virtual host server_name or domain"
+        },
+        "listen": {
+          "type": ["integer", "array"],
+          "description": "Port or list of ports to listen on",
+          "items": {
+            "type": "integer",
+            "description": "TCP listen port"
+          }
+        },
+        "routes": {
+          "type": ["object", "array"],
+          "description": "Routing table mapping URL prefixes to upstream proxies, WebSockets, or static/SPA directories",
+          "items": {
+            "type": "object",
+            "description": "Single ingress route entry",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "URL path prefix (e.g., '/', '/api', '/ws')"
+              },
+              "type": {
+                "type": "string",
+                "description": "Route type (proxy, ws, static, spa)"
+              },
+              "target": {
+                "type": "string",
+                "description": "Upstream URL or local filesystem path"
+              }
+            }
+          }
+        }
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Lifecycle hooks executed during installation, build, migration, and service startup/shutdown",
+      "properties": {
+        "pre_install": {
+          "type": "array",
+          "description": "Hooks executed before installing dependencies",
+          "items": {
+            "type": "object",
+            "description": "Hook command specification",
+            "properties": {
+              "name": { "type": "string", "description": "Hook identifier" },
+              "command": { "type": "string", "description": "Shell command to execute" },
+              "working_dir": { "type": "string", "description": "Working directory for the hook" },
+              "condition": {
+                "type": "string",
+                "description": "Conditional guard (unless_exists, if_exists, unless_command)"
+              }
+            }
+          }
+        },
+        "post_install": {
+          "type": "array",
+          "description": "Hooks executed after installing dependencies",
+          "items": {
+            "type": "object",
+            "description": "Hook command specification",
+            "properties": {
+              "name": { "type": "string", "description": "Hook identifier" },
+              "command": { "type": "string", "description": "Shell command to execute" },
+              "working_dir": { "type": "string", "description": "Working directory for the hook" },
+              "condition": {
+                "type": "string",
+                "description": "Conditional guard (unless_exists, if_exists, unless_command)"
+              }
+            }
+          }
+        },
+        "build": {
+          "type": "array",
+          "description": "Hooks executed during the build phase",
+          "items": {
+            "type": "object",
+            "description": "Hook command specification",
+            "properties": {
+              "name": { "type": "string", "description": "Hook identifier" },
+              "command": { "type": "string", "description": "Shell command to execute" },
+              "working_dir": { "type": "string", "description": "Working directory for the hook" },
+              "condition": {
+                "type": "string",
+                "description": "Conditional guard (unless_exists, if_exists, unless_command)"
+              }
+            }
+          }
+        },
+        "db_migrate": {
+          "type": "array",
+          "description": "Hooks executed to migrate database schemas",
+          "items": {
+            "type": "object",
+            "description": "Hook command specification",
+            "properties": {
+              "name": { "type": "string", "description": "Hook identifier" },
+              "command": { "type": "string", "description": "Shell command to execute" },
+              "working_dir": { "type": "string", "description": "Working directory for the hook" },
+              "condition": {
+                "type": "string",
+                "description": "Conditional guard (unless_exists, if_exists, unless_command)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ml": {
+      "type": "object",
+      "description": "Declarative Machine Learning training and inference configuration across local and cloud accelerators",
+      "properties": {
+        "backend": {
+          "type": "string",
+          "description": "ML framework or serving backend (jax, maxtext, pytorch, keras, mlx, vllm, ollama, jetstream)"
+        },
+        "target": {
+          "type": "string",
+          "description": "Execution target (local, gcp-tpu-vm, gcp-gpu-vm, gke-xpk)"
+        },
+        "train_command": {
+          "type": "string",
+          "description": "Command executed by 'libscript train'"
+        },
+        "infer_command": {
+          "type": "string",
+          "description": "Command executed by 'libscript infer'"
+        },
+        "etl_command": {
+          "type": "string",
+          "description": "Command executed for ML ETL preprocessing"
+        }
+      }
     }
   }
 }

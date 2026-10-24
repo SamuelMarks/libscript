@@ -61,3 +61,10 @@ if "%RUST_SERVER_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\rust-server\%RUST_SERVER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "RUST_SERVER_VERSION=%RUST_SERVER_VERSION%"
+)
+exit /b 0

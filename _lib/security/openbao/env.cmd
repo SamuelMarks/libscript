@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%OPENBAO_VERSION%"=="" SET "OPENBAO_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\openbao\%OPENBAO_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "OPENBAO_VERSION=%OPENBAO_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -53,23 +53,34 @@ goto :find_root
 
 if "%NETCTL_STATE_FILE%"=="" set NETCTL_STATE_FILE=.netctl.json
 
-if "%~1"=="init" goto init
-if "%~1"=="listen" goto listen
-if "%~1"=="static" goto static
-if "%~1"=="proxy" goto proxy
-if "%~1"=="rewrite" goto rewrite
+if /i "%~1"=="init" goto init
+if /i "%~1"=="domain" goto domain
+if /i "%~1"=="listen" goto listen
+if /i "%~1"=="static" goto static
+if /i "%~1"=="spa" goto spa
+if /i "%~1"=="proxy" goto proxy
+if /i "%~1"=="ws" goto ws
+if /i "%~1"=="rewrite" goto rewrite
 exit /b 1
 
 :: ## init
 :: Initializes default environment variables and module state.
 :init
 if not exist "%NETCTL_STATE_FILE%" (
-    echo {"listen":[],"routes":{}} > "%NETCTL_STATE_FILE%"
+    echo {"domain":"_","listen":[],"routes":{}} > "%NETCTL_STATE_FILE%"
 ) else (
     for %%I in ("%NETCTL_STATE_FILE%") do if %%~zI equ 0 (
-        echo {"listen":[],"routes":{}} > "%NETCTL_STATE_FILE%"
+        echo {"domain":"_","listen":[],"routes":{}} > "%NETCTL_STATE_FILE%"
     )
 )
+exit /b 0
+
+:: ## domain
+:: Sets the server_name / domain in the state file.
+:domain
+call :init
+jq --arg d "%~2" ".domain = $d" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 
 :: ## listen
@@ -88,11 +99,30 @@ jq --arg p "%~2" --arg t "%~3" ".routes[$p] = {\"type\": \"static\", \"target\":
 move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 
+:: ## spa
+:: Registers a Single-Page Application (SPA) static route with index.html fallback.
+:spa
+call :init
+jq --arg p "%~2" --arg t "%~3" ".routes[$p] = {\"type\": \"spa\", \"target\": $t}" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
 :: ## proxy
 :: Performs the proxy operation and updates component state.
 :proxy
 call :init
 jq --arg p "%~2" --arg t "%~3" ".routes[$p] = {\"type\": \"proxy\", \"target\": $t}" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## ws
+:: Registers a WebSocket reverse proxy route with Upgrade headers.
+:ws
+call :init
+set "ws_target=%~3"
+set "ws_target=!ws_target:ws://=http://!"
+set "ws_target=!ws_target:wss://=https://!"
+jq --arg p "%~2" --arg t "!ws_target!" ".routes[$p] = {\"type\": \"ws\", \"target\": $t}" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
 move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 

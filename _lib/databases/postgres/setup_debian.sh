@@ -46,6 +46,19 @@ export SCRIPT_NAME
 
 _DEL='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 PID=
+# ## _pg_debian_cleanup
+# Restores policy-rc.d and stops single-user postgres if interrupted.
+_pg_debian_cleanup() {
+  if [ -n "${PID:-}" ]; then
+    priv kill "${PID}" 2>/dev/null || true
+    priv rm -f -- '/var/run/postgresql/'"${POSTGRES_VERSION}"'-main.pid' 2>/dev/null || true
+    PID=
+  fi
+  if [ -f '/usr/sbin/policy-rc.d.prev' ]; then
+    priv mv -- '/usr/sbin/policy-rc.d.prev' '/usr/sbin/policy-rc.d' 2>/dev/null || true
+  fi
+}
+trap '_pg_debian_cleanup' EXIT HUP INT QUIT TERM
 if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
   libscript_depends 'postgresql-common'
   if [ -x '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh' ]; then

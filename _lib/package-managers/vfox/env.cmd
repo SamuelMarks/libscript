@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%VFOX_VERSION%"=="" SET "VFOX_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\vfox\%VFOX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "VFOX_VERSION=%VFOX_VERSION%"
+)
+exit /b 0

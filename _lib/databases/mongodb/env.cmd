@@ -61,3 +61,10 @@ if "%MONGODB_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MONGODB_VERSION=%MONGODB_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

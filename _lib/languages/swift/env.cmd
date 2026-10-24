@@ -56,3 +56,11 @@ if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
 
 set SWIFT_DIR=%LIBSCRIPT_HOME%\swift\%SWIFT_VERSION%
 set PATH=%SWIFT_DIR%\usr\bin;%PATH%
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "SWIFT_DIR=%SWIFT_DIR%"
+    set "SWIFT_VERSION=%SWIFT_VERSION%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%POETRY_VERSION%"=="" SET "POETRY_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\poetry\%POETRY_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "POETRY_VERSION=%POETRY_VERSION%"
+)
+exit /b 0

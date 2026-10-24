@@ -61,3 +61,10 @@ if "%ETCD_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\etcd\%ETCD_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "ETCD_VERSION=%ETCD_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

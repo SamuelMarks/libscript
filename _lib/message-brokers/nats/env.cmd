@@ -61,3 +61,10 @@ if "%NATS_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\nats\%NATS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "NATS_VERSION=%NATS_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%KUBERNETES_K0S_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\kubernetes-k0s\%KUBERNETES_K0S_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "KUBERNETES_K0S_VERSION=%KUBERNETES_K0S_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

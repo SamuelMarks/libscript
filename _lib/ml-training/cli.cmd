@@ -3,9 +3,10 @@
 ::
 :: ## Overview
 :: Command-line interface entry point for TPU VM eval node ML training stack.
+:: Routes deploy and teardown subcommands directly and delegates standard verbs to component_core.cmd.
 ::
 :: ## Usage
-:: cli.cmd cli.cmd [action]
+:: cli.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,6 +50,17 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+
+if /i "%~1"=="deploy" (
+    shift
+    call "!SCRIPT_DIR!\deploy.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+if /i "%~1"=="teardown" (
+    shift
+    call "!SCRIPT_DIR!\teardown.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
 
 set "PACKAGE_NAME=tpu-vm-eval-node"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*

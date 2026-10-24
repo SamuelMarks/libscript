@@ -59,7 +59,7 @@ configure_hashicorp_repo_debian() {
   priv mkdir -p /usr/share/keyrings
 
   key_tmp=$(mktemp)
-  curl -fsSL https://apt.releases.hashicorp.com/gpg -o "$key_tmp"
+  libscript_download "https://apt.releases.hashicorp.com/gpg" "$key_tmp"
   priv gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg --yes < "$key_tmp"
   rm -f "$key_tmp"
 
@@ -153,7 +153,7 @@ case "$ACTION" in
       zip_url="https://releases.hashicorp.com/packer/${ver}/packer_${ver}_${os}_${arch}.zip"
       zip_tmp=$(mktemp)
       log_info "Downloading Packer binary from $zip_url..."
-      curl -fsSL "$zip_url" -o "$zip_tmp"
+      libscript_download "$zip_url" "$zip_tmp"
       unzip -q -o "$zip_tmp" -d "$target_dir"
       chmod +x "$target_dir/packer"
       rm -f "$zip_tmp"

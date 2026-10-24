@@ -61,3 +61,10 @@ if "%PYTHON_SERVER_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "PYTHON_SERVER_VERSION=%PYTHON_SERVER_VERSION%"
+)
+exit /b 0

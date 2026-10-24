@@ -181,7 +181,7 @@ exit /b 0
 if not "!SHARED_DB!"=="" (
     echo [INFO] Provisioning shared DB ^(!SHARED_DB!^) on !TARGET_HOST! ^(if missing^)...
     if "!SHARED_DB!"=="postgres" (
-        ssh "!TARGET_HOST!" "command -v psql >/dev/null 2>&1 || $HOME/libscript/libscript.sh install !SHARED_DB! latest; pg_isready >/dev/null 2>&1 || $HOME/libscript/libscript.sh start !SHARED_DB!"
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || $HOME/libscript/libscript.sh install !SHARED_DB! latest; if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || $HOME/libscript/libscript.sh start !SHARED_DB!"
     ) else (
         ssh "!TARGET_HOST!" "$HOME/libscript/libscript.sh install !SHARED_DB! latest && $HOME/libscript/libscript.sh start !SHARED_DB!"
     )
@@ -204,13 +204,14 @@ exit /b 0
 :setup_app_db
 set "aname=%~1"
 set "needs_db=%~2"
+ssh "!TARGET_HOST!" "cd \"$HOME/apps/!aname!\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
 if "!needs_db!"=="1" (
     if "!SHARED_DB!"=="postgres" (
         set "safe_db_name=!aname:-=_!"
         echo [INFO] Ensuring DB !safe_db_name! exists on !TARGET_HOST!...
         REM Note: ssh execution happens on the REMOTE host. We use grep since remote is likely Linux. 
         REM If remote is Windows, this would need an OS abstraction layer, but sticking to PaaS Linux standard for now.
-        ssh "!TARGET_HOST!" "psql -lqt | cut -d \| -f 1 | grep -qw !safe_db_name! || createdb !safe_db_name!"
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; psql -lqt | cut -d \| -f 1 | grep -qw !safe_db_name! || createdb !safe_db_name!"
         ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/!safe_db_name!' $HOME/apps/!aname!/.env || echo DATABASE_URL=postgres://localhost:5432/!safe_db_name! >> $HOME/apps/!aname!/.env"
     )
 )
@@ -247,12 +248,21 @@ if not exist "!apath!\libscript.json" (
 )
 
 if "!is_static!"=="1" (
-    ssh "!TARGET_HOST!" "$HOME/libscript/_lib/networking/netctl/cli.sh route add \"!aname!\" \"!adomain!\" --static \"$HOME/!rdir!\""
+    ssh "!TARGET_HOST!" "$HOME/libscript/_lib/networking/netctl/cli.sh --domain \"!adomain!\" --listen 80 --static / \"$HOME/!rdir!\" --emit nginx"
 ) else (
-    set "remote_port=3000"
-    for /f "delims=" %%P in ('jq -r ".port // empty" "!apath!\libscript.json" 2^>nul') do (
-        if not "%%P"=="" if not "%%P"=="null" set "remote_port=%%P"
+    set "has_ingress=0"
+    if exist "!apath!\libscript.json" (
+        jq -e ".ingress != null" "!apath!\libscript.json" >nul 2>nul
+        if not errorlevel 1 set "has_ingress=1"
     )
-    ssh "!TARGET_HOST!" "$HOME/libscript/_lib/networking/netctl/cli.sh route add \"!aname!\" \"!adomain!\" --port \"!remote_port!\""
+    if "!has_ingress!"=="1" (
+        ssh "!TARGET_HOST!" "cd \"$HOME/!rdir!\" && $HOME/libscript/_lib/networking/netctl/cli.sh apply libscript.json --reload"
+    ) else (
+        set "remote_port=3000"
+        for /f "delims=" %%P in ('jq -r ".port // empty" "!apath!\libscript.json" 2^>nul') do (
+            if not "%%P"=="" if not "%%P"=="null" set "remote_port=%%P"
+        )
+        ssh "!TARGET_HOST!" "$HOME/libscript/_lib/networking/netctl/cli.sh --domain \"!adomain!\" --listen 80 --proxy / \"http://127.0.0.1:!remote_port!\" --emit nginx"
+    )
 )
 exit /b 0

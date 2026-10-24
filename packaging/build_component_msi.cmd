@@ -189,13 +189,24 @@ if "%COMPONENT%"=="" (
 
 set "BUNDLE_JSON=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\offline_bundle.json"
 if "%VERSION%"=="" if exist "%BUNDLE_JSON%" (
-    if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.version"`) do set "VERSION=%%A"
-    if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.version"`) do set "VERSION=%%A"
-    if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mongodb.version"`) do set "VERSION=%%A"
-    if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.version"`) do set "VERSION=%%A"
-    if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.version"`) do set "VERSION=%%A"
-    if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.version"`) do set "VERSION=%%A"
-    if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).webservers.caddy.version"`) do set "VERSION=%%A"
+    where jq >nul 2>&1
+    if not errorlevel 1 (
+        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`jq -r ".databases.mysql.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`jq -r ".databases.redis.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`jq -r ".databases.mongodb.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`jq -r ".runtimes.python.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`jq -r ".runtimes.nodejs.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`jq -r ".databases.meilisearch.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`jq -r ".webservers.caddy.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+    ) else (
+        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.version"`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.version"`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mongodb.version"`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.version"`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.version"`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.version"`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).webservers.caddy.version"`) do set "VERSION=%%A"
+    )
 )
 if "%VERSION%"=="" set "VERSION=1.0.0"
 

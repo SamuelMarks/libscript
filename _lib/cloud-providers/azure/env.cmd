@@ -61,3 +61,10 @@ if "%AZURE_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\azure\%AZURE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "AZURE_VERSION=%AZURE_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

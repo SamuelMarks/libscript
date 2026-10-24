@@ -284,8 +284,31 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
 
 else
   # ----------------------------------------------------
-  # TRADITIONAL INSTALL.JSON BACKWARD COMPATIBLE MODE
+  # TRADITIONAL INSTALL.JSON & MODERN LIBSCRIPT.JSON MODE
   # ----------------------------------------------------
+  def normalize_pkg_alias(name):
+    (name | tostring | ascii_downcase) as $n |
+    if $n == "postgresql" then "postgres"
+    elif $n == "node" then "nodejs"
+    elif $n == "redis" then "valkey"
+    else name
+    end;
+
+  def parse_dep_item(layer_name):
+    if type == "string" then
+      {layer: layer_name, type: "name", val: normalize_pkg_alias(.), version: "latest"}
+    elif type == "object" then
+      if .name then
+        {layer: layer_name, type: "name", val: normalize_pkg_alias(.name), version: ((.version // "latest") | tostring), ports: .ports, override: .override}
+      elif .anyOf then
+        {layer: layer_name, type: "anyOf", val: ([.anyOf[] | normalize_pkg_alias(.)]), version: ((.version // "latest") | tostring), ports: .ports, override: .override}
+      else
+        empty
+      end
+    else
+      empty
+    end;
+
   def resolve(reqs; state; manifests; os):
     if (reqs | length) == 0 then
       state
@@ -295,11 +318,11 @@ else
 
       (
         if $req.type == "name" then
-          ( [ manifests[] | select((.name | ascii_downcase) == ($req.val | ascii_downcase)) ] | if length == 0 then [{"name": $req.val, "provides": [], "conflicts": []}] else .[0] | .name = $req.val | [.] end ) | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
+          ( [ manifests[]? | select((.name // "" | ascii_downcase) == ($req.val | ascii_downcase)) ] | if length == 0 then [{"name": $req.val, "provides": [], "conflicts": []}] else .[0] | .name = $req.val | [.] end ) | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
         elif $req.type == "cap" then
-          [ manifests[] | select(.provides != null and (.provides | index($req.val) != null)) ] | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
+          [ manifests[]? | select(.provides != null and (.provides | index($req.val) != null)) ] | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
         elif $req.type == "anyOf" then
-          [ manifests[] | select(.name as $n | $req.val | index($n) != null) ] | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
+          ( [ manifests[]? | select(.name as $n | $req.val | index($n) != null) ] | if length == 0 then [{"name": $req.val[0], "provides": [], "conflicts": []}] else . end ) | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
         else
           []
         end
@@ -336,20 +359,30 @@ else
       )
     end;
 
-  ($root.install.dependencies.required // {}) as $req |
+  ($root.config // $root) as $doc |
+  ($doc.install.dependencies.required // {}) as $req |
+  ($doc.deps // {}) as $flat_deps |
+  ($doc.dependencies // {}) as $struct_deps |
 
   (
-    [ ($req.databases[]?  | if .name then {layer: "databases", type: "name", val: .name, version: .version, ports: .ports, override: .override} elif .anyOf then {layer: "databases", type: "anyOf", val: .anyOf, version: .version, ports: .ports, override: .override} else empty end) ] +
-    [ ($req.servers[]?    | if .name then {layer: "servers", type: "name", val: .name, version: .version, ports: .ports, override: .override} elif .anyOf then {layer: "servers", type: "anyOf", val: .anyOf, version: .version, ports: .ports, override: .override} else empty end) ] +
-    [ ($req.toolchains[]? | if .name then {layer: "toolchains", type: "name", val: .name, version: .version, ports: .ports, override: .override} elif .anyOf then {layer: "toolchains", type: "anyOf", val: .anyOf, version: .version, ports: .ports, override: .override} else empty end) ] +
+    [ ($flat_deps | if type == "object" then to_entries[] | {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (if .value == null or .value == "" then "latest" else (.value | tostring) end)} elif type == "array" then .[] | parse_dep_item("deps") else empty end) ] +
+    [ ($struct_deps | if type == "array" then .[] | parse_dep_item("runtime") elif type == "object" then (
+        ((.runtime // [])[]? | parse_dep_item("runtime")),
+        ((.build // [])[]? | parse_dep_item("build")),
+        ((.optional // [])[]? | parse_dep_item("optional")),
+        (to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional" and .key != "required") | if (.value | type) == "string" or (.value | type) == "number" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (.value | tostring)} else empty end)
+      ) else empty end) ] +
+    [ ($req.databases[]?  | parse_dep_item("databases")) ] +
+    [ ($req.servers[]?    | parse_dep_item("servers")) ] +
+    [ ($req.toolchains[]? | parse_dep_item("toolchains")) ] +
     [ ($req.capabilities[]? | {type: "cap", val: .}) ] +
-    [ ($root.install.wwwroot[]?.dependencies.required.capabilities[]? | {type: "cap", val: .}) ] +
-    [ ($root.install.wwwroot[]?.dependencies.required.databases[]?  | if .name then {layer: "databases", type: "name", val: .name, version: .version, ports: .ports, override: .override} elif .anyOf then {layer: "databases", type: "anyOf", val: .anyOf, version: .version, ports: .ports, override: .override} else empty end) ] +
-    [ ($root.install.wwwroot[]?.dependencies.required.servers[]?    | if .name then {layer: "servers", type: "name", val: .name, version: .version, ports: .ports, override: .override} elif .anyOf then {layer: "servers", type: "anyOf", val: .anyOf, version: .version, ports: .ports, override: .override} else empty end) ] +
-    [ ($root.install.wwwroot[]?.dependencies.required.toolchains[]? | if .name then {layer: "toolchains", type: "name", val: .name, version: .version, ports: .ports, override: .override} elif .anyOf then {layer: "toolchains", type: "anyOf", val: .anyOf, version: .version, ports: .ports, override: .override} else empty end) ] 
+    [ ($doc.install.wwwroot[]?.dependencies.required.capabilities[]? | {type: "cap", val: .}) ] +
+    [ ($doc.install.wwwroot[]?.dependencies.required.databases[]?  | parse_dep_item("databases")) ] +
+    [ ($doc.install.wwwroot[]?.dependencies.required.servers[]?    | parse_dep_item("servers")) ] +
+    [ ($doc.install.wwwroot[]?.dependencies.required.toolchains[]? | parse_dep_item("toolchains")) ]
   ) as $requirements |
 
-  resolve($requirements; {selected: [], conflicts: [], provided: [], ports: []}; $root.manifests; $target_os) as $solution |
+  resolve($requirements; {selected: [], conflicts: [], provided: [], ports: []}; ($root.manifests // []); $target_os) as $solution |
 
   if $solution == null then
     error("UNSATISFIABLE: Could not resolve capabilities and constraints. Check install.json and component manifests.")

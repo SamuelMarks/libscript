@@ -51,3 +51,8 @@ goto :find_root
 :root_found
 
 call "%~dp0\..\..\_common\env_base.cmd" %*
+
+endlocal & (
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%CHOCO_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\choco\%CHOCO_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CHOCO_VERSION=%CHOCO_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

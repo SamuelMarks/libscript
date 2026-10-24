@@ -61,3 +61,10 @@ if "%PSMUX_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\psmux\%PSMUX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "PSMUX_VERSION=%PSMUX_VERSION%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%MAMBA_VERSION%"=="" SET "MAMBA_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\mamba\%MAMBA_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "MAMBA_VERSION=%MAMBA_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

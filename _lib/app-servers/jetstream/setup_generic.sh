@@ -146,7 +146,7 @@ case "$ACTION" in
           . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
         _py_ver=""
-        if python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+        if command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'; then
           _py_ver=""
         elif command -v python3.11 >/dev/null 2>&1; then
           _py_ver="3.11"

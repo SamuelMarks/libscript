@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%EMERGE_VERSION%"=="" SET "EMERGE_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\emerge\%EMERGE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "EMERGE_VERSION=%EMERGE_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

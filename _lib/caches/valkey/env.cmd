@@ -61,3 +61,10 @@ if "%VALKEY_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "VALKEY_VERSION=%VALKEY_VERSION%"
+)
+exit /b 0

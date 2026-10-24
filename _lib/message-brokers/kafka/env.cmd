@@ -61,3 +61,10 @@ if "%KAFKA_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\kafka\%KAFKA_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "KAFKA_VERSION=%KAFKA_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

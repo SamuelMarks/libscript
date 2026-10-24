@@ -178,7 +178,7 @@ if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nodejs %NODEJS_VERSION% to %DOWNLOAD_DIR%\nodejs...
     if not exist "%DOWNLOAD_DIR%\nodejs" mkdir "%DOWNLOAD_DIR%\nodejs"
     if not "%NODEJS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%NODEJS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NODEJS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.zip"
     ) else (
         echo NODEJS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -189,7 +189,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NODEJS_INSTALL_METHOD%"=="system" (
-    winget install nodejs --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nodejs
     exit /b !errorlevel!
 )
 if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise install "nodejs@%NODEJS_VERSION%" & exit /b 0 )
@@ -220,7 +220,7 @@ if not exist "%TARGET_DIR%\bin\node.exe" if not exist "%TARGET_DIR%\node.exe" (
         tar -xf "%DOWNLOAD_DIR%\nodejs\nodejs-%NODEJS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NODEJS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%NODEJS_DOWNLOAD_URL%" -o "%TEMP%\nodejs.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NODEJS_DOWNLOAD_URL%" "%TEMP%\nodejs.zip"
         tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%"
     ) else (
         set "_NODE_ARCH=x64"
@@ -231,19 +231,13 @@ if not exist "%TARGET_DIR%\bin\node.exe" if not exist "%TARGET_DIR%\node.exe" (
         if not "!_NODE_VER:~0,1!"=="v" set "_NODE_VER=v!_NODE_VER!"
         set "_NODE_URL=https://nodejs.org/dist/!_NODE_VER!/node-!_NODE_VER!-win-!_NODE_ARCH!.zip"
         echo Downloading Node.js from !_NODE_URL!...
-        curl -f -sSL "!_NODE_URL!" -o "%TEMP%\nodejs.zip" 2>nul
-        if not errorlevel 1 (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_NODE_URL!" "%TEMP%\nodejs.zip"
+        if not errorlevel 1 if exist "%TEMP%\nodejs.zip" (
             tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%"
             if exist "%TARGET_DIR%\node.exe" copy /y "%TARGET_DIR%\node.exe" "%TARGET_DIR%\bin\node.exe" >nul 2>&1
             del /f /q "%TEMP%\nodejs.zip" 2>nul
         ) else (
-            where winget >nul 2>&1
-            if not errorlevel 1 (
-                winget install --id OpenJS.NodeJS.LTS -e --silent --accept-package-agreements --accept-source-agreements
-            ) else (
-                echo No download URL or cache available for nodejs.
-                exit /b 1
-            )
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nodejs
         )
     )
 ) else (
@@ -253,6 +247,11 @@ set "ALIAS_DIR=%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
     mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+set "DEFAULT_DIR=%LIBSCRIPT_HOME%\nodejs\default"
+if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
+    if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%" 2>nul
+    mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
 # Executes defined lifecycle hooks from an install manifest on Unix-like systems.
+# Supports both .hooks and .lifecycle_hooks, working_dir, OS filtering, and conditional execution.
 #
 # ## Usage
-# Run `run_hooks.sh <json_file> <hook_type>` (e.g. pre_install, post_install) to parse and execute commands.
-
+# Run `run_hooks.sh <json_file> <hook_type>` (e.g. pre_install, post_install, build, db_migrate, pre_start) to parse and execute commands.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,56 +21,151 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
 # @description Automatically handles run_hooks for the run_hooks.sh (orchestration) component.
 # @file run_hooks.sh
 
-
-# run_hooks.sh <json_file> <hook_type>
-JSON_FILE="$1"
-HOOK_TYPE="$2"
+JSON_FILE="${1:-}"
+HOOK_TYPE="${2:-}"
 
 SCRIPT_DIR=$(cd "${SCRIPT_DIR}" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
 
-if [ ! -f "$JSON_FILE" ]; then exit 0; fi
+if [ -z "$JSON_FILE" ] || [ -z "$HOOK_TYPE" ] || [ ! -f "$JSON_FILE" ]; then
+  exit 0
+fi
 
-HOOKS=$(jq -c ".hooks.${HOOK_TYPE}[]?" "$JSON_FILE" 2>/dev/null || true)
+MANIFEST_DIR=$(cd -- "$(dirname -- "$JSON_FILE")" && pwd)
 
-if [ -z "$HOOKS" ]; then exit 0; fi
+if [ -f "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh" ]; then
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "$SCRIPT_NAME"
+  libscript_hydrate_manifest_env "$JSON_FILE"
+fi
+
+if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
+  OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+  case "$OS_NAME" in
+    linux*) CURRENT_OS="linux" ;;
+    darwin*) CURRENT_OS="darwin" ;;
+    freebsd*) CURRENT_OS="freebsd" ;;
+    msys*|cygwin*|mingw*) CURRENT_OS="windows" ;;
+    *) CURRENT_OS="$OS_NAME" ;;
+  esac
+else
+  CURRENT_OS="$LIBSCRIPT_TARGET_OS"
+fi
+
+HOOKS=$(jq -c --arg ht "$HOOK_TYPE" '((.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // []))[]?' "$JSON_FILE" 2>/dev/null || true)
+
+if [ -z "$HOOKS" ]; then
+  exit 0
+fi
+
+# ## resolve_hook_path
+# Resolves a path relative to the hook working directory if not absolute.
+resolve_hook_path() {
+  _hp="$1"
+  _wd="$2"
+  if [ "${_hp#/}" != "$_hp" ]; then
+    printf '%s
+' "$_hp"
+  else
+    printf '%s
+' "${_wd}/${_hp}"
+  fi
+}
 
 log_info "Running $HOOK_TYPE hooks..."
-printf '%s\n' "$HOOKS" | while read -r hook; do
-    if printf '%s\n' "$hook" | grep -q '^{'; then
-        NAME=$(printf '%s\n' "$hook" | jq -r '.name // "unnamed_hook"')
-        cmd=$(printf '%s\n' "$hook" | jq -r '.command // empty')
-        COND=$(printf '%s\n' "$hook" | jq -r '.condition // empty')
+printf '%s
+' "$HOOKS" | while IFS= read -r hook; do
+  [ -n "$hook" ] || continue
+  if printf '%s
+' "$hook" | grep -q '^{'; then
+    NAME=$(printf '%s
+' "$hook" | jq -r '.name // "unnamed_hook"')
+    cmd=$(printf '%s
+' "$hook" | jq -r '.command // empty')
+    COND=$(printf '%s
+' "$hook" | jq -r '.condition // empty')
+    RAW_WD=$(printf '%s
+' "$hook" | jq -r '.working_dir // .cwd // "."')
 
-        if [ -n "$COND" ]; then
-            if printf '%s\n' "$COND" | grep -q "^unless_exists "; then
-                FILE=$(printf '%s\n' "$COND" | sed 's/^unless_exists //')
-                if [ -e "$FILE" ]; then
-                    log_info "Skipping hook '$NAME': $FILE exists"
-                    continue
-                fi
-            fi
-        fi
+    # OS filter check
+    OS_MATCH=$(printf '%s
+' "$hook" | jq -r --arg os "$CURRENT_OS" '
+      (.os // .platform) as $p |
+      if $p == null then "1"
+      elif ($p | type) == "string" then (if ($p | ascii_downcase) == $os or ($p | ascii_downcase) == "all" or ($p | ascii_downcase) == "posix" or ($p | ascii_downcase) == "unix" then "1" else "0" end)
+      elif ($p | type) == "array" then (if ([ $p[] | ascii_downcase ] | index($os) != null or index("all") != null or index("posix") != null or index("unix") != null) then "1" else "0" end)
+      else "1" end
+    ' 2>/dev/null || printf '1')
 
-        if [ -n "$cmd" ]; then
-            log_info "Executing hook '$NAME': $cmd"
-            sh -c "$cmd"
-        fi
-    else
-        # Handle simple string array format
-        cmd=$(printf '%s\n' "$hook" | sed 's/^"//; s/"$//')
-        log_info "Executing hook: $cmd"
-        sh -c "$cmd"
+    if [ "$OS_MATCH" = "0" ]; then
+      log_info "Skipping hook '$NAME': OS filter does not match $CURRENT_OS"
+      continue
     fi
+
+    if [ -z "$RAW_WD" ] || [ "$RAW_WD" = "." ]; then
+      HOOK_WD="$MANIFEST_DIR"
+    elif [ "${RAW_WD#/}" != "$RAW_WD" ]; then
+      HOOK_WD="$RAW_WD"
+    else
+      HOOK_WD="${MANIFEST_DIR}/${RAW_WD}"
+    fi
+
+    if [ -n "$COND" ]; then
+      if printf '%s
+' "$COND" | grep -q "^unless_exists "; then
+        FILE=$(printf '%s
+' "$COND" | sed 's/^unless_exists //')
+        TARGET_FILE=$(resolve_hook_path "$FILE" "$HOOK_WD")
+        if [ -e "$TARGET_FILE" ] || [ -e "$FILE" ]; then
+          log_info "Skipping hook '$NAME': $FILE exists"
+          continue
+        fi
+      elif printf '%s
+' "$COND" | grep -q "^if_exists "; then
+        FILE=$(printf '%s
+' "$COND" | sed 's/^if_exists //')
+        TARGET_FILE=$(resolve_hook_path "$FILE" "$HOOK_WD")
+        if [ ! -e "$TARGET_FILE" ] && [ ! -e "$FILE" ]; then
+          log_info "Skipping hook '$NAME': $FILE does not exist"
+          continue
+        fi
+      elif printf '%s
+' "$COND" | grep -q "^unless_command "; then
+        CHK_CMD=$(printf '%s
+' "$COND" | sed 's/^unless_command //')
+        if command -v "$CHK_CMD" >/dev/null 2>&1; then
+          log_info "Skipping hook '$NAME': command $CHK_CMD already in PATH"
+          continue
+        fi
+      fi
+    fi
+
+    if [ -n "$cmd" ]; then
+      log_info "Executing hook '$NAME' (in $HOOK_WD): $cmd"
+      (cd "$HOOK_WD" && sh -c "$cmd")
+    fi
+  else
+    cmd=$(printf '%s
+' "$hook" | sed 's/^"//; s/"$//')
+    if [ -n "$cmd" ]; then
+      log_info "Executing hook (in $MANIFEST_DIR): $cmd"
+      (cd "$MANIFEST_DIR" && sh -c "$cmd")
+    fi
+  fi
 done

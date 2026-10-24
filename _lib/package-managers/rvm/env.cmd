@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%RVM_VERSION%"=="" SET "RVM_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\rvm\%RVM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "RVM_VERSION=%RVM_VERSION%"
+)
+exit /b 0

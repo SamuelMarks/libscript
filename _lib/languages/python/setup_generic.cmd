@@ -178,7 +178,7 @@ if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading python %PYTHON_VERSION% to %DOWNLOAD_DIR%\python...
     if not exist "%DOWNLOAD_DIR%\python" mkdir "%DOWNLOAD_DIR%\python"
     if not "%PYTHON_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PYTHON_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip"
     ) else (
         echo PYTHON_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -189,11 +189,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PYTHON_INSTALL_METHOD%"=="system" (
-    if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
-        winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
-    ) else (
-        winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements || winget install --id Python.Python.3.10 -e --source winget -a x64 --accept-package-agreements --accept-source-agreements
-    )
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
     exit /b !errorlevel!
 )
 if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise install "python@%PYTHON_VERSION%" & exit /b 0 )
@@ -226,21 +222,17 @@ if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe
         tar -xf "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PYTHON_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PYTHON_DOWNLOAD_URL%" -o "%TEMP%\python.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_DOWNLOAD_URL%" "%TEMP%\python.zip"
         tar -xf "%TEMP%\python.zip" -C "%TARGET_DIR%"
     ) else (
         if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
-            where winget >nul 2>&1
-            if not errorlevel 1 (
-                echo Installing Python 3.12 via winget...
-                winget install --id Python.Python.3.12 -e --silent --accept-package-agreements --accept-source-agreements
-            )
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
         )
         if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe" (
             echo Downloading portable Python 3.12...
             set "_PY_ARCH=amd64"
             if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_PY_ARCH=arm64"
-            curl -fSL "https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-!_PY_ARCH!.zip" -o "%TEMP%\python-embed.zip"
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-!_PY_ARCH!.zip" "%TEMP%\python-embed.zip"
             if exist "%TEMP%\python-embed.zip" (
                 tar -xf "%TEMP%\python-embed.zip" -C "%TARGET_DIR%\bin" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\python-embed.zip' -DestinationPath '%TARGET_DIR%\bin' -Force"
                 copy /y "%TARGET_DIR%\bin\python.exe" "%TARGET_DIR%\python.exe" >nul 2>&1
@@ -254,6 +246,11 @@ set "ALIAS_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
     mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+set "DEFAULT_DIR=%LIBSCRIPT_HOME%\python\default"
+if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
+    if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%" 2>nul
+    mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

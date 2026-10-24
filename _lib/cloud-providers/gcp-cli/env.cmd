@@ -54,3 +54,10 @@ goto :find_root
 if "%GCP_CLI_ENABLED%"=="" set "GCP_CLI_ENABLED=1"
 if "%CLI_VERSION%"=="" set "CLI_VERSION=latest"
 set "PATH=%LIBSCRIPT_HOME%\cli\%CLI_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CLI_VERSION=%CLI_VERSION%"
+    set "GCP_CLI_ENABLED=%GCP_CLI_ENABLED%"
+    set "PATH=%PATH%"
+)
+exit /b 0

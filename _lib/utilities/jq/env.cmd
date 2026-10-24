@@ -61,3 +61,10 @@ if "%JQ_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\jq\%JQ_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "JQ_VERSION=%JQ_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

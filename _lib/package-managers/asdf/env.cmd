@@ -61,3 +61,10 @@ if "%ASDF_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "ASDF_VERSION=%ASDF_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

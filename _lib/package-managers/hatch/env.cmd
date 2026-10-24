@@ -56,3 +56,10 @@ if "%HATCH_VERSION%"=="" (
     set "HATCH_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\hatch\%HATCH_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "HATCH_VERSION=%HATCH_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -60,3 +60,10 @@ if "%VAGRANT_VERSION%"=="" (
 if exist "%LIBSCRIPT_HOME%\vagrant\%VAGRANT_VERSION%\bin" (
     set "PATH=%LIBSCRIPT_HOME%\vagrant\%VAGRANT_VERSION%\bin;%PATH%"
 )
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "VAGRANT_VERSION=%VAGRANT_VERSION%"
+)
+exit /b 0

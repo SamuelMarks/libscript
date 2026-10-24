@@ -61,3 +61,10 @@ if "%CARGO_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\cargo\%CARGO_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CARGO_VERSION=%CARGO_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -89,11 +89,25 @@ if "!is_json!"=="1" (
     if "!skip_hooks!"=="0" (
         if /i "!action!"=="start" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+            )
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
         )
         if /i "!action!"=="up" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+            )
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
+        )
+        if /i "!action!"=="stop" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_stop"
+        )
+        if /i "!action!"=="down" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_stop"
         )
     )
     call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
@@ -108,17 +122,45 @@ if "!is_json!"=="1" (
     
     if /i "!action!"=="start" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        jq -e ".ingress != null" "!json_file!" >nul 2>&1
+        if not errorlevel 1 (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+        )
+        if "!skip_hooks!"=="0" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_start"
+        )
     ) else if /i "!action!"=="up" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        jq -e ".ingress != null" "!json_file!" >nul 2>&1
+        if not errorlevel 1 (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+        )
+        if "!skip_hooks!"=="0" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_start"
+        )
     ) else if /i "!action!"=="stop" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        if "!skip_hooks!"=="0" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_stop"
+        )
     ) else if /i "!action!"=="down" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        if "!skip_hooks!"=="0" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_stop"
+        )
     ) else if /i "!action!"=="status" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+    ) else if /i "!action!"=="health" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+    ) else if /i "!action!"=="logs" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
     ) else if /i "!action!"=="restart" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "stop" "!json_file!"
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "start" "!json_file!"
+        jq -e ".ingress != null" "!json_file!" >nul 2>&1
+        if not errorlevel 1 (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+        )
     )
 
     exit /b 0

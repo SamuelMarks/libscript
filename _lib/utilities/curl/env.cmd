@@ -61,3 +61,10 @@ if "%CURL_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\curl\%CURL_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CURL_VERSION=%CURL_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

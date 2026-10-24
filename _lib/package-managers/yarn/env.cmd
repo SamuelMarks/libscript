@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%YARN_VERSION%"=="" SET "YARN_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\yarn\%YARN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "YARN_VERSION=%YARN_VERSION%"
+)
+exit /b 0

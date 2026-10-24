@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/payloads/ai/gke-xpk-training/vars.schema.json",
+  "title": "GKE XPK Training Payload Variables",
+  "description": "Configuration variables for multi-slice GKE XPK distributed TPU training workloads.",
+  "type": "object",
+  "properties": {
+    "XPK_CLUSTER_NAME": {
+      "description": "Name of the target GKE XPK cluster.",
+      "type": "string",
+      "default": "ml-xpk-cluster"
+    },
+    "WORKLOAD_NAME": {
+      "description": "Unique identifier for the XPK training workload.",
+      "type": "string",
+      "default": "ml-training-job"
+    },
+    "TRAIN_SCRIPT": {
+      "description": "Training entrypoint command executed inside the container across TPU slices.",
+      "type": "string",
+      "default": "python train.py"
+    },
+    "DOCKER_IMAGE": {
+      "description": "Container image containing the JAX/MaxText/PyTorch training environment.",
+      "type": "string"
+    },
+    "TPU_ACCELERATOR_TYPE": {
+      "description": "TPU accelerator topology (e.g. v4-8, v5litepod-16, v5p-8).",
+      "type": "string",
+      "default": "v4-8"
+    },
+    "TPU_SLICE_COUNT": {
+      "description": "Number of TPU slices for multi-slice data-parallel / FSDP training.",
+      "type": "string",
+      "default": "1"
+    },
+    "TPU_SCHEDULING_TYPE": {
+      "description": "Provisioning scheduling mode ('spot' for TFRC/preemptible or 'on-demand').",
+      "type": "string",
+      "enum": ["spot", "on-demand"]
+    },
+    "GCP_PROJECT_ID": {
+      "description": "Google Cloud Project ID hosting the GKE XPK cluster.",
+      "type": "string"
+    },
+    "GCP_ZONE": {
+      "description": "Google Cloud compute zone where the TPU nodes reside.",
+      "type": "string"
+    },
+    "HF_TOKEN": {
+      "description": "Optional Hugging Face authentication token injected into the workload.",
+      "type": "string"
+    }
+  }
+}

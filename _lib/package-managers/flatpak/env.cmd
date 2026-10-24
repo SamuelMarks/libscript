@@ -56,3 +56,10 @@ if "%FLATPAK_VERSION%"=="" (
     set "FLATPAK_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\flatpak\%FLATPAK_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "FLATPAK_VERSION=%FLATPAK_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

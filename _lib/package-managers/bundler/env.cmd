@@ -61,3 +61,10 @@ if "%BUNDLER_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\bundler\%BUNDLER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "BUNDLER_VERSION=%BUNDLER_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

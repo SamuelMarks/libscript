@@ -61,3 +61,10 @@ if "%OPENRC_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "OPENRC_VERSION=%OPENRC_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

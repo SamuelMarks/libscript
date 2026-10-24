@@ -67,3 +67,10 @@ if exist "%~dp0..\..\languages\bun\env.cmd" (
 ) else (
     set "PATH=%LIBSCRIPT_HOME%\bun\latest\bin;%USERPROFILE%\.bun\bin;%PATH%"
 )
+
+endlocal & (
+    set "BUN_PM_VERSION=%BUN_PM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

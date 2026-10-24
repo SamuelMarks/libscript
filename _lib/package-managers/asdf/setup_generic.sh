@@ -178,7 +178,11 @@ case "$ACTION" in
           'x86_64') arch='amd64' ;;
           'aarch64'|'arm64') arch='arm64' ;;
         esac
-        curl -sSL "https://github.com/asdf-vm/asdf/releases/download/v${EXACT_VERSION}/asdf-v${EXACT_VERSION}-${os}-${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" || true
+        _asdf_tar=$(mktemp)
+        if libscript_download "https://github.com/asdf-vm/asdf/releases/download/v${EXACT_VERSION}/asdf-v${EXACT_VERSION}-${os}-${arch}.tar.gz" "${_asdf_tar}"; then
+          tar -xzf "${_asdf_tar}" -C "${TARGET_DIR}/bin" || true
+        fi
+        rm -f "${_asdf_tar}"
         chmod +x "${TARGET_DIR}/bin/asdf" || true
       fi
       libscript_symlink_alias "asdf" "$VERSION" "${EXACT_VERSION}"

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%YAY_VERSION%"=="" SET "YAY_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\yay\%YAY_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "YAY_VERSION=%YAY_VERSION%"
+)
+exit /b 0

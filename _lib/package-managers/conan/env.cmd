@@ -61,3 +61,10 @@ if "%CONAN_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\conan\%CONAN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CONAN_VERSION=%CONAN_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

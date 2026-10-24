@@ -56,3 +56,10 @@ if "%GUIX_VERSION%"=="" (
     set "GUIX_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GUIX_VERSION=%GUIX_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

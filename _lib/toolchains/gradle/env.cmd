@@ -61,3 +61,10 @@ if "%GRADLE_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\gradle\%GRADLE_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GRADLE_VERSION=%GRADLE_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

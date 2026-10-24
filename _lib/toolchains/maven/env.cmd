@@ -61,3 +61,10 @@ if "%MAVEN_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MAVEN_VERSION=%MAVEN_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%SCOOP_VERSION%"=="" SET "SCOOP_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\scoop\%SCOOP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "SCOOP_VERSION=%SCOOP_VERSION%"
+)
+exit /b 0

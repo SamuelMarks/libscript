@@ -52,3 +52,8 @@ goto :find_root
 :root_found
 
 if not "%MAGENTO_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%MAGENTO_LISTEN%"
+
+endlocal & (
+    set "LIBSCRIPT_LISTEN_PORT=%LIBSCRIPT_LISTEN_PORT%"
+)
+exit /b 0

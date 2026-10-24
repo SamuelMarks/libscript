@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PYENV_VERSION%"=="" SET "PYENV_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pyenv\%PYENV_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PYENV_VERSION=%PYENV_VERSION%"
+)
+exit /b 0

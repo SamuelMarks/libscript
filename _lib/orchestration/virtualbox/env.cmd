@@ -54,3 +54,8 @@ goto :find_root
 if exist "C:\Program Files\Oracle\VirtualBox" (
     set "PATH=C:\Program Files\Oracle\VirtualBox;%PATH%"
 )
+
+endlocal & (
+    set "PATH=%PATH%"
+)
+exit /b 0

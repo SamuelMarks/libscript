@@ -56,3 +56,10 @@ if "%EOPKG_VERSION%"=="" (
     set "EOPKG_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\eopkg\%EOPKG_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "EOPKG_VERSION=%EOPKG_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

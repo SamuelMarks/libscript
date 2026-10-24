@@ -127,7 +127,13 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     if [ "$skip_hooks" -eq 0 ]; then
       if [ "$action" = "start" ] || [ "$action" = "up" ]; then
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
+        if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" ]; then
+          "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" "$json_file"
+        fi
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_start"
+      elif [ "$action" = "stop" ] || [ "$action" = "down" ]; then
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_stop"
       fi
     fi
 
@@ -155,13 +161,25 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
 
     if [ "$action" = "start" ] || [ "$action" = "up" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
+      if jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/networking/netctl/cli.sh" apply "$json_file" --reload || true
+      fi
+      if [ "$skip_hooks" -eq 0 ]; then
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_start"
+      fi
     elif [ "$action" = "stop" ] || [ "$action" = "down" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
-    elif [ "$action" = "status" ]; then
+      if [ "$skip_hooks" -eq 0 ]; then
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_stop"
+      fi
+    elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
     elif [ "$action" = "restart" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "stop" "$json_file"
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "start" "$json_file"
+      if jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/networking/netctl/cli.sh" apply "$json_file" --reload || true
+      fi
     fi
 
     wait

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/android-sdk/vars.schema.json",
+  "title": "Android SDK variables",
+  "description": "Configuration variables for the Android SDK command-line tools recipe",
+  "type": "object",
+  "properties": {
+    "ANDROID_SDK_VERSION": {
+      "description": "Revision number of Google Android commandlinetools to install (or 'latest').",
+      "type": "string",
+      "default": "11076708"
+    },
+    "ANDROID_PLATFORM": {
+      "description": "Android SDK platform package identifier to install via sdkmanager.",
+      "type": "string",
+      "default": "platforms;android-34"
+    },
+    "ANDROID_BUILD_TOOLS": {
+      "description": "Android SDK build-tools package identifier to install via sdkmanager.",
+      "type": "string",
+      "default": "build-tools;34.0.0"
+    },
+    "ANDROID_SDK_DOWNLOAD_URL": {
+      "description": "Optional explicit download URL override for the commandlinetools archive.",
+      "type": "string"
+    }
+  }
+}

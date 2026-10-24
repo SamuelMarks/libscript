@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PKGX_VERSION%"=="" SET "PKGX_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pkgx\%PKGX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PKGX_VERSION=%PKGX_VERSION%"
+)
+exit /b 0

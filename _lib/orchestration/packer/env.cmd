@@ -60,3 +60,10 @@ if "%PACKER_VERSION%"=="" (
 if exist "%LIBSCRIPT_HOME%\packer\%PACKER_VERSION%\bin" (
     set "PATH=%LIBSCRIPT_HOME%\packer\%PACKER_VERSION%\bin;%PATH%"
 )
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PACKER_VERSION=%PACKER_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

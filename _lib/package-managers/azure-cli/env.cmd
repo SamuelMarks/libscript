@@ -61,3 +61,10 @@ if "%AZURE_CLI_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\azure-cli\%AZURE_CLI_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "AZURE_CLI_VERSION=%AZURE_CLI_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

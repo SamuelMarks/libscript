@@ -61,3 +61,10 @@ if "%CARGO_BINSTALL_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\cargo-binstall\%CARGO_BINSTALL_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "CARGO_BINSTALL_VERSION=%CARGO_BINSTALL_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

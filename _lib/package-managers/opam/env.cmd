@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%OPAM_VERSION%"=="" SET "OPAM_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\opam\%OPAM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "OPAM_VERSION=%OPAM_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

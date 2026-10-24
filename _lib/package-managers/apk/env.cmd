@@ -61,3 +61,10 @@ if "%APK_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\apk\%APK_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "APK_VERSION=%APK_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

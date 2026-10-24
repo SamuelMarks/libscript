@@ -56,3 +56,10 @@ if "%FNM_VERSION%"=="" (
     set "FNM_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "FNM_VERSION=%FNM_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

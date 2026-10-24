@@ -56,3 +56,10 @@ if "%GHCUP_VERSION%"=="" (
     set "GHCUP_VERSION=latest"
 )
 set "PATH=%LIBSCRIPT_HOME%\ghcup\%GHCUP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GHCUP_VERSION=%GHCUP_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

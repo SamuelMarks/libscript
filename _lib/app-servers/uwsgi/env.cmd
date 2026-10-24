@@ -59,3 +59,11 @@ if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if exist "%LIBSCRIPT_HOME%\uwsgi\%UWSGI_VERSION%\bin" (
     set "PATH=%LIBSCRIPT_HOME%\uwsgi\%UWSGI_VERSION%\bin;%PATH%"
 )
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "UWSGI_VERSION=%UWSGI_VERSION%"
+    set "UWSGI_WORKERS=%UWSGI_WORKERS%"
+)
+exit /b 0

@@ -99,6 +99,13 @@ audit_component_dir() {
     fi
   fi
 
+  # 3b. Verify env.cmd exports across endlocal boundary if setlocal is used
+  if [ -f "${_comp_dir}/env.cmd" ]; then
+    if grep -qi "setlocal" "${_comp_dir}/env.cmd" && ! grep -qi "endlocal" "${_comp_dir}/env.cmd"; then
+      log_vm_violation "${_rel_dir}/env.cmd" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; environment mutations will be lost on return."
+    fi
+  fi
+
   # 4. Verify Tier 1 leaf recipes do not invoke kernel/partitioning primitives
   case "$_rel_dir" in
     _lib/orchestration/*|_lib/storage/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/base-system/*|_lib/virtualization/*|_lib/cloud/*|_lib/cloud-providers/*)

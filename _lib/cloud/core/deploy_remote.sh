@@ -89,7 +89,7 @@ provision_shared_db() {
     log_info "Provisioning shared DB ($SHARED_DB) on $TARGET_HOST (if missing)..."
     if [ "$SHARED_DB" = "postgres" ]; then
       # shellcheck disable=SC2029
-      ssh "$TARGET_HOST" "command -v psql >/dev/null 2>&1 || \$HOME/libscript/libscript.sh install $SHARED_DB latest; pg_isready >/dev/null 2>&1 || \$HOME/libscript/libscript.sh start $SHARED_DB"
+      ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || \$HOME/libscript/libscript.sh install $SHARED_DB latest; if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || \$HOME/libscript/libscript.sh start $SHARED_DB"
     else
       # shellcheck disable=SC2029
       ssh "$TARGET_HOST" "\$HOME/libscript/libscript.sh install $SHARED_DB latest && \$HOME/libscript/libscript.sh start $SHARED_DB"
@@ -102,11 +102,13 @@ provision_shared_db() {
 setup_app_db() {
   app_name="$1"
   needs_db="$2"
+  # shellcheck disable=SC2029
+  ssh "$TARGET_HOST" "cd \"\$HOME/apps/$app_name\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
   if [ "$needs_db" -eq 1 ] && [ "$SHARED_DB" = "postgres" ]; then
     safe_db_name=$(printf "%s" "$app_name" | tr '-' '_')
     log_info "Ensuring DB $safe_db_name exists on $TARGET_HOST..."
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "psql -lqt | cut -d \\| -f 1 | grep -qw $safe_db_name || createdb $safe_db_name"
+    ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; psql -lqt | cut -d \\| -f 1 | grep -qw $safe_db_name || createdb $safe_db_name"
     # shellcheck disable=SC2029
     ssh "$TARGET_HOST" "touch \$HOME/apps/$app_name/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/$safe_db_name' \$HOME/apps/$app_name/.env || echo 'DATABASE_URL=postgres://localhost:5432/$safe_db_name' >> \$HOME/apps/$app_name/.env"
   fi
@@ -147,7 +149,10 @@ configure_routing() {
   
   if [ "$is_static" -eq 1 ]; then
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "\$HOME/libscript/_lib/networking/netctl/cli.sh route add \"$app_name\" \"$domain\" --static \"\$HOME/$remote_dir\""
+    ssh "$TARGET_HOST" "\$HOME/libscript/_lib/networking/netctl/cli.sh --domain \"$domain\" --listen 80 --static / \"\$HOME/$remote_dir\" --emit nginx"
+  elif [ -f "$app_path/libscript.json" ] && jq -e '.ingress != null' "$app_path/libscript.json" >/dev/null 2>&1; then
+    # shellcheck disable=SC2029
+    ssh "$TARGET_HOST" "cd \"\$HOME/$remote_dir\" && \$HOME/libscript/_lib/networking/netctl/cli.sh apply libscript.json --reload"
   else
     remote_port=3000
     if [ -f "$app_path/libscript.json" ]; then
@@ -155,7 +160,7 @@ configure_routing() {
       if [ -n "$parsed_port" ] && [ "$parsed_port" != "null" ]; then remote_port="$parsed_port"; fi
     fi
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "\$HOME/libscript/_lib/networking/netctl/cli.sh route add \"$app_name\" \"$domain\" --port \"$remote_port\""
+    ssh "$TARGET_HOST" "\$HOME/libscript/_lib/networking/netctl/cli.sh --domain \"$domain\" --listen 80 --proxy / \"http://127.0.0.1:${remote_port}\" --emit nginx"
   fi
 }
 

@@ -54,3 +54,8 @@ goto :find_root
 if exist "C:\Program Files\qemu" (
     set "PATH=C:\Program Files\qemu;%PATH%"
 )
+
+endlocal & (
+    set "PATH=%PATH%"
+)
+exit /b 0

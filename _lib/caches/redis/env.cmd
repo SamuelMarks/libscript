@@ -61,3 +61,10 @@ if "%REDIS_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\redis\%REDIS_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "REDIS_VERSION=%REDIS_VERSION%"
+)
+exit /b 0

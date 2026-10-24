@@ -61,3 +61,10 @@ if "%GCP_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\gcp\%GCP_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "GCP_VERSION=%GCP_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -53,3 +53,9 @@ goto :find_root
 
 if "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST%"=="" set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST=%TEMP%\serve-actix-diesel-auth-scaffold\serve-actix-diesel-auth-scaffold"
 if "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR%"=="" set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR=%TEMP%\serve-actix-diesel-auth-scaffold\serve-actix-diesel-auth-scaffold"
+
+endlocal & (
+    set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR=%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR%"
+    set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST=%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST%"
+)
+exit /b 0

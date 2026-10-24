@@ -58,3 +58,11 @@ if "%LIBSCRIPT_HOME%"=="" (
 set "XPK_DIR=%LIBSCRIPT_BASE_DIR%\xpk\%XPK_VERSION%"
 set "PATH=%XPK_DIR%\bin;%PATH%"
 set "PYTHONPATH=%XPK_DIR%;%PYTHONPATH%"
+
+endlocal & (
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+    set "PYTHONPATH=%PYTHONPATH%"
+    set "XPK_DIR=%XPK_DIR%"
+)
+exit /b 0

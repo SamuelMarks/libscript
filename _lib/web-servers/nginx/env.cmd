@@ -61,3 +61,10 @@ if "%NGINX_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "NGINX_VERSION=%NGINX_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

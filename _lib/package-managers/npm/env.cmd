@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%NPM_VERSION%"=="" SET "NPM_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\npm\%NPM_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "NPM_VERSION=%NPM_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%PIPX_VERSION%"=="" SET "PIPX_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\pipx\%PIPX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "PIPX_VERSION=%PIPX_VERSION%"
+)
+exit /b 0

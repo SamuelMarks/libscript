@@ -59,7 +59,7 @@ for /f "tokens=*" %%a in (downloads-%ARCH%.txt) do (
   rem get filename from URL
   for %%F in ("%%a") do set "FILENAME=%%~nxF"
   if not exist "downloads\!FILENAME!" (
-    curl -L -o "downloads\!FILENAME!" "%%a"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%%a" "downloads\!FILENAME!"
   )
 )
 
@@ -71,9 +71,9 @@ if not exist downloads\worker mkdir downloads\worker
 if exist "downloads\crictl-v1.32.0-linux-%ARCH%.tar.gz" (
   tar -xzf "downloads\crictl-v1.32.0-linux-%ARCH%.tar.gz" -C downloads\worker\
 )
-rem Using curl for kubectl.exe since the linux one won't work locally on Windows
+rem Using libscript_download for kubectl.exe since the linux one won't work locally on Windows
 if not exist "downloads\client\kubectl.exe" (
-  curl -L -o "downloads\client\kubectl.exe" "https://dl.k8s.io/release/v1.32.0/bin/windows/amd64/kubectl.exe"
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://dl.k8s.io/release/v1.32.0/bin/windows/amd64/kubectl.exe" "downloads\client\kubectl.exe"
 )
 copy /Y "downloads\client\kubectl.exe" "%SystemRoot%\System32\kubectl.exe" >nul 2>&1
 kubectl version --client

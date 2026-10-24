@@ -50,20 +50,45 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%PYTHON_VERSION%"=="" set PYTHON_VERSION=3.11.9
+if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.11.9"
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"
 ) else (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 set "PYTHONHOME=%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%"
-set "PATH=%PYTHONHOME%\bin;%PYTHONHOME%\Scripts;%PATH%"
+set "_NEW_PATH=!PATH!"
+echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!\Scripts;" >nul 2>&1
+if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!\Scripts;!_NEW_PATH!"
+echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!\bin;" >nul 2>&1
+if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!\bin;!_NEW_PATH!"
+echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!;" >nul 2>&1
+if errorlevel 1 if exist "!PYTHONHOME!\python.exe" set "_NEW_PATH=!PYTHONHOME!;!_NEW_PATH!"
 
-:: In cmd we can't easily extract major.minor, but Python natively searches lib\site-packages in Windows.
-set "PYTHONPATH=%PYTHONHOME%\Lib\site-packages;%PYTHONPATH%"
+set "_NEW_PYPATH=!PYTHONPATH!"
+echo ";!_NEW_PYPATH!;" | findstr /I /C:";!PYTHONHOME!\Lib\site-packages;" >nul 2>&1
+if errorlevel 1 (
+    if "!_NEW_PYPATH!"=="" (
+        set "_NEW_PYPATH=!PYTHONHOME!\Lib\site-packages"
+    ) else (
+        set "_NEW_PYPATH=!PYTHONHOME!\Lib\site-packages;!_NEW_PYPATH!"
+    )
+)
 
+set "_NEW_VENV=%VIRTUAL_ENV%"
 if not "%PYTHON_VENV%"=="" (
-    set "PATH=%PYTHON_VENV%\Scripts;%PATH%"
-    set "VIRTUAL_ENV=%PYTHON_VENV%"
+    echo ";!_NEW_PATH!;" | findstr /I /C:";%PYTHON_VENV%\Scripts;" >nul 2>&1
+    if errorlevel 1 set "_NEW_PATH=%PYTHON_VENV%\Scripts;!_NEW_PATH!"
+    set "_NEW_VENV=%PYTHON_VENV%"
     set "PYTHONHOME="
 )
+
+endlocal & (
+    set "PYTHON_VERSION=%PYTHON_VERSION%"
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PYTHONHOME=%PYTHONHOME%"
+    set "PYTHONPATH=%_NEW_PYPATH%"
+    set "VIRTUAL_ENV=%_NEW_VENV%"
+    set "PATH=%_NEW_PATH%"
+)
+exit /b 0

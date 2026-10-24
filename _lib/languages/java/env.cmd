@@ -61,3 +61,11 @@ if "%LIBSCRIPT_HOME%"=="" (
 
 set "JAVA_HOME=%LIBSCRIPT_BASE_DIR%\java\%JAVA_VERSION%"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
+
+endlocal & (
+    set "JAVA_HOME=%JAVA_HOME%"
+    set "JAVA_VERSION=%JAVA_VERSION%"
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "PATH=%PATH%"
+)
+exit /b 0

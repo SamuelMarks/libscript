@@ -2,7 +2,8 @@
 :: # nginx.cmd
 ::
 :: ## Overview
-:: Network control library module for nginx.
+:: Network control library module for nginx on Windows.
+:: Supports SPA try_files, WebSocket Upgrade headers, domain server_name, and WASM MIME types.
 :: 
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
@@ -57,21 +58,68 @@ if not exist "%NETCTL_STATE_FILE%" (
     exit /b 1
 )
 
+set "DOMAIN=_"
+for /f "delims=" %%d in ('jq -r ".domain // \"_\"" "%NETCTL_STATE_FILE%" 2^>nul') do set "DOMAIN=%%d"
+if "!DOMAIN!"=="" set "DOMAIN=_"
+if "!DOMAIN!"=="null" set "DOMAIN=_"
+
 echo server {
 
 for /f "delims=" %%i in ('jq -r ".listen[]" "%NETCTL_STATE_FILE%"') do (
     echo     listen %%i;
 )
 
+echo     server_name !DOMAIN!;
+echo     include mime.types;
+echo     types {
+echo         application/wasm wasm;
+echo     }
+
 for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"') do (
     echo.
     echo     location %%a {
     if "%%b"=="static" (
-        echo         alias %%c/;
+        if "%%a"=="/" (
+            echo         root %%c;
+            echo         index index.html;
+            echo         try_files $uri $uri/ /index.html;
+        ) else (
+            echo         alias %%c/;
+        )
+    ) else if "%%b"=="spa" (
+        if "%%a"=="/" (
+            echo         root %%c;
+            echo         index index.html;
+            echo         try_files $uri $uri/ /index.html;
+        ) else (
+            echo         alias %%c/;
+            echo         index index.html;
+            echo         try_files $uri $uri/ %%a/index.html;
+        )
     ) else if "%%b"=="proxy" (
-        echo         proxy_pass %%c;
+        set "p_target=%%c"
+        set "p_target=!p_target:ws://=http://!"
+        set "p_target=!p_target:wss://=https://!"
+        echo         proxy_pass !p_target!;
+        echo         proxy_http_version 1.1;
+        echo         proxy_set_header Upgrade $http_upgrade;
+        echo         proxy_set_header Connection "upgrade";
         echo         proxy_set_header Host $host;
         echo         proxy_set_header X-Real-IP $remote_addr;
+        echo         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        echo         proxy_set_header X-Forwarded-Proto $scheme;
+    ) else if "%%b"=="ws" (
+        set "p_target=%%c"
+        set "p_target=!p_target:ws://=http://!"
+        set "p_target=!p_target:wss://=https://!"
+        echo         proxy_pass !p_target!;
+        echo         proxy_http_version 1.1;
+        echo         proxy_set_header Upgrade $http_upgrade;
+        echo         proxy_set_header Connection "upgrade";
+        echo         proxy_set_header Host $host;
+        echo         proxy_set_header X-Real-IP $remote_addr;
+        echo         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        echo         proxy_set_header X-Forwarded-Proto $scheme;
     ) else if "%%b"=="rewrite" (
         echo         rewrite %%d break;
     )

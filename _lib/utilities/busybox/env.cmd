@@ -61,3 +61,10 @@ if "%BUSYBOX_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\busybox\%BUSYBOX_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "BUSYBOX_VERSION=%BUSYBOX_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

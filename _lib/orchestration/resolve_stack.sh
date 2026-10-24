@@ -70,6 +70,20 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+# Check if config file is empty or whitespace-only
+if [ ! -s "$CONFIG_FILE" ] || ! jq -e '.' "$CONFIG_FILE" >/dev/null 2>&1; then
+  if [ -n "$OUTPUT_FILE" ]; then
+    OUT_DIR=$(dirname -- "$OUTPUT_FILE")
+    if [ ! -d "$OUT_DIR" ]; then
+      mkdir -p "$OUT_DIR"
+    fi
+    printf '%s\n' '{"selected": [], "conflicts": [], "provided": [], "ports": []}' > "$OUTPUT_FILE"
+  else
+    printf '%s\n' '{"selected": [], "conflicts": [], "provided": [], "ports": []}'
+  fi
+  exit 0
+fi
+
 # Find all manifests within _lib
 MANIFEST_ARGS=""
 tmp_manifests=$(mktemp 2>/dev/null || printf '%s' "/tmp/libscript_manifests.$$")

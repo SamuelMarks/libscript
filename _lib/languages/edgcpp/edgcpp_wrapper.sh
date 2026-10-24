@@ -39,16 +39,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # ## now_ms
 # Returns the current wall-clock timestamp in milliseconds.
 now_ms() {
-  if command -v perl >/dev/null 2>&1; then
-    perl -MTime::HiRes=time -e 'printf "%d
-", int(time() * 1000)' 2>/dev/null && return 0
-  fi
-  if command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import time; print(int(time.time() * 1000))' 2>/dev/null && return 0
+  if [ -r /proc/uptime ]; then
+    awk '{printf "%d\n", $1 * 1000}' /proc/uptime 2>/dev/null && return 0
   fi
   _s=$(date +%s 2>/dev/null || printf '0')
-  printf '%s000
-' "${_s}"
+  printf '%s000\n' "${_s}"
 }
 
 # ## resolve_edgcpp_binaries

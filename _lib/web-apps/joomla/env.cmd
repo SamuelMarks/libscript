@@ -52,3 +52,8 @@ goto :find_root
 :root_found
 
 if not "%JOOMLA_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%JOOMLA_LISTEN%"
+
+endlocal & (
+    set "LIBSCRIPT_LISTEN_PORT=%LIBSCRIPT_LISTEN_PORT%"
+)
+exit /b 0

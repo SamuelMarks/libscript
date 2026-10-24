@@ -51,3 +51,9 @@ goto :find_root
 
 IF "%ZYPPER_VERSION%"=="" SET "ZYPPER_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%\zypper\%ZYPPER_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "PATH=%PATH%"
+    set "ZYPPER_VERSION=%ZYPPER_VERSION%"
+)
+exit /b 0

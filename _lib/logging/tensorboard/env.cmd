@@ -61,3 +61,10 @@ if "%TENSORBOARD_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+    set "TENSORBOARD_VERSION=%TENSORBOARD_VERSION%"
+)
+exit /b 0

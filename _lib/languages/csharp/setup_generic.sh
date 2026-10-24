@@ -204,8 +204,8 @@ case "$ACTION" in
               log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
               libscript_depends "curl" "tar" "wget" "libicu"
               TEMP_FILE=$(mktemp)
-            curl -fsSL https://dot.net/v1/dotnet-install.sh -o "${TEMP_FILE}"
-            chmod +x "${TEMP_FILE}"
+              libscript_download "https://dot.net/v1/dotnet-install.sh" "${TEMP_FILE}"
+              chmod +x "${TEMP_FILE}"
             if [ "${EXACT_VERSION}" = "latest" ]; then
               "${TEMP_FILE}" --install-dir "${TARGET_DIR}/bin"
             else

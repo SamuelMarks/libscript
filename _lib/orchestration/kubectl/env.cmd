@@ -60,3 +60,10 @@ if "%KUBECTL_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\kubectl\%KUBECTL_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "KUBECTL_VERSION=%KUBECTL_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

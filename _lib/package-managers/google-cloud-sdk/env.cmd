@@ -75,3 +75,11 @@ if "%CLOUDSDK_PYTHON%"=="" (
         )
     )
 )
+
+endlocal & (
+    set "CLOUDSDK_PYTHON=%CLOUDSDK_PYTHON%"
+    set "GOOGLE_CLOUD_SDK_VERSION=%GOOGLE_CLOUD_SDK_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0

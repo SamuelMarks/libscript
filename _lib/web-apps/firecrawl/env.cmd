@@ -52,3 +52,8 @@ goto :find_root
 :root_found
 
 if "%FIRECRAWL_BUILD_DIR%"=="" set "FIRECRAWL_BUILD_DIR=%TEMP%\firecrawl"
+
+endlocal & (
+    set "FIRECRAWL_BUILD_DIR=%FIRECRAWL_BUILD_DIR%"
+)
+exit /b 0

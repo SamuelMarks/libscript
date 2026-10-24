@@ -369,6 +369,25 @@ audit_single_file() {
       ;;
   esac
 
+  # 8b. Verify _lib/*/*/env.cmd exports across endlocal boundary
+  case "$file" in
+    _lib/*/env.cmd|_lib/*/*/env.cmd)
+      if grep -qi "setlocal" "$file" && ! grep -qi "endlocal" "$file"; then
+        log_failure "$file" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; PATH and variable updates will be lost on return."
+      fi
+      ;;
+  esac
+
+  # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, cli/)
+  case "$file" in
+    _lib/_common/*.sh|cli/*.sh|cli/*/*.sh|cli/*/*/*.sh)
+      interp_hits=$(grep -nE '^[[:space:]]*(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]' "$file" 2>/dev/null | grep -v 'libscript-allow-interp' || true)
+      if [ -n "$interp_hits" ]; then
+        log_failure "$file" "ZERO_DEP_SUBSTRATE" "Core orchestration script invokes external interpreter inline: $interp_hits"
+      fi
+      ;;
+  esac
+
   # 9. Schema 100% Property Description Coverage
   case "$file" in
     *.schema.json)

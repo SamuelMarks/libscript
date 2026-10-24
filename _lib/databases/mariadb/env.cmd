@@ -61,3 +61,10 @@ if "%MARIADB_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MARIADB_VERSION=%MARIADB_VERSION%"
+    set "PATH=%PATH%"
+)
+exit /b 0

@@ -61,3 +61,10 @@ if "%DUCKDB_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\bin;%PATH%"
+
+endlocal & (
+    set "DUCKDB_VERSION=%DUCKDB_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "PATH=%PATH%"
+)
+exit /b 0
