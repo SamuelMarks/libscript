@@ -129,7 +129,38 @@ setup_user_groups() {
   done
 }
 
+# ## setup_gpu_passthrough
+# Configures generic bare-metal IOMMU and VFIO-PCI GPU passthrough for local development.
+setup_gpu_passthrough() {
+  _vfio_ids="${1:-${QEMU_VFIO_PCI_IDS:-}}"
+  _sysroot="${LIBSCRIPT_TARGET_SYSROOT:-/}"
+  _mod_dir="${_sysroot%/}/etc/modules-load.d"
+  _modprobe_dir="${_sysroot%/}/etc/modprobe.d"
+  mkdir -p "$_mod_dir" "$_modprobe_dir" 2>/dev/null || {
+    _mod_dir="${TMPDIR:-/tmp}/libscript/vfio/modules-load.d"
+    _modprobe_dir="${TMPDIR:-/tmp}/libscript/vfio/modprobe.d"
+    mkdir -p "$_mod_dir" "$_modprobe_dir"
+  }
+  cat <<EOF > "${_mod_dir}/libscript-vfio.conf"
+# BEGIN libscript-managed: vfio-gpu-passthrough
+vfio
+vfio_iommu_type1
+vfio_pci
+# END libscript-managed: vfio-gpu-passthrough
+EOF
+  if [ -n "$_vfio_ids" ]; then
+    printf 'options vfio-pci ids=%s disable_vga=1\n' "$_vfio_ids" > "${_modprobe_dir}/libscript-vfio.conf"
+  else
+    printf '# options vfio-pci disable_vga=1\n' > "${_modprobe_dir}/libscript-vfio.conf"
+  fi
+  printf '[OK] Bare-metal VFIO-PCI GPU passthrough configured in %s\n' "$_modprobe_dir"
+}
+
 case "$ACTION" in
+  gpu-passthrough)
+    setup_gpu_passthrough "${1:-}"
+    exit 0
+    ;;
   ls)
     if command -v qemu-system-x86_64 >/dev/null 2>&1; then
       qemu-system-x86_64 --version | head -n 1

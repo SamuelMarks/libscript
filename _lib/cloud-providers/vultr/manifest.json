@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "vultr",
+  "provides": ["vultr", "vultr-cli"],
+  "os_whitelist": ["all"],
+  "category": "cloud-providers",
+  "title": "Vultr",
+  "description": "LibScript component for Vultr cloud provider and vultr-cli"
+}

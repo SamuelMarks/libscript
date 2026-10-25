@@ -2,10 +2,10 @@
 :: # restore_cloud.cmd
 ::
 :: ## Overview
-:: Restores cloud node data from a backup on Windows.
+:: Restores cloud node data from a backup or imports multi-app state (`--import-state`) on Windows.
 ::
 :: ## Usage
-:: Run `restore_cloud.cmd <node_name> [options]` to reprovision and pull config/data from an archive.
+:: Run `restore_cloud.cmd <node_name> [options]` to reprovision or import application state.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,25 +51,70 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "NODE=%~1"
-if "!NODE!"=="" (
-    echo Usage: restore_cloud.cmd ^<node_name^> [options]
-    echo Options:
-    echo   --from-backup ^<id^>   Restore from a specific backup ID/archive
-    exit /b 1
-)
-shift
+if /i "%~1"=="restore" shift
+if /i "%~1"=="import-remote" shift
 
+set "NODE=%NODE_NAME%"
+set "PROVIDER=%CLOUD_PROVIDER%"
+if "!PROVIDER!"=="" set "PROVIDER=%PROVIDER%"
+if "!PROVIDER!"=="" set "PROVIDER=azure"
+set "RG_CTX=%RG_NAME%"
+if "!RG_CTX!"=="" set "RG_CTX=RG-ANALYTICS-PROD"
+set "LOCATION=%LOCATION%"
+if "!LOCATION!"=="" set "LOCATION=eastus"
+set "ADMIN_USER=%ADMIN_USER%"
+if "!ADMIN_USER!"=="" set "ADMIN_USER=azureuser"
+set "ONLY_TARGET=%ONLY_TARGET%"
+if "!ONLY_TARGET!"=="" set "ONLY_TARGET=all"
+set "SKIP_VERIFY=0"
+set "DRY_RUN_MODE=0"
+if /i "%DRY_RUN%"=="true" set "DRY_RUN_MODE=1"
+if "%DRY_RUN%"=="1" set "DRY_RUN_MODE=1"
 set "BACKUP_ID=latest"
+set "IMPORT_MODE=0"
+set "LOCAL_SRC="
+set "APP_SPECS="
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto :args_done
-if /i "%~1"=="--from-backup" (
-    set "BACKUP_ID=%~2"
-    shift & shift
+set "_RA=%~1"
+if /i "!_RA!"=="--from-backup" ( set "BACKUP_ID=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,11!"=="--provider=" ( set "PROVIDER=!_RA:~11!" & shift & goto :parse_args )
+if /i "!_RA!"=="--provider" ( set "PROVIDER=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,7!"=="--node=" ( set "NODE=!_RA:~7!" & shift & goto :parse_args )
+if /i "!_RA!"=="--node" ( set "NODE=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,5!"=="--rg=" ( set "RG_CTX=!_RA:~5!" & shift & goto :parse_args )
+if /i "!_RA!"=="--rg" ( set "RG_CTX=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,11!"=="--location=" ( set "LOCATION=!_RA:~11!" & shift & goto :parse_args )
+if /i "!_RA!"=="--location" ( set "LOCATION=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,13!"=="--admin-user=" ( set "ADMIN_USER=!_RA:~13!" & shift & goto :parse_args )
+if /i "!_RA!"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,7!"=="--only=" ( set "ONLY_TARGET=!_RA:~7!" & shift & goto :parse_args )
+if /i "!_RA!"=="--only" ( set "ONLY_TARGET=%~2" & shift & shift & goto :parse_args )
+if /i "!_RA!"=="--skip-verify" ( set "SKIP_VERIFY=1" & shift & goto :parse_args )
+if /i "!_RA!"=="--dry-run" ( set "DRY_RUN_MODE=1" & set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_RA!"=="-n" ( set "DRY_RUN_MODE=1" & set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_RA:~0,6!"=="--app=" ( set "APP_SPECS=!APP_SPECS!!_RA:~6!|" & shift & goto :parse_args )
+if /i "!_RA!"=="--app" ( set "APP_SPECS=!APP_SPECS!%~2|" & shift & shift & goto :parse_args )
+if /i "!_RA:~0,15!"=="--import-state=" ( set "IMPORT_MODE=1" & set "LOCAL_SRC=!_RA:~15!" & shift & goto :parse_args )
+if /i "!_RA!"=="--import-state" (
+    set "IMPORT_MODE=1"
+    shift
+    if not "%~1"=="" (
+        set "_NX=%~1"
+        if not "!_NX:~0,1!"=="-" (
+            set "LOCAL_SRC=%~1"
+            shift
+        )
+    )
     goto :parse_args
+)
+if "!NODE!"=="" (
+    set "NODE=%~1"
+) else if "!IMPORT_MODE!"=="1" if "!LOCAL_SRC!"=="" (
+    set "LOCAL_SRC=%~1"
 )
 shift
 goto :parse_args
@@ -77,31 +122,103 @@ goto :parse_args
 :: ## args_done
 :: Continues execution after command-line argument parsing completes.
 :args_done
+if "!NODE!"=="" (
+    echo Usage: restore_cloud.cmd ^<node_name^> [options]
+    exit /b 1
+)
+
+if "!IMPORT_MODE!"=="1" goto :run_import_state
 
 echo [RESTORE] Starting restoration ^& reprovisioning for node: !NODE!
-
-set "PROVIDER=unknown"
-if exist ".deploy_state" (
-    for /f "tokens=1,2 delims==" %%A in (.deploy_state) do (
-        if "%%A"=="PROVIDER" set "PROVIDER=%%B"
-    )
-)
-
-echo [RESTORE] 1. Validating hardware architecture ^& quotas...
-echo [RESTORE] 2. Identifying retained IPs and Disks...
-
-if "!PROVIDER!"=="aws" (
-    echo   -^> Mapping retained Elastic IP to new EC2 instance.
-) else if "!PROVIDER!"=="azure" (
-    echo   -^> Associating retained Public IP with new VM Network Interface.
-) else if "!PROVIDER!"=="gcp" (
-    echo   -^> Binding preserved Static IP to new Compute Engine instance.
-)
-
-echo [RESTORE] 3. Re-attaching cloud data disks ^(ensuring size ^>= original^)...
-echo [RESTORE] 4. Pulling config/data from backup archive: !BACKUP_ID!...
-echo [RESTORE] 5. Retemplating IP dependencies ^(e.g. bind_address configs^)...
-echo [RESTORE] 6. Running application resumption hooks...
-
 echo [RESTORE] Restore complete.
 exit /b 0
+
+:: ## run_import_state
+:: Uploads LOCAL_SRC to the remote node and runs import-state for each matching app.
+:run_import_state
+if "!LOCAL_SRC!"=="" (
+    echo [ERROR] '--import-state' requires a local source directory. 1>&2
+    exit /b 1
+)
+if "!DRY_RUN_MODE!"=="0" (
+    if not exist "!LOCAL_SRC!" (
+        echo [ERROR] Import source directory '!LOCAL_SRC!' does not exist. 1>&2
+        exit /b 1
+    )
+)
+set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
+call "!CLI!" node sync "!NODE!" "!RG_CTX!"
+if errorlevel 1 exit /b 1
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/stanford_import_stage && mkdir -p /tmp/stanford_import_stage"
+if errorlevel 1 exit /b 1
+call "!CLI!" node upload "!NODE!" "!RG_CTX!" "!LOCAL_SRC!/" "/tmp/stanford_import_stage/"
+if errorlevel 1 exit /b 1
+set "REM_SPECS=!APP_SPECS!"
+
+:: ## import_next_app
+:: Iterates over APP_SPECS and imports state for each matching app.
+:import_next_app
+if "!REM_SPECS!"=="" goto :import_finish
+for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
+    set "_CUR_IM=%%A"
+    set "REM_SPECS=%%B"
+)
+for /f "tokens=1 delims=@" %%D in ("!_CUR_IM!") do set "_CUR_PD=%%D"
+set "_CUR_DEST="
+for /f "tokens=1,2 delims=:" %%P in ("!_CUR_PD!") do (
+    if "%%Q"=="" ( set "_CUR_DEST=%%P" ) else ( set "_CUR_DEST=%%Q" )
+)
+set "_MATCH=0"
+if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+if "!_MATCH!"=="1" (
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh import-state libscript.json /tmp/stanford_import_stage"
+    if errorlevel 1 exit /b 1
+)
+goto :import_next_app
+
+:: ## import_finish
+:: Cleans up remote staging directory and verifies post-import health if enabled.
+:import_finish
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/stanford_import_stage"
+if "!SKIP_VERIFY!"=="0" (
+    set "REM_SPECS=!APP_SPECS!"
+    call :verify_imported_apps
+    if errorlevel 1 exit /b 1
+)
+echo [INFO] Import from '!LOCAL_SRC!' completed successfully.
+exit /b 0
+
+:: ## verify_imported_apps
+:: Runs health verification for each imported application.
+:verify_imported_apps
+if "!REM_SPECS!"=="" exit /b 0
+for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
+    set "_CUR_IM=%%A"
+    set "REM_SPECS=%%B"
+)
+set "_CUR_DOM="
+for /f "tokens=1,2 delims=@" %%D in ("!_CUR_IM!") do (
+    set "_CUR_PD=%%D"
+    set "_CUR_DOM=%%E"
+)
+set "_CUR_DEST="
+for /f "tokens=1,2 delims=:" %%P in ("!_CUR_PD!") do (
+    if "%%Q"=="" ( set "_CUR_DEST=%%P" ) else ( set "_CUR_DEST=%%Q" )
+)
+set "_MATCH=0"
+if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+if "!_MATCH!"=="1" (
+    set "_PUB_ARG="
+    if not "!_CUR_DOM!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_CUR_DOM!"
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
+    if errorlevel 1 exit /b 1
+)
+goto :verify_imported_apps

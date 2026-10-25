@@ -43,12 +43,49 @@ elif [ "$CMD" = "import-state" ]; then
 elif [ "$CMD" = "prepare-storage" ]; then
   json_file="${1:-libscript.json}"
   if [ -f "$json_file" ] && command -v jq >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+      # shellcheck disable=SC1090,SC1091
+      . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+      unset SCRIPT_NAME || true
+      libscript_hydrate_manifest_env "$json_file" || true
+    fi
     _ps_mounts=$(jq -r '(.infrastructure.node.data_disks // [])[]? | "\(.mount_path // "/mnt/data") \(.fstype // "ext4")"' "$json_file" 2>/dev/null || true)
     if [ -n "$_ps_mounts" ]; then
       printf '%s\n' "$_ps_mounts" | while read -r _mp _fs; do
         [ -n "$_mp" ] || continue
+        if type libscript_expand_manifest_vars >/dev/null 2>&1; then
+          _mp=$(libscript_expand_manifest_vars "$_mp")
+        fi
+        case "$_mp" in
+          \$\{*) _mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
+        esac
         "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" --auto-data-disk "$_mp" "${_fs:-ext4}"
       done
+    fi
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/service_install.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/service_install.sh"
+      # shellcheck disable=SC1090,SC1091
+      . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/service_install.sh"
+      unset SCRIPT_NAME || true
+    fi
+    _ps_overrides=$(jq -r '(.service_overrides // {}) | to_entries[]? | "\(.key) \(.value | to_entries | map("\(.key)=\(.value)") | join(" "))"' "$json_file" 2>/dev/null || true)
+    if [ -n "$_ps_overrides" ] && type libscript_service_override_env >/dev/null 2>&1; then
+      printf '%s\n' "$_ps_overrides" | while read -r _ovr_svc _ovr_pairs; do
+        [ -n "$_ovr_svc" ] && [ -n "$_ovr_pairs" ] || continue
+        if type libscript_expand_manifest_vars >/dev/null 2>&1; then
+          _ovr_pairs=$(libscript_expand_manifest_vars "$_ovr_pairs")
+        fi
+        # shellcheck disable=SC2086
+        libscript_service_override_env "$_ovr_svc" $_ovr_pairs || true
+      done
+    fi
+    _has_ollama=$(jq -r 'if (.deps.ollama != null) or (.dependencies.ollama != null) or ([.dependencies.runtime[]? | select(.name == "ollama")] | length > 0) then "1" else "0" end' "$json_file" 2>/dev/null || printf '0')
+    if [ "$_has_ollama" = "1" ] || [ -n "${OLLAMA_MODELS:-}" ]; then
+      _ol_models="${OLLAMA_MODELS:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
+      if [ -x "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" ]; then
+        OLLAMA_MODELS="$_ol_models" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" configure || true
+      fi
     fi
   fi
   exit 0
@@ -94,7 +131,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
             ;;
         duckdb)
             if command -v duckdb >/dev/null 2>&1; then
-              duckdb -c 'SELECT 1;' >/dev/null 2>&1
+              duckdb :memory: -c 'SELECT 1;' >/dev/null 2>&1 || true
             else
               "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
             fi
@@ -156,14 +193,14 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
       _nsd_group="${SERVICE_GROUP:-${REMOTE_GROUP:-$_nsd_user}}"
       for _nsd_ef in "${_nsd_dir}/.env.libscript" "${_nsd_dir}/.env" "${_nsd_dir}/.env.secrets"; do
         if [ -f "$_nsd_ef" ]; then
-          chown "${_nsd_user}:${_nsd_group}" "$_nsd_ef" 2>/dev/null || sudo chown "${_nsd_user}:${_nsd_group}" "$_nsd_ef" 2>/dev/null || true
-          chmod 0644 "$_nsd_ef" 2>/dev/null || sudo chmod 0644 "$_nsd_ef" 2>/dev/null || true
+          chown "${_nsd_user}:${_nsd_group}" "$_nsd_ef" 2>/dev/null || sudo -n chown "${_nsd_user}:${_nsd_group}" "$_nsd_ef" 2>/dev/null || true
+          chmod 0644 "$_nsd_ef" 2>/dev/null || sudo -n chmod 0644 "$_nsd_ef" 2>/dev/null || true
         fi
       done
       for _nsd_target in "${DATA_DISK_MOUNT:-/mnt/data}" "${DATA_MOUNT_DIR:-/mnt/data}" "${TMP_DATA_DIR:-/tmp/data}" "${_nsd_dir}/data"; do
         if [ -n "$_nsd_target" ] && [ -d "$_nsd_target" ]; then
-          chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || sudo chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || true
-          chmod -R u+rwX,go+rX "$_nsd_target" 2>/dev/null || sudo chmod -R u+rwX,go+rX "$_nsd_target" 2>/dev/null || true
+          chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || sudo -n chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || true
+          chmod -R u+rwX,go+rX "$_nsd_target" 2>/dev/null || sudo -n chmod -R u+rwX,go+rX "$_nsd_target" 2>/dev/null || true
         fi
       done
     fi

@@ -86,12 +86,45 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="azure" (
     where az >nul 2>nul
     if errorlevel 1 (
-        echo Error: 'az' CLI is not installed or not in PATH. >&2
+        echo Error: Azure CLI ('az'^) is not installed. Run 'libscript install azure'. >&2
         exit /b 1
     )
     az account show >nul 2>nul
     if errorlevel 1 (
         echo Error: Azure CLI is not authenticated. Please run 'az login'. >&2
+        exit /b 1
+    )
+) else if "%provider%"=="digitalocean" (
+    where doctl >nul 2>nul
+    if errorlevel 1 (
+        echo Error: DigitalOcean CLI ('doctl'^) is not installed. Run 'libscript install digitalocean'. >&2
+        exit /b 1
+    )
+    doctl account get >nul 2>nul
+    if errorlevel 1 (
+        echo Error: DigitalOcean CLI is not authenticated. Please run 'doctl auth init'. >&2
+        exit /b 1
+    )
+) else if "%provider%"=="linode" (
+    where linode-cli >nul 2>nul
+    if errorlevel 1 (
+        echo Error: Linode CLI ('linode-cli'^) is not installed. Run 'libscript install linode'. >&2
+        exit /b 1
+    )
+    linode-cli account view >nul 2>nul
+    if errorlevel 1 (
+        echo Error: Linode CLI is not authenticated. Please run 'linode-cli configure'. >&2
+        exit /b 1
+    )
+) else if "%provider%"=="vultr" (
+    where vultr-cli >nul 2>nul
+    if errorlevel 1 (
+        echo Error: Vultr CLI ('vultr-cli'^) is not installed. Run 'libscript install vultr'. >&2
+        exit /b 1
+    )
+    vultr-cli account >nul 2>nul
+    if errorlevel 1 (
+        echo Error: Vultr CLI is not authenticated. Please set VULTR_API_KEY. >&2
         exit /b 1
     )
 ) else (

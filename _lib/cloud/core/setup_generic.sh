@@ -57,6 +57,18 @@ handle_list_managed() {
   if command -v gcloud >/dev/null 2>&1; then
     printf '%s\n' "GCP Managed Resource Listing Placeholder"
   fi
+  printf '%s\n' "--- DigitalOcean Resources"
+  if command -v doctl >/dev/null 2>&1; then
+    printf '%s\n' "DigitalOcean Managed Resource Listing Placeholder"
+  fi
+  printf '%s\n' "--- Linode Resources"
+  if command -v linode-cli >/dev/null 2>&1; then
+    printf '%s\n' "Linode Managed Resource Listing Placeholder"
+  fi
+  printf '%s\n' "--- Vultr Resources"
+  if command -v vultr-cli >/dev/null 2>&1; then
+    printf '%s\n' "Vultr Managed Resource Listing Placeholder"
+  fi
 }
 
 # ## handle_diff
@@ -72,6 +84,12 @@ handle_diff() {
   printf '%s\n' "Azure Diff Placeholder"
   printf '%s\n' "--- GCP Drift"
   printf '%s\n' "GCP Diff Placeholder"
+  printf '%s\n' "--- DigitalOcean Drift"
+  printf '%s\n' "DigitalOcean Diff Placeholder"
+  printf '%s\n' "--- Linode Drift"
+  printf '%s\n' "Linode Diff Placeholder"
+  printf '%s\n' "--- Vultr Drift"
+  printf '%s\n' "Vultr Diff Placeholder"
 }
 
 case "$action" in
@@ -89,7 +107,10 @@ case "$action" in
   restore)
     exec "$SCRIPT_DIR/restore_cloud.sh" "$@"
     ;;
-  aws|azure|gcp|hetzner|proxmox)
+  dashboard|cost|usage|logs-aggregate)
+    exec "$SCRIPT_DIR/dashboard.sh" "$action" "$@"
+    ;;
+  aws|azure|gcp|hetzner|proxmox|digitalocean|linode|vultr)
     PROVIDER="$action"
     if [ "${1:-}" = "storage" ]; then
       shift
@@ -134,6 +155,9 @@ case "$action" in
     if command -v aws >/dev/null 2>&1; then printf '%s\n' "Cleaning up aws..."; fi
     if command -v az >/dev/null 2>&1; then printf '%s\n' "Cleaning up azure..."; fi
     if command -v gcloud >/dev/null 2>&1; then printf '%s\n' "Cleaning up gcp..."; fi
+    if command -v doctl >/dev/null 2>&1; then printf '%s\n' "Cleaning up digitalocean..."; fi
+    if command -v linode-cli >/dev/null 2>&1; then printf '%s\n' "Cleaning up linode..."; fi
+    if command -v vultr-cli >/dev/null 2>&1; then printf '%s\n' "Cleaning up vultr..."; fi
     exit 0
     ;;
   *)

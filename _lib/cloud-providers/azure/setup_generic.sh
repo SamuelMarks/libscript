@@ -202,7 +202,7 @@ case "$ACTION" in
           exit 0
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-azureuser}@$IP" "$@"
+        ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "$@"
         ;;
       attach-disk)
         RG=${3:-}; DISK_NAME=${4:-}
@@ -226,12 +226,16 @@ case "$ACTION" in
           exit 0
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        _src_sync="$SRC"
+        if [ -d "$SRC" ]; then
+          _src_sync="${SRC%/}/"
+        fi
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
         elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
+          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
         else
-          scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         fi
         ;;
       scp|upload)
@@ -243,9 +247,9 @@ case "$ACTION" in
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST" || scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST" || scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         else
-          scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         fi
         ;;
       scp-from|download)
@@ -258,9 +262,9 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         mkdir -p "$(dirname "$DST")"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST" || scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST" || scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
         else
-          scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
+          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
         fi
         ;;
       sync)
@@ -271,11 +275,11 @@ case "$ACTION" in
           exit 0
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript"
+        ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="vagrant" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
+          rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         else
-          scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
+          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         fi
         ;;
       *)

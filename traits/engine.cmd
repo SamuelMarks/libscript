@@ -2,10 +2,11 @@
 :: # engine.cmd
 ::
 :: ## Overview
-:: Core Unified Traits Engine resolving priority order and dispatching traits on Windows.
+:: Core Unified Traits Engine resolving priority order and dispatching traits on Windows,
+:: including manifest-driven storage and ingress trait execution.
 ::
 :: ## Usage
-:: traits\engine.cmd <list|enable|disable|apply|verify|teardown> [trait_name]
+:: traits\engine.cmd <list|enable|disable|apply|verify|teardown> [trait_name] [--manifest <libscript.json>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -54,8 +55,19 @@ goto :find_root
 set "ORDERED_TRAITS=storage secrets mesh firewall discovery tls ingress logging metrics backup maintenance"
 set "ACTION=%~1"
 set "TARGET_TRAIT=%~2"
+set "MANIFEST_FILE="
 if "%ACTION%"=="" set "ACTION=list"
 if "%TARGET_TRAIT%"=="" set "TARGET_TRAIT=all"
+
+for %%A in (%2 %3 %4 %5 %6) do (
+    set "_ta=%%~A"
+    if /i "!_ta:~0,11!"=="--manifest=" set "MANIFEST_FILE=!_ta:~11!"
+)
+if /i "%~2"=="--manifest" (
+    set "TARGET_TRAIT=all"
+    set "MANIFEST_FILE=%~3"
+)
+if /i "%~3"=="--manifest" set "MANIFEST_FILE=%~4"
 
 if "%ACTION%"=="list" goto :list_traits
 if "%ACTION%"=="enable" goto :enable_trait
@@ -92,15 +104,49 @@ exit /b 0
 :exec_trait
 if "%TARGET_TRAIT%"=="all" (
     for %%T in (%ORDERED_TRAITS%) do (
-        echo [INFO] Trait "%%T": action="%ACTION%"
+        call :run_single_trait "%%T" "%ACTION%"
     )
 ) else (
-    echo [INFO] Trait "%TARGET_TRAIT%": action="%ACTION%"
+    call :run_single_trait "%TARGET_TRAIT%" "%ACTION%"
+)
+exit /b 0
+
+:: ## run_single_trait
+:: Dispatches a single trait action to the concrete trait script.
+:run_single_trait
+set "_T_NAME=%~1"
+set "_T_ACT=%~2"
+echo [INFO] Trait "!_T_NAME!": action="!_T_ACT!"
+if /i "%DRY_RUN%"=="true" exit /b 0
+if "%DRY_RUN%"=="1" exit /b 0
+if /i "!_T_NAME!"=="storage" (
+    if /i "!_T_ACT!"=="apply" (
+        if not "!MANIFEST_FILE!"=="" (
+            if exist "!MANIFEST_FILE!" (
+                set "STACK="
+                call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" prepare-storage "!MANIFEST_FILE!"
+            )
+        )
+    )
+)
+if /i "!_T_NAME!"=="ingress" (
+    if not "!MANIFEST_FILE!"=="" (
+        if exist "!MANIFEST_FILE!" (
+            if /i "!_T_ACT!"=="apply" (
+                set "STACK="
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!MANIFEST_FILE!" --reload
+            )
+            if /i "!_T_ACT!"=="teardown" (
+                set "STACK="
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" remove-ingress "!MANIFEST_FILE!" --reload
+            )
+        )
+    )
 )
 exit /b 0
 
 :: ## help
 :: Prints usage help for engine.cmd.
 :help
-echo Usage: engine.cmd ^<list^|enable^|disable^|apply^|verify^|teardown^> [trait_name]
+echo Usage: engine.cmd ^<list^|enable^|disable^|apply^|verify^|teardown^> [trait_name] [--manifest ^<libscript.json^>]
 exit /b 0

@@ -130,18 +130,18 @@ query_duckdb_scalar() {
   _qds_out=""
   if ensure_duckdb_cli; then
     if [ "$_qds_mode" = "len" ]; then
-      _qds_out=$(duckdb "$_qds_path" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | grep -c . || true)
+      _qds_out=$(duckdb "$_qds_path" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | awk 'NF {c++} END {print c+0}')
     else
       _qds_out=$(duckdb "$_qds_path" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | tr -d '[:space:]' | head -n 1 || true)
     fi
-    if [ -z "$_qds_out" ] && [ -f "$_qds_path" ]; then
+    if { [ -z "$_qds_out" ] || [ "$_qds_out" = "0" ]; } && [ -f "${_qds_path}.wal" ]; then
       _qds_tmp=$(mktemp -d 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_duckdb_hc.$$")
       mkdir -p "$_qds_tmp"
       _qds_snap="${_qds_tmp}/$(basename -- "$_qds_path")"
       cp -f "$_qds_path" "$_qds_snap" 2>/dev/null || true
       [ -f "${_qds_path}.wal" ] && cp -f "${_qds_path}.wal" "${_qds_snap}.wal" 2>/dev/null || true
       if [ "$_qds_mode" = "len" ]; then
-        _qds_out=$(duckdb "$_qds_snap" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | grep -c . || true)
+        _qds_out=$(duckdb "$_qds_snap" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | awk 'NF {c++} END {print c+0}')
       else
         _qds_out=$(duckdb "$_qds_snap" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | tr -d '[:space:]' | head -n 1 || true)
       fi

@@ -64,11 +64,30 @@ if /i "%action%"=="restore" (
     call "%~dp0restore_cloud.cmd" %*
     exit /b %errorlevel%
 )
+if /i "%action%"=="dashboard" (
+    call "%~dp0dashboard.cmd" dashboard %*
+    exit /b %errorlevel%
+)
+if /i "%action%"=="cost" (
+    call "%~dp0dashboard.cmd" cost %*
+    exit /b %errorlevel%
+)
+if /i "%action%"=="usage" (
+    call "%~dp0dashboard.cmd" usage %*
+    exit /b %errorlevel%
+)
+if /i "%action%"=="logs-aggregate" (
+    call "%~dp0dashboard.cmd" logs-aggregate %*
+    exit /b %errorlevel%
+)
 if /i "%action%"=="aws" goto :route_provider
 if /i "%action%"=="azure" goto :route_provider
 if /i "%action%"=="gcp" goto :route_provider
 if /i "%action%"=="hetzner" goto :route_provider
 if /i "%action%"=="proxmox" goto :route_provider
+if /i "%action%"=="digitalocean" goto :route_provider
+if /i "%action%"=="linode" goto :route_provider
+if /i "%action%"=="vultr" goto :route_provider
 if /i "%action%"=="storage" goto :route_storage
 
 :: Default behavior (no-op)

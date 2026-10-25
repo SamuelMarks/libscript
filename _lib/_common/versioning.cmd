@@ -3,14 +3,13 @@
 ::
 :: ## Overview
 :: Provides common utilities for managing component versions on Windows.
-:: It includes subroutines to resolve component version directories
-:: and create NTFS directory junctions (`mklink /J`) for version aliases.
+:: It includes subroutines to resolve component version directories,
+:: create NTFS directory junctions (`mklink /J`) for version aliases,
+:: and inspect existing installations (`:libscript_check_installed_version`).
 :: 
 :: ## Usage
-:: Call subroutines like `:libscript_symlink_alias` from other batch scripts to manage versions.
+:: Call subroutines like `:libscript_symlink_alias` or `:libscript_check_installed_version` from other batch scripts.
 
-:: versioning.cmd
-:: Common utilities for managing native libscript installations and version aliases on Windows.
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -55,6 +54,14 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if not "%~1"=="" (
+    set "_VER_SUB=%~1"
+    if "!_VER_SUB:~0,1!"==":" (
+        shift
+        call !_VER_SUB! "%~1" "%~2" "%~3" "%~4"
+        exit /b !errorlevel!
+    )
+)
 goto :eof
 
 :: ## libscript_get_version_dir
@@ -94,3 +101,65 @@ set "exact_path=%base_dir%\%exact_version%"
 if exist "%alias_path%" rmdir "%alias_path%"
 mklink /J "%alias_path%" "%exact_path%" >nul
 goto :eof
+
+:: ## libscript_check_installed_version
+:: Checks whether a component satisfying the requested version is already installed in LIBSCRIPT_HOME or system PATH on Windows.
+:libscript_check_installed_version
+set "_civ_comp=%~1"
+set "_civ_req=%~2"
+if "!_civ_req!"=="" set "_civ_req=latest"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "_civ_home=%USERPROFILE%\.libscript"
+) else (
+    set "_civ_home=%LIBSCRIPT_HOME%"
+)
+set "_civ_prefix=!_civ_req:.x=!"
+set "_civ_prefix=!_civ_prefix:.*=!"
+if /i "!_civ_comp!"=="nodejs" (
+    if exist "!_civ_home!\nodejs\!_civ_req!\node.exe" exit /b 0
+    if exist "!_civ_home!\nodejs\!_civ_req!\bin\node.exe" exit /b 0
+    if exist "!_civ_home!\nodejs" (
+        for /d %%D in ("!_civ_home!\nodejs\*") do (
+            if exist "%%~fD\node.exe" (
+                for /f "delims=" %%V in ('"%%~fD\node.exe" -v 2^>nul') do (
+                    set "_nv=%%V"
+                    set "_nv=!_nv:v=!"
+                    if /i "!_civ_req!"=="latest" exit /b 0
+                    echo !_nv! | findstr /b /c:"!_civ_prefix!." >nul 2>&1
+                    if not errorlevel 1 exit /b 0
+                )
+            )
+        )
+    )
+    where node >nul 2>&1
+    if not errorlevel 1 (
+        for /f "delims=" %%V in ('node -v 2^>nul') do (
+            set "_nv=%%V"
+            set "_nv=!_nv:v=!"
+            if /i "!_civ_req!"=="latest" exit /b 0
+            echo !_nv! | findstr /b /c:"!_civ_prefix!." >nul 2>&1
+            if not errorlevel 1 exit /b 0
+        )
+    )
+    exit /b 1
+)
+if /i "!_civ_comp!"=="python" (
+    if exist "!_civ_home!\python\!_civ_req!\python.exe" exit /b 0
+    if exist "!_civ_home!\python\!_civ_req!\bin\python.exe" exit /b 0
+    where python >nul 2>&1
+    if not errorlevel 1 (
+        if /i "!_civ_req!"=="latest" exit /b 0
+        python -c "import sys; sys.exit(0 if f'{sys.version_info[0]}.{sys.version_info[1]}' == '!_civ_prefix!' else 1)" >nul 2>&1
+        if not errorlevel 1 exit /b 0
+    )
+    exit /b 1
+)
+if /i "!_civ_comp!"=="postgres" (
+    where psql >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    exit /b 1
+)
+if exist "!_civ_home!\!_civ_comp!\!_civ_req!\bin" exit /b 0
+where !_civ_comp! >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1

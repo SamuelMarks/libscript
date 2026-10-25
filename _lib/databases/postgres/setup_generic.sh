@@ -62,6 +62,22 @@ resolve_exact_version() {
   fi
 }
 
+# ## libscript_postgres_is_ready
+# Checks whether a PostgreSQL client/server installation or active cluster is already present on the host.
+libscript_postgres_is_ready() {
+  _pg_port="${POSTGRES_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-5432}}"
+  if command -v pg_isready >/dev/null 2>&1 && pg_isready -h 127.0.0.1 -p "${_pg_port}" -q 2>/dev/null; then
+    return 0
+  fi
+  if command -v pg_isready >/dev/null 2>&1 && pg_isready -q 2>/dev/null; then
+    return 0
+  fi
+  if command -v psql >/dev/null 2>&1 && { command -v postgres >/dev/null 2>&1 || [ -d "/etc/postgresql" ] || [ -d "/var/lib/postgresql" ]; }; then
+    return 0
+  fi
+  return 1
+}
+
 case "$ACTION" in
   ls)
     if [ "$POSTGRES_INSTALL_METHOD" = "mise" ]; then
@@ -106,8 +122,6 @@ case "$ACTION" in
       printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$POSTGRES_INSTALL_METHOD" = "vfox" ]; then
       vfox use "postgres@${VERSION}"
-    elif [ "$POSTGRES_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "postgres@${VERSION}"
     elif [ "$POSTGRES_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System packages do not support use here."
     else
@@ -146,6 +160,21 @@ case "$ACTION" in
       EXACT_VERSION="${VERSION:-17.0}"
       [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="17.0"
       libscript_build_component_from_source "postgres" "${EXACT_VERSION}" "postgres" "c" "autotools" "${POSTGRES_DOWNLOAD_URL:-}"
+      exit 0
+    fi
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && { [ "$POSTGRES_INSTALL_METHOD" = "libscript_native" ] || [ "$POSTGRES_INSTALL_METHOD" = "system" ]; } && libscript_postgres_is_ready; then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/postgres/${EXACT_VERSION}"
+      mkdir -p "${TARGET_DIR}/bin"
+      if command -v psql >/dev/null 2>&1; then
+        ln -sf "$(command -v psql)" "${TARGET_DIR}/bin/psql" 2>/dev/null || true
+      fi
+      if command -v postgres >/dev/null 2>&1; then
+        ln -sf "$(command -v postgres)" "${TARGET_DIR}/bin/postgres" 2>/dev/null || true
+      fi
+      libscript_symlink_alias "postgres" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "postgres" "default" "${EXACT_VERSION}"
+      log_info "[REUSE] PostgreSQL (${VERSION}) is already installed and ready."
       exit 0
     fi
     if [ "$POSTGRES_INSTALL_METHOD" = "system" ]; then
@@ -211,13 +240,27 @@ case "$ACTION" in
       fi
       libscript_symlink_alias "postgres" "$VERSION" "${EXACT_VERSION}"
     fi
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+      # shellcheck disable=SC1090,SC1091
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+      unset SCRIPT_NAME || true
+      libscript_apply_hardware_tuning "postgres" || true
+    fi
     ;;
   start|stop|restart|status|health|logs|up|down)
     if [ "$POSTGRES_INSTALL_METHOD" = "libscript_native" ] || [ "$POSTGRES_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
       . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-postgres}}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-}"
+      if [ -z "$service_name" ]; then
+        if [ -f "/lib/systemd/system/postgresql.service" ] || [ -f "/etc/init.d/postgresql" ]; then
+          service_name="postgresql"
+        else
+          service_name="libscript_${PACKAGE_NAME:-postgres}"
+        fi
+      fi
       libscript_service "$ACTION" "$service_name" "$@"
     else
       log_info "$ACTION not natively implemented for $POSTGRES_INSTALL_METHOD."

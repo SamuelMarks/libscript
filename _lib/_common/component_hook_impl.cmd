@@ -77,6 +77,9 @@ exit /b 1
 :: ## hook_configure
 :: Renders component configuration templates using envsubst_safe.cmd.
 :hook_configure
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\hw_tune.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\hw_tune.cmd" :libscript_apply_hardware_tuning "%COMP%"
+)
 echo {"component":"%COMP%","action":"configure","status":"configured"}
 exit /b 0
 

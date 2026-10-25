@@ -276,15 +276,15 @@ The installer incorporates custom action `CA_CheckNetworkConnection`:
 
 Before rolling out `OpenEdX-Offline-Setup.msi` into production air-gapped zones:
 
-- [ ] **Cache Hydration & Integrity**: Run `hydrate_offline_cache.* --verify-only` to ensure all
+- [x] **Cache Hydration & Integrity**: Run `hydrate_offline_cache.* --verify-only` to ensure all
       SHA-256 integrity hashes match `offline_bundle.json`.
-- [ ] **Zero Network Dependency**: Verify that all `git clone`, `curl`, `wget`, and PyPI queries are
+- [x] **Zero Network Dependency**: Verify that all `git clone`, `curl`, `wget`, and PyPI queries are
       inhibited by checking `PROP_OPENEDX_OFFLINE=1`.
-- [ ] **Silent Installation**: Test unattended installation with log output:
+- [x] **Silent Installation**: Test unattended installation with log output:
       `cmd     msiexec /i OpenEdX-Offline-Setup.msi /qn /l*v C:\libscript\offline_install.log     `
-- [ ] **Port Availability**: Verify default ports (8000, 8001, 3306, 6379, 27017, 7700) are not
+- [x] **Port Availability**: Verify default ports (8000, 8001, 3306, 6379, 27017, 7700) are not
       occupied by existing services.
-- [ ] **Clean Removal**: Test silent uninstallation (`msiexec /x OpenEdX-Offline-Setup.msi /qn`) to
+- [x] **Clean Removal**: Test silent uninstallation (`msiexec /x OpenEdX-Offline-Setup.msi /qn`) to
       confirm clean teardown of files and Windows services.
 
 ### Troubleshooting Offline Deployments

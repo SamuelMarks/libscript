@@ -94,12 +94,16 @@ exit /b 0
 :process_db_entry
 set "engine=postgres"
 set "db_name=app_db"
+set "legacy_names="
 set "db_user=postgres"
 set "db_pass="
 set "pass_env="
 set "db_host=127.0.0.1"
 set "db_port="
 set "url_env=DATABASE_URL"
+set "sync_url_env="
+set "async_url_env="
+set "db_env="
 set "db_path="
 set "seed_file="
 set "seed_dir="
@@ -108,12 +112,16 @@ set "seed_cmd="
 
 for /f "delims=" %%e in ('echo !db_entry! ^| jq -r "(.engine // .type // \"postgres\") | ascii_downcase" 2^>nul') do set "engine=%%e"
 for /f "delims=" %%n in ('echo !db_entry! ^| jq -r ".name // .db_name // \"app_db\"" 2^>nul') do set "db_name=%%n"
+for /f "delims=" %%l in ('echo !db_entry! ^| jq -r "(.legacy_names // []) | join(\",\")" 2^>nul') do set "legacy_names=%%l"
 for /f "delims=" %%u in ('echo !db_entry! ^| jq -r ".user // .username // \"postgres\"" 2^>nul') do set "db_user=%%u"
 for /f "delims=" %%p in ('echo !db_entry! ^| jq -r ".password // empty" 2^>nul') do set "db_pass=%%p"
 for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".password_env // empty" 2^>nul') do set "pass_env=%%k"
 for /f "delims=" %%h in ('echo !db_entry! ^| jq -r ".host // \"127.0.0.1\"" 2^>nul') do set "db_host=%%h"
 for /f "delims=" %%P in ('echo !db_entry! ^| jq -r ".port // empty" 2^>nul') do set "db_port=%%P"
 for /f "delims=" %%v in ('echo !db_entry! ^| jq -r ".url_env // \"DATABASE_URL\"" 2^>nul') do set "url_env=%%v"
+for /f "delims=" %%y in ('echo !db_entry! ^| jq -r ".sync_url_env // empty" 2^>nul') do set "sync_url_env=%%y"
+for /f "delims=" %%a in ('echo !db_entry! ^| jq -r ".async_url_env // empty" 2^>nul') do set "async_url_env=%%a"
+for /f "delims=" %%b in ('echo !db_entry! ^| jq -r ".db_env // empty" 2^>nul') do set "db_env=%%b"
 for /f "delims=" %%f in ('echo !db_entry! ^| jq -r ".path // .file // .db_path // empty" 2^>nul') do set "db_path=%%f"
 for /f "delims=" %%s in ('echo !db_entry! ^| jq -r ".seed_file // empty" 2^>nul') do set "seed_file=%%s"
 for /f "delims=" %%d in ('echo !db_entry! ^| jq -r ".seed_dir // empty" 2^>nul') do set "seed_dir=%%d"
@@ -149,19 +157,30 @@ for /f "delims=" %%x in ('jq -rn --arg s "!_ev_val!" "reduce range(3) as $_ ($s;
 exit /b 0
 
 :: ## prov_pg
-:: Provisions a PostgreSQL database and writes DATABASE_URL.
+:: Provisions a PostgreSQL database with reuse-else-create semantics and writes connection URLs.
 :prov_pg
 if "!db_port!"=="" set "db_port=5432"
 echo [INFO] Provisioning PostgreSQL database '!db_name!' (user: !db_user!, host: !db_host!:!db_port!)...
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" (
+set "_pg_ready=0"
+where pg_isready >nul 2>nul
+if not errorlevel 1 (
+    pg_isready -h "!db_host!" -p "!db_port!" -q >nul 2>&1
+    if not errorlevel 1 set "_pg_ready=1"
+)
+if "!_pg_ready!"=="1" (
+    echo [REUSE] PostgreSQL server is already active on !db_host!:!db_port!.
+) else if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" start >nul 2>&1
 )
 call :set_env_var "!url_env!" "postgresql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
+if not "!sync_url_env!"=="" call :set_env_var "!sync_url_env!" "postgresql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
+if not "!async_url_env!"=="" call :set_env_var "!async_url_env!" "postgresql+asyncpg://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
+if not "!db_env!"=="" call :set_env_var "!db_env!" "!db_name!"
 where psql >nul 2>nul
 if not errorlevel 1 (
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine postgres --host "!db_host!" --port "!db_port!" --admin-user postgres --admin-pass "!db_pass!" --schema "!db_name!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine postgres --host "!db_host!" --port "!db_port!" --admin-user postgres --admin-pass "!db_pass!" --schema "!db_name!" --legacy-names "!legacy_names!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
     )
     if not "!seed_file!"=="" (
         set "sf_win=!seed_file:/=\!"
@@ -171,12 +190,37 @@ if not errorlevel 1 (
     )
 )
 if not "!seed_cmd!"=="" (
-    pushd "!MANIFEST_DIR!"
-    cmd.exe /c "!seed_cmd!"
-    set "rc=!errorlevel!"
-    popd
-    if not "!rc!"=="0" exit /b !rc!
+    call :check_pg_populated
+    if not errorlevel 1 (
+        echo [REUSE] PostgreSQL database '!db_name!' already has required tables and minimum rows; skipping full re-seed.
+    ) else (
+        pushd "!MANIFEST_DIR!"
+        cmd.exe /c "!seed_cmd!"
+        set "rc=!errorlevel!"
+        popd
+        if not "!rc!"=="0" exit /b !rc!
+    )
 )
+exit /b 0
+
+:: ## check_pg_populated
+:: Checks whether all required_tables and min_rows in a PostgreSQL database are satisfied on Windows.
+:check_pg_populated
+if "!LIBSCRIPT_FORCE_SEED!"=="1" exit /b 1
+where psql >nul 2>nul
+if errorlevel 1 exit /b 1
+set "_cpp_has_req=0"
+set "PGPASSWORD=!db_pass!"
+for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
+    set "_cpp_has_req=1"
+    set "_cpp_tbl=%%t"
+    set "_cpp_min_r=1"
+    for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "%%t" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "_cpp_min_r=%%r"
+    set "_cpp_rc=-1"
+    for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM \"%%t\";" 2^>nul') do set "_cpp_rc=%%c"
+    if !_cpp_rc! lss !_cpp_min_r! exit /b 1
+)
+if "!_cpp_has_req!"=="0" exit /b 1
 exit /b 0
 
 :: ## prov_mysql
@@ -283,12 +327,36 @@ if not "!seed_dir!"=="" (
     )
 )
 if not "!seed_cmd!"=="" (
-    pushd "!MANIFEST_DIR!"
-    cmd.exe /c "!seed_cmd!"
-    set "rc=!errorlevel!"
-    popd
-    if not "!rc!"=="0" exit /b !rc!
+    call :check_duckdb_populated
+    if not errorlevel 1 (
+        echo [REUSE] DuckDB database '!db_path!' already has required tables and minimum rows; skipping full re-seed.
+    ) else (
+        pushd "!MANIFEST_DIR!"
+        cmd.exe /c "!seed_cmd!"
+        set "rc=!errorlevel!"
+        popd
+        if not "!rc!"=="0" exit /b !rc!
+    )
 )
+exit /b 0
+
+:: ## check_duckdb_populated
+:: Checks whether all required_tables and min_rows in a DuckDB database file are satisfied on Windows.
+:check_duckdb_populated
+if "!LIBSCRIPT_FORCE_SEED!"=="1" exit /b 1
+if not exist "!db_path!" exit /b 1
+where duckdb >nul 2>nul
+if errorlevel 1 exit /b 1
+set "_cdp_has_req=0"
+for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
+    set "_cdp_has_req=1"
+    set "_cdp_min_r=1"
+    for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "%%t" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "_cdp_min_r=%%r"
+    set "_cdp_rc=-1"
+    for /f "delims=" %%c in ('duckdb "!db_path!" -readonly -csv -noheader -c "SELECT COUNT(*) FROM \"%%t\";" 2^>nul') do set "_cdp_rc=%%c"
+    if !_cdp_rc! lss !_cdp_min_r! exit /b 1
+)
+if "!_cdp_has_req!"=="0" exit /b 1
 exit /b 0
 
 :: ## exec_duckdb_sql
@@ -326,6 +394,7 @@ exit /b 0
 :: ## set_env_var
 :: Idempotently updates or appends a key-value pair in .env.libscript.
 :set_env_var
+if "%~1"=="" exit /b 0
 if exist "!ENV_OUT!" (
     findstr /v /b /c:"%~1=" "!ENV_OUT!" > "!ENV_OUT!.tmp" 2>nul
     move /y "!ENV_OUT!.tmp" "!ENV_OUT!" >nul 2>&1

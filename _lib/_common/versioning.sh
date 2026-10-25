@@ -1,12 +1,12 @@
 #!/bin/sh
 # ## Overview
 # Provides common utilities for managing component versions and aliases on Unix systems.
-# It defines functions (`libscript_get_version_dir`, `libscript_symlink_alias`) to
-# resolve installation paths and create symlinks for version aliasing within
-# the local libscript environment.
+# It defines functions (`libscript_get_version_dir`, `libscript_symlink_alias`,
+# `libscript_check_installed_version`) to resolve installation paths, create symlinks for
+# version aliasing, and inspect existing installations with reuse-else-create semantics.
 # 
 # ## Usage
-# Source this file to utilize its version path resolution and aliasing utilities.
+# Source this file to utilize its version path resolution, aliasing, and inspection utilities.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -63,4 +63,127 @@ libscript_symlink_alias() {
       (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}")
     fi
   fi
+}
+
+# ## libscript_check_installed_version
+# Checks whether a component satisfying the requested version is already installed in LIBSCRIPT_HOME or system PATH.
+libscript_check_installed_version() {
+  _civ_comp="$1"
+  _civ_req="${2:-latest}"
+  _civ_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  _civ_user_home="${REMOTE_HOME:-${HOME:-/root}}"
+  _civ_prefix=$(printf '%s' "$_civ_req" | sed -e 's/^v//' -e 's/\.x$//' -e 's/\.\*$//')
+
+  case "$_civ_comp" in
+    nodejs|node)
+      if [ -x "${_civ_home}/nodejs/${_civ_req}/bin/node" ]; then
+        printf '%s\n' "${_civ_home}/nodejs/${_civ_req}/bin"
+        return 0
+      fi
+      if [ -d "${_civ_home}/nodejs" ]; then
+        for _civ_d in "${_civ_home}/nodejs"/*; do
+          [ -x "${_civ_d}/bin/node" ] || continue
+          _civ_v=$("${_civ_d}/bin/node" -v 2>/dev/null | sed 's/^v//' || true)
+          if [ "$_civ_req" = "latest" ] || [ "$_civ_req" = "lts" ] || [ "${_civ_v#"${_civ_prefix}".}" != "$_civ_v" ] || [ "$_civ_v" = "$_civ_prefix" ]; then
+            libscript_symlink_alias "nodejs" "$_civ_req" "$(basename -- "$_civ_d")" 2>/dev/null || true
+            printf '%s\n' "${_civ_d}/bin"
+            return 0
+          fi
+        done
+      fi
+      if command -v node >/dev/null 2>&1; then
+        _civ_v=$(node -v 2>/dev/null | sed 's/^v//' || true)
+        if [ "$_civ_req" = "latest" ] || [ "$_civ_req" = "lts" ] || [ "${_civ_v#"${_civ_prefix}".}" != "$_civ_v" ] || [ "$_civ_v" = "$_civ_prefix" ]; then
+          dirname -- "$(command -v node)"
+          return 0
+        fi
+      fi
+      return 1
+      ;;
+    python|python3)
+      if [ -x "${_civ_home}/python/${_civ_req}/bin/python3" ]; then
+        printf '%s\n' "${_civ_home}/python/${_civ_req}/bin"
+        return 0
+      fi
+      if [ "$_civ_prefix" != "latest" ] && command -v "python${_civ_prefix}" >/dev/null 2>&1; then
+        dirname -- "$(command -v "python${_civ_prefix}")"
+        return 0
+      fi
+      for _civ_uv_py_dir in "${UV_PYTHON_INSTALL_DIR:-}" "${_civ_user_home}/.local/share/uv/python" "/root/.local/share/uv/python"; do
+        [ -n "$_civ_uv_py_dir" ] && [ -d "$_civ_uv_py_dir" ] || continue
+        for _civ_pyd in "$_civ_uv_py_dir"/cpython-"${_civ_prefix}"*; do
+          if [ -x "${_civ_pyd}/bin/python3" ]; then
+            printf '%s\n' "${_civ_pyd}/bin"
+            return 0
+          fi
+        done
+      done
+      if command -v python3 >/dev/null 2>&1; then
+        _civ_pyv=$(python3 -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")' 2>/dev/null || true)
+        if [ "$_civ_req" = "latest" ] || [ "$_civ_pyv" = "$_civ_prefix" ]; then
+          dirname -- "$(command -v python3)"
+          return 0
+        fi
+      fi
+      return 1
+      ;;
+    uv)
+      for _civ_uv_bin in "${_civ_home}/uv/${_civ_req}/bin/uv" "${_civ_home}/uv/default/bin/uv" "${_civ_user_home}/.local/bin/uv" "/root/.local/bin/uv" "$(command -v uv 2>/dev/null || true)"; do
+        if [ -n "$_civ_uv_bin" ] && [ -x "$_civ_uv_bin" ]; then
+          dirname -- "$_civ_uv_bin"
+          return 0
+        fi
+      done
+      return 1
+      ;;
+    postgres|postgresql)
+      if command -v pg_isready >/dev/null 2>&1 && pg_isready -q 2>/dev/null; then
+        dirname -- "$(command -v pg_isready)"
+        return 0
+      fi
+      if command -v psql >/dev/null 2>&1 && { command -v postgres >/dev/null 2>&1 || [ -d "/etc/postgresql" ] || [ -d "/var/lib/postgresql" ]; }; then
+        dirname -- "$(command -v psql)"
+        return 0
+      fi
+      return 1
+      ;;
+    duckdb)
+      for _civ_dk_bin in "${_civ_home}/duckdb/${_civ_req}/bin/duckdb" "${_civ_home}/duckdb/default/bin/duckdb" "${_civ_user_home}/.local/bin/duckdb" "/usr/local/bin/duckdb" "$(command -v duckdb 2>/dev/null || true)"; do
+        if [ -n "$_civ_dk_bin" ] && [ -x "$_civ_dk_bin" ]; then
+          dirname -- "$_civ_dk_bin"
+          return 0
+        fi
+      done
+      return 1
+      ;;
+    nginx)
+      for _civ_nx_bin in "${_civ_home}/nginx/${_civ_req}/bin/nginx" "/usr/sbin/nginx" "/usr/local/bin/nginx" "$(command -v nginx 2>/dev/null || true)"; do
+        if [ -n "$_civ_nx_bin" ] && [ -x "$_civ_nx_bin" ]; then
+          dirname -- "$_civ_nx_bin"
+          return 0
+        fi
+      done
+      return 1
+      ;;
+    ollama)
+      for _civ_ol_bin in "${_civ_home}/ollama/${_civ_req}/bin/ollama" "/usr/local/bin/ollama" "/usr/bin/ollama" "$(command -v ollama 2>/dev/null || true)"; do
+        if [ -n "$_civ_ol_bin" ] && [ -x "$_civ_ol_bin" ]; then
+          dirname -- "$_civ_ol_bin"
+          return 0
+        fi
+      done
+      return 1
+      ;;
+    *)
+      if [ -d "${_civ_home}/${_civ_comp}/${_civ_req}/bin" ]; then
+        printf '%s\n' "${_civ_home}/${_civ_comp}/${_civ_req}/bin"
+        return 0
+      fi
+      if command -v "$_civ_comp" >/dev/null 2>&1; then
+        dirname -- "$(command -v "$_civ_comp")"
+        return 0
+      fi
+      return 1
+      ;;
+  esac
 }

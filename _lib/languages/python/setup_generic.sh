@@ -3,7 +3,7 @@
 # Generic setup module for Python.
 #
 # ## Usage
-# Installs Python by compiling from source or by delegating to system/mise/asdf. Can also create venvs.
+# Reuses existing matching Python installations or installs via uv/system/source. Can also create venvs.
 
 
 set -feu
@@ -44,8 +44,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-PYTHON_INSTALL_METHOD="system"
-PYTHON_VERSION="${PYTHON_VERSION:-3.11.9}"
+PYTHON_INSTALL_METHOD="${PYTHON_INSTALL_METHOD:-libscript_native}"
+PYTHON_VERSION="${PYTHON_VERSION:-${VERSION:-3.12}}"
 ACTION="${ACTION:-install}"
 
 # Parse python and pip offline options
@@ -67,18 +67,82 @@ if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${PIP_NO_INDEX:-0}" = "1" ]; then
   export PIP_FIND_LINKS="${PIP_FIND_LINKS:-${PIP_WHEEL_DIR:-$_def_wheels}}"
 fi
 
+# ## find_existing_python
+# Searches LIBSCRIPT_HOME, system PATH, and uv python directories for a Python interpreter matching PYTHON_VERSION.
+find_existing_python() {
+  _fep_req=$(printf '%s' "$PYTHON_VERSION" | cut -d. -f1,2)
+  [ "$_fep_req" = "latest" ] && _fep_req="3.12"
+  _fep_home="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+  if [ -x "${_fep_home}/python/${PYTHON_VERSION}/bin/python3" ]; then
+    printf '%s\n' "${_fep_home}/python/${PYTHON_VERSION}/bin/python3"
+    return 0
+  fi
+  if command -v "python${_fep_req}" >/dev/null 2>&1; then
+    command -v "python${_fep_req}"
+    return 0
+  fi
+  for _fep_uv_dir in "${UV_PYTHON_INSTALL_DIR:-}" "${REMOTE_HOME:-$HOME}/.local/share/uv/python" "${HOME}/.local/share/uv/python" "/root/.local/share/uv/python"; do
+    [ -n "$_fep_uv_dir" ] && [ -d "$_fep_uv_dir" ] || continue
+    for _fep_cand in "$_fep_uv_dir"/cpython-"${_fep_req}"*/bin/python3; do
+      if [ -x "$_fep_cand" ]; then
+        printf '%s\n' "$_fep_cand"
+        return 0
+      fi
+    done
+  done
+  if command -v uv >/dev/null 2>&1; then
+    _uv_found=$(uv python find "$_fep_req" 2>/dev/null || true)
+    if [ -n "$_uv_found" ] && [ -x "$_uv_found" ]; then
+      printf '%s\n' "$_uv_found"
+      return 0
+    fi
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    _sys_pyv=$(python3 -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")' 2>/dev/null || true)
+    if [ "$_sys_pyv" = "$_fep_req" ]; then
+      command -v python3
+      return 0
+    fi
+  fi
+  return 1
+}
+
+# ## link_python_into_libscript_home
+# Symlinks a discovered Python binary directory into LIBSCRIPT_HOME/python/<PYTHON_VERSION>.
+link_python_into_libscript_home() {
+  _lpi_py_bin="$1"
+  _lpi_bin_dir=$(dirname -- "$_lpi_py_bin")
+  _lpi_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${PYTHON_VERSION}"
+  mkdir -p "${_lpi_target}/bin"
+  if [ "$_lpi_py_bin" != "${_lpi_target}/bin/python3" ]; then
+    ln -sf "$_lpi_py_bin" "${_lpi_target}/bin/python3" 2>/dev/null || true
+    ln -sf "$_lpi_py_bin" "${_lpi_target}/bin/python" 2>/dev/null || true
+    _lpi_minor=$(printf '%s' "$PYTHON_VERSION" | cut -d. -f1,2)
+    ln -sf "$_lpi_py_bin" "${_lpi_target}/bin/python${_lpi_minor}" 2>/dev/null || true
+    if [ -x "${_lpi_bin_dir}/pip3" ]; then
+      ln -sf "${_lpi_bin_dir}/pip3" "${_lpi_target}/bin/pip3" 2>/dev/null || true
+      ln -sf "${_lpi_bin_dir}/pip3" "${_lpi_target}/bin/pip" 2>/dev/null || true
+    fi
+  fi
+  libscript_symlink_alias "python" "default" "${PYTHON_VERSION}"
+  libscript_symlink_alias "python" "latest" "${PYTHON_VERSION}"
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${PYTHON_VERSION}" = "latest" ]; then
     if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
-      EXACT_VERSION="3.11.9"
+      EXACT_VERSION="3.12.8"
     else
       if ! command -v curl >/dev/null 2>&1; then
         libscript_depends 'curl'
       fi
       EXACT_VERSION=$(curl -sL --compressed https://www.python.org/downloads/ | grep -o 'Python 3\.[0-9]*\.[0-9]*' | sort -V | tail -n 1 | awk '{print $2}')
+      [ -z "$EXACT_VERSION" ] && EXACT_VERSION="3.12.8"
     fi
+  elif ! printf '%s' "$PYTHON_VERSION" | grep -q '\.[0-9]*\.'; then
+    EXACT_VERSION="${PYTHON_VERSION}.8"
   else
     EXACT_VERSION="${PYTHON_VERSION}"
   fi
@@ -149,6 +213,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_python >/dev/null 2>&1; then
+        log_info "[REUSE] Python ${PYTHON_VERSION} is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading python ${PYTHON_VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python"
       if [ -n "${PYTHON_DOWNLOAD_URL:-}" ]; then
@@ -160,10 +228,36 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${PYTHON_VERSION:-${VERSION:-latest}}/bin/python" ]; then
-      log_info "python ${PYTHON_VERSION:-${VERSION:-latest}} is already installed."
-      libscript_symlink_alias "python" "default" "${PYTHON_VERSION:-${VERSION:-latest}}"
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_py=$(find_existing_python 2>/dev/null); then
+      link_python_into_libscript_home "$_existing_py"
+      log_info "[REUSE] python ${PYTHON_VERSION} found at ${_existing_py}."
       exit 0
+    fi
+
+    # Fast native Python installation via uv python install before falling back to system/source
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ] || [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+      if ! command -v uv >/dev/null 2>&1 && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" install latest >/dev/null 2>&1 || true
+        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh" ]; then
+          STACK=""
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh"
+          # shellcheck disable=SC1090,SC1091
+          . "${SCRIPT_NAME}" || true
+          unset SCRIPT_NAME || true
+        fi
+      fi
+      if command -v uv >/dev/null 2>&1; then
+        _req_py=$(printf '%s' "$PYTHON_VERSION" | cut -d. -f1,2)
+        [ "$_req_py" = "latest" ] && _req_py="3.12"
+        log_info "[CREATE] Installing Python ${_req_py} via uv..."
+        if uv python install "$_req_py" >/dev/null 2>&1; then
+          if _uv_py=$(find_existing_python 2>/dev/null); then
+            link_python_into_libscript_home "$_uv_py"
+            log_info "Installed Python ${PYTHON_VERSION} at ${_uv_py}."
+            exit 0
+          fi
+        fi
+      fi
     fi
 
     if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
@@ -210,10 +304,10 @@ case "$ACTION" in
           fi
         else
           PY_TARBALL=$(mktemp)
-        libscript_download "https://www.python.org/ftp/python/${EXACT_VERSION}/Python-${EXACT_VERSION}.tgz" "${PY_TARBALL}"
-        TMP_BUILD_DIR=$(mktemp -d)
-        tar -xf "${PY_TARBALL}" -C "${TMP_BUILD_DIR}"
-        rm -f "${PY_TARBALL}"
+          libscript_download "https://www.python.org/ftp/python/${EXACT_VERSION}/Python-${EXACT_VERSION}.tgz" "${PY_TARBALL}"
+          TMP_BUILD_DIR=$(mktemp -d)
+          tar -xf "${PY_TARBALL}" -C "${TMP_BUILD_DIR}"
+          rm -f "${PY_TARBALL}"
         fi
         
         mkdir -p "${PY_DIR}"
@@ -229,7 +323,6 @@ case "$ACTION" in
         )
         rm -rf "${TMP_BUILD_DIR}"
         
-        # Setup symlinks
         if [ ! -f "${PY_DIR}/bin/python" ] && [ -f "${PY_DIR}/bin/python${PY_MINOR_VER}" ]; then
           ln -sf "python${PY_MINOR_VER}" "${PY_DIR}/bin/python"
         fi
@@ -237,7 +330,6 @@ case "$ACTION" in
           ln -sf "python${PY_MINOR_VER}" "${PY_DIR}/bin/python3"
         fi
         
-        # Install ensurepip if pip isn't installed
         if [ -x "${PY_DIR}/bin/python" ] && ! "${PY_DIR}/bin/python" -m pip --version >/dev/null 2>&1; then
            "${PY_DIR}/bin/python" -m ensurepip || true
         fi
@@ -247,14 +339,12 @@ case "$ACTION" in
         libscript_symlink_alias "python" "latest" "${EXACT_VERSION}"
       fi
 
-      # VENV logic from old script
       if [ "${PYTHON_VENV-}" ]; then
         export VENV="${PYTHON_VENV}"
         if [ ! -f "${PYTHON_VENV}/bin/python" ]; then
           if ! type libscript_python_venv >/dev/null 2>&1; then
             . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
           fi
-          # Note: We provide EXACT_VERSION to ensure the newly installed binary is selected by our abstraction router
           libscript_python_venv "${PYTHON_VENV}" "${EXACT_VERSION}"
           
           _pip_cmd_opts=""
@@ -267,7 +357,6 @@ case "$ACTION" in
 
           "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -U pip setuptools wheel 2>/dev/null || true
           
-          # Hardware-Optimized ML Profiles
           if [ -n "${ML_ACCELERATOR_BACKEND:-}" ] && [ "${PIP_NO_INDEX:-0}" != "1" ]; then
             log_info "Installing hardware-optimized ML profile: ${ML_ACCELERATOR_BACKEND}"
             case "${ML_ACCELERATOR_BACKEND}" in

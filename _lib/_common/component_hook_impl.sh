@@ -63,6 +63,13 @@ ROLE=%s
 COMPONENT=%s
 # END libscript-managed: %s
 ' "$comp" "$role" "$comp" "$comp" > "$conf_marker"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+    # shellcheck disable=SC1090,SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+    unset SCRIPT_NAME || true
+    libscript_apply_hardware_tuning "$comp" "$sysroot" || true
+  fi
   return 0
 }
 

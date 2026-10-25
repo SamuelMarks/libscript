@@ -4,18 +4,19 @@ setlocal EnableDelayedExpansion
 :: # LibScript Service Management Module (Windows Batch)
 ::
 :: ## Overview
-:: This module provides operations to start, stop, and manage Windows services.
+:: This module provides operations to start, stop, and manage Windows services
+:: (sc.exe) as well as fallback background runner daemons.
 ::
 :: ## Usage
 :: ```batch
-:: call "!LIBSCRIPT_ROOT_DIR!\\_lib\\_common\\service.cmd" :libscript_service start <service_name>
+:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start <service_name>
 :: ```
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2^>^&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" ^>^&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -72,49 +73,135 @@ if "%_SERVICE%"=="" (
 if /i "%_ACTION%"=="up" set "_ACTION=start"
 if /i "%_ACTION%"=="down" set "_ACTION=stop"
 if /i "%_ACTION%"=="query" set "_ACTION=status"
+if /i "%_ACTION%"=="remove" set "_ACTION=uninstall"
+if /i "%_ACTION%"=="uninstall-service" set "_ACTION=uninstall"
 
 call :libscript_service "%_ACTION%" "%_SERVICE%"
 exit /b %ERRORLEVEL%
 
 :: ## libscript_service
-:: Executes Windows service management commands using sc.exe.
+:: Executes Windows service management commands using sc.exe or fallback runner.
 :libscript_service
 set "_SVC_ACT=%~1"
 set "_SVC_NAME=%~2"
+set "_DATA_BASE=%TEMP%\data"
+if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
+set "_SVC_DIR=!_DATA_BASE!\!_SVC_NAME!"
+set "_PID_FILE=!_SVC_DIR!\service.pid"
+set "_RUN_FILE=!_SVC_DIR!\run_!_SVC_NAME!.cmd"
+set "_LOG_FILE=!_SVC_DIR!\service.log"
+
+set "_INIT_SYS=%LIBSCRIPT_INIT_SYSTEM%"
+if "!_INIT_SYS!"=="" set "_INIT_SYS=%INIT_SYSTEM%"
+if "%LIBSCRIPT_FORCE_FALLBACK_DAEMON%"=="1" set "_INIT_SYS=fallback"
+
+if /i "!_INIT_SYS!"=="fallback" goto :fallback_service
+if /i "!_INIT_SYS!"=="none" goto :fallback_service
+
 if /i "%_SVC_ACT%"=="start" (
-    sc.exe start "%_SVC_NAME%"
-    exit /b !ERRORLEVEL!
+    sc.exe query "%_SVC_NAME%" >nul 2>&1
+    if not errorlevel 1 (
+        sc.exe start "%_SVC_NAME%"
+        exit /b !ERRORLEVEL!
+    )
+    goto :fallback_service
 )
 if /i "%_SVC_ACT%"=="stop" (
-    sc.exe stop "%_SVC_NAME%"
-    exit /b !ERRORLEVEL!
+    sc.exe query "%_SVC_NAME%" >nul 2>&1
+    if not errorlevel 1 (
+        sc.exe stop "%_SVC_NAME%"
+        exit /b !ERRORLEVEL!
+    )
+    goto :fallback_service
 )
 if /i "%_SVC_ACT%"=="restart" (
-    sc.exe stop "%_SVC_NAME%" >nul 2>&1
-    timeout /t 2 /nobreak >nul 2>&1
-    sc.exe start "%_SVC_NAME%"
-    exit /b !ERRORLEVEL!
+    sc.exe query "%_SVC_NAME%" >nul 2>&1
+    if not errorlevel 1 (
+        sc.exe stop "%_SVC_NAME%" >nul 2>&1
+        timeout /t 2 /nobreak >nul 2>&1
+        sc.exe start "%_SVC_NAME%"
+        exit /b !ERRORLEVEL!
+    )
+    goto :fallback_service
 )
 if /i "%_SVC_ACT%"=="status" (
-    sc.exe query "%_SVC_NAME%"
-    exit /b !ERRORLEVEL!
+    sc.exe query "%_SVC_NAME%" >nul 2>&1
+    if not errorlevel 1 (
+        sc.exe query "%_SVC_NAME%"
+        exit /b !ERRORLEVEL!
+    )
+    goto :fallback_service
 )
 if /i "%_SVC_ACT%"=="enable" (
-    sc.exe config "%_SVC_NAME%" start= auto
-    exit /b !ERRORLEVEL!
+    sc.exe config "%_SVC_NAME%" start= auto >nul 2>&1
+    exit /b 0
 )
 if /i "%_SVC_ACT%"=="disable" (
-    sc.exe config "%_SVC_NAME%" start= disabled
+    sc.exe config "%_SVC_NAME%" start= disabled >nul 2>&1
+    exit /b 0
+)
+if /i "%_SVC_ACT%"=="uninstall" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%_SVC_NAME%"
     exit /b !ERRORLEVEL!
 )
 if /i "%_SVC_ACT%"=="health" (
-    sc.exe query "%_SVC_NAME%" | findstr /C:"RUNNING" >nul 2>&1
-    exit /b !ERRORLEVEL!
+    sc.exe query "%_SVC_NAME%" 2>nul | findstr /C:"RUNNING" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    if exist "!_PID_FILE!" exit /b 0
+    exit /b 1
 )
 if /i "%_SVC_ACT%"=="logs" (
+    if exist "!_LOG_FILE!" (
+        type "!_LOG_FILE!"
+        exit /b 0
+    )
     echo [WARN] Logs not natively supported via sc.exe for %_SVC_NAME%
     exit /b 0
 )
 echo [ERROR] Unknown service action: %_SVC_ACT% >&2
 exit /b 1
 
+:: ## fallback_service
+:: Manages background runner processes using PID markers when sc.exe is not used.
+:fallback_service
+if /i "%_SVC_ACT%"=="start" (
+    if exist "!_RUN_FILE!" (
+        start "!_SVC_NAME!" /B cmd.exe /v:on /c "!_RUN_FILE!"
+        echo running > "!_PID_FILE!"
+        exit /b 0
+    )
+    exit /b 0
+)
+if /i "%_SVC_ACT%"=="stop" (
+    taskkill /fi "WINDOWTITLE eq !_SVC_NAME!" /f >nul 2>&1
+    if exist "!_PID_FILE!" del /f /q "!_PID_FILE!" >nul 2>&1
+    exit /b 0
+)
+if /i "%_SVC_ACT%"=="restart" (
+    taskkill /fi "WINDOWTITLE eq !_SVC_NAME!" /f >nul 2>&1
+    if exist "!_PID_FILE!" del /f /q "!_PID_FILE!" >nul 2>&1
+    if exist "!_RUN_FILE!" (
+        start "!_SVC_NAME!" /B cmd.exe /v:on /c "!_RUN_FILE!"
+        echo running > "!_PID_FILE!"
+    )
+    exit /b 0
+)
+if /i "%_SVC_ACT%"=="status" (
+    if exist "!_PID_FILE!" (
+        echo [RUNNING] !_SVC_NAME!
+        exit /b 0
+    )
+    echo [STOPPED] !_SVC_NAME!
+    exit /b 1
+)
+if /i "%_SVC_ACT%"=="uninstall" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%_SVC_NAME%"
+    exit /b !ERRORLEVEL!
+)
+if /i "%_SVC_ACT%"=="logs" (
+    if exist "!_LOG_FILE!" type "!_LOG_FILE!"
+    exit /b 0
+)
+exit /b 0

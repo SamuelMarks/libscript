@@ -182,7 +182,7 @@ case "${1:-}" in
       exit 1
     fi
     ;;
-  auth*|location*|group*|project*|network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|aws*|azure*|gcp*|hetzner*|proxmox*|cleanup*)
+  auth*|location*|group*|project*|network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|dashboard*|cost*|usage*|logs-aggregate*|aws*|azure*|gcp*|hetzner*|proxmox*|digitalocean*|linode*|vultr*|cleanup*)
     ACTION="${1:-}"
     shift
     ;;
@@ -248,7 +248,7 @@ fi
 # Argument parsing loop
 while [ $# -gt 0 ]; do
   # These actions stop parsing and pass remaining args to sub-scripts
-  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "auth" ] || [ "$ACTION" = "location" ] || [ "$ACTION" = "group" ] || [ "$ACTION" = "project" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ] || [ "$ACTION" = "hetzner" ] || [ "$ACTION" = "proxmox" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "auth" ] || [ "$ACTION" = "location" ] || [ "$ACTION" = "group" ] || [ "$ACTION" = "project" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "dashboard" ] || [ "$ACTION" = "cost" ] || [ "$ACTION" = "usage" ] || [ "$ACTION" = "logs-aggregate" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ] || [ "$ACTION" = "hetzner" ] || [ "$ACTION" = "proxmox" ] || [ "$ACTION" = "digitalocean" ] || [ "$ACTION" = "linode" ] || [ "$ACTION" = "vultr" ]; then
     break
   fi
   case "$1" in

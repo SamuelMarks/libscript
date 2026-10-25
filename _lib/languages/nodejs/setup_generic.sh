@@ -3,7 +3,7 @@
 # Generic setup module for Node.js.
 #
 # ## Usage
-# Installs Node.js by downloading release tarballs from nodejs.org or using system/mise/asdf.
+# Installs Node.js natively by downloading release tarballs from nodejs.org with reuse-else-create semantics.
 
 
 set -feu
@@ -77,10 +77,38 @@ if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
   fi
 fi
 
+# ## find_local_matching_nodejs
+# Checks LIBSCRIPT_HOME/nodejs for an existing Node.js installation matching the requested major/minor prefix.
+find_local_matching_nodejs() {
+  _flm_req=$(printf '%s' "$NODEJS_VERSION" | sed -e 's/^v//' -e 's/\.x$//' -e 's/\.\*$//')
+  _flm_base="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs"
+  [ -d "$_flm_base" ] || return 1
+  if [ -x "${_flm_base}/${NODEJS_VERSION}/bin/node" ]; then
+    _flm_v=$("${_flm_base}/${NODEJS_VERSION}/bin/node" -v 2>/dev/null | sed 's/^v//' || true)
+    if [ -n "$_flm_v" ]; then
+      EXACT_VERSION="$_flm_v"
+      return 0
+    fi
+  fi
+  for _flm_d in "$_flm_base"/v*; do
+    [ -x "${_flm_d}/bin/node" ] || continue
+    _flm_v=$("${_flm_d}/bin/node" -v 2>/dev/null | sed 's/^v//' || true)
+    if [ "$_flm_req" = "latest" ] || [ "$_flm_req" = "lts" ] || [ "${_flm_v#"${_flm_req}".}" != "$_flm_v" ] || [ "$_flm_v" = "$_flm_req" ]; then
+      EXACT_VERSION="$_flm_v"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ## resolve_exact_version
-# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
+# Resolves semantic version aliases (such as 'latest', 'lts', '20.x', or '22') to a concrete release version.
 resolve_exact_version() {
-  clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed 's/^v//')
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_local_matching_nodejs; then
+    NODEJS_BASE_URL="https://nodejs.org/dist/v${EXACT_VERSION}"
+    return 0
+  fi
+  clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed -e 's/^v//' -e 's/\.x$//' -e 's/\.\*$//')
   if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
     EXACT_VERSION="20.17.0"
     NODEJS_BASE_URL="file://${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/runtimes"
@@ -167,6 +195,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_local_matching_nodejs; then
+        log_info "[REUSE] Node.js ${NODEJS_VERSION} (v${EXACT_VERSION}) is already installed locally; skipping download."
+        exit 0
+      fi
       log_info "Downloading nodejs ${NODEJS_VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs"
       if [ -n "${NODEJS_DOWNLOAD_URL:-}" ]; then
@@ -178,8 +210,13 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${VERSION:-latest}/bin/node" ]; then
-      log_info "nodejs ${VERSION:-latest} is already installed."
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_local_matching_nodejs; then
+      libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${EXACT_VERSION}"
+      _node_major=$(printf '%s' "$EXACT_VERSION" | cut -d. -f1)
+      [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}" "v${EXACT_VERSION}"
+      [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}.x" "v${EXACT_VERSION}"
+      libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
+      log_info "[REUSE] nodejs ${NODEJS_VERSION} (v${EXACT_VERSION}) is already installed."
       exit 0
     fi
     if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
@@ -196,7 +233,6 @@ case "$ACTION" in
     else
       resolve_exact_version
       libscript_depends 'curl' 'tar'
-      resolve_exact_version
       NODE_DIR=$(libscript_get_version_dir "nodejs" "v${EXACT_VERSION}")
       export PATH="${NODE_DIR}/bin:${PATH}"
       
@@ -243,6 +279,9 @@ case "$ACTION" in
       fi
 
       libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${EXACT_VERSION}"
+      _node_major=$(printf '%s' "$EXACT_VERSION" | cut -d. -f1)
+      [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}" "v${EXACT_VERSION}"
+      [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}.x" "v${EXACT_VERSION}"
       libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
       libscript_symlink_alias "nodejs" "latest" "v${EXACT_VERSION}"
     fi

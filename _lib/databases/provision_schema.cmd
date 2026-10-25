@@ -13,10 +13,10 @@ set "STACK=%STACK%:!THIS_FILE!:"
 
 :: ## Overview
 :: Idempotently provisions a multi-tenant database schema and least-privilege user account on Windows.
-:: Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite.
+:: Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite with reuse-else-create semantics.
 ::
 :: ## Usage
-::   call provision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant> --password <tenant_pass>
+::   call provision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant> --password <tenant_pass> [--legacy-names <csv>]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -55,6 +55,7 @@ set "PORT="
 set "ADMIN_USER="
 set "ADMIN_PASS="
 set "SCHEMA_NAME="
+set "LEGACY_NAMES="
 set "TENANT_USER="
 set "TENANT_PASS="
 set "CHARSET=utf8mb4"
@@ -70,6 +71,7 @@ if "%~1"=="--port" ( set "PORT=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--admin-pass" ( set "ADMIN_PASS=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--schema" ( set "SCHEMA_NAME=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--legacy-names" ( set "LEGACY_NAMES=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--user" ( set "TENANT_USER=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--password" ( set "TENANT_PASS=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--charset" ( set "CHARSET=%~2" & shift & shift & goto parse_args )
@@ -116,18 +118,41 @@ if "%ADMIN_PASS%"=="" (
 del "%TMP_SQL%"
 exit /b 0
 
+:: ## run_psql_admin
+:: Executes a psql administrative command against the specified database on Windows.
+:run_psql_admin
+set "_RPA_DB=%~1"
+set "_RPA_FLAG=%~2"
+set "_RPA_SQL=%~3"
+set "PGPASSWORD=%ADMIN_PASS%"
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -d "%_RPA_DB%" %_RPA_FLAG% "%_RPA_SQL%" 2>nul
+if not errorlevel 1 exit /b 0
+set "PGPASSWORD=%TENANT_PASS%"
+psql -h "%HOST%" -p "%PORT%" -U "%TENANT_USER%" -d "%_RPA_DB%" %_RPA_FLAG% "%_RPA_SQL%" 2>nul
+exit /b !errorlevel!
+
 :: ## do_postgres
-:: Performs the do_postgres operation and updates component state.
+:: Idempotently reuses or creates PostgreSQL role and database schema on Windows.
 :do_postgres
 if "%PORT%"=="" set "PORT=5432"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
 set "PGPASSWORD=%ADMIN_PASS%"
-psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -tAc "SELECT 1 FROM pg_database WHERE datname='%SCHEMA_NAME%'" | findstr "1" >nul
-if errorlevel 1 ( psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "CREATE DATABASE \"%SCHEMA_NAME%\";" )
-psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -tAc "SELECT 1 FROM pg_roles WHERE rolname='%TENANT_USER%'" | findstr "1" >nul
-if errorlevel 1 ( psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "CREATE USER \"%TENANT_USER%\" WITH ENCRYPTED PASSWORD '%TENANT_PASS%';" )
-psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "GRANT ALL PRIVILEGES ON DATABASE \"%SCHEMA_NAME%\" TO \"%TENANT_USER%\";"
-psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -d "%SCHEMA_NAME%" -c "ALTER SCHEMA public OWNER TO \"%TENANT_USER%\";"
+call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='%TENANT_USER%'" | findstr "1" >nul
+if not errorlevel 1 (
+    echo [REUSE] PostgreSQL role '%TENANT_USER%' already exists.
+) else (
+    echo [CREATE] Creating PostgreSQL role '%TENANT_USER%'...
+    call :run_psql_admin postgres -c "CREATE USER \"%TENANT_USER%\" WITH LOGIN ENCRYPTED PASSWORD '%TENANT_PASS%';" >nul 2>&1
+)
+call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_database WHERE datname='%SCHEMA_NAME%'" | findstr "1" >nul
+if not errorlevel 1 (
+    echo [REUSE] PostgreSQL database '%SCHEMA_NAME%' already exists.
+) else (
+    echo [CREATE] Creating PostgreSQL database '%SCHEMA_NAME%' owned by '%TENANT_USER%'...
+    call :run_psql_admin postgres -c "CREATE DATABASE \"%SCHEMA_NAME%\" OWNER \"%TENANT_USER%\";" >nul 2>&1
+)
+call :run_psql_admin postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"%SCHEMA_NAME%\" TO \"%TENANT_USER%\";" >nul 2>&1
+call :run_psql_admin "%SCHEMA_NAME%" -c "ALTER SCHEMA public OWNER TO \"%TENANT_USER%\";" >nul 2>&1
 set "PGPASSWORD="
 exit /b 0
 

@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for uv
+:: Windows setup for uv with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -61,11 +61,7 @@ if "%DOWNLOAD_DIR%"=="" (
 
 :: Resolve install method
 if "%UV_INSTALL_METHOD%"=="" (
-    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
-        set "UV_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
-    ) else (
-        set "UV_INSTALL_METHOD=libscript_native"
-    )
+    set "UV_INSTALL_METHOD=libscript_native"
 )
 
 if "%ACTION%"=="ls" goto :action_ls
@@ -84,7 +80,16 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_uv
+:: Checks LIBSCRIPT_HOME, USERPROFILE\.local\bin, and system PATH for an existing uv.exe binary.
+:find_existing_uv
+if exist "%LIBSCRIPT_HOME%\uv\%UV_VERSION%\bin\uv.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\uv\default\bin\uv.exe" exit /b 0
+if exist "%USERPROFILE%\.local\bin\uv.exe" exit /b 0
+where uv >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -141,6 +146,13 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%UV_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_uv
+        if not errorlevel 1 (
+            echo [REUSE] uv is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading uv %UV_VERSION% to %DOWNLOAD_DIR%\uv...
     if not exist "%DOWNLOAD_DIR%\uv" mkdir "%DOWNLOAD_DIR%\uv"
     if not "%UV_DOWNLOAD_URL%"=="" (
@@ -154,6 +166,13 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_uv
+    if not errorlevel 1 (
+        echo [REUSE] uv ^(%UV_VERSION%^) is already installed.
+        exit /b 0
+    )
+)
 if "%UV_INSTALL_METHOD%"=="system" (
     winget install uv --accept-package-agreements --accept-source-agreements
     exit /b !errorlevel!
@@ -164,7 +183,7 @@ if "%UV_INSTALL_METHOD%"=="pkgx" ( pkgx install "uv@%UV_VERSION%" & exit /b 0 )
 if "%UV_INSTALL_METHOD%"=="vfox" ( vfox add uv & vfox install "uv@%UV_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\uv\%UV_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\uv.exe" (
     echo Installing uv %UV_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip" (
@@ -178,8 +197,16 @@ if not exist "%TARGET_DIR%\bin" (
         curl -sSL "%UV_DOWNLOAD_URL%" -o "%TEMP%\uv.zip"
         tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for uv.
-        exit /b 1
+        set "_UV_ARCH=x86_64"
+        if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_UV_ARCH=aarch64"
+        curl -sSLf "https://github.com/astral-sh/uv/releases/latest/download/uv-!_UV_ARCH!-pc-windows-msvc.zip" -o "%TEMP%\uv.zip"
+        if not errorlevel 1 (
+            tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%\bin"
+            del /f /q "%TEMP%\uv.zip" 2>nul
+        ) else (
+            echo No download URL or cache available for uv.
+            exit /b 1
+        )
     )
 ) else (
     echo uv %UV_VERSION% is already installed.
@@ -188,6 +215,11 @@ set "ALIAS_DIR=%LIBSCRIPT_HOME%\uv\%UV_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
     mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+set "DEFAULT_DIR=%LIBSCRIPT_HOME%\uv\default"
+if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
+    if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%" 2>nul
+    mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

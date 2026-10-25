@@ -96,6 +96,15 @@ libscript_volume_create() {
       fi
       sh -c "$cmd"
       ;;
+    digitalocean)
+      doctl compute volume create "$vname" --region "$zone" --size "${size}GiB"
+      ;;
+    linode)
+      linode-cli volumes create --label "$vname" --region "$zone" --size "$size"
+      ;;
+    vultr)
+      vultr-cli block-storage create --label="$vname" --region="$zone" --size="$size"
+      ;;
   esac
 }
 
@@ -133,6 +142,15 @@ libscript_volume_delete() {
       libscript_verify_managed azure volume "$vid" "$rg" || return 1
       az disk delete --name "$vid" --resource-group "$rg" --yes
       ;;
+    digitalocean)
+      doctl compute volume delete "$vid" --force
+      ;;
+    linode)
+      linode-cli volumes delete "$vid"
+      ;;
+    vultr)
+      vultr-cli block-storage delete "$vid"
+      ;;
   esac
 }
 
@@ -167,6 +185,15 @@ libscript_volume_list() {
       else
         az disk list --resource-group "$rg" --query "[].[name,diskState]" --output tsv
       fi
+      ;;
+    digitalocean)
+      doctl compute volume list
+      ;;
+    linode)
+      linode-cli volumes list
+      ;;
+    vultr)
+      vultr-cli block-storage list
       ;;
   esac
 }
@@ -204,6 +231,15 @@ libscript_volume_attach() {
       fi
       az vm disk attach --vm-name "$nid" --name "$vid" --resource-group "$rg" --new false
       ;;
+    digitalocean)
+      doctl compute volume-action attach "$vid" "$nid"
+      ;;
+    linode)
+      linode-cli volumes attach "$vid" --linode_id "$nid"
+      ;;
+    vultr)
+      vultr-cli block-storage attach "$vid" --instance="$nid"
+      ;;
   esac
 }
 
@@ -238,6 +274,15 @@ libscript_volume_detach() {
         return 1
       fi
       az vm disk detach --vm-name "$nid" --name "$vid" --resource-group "$rg"
+      ;;
+    digitalocean)
+      doctl compute volume-action detach "$vid" "$nid"
+      ;;
+    linode)
+      linode-cli volumes detach "$vid"
+      ;;
+    vultr)
+      vultr-cli block-storage detach "$vid"
       ;;
   esac
 }

@@ -1,10 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Orchestrates taking backups or snapshots of a deployed cloud node.
+# Orchestrates taking backups, snapshots, or multi-app state exports (`--export-state`) of a deployed cloud node.
 #
 # ## Usage
-# Run `backup_cloud.sh <node_name> [options]` (e.g. `--target s3`, `--snapshot`) to backup data.
-
+# Run `backup_cloud.sh <node_name> [options]` (e.g. `--export-state <local_dir> [--app <dest>]...`) to backup or export data.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -29,58 +28,154 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT=${LIBSCRIPT_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}
+_BK_SCRIPT_DIR="$SCRIPT_DIR"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_DIR="$_BK_SCRIPT_DIR"
 
 if [ "$#" -lt 1 ]; then
   printf '%s\n' "Usage: ${THIS_FILE} <node_name> [options]"
   printf '%s\n' "Options:"
-  printf '%s\n' "  --keep-last <N>      Number of backups to retain"
-  printf '%s\n' "  --target <local|s3>  Backup target"
-  printf '%s\n' "  --snapshot           Take a cloud-native disk snapshot"
+  printf '%s\n' "  --keep-last <N>                Number of backups to retain"
+  printf '%s\n' "  --target <local|s3>            Backup target"
+  printf '%s\n' "  --snapshot                     Take a cloud-native disk snapshot"
+  printf '%s\n' "  --export-state [app] <dir>     Export remote application state into <dir>"
   exit 1
 fi
 
-NODE=$1
-shift
-
+NODE="${NODE_NAME:-}"
+PROVIDER="${CLOUD_PROVIDER:-${PROVIDER:-azure}}"
+RG_CTX="${RG_NAME:-RG-ANALYTICS-PROD}"
+LOCATION="${LOCATION:-eastus}"
+ADMIN_USER="${ADMIN_USER:-azureuser}"
+ONLY_TARGET="${ONLY_TARGET:-all}"
 KEEP_LAST=5
 TARGET="local"
 TAKE_SNAPSHOT=0
+EXPORT_MODE=0
+LOCAL_DST=""
+APP_SPECS=""
+
+# ## matches_only_target
+# Checks whether an application remote destination matches the --only selector.
+matches_only_target() {
+  _mot_dest="$1"
+  case "$ONLY_TARGET" in
+    all|both|"") return 0 ;;
+    pulse|pulse_query|pulse-query|hospital_dashboard_platform|hospital-dashboard-platform)
+      case "$_mot_dest" in
+        *hospital-dashboard-platform*|*pulse*) return 0 ;;
+      esac
+      return 1
+      ;;
+    t1d|t1d_analytics|t1d-analytics)
+      case "$_mot_dest" in
+        *t1d*) return 0 ;;
+      esac
+      return 1
+      ;;
+    *)
+      [ "$_mot_dest" = "$ONLY_TARGET" ] && return 0
+      return 1
+      ;;
+  esac
+}
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    backup|export-remote) shift ;;
     --keep-last) KEEP_LAST="$2"; shift 2 ;;
     --target) TARGET="$2"; shift 2 ;;
     --snapshot) TAKE_SNAPSHOT=1; shift 1 ;;
     --paths) PATHS="$2"; shift 2 ;;
+    --provider=*) PROVIDER="${1#*=}"; shift ;;
     --provider) PROVIDER="$2"; shift 2 ;;
-    --rg) RG_CTX="$2"; shift 2 ;;
-    --export-state)
-      REMOTE_APP_DIR="$2"; LOCAL_DST="$3"; shift 3
-      CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER:-azure}/cli.sh"
-      "$CLI" node exec "$NODE" "${RG_CTX:-RG-ANALYTICS-PROD}" "cd $REMOTE_APP_DIR && sudo ~/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
-      "$CLI" node download "$NODE" "${RG_CTX:-RG-ANALYTICS-PROD}" "/tmp/libscript_export_stage/" "$LOCAL_DST/"
-      exit 0
+    --node=*) NODE="${1#*=}"; shift ;;
+    --node) NODE="$2"; shift 2 ;;
+    --rg=*|--resource-group=*) RG_CTX="${1#*=}"; shift ;;
+    --rg|--resource-group) RG_CTX="$2"; shift 2 ;;
+    --location=*) LOCATION="${1#*=}"; shift ;;
+    --location) LOCATION="$2"; shift 2 ;;
+    --admin-user=*|--admin-username=*) ADMIN_USER="${1#*=}"; shift ;;
+    --admin-user|--admin-username) ADMIN_USER="$2"; shift 2 ;;
+    --only=*) ONLY_TARGET="${1#*=}"; shift ;;
+    --only) ONLY_TARGET="$2"; shift 2 ;;
+    --dry-run|-n) export DRY_RUN="true"; shift ;;
+    --app=*) APP_SPECS="${APP_SPECS}${1#*=}|"; shift ;;
+    --app) APP_SPECS="${APP_SPECS}${2}|"; shift 2 ;;
+    --export-state=*)
+      EXPORT_MODE=1
+      LOCAL_DST="${1#*=}"
+      shift
       ;;
-    *) shift 1 ;;
+    --export-state)
+      EXPORT_MODE=1
+      shift
+      if [ $# -ge 2 ] && [ "${2#-}" = "$2" ]; then
+        APP_SPECS="${APP_SPECS}${1}|"
+        LOCAL_DST="$2"
+        shift 2
+      elif [ $# -ge 1 ] && [ "${1#-}" = "$1" ]; then
+        LOCAL_DST="$1"
+        shift 1
+      fi
+      ;;
+    *)
+      if [ -z "$NODE" ]; then
+        NODE="$1"
+      elif [ "$EXPORT_MODE" -eq 1 ] && [ -z "$LOCAL_DST" ]; then
+        LOCAL_DST="$1"
+      fi
+      shift
+      ;;
   esac
 done
 
+export AZURE_LOCATION="$LOCATION"
+export LOCATION ADMIN_USER
+
+if [ "$EXPORT_MODE" -eq 1 ]; then
+  if [ -z "$LOCAL_DST" ]; then
+    log_error "'--export-state' requires a local destination directory."
+    exit 1
+  fi
+  mkdir -p "$LOCAL_DST"
+  CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
+  log_info "Exporting remote state for '${ONLY_TARGET}' from '${NODE}' into '${LOCAL_DST}'..."
+  "$CLI" node sync "$NODE" "$RG_CTX"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/stanford_export_stage && mkdir -p /tmp/stanford_export_stage"
+  OIFS="$IFS"
+  IFS="|"
+  # shellcheck disable=SC2086
+  set -- $APP_SPECS
+  IFS="$OIFS"
+  for _ex_spec in "$@"; do
+    [ -n "$_ex_spec" ] || continue
+    _ex_no_dom="${_ex_spec%%@*}"
+    case "$_ex_no_dom" in
+      *:*) _ex_dest="${_ex_no_dom#*:}" ;;
+      *) _ex_dest="$_ex_no_dom" ;;
+    esac
+    if ! matches_only_target "$_ex_dest"; then
+      continue
+    fi
+    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_ex_dest} && sudo LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh export-state libscript.json /tmp/stanford_export_stage"
+  done
+  "$CLI" node download "$NODE" "$RG_CTX" "/tmp/stanford_export_stage/" "${LOCAL_DST}/"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/stanford_export_stage"
+  log_info "Export completed successfully into '${LOCAL_DST}'."
+  exit 0
+fi
+
 printf '%s\n' "[BACKUP] Starting backup for node: $NODE"
 
-# Determine provider and state
 STATE_FILE=".libscript_state.json"
-PROVIDER="unknown"
 if [ -f "$STATE_FILE" ] && command -v jq >/dev/null 2>&1; then
-  # Look up provider from state if possible. Fallback to trying all or reading .deploy_state
   if [ -f ".deploy_state" ]; then
     PROVIDER=$(grep "^PROVIDER=" .deploy_state | cut -d= -f2-)
   fi
 fi
 
 printf '%s\n' "[BACKUP] Pre-backup hooks: Quiescing database/filesystem..."
-# Mock quiesce logic
 printf '%s\n' "  -> Running fsfreeze / FLUSH TABLES WITH READ LOCK equivalent..."
 
 if [ "$TAKE_SNAPSHOT" -eq 1 ]; then
@@ -107,15 +202,11 @@ if [ "$TARGET" = "local" ]; then
   TIMESTAMP=$(date +%s)
   ARCHIVE="$BACKUP_DIR/backup-${TIMESTAMP}.tar.zst"
   printf '%s\n' "[BACKUP] Creating local encrypted archive at $ARCHIVE..."
-  # Mock archive creation
   touch "$ARCHIVE"
   printf '%s\n' "  -> Mocked AES-256 encryption applied."
-  
   printf '%s\n' "[BACKUP] Enforcing retention policy: keeping last $KEEP_LAST backups."
-  # Pruning logic
   # shellcheck disable=SC2012
   ls -1t "$BACKUP_DIR"/backup-*.tar.zst 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs rm -f 2>/dev/null || true
-
 elif [ "$TARGET" = "s3" ] || [ "$TARGET" = "gcs" ] || [ "$TARGET" = "azure" ]; then
   printf '%s\n' "[BACKUP] Streaming backup to remote object storage ($TARGET)..."
   printf '%s\n' "  -> Handling multipart uploads for large files."

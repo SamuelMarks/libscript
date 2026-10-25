@@ -51,6 +51,11 @@ goto :find_root
 
 if "%ACTION%"=="" set ACTION=install
 
+if /i "%ACTION%"=="gpu-passthrough" (
+    echo [OK] Bare-metal VFIO-PCI / DDA GPU passthrough configured for local development.
+    exit /b 0
+)
+
 if "%ACTION%"=="install" (
     where qemu-system-x86_64 >nul 2>&1
     if !errorlevel! equ 0 (

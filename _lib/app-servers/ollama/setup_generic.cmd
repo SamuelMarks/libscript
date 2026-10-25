@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for ollama
+:: Windows setup for ollama with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -84,7 +84,15 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_ollama
+:: Checks LIBSCRIPT_HOME and system PATH for an existing ollama.exe binary.
+:find_existing_ollama
+if exist "%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\bin\ollama.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\ollama\default\bin\ollama.exe" exit /b 0
+where ollama >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -141,6 +149,13 @@ exit /b 0
 :: Downloads the ollama release archive into the local download cache.
 :action_download
 if "%OLLAMA_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_ollama
+        if not errorlevel 1 (
+            echo [REUSE] ollama is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading ollama %OLLAMA_VERSION% to %DOWNLOAD_DIR%\ollama...
     if not exist "%DOWNLOAD_DIR%\ollama" mkdir "%DOWNLOAD_DIR%\ollama"
     if not "%OLLAMA_DOWNLOAD_URL%"=="" (
@@ -154,6 +169,13 @@ exit /b 0
 :: ## action_install
 :: Installs the requested ollama version using the configured installation method.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_ollama
+    if not errorlevel 1 (
+        echo [REUSE] ollama ^(%OLLAMA_VERSION%^) is already installed.
+        exit /b 0
+    )
+)
 if "%OLLAMA_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ollama
     exit /b !errorlevel!

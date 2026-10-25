@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/linode/vars.schema.json",
+  "title": "Linode Cloud Provider",
+  "description": "Linode Cloud Provider management tools",
+  "type": "object",
+  "properties": {
+    "LINODE_VERSION": {
+      "description": "Specific version of linode CLI (linode-cli) to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "LINODE_INSTALL_METHOD": {
+      "description": "How to install LINODE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/vultr/vars.schema.json",
+  "title": "Vultr Cloud Provider",
+  "description": "Vultr Cloud Provider management tools",
+  "type": "object",
+  "properties": {
+    "VULTR_VERSION": {
+      "description": "Specific version of vultr CLI (vultr-cli) to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "VULTR_INSTALL_METHOD": {
+      "description": "How to install VULTR. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    }
+  }
+}

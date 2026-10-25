@@ -9,30 +9,30 @@ or operating system.
       Cross-cloud mesh: `postgres-ha`, `redis-cluster`, `valkey-cluster`, `mesos-marathon-ha`,
       `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`).
 - [x] Automated global load balancer and reverse proxy configuration (`traits/ingress/`, `netctl`).
-- [ ] Provider Expansion: Add support for DigitalOcean, Linode, and Vultr to the multicloud wrapper.
+- [x] Provider Expansion: Add support for DigitalOcean, Linode, and Vultr to the multicloud wrapper.
 - [x] Unified Deployment Grammar: High-level declarative DSLs (`payloads/payload.schema.json` and
       `topologies/topology.schema.json`) to describe globally distributed stacks and clusters.
 - [x] Encrypted cross-node mesh networking / Zero-Trust Sidecars (`traits/mesh/` WireGuard &
       Tailscale overlays).
-- [ ] Git-driven deployment workflows (`libscript deploy`).
+- [x] Git-driven deployment workflows (`libscript deploy`).
 - [x] Cross-cloud persistent volume and state management (`traits/storage/`, `traits/backup/`).
 
 ## Phase 4: Hardware & Observability (Next)
 
-- [ ] Hardware-Aware Optimization: Automatically tuning component installations based on detected
+- [x] Hardware-Aware Optimization: Automatically tuning component installations based on detected
       hardware (CPU instructions, NVMe presence).
 - [x] Terminal User Interface (TUI) for stack and PaaS management via `package-as TUI`.
-- [ ] Lightweight, decentralized Web Dashboard / Control Plane for real-time monitoring and resource
+- [x] Lightweight, decentralized Web Dashboard / Control Plane for real-time monitoring and resource
       management.
-- [ ] Integrated log aggregation and health monitoring.
-- [ ] Real-time multicloud resource cost and usage reporting.
+- [x] Integrated log aggregation and health monitoring.
+- [x] Real-time multicloud resource cost and usage reporting.
 
 ## Phase 5: Hardware Acceleration & AI Infrastructure (Current)
 
 - [x] Abstracted provisioning for TPU and GPU Virtual Machines.
 - [x] GKE integration for distributed AI workloads via XPK.
 - [x] Automation for inference engines (vLLM, JetStream).
-- [ ] Bare-metal generic GPU passthrough setup for local development.
+- [x] Bare-metal generic GPU passthrough setup for local development.
 
 ## Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix
 

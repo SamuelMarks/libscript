@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for python
+:: Windows setup for python with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -84,7 +84,7 @@ if "%LIBSCRIPT_OFFLINE%"=="1" (
 )
 
 if "%ACTION%"=="" set ACTION=install
-if "%PYTHON_VERSION%"=="" set PYTHON_VERSION=latest
+if "%PYTHON_VERSION%"=="" set PYTHON_VERSION=3.12
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
@@ -95,11 +95,7 @@ if "%DOWNLOAD_DIR%"=="" (
 
 :: Resolve install method
 if "%PYTHON_INSTALL_METHOD%"=="" (
-    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
-        set "PYTHON_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
-    ) else (
-        set "PYTHON_INSTALL_METHOD=libscript_native"
-    )
+    set "PYTHON_INSTALL_METHOD=libscript_native"
 )
 
 if "%ACTION%"=="ls" goto :action_ls
@@ -118,7 +114,24 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_python
+:: Checks LIBSCRIPT_HOME, uv python directory, and system PATH for a matching Python installation on Windows.
+:find_existing_python
+if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\bin\python.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\python.exe" exit /b 0
+where python >nul 2>&1
+if not errorlevel 1 (
+    if /i "%PYTHON_VERSION%"=="latest" exit /b 0
+    python -c "import sys; sys.exit(0 if f'{sys.version_info[0]}.{sys.version_info[1]}'.startswith('%PYTHON_VERSION%') else 1)" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+where uv >nul 2>&1
+if not errorlevel 1 (
+    uv python find "%PYTHON_VERSION%" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -175,6 +188,13 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_python
+        if not errorlevel 1 (
+            echo [REUSE] Python %PYTHON_VERSION% is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading python %PYTHON_VERSION% to %DOWNLOAD_DIR%\python...
     if not exist "%DOWNLOAD_DIR%\python" mkdir "%DOWNLOAD_DIR%\python"
     if not "%PYTHON_DOWNLOAD_URL%"=="" (
@@ -188,6 +208,21 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_python
+    if not errorlevel 1 (
+        echo [REUSE] python %PYTHON_VERSION% is already installed.
+        exit /b 0
+    )
+)
+where uv >nul 2>&1
+if not errorlevel 1 (
+    uv python install "%PYTHON_VERSION%" >nul 2>&1
+    if not errorlevel 1 (
+        echo Installed Python %PYTHON_VERSION% via uv.
+        exit /b 0
+    )
+)
 if "%PYTHON_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
     exit /b !errorlevel!

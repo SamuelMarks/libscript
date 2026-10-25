@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "digitalocean",
+  "provides": ["digitalocean", "doctl"],
+  "os_whitelist": ["all"],
+  "category": "cloud-providers",
+  "title": "DigitalOcean",
+  "description": "LibScript component for DigitalOcean cloud provider and doctl CLI"
+}

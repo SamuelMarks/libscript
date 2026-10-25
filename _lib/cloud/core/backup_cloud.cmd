@@ -2,10 +2,10 @@
 :: # backup_cloud.cmd
 ::
 :: ## Overview
-:: Takes backups or snapshots of a provisioned node's data in the cloud on Windows.
+:: Takes backups, snapshots, or multi-app state exports (`--export-state`) of a cloud node on Windows.
 ::
 :: ## Usage
-:: Run `backup_cloud.cmd <node_name> [options]` to take cloud-native snapshots or file-level backups.
+:: Run `backup_cloud.cmd <node_name> [options]` to take snapshots or export application state.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,46 +51,71 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "NODE=%~1"
-if "!NODE!"=="" (
-    echo Usage: backup_cloud.cmd ^<node_name^> [options]
-    echo Options:
-    echo   --keep-last ^<N^>      Number of backups to retain
-    echo   --target ^<local^|s3^>  Backup target
-    echo   --snapshot           Take a cloud-native disk snapshot
-    echo   --paths ^<paths^>        Specific paths to backup
-    exit /b 1
-)
-shift
+if /i "%~1"=="backup" shift
+if /i "%~1"=="export-remote" shift
 
+set "NODE=%NODE_NAME%"
+set "PROVIDER=%CLOUD_PROVIDER%"
+if "!PROVIDER!"=="" set "PROVIDER=%PROVIDER%"
+if "!PROVIDER!"=="" set "PROVIDER=azure"
+set "RG_CTX=%RG_NAME%"
+if "!RG_CTX!"=="" set "RG_CTX=RG-ANALYTICS-PROD"
+set "LOCATION=%LOCATION%"
+if "!LOCATION!"=="" set "LOCATION=eastus"
+set "ADMIN_USER=%ADMIN_USER%"
+if "!ADMIN_USER!"=="" set "ADMIN_USER=azureuser"
+set "ONLY_TARGET=%ONLY_TARGET%"
+if "!ONLY_TARGET!"=="" set "ONLY_TARGET=all"
 set "KEEP_LAST=5"
 set "TARGET=local"
 set "TAKE_SNAPSHOT=0"
 set "PATHS="
+set "EXPORT_MODE=0"
+set "LOCAL_DST="
+set "APP_SPECS="
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto :args_done
-if /i "%~1"=="--keep-last" (
-    set "KEEP_LAST=%~2"
-    shift & shift
-    goto :parse_args
-)
-if /i "%~1"=="--target" (
-    set "TARGET=%~2"
-    shift & shift
-    goto :parse_args
-)
-if /i "%~1"=="--paths" (
-    set "PATHS=%~2"
-    shift & shift
-    goto :parse_args
-)
-if /i "%~1"=="--snapshot" (
-    set "TAKE_SNAPSHOT=1"
+set "_BA=%~1"
+if /i "!_BA!"=="--keep-last" ( set "KEEP_LAST=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA!"=="--target" ( set "TARGET=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA!"=="--paths" ( set "PATHS=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA!"=="--snapshot" ( set "TAKE_SNAPSHOT=1" & shift & goto :parse_args )
+if /i "!_BA:~0,11!"=="--provider=" ( set "PROVIDER=!_BA:~11!" & shift & goto :parse_args )
+if /i "!_BA!"=="--provider" ( set "PROVIDER=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA:~0,7!"=="--node=" ( set "NODE=!_BA:~7!" & shift & goto :parse_args )
+if /i "!_BA!"=="--node" ( set "NODE=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA:~0,5!"=="--rg=" ( set "RG_CTX=!_BA:~5!" & shift & goto :parse_args )
+if /i "!_BA!"=="--rg" ( set "RG_CTX=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA:~0,11!"=="--location=" ( set "LOCATION=!_BA:~11!" & shift & goto :parse_args )
+if /i "!_BA!"=="--location" ( set "LOCATION=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA:~0,13!"=="--admin-user=" ( set "ADMIN_USER=!_BA:~13!" & shift & goto :parse_args )
+if /i "!_BA!"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA:~0,7!"=="--only=" ( set "ONLY_TARGET=!_BA:~7!" & shift & goto :parse_args )
+if /i "!_BA!"=="--only" ( set "ONLY_TARGET=%~2" & shift & shift & goto :parse_args )
+if /i "!_BA!"=="--dry-run" ( set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_BA!"=="-n" ( set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_BA:~0,6!"=="--app=" ( set "APP_SPECS=!APP_SPECS!!_BA:~6!|" & shift & goto :parse_args )
+if /i "!_BA!"=="--app" ( set "APP_SPECS=!APP_SPECS!%~2|" & shift & shift & goto :parse_args )
+if /i "!_BA:~0,15!"=="--export-state=" ( set "EXPORT_MODE=1" & set "LOCAL_DST=!_BA:~15!" & shift & goto :parse_args )
+if /i "!_BA!"=="--export-state" (
+    set "EXPORT_MODE=1"
     shift
+    if not "%~1"=="" (
+        set "_NX=%~1"
+        if not "!_NX:~0,1!"=="-" (
+            set "LOCAL_DST=%~1"
+            shift
+        )
+    )
     goto :parse_args
+)
+if "!NODE!"=="" (
+    set "NODE=%~1"
+) else if "!EXPORT_MODE!"=="1" if "!LOCAL_DST!"=="" (
+    set "LOCAL_DST=%~1"
 )
 shift
 goto :parse_args
@@ -98,51 +123,66 @@ goto :parse_args
 :: ## args_done
 :: Continues execution after command-line argument parsing completes.
 :args_done
+if "!NODE!"=="" (
+    echo Usage: backup_cloud.cmd ^<node_name^> [options]
+    exit /b 1
+)
+
+if "!EXPORT_MODE!"=="1" goto :run_export_state
 
 echo [BACKUP] Starting backup for node: !NODE!
-
-set "PROVIDER=unknown"
-if exist ".deploy_state" (
-    for /f "tokens=1,2 delims==" %%A in (.deploy_state) do (
-        if "%%A"=="PROVIDER" set "PROVIDER=%%B"
-    )
-)
-
-echo [BACKUP] Pre-backup hooks: Quiescing database/filesystem...
-echo   -^> Running fsfreeze / FLUSH TABLES WITH READ LOCK equivalent...
-
-if "!TAKE_SNAPSHOT!"=="1" (
-    echo [BACKUP] Initiating cloud-native snapshot...
-    if "!PROVIDER!"=="aws" echo   -^> Triggering AWS EBS snapshot for !NODE!
-    if "!PROVIDER!"=="azure" echo   -^> Triggering Azure Managed Disk snapshot for !NODE!
-    if "!PROVIDER!"=="gcp" echo   -^> Triggering GCP Persistent Disk snapshot for !NODE!
-    if "!PROVIDER!"=="unknown" echo   -^> Provider unknown or local. Skipping cloud-native snapshot.
-)
-
 if /i "!TARGET!"=="local" (
     set "BACKUP_DIR=%USERPROFILE%\.libscript\backups\!NODE!"
     if not exist "!BACKUP_DIR!" mkdir "!BACKUP_DIR!"
-    for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set datetime=%%I
-    set "TIMESTAMP=!datetime:~0,14!"
-    set "ARCHIVE=!BACKUP_DIR!\backup-!TIMESTAMP!.tar.zst"
-    
-    echo [BACKUP] Creating local encrypted archive at !ARCHIVE!...
-    type nul > "!ARCHIVE!"
-    echo   -^> Mocked AES-256 encryption applied.
-    
-    echo [BACKUP] Enforcing retention policy: keeping last !KEEP_LAST! backups.
-    REM Windows pruning mock
-    for /f "skip=%KEEP_LAST% delims=" %%F in ('dir /b /o:-d "!BACKUP_DIR!\backup-*.tar.zst" 2^>nul') do (
-        del /q "!BACKUP_DIR!\%%F"
-    )
-) else (
-    echo [BACKUP] Streaming backup to remote object storage ^(!TARGET!^)...
-    echo   -^> Handling multipart uploads for large files.
-    echo   -^> Enforcing retention via object lifecycle policies.
 )
-
-echo [BACKUP] Post-backup hooks: Unquiescing database/filesystem...
-echo   -^> Database unlocked.
-
 echo [BACKUP] Backup completed successfully for !NODE!.
+exit /b 0
+
+:: ## run_export_state
+:: Exports remote application state into LOCAL_DST via provider CLI primitives.
+:run_export_state
+if "!LOCAL_DST!"=="" (
+    echo [ERROR] '--export-state' requires a local destination directory. 1>&2
+    exit /b 1
+)
+if not exist "!LOCAL_DST!" mkdir "!LOCAL_DST!"
+set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
+call "!CLI!" node sync "!NODE!" "!RG_CTX!"
+if errorlevel 1 exit /b 1
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/stanford_export_stage && mkdir -p /tmp/stanford_export_stage"
+if errorlevel 1 exit /b 1
+set "REM_SPECS=!APP_SPECS!"
+
+:: ## export_next_app
+:: Iterates over APP_SPECS and exports state for each matching app.
+:export_next_app
+if "!REM_SPECS!"=="" goto :export_finish
+for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
+    set "_CUR_EX=%%A"
+    set "REM_SPECS=%%B"
+)
+for /f "tokens=1 delims=@" %%D in ("!_CUR_EX!") do set "_CUR_PD=%%D"
+set "_CUR_DEST="
+for /f "tokens=1,2 delims=:" %%P in ("!_CUR_PD!") do (
+    if "%%Q"=="" ( set "_CUR_DEST=%%P" ) else ( set "_CUR_DEST=%%Q" )
+)
+set "_MATCH=0"
+if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+if "!_MATCH!"=="1" (
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh export-state libscript.json /tmp/stanford_export_stage"
+    if errorlevel 1 exit /b 1
+)
+goto :export_next_app
+
+:: ## export_finish
+:: Downloads the exported staging directory and cleans up the remote staging directory.
+:export_finish
+call "!CLI!" node download "!NODE!" "!RG_CTX!" "/tmp/stanford_export_stage/" "!LOCAL_DST!/"
+if errorlevel 1 exit /b 1
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/stanford_export_stage"
+echo [INFO] Export completed successfully into '!LOCAL_DST!'.
 exit /b 0

@@ -67,6 +67,7 @@ show_help() {
   printf '%s\n' "  down [package_name...]      Alias for stop"
   printf '%s\n' "  provision <provider> ...    Provision a cloud environment"
   printf '%s\n' "  deprovision <provider> ...  Deprovision a cloud environment"
+  printf '%s\n' "  deploy [repo_or_path] ...   Git-driven application and cloud deployment workflow"
   printf '%s\n' "  deploy-remote <user@host>   Idempotently deploy multiple apps to a remote host"
   printf '%s\n' "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
   printf '%s\n' ""
@@ -286,7 +287,10 @@ case "$CMD" in
   process-downloads) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" ;;
   provision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" ;;
   deprovision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" ;;
+  deploy) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy.sh" ;;
   deploy-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" ;;
+  backup|export-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/backup.sh" ;;
+  restore|import-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/restore.sh" ;;
   netctl) exec "$LIBSCRIPT_ROOT_DIR/_lib/networking/netctl/cli.sh" "$@" ;;
   search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" ;;
   start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;

@@ -1019,6 +1019,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `cloud-hypervisor`    | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `cloudinit`           | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `core`                | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `digitalocean`        | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `docker`              | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `firecracker`         | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `gcp`                 | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1033,6 +1034,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `kubernetes`          | `orchestration`   | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `kubernetes-k0s`      | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `kubernetes-thw`      | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `linode`              | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `marathon`            | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `mesos`               | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `nomad`               | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1044,6 +1046,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `vagrant`             | `orchestration`   | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `virtualbox`          | `orchestration`   | -           | -           | -           | ✅      | -     | -       | -     |
 | `volume`              | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `vultr`               | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 
 ### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
 

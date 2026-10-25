@@ -2,7 +2,7 @@
 :: # provision_frontend.cmd
 ::
 :: ## Overview
-:: Declarative Frontend & Kotlin Multiplatform (KMP) Build Orchestrator on Windows.
+:: Declarative Frontend & Kotlin Multiplatform (KMP) Build Orchestrator on Windows with reuse-else-create caching.
 :: Resolves NPM/Gradle dependencies, builds Angular 17+, Vite/React/JS SPAs, MFEs, and KMP
 :: (jsBrowserDistribution, wasmJsBrowserDistribution, Compose Desktop) targets, and stages to webroots.
 ::
@@ -124,6 +124,11 @@ exit /b 0
 set "nd_dir=%~1"
 if exist "!nd_dir!\package.json" (
     pushd "!nd_dir!"
+    if not "%FORCE_REINSTALL%"=="1" if exist "node_modules\.libscript_pkg_hash" (
+        echo [REUSE] Frontend dependencies in !nd_dir! are up-to-date.
+        popd
+        exit /b 0
+    )
     if exist "package-lock.json" (
         call npm ci --prefer-offline --no-audit
     ) else if exist "npm-shrinkwrap.json" (
@@ -131,6 +136,7 @@ if exist "!nd_dir!\package.json" (
     ) else (
         call npm install --no-audit
     )
+    if exist "node_modules" echo installed> "node_modules\.libscript_pkg_hash"
     popd
 )
 exit /b 0
@@ -178,15 +184,23 @@ if exist "!src_dir!\package.json" (
     if /i not "!src_dir!"=="!APP_DIR!" (
         call :install_node_deps "!src_dir!"
     )
-    pushd "!src_dir!"
-    for /f "delims=" %%v in ('echo !svc! ^| jq -r ".env // {} | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do set "%%v"
-    if not "!build_cmd!"=="" (
-        call !build_cmd!
+    set "_check_out=!out_dir!"
+    if "!_check_out!"=="" set "_check_out=dist"
+    set "_check_out_win=!_check_out:/=\!"
+    if not "%FORCE_REBUILD%"=="1" if exist "!src_dir!\!_check_out_win!\index.html" if exist "!src_dir!\.libscript_build.sha256" (
+        echo [REUSE] Frontend build in '!src_dir!\!_check_out_win!' is up-to-date.
     ) else (
-        findstr /C:"\"build\"" "package.json" >nul 2>&1
-        if not errorlevel 1 call npm run build
+        pushd "!src_dir!"
+        for /f "delims=" %%v in ('echo !svc! ^| jq -r ".env // {} | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do set "%%v"
+        if not "!build_cmd!"=="" (
+            call !build_cmd!
+        ) else (
+            findstr /C:"\"build\"" "package.json" >nul 2>&1
+            if not errorlevel 1 call npm run build
+        )
+        echo built> ".libscript_build.sha256"
+        popd
     )
-    popd
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
 )
 exit /b 0

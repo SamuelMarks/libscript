@@ -1,11 +1,12 @@
 #!/bin/sh
 # ## Overview
-# This module provides utilities for managing Python virtual environments
-# and resolving Python executable versions. It abstracts the underlying
-# toolchain (`venv`, `uv`, `pyenv`, etc.) behind common functions.
+# This module provides utilities for managing Python virtual environments,
+# resolving Python executable versions, and ensuring ownership/symlink integrity.
+# It abstracts the underlying toolchain (`venv`, `uv`, `pyenv`, etc.) behind common functions.
 #
 # ## Usage
-# Source this file to use `libscript_python_venv` and `libscript_python_resolve`.
+# Source this file to use `libscript_python_venv`, `libscript_python_resolve`, and
+# `libscript_python_ensure_venv_owner`.
 #
 # ```sh
 # . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
@@ -15,6 +16,9 @@
 #
 # # Create a virtual environment
 # libscript_python_venv "/path/to/venv" "3.11"
+#
+# # Ensure a project directory's .venv is accessible by the service user
+# libscript_python_ensure_venv_owner "/path/to/project" "3.12" "azureuser" "/home/ubuntu"
 # ```
 
 set -feu
@@ -42,18 +46,41 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
+# ## libscript_resolve_user_home
+# Resolves the home directory for a given system username across Linux, BSD, and macOS.
+libscript_resolve_user_home() {
+  _ruh_user="${1:-}"
+  if [ -z "$_ruh_user" ] || [ "$_ruh_user" = "root" ]; then
+    printf '%s\n' "${REMOTE_HOME:-/root}"
+    return 0
+  fi
+  if [ -n "${REMOTE_HOME:-}" ] && [ -d "${REMOTE_HOME}" ]; then
+    printf '%s\n' "${REMOTE_HOME}"
+    return 0
+  fi
+  if command -v getent >/dev/null 2>&1; then
+    _ruh_ent=$(getent passwd "$_ruh_user" 2>/dev/null | awk -F: '{print $6}' || true)
+    if [ -n "$_ruh_ent" ]; then
+      printf '%s\n' "$_ruh_ent"
+      return 0
+    fi
+  fi
+  if [ -f /etc/passwd ]; then
+    _ruh_pw=$(awk -F: -v u="$_ruh_user" '$1 == u {print $6}' /etc/passwd 2>/dev/null || true)
+    if [ -n "$_ruh_pw" ]; then
+      printf '%s\n' "$_ruh_pw"
+      return 0
+    fi
+  fi
+  if [ "$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]')" = "darwin" ] && [ -d "/Users/${_ruh_user}" ]; then
+    printf '%s\n' "/Users/${_ruh_user}"
+    return 0
+  fi
+  printf '%s\n' "/home/${_ruh_user}"
+}
+
 # ## libscript_python_resolve
 # Resolves the path to the Python executable for a given version.
-#
-# **Environment Variables:**
-# - `LIBSCRIPT_PYTHON_BACKEND`: The backend to use (`uv`, `pyenv`, `native`). Defaults to `native`.
-#
-# **Arguments:**
-# 1. `_version` (string, optional): The requested Python version (e.g., `3.11`).
-#
-# **Returns:**
-# Prints the path to the executable and returns 0 on success, or non-zero on failure.
-# Resolves the path to the python interpreter.
 libscript_python_resolve() {
   _version="${1:-}"
   _backend="${LIBSCRIPT_PYTHON_BACKEND:-native}"
@@ -85,8 +112,6 @@ libscript_python_resolve() {
         elif command -v "python$(printf '%s' "${_version}" | cut -d. -f1)" >/dev/null 2>&1; then
           command -v "python$(printf '%s' "${_version}" | cut -d. -f1)"
         else
-          # Fallback to libscript_native installation check
-          # Source versioning if needed
           if ! type libscript_get_version_dir >/dev/null 2>&1; then
             . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
           fi
@@ -96,7 +121,6 @@ libscript_python_resolve() {
             "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install python "${_version}" >&2 || return 1
           fi
           
-          # Try to find the binary in the newly installed/resolved directory
           if [ -x "${_py_dir}/bin/python${_version}" ]; then
             printf '%s\n' "${_py_dir}/bin/python${_version}"
           elif [ -x "${_py_dir}/bin/python$(printf '%s' "${_version}" | cut -d. -f1)" ]; then
@@ -128,17 +152,6 @@ libscript_python_resolve() {
 
 # ## libscript_python_venv
 # Creates a Python virtual environment at the specified directory.
-#
-# **Environment Variables:**
-# - `LIBSCRIPT_PYTHON_VENV_BACKEND`: The backend to use (`uv`, `venv`). Defaults to `venv`.
-#
-# **Arguments:**
-# 1. `_target_dir` (string): The path where the virtual environment will be created.
-# 2. `_python_version` (string, optional): The specific Python version to use.
-#
-# **Returns:**
-# 0 on success, non-zero on failure.
-# Creates a Python virtual environment.
 libscript_python_venv() {
   if [ "$#" -lt 1 ]; then
     log_error "Usage: libscript_python_venv <target_dir> [python_version]"
@@ -160,8 +173,6 @@ libscript_python_venv() {
       fi
       ;;
     venv)
-      # Try to resolve a specific python executable if a version is requested,
-      # otherwise fallback to default `python3` or `python`
       if [ -n "${_python_version}" ]; then
          _python_exe=$(libscript_python_resolve "${_python_version}") || return 1
       else
@@ -192,4 +203,52 @@ libscript_python_venv() {
       return 1
       ;;
   esac
+}
+
+# ## libscript_python_ensure_venv_owner
+# Verifies that a project directory's .venv does not symlink into /root when run by a non-root user,
+# recreating and syncing the virtual environment under the target user's home directory if needed.
+libscript_python_ensure_venv_owner() {
+  _venv_dir="${1:-}"
+  _venv_ver="${2:-${PYTHON_VERSION:-3.12}}"
+  _venv_user="${3:-${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-}}}}"
+  _venv_home="${4:-}"
+
+  [ -n "$_venv_dir" ] && [ -d "$_venv_dir" ] || return 0
+  if [ ! -f "${_venv_dir}/pyproject.toml" ] && [ ! -f "${_venv_dir}/requirements.txt" ] && [ ! -d "${_venv_dir}/.venv" ]; then
+    return 0
+  fi
+
+  if [ -z "$_venv_ver" ] || [ "$_venv_ver" = "null" ] || [ "$_venv_ver" = "latest" ] || [ "$_venv_ver" = "default" ]; then
+    _venv_ver="3.12"
+  fi
+  if [ -z "$_venv_home" ]; then
+    _venv_home=$(libscript_resolve_user_home "$_venv_user")
+  fi
+
+  if [ -L "${_venv_dir}/.venv/bin/python" ] || [ -L "${_venv_dir}/.venv/bin/python3" ]; then
+    _venv_lnk=$(readlink -f "${_venv_dir}/.venv/bin/python3" 2>/dev/null || readlink "${_venv_dir}/.venv/bin/python3" 2>/dev/null || true)
+    case "$_venv_lnk" in
+      /root/*)
+        if [ -n "$_venv_user" ] && [ "$_venv_user" != "root" ]; then
+          log_info "Recreating '${_venv_dir}/.venv' for user '$_venv_user' (previously linked into /root)..."
+          rm -rf "${_venv_dir}/.venv"
+        fi
+        ;;
+    esac
+  fi
+
+  if [ ! -x "${_venv_dir}/.venv/bin/python" ]; then
+    if command -v uv >/dev/null 2>&1; then
+      HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
+      (cd "$_venv_dir" && HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" PATH="${PATH}:${_venv_home}/.local/bin:/root/.local/bin" uv sync --python "$_venv_ver" 2>/dev/null || HOME="$_venv_home" uv sync 2>/dev/null || true)
+    else
+      libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
+    fi
+  fi
+
+  if [ -n "$_venv_user" ] && id "$_venv_user" >/dev/null 2>&1 && [ -d "${_venv_dir}/.venv" ]; then
+    _venv_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_venv_user}}"
+    chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || sudo -n chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || true
+  fi
 }

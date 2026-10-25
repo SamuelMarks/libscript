@@ -209,9 +209,13 @@ if exist "!runner_file!" del /f /q "!runner_file!" >nul 2>&1
 exit /b 0
 
 :: ## do_start
-:: Generates an isolated runner script and starts the service in the background.
+:: Generates an isolated runner script, delegates registration to service_install.cmd, and starts the service.
 :do_start
 echo Configuring and starting service '!name!' (workdir: !svc_workdir!)...
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!svc_workdir!" "%PYTHON_VERSION%"
+)
 (
     echo @echo off
     echo setlocal EnableDelayedExpansion
@@ -251,9 +255,11 @@ echo running > "!pid_file!"
 exit /b 0
 
 :: ## do_stop
-:: Stops the target background service and removes its PID marker.
+:: Stops the target background service via service.cmd and removes its PID marker.
 :do_stop
 echo Stopping service '!name!'...
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop "!name!" >nul 2>&1
 taskkill /fi "WINDOWTITLE eq !name!" /f >nul 2>&1
 if exist "!pid_file!" del /f /q "!pid_file!" >nul 2>&1
 exit /b 0

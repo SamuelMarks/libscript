@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for ollama.
+# Generic setup module for ollama with reuse-else-create semantics.
 # 
 # ## Usage
 # Execute this script to perform generic initialization steps for ollama.
@@ -47,9 +47,30 @@ OLLAMA_INSTALL_METHOD="$(libscript_resolve_install_method "OLLAMA")"
 ACTION="${ACTION:-install}"
 VERSION="${OLLAMA_VERSION:-latest}"
 
+# ## find_existing_ollama
+# Checks LIBSCRIPT_HOME, /usr/local/bin, /usr/bin, and system PATH for an existing ollama binary.
+find_existing_ollama() {
+  for _feo_cand in \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${VERSION}/bin/ollama" \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/default/bin/ollama" \
+    "/usr/local/bin/ollama" \
+    "/usr/bin/ollama" \
+    "$(command -v ollama 2>/dev/null || true)"; do
+    if [ -n "$_feo_cand" ] && [ -x "$_feo_cand" ]; then
+      printf '%s\n' "$_feo_cand"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_ollama >/dev/null 2>&1; then
+    EXACT_VERSION="${VERSION:-latest}"
+    return 0
+  fi
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote ollama 2>/dev/null | tail -n 1)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
@@ -92,8 +113,8 @@ case "$ACTION" in
       if [ -n "${OLLAMA_RELEASES_URL:-}" ]; then
         curl -sSL "${OLLAMA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/ollama/ollama" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+        git ls-remote --tags "https://github.com/ollama/ollama" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+      fi
     fi
     exit 0
     ;;
@@ -104,8 +125,6 @@ case "$ACTION" in
       asdf global ollama "${VERSION}"
     elif [ "$OLLAMA_INSTALL_METHOD" = "pkgx" ]; then
       printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "ollama@${VERSION}"
     elif [ "$OLLAMA_INSTALL_METHOD" = "vfox" ]; then
       vfox use "ollama@${VERSION}"
     elif [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
@@ -131,6 +150,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$OLLAMA_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_ollama >/dev/null 2>&1; then
+        log_info "[REUSE] ollama is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading ollama ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama"
       if [ -n "${OLLAMA_DOWNLOAD_URL:-}" ]; then
@@ -142,6 +165,18 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_ol=$(find_existing_ollama 2>/dev/null); then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$_existing_ol" != "${TARGET_DIR}/bin/ollama" ]; then
+        ln -sf "$_existing_ol" "${TARGET_DIR}/bin/ollama" 2>/dev/null || true
+      fi
+      libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
+      log_info "[REUSE] ollama (${VERSION}) already installed at ${_existing_ol}."
+      exit 0
+    fi
     if [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "ollama"; then
         log_info "System package manager does not have ollama. Falling back to native..."
@@ -161,7 +196,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/ollama" ]; then
         log_info "Installing ollama ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -215,6 +250,7 @@ case "$ACTION" in
         log_info "ollama ${VERSION} is already installed."
       fi
       libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

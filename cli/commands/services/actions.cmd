@@ -72,8 +72,21 @@ if /i "!action!"=="import-state" (
 if /i "!action!"=="prepare-storage" (
     set "_ps_json=%~2"
     if "!_ps_json!"=="" set "_ps_json=libscript.json"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!_ps_json!"
+    )
     for /f "tokens=1,2" %%M in ('jq -r "(.infrastructure.node.data_disks // [])[]? | \"\(.mount_path // \"/mnt/data\") \(.fstype // \"NTFS\")\"" "!_ps_json!" 2^>nul') do (
         call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
+    )
+    set "_has_ol=0"
+    for /f "delims=" %%O in ('jq -r "if (.deps.ollama != null) or (.dependencies.ollama != null) then \"1\" else \"0\" end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
+    if not "!OLLAMA_MODELS!"=="" set "_has_ol=1"
+    if "!_has_ol!"=="1" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" configure
+        )
     )
     exit /b 0
 )

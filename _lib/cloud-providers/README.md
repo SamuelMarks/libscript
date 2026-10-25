@@ -9,7 +9,12 @@ Azure.
 
 - [aws](./aws/README.md)
 - [azure](./azure/README.md)
+- [digitalocean](./digitalocean/README.md)
 - [gcp](./gcp/README.md)
+- [hetzner](./hetzner/README.md)
+- [linode](./linode/README.md)
+- [proxmox](./proxmox/README.md)
+- [vultr](./vultr/README.md)
 
 <!-- END_COMPONENTS -->
 

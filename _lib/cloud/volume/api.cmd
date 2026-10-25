@@ -119,6 +119,12 @@ if "%provider%"=="aws" (
         set "cmd=!cmd! --tags "%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%""
     )
     %cmd%
+) else if "%provider%"=="digitalocean" (
+    doctl compute volume create "%vname%" --region "%zone%" --size "%size%GiB"
+) else if "%provider%"=="linode" (
+    linode-cli volumes create --label "%vname%" --region "%zone%" --size "%size%"
+) else if "%provider%"=="vultr" (
+    vultr-cli block-storage create --label="%vname%" --region="%zone%" --size="%size%"
 )
 exit /b 0
 
@@ -154,6 +160,12 @@ if "%provider%"=="aws" (
         if errorlevel 1 exit /b 1
     )
     az disk delete --name "%vid%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --yes
+) else if "%provider%"=="digitalocean" (
+    doctl compute volume delete "%vid%" --force
+) else if "%provider%"=="linode" (
+    linode-cli volumes delete "%vid%"
+) else if "%provider%"=="vultr" (
+    vultr-cli block-storage delete "%vid%"
 )
 exit /b 0
 
@@ -185,6 +197,12 @@ if "%provider%"=="aws" (
     ) else (
         az disk list --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --query "[].[name,diskState]" --output tsv
     )
+) else if "%provider%"=="digitalocean" (
+    doctl compute volume list
+) else if "%provider%"=="linode" (
+    linode-cli volumes list
+) else if "%provider%"=="vultr" (
+    vultr-cli block-storage list
 )
 exit /b 0
 
@@ -219,6 +237,12 @@ if "%provider%"=="aws" (
         exit /b 1
     )
     az vm disk attach --vm-name "%nid%" --name "%vid%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --new false
+) else if "%provider%"=="digitalocean" (
+    doctl compute volume-action attach "%vid%" "%nid%"
+) else if "%provider%"=="linode" (
+    linode-cli volumes attach "%vid%" --linode_id "%nid%"
+) else if "%provider%"=="vultr" (
+    vultr-cli block-storage attach "%vid%" --instance="%nid%"
 )
 exit /b 0
 
@@ -248,5 +272,11 @@ if "%provider%"=="aws" (
         exit /b 1
     )
     az vm disk detach --vm-name "%nid%" --name "%vid%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%"
+) else if "%provider%"=="digitalocean" (
+    doctl compute volume-action detach "%vid%" "%nid%"
+) else if "%provider%"=="linode" (
+    linode-cli volumes detach "%vid%"
+) else if "%provider%"=="vultr" (
+    vultr-cli block-storage detach "%vid%"
 )
 exit /b 0

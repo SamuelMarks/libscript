@@ -21,20 +21,18 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP=$(mktemp -d "${TMPDIR:-/tmp}/libscript_fullstack_test.XXXXXX")
 trap 'rm -rf "$TEST_TMP"' EXIT
 export LIBSCRIPT_DATA_DIR="${TEST_TMP}/data"
+export LIBSCRIPT_HOME="${TEST_TMP}/home/.libscript"
 export LIBSCRIPT_FORCE_FALLBACK_DAEMON=1
 
 # ## assert_contains
@@ -42,15 +40,12 @@ export LIBSCRIPT_FORCE_FALLBACK_DAEMON=1
 assert_contains() {
   _haystack="$1"
   _needle="$2"
-  _msg="$3"
-  if ! printf '%s
-' "$_haystack" | grep -q "$_needle"; then
-    printf '[FAIL] %s: expected "%s"
-' "$_msg" "$_needle" >&2
+  _label="$3"
+  if ! printf '%s\n' "$_haystack" | grep -Fq -e "$_needle"; then
+    printf '[FAIL] %s: expected "%s"\n' "$_label" "$_needle" >&2
     exit 1
   fi
-  printf '[PASS] %s
-' "$_msg"
+  printf '[PASS] %s\n' "$_label"
 }
 
 # 1. Test resolve_stack with flat .deps, .dependencies.runtime, and legacy .install.dependencies
@@ -123,12 +118,10 @@ cat << 'EOF' > "${TEST_TMP}/hooks_test.json"
 EOF
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "${TEST_TMP}/hooks_test.json" "build"
 if [ ! -f "${TEST_TMP}/subdir/verified.txt" ]; then
-  printf '[FAIL] run_hooks did not execute working_dir + if_exists hook
-' >&2
+  printf '[FAIL] run_hooks did not execute working_dir + if_exists hook\n' >&2
   exit 1
 fi
-printf '[PASS] run_hooks .hooks + .lifecycle_hooks + working_dir + conditions
-'
+printf '[PASS] run_hooks .hooks + .lifecycle_hooks + working_dir + conditions\n'
 
 # 3. Test provision_db for sqlite & duckdb
 cat << 'EOF' > "${TEST_TMP}/db_test.json"
@@ -190,14 +183,11 @@ assert_contains "$APPLY_CADDY" "try_files {path} {path}/ /index.html" "netctl ap
 
 # 6. Test provision_frontend with Angular 17+ browser/ layout and KMP wasmJs layout
 mkdir -p "${TEST_TMP}/fe_app/ng-web/dist/pulse-ng/browser"
-printf '<html>Angular 17 SPA</html>
-' > "${TEST_TMP}/fe_app/ng-web/dist/pulse-ng/browser/index.html"
-printf '{"name": "ng-web"}
-' > "${TEST_TMP}/fe_app/ng-web/package.json"
+printf '<html>Angular 17 SPA</html>\n' > "${TEST_TMP}/fe_app/ng-web/dist/pulse-ng/browser/index.html"
+printf '{"name": "ng-web"}\n' > "${TEST_TMP}/fe_app/ng-web/package.json"
 
 mkdir -p "${TEST_TMP}/fe_app/kmp-web/composeApp/build/dist/wasmJs/productionExecutable"
-printf '<html>KMP WasmJS SPA</html>
-' > "${TEST_TMP}/fe_app/kmp-web/composeApp/build/dist/wasmJs/productionExecutable/index.html"
+printf '<html>KMP WasmJS SPA</html>\n' > "${TEST_TMP}/fe_app/kmp-web/composeApp/build/dist/wasmJs/productionExecutable/index.html"
 touch "${TEST_TMP}/fe_app/kmp-web/build.gradle.kts"
 
 cat << 'EOF' > "${TEST_TMP}/fe_app/libscript.json"
@@ -217,17 +207,14 @@ cat << 'EOF' > "${TEST_TMP}/fe_app/libscript.json"
 EOF
 "${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/provision_frontend.sh" --app-dir "${TEST_TMP}/fe_app" --manifest "${TEST_TMP}/fe_app/libscript.json"
 if [ ! -f "${TEST_TMP}/fe_app/webroot/angular_ui/index.html" ]; then
-  printf '[FAIL] provision_frontend did not stage Angular 17+ dist/<app>/browser/index.html
-' >&2
+  printf '[FAIL] provision_frontend did not stage Angular 17+ dist/<app>/browser/index.html\n' >&2
   exit 1
 fi
 if [ ! -f "${TEST_TMP}/fe_app/webroot/kmp_ui/index.html" ]; then
-  printf '[FAIL] provision_frontend did not stage KMP wasmJs productionExecutable/index.html
-' >&2
+  printf '[FAIL] provision_frontend did not stage KMP wasmJs productionExecutable/index.html\n' >&2
   exit 1
 fi
-printf '[PASS] provision_frontend Angular 17+ browser/ and KMP wasmJs staging
-'
+printf '[PASS] provision_frontend Angular 17+ browser/ and KMP wasmJs staging\n'
 
 # 7. Test ML CLI routing (train / infer dry-run and local execution)
 cat << 'EOF' > "${TEST_TMP}/ml_app.json"
@@ -283,7 +270,12 @@ cat << 'EOF' > "${TEST_TMP}/mock_bin/duckdb"
 if printf '%s\n' "$*" | grep -q "SHOW TABLES"; then
   exit 0
 fi
-printf '1\n' > "$1"
+if [ "$1" != ":memory:" ] && [ -n "$1" ]; then
+  case "$1" in
+    -*) ;;
+    *) printf '1\n' > "$1" ;;
+  esac
+fi
 exit 0
 EOF
 chmod +x "${TEST_TMP}/mock_bin/duckdb"
@@ -373,4 +365,60 @@ fi
 "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
 printf '[PASS] libscript.sh health validates service health_check.expect_json assertions\n'
 
+# 11. Test init-system abstraction with LIBSCRIPT_INIT_SYSTEM=fallback (even when LIBSCRIPT_FORCE_FALLBACK_DAEMON is unset)
+cat << 'EOF' > "${TEST_TMP}/init_fallback_test.json"
+{
+  "init_system": "fallback",
+  "services": [
+    {
+      "name": "test_init_abstract_svc",
+      "command": "sleep 30"
+    }
+  ]
+}
+EOF
+(
+  unset LIBSCRIPT_FORCE_FALLBACK_DAEMON
+  LIBSCRIPT_INIT_SYSTEM="fallback" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start "${TEST_TMP}/init_fallback_test.json"
+  sleep 1
+  LIBSCRIPT_INIT_SYSTEM="fallback" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/init_fallback_test.json" >/dev/null
+  LIBSCRIPT_INIT_SYSTEM="fallback" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" down "${TEST_TMP}/init_fallback_test.json" --remove
+)
+printf '[PASS] LIBSCRIPT_INIT_SYSTEM=fallback lifecycle (start, health, down --remove)\n'
+
+# 12. Test multi-app shared-node cloud orchestration (provision, deprovision --keep-infra, backup --export-state, restore --import-state) in --dry-run mode
+mkdir -p "${TEST_TMP}/app_a" "${TEST_TMP}/app_b" "${TEST_TMP}/state_dir"
+cat << 'EOF' > "${TEST_TMP}/app_a/libscript.json"
+{
+  "name": "hospital-dashboard-platform",
+  "domain": "pulse-query.healthplatform.io",
+  "infrastructure": {"network": {"ports": ["8000", "4200"]}}
+}
+EOF
+cat << 'EOF' > "${TEST_TMP}/app_b/libscript.json"
+{
+  "name": "t1d-analytics",
+  "domain": "t1d-analytics.healthplatform.io",
+  "infrastructure": {"network": {"ports": ["8001", "3000"]}}
+}
+EOF
+PROV_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" provision --provider azure --node test-node --rg TEST-RG --location eastus --app "${TEST_TMP}/app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "${TEST_TMP}/app_b:t1d-analytics@t1d-analytics.healthplatform.io" --dry-run 2>&1)
+assert_contains "$PROV_DRY" "prepare-storage libscript.json" "provision --dry-run invokes declarative prepare-storage"
+assert_contains "$PROV_DRY" "hospital-dashboard-platform" "provision --dry-run deploys app_a"
+assert_contains "$PROV_DRY" "t1d-analytics" "provision --dry-run deploys app_b"
+
+PROV_ONLY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" provision --provider azure --node test-node --rg TEST-RG --location eastus --only t1d_analytics --app "${TEST_TMP}/app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "${TEST_TMP}/app_b:t1d-analytics@t1d-analytics.healthplatform.io" --dry-run 2>&1)
+assert_contains "$PROV_ONLY" "t1d-analytics" "provision --only=t1d_analytics deploys t1d-analytics"
+
+TEARDOWN_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" deprovision --provider azure --node test-node --rg TEST-RG --location eastus --keep-infra --purge-data --only t1d-analytics --app "${TEST_TMP}/app_a:hospital-dashboard-platform" --app "${TEST_TMP}/app_b:t1d-analytics" --dry-run 2>&1)
+assert_contains "$TEARDOWN_DRY" "--remove --purge-data" "deprovision --keep-infra --purge-data runs down --remove --purge-data"
+
+BK_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" backup test-node --provider azure --rg TEST-RG --only pulse_query --app hospital-dashboard-platform --app t1d-analytics --export-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
+assert_contains "$BK_DRY" "export-state libscript.json" "backup --export-state exports selected app state"
+
+RS_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" restore test-node --provider azure --rg TEST-RG --only pulse_query --app "hospital-dashboard-platform@pulse-query.healthplatform.io" --app "t1d-analytics@t1d-analytics.healthplatform.io" --import-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
+assert_contains "$RS_DRY" "import-state libscript.json" "restore --import-state imports selected app state"
+printf '[PASS] Multi-app shared-node provision, deprovision, backup, and restore dry-run orchestration\n'
+
 printf '=== ALL FULLSTACK ORCHESTRATION TESTS PASSED ===\n'
+

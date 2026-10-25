@@ -3,7 +3,7 @@
 # Debian-specific setup script for PostgreSQL.
 #
 # ## Usage
-# Installs PostgreSQL from the official `apt.postgresql.org` repository and manages sysvinit.
+# Installs PostgreSQL from the official `apt.postgresql.org` repository or reuses an active cluster.
 
 
 set -feu
@@ -31,7 +31,7 @@ export DIR="${_DIR}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh"; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -43,6 +43,33 @@ SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
+
+# ## _pg_debian_is_active
+# Checks whether a PostgreSQL cluster is already installed and accepting connections on the target port or socket.
+_pg_debian_is_active() {
+  _pg_port="${POSTGRES_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-5432}}"
+  if command -v psql >/dev/null 2>&1; then
+    if command -v pg_isready >/dev/null 2>&1 && pg_isready -h 127.0.0.1 -p "${_pg_port}" -q 2>/dev/null; then
+      return 0
+    fi
+    if command -v pg_isready >/dev/null 2>&1 && pg_isready -q 2>/dev/null; then
+      return 0
+    fi
+    if priv_as "${POSTGRES_SERVICE_USER:-postgres}" psql -tAc "SELECT 1" >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+if [ "${FORCE_REINSTALL:-0}" != "1" ] && _pg_debian_is_active; then
+  log_info "[REUSE] PostgreSQL cluster already active on port ${POSTGRES_LISTEN_PORT:-5432}."
+  if [ "$(ps -q 1 -o comm= 2>/dev/null || true)" = 'systemd' ] && command -v systemctl >/dev/null 2>&1; then
+    priv systemctl enable postgresql >/dev/null 2>&1 || true
+    priv systemctl start postgresql >/dev/null 2>&1 || true
+  fi
+  exit 0
+fi
 
 _DEL='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 PID=
@@ -59,7 +86,7 @@ _pg_debian_cleanup() {
   fi
 }
 trap '_pg_debian_cleanup' EXIT HUP INT QUIT TERM
-if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
+if ! dpkg -s -- 'postgresql-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
   libscript_depends 'postgresql-common'
   if [ -x '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh' ]; then
     yes '' | priv '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
@@ -110,6 +137,8 @@ if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRES_VERSION}" >/dev/null 2>&1; t
         -r '/var/log/postgresql/'"${POSTGRES_VERSION}"'-main.log' >'/var/log/postgresql/'"${POSTGRES_VERSION}"'-main.log0' 2>&1 &
     PID="$!"
     printf '%d' "${PID}" | priv dd status='none' of='/var/run/postgresql/'"${POSTGRES_VERSION}"'-main.pid'
+  else
+    priv systemctl enable --now postgresql >/dev/null 2>&1 || priv service postgresql start >/dev/null 2>&1 || true
   fi
 fi
 

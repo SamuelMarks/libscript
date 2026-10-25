@@ -93,13 +93,9 @@ if "%DOWNLOAD_DIR%"=="" (
     set "DOWNLOAD_DIR=%TEMP%\libscript_downloads"
 )
 
-:: Resolve install method
+:: Resolve install method (default natively handled by libscript)
 if "%NODEJS_INSTALL_METHOD%"=="" (
-    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
-        set "NODEJS_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
-    ) else (
-        set "NODEJS_INSTALL_METHOD=libscript_native"
-    )
+    set "NODEJS_INSTALL_METHOD=libscript_native"
 )
 
 if "%ACTION%"=="ls" goto :action_ls
@@ -118,7 +114,49 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_local_matching_nodejs
+:: Checks LIBSCRIPT_HOME\nodejs for an existing Node.js installation matching NODEJS_VERSION.
+:find_local_matching_nodejs
+set "_FLM_DIR="
+set "_FLM_REQ=%NODEJS_VERSION%"
+set "_FLM_REQ=!_FLM_REQ:v=!"
+set "_FLM_REQ=!_FLM_REQ:.x=!"
+if exist "%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%\bin\node.exe" (
+    set "_FLM_DIR=%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
+    exit /b 0
+)
+if exist "%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%\node.exe" (
+    set "_FLM_DIR=%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
+    exit /b 0
+)
+if exist "%LIBSCRIPT_HOME%\nodejs" (
+    for /d %%D in ("%LIBSCRIPT_HOME%\nodejs\*") do (
+        set "_CAND_NODE="
+        if exist "%%~fD\bin\node.exe" set "_CAND_NODE=%%~fD\bin\node.exe"
+        if exist "%%~fD\node.exe" set "_CAND_NODE=%%~fD\node.exe"
+        if defined _CAND_NODE (
+            for /f "delims=" %%V in ('"!_CAND_NODE!" -v 2^>nul') do (
+                set "_NV=%%V"
+                set "_NV=!_NV:v=!"
+                if /i "!_FLM_REQ!"=="latest" (
+                    set "_FLM_DIR=%%~fD"
+                    exit /b 0
+                )
+                if /i "!_FLM_REQ!"=="lts" (
+                    set "_FLM_DIR=%%~fD"
+                    exit /b 0
+                )
+                echo !_NV! | findstr /b /c:"!_FLM_REQ!." >nul 2>&1
+                if not errorlevel 1 (
+                    set "_FLM_DIR=%%~fD"
+                    exit /b 0
+                )
+            )
+        )
+    )
+)
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -175,6 +213,13 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_local_matching_nodejs
+        if not errorlevel 1 (
+            echo [REUSE] Node.js %NODEJS_VERSION% is already installed locally; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading nodejs %NODEJS_VERSION% to %DOWNLOAD_DIR%\nodejs...
     if not exist "%DOWNLOAD_DIR%\nodejs" mkdir "%DOWNLOAD_DIR%\nodejs"
     if not "%NODEJS_DOWNLOAD_URL%"=="" (
@@ -188,6 +233,23 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_local_matching_nodejs
+    if not errorlevel 1 (
+        set "ALIAS_DIR=%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
+        if not "!_FLM_DIR!"=="!ALIAS_DIR!" (
+            if exist "!ALIAS_DIR!" rmdir "!ALIAS_DIR!" 2>nul
+            mklink /J "!ALIAS_DIR!" "!_FLM_DIR!" >nul 2>&1
+        )
+        set "DEFAULT_DIR=%LIBSCRIPT_HOME%\nodejs\default"
+        if not "!_FLM_DIR!"=="!DEFAULT_DIR!" (
+            if exist "!DEFAULT_DIR!" rmdir "!DEFAULT_DIR!" 2>nul
+            mklink /J "!DEFAULT_DIR!" "!_FLM_DIR!" >nul 2>&1
+        )
+        echo [REUSE] nodejs %NODEJS_VERSION% is already installed at !_FLM_DIR!.
+        exit /b 0
+    )
+)
 if "%NODEJS_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nodejs
     exit /b !errorlevel!
@@ -226,8 +288,12 @@ if not exist "%TARGET_DIR%\bin\node.exe" if not exist "%TARGET_DIR%\node.exe" (
         set "_NODE_ARCH=x64"
         if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_NODE_ARCH=arm64"
         set "_NODE_VER=%NODEJS_VERSION%"
-        if /i "!_NODE_VER!"=="latest" set "_NODE_VER=v20.18.0"
-        if /i "!_NODE_VER!"=="lts" set "_NODE_VER=v20.18.0"
+        if /i "!_NODE_VER!"=="latest" set "_NODE_VER=v22.14.0"
+        if /i "!_NODE_VER!"=="lts" set "_NODE_VER=v22.14.0"
+        if /i "!_NODE_VER!"=="22" set "_NODE_VER=v22.14.0"
+        if /i "!_NODE_VER!"=="22.x" set "_NODE_VER=v22.14.0"
+        if /i "!_NODE_VER!"=="20" set "_NODE_VER=v20.18.0"
+        if /i "!_NODE_VER!"=="20.x" set "_NODE_VER=v20.18.0"
         if not "!_NODE_VER:~0,1!"=="v" set "_NODE_VER=v!_NODE_VER!"
         set "_NODE_URL=https://nodejs.org/dist/!_NODE_VER!/node-!_NODE_VER!-win-!_NODE_ARCH!.zip"
         echo Downloading Node.js from !_NODE_URL!...

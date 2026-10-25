@@ -294,17 +294,22 @@ netctl_apply_manifest() {
   if [ -n "$_out_file" ]; then
     mkdir -p "$(dirname -- "$_out_file")"
     emit_by_format "$_format" > "$_out_file"
-    if command -v python3 >/dev/null 2>&1; then python3 -c 'import os, sys; p = sys.argv[1]; s = open(p, "r", encoding="utf-8").read(); open(p, "w", encoding="utf-8").write(os.path.expandvars(s))' "$_out_file" 2>/dev/null || true; fi
   elif [ "$_do_reload" -eq 1 ]; then
     _conf_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/ingress"
     mkdir -p "$_conf_dir"
+    _dom=$(jq -r '.domain // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+    if [ "$_format" = "nginx" ] && [ -n "$_dom" ] && [ "$_dom" != "_" ] && ! [ -f "/etc/letsencrypt/live/${_dom}/fullchain.pem" ] && command -v openssl >/dev/null 2>&1; then
+      if [ ! -f "/etc/nginx/ssl/${_dom}.crt" ]; then
+        mkdir -p /etc/nginx/ssl 2>/dev/null || sudo mkdir -p /etc/nginx/ssl 2>/dev/null || true
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || \
+          sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || true
+      fi
+    fi
     _out_file="${_conf_dir}/${_format}.conf"
     emit_by_format "$_format" > "$_out_file"
-    if command -v python3 >/dev/null 2>&1; then python3 -c 'import os, sys; p = sys.argv[1]; s = open(p, "r", encoding="utf-8").read(); open(p, "w", encoding="utf-8").write(os.path.expandvars(s))' "$_out_file" 2>/dev/null || true; fi
     netctl_ensure_static_permissions "$NETCTL_STATE_FILE" "$_manifest_dir"
     if [ "$_format" = "nginx" ] && command -v nginx >/dev/null 2>&1; then
       if [ -d /etc/nginx/conf.d ]; then
-        _dom=$(jq -r '.domain // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
         if [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
           _dest="/etc/nginx/conf.d/${_dom}.conf"
         else
@@ -313,9 +318,15 @@ netctl_apply_manifest() {
         if [ -w /etc/nginx/conf.d ]; then
           rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
           cp "$_out_file" "$_dest"
+          if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
+            cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
+          fi
         elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
           sudo rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
           sudo cp "$_out_file" "$_dest"
+          if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
+            sudo cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
+          fi
         fi
         netctl_reload_proxy "nginx"
       fi

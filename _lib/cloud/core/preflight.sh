@@ -61,11 +61,41 @@ libscript_check_preflight() {
       ;;
     azure)
       if ! command -v az >/dev/null 2>&1; then
-        printf "Error: 'az' CLI is not installed or not in PATH.\n" >&2
+        printf "Error: Azure CLI ('az') is not installed. Run 'libscript install azure'.\n" >&2
         return 1
       fi
       if ! az account show >/dev/null 2>&1; then
         printf "Error: Azure CLI is not authenticated. Please run 'az login'.\n" >&2
+        return 1
+      fi
+      ;;
+    digitalocean)
+      if ! command -v doctl >/dev/null 2>&1; then
+        printf "Error: DigitalOcean CLI ('doctl') is not installed. Run 'libscript install digitalocean'.\n" >&2
+        return 1
+      fi
+      if ! doctl account get >/dev/null 2>&1; then
+        printf "Error: DigitalOcean CLI is not authenticated. Please run 'doctl auth init'.\n" >&2
+        return 1
+      fi
+      ;;
+    linode)
+      if ! command -v linode-cli >/dev/null 2>&1; then
+        printf "Error: Linode CLI ('linode-cli') is not installed. Run 'libscript install linode'.\n" >&2
+        return 1
+      fi
+      if ! linode-cli account view >/dev/null 2>&1; then
+        printf "Error: Linode CLI is not authenticated. Please run 'linode-cli configure'.\n" >&2
+        return 1
+      fi
+      ;;
+    vultr)
+      if ! command -v vultr-cli >/dev/null 2>&1; then
+        printf "Error: Vultr CLI ('vultr-cli') is not installed. Run 'libscript install vultr'.\n" >&2
+        return 1
+      fi
+      if ! vultr-cli account >/dev/null 2>&1; then
+        printf "Error: Vultr CLI is not authenticated. Please set VULTR_API_KEY.\n" >&2
         return 1
       fi
       ;;

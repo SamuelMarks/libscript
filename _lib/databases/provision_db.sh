@@ -141,6 +141,7 @@ fi
 set_env_var() {
   _key="$1"
   _val="$2"
+  [ -n "$_key" ] || return 0
   if [ -f "$ENV_OUT" ]; then
     _tmp_env=$(mktemp "${TMPDIR:-/tmp}/libscript_env.XXXXXX")
     grep -v "^${_key}=" "$ENV_OUT" > "$_tmp_env" 2>/dev/null || true
@@ -168,6 +169,22 @@ resolve_db_asset_path() {
   fi
 }
 
+# ## resolve_min_rows
+# Determines the minimum required row count for a given table from the database entry JSON.
+resolve_min_rows() {
+  _rmr_entry="$1"
+  _rmr_table="$2"
+  _rmr_val=$(printf '%s\n' "$_rmr_entry" | jq -r --arg tbl "$_rmr_table" '
+    if (.min_rows | type) == "number" then .min_rows
+    elif (.min_rows | type) == "object" then (.min_rows[$tbl] // 1)
+    else 1 end
+  ' 2>/dev/null || printf '1')
+  if [ -z "$_rmr_val" ] || [ "$_rmr_val" = "null" ]; then
+    _rmr_val=1
+  fi
+  printf '%s\n' "$_rmr_val"
+}
+
 # ## ensure_duckdb_cli
 # Ensures the duckdb binary is available in PATH by sourcing _lib/databases/duckdb/env.sh or installing it.
 ensure_duckdb_cli() {
@@ -185,6 +202,71 @@ ensure_duckdb_cli() {
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb/cli.sh" install latest >/dev/null 2>&1 || true
   fi
   command -v duckdb >/dev/null 2>&1
+}
+
+# ## check_postgres_populated
+# Checks whether all required_tables and min_rows in a PostgreSQL database are already satisfied.
+check_postgres_populated() {
+  _cpp_entry="$1"
+  _cpp_host="$2"
+  _cpp_port="$3"
+  _cpp_user="$4"
+  _cpp_pass="$5"
+  _cpp_db="$6"
+  [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ] && return 1
+  command -v psql >/dev/null 2>&1 || return 1
+  _cpp_req=$(printf '%s\n' "$_cpp_entry" | jq -r '.required_tables[]?' 2>/dev/null || true)
+  _cpp_min_tbl=$(printf '%s\n' "$_cpp_entry" | jq -r '.min_tables // empty' 2>/dev/null || true)
+  [ -z "$_cpp_req" ] && [ -z "$_cpp_min_tbl" ] && return 1
+  if [ -n "$_cpp_min_tbl" ]; then
+    _cpp_cnt=$(PGPASSWORD="$_cpp_pass" psql -h "$_cpp_host" -p "$_cpp_port" -U "$_cpp_user" -d "$_cpp_db" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2>/dev/null | tr -d '[:space:]' || printf '0')
+    : "${_cpp_cnt:=0}"
+    [ "$_cpp_cnt" -lt "$_cpp_min_tbl" ] 2>/dev/null && return 1
+  fi
+  if [ -n "$_cpp_req" ]; then
+    while IFS= read -r _cpp_tbl; do
+      [ -n "$_cpp_tbl" ] || continue
+      _cpp_min_r=$(resolve_min_rows "$_cpp_entry" "$_cpp_tbl")
+      _cpp_rc=$(PGPASSWORD="$_cpp_pass" psql -h "$_cpp_host" -p "$_cpp_port" -U "$_cpp_user" -d "$_cpp_db" -Atc "SELECT count(*) FROM \"${_cpp_tbl}\";" 2>/dev/null | tr -d '[:space:]' || printf '%s' "-1")
+      if [ -z "$_cpp_rc" ] || [ "$_cpp_rc" -lt "$_cpp_min_r" ] 2>/dev/null; then
+        return 1
+      fi
+    done << EOF_CPP_REQ
+$_cpp_req
+EOF_CPP_REQ
+  fi
+  return 0
+}
+
+# ## check_duckdb_populated
+# Checks whether all required_tables and min_rows in a DuckDB database file are already satisfied.
+check_duckdb_populated() {
+  _cdp_entry="$1"
+  _cdp_path="$2"
+  [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ] && return 1
+  [ -s "$_cdp_path" ] || return 1
+  ensure_duckdb_cli || return 1
+  _cdp_req=$(printf '%s\n' "$_cdp_entry" | jq -r '.required_tables[]?' 2>/dev/null || true)
+  _cdp_min_tbl=$(printf '%s\n' "$_cdp_entry" | jq -r '.min_tables // empty' 2>/dev/null || true)
+  [ -z "$_cdp_req" ] && [ -z "$_cdp_min_tbl" ] && return 1
+  if [ -n "$_cdp_min_tbl" ]; then
+    _cdp_cnt=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
+    : "${_cdp_cnt:=0}"
+    [ "$_cdp_cnt" -lt "$_cdp_min_tbl" ] 2>/dev/null && return 1
+  fi
+  if [ -n "$_cdp_req" ]; then
+    while IFS= read -r _cdp_tbl; do
+      [ -n "$_cdp_tbl" ] || continue
+      _cdp_min_r=$(resolve_min_rows "$_cdp_entry" "$_cdp_tbl")
+      _cdp_rc=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SELECT COUNT(*) FROM \"${_cdp_tbl}\";" 2>/dev/null | tr -d '[:space:]' | head -n 1 || printf '%s' "-1")
+      if [ -z "$_cdp_rc" ] || [ "$_cdp_rc" -lt "$_cdp_min_r" ] 2>/dev/null; then
+        return 1
+      fi
+    done << EOF_CDP_REQ
+$_cdp_req
+EOF_CDP_REQ
+  fi
+  return 0
 }
 
 # ## exec_duckdb_sql_file
@@ -220,12 +302,16 @@ while IFS= read -r db_entry <&3; do
   [ -n "$db_entry" ] || continue
   ENGINE=$(printf '%s\n' "$db_entry" | jq -r '(.engine // .type // "postgres") | ascii_downcase')
   DB_NAME=$(printf '%s\n' "$db_entry" | jq -r '.name // .db_name // "app_db"')
+  LEGACY_NAMES_CSV=$(printf '%s\n' "$db_entry" | jq -r '(.legacy_names // []) | join(",")' 2>/dev/null || true)
   DB_USER=$(printf '%s\n' "$db_entry" | jq -r '.user // .username // "postgres"')
   PASS_ENV=$(printf '%s\n' "$db_entry" | jq -r '.password_env // empty')
   RAW_PASS=$(printf '%s\n' "$db_entry" | jq -r '.password // empty')
   DB_HOST=$(printf '%s\n' "$db_entry" | jq -r '.host // "127.0.0.1"')
   DB_PORT=$(printf '%s\n' "$db_entry" | jq -r '.port // empty')
   ENV_VAR_NAME=$(printf '%s\n' "$db_entry" | jq -r '.url_env // "DATABASE_URL"')
+  SYNC_URL_ENV=$(printf '%s\n' "$db_entry" | jq -r '.sync_url_env // empty')
+  ASYNC_URL_ENV=$(printf '%s\n' "$db_entry" | jq -r '.async_url_env // empty')
+  DB_ENV_NAME=$(printf '%s\n' "$db_entry" | jq -r '.db_env // empty')
   SEED_FILE=$(printf '%s\n' "$db_entry" | jq -r '.seed_file // empty')
   SEED_DIR=$(printf '%s\n' "$db_entry" | jq -r '.seed_dir // empty')
   MIGRATION_DIR=$(printf '%s\n' "$db_entry" | jq -r '.migration_dir // empty')
@@ -244,24 +330,25 @@ while IFS= read -r db_entry <&3; do
     postgres|postgresql)
       : "${DB_PORT:=5432}"
       log_info "Provisioning PostgreSQL database '$DB_NAME' (user: '$DB_USER', host: $DB_HOST:$DB_PORT)..."
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/cli.sh" ] && ! pg_isready -h "$DB_HOST" -p "$DB_PORT" >/dev/null 2>&1; then
+      if command -v pg_isready >/dev/null 2>&1 && pg_isready -h "$DB_HOST" -p "$DB_PORT" -q 2>/dev/null; then
+        log_info "[REUSE] PostgreSQL server is already active on ${DB_HOST}:${DB_PORT}."
+      elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/cli.sh" ]; then
+        log_info "[CREATE] Starting PostgreSQL server on ${DB_HOST}:${DB_PORT}..."
         "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/cli.sh" start >/dev/null 2>&1 || true
       fi
       set_env_var "$ENV_VAR_NAME" "postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+      [ -n "$SYNC_URL_ENV" ] && set_env_var "$SYNC_URL_ENV" "postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+      [ -n "$ASYNC_URL_ENV" ] && set_env_var "$ASYNC_URL_ENV" "postgresql+asyncpg://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+      [ -n "$DB_ENV_NAME" ] && set_env_var "$DB_ENV_NAME" "$DB_NAME"
       if command -v psql >/dev/null 2>&1; then
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
           env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
             --engine postgres --host "$DB_HOST" --port "$DB_PORT" \
             --admin-user postgres --admin-pass "$DB_PASS" \
-            --schema "$DB_NAME" --user "$DB_USER" --password "$DB_PASS" >/dev/null 2>&1 || true
+            --schema "$DB_NAME" --legacy-names "$LEGACY_NAMES_CSV" \
+            --user "$DB_USER" --password "$DB_PASS" || true
         fi
         export PGPASSWORD="${DB_PASS}"
-        psql -h "$DB_HOST" -p "$DB_PORT" -U postgres -c "ALTER USER \"${DB_USER}\" WITH PASSWORD '${DB_PASS}';" >/dev/null 2>&1 || \
-          su - postgres -c "psql -c \"ALTER USER \\\"${DB_USER}\\\" WITH PASSWORD '${DB_PASS}';\"" >/dev/null 2>&1 || true
-        psql -h "$DB_HOST" -p "$DB_PORT" -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" 2>/dev/null | grep -q 1 || \
-          su - postgres -c "psql -c \"CREATE DATABASE \\\"${DB_NAME}\\\" OWNER \\\"${DB_USER}\\\";\"" >/dev/null 2>&1 || \
-          createdb -h "$DB_HOST" -p "$DB_PORT" "$DB_NAME" >/dev/null 2>&1 || true
-
         if [ -n "$MIGRATION_DIR" ]; then
           RES_MIG_DIR=$(resolve_db_asset_path "$MIGRATION_DIR")
           if [ -d "$RES_MIG_DIR" ]; then
@@ -279,9 +366,13 @@ while IFS= read -r db_entry <&3; do
         fi
       fi
       if [ -n "$SEED_CMD" ]; then
-        ensure_manifest_python_venvs
-        log_info "Running PostgreSQL seed_command for '$DB_NAME': $SEED_CMD"
-        (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+        if check_postgres_populated "$db_entry" "$DB_HOST" "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB_NAME"; then
+          log_info "[REUSE] PostgreSQL database '$DB_NAME' already has required tables and minimum rows; skipping full re-seed."
+        else
+          ensure_manifest_python_venvs
+          log_info "[CREATE] Running PostgreSQL seed_command for '$DB_NAME': $SEED_CMD"
+          (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+        fi
       fi
       ;;
     mysql|mariadb)
@@ -377,9 +468,13 @@ while IFS= read -r db_entry <&3; do
         fi
       fi
       if [ -n "$SEED_CMD" ]; then
-        ensure_manifest_python_venvs
-        log_info "Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
-        (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+        if check_duckdb_populated "$db_entry" "$DB_PATH"; then
+          log_info "[REUSE] DuckDB database '$DB_PATH' already has required tables and minimum rows; skipping full re-seed."
+        else
+          ensure_manifest_python_venvs
+          log_info "[CREATE] Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
+          (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+        fi
       fi
       DB_OWNER=$(printf '%s\n' "$db_entry" | jq -r '.user // empty')
       DB_OWNER=$(expand_manifest_vars "$DB_OWNER")

@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
-for _dm_lib in "_lib/_common/log.sh" "_lib/_common/service.sh" "_lib/_common/service_install.sh"; do
+for _dm_lib in "_lib/_common/log.sh" "_lib/_common/python_env.sh" "_lib/_common/service.sh" "_lib/_common/service_install.sh"; do
   if [ -f "${LIBSCRIPT_ROOT_DIR}/${_dm_lib}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_dm_lib}"
     export SCRIPT_NAME
@@ -136,13 +136,6 @@ if [ -z "${NPX_BIN:-}" ] || { [ "${NPX_BIN#/}" != "${NPX_BIN:-}" ] && [ ! -x "${
   fi
 fi
 
-if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh" ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-  # shellcheck disable=SC1090,SC1091
-  . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-  unset SCRIPT_NAME || true
-fi
-
 # ## expand_manifest_vars
 # Expands ${VAR:-default}, ${VAR}, and $VAR environment references inside a manifest string value.
 expand_manifest_vars() {
@@ -153,8 +146,20 @@ expand_manifest_vars() {
   fi
 }
 
+# Respect manifest-level init_system or capabilities if LIBSCRIPT_INIT_SYSTEM is not already overridden
+if [ -z "${LIBSCRIPT_INIT_SYSTEM:-}" ] && [ -z "${INIT_SYSTEM:-}" ]; then
+  _mf_init=$(jq -r '.init_system // (.infrastructure.node.capabilities // [] | map(select(. == "systemd" or . == "openrc" or . == "sysvinit" or . == "bsd_rc" or . == "launchd" or . == "smf" or . == "runit" or . == "s6" or . == "fallback" or . == "none")) | .[0]) // empty' "$JSON_FILE" 2>/dev/null || true)
+  _mf_init=$(expand_manifest_vars "$_mf_init")
+  if [ -n "$_mf_init" ] && [ "$_mf_init" != "null" ] && [ "$_mf_init" != "auto" ]; then
+    if [ "$_mf_init" != "systemd" ] || [ -d /run/systemd/system ]; then
+      LIBSCRIPT_INIT_SYSTEM="$_mf_init"
+      export LIBSCRIPT_INIT_SYSTEM
+    fi
+  fi
+fi
+
 # ## evaluate_json_expr
-# Evaluates a jq boolean expression against a JSON string with a Python fallback.
+# Evaluates a jq boolean expression against a JSON string.
 evaluate_json_expr() {
   _eje_payload="$1"
   _eje_expr="$2"
@@ -227,58 +232,31 @@ resolve_env_file() {
   fi
 }
 
-# ## start_fallback_daemon
-# Launches a service in a background subshell with isolated env, working_dir, log file, and PID tracking.
-start_fallback_daemon() {
-  _name="$1"
-  _cmd="$2"
-  _workdir="$3"
-  _svc_json="$4"
-  _svc_data="${DATA_BASE}/${_name}"
-  mkdir -p "$_svc_data"
-  _pid_file="${_svc_data}/service.pid"
-  _log_file="${_svc_data}/service.log"
-
-  if [ -f "$_pid_file" ]; then
-    _old_pid=$(cat "$_pid_file" 2>/dev/null || true)
-    if [ -n "$_old_pid" ] && kill -0 "$_old_pid" 2>/dev/null; then
-      log_info "Service '$_name' is already running (PID $_old_pid)."
-      return 0
-    fi
+# ## collect_service_env_files
+# Collects and resolves all env_files declared on a service entry into a newline-separated list.
+collect_service_env_files() {
+  _env_file_json="$1"
+  _env_file_wd="$2"
+  _env_file_raw=$(printf '%s\n' "$_env_file_json" | jq -r '.env_files[]?' 2>/dev/null || true)
+  if [ -n "$_env_file_raw" ]; then
+    printf '%s\n' "$_env_file_raw" | while IFS= read -r _ef_item; do
+      [ -n "$_ef_item" ] || continue
+      resolve_env_file "$_ef_item" "$_env_file_wd"
+    done
   fi
+}
 
-  _runner="${_svc_data}/run_${_name}.sh"
-  {
-    printf '#!/bin/sh\n'
-    printf 'export PATH="%s"\n' "$PATH"
-    printf 'export REMOTE_USER="%s" REMOTE_GROUP="%s" REMOTE_HOME="%s" REMOTE_APP_DIR="%s"\n' "${REMOTE_USER:-}" "${REMOTE_GROUP:-}" "${REMOTE_HOME:-}" "${REMOTE_APP_DIR:-$MANIFEST_DIR}"
-    printf 'if [ -f "%s/env.sh" ]; then . "%s/env.sh" >/dev/null 2>&1 || true; fi\n' "$LIBSCRIPT_ROOT_DIR" "$LIBSCRIPT_ROOT_DIR"
-    printf 'if [ -f "/etc/libscript/%s/service.env" ]; then set -a; . "/etc/libscript/%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_name" "$_name"
-    printf 'if [ -f "%s/service.env" ]; then set -a; . "%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_svc_data" "$_svc_data"
-    if [ -f "${MANIFEST_DIR}/.env.libscript" ]; then
-      printf 'set -a; . "%s/.env.libscript" 2>/dev/null || true; set +a\n' "$MANIFEST_DIR"
-    fi
-    _ef_list=$(printf '%s\n' "$_svc_json" | jq -r '.env_files[]?' 2>/dev/null || true)
-    if [ -n "$_ef_list" ]; then
-      printf '%s\n' "$_ef_list" | while IFS= read -r _ef_item; do
-        [ -n "$_ef_item" ] || continue
-        _ef_resolved=$(resolve_env_file "$_ef_item" "$_workdir")
-        printf 'if [ -f "%s" ]; then set -a; . "%s" 2>/dev/null || true; set +a; fi\n' "$_ef_resolved" "$_ef_resolved"
-      done
-    fi
-    _env_pairs=$(printf '%s\n' "$_svc_json" | jq -r '(.env // .environment // {}) | to_entries[]? | "export \(.key)=\(.value | @sh)"' 2>/dev/null || true)
-    if [ -n "$_env_pairs" ]; then
-      printf '%s\n' "$_env_pairs"
-    fi
-    printf 'cd "%s" || exit 1\n' "$_workdir"
-    printf 'exec %s\n' "$_cmd"
-  } > "$_runner"
-  chmod +x "$_runner"
-
-  nohup sh "$_runner" >> "$_log_file" 2>&1 &
-  _new_pid=$!
-  printf '%s\n' "$_new_pid" > "$_pid_file"
-  log_info "Started service '$_name' in background (PID $_new_pid, log: $_log_file)"
+# ## collect_service_env_vars
+# Collects and expands all env key=value pairs declared on a service entry into a newline-separated list.
+collect_service_env_vars() {
+  _env_var_json="$1"
+  _env_var_raw=$(printf '%s\n' "$_env_var_json" | jq -r '(.env // .environment // {}) | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+  if [ -n "$_env_var_raw" ]; then
+    printf '%s\n' "$_env_var_raw" | while IFS= read -r _kv_item; do
+      [ -n "$_kv_item" ] || continue
+      expand_manifest_vars "$_kv_item"
+    done
+  fi
 }
 
 # ## run_service_health_cmd
@@ -298,26 +276,22 @@ run_service_health_cmd() {
       . "${MANIFEST_DIR}/.env.libscript" 2>/dev/null || true
       set +a
     fi
-    _hc_ef_list=$(printf '%s\n' "$_hc_svc_json" | jq -r '.env_files[]?' 2>/dev/null || true)
+    _hc_ef_list=$(collect_service_env_files "$_hc_svc_json" "$_hc_wd")
     if [ -n "$_hc_ef_list" ]; then
-      while IFS= read -r _hc_ef_item; do
-        [ -n "$_hc_ef_item" ] || continue
-        _hc_ef_res=$(resolve_env_file "$_hc_ef_item" "$_hc_wd")
-        if [ -f "$_hc_ef_res" ]; then
-          set -a
-          # shellcheck disable=SC1090
-          . "$_hc_ef_res" 2>/dev/null || true
-          set +a
-        fi
+      while IFS= read -r _hc_ef_res; do
+        [ -n "$_hc_ef_res" ] && [ -f "$_hc_ef_res" ] || continue
+        set -a
+        # shellcheck disable=SC1090
+        . "$_hc_ef_res" 2>/dev/null || true
+        set +a
       done << EOF_HC_ENV_FILE
 $_hc_ef_list
 EOF_HC_ENV_FILE
     fi
-    _hc_env_pairs=$(printf '%s\n' "$_hc_svc_json" | jq -r '(.env // .environment // {}) | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+    _hc_env_pairs=$(collect_service_env_vars "$_hc_svc_json")
     if [ -n "$_hc_env_pairs" ]; then
-      while IFS= read -r _hc_kv; do
-        [ -n "$_hc_kv" ] || continue
-        _hc_kv_exp=$(expand_manifest_vars "$_hc_kv")
+      while IFS= read -r _hc_kv_exp; do
+        [ -n "$_hc_kv_exp" ] || continue
         export "${_hc_kv_exp%%=*}=${_hc_kv_exp#*=}"
       done << EOF_HC_ENV_KV
 $_hc_env_pairs
@@ -353,20 +327,12 @@ while IFS= read -r svc <&3; do
   [ -n "$svc" ] || continue
   NAME=$(printf '%s\n' "$svc" | jq -r '.name // empty')
   CMD=$(printf '%s\n' "$svc" | jq -r '.command // empty')
-  CMD=$(expand_manifest_vars "$CMD")
+  case "$CMD" in
+    *\$\{*) CMD=$(expand_manifest_vars "$CMD") ;;
+  esac
   if [ -z "$NAME" ]; then continue; fi
 
   if [ "$ACTION" = "uninstall" ]; then
-    PID_FILE="${DATA_BASE}/${NAME}/service.pid"
-    if [ -f "$PID_FILE" ]; then
-      SVC_PID=$(cat "$PID_FILE" 2>/dev/null || true)
-      if [ -n "$SVC_PID" ] && kill -0 "$SVC_PID" 2>/dev/null; then
-        kill "$SVC_PID" 2>/dev/null || true
-        sleep 1
-        kill -9 "$SVC_PID" 2>/dev/null || true
-      fi
-      rm -f "$PID_FILE"
-    fi
     libscript_uninstall_service "$NAME"
     [ -n "$CMD" ] && pkill -f "$CMD" 2>/dev/null || true
     log_info "Uninstalled service '$NAME'."
@@ -385,231 +351,24 @@ while IFS= read -r svc <&3; do
 
   if [ "$ACTION" = "start" ] || [ "$ACTION" = "up" ]; then
     log_info "Configuring service '$NAME' (workdir: $SVC_WORKDIR)..."
-    if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1 && [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && [ -d /run/systemd/system ]; then
-      SVC_HOME="${REMOTE_HOME:-/root}"
-      if [ -n "$SVC_USER" ] && [ -d "/home/${SVC_USER}" ]; then
-        SVC_HOME="/home/${SVC_USER}"
-      fi
-      RUNNER_SCRIPT="${SVC_DATA}/systemd_run_${NAME}.sh"
-      {
-        printf '#!/bin/sh\n'
-        printf 'export HOME="%s"\n' "$SVC_HOME"
-        printf 'export UV_PYTHON_INSTALL_DIR="%s/.local/share/uv/python"\n' "$SVC_HOME"
-        printf 'export UV_CACHE_DIR="%s/.cache/uv"\n' "$SVC_HOME"
-        printf 'export PATH="%s"\n' "$PATH"
-        printf 'export REMOTE_USER="%s" REMOTE_GROUP="%s" REMOTE_HOME="%s" REMOTE_APP_DIR="%s"\n' "${REMOTE_USER:-}" "${REMOTE_GROUP:-}" "${REMOTE_HOME:-$SVC_HOME}" "${REMOTE_APP_DIR:-$MANIFEST_DIR}"
-        printf 'if [ -f "%s/env.sh" ]; then . "%s/env.sh" >/dev/null 2>&1 || true; fi\n' "$LIBSCRIPT_ROOT_DIR" "$LIBSCRIPT_ROOT_DIR"
-        printf 'if [ -f "/etc/libscript/%s/service.env" ]; then set -a; . "/etc/libscript/%s/service.env" 2>/dev/null || true; set +a; fi\n' "$NAME" "$NAME"
-        printf 'if [ -f "%s/service.env" ]; then set -a; . "%s/service.env" 2>/dev/null || true; set +a; fi\n' "$SVC_DATA" "$SVC_DATA"
-        printf 'cd "%s" || exit 1\n' "$SVC_WORKDIR"
-        printf '%s\n' "$CMD"
-      } > "$RUNNER_SCRIPT"
-      chmod 0755 "$SVC_DATA" "$RUNNER_SCRIPT" 2>/dev/null || true
-      if [ "$(id -u)" -eq 0 ] || sudo -n true 2>/dev/null; then
-        SERVICE_FILE="/etc/systemd/system/${NAME}.service"
-        USER_DIRECTIVE=""
-        if [ -n "$SVC_USER" ] && id "$SVC_USER" >/dev/null 2>&1; then
-          USER_DIRECTIVE="User=${SVC_USER}"
-          chown "${SVC_USER}:${SVC_USER}" "$SVC_DATA" "$RUNNER_SCRIPT" 2>/dev/null || sudo chown "${SVC_USER}:${SVC_USER}" "$SVC_DATA" "$RUNNER_SCRIPT" 2>/dev/null || true
-          if [ -L "${SVC_WORKDIR}/.venv/bin/python" ] || [ -L "${SVC_WORKDIR}/.venv/bin/python3" ]; then
-            _py_lnk=$(readlink -f "${SVC_WORKDIR}/.venv/bin/python3" 2>/dev/null || readlink "${SVC_WORKDIR}/.venv/bin/python3" 2>/dev/null || true)
-            case "$_py_lnk" in
-              /root/*)
-                log_info "Recreating '${SVC_WORKDIR}/.venv' for user '$SVC_USER' (previously linked into /root)..."
-                rm -rf "${SVC_WORKDIR}/.venv"
-                _dm_py_ver="${PYTHON_VERSION:-3.12}"
-                [ "$_dm_py_ver" = "latest" ] || [ "$_dm_py_ver" = "default" ] && _dm_py_ver="3.12"
-                if type libscript_python_venv >/dev/null 2>&1; then
-                  HOME="$SVC_HOME" UV_PYTHON_INSTALL_DIR="${SVC_HOME}/.local/share/uv/python" UV_CACHE_DIR="${SVC_HOME}/.cache/uv" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${SVC_WORKDIR}/.venv" "$_dm_py_ver" 2>/dev/null || true
-                fi
-                (cd "$SVC_WORKDIR" && HOME="$SVC_HOME" UV_PYTHON_INSTALL_DIR="${SVC_HOME}/.local/share/uv/python" UV_CACHE_DIR="${SVC_HOME}/.cache/uv" PATH="${PATH}:${SVC_HOME}/.local/bin:/root/.local/bin" uv sync --python "$_dm_py_ver" 2>/dev/null || true)
-                chown -R "${SVC_USER}:${SVC_USER}" "${SVC_WORKDIR}/.venv" "${SVC_HOME}/.local" "${SVC_HOME}/.cache" 2>/dev/null || true
-                ;;
-            esac
-          fi
-        fi
-        sudo sh -c "cat << SYSTEMD > \"$SERVICE_FILE\"
-[Unit]
-Description=$NAME service managed by libscript
-After=network.target
-
-[Service]
-WorkingDirectory=$SVC_WORKDIR
-${USER_DIRECTIVE}
-Environment=\"HOME=$SVC_HOME\"
-Environment=\"UV_PYTHON_INSTALL_DIR=${SVC_HOME}/.local/share/uv/python\"
-Environment=\"UV_CACHE_DIR=${SVC_HOME}/.cache/uv\"
-Environment=\"PATH=$PATH\"
-Environment=\"REMOTE_USER=${REMOTE_USER:-}\"
-Environment=\"REMOTE_GROUP=${REMOTE_GROUP:-}\"
-Environment=\"REMOTE_HOME=${REMOTE_HOME:-$SVC_HOME}\"
-Environment=\"REMOTE_APP_DIR=${REMOTE_APP_DIR:-$MANIFEST_DIR}\"
-ExecStart=/bin/sh \"$RUNNER_SCRIPT\"
-StandardOutput=journal
-StandardError=journal
-Restart=always
-RestartSec=2
-SYSTEMD
-"
-        if [ -f "${MANIFEST_DIR}/.env.libscript" ]; then
-          sudo sh -c "printf 'EnvironmentFile=-%s/.env.libscript\n' \"$MANIFEST_DIR\" >> \"$SERVICE_FILE\""
-        fi
-        ENV_FILES=$(printf '%s\n' "$svc" | jq -r '.env_files[]?' 2>/dev/null || true)
-        if [ -n "$ENV_FILES" ]; then
-          printf '%s\n' "$ENV_FILES" | while IFS= read -r ef; do
-            EF_FULL=$(resolve_env_file "$ef" "$SVC_WORKDIR")
-            if [ -f "$EF_FULL" ]; then
-              sudo sh -c "printf 'EnvironmentFile=-%s\n' \"$EF_FULL\" >> \"$SERVICE_FILE\""
-            fi
-          done
-        fi
-        ENVS=$(printf '%s\n' "$svc" | jq -r '(.env // .environment // {}) | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
-        if [ -n "$ENVS" ]; then
-          printf '%s\n' "$ENVS" | while IFS= read -r e; do
-            if [ -n "$e" ]; then
-              e=$(expand_manifest_vars "$e")
-              case "$e" in
-                PATH=*:*) e="${e}:${PATH}" ;;
-              esac
-              sudo sh -c "printf 'Environment=\"%s\"\n' \"$e\" >> \"$SERVICE_FILE\""
-            fi
-          done
-        fi
-        sudo sh -c "cat << 'SYSTEMD' >> \"$SERVICE_FILE\"
-
-[Install]
-WantedBy=multi-user.target
-SYSTEMD
-"
-        sudo systemctl daemon-reload
-        sudo systemctl enable "$NAME" && sudo systemctl restart "$NAME"
-      elif systemctl --user status >/dev/null 2>&1; then
-        USER_UNIT_DIR="${HOME}/.config/systemd/user"
-        mkdir -p "$USER_UNIT_DIR"
-        SERVICE_FILE="${USER_UNIT_DIR}/${NAME}.service"
-        cat << SYSTEMD > "$SERVICE_FILE"
-[Unit]
-Description=$NAME service managed by libscript
-After=network.target
-
-[Service]
-WorkingDirectory=$SVC_WORKDIR
-Environment="HOME=$SVC_HOME"
-Environment="PATH=$PATH"
-Environment="REMOTE_USER=${REMOTE_USER:-}"
-Environment="REMOTE_GROUP=${REMOTE_GROUP:-}"
-Environment="REMOTE_HOME=${REMOTE_HOME:-$SVC_HOME}"
-Environment="REMOTE_APP_DIR=${REMOTE_APP_DIR:-$MANIFEST_DIR}"
-ExecStart=/bin/sh "$RUNNER_SCRIPT"
-StandardOutput=append:${SVC_DATA}/stdout.log
-StandardError=append:${SVC_DATA}/stderr.log
-Restart=always
-RestartSec=2
-SYSTEMD
-        if [ -f "${MANIFEST_DIR}/.env.libscript" ]; then
-          printf 'EnvironmentFile=-%s/.env.libscript\n' "$MANIFEST_DIR" >> "$SERVICE_FILE"
-        fi
-        ENV_FILES=$(printf '%s\n' "$svc" | jq -r '.env_files[]?' 2>/dev/null || true)
-        if [ -n "$ENV_FILES" ]; then
-          printf '%s\n' "$ENV_FILES" | while IFS= read -r ef; do
-            EF_FULL=$(resolve_env_file "$ef" "$SVC_WORKDIR")
-            if [ -f "$EF_FULL" ]; then
-              printf 'EnvironmentFile=-%s\n' "$EF_FULL" >> "$SERVICE_FILE"
-            fi
-          done
-        fi
-        ENVS=$(printf '%s\n' "$svc" | jq -r '(.env // .environment // {}) | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
-        if [ -n "$ENVS" ]; then
-          printf '%s\n' "$ENVS" | while IFS= read -r e; do
-            if [ -n "$e" ]; then
-              e=$(expand_manifest_vars "$e")
-              printf 'Environment="%s"\n' "$e" >> "$SERVICE_FILE"
-            fi
-          done
-        fi
-        cat << 'SYSTEMD' >> "$SERVICE_FILE"
-
-[Install]
-WantedBy=default.target
-SYSTEMD
-        systemctl --user daemon-reload
-        systemctl --user enable "$NAME" && systemctl --user restart "$NAME"
-      else
-        start_fallback_daemon "$NAME" "$CMD" "$SVC_WORKDIR" "$svc"
-      fi
-    elif printf '%s\n' "$OS_NAME" | grep -q "darwin" && [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && [ "${LIBSCRIPT_USE_LAUNCHD:-0}" = "1" ]; then
-      PLIST_FILE="$HOME/Library/LaunchAgents/com.libscript.${NAME}.plist"
-      mkdir -p "$HOME/Library/LaunchAgents"
-      ENV_DICT="<key>PATH</key><string>${PATH}</string>"
-      ENVS=$(printf '%s\n' "$svc" | jq -r '(.env // .environment // {}) | to_entries[]? | "<key>\(.key)</key><string>\(.value)</string>"' 2>/dev/null || true)
-      if [ -n "$ENVS" ]; then
-        ENV_DICT="${ENV_DICT}${ENVS}"
-      fi
-      ENV_FILES=$(printf '%s\n' "$svc" | jq -r '.env_files[]?' 2>/dev/null || true)
-      if [ -n "$ENV_FILES" ]; then
-        while IFS= read -r ef; do
-          [ -n "$ef" ] || continue
-          EF_FULL=$(resolve_env_file "$ef" "$SVC_WORKDIR")
-          if [ -f "$EF_FULL" ]; then
-            while IFS='=' read -r k v; do
-              case "$k" in ''|\#*) continue ;; esac
-              v=$(printf '%s' "$v" | sed -e 's/^"//;s/"$//')
-              ENV_DICT="${ENV_DICT}<key>${k}</key><string>${v}</string>"
-            done < "$EF_FULL"
-          fi
-        done << EOF_EF
-$ENV_FILES
-EOF_EF
-      fi
-      cat << PLIST > "$PLIST_FILE"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.libscript.${NAME}</string>
-    <key>WorkingDirectory</key>
-    <string>${SVC_WORKDIR}</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/bin/sh</string>
-        <string>-c</string>
-        <string>$CMD</string>
-    </array>
-    <key>EnvironmentVariables</key>
-    <dict>
-        ${ENV_DICT}
-    </dict>
-    <key>StandardOutPath</key>
-    <string>${SVC_DATA}/stdout.log</string>
-    <key>StandardErrorPath</key>
-    <string>${SVC_DATA}/stderr.log</string>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-</dict>
-</plist>
-PLIST
-      launchctl load -w "$PLIST_FILE" 2>/dev/null || true
-      launchctl start "com.libscript.${NAME}" 2>/dev/null || true
-      start_fallback_daemon "$NAME" "$CMD" "$SVC_WORKDIR" "$svc"
-    else
-      start_fallback_daemon "$NAME" "$CMD" "$SVC_WORKDIR" "$svc"
+    SVC_ENV_FILES=$(collect_service_env_files "$svc" "$SVC_WORKDIR")
+    SVC_ENV_VARS=$(collect_service_env_vars "$svc")
+    LIBSCRIPT_SERVICE_MANIFEST_DIR="$MANIFEST_DIR" \
+    LIBSCRIPT_SERVICE_USER="$SVC_USER" \
+    LIBSCRIPT_SERVICE_ENV="$SVC_ENV_VARS" \
+    LIBSCRIPT_SERVICE_ENV_FILES="$SVC_ENV_FILES" \
+      libscript_install_service "$NAME" "$CMD" "$SVC_WORKDIR" "$NAME service managed by libscript" "$SVC_ENV_VARS" "$SVC_USER" "$SVC_ENV_FILES"
+    _dm_hc_url=$(printf '%s\n' "$svc" | jq -r '(.health_check // .healthcheck) as $hc | if ($hc | type) == "object" then ($hc.url // empty) else empty end' 2>/dev/null || true)
+    _dm_hc_url=$(expand_manifest_vars "$_dm_hc_url")
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_SERVICE_UNIT_UNCHANGED:-0}" = "1" ] && [ "$(libscript_detect_init_system)" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null && { [ -z "$_dm_hc_url" ] || curl -sf -m 3 "$_dm_hc_url" >/dev/null 2>&1; }; then
+      log_info "[REUSE] Daemon '$NAME' is already running and healthy."
+    elif ! libscript_service restart "$NAME" 2>/dev/null; then
+      libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
     fi
   elif [ "$ACTION" = "stop" ] || [ "$ACTION" = "down" ]; then
-    PID_FILE="${SVC_DATA}/service.pid"
-    if [ -f "$PID_FILE" ]; then
-      SVC_PID=$(cat "$PID_FILE" 2>/dev/null || true)
-      if [ -n "$SVC_PID" ] && kill -0 "$SVC_PID" 2>/dev/null; then
-        kill "$SVC_PID" 2>/dev/null || true
-        sleep 1
-        kill -9 "$SVC_PID" 2>/dev/null || true
-      fi
-      rm -f "$PID_FILE"
-    fi
     libscript_service stop "$NAME" >/dev/null 2>&1 || true
     libscript_service disable "$NAME" >/dev/null 2>&1 || true
+    libscript_service_fallback stop "$NAME" >/dev/null 2>&1 || true
     pkill -f "$CMD" 2>/dev/null || true
     log_info "Stopped service '$NAME'."
   elif [ "$ACTION" = "status" ]; then
@@ -621,10 +380,6 @@ PLIST
       else
         printf '[STOPPED] %s (stale PID %s)\n' "$NAME" "${SVC_PID:-unknown}"
       fi
-    elif [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
-      systemctl status "$NAME" --no-pager 2>/dev/null || systemctl --user status "$NAME" --no-pager 2>/dev/null || printf '[STOPPED] %s\n' "$NAME"
-    elif printf '%s\n' "$OS_NAME" | grep -q "darwin" && launchctl list 2>/dev/null | grep -q "com.libscript.${NAME}"; then
-      launchctl list | grep "com.libscript.${NAME}" || true
     else
       libscript_service status "$NAME" 2>/dev/null || printf '[STOPPED] %s\n' "$NAME"
     fi
@@ -639,7 +394,7 @@ PLIST
       else
         printf '[STOPPED] %s (stale PID %s)\n' "$NAME" "${SVC_PID:-unknown}"
       fi
-    elif [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+    elif [ "$(libscript_detect_init_system)" = "systemd" ]; then
       if systemctl is-active --quiet "$NAME" 2>/dev/null || systemctl --user is-active --quiet "$NAME" 2>/dev/null; then
         _sub_state=$(systemctl show -p SubState --value "$NAME" 2>/dev/null || systemctl --user show -p SubState --value "$NAME" 2>/dev/null || printf 'running')
         if [ "$_sub_state" = "auto-restart" ] || [ "$_sub_state" = "failed" ] || [ "$_sub_state" = "dead" ]; then

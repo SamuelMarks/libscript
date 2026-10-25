@@ -93,6 +93,38 @@ if not errorlevel 1 (
 )
 echo [PASS] run_hooks.cmd propagates non-zero hook exit code
 
+:: 8. Test multi-app shared-node provision, deprovision, backup, and restore dry-run
+if not exist "!TEST_TMP!\app_a" mkdir "!TEST_TMP!\app_a"
+if not exist "!TEST_TMP!\app_b" mkdir "!TEST_TMP!\app_b"
+if not exist "!TEST_TMP!\state_dir" mkdir "!TEST_TMP!\state_dir"
+echo {"name": "hospital-dashboard-platform"} > "!TEST_TMP!\app_a\libscript.json"
+echo {"name": "t1d-analytics"} > "!TEST_TMP!\app_b\libscript.json"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" provision --provider azure --node test-node --rg TEST-RG --location eastus --app "!TEST_TMP!\app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "!TEST_TMP!\app_b:t1d-analytics@t1d-analytics.healthplatform.io" --dry-run >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] libscript.cmd provision --dry-run failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" deprovision --provider azure --node test-node --rg TEST-RG --location eastus --keep-infra --purge-data --only t1d-analytics --app "!TEST_TMP!\app_a:hospital-dashboard-platform" --app "!TEST_TMP!\app_b:t1d-analytics" --dry-run >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] libscript.cmd deprovision --keep-infra --dry-run failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" backup test-node --provider azure --rg TEST-RG --only pulse_query --app hospital-dashboard-platform --app t1d-analytics --export-state "!TEST_TMP!\state_dir" --dry-run >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] libscript.cmd backup --export-state --dry-run failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" restore test-node --provider azure --rg TEST-RG --only pulse_query --app "hospital-dashboard-platform@pulse-query.healthplatform.io" --app "t1d-analytics@t1d-analytics.healthplatform.io" --import-state "!TEST_TMP!\state_dir" --dry-run >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] libscript.cmd restore --import-state --dry-run failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] Multi-app shared-node provision, deprovision, backup, and restore dry-run orchestration
+
 rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo === ALL WINDOWS FULLSTACK ORCHESTRATION TESTS PASSED ===
 exit /b 0

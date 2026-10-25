@@ -89,7 +89,7 @@ if /i "%ACTION%"=="-v" (
 )
 
 set "IS_CLOUD_VERB=0"
-for %%V in (auth location group project network node dns firewall ssh backup restore diff list-managed storage aws azure gcp hetzner proxmox cleanup setup deploy) do (
+for %%V in (auth location group project network node dns firewall ssh backup restore diff list-managed storage dashboard cost usage logs-aggregate aws azure gcp hetzner proxmox digitalocean linode vultr cleanup setup deploy) do (
     if /i "%ACTION%"=="%%V" set "IS_CLOUD_VERB=1"
 )
 if "!IS_CLOUD_VERB!"=="1" (

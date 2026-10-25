@@ -2,10 +2,10 @@
 :: # teardown_cloud.cmd
 ::
 :: ## Overview
-:: Teardown orchestrator for cloud environments on Windows.
+:: Teardown orchestrator for cloud environments and remote applications on Windows.
 ::
 :: ## Usage
-:: Run `teardown_cloud.cmd <provider> <node> <rg> <loc>` to cleanly destroy resources and backup state.
+:: Run `teardown_cloud.cmd <provider> <node> <rg> <loc> [options]` to cleanly remove apps or destroy infrastructure.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,10 +51,26 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /i "%~1"=="deprovision" shift
+
 set "IS_TPU=0"
 set "SHARED_STORAGE=0"
 set "RETAIN_IP=0"
 set "RETAIN_DATA=0"
+set "KEEP_INFRA=0"
+set "PURGE_DATA=%PURGE_DATA%"
+if "!PURGE_DATA!"=="" set "PURGE_DATA=0"
+set "ONLY_TARGET=%ONLY_TARGET%"
+if "!ONLY_TARGET!"=="" set "ONLY_TARGET=all"
+set "PROVIDER=%CLOUD_PROVIDER%"
+if "!PROVIDER!"=="" set "PROVIDER=%PROVIDER%"
+set "NODE=%NODE_NAME%"
+set "RG=%RG_NAME%"
+set "LOC=%LOCATION%"
+if "!LOC!"=="" set "LOC=eastus"
+set "ADMIN_USER=%ADMIN_USER%"
+if "!ADMIN_USER!"=="" set "ADMIN_USER=azureuser"
+set "APP_SPECS="
 
 set "P1="
 set "P2="
@@ -68,44 +84,37 @@ set "P6="
 :parse_args
 set "arg=%~1"
 if "!arg!"=="" goto :args_done
-if /i "!arg!"=="--tpu" (
-    set "IS_TPU=1"
-    shift
-    goto :parse_args
-)
-if /i "!arg!"=="--accelerator" (
-    set "IS_TPU=1"
-    shift
-    goto :parse_args
-)
-if /i "!arg!"=="--shared-storage" (
-    set "SHARED_STORAGE=1"
-    shift
-    goto :parse_args
-)
-if /i "!arg!"=="--retain-ip" (
-    set "RETAIN_IP=1"
-    shift
-    goto :parse_args
-)
-if /i "!arg!"=="--retain-data" (
-    set "RETAIN_DATA=1"
-    shift
-    goto :parse_args
-)
+if /i "!arg!"=="--tpu" ( set "IS_TPU=1" & shift & goto :parse_args )
+if /i "!arg!"=="--accelerator" ( set "IS_TPU=1" & shift & goto :parse_args )
+if /i "!arg!"=="--shared-storage" ( set "SHARED_STORAGE=1" & shift & goto :parse_args )
+if /i "!arg!"=="--retain-ip" ( set "RETAIN_IP=1" & shift & goto :parse_args )
+if /i "!arg!"=="--retain-data" ( set "RETAIN_DATA=1" & shift & goto :parse_args )
+if /i "!arg!"=="--keep-infra" ( set "KEEP_INFRA=1" & shift & goto :parse_args )
+if /i "!arg!"=="--remove-app" ( set "KEEP_INFRA=1" & shift & goto :parse_args )
+if /i "!arg!"=="--purge-data" ( set "PURGE_DATA=1" & shift & goto :parse_args )
+if /i "!arg!"=="--dry-run" ( set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!arg!"=="-n" ( set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!arg:~0,7!"=="--only=" ( set "ONLY_TARGET=!arg:~7!" & shift & goto :parse_args )
+if /i "!arg!"=="--only" ( set "ONLY_TARGET=%~2" & shift & shift & goto :parse_args )
+if /i "!arg:~0,11!"=="--provider=" ( set "PROVIDER=!arg:~11!" & shift & goto :parse_args )
+if /i "!arg!"=="--provider" ( set "PROVIDER=%~2" & shift & shift & goto :parse_args )
+if /i "!arg:~0,7!"=="--node=" ( set "NODE=!arg:~7!" & shift & goto :parse_args )
+if /i "!arg!"=="--node" ( set "NODE=%~2" & shift & shift & goto :parse_args )
+if /i "!arg:~0,5!"=="--rg=" ( set "RG=!arg:~5!" & shift & goto :parse_args )
+if /i "!arg!"=="--rg" ( set "RG=%~2" & shift & shift & goto :parse_args )
+if /i "!arg:~0,11!"=="--location=" ( set "LOC=!arg:~11!" & shift & goto :parse_args )
+if /i "!arg!"=="--location" ( set "LOC=%~2" & shift & shift & goto :parse_args )
+if /i "!arg:~0,13!"=="--admin-user=" ( set "ADMIN_USER=!arg:~13!" & shift & goto :parse_args )
+if /i "!arg!"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto :parse_args )
+if /i "!arg:~0,6!"=="--app=" ( set "APP_SPECS=!APP_SPECS!!arg:~6!|" & set "KEEP_INFRA=1" & shift & goto :parse_args )
+if /i "!arg!"=="--app" ( set "APP_SPECS=!APP_SPECS!%~2|" & set "KEEP_INFRA=1" & shift & shift & goto :parse_args )
 
-if "!P1!"=="" (
-    set "P1=%~1"
-) else if "!P2!"=="" (
-    set "P2=%~1"
-) else if "!P3!"=="" (
-    set "P3=%~1"
-) else if "!P4!"=="" (
-    set "P4=%~1"
-) else if "!P5!"=="" (
-    set "P5=%~1"
-) else if "!P6!"=="" (
-    set "P6=%~1"
+if "!P1!"=="" ( set "P1=%~1"
+) else if "!P2!"=="" ( set "P2=%~1"
+) else if "!P3!"=="" ( set "P3=%~1"
+) else if "!P4!"=="" ( set "P4=%~1"
+) else if "!P5!"=="" ( set "P5=%~1"
+) else if "!P6!"=="" ( set "P6=%~1"
 )
 shift
 goto :parse_args
@@ -113,201 +122,83 @@ goto :parse_args
 :: ## args_done
 :: Continues execution after command-line argument parsing completes.
 :args_done
-
-set "PROVIDER=!P1!"
-set "NODE=!P2!"
-set "RG=!P3!"
-set "LOC=!P4!"
+if "!PROVIDER!"=="" set "PROVIDER=!P1!"
+if "!NODE!"=="" set "NODE=!P2!"
+if "!RG!"=="" set "RG=!P3!"
+if not "!P4!"=="" set "LOC=!P4!"
 set "REPO_PATH=!P5!"
 if "!REPO_PATH!"=="" set "REPO_PATH=."
 set "REMOTE_DEST=!P6!"
-if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
+if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/!NODE!"
 
-if "!LOC!"=="" (
-    echo Usage: teardown_cloud.cmd ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest] [--retain-ip] [--retain-data]
+if "!PROVIDER!"=="" (
+    echo Usage: teardown_cloud.cmd ^<provider^> ^<node_name^> ^<rg^> [location] [options]
     exit /b 1
 )
 
-:: -----------------------------------------------------------------------------
-:: Logging Configuration
-:: -----------------------------------------------------------------------------
-set "LOG_DIR=!REPO_PATH!\logs"
-if not exist "!LOG_DIR!" mkdir "!LOG_DIR!"
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set datetime=%%I
-set "TIMESTAMP=!datetime:~0,14!"
-set "LOG_FILE=!LOG_DIR!\teardown-!TIMESTAMP!.log"
-
-call :log "INIT" "Starting !PROVIDER! teardown for !NODE!..."
-
-set "STATE_FILE=!REPO_PATH!\.deploy_state"
-
-set "DOMAIN="
-set "STATE_BUCKET="
-set "STATE_ENDPOINT="
-set "STATE_PATHS="
-
-if exist "!REPO_PATH!\libscript.json" (
-    where jq >nul 2>&1
-    if !errorlevel! equ 0 (
-        for /f "delims=" %%I in ('jq -r ".domain // \"\"" "!REPO_PATH!\libscript.json"') do set "DOMAIN=%%I"
-        for /f "delims=" %%I in ('jq -r ".state.bucket // \"\"" "!REPO_PATH!\libscript.json"') do set "STATE_BUCKET=%%I"
-        for /f "delims=" %%I in ('jq -r ".state.endpoint // \"\"" "!REPO_PATH!\libscript.json"') do set "STATE_ENDPOINT=%%I"
-        for /f "delims=" %%I in ('jq -r "if .state.paths then (.state.paths | join(\" \")) else \"\" end" "!REPO_PATH!\libscript.json"') do set "STATE_PATHS=%%I"
-    )
-)
-
-set "CLI=%~dp0..\_lib\cloud-providers\!PROVIDER!\cli.cmd"
+set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
 if not exist "!CLI!" (
-    call :log "ERROR" "Provider !PROVIDER! not supported."
+    echo [ERROR] Provider !PROVIDER! not supported. 1>&2
     exit /b 1
-)
-
-:: -----------------------------------------------------------------------------
-:: Dependency Check
-:: -----------------------------------------------------------------------------
-set "CMD_TO_CHECK="
-set "PKG_TO_INSTALL="
-if "!PROVIDER!"=="azure" (
-    set "CMD_TO_CHECK=az"
-    set "PKG_TO_INSTALL=azure-cli"
-)
-if "!PROVIDER!"=="aws" (
-    set "CMD_TO_CHECK=aws"
-    set "PKG_TO_INSTALL=awscli"
-)
-if "!PROVIDER!"=="gcp" (
-    set "CMD_TO_CHECK=gcloud"
-    set "PKG_TO_INSTALL=google-cloud-sdk"
-)
-
-if not "!CMD_TO_CHECK!"=="" (
-    where !CMD_TO_CHECK! >nul 2>&1
-    if errorlevel 1 (
-        call :log "INFO" "Command '!CMD_TO_CHECK!' not found. Installing '!PKG_TO_INSTALL!' via LibScript..."
-        call "!LIBSCRIPT_ROOT!\libscript.cmd" install "!PKG_TO_INSTALL!" latest
-        if errorlevel 1 (
-            call :log "ERROR" "Failed to auto-install !PKG_TO_INSTALL!. Please install it manually."
-            exit /b 1
-        )
-    )
 )
 
 set "CTX=!RG!"
-if "!PROVIDER!"=="aws" set "CTX=!LOC!"
-if "!PROVIDER!"=="gcp" set "CTX=!LOC!"
+if /i "!PROVIDER!"=="aws" set "CTX=!LOC!"
+if /i "!PROVIDER!"=="gcp" set "CTX=!LOC!"
 
-call :log "STOP" "Stopping remote stack..."
-call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh stop" >> "!LOG_FILE!" 2>&1
+if "!KEEP_INFRA!"=="1" if not "!APP_SPECS!"=="" goto :remove_apps_mode
 
-if not "!STATE_PATHS!"=="" (
-    for %%P in (!STATE_PATHS!) do (
-        call :log "SYNC" "Syncing %%P from node to prevent data loss..."
-        call "!CLI!" node scp-from "!NODE!" "!CTX!" "!REMOTE_DEST!/%%P" "!REPO_PATH!\%%P" >> "!LOG_FILE!" 2>&1
-
-        if not "!STATE_BUCKET!"=="" if exist "!REPO_PATH!\%%P" (
-            call :log "STATE" "Backing up %%P to object storage !STATE_BUCKET!..."
-            if "!STATE_BUCKET:~0,5!"=="s3://" (
-                set "S3_ARGS="
-                if not "!STATE_ENDPOINT!"=="" set "S3_ARGS=--endpoint-url !STATE_ENDPOINT!"
-                aws s3 cp !S3_ARGS! "!REPO_PATH!\%%P" "!STATE_BUCKET!/%%P" >> "!LOG_FILE!" 2>&1
-            ) else if "!STATE_BUCKET:~0,5!"=="gs://" (
-                gcloud storage cp "!REPO_PATH!\%%P" "!STATE_BUCKET!/%%P" >> "!LOG_FILE!" 2>&1
-            ) else if "!STATE_BUCKET:~0,8!"=="azure://" (
-                for /f "tokens=3 delims=/" %%C in ("!STATE_BUCKET!") do set "CONTAINER=%%C"
-                az storage blob upload --container-name "!CONTAINER!" --name "%%P" --file "!REPO_PATH!\%%P" --auth-mode login --overwrite >> "!LOG_FILE!" 2>&1
-            )
-        )
-    )
+if /i "%DRY_RUN%"=="true" (
+    echo [DRY_RUN] Simulated deprovision for !PROVIDER! !NODE! !RG! !LOC!
+    exit /b 0
 )
 
-if not "!DOMAIN!"=="" (
-    if "!RETAIN_IP!"=="0" (
-        call :log "DNS" "Unmapping DNS..."
-        if "!PROVIDER!"=="azure" (
-            for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
-            call "!CLI!" dns unmap-node "!NODE!" "!RG!" "!DOMAIN!" "!ZONE_NAME!" "!ZONE_NAME!-rg" >> "!LOG_FILE!" 2>&1
-        ) else if "!PROVIDER!"=="aws" (
-            if "!AWS_ZONE_ID!"=="" (
-                for /f "tokens=*" %%i in ('aws route53 list-hosted-zones-by-name --dns-name "!DOMAIN!" --query "HostedZones[0].Id" --output text 2^>nul') do set "RAW_ID=%%i"
-                if not "!RAW_ID!"=="None" (
-                    for %%a in ("!RAW_ID:/=" "!") do set "AWS_ZONE_ID=%%~a"
-                )
-            )
-            if not "!AWS_ZONE_ID!"=="" (
-                call "!CLI!" dns unmap-node "!NODE!" "!DOMAIN!" "!AWS_ZONE_ID!" >> "!LOG_FILE!" 2>&1
-            )
-        ) else if "!PROVIDER!"=="gcp" (
-            for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
-            call "!CLI!" dns unmap-node "!NODE!" "!LOC!" "!DOMAIN!" "!ZONE_NAME!" >> "!LOG_FILE!" 2>&1
-        )
-    ) else if "!RETAIN_IP!"=="1" (
-        call :log "DNS" "Skipping DNS unmapping because --retain-ip is set."
-    )
+call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh stop"
+call "!CLI!" node delete "!NODE!" "!CTX!"
+if /i "!PROVIDER!"=="azure" (
+    call "!CLI!" firewall delete "!NODE!-nsg" "!RG!"
+    call "!CLI!" network delete "!NODE!-vnet" "!RG!"
 )
+echo [DONE] Teardown complete.
+exit /b 0
 
-if "!RETAIN_IP!"=="1" (
-    call :log "INFRA" "Retaining IP address..."
-    if "!PROVIDER!"=="aws" call :log "INFRA" "  -> Detaching AWS Elastic IP..."
-    if "!PROVIDER!"=="azure" call :log "INFRA" "  -> Dissociating Azure Public IP..."
-    if "!PROVIDER!"=="gcp" call :log "INFRA" "  -> Promoting GCP Ephemeral IP to Static..."
+:: ## remove_apps_mode
+:: Decommissions selected application(s) from the shared node without deleting the VM.
+:remove_apps_mode
+call "!CLI!" node sync "!NODE!" "!CTX!"
+if errorlevel 1 exit /b 1
+set "_PURGE_FLAG="
+if "!PURGE_DATA!"=="1" set "_PURGE_FLAG= --purge-data"
+set "REM_SPECS=!APP_SPECS!"
+
+:: ## remove_next_app
+:: Iterates over APP_SPECS and decommissions each matching target.
+:remove_next_app
+if "!REM_SPECS!"=="" (
+    echo [INFO] Removal of '!ONLY_TARGET!' completed successfully.
+    exit /b 0
 )
-
-if "!RETAIN_DATA!"=="1" (
-    call :log "INFRA" "Retaining data volume..."
-    if "!PROVIDER!"=="aws" call :log "INFRA" "  -> Detaching AWS EBS volume..."
-    if "!PROVIDER!"=="azure" call :log "INFRA" "  -> Detaching Azure Managed Disk..."
-    if "!PROVIDER!"=="gcp" call :log "INFRA" "  -> Detaching GCP Persistent Disk..."
+for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
+    set "_CUR_RM=%%A"
+    set "REM_SPECS=%%B"
 )
-
-call :log "INFRA" "Deleting Node..."
-call "!CLI!" node delete "!NODE!" "!CTX!" >> "!LOG_FILE!" 2>&1
-
-call :log "INFRA" "Deleting Firewall..."
-if "!PROVIDER!"=="azure" (
-    call "!CLI!" firewall delete "!NODE!-nsg!" "!RG!" >> "!LOG_FILE!" 2>&1
-) else if "!PROVIDER!"=="aws" (
-    set "SG_ID="
-    if exist "!STATE_FILE!" (
-        for /f "tokens=2 delims==" %%i in ('findstr "^AWS_SG=" "!STATE_FILE!"') do set "SG_ID=%%i"
-    )
-    if not "!SG_ID!"=="" (
-        aws ec2 delete-security-group --group-id "!SG_ID!" >> "!LOG_FILE!" 2>&1
-    )
-) else if "!PROVIDER!"=="gcp" (
-    call "!CLI!" firewall delete "!NODE!-fw" >> "!LOG_FILE!" 2>&1
-)
-
-call :log "INFRA" "Deleting Network..."
-if "!PROVIDER!"=="azure" (
-    call "!CLI!" network delete "!NODE!-vnet" "!RG!" >> "!LOG_FILE!" 2>&1
-) else if "!PROVIDER!"=="aws" (
-    set "VPC_ID="
-    if exist "!STATE_FILE!" (
-        for /f "tokens=2 delims==" %%i in ('findstr "^AWS_VPC=" "!STATE_FILE!"') do set "VPC_ID=%%i"
-    )
-    if not "!VPC_ID!"=="" (
-        aws ec2 delete-vpc --vpc-id "!VPC_ID!" >> "!LOG_FILE!" 2>&1
+for /f "tokens=1 delims=@" %%D in ("!_CUR_RM!") do set "_CUR_PD=%%D"
+set "_CUR_DEST="
+for /f "tokens=1,2 delims=:" %%P in ("!_CUR_PD!") do (
+    if "%%Q"=="" (
+        for %%F in ("%%P") do set "_CUR_DEST=%%~nxF"
     ) else (
-        call "!CLI!" network delete "!NODE!-vpc" >> "!LOG_FILE!" 2>&1
+        set "_CUR_DEST=%%Q"
     )
-) else if "!PROVIDER!"=="gcp" (
-    call "!CLI!" network delete "!NODE!-vpc" >> "!LOG_FILE!" 2>&1
 )
-
-if exist "!STATE_FILE!" (
-    call :log "STATE" "Cleaning up !STATE_FILE!"
-    del "!STATE_FILE!"
+set "_MATCH=0"
+if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+if "!_MATCH!"=="1" (
+    call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_CUR_DEST!/libscript.json ]; then cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh down libscript.json --remove!_PURGE_FLAG! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh netctl remove-ingress libscript.json; fi; sudo rm -rf ~/!_CUR_DEST!"
+    if errorlevel 1 exit /b 1
 )
-
-call :log "DONE" "Teardown complete."
-exit /b 0
-
-:: -----------------------------------------------------------------------------
-:: Functions
-:: -----------------------------------------------------------------------------
-:: ## log
-:: Formats and emits a timestamped log message at the specified severity level.
-:log
-echo [%~1] %~2
-echo [%DATE% %TIME%] [%~1] %~2 >> "!LOG_FILE!"
-exit /b 0
+goto :remove_next_app

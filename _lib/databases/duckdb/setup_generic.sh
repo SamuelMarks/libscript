@@ -3,7 +3,7 @@
 # Generic setup module for duckdb.
 # 
 # ## Usage
-# Execute this script to perform generic initialization steps for duckdb.
+# Execute this script to perform generic initialization steps for duckdb with reuse-else-create semantics.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -47,9 +47,32 @@ DUCKDB_INSTALL_METHOD="$(libscript_resolve_install_method "DUCKDB")"
 ACTION="${ACTION:-install}"
 VERSION="${DUCKDB_VERSION:-latest}"
 
+# ## find_existing_duckdb
+# Searches LIBSCRIPT_HOME and system PATH for an existing duckdb CLI binary.
+find_existing_duckdb() {
+  _fed_home="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+  for _fed_cand in \
+    "${_fed_home}/duckdb/${VERSION}/bin/duckdb" \
+    "${_fed_home}/duckdb/default/bin/duckdb" \
+    "${REMOTE_HOME:-$HOME}/.local/bin/duckdb" \
+    "${HOME}/.local/bin/duckdb" \
+    "/usr/local/bin/duckdb" \
+    "$(command -v duckdb 2>/dev/null || true)"; do
+    if [ -n "$_fed_cand" ] && [ -x "$_fed_cand" ]; then
+      printf '%s\n' "$_fed_cand"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_dk=$(find_existing_duckdb 2>/dev/null); then
+    EXACT_VERSION="${VERSION:-latest}"
+    return 0
+  fi
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote duckdb 2>/dev/null | tail -n 1)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
@@ -92,8 +115,8 @@ case "$ACTION" in
       if [ -n "${DUCKDB_RELEASES_URL:-}" ]; then
         curl -sSL "${DUCKDB_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/duckdb/duckdb" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+        git ls-remote --tags "https://github.com/duckdb/duckdb" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+      fi
     fi
     exit 0
     ;;
@@ -104,8 +127,6 @@ case "$ACTION" in
       asdf global duckdb "${VERSION}"
     elif [ "$DUCKDB_INSTALL_METHOD" = "pkgx" ]; then
       printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$DUCKDB_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "duckdb@${VERSION}"
     elif [ "$DUCKDB_INSTALL_METHOD" = "vfox" ]; then
       vfox use "duckdb@${VERSION}"
     elif [ "$DUCKDB_INSTALL_METHOD" = "system" ]; then
@@ -131,6 +152,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$DUCKDB_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_duckdb >/dev/null 2>&1; then
+        log_info "[REUSE] duckdb is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading duckdb ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/duckdb..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/duckdb"
       if [ -n "${DUCKDB_DOWNLOAD_URL:-}" ]; then
@@ -142,6 +167,18 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_dk=$(find_existing_duckdb 2>/dev/null); then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/duckdb/${EXACT_VERSION}"
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$_existing_dk" != "${TARGET_DIR}/bin/duckdb" ]; then
+        ln -sf "$_existing_dk" "${TARGET_DIR}/bin/duckdb" 2>/dev/null || true
+      fi
+      libscript_symlink_alias "duckdb" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "duckdb" "default" "${EXACT_VERSION}"
+      log_info "[REUSE] duckdb (${VERSION}) already installed at ${_existing_dk}."
+      exit 0
+    fi
     if [ "$DUCKDB_INSTALL_METHOD" = "from-source" ]; then
       EXACT_VERSION="${VERSION:-1.1.2}"
       [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="1.1.2"
@@ -163,7 +200,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/duckdb/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/duckdb" ]; then
         log_info "Installing duckdb ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/duckdb/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -201,31 +238,39 @@ case "$ACTION" in
               fi
             else
               log_info "No download URL provided for duckdb ${VERSION}. Attempting fallback to Github..."
-            libscript_depends "curl" "unzip"
-            TEMP_FILE=$(mktemp)
-            OS_ARCH=$(uname -m)
-            _actual_version="${EXACT_VERSION}"
-            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-              _actual_version=$(curl -sI https://github.com/duckdb/duckdb/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
+              libscript_depends "curl" "unzip"
+              TEMP_FILE=$(mktemp)
+              OS_ARCH=$(uname -m)
+              _actual_version="${EXACT_VERSION}"
+              if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+                _actual_version=$(curl -sI https://github.com/duckdb/duckdb/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
+              else
+                case "${_actual_version}" in
+                  v*) ;;
+                  *) _actual_version="v${_actual_version}" ;;
+                esac
+              fi
+              _musl_suffix=""
+              if [ -f "/etc/alpine-release" ]; then _musl_suffix="-musl"; fi
+              if [ "$UNAME_LOWER" = "darwin" ]; then
+                DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-osx-universal.zip"
+              elif [ "$OS_ARCH" = "aarch64" ] || [ "$OS_ARCH" = "arm64" ]; then
+                DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-arm64${_musl_suffix}.zip"
+              else
+                DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-amd64${_musl_suffix}.zip"
+              fi
+              curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
+              chmod +x "${TARGET_DIR}/bin/duckdb" || true
+              rm -f "${TEMP_FILE}"
             fi
-            _musl_suffix=""
-            if [ -f "/etc/alpine-release" ]; then _musl_suffix="-musl"; fi
-            if [ "$OS_ARCH" = "aarch64" ]; then
-              DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-arm64${_musl_suffix}.zip"
-            else
-              DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-amd64${_musl_suffix}.zip"
-            fi
-            curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
-            chmod +x "${TARGET_DIR}/bin/duckdb" || true
-            rm -f "${TEMP_FILE}"
           fi
         fi
-fi
       else
         log_info "duckdb ${VERSION} is already installed."
       fi
       libscript_symlink_alias "duckdb" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "duckdb" "default" "${EXACT_VERSION}"
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

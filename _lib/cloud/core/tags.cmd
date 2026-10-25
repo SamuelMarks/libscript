@@ -181,6 +181,12 @@ if "%provider%"=="aws" (
     echo --labels=%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
 ) else if "%provider%"=="azure" (
     echo --tags %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="digitalocean" (
+    echo --tag-name %LIBSCRIPT_TAG_KEY%-%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="linode" (
+    echo --tags %LIBSCRIPT_TAG_KEY%:%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="vultr" (
+    echo --tags %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
 ) else (
     echo Error: Unknown cloud provider "%provider%" for tagging. >&2
     exit /b 1
@@ -199,6 +205,12 @@ if "%provider%"=="aws" (
     echo --filter=labels.%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
 ) else if "%provider%"=="azure" (
     echo --query "[?tags.%LIBSCRIPT_TAG_KEY% == '%LIBSCRIPT_TAG_VALUE%']"
+) else if "%provider%"=="digitalocean" (
+    echo --tag-name %LIBSCRIPT_TAG_KEY%-%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="linode" (
+    echo --tags %LIBSCRIPT_TAG_KEY%:%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="vultr" (
+    echo --tag %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
 ) else (
     echo Error: Unknown cloud provider "%provider%" for tag filtering. >&2
     exit /b 1

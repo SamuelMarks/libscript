@@ -63,17 +63,12 @@ fi
 export PYTHON_VERSION
 
 if [ "${PYTHON_VERSION:-}" ]; then
-  export PYTHONHOME="${_py_base}/${PYTHON_VERSION}"
+  _py_dir="${_py_base}/${PYTHON_VERSION}"
   PYTHON_MINOR_VERSION=$(printf '%s
 ' "${PYTHON_VERSION}" | cut -d. -f1,2)
   export PYTHON_MINOR_VERSION
-  _py_site="${PYTHONHOME}/lib/python${PYTHON_MINOR_VERSION}/site-packages"
-  case ":${PYTHONPATH:-}:" in
-    *":${_py_site}:"*) ;;
-    *) export PYTHONPATH="${_py_site}${PYTHONPATH:+:${PYTHONPATH}}" ;;
-  esac
-  for _py_cand in "${PYTHONHOME}/bin" "${_py_base}/default/bin"; do
-    if [ -d "$_py_cand" ] || [ "$_py_cand" = "${PYTHONHOME}/bin" ]; then
+  for _py_cand in "${_py_dir}/bin" "${_py_base}/default/bin"; do
+    if [ -d "$_py_cand" ] || [ "$_py_cand" = "${_py_dir}/bin" ]; then
       case ":${PATH:-}:" in
         *":${_py_cand}:"*) ;;
         *) PATH="${_py_cand}${PATH:+:${PATH}}" ;;
@@ -81,7 +76,14 @@ if [ "${PYTHON_VERSION:-}" ]; then
     fi
   done
   export PATH
-  if [ ! -d "${PYTHONHOME}" ]; then
+  if [ -d "${_py_dir}/lib/python${PYTHON_MINOR_VERSION}/encodings" ]; then
+    export PYTHONHOME="${_py_dir}"
+    _py_site="${PYTHONHOME}/lib/python${PYTHON_MINOR_VERSION}/site-packages"
+    case ":${PYTHONPATH:-}:" in
+      *":${_py_site}:"*) ;;
+      *) export PYTHONPATH="${_py_site}${PYTHONPATH:+:${PYTHONPATH}}" ;;
+    esac
+  else
     unset PYTHONHOME
   fi
 fi

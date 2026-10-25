@@ -51,6 +51,18 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+for %%A in (%*) do (
+    set "_dra=%%~A"
+    if /i "!_dra!"=="--provider" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\deploy_cloud.cmd" %*
+        exit /b !ERRORLEVEL!
+    )
+    if /i "!_dra:~0,11!"=="--provider=" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\deploy_cloud.cmd" %*
+        exit /b !ERRORLEVEL!
+    )
+)
+
 if "%~1"=="" (
     echo [ERROR] Usage: deploy_remote.cmd ^<user@host^> [--app ^<path^>@^<domain^>]... [--shared-db ^<engine^>]
     exit /b 1

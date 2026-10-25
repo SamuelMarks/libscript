@@ -2,7 +2,7 @@
 :: # install.cmd
 ::
 :: ## Overview
-:: Resolves and installs dependencies required by libscript components.
+:: Resolves and installs dependencies required by libscript components with reuse-else-create semantics.
 :: 
 :: ## Usage
 :: Execute this script to fetch and setup required dependencies.
@@ -60,8 +60,10 @@ for %%A in (%2 %3 %4 %5 %6) do (
     set "_ia=%%~A"
     if /i "!_ia!"=="--force-reinstall" (
         set "force_reinstall=1"
+        set "FORCE_REINSTALL=1"
     ) else if /i "!_ia!"=="--force-rebuild" (
         set "force_rebuild=1"
+        set "FORCE_REBUILD=1"
     ) else if not "!_ia!"=="" (
         if not "!_ia:~0,1!"=="-" set "json_file=!_ia!"
     )
@@ -98,7 +100,7 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
 REM Parallel Download Phase
-echo Downloading dependencies in parallel...
+echo Checking and downloading missing dependencies in parallel...
 for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
     if "%%c"=="" (
         start "" /b cmd /c "call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" download "%%a" "%%b""
@@ -109,8 +111,8 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
 
 ping 127.0.0.1 -n 4 >nul
 
-REM Serial Install Phase
-echo Installing dependencies sequentially...
+REM Serial Reuse-Else-Create Install Phase
+echo Resolving dependencies ^(reuse-else-create^)...
 for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
     set "has_override=0"
     if not "%%c"=="" (
@@ -119,8 +121,20 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
     if "!has_override!"=="1" (
         echo Skipping installation of %%a ^(override provided: %%c^)
     ) else (
-        echo Installing %%a %%b...
-        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "%%a" "%%b"
+        set "_dep_reused=0"
+        if "!force_reinstall!"=="0" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" (
+                set "STACK="
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_check_installed_version "%%a" "%%b" >nul 2>&1
+                if not errorlevel 1 set "_dep_reused=1"
+            )
+        )
+        if "!_dep_reused!"=="1" (
+            echo [REUSE] Dependency '%%a' ^(%%b^) is already installed; reusing existing installation.
+        ) else (
+            echo [CREATE] Installing missing dependency '%%a' ^(%%b^)...
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "%%a" "%%b"
+        )
     )
     for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
         if exist "%%C\%%a\env.cmd" (

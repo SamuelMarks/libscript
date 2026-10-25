@@ -150,6 +150,15 @@ libscript_format_tags() {
     azure)
       printf -- '--tags %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
+    digitalocean)
+      printf -- '--tag-name %s-%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    linode)
+      printf -- '--tags %s:%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    vultr)
+      printf -- '--tags %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
     *)
       printf 'Error: Unknown cloud provider "%s" for tagging.\n' "${provider}" >&2
       return 1
@@ -185,6 +194,15 @@ libscript_format_tag_filter() {
     azure)
       # Azure CLI usually uses JMESPath queries to filter by tags
       printf -- '--query "[?tags.%s == ''%s'']"' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    digitalocean)
+      printf -- '--tag-name %s-%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    linode)
+      printf -- '--tags %s:%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    vultr)
+      printf -- '--tag %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     *)
       printf 'Error: Unknown cloud provider "%s" for tag filtering.\n' "${provider}" >&2

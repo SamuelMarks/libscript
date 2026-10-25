@@ -3,7 +3,7 @@
 # Generic setup module for uv.
 # 
 # ## Usage
-# Execute this script to perform generic initialization steps for uv.
+# Execute this script to perform generic initialization steps for uv with reuse-else-create semantics.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -43,14 +43,39 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-UV_INSTALL_METHOD="${UV_INSTALL_METHOD:-system}"
-UV_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$UV_INSTALL_METHOD" libscript_resolve_install_method "UV")"
+UV_INSTALL_METHOD="${UV_INSTALL_METHOD:-libscript_native}"
 ACTION="${ACTION:-install}"
 VERSION="${UV_VERSION:-latest}"
+
+# ## find_existing_uv
+# Searches LIBSCRIPT_HOME, ~/.local/bin, and system PATH for an existing uv binary.
+find_existing_uv() {
+  _feu_home="${LIBSCRIPT_HOME:-$HOME/.libscript}"
+  for _feu_cand in \
+    "${_feu_home}/uv/${VERSION}/bin/uv" \
+    "${_feu_home}/uv/default/bin/uv" \
+    "${REMOTE_HOME:-$HOME}/.local/bin/uv" \
+    "${HOME}/.local/bin/uv" \
+    "/root/.local/bin/uv" \
+    "$(command -v uv 2>/dev/null || true)"; do
+    if [ -n "$_feu_cand" ] && [ -x "$_feu_cand" ]; then
+      printf '%s\n' "$_feu_cand"
+      return 0
+    fi
+  done
+  return 1
+}
 
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_uv=$(find_existing_uv 2>/dev/null); then
+    _uv_ver=$("$_existing_uv" --version 2>/dev/null | awk '{print $2}' || true)
+    if [ -n "$_uv_ver" ]; then
+      EXACT_VERSION="$_uv_ver"
+      return 0
+    fi
+  fi
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote uv 2>/dev/null | tail -n 1)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
@@ -58,6 +83,7 @@ resolve_exact_version() {
     else
       EXACT_VERSION=$(curl -sL https://api.github.com/repos/astral-sh/uv/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
     fi
+    [ -z "${EXACT_VERSION:-}" ] && EXACT_VERSION="latest"
   else
     EXACT_VERSION="${VERSION:-latest}"
   fi
@@ -93,8 +119,8 @@ case "$ACTION" in
       if [ -n "${UV_RELEASES_URL:-}" ]; then
         curl -sSL "${UV_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/astral-sh/uv" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+        git ls-remote --tags "https://github.com/astral-sh/uv" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+      fi
     fi
     exit 0
     ;;
@@ -105,8 +131,6 @@ case "$ACTION" in
       asdf global uv "${VERSION}"
     elif [ "$UV_INSTALL_METHOD" = "pkgx" ]; then
       printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "uv@${VERSION}"
     elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
       vfox use "uv@${VERSION}"
     elif [ "$UV_INSTALL_METHOD" = "system" ]; then
@@ -132,6 +156,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_uv >/dev/null 2>&1; then
+        log_info "[REUSE] uv is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading uv ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/uv..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/uv"
       if [ -n "${UV_DOWNLOAD_URL:-}" ]; then
@@ -143,6 +171,22 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_uv=$(find_existing_uv 2>/dev/null); then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$_existing_uv" != "${TARGET_DIR}/bin/uv" ]; then
+        ln -sf "$_existing_uv" "${TARGET_DIR}/bin/uv" 2>/dev/null || true
+      fi
+      libscript_symlink_alias "uv" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "uv" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "uv" ]; then
+        libscript_symlink_alias "uv" "$VERSION" "${EXACT_VERSION}"
+      fi
+      log_info "[REUSE] uv (${EXACT_VERSION}) already installed at ${_existing_uv}."
+      exit 0
+    fi
+
     if [ "$UV_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "uv" 2>/dev/null; then
         log_info "System package manager does not have uv, falling back to standalone install..."
@@ -163,7 +207,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/uv" ]; then
         log_info "Installing uv ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/uv/"*"${VERSION}"* >/dev/null 2>&1; then

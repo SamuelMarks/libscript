@@ -109,7 +109,7 @@ printf '%s\n' "Generating markdown docs..."
 modified_tmp=$(mktemp)
 base_vars_tmp=$(mktemp)
 if [ -f "$ROOT_DIR/_lib/_common/base_vars.schema.json" ]; then
-  jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(.value.default // "none")` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$ROOT_DIR/_lib/_common/base_vars.schema.json" > "$base_vars_tmp"
+  jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$ROOT_DIR/_lib/_common/base_vars.schema.json" > "$base_vars_tmp"
   sed -i '' 's/ |"$/ |/' "$base_vars_tmp" 2>/dev/null || sed -i 's/ |"$/ |/' "$base_vars_tmp"
 fi
 
@@ -138,7 +138,7 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologi
         fi
         
         # Process component vars
-        jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(.value.default // "none")` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$schema" >> "$vars_tmp"
+        jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$schema" >> "$vars_tmp"
         
         # Clean up commas in empty arrays and pipes
         sed -i '' 's/ |"$/ |/' "$vars_tmp" 2>/dev/null || sed -i 's/ |"$/ |/' "$vars_tmp"

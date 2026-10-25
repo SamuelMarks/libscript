@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Resolves and installs dependencies required by libscript components.
+# Resolves and installs dependencies required by libscript components with reuse-else-create semantics.
 # 
 # ## Usage
 # Execute this script to fetch and setup required dependencies.
@@ -40,6 +40,8 @@ if [ "$CMD" = "install-deps" ]; then
       *) json_file="$_id_arg" ;;
     esac
   done
+  [ "$force_reinstall" -eq 1 ] && export FORCE_REINSTALL=1
+  [ "$force_rebuild" -eq 1 ] && export FORCE_REBUILD=1
   if [ ! -f "$json_file" ]; then
     printf '%s\n' "Error: $json_file not found." >&2
     exit 1
@@ -71,7 +73,14 @@ if [ "$CMD" = "install-deps" ]; then
     libscript_hydrate_manifest_env "$json_file" || true
   fi
 
-    _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/versioning.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/versioning.sh"
+    # shellcheck disable=SC1090,SC1091
+    . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/versioning.sh"
+    unset SCRIPT_NAME || true
+  fi
+
+  _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
   if [ "$force_reinstall" -eq 1 ]; then
     printf '[INFO] --force-reinstall: cleaning .venv and node_modules in %s...\n' "$_manifest_dir"
     for _clean_dir in "$_manifest_dir" "$_manifest_dir"/*; do
@@ -92,7 +101,7 @@ if [ "$CMD" = "install-deps" ]; then
     printf '%s\n' "$_data_disks" | while read -r _dd_mp _dd_fs; do
       [ -n "$_dd_mp" ] || continue
       case "$_dd_mp" in
-        **) _dd_mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
+        *'$'*) _dd_mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
       esac
       "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" --auto-data-disk "$_dd_mp" "${_dd_fs:-ext4}" || true
     done
@@ -105,27 +114,33 @@ if [ "$CMD" = "install-deps" ]; then
   if [ -z "$deps" ]; then
     printf '%s\n' "No dependencies found in $json_file."
   else
-    # Parallel Download Phase
-    printf '%s\n' "Downloading dependencies in parallel..."
+    # Parallel Download Phase (only for missing dependencies)
+    printf '%s\n' "Checking and downloading missing dependencies in parallel..."
     printf '%s\n' "$deps" | while read -r pkg ver override; do
       if [ -n "$pkg" ]; then
         if [ "$ver" = "null" ]; then ver="latest"; fi
         if [ -z "$override" ] || [ "$override" = "null" ]; then
-          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" download "$pkg" "$ver" &
+          if [ "$force_reinstall" -eq 0 ] && type libscript_check_installed_version >/dev/null 2>&1 && libscript_check_installed_version "$pkg" "$ver" >/dev/null 2>&1; then
+            :
+          else
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" download "$pkg" "$ver" &
+          fi
         fi
       fi
     done
     wait
 
-    # Serial Install Phase
-    printf '%s\n' "Installing dependencies sequentially..."
+    # Serial Reuse-Else-Create Install Phase
+    printf '%s\n' "Resolving dependencies (reuse-else-create)..."
     printf '%s\n' "$deps" | while read -r pkg ver override; do
       if [ -n "$pkg" ]; then
         if [ "$ver" = "null" ]; then ver="latest"; fi
         if [ -n "$override" ] && [ "$override" != "null" ]; then
           printf '%s\n' "Skipping installation of $pkg (override provided: $override)"
+        elif [ "$force_reinstall" -eq 0 ] && type libscript_check_installed_version >/dev/null 2>&1 && _reused_bin=$(libscript_check_installed_version "$pkg" "$ver" 2>/dev/null); then
+          printf '[REUSE] Dependency '\''%s'\'' (%s) is already installed at %s; reusing existing installation.\n' "$pkg" "$ver" "${_reused_bin:-system}"
         else
-          printf '%s\n' "Installing $pkg $ver..."
+          printf '[CREATE] Installing missing dependency '\''%s'\'' (%s)...\n' "$pkg" "$ver"
           "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver"
         fi
       fi
@@ -139,6 +154,18 @@ if [ "$CMD" = "install-deps" ]; then
         if [ "$ver" = "null" ] || [ -z "$ver" ]; then ver="latest"; fi
         _pkg_up=$(printf '%s' "$pkg" | tr '[:lower:]-' '[:upper:]_')
         export "${_pkg_up}_VERSION=${ver}"
+        if type libscript_check_installed_version >/dev/null 2>&1 && _comp_bin_dir=$(libscript_check_installed_version "$pkg" "$ver" 2>/dev/null); then
+          if [ -n "$_comp_bin_dir" ] && [ -d "$_comp_bin_dir" ]; then
+            case ":${PATH}:" in
+              *":${_comp_bin_dir}:"*) ;;
+              *) export PATH="${_comp_bin_dir}:${PATH}" ;;
+            esac
+            case ":${SERVICE_EXTRA_PATH:-}:" in
+              *":${_comp_bin_dir}:"*) ;;
+              *) export SERVICE_EXTRA_PATH="${_comp_bin_dir}${SERVICE_EXTRA_PATH:+:${SERVICE_EXTRA_PATH}}" ;;
+            esac
+          fi
+        fi
         for _cat_name in $(ls -1 "${LIBSCRIPT_ROOT_DIR:-.}/_lib" 2>/dev/null || true); do
           _cat_dir="${LIBSCRIPT_ROOT_DIR:-.}/_lib/${_cat_name}"
           if [ -f "${_cat_dir}/${pkg}/env.sh" ]; then
@@ -153,12 +180,20 @@ if [ "$CMD" = "install-deps" ]; then
     unset SCRIPT_NAME || true
     rm -f "$tmp_deps_env"
 
-    # Persist resolved PATH idempotently into .env.libscript alongside manifest
+    # Persist resolved PATH and SERVICE_EXTRA_PATH idempotently into .env.libscript alongside manifest
     _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
     _env_out="${_manifest_dir}/.env.libscript"
     touch "$_env_out"
-    grep -v "^PATH=" "$_env_out" > "${_env_out}.tmp" 2>/dev/null || true
+    grep -v -E "^(PATH|SERVICE_EXTRA_PATH|SERVICE_PATH)=" "$_env_out" > "${_env_out}.tmp" 2>/dev/null || true
     printf 'PATH="%s"\n' "$PATH" >> "${_env_out}.tmp"
+    if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then
+      printf 'SERVICE_EXTRA_PATH="%s"\n' "$SERVICE_EXTRA_PATH" >> "${_env_out}.tmp"
+      printf 'SERVICE_PATH="%s:%s"\n' "$SERVICE_EXTRA_PATH" "$PATH" >> "${_env_out}.tmp"
+      export SERVICE_PATH="${SERVICE_EXTRA_PATH}:${PATH}"
+    else
+      printf 'SERVICE_PATH="%s"\n' "$PATH" >> "${_env_out}.tmp"
+      export SERVICE_PATH="$PATH"
+    fi
     mv "${_env_out}.tmp" "$_env_out"
     chmod 0644 "$_env_out" 2>/dev/null || true
   fi
@@ -184,29 +219,8 @@ if [ "$CMD" = "install-deps" ]; then
   fi
   for _py_proj in "$_manifest_dir" "$_manifest_dir"/*; do
     [ -d "$_py_proj" ] || continue
-    if [ -f "${_py_proj}/pyproject.toml" ] || [ -f "${_py_proj}/requirements.txt" ]; then
-      # If .venv/bin/python points into /root/... (inaccessible to non-root service user), recreate it cleanly
-      if [ -L "${_py_proj}/.venv/bin/python" ] || [ -L "${_py_proj}/.venv/bin/python3" ]; then
-        _py_target=$(readlink -f "${_py_proj}/.venv/bin/python3" 2>/dev/null || readlink "${_py_proj}/.venv/bin/python3" 2>/dev/null || true)
-        case "$_py_target" in
-          /root/*)
-            if [ -n "$_target_user" ] && [ "$_target_user" != "root" ]; then
-              rm -rf "${_py_proj}/.venv"
-            fi
-            ;;
-        esac
-      fi
-      if [ ! -x "${_py_proj}/.venv/bin/python" ]; then
-        if command -v uv >/dev/null 2>&1; then
-          HOME="${_target_home:-${HOME:-/root}}" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_py_proj}/.venv" "$_py_ver" 2>/dev/null || true
-          (cd "$_py_proj" && HOME="${_target_home:-${HOME:-/root}}" uv sync --python "$_py_ver" 2>/dev/null || HOME="${_target_home:-${HOME:-/root}}" uv sync 2>/dev/null || true)
-        elif type libscript_python_venv >/dev/null 2>&1; then
-          libscript_python_venv "${_py_proj}/.venv" "$_py_ver" 2>/dev/null || true
-        fi
-      fi
-      if [ -n "$_target_user" ] && id "$_target_user" >/dev/null 2>&1 && [ -d "${_py_proj}/.venv" ]; then
-        chown -R "${_target_user}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_target_user}}" "${_py_proj}/.venv" "${_target_home:-/home/$_target_user}/.local" "${_target_home:-/home/$_target_user}/.cache" 2>/dev/null || true
-      fi
+    if type libscript_python_ensure_venv_owner >/dev/null 2>&1; then
+      libscript_python_ensure_venv_owner "$_py_proj" "$_py_ver" "$_target_user" "$_target_home"
     fi
   done
 

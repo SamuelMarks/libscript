@@ -53,7 +53,7 @@ function Convert-SchemaPropertiesToRows {
             $desc = if ($val.description) { ($val.description -replace "`r?`n", " ") } else { "" }
             $def = if ($null -ne $val.default -and ($val.default -isnot [bool] -or $val.default -eq $true)) {
                 if ($val.default -is [bool]) { "true" }
-                elseif ($val.default -is [array]) { if ($val.default.Count -eq 0) { "[]" } else { ConvertTo-Json -InputObject $val.default -Compress } }
+                elseif ($val.default -is [array]) { if ($val.default.Count -eq 0) { "none" } else { ConvertTo-Json -InputObject $val.default -Compress } }
                 elseif ($val.default -is [System.Management.Automation.PSCustomObject]) { ConvertTo-Json -InputObject $val.default -Compress }
                 else { [string]$val.default }
             } else { "none" }

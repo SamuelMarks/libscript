@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup script for the nginx component.
+# Generic setup script for the nginx component with reuse-else-create semantics.
 #
 # ## Usage
 # This script is typically called internally by the component lifecycle.
@@ -45,6 +45,22 @@ NGINX_INSTALL_METHOD="${NGINX_INSTALL_METHOD:-system}"
 NGINX_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$NGINX_INSTALL_METHOD" libscript_resolve_install_method "NGINX")"
 NGINX_VERSION="${NGINX_VERSION:-latest}"
 ACTION="${ACTION:-install}"
+
+# ## find_existing_nginx
+# Checks LIBSCRIPT_HOME, /usr/sbin/nginx, and system PATH for an existing nginx binary.
+find_existing_nginx() {
+  for _fen_cand in \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${NGINX_VERSION}/bin/nginx" \
+    "/usr/sbin/nginx" \
+    "/usr/local/bin/nginx" \
+    "$(command -v nginx 2>/dev/null || true)"; do
+    if [ -n "$_fen_cand" ] && [ -x "$_fen_cand" ]; then
+      printf '%s\n' "$_fen_cand"
+      return 0
+    fi
+  done
+  return 1
+}
 
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
@@ -124,6 +140,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_nginx >/dev/null 2>&1; then
+        log_info "[REUSE] nginx is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading nginx ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx"
       if [ -n "${NGINX_DOWNLOAD_URL:-}" ]; then
@@ -140,8 +160,8 @@ case "$ACTION" in
       libscript_build_component_from_source "nginx" "${EXACT_VERSION}" "nginx" "c" "autotools" "${NGINX_DOWNLOAD_URL:-}"
       exit 0
     fi
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${VERSION:-latest}/bin/nginx" ]; then
-      log_info "nginx ${VERSION:-latest} is already installed."
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_nx=$(find_existing_nginx 2>/dev/null); then
+      log_info "[REUSE] nginx is already installed at ${_existing_nx}."
       exit 0
     fi
 
@@ -176,6 +196,13 @@ case "$ACTION" in
       libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"
 
     fi
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+      # shellcheck disable=SC1090,SC1091
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"
+      unset SCRIPT_NAME || true
+      libscript_apply_hardware_tuning "nginx" || true
+    fi
     ;;
   start|stop|restart|status|health|logs|up|down)
     if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
@@ -184,7 +211,7 @@ case "$ACTION" in
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-}"
       if [ -z "$service_name" ]; then
-        if [ "$NGINX_INSTALL_METHOD" = "system" ]; then
+        if [ "$NGINX_INSTALL_METHOD" = "system" ] || [ -f "/lib/systemd/system/nginx.service" ] || [ -f "/etc/init.d/nginx" ]; then
           service_name="nginx"
         else
           service_name="libscript_${PACKAGE_NAME:-nginx}"

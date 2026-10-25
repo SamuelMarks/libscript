@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for nginx
+:: Windows setup for nginx with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -84,7 +84,15 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_nginx
+:: Checks LIBSCRIPT_HOME and system PATH for an existing nginx.exe binary.
+:find_existing_nginx
+if exist "%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%\bin\nginx.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\nginx\default\bin\nginx.exe" exit /b 0
+where nginx >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -141,6 +149,13 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%NGINX_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_nginx
+        if not errorlevel 1 (
+            echo [REUSE] nginx is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading nginx %NGINX_VERSION% to %DOWNLOAD_DIR%\nginx...
     if not exist "%DOWNLOAD_DIR%\nginx" mkdir "%DOWNLOAD_DIR%\nginx"
     if not "%NGINX_DOWNLOAD_URL%"=="" (
@@ -154,6 +169,13 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_nginx
+    if not errorlevel 1 (
+        echo [REUSE] nginx ^(%NGINX_VERSION%^) is already installed.
+        exit /b 0
+    )
+)
 if /i "%NGINX_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "nginx" "%NGINX_VERSION%" "nginx" "c"
     exit /b !errorlevel!

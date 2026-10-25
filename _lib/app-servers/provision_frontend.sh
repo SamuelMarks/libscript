@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Declarative Frontend & Kotlin Multiplatform (KMP) Build Orchestrator.
+# Declarative Frontend & Kotlin Multiplatform (KMP) Build Orchestrator with reuse-else-create caching.
 # Resolves NPM/Gradle dependencies, builds Angular 17+, Vite/React/JS SPAs, MFEs, and KMP
 # (jsBrowserDistribution, wasmJsBrowserDistribution, Compose Desktop, iOS) targets, and stages to webroots.
 #
@@ -22,16 +22,13 @@ else
 fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 app_dir=""
@@ -48,8 +45,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$app_dir" ]; then
-  printf 'Error: --app-dir is required.
-' >&2
+  printf 'Error: --app-dir is required.\n' >&2
   exit 1
 fi
 
@@ -60,8 +56,7 @@ if [ -z "$manifest_path" ] && [ -n "$packaging_path" ]; then
   manifest_path="$packaging_path"
 fi
 if [ -z "$packaging_path" ]; then
-  printf 'Error: --manifest or --packaging is required.
-' >&2
+  printf 'Error: --manifest or --packaging is required.\n' >&2
   exit 1
 fi
 
@@ -69,13 +64,33 @@ app_dir=$(cd -- "$app_dir" && pwd)
 webroot_base="$app_dir/webroot"
 mkdir -p "$webroot_base"
 
+# ## compute_frontend_fingerprint
+# Computes a deterministic checksum over package.json, lockfiles, and src/ for build cache validation.
+compute_frontend_fingerprint() {
+  _cff_dir="$1"
+  (
+    cd "$_cff_dir" 2>/dev/null || exit 0
+    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock; do
+      [ -f "$_cff_f" ] && cksum "$_cff_f" 2>/dev/null || true
+    done
+    if [ -d "src" ]; then
+      find src -type f -exec cksum {} + 2>/dev/null | sort || true
+    fi
+  ) | cksum | awk '{print $1"_"$2}'
+}
+
 # ## install_node_deps
-# Installs npm/pnpm/yarn/bun dependencies in a target directory if package.json exists.
+# Installs npm/pnpm/yarn/bun dependencies in a target directory if package.json exists, reusing node_modules if lockfile hash matches.
 install_node_deps() {
   _dir="$1"
   if [ -f "$_dir/package.json" ]; then
     (
       cd "$_dir"
+      _pkg_fp=$(cksum package.json package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ -d "node_modules" ] && [ -f "node_modules/.libscript_pkg_hash" ] && [ "$(cat node_modules/.libscript_pkg_hash 2>/dev/null || true)" = "$_pkg_fp" ]; then
+        printf '[REUSE] Frontend dependencies in %s are up-to-date.\n' "$_dir"
+        exit 0
+      fi
       if [ -f "pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
         pnpm install --frozen-lockfile || pnpm install
       elif [ -f "yarn.lock" ] && command -v yarn >/dev/null 2>&1; then
@@ -83,9 +98,12 @@ install_node_deps() {
       elif [ -f "bun.lockb" ] && command -v bun >/dev/null 2>&1; then
         bun install
       elif [ -f "package-lock.json" ] || [ -f "npm-shrinkwrap.json" ]; then
-        npm ci --prefer-offline --no-audit
+        npm ci --prefer-offline --no-audit || npm install --legacy-peer-deps --no-audit
       else
         npm install --no-audit
+      fi
+      if [ -d "node_modules" ]; then
+        printf '%s\n' "$_pkg_fp" > "node_modules/.libscript_pkg_hash" 2>/dev/null || true
       fi
     )
   fi
@@ -193,19 +211,13 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
   ' "$packaging_path" 2>/dev/null || true)
 
   if [ -n "$FRONTEND_ENTRIES" ]; then
-    printf '%s
-' "$FRONTEND_ENTRIES" | while IFS= read -r svc; do
+    printf '%s\n' "$FRONTEND_ENTRIES" | while IFS= read -r svc; do
       [ -n "$svc" ] || continue
-      svc_id=$(printf '%s
-' "$svc" | jq -r '.id // .name // "default"')
-      src_rel=$(printf '%s
-' "$svc" | jq -r '.source_dir // .working_dir // .cwd // "."')
-      build_cmd=$(printf '%s
-' "$svc" | jq -r '.build_command // empty')
-      out_dir=$(printf '%s
-' "$svc" | jq -r '.output_dir // .dist_dir // empty')
-      kmp_target=$(printf '%s
-' "$svc" | jq -r '.target // empty')
+      svc_id=$(printf '%s\n' "$svc" | jq -r '.id // .name // "default"')
+      src_rel=$(printf '%s\n' "$svc" | jq -r '.source_dir // .working_dir // .cwd // "."')
+      build_cmd=$(printf '%s\n' "$svc" | jq -r '.build_command // empty')
+      out_dir=$(printf '%s\n' "$svc" | jq -r '.output_dir // .dist_dir // empty')
+      kmp_target=$(printf '%s\n' "$svc" | jq -r '.target // empty')
 
       if [ -z "$src_rel" ] || [ "$src_rel" = "." ]; then
         src_dir="$app_dir"
@@ -240,18 +252,25 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         if [ "$src_dir" != "$app_dir" ]; then
           install_node_deps "$src_dir"
         fi
-        (
-          cd "$src_dir"
-          if [ -s "$_fe_env_file" ]; then
-            # shellcheck disable=SC1090
-            . "$_fe_env_file"
-          fi
-          if [ -n "$build_cmd" ]; then
-            sh -c "$build_cmd"
-          elif grep -q '"build"' "package.json"; then
-            npm run build
-          fi
-        )
+        _fe_fp=$(compute_frontend_fingerprint "$src_dir")
+        _fe_check_out="${src_dir}/${out_dir:-dist}"
+        if [ "${FORCE_REBUILD:-0}" != "1" ] && [ -f "${_fe_check_out}/index.html" ] && [ -f "${src_dir}/.libscript_build.sha256" ] && [ "$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)" = "$_fe_fp" ]; then
+          printf '[REUSE] Frontend build in '\''%s'\'' is up-to-date.\n' "$_fe_check_out"
+        else
+          (
+            cd "$src_dir"
+            if [ -s "$_fe_env_file" ]; then
+              # shellcheck disable=SC1090
+              . "$_fe_env_file"
+            fi
+            if [ -n "$build_cmd" ]; then
+              sh -c "$build_cmd"
+            elif grep -q '"build"' "package.json"; then
+              npm run build
+            fi
+          )
+          printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
+        fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       fi
       rm -f "$_fe_env_file"
@@ -263,8 +282,7 @@ fi
 if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
   jq -c '((.lifecycle_hooks.pre_install // []) + (.hooks.pre_install // []))[]?' "$packaging_path" 2>/dev/null | while IFS= read -r hook; do
     [ -n "$hook" ] || continue
-    cmd=$(printf '%s
-' "$hook" | jq -r '.command // empty')
+    cmd=$(printf '%s\n' "$hook" | jq -r '.command // empty')
     case "$cmd" in
       *collectstatic*|*paver*update_assets*)
         (cd "$app_dir" && sh -c "$cmd") || true

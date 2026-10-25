@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for duckdb
+:: Windows setup for duckdb with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -84,7 +84,15 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_duckdb
+:: Checks LIBSCRIPT_HOME and system PATH for an existing duckdb.exe binary.
+:find_existing_duckdb
+if exist "%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\bin\duckdb.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\duckdb\default\bin\duckdb.exe" exit /b 0
+where duckdb >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -141,6 +149,13 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%DUCKDB_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_duckdb
+        if not errorlevel 1 (
+            echo [REUSE] duckdb is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading duckdb %DUCKDB_VERSION% to %DOWNLOAD_DIR%\duckdb...
     if not exist "%DOWNLOAD_DIR%\duckdb" mkdir "%DOWNLOAD_DIR%\duckdb"
     if not "%DUCKDB_DOWNLOAD_URL%"=="" (
@@ -154,6 +169,13 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_duckdb
+    if not errorlevel 1 (
+        echo [REUSE] duckdb ^(%DUCKDB_VERSION%^) is already installed.
+        exit /b 0
+    )
+)
 if /i "%DUCKDB_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "duckdb" "%DUCKDB_VERSION%" "duckdb" "c++"
     exit /b !errorlevel!
@@ -168,7 +190,7 @@ if "%DUCKDB_INSTALL_METHOD%"=="pkgx" ( pkgx install "duckdb@%DUCKDB_VERSION%" & 
 if "%DUCKDB_INSTALL_METHOD%"=="vfox" ( vfox add duckdb & vfox install "duckdb@%DUCKDB_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\duckdb.exe" (
     echo Installing duckdb %DUCKDB_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip" (
@@ -182,8 +204,14 @@ if not exist "%TARGET_DIR%\bin" (
         curl -sSL "%DUCKDB_DOWNLOAD_URL%" -o "%TEMP%\duckdb.zip"
         tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for duckdb.
-        exit /b 1
+        curl -sSLf "https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-windows-amd64.zip" -o "%TEMP%\duckdb.zip"
+        if not errorlevel 1 (
+            tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%\bin"
+            del /f /q "%TEMP%\duckdb.zip" 2>nul
+        ) else (
+            echo No download URL or cache available for duckdb.
+            exit /b 1
+        )
     )
 ) else (
     echo duckdb %DUCKDB_VERSION% is already installed.
@@ -192,6 +220,11 @@ set "ALIAS_DIR=%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
     mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+set "DEFAULT_DIR=%LIBSCRIPT_HOME%\duckdb\default"
+if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
+    if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%" 2>nul
+    mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 

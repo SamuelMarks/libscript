@@ -370,11 +370,16 @@ if /i "!_SUB!"=="ip" (
     exit /b 0
 )
 if /i "!_SUB!"=="exec" (
-    ssh -o StrictHostKeyChecking=no "%ADMIN_USER%@!_IP!" "%~5"
+    ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "%ADMIN_USER%@!_IP!" "%~5"
     exit /b !ERRORLEVEL!
 )
 if /i "!_SUB!"=="sync" (
-    scp -o StrictHostKeyChecking=no -r "!LIBSCRIPT_ROOT_DIR!" "%ADMIN_USER%@!_IP!:~/libscript"
+    where rsync >nul 2>&1
+    if not errorlevel 1 (
+        rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "!LIBSCRIPT_ROOT_DIR!/" "%ADMIN_USER%@!_IP!:~/libscript/"
+        exit /b !ERRORLEVEL!
+    )
+    scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "!LIBSCRIPT_ROOT_DIR!" "%ADMIN_USER%@!_IP!:~/libscript"
     exit /b !ERRORLEVEL!
 )
 if /i "!_SUB!"=="deploy" goto :node_upload_impl
@@ -385,17 +390,21 @@ if /i "!_SUB!"=="scp-from" goto :node_download_impl
 exit /b 0
 
 :: ## node_upload_impl
-:: Uploads a local path to the remote Azure VM via rsync or scp.
+:: Uploads a local path to the remote Azure VM via rsync or scp with cache exclusions.
 :node_upload_impl
 set "_SRC=%~5"
 set "_DST=%~6"
-ssh -o StrictHostKeyChecking=no "%ADMIN_USER%@!_IP!" "mkdir -p !_DST!" >nul 2>&1
+ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "%ADMIN_USER%@!_IP!" "mkdir -p !_DST!" >nul 2>&1
+set "_SRC_RS=!_SRC!"
+if exist "!_SRC!\*" (
+    if not "!_SRC_RS:~-1!"=="/" if not "!_SRC_RS:~-1!"=="\" set "_SRC_RS=!_SRC_RS!/"
+)
 where rsync >nul 2>&1
 if not errorlevel 1 (
-    rsync -avz -e "ssh -o StrictHostKeyChecking=no" "!_SRC!" "%ADMIN_USER%@!_IP!:!_DST!"
+    rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "!_SRC_RS!" "%ADMIN_USER%@!_IP!:!_DST!"
     exit /b !ERRORLEVEL!
 )
-scp -o StrictHostKeyChecking=no -r "!_SRC!" "%ADMIN_USER%@!_IP!:!_DST!"
+scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "!_SRC!" "%ADMIN_USER%@!_IP!:!_DST!"
 exit /b !ERRORLEVEL!
 
 :: ## node_download_impl
@@ -408,8 +417,8 @@ for %%D in ("!_DST!") do (
 )
 where rsync >nul 2>&1
 if not errorlevel 1 (
-    rsync -avz -e "ssh -o StrictHostKeyChecking=no" "%ADMIN_USER%@!_IP!:!_SRC!" "!_DST!"
+    rsync -avz -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "%ADMIN_USER%@!_IP!:!_SRC!" "!_DST!"
     exit /b !ERRORLEVEL!
 )
-scp -o StrictHostKeyChecking=no -r "%ADMIN_USER%@!_IP!:!_SRC!" "!_DST!"
+scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "%ADMIN_USER%@!_IP!:!_SRC!" "!_DST!"
 exit /b !ERRORLEVEL!

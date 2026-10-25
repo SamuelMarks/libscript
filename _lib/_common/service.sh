@@ -160,7 +160,7 @@ libscript_service() {
     remove|uninstall-service) _action="uninstall" ;;
   esac
 
-  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" = "1" ]; then
+  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" = "1" ] || [ "${LIBSCRIPT_INIT_SYSTEM:-${INIT_SYSTEM:-auto}}" = "fallback" ] || [ "${LIBSCRIPT_INIT_SYSTEM:-${INIT_SYSTEM:-auto}}" = "none" ]; then
     libscript_service_fallback "$_action" "$_service" "$@"
     return $?
   fi

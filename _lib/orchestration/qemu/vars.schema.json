@@ -24,6 +24,16 @@
       "type": "string",
       "description": "Create standard edk2/OVMF UEFI firmware symlinks in /usr/local/share/qemu (1 or 0)",
       "default": "1"
+    },
+    "QEMU_GPU_PASSTHROUGH": {
+      "type": "string",
+      "description": "Configure generic bare-metal IOMMU and VFIO-PCI GPU passthrough setup for local development (1 or 0)",
+      "default": "0"
+    },
+    "QEMU_VFIO_PCI_IDS": {
+      "type": "string",
+      "description": "Comma-separated PCI vendor:device IDs (e.g. 10de:2684,10de:22ba) to bind to vfio-pci",
+      "default": ""
     }
   }
 }

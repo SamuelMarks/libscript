@@ -29,6 +29,15 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
+# Delegate to deploy_cloud.sh when --provider is specified
+for _dr_arg in "$@"; do
+  case "$_dr_arg" in
+    --provider|--provider=*)
+      exec "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/deploy_cloud.sh" "$@"
+      ;;
+  esac
+done
+
 if [ $# -lt 1 ]; then
   log_error "Usage: deploy_remote.sh <user@host> [--app <path>@<domain>]... [--shared-db <engine>]"
   exit 1

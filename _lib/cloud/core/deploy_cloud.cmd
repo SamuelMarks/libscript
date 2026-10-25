@@ -2,10 +2,12 @@
 :: # deploy_cloud.cmd
 ::
 :: ## Overview
-:: Primary deployment orchestrator for Windows, provisioning cloud infrastructure and deploying code.
+:: Primary deployment orchestrator for Windows, provisioning infrastructure across AWS, Azure, or GCP,
+:: and deploying one or more applications onto a single or shared compute node.
 ::
 :: ## Usage
-:: Run `deploy_cloud.cmd <provider> <node> <rg> <loc> [repo] [dest]` to provision VM, wait for WinRM/SSH, and deploy.
+:: Run `deploy_cloud.cmd [options] <provider> <node> <rg> <loc> [repo] [dest]` or
+:: `deploy_cloud.cmd --provider <p> --node <n> --rg <rg> --location <loc> [--app <repo>[:<dest>][@<domain>]]...`
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,513 +53,250 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /i "%~1"=="provision" shift
+
 set "IS_TPU=0"
 set "SHARED_STORAGE=0"
 set "SKIP_INFRA=0"
 set "SKIP_PREPARE=0"
 set "SKIP_VERIFY=0"
-set "DEPS_FLAGS="
+set "FORCE_REINSTALL=%FORCE_REINSTALL%"
+if "!FORCE_REINSTALL!"=="" set "FORCE_REINSTALL=0"
+set "FORCE_REBUILD=%FORCE_REBUILD%"
+if "!FORCE_REBUILD!"=="" set "FORCE_REBUILD=0"
+set "ONLY_TARGET=%ONLY_TARGET%"
+if "!ONLY_TARGET!"=="" set "ONLY_TARGET=all"
+set "DRY_RUN_MODE=0"
+if /i "%DRY_RUN%"=="true" set "DRY_RUN_MODE=1"
+if "%DRY_RUN%"=="1" set "DRY_RUN_MODE=1"
 
-set "P1="
-set "P2="
-set "P3="
-set "P4="
-set "P5="
-set "P6="
+set "PROVIDER=%CLOUD_PROVIDER%"
+if "!PROVIDER!"=="" set "PROVIDER=%PROVIDER%"
+set "NODE=%NODE_NAME%"
+set "RG=%RG_NAME%"
+set "LOC=%LOCATION%"
+set "VM_OS=%VM_IMAGE%"
+set "VM_SIZE=%VM_SIZE%"
+set "ADMIN_USER=%ADMIN_USER%"
+set "APP_SPECS="
+set "_p1="
+set "_p2="
+set "_p3="
+set "_p4="
+set "_p5="
+set "_p6="
 
-:: ## arg_loop
-:: Parses command-line arguments and populates configuration variables.
-:arg_loop
-set "arg=%~1"
-if "!arg!"=="" goto :args_done
-if /i "!arg!"=="--tpu" (
-    set "IS_TPU=1"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--accelerator" (
-    set "IS_TPU=1"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--shared-storage" (
-    set "SHARED_STORAGE=1"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--skip-infra" (
-    set "SKIP_INFRA=1"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--skip-prepare" (
-    set "SKIP_PREPARE=1"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--skip-verify" (
-    set "SKIP_VERIFY=1"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--force-reinstall" (
-    set "DEPS_FLAGS=!DEPS_FLAGS! --force-reinstall"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--force-rebuild" (
-    set "DEPS_FLAGS=!DEPS_FLAGS! --force-rebuild"
-    shift
-    goto :arg_loop
-)
-if /i "!arg!"=="--dry-run" (
-    set "DRY_RUN=true"
-    shift
-    goto :arg_loop
-)
+:: ## parse_args
+:: Parses command-line flags and positional parameters.
+:parse_args
+if "%~1"=="" goto :args_done
+set "_A=%~1"
+if /i "!_A!"=="--tpu" ( set "IS_TPU=1" & shift & goto :parse_args )
+if /i "!_A!"=="--accelerator" ( set "IS_TPU=1" & shift & goto :parse_args )
+if /i "!_A!"=="--shared-storage" ( set "SHARED_STORAGE=1" & shift & goto :parse_args )
+if /i "!_A!"=="--skip-infra" ( set "SKIP_INFRA=1" & shift & goto :parse_args )
+if /i "!_A!"=="--skip-prepare" ( set "SKIP_PREPARE=1" & shift & goto :parse_args )
+if /i "!_A!"=="--skip-verify" ( set "SKIP_VERIFY=1" & shift & goto :parse_args )
+if /i "!_A!"=="--force-reinstall" ( set "FORCE_REINSTALL=1" & shift & goto :parse_args )
+if /i "!_A!"=="--force-rebuild" ( set "FORCE_REBUILD=1" & shift & goto :parse_args )
+if /i "!_A!"=="--dry-run" ( set "DRY_RUN_MODE=1" & set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_A!"=="-n" ( set "DRY_RUN_MODE=1" & set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_A:~0,7!"=="--only=" ( set "ONLY_TARGET=!_A:~7!" & shift & goto :parse_args )
+if /i "!_A!"=="--only" ( set "ONLY_TARGET=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,11!"=="--provider=" ( set "PROVIDER=!_A:~11!" & shift & goto :parse_args )
+if /i "!_A!"=="--provider" ( set "PROVIDER=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,7!"=="--node=" ( set "NODE=!_A:~7!" & shift & goto :parse_args )
+if /i "!_A!"=="--node" ( set "NODE=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,5!"=="--rg=" ( set "RG=!_A:~5!" & shift & goto :parse_args )
+if /i "!_A!"=="--rg" ( set "RG=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,17!"=="--resource-group=" ( set "RG=!_A:~17!" & shift & goto :parse_args )
+if /i "!_A!"=="--resource-group" ( set "RG=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,11!"=="--location=" ( set "LOC=!_A:~11!" & shift & goto :parse_args )
+if /i "!_A!"=="--location" ( set "LOC=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,11!"=="--vm-image=" ( set "VM_OS=!_A:~11!" & shift & goto :parse_args )
+if /i "!_A!"=="--vm-image" ( set "VM_OS=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,7!"=="--size=" ( set "VM_SIZE=!_A:~7!" & shift & goto :parse_args )
+if /i "!_A!"=="--size" ( set "VM_SIZE=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,13!"=="--admin-user=" ( set "ADMIN_USER=!_A:~13!" & shift & goto :parse_args )
+if /i "!_A!"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,6!"=="--app=" ( set "APP_SPECS=!APP_SPECS!!_A:~6!|" & shift & goto :parse_args )
+if /i "!_A!"=="--app" ( set "APP_SPECS=!APP_SPECS!%~2|" & shift & shift & goto :parse_args )
 
-if "!P1!"=="" (
-    set "P1=%~1"
-) else if "!P2!"=="" (
-    set "P2=%~1"
-) else if "!P3!"=="" (
-    set "P3=%~1"
-) else if "!P4!"=="" (
-    set "P4=%~1"
-) else if "!P5!"=="" (
-    set "P5=%~1"
-) else if "!P6!"=="" (
-    set "P6=%~1"
+if "!_p1!"=="" ( set "_p1=%~1"
+) else if "!_p2!"=="" ( set "_p2=%~1"
+) else if "!_p3!"=="" ( set "_p3=%~1"
+) else if "!_p4!"=="" ( set "_p4=%~1"
+) else if "!_p5!"=="" ( set "_p5=%~1"
+) else if "!_p6!"=="" ( set "_p6=%~1"
 )
 shift
-goto :arg_loop
+goto :parse_args
 
 :: ## args_done
-:: Continues execution after command-line argument parsing completes.
+:: Validates parsed arguments and begins provisioning and deployment.
 :args_done
-
-set "PROVIDER=!P1!"
-set "NODE=!P2!"
-set "RG=!P3!"
-set "LOC=!P4!"
-set "REPO_PATH=!P5!"
+if "!PROVIDER!"=="" set "PROVIDER=!_p1!"
+if "!NODE!"=="" set "NODE=!_p2!"
+if "!RG!"=="" set "RG=!_p3!"
+if "!LOC!"=="" set "LOC=!_p4!"
+set "REPO_PATH=!_p5!"
 if "!REPO_PATH!"=="" set "REPO_PATH=."
-set "REMOTE_DEST=!P6!"
-if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
+set "REMOTE_DEST=!_p6!"
 
-if "!LOC!"=="" (
-    echo Usage: deploy_cloud.cmd [--tpu] [--shared-storage] ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest]
+if "!PROVIDER!"=="" (
+    echo Usage: deploy_cloud.cmd [options] ^<provider^> ^<node_name^> ^<rg^> ^<location^> [repo] [dest]
     exit /b 1
 )
 
-:: -----------------------------------------------------------------------------
-:: Logging Configuration
-:: -----------------------------------------------------------------------------
-set "LOG_DIR=!REPO_PATH!\logs"
-if not exist "!LOG_DIR!" mkdir "!LOG_DIR!"
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set datetime=%%I
-set "TIMESTAMP=!datetime:~0,14!"
-set "LOG_FILE=!LOG_DIR!\provision-!TIMESTAMP!.log"
+if "!VM_OS!"=="" set "VM_OS=Ubuntu2204"
+if "!ADMIN_USER!"=="" set "ADMIN_USER=azureuser"
+set "VNET_NAME=!NODE!-vnet"
+set "NSG_NAME=!NODE!-nsg"
+set "AZURE_LOCATION=!LOC!"
+set "LOCATION=!LOC!"
 
-call :log "INIT" "Starting !PROVIDER! deployment for !NODE!..."
-call :log "INIT" "Logging to !LOG_FILE!"
-
-set "STATE_FILE=!REPO_PATH!\.deploy_state"
-if not exist "!STATE_FILE!" type nul > "!STATE_FILE!"
-
-call :record_state "PROVIDER" "!PROVIDER!"
-call :record_state "NODE" "!NODE!"
-call :record_state "RG" "!RG!"
-call :record_state "REGION" "!LOC!"
-
-set "CLI=%~dp0..\_lib\cloud-providers\!PROVIDER!\cli.cmd"
+set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
 if not exist "!CLI!" (
-    call :log "ERROR" "Provider !PROVIDER! not supported."
+    echo [ERROR] Provider !PROVIDER! not supported ^(!CLI! missing^). 1>&2
     exit /b 1
 )
 
-:: -----------------------------------------------------------------------------
-:: Read Configuration
-:: -----------------------------------------------------------------------------
-set "DOMAIN="
-set "SECRETS_DIR="
-set "OS_IMAGE="
-set "SIZE="
-set "DISK_GB="
-set "PORTS=22 80 443"
-set "STATE_BUCKET="
-set "STATE_ENDPOINT="
-set "STATE_PATHS="
-
-if exist "!REPO_PATH!\libscript.json" (
-    where jq >nul 2>&1
-    if !errorlevel! equ 0 (
-        for /f "delims=" %%I in ('jq -r ".domain // \"\"" "!REPO_PATH!\libscript.json"') do set "DOMAIN=%%I"
-        for /f "delims=" %%I in ('jq -r ".secrets_dir // \"\"" "!REPO_PATH!\libscript.json"') do set "SECRETS_DIR=%%I"
-        for /f "delims=" %%I in ('jq -r ".infrastructure.node.os // \"\"" "!REPO_PATH!\libscript.json"') do set "OS_IMAGE=%%I"
-        for /f "delims=" %%I in ('jq -r ".infrastructure.node.size // \"\"" "!REPO_PATH!\libscript.json"') do set "SIZE=%%I"
-        for /f "delims=" %%I in ('jq -r ".infrastructure.node.disk_gb // \"\"" "!REPO_PATH!\libscript.json"') do set "DISK_GB=%%I"
-        for /f "delims=" %%I in ('jq -r "([22, 80, 443, .infrastructure.network.ports[]?, (.ingress.listen | if type == \"array\" then .[] elif type == \"number\" or type == \"string\" then . else empty end), (.services | if type == \"object\" then .[].port? elif type == \"array\" then .[].port? else empty end)] | map(select(. != null and . != \"\")) | map(tostring) | unique | join(\" \"))" "!REPO_PATH!\libscript.json" 2^>nul') do set "PORTS=%%I"
-        if "!PORTS!"=="" set "PORTS=22 80 443"
-        for /f "delims=" %%I in ('jq -r ".state.bucket // \"\"" "!REPO_PATH!\libscript.json"') do set "STATE_BUCKET=%%I"
-        for /f "delims=" %%I in ('jq -r ".state.endpoint // \"\"" "!REPO_PATH!\libscript.json"') do set "STATE_ENDPOINT=%%I"
-        for /f "delims=" %%I in ('jq -r "if .state.paths then (.state.paths | join(\" \")) else \"\" end" "!REPO_PATH!\libscript.json"') do set "STATE_PATHS=%%I"
-    )
+if "!APP_SPECS!"=="" (
+    if "!REMOTE_DEST!"=="" set "REMOTE_DEST=!NODE!"
+    set "APP_SPECS=!REPO_PATH!:!REMOTE_DEST!|"
 )
 
-if "!OS_IMAGE!"=="" (
-    if "!PROVIDER!"=="azure" set "OS_IMAGE=Ubuntu2204"
-    if "!PROVIDER!"=="aws" set "OS_IMAGE=ami-0c7217cdde317cfec"
-    if "!PROVIDER!"=="gcp" set "OS_IMAGE=ubuntu-2204-lts"
-)
-if "!SIZE!"=="" (
-    if "!PROVIDER!"=="azure" set "SIZE=Standard_B2s"
-    if "!PROVIDER!"=="aws" set "SIZE=t3.medium"
-    if "!PROVIDER!"=="gcp" set "SIZE=e2-medium"
-) else (
-    echo !SIZE! | findstr /b "Standard_D" >nul
-    if not errorlevel 1 (
-        if "!PROVIDER!"=="aws" set "SIZE=t3.xlarge"
-        if "!PROVIDER!"=="gcp" set "SIZE=e2-standard-4"
-    )
-    echo !SIZE! | findstr /b "Standard_B" >nul
-    if not errorlevel 1 (
-        if "!PROVIDER!"=="aws" set "SIZE=t3.medium"
-        if "!PROVIDER!"=="gcp" set "SIZE=e2-medium"
-    )
-    echo !SIZE! | findstr /b "t3." >nul
-    if not errorlevel 1 (
-        if "!PROVIDER!"=="azure" set "SIZE=Standard_D4s_v3"
-        if "!PROVIDER!"=="gcp" set "SIZE=e2-standard-4"
-    )
-)
-
-:: -----------------------------------------------------------------------------
-:: Dependency Check
-:: -----------------------------------------------------------------------------
-set "CMD_TO_CHECK="
-set "PKG_TO_INSTALL="
-if "!PROVIDER!"=="azure" (
-    set "CMD_TO_CHECK=az"
-    set "PKG_TO_INSTALL=azure-cli"
-)
-if "!PROVIDER!"=="aws" (
-    set "CMD_TO_CHECK=aws"
-    set "PKG_TO_INSTALL=awscli"
-)
-if "!PROVIDER!"=="gcp" (
-    set "CMD_TO_CHECK=gcloud"
-    set "PKG_TO_INSTALL=google-cloud-sdk"
-)
-
-if not "!CMD_TO_CHECK!"=="" (
-    where !CMD_TO_CHECK! >nul 2>&1
-    if errorlevel 1 (
-        call :log "INFO" "Command '!CMD_TO_CHECK!' not found. Installing '!PKG_TO_INSTALL!' via LibScript..."
-        call "!LIBSCRIPT_ROOT!\libscript.cmd" install "!PKG_TO_INSTALL!" latest
-        if errorlevel 1 (
-            call :log "ERROR" "Failed to auto-install !PKG_TO_INSTALL!. Please install it manually."
-            exit /b 1
-        )
-    )
-)
-
-call :log "INFRA" "Provisioning Network and Compute..."
-
-if "!PROVIDER!"=="azure" (
-    call :retry "!CLI!" group ensure "!RG!" --location "!LOC!"
-    call :record_state "AZURE_RG" "!RG!"
-    call :retry "!CLI!" network create "!NODE!-vnet" "!RG!" --location "!LOC!"
-    call :record_state "AZURE_VNET" "!NODE!-vnet"
-    call :retry "!CLI!" firewall create "!NODE!-nsg" "!RG!" "!PORTS!" --location "!LOC!"
-    call :record_state "AZURE_NSG" "!NODE!-nsg"
-    set "NODE_ARGS=--size !SIZE! --vnet-name !NODE!-vnet --nsg !NODE!-nsg --tags libscript:managed=true libscript:node=!NODE!"
-    if not "!DISK_GB!"=="" set "NODE_ARGS=!NODE_ARGS! --os-disk-size-gb !DISK_GB!"
-    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" !NODE_ARGS!
-    call :record_state "AZURE_NODE" "!NODE!"
-
-    jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
-    if not errorlevel 1 (
-        for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
-        call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
-        call :retry "!CLI!" node attach-disk "!NODE!" "!RG!" "!DISK_NAME!"
-    )
-)
-
-if "!PROVIDER!"=="aws" (
-    set "AWS_DEFAULT_REGION=!LOC!"
-    for /f "tokens=*" %%i in ('call "!CLI!" network create "!NODE!-vpc"') do set "VPC_ID=%%i"
-    call :record_state "AWS_VPC" "!VPC_ID!"
-    for /f "tokens=*" %%i in ('call "!CLI!" firewall create "!NODE!-sg" "!NODE!-vpc" "!PORTS!"') do set "SG_ID=%%i"
-    call :record_state "AWS_SG" "!SG_ID!"
-    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!NODE!-vpc" "!SIZE!" --tags "Key=libscript:managed,Value=true" "Key=libscript:node,Value=!NODE!"
-    call :record_state "AWS_NODE" "!NODE!"
-
-    jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
-    if not errorlevel 1 (
-        for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
-        call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
-        call :retry "!CLI!" node attach-disk "!NODE!" "!LOC!" "!DISK_NAME!"
-    )
-)
-
-if "!PROVIDER!"=="gcp" (
-    set "GCP_ZONE=!LOC!"
-    call :retry "!CLI!" network create "!NODE!-vpc" "10.0.0.0/16"
-    call :record_state "GCP_VPC" "!NODE!-vpc"
-    call :retry "!CLI!" firewall create "!NODE!-fw" "!NODE!-vpc" "!PORTS!"
-    call :record_state "GCP_FW" "!NODE!-fw"
-
-    if "!IS_TPU!"=="1" (
-        call :log "INFRA" "Provisioning GCP TPU VM..."
-        set "TPU_CLI=!SCRIPT_DIR!\..\..\cloud-providers\gcp\tpu-vm\cli.cmd"
-        set "TPU_NETWORK=!NODE!-vpc"
-
-        if "!SHARED_STORAGE!"=="1" (
-            call :log "INFRA" "Provisioning Filestore..."
-            set "FILESTORE_ZONE=!LOC!"
-            set "FILESTORE_NETWORK=!NODE!-vpc"
-            call :retry "!SCRIPT_DIR!\..\..\cloud-providers\gcp\filestore\cli.cmd" create "!NODE!-nfs"
-            call :record_state "GCP_FILESTORE" "!NODE!-nfs"
-        )
-
-        call :retry "!TPU_CLI!" create "!NODE!"
-        call :record_state "GCP_TPU_VM" "!NODE!"
-
-        if "!TPU_USE_QUEUED_RESOURCE!"=="true" (
-            call :record_state "GCP_TPU_QUEUED_RESOURCE" "!NODE!-qr"
-            call :log "HEALTH" "Waiting for TPU Queued Resource to become ACTIVE..."
-            call :wait_for_tpu_active "!NODE!" "!LOC!"
-        )
-    ) else (
-        call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" --network "!NODE!-vpc!" --machine-type "!SIZE!" --labels "libscript-managed=true,libscript-node=!NODE!"
-        call :record_state "GCP_NODE" "!NODE!"
-
-        jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
-        if not errorlevel 1 (
-            for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
-            call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
-            call :retry "!CLI!" node attach-disk "!NODE!" "!LOC!" "!DISK_NAME!"
-        )
-    )
-)
-
+set "PORTS=22 80 443 3000 4200 8000 8001"
 set "CTX=!RG!"
-if "!PROVIDER!"=="aws" set "CTX=!LOC!"
-if "!PROVIDER!"=="gcp" set "CTX=!LOC!"
+if /i "!PROVIDER!"=="aws" set "CTX=!LOC!"
+if /i "!PROVIDER!"=="gcp" set "CTX=!LOC!"
 
-:: -----------------------------------------------------------------------------
-:: Wait for SSH / WinRM
-:: -----------------------------------------------------------------------------
-call :log "HEALTH" "Waiting for SSH/WinRM readiness on node !NODE!..."
-set "ATTEMPT=1"
-set "MAX_ATTEMPTS=30"
-:: ## ssh_loop
-:: Performs the ssh_loop operation and updates component state.
-:ssh_loop
-call "!CLI!" node exec "!NODE!" "!CTX!" "echo SSH_READY" >nul 2>&1
-if %errorlevel% equ 0 (
-    call :log "HEALTH" "SSH/WinRM is ready."
-    goto :ssh_ready
-)
-if !ATTEMPT! geq !MAX_ATTEMPTS! (
-    call :log "ERROR" "Node failed to become ready after !MAX_ATTEMPTS! attempts."
-    exit /b 1
-)
-call :log "HEALTH" "Not ready (attempt !ATTEMPT!/!MAX_ATTEMPTS!). Waiting 10s..."
-timeout /t 10 /nobreak >nul
-set /a ATTEMPT+=1
-goto :ssh_loop
-
-:: ## ssh_ready
-:: Performs the ssh_ready operation and updates component state.
-:ssh_ready
-
-:: -----------------------------------------------------------------------------
-:: Sync and Deploy
-:: -----------------------------------------------------------------------------
-call :log "SYNC" "Syncing LibScript..."
-call :retry "!CLI!" node sync "!NODE!" "!CTX!"
-
-call :log "SYNC" "Deploying Repository..."
-call :retry "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p !REMOTE_DEST!"
-if "!IS_TPU!"=="1" (
-    call :log "SYNC" "Using tpu-vm scp --all-workers..."
-    call :retry "!TPU_CLI!" scp "!NODE!" "!REPO_PATH!" "!REMOTE_DEST!" --all-workers
-) else (
-    where rsync >nul 2>&1
-    if %errorlevel% equ 0 (
-        call :log "SYNC" "Using rsync..."
-        call :retry "!CLI!" node deploy "!NODE!" "!CTX!" "!REPO_PATH!" "!REMOTE_DEST!"
-    ) else (
-        call :log "SYNC" "Using scp/winrm fallback..."
-        call :retry "!CLI!" node scp "!NODE!" "!CTX!" "!REPO_PATH!" "!REMOTE_DEST!"
+if "!SKIP_INFRA!"=="0" (
+    if /i "!PROVIDER!"=="azure" (
+        call "!CLI!" group ensure "!RG!" --location "!LOC!"
+        if errorlevel 1 exit /b 1
     )
+    call "!CLI!" network create "!VNET_NAME!" "!CTX!" --location "!LOC!"
+    if errorlevel 1 exit /b 1
+    call "!CLI!" firewall create "!NSG_NAME!" "!CTX!" "!PORTS!" --location "!LOC!"
+    if errorlevel 1 exit /b 1
+    set "_SIZE_ARG="
+    if not "!VM_SIZE!"=="" set "_SIZE_ARG=--size !VM_SIZE!"
+    call "!CLI!" node create "!NODE!" "!VM_OS!" "!CTX!" !_SIZE_ARG! --vnet-name "!VNET_NAME!" --nsg "!NSG_NAME!" --admin-username "!ADMIN_USER!"
+    if errorlevel 1 exit /b 1
 )
 
-if not "!SECRETS_DIR!"=="" if exist "!REPO_PATH!\!SECRETS_DIR!" (
-    call :log "SECRETS" "Deploying Secrets out-of-band via node scp (bypassing gitignore)..."
-    call :retry "!CLI!" node scp "!NODE!" "!CTX!" "!REPO_PATH!\!SECRETS_DIR!" "!REMOTE_DEST!/!SECRETS_DIR!"
-)
+call "!CLI!" node sync "!NODE!" "!CTX!"
+if errorlevel 1 exit /b 1
 
-if not "!STATE_PATHS!"=="" (
-    for %%P in (!STATE_PATHS!) do (
-        if not "!STATE_BUCKET!"=="" (
-            call :log "STATE" "Restoring %%P from object storage !STATE_BUCKET!..."
-            if "!STATE_BUCKET:~0,5!"=="s3://" (
-                set "S3_ARGS="
-                if not "!STATE_ENDPOINT!"=="" set "S3_ARGS=--endpoint-url !STATE_ENDPOINT!"
-                aws s3 cp !S3_ARGS! "!STATE_BUCKET!/%%P" "!REPO_PATH!\%%P" >> "!LOG_FILE!" 2>&1
-            ) else if "!STATE_BUCKET:~0,5!"=="gs://" (
-                gcloud storage cp "!STATE_BUCKET!/%%P" "!REPO_PATH!\%%P" >> "!LOG_FILE!" 2>&1
-            ) else if "!STATE_BUCKET:~0,8!"=="azure://" (
-                for /f "tokens=3 delims=/" %%C in ("!STATE_BUCKET!") do set "CONTAINER=%%C"
-                az storage blob download --container-name "!CONTAINER!" --name "%%P" --file "!REPO_PATH!\%%P" --auth-mode login >> "!LOG_FILE!" 2>&1
-            )
-        )
-        if exist "!REPO_PATH!\%%P" (
-            call :log "STATE" "Deploying state %%P to node..."
-            call :retry "!CLI!" node scp "!NODE!" "!CTX!" "!REPO_PATH!\%%P" "!REMOTE_DEST!/%%P"
-        )
-    )
-)
+set "PREPARED_STORAGE=0"
+set "REM_SPECS=!APP_SPECS!"
 
-if not "!DOMAIN!"=="" (
-    call :log "DNS" "Mapping DNS for !DOMAIN!..."
-    if "!PROVIDER!"=="azure" (
-        for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
-        call :retry "!CLI!" dns map-node "!NODE!" "!RG!" "!DOMAIN!" "!ZONE_NAME!" "!ZONE_NAME!-rg"
-    ) else if "!PROVIDER!"=="aws" (
-        if "!AWS_ZONE_ID!"=="" (
-            for /f "tokens=*" %%i in ('aws route53 list-hosted-zones-by-name --dns-name "!DOMAIN!" --query "HostedZones[0].Id" --output text 2^>nul') do set "RAW_ID=%%i"
-            if not "!RAW_ID!"=="None" (
-                for %%a in ("!RAW_ID:/=" "!") do set "AWS_ZONE_ID=%%~a"
-            )
-        )
-        if not "!AWS_ZONE_ID!"=="" (
-            call :retry "!CLI!" dns map-node "!NODE!" "!DOMAIN!" "!AWS_ZONE_ID!"
-        )
-    ) else if "!PROVIDER!"=="gcp" (
-        for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
-        call :retry "!CLI!" dns map-node "!NODE!" "!LOC!" "!DOMAIN!" "!ZONE_NAME!"
-    )
+:: ## deploy_loop
+:: Iterates over APP_SPECS and deploys each selected application onto the shared node.
+:deploy_loop
+if "!REM_SPECS!"=="" goto :verify_loop
+for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
+    set "_CUR_SPEC=%%A"
+    set "REM_SPECS=%%B"
 )
+call :deploy_one_spec "!_CUR_SPEC!"
+if errorlevel 1 exit /b 1
+goto :deploy_loop
 
-call :log "START" "Installing Dependencies and Starting..."
-if "!IS_TPU!"=="1" (
-    if "!SHARED_STORAGE!"=="1" (
-        call :log "INFRA" "Mounting Filestore across all TPU workers..."
-        for /f "tokens=*" %%i in ('gcloud filestore instances describe "!NODE!-nfs" --zone="!LOC!" --format="value(networks.ipAddresses[0])"') do set "NFS_IP=%%i"
-        call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "sudo LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/traits/storage/nfs.sh !NFS_IP!:/vol1 /mnt/shared && sudo chmod a+w /mnt/shared"
-    )
-    call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
-    call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/_lib/databases/provision_db.sh libscript.json"
-    call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
-) else (
-    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps!DEPS_FLAGS!"
-    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/_lib/databases/provision_db.sh libscript.json"
-    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
-)
+:: ## verify_loop
+:: Runs post-deployment health and public ingress verification on deployed apps.
+:verify_loop
+if "!SKIP_VERIFY!"=="1" goto :deploy_done
+set "REM_SPECS=!APP_SPECS!"
 
-:: -----------------------------------------------------------------------------
-:: Wait for Health
-:: -----------------------------------------------------------------------------
-call :log "HEALTH" "Polling application health (via libscript health libscript.json)..."
-set "HC_URL="
-set "HC_EXPECT_JSON="
-if not "!JSON_FILE!"=="" if exist "!JSON_FILE!" (
-    for /f "delims=" %%u in ('jq -r "((.services // .infrastructure.services) | if type == \"object\" then [to_entries[].value] elif type == \"array\" then . else [] end) | map((.health_check // .healthcheck) | select(type == \"object\" and .url != null) | .url) | .[0] // empty" "!JSON_FILE!" 2^>nul') do set "HC_URL=%%u"
-    for /f "delims=" %%j in ('jq -r "((.services // .infrastructure.services) | if type == \"object\" then [to_entries[].value] elif type == \"array\" then . else [] end) | map((.health_check // .healthcheck) | select(type == \"object\" and .expect_json != null) | .expect_json) | .[0] // empty" "!JSON_FILE!" 2^>nul') do set "HC_EXPECT_JSON=%%j"
+:: ## verify_next
+:: Iterates through each deployed app for health verification.
+:verify_next
+if "!REM_SPECS!"=="" goto :deploy_done
+for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
+    set "_CUR_SPEC=%%A"
+    set "REM_SPECS=%%B"
 )
-set "ATTEMPT=1"
-set "MAX_ATTEMPTS=12"
-:: ## health_loop
-:: Performs the health_loop operation and updates component state.
-:health_loop
-set "REMOTE_OK=0"
-if "!IS_TPU!"=="1" (
-    call "!TPU_CLI!" ssh "!NODE!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health libscript.json" >nul 2>&1
-    if not errorlevel 1 set "REMOTE_OK=1"
-) else (
-    call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health libscript.json" >nul 2>&1
-    if not errorlevel 1 set "REMOTE_OK=1"
-)
-if "!REMOTE_OK!"=="1" if not "!HC_URL!"=="" (
-    if "!IS_TPU!"=="1" (
-        call "!TPU_CLI!" ssh "!NODE!" "curl -fsSL \"!HC_URL!\"" > "!LOG_FILE!.hc" 2>nul
-    ) else (
-        call "!CLI!" node exec "!NODE!" "!CTX!" "curl -fsSL \"!HC_URL!\"" > "!LOG_FILE!.hc" 2>nul
-    )
-    if errorlevel 1 (
-        set "REMOTE_OK=0"
-    ) else if not "!HC_EXPECT_JSON!"=="" (
-        jq -e "!HC_EXPECT_JSON!" "!LOG_FILE!.hc" >nul 2>&1
-        if errorlevel 1 set "REMOTE_OK=0"
-    )
-    if exist "!LOG_FILE!.hc" del /f /q "!LOG_FILE!.hc" >nul 2>&1
-)
-if "!REMOTE_OK!"=="1" (
-    call :log "HEALTH" "Application stack is healthy."
-    goto :health_ready
-)
-if !ATTEMPT! geq !MAX_ATTEMPTS! (
-    call :log "WARNING" "Application health check failed or timed out. Check logs."
-    goto :health_ready
-)
-call :log "HEALTH" "Application not ready (attempt !ATTEMPT!/!MAX_ATTEMPTS!). Waiting 10s..."
-timeout /t 10 /nobreak >nul
-set /a ATTEMPT+=1
-goto :health_loop
+call :verify_one_spec "!_CUR_SPEC!"
+if errorlevel 1 exit /b 1
+goto :verify_next
 
-:: ## health_ready
-:: Performs the health_ready operation and updates component state.
-:health_ready
-
-call :log "DONE" "Deployment complete. View logs at !LOG_FILE!"
+:: ## deploy_done
+:: Finalizes deployment execution.
+:deploy_done
+echo [DONE] Deployment complete.
 exit /b 0
 
-:: -----------------------------------------------------------------------------
-:: Functions
-:: -----------------------------------------------------------------------------
-:: ## log
-:: Formats and emits a timestamped log message at the specified severity level.
-:log
-echo [%~1] %~2
-echo [%DATE% %TIME%] [%~1] %~2 >> "!LOG_FILE!"
+:: ## parse_spec
+:: Parses <repo>[:<dest>][@<domain>] into _SP_REPO, _SP_DEST, and _SP_DOMAIN.
+:parse_spec
+set "_RAW=%~1"
+set "_SP_DOMAIN="
+for /f "tokens=1,2 delims=@" %%D in ("!_RAW!") do (
+    set "_SP_PD=%%D"
+    set "_SP_DOMAIN=%%E"
+)
+for /f "tokens=1,2 delims=:" %%P in ("!_SP_PD!") do (
+    set "_SP_REPO=%%P"
+    set "_SP_DEST=%%Q"
+)
+if "!_SP_DEST!"=="" (
+    for %%F in ("!_SP_REPO!") do set "_SP_DEST=%%~nxF"
+)
 exit /b 0
 
-:: ## record_state
-:: Performs the record_state operation and updates component state.
-:record_state
-if exist "!STATE_FILE!" (
-    findstr /v /b /c:"%~1=" "!STATE_FILE!" > "!STATE_FILE!.tmp"
-    move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
-)
-echo %~1=%~2>> "!STATE_FILE!"
-call :log "STATE" "Recorded %~1=%~2"
+:: ## check_only_match
+:: Sets _MATCH=1 if the given remote destination matches ONLY_TARGET.
+:check_only_match
+set "_CHK_DEST=%~1"
+set "_MATCH=0"
+if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="!_CHK_DEST!" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CHK_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
+if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CHK_DEST!"=="t1d-analytics" set "_MATCH=1"
 exit /b 0
 
-:: ## retry
-:: Performs the retry operation and updates component state.
-:retry
-set "RETRY_ATTEMPT=1"
-set "RETRY_MAX=5"
-set "RETRY_WAIT=5"
-:: ## retry_loop
-:: Performs the retry_loop operation and updates component state.
-:retry_loop
-call :log "RETRY" "Attempt !RETRY_ATTEMPT! of !RETRY_MAX!: %*"
-call %* >> "!LOG_FILE!" 2>&1
-if %errorlevel% equ 0 (
-    call :log "RETRY" "Command succeeded."
-    exit /b 0
+:: ## deploy_one_spec
+:: Deploys a single application specification onto the shared node.
+:deploy_one_spec
+call :parse_spec "%~1"
+call :check_only_match "!_SP_DEST!"
+if "!_MATCH!"=="0" exit /b 0
+
+call "!CLI!" node deploy "!NODE!" "!CTX!" "!_SP_REPO!" "!_SP_DEST!"
+if errorlevel 1 exit /b 1
+
+if exist "!_SP_REPO!\.env" (
+    call "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env" "!_SP_DEST!/.env"
+    if errorlevel 1 exit /b 1
 )
-if !RETRY_ATTEMPT! geq !RETRY_MAX! (
-    call :log "ERROR" "Command failed after !RETRY_MAX! attempts: %*"
-    exit /b 1
+if exist "!_SP_REPO!\.env.secrets" (
+    call "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env.secrets" "!_SP_DEST!/.env.secrets"
+    if errorlevel 1 exit /b 1
 )
-call :log "RETRY" "Command failed (exit !errorlevel!). Waiting !RETRY_WAIT!s..."
-timeout /t !RETRY_WAIT! /nobreak >nul
-set /a RETRY_ATTEMPT+=1
-set /a RETRY_WAIT*=2
-goto :retry_loop
+
+if "!SKIP_PREPARE!"=="0" if "!PREPARED_STORAGE!"=="0" (
+    call "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh prepare-storage libscript.json"
+    if errorlevel 1 exit /b 1
+    set "PREPARED_STORAGE=1"
+)
+
+set "_DEPS_FLAGS="
+if "!FORCE_REINSTALL!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-reinstall"
+if "!FORCE_REBUILD!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-rebuild"
+
+call "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh install-deps libscript.json!_DEPS_FLAGS! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh start libscript.json && sudo REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh netctl ingress libscript.json"
+exit /b !ERRORLEVEL!
+
+:: ## verify_one_spec
+:: Verifies health and ingress for a single deployed application specification.
+:verify_one_spec
+call :parse_spec "%~1"
+call :check_only_match "!_SP_DEST!"
+if "!_MATCH!"=="0" exit /b 0
+set "_PUB_ARG="
+if not "!_SP_DOMAIN!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_SP_DOMAIN!"
+call "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
+exit /b !ERRORLEVEL!

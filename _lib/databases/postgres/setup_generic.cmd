@@ -84,7 +84,23 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## libscript_postgres_is_ready
+:: Checks whether PostgreSQL client/server or service is already installed and ready on Windows.
+:libscript_postgres_is_ready
+where pg_isready >nul 2>&1
+if not errorlevel 1 (
+    pg_isready -h 127.0.0.1 -p 5432 -q >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+where psql >nul 2>&1
+if not errorlevel 1 (
+    sc query postgresql* >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    where postgres >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -157,6 +173,13 @@ exit /b 0
 if /i "%POSTGRES_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "postgres" "%POSTGRES_VERSION%" "postgres" "c"
     exit /b !errorlevel!
+)
+if not "%FORCE_REINSTALL%"=="1" (
+    call :libscript_postgres_is_ready
+    if not errorlevel 1 (
+        echo [REUSE] PostgreSQL ^(%POSTGRES_VERSION%^) is already installed and ready.
+        exit /b 0
+    )
 )
 if "%POSTGRES_INSTALL_METHOD%"=="system" (
     winget install postgres --accept-package-agreements --accept-source-agreements

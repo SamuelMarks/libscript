@@ -1,11 +1,12 @@
 #!/bin/sh
 # ## Overview
 # Internal script for service_install. Registers, overrides environment for, or removes a
-# service using the OS-native init system or fallback runner.
+# service using the OS-native init system (systemd, openrc, sysvinit, bsd_rc, launchd, smf,
+# runit, s6, Windows sc.exe) or fallback runner.
 #
 # ## Usage
 # . "$LIBSCRIPT_ROOT_DIR/_lib/_common/service_install.sh"
-# libscript_install_service <service_name> <exec_start> [working_dir] [description] [env]
+# libscript_install_service <service_name> <exec_start> [working_dir] [description] [env] [user] [env_files]
 # libscript_uninstall_service <service_name>
 # libscript_service_override_env <service_name> <KEY=VALUE...>
 
@@ -32,7 +33,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh"; do
+for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh" "_lib/_common/python_env.sh"; do
   if [ -f "${LIBSCRIPT_ROOT_DIR}/${LIB}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
     export SCRIPT_NAME
@@ -42,57 +43,272 @@ for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh
 done
 unset SCRIPT_NAME || true
 
+# ## libscript_detect_init_system
+# Detects the active or requested init system based on LIBSCRIPT_INIT_SYSTEM, INIT_SYSTEM,
+# LIBSCRIPT_FORCE_FALLBACK_DAEMON, and runtime capabilities.
+libscript_detect_init_system() {
+  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" = "1" ]; then
+    printf '%s\n' "fallback"
+    return 0
+  fi
+  _req_init="${LIBSCRIPT_INIT_SYSTEM:-${INIT_SYSTEM:-auto}}"
+  case "$_req_init" in
+    fallback|none|pid)
+      printf '%s\n' "fallback"
+      return 0
+      ;;
+    systemd|openrc|sysvinit|bsd_rc|launchd|smf|runit|s6|sc)
+      printf '%s\n' "$_req_init"
+      return 0
+      ;;
+  esac
+
+  _uname_l="${UNAME_LOWER:-$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'linux')}"
+  if command -v systemctl >/dev/null 2>&1 && { [ -d /run/systemd/system ] || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; }; then
+    printf '%s\n' "systemd"
+  elif command -v rc-service >/dev/null 2>&1; then
+    printf '%s\n' "openrc"
+  elif command -v svccfg >/dev/null 2>&1 && command -v svcadm >/dev/null 2>&1; then
+    printf '%s\n' "smf"
+  elif [ "$_uname_l" = "freebsd" ] || [ "$_uname_l" = "openbsd" ] || [ "$_uname_l" = "netbsd" ] || command -v sysrc >/dev/null 2>&1; then
+    printf '%s\n' "bsd_rc"
+  elif [ "$_uname_l" = "darwin" ] && command -v launchctl >/dev/null 2>&1 && [ "${LIBSCRIPT_USE_LAUNCHD:-0}" = "1" ]; then
+    printf '%s\n' "launchd"
+  elif command -v sv >/dev/null 2>&1 && [ -d /etc/service ]; then
+    printf '%s\n' "runit"
+  elif command -v s6-svc >/dev/null 2>&1 && { [ -d /run/service ] || [ -d /etc/s6/sv ]; }; then
+    printf '%s\n' "s6"
+  elif [ -d /etc/init.d ] && command -v service >/dev/null 2>&1 && { [ "$(id -u 2>/dev/null || printf '1000')" -eq 0 ] || sudo -n true 2>/dev/null; }; then
+    printf '%s\n' "sysvinit"
+  elif command -v sc.exe >/dev/null 2>&1; then
+    printf '%s\n' "sc"
+  else
+    printf '%s\n' "fallback"
+  fi
+}
+
+# ## libscript_write_service_runner
+# Writes an isolated, init-agnostic POSIX /bin/sh runner script for a service at
+# ${LIBSCRIPT_DATA_DIR}/<service>/run_<service>.sh.
+libscript_write_service_runner() {
+  _wsr_name="$1"
+  _wsr_exec="$2"
+  _wsr_wd="${3:-/}"
+  _wsr_env="${4:-}"
+  _wsr_user="${5:-${LIBSCRIPT_SERVICE_USER:-}}"
+  _wsr_env_files="${6:-${LIBSCRIPT_SERVICE_ENV_FILES:-}}"
+  _wsr_manifest_dir="${LIBSCRIPT_SERVICE_MANIFEST_DIR:-$_wsr_wd}"
+
+  _wsr_data="${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_wsr_name}"
+  mkdir -p "$_wsr_data" 2>/dev/null || priv mkdir -p "$_wsr_data" 2>/dev/null || true
+
+  _wsr_home="${REMOTE_HOME:-${HOME:-/root}}"
+  if type libscript_resolve_user_home >/dev/null 2>&1 && [ -n "$_wsr_user" ]; then
+    _wsr_home=$(libscript_resolve_user_home "$_wsr_user")
+  elif [ -n "$_wsr_user" ] && [ -d "/home/${_wsr_user}" ]; then
+    _wsr_home="/home/${_wsr_user}"
+  fi
+
+  _wsr_runner="${_wsr_data}/run_${_wsr_name}.sh"
+  {
+    printf '#!/bin/sh\n'
+    printf 'export HOME="%s"\n' "$_wsr_home"
+    printf 'export UV_PYTHON_INSTALL_DIR="%s/.local/share/uv/python"\n' "$_wsr_home"
+    printf 'export UV_CACHE_DIR="%s/.cache/uv"\n' "$_wsr_home"
+    printf 'export PATH="%s"\n' "$PATH"
+    printf 'export REMOTE_USER="%s" REMOTE_GROUP="%s" REMOTE_HOME="%s" REMOTE_APP_DIR="%s"\n' "${REMOTE_USER:-$_wsr_user}" "${REMOTE_GROUP:-$_wsr_user}" "${REMOTE_HOME:-$_wsr_home}" "${REMOTE_APP_DIR:-$_wsr_manifest_dir}"
+    printf 'if [ -f "%s/env.sh" ]; then . "%s/env.sh" >/dev/null 2>&1 || true; fi\n' "$LIBSCRIPT_ROOT_DIR" "$LIBSCRIPT_ROOT_DIR"
+    printf 'if [ -f "/etc/libscript/%s/service.env" ]; then set -a; . "/etc/libscript/%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_wsr_name" "$_wsr_name"
+    printf 'if [ -f "%s/service.env" ]; then set -a; . "%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_wsr_data" "$_wsr_data"
+    if [ -f "${_wsr_manifest_dir}/.env.libscript" ]; then
+      printf 'if [ -f "%s/.env.libscript" ]; then set -a; . "%s/.env.libscript" 2>/dev/null || true; set +a; fi\n' "$_wsr_manifest_dir" "$_wsr_manifest_dir"
+    fi
+    if [ -n "$_wsr_env_files" ]; then
+      printf '%s\n' "$_wsr_env_files" | while IFS= read -r _ef_item; do
+        [ -n "$_ef_item" ] || continue
+        printf 'if [ -f "%s" ]; then set -a; . "%s" 2>/dev/null || true; set +a; fi\n' "$_ef_item" "$_ef_item"
+      done
+    fi
+    if [ -n "$_wsr_env" ]; then
+      printf '%s\n' "$_wsr_env" | while IFS= read -r _kv_item; do
+        [ -n "$_kv_item" ] || continue
+        case "$_kv_item" in
+          export\ *) printf '%s\n' "$_kv_item" ;;
+          *=*)
+            _k_part="${_kv_item%%=*}"
+            _v_part="${_kv_item#*=}"
+            case "$_k_part" in
+              PATH)
+                case "$_v_part" in
+                  *:*) _v_part="${_v_part}:${PATH}" ;;
+                esac
+                ;;
+            esac
+            _v_esc=$(printf '%s' "$_v_part" | sed "s/'/'\\\\''/g")
+            printf "export %s='%s'\n" "$_k_part" "$_v_esc"
+            ;;
+        esac
+      done
+    fi
+    printf 'cd "%s" || exit 1\n' "$_wsr_wd"
+    case "$_wsr_exec" in
+      *";"*|*"&&"*|*"||"*|*"|"*|"set "*|"for "*|"if "*)
+        printf '%s\n' "$_wsr_exec"
+        ;;
+      *)
+        printf 'exec %s\n' "$_wsr_exec"
+        ;;
+    esac
+  } > "$_wsr_runner"
+  chmod 0755 "$_wsr_data" "$_wsr_runner" 2>/dev/null || true
+  if [ -n "$_wsr_user" ] && id "$_wsr_user" >/dev/null 2>&1; then
+    chown "${_wsr_user}:${_wsr_user}" "$_wsr_data" "$_wsr_runner" 2>/dev/null || priv chown "${_wsr_user}:${_wsr_user}" "$_wsr_data" "$_wsr_runner" 2>/dev/null || true
+  fi
+  printf '%s\n' "$_wsr_runner"
+}
+
 # ## libscript_install_service
-# Performs the libscript_install_service operation and updates component state.
+# Registers a service across the active init system (systemd, openrc, sysvinit, bsd_rc, launchd,
+# smf, runit, s6, sc.exe, or fallback PID runner) and generates a shared runner script.
 libscript_install_service() {
   _service_name="$1"
   _exec_start="$2"
   _working_dir="${3:-/}"
   _description="${4:-$_service_name service}"
-  _env="${5:-}"
+  _env="${5:-${LIBSCRIPT_SERVICE_ENV:-}}"
+  _svc_user="${6:-${LIBSCRIPT_SERVICE_USER:-}}"
+  _env_files="${7:-${LIBSCRIPT_SERVICE_ENV_FILES:-}}"
+  _manifest_dir="${LIBSCRIPT_SERVICE_MANIFEST_DIR:-$_working_dir}"
   _rc_name=$(printf '%s\n' "$_service_name" | tr '-' '_')
 
-  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && command -v systemctl >/dev/null 2>&1 && { [ -d /run/systemd/system ] || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; }; then
-    log_info "Installing systemd service: $_service_name"
-    _tmp_file=$(mktemp)
+  _svc_home="${REMOTE_HOME:-${HOME:-/root}}"
+  if type libscript_resolve_user_home >/dev/null 2>&1 && [ -n "$_svc_user" ]; then
+    _svc_home=$(libscript_resolve_user_home "$_svc_user")
+  elif [ -n "$_svc_user" ] && [ -d "/home/${_svc_user}" ]; then
+    _svc_home="/home/${_svc_user}"
+  fi
 
-    export DESCRIPTION="$_description"
-    export EXEC_START="$_exec_start"
-    export WORKING_DIR="$_working_dir"
-    export ENV="$_env"
+  if [ -n "$_svc_user" ] && type libscript_python_ensure_venv_owner >/dev/null 2>&1; then
+    libscript_python_ensure_venv_owner "$_working_dir" "${PYTHON_VERSION:-3.12}" "$_svc_user" "$_svc_home"
+  fi
 
-    if command -v envsubst >/dev/null 2>&1; then
-      envsubst < "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/systemd/simple.service" > "$_tmp_file"
-    else
-      sed "s|\${DESCRIPTION}|${DESCRIPTION}|g" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/systemd/simple.service" | \
-        sed "s|\${EXEC_START}|${EXEC_START}|g" | \
-        sed "s|\${WORKING_DIR}|${WORKING_DIR}|g" | \
-        sed "s|\${ENV}|${ENV}|g" > "$_tmp_file"
-    fi
+  _runner_script=$(libscript_write_service_runner "$_service_name" "$_exec_start" "$_working_dir" "$_env" "$_svc_user" "$_env_files")
+  _init_sys=$(libscript_detect_init_system)
+  _svc_data="${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_service_name}"
 
-    priv install -m 0644 -o 'root' -- "$_tmp_file" "/etc/systemd/system/${_service_name}.service"
-    priv systemctl daemon-reload
-    priv systemctl enable "$_service_name"
-    rm -f "$_tmp_file"
-  elif [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && command -v rc-service >/dev/null 2>&1; then
-    log_info "Installing OpenRC service: $_service_name"
-    _tmp_file=$(mktemp)
-    _openrc_cmd="$_exec_start"
-    _openrc_args=""
-    case "$_exec_start" in
-      *" "*)
-        _openrc_cmd="${_exec_start%% *}"
-        _openrc_args="${_exec_start#* }"
-        ;;
-    esac
-    cat > "$_tmp_file" <<EOF
+  case "$_init_sys" in
+    systemd)
+      log_info "Installing systemd service: $_service_name"
+      _tmp_file=$(mktemp)
+      _user_directive=""
+      if [ -n "$_svc_user" ] && id "$_svc_user" >/dev/null 2>&1; then
+        _user_directive="User=${_svc_user}"
+      fi
+      if [ "$(id -u 2>/dev/null || printf '1000')" -eq 0 ] || sudo -n true 2>/dev/null || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; then
+        cat << SYSTEMD > "$_tmp_file"
+[Unit]
+Description=${_description}
+After=network.target
+
+[Service]
+WorkingDirectory=${_working_dir}
+${_user_directive}
+Environment="HOME=${_svc_home}"
+Environment="UV_PYTHON_INSTALL_DIR=${_svc_home}/.local/share/uv/python"
+Environment="UV_CACHE_DIR=${_svc_home}/.cache/uv"
+Environment="PATH=${PATH}"
+Environment="REMOTE_USER=${REMOTE_USER:-$_svc_user}"
+Environment="REMOTE_GROUP=${REMOTE_GROUP:-$_svc_user}"
+Environment="REMOTE_HOME=${REMOTE_HOME:-$_svc_home}"
+Environment="REMOTE_APP_DIR=${REMOTE_APP_DIR:-$_manifest_dir}"
+ExecStart=/bin/sh "${_runner_script}"
+StandardOutput=journal
+StandardError=journal
+Restart=always
+RestartSec=2
+SYSTEMD
+        if [ -f "${_manifest_dir}/.env.libscript" ]; then
+          printf 'EnvironmentFile=-%s/.env.libscript\n' "$_manifest_dir" >> "$_tmp_file"
+        fi
+        if [ -n "$_env_files" ]; then
+          printf '%s\n' "$_env_files" | while IFS= read -r _ef; do
+            [ -n "$_ef" ] && [ -f "$_ef" ] && printf 'EnvironmentFile=-%s\n' "$_ef" >> "$_tmp_file" || true
+          done
+        fi
+        if [ -n "$_env" ]; then
+          printf '%s\n' "$_env" | while IFS= read -r _e_line; do
+            [ -n "$_e_line" ] || continue
+            _e_clean="${_e_line#export }"
+            case "$_e_clean" in
+              PATH=*:*) _e_clean="${_e_clean}:${PATH}" ;;
+            esac
+            printf 'Environment="%s"\n' "$_e_clean" >> "$_tmp_file"
+          done
+        fi
+        cat << 'SYSTEMD_INST' >> "$_tmp_file"
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD_INST
+        if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ -f "/etc/systemd/system/${_service_name}.service" ] && cmp -s "$_tmp_file" "/etc/systemd/system/${_service_name}.service" 2>/dev/null; then
+          log_info "[REUSE] Systemd unit for '${_service_name}' is unchanged."
+          export LIBSCRIPT_SERVICE_UNIT_UNCHANGED=1
+        else
+          priv install -m 0644 -o 'root' -- "$_tmp_file" "/etc/systemd/system/${_service_name}.service"
+          priv systemctl daemon-reload
+          priv systemctl enable "$_service_name"
+          export LIBSCRIPT_SERVICE_UNIT_UNCHANGED=0
+        fi
+        rm -f "$_tmp_file"
+      elif systemctl --user status >/dev/null 2>&1; then
+        _user_unit_dir="${HOME:-/tmp}/.config/systemd/user"
+        mkdir -p "$_user_unit_dir"
+        cat << SYSTEMD_USR > "${_user_unit_dir}/${_service_name}.service"
+[Unit]
+Description=${_description}
+After=network.target
+
+[Service]
+WorkingDirectory=${_working_dir}
+Environment="HOME=${_svc_home}"
+Environment="PATH=${PATH}"
+Environment="REMOTE_USER=${REMOTE_USER:-$_svc_user}"
+Environment="REMOTE_GROUP=${REMOTE_GROUP:-$_svc_user}"
+Environment="REMOTE_HOME=${REMOTE_HOME:-$_svc_home}"
+Environment="REMOTE_APP_DIR=${REMOTE_APP_DIR:-$_manifest_dir}"
+ExecStart=/bin/sh "${_runner_script}"
+StandardOutput=append:${_svc_data}/stdout.log
+StandardError=append:${_svc_data}/stderr.log
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
+SYSTEMD_USR
+        rm -f "$_tmp_file"
+        systemctl --user daemon-reload
+        systemctl --user enable "$_service_name"
+      else
+        rm -f "$_tmp_file"
+        log_info "Systemd requires root or active user bus; registered fallback runner for $_service_name"
+      fi
+      ;;
+    openrc)
+      log_info "Installing OpenRC service: $_service_name"
+      _tmp_file=$(mktemp)
+      _openrc_user_line=""
+      if [ -n "$_svc_user" ] && id "$_svc_user" >/dev/null 2>&1; then
+        _openrc_user_line="command_user=\"${_svc_user}\""
+      fi
+      cat > "$_tmp_file" <<EOF_OPENRC
 #!/sbin/openrc-run
 # $_description
 
 name="$_service_name"
 description="$_description"
-command="${_openrc_cmd}"
-command_args="${_openrc_args}"
+command="/bin/sh"
+command_args="${_runner_script}"
+${_openrc_user_line}
 command_background="yes"
 pidfile="/run/$_service_name.pid"
 directory="$_working_dir"
@@ -100,19 +316,20 @@ output_log="/var/log/${_service_name}.log"
 error_log="/var/log/${_service_name}_err.log"
 
 # ## depend
-# Performs the depend operation and updates component state.
+# Declares OpenRC network dependency for the service.
 depend() {
     need net
 }
-EOF
-    priv install -m 0755 -o 'root' -- "$_tmp_file" "/etc/init.d/$_service_name"
-    priv rc-update add "$_service_name" default
-    rm -f "$_tmp_file"
-  elif [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && command -v svccfg >/dev/null 2>&1; then
-    log_info "Installing SMF manifest: $_service_name"
-    _tmp_file=$(mktemp)
-    _xml_exec=$(printf '%s' "$_exec_start" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-    cat > "$_tmp_file" <<EOF
+EOF_OPENRC
+      priv install -m 0755 -o 'root' -- "$_tmp_file" "/etc/init.d/$_service_name"
+      priv rc-update add "$_service_name" default
+      rm -f "$_tmp_file"
+      ;;
+    smf)
+      log_info "Installing SMF manifest: $_service_name"
+      _tmp_file=$(mktemp)
+      _xml_exec=$(printf '/bin/sh %s' "$_runner_script" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+      cat > "$_tmp_file" <<EOF_SMF
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
 <service_bundle type='manifest' name='libscript:$_service_name'>
@@ -128,14 +345,19 @@ EOF
     </property_group>
   </service>
 </service_bundle>
-EOF
-    priv svccfg import "$_tmp_file"
-    priv svcadm enable -s "application/libscript/$_service_name"
-    rm -f "$_tmp_file"
-  elif [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && [ "${UNAME_LOWER:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "freebsd" ]; then
-    log_info "Installing FreeBSD rc.d service: $_service_name"
-    _tmp_file=$(mktemp)
-    cat > "$_tmp_file" <<EOF
+EOF_SMF
+      priv svccfg import "$_tmp_file"
+      priv svcadm enable -s "application/libscript/$_service_name"
+      rm -f "$_tmp_file"
+      ;;
+    bsd_rc)
+      log_info "Installing FreeBSD/BSD rc.d service: $_service_name"
+      _tmp_file=$(mktemp)
+      _bsd_user_arg=""
+      if [ -n "$_svc_user" ] && id "$_svc_user" >/dev/null 2>&1; then
+        _bsd_user_arg="-u ${_svc_user} "
+      fi
+      cat > "$_tmp_file" <<EOF_BSD
 #!/bin/sh
 #
 # PROVIDE: $_rc_name
@@ -148,37 +370,139 @@ name="$_rc_name"
 rcvar="\${name}_enable"
 pidfile="/var/run/\${name}.pid"
 command="/usr/sbin/daemon"
-command_args="-P \${pidfile} -r -f -o /var/log/\${name}.log $_exec_start"
+command_args="-P \${pidfile} -r -f ${_bsd_user_arg}-o /var/log/\${name}.log /bin/sh ${_runner_script}"
 
 load_rc_config \$name
 : \${${_rc_name}_enable:="NO"}
 
 run_rc_command "\$1"
-EOF
-    priv install -m 0755 -o 'root' -- "$_tmp_file" "/usr/local/etc/rc.d/$_rc_name"
-    priv sysrc "${_rc_name}_enable=YES"
-    rm -f "$_tmp_file"
-  elif command -v sc.exe >/dev/null 2>&1; then
-    log_info "Installing Windows service: $_service_name"
-    if sc.exe query "$_service_name" >/dev/null 2>&1; then
-      sc.exe config "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
-    else
-      sc.exe create "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
+EOF_BSD
+      priv install -m 0755 -o 'root' -- "$_tmp_file" "/usr/local/etc/rc.d/$_rc_name"
+      command -v sysrc >/dev/null 2>&1 && priv sysrc "${_rc_name}_enable=YES" || true
+      rm -f "$_tmp_file"
+      ;;
+    launchd)
+      log_info "Installing macOS launchd service: $_service_name"
+      _plist_dir="${HOME:-/tmp}/Library/LaunchAgents"
+      mkdir -p "$_plist_dir"
+      _plist_file="${_plist_dir}/com.libscript.${_service_name}.plist"
+      cat << PLIST > "$_plist_file"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.libscript.${_service_name}</string>
+    <key>WorkingDirectory</key>
+    <string>${_working_dir}</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/sh</string>
+        <string>${_runner_script}</string>
+    </array>
+    <key>StandardOutPath</key>
+    <string>${_svc_data}/stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>${_svc_data}/stderr.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+      launchctl load -w "$_plist_file" 2>/dev/null || true
+      ;;
+    runit)
+      log_info "Installing runit service: $_service_name"
+      priv mkdir -p "/etc/service/${_service_name}"
+      _tmp_file=$(mktemp)
+      cat > "$_tmp_file" <<EOF_RUNIT
+#!/bin/sh
+exec /bin/sh "${_runner_script}" 2>&1
+EOF_RUNIT
+      priv install -m 0755 -o 'root' -- "$_tmp_file" "/etc/service/${_service_name}/run"
+      rm -f "$_tmp_file"
+      ;;
+    s6)
+      log_info "Installing s6 service: $_service_name"
+      _s6_base="/run/service"
+      [ -d /etc/s6/sv ] && _s6_base="/etc/s6/sv"
+      priv mkdir -p "${_s6_base}/${_service_name}"
+      _tmp_file=$(mktemp)
+      cat > "$_tmp_file" <<EOF_S6
+#!/bin/sh
+exec /bin/sh "${_runner_script}" 2>&1
+EOF_S6
+      priv install -m 0755 -o 'root' -- "$_tmp_file" "${_s6_base}/${_service_name}/run"
+      rm -f "$_tmp_file"
+      ;;
+    sysvinit)
+      log_info "Installing SysVinit service: $_service_name"
+      _tmp_file=$(mktemp)
+      cat > "$_tmp_file" <<EOF_SYSV
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          ${_service_name}
+# Required-Start:    \$remote_fs \$syslog \$network
+# Required-Stop:     \$remote_fs \$syslog \$network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: ${_description}
+### END INIT INFO
+
+PIDFILE="/var/run/${_service_name}.pid"
+LOGFILE="/var/log/${_service_name}.log"
+
+case "\$1" in
+  start)
+    if [ -f "\$PIDFILE" ] && kill -0 "\$(cat "\$PIDFILE")" 2>/dev/null; then
+      exit 0
     fi
-    sc.exe description "$_service_name" "$_description"
-  else
-    log_info "Registering fallback daemon runner for service: $_service_name"
-    _fb_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_service_name}"
-    mkdir -p "$_fb_dir"
-    {
-      printf '#!/bin/sh\n'
-      printf 'if [ -f "/etc/libscript/%s/service.env" ]; then set -a; . "/etc/libscript/%s/service.env"; set +a; fi\n' "$_service_name" "$_service_name"
-      printf 'if [ -f "%s/service.env" ]; then set -a; . "%s/service.env"; set +a; fi\n' "$_fb_dir" "$_fb_dir"
-      printf 'cd "%s" || exit 1\n' "$_working_dir"
-      printf 'exec %s\n' "$_exec_start"
-    } > "${_fb_dir}/run_${_service_name}.sh"
-    chmod +x "${_fb_dir}/run_${_service_name}.sh"
-  fi
+    nohup /bin/sh "${_runner_script}" >> "\$LOGFILE" 2>&1 &
+    printf '%s\n' "\$!" > "\$PIDFILE"
+    ;;
+  stop)
+    if [ -f "\$PIDFILE" ]; then
+      kill "\$(cat "\$PIDFILE")" 2>/dev/null || true
+      rm -f "\$PIDFILE"
+    fi
+    ;;
+  restart|reload)
+    "\$0" stop
+    sleep 1
+    "\$0" start
+    ;;
+  status)
+    [ -f "\$PIDFILE" ] && kill -0 "\$(cat "\$PIDFILE")" 2>/dev/null
+    ;;
+  *)
+    printf 'Usage: %s {start|stop|restart|reload|status}\n' "\$0" >&2
+    exit 1
+    ;;
+esac
+EOF_SYSV
+      priv install -m 0755 -o 'root' -- "$_tmp_file" "/etc/init.d/${_service_name}"
+      if command -v update-rc.d >/dev/null 2>&1; then
+        priv update-rc.d "${_service_name}" defaults 2>/dev/null || true
+      elif command -v chkconfig >/dev/null 2>&1; then
+        priv chkconfig "${_service_name}" on 2>/dev/null || true
+      fi
+      rm -f "$_tmp_file"
+      ;;
+    sc)
+      log_info "Installing Windows service: $_service_name"
+      if sc.exe query "$_service_name" >/dev/null 2>&1; then
+        sc.exe config "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
+      else
+        sc.exe create "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
+      fi
+      sc.exe description "$_service_name" "$_description"
+      ;;
+    *)
+      log_info "Registered fallback daemon runner for service: $_service_name (${_runner_script})"
+      ;;
+  esac
 }
 
 # ## libscript_service_override_env
@@ -192,7 +516,7 @@ libscript_service_override_env() {
   fi
   _ovr_rc_name=$(printf '%s\n' "$_ovr_service" | tr '-' '_')
 
-  # 1. Generic / fallback env file
+  # 1. Generic / fallback env file (always written so runner scripts and fallback daemons pick it up)
   _ovr_fb_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_ovr_service}"
   mkdir -p "$_ovr_fb_dir" 2>/dev/null || true
   if [ -w "$_ovr_fb_dir" ]; then
@@ -211,8 +535,10 @@ libscript_service_override_env() {
     rm -f "$_tmp_gen"
   fi
 
+  _init_sys=$(libscript_detect_init_system)
+
   # 2. Systemd drop-in override
-  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && command -v systemctl >/dev/null 2>&1 && { [ -d /run/systemd/system ] || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; }; then
+  if [ "$_init_sys" = "systemd" ]; then
     _ovr_dir="/etc/systemd/system/${_ovr_service}.service.d"
     priv mkdir -p "$_ovr_dir"
     _tmp_ovr=$(mktemp)
@@ -227,7 +553,7 @@ libscript_service_override_env() {
   fi
 
   # 3. OpenRC /etc/conf.d/<service>
-  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && command -v rc-service >/dev/null 2>&1; then
+  if [ "$_init_sys" = "openrc" ]; then
     priv mkdir -p /etc/conf.d
     _tmp_ovr=$(mktemp)
     [ -f "/etc/conf.d/${_ovr_service}" ] && cat "/etc/conf.d/${_ovr_service}" > "$_tmp_ovr" || true
@@ -243,7 +569,7 @@ libscript_service_override_env() {
   fi
 
   # 4. FreeBSD / BSD /etc/rc.conf.d/<service>
-  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && { [ "${UNAME_LOWER:-}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; }; then
+  if [ "$_init_sys" = "bsd_rc" ]; then
     priv mkdir -p /etc/rc.conf.d
     _tmp_ovr=$(mktemp)
     [ -f "/etc/rc.conf.d/${_ovr_rc_name}" ] && cat "/etc/rc.conf.d/${_ovr_rc_name}" > "$_tmp_ovr" || true
@@ -259,7 +585,7 @@ libscript_service_override_env() {
   fi
 
   # 5. macOS launchd EnvironmentVariables
-  if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" != "1" ] && [ "${UNAME_LOWER:-}" = "darwin" ] && command -v launchctl >/dev/null 2>&1; then
+  if [ "$_init_sys" = "launchd" ] || { [ "${UNAME_LOWER:-}" = "darwin" ] && command -v launchctl >/dev/null 2>&1; }; then
     for _kv in "$@"; do
       _k="${_kv%%=*}"
       _v="${_kv#*=}"
@@ -326,6 +652,14 @@ libscript_uninstall_service() {
       priv launchctl unload -w "/Library/LaunchDaemons/com.libscript.${_service_name}.plist" 2>/dev/null || true
       priv rm -f "/Library/LaunchDaemons/com.libscript.${_service_name}.plist"
     fi
+  elif [ -d "/etc/service/${_service_name}" ]; then
+    log_info "Uninstalling runit service: $_service_name"
+    command -v sv >/dev/null 2>&1 && priv sv down "$_service_name" 2>/dev/null || true
+    priv rm -rf "/etc/service/${_service_name}"
+  elif [ -d "/run/service/${_service_name}" ] || [ -d "/etc/s6/sv/${_service_name}" ]; then
+    log_info "Uninstalling s6 service: $_service_name"
+    command -v s6-svc >/dev/null 2>&1 && priv s6-svc -d "/run/service/${_service_name}" 2>/dev/null || true
+    priv rm -rf "/run/service/${_service_name}" "/etc/s6/sv/${_service_name}"
   elif [ -x "/etc/init.d/${_service_name}" ]; then
     log_info "Uninstalling SysVinit service: $_service_name"
     priv service "$_service_name" stop 2>/dev/null || true
