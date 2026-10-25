@@ -245,12 +245,132 @@ assert_contains "$DRY_OUT" "backend=jax" "libscript.sh train --dry-run parses .m
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" train "${TEST_TMP}/ml_app.json"
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" infer "${TEST_TMP}/ml_app.json"
 if [ ! -f "${TEST_TMP}/trained.txt" ] || [ ! -f "${TEST_TMP}/inferred.txt" ]; then
-  printf '[FAIL] libscript.sh train/infer local execution failed
-' >&2
+  printf '[FAIL] libscript.sh train/infer local execution failed\n' >&2
   exit 1
 fi
-printf '[PASS] libscript.sh train & infer local execution
-'
+printf '[PASS] libscript.sh train & infer local execution\n'
 
-printf '=== ALL FULLSTACK ORCHESTRATION TESTS PASSED ===
-'
+# 8. Test run_hooks.sh exits non-zero immediately when a db_migrate or health hook fails, and supports .infrastructure.hooks
+cat << 'EOF' > "${TEST_TMP}/failing_hook.json"
+{
+  "infrastructure": {
+    "hooks": {
+      "db_migrate": [
+        {"name": "bad_migration", "command": "exit 42"}
+      ],
+      "health": [
+        {"name": "bad_health", "command": "exit 1"}
+      ]
+    }
+  }
+}
+EOF
+if "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "${TEST_TMP}/failing_hook.json" "db_migrate" >/dev/null 2>&1; then
+  printf '[FAIL] run_hooks.sh should have exited non-zero on failing db_migrate hook\n' >&2
+  exit 1
+fi
+if "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "${TEST_TMP}/failing_hook.json" "health" >/dev/null 2>&1; then
+  printf '[FAIL] run_hooks.sh should have exited non-zero on failing health hook\n' >&2
+  exit 1
+fi
+printf '[PASS] run_hooks.sh propagates non-zero exit code on failing db_migrate and health hooks\n'
+
+# 9. Test libscript.sh health fails with exit code 1 when DuckDB or Postgres database has 0 tables and min_tables: 1 is configured
+mkdir -p "${TEST_TMP}/mock_bin"
+cat << 'EOF' > "${TEST_TMP}/mock_bin/duckdb"
+#!/bin/sh
+# Mock duckdb CLI returning 0 tables for SHOW TABLES
+if printf '%s\n' "$*" | grep -q "SHOW TABLES"; then
+  exit 0
+fi
+printf '1\n' > "$1"
+exit 0
+EOF
+chmod +x "${TEST_TMP}/mock_bin/duckdb"
+
+cat << 'EOF' > "${TEST_TMP}/mock_bin/psql"
+#!/bin/sh
+# Mock psql returning 1 for connectivity and 0 for information_schema.tables count
+if printf '%s\n' "$*" | grep -q "information_schema.tables"; then
+  printf '0\n'
+  exit 0
+fi
+printf '1\n'
+exit 0
+EOF
+chmod +x "${TEST_TMP}/mock_bin/psql"
+
+printf 'duckdb_placeholder' > "${TEST_TMP}/empty_test.duckdb"
+cat << EOF > "${TEST_TMP}/unpopulated_duckdb.json"
+{
+  "databases": [
+    {
+      "engine": "duckdb",
+      "name": "analytics",
+      "path": "${TEST_TMP}/empty_test.duckdb",
+      "min_tables": 1
+    }
+  ]
+}
+EOF
+if PATH="${TEST_TMP}/mock_bin:$PATH" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/unpopulated_duckdb.json" >/dev/null 2>&1; then
+  printf '[FAIL] libscript.sh health should fail when DuckDB has 0 tables and min_tables: 1\n' >&2
+  exit 1
+fi
+
+cat << 'EOF' > "${TEST_TMP}/unpopulated_pg.json"
+{
+  "databases": [
+    {
+      "engine": "postgres",
+      "name": "app_db",
+      "min_tables": 1
+    }
+  ]
+}
+EOF
+if PATH="${TEST_TMP}/mock_bin:$PATH" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/unpopulated_pg.json" >/dev/null 2>&1; then
+  printf '[FAIL] libscript.sh health should fail when Postgres has 0 tables and min_tables: 1\n' >&2
+  exit 1
+fi
+printf '[PASS] libscript.sh health fails when DuckDB or Postgres has 0 tables and min_tables: 1\n'
+
+# 10. Test libscript.sh health fails with exit code 1 when a service health_check.expect_json assertion fails even if HTTP status is 200
+cat << 'EOF' > "${TEST_TMP}/mock_http_payload.json"
+{"status": "healthy", "datasets": {"table_count": 0}}
+EOF
+cat << EOF > "${TEST_TMP}/svc_expect_json.json"
+{
+  "services": [
+    {
+      "name": "test_api_hc",
+      "command": "sleep 30",
+      "health_check": {
+        "url": "file://${TEST_TMP}/mock_http_payload.json",
+        "expect_json": ".status == \"healthy\" and .datasets.table_count >= 2",
+        "retries": 1,
+        "interval": 1
+      }
+    }
+  ]
+}
+EOF
+"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" start "${TEST_TMP}/svc_expect_json.json"
+sleep 1
+if "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/svc_expect_json.json" >/dev/null 2>&1; then
+  "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
+  printf '[FAIL] libscript.sh health should fail when health_check.expect_json assertion evaluates to false\n' >&2
+  exit 1
+fi
+cat << 'EOF' > "${TEST_TMP}/mock_http_payload.json"
+{"status": "healthy", "datasets": {"table_count": 3}}
+EOF
+if ! "${LIBSCRIPT_ROOT_DIR}/libscript.sh" health "${TEST_TMP}/svc_expect_json.json" >/dev/null 2>&1; then
+  "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
+  printf '[FAIL] libscript.sh health should succeed when health_check.expect_json assertion evaluates to true\n' >&2
+  exit 1
+fi
+"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "${TEST_TMP}/svc_expect_json.json"
+printf '[PASS] libscript.sh health validates service health_check.expect_json assertions\n'
+
+printf '=== ALL FULLSTACK ORCHESTRATION TESTS PASSED ===\n'

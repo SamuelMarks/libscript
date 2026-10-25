@@ -84,6 +84,7 @@ if "%ENGINE%"=="postgres" goto do_postgres
 if "%ENGINE%"=="postgresql" goto do_postgres
 if "%ENGINE%"=="mongodb" goto do_mongodb
 if "%ENGINE%"=="sqlite" goto do_sqlite
+if "%ENGINE%"=="duckdb" goto do_sqlite
 echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
@@ -130,5 +131,5 @@ exit /b 0
 :: ## do_sqlite
 :: Performs the do_sqlite operation and updates component state.
 :do_sqlite
-if exist "%SCHEMA_NAME%" del /Q "%SCHEMA_NAME%" "%SCHEMA_NAME%-wal" "%SCHEMA_NAME%-shm"
+if exist "%SCHEMA_NAME%" del /Q "%SCHEMA_NAME%" "%SCHEMA_NAME%-wal" "%SCHEMA_NAME%-shm" "%SCHEMA_NAME%.wal" "%SCHEMA_NAME%.shm" 2>nul
 exit /b 0

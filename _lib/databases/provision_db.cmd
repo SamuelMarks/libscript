@@ -63,12 +63,30 @@ for %%P in ("!JSON_FILE!") do set "MANIFEST_DIR=%%~dpP"
 if "!MANIFEST_DIR:~-1!"=="\" set "MANIFEST_DIR=!MANIFEST_DIR:~0,-1!"
 set "ENV_OUT=!MANIFEST_DIR!\.env.libscript"
 
-set "JQ_DB_FILTER=(.databases | if type == \"object\" then to_entries | map(.value + {name: (.value.name // .value.db_name // .key)}) elif type == \"array\" then map(. + {name: (.name // .db_name // .id)}) else [] end)[]?"
-
-for /f "delims=" %%i in ('jq -c "!JQ_DB_FILTER!" "!JSON_FILE!" 2^>nul') do (
-    set "db_entry=%%i"
-    call :process_db_entry
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!JSON_FILE!"
 )
+
+for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\.env.libscript") do (
+    if exist "%%~fE" (
+        for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
+            if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%~B"
+        )
+    )
+)
+
+set "JQ_DB_FILTER=((.databases // .infrastructure.databases) | if type == \"object\" then to_entries | map(.value + {name: (.value.name // .value.db_name // .key)}) elif type == \"array\" then map(. + {name: (.name // .db_name // .id)}) else [] end)[]?"
+
+set "PROV_FAILED=0"
+for /f "delims=" %%i in ('jq -c "!JQ_DB_FILTER!" "!JSON_FILE!" 2^>nul') do (
+    if "!PROV_FAILED!"=="0" (
+        set "db_entry=%%i"
+        call :process_db_entry
+        if errorlevel 1 set "PROV_FAILED=1"
+    )
+)
+if "!PROV_FAILED!"=="1" exit /b 1
 exit /b 0
 
 :: ## process_db_entry
@@ -77,20 +95,39 @@ exit /b 0
 set "engine=postgres"
 set "db_name=app_db"
 set "db_user=postgres"
-set "db_pass=postgres"
+set "db_pass="
+set "pass_env="
 set "db_host=127.0.0.1"
 set "db_port="
 set "url_env=DATABASE_URL"
 set "db_path="
+set "seed_file="
+set "seed_dir="
+set "migration_dir="
+set "seed_cmd="
 
 for /f "delims=" %%e in ('echo !db_entry! ^| jq -r "(.engine // .type // \"postgres\") | ascii_downcase" 2^>nul') do set "engine=%%e"
 for /f "delims=" %%n in ('echo !db_entry! ^| jq -r ".name // .db_name // \"app_db\"" 2^>nul') do set "db_name=%%n"
 for /f "delims=" %%u in ('echo !db_entry! ^| jq -r ".user // .username // \"postgres\"" 2^>nul') do set "db_user=%%u"
-for /f "delims=" %%p in ('echo !db_entry! ^| jq -r ".password // \"postgres\"" 2^>nul') do set "db_pass=%%p"
+for /f "delims=" %%p in ('echo !db_entry! ^| jq -r ".password // empty" 2^>nul') do set "db_pass=%%p"
+for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".password_env // empty" 2^>nul') do set "pass_env=%%k"
 for /f "delims=" %%h in ('echo !db_entry! ^| jq -r ".host // \"127.0.0.1\"" 2^>nul') do set "db_host=%%h"
 for /f "delims=" %%P in ('echo !db_entry! ^| jq -r ".port // empty" 2^>nul') do set "db_port=%%P"
 for /f "delims=" %%v in ('echo !db_entry! ^| jq -r ".url_env // \"DATABASE_URL\"" 2^>nul') do set "url_env=%%v"
-for /f "delims=" %%f in ('echo !db_entry! ^| jq -r ".path // .file // empty" 2^>nul') do set "db_path=%%f"
+for /f "delims=" %%f in ('echo !db_entry! ^| jq -r ".path // .file // .db_path // empty" 2^>nul') do set "db_path=%%f"
+for /f "delims=" %%s in ('echo !db_entry! ^| jq -r ".seed_file // empty" 2^>nul') do set "seed_file=%%s"
+for /f "delims=" %%d in ('echo !db_entry! ^| jq -r ".seed_dir // empty" 2^>nul') do set "seed_dir=%%d"
+for /f "delims=" %%m in ('echo !db_entry! ^| jq -r ".migration_dir // empty" 2^>nul') do set "migration_dir=%%m"
+for /f "delims=" %%c in ('echo !db_entry! ^| jq -r ".seed_command // empty" 2^>nul') do set "seed_cmd=%%c"
+
+if "!db_pass!"=="" (
+    if not "!pass_env!"=="" (
+        for /f "delims=" %%v in ("!pass_env!") do set "db_pass=!%%v!"
+    )
+)
+if "!db_pass!"=="" set "db_pass=postgres"
+if not "!db_path!"=="" call :expand_vars db_path
+if not "!seed_cmd!"=="" call :expand_vars seed_cmd
 
 if /i "!engine!"=="postgres" goto :prov_pg
 if /i "!engine!"=="postgresql" goto :prov_pg
@@ -103,6 +140,14 @@ if /i "!engine!"=="valkey" goto :prov_redis
 if /i "!engine!"=="redis" goto :prov_redis
 exit /b 0
 
+:: ## expand_vars
+:: Expands ${VAR:-default} and ${VAR} references in the named variable using jq and env.
+:expand_vars
+set "_ev_name=%~1"
+set "_ev_val=!%_ev_name%!"
+for /f "delims=" %%x in ('jq -rn --arg s "!_ev_val!" "reduce range(3) as $_ ($s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\"))" 2^>nul') do set "!_ev_name!=%%x"
+exit /b 0
+
 :: ## prov_pg
 :: Provisions a PostgreSQL database and writes DATABASE_URL.
 :prov_pg
@@ -111,13 +156,27 @@ echo [INFO] Provisioning PostgreSQL database '!db_name!' (user: !db_user!, host:
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" start >nul 2>&1
 )
+call :set_env_var "!url_env!" "postgresql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
 where psql >nul 2>nul
 if not errorlevel 1 (
-    psql -h "!db_host!" -p "!db_port!" -U postgres -c "CREATE USER "!db_user!" WITH PASSWORD '!db_pass!';" >nul 2>&1
-    psql -h "!db_host!" -p "!db_port!" -U postgres -c "CREATE DATABASE "!db_name!" OWNER "!db_user!";" >nul 2>&1
-    psql -h "!db_host!" -p "!db_port!" -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE "!db_name!" TO "!db_user!";" >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine postgres --host "!db_host!" --port "!db_port!" --admin-user postgres --admin-pass "!db_pass!" --schema "!db_name!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+    )
+    if not "!seed_file!"=="" (
+        set "sf_win=!seed_file:/=\!"
+        if not "!sf_win:~1,1!"==":" set "sf_win=!MANIFEST_DIR!\!sf_win!"
+        set "PGPASSWORD=!db_pass!"
+        if exist "!sf_win!" psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -f "!sf_win!" >nul 2>&1
+    )
 )
-call :set_env_var "!url_env!" "postgresql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
+if not "!seed_cmd!"=="" (
+    pushd "!MANIFEST_DIR!"
+    cmd.exe /c "!seed_cmd!"
+    set "rc=!errorlevel!"
+    popd
+    if not "!rc!"=="0" exit /b !rc!
+)
 exit /b 0
 
 :: ## prov_mysql
@@ -130,9 +189,19 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\mariadb\cli.cmd" (
 )
 where mysql >nul 2>nul
 if not errorlevel 1 (
-    mysql -h "!db_host!" -P "!db_port!" -u root -e "CREATE DATABASE IF NOT EXISTS `!db_name!`; CREATE USER IF NOT EXISTS '!db_user!'@'%%' IDENTIFIED BY '!db_pass!'; GRANT ALL PRIVILEGES ON `!db_name!`.* TO '!db_user!'@'%%'; FLUSH PRIVILEGES;" >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "!db_host!" --port "!db_port!" --admin-user root --schema "!db_name!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+    )
 )
 call :set_env_var "!url_env!" "mysql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
+if not "!seed_cmd!"=="" (
+    pushd "!MANIFEST_DIR!"
+    cmd.exe /c "!seed_cmd!"
+    set "rc=!errorlevel!"
+    popd
+    if not "!rc!"=="0" exit /b !rc!
+)
 exit /b 0
 
 :: ## prov_sqlite
@@ -147,12 +216,26 @@ if "!db_path!"=="" (
 for %%D in ("!db_path!") do set "db_dir=%%~dpD"
 if not exist "!db_dir!" mkdir "!db_dir!"
 echo [INFO] Provisioning SQLite database at '!db_path!'...
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+    where sqlite3 >nul 2>nul
+    if not errorlevel 1 (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine sqlite --schema "!db_path!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+    )
+)
 call :set_env_var "!url_env!" "sqlite:///!db_path:\=/!"
 call :set_env_var "SQLITE_PATH" "!db_path!"
+if not "!seed_cmd!"=="" (
+    pushd "!MANIFEST_DIR!"
+    cmd.exe /c "!seed_cmd!"
+    set "rc=!errorlevel!"
+    popd
+    if not "!rc!"=="0" exit /b !rc!
+)
 exit /b 0
 
 :: ## prov_duckdb
-:: Ensures parent directory for DuckDB database exists and writes DUCKDB_PATH.
+:: Ensures parent directory and valid DuckDB database file exist, runs seeds, and writes DUCKDB_PATH.
 :prov_duckdb
 if "!db_path!"=="" (
     set "db_path=!MANIFEST_DIR!\data\!db_name!.duckdb"
@@ -163,7 +246,69 @@ if "!db_path!"=="" (
 for %%D in ("!db_path!") do set "db_dir=%%~dpD"
 if not exist "!db_dir!" mkdir "!db_dir!"
 echo [INFO] Provisioning DuckDB database at '!db_path!'...
-call :set_env_var "DUCKDB_PATH" "!db_path!"
+set "path_env=DUCKDB_PATH"
+for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".path_env // .env_var // \"DUCKDB_PATH\"" 2^>nul') do set "path_env=%%k"
+call :set_env_var "!path_env!" "!db_path!"
+if not "!path_env!"=="DUCKDB_PATH" (
+    call :set_env_var "DUCKDB_PATH" "!db_path!"
+)
+if not "!url_env!"=="DATABASE_URL" (
+    call :set_env_var "!url_env!" "duckdb:///!db_path:\=/!"
+)
+where duckdb >nul 2>nul
+if errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd"
+    )
+)
+if not exist "!db_path!" (
+    where duckdb >nul 2>nul
+    if not errorlevel 1 (
+        duckdb "!db_path!" -c "SELECT 1;" >nul 2>&1
+    )
+)
+if not "!seed_file!"=="" (
+    set "sf_win=!seed_file:/=\!"
+    if not "!sf_win:~1,1!"==":" set "sf_win=!MANIFEST_DIR!\!sf_win!"
+    if exist "!sf_win!" call :exec_duckdb_sql "!db_path!" "!sf_win!"
+)
+if not "!seed_dir!"=="" (
+    set "sd_win=!seed_dir:/=\!"
+    if not "!sd_win:~1,1!"==":" set "sd_win=!MANIFEST_DIR!\!sd_win!"
+    if exist "!sd_win!" (
+        for %%S in ("!sd_win!\*.sql") do call :exec_duckdb_sql "!db_path!" "%%~fS"
+        for %%C in ("!sd_win!\*.csv") do call :import_duckdb_file "!db_path!" "%%~fC" "%%~nC"
+        for %%Q in ("!sd_win!\*.parquet") do call :import_duckdb_file "!db_path!" "%%~fQ" "%%~nQ"
+    )
+)
+if not "!seed_cmd!"=="" (
+    pushd "!MANIFEST_DIR!"
+    cmd.exe /c "!seed_cmd!"
+    set "rc=!errorlevel!"
+    popd
+    if not "!rc!"=="0" exit /b !rc!
+)
+exit /b 0
+
+:: ## exec_duckdb_sql
+:: Executes a SQL script file against the target DuckDB database.
+:exec_duckdb_sql
+where duckdb >nul 2>nul
+if not errorlevel 1 (
+    duckdb "%~1" < "%~2" >nul 2>&1
+)
+exit /b 0
+
+:: ## import_duckdb_file
+:: Imports a CSV or Parquet file into DuckDB as a table named after the file stem.
+:import_duckdb_file
+set "_idf_file=%~2"
+set "_idf_fwd=!_idf_file:\=/!"
+where duckdb >nul 2>nul
+if not errorlevel 1 (
+    duckdb "%~1" -c "CREATE TABLE IF NOT EXISTS \"%~3\" AS SELECT * FROM '!_idf_fwd!';" >nul 2>&1
+)
 exit /b 0
 
 :: ## prov_redis

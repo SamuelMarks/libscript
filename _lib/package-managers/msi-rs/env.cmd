@@ -64,4 +64,5 @@ set "EXTRA_PATHS="
 if exist "!LIBSCRIPT_ROOT_DIR!\tools\wix" set "EXTRA_PATHS=!LIBSCRIPT_ROOT_DIR!\tools\wix;"
 if exist "%LIBSCRIPT_HOME%\msi-rs\default\bin" set "EXTRA_PATHS=%EXTRA_PATHS%%LIBSCRIPT_HOME%\msi-rs\default\bin;"
 
-endlocal & set "PATH=%EXTRA_PATHS%%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%\bin;%PATH%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "" "" "%EXTRA_PATHS%%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%\bin"
+endlocal & set "PATH=%PATH%"

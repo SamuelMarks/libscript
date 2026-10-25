@@ -54,7 +54,15 @@ goto :find_root
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
-set "FORMAT=%~1"
+if /i "%~1"=="remove-ingress" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" remove-ingress "%~2"
+    exit /b %errorlevel%
+)
+if /i "%~1"=="unroute" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" remove-ingress "%~2"
+    exit /b %errorlevel%
+)
+set "FORMAT=%~1" 
 set "ROUTE_PATH=%~3"
 if "%FORMAT%"=="" set "FORMAT=nginx"
 if "%ROUTE_PATH%"=="" set "ROUTE_PATH=/"

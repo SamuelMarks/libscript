@@ -3,10 +3,10 @@
 ::
 :: ## Overview
 :: Executes defined lifecycle hooks from an install manifest on Windows.
-:: Supports both .hooks and .lifecycle_hooks, working_dir, OS filtering, cmd_windows, and conditions.
+:: Supports both .hooks and .lifecycle_hooks (including under .infrastructure), working_dir, OS filtering, cmd_windows, and conditions.
 ::
 :: ## Usage
-:: Run `run_hooks.cmd <json_file> <hook_type>` (e.g. pre_install, post_install, build, db_migrate, pre_start).
+:: Run `run_hooks.cmd <json_file> <hook_type>` (e.g. pre_install, post_install, build, db_migrate, seed, pre_start, post_start, pre_stop, post_stop, health).
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -52,6 +52,23 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /i "%~1"=="--help" goto :show_help
+if /i "%~1"=="-h" goto :show_help
+if /i "%~1"=="/?" goto :show_help
+if /i "%~1"=="-?" goto :show_help
+goto :args_ready
+
+:: ## show_help
+:: Displays usage and supported lifecycle hook types.
+:show_help
+echo Usage: run_hooks.cmd ^<json_file^> ^<hook_type^>
+echo Supported hook types: pre_install, post_install, build, db_migrate, seed, pre_start, post_start, pre_stop, post_stop, health
+exit /b 0
+
+:: ## args_ready
+:: Continues hook execution after CLI flag checks.
+:args_ready
+
 set "json_file=%~1"
 set "hook_type=%~2"
 
@@ -67,10 +84,15 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
 )
 
-for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "((.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // []))[]?" "!json_file!" 2^>nul') do (
-    set "hook=%%i"
-    call :exec_single_hook
+set "HOOK_FAILED=0"
+for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "((.hooks[$ht] // .infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // .infrastructure.lifecycle_hooks[$ht] // []))[]?" "!json_file!" 2^>nul') do (
+    if "!HOOK_FAILED!"=="0" (
+        set "hook=%%i"
+        call :exec_single_hook
+        if errorlevel 1 set "HOOK_FAILED=1"
+    )
 )
+if "!HOOK_FAILED!"=="1" exit /b 1
 exit /b 0
 
 :: ## exec_single_hook
@@ -82,8 +104,10 @@ if not "!first_char!"=="{" (
     if not "!raw_cmd!"=="" (
         echo Executing hook: !raw_cmd!
         pushd "!MANIFEST_DIR!"
-        call !raw_cmd!
+        cmd.exe /c "!raw_cmd!"
+        set "rc=!errorlevel!"
         popd
+        if not "!rc!"=="0" exit /b !rc!
     )
     exit /b 0
 )
@@ -152,6 +176,8 @@ if "!cmd!"=="" exit /b 0
 
 echo Executing hook '!name!' (in !hook_wd!): !cmd!
 pushd "!hook_wd!"
-call !cmd!
+cmd.exe /c "!cmd!"
+set "rc=!errorlevel!"
 popd
+if not "!rc!"=="0" exit /b !rc!
 exit /b 0

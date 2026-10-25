@@ -2,8 +2,9 @@
 :: # actions.cmd
 ::
 :: ## Overview
-:: Provides a unified interface for managing service states (start, stop, restart).
-:: 
+:: Provides a unified interface for managing service states (start, stop, restart,
+:: status, health, logs, down, uninstall-service, deprovision-db, export-state, import-state).
+::
 :: ## Usage
 :: Execute this script to perform lifecycle actions on background services.
 
@@ -54,19 +55,65 @@ if not defined LIBSCRIPT_ROOT_DIR (
     set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 set "action=%cmd%"
+if /i "!action!"=="deprovision-db" (
+    set "_db_json=%~2"
+    if "!_db_json!"=="" set "_db_json=libscript.json"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\deprovision_db.cmd" "!_db_json!"
+    exit /b !ERRORLEVEL!
+)
+if /i "!action!"=="export-state" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\export_db.cmd" "%~2" "%~3"
+    exit /b !ERRORLEVEL!
+)
+if /i "!action!"=="import-state" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\import_db.cmd" "%~2" "%~3"
+    exit /b !ERRORLEVEL!
+)
+if /i "!action!"=="prepare-storage" (
+    set "_ps_json=%~2"
+    if "!_ps_json!"=="" set "_ps_json=libscript.json"
+    for /f "tokens=1,2" %%M in ('jq -r "(.infrastructure.node.data_disks // [])[]? | \"\(.mount_path // \"/mnt/data\") \(.fstype // \"NTFS\")\"" "!_ps_json!" 2^>nul') do (
+        call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
+    )
+    exit /b 0
+)
+
 if /i "!action!"=="up" set "action=start"
 if /i "!action!"=="down" set "action=stop"
+if /i "!action!"=="uninstall-service" set "action=uninstall"
+
 set "skip_hooks=0"
-set "arg1=%~2"
-set "arg2=%~3"
-set "arg3=%~4"
-if /i "!arg1!"=="--no-hooks" (
-    set "skip_hooks=1"
-    set "arg1=!arg2!"
-    set "arg2=!arg3!"
-) else if /i "!arg2!"=="--no-hooks" (
-    set "skip_hooks=1"
-    set "arg2=!arg3!"
+set "remove_service=0"
+set "purge_data=0"
+set "remediate=0"
+set "verify_ingress=0"
+set "public_url="
+set "arg1="
+
+for %%A in (%2 %3 %4 %5 %6 %7 %8 %9) do (
+    set "_ca=%%~A"
+    if /i "!_ca!"=="--no-hooks" (
+        set "skip_hooks=1"
+    ) else if /i "!_ca!"=="--remove" (
+        set "remove_service=1"
+    ) else if /i "!_ca!"=="--uninstall" (
+        set "remove_service=1"
+    ) else if /i "!_ca!"=="--purge-data" (
+        set "purge_data=1"
+    ) else if /i "!_ca!"=="--remediate" (
+        set "remediate=1"
+    ) else if /i "!_ca!"=="--verify-ingress" (
+        set "verify_ingress=1"
+    ) else if /i "!_ca:~0,13!"=="--public-url=" (
+        set "public_url=!_ca:~13!"
+        set "verify_ingress=1"
+    ) else if "!arg1!"=="" (
+        set "arg1=!_ca!"
+    )
+)
+
+if /i "!action!"=="stop" (
+    if "!remove_service!"=="1" set "action=uninstall"
 )
 
 set "is_json=0"
@@ -89,69 +136,118 @@ if "!is_json!"=="1" (
     if "!skip_hooks!"=="0" (
         if /i "!action!"=="start" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
-            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
-            )
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
-        )
-        if /i "!action!"=="up" (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
-            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
-            )
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
+            if errorlevel 1 exit /b 1
         )
         if /i "!action!"=="stop" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_stop"
         )
-        if /i "!action!"=="down" (
+        if /i "!action!"=="uninstall" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_stop"
         )
     )
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
-    for /f "tokens=1,2 delims= " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
-        set "pkg=%%A"
-        set "ver=%%B"
-        if "!ver!"=="null" set "ver=latest"
-        set "LIBSCRIPT_INTERNAL_START=1"
-        start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
+    if /i not "!action!"=="uninstall" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
+        for /f "tokens=1,2 delims=	 " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
+            set "pkg=%%A"
+            set "ver=%%B"
+            if "!ver!"=="null" set "ver=latest"
+            set "LIBSCRIPT_INTERNAL_START=1"
+            if /i "!action!"=="health" (
+                call "%~f0" !action! !pkg! !ver!
+                if errorlevel 1 (
+                    if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
+                    exit /b 1
+                )
+            ) else if /i "!action!"=="start" (
+                if /i "!pkg!"=="postgres" (
+                    call "%~f0" !action! !pkg! !ver!
+                ) else if /i "!pkg!"=="postgresql" (
+                    call "%~f0" !action! !pkg! !ver!
+                ) else if /i "!pkg!"=="mariadb" (
+                    call "%~f0" !action! !pkg! !ver!
+                ) else if /i "!pkg!"=="mysql" (
+                    call "%~f0" !action! !pkg! !ver!
+                ) else if /i "!pkg!"=="valkey" (
+                    call "%~f0" !action! !pkg! !ver!
+                ) else if /i "!pkg!"=="redis" (
+                    call "%~f0" !action! !pkg! !ver!
+                ) else (
+                    start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
+                )
+            ) else (
+                start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
+            )
+        )
+        if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
     )
-    if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
-    
+
     if /i "!action!"=="start" (
+        if "!skip_hooks!"=="0" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+                if errorlevel 1 exit /b 1
+            )
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
+            if errorlevel 1 exit /b 1
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
+            if errorlevel 1 exit /b 1
+        )
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        if errorlevel 1 exit /b 1
         jq -e ".ingress != null" "!json_file!" >nul 2>&1
         if not errorlevel 1 (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
         )
         if "!skip_hooks!"=="0" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_start"
-        )
-    ) else if /i "!action!"=="up" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
-        jq -e ".ingress != null" "!json_file!" >nul 2>&1
-        if not errorlevel 1 (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
-        )
-        if "!skip_hooks!"=="0" (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_start"
+            if errorlevel 1 exit /b 1
         )
     ) else if /i "!action!"=="stop" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        if "!purge_data!"=="1" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\deprovision_db.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\deprovision_db.cmd" "!json_file!"
+            )
+        )
         if "!skip_hooks!"=="0" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_stop"
+            if errorlevel 1 exit /b 1
         )
-    ) else if /i "!action!"=="down" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+    ) else if /i "!action!"=="uninstall" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "uninstall" "!json_file!"
+        jq -e ".ingress != null" "!json_file!" >nul 2>&1
+        if not errorlevel 1 (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" remove-ingress "!json_file!" --reload
+        )
+        if "!purge_data!"=="1" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\deprovision_db.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\deprovision_db.cmd" "!json_file!"
+            )
+        )
         if "!skip_hooks!"=="0" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_stop"
         )
     ) else if /i "!action!"=="status" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
     ) else if /i "!action!"=="health" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
+        call :run_health_check
+        if errorlevel 1 (
+            if "!remediate!"=="1" (
+                echo [INFO] Health check failed for !json_file!; running auto-remediation...
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "stop" "!json_file!"
+                if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
+                    set "LIBSCRIPT_FORCE_SEED=1"
+                    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+                )
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "start" "!json_file!"
+                call :run_health_check
+                if errorlevel 1 exit /b 1
+            ) else (
+                exit /b 1
+            )
+        )
     ) else if /i "!action!"=="logs" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
     ) else if /i "!action!"=="restart" (
@@ -165,7 +261,6 @@ if "!is_json!"=="1" (
 
     exit /b 0
 ) else (
-    rem Support multiple specific services: libscript.cmd start caddy postgres
     :: ## loop_services
     :: Iterates through specified services and triggers execution.
     :loop_services
@@ -173,19 +268,27 @@ if "!is_json!"=="1" (
     if not "!pkg!"=="" (
         set "LIBSCRIPT_INTERNAL_START=1"
         set "STACK="
-        if /i "!action!"=="status" (
-            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
-        ) else if /i "!action!"=="health" (
-            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
-        ) else if /i "!action!"=="logs" (
-            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
-        ) else if /i "!pkg!"=="openedx" (
-            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
-        ) else (
-            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
-        )
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
         shift
         goto loop_services
     )
     exit /b 0
 )
+
+:: ## run_health_check
+:: Runs database, daemon, and hook health checks for the target manifest.
+:run_health_check
+set "_dm_flags="
+if "!verify_ingress!"=="1" set "_dm_flags=--verify-ingress"
+if not "!public_url!"=="" set "_dm_flags=!_dm_flags! --public-url=!public_url!"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\health_db.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\health_db.cmd" "!json_file!"
+    if errorlevel 1 exit /b 1
+)
+call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "health" "!json_file!" !_dm_flags!
+if errorlevel 1 exit /b 1
+if "!skip_hooks!"=="0" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "health"
+    if errorlevel 1 exit /b 1
+)
+exit /b 0

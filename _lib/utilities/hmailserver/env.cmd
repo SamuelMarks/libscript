@@ -55,7 +55,10 @@ goto :find_root
 if "%HMAILSERVER_SMTP_PORT%"=="" set "HMAILSERVER_SMTP_PORT=25"
 if "%HMAILSERVER_INSTALL_DIR%"=="" set "HMAILSERVER_INSTALL_DIR=%ProgramFiles(x86)%\hMailServer"
 if exist "%HMAILSERVER_INSTALL_DIR%\Bin" (
-    set "PATH=%HMAILSERVER_INSTALL_DIR%\Bin;%PATH%"
+    set "_CAND_P=%HMAILSERVER_INSTALL_DIR%\Bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 endlocal & (

@@ -306,3 +306,11 @@ exit /b 1
 :noop
 echo netctl is a native shell module. No installation or daemon management required.
 exit /b 0
+
+:: ## remove_ingress
+:: Removes reverse proxy ingress configuration for the specified manifest or domain on Windows.
+:remove_ingress
+set "_RMI_ARG=%~1"
+if "!_RMI_ARG!"=="" set "_RMI_ARG=libscript.json"
+if exist "%TEMP%\data\ingress\nginx.conf" del /f /q "%TEMP%\data\ingress\nginx.conf" >nul 2>&1
+exit /b 0

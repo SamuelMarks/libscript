@@ -60,7 +60,10 @@ if "%ANSIBLE_GALAXY_VERSION%"=="" (
     set "ANSIBLE_GALAXY_VERSION=latest"
 )
 
-set "PATH=%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "ANSIBLE_GALAXY_VERSION=%ANSIBLE_GALAXY_VERSION%"

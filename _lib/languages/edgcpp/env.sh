@@ -32,6 +32,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
+_EB_CALLER_THIS="${THIS_FILE}"
+_EB_CALLER_DIR="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 export LIBSCRIPT_ROOT_DIR
 
 _edg_ver="${EDGCPP_VERSION:-default}"
@@ -48,7 +55,7 @@ fi
 export EDGCPP_HOME="${_edg_prefix}"
 
 if [ -d "${_edg_prefix}/bin" ]; then
-  export PATH="${_edg_prefix}/bin:${PATH}"
+  libscript_path_prepend "${_edg_prefix}/bin"
 fi
 
 if [ -x "${_edg_prefix}/bin/cpfe" ]; then

@@ -144,7 +144,7 @@ if "%JQ_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading jq %JQ_VERSION% to %DOWNLOAD_DIR%\jq...
     if not exist "%DOWNLOAD_DIR%\jq" mkdir "%DOWNLOAD_DIR%\jq"
     if not "%JQ_DOWNLOAD_URL%"=="" (
-        curl -sSL "%JQ_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\jq\jq-%JQ_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%JQ_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\jq\jq-%JQ_VERSION%.zip"
     ) else (
         echo JQ_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -159,7 +159,7 @@ if /i "%JQ_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%JQ_INSTALL_METHOD%"=="system" (
-    winget install jq --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends jq
     exit /b !errorlevel!
 )
 if "%JQ_INSTALL_METHOD%"=="mise" ( mise install "jq@%JQ_VERSION%" & exit /b 0 )
@@ -179,7 +179,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\jq\jq-%JQ_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%JQ_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%JQ_DOWNLOAD_URL%" -o "%TEMP%\jq.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%JQ_DOWNLOAD_URL%" "%TEMP%\jq.zip"
         tar -xf "%TEMP%\jq.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for jq.

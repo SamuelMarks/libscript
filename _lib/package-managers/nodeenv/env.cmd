@@ -56,9 +56,15 @@ if "%NODEENV_VERSION%"=="" set "NODEENV_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if exist "%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/Scripts" (
-    set "PATH=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/Scripts;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/Scripts"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 ) else if exist "%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin" (
-    set "PATH=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 endlocal & (

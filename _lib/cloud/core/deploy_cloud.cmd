@@ -53,6 +53,10 @@ goto :find_root
 
 set "IS_TPU=0"
 set "SHARED_STORAGE=0"
+set "SKIP_INFRA=0"
+set "SKIP_PREPARE=0"
+set "SKIP_VERIFY=0"
+set "DEPS_FLAGS="
 
 set "P1="
 set "P2="
@@ -78,6 +82,36 @@ if /i "!arg!"=="--accelerator" (
 )
 if /i "!arg!"=="--shared-storage" (
     set "SHARED_STORAGE=1"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--skip-infra" (
+    set "SKIP_INFRA=1"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--skip-prepare" (
+    set "SKIP_PREPARE=1"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--skip-verify" (
+    set "SKIP_VERIFY=1"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--force-reinstall" (
+    set "DEPS_FLAGS=!DEPS_FLAGS! --force-reinstall"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--force-rebuild" (
+    set "DEPS_FLAGS=!DEPS_FLAGS! --force-rebuild"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--dry-run" (
+    set "DRY_RUN=true"
     shift
     goto :arg_loop
 )
@@ -231,7 +265,7 @@ if not "!CMD_TO_CHECK!"=="" (
 call :log "INFRA" "Provisioning Network and Compute..."
 
 if "!PROVIDER!"=="azure" (
-    call :retry az group create --name "!RG!" --location "!LOC!"
+    call :retry "!CLI!" group ensure "!RG!" --location "!LOC!"
     call :record_state "AZURE_RG" "!RG!"
     call :retry "!CLI!" network create "!NODE!-vnet" "!RG!" --location "!LOC!"
     call :record_state "AZURE_VNET" "!NODE!-vnet"
@@ -420,7 +454,7 @@ if "!IS_TPU!"=="1" (
     call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/_lib/databases/provision_db.sh libscript.json"
     call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
 ) else (
-    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
+    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps!DEPS_FLAGS!"
     call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/_lib/databases/provision_db.sh libscript.json"
     call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
 )
@@ -428,18 +462,41 @@ if "!IS_TPU!"=="1" (
 :: -----------------------------------------------------------------------------
 :: Wait for Health
 :: -----------------------------------------------------------------------------
-call :log "HEALTH" "Polling application health (via libscript health)..."
+call :log "HEALTH" "Polling application health (via libscript health libscript.json)..."
+set "HC_URL="
+set "HC_EXPECT_JSON="
+if not "!JSON_FILE!"=="" if exist "!JSON_FILE!" (
+    for /f "delims=" %%u in ('jq -r "((.services // .infrastructure.services) | if type == \"object\" then [to_entries[].value] elif type == \"array\" then . else [] end) | map((.health_check // .healthcheck) | select(type == \"object\" and .url != null) | .url) | .[0] // empty" "!JSON_FILE!" 2^>nul') do set "HC_URL=%%u"
+    for /f "delims=" %%j in ('jq -r "((.services // .infrastructure.services) | if type == \"object\" then [to_entries[].value] elif type == \"array\" then . else [] end) | map((.health_check // .healthcheck) | select(type == \"object\" and .expect_json != null) | .expect_json) | .[0] // empty" "!JSON_FILE!" 2^>nul') do set "HC_EXPECT_JSON=%%j"
+)
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=12"
 :: ## health_loop
 :: Performs the health_loop operation and updates component state.
 :health_loop
+set "REMOTE_OK=0"
 if "!IS_TPU!"=="1" (
-    call "!TPU_CLI!" ssh "!NODE!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
+    call "!TPU_CLI!" ssh "!NODE!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health libscript.json" >nul 2>&1
+    if not errorlevel 1 set "REMOTE_OK=1"
 ) else (
-    call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
+    call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health libscript.json" >nul 2>&1
+    if not errorlevel 1 set "REMOTE_OK=1"
 )
-if %errorlevel% equ 0 (
+if "!REMOTE_OK!"=="1" if not "!HC_URL!"=="" (
+    if "!IS_TPU!"=="1" (
+        call "!TPU_CLI!" ssh "!NODE!" "curl -fsSL \"!HC_URL!\"" > "!LOG_FILE!.hc" 2>nul
+    ) else (
+        call "!CLI!" node exec "!NODE!" "!CTX!" "curl -fsSL \"!HC_URL!\"" > "!LOG_FILE!.hc" 2>nul
+    )
+    if errorlevel 1 (
+        set "REMOTE_OK=0"
+    ) else if not "!HC_EXPECT_JSON!"=="" (
+        jq -e "!HC_EXPECT_JSON!" "!LOG_FILE!.hc" >nul 2>&1
+        if errorlevel 1 set "REMOTE_OK=0"
+    )
+    if exist "!LOG_FILE!.hc" del /f /q "!LOG_FILE!.hc" >nul 2>&1
+)
+if "!REMOTE_OK!"=="1" (
     call :log "HEALTH" "Application stack is healthy."
     goto :health_ready
 )

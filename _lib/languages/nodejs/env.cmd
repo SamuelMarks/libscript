@@ -51,6 +51,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if "%NODEJS_VERSION%"=="" set "NODEJS_VERSION=lts"
 if "%LIBSCRIPT_HOME%"=="" (
@@ -62,7 +63,7 @@ set "_NODE_BIN=%LIBSCRIPT_BASE_DIR%\nodejs\%NODEJS_VERSION%\bin"
 set "_NODE_ROOT=%LIBSCRIPT_BASE_DIR%\nodejs\%NODEJS_VERSION%"
 set "_NEW_PATH=!PATH!"
 echo ";!_NEW_PATH!;" | findstr /I /C:";!_NODE_ROOT!;" >nul 2>&1
-if errorlevel 1 if exist "!_NODE_ROOT!\node.exe" set "_NEW_PATH=!_NODE_ROOT!;!_NEW_PATH!"
+if errorlevel 1 set "_NEW_PATH=!_NODE_ROOT!;!_NEW_PATH!"
 echo ";!_NEW_PATH!;" | findstr /I /C:";!_NODE_BIN!;" >nul 2>&1
 if errorlevel 1 set "_NEW_PATH=!_NODE_BIN!;!_NEW_PATH!"
 

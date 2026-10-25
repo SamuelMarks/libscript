@@ -54,6 +54,15 @@ while [ $# -gt 0 ]; do
     --target) TARGET="$2"; shift 2 ;;
     --snapshot) TAKE_SNAPSHOT=1; shift 1 ;;
     --paths) PATHS="$2"; shift 2 ;;
+    --provider) PROVIDER="$2"; shift 2 ;;
+    --rg) RG_CTX="$2"; shift 2 ;;
+    --export-state)
+      REMOTE_APP_DIR="$2"; LOCAL_DST="$3"; shift 3
+      CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER:-azure}/cli.sh"
+      "$CLI" node exec "$NODE" "${RG_CTX:-RG-ANALYTICS-PROD}" "cd $REMOTE_APP_DIR && sudo ~/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
+      "$CLI" node download "$NODE" "${RG_CTX:-RG-ANALYTICS-PROD}" "/tmp/libscript_export_stage/" "$LOCAL_DST/"
+      exit 0
+      ;;
     *) shift 1 ;;
   esac
 done

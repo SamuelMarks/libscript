@@ -59,5 +59,6 @@ if not "%CXX_BACKEND%"=="" if not "%CXX_BACKEND%"=="default" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\%CXX_BACKEND%\env.cmd"
     )
 )
-endlocal & set "PATH=%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin;%PATH%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "" "" "%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin"
+endlocal & set "PATH=%PATH%"
 exit /b 0

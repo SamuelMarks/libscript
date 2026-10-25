@@ -54,7 +54,10 @@ goto :find_root
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%GCC_CFLAGS%"=="" set "GCC_CFLAGS=-O2"
 endlocal & (
-    set "PATH=%LIBSCRIPT_HOME%\gcc\default\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\gcc\default\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
     set "CC=gcc"
     set "CXX=g++"
     set "HOSTCC=gcc"

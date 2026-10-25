@@ -2,10 +2,11 @@
 :: # service_install.cmd
 ::
 :: ## Overview
-:: Internal script for service_install on Windows. Registers or removes a Windows service.
+:: Internal script for service_install on Windows. Registers, overrides environment variables for,
+:: or removes a Windows service or fallback runner.
 ::
 :: ## Usage
-:: service_install.cmd <install|uninstall> <service_name> [exec_start] [description]
+:: service_install.cmd <install|uninstall|override-env> <service_name> [args...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,17 +52,29 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%~1"=="--uninstall" (
-    echo Uninstalling Windows service: %~2
-    sc.exe stop "%~2" >nul 2>&1
-    sc.exe delete "%~2"
-    exit /b 0
+if /i "%~1"=="--uninstall" (
+    call :libscript_uninstall_service "%~2"
+    exit /b !ERRORLEVEL!
 )
-if "%~1"=="uninstall" (
-    echo Uninstalling Windows service: %~2
-    sc.exe stop "%~2" >nul 2>&1
-    sc.exe delete "%~2"
-    exit /b 0
+if /i "%~1"=="uninstall" (
+    call :libscript_uninstall_service "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"==":libscript_uninstall_service" (
+    call :libscript_uninstall_service "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"=="override-env" (
+    call :libscript_service_override_env "%~2" "%~3" "%~4" "%~5" "%~6"
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"=="--override-env" (
+    call :libscript_service_override_env "%~2" "%~3" "%~4" "%~5" "%~6"
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"==":libscript_service_override_env" (
+    call :libscript_service_override_env "%~2" "%~3" "%~4" "%~5" "%~6"
+    exit /b !ERRORLEVEL!
 )
 
 set "_SERVICE_NAME=%~1"
@@ -74,11 +87,9 @@ if "%_SERVICE_NAME%"=="" (
     exit /b 1
 )
 
-if "%~5"=="uninstall" (
-    echo Uninstalling Windows service: %_SERVICE_NAME%
-    sc.exe stop "%_SERVICE_NAME%" >nul 2>&1
-    sc.exe delete "%_SERVICE_NAME%"
-    exit /b 0
+if /i "%~5"=="uninstall" (
+    call :libscript_uninstall_service "%_SERVICE_NAME%"
+    exit /b !ERRORLEVEL!
 )
 
 if "%_DESCRIPTION%"=="" set "_DESCRIPTION=%_SERVICE_NAME% service"
@@ -86,5 +97,53 @@ if "%_DESCRIPTION%"=="" set "_DESCRIPTION=%_SERVICE_NAME% service"
 echo Installing Windows service: %_SERVICE_NAME%
 sc.exe create "%_SERVICE_NAME%" binPath= "%_EXEC_START%" start= auto obj= LocalSystem
 sc.exe description "%_SERVICE_NAME%" "%_DESCRIPTION%"
+exit /b 0
 
+:: ## libscript_uninstall_service
+:: Stops and deletes a Windows service and cleans up any fallback PID/runner files.
+:libscript_uninstall_service
+set "_UN_SVC=%~1"
+if "!_UN_SVC!"=="" exit /b 1
+echo Uninstalling Windows service: !_UN_SVC!
+sc.exe stop "!_UN_SVC!" >nul 2>&1
+sc.exe delete "!_UN_SVC!" >nul 2>&1
+taskkill /fi "WINDOWTITLE eq !_UN_SVC!" /f >nul 2>&1
+set "_DATA_BASE=%TEMP%\data"
+if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
+if exist "!_DATA_BASE!\!_UN_SVC!\service.pid" del /f /q "!_DATA_BASE!\!_UN_SVC!\service.pid" >nul 2>&1
+if exist "!_DATA_BASE!\!_UN_SVC!\run_!_UN_SVC!.cmd" del /f /q "!_DATA_BASE!\!_UN_SVC!\run_!_UN_SVC!.cmd" >nul 2>&1
+exit /b 0
+
+:: ## libscript_service_override_env
+:: Persists environment variable overrides for a Windows service in the Registry and fallback .env.service file.
+:libscript_service_override_env
+set "_OVR_SVC=%~1"
+if "!_OVR_SVC!"=="" (
+    echo [ERROR] Usage: service_install.cmd override-env ^<service_name^> ^<KEY=VALUE...^> >&2
+    exit /b 1
+)
+set "_DATA_BASE=%TEMP%\data"
+if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
+if not exist "!_DATA_BASE!\!_OVR_SVC!" mkdir "!_DATA_BASE!\!_OVR_SVC!"
+set "_ENV_FILE=!_DATA_BASE!\!_OVR_SVC!\.env.service"
+type nul > "!_ENV_FILE!"
+set "_REG_MULTI="
+for %%K in ("%~2" "%~3" "%~4" "%~5") do (
+    set "_KV=%%~K"
+    if not "!_KV!"=="" (
+        echo !_KV!>> "!_ENV_FILE!"
+        for /f "tokens=1* delims==" %%A in ("!_KV!") do (
+            setx %%A "%%B" /M >nul 2>&1
+        )
+        if defined _REG_MULTI (
+            set "_REG_MULTI=!_REG_MULTI!\0!_KV!"
+        ) else (
+            set "_REG_MULTI=!_KV!"
+        )
+    )
+)
+reg query "HKLM\SYSTEM\CurrentControlSet\Services\!_OVR_SVC!" >nul 2>&1
+if not errorlevel 1 (
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\!_OVR_SVC!" /v Environment /t REG_MULTI_SZ /d "!_REG_MULTI!" /f >nul 2>&1
+)
 exit /b 0

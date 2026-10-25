@@ -40,7 +40,12 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-FORMAT="${1:-nginx}"
+if [ "${1:-}" = "remove-ingress" ] || [ "${1:-}" = "unroute" ]; then
+  shift
+  exec "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" remove-ingress "${1:-libscript.json}"
+fi
+
+FORMAT="${1:-nginx}" 
 COMP="${2:-postgres}"
 ROUTE_PATH="${3:-/}"
 OUT_FILE="${4:-}"

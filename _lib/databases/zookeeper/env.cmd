@@ -50,12 +50,18 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%ZOOKEEPER_VERSION%"=="" set "ZOOKEEPER_VERSION=latest"
+if "%ZOOKEEPER_CLIENT_PORT%"=="" set "ZOOKEEPER_CLIENT_PORT=2181"
+set "ZOOKEEPER_HOME=%LIBSCRIPT_HOME%\zookeeper\%ZOOKEEPER_VERSION%"
+set "ZOOKEEPER_DATA_DIR=%LIBSCRIPT_HOME%\zookeeper\data"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "zookeeper" "%ZOOKEEPER_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%ZOOKEEPER_VERSION%"=="" set "ZOOKEEPER_VERSION=latest"
-    if "%ZOOKEEPER_CLIENT_PORT%"=="" set "ZOOKEEPER_CLIENT_PORT=2181"
-    set "ZOOKEEPER_HOME=%LIBSCRIPT_HOME%\zookeeper\%ZOOKEEPER_VERSION%"
-    set "ZOOKEEPER_DATA_DIR=%LIBSCRIPT_HOME%\zookeeper\data"
-    set "PATH=%LIBSCRIPT_HOME%\zookeeper\%ZOOKEEPER_VERSION%\bin;%PATH%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "ZOOKEEPER_VERSION=%ZOOKEEPER_VERSION%"
+    set "ZOOKEEPER_CLIENT_PORT=%ZOOKEEPER_CLIENT_PORT%"
+    set "ZOOKEEPER_HOME=%ZOOKEEPER_HOME%"
+    set "ZOOKEEPER_DATA_DIR=%ZOOKEEPER_DATA_DIR%"
+    set "PATH=%PATH%"
 )
 exit /b 0

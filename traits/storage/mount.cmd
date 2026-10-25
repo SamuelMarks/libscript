@@ -2,10 +2,11 @@
 :: # mount.cmd
 ::
 :: ## Overview
-:: Idempotently formats unformatted disks via _lib\storage\format_fs.cmd and mounts volumes on Windows.
+:: Idempotently formats unformatted disks via _lib\storage\format_fs.cmd, supports
+:: --auto-data-disk discovery, and mounts volumes on Windows.
 ::
 :: ## Usage
-:: traits\storage\mount.cmd <device_or_disk> <mount_point> [fstype]
+:: traits\storage\mount.cmd <device_or_disk|--auto-data-disk> <mount_point> [fstype]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -54,9 +55,15 @@ goto :find_root
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
-set "DEVICE=%~1"
-set "MOUNT_POINT=%~2"
-set "FSTYPE=%~3"
+if /i "%~1"=="--auto-data-disk" (
+    set "DEVICE=auto"
+    set "MOUNT_POINT=%~2"
+    set "FSTYPE=%~3"
+) else (
+    set "DEVICE=%~1"
+    set "MOUNT_POINT=%~2"
+    set "FSTYPE=%~3"
+)
 if "%FSTYPE%"=="" set "FSTYPE=ntfs"
 
 if "%DEVICE%"=="" goto :help_err
@@ -69,11 +76,11 @@ exit /b 0
 :: ## help
 :: Prints usage help for mount.cmd.
 :help
-echo Usage: mount.cmd ^<device_or_disk^> ^<mount_point^> [fstype]
+echo Usage: mount.cmd ^<device_or_disk^|--auto-data-disk^> ^<mount_point^> [fstype]
 exit /b 0
 
 :: ## help_err
 :: Prints usage help and exits with code 1.
 :help_err
-echo Usage: mount.cmd ^<device_or_disk^> ^<mount_point^> [fstype] 1>&2
+echo Usage: mount.cmd ^<device_or_disk^|--auto-data-disk^> ^<mount_point^> [fstype] 1>&2
 exit /b 1

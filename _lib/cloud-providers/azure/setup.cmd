@@ -3,10 +3,10 @@
 ::
 :: ## Overview
 :: Serves as the primary Windows setup entry point for the Azure Cloud Provider component.
-:: Supports both tool installation and Tier 3 Azure Managed Image upload/registration.
+:: Supports tool installation, cloud orchestration verbs, and Tier 3 Azure Managed Image upload/registration.
 ::
 :: ## Usage
-:: Call `setup.cmd [register-image <image_path> [storage_account] [container] [image_name]]` to manage Azure infrastructure.
+:: Call `setup.cmd [action] [args...]` to manage Azure infrastructure.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -52,7 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
 if "%~1"=="--help" (
     echo Usage: %~nx0 [register-image ^<image_path^> [storage_account] [container] [image_name]]
     echo Azure Cloud Provider setup and image registration.
@@ -68,6 +67,14 @@ set "ACTION=%~1"
 if /i "%ACTION%"=="register-image" goto do_register_image
 if /i "%ACTION%"=="--register-image" goto do_register_image
 if /i "%ACTION%"=="image" goto do_register_image
+
+for %%V in (group project network firewall node dns auth location) do (
+    if /i "%ACTION%"=="%%V" (
+        set "STACK="
+        call "!SCRIPT_DIR!\setup_generic.cmd" %*
+        exit /b !ERRORLEVEL!
+    )
+)
 
 call "%~dp0\..\..\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%

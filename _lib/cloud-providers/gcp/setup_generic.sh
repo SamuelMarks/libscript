@@ -76,6 +76,12 @@ resolve_exact_version() {
 }
 
 case "$ACTION" in
+  group|project)
+    SUBACTION=${1:-ensure}
+    PROJ=${2:-${GCP_PROJECT_ID:-default}}
+    printf '%s\n' "GCP project/group '$PROJ' ensured."
+    exit 0
+    ;;
   node)
     SUBACTION=${1:-}
     RESOURCE_NAME=${2:-}
@@ -183,10 +189,48 @@ case "$ACTION" in
           esac
         done
         ;;
+      ip)
+        ZONE=${3:-${GCP_ZONE:-}}
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "203.0.113.10"
+          exit 0
+        fi
+        gcloud compute instances describe "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
+        ;;
       exec)
         shift 2
-        if [ -z "$RESOURCE_NAME" ]; then printf '%s\n' "Usage: node exec <name> <cmd...>"; exit 1; fi
+        if [ $# -gt 1 ]; then shift; fi
+        if [ -z "$RESOURCE_NAME" ]; then printf '%s\n' "Usage: node exec <name> [zone] <cmd...>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Executing on $RESOURCE_NAME: $*"
+          exit 0
+        fi
         gcloud compute ssh "$RESOURCE_NAME" --command="$*"
+        ;;
+      sync)
+        ZONE=${3:-${GCP_ZONE:-}}
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Syncing LibScript to $RESOURCE_NAME"
+          exit 0
+        fi
+        gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$LIBSCRIPT_ROOT_DIR" "${RESOURCE_NAME}:~/libscript"
+        ;;
+      deploy|upload|scp)
+        ZONE=${3:-${GCP_ZONE:-}}; SRC=${4:-}; DST=${5:-}
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Uploading $SRC to $RESOURCE_NAME -> $DST"
+          exit 0
+        fi
+        gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$SRC" "${RESOURCE_NAME}:${DST}"
+        ;;
+      download|scp-from)
+        ZONE=${3:-${GCP_ZONE:-}}; SRC=${4:-}; DST=${5:-}
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Downloading $RESOURCE_NAME:$SRC -> $DST"
+          exit 0
+        fi
+        mkdir -p "$(dirname "$DST")"
+        gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "${RESOURCE_NAME}:${SRC}" "$DST"
         ;;
       *)
         printf '%s\n' "Unknown node sub-action: $SUBACTION"; exit 1

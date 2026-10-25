@@ -273,15 +273,11 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
     if [ ! -f "${WORDPRESS_WWWROOT}/index.php" ]; then
       printf '<?php\n// WordPress Bootstrap\n' | safe_tee "${WORDPRESS_WWWROOT}/index.php" >/dev/null
     fi
-  elif command -v libscript_download >/dev/null 2>&1; then
+  else
     tmp_wp=$(mktemp)
     libscript_download "${dl_url:-}" "${tmp_wp}" 2>/dev/null || libscript_download "https://wordpress.org/latest.tar.gz" "${tmp_wp}" 2>/dev/null || true
     safe_tar xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
     rm -f "${tmp_wp}"
-  elif command -v curl >/dev/null 2>&1; then
-    curl -sSL "${dl_url}" 2>/dev/null | safe_tar xz --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO- "${dl_url}" 2>/dev/null | safe_tar xz --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
   fi
 
   # Ensure authentic core structure exists
@@ -353,11 +349,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
     safe_mkdir -p "${WORDPRESS_WWWROOT}/wp-content/mu-plugins"
     dl_sqlite_url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
     tmp_sqlite=$(mktemp)
-    if command -v libscript_download >/dev/null 2>&1; then
-      libscript_download "${dl_sqlite_url}" "${tmp_sqlite}"
-    else
-      wget -qO "${tmp_sqlite}" "${dl_sqlite_url}" 2>/dev/null || true
-    fi
+    libscript_download "${dl_sqlite_url}" "${tmp_sqlite}" 2>/dev/null || true
     if [ -s "${tmp_sqlite}" ]; then
       priv unzip -q -o "${tmp_sqlite}" -d "${WORDPRESS_WWWROOT}/wp-content/plugins" 2>/dev/null || true
       safe_cp "${WORDPRESS_WWWROOT}/wp-content/plugins/sqlite-database-integration/db.copy" "${WORDPRESS_WWWROOT}/wp-content/db.php" 2>/dev/null || true
@@ -369,11 +361,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
     dl_pg_url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
     tmp_pg=$(mktemp)
-    if command -v libscript_download >/dev/null 2>&1; then
-      libscript_download "${dl_pg_url}" "${tmp_pg}"
-    else
-      wget -qO "${tmp_pg}" "${dl_pg_url}" 2>/dev/null || true
-    fi
+    libscript_download "${dl_pg_url}" "${tmp_pg}" 2>/dev/null || true
     if [ -s "${tmp_pg}" ]; then
       priv unzip -q -o "${tmp_pg}" -d "${WORDPRESS_WWWROOT}/wp-content" 2>/dev/null || true
       priv mv "${WORDPRESS_WWWROOT}/wp-content/postgresql-for-wordpress/pg4wp" "${WORDPRESS_WWWROOT}/wp-content/" 2>/dev/null || true

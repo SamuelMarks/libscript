@@ -55,7 +55,10 @@ if "%LIBSCRIPT_HOME%"=="" (
 if "%GO_PM_VERSION%"=="" (
     set "GO_PM_VERSION=latest"
 )
-set "PATH=%LIBSCRIPT_HOME%\go-pm\%GO_PM_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\go-pm\%GO_PM_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "GO_PM_VERSION=%GO_PM_VERSION%"

@@ -89,7 +89,7 @@ if /i "%ACTION%"=="-v" (
 )
 
 set "IS_CLOUD_VERB=0"
-for %%V in (auth location network node dns firewall ssh backup restore diff list-managed storage aws azure gcp hetzner proxmox cleanup setup deploy) do (
+for %%V in (auth location group project network node dns firewall ssh backup restore diff list-managed storage aws azure gcp hetzner proxmox cleanup setup deploy) do (
     if /i "%ACTION%"=="%%V" set "IS_CLOUD_VERB=1"
 )
 if "!IS_CLOUD_VERB!"=="1" (
@@ -512,7 +512,7 @@ if exist "!COMP_DIR!\service.cmd" (
     exit /b !errorlevel!
 )
 if exist "!COMP_DIR!\setup.cmd" (
-    call "!COMP_DIR!\setup.cmd" "!ACTION!"
+    call "!COMP_DIR!\setup.cmd" "!ACTION!" %1 %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
 exit /b 0
@@ -528,7 +528,7 @@ if /i not "!ACTION!"=="install" if /i not "!ACTION!"=="setup" (
     )
 )
 if exist "!COMP_DIR!\setup.cmd" (
-    call "!COMP_DIR!\setup.cmd" "!ACTION!"
+    call "!COMP_DIR!\setup.cmd" "!ACTION!" %1 %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
 echo Error: setup.cmd not found in !COMP_DIR! 1>&2

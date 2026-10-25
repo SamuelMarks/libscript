@@ -24,27 +24,29 @@ $ServerName = if ($env:DRUPAL_SERVER_NAME) { $env:DRUPAL_SERVER_NAME } else { "l
 $ListenPort = if ($env:DRUPAL_LISTEN) { $env:DRUPAL_LISTEN } else { "80" }
 $WebServer = if ($env:DRUPAL_WEBSERVER) { $env:DRUPAL_WEBSERVER } else { "iis" }
 
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$rootDir = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+$libDir = Join-Path $rootDir "_lib"
+
 Write-Host "Installing dependencies for Drupal ($WebServer)..."
 if (-not (Get-Command "php" -ErrorAction SilentlyContinue)) {
-    Write-Host "PHP not found. Attempting to install via Winget..."
-    winget install --silent --force --id=PHP.PHP --accept-package-agreements --accept-source-agreements
+    Write-Host "PHP not found. Delegating to LibScript php component..."
+    & (Join-Path $rootDir "libscript.cmd") install php latest
 }
 
 if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
-        Write-Host "MariaDB not found. Attempting to install via Winget..."
-        winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+        Write-Host "MariaDB not found. Delegating to LibScript mariadb component..."
+        & (Join-Path $rootDir "libscript.cmd") install mariadb latest
     }
 } elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
     if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
-        Write-Host "PostgreSQL not found. Attempting to install via Winget..."
-        winget install --silent --force --id=PostgreSQL.PostgreSQL --accept-package-agreements --accept-source-agreements
+        Write-Host "PostgreSQL not found. Delegating to LibScript postgres component..."
+        & (Join-Path $rootDir "libscript.cmd") install postgres latest
     }
 }
 
 if ($WebServer -eq "iis") {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-    $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib\")
     $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
     if (Test-Path $iisSetup) {
         Write-Host "Running IIS Setup..."
@@ -64,7 +66,7 @@ if (-not (Test-Path (Join-Path $WwwRoot "core"))) {
     $tmpExtDir = Join-Path $env:TEMP "dp_extract_$(Get-Random)"
     $dlUrl = "https://ftp.drupal.org/files/projects/drupal-$DrupalVersion.zip"
 
-    Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip
+    & (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
     New-Item -ItemType Directory -Force -Path $tmpExtDir | Out-Null
     Expand-Archive -Path $tmpZip -DestinationPath $tmpExtDir -Force
     Copy-Item -Path (Join-Path $tmpExtDir "drupal-$DrupalVersion\*") -Destination $WwwRoot -Recurse -Force
@@ -73,27 +75,11 @@ if (-not (Test-Path (Join-Path $WwwRoot "core"))) {
 }
 
 Write-Host "Configuring Database..."
+$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
 if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
-    try {
-        $mysqlCmd = "CREATE DATABASE IF NOT EXISTS `$DbName`; CREATE USER IF NOT EXISTS '$DbUser'@'localhost' IDENTIFIED BY '$DbPass'; GRANT ALL PRIVILEGES ON `$DbName`.* TO '$DbUser'@'localhost'; FLUSH PRIVILEGES;"
-        mysql -u root -e $mysqlCmd
-    } catch {
-        Write-Warning "Failed to automatically configure MariaDB. You may need to create the database manually."
-    }
+    & $provSchema --engine mysql --host 127.0.0.1 --port 3306 --schema $DbName --user $DbUser --password $DbPass
 } elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
-    try {
-        $dbExists = & psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$DbName'"
-        if (-not ($dbExists -match "1")) {
-            & psql -U postgres -c "CREATE DATABASE $DbName"
-        }
-        $userExists = & psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '$DbUser'"
-        if (-not ($userExists -match "1")) {
-            & psql -U postgres -c "CREATE USER $DbUser WITH PASSWORD '$DbPass'"
-        }
-        & psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $DbName TO $DbUser"
-    } catch {
-        Write-Warning "Failed to automatically configure PostgreSQL. You may need to create the database manually."
-    }
+    & $provSchema --engine postgres --host 127.0.0.1 --port 5432 --schema $DbName --user $DbUser --password $DbPass
 } elseif ($DbType -eq "sqlite") {
     $sqliteDir = Join-Path $WwwRoot "sites\default\files"
     if (-not (Test-Path $sqliteDir)) {

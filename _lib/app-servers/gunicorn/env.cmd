@@ -58,7 +58,10 @@ if "%GUNICORN_VERSION%"=="" set "GUNICORN_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if exist "%LIBSCRIPT_HOME%\gunicorn\%GUNICORN_VERSION%\Scripts" (
-    set "PATH=%LIBSCRIPT_HOME%\gunicorn\%GUNICORN_VERSION%\Scripts;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\gunicorn\%GUNICORN_VERSION%\Scripts"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 endlocal & (

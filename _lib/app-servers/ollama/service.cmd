@@ -2,10 +2,11 @@
 :: # service.cmd
 ::
 :: ## Overview
-:: Manages background service lifecycle operations (start, stop, status) for the ollama component.
+:: Manages background service lifecycle operations (start, stop, status, configure)
+:: and OLLAMA_MODELS directory configuration for the ollama component on Windows.
 ::
 :: ## Usage
-:: service.cmd
+:: service.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,4 +52,32 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
+call "!SCRIPT_DIR!\env.cmd"
+set "_ACT=%~1"
+if "!_ACT!"=="" set "_ACT=%ACTION%"
+if "!_ACT!"=="" set "_ACT=status"
+set "_SVC=%LIBSCRIPT_SERVICE_NAME%"
+if "!_SVC!"=="" set "_SVC=ollama"
+
+if /i "!_ACT!"=="start" call :configure_ollama_env
+if /i "!_ACT!"=="restart" call :configure_ollama_env
+if /i "!_ACT!"=="install-service" call :configure_ollama_env
+if /i "!_ACT!"=="configure" (
+    call :configure_ollama_env
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart "!_SVC!"
+    exit /b !ERRORLEVEL!
+)
+
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "!_ACT!" "!_SVC!"
+exit /b !ERRORLEVEL!
+
+:: ## configure_ollama_env
+:: Creates the OLLAMA_MODELS directory and persists the environment override.
+:configure_ollama_env
+if not exist "!OLLAMA_MODELS!" mkdir "!OLLAMA_MODELS!"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "OLLAMA_MODELS=!OLLAMA_MODELS!"
 exit /b 0

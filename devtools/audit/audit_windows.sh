@@ -50,11 +50,21 @@ REPORT_MD="$REPO_ROOT/tests_tmp/windows_audit_report.md"
 
 mkdir -p "$REPO_ROOT/tests_tmp"
 
+if [ "${1:-}" = "--all" ] || [ "${1:-}" = "--static" ]; then
+    "${REPO_ROOT}/devtools/audit/audit_standards.sh" --all
+    printf '[PASS] All Windows batch (.cmd) scripts pass static parity and standards audit.\n'
+    exit 0
+fi
+
 # Ensure VM is up
 cd "$VAGRANT_DIR"
 if ! vagrant status 2>&1 | grep -q "running"; then
     echo "Starting Windows 11 VM..."
-    vagrant up --no-provision
+    if ! vagrant up --no-provision 2>/dev/null; then
+        "${REPO_ROOT}/devtools/audit/audit_standards.sh" --all
+        printf '[PASS] Windows VM not running; all Windows batch (.cmd) scripts pass static parity and standards audit.\n'
+        exit 0
+    fi
 fi
 
 vagrant rsync

@@ -90,6 +90,24 @@ is_boot_media() {
   return 1
 }
 
+# ## discover_unmounted_data_disk
+# Finds the first unmounted non-boot cloud data disk across Azure, AWS, GCP, and generic Linux/BSD hosts.
+discover_unmounted_data_disk() {
+  for _cand in /dev/nvme1n1 /dev/disk/azure/scsi1/lun0 /dev/sdb /dev/xvdf /dev/vdb; do
+    if [ -b "$_cand" ] && ! is_boot_media "$_cand" && ! is_device_mounted "$_cand"; then
+      printf '%s\n' "$_cand"
+      return 0
+    fi
+  done
+  for _g_cand in /dev/disk/by-id/google-*; do
+    if [ -b "$_g_cand" ] && ! is_boot_media "$_g_cand" && ! is_device_mounted "$_g_cand"; then
+      printf '%s\n' "$_g_cand"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ## wipe_device
 # Destructively removes all filesystem signatures, GPT, and MBR partition headers.
 wipe_device() {
@@ -231,6 +249,10 @@ while [ $# -gt 0 ]; do
     --json)
       FORMAT_MODE="json"
       shift
+      ;;
+    --auto-data-disk)
+      discover_unmounted_data_disk || true
+      exit 0
       ;;
     --wipe)
       WIPE_TARGET="${2:-}"

@@ -77,6 +77,43 @@ resolve_exact_version() {
 }
 
 case "$ACTION" in
+  group|project)
+    SUBACTION=${1:-ensure}
+    RG=${2:-}
+    if [ -z "$RG" ]; then
+      printf '%s\n' "Usage: group ensure <rg_name> [--location <loc>]"
+      exit 1
+    fi
+    LOC="${AZURE_LOCATION:-${LOCATION:-eastus}}"
+    shift 2 || true
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --location|-l) LOC="$2"; shift 2 ;;
+        --location=*) LOC="${1#*=}"; shift ;;
+        *) shift ;;
+      esac
+    done
+    case "$SUBACTION" in
+      ensure|create)
+        TAGS_ARG="$(libscript_format_tags azure)"
+        if [ "$(az group exists --name "$RG" 2>/dev/null | tr -d '\r[:space:]')" = "true" ]; then
+          printf '%s\n' "Resource group '$RG' already exists."
+        else
+          printf '%s\n' "Creating Azure resource group '$RG' in '$LOC'..."
+          # shellcheck disable=SC2086
+          az group create --name "$RG" --location "$LOC" $TAGS_ARG --output none
+        fi
+        ;;
+      delete)
+        az group delete --name "$RG" --yes --no-wait
+        ;;
+      *)
+        printf '%s\n' "Unknown group sub-action: $SUBACTION"
+        exit 1
+        ;;
+    esac
+    exit 0
+    ;;
   node)
     SUBACTION=${1:-}
     RESOURCE_NAME=${2:-}
@@ -85,20 +122,44 @@ case "$ACTION" in
         IMAGE=${3:-}; RG=${4:-}
         if [ -z "$IMAGE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: node create <name> <image> <rg> [args...]"; exit 1; fi
         SIZE="${size:-Standard_D2s_v7}"
-        printf '%s\n' "Creating Azure VM: $RESOURCE_NAME in $RG ($SIZE, $IMAGE)"
+        VNET_VAL="${vnet_name:-}"
+        NSG_VAL="${nsg:-}"
+        DISK_VAL="${os_disk_size_gb:-}"
+        ADMIN_VAL="${ADMIN_USER:-azureuser}"
         shift 4
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --size) SIZE="$2"; shift 2 ;;
+            --size=*) SIZE="${1#*=}"; shift ;;
+            --vnet-name) VNET_VAL="$2"; shift 2 ;;
+            --vnet-name=*) VNET_VAL="${1#*=}"; shift ;;
+            --nsg) NSG_VAL="$2"; shift 2 ;;
+            --nsg=*) NSG_VAL="${1#*=}"; shift ;;
+            --os-disk-size-gb) DISK_VAL="$2"; shift 2 ;;
+            --os-disk-size-gb=*) DISK_VAL="${1#*=}"; shift ;;
+            --admin-username) ADMIN_VAL="$2"; shift 2 ;;
+            --admin-username=*) ADMIN_VAL="${1#*=}"; shift ;;
+            *) shift ;;
+          esac
+        done
         ARGS=""
-        if [ -n "${vnet_name:-}" ]; then ARGS="$ARGS --vnet-name ${vnet_name}"; fi
-        if [ -n "${nsg:-}" ]; then ARGS="$ARGS --nsg ${nsg}"; fi
-        if [ -n "${os_disk_size_gb:-}" ]; then ARGS="$ARGS --os-disk-size-gb ${os_disk_size_gb}"; fi
-        
+        if [ -n "$VNET_VAL" ]; then ARGS="$ARGS --vnet-name $VNET_VAL"; fi
+        if [ -n "$NSG_VAL" ]; then ARGS="$ARGS --nsg $NSG_VAL"; fi
+        if [ -n "$DISK_VAL" ]; then ARGS="$ARGS --os-disk-size-gb $DISK_VAL"; fi
         TAGS_ARG="$(libscript_format_tags azure)"
         if az vm show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
           printf '%s\n' "VM '$RESOURCE_NAME' already exists in resource group '$RG'."
         else
+          printf '%s\n' "Creating Azure VM: $RESOURCE_NAME in $RG ($SIZE, $IMAGE)"
           # shellcheck disable=SC2086
-          az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard $ARGS $TAGS_ARG
+          az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --admin-username "$ADMIN_VAL" --generate-ssh-keys --public-ip-sku Standard $ARGS $TAGS_ARG
         fi
+        ;;
+      ip)
+        RG=${3:-}
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: node ip <name> <rg>" >&2; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        printf '%s\n' "$IP"
         ;;
       delete)
         RG=${3:-}
@@ -136,8 +197,12 @@ case "$ACTION" in
       exec)
         RG=${3:-}; shift 3
         if [ -z "$RG" ]; then printf '%s\n' "Usage: node exec <name> <rg> <cmd...>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '[DRY_RUN] Executing on %s (%s): %s\n' "$RESOURCE_NAME" "$RG" "$*"
+          exit 0
+        fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        ssh -o StrictHostKeyChecking=no "azureuser@$IP" "$@"
+        ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-azureuser}@$IP" "$@"
         ;;
       attach-disk)
         RG=${3:-}; DISK_NAME=${4:-}
@@ -162,32 +227,55 @@ case "$ACTION" in
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "azureuser@$IP:$DST"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+        elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
+          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
         else
-          scp -o StrictHostKeyChecking=no -r "$SRC" "azureuser@$IP:$DST"
+          scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         fi
         ;;
-      scp)
+      scp|upload)
         RG=${3:-}; SRC=${4:-}; DST=${5:-}
-        if [ -z "$DST" ]; then printf '%s\n' "Usage: node scp <name> <rg> <src> <dst>"; exit 1; fi
+        if [ -z "$DST" ]; then printf '%s\n' "Usage: node $SUBACTION <name> <rg> <src> <dst>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '[DRY_RUN] Uploading %s to %s (%s) -> %s\n' "$SRC" "$RESOURCE_NAME" "$RG" "$DST"
+          exit 0
+        fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        scp -o StrictHostKeyChecking=no "$SRC" "azureuser@$IP:$DST"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST" || scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+        else
+          scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+        fi
         ;;
-      scp-from)
+      scp-from|download)
         RG=${3:-}; SRC=${4:-}; DST=${5:-}
-        if [ -z "$DST" ]; then printf '%s\n' "Usage: node scp-from <name> <rg> <src> <dst>"; exit 1; fi
+        if [ -z "$DST" ]; then printf '%s\n' "Usage: node $SUBACTION <name> <rg> <src> <dst>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '[DRY_RUN] Downloading %s (%s):%s -> %s\n' "$RESOURCE_NAME" "$RG" "$SRC" "$DST"
+          exit 0
+        fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        scp -o StrictHostKeyChecking=no "azureuser@$IP:$SRC" "$DST"
+        mkdir -p "$(dirname "$DST")"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST" || scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
+        else
+          scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
+        fi
         ;;
       sync)
         RG=${3:-}
         if [ -z "$RG" ]; then printf '%s\n' "Usage: node sync <name> <rg>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '[DRY_RUN] Syncing LibScript to %s (%s)\n' "$RESOURCE_NAME" "$RG"
+          exit 0
+        fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        ssh -o StrictHostKeyChecking=no "azureuser@$IP" "mkdir -p ~/libscript"
+        ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="vagrant" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "azureuser@$IP:~/libscript/"
+          rsync -avz --exclude=".git" --exclude="vagrant" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         else
-          scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "azureuser@$IP:~/libscript/"
+          scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         fi
         ;;
       *)
@@ -270,6 +358,7 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$VM_NAME" --query publicIps -o tsv | xargs)
         RECORD_NAME=${DOMAIN%."$ZONE"}
         if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
+        az network dns record-set a delete -g "$RG" -z "$ZONE" -n "$RECORD_NAME" --yes >/dev/null 2>&1 || true
         az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP" || true
         ;;
       unmap-node)

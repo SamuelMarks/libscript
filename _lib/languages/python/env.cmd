@@ -49,12 +49,26 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
-if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.11.9"
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"
 ) else (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
+)
+if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=latest"
+if /i "%PYTHON_VERSION%"=="latest" (
+    if exist "%LIBSCRIPT_BASE_DIR%\python\default" (
+        set "PYTHON_VERSION=default"
+    ) else if exist "%LIBSCRIPT_BASE_DIR%\python\latest" (
+        set "PYTHON_VERSION=latest"
+    ) else if exist "%LIBSCRIPT_BASE_DIR%\python\3.12" (
+        set "PYTHON_VERSION=3.12"
+    ) else if exist "%LIBSCRIPT_BASE_DIR%\python\3.11.9" (
+        set "PYTHON_VERSION=3.11.9"
+    ) else (
+        set "PYTHON_VERSION=3.12"
+    )
 )
 set "PYTHONHOME=%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%"
 set "_NEW_PATH=!PATH!"
@@ -63,7 +77,7 @@ if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!\Scripts;!_NEW_PATH!"
 echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!\bin;" >nul 2>&1
 if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!\bin;!_NEW_PATH!"
 echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!;" >nul 2>&1
-if errorlevel 1 if exist "!PYTHONHOME!\python.exe" set "_NEW_PATH=!PYTHONHOME!;!_NEW_PATH!"
+if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!;!_NEW_PATH!"
 
 set "_NEW_PYPATH=!PYTHONPATH!"
 echo ";!_NEW_PYPATH!;" | findstr /I /C:";!PYTHONHOME!\Lib\site-packages;" >nul 2>&1

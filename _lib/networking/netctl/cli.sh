@@ -78,6 +78,86 @@ EOF
   exit 1
 }
 
+# ## netctl_reload_proxy
+# Reloads the active web proxy server abstractly via _lib/_common/service.sh.
+netctl_reload_proxy() {
+  _nrp_fmt="${1:-nginx}"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+  fi
+  case "$_nrp_fmt" in
+    nginx)
+      if command -v nginx >/dev/null 2>&1; then
+        nginx -s reload >/dev/null 2>&1 || sudo nginx -s reload >/dev/null 2>&1 || libscript_service reload nginx >/dev/null 2>&1 || true
+      fi
+      ;;
+    caddy)
+      if command -v caddy >/dev/null 2>&1; then
+        libscript_service reload caddy >/dev/null 2>&1 || true
+      fi
+      ;;
+    apache|apache2|httpd)
+      libscript_service reload httpd >/dev/null 2>&1 || libscript_service reload apache2 >/dev/null 2>&1 || true
+      ;;
+  esac
+}
+
+# ## netctl_ensure_static_permissions
+# Ensures parent home/application directories have o+x traverse permissions and static_dir has o+rX.
+netctl_ensure_static_permissions() {
+  _nes_state="$1"
+  _nes_mdir="$2"
+  [ -f "$_nes_state" ] || return 0
+  if [ -n "${REMOTE_HOME:-}" ] && [ -d "${REMOTE_HOME}" ]; then
+    chmod o+x "${REMOTE_HOME}" 2>/dev/null || sudo chmod o+x "${REMOTE_HOME}" 2>/dev/null || true
+  fi
+  if [ -d "$_nes_mdir" ]; then
+    chmod o+x "$_nes_mdir" 2>/dev/null || sudo chmod o+x "$_nes_mdir" 2>/dev/null || true
+    _parent_d=$(dirname -- "$_nes_mdir")
+    [ -d "$_parent_d" ] && [ "$_parent_d" != "/" ] && { chmod o+x "$_parent_d" 2>/dev/null || sudo chmod o+x "$_parent_d" 2>/dev/null || true; }
+  fi
+  _static_targets=$(jq -r '.routes // {} | to_entries[]? | select(.value.type == "static" or .value.type == "spa") | .value.target // empty' "$_nes_state" 2>/dev/null || true)
+  if [ -n "$_static_targets" ]; then
+    printf '%s\n' "$_static_targets" | while IFS= read -r _st_dir; do
+      [ -n "$_st_dir" ] || continue
+      if [ -d "$_st_dir" ]; then
+        chmod -R o+rX "$_st_dir" 2>/dev/null || sudo chmod -R o+rX "$_st_dir" 2>/dev/null || true
+        _cur_p=$(dirname -- "$_st_dir")
+        while [ -n "$_cur_p" ] && [ "$_cur_p" != "/" ] && [ "$_cur_p" != "." ]; do
+          chmod o+x "$_cur_p" 2>/dev/null || sudo chmod o+x "$_cur_p" 2>/dev/null || true
+          _cur_p=$(dirname -- "$_cur_p")
+        done
+      fi
+    done
+  fi
+}
+
+# ## netctl_remove_manifest_ingress
+# Removes managed reverse-proxy virtual host configs for a libscript.json manifest and reloads the proxy.
+netctl_remove_manifest_ingress() {
+  _rmi_arg="${1:-libscript.json}"
+  _rmi_dom=""
+  _rmi_fmt="nginx"
+  if [ -f "$_rmi_arg" ] && command -v jq >/dev/null 2>&1; then
+    _rmi_dom=$(jq -r '.ingress.domain // .domain // empty' "$_rmi_arg" 2>/dev/null || true)
+    _rmi_fmt=$(jq -r '.ingress.provider // .ingress.engine // "nginx"' "$_rmi_arg" 2>/dev/null || printf 'nginx')
+  else
+    _rmi_dom="$_rmi_arg"
+  fi
+  if [ -n "$_rmi_dom" ] && [ "$_rmi_dom" != "libscript.json" ]; then
+    for _vhost in "/etc/nginx/conf.d/${_rmi_dom}.conf" "/etc/nginx/sites-enabled/${_rmi_dom}" "/etc/nginx/sites-available/${_rmi_dom}" "/etc/httpd/conf.d/${_rmi_dom}.conf" "/etc/apache2/sites-enabled/${_rmi_dom}.conf"; do
+      if [ -f "$_vhost" ] || [ -L "$_vhost" ]; then
+        rm -f "$_vhost" 2>/dev/null || sudo rm -f "$_vhost" 2>/dev/null || true
+      fi
+    done
+  fi
+  netctl_reload_proxy "$_rmi_fmt"
+}
+
 # ## emit_by_format
 # Dispatches emission to the specified proxy format backend.
 emit_by_format() {
@@ -122,6 +202,17 @@ netctl_apply_manifest() {
   fi
 
   _manifest_dir=$(cd -- "$(dirname -- "$_json_file")" && pwd)
+
+  for _nc_ef in "${_manifest_dir}/.env" "${_manifest_dir}/.env.secrets" "${_manifest_dir}/.env.libscript"; do
+    if [ -f "$_nc_ef" ]; then
+      set -a
+      set +u
+      # shellcheck disable=SC1090,SC1091
+      . "$_nc_ef" 2>/dev/null || true
+      set -u
+      set +a
+    fi
+  done
 
   if [ -z "$_format" ]; then
     _format=$(jq -r '.ingress.provider // .ingress.engine // "nginx"' "$_json_file" 2>/dev/null || printf 'nginx')
@@ -203,24 +294,35 @@ netctl_apply_manifest() {
   if [ -n "$_out_file" ]; then
     mkdir -p "$(dirname -- "$_out_file")"
     emit_by_format "$_format" > "$_out_file"
+    if command -v python3 >/dev/null 2>&1; then python3 -c 'import os, sys; p = sys.argv[1]; s = open(p, "r", encoding="utf-8").read(); open(p, "w", encoding="utf-8").write(os.path.expandvars(s))' "$_out_file" 2>/dev/null || true; fi
   elif [ "$_do_reload" -eq 1 ]; then
     _conf_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/ingress"
     mkdir -p "$_conf_dir"
     _out_file="${_conf_dir}/${_format}.conf"
     emit_by_format "$_format" > "$_out_file"
+    if command -v python3 >/dev/null 2>&1; then python3 -c 'import os, sys; p = sys.argv[1]; s = open(p, "r", encoding="utf-8").read(); open(p, "w", encoding="utf-8").write(os.path.expandvars(s))' "$_out_file" 2>/dev/null || true; fi
+    netctl_ensure_static_permissions "$NETCTL_STATE_FILE" "$_manifest_dir"
     if [ "$_format" = "nginx" ] && command -v nginx >/dev/null 2>&1; then
-      if [ -d /etc/nginx/conf.d ] && [ -w /etc/nginx/conf.d ]; then
+      if [ -d /etc/nginx/conf.d ]; then
         _dom=$(jq -r '.domain // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
-        rm -f /etc/nginx/conf.d/libscript_ingress.conf
         if [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
-          cp "$_out_file" "/etc/nginx/conf.d/${_dom}.conf"
+          _dest="/etc/nginx/conf.d/${_dom}.conf"
         else
-          cp "$_out_file" /etc/nginx/conf.d/libscript_ingress.conf
+          _dest="/etc/nginx/conf.d/libscript_ingress.conf"
         fi
-        nginx -s reload >/dev/null 2>&1 || systemctl restart nginx >/dev/null 2>&1 || true
+        if [ -w /etc/nginx/conf.d ]; then
+          rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
+          cp "$_out_file" "$_dest"
+        elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+          sudo rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
+          sudo cp "$_out_file" "$_dest"
+        fi
+        netctl_reload_proxy "nginx"
       fi
     elif [ "$_format" = "caddy" ] && command -v caddy >/dev/null 2>&1; then
-      caddy reload --config "$_out_file" >/dev/null 2>&1 || true
+      caddy reload --config "$_out_file" >/dev/null 2>&1 || netctl_reload_proxy "caddy"
+    else
+      netctl_reload_proxy "$_format"
     fi
   else
     emit_by_format "$_format"
@@ -255,6 +357,21 @@ case "$1" in
   apply)
     shift
     netctl_apply_manifest "$@"
+    exit 0
+    ;;
+  ingress)
+    shift
+    netctl_apply_manifest "${1:-libscript.json}" --reload
+    exit 0
+    ;;
+  remove-ingress|unroute)
+    shift
+    netctl_remove_manifest_ingress "${1:-libscript.json}"
+    exit 0
+    ;;
+  reload)
+    shift
+    netctl_reload_proxy "${1:-nginx}"
     exit 0
     ;;
   emit)

@@ -50,7 +50,10 @@ goto :find_root
 :root_found
 
 IF "%MSYS2_VERSION%"=="" SET "MSYS2_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%\msys2\%MSYS2_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\msys2\%MSYS2_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "MSYS2_VERSION=%MSYS2_VERSION%"

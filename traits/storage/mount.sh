@@ -1,9 +1,11 @@
 #!/bin/sh
 # ## Overview
-# Idempotently formats unformatted block devices via _lib/storage/format_fs.sh and reconciles /etc/fstab or /etc/vfstab.
+# Idempotently formats unformatted block devices via _lib/storage/format_fs.sh, discovers
+# cloud data disks (--auto-data-disk), reconciles /etc/fstab or /etc/vfstab, mounts volumes,
+# and normalizes directory ownership.
 #
 # ## Usage
-# ./traits/storage/mount.sh <device_or_uuid> <mount_point> [fstype]
+# ./traits/storage/mount.sh <device_or_uuid|--auto-data-disk> <mount_point> [fstype]
 
 set -feu
 
@@ -33,7 +35,7 @@ export LIBSCRIPT_ROOT_DIR
 # ## print_usage
 # Prints usage instructions for traits/storage/mount.sh.
 print_usage() {
-  printf '%s\n' "Usage: $0 <device_or_uuid> <mount_point> [fstype]"
+  printf '%s\n' "Usage: $0 <device_or_uuid|--auto-data-disk> <mount_point> [fstype]"
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
@@ -41,11 +43,20 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-DEVICE="${1:-}"
-MOUNT_POINT="${2:-}"
-FSTYPE="${3:-ext4}"
+AUTO_DISCOVER=0
+if [ "${1:-}" = "--auto-data-disk" ]; then
+  AUTO_DISCOVER=1
+  shift
+  MOUNT_POINT="${1:-/mnt/data}"
+  FSTYPE="${2:-ext4}"
+  DEVICE=""
+else
+  DEVICE="${1:-}"
+  MOUNT_POINT="${2:-}"
+  FSTYPE="${3:-ext4}"
+fi
 
-if [ -z "$DEVICE" ] || [ -z "$MOUNT_POINT" ]; then
+if [ -z "$MOUNT_POINT" ] || { [ "$AUTO_DISCOVER" -eq 0 ] && [ -z "$DEVICE" ]; }; then
   print_usage >&2
   exit 1
 fi
@@ -58,6 +69,49 @@ else
   FSTAB_FILE="${SYSROOT%/}/etc/fstab"
 fi
 
+# ## normalize_mount_ownership
+# Ensures the mounted directory is owned by SERVICE_USER or REMOTE_USER when configured.
+normalize_mount_ownership() {
+  _nmo_dir="${SYSROOT%/}${MOUNT_POINT}"
+  mkdir -p "$_nmo_dir" 2>/dev/null || sudo mkdir -p "$_nmo_dir" 2>/dev/null || true
+  _nmo_user="${SERVICE_USER:-${REMOTE_USER:-${ADMIN_USER:-${SUDO_USER:-}}}}"
+  if [ -n "$_nmo_user" ] && id "$_nmo_user" >/dev/null 2>&1; then
+    _nmo_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_nmo_user}}"
+    chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || sudo chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || true
+  fi
+}
+
+# ## is_already_mounted
+# Checks whether MOUNT_POINT is already an active mountpoint.
+is_already_mounted() {
+  if command -v mountpoint >/dev/null 2>&1 && mountpoint -q "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null; then
+    return 0
+  fi
+  if [ -f /proc/mounts ] && grep -q " ${SYSROOT%/}${MOUNT_POINT} " /proc/mounts 2>/dev/null; then
+    return 0
+  fi
+  if command -v mount >/dev/null 2>&1 && mount | grep -q " on ${SYSROOT%/}${MOUNT_POINT} "; then
+    return 0
+  fi
+  return 1
+}
+
+if [ "$AUTO_DISCOVER" -eq 1 ]; then
+  if [ "$SYSROOT" = "/" ] && is_already_mounted; then
+    normalize_mount_ownership
+    printf '[INFO] %s is already mounted; ownership normalized.\n' "$MOUNT_POINT"
+    exit 0
+  fi
+  if [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/storage/disk_discovery.sh" ]; then
+    DEVICE=$("${LIBSCRIPT_ROOT_DIR}/_lib/storage/disk_discovery.sh" --auto-data-disk 2>/dev/null || true)
+  fi
+  if [ -z "$DEVICE" ]; then
+    normalize_mount_ownership
+    printf '[INFO] No unmounted physical data disk detected; prepared directory %s.\n' "$MOUNT_POINT"
+    exit 0
+  fi
+fi
+
 # ## check_existing_signature
 # Checks whether the block device already has a valid filesystem signature to prevent destructive formatting.
 check_existing_signature() {
@@ -68,22 +122,29 @@ check_existing_signature() {
   if command -v blkid >/dev/null 2>&1 && blkid "$dev_target" >/dev/null 2>&1; then
     return 0
   fi
+  if command -v fstyp >/dev/null 2>&1 && fstyp "$dev_target" >/dev/null 2>&1; then
+    return 0
+  fi
   return 1
 }
 
 # ## reconcile_fstab_entry
 # Writes persistent fstab or vfstab entry inside libscript-trait-storage markers idempotently.
 reconcile_fstab_entry() {
-  mkdir -p "${SYSROOT%/}/etc"
-  mkdir -p "${SYSROOT%/}${MOUNT_POINT}"
-  touch "$FSTAB_FILE"
+  mkdir -p "${SYSROOT%/}/etc" 2>/dev/null || sudo mkdir -p "${SYSROOT%/}/etc" 2>/dev/null || true
+  mkdir -p "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null || sudo mkdir -p "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null || true
+  touch "$FSTAB_FILE" 2>/dev/null || sudo touch "$FSTAB_FILE" 2>/dev/null || true
   marker_id="libscript-trait-storage:${MOUNT_POINT}"
   if ! grep -q "# BEGIN ${marker_id}" "$FSTAB_FILE" 2>/dev/null; then
-    {
-      printf '# BEGIN %s\n' "$marker_id"
-      printf '%s %s %s defaults,nofail 0 2\n' "$DEVICE" "$MOUNT_POINT" "$FSTYPE"
-      printf '# END %s\n' "$marker_id"
-    } >> "$FSTAB_FILE"
+    if [ -w "$FSTAB_FILE" ]; then
+      {
+        printf '# BEGIN %s\n' "$marker_id"
+        printf '%s %s %s defaults,nofail 0 2\n' "$DEVICE" "$MOUNT_POINT" "$FSTYPE"
+        printf '# END %s\n' "$marker_id"
+      } >> "$FSTAB_FILE"
+    else
+      sudo sh -c "printf '# BEGIN %s\n%s %s %s defaults,nofail 0 2\n# END %s\n' '$marker_id' '$DEVICE' '$MOUNT_POINT' '$FSTYPE' '$marker_id' >> '$FSTAB_FILE'" 2>/dev/null || true
+    fi
   fi
 }
 
@@ -98,8 +159,9 @@ fi
 reconcile_fstab_entry
 
 if [ "$SYSROOT" = "/" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ -b "$DEVICE" ]; then
-  if ! mount | grep -q " on ${MOUNT_POINT} "; then
-    mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || true
+  if ! is_already_mounted; then
+    mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || sudo mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || true
   fi
 fi
+normalize_mount_ownership
 printf '[INFO] Storage trait applied for %s -> %s (%s).\n' "$DEVICE" "$MOUNT_POINT" "$FSTYPE"

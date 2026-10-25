@@ -31,8 +31,15 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
+_EB_CALLER_THIS="${THIS_FILE}"
+_EB_CALLER_DIR="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 ANDROID_SDK_VERSION="${ANDROID_SDK_VERSION:-latest}"
 export ANDROID_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/android-sdk/${ANDROID_SDK_VERSION}"
 export ANDROID_SDK_ROOT="${ANDROID_HOME}"
-export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+libscript_path_prepend "${ANDROID_HOME}/cmdline-tools/latest/bin" "${ANDROID_HOME}/platform-tools"

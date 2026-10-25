@@ -53,7 +53,7 @@ find_bento_dir() {
     printf '%s\n' "$BENTO_DIR"
     return 0
   fi
-  for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "$HOME/bento" "$HOME/bento/bento" "/home/azureuser/bento/bento"; do
+  for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "$HOME/bento" "$HOME/bento/bento"; do
     if [ -f "$candidate/packer_templates/pkr-builder.pkr.hcl" ] || [ -f "$candidate/builds.yml" ]; then
       printf '%s\n' "$candidate"
       return 0

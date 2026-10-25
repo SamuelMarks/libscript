@@ -29,7 +29,17 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$CMD" = "install-deps" ]; then
-  json_file="${1:-libscript.json}"
+  json_file="libscript.json"
+  force_reinstall=0
+  force_rebuild=0
+  for _id_arg in "$@"; do
+    case "$_id_arg" in
+      --force-reinstall) force_reinstall=1 ;;
+      --force-rebuild) force_rebuild=1 ;;
+      -*) ;;
+      *) json_file="$_id_arg" ;;
+    esac
+  done
   if [ ! -f "$json_file" ]; then
     printf '%s\n' "Error: $json_file not found." >&2
     exit 1
@@ -53,8 +63,44 @@ if [ "$CMD" = "install-deps" ]; then
     fi
   fi
 
-  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_install"
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+    # shellcheck disable=SC1090,SC1091
+    . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+    unset SCRIPT_NAME || true
+    libscript_hydrate_manifest_env "$json_file" || true
+  fi
 
+    _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
+  if [ "$force_reinstall" -eq 1 ]; then
+    printf '[INFO] --force-reinstall: cleaning .venv and node_modules in %s...\n' "$_manifest_dir"
+    for _clean_dir in "$_manifest_dir" "$_manifest_dir"/*; do
+      [ -d "$_clean_dir" ] || continue
+      rm -rf "${_clean_dir}/.venv" "${_clean_dir}/node_modules"
+    done
+  fi
+  if [ "$force_rebuild" -eq 1 ]; then
+    printf '[INFO] --force-rebuild: cleaning dist, build, and .angular caches in %s...\n' "$_manifest_dir"
+    for _clean_dir in "$_manifest_dir" "$_manifest_dir"/*; do
+      [ -d "$_clean_dir" ] || continue
+      rm -rf "${_clean_dir}/dist" "${_clean_dir}/build" "${_clean_dir}/.angular"
+    done
+  fi
+
+  _data_disks=$(jq -r '(.infrastructure.node.data_disks // [])[]? | "\(.mount_path // "/mnt/data") \(.fstype // "ext4")"' "$json_file" 2>/dev/null || true)
+  if [ -n "$_data_disks" ] && [ -x "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" ]; then
+    printf '%s\n' "$_data_disks" | while read -r _dd_mp _dd_fs; do
+      [ -n "$_dd_mp" ] || continue
+      case "$_dd_mp" in
+        **) _dd_mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
+      esac
+      "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" --auto-data-disk "$_dd_mp" "${_dd_fs:-ext4}" || true
+    done
+  fi
+
+  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_install" 
+
+  unset SCRIPT_NAME || true
   deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
   if [ -z "$deps" ]; then
     printf '%s\n' "No dependencies found in $json_file."
@@ -104,6 +150,7 @@ if [ "$CMD" = "install-deps" ]; then
         done
       fi
     done < "$tmp_deps_env"
+    unset SCRIPT_NAME || true
     rm -f "$tmp_deps_env"
 
     # Persist resolved PATH idempotently into .env.libscript alongside manifest
@@ -113,6 +160,60 @@ if [ "$CMD" = "install-deps" ]; then
     grep -v "^PATH=" "$_env_out" > "${_env_out}.tmp" 2>/dev/null || true
     printf 'PATH="%s"\n' "$PATH" >> "${_env_out}.tmp"
     mv "${_env_out}.tmp" "$_env_out"
+    chmod 0644 "$_env_out" 2>/dev/null || true
+  fi
+
+  # Ensure project Python virtual environments exist and are usable by the service user before running install hooks & DB provisioning
+  _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
+  _py_ver=$(jq -r '(.deps.python // .dependencies.python // (.dependencies.runtime[]? | select(.name=="python") | .version) // "3.12")' "$json_file" 2>/dev/null | head -n 1 || printf '3.12')
+  [ -z "$_py_ver" ] || [ "$_py_ver" = "null" ] && _py_ver="3.12"
+  _target_user="${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-}}}"
+  _target_home="${REMOTE_HOME:-}"
+  if [ -n "$_target_user" ] && [ -z "$_target_home" ] && [ -d "/home/${_target_user}" ]; then
+    _target_home="/home/${_target_user}"
+  fi
+  if [ -n "$_target_home" ] && [ -d "$_target_home" ]; then
+    export UV_PYTHON_INSTALL_DIR="${_target_home}/.local/share/uv/python"
+    export UV_CACHE_DIR="${_target_home}/.cache/uv"
+  fi
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/python_env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/python_env.sh"
+    # shellcheck disable=SC1090,SC1091
+    . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/python_env.sh"
+    unset SCRIPT_NAME || true
+  fi
+  for _py_proj in "$_manifest_dir" "$_manifest_dir"/*; do
+    [ -d "$_py_proj" ] || continue
+    if [ -f "${_py_proj}/pyproject.toml" ] || [ -f "${_py_proj}/requirements.txt" ]; then
+      # If .venv/bin/python points into /root/... (inaccessible to non-root service user), recreate it cleanly
+      if [ -L "${_py_proj}/.venv/bin/python" ] || [ -L "${_py_proj}/.venv/bin/python3" ]; then
+        _py_target=$(readlink -f "${_py_proj}/.venv/bin/python3" 2>/dev/null || readlink "${_py_proj}/.venv/bin/python3" 2>/dev/null || true)
+        case "$_py_target" in
+          /root/*)
+            if [ -n "$_target_user" ] && [ "$_target_user" != "root" ]; then
+              rm -rf "${_py_proj}/.venv"
+            fi
+            ;;
+        esac
+      fi
+      if [ ! -x "${_py_proj}/.venv/bin/python" ]; then
+        if command -v uv >/dev/null 2>&1; then
+          HOME="${_target_home:-${HOME:-/root}}" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_py_proj}/.venv" "$_py_ver" 2>/dev/null || true
+          (cd "$_py_proj" && HOME="${_target_home:-${HOME:-/root}}" uv sync --python "$_py_ver" 2>/dev/null || HOME="${_target_home:-${HOME:-/root}}" uv sync 2>/dev/null || true)
+        elif type libscript_python_venv >/dev/null 2>&1; then
+          libscript_python_venv "${_py_proj}/.venv" "$_py_ver" 2>/dev/null || true
+        fi
+      fi
+      if [ -n "$_target_user" ] && id "$_target_user" >/dev/null 2>&1 && [ -d "${_py_proj}/.venv" ]; then
+        chown -R "${_target_user}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_target_user}}" "${_py_proj}/.venv" "${_target_home:-/home/$_target_user}/.local" "${_target_home:-/home/$_target_user}/.cache" 2>/dev/null || true
+      fi
+    fi
+  done
+
+  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "install"
+
+  if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" "$json_file"
   fi
 
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"

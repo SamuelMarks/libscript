@@ -222,7 +222,15 @@ case "$ACTION" in
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
       . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ollama}}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      service_name="${LIBSCRIPT_SERVICE_NAME:-ollama}"
+      if [ "$ACTION" = "start" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "up" ]; then
+        mkdir -p "${OLLAMA_MODELS:-/mnt/data/ollama_models}" 2>/dev/null || true
+        libscript_service_override_env "$service_name" "OLLAMA_MODELS=${OLLAMA_MODELS:-/mnt/data/ollama_models}" || true
+      fi
       libscript_service "$ACTION" "$service_name" "$@"
     else
       log_info "$ACTION not natively implemented for $OLLAMA_INSTALL_METHOD."

@@ -84,6 +84,15 @@ if errorlevel 1 (
 )
 echo [PASS] libscript.cmd train --dry-run
 
+echo {"infrastructure": {"hooks": {"db_migrate": [{"name": "bad_hook", "command": "exit /b 42"}]}}} > "!TEST_TMP!\bad_hook.json"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!TEST_TMP!\bad_hook.json" "db_migrate" >nul 2>&1
+if not errorlevel 1 (
+    echo [FAIL] run_hooks.cmd should fail on non-zero hook exit >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] run_hooks.cmd propagates non-zero hook exit code
+
 rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo === ALL WINDOWS FULLSTACK ORCHESTRATION TESTS PASSED ===
 exit /b 0

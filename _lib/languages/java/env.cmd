@@ -60,7 +60,10 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 
 set "JAVA_HOME=%LIBSCRIPT_BASE_DIR%\java\%JAVA_VERSION%"
-set "PATH=%JAVA_HOME%\bin;%PATH%"
+set "_CAND_P=%JAVA_HOME%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "JAVA_HOME=%JAVA_HOME%"

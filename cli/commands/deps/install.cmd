@@ -53,8 +53,19 @@ goto :find_root
 if not defined LIBSCRIPT_ROOT_DIR (
     set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
-set "json_file=%~2"
-if "!json_file!"=="" set "json_file=libscript.json"
+set "json_file=libscript.json"
+set "force_reinstall=0"
+set "force_rebuild=0"
+for %%A in (%2 %3 %4 %5 %6) do (
+    set "_ia=%%~A"
+    if /i "!_ia!"=="--force-reinstall" (
+        set "force_reinstall=1"
+    ) else if /i "!_ia!"=="--force-rebuild" (
+        set "force_rebuild=1"
+    ) else if not "!_ia!"=="" (
+        if not "!_ia:~0,1!"=="-" set "json_file=!_ia!"
+    )
+)
 if not exist "!json_file!" (
     echo Error: !json_file! not found. 1>&2
     exit /b 1
@@ -76,6 +87,11 @@ if "!LIBSCRIPT_SECRETS!"=="" (
             set "LIBSCRIPT_SECRETS=!SCRIPT_DIR!\secrets"
         )
     )
+)
+
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
 )
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_install"
@@ -125,7 +141,29 @@ if exist "!_ENV_OUT!" (
 )
 echo PATH=!PATH!>> "!_ENV_OUT!"
 
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "install"
+if errorlevel 1 exit /b 1
+
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+    if errorlevel 1 exit /b 1
+)
+
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_install"
+if errorlevel 1 exit /b 1
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
-endlocal & set "PATH=%PATH%"
+if errorlevel 1 exit /b 1
+endlocal & (
+    set "PATH=%PATH%"
+    set "NODEJS_VERSION=%NODEJS_VERSION%"
+    set "PYTHON_VERSION=%PYTHON_VERSION%"
+    set "PYTHONHOME=%PYTHONHOME%"
+    set "PYTHONPATH=%PYTHONPATH%"
+    set "VIRTUAL_ENV=%VIRTUAL_ENV%"
+    set "POSTGRES_VERSION=%POSTGRES_VERSION%"
+    set "POSTGRES_URL=%POSTGRES_URL%"
+    set "DATABASE_URL=%DATABASE_URL%"
+    set "DUCKDB_PATH=%DUCKDB_PATH%"
+    set "SQLITE_PATH=%SQLITE_PATH%"
+)
 exit /b 0

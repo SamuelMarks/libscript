@@ -55,19 +55,28 @@ goto :find_root
 :root_found
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-set "_EB_PKG=%PACKAGE_NAME%"
+set "_EB_PKG=%~1"
+if "!_EB_PKG!"=="" set "_EB_PKG=%PACKAGE_NAME%"
 if "!_EB_PKG!"=="" if not "!CALLER_FILE!"=="" (
     for %%D in ("!CALLER_FILE!") do set "_EB_DIR=%%~dpD"
     if "!_EB_DIR:~-1!"=="\" set "_EB_DIR=!_EB_DIR:~0,-1!"
     for %%N in ("!_EB_DIR!") do set "_EB_PKG=%%~nxN"
 )
-set "_EB_VER=%LIBSCRIPT_VERSION%"
+set "_EB_VER=%~2"
+if "!_EB_VER!"=="" set "_EB_VER=%LIBSCRIPT_VERSION%"
 if "!_EB_VER!"=="" set "_EB_VER=latest"
 set "_NEW_PATH=!PATH!"
-if not "!_EB_PKG!"=="" if /i not "!_EB_PKG!"=="_common" (
-    set "_CAND=!LIBSCRIPT_HOME!\!_EB_PKG!\!_EB_VER!\bin"
-    echo ";!_NEW_PATH!;" | findstr /I /C:";!_CAND!;" >nul 2>&1
-    if errorlevel 1 set "_NEW_PATH=!_CAND!;!_NEW_PATH!"
+if not "!_EB_PKG!"=="" if /i not "!_EB_PKG!"=="_common" if /i not "!_EB_PKG!"=="_noop" (
+    for %%C in ("!LIBSCRIPT_HOME!\!_EB_PKG!\default\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\!_EB_VER!\bin") do (
+        set "_CAND=%%~C"
+        echo ";!_NEW_PATH!;" | findstr /I /C:";!_CAND!;" >nul 2>&1
+        if errorlevel 1 set "_NEW_PATH=!_CAND!;!_NEW_PATH!"
+    )
+)
+if not "%~3"=="" (
+    set "_EXTRA=%~3"
+    echo ";!_NEW_PATH!;" | findstr /I /C:";!_EXTRA!;" >nul 2>&1
+    if errorlevel 1 set "_NEW_PATH=!_EXTRA!;!_NEW_PATH!"
 )
 
 endlocal & (

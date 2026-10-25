@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/libscript.schema.json",
+  "title": "LibScript Application & Stack Manifest",
+  "description": "Declarative manifest schema for full-stack application dependencies, databases, services, lifecycle hooks, ingress, and cloud infrastructure.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Application or stack identifier"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the application or stack manifest"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Primary domain name for ingress routing and DNS mapping"
+    },
+    "secrets": {
+      "type": "string",
+      "description": "Directory path or Vault/OpenBao URL for storing and retrieving generated secrets"
+    },
+    "secrets_dir": {
+      "type": "string",
+      "description": "Relative directory containing secret files transferred out-of-band during cloud deployment"
+    },
+    "deps": {
+      "type": "object",
+      "description": "Map of required LibScript component names to version strings or configuration objects",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": ["string", "object"],
+          "description": "Requested semantic version string or dependency override specification"
+        }
+      }
+    },
+    "databases": {
+      "type": ["object", "array"],
+      "description": "Declarative database and cache instances to initialize, seed, and verify during health checks",
+      "items": {
+        "type": "object",
+        "description": "Single database provisioning and health verification specification",
+        "properties": {
+          "engine": {
+            "type": "string",
+            "description": "Database engine identifier (postgres, postgresql, mysql, mariadb, sqlite, sqlite3, duckdb, valkey, redis)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Logical database name"
+          },
+          "db_name": {
+            "type": "string",
+            "description": "Alias for logical database name"
+          },
+          "user": {
+            "type": "string",
+            "description": "Database role or system owner user"
+          },
+          "password": {
+            "type": "string",
+            "description": "Database password (prefer password_env for sensitive credentials)"
+          },
+          "password_env": {
+            "type": "string",
+            "description": "Environment variable name from which to read the database password"
+          },
+          "host": {
+            "type": "string",
+            "description": "Database host address (defaults to 127.0.0.1)"
+          },
+          "port": {
+            "type": "integer",
+            "description": "Database TCP port"
+          },
+          "path": {
+            "type": "string",
+            "description": "Filesystem path for file-backed databases such as DuckDB or SQLite"
+          },
+          "db_path": {
+            "type": "string",
+            "description": "Alias for filesystem path of file-backed databases"
+          },
+          "url_env": {
+            "type": "string",
+            "description": "Environment variable name exported with the constructed connection URI (defaults to DATABASE_URL)"
+          },
+          "min_tables": {
+            "type": "integer",
+            "description": "Minimum number of user tables required in the database for health checks to pass"
+          },
+          "required_tables": {
+            "type": "array",
+            "description": "Array of table names that must exist and have non-zero row counts (or >= min_rows)",
+            "items": {
+              "type": "string",
+              "description": "Table name required to exist in the database"
+            }
+          },
+          "min_rows": {
+            "type": ["integer", "object"],
+            "description": "Minimum row count required for each table in required_tables (integer or table-to-count map)",
+            "additionalProperties": {
+              "type": "integer",
+              "description": "Minimum row count required for the named table"
+            }
+          },
+          "seed_file": {
+            "type": "string",
+            "description": "Relative or absolute path to a SQL seed script executed during provisioning"
+          },
+          "seed_dir": {
+            "type": "string",
+            "description": "Directory of SQL, CSV, or Parquet files imported during provisioning"
+          },
+          "migration_dir": {
+            "type": "string",
+            "description": "Directory of SQL migration files applied in order during provisioning"
+          },
+          "seed_command": {
+            "type": "string",
+            "description": "Custom shell command executed in the manifest directory to seed the database"
+          },
+          "health_command": {
+            "type": "string",
+            "description": "Custom shell command executed during health checks to verify database integrity"
+          }
+        }
+      }
+    },
+    "services": {
+      "type": ["object", "array"],
+      "description": "Declarative application service daemons managed by LibScript",
+      "items": {
+        "type": "object",
+        "description": "Service daemon runtime and health check specification",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique service identifier"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command executed to start the service daemon"
+          },
+          "working_dir": {
+            "type": "string",
+            "description": "Working directory for the service process relative to the manifest directory"
+          },
+          "user": {
+            "type": "string",
+            "description": "System user account under which the service runs"
+          },
+          "port": {
+            "type": "integer",
+            "description": "TCP port exposed by the service for fallback readiness checks"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables injected into the service runtime",
+            "patternProperties": {
+              "^[A-Z0-9_]+$": {
+                "type": "string",
+                "description": "Environment variable string value"
+              }
+            }
+          },
+          "env_files": {
+            "type": "array",
+            "description": "List of dotenv files loaded prior to starting the service",
+            "items": {
+              "type": "string",
+              "description": "Path to a dotenv file"
+            }
+          },
+          "health_check": {
+            "type": ["string", "object"],
+            "description": "Deep health check configuration supporting command execution, HTTP polling, and JSON payload assertions",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "HTTP/HTTPS endpoint URL polled during service health verification"
+              },
+              "command": {
+                "type": "string",
+                "description": "Shell command executed inside the service working directory to verify health"
+              },
+              "expect_status": {
+                "type": "integer",
+                "description": "Expected HTTP response status code (defaults to 200)"
+              },
+              "expect_json": {
+                "type": "string",
+                "description": "jq filter expression that must evaluate to true against the HTTP JSON response body"
+              },
+              "retries": {
+                "type": "integer",
+                "description": "Maximum number of HTTP polling retries before failing the health check"
+              },
+              "interval": {
+                "type": "integer",
+                "description": "Interval in seconds between HTTP health check retries"
+              },
+              "timeout": {
+                "type": "integer",
+                "description": "Timeout in seconds for each HTTP health check request"
+              }
+            }
+          },
+          "healthcheck": {
+            "type": ["string", "object"],
+            "description": "Alias for health_check supporting identical command, URL, and expect_json properties"
+          }
+        }
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Lifecycle hooks executed during installation, build, migration, seeding, service transitions, and health checks",
+      "properties": {
+        "pre_install": {
+          "type": "array",
+          "description": "Hooks executed prior to dependency installation",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "post_install": {
+          "type": "array",
+          "description": "Hooks executed after dependency installation completes",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "build": {
+          "type": "array",
+          "description": "Hooks executed to compile or bundle application assets before service startup",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "db_migrate": {
+          "type": "array",
+          "description": "Hooks executed after database provisioning to apply schema migrations and seeds",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "seed": {
+          "type": "array",
+          "description": "Hooks executed to populate initial or synthetic datasets",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "pre_start": {
+          "type": "array",
+          "description": "Hooks executed immediately before starting application service daemons",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "post_start": {
+          "type": "array",
+          "description": "Hooks executed after application service daemons have started",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "pre_stop": {
+          "type": "array",
+          "description": "Hooks executed prior to stopping application service daemons",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "post_stop": {
+          "type": "array",
+          "description": "Hooks executed after application service daemons have stopped",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        },
+        "health": {
+          "type": "array",
+          "description": "Hooks executed during 'libscript health' to run project-specific health assertions",
+          "items": {
+            "type": ["string", "object"],
+            "description": "Hook command string or structured hook object"
+          }
+        }
+      }
+    }
+  }
+}

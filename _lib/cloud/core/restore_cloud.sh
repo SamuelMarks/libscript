@@ -47,6 +47,15 @@ BACKUP_ID="latest"
 while [ $# -gt 0 ]; do
   case "$1" in
     --from-backup) BACKUP_ID="$2"; shift 2 ;;
+    --provider) PROVIDER="$2"; shift 2 ;;
+    --rg) RG_CTX="$2"; shift 2 ;;
+    --import-state)
+      REMOTE_APP_DIR="$2"; LOCAL_SRC="$3"; shift 3
+      CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER:-azure}/cli.sh"
+      "$CLI" node upload "$NODE" "${RG_CTX:-RG-ANALYTICS-PROD}" "$LOCAL_SRC/" "/tmp/libscript_import_stage/"
+      "$CLI" node exec "$NODE" "${RG_CTX:-RG-ANALYTICS-PROD}" "cd $REMOTE_APP_DIR && sudo ~/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
+      exit 0
+      ;;
     *) shift 1 ;;
   esac
 done

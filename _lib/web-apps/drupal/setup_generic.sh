@@ -73,15 +73,10 @@ if [ ! -d "${DRUPAL_WWWROOT}/core" ]; then
   printf '%s\n' "Downloading Drupal (${DRUPAL_VERSION}) to ${DRUPAL_WWWROOT}..."
   priv mkdir -p "${DRUPAL_WWWROOT}"
   dl_url="https://ftp.drupal.org/files/projects/drupal-${DRUPAL_VERSION}.tar.gz"
-
-  if command -v libscript_download >/dev/null 2>&1; then
-    tmp_dp=$(mktemp)
-    libscript_download "${dl_url:-}" "${tmp_dp}"
-    priv tar xzf "${tmp_dp}" --strip-components=1 -C "${DRUPAL_WWWROOT}"
-    rm -f "${tmp_dp}"
-  else
-    wget -qO- "${dl_url}" 2>/dev/null | priv tar xz --strip-components=1 -C "${DRUPAL_WWWROOT}" || curl -sSL "${dl_url}" | priv tar xz --strip-components=1 -C "${DRUPAL_WWWROOT}"
-  fi
+  tmp_dp=$(mktemp)
+  libscript_download "${dl_url:-}" "${tmp_dp}"
+  priv tar xzf "${tmp_dp}" --strip-components=1 -C "${DRUPAL_WWWROOT}"
+  rm -f "${tmp_dp}"
 fi
 
 DB_NAME="${DRUPAL_DB_NAME:-drupal}"
@@ -90,28 +85,20 @@ DB_PASS="${DRUPAL_DB_PASS:-drupal}"
 
 printf '%s\n' "Configuring Database..."
 if [ "${DRUPAL_DB_TYPE}" = "mariadb" ] || [ "${DRUPAL_DB_TYPE}" = "mysql" ]; then
-  if command -v mysql >/dev/null 2>&1; then
-    if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
-      priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-      priv mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-      priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
-      priv mysql -u root -e "FLUSH PRIVILEGES;"
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql --host "127.0.0.1" --port "3306" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
-    fi
   fi
 elif [ "${DRUPAL_DB_TYPE}" = "postgres" ] || [ "${DRUPAL_DB_TYPE}" = "postgresql" ] || [ "${DRUPAL_DB_TYPE}" = "pgsql" ]; then
-  if command -v psql >/dev/null 2>&1; then
-    if priv su - postgres -c "psql -c 'SELECT 1'" >/dev/null 2>&1; then
-      priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'\"" | grep -q 1 || priv su - postgres -c "createdb ${DB_NAME}"
-      priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv su - postgres -c "psql -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}'\""
-      priv su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER}\""
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine postgres --host "127.0.0.1" --port "5432" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
-    fi
   fi
 elif [ "${DRUPAL_DB_TYPE}" = "sqlite" ]; then
-  # For sqlite we just need to make sure directory is writable
   priv mkdir -p "${DRUPAL_WWWROOT}/sites/default/files"
 fi
 

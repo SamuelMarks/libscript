@@ -61,7 +61,10 @@ if "%GOOGLE_CLOUD_SDK_VERSION%"=="" (
 set "_GCLOUD_BIN=%LIBSCRIPT_HOME%\google-cloud-sdk\%GOOGLE_CLOUD_SDK_VERSION%\bin"
 echo ;%PATH%; | findstr /I /C:";%_GCLOUD_BIN%;" >nul 2>&1
 if errorlevel 1 (
-    set "PATH=%_GCLOUD_BIN%;%PATH%"
+    set "_CAND_P=%_GCLOUD_BIN%"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 if "%CLOUDSDK_PYTHON%"=="" (

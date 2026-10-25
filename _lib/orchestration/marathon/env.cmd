@@ -56,6 +56,9 @@ endlocal & (
     if "%MARATHON_HTTP_PORT%"=="" set "MARATHON_HTTP_PORT=8080"
     set "MARATHON_HOME=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%"
     set "MARATHON_URL=http://127.0.0.1:%MARATHON_HTTP_PORT%"
-    set "PATH=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 exit /b 0

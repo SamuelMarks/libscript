@@ -30,11 +30,18 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+_EB_CALLER_THIS="${THIS_FILE}"
+_EB_CALLER_DIR="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 
 SPACK_VERSION="${SPACK_VERSION:-latest}"
 export SPACK_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${SPACK_VERSION}"
-export PATH="$SPACK_ROOT/bin:${PATH}"
+libscript_path_prepend "$SPACK_ROOT/bin"
 if [ -s "$SPACK_ROOT/share/spack/setup-env.sh" ]; then
   if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
     # shellcheck disable=SC1091

@@ -56,6 +56,12 @@ if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%SQLITE_VERSION%"=="" set "SQLITE_VERSION=default"
 endlocal & (
     set "SQLITE_PREFIX=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
-    set "PATH=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin;%LIBSCRIPT_HOME%\sqlite\default\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\sqlite\default\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    set "_CAND_P=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 exit /b 0

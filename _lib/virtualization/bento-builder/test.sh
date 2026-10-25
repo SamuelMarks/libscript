@@ -89,7 +89,7 @@ for tool in xorriso genisoimage wimlib-imagex 7z cabextract; do
 done
 
 bento_dir=""
-for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "$HOME/bento" "$HOME/bento/bento" "/home/azureuser/bento/bento"; do
+for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "$HOME/bento" "$HOME/bento/bento"; do
   if [ -f "$candidate/packer_templates/pkr-builder.pkr.hcl" ]; then
     bento_dir="$candidate"
     break

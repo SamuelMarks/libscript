@@ -287,8 +287,14 @@ case "$CMD" in
   provision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" ;;
   deprovision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" ;;
   deploy-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" ;;
+  netctl) exec "$LIBSCRIPT_ROOT_DIR/_lib/networking/netctl/cli.sh" "$@" ;;
   search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" ;;
-  start|stop|status|health|logs|restart|up|down) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;
+  start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;
+  uninstall-service)
+    if [ $# -eq 0 ] || [ "${1:-}" = "libscript.json" ] || [ "${1##*.}" = "json" ] || [ "${1#--}" != "${1:-}" ]; then
+      . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh"
+    fi
+    ;;
   install-deps) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" ;;
   db-search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" ;;
   update-db) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" ;;

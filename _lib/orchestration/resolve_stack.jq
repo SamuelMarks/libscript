@@ -69,10 +69,10 @@ def topo_visit(node; dag):
 # Topological sort with multi-pass cycle resolution
 def topological_sort(graph; cyclic_edges):
   # Remove cyclic feedback edges to form a DAG
-  reduce (graph | keys)[] as $u (
+  (reduce (graph | keys)[] as $u (
     {};
     .[$u] = [ (graph[$u] // [])[] | select(($u + "->" + .) as $edge | cyclic_edges | index($edge) == null) ]
-  ) as $dag |
+  )) as $dag |
 
   # Standard Kahn's algorithm or DFS post-order
   reduce ($dag | keys)[] as $node (
@@ -122,7 +122,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   ] + $user_pkgs) | unique as $all_components |
 
   # Build dependency graph
-  reduce $all_components[] as $comp (
+  (reduce $all_components[] as $comp (
     {};
     .[$comp] = (
       [ $root.manifests[]? | select(.name == $comp) ] |
@@ -130,7 +130,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
         (.[0].dependencies?.build_deps // []) + (.[0].dependencies?.runtime_deps // [])
       else [] end
     )
-  ) as $dep_graph |
+  )) as $dep_graph |
 
   # Identify cycles with Tarjan's SCC
   (tarjan_scc($dep_graph) | map(select(length > 1))) as $cycles |
@@ -309,6 +309,19 @@ else
       empty
     end;
 
+  def extract_db_engine:
+    if type == "object" then
+      (if .engine != null or .type != null then
+        [{layer: "databases", type: "name", val: normalize_pkg_alias(.engine // .type), version: ((.version // "latest") | tostring)}]
+      else
+        [ to_entries[] | select((.value | type) == "object") | {layer: "databases", type: "name", val: normalize_pkg_alias(.value.engine // .value.type // "postgres"), version: ((.value.version // "latest") | tostring)} ]
+      end)
+    elif type == "array" then
+      [ .[] | select(type == "object") | {layer: "databases", type: "name", val: normalize_pkg_alias(.engine // .type // "postgres"), version: ((.version // "latest") | tostring)} ]
+    else
+      []
+    end;
+
   def resolve(reqs; state; manifests; os):
     if (reqs | length) == 0 then
       state
@@ -347,13 +360,14 @@ else
             null
           else
             (if $c.versions == null then ($req.version // "latest") else ($c.versions | max_satisfying(.; $req.version)) end) as $picked_version |
+            ([ (($c.dependencies?.runtime_deps // []) + ($c.dependencies?.build_deps // []))[]? | {layer: ($req.layer // "deps"), type: "name", val: normalize_pkg_alias(.), version: "latest"} ]) as $trans_reqs |
             (state |
              .selected += [$c + {version: $picked_version, override: $req.override, layer: $req.layer}] |
              .conflicts = ((.conflicts + ($c.conflicts // [])) | unique) |
              .provided = ((.provided + ($c.provides // [])) | unique) |
              .ports = ((.ports + ($req.ports // $c.ports // [])) | unique)
             ) as $next_state |
-            resolve($rest; $next_state; manifests; os)
+            resolve($trans_reqs + $rest; $next_state; manifests; os)
           end
         end
       )
@@ -363,6 +377,7 @@ else
   ($doc.install.dependencies.required // {}) as $req |
   ($doc.deps // {}) as $flat_deps |
   ($doc.dependencies // {}) as $struct_deps |
+  ($doc.databases // $doc.infrastructure.databases // null) as $decl_dbs |
 
   (
     [ ($flat_deps | if type == "object" then to_entries[] | {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (if .value == null or .value == "" then "latest" else (.value | tostring) end)} elif type == "array" then .[] | parse_dep_item("deps") else empty end) ] +
@@ -370,8 +385,9 @@ else
         ((.runtime // [])[]? | parse_dep_item("runtime")),
         ((.build // [])[]? | parse_dep_item("build")),
         ((.optional // [])[]? | parse_dep_item("optional")),
-        (to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional" and .key != "required") | if (.value | type) == "string" or (.value | type) == "number" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (.value | tostring)} else empty end)
+        (to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional" and .key != "required") | if (.value | type) == "string" or (.value | type) == "number" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (.value | tostring)} elif (.value | type) == "object" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: ((.value.version // "latest") | tostring)} else empty end)
       ) else empty end) ] +
+    ($decl_dbs | extract_db_engine) +
     [ ($req.databases[]?  | parse_dep_item("databases")) ] +
     [ ($req.servers[]?    | parse_dep_item("servers")) ] +
     [ ($req.toolchains[]? | parse_dep_item("toolchains")) ] +

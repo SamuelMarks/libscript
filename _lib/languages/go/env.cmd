@@ -59,7 +59,10 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 set "GOROOT=%LIBSCRIPT_BASE_DIR%\go\%GO_VERSION%"
-set "PATH=%GOROOT%\bin;%PATH%"
+set "_CAND_P=%GOROOT%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "GO_VERSION=%GO_VERSION%"

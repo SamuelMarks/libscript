@@ -50,6 +50,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if not "%WORDPRESS_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%WORDPRESS_LISTEN%"
 

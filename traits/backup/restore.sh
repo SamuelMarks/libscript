@@ -48,4 +48,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
+if [ -f "${1:-}" ] && case "${1:-}" in *.json) true ;; *) false ;; esac; then
+  exec "${LIBSCRIPT_ROOT_DIR}/_lib/databases/import_db.sh" "$1" "${2:-/tmp/libscript_import_stage}"
+fi
 verify_and_restore "${1:-postgres}" "${2:-}"

@@ -56,7 +56,10 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 set "XPK_DIR=%LIBSCRIPT_BASE_DIR%\xpk\%XPK_VERSION%"
-set "PATH=%XPK_DIR%\bin;%PATH%"
+set "_CAND_P=%XPK_DIR%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 set "PYTHONPATH=%XPK_DIR%;%PYTHONPATH%"
 
 endlocal & (

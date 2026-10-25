@@ -113,6 +113,17 @@ if exist "devtools\audit\audit_standards.cmd" (
     )
 )
 
+:: 4. ShellCheck (if available)
+where shellcheck >nul 2>&1
+if not errorlevel 1 (
+    echo Running shellcheck...
+    shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2296,SC2154,SC2034 libscript.sh
+    if errorlevel 1 (
+        echo [ERROR] ShellCheck failed.
+        exit /b 1
+    )
+)
+
 if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     echo Regenerating markdown readme files interpolating the json...
     call "devtools\docs-gen\generate_markdown_docs.cmd"

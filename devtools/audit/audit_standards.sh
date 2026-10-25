@@ -54,6 +54,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   exit 0
 fi
 
+ORIG_PWD=$(pwd)
 cd "$REPO_ROOT"
 
 # ## handle_interrupt
@@ -278,6 +279,10 @@ audit_single_file() {
 
   # Validate Windows batch headers, idempotency, docstrings, and safety in single awk pass
   if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
+    sh_equiv="${file%.*}.sh"
+    if [ ! -f "$sh_equiv" ]; then
+      log_failure "$file" "POSIX_PARITY" "Missing POSIX shell equivalent file ('$sh_equiv') for Windows batch script."
+    fi
     cmd_violations=$(awk '
       BEGIN {
         has_echo_off = 0; has_delayed = 0; has_this_file = 0;
@@ -369,21 +374,41 @@ audit_single_file() {
       ;;
   esac
 
-  # 8b. Verify _lib/*/*/env.cmd exports across endlocal boundary
+  # 8b. Verify _lib/*/*/env.cmd exports across endlocal boundary and idempotent PATH updates
   case "$file" in
     _lib/*/env.cmd|_lib/*/*/env.cmd)
       if grep -qi "setlocal" "$file" && ! grep -qi "endlocal" "$file"; then
         log_failure "$file" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; PATH and variable updates will be lost on return."
       fi
+      unguarded_cmd_path=$(grep -niE '^[[:space:]]*(endlocal[[:space:]]*&[[:space:]]*)?set[[:space:]]+"PATH=[^"]+;%PATH%"' "$file" 2>/dev/null || true)
+      if [ -n "$unguarded_cmd_path" ]; then
+        log_failure "$file" "ENV_PATH_IDEMPOTENCY" "Unguarded set \"PATH=...;%PATH%\" in env.cmd duplicates PATH entries on re-run: $unguarded_cmd_path"
+      fi
+      ;;
+    _lib/*/env.sh|_lib/*/*/env.sh)
+      unguarded_sh_path=$(grep -nE '^[[:space:]]*export[[:space:]]+PATH="[^"]+:\$\{?PATH(\:-)?\}?"' "$file" 2>/dev/null || true)
+      if [ -n "$unguarded_sh_path" ]; then
+        log_failure "$file" "ENV_PATH_IDEMPOTENCY" "Unguarded export PATH=\"...:\$PATH\" in env.sh duplicates PATH entries on re-run: $unguarded_sh_path"
+      fi
       ;;
   esac
 
-  # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, cli/)
+  # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, _lib/orchestration/, _lib/init-systems/, _lib/databases/, _lib/cloud/core/, cli/)
   case "$file" in
-    _lib/_common/*.sh|cli/*.sh|cli/*/*.sh|cli/*/*/*.sh)
-      interp_hits=$(grep -nE '^[[:space:]]*(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]' "$file" 2>/dev/null | grep -v 'libscript-allow-interp' || true)
+    _lib/_common/*.sh|_lib/orchestration/*.sh|_lib/init-systems/*.sh|_lib/databases/*.sh|_lib/cloud/core/*.sh|cli/*.sh|cli/*/*.sh|cli/*/*/*.sh)
+      interp_hits=$(grep -nE '^[[:space:]]*(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]' "$file" 2>/dev/null || true)
       if [ -n "$interp_hits" ]; then
         log_failure "$file" "ZERO_DEP_SUBSTRATE" "Core orchestration script invokes external interpreter inline: $interp_hits"
+      fi
+      ;;
+  esac
+
+  # 8d. Ban hardcoded user/project paths and .volta in core substrate (_lib/ and cli/)
+  case "$file" in
+    _lib/*|cli/*)
+      leak_hits=$(grep -nE '(pulse-query-backend|t1d-analytics-backend|/home/azureuser|\.volta/bin)' "$file" 2>/dev/null || true)
+      if [ -n "$leak_hits" ]; then
+        log_failure "$file" "NO_HARDCODED_USER_PATHS" "Hardcoded user/project path or .volta reference in substrate: $leak_hits"
       fi
       ;;
   esac
@@ -458,7 +483,11 @@ elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
   IFS="$OIFS"
 else
   for candidate in "$@"; do
-    [ -f "$candidate" ] && audit_single_file "$candidate"
+    if [ -f "$candidate" ]; then
+      audit_single_file "$candidate"
+    elif [ -f "${ORIG_PWD}/${candidate}" ]; then
+      audit_single_file "${ORIG_PWD}/${candidate}"
+    fi
   done
 fi
 

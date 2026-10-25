@@ -58,6 +58,9 @@ endlocal & (
     if "%K8S_MARATHON_BACKEND%"=="" set "K8S_MARATHON_BACKEND=k8s"
     set "K8S_MARATHON_HOME=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%"
     set "K8S_MARATHON_URL=http://127.0.0.1:%K8S_MARATHON_PORT%"
-    set "PATH=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 exit /b 0

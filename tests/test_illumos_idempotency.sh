@@ -55,7 +55,7 @@ fi
 printf '[PASS 1]   Initial build completed successfully.\n'
 
 # Capture sysroot mtime snapshot
-MTIME_PASS1=$(ls -lR "${TEST_SYSROOT}" | awk '{print $5, $6, $7, $8, $9}' | sum 2>/dev/null || cksum 2>/dev/null || true)
+MTIME_PASS1=$(find "${TEST_SYSROOT}" -type f 2>/dev/null | sort | sum 2>/dev/null || cksum 2>/dev/null || true)
 
 # --- PASS 2: Consecutive Idempotency Re-run ---
 printf '[PASS 2]   Executing consecutive idempotency verification pass...\n'

@@ -50,6 +50,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST%"=="" set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST=%TEMP%\serve-actix-diesel-auth-scaffold\serve-actix-diesel-auth-scaffold"
 if "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR%"=="" set "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR=%TEMP%\serve-actix-diesel-auth-scaffold\serve-actix-diesel-auth-scaffold"

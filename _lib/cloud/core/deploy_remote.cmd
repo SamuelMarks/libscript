@@ -90,6 +90,12 @@ if "%~1"=="--shared-db" (
     shift
     goto parse_args
 )
+if /i "%~1"=="--skip-infra" (shift & goto parse_args)
+if /i "%~1"=="--skip-prepare" (shift & goto parse_args)
+if /i "%~1"=="--skip-verify" (shift & goto parse_args)
+if /i "%~1"=="--force-reinstall" (shift & goto parse_args)
+if /i "%~1"=="--force-rebuild" (shift & goto parse_args)
+if /i "%~1"=="--dry-run" (shift & goto parse_args)
 echo [ERROR] Unknown argument: %~1
 exit /b 1
 
@@ -169,7 +175,7 @@ goto loop_apps
 if not "!HEALTH_APPS!"=="" (
     echo [INFO] Running health checks for backend services:!HEALTH_APPS!...
     for %%a in (!HEALTH_APPS!) do (
-        ssh "!TARGET_HOST!" "cd $HOME/apps/%%a && LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/init-systems/daemonize.sh status libscript.json"
+        ssh "!TARGET_HOST!" "cd $HOME/apps/%%a && LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json"
     )
 )
 echo [INFO] Deployment remote complete.
@@ -209,9 +215,7 @@ if "!needs_db!"=="1" (
     if "!SHARED_DB!"=="postgres" (
         set "safe_db_name=!aname:-=_!"
         echo [INFO] Ensuring DB !safe_db_name! exists on !TARGET_HOST!...
-        REM Note: ssh execution happens on the REMOTE host. We use grep since remote is likely Linux. 
-        REM If remote is Windows, this would need an OS abstraction layer, but sticking to PaaS Linux standard for now.
-        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; psql -lqt | cut -d \| -f 1 | grep -qw !safe_db_name! || createdb !safe_db_name!"
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; $HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema !safe_db_name! --user postgres --password postgres >/dev/null 2>&1 || createdb !safe_db_name! 2>/dev/null || true"
         ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/!safe_db_name!' $HOME/apps/!aname!/.env || echo DATABASE_URL=postgres://localhost:5432/!safe_db_name! >> $HOME/apps/!aname!/.env"
     )
 )
@@ -223,9 +227,7 @@ exit /b 0
 set "rdir=%~1"
 set "aname=%~2"
 echo [INFO] Executing lifecycle hooks for !aname!...
-ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then $HOME/libscript/libscript.sh install-deps; fi"
-ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/orchestration/run_hooks.sh libscript.json install; fi"
-ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/init-systems/daemonize.sh stop libscript.json && LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/init-systems/daemonize.sh start libscript.json; fi"
+ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then $HOME/libscript/libscript.sh install-deps libscript.json && $HOME/libscript/libscript.sh start libscript.json; fi"
 exit /b 0
 
 :: ## configure_routing

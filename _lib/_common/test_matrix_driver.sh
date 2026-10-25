@@ -147,9 +147,8 @@ matrix_driver_check_manifest_support() {
 matrix_driver_build_4stage_probe() {
   _target="$1"
   _guest_root="${2:-/opt/repos/libscript}"
-  printf 'export LIBSCRIPT_ROOT_DIR="%s"; timeout 600 "%s/libscript.sh" install "%s" && timeout 120 "%s/libscript.sh" test "%s" && "%s/libscript.sh" which "%s" latest >/dev/null 2>&1 || true; "%s/libscript.sh" env "%s" latest >/dev/null 2>&1 || true; "%s/libscript.sh" ls "%s" >/dev/null 2>&1 || true; timeout 600 "%s/libscript.sh" install "%s" && timeout 120 "%s/libscript.sh" test "%s"
-' 
-    "${_guest_root}" "${_guest_root}" "${_target}" "${_guest_root}" "${_target}" 
-    "${_guest_root}" "${_target}" "${_guest_root}" "${_target}" "${_guest_root}" "${_target}" 
+  printf 'export LIBSCRIPT_ROOT_DIR="%s"; timeout 600 "%s/libscript.sh" install "%s" && timeout 120 "%s/libscript.sh" test "%s" && "%s/libscript.sh" which "%s" latest >/dev/null 2>&1 || true; "%s/libscript.sh" env "%s" latest >/dev/null 2>&1 || true; "%s/libscript.sh" ls "%s" >/dev/null 2>&1 || true; timeout 600 "%s/libscript.sh" install "%s" && timeout 120 "%s/libscript.sh" test "%s"\n' \
+    "${_guest_root}" "${_guest_root}" "${_target}" "${_guest_root}" "${_target}" \
+    "${_guest_root}" "${_target}" "${_guest_root}" "${_target}" "${_guest_root}" "${_target}" \
     "${_guest_root}" "${_target}" "${_guest_root}" "${_target}"
 }

@@ -51,6 +51,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if "%EXIM_SMTP_PORT%"=="" set "EXIM_SMTP_PORT=25"
 if "%EXIM_RELAY_FROM_HOSTS%"=="" set "EXIM_RELAY_FROM_HOSTS=127.0.0.1"

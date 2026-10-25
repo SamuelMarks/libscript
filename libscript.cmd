@@ -167,6 +167,10 @@ if /i "%cmd%"=="list" ( call "!SCRIPT_DIR!\cli\commands\core\list.cmd" %* & exit
 if /i "%cmd%"=="search" ( call "!SCRIPT_DIR!\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="provision" ( call "!SCRIPT_DIR!\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deprovision" ( call "!SCRIPT_DIR!\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="netctl" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b !errorlevel!
+)
 if /i "%cmd%"=="deploy-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\deploy-remote.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="package-as" ( call "!SCRIPT_DIR!\cli\commands\packaging\package-as.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="install-deps" ( call "!SCRIPT_DIR!\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
@@ -199,10 +203,21 @@ if /i "%cmd%"=="env" (
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"
+if /i "%cmd%"=="status" set "is_docker_cmd=1"
+if /i "%cmd%"=="logs" set "is_docker_cmd=1"
 if /i "%cmd%"=="health" set "is_docker_cmd=1"
 if /i "%cmd%"=="restart" set "is_docker_cmd=1"
 if /i "%cmd%"=="up" set "is_docker_cmd=1"
 if /i "%cmd%"=="down" set "is_docker_cmd=1"
+if /i "%cmd%"=="deprovision-db" set "is_docker_cmd=1"
+if /i "%cmd%"=="export-state" set "is_docker_cmd=1"
+if /i "%cmd%"=="import-state" set "is_docker_cmd=1"
+if /i "%cmd%"=="prepare-storage" set "is_docker_cmd=1"
+if /i "%cmd%"=="uninstall-service" (
+    if "%~2"=="" set "is_docker_cmd=1"
+    if /i "%~2"=="libscript.json" set "is_docker_cmd=1"
+    echo %~2 | findstr /i "\.json$" >nul && set "is_docker_cmd=1"
+)
 
 if "!is_docker_cmd!"=="1" (
     if not "%LIBSCRIPT_INTERNAL_START%"=="1" (

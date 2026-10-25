@@ -56,6 +56,12 @@ endlocal & (
     if "%ANDROID_SDK_VERSION%"=="" set "ANDROID_SDK_VERSION=latest"
     set "ANDROID_HOME=%USERPROFILE%\.libscript\android-sdk\latest"
     set "ANDROID_SDK_ROOT=%USERPROFILE%\.libscript\android-sdk\latest"
-    set "PATH=%USERPROFILE%\.libscript\android-sdk\latest\cmdline-tools\latest\bin;%USERPROFILE%\.libscript\android-sdk\latest\platform-tools;%PATH%"
+    set "_CAND_P=%USERPROFILE%\.libscript\android-sdk\latest\platform-tools"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    set "_CAND_P=%USERPROFILE%\.libscript\android-sdk\latest\cmdline-tools\latest\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 exit /b 0

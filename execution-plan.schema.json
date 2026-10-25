@@ -330,6 +330,48 @@
               "type": "string",
               "description": "Relative or absolute path to an environment file"
             }
+          },
+          "port": {
+            "type": "integer",
+            "description": "Primary TCP port exposed by the service for fallback readiness polling"
+          },
+          "user": {
+            "type": "string",
+            "description": "System user account under which the service runs and owns stateful data"
+          },
+          "health_check": {
+            "type": ["string", "object"],
+            "description": "Declarative service health check command or HTTP/JSON verification specification",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "HTTP/HTTPS endpoint URL polled to verify service readiness"
+              },
+              "command": {
+                "type": "string",
+                "description": "Custom shell command executed in the service working directory to verify health"
+              },
+              "expect_status": {
+                "type": "integer",
+                "description": "Expected HTTP status code returned by the health check URL (defaults to 200)"
+              },
+              "expect_json": {
+                "type": "string",
+                "description": "jq boolean filter expression evaluated against the HTTP JSON response body"
+              },
+              "retries": {
+                "type": "integer",
+                "description": "Number of polling attempts before declaring the service unhealthy"
+              },
+              "interval": {
+                "type": "integer",
+                "description": "Delay in seconds between consecutive health check polling attempts"
+              },
+              "timeout": {
+                "type": "integer",
+                "description": "Per-request timeout in seconds when polling the health check URL"
+              }
+            }
           }
         }
       }
@@ -360,6 +402,50 @@
           "port": {
             "type": "integer",
             "description": "Database TCP port"
+          },
+          "path": {
+            "type": "string",
+            "description": "Filesystem path for embedded database engines such as DuckDB or SQLite"
+          },
+          "min_tables": {
+            "type": "integer",
+            "description": "Minimum number of user tables required in the database for health checks to pass"
+          },
+          "required_tables": {
+            "type": "array",
+            "description": "List of table names that must exist and contain rows for health checks to pass",
+            "items": {
+              "type": "string",
+              "description": "Required database table identifier"
+            }
+          },
+          "min_rows": {
+            "type": ["integer", "object"],
+            "description": "Minimum row count required across required_tables (integer or per-table map)",
+            "additionalProperties": {
+              "type": "integer",
+              "description": "Minimum row count for the specified table name"
+            }
+          },
+          "seed_file": {
+            "type": "string",
+            "description": "Path to a SQL script file executed during database provisioning"
+          },
+          "seed_dir": {
+            "type": "string",
+            "description": "Directory of SQL, CSV, or Parquet files imported during database provisioning"
+          },
+          "migration_dir": {
+            "type": "string",
+            "description": "Directory of SQL migration files applied in lexical order during provisioning"
+          },
+          "seed_command": {
+            "type": "string",
+            "description": "Custom shell command executed in the manifest directory to seed the database"
+          },
+          "health_command": {
+            "type": "string",
+            "description": "Custom shell command executed during health checks to validate database state"
           }
         }
       }
@@ -466,6 +552,40 @@
         "db_migrate": {
           "type": "array",
           "description": "Hooks executed to migrate database schemas",
+          "items": {
+            "type": "object",
+            "description": "Hook command specification",
+            "properties": {
+              "name": { "type": "string", "description": "Hook identifier" },
+              "command": { "type": "string", "description": "Shell command to execute" },
+              "working_dir": { "type": "string", "description": "Working directory for the hook" },
+              "condition": {
+                "type": "string",
+                "description": "Conditional guard (unless_exists, if_exists, unless_command)"
+              }
+            }
+          }
+        },
+        "seed": {
+          "type": "array",
+          "description": "Hooks executed to seed initial datasets into databases",
+          "items": {
+            "type": "object",
+            "description": "Hook command specification",
+            "properties": {
+              "name": { "type": "string", "description": "Hook identifier" },
+              "command": { "type": "string", "description": "Shell command to execute" },
+              "working_dir": { "type": "string", "description": "Working directory for the hook" },
+              "condition": {
+                "type": "string",
+                "description": "Conditional guard (unless_exists, if_exists, unless_command)"
+              }
+            }
+          }
+        },
+        "health": {
+          "type": "array",
+          "description": "Hooks executed during health checks to verify application and dataset integrity",
           "items": {
             "type": "object",
             "description": "Hook command specification",

@@ -59,5 +59,6 @@ if not "%CC_BACKEND%"=="" if not "%CC_BACKEND%"=="default" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\%CC_BACKEND%\env.cmd"
     )
 )
-endlocal & set "PATH=%LIBSCRIPT_HOME%\c\%C_VERSION%\bin;%PATH%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "" "" "%LIBSCRIPT_HOME%\c\%C_VERSION%\bin"
+endlocal & set "PATH=%PATH%"
 exit /b 0

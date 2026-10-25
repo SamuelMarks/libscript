@@ -60,7 +60,10 @@ if "%DASH_VERSION%"=="" (
     set "DASH_VERSION=latest"
 )
 
-set "PATH=%LIBSCRIPT_HOME%\dash\%DASH_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\dash\%DASH_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "DASH_VERSION=%DASH_VERSION%"

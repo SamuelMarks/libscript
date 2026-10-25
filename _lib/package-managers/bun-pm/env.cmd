@@ -60,12 +60,21 @@ if "%BUN_PM_VERSION%"=="" (
     set "BUN_PM_VERSION=latest"
 )
 
-set "PATH=%LIBSCRIPT_HOME%\bun-pm\%BUN_PM_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\bun-pm\%BUN_PM_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if exist "%~dp0..\..\languages\bun\env.cmd" (
     call "%~dp0..\..\languages\bun\env.cmd"
 ) else (
-    set "PATH=%LIBSCRIPT_HOME%\bun\latest\bin;%USERPROFILE%\.bun\bin;%PATH%"
+    set "_CAND_P=%USERPROFILE%\.bun\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    set "_CAND_P=%LIBSCRIPT_HOME%\bun\latest\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 endlocal & (

@@ -51,6 +51,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if "%WAITRESS_PORT%"=="" set "WAITRESS_PORT=8000"
 if "%WAITRESS_HOST%"=="" set "WAITRESS_HOST=0.0.0.0"

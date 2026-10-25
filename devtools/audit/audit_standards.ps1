@@ -160,8 +160,12 @@ function Audit-File {
         }
     }
 
-    # Batch script header verification
+    # Batch script header verification and reverse POSIX parity
     if ($ext -eq "cmd" -or $ext -eq "bat") {
+        $shFile = [System.IO.Path]::ChangeExtension($FilePath, ".sh")
+        if (-not (Test-Path $shFile)) {
+            Log-Violation -File $FilePath -Rule "POSIX_PARITY" -Details "Missing POSIX shell equivalent file ('$shFile')."
+        }
         if ($lines[0].Trim() -notmatch '^@echo off$') {
             Log-Violation -File $FilePath -Rule "BATCH_ECHO_OFF" -Details "Missing '@echo off' on line 1."
         }

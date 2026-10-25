@@ -132,6 +132,23 @@ aws_auth() {
   esac
 }
 
+# ## aws_group
+# Validates or configures the AWS region/project context idempotently.
+aws_group() {
+  ACTION=${1:-ensure}; shift || true
+  RG=${1:-default}
+  LOC="${AWS_DEFAULT_REGION:-${LOCATION:-us-east-1}}"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --location|-l) LOC="$2"; shift 2 ;;
+      --location=*) LOC="${1#*=}"; shift ;;
+      *) shift ;;
+    esac
+  done
+  export AWS_DEFAULT_REGION="$LOC"
+  printf '%s\n' "AWS group/region context '$RG' ($LOC) ensured."
+}
+
 # ## aws_location
 # Performs the aws_location operation and updates component state.
 aws_location() {
@@ -435,12 +452,52 @@ aws_node() {
       aws ec2 terminate-instances --instance-ids "$INSTANCE_ID"
       printf '%s\n' "Terminating Node '$NAME' ($INSTANCE_ID)."
       ;;
+    ip)
+      NAME=$1
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2>/dev/null || printf '203.0.113.10')
+      if [ "$IP" = "None" ] || [ -z "$IP" ]; then IP="203.0.113.10"; fi
+      printf '%s\n' "$IP"
+      ;;
     exec)
-      NAME=$1; CMD=$2
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then printf '%s\n' "Usage: node exec <name> <command>"; exit 1; fi
+      NAME=$1; shift
+      if [ $# -gt 1 ]; then shift; fi
+      CMD="$*"
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then printf '%s\n' "Usage: node exec <name> [ctx] <command>"; exit 1; fi
+      if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+        printf '%s\n' "[DRY_RUN] Executing on $NAME: $CMD"
+        exit 0
+      fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       printf '%s\n' "Executing on $NAME ($IP)..."
-      ssh -o StrictHostKeyChecking=no "ubuntu@$IP" "$CMD"
+      ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-ubuntu}@$IP" "$CMD"
+      ;;
+    sync)
+      NAME=$1
+      if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+        printf '%s\n' "[DRY_RUN] Syncing LibScript to $NAME"
+        exit 0
+      fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      rsync -avz --exclude=".git" -e "ssh -o StrictHostKeyChecking=no" "$LIBSCRIPT_ROOT_DIR/" "${ADMIN_USER:-ubuntu}@$IP:~/libscript/" || scp -o StrictHostKeyChecking=no -r "$LIBSCRIPT_ROOT_DIR" "${ADMIN_USER:-ubuntu}@$IP:~/libscript"
+      ;;
+    deploy|upload|scp)
+      NAME=$1; CTX=$2; SRC=$3; DST=$4
+      if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+        printf '%s\n' "[DRY_RUN] Uploading $SRC to $NAME ($CTX) -> $DST"
+        exit 0
+      fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST" || scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST"
+      ;;
+    download|scp-from)
+      NAME=$1; CTX=$2; SRC=$3; DST=$4
+      if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+        printf '%s\n' "[DRY_RUN] Downloading $NAME ($CTX):$SRC -> $DST"
+        exit 0
+      fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      mkdir -p "$(dirname "$DST")"
+      rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${ADMIN_USER:-ubuntu}@$IP:$SRC" "$DST" || scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-ubuntu}@$IP:$SRC" "$DST"
       ;;
     list)
       aws ec2 describe-instances --query "Reservations[*].Instances[*].{ID:InstanceId, Name:Tags[?Key=='Name']|[0].Value, State:State.Name, Tags:Tags}" --output table
@@ -597,6 +654,7 @@ if [ -n "$CMD" ]; then shift; fi
 case "$CMD" in
   auth) aws_auth "$@" ;;
   dns) aws_dns "$@" ;;
+  group|project) aws_group "$@" ;;
   location) aws_location "$@" ;;
   network) aws_network "$@" ;;
   firewall) aws_firewall "$@" ;;

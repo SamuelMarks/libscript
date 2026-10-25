@@ -51,10 +51,31 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-if "%POSTGRES_VERSION%"=="" set "POSTGRES_VERSION=15"
-if /i "%POSTGRES_VERSION%"=="latest" set "POSTGRES_VERSION=15"
+if "%POSTGRES_VERSION%"=="" set "POSTGRES_VERSION=latest"
+if /i "%POSTGRES_VERSION%"=="latest" (
+    if exist "%LIBSCRIPT_HOME%\postgres\default\bin" (
+        set "POSTGRES_VERSION=default"
+    ) else if exist "%LIBSCRIPT_HOME%\postgres\latest\bin" (
+        set "POSTGRES_VERSION=latest"
+    ) else if exist "%LIBSCRIPT_HOME%\postgres\17\bin" (
+        set "POSTGRES_VERSION=17"
+    ) else if exist "%ProgramFiles%\PostgreSQL\17\bin" (
+        set "POSTGRES_VERSION=17"
+    ) else if exist "%LIBSCRIPT_HOME%\postgres\16\bin" (
+        set "POSTGRES_VERSION=16"
+    ) else if exist "%ProgramFiles%\PostgreSQL\16\bin" (
+        set "POSTGRES_VERSION=16"
+    ) else if exist "%LIBSCRIPT_HOME%\postgres\15\bin" (
+        set "POSTGRES_VERSION=15"
+    ) else if exist "%ProgramFiles%\PostgreSQL\15\bin" (
+        set "POSTGRES_VERSION=15"
+    ) else (
+        set "POSTGRES_VERSION=17"
+    )
+)
 set "POSTGRESQL_VERSION=%POSTGRES_VERSION%"
 if "%POSTGRES_USER%"=="" set "POSTGRES_USER=postgres"
 if "%POSTGRES_PASSWORD%"=="" set "POSTGRES_PASSWORD=password"

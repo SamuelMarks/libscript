@@ -50,7 +50,10 @@ goto :find_root
 :root_found
 
 IF "%RVM_VERSION%"=="" SET "RVM_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%\rvm\%RVM_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\rvm\%RVM_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "PATH=%PATH%"

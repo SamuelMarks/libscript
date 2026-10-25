@@ -50,6 +50,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.10"
 if "%JUPYTERHUB_NOTEBOOK_DIR%"=="" set "JUPYTERHUB_NOTEBOOK_DIR=C:\notebooks"

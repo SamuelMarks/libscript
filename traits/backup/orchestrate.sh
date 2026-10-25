@@ -54,4 +54,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
+if [ -f "${1:-}" ] && case "${1:-}" in *.json) true ;; *) false ;; esac; then
+  exec "${LIBSCRIPT_ROOT_DIR}/_lib/databases/export_db.sh" "$1" "${2:-/tmp/libscript_export_stage}"
+fi
 orchestrate_backups "$@"

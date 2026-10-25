@@ -60,7 +60,10 @@ if "%CONDA_VERSION%"=="" (
     set "CONDA_VERSION=latest"
 )
 
-set "PATH=%LIBSCRIPT_HOME%\conda\%CONDA_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\conda\%CONDA_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "CONDA_VERSION=%CONDA_VERSION%"

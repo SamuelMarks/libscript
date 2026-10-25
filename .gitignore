@@ -252,6 +252,7 @@ all_scripts.txt
 /*.csv
 /*.tsv
 /*.json
+!/libscript.schema.json
 !/manifest.schema.json
 !/base_vars.schema.json
 !/installer.schema.json

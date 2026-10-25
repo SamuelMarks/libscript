@@ -183,7 +183,7 @@ tmp_scripts=$(mktemp)
 if [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git -C "${TARGET_ROOT}" ls-files "*.sh" "*.cmd" "*.ps1" | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' > "$tmp_scripts" || true
 else
-  (cd "${TARGET_ROOT}" && find . \( -name "*.sh" -o -name "*.cmd" -o -name "*.ps1" \) -type f | sed 's|^\./||' | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/') > "$tmp_scripts" || true
+  (cd "${TARGET_ROOT}" && find . -maxdepth 1 \( -name "*.sh" -o -name "*.cmd" -o -name "*.ps1" \) -type f | sed 's|^\./||') > "$tmp_scripts" || true
 fi
 
 while IFS= read -r rel_script; do
@@ -213,7 +213,7 @@ printf '==> Auditing Schema Description Coverage...
 
 MISSING_SCHEMA_DOCS=0
 tmp_schemas=$(mktemp)
-find "${TARGET_ROOT}" -name "*.schema.json" -type f > "$tmp_schemas"
+if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.schema.json" -type f > "$tmp_schemas"; else find "${TARGET_ROOT}" -maxdepth 1 -name "*.schema.json" -type f > "$tmp_schemas"; fi
 
 while IFS= read -r schema_file; do
   if grep -q '"type":' "$schema_file" && ! grep -q '"description":' "$schema_file"; then
@@ -228,7 +228,7 @@ printf '==> Auditing Shell Function Docstring Coverage...
 '
 MISSING_FUNC_DOCS=0
 tmp_sh=$(mktemp)
-find "${TARGET_ROOT}" -name "*.sh" -type f | grep -v "node_modules" > "$tmp_sh" || true
+if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.sh" -type f | grep -v "node_modules" > "$tmp_sh" || true; else find "${TARGET_ROOT}" -maxdepth 1 -name "*.sh" -type f > "$tmp_sh" || true; fi
 
 while IFS= read -r sh_file; do
   missing_in_file=$(awk -v file="${sh_file#"${TARGET_ROOT}"/}" '
@@ -267,12 +267,12 @@ printf '==> Auditing Batch Label Docstring Coverage...
 '
 MISSING_CMD_DOCS=0
 tmp_cmd=$(mktemp)
-find "${TARGET_ROOT}" -name "*.cmd" -type f | grep -v "node_modules" > "$tmp_cmd" || true
+if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.cmd" -type f | grep -v "node_modules" > "$tmp_cmd" || true; else find "${TARGET_ROOT}" -maxdepth 1 -name "*.cmd" -type f > "$tmp_cmd" || true; fi
 
 while IFS= read -r cmd_file; do
   missing_in_file=$(awk -v file="${cmd_file#"${TARGET_ROOT}"/}" '
     BEGIN { has_doc = 0; prev_hdr = "" }
-    { sub(/$/, "", $0) }
+    { sub(/\r$/, "", $0) }
     /^:: ## / {
         if ($0 == prev_hdr) {
             print file ":" NR " (duplicate docstring header)";
@@ -307,7 +307,7 @@ printf '==> Auditing PowerShell Header Coverage...
 '
 MISSING_PS1_DOCS=0
 tmp_ps1=$(mktemp)
-find "${TARGET_ROOT}" -name "*.ps1" -type f | grep -v "node_modules" > "$tmp_ps1" || true
+if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.ps1" -type f | grep -v "node_modules" > "$tmp_ps1" || true; else find "${TARGET_ROOT}" -maxdepth 1 -name "*.ps1" -type f > "$tmp_ps1" || true; fi
 
 while IFS= read -r ps1_file; do
   if ! head -n 30 "$ps1_file" | grep -q "## Overview"; then

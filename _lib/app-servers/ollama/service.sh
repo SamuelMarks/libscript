@@ -1,9 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Manages background service lifecycle operations (start, stop, status) for the ollama component.
+# Manages background service lifecycle operations (start, stop, status, override-env)
+# and OLLAMA_MODELS directory configuration for the ollama component.
 #
 # ## Usage
-# ./service.sh
+# ./service.sh [action]
 
 set -feu
 
@@ -29,4 +30,27 @@ export STACK="${STACK:-}${THIS_FILE}":
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-exit 0
+for _ol_lib in "_lib/app-servers/ollama/env.sh" "_lib/_common/service.sh" "_lib/_common/service_install.sh"; do
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/${_ol_lib}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_ol_lib}"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+done
+unset SCRIPT_NAME || true
+
+_ol_action="${1:-${ACTION:-status}}"
+_ol_svc="${LIBSCRIPT_SERVICE_NAME:-ollama}"
+
+if [ "$_ol_action" = "start" ] || [ "$_ol_action" = "restart" ] || [ "$_ol_action" = "install-service" ] || [ "$_ol_action" = "configure" ]; then
+  mkdir -p "${OLLAMA_MODELS}" 2>/dev/null || sudo mkdir -p "${OLLAMA_MODELS}" 2>/dev/null || true
+  chmod 0777 "${OLLAMA_MODELS}" 2>/dev/null || sudo chmod 0777 "${OLLAMA_MODELS}" 2>/dev/null || true
+  libscript_service_override_env "$_ol_svc" "OLLAMA_MODELS=${OLLAMA_MODELS}" || true
+  if [ "$_ol_action" = "configure" ]; then
+    libscript_service restart "$_ol_svc" 2>/dev/null || true
+    exit 0
+  fi
+fi
+
+libscript_service "$_ol_action" "$_ol_svc"

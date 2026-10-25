@@ -26,6 +26,13 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+_EB_CALLER_THIS="${THIS_FILE}"
+_EB_CALLER_DIR="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 JQ_VERSION="${JQ_VERSION:-latest}"
 if [ "${JQ_VERSION}" = "latest" ]; then
@@ -34,4 +41,4 @@ else
   EXACT_VERSION="${JQ_VERSION}"
 fi
 
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/jq/${EXACT_VERSION}/bin:${PATH}"
+libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/jq/${EXACT_VERSION}/bin"

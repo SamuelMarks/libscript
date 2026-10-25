@@ -56,6 +56,9 @@ endlocal & (
     if "%NOMAD_HTTP_PORT%"=="" set "NOMAD_HTTP_PORT=4646"
     set "NOMAD_HOME=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%"
     set "NOMAD_ADDR=http://127.0.0.1:%NOMAD_HTTP_PORT%"
-    set "PATH=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 exit /b 0

@@ -108,6 +108,13 @@ if [ $# -gt 0 ]; then
     for script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh"); do
       audit_file "${LIBSCRIPT_ROOT_DIR}/${script}"
     done
+    for cmd_script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.cmd" "*.bat"); do
+      sh_companion="${LIBSCRIPT_ROOT_DIR}/${cmd_script%.*}.sh"
+      if [ ! -f "$sh_companion" ]; then
+        printf '[FAIL] [%s] Missing paired POSIX shell companion: %s\n' "$cmd_script" "$sh_companion" >&2
+        ERRORS=$((ERRORS + 1))
+      fi
+    done
   else
     for target in "$@"; do
       audit_file "$target"

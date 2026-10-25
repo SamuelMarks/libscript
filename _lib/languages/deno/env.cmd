@@ -58,7 +58,10 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 
-set "PATH=%LIBSCRIPT_BASE_DIR%\deno\%DENO_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_BASE_DIR%\deno\%DENO_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "DENO_VERSION=%DENO_VERSION%"

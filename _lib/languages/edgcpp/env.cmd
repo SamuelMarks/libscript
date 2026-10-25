@@ -55,7 +55,10 @@ set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\default"
 if not exist "!_edg_home!" set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.1"
 endlocal & (
     set "EDGCPP_HOME=%_edg_home%"
-    set "PATH=%_edg_home%\bin;%PATH%"
+    set "_CAND_P=%_edg_home%\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
     set "CPFE_BIN=%_edg_home%\bin\cpfe.exe"
     set "CC=%SCRIPT_DIR%\edgcpp_wrapper.cmd"
     set "CXX=%SCRIPT_DIR%\edgcpp_wrapper.cmd"

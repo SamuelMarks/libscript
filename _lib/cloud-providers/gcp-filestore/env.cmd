@@ -53,7 +53,10 @@ goto :find_root
 
 if "%GCP_FILESTORE_ENABLED%"=="" set "GCP_FILESTORE_ENABLED=1"
 if "%FILESTORE_VERSION%"=="" set "FILESTORE_VERSION=latest"
-set "PATH=%LIBSCRIPT_HOME%\filestore\%FILESTORE_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\filestore\%FILESTORE_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 endlocal & (
     set "FILESTORE_VERSION=%FILESTORE_VERSION%"

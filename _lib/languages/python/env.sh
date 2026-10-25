@@ -30,15 +30,34 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
+_EB_CALLER_THIS="${THIS_FILE}"
+_EB_CALLER_DIR="${SCRIPT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 _py_base="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/python"
-if [ -z "${PYTHON_VERSION:-}" ]; then
+if [ -z "${PYTHON_VERSION:-}" ] || [ "${PYTHON_VERSION:-}" = "latest" ]; then
   if [ -d "${_py_base}/default" ]; then
     PYTHON_VERSION="default"
   elif [ -d "${_py_base}/latest" ]; then
     PYTHON_VERSION="latest"
+  elif [ -d "${_py_base}/3.12" ]; then
+    PYTHON_VERSION="3.12"
   else
-    PYTHON_VERSION="3.11.9"
+    _py_detected=""
+    for _py_dir in "${_py_base}"/3.*; do
+      if [ -d "$_py_dir" ]; then
+        _py_detected=$(basename "$_py_dir")
+      fi
+    done
+    if [ -n "$_py_detected" ]; then
+      PYTHON_VERSION="$_py_detected"
+    else
+      PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
+    fi
   fi
 fi
 export PYTHON_VERSION

@@ -40,6 +40,12 @@ SCRIPT_DIR="$_DEPLOY_SCRIPT_DIR"
 
 IS_TPU=0
 export SHARED_STORAGE=0
+SKIP_INFRA=0
+SKIP_PREPARE=0
+SKIP_VERIFY=0
+FORCE_REINSTALL=0
+FORCE_REBUILD=0
+DEPS_FLAGS=""
 export POSITIONALS=""
 
 # Parse flags
@@ -48,6 +54,12 @@ for arg do
   case "$arg" in
     --tpu|--accelerator) IS_TPU=1 ;;
     --shared-storage) export SHARED_STORAGE=1 ;;
+    --skip-infra) SKIP_INFRA=1 ;;
+    --skip-prepare) SKIP_PREPARE=1 ;;
+    --skip-verify) SKIP_VERIFY=1 ;;
+    --force-reinstall) FORCE_REINSTALL=1; DEPS_FLAGS="${DEPS_FLAGS} --force-reinstall" ;;
+    --force-rebuild) FORCE_REBUILD=1; DEPS_FLAGS="${DEPS_FLAGS} --force-rebuild" ;;
+    --dry-run|-n) export DRY_RUN="true" ;;
     *)
       if [ -z "$_p1" ]; then _p1="$arg"
       elif [ -z "$_p2" ]; then _p2="$arg"
@@ -316,10 +328,11 @@ fi
 # -----------------------------------------------------------------------------
 # Infrastructure Provisioning
 # -----------------------------------------------------------------------------
-log "INFRA" "Provisioning Network and Compute..."
+if [ "$SKIP_INFRA" -eq 0 ]; then
+log "INFRA" "Provisioning Network and Compute..." 
 
 if [ "$PROVIDER" = "azure" ]; then
-  with_retry az group create --name "$RG" --location "$LOC"
+  with_retry "$CLI" group ensure "$RG" --location "$LOC"
   record_state "AZURE_RG" "$RG"
 
   with_retry "$CLI" network create "${NODE}-vnet" "$RG" --location "$LOC"
@@ -397,6 +410,8 @@ elif [ "$PROVIDER" = "gcp" ]; then
   fi
 fi
 
+fi # end SKIP_INFRA
+
 CTX="$RG"
 if [ "$PROVIDER" = "gcp" ] || [ "$PROVIDER" = "aws" ]; then CTX="$LOC"; fi
 
@@ -459,8 +474,21 @@ transfer_files "$REPO_PATH/" "$REMOTE_DEST/"
 # -----------------------------------------------------------------------------
 if [ -n "$SECRETS_DIR" ] && [ -d "$REPO_PATH/$SECRETS_DIR" ]; then
   log "SECRETS" "Transferring secrets explicitly out-of-band via node scp (bypassing .gitignore)..."
-  # Use node scp directly for secrets to ensure they transfer regardless of .gitignore
   with_retry "$CLI" node scp "$NODE" "$CTX" "$REPO_PATH/$SECRETS_DIR" "$REMOTE_DEST/$SECRETS_DIR"
+fi
+for _env_f in .env .env.secrets; do
+  if [ -f "$REPO_PATH/$_env_f" ]; then
+    log "SECRETS" "Transferring $_env_f to $REMOTE_DEST/$_env_f..."
+    with_retry "$CLI" node upload "$NODE" "$CTX" "$REPO_PATH/$_env_f" "$REMOTE_DEST/$_env_f"
+  fi
+done
+if [ -f "$REPO_PATH/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+  _manifest_efs=$(jq -r ".env_files[]? // empty" "$REPO_PATH/libscript.json" 2>/dev/null || true)
+  for _mef in $_manifest_efs; do
+    if [ -f "$REPO_PATH/$_mef" ] && [ "$_mef" != ".env" ] && [ "$_mef" != ".env.secrets" ]; then
+      with_retry "$CLI" node upload "$NODE" "$CTX" "$REPO_PATH/$_mef" "$REMOTE_DEST/$_mef"
+    fi
+  done
 fi
 
 # -----------------------------------------------------------------------------
@@ -524,7 +552,10 @@ if [ "$IS_TPU" -eq 1 ]; then
   fi
   with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
 else
-  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
+  if [ "$SKIP_PREPARE" -eq 0 ]; then
+    with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh prepare-storage libscript.json" || true
+  fi
+  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps${DEPS_FLAGS}"
 fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
@@ -549,18 +580,40 @@ fi
 # ## wait_for_health
 # Polls service endpoints until health checks pass or timeout expires.
 wait_for_health() {
-  log "HEALTH" "Polling application health (via libscript health)..."
+  log "HEALTH" "Polling application health (via libscript health libscript.json)..."
   max_attempts=12
   attempt=1
+  _hc_url=""
+  _hc_expect_json=""
+  if [ -n "${JSON_FILE:-}" ] && [ -f "${JSON_FILE:-}" ] && command -v jq >/dev/null 2>&1; then
+    _hc_url=$(jq -r '((.services // .infrastructure.services) | if type == "object" then [to_entries[].value] elif type == "array" then . else [] end) | map((.health_check // .healthcheck) | select(type == "object" and .url != null) | .url) | .[0] // empty' "$JSON_FILE" 2>/dev/null || true)
+    _hc_expect_json=$(jq -r '((.services // .infrastructure.services) | if type == "object" then [to_entries[].value] elif type == "array" then . else [] end) | map((.health_check // .healthcheck) | select(type == "object" and .expect_json != null) | .expect_json) | .[0] // empty' "$JSON_FILE" 2>/dev/null || true)
+  fi
   while [ $attempt -le $max_attempts ]; do
+    _remote_ok=0
     if [ "$IS_TPU" -eq 1 ]; then
-      if "$TPU_CLI" ssh "$NODE" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health" >/dev/null 2>&1; then
-        log "HEALTH" "Application stack is healthy."
-        return 0
+      if "$TPU_CLI" ssh "$NODE" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health libscript.json" >/dev/null 2>&1; then
+        _remote_ok=1
       fi
-    elif "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health" >/dev/null 2>&1; then
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-
+    elif "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health libscript.json" >/dev/null 2>&1; then
+      _remote_ok=1
+    fi
+    if [ "$_remote_ok" -eq 1 ] && [ -n "$_hc_url" ]; then
+      if [ "$IS_TPU" -eq 1 ]; then
+        _remote_body=$("$TPU_CLI" ssh "$NODE" "curl -fsSL \"$_hc_url\"" 2>/dev/null || true)
+      else
+        _remote_body=$("$CLI" node exec "$NODE" "$CTX" "curl -fsSL \"$_hc_url\"" 2>/dev/null || true)
+      fi
+      if [ -z "$_remote_body" ]; then
+        _remote_ok=0
+      elif [ -n "$_hc_expect_json" ]; then
+        if ! printf '%s\n' "$_remote_body" | jq -e "$_hc_expect_json" >/dev/null 2>&1; then
+          _remote_ok=0
+        fi
+      fi
+    fi
+    if [ "$_remote_ok" -eq 1 ]; then
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
       log "HEALTH" "Application stack is healthy."
       return 0
     fi
@@ -569,8 +622,11 @@ wait_for_health() {
     attempt=$((attempt + 1))
   done
   log "WARNING" "Application health check failed or timed out. Please check logs manually."
+  return 1
 }
 
-wait_for_health
+if [ "$SKIP_VERIFY" -eq 0 ]; then
+  wait_for_health
+fi
 
 log "DONE" "Deployment complete. View full logs at $LOG_FILE"

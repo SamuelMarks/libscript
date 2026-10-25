@@ -58,7 +58,32 @@ if /i "%~1"=="--hydrate" (
     set "MANIFEST_FILE=%~2"
     if "!MANIFEST_FILE!"=="" set "MANIFEST_FILE=libscript.json"
     call :hydrate_manifest "!MANIFEST_FILE!"
-    endlocal & set "PATH=%PATH%"
+    endlocal & (
+        set "PATH=%PATH%"
+        set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+        set "NODEJS_VERSION=%NODEJS_VERSION%"
+        set "PYTHON_VERSION=%PYTHON_VERSION%"
+        set "PYTHONHOME=%PYTHONHOME%"
+        set "PYTHONPATH=%PYTHONPATH%"
+        set "PYTHON_VENV=%PYTHON_VENV%"
+        set "VIRTUAL_ENV=%VIRTUAL_ENV%"
+        set "UV_VERSION=%UV_VERSION%"
+        set "UV_BIN=%UV_BIN%"
+        set "NPX_BIN=%NPX_BIN%"
+        set "POSTGRES_VERSION=%POSTGRES_VERSION%"
+        set "POSTGRESQL_VERSION=%POSTGRESQL_VERSION%"
+        set "POSTGRES_USER=%POSTGRES_USER%"
+        set "POSTGRES_PASSWORD=%POSTGRES_PASSWORD%"
+        set "POSTGRES_HOST=%POSTGRES_HOST%"
+        set "POSTGRES_PORT=%POSTGRES_PORT%"
+        set "POSTGRES_DB=%POSTGRES_DB%"
+        set "POSTGRES_URL=%POSTGRES_URL%"
+        set "DATABASE_URL=%DATABASE_URL%"
+        set "DUCKDB_PATH=%DUCKDB_PATH%"
+        set "SQLITE_PATH=%SQLITE_PATH%"
+        set "REDIS_URL=%REDIS_URL%"
+        set "VALKEY_URL=%VALKEY_URL%"
+    )
     exit /b 0
 )
 
@@ -127,21 +152,43 @@ exit /b 0
 set "_HM_JSON=%~1"
 if not exist "!_HM_JSON!" exit /b 0
 for %%F in ("!_HM_JSON!") do set "_HM_DIR=%%~dpF"
-if exist "!_HM_DIR!\.env.libscript" (
-    for /f "usebackq tokens=1* delims==" %%A in ("!_HM_DIR!\.env.libscript") do (
-        if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%B"
+if "!_HM_DIR:~-1!"=="\" set "_HM_DIR=!_HM_DIR:~0,-1!"
+for %%E in ("!_HM_DIR!\.env" "!_HM_DIR!\.env.secrets" "!_HM_DIR!\.env.libscript") do (
+    if exist "%%~fE" (
+        for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
+            if not "%%A"=="" if not "%%A:~0,1%"=="#" (
+                if not defined %%A set "%%A=%%~B"
+            )
+        )
     )
 )
 where jq >nul 2>&1
 if errorlevel 1 exit /b 0
-for /f "tokens=1,2" %%a in ('jq -r "(.dependencies // {}) | to_entries[]? | .key + " " + (if (.value | type) == "object" then (.value.version // "latest") elif (.value | type) == "string" then .value else "latest" end)" "!_HM_JSON!" 2^>nul') do (
-    for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
-        if exist "%%C\%%a\env.cmd" (
-            set "STACK="
-            call "%%C\%%a\env.cmd"
+set "_HM_TMP=%TEMP%\libscript_hm_!RANDOM!.txt"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!_HM_JSON!" > "!_HM_TMP!.json" 2>nul
+    jq -r ".selected[]? | .name + \" \" + (.version // \"latest\")" "!_HM_TMP!.json" > "!_HM_TMP!" 2>nul
+    if exist "!_HM_TMP!.json" del /q "!_HM_TMP!.json" >nul 2>&1
+)
+for %%S in ("!_HM_TMP!") do set "_HM_SIZE=%%~zS"
+if "!_HM_SIZE!"=="" set "_HM_SIZE=0"
+if "!_HM_SIZE!"=="0" (
+    jq -r "((.dependencies // {}) | if type == \"object\" then to_entries[]? | select(.key != \"runtime\" and .key != \"build\" and .key != \"optional\") | .key + \" \" + (if (.value | type) == \"object\" then (.value.version // \"latest\") elif (.value | type) == \"string\" then .value else \"latest\" end) else empty end), ((.databases // .infrastructure.databases) | if type == \"object\" then to_entries[]? | (.value.engine // .value.type // \"postgres\") + \" \" + (.value.version // \"latest\") elif type == \"array\" then .[]? | (.engine // .type // \"postgres\") + \" \" + (.version // \"latest\") else empty end)" "!_HM_JSON!" > "!_HM_TMP!" 2>nul
+)
+if exist "!_HM_TMP!" (
+    for /f "usebackq tokens=1,2" %%a in ("!_HM_TMP!") do (
+        set "LIBSCRIPT_VERSION=%%b"
+        for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
+            if exist "%%C\%%a\env.cmd" (
+                set "STACK="
+                call "%%C\%%a\env.cmd"
+            )
         )
     )
+    del /q "!_HM_TMP!" >nul 2>&1
 )
+if "!UV_BIN!"=="" set "UV_BIN=uv"
+if "!NPX_BIN!"=="" set "NPX_BIN=npx"
 exit /b 0
 
 :: ## print_manifest
@@ -153,7 +200,15 @@ if not exist "!_PM_JSON!" exit /b 1
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 where jq >nul 2>&1
 if errorlevel 1 exit /b 1
-for /f "tokens=1,2" %%a in ('jq -r "(.dependencies // {}) | to_entries[]? | .key + " " + (if (.value | type) == "object" then (.value.version // "latest") elif (.value | type) == "string" then .value else "latest" end)" "!_PM_JSON!" 2^>nul') do (
-    call :emit_path "!_PM_FMT!" "!LIBSCRIPT_HOME!\%%a\%%b\bin"
+set "_OLD_PATH=!PATH!"
+call :hydrate_manifest "!_PM_JSON!"
+for %%P in ("!PATH:;=" "!") do (
+    set "_P_ITEM=%%~P"
+    if not "!_P_ITEM!"=="" (
+        echo ";!_OLD_PATH!;" | findstr /I /C:";!_P_ITEM!;" >nul 2>&1
+        if errorlevel 1 (
+            call :emit_path "!_PM_FMT!" "!_P_ITEM!"
+        )
+    )
 )
 exit /b 0

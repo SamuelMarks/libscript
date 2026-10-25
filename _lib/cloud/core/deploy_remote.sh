@@ -64,6 +64,9 @@ while [ $# -gt 0 ]; do
       SHARED_DB="$2"
       shift 2
       ;;
+    --skip-infra|--skip-prepare|--skip-verify|--force-reinstall|--force-rebuild|--dry-run)
+      shift
+      ;;
     *)
       log_error "Unknown argument: $1"
       exit 1
@@ -108,7 +111,7 @@ setup_app_db() {
     safe_db_name=$(printf "%s" "$app_name" | tr '-' '_')
     log_info "Ensuring DB $safe_db_name exists on $TARGET_HOST..."
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; psql -lqt | cut -d \\| -f 1 | grep -qw $safe_db_name || createdb $safe_db_name"
+    ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; \$HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema $safe_db_name --user postgres --password postgres >/dev/null 2>&1 || createdb $safe_db_name 2>/dev/null || true"
     # shellcheck disable=SC2029
     ssh "$TARGET_HOST" "touch \$HOME/apps/$app_name/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/$safe_db_name' \$HOME/apps/$app_name/.env || echo 'DATABASE_URL=postgres://localhost:5432/$safe_db_name' >> \$HOME/apps/$app_name/.env"
   fi
@@ -121,11 +124,7 @@ execute_lifecycle_hooks() {
   app_name="$2"
   log_info "Executing lifecycle hooks for $app_name..."
   # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then \$HOME/libscript/libscript.sh install-deps; fi"
-  # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/orchestration/run_hooks.sh libscript.json install; fi"
-  # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/init-systems/daemonize.sh stop libscript.json && LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/init-systems/daemonize.sh start libscript.json; fi"
+  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then \$HOME/libscript/libscript.sh install-deps libscript.json && \$HOME/libscript/libscript.sh start libscript.json; fi"
 }
 
 # ## configure_routing
@@ -245,7 +244,7 @@ if [ -n "$HEALTH_APPS" ]; then
   log_info "Running health checks for backend services:$HEALTH_APPS..."
   for app in $HEALTH_APPS; do
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "cd \$HOME/apps/$app && LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/init-systems/daemonize.sh status libscript.json" || true
+    ssh "$TARGET_HOST" "cd \$HOME/apps/$app && LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh health libscript.json" || true
   done
 fi
 

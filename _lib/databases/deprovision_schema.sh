@@ -77,9 +77,14 @@ case "$engine" in
     [ -z "$port" ] && port="5432"
     [ -z "$admin_user" ] && admin_user="postgres"
     export PGPASSWORD="$admin_pass"
-    psql -h "$host" -p "$port" -U "$admin_user" -c "DROP DATABASE IF EXISTS \"${schema_name}\";"
-    psql -h "$host" -p "$port" -U "$admin_user" -c "DROP USER IF EXISTS \"${tenant_user}\";"
+    psql -h "$host" -p "$port" -U "$admin_user" -c "DROP DATABASE IF EXISTS \"${schema_name}\";" 2>/dev/null || sudo -u postgres psql -c "DROP DATABASE IF EXISTS \"${schema_name}\";" 2>/dev/null || true
+    if [ -n "$tenant_user" ] && [ "$tenant_user" != "postgres" ]; then
+      psql -h "$host" -p "$port" -U "$admin_user" -c "DROP USER IF EXISTS \"${tenant_user}\";" 2>/dev/null || sudo -u postgres psql -c "DROP USER IF EXISTS \"${tenant_user}\";" 2>/dev/null || true
+    fi
     unset PGPASSWORD
+    ;;
+  duckdb)
+    rm -f "$schema_name" "${schema_name}.wal" "${schema_name}.shm" "${schema_name}-wal" "${schema_name}-shm" 2>/dev/null || sudo rm -f "$schema_name" "${schema_name}.wal" "${schema_name}.shm" 2>/dev/null || true
     ;;
   mongodb)
     [ -z "$port" ] && port="27017"

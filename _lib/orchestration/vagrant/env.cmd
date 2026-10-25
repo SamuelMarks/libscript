@@ -58,7 +58,10 @@ if "%VAGRANT_VERSION%"=="" (
     set "VAGRANT_VERSION=latest"
 )
 if exist "%LIBSCRIPT_HOME%\vagrant\%VAGRANT_VERSION%\bin" (
-    set "PATH=%LIBSCRIPT_HOME%\vagrant\%VAGRANT_VERSION%\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\vagrant\%VAGRANT_VERSION%\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 endlocal & (

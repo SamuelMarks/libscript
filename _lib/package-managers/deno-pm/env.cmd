@@ -60,12 +60,18 @@ if "%DENO_PM_VERSION%"=="" (
     set "DENO_PM_VERSION=latest"
 )
 
-set "PATH=%LIBSCRIPT_HOME%\deno-pm\%DENO_PM_VERSION%\bin;%PATH%"
+set "_CAND_P=%LIBSCRIPT_HOME%\deno-pm\%DENO_PM_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 
 if exist "%~dp0..\..\languages\deno\env.cmd" (
     call "%~dp0..\..\languages\deno\env.cmd"
 ) else (
-    set "PATH=%LIBSCRIPT_HOME%\deno\latest\bin;%PATH%"
+    set "_CAND_P=%LIBSCRIPT_HOME%\deno\latest\bin"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 )
 
 endlocal & (

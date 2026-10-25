@@ -56,7 +56,10 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 set "HUGGINGFACE_CLI_DIR=%LIBSCRIPT_BASE_DIR%\huggingface-cli\%HUGGINGFACE_CLI_VERSION%"
-set "PATH=%HUGGINGFACE_CLI_DIR%\bin;%PATH%"
+set "_CAND_P=%HUGGINGFACE_CLI_DIR%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
 set "PYTHONPATH=%HUGGINGFACE_CLI_DIR%;%PYTHONPATH%"
 
 endlocal & (
