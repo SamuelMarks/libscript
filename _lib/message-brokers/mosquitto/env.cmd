@@ -63,7 +63,8 @@ if "%MOSQUITTO_VERSION%"=="" (
 set "_CAND_P=%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "mosquitto"
 
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"

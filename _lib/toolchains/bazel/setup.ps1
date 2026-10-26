@@ -167,15 +167,7 @@ switch ($Action) {
     default {
         # download and install
         if ($InstallMethod -eq "system") {
-            $WinPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-            if ([string]::IsNullOrEmpty($WinPkgMgr)) {
-                $WinPkgMgr = "winget"
-            }
-            if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=bazel.bazel -e --accept-package-agreements --accept-source-agreements
-            } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y bazel
-            }
+            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends bazel
         } elseif ($InstallMethod -eq "mise") {
             mise install "bazel@${BazelVersion}"
         } elseif ($InstallMethod -eq "asdf") {
@@ -207,7 +199,7 @@ switch ($Action) {
             }
 
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $BazelExe
+            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $DownloadUrl $BazelExe
 
             Set-LibscriptAlias -Component "bazel" -AliasName $BazelVersion -ExactVersion $ExactVersion
         }

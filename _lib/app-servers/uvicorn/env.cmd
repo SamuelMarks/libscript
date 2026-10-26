@@ -51,13 +51,15 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "uvicorn"
 
 if "%UVICORN_PORT%"=="" set "UVICORN_PORT=8000"
 if "%UVICORN_HOST%"=="" set "UVICORN_HOST=0.0.0.0"
 if "%UVICORN_WORKERS%"=="" set "UVICORN_WORKERS=2"
 
 endlocal & (
+    set "PATH=%PATH%"
     set "UVICORN_HOST=%UVICORN_HOST%"
     set "UVICORN_PORT=%UVICORN_PORT%"
     set "UVICORN_WORKERS=%UVICORN_WORKERS%"

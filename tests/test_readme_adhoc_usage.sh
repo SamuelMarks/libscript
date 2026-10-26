@@ -132,8 +132,8 @@ for pass in 1 2; do
 done
 
 for emit_target in nginx caddy httpd iis; do
-  out1=$("${LIBSCRIPT_ROOT_DIR}/netctl.sh" --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit "$emit_target")
-  out2=$("${LIBSCRIPT_ROOT_DIR}/netctl.sh" --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit "$emit_target")
+  out1=$("${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit "$emit_target")
+  out2=$("${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen 80 --listen 443 --proxy /api http://localhost:8080 --static / /var/www --emit "$emit_target")
   [ "$out1" = "$out2" ] || exit 1
 done
 

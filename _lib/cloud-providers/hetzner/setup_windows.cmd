@@ -55,8 +55,8 @@ goto :find_root
 where hcloud >nul 2>&1
 if %errorlevel% equ 0 exit /b 0
 
-echo Installing Hetzner Cloud CLI via winget...
-winget install --id HetznerCloud.CLI --silent --accept-package-agreements --accept-source-agreements
+echo Installing Hetzner Cloud CLI via pkg_mgr...
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends HetznerCloud.CLI
 
 where hcloud >nul 2>&1
 if %errorlevel% equ 0 exit /b 0

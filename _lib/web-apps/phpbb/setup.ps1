@@ -51,11 +51,7 @@ if (-not (Test-Path $WwwRoot)) {
 $tmpZip = Join-Path $env:TEMP "phpbb_$(Get-Random).zip"
 $dlUrl = "https://download.phpbb.com/pub/release/$PhpbbMajorVersion/$PhpbbVersion/phpBB-$PhpbbVersion.zip"
 
-if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-    curl.exe -sSL "$dlUrl" -o "$tmpZip"
-} else {
-    Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip -UseBasicParsing
-}
+& (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
 
 if (Test-Path $tmpZip) {
     $sevenZip = "C:\Program Files\7-Zip\7z.exe"

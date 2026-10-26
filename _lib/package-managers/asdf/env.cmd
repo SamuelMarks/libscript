@@ -63,7 +63,8 @@ if "%ASDF_VERSION%"=="" (
 set "_CAND_P=%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "asdf"
 
 endlocal & (
     set "ASDF_VERSION=%ASDF_VERSION%"

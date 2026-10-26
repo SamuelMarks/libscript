@@ -195,8 +195,13 @@ set "_MATCH=0"
 if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+set "_NORM_TARGET=!ONLY_TARGET:_=-!"
+set "_NORM_DEST=!_CUR_DEST:_=-!"
+if /i "!_NORM_TARGET!"=="!_NORM_DEST!" set "_MATCH=1"
+if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
+    jq -e --arg t "!ONLY_TARGET!" --arg tn "!_NORM_TARGET!" "([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub(\"_\"; \"-\") == $tn))" "!_CUR_DEST!\libscript.json" >nul 2>&1
+    if not errorlevel 1 set "_MATCH=1"
+)
 if "!_MATCH!"=="1" (
     call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_CUR_DEST!/libscript.json ]; then cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh down libscript.json --remove!_PURGE_FLAG! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh netctl remove-ingress libscript.json; fi; sudo rm -rf ~/!_CUR_DEST!"
     if errorlevel 1 exit /b 1

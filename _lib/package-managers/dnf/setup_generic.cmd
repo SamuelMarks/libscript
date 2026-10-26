@@ -144,7 +144,7 @@ if "%DNF_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading dnf %DNF_VERSION% to %DOWNLOAD_DIR%\dnf...
     if not exist "%DOWNLOAD_DIR%\dnf" mkdir "%DOWNLOAD_DIR%\dnf"
     if not "%DNF_DOWNLOAD_URL%"=="" (
-        curl -sSL "%DNF_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DNF_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.zip"
     ) else (
         echo DNF_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%DNF_INSTALL_METHOD%"=="system" (
-    winget install dnf --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends dnf
     exit /b !errorlevel!
 )
 if "%DNF_INSTALL_METHOD%"=="mise" ( mise install "dnf@%DNF_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DNF_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%DNF_DOWNLOAD_URL%" -o "%TEMP%\dnf.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DNF_DOWNLOAD_URL%" "%TEMP%\dnf.zip"
         tar -xf "%TEMP%\dnf.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for dnf.

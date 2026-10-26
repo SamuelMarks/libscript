@@ -107,7 +107,7 @@ v1.36.0
         mv "${TEMP_BIN}" "${TARGET_DIR}/bin/meilisearch"
         chmod +x "${TARGET_DIR}/bin/meilisearch"
         if [ -f "/etc/alpine-release" ] && command -v apk >/dev/null 2>&1; then
-          apk add --no-cache gcompat gcc musl-dev >/dev/null 2>&1 || true
+          libscript_depends gcompat gcc musl-dev >/dev/null 2>&1 || true
           mkdir -p /usr/local/lib
           if [ ! -f "/usr/local/lib/libresinit.so" ]; then
             printf 'int __res_init(void) { return 0; }\nint res_init(void) { return 0; }\n' | gcc -shared -fPIC -x c - -o /usr/local/lib/libresinit.so 2>/dev/null || true

@@ -35,7 +35,15 @@ unset SCRIPT_NAME || true
 
 export JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-system}"
 JAVA_VERSION="${JAVA_VERSION:-latest}"
-if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ]; then
-  export JAVA_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/java/${JAVA_VERSION}"
+export JAVA_VERSION
+_java_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/java"
+if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ -d "${_java_home}/${JAVA_VERSION}" ] || [ -d "${_java_home}/default" ]; then
+  if [ -d "${_java_home}/${JAVA_VERSION}" ]; then
+    export JAVA_HOME="${_java_home}/${JAVA_VERSION}"
+  elif [ -d "${_java_home}/default" ]; then
+    export JAVA_HOME="${_java_home}/default"
+  else
+    export JAVA_HOME="${_java_home}/${JAVA_VERSION}"
+  fi
   libscript_path_prepend "${JAVA_HOME}/bin"
 fi

@@ -144,7 +144,7 @@ if "%AQUA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading aqua %AQUA_VERSION% to %DOWNLOAD_DIR%\aqua...
     if not exist "%DOWNLOAD_DIR%\aqua" mkdir "%DOWNLOAD_DIR%\aqua"
     if not "%AQUA_DOWNLOAD_URL%"=="" (
-        curl -sSL "%AQUA_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\aqua\aqua-%AQUA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AQUA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\aqua\aqua-%AQUA_VERSION%.zip"
     ) else (
         echo AQUA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%AQUA_INSTALL_METHOD%"=="system" (
-    winget install aqua --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends aqua
     exit /b !errorlevel!
 )
 if "%AQUA_INSTALL_METHOD%"=="mise" ( mise install "aqua@%AQUA_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\aqua\aqua-%AQUA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%AQUA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%AQUA_DOWNLOAD_URL%" -o "%TEMP%\aqua.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AQUA_DOWNLOAD_URL%" "%TEMP%\aqua.zip"
         tar -xf "%TEMP%\aqua.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aqua.

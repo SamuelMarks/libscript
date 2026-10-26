@@ -59,8 +59,8 @@ if exist "%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto 
 if exist "%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto :create_shims
 if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto :create_shims
 
-echo Installing Google Cloud SDK via winget...
-winget install --id Google.CloudSDK --silent --accept-package-agreements --accept-source-agreements --override "/S /D=C:\GoogleCloudSDK"
+echo Installing Google Cloud SDK via pkg_mgr...
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends Google.CloudSDK
 
 :: ## create_shims
 :: Creates executable command shims in the local binary directory.

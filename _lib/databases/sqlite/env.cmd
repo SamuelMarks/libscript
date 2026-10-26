@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -54,14 +54,19 @@ goto :find_root
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%SQLITE_VERSION%"=="" set "SQLITE_VERSION=default"
+set "SQLITE_PREFIX=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
+for %%P in ("%LIBSCRIPT_HOME%\sqlite\default\bin" "%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin") do (
+    set "_CAND_P=%%~P"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+)
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "sqlite" "%SQLITE_VERSION%"
+
 endlocal & (
-    set "SQLITE_PREFIX=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
-    set "_CAND_P=%LIBSCRIPT_HOME%\sqlite\default\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "_CAND_P=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "SQLITE_VERSION=%SQLITE_VERSION%"
+    set "SQLITE_PREFIX=%SQLITE_PREFIX%"
+    set "PATH=%PATH%"
 )
 exit /b 0

@@ -76,15 +76,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls node
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls nodejs
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             node -v
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -96,33 +88,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote node
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls nodejs
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            # Minimal stub
             $Tab = Invoke-RestMethod -Uri "https://nodejs.org/dist/index.tab"
             $Tab -split "`n" | Select-Object -Skip 1 | ForEach-Object { ($_ -split "`t")[0].TrimStart('v') }
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "node@${NodeVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls nodejs
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -188,23 +163,7 @@ switch ($Action) {
     default {
         # download and install
         if ($InstallMethod -eq "system") {
-            $WinPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-            if ([string]::IsNullOrEmpty($WinPkgMgr)) {
-                $WinPkgMgr = "winget"
-            }
-            if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=OpenJS.NodeJS -e --accept-package-agreements --accept-source-agreements
-            } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y nodejs
-            }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "node@${NodeVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls nodejs; exit 1
+            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends nodejs
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -232,7 +191,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $NodeDir"
             Expand-Archive -Path $TempZip -DestinationPath $NodeDir -Force

@@ -144,7 +144,7 @@ if "%DENO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading deno %DENO_VERSION% to %DOWNLOAD_DIR%\deno...
     if not exist "%DOWNLOAD_DIR%\deno" mkdir "%DOWNLOAD_DIR%\deno"
     if not "%DENO_DOWNLOAD_URL%"=="" (
-        curl -sSL "%DENO_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\deno\deno-%DENO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DENO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\deno\deno-%DENO_VERSION%.zip"
     ) else (
         echo DENO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%DENO_INSTALL_METHOD%"=="system" (
-    winget install deno --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends deno
     exit /b !errorlevel!
 )
 if "%DENO_INSTALL_METHOD%"=="mise" ( mise install "deno@%DENO_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\deno\deno-%DENO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DENO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%DENO_DOWNLOAD_URL%" -o "%TEMP%\deno.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DENO_DOWNLOAD_URL%" "%TEMP%\deno.zip"
         tar -xf "%TEMP%\deno.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for deno.

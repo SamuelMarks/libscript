@@ -144,7 +144,7 @@ if "%JULIA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading julia %JULIA_VERSION% to %DOWNLOAD_DIR%\julia...
     if not exist "%DOWNLOAD_DIR%\julia" mkdir "%DOWNLOAD_DIR%\julia"
     if not "%JULIA_DOWNLOAD_URL%"=="" (
-        curl -sSL "%JULIA_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\julia\julia-%JULIA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%JULIA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\julia\julia-%JULIA_VERSION%.zip"
     ) else (
         echo JULIA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%JULIA_INSTALL_METHOD%"=="system" (
-    winget install julia --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends julia
     exit /b !errorlevel!
 )
 if "%JULIA_INSTALL_METHOD%"=="mise" ( mise install "julia@%JULIA_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\julia\julia-%JULIA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%JULIA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%JULIA_DOWNLOAD_URL%" -o "%TEMP%\julia.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%JULIA_DOWNLOAD_URL%" "%TEMP%\julia.zip"
         tar -xf "%TEMP%\julia.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for julia.

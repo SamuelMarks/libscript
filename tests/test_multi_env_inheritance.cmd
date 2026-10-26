@@ -59,32 +59,40 @@ set "LIBSCRIPT_HOME=!TEST_TMP!\home"
 if not exist "!LIBSCRIPT_HOME!\nodejs\22\bin" mkdir "!LIBSCRIPT_HOME!\nodejs\22\bin"
 if not exist "!LIBSCRIPT_HOME!\postgres\17\bin" mkdir "!LIBSCRIPT_HOME!\postgres\17\bin"
 if not exist "!LIBSCRIPT_HOME!\python\3.12\bin" mkdir "!LIBSCRIPT_HOME!\python\3.12\bin"
+if not exist "!LIBSCRIPT_HOME!\rust\stable\bin" mkdir "!LIBSCRIPT_HOME!\rust\stable\bin"
+if not exist "!LIBSCRIPT_HOME!\go\1.22\bin" mkdir "!LIBSCRIPT_HOME!\go\1.22\bin"
+if not exist "!LIBSCRIPT_HOME!\java\21\bin" mkdir "!LIBSCRIPT_HOME!\java\21\bin"
 
 set "NODEJS_VERSION=22"
 set "POSTGRES_VERSION=17"
 set "PYTHON_VERSION=3.12"
+set "RUST_VERSION=stable"
+set "GO_VERSION=1.22"
+set "JAVA_VERSION=21"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\nodejs\env.cmd"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\env.cmd"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\python\env.cmd"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\rust\env.cmd"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\go\env.cmd"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\java\env.cmd"
 
-echo "!PATH!" | findstr /I /C:"nodejs\22\bin" >nul 2>&1
-if errorlevel 1 (
-    echo [FAIL] nodejs\22\bin missing from PATH
-    rmdir /s /q "!TEST_TMP!" 2>nul
-    exit /b 1
+for %%E in ("nodejs\22\bin" "postgres\17\bin" "python\3.12\bin" "rust\stable\bin" "go\1.22\bin" "java\21\bin") do (
+    echo "!PATH!" | findstr /I /C:"%%~E" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] %%~E missing from PATH
+        rmdir /s /q "!TEST_TMP!" 2>nul
+        exit /b 1
+    )
 )
-echo "!PATH!" | findstr /I /C:"postgres\17\bin" >nul 2>&1
-if errorlevel 1 (
-    echo [FAIL] postgres\17\bin missing from PATH
-    rmdir /s /q "!TEST_TMP!" 2>nul
-    exit /b 1
-)
-echo "!PATH!" | findstr /I /C:"python\3.12\bin" >nul 2>&1
-if errorlevel 1 (
-    echo [FAIL] python\3.12\bin missing from PATH
+echo "!PATH!" | findstr /I /C:"_common" >nul 2>&1
+if not errorlevel 1 (
+    echo [FAIL] _common path pollution detected in PATH
     rmdir /s /q "!TEST_TMP!" 2>nul
     exit /b 1
 )

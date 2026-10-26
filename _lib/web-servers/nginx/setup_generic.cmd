@@ -159,7 +159,7 @@ if "%NGINX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nginx %NGINX_VERSION% to %DOWNLOAD_DIR%\nginx...
     if not exist "%DOWNLOAD_DIR%\nginx" mkdir "%DOWNLOAD_DIR%\nginx"
     if not "%NGINX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%NGINX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip"
     ) else (
         echo NGINX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -181,7 +181,7 @@ if /i "%NGINX_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%NGINX_INSTALL_METHOD%"=="system" (
-    winget install nginx --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nginx
     exit /b !errorlevel!
 )
 if "%NGINX_INSTALL_METHOD%"=="mise" ( mise install "nginx@%NGINX_VERSION%" & exit /b 0 )
@@ -201,7 +201,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NGINX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%NGINX_DOWNLOAD_URL%" -o "%TEMP%\nginx.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%TEMP%\nginx.zip"
         tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nginx.

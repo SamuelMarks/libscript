@@ -149,7 +149,7 @@ if "%AZURE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading azure %AZURE_VERSION% to %DOWNLOAD_DIR%\azure...
     if not exist "%DOWNLOAD_DIR%\azure" mkdir "%DOWNLOAD_DIR%\azure"
     if not "%AZURE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%AZURE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\azure\azure-%AZURE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AZURE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\azure\azure-%AZURE_VERSION%.zip"
     ) else (
         echo AZURE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -160,7 +160,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%AZURE_INSTALL_METHOD%"=="system" (
-    winget install azure --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends azure
     exit /b !errorlevel!
 )
 if "%AZURE_INSTALL_METHOD%"=="mise" ( mise install "azure@%AZURE_VERSION%" & exit /b 0 )
@@ -180,7 +180,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\azure\azure-%AZURE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%AZURE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%AZURE_DOWNLOAD_URL%" -o "%TEMP%\azure.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AZURE_DOWNLOAD_URL%" "%TEMP%\azure.zip"
         tar -xf "%TEMP%\azure.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for azure.
@@ -324,9 +324,20 @@ if errorlevel 1 (
     if errorlevel 1 exit /b 1
 )
 set "_PRIORITY=1000"
+for /f "delims=" %%M in ('az network nsg rule list -g "!_RG!" --nsg-name "!_NSG!" --query "max([].priority)" -o tsv 2^>nul') do (
+    if not "%%M"=="" if not "%%M"=="None" (
+        if %%M geq 1000 if %%M lss 4000 set /a _PRIORITY=%%M+10
+    )
+)
 for %%P in (!_PORTS!) do (
-    az network nsg rule create -g "!_RG!" --nsg-name "!_NSG!" -n "AllowPort_%%P" --priority !_PRIORITY! --destination-port-ranges %%P --access Allow --protocol Tcp --output none
-    set /a _PRIORITY+=10
+    az network nsg rule show -g "!_RG!" --nsg-name "!_NSG!" -n "Allow_%%P" >nul 2>&1
+    if not errorlevel 1 (
+        echo [REUSE] Firewall rule Allow_%%P ^(port %%P^) already exists on !_NSG!
+    ) else (
+        echo [CREATE] Opening port %%P on !_NSG! ^(priority !_PRIORITY!^)
+        az network nsg rule create -g "!_RG!" --nsg-name "!_NSG!" -n "Allow_%%P" --priority !_PRIORITY! --destination-port-ranges %%P --access Allow --protocol Tcp --output none
+        set /a _PRIORITY+=10
+    )
 )
 exit /b 0
 
@@ -376,7 +387,7 @@ if /i "!_SUB!"=="exec" (
 if /i "!_SUB!"=="sync" (
     where rsync >nul 2>&1
     if not errorlevel 1 (
-        rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "!LIBSCRIPT_ROOT_DIR!/" "%ADMIN_USER%@!_IP!:~/libscript/"
+        rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="logs" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "!LIBSCRIPT_ROOT_DIR!/" "%ADMIN_USER%@!_IP!:~/libscript/"
         exit /b !ERRORLEVEL!
     )
     scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "!LIBSCRIPT_ROOT_DIR!" "%ADMIN_USER%@!_IP!:~/libscript"
@@ -401,7 +412,7 @@ if exist "!_SRC!\*" (
 )
 where rsync >nul 2>&1
 if not errorlevel 1 (
-    rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "!_SRC_RS!" "%ADMIN_USER%@!_IP!:!_DST!"
+    rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "!_SRC_RS!" "%ADMIN_USER%@!_IP!:!_DST!"
     exit /b !ERRORLEVEL!
 )
 scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "!_SRC!" "%ADMIN_USER%@!_IP!:!_DST!"

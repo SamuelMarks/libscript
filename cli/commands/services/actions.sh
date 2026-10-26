@@ -126,6 +126,15 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
             etcdctl version >/dev/null 2>&1
             ;;
+        valkey|redis)
+            if command -v valkey-cli >/dev/null 2>&1 && valkey-cli ping 2>/dev/null | grep -qi "PONG"; then
+              true
+            elif command -v redis-cli >/dev/null 2>&1 && redis-cli ping 2>/dev/null | grep -qi "PONG"; then
+              true
+            else
+              "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
+            fi
+            ;;
         nginx|ollama)
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
             ;;
@@ -159,7 +168,13 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
         huggingface-cli) huggingface-cli --version || true ;;
         just) just --version || true ;;
         maven) mvn --version || true ;;
-        uv) uv --version || true ;;
+        uv)
+            if command -v uv >/dev/null 2>&1; then
+              uv --version || true
+            else
+              "${LIBSCRIPT_ROOT_DIR:-.}/_lib/package-managers/uv/cli.sh" test >/dev/null 2>&1 || true
+            fi
+            ;;
         xpk) xpk --version || true ;;
         *)
           "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
@@ -270,6 +285,14 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     if ! command -v jq >/dev/null 2>&1; then
       printf '%s\n' "Error: jq is required to parse $json_file." >&2
       exit 1
+    fi
+
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+      # shellcheck disable=SC1090,SC1091
+      . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/env_printer.sh"
+      unset SCRIPT_NAME || true
+      libscript_hydrate_manifest_env "$json_file" || true
     fi
 
     if [ "$skip_hooks" -eq 0 ]; then

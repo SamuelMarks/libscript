@@ -65,7 +65,7 @@ set "URL=https://github.com/aquaproj/aqua/releases/download/v2.62.3/aqua_windows
 set "TEMP_ZIP=%TEMP%\aqua.zip"
 
 echo Downloading aqua (%ARCH%) from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download aqua.
     exit /b 1

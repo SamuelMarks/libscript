@@ -174,6 +174,7 @@ case "$engine" in
     fi
     js_cmd="db.getSiblingDB('${schema_name}').createUser({user: '${tenant_user}', pwd: '${tenant_pass}', roles: [{role: 'readWrite', db: '${schema_name}'}]});"
     js_check="var res = db.getSiblingDB('${schema_name}').getUser('${tenant_user}'); if (!res) { ${js_cmd} }"
+    # shellcheck disable=SC2086
     mongosh $mongosh_args --eval "$js_check" --quiet
     ;;
   sqlite)

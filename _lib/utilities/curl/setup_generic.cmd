@@ -144,7 +144,7 @@ if "%CURL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading curl %CURL_VERSION% to %DOWNLOAD_DIR%\curl...
     if not exist "%DOWNLOAD_DIR%\curl" mkdir "%DOWNLOAD_DIR%\curl"
     if not "%CURL_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CURL_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\curl\curl-%CURL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CURL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\curl\curl-%CURL_VERSION%.zip"
     ) else (
         echo CURL_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -159,7 +159,7 @@ if /i "%CURL_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%CURL_INSTALL_METHOD%"=="system" (
-    winget install curl --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends curl
     exit /b !errorlevel!
 )
 if "%CURL_INSTALL_METHOD%"=="mise" ( mise install "curl@%CURL_VERSION%" & exit /b 0 )
@@ -179,7 +179,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\curl\curl-%CURL_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CURL_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CURL_DOWNLOAD_URL%" -o "%TEMP%\curl.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CURL_DOWNLOAD_URL%" "%TEMP%\curl.zip"
         tar -xf "%TEMP%\curl.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for curl.

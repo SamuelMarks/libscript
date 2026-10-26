@@ -144,7 +144,7 @@ if "%IIS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading iis %IIS_VERSION% to %DOWNLOAD_DIR%\iis...
     if not exist "%DOWNLOAD_DIR%\iis" mkdir "%DOWNLOAD_DIR%\iis"
     if not "%IIS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%IIS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\iis\iis-%IIS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%IIS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\iis\iis-%IIS_VERSION%.zip"
     ) else (
         echo IIS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%IIS_INSTALL_METHOD%"=="system" (
-    winget install iis --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends iis
     exit /b !errorlevel!
 )
 if "%IIS_INSTALL_METHOD%"=="mise" ( mise install "iis@%IIS_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\iis\iis-%IIS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%IIS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%IIS_DOWNLOAD_URL%" -o "%TEMP%\iis.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%IIS_DOWNLOAD_URL%" "%TEMP%\iis.zip"
         tar -xf "%TEMP%\iis.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for iis.

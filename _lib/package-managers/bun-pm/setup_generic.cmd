@@ -144,7 +144,7 @@ if "%BUN_PM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading bun-pm %BUN_PM_VERSION% to %DOWNLOAD_DIR%\bun-pm...
     if not exist "%DOWNLOAD_DIR%\bun-pm" mkdir "%DOWNLOAD_DIR%\bun-pm"
     if not "%BUN_PM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%BUN_PM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\bun-pm\bun-pm-%BUN_PM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUN_PM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\bun-pm\bun-pm-%BUN_PM_VERSION%.zip"
     ) else (
         echo BUN_PM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%BUN_PM_INSTALL_METHOD%"=="system" (
-    winget install bun-pm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends bun-pm
     exit /b !errorlevel!
 )
 if "%BUN_PM_INSTALL_METHOD%"=="mise" ( mise install "bun-pm@%BUN_PM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\bun-pm\bun-pm-%BUN_PM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%BUN_PM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%BUN_PM_DOWNLOAD_URL%" -o "%TEMP%\bun-pm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUN_PM_DOWNLOAD_URL%" "%TEMP%\bun-pm.zip"
         tar -xf "%TEMP%\bun-pm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for bun-pm.

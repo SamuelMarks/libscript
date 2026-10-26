@@ -144,7 +144,7 @@ if "%NVM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nvm %NVM_VERSION% to %DOWNLOAD_DIR%\nvm...
     if not exist "%DOWNLOAD_DIR%\nvm" mkdir "%DOWNLOAD_DIR%\nvm"
     if not "%NVM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%NVM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\nvm\nvm-%NVM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NVM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nvm\nvm-%NVM_VERSION%.zip"
     ) else (
         echo NVM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NVM_INSTALL_METHOD%"=="system" (
-    winget install nvm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nvm
     exit /b !errorlevel!
 )
 if "%NVM_INSTALL_METHOD%"=="mise" ( mise install "nvm@%NVM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nvm\nvm-%NVM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NVM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%NVM_DOWNLOAD_URL%" -o "%TEMP%\nvm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NVM_DOWNLOAD_URL%" "%TEMP%\nvm.zip"
         tar -xf "%TEMP%\nvm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nvm.

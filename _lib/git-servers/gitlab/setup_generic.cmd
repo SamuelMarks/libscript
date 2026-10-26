@@ -144,7 +144,7 @@ if "%GITLAB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gitlab %GITLAB_VERSION% to %DOWNLOAD_DIR%\gitlab...
     if not exist "%DOWNLOAD_DIR%\gitlab" mkdir "%DOWNLOAD_DIR%\gitlab"
     if not "%GITLAB_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GITLAB_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GITLAB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.zip"
     ) else (
         echo GITLAB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GITLAB_INSTALL_METHOD%"=="system" (
-    winget install gitlab --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gitlab
     exit /b !errorlevel!
 )
 if "%GITLAB_INSTALL_METHOD%"=="mise" ( mise install "gitlab@%GITLAB_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GITLAB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GITLAB_DOWNLOAD_URL%" -o "%TEMP%\gitlab.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GITLAB_DOWNLOAD_URL%" "%TEMP%\gitlab.zip"
         tar -xf "%TEMP%\gitlab.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gitlab.

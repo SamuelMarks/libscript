@@ -62,7 +62,7 @@ set "URL=https://downloads.haskell.org/~cabal/cabal-install-3.12.1.0/cabal-insta
 set "TEMP_ZIP=%TEMP%\cabal.zip"
 
 echo Downloading cabal from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download cabal.
     exit /b 1

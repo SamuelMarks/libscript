@@ -144,7 +144,7 @@ if "%COMPOSER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading composer %COMPOSER_VERSION% to %DOWNLOAD_DIR%\composer...
     if not exist "%DOWNLOAD_DIR%\composer" mkdir "%DOWNLOAD_DIR%\composer"
     if not "%COMPOSER_DOWNLOAD_URL%"=="" (
-        curl -sSL "%COMPOSER_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\composer\composer-%COMPOSER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%COMPOSER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\composer\composer-%COMPOSER_VERSION%.zip"
     ) else (
         echo COMPOSER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%COMPOSER_INSTALL_METHOD%"=="system" (
-    winget install composer --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends composer
     exit /b !errorlevel!
 )
 if "%COMPOSER_INSTALL_METHOD%"=="mise" ( mise install "composer@%COMPOSER_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\composer\composer-%COMPOSER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%COMPOSER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%COMPOSER_DOWNLOAD_URL%" -o "%TEMP%\composer.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%COMPOSER_DOWNLOAD_URL%" "%TEMP%\composer.zip"
         tar -xf "%TEMP%\composer.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for composer.

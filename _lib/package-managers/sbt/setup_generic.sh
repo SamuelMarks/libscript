@@ -182,7 +182,7 @@ case "$ACTION" in
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
           libscript_depends "tar"
-          curl -sSL "$URL" -o "$TEMP_FILE.tgz"
+          libscript_download "$URL" "$TEMP_FILE.tgz"
           tar -xzf "$TEMP_FILE.tgz" -C "${TARGET_DIR}" --strip-components=1
           rm -f "$TEMP_FILE.tgz"
         fi

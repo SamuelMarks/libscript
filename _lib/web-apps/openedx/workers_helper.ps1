@@ -63,8 +63,8 @@ function Do-Start {
         $resolvedPy = $PyBin
     } else {
         $pyCandidates = @(
-            "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe",
-            "C:\Users\vagrant\AppData\Local\Programs\Python\Python311-arm64\python.exe",
+            "$env:LOCALAPPDATA\Programs\Python\Python312-arm64\python.exe",
+            "$env:LOCALAPPDATA\Programs\Python\Python311-arm64\python.exe",
             "C:\Program Files\Python312\python.exe",
             "C:\Program Files\Python311\python.exe"
         )

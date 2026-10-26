@@ -176,7 +176,7 @@ case "$ACTION" in
           fi
           TEMP_FILE=$(mktemp --suffix=.sh 2>/dev/null || mktemp /tmp/miniconda_XXXXXX.sh)
           libscript_depends "curl"
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+          if ! libscript_download "$URL" "$TEMP_FILE"; then
             log_error "Failed to download conda from $URL"
             rm -f "$TEMP_FILE"
             exit 1

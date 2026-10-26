@@ -143,12 +143,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$MOSQUITTO_INSTALL_METHOD" = "system" ]; then
-      if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
-        priv dnf install -y mosquitto || true
-      else
-        libscript_depends "mosquitto"
-      fi
+      libscript_depends "mosquitto"
     elif [ "$MOSQUITTO_INSTALL_METHOD" = "mise" ]; then
       mise install "mosquitto@${VERSION}"
     elif [ "$MOSQUITTO_INSTALL_METHOD" = "asdf" ]; then
@@ -194,12 +189,7 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for mosquitto..."
-              if command -v dnf >/dev/null 2>&1; then
-                priv dnf install -y epel-release || true
-                priv dnf install -y mosquitto || true
-              else
-                libscript_depends "mosquitto"
-              fi
+              libscript_depends "mosquitto" || true
               if command -v mosquitto >/dev/null 2>&1; then
                 ln -sf "$(command -v mosquitto)" "${TARGET_DIR}/bin/mosquitto" 2>/dev/null || true
               fi

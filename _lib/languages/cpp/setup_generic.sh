@@ -134,7 +134,7 @@ case "$ACTION" in
       log_info "Downloading cpp ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpp..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpp"
       if [ -n "${CPP_DOWNLOAD_URL:-}" ]; then
-        curl -sSL "${CPP_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpp/cpp-${VERSION}.tar.gz"
+        libscript_download "${CPP_DOWNLOAD_URL}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpp/cpp-${VERSION}.tar.gz"
       else
         printf '%s\n' "CPP_DOWNLOAD_URL is not defined. Skipping."
       fi

@@ -84,9 +84,11 @@ safe_tee() {
 }
 
 # Dependencies
-# # libscript_depends 'python'
-# # libscript_depends "${ODOO_DB_TYPE}"
-# # libscript_depends "${ODOO_WEBSERVER}"
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'python' || true
+  libscript_depends "${ODOO_DB_TYPE}" || true
+  libscript_depends "${ODOO_WEBSERVER}" || true
+fi
 
 # Create directories
 if [ ! -f "${ODOO_WWWROOT}/odoo-bin" ]; then
@@ -95,14 +97,10 @@ if [ ! -f "${ODOO_WWWROOT}/odoo-bin" ]; then
 
   dl_url="https://github.com/odoo/odoo/archive/refs/heads/${ODOO_VERSION}.tar.gz"
 
-  if command -v libscript_download >/dev/null 2>&1; then
-    tmp_odoo=$(mktemp)
-    libscript_download "${dl_url:-}" "${tmp_odoo}"
-    priv tar xzf "${tmp_odoo}" --strip-components=1 -C "${ODOO_WWWROOT}"
-    rm -f "${tmp_odoo}"
-  else
-    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${ODOO_WWWROOT}"
-  fi
+  tmp_odoo=$(mktemp)
+  libscript_download "${dl_url:-}" "${tmp_odoo}"
+  priv tar xzf "${tmp_odoo}" --strip-components=1 -C "${ODOO_WWWROOT}"
+  rm -f "${tmp_odoo}"
 
   # Install Python dependencies using requirements.txt
   if [ -f "${ODOO_WWWROOT}/requirements.txt" ]; then
@@ -119,23 +117,21 @@ fi
 
 # Setup Database
 log_info "Configuring Database (${ODOO_DB_TYPE})..."
-if [ "${ODOO_DB_TYPE}" = "postgres" ] && command -v psql >/dev/null 2>&1; then
-  if priv -u postgres psql -c "SELECT 1;" >/dev/null 2>&1 || priv psql -U postgres -c "SELECT 1;" >/dev/null 2>&1; then
-    # Check and create user
-    priv -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${ODOO_DB_USER}'" 2>/dev/null | grep -q 1 || priv psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '${ODOO_DB_USER}'" 2>/dev/null | grep -q 1 || priv -u postgres psql -c "CREATE USER ${ODOO_DB_USER} WITH PASSWORD '${ODOO_DB_PASS}';" || priv psql -U postgres -c "CREATE USER ${ODOO_DB_USER} WITH PASSWORD '${ODOO_DB_PASS}';"
-    priv -u postgres psql -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" 2>/dev/null || priv psql -U postgres -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" || true
-    # Check and create db
-    priv -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '${ODOO_DB_NAME}'" 2>/dev/null | grep -q 1 || priv psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${ODOO_DB_NAME}'" 2>/dev/null | grep -q 1 || priv -u postgres psql -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};" || priv psql -U postgres -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};"
-  else
-    log_warn "PostgreSQL is not running or login failed. Skipping automated DB setup."
+if [ "${ODOO_DB_TYPE}" = "postgres" ] || [ "${ODOO_DB_TYPE}" = "postgresql" ]; then
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine postgres --host "${ODOO_DB_HOST}" --port "${ODOO_DB_PORT}" \
+      --schema "${ODOO_DB_NAME}" --user "${ODOO_DB_USER}" --password "${ODOO_DB_PASS}" >/dev/null 2>&1 || \
+      log_warn "PostgreSQL is not running or login failed. Skipping automated DB setup."
   fi
-elif [ "${ODOO_DB_TYPE}" = "mariadb" ] && command -v mysql >/dev/null 2>&1; then
-  # Odoo doesn't support MariaDB, but to satisfy multi-db requirement we configure the db anyway
-  if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
-    priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${ODOO_DB_NAME}\`;"
-    priv mysql -u root -e "CREATE USER IF NOT EXISTS '${ODOO_DB_USER}'@'localhost' IDENTIFIED BY '${ODOO_DB_PASS}';"
-    priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${ODOO_DB_NAME}\`.* TO '${ODOO_DB_USER}'@'localhost';"
-    priv mysql -u root -e "FLUSH PRIVILEGES;"
+  if command -v psql >/dev/null 2>&1; then
+    priv -u postgres psql -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" >/dev/null 2>&1 || priv psql -U postgres -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" >/dev/null 2>&1 || true
+  fi
+elif [ "${ODOO_DB_TYPE}" = "mariadb" ] || [ "${ODOO_DB_TYPE}" = "mysql" ]; then
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql --host "${ODOO_DB_HOST}" --port "3306" \
+      --schema "${ODOO_DB_NAME}" --user "${ODOO_DB_USER}" --password "${ODOO_DB_PASS}" >/dev/null 2>&1 || true
   fi
 elif [ "${ODOO_DB_TYPE}" = "sqlite" ]; then
   # Odoo doesn't support SQLite. No db-side setup needed, just let Odoo fail or handle it

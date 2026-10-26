@@ -147,6 +147,15 @@ libscript_check_installed_version() {
       fi
       return 1
       ;;
+    valkey|redis)
+      for _civ_vk_bin in "${_civ_home}/${_civ_comp}/${_civ_req}/bin/valkey-server" "${_civ_home}/${_civ_comp}/${_civ_req}/bin/redis-server" "/usr/local/bin/valkey-server" "/usr/bin/valkey-server" "/usr/bin/redis-server" "$(command -v valkey-server 2>/dev/null || true)" "$(command -v redis-server 2>/dev/null || true)"; do
+        if [ -n "$_civ_vk_bin" ] && [ -x "$_civ_vk_bin" ]; then
+          dirname -- "$_civ_vk_bin"
+          return 0
+        fi
+      done
+      return 1
+      ;;
     duckdb)
       for _civ_dk_bin in "${_civ_home}/duckdb/${_civ_req}/bin/duckdb" "${_civ_home}/duckdb/default/bin/duckdb" "${_civ_user_home}/.local/bin/duckdb" "/usr/local/bin/duckdb" "$(command -v duckdb 2>/dev/null || true)"; do
         if [ -n "$_civ_dk_bin" ] && [ -x "$_civ_dk_bin" ]; then

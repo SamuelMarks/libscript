@@ -144,7 +144,7 @@ if "%PACMAN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pacman %PACMAN_VERSION% to %DOWNLOAD_DIR%\pacman...
     if not exist "%DOWNLOAD_DIR%\pacman" mkdir "%DOWNLOAD_DIR%\pacman"
     if not "%PACMAN_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PACMAN_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pacman\pacman-%PACMAN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PACMAN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pacman\pacman-%PACMAN_VERSION%.zip"
     ) else (
         echo PACMAN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PACMAN_INSTALL_METHOD%"=="system" (
-    winget install pacman --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pacman
     exit /b !errorlevel!
 )
 if "%PACMAN_INSTALL_METHOD%"=="mise" ( mise install "pacman@%PACMAN_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pacman\pacman-%PACMAN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PACMAN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PACMAN_DOWNLOAD_URL%" -o "%TEMP%\pacman.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PACMAN_DOWNLOAD_URL%" "%TEMP%\pacman.zip"
         tar -xf "%TEMP%\pacman.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pacman.

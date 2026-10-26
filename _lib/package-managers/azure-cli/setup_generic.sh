@@ -167,7 +167,7 @@ case "$ACTION" in
         if [ -f /etc/alpine-release ] || [ "${TARGET_OS:-}" = "alpine" ] || [ "${TARGET_OS:-}" = "rhel" ] || [ "${PKG_MGR:-}" = "dnf" ]; then
           log_info "Installing azure-cli via pip on ${TARGET_OS:-system}..."
           if command -v dnf >/dev/null 2>&1; then
-            priv dnf install -y python3-pip || true
+            libscript_depends python3-pip || true
             priv pip3 install azure-cli || true
           else
             libscript_depends "python3" "py3-pip"

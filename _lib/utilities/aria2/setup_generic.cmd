@@ -144,7 +144,7 @@ if "%ARIA2_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading aria2 %ARIA2_VERSION% to %DOWNLOAD_DIR%\aria2...
     if not exist "%DOWNLOAD_DIR%\aria2" mkdir "%DOWNLOAD_DIR%\aria2"
     if not "%ARIA2_DOWNLOAD_URL%"=="" (
-        curl -sSL "%ARIA2_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ARIA2_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.zip"
     ) else (
         echo ARIA2_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ARIA2_INSTALL_METHOD%"=="system" (
-    winget install aria2 --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends aria2
     exit /b !errorlevel!
 )
 if "%ARIA2_INSTALL_METHOD%"=="mise" ( mise install "aria2@%ARIA2_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ARIA2_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%ARIA2_DOWNLOAD_URL%" -o "%TEMP%\aria2.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ARIA2_DOWNLOAD_URL%" "%TEMP%\aria2.zip"
         tar -xf "%TEMP%\aria2.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aria2.

@@ -146,7 +146,7 @@ if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading ansible-galaxy %ANSIBLE_GALAXY_VERSION% to %DOWNLOAD_DIR%\ansible-galaxy...
     if not exist "%DOWNLOAD_DIR%\ansible-galaxy" mkdir "%DOWNLOAD_DIR%\ansible-galaxy"
     if not "%ANSIBLE_GALAXY_DOWNLOAD_URL%"=="" (
-        curl -sSL "%ANSIBLE_GALAXY_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\ansible-galaxy\ansible-galaxy-%ANSIBLE_GALAXY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ANSIBLE_GALAXY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ansible-galaxy\ansible-galaxy-%ANSIBLE_GALAXY_VERSION%.zip"
     ) else (
         echo ANSIBLE_GALAXY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -157,7 +157,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="system" (
-    winget install ansible-galaxy --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ansible-galaxy
     exit /b !errorlevel!
 )
 if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="mise" ( mise install "ansible-galaxy@%ANSIBLE_GALAXY_VERSION%" & exit /b 0 )
@@ -177,7 +177,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\ansible-galaxy\ansible-galaxy-%ANSIBLE_GALAXY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ANSIBLE_GALAXY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%ANSIBLE_GALAXY_DOWNLOAD_URL%" -o "%TEMP%\ansible-galaxy.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ANSIBLE_GALAXY_DOWNLOAD_URL%" "%TEMP%\ansible-galaxy.zip"
         tar -xf "%TEMP%\ansible-galaxy.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ansible-galaxy.

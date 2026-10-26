@@ -144,7 +144,7 @@ if "%KUBERNETES_THW_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kubernetes-thw %KUBERNETES_THW_VERSION% to %DOWNLOAD_DIR%\kubernetes-thw...
     if not exist "%DOWNLOAD_DIR%\kubernetes-thw" mkdir "%DOWNLOAD_DIR%\kubernetes-thw"
     if not "%KUBERNETES_THW_DOWNLOAD_URL%"=="" (
-        curl -sSL "%KUBERNETES_THW_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\kubernetes-thw\kubernetes-thw-%KUBERNETES_THW_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KUBERNETES_THW_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\kubernetes-thw\kubernetes-thw-%KUBERNETES_THW_VERSION%.zip"
     ) else (
         echo KUBERNETES_THW_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%KUBERNETES_THW_INSTALL_METHOD%"=="system" (
-    winget install kubernetes-thw --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends kubernetes-thw
     exit /b !errorlevel!
 )
 if "%KUBERNETES_THW_INSTALL_METHOD%"=="mise" ( mise install "kubernetes-thw@%KUBERNETES_THW_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\kubernetes-thw\kubernetes-thw-%KUBERNETES_THW_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%KUBERNETES_THW_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%KUBERNETES_THW_DOWNLOAD_URL%" -o "%TEMP%\kubernetes-thw.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KUBERNETES_THW_DOWNLOAD_URL%" "%TEMP%\kubernetes-thw.zip"
         tar -xf "%TEMP%\kubernetes-thw.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for kubernetes-thw.

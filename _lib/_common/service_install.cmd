@@ -124,6 +124,13 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!_WORKING_DIR!" "%PYTHON_VERSION%"
 )
 
+for %%B in ("!_WORKING_DIR!\.venv\Scripts" "!_WORKING_DIR!\node_modules\.bin" "!_MANIFEST_DIR!\.venv\Scripts" "!_MANIFEST_DIR!\node_modules\.bin") do (
+    if exist "%%~fB" (
+        echo ";!PATH!;" | findstr /I /C:";%%~fB;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~fB;!PATH!"
+    )
+)
+
 (
     echo @echo off
     echo setlocal EnableDelayedExpansion
@@ -133,6 +140,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
     )
     if exist "!_MANIFEST_DIR!\.env.libscript" (
         echo for /f "usebackq tokens=* delims=" %%%%L in ^("!_MANIFEST_DIR!\.env.libscript"^) do set "%%%%L"
+        echo if defined SERVICE_PATH set "PATH=%%SERVICE_PATH%%"
     )
     echo pushd "!_WORKING_DIR!"
     echo call !_EXEC_START! ^>^> "!_LOG_FILE!" 2^>^&1
@@ -159,6 +167,19 @@ if not errorlevel 1 (
     sc.exe create "!_SERVICE_NAME!" binPath= "cmd.exe /c \"!_RUNNER_FILE!\"" start= auto obj= LocalSystem >nul 2>&1
 )
 sc.exe description "!_SERVICE_NAME!" "!_DESCRIPTION!" >nul 2>&1
+set "_SVC_REG_ENV=PATH=!PATH!\0SERVICE_PATH=!PATH!"
+if exist "!_MANIFEST_DIR!\.env.libscript" (
+    for /f "usebackq tokens=1* delims==" %%A in ("!_MANIFEST_DIR!\.env.libscript") do (
+        if not "%%A"=="" (
+            set "_rk=%%A"
+            if not "!_rk:~0,1!"=="#" set "_SVC_REG_ENV=!_SVC_REG_ENV!\0%%A=%%B"
+        )
+    )
+)
+reg query "HKLM\SYSTEM\CurrentControlSet\Services\!_SERVICE_NAME!" >nul 2>&1
+if not errorlevel 1 (
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\!_SERVICE_NAME!" /v Environment /t REG_MULTI_SZ /d "!_SVC_REG_ENV!" /f >nul 2>&1
+)
 exit /b 0
 
 :: ## libscript_uninstall_service

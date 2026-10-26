@@ -144,7 +144,7 @@ if "%CSHARP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading csharp %CSHARP_VERSION% to %DOWNLOAD_DIR%\csharp...
     if not exist "%DOWNLOAD_DIR%\csharp" mkdir "%DOWNLOAD_DIR%\csharp"
     if not "%CSHARP_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CSHARP_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CSHARP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.zip"
     ) else (
         echo CSHARP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CSHARP_INSTALL_METHOD%"=="system" (
-    winget install csharp --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends csharp
     exit /b !errorlevel!
 )
 if "%CSHARP_INSTALL_METHOD%"=="mise" ( mise install "csharp@%CSHARP_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CSHARP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CSHARP_DOWNLOAD_URL%" -o "%TEMP%\csharp.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CSHARP_DOWNLOAD_URL%" "%TEMP%\csharp.zip"
         tar -xf "%TEMP%\csharp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for csharp.

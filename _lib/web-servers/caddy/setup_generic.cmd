@@ -144,7 +144,7 @@ if "%CADDY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading caddy %CADDY_VERSION% to %DOWNLOAD_DIR%\caddy...
     if not exist "%DOWNLOAD_DIR%\caddy" mkdir "%DOWNLOAD_DIR%\caddy"
     if not "%CADDY_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CADDY_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CADDY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.zip"
     ) else (
         echo CADDY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CADDY_INSTALL_METHOD%"=="system" (
-    winget install caddy --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends caddy
     exit /b !errorlevel!
 )
 if "%CADDY_INSTALL_METHOD%"=="mise" ( mise install "caddy@%CADDY_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CADDY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CADDY_DOWNLOAD_URL%" -o "%TEMP%\caddy.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CADDY_DOWNLOAD_URL%" "%TEMP%\caddy.zip"
         tar -xf "%TEMP%\caddy.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for caddy.

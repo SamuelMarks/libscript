@@ -9,6 +9,14 @@
       "type": "string",
       "description": "Application or stack identifier"
     },
+    "aliases": {
+      "type": "array",
+      "description": "Alternative CLI selector names or identifiers for targeting this application in multi-app stacks.",
+      "items": {
+        "type": "string",
+        "description": "Alias string matching --only selectors."
+      }
+    },
     "version": {
       "type": "string",
       "description": "Semantic version of the application or stack manifest"
@@ -30,19 +38,13 @@
       "description": "Map of required LibScript component names to version strings or configuration objects",
       "patternProperties": {
         "^[a-zA-Z0-9_-]+$": {
-          "type": [
-            "string",
-            "object"
-          ],
+          "type": ["string", "object"],
           "description": "Requested semantic version string or dependency override specification"
         }
       }
     },
     "databases": {
-      "type": [
-        "object",
-        "array"
-      ],
+      "type": ["object", "array"],
       "description": "Declarative database and cache instances to initialize, seed, and verify during health checks",
       "items": {
         "type": "object",
@@ -105,10 +107,7 @@
             }
           },
           "min_rows": {
-            "type": [
-              "integer",
-              "object"
-            ],
+            "type": ["integer", "object"],
             "description": "Minimum row count required for each table in required_tables (integer or table-to-count map)",
             "additionalProperties": {
               "type": "integer",
@@ -139,10 +138,7 @@
       }
     },
     "services": {
-      "type": [
-        "object",
-        "array"
-      ],
+      "type": ["object", "array"],
       "description": "Declarative application service daemons managed by LibScript",
       "items": {
         "type": "object",
@@ -187,10 +183,7 @@
             }
           },
           "health_check": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Deep health check configuration supporting command execution, HTTP polling, and JSON payload assertions",
             "properties": {
               "url": {
@@ -224,10 +217,7 @@
             }
           },
           "healthcheck": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Alias for health_check supporting identical command, URL, and expect_json properties"
           }
         }
@@ -241,10 +231,7 @@
           "type": "array",
           "description": "Hooks executed prior to dependency installation",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -252,10 +239,7 @@
           "type": "array",
           "description": "Hooks executed after dependency installation completes",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -263,10 +247,7 @@
           "type": "array",
           "description": "Hooks executed to compile or bundle application assets before service startup",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -274,10 +255,7 @@
           "type": "array",
           "description": "Hooks executed after database provisioning to apply schema migrations and seeds",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -285,10 +263,7 @@
           "type": "array",
           "description": "Hooks executed to populate initial or synthetic datasets",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -296,10 +271,7 @@
           "type": "array",
           "description": "Hooks executed immediately before starting application service daemons",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -307,10 +279,7 @@
           "type": "array",
           "description": "Hooks executed after application service daemons have started",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -318,10 +287,7 @@
           "type": "array",
           "description": "Hooks executed prior to stopping application service daemons",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -329,10 +295,7 @@
           "type": "array",
           "description": "Hooks executed after application service daemons have stopped",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         },
@@ -340,10 +303,7 @@
           "type": "array",
           "description": "Hooks executed during 'libscript health' to run project-specific health assertions",
           "items": {
-            "type": [
-              "string",
-              "object"
-            ],
+            "type": ["string", "object"],
             "description": "Hook command string or structured hook object"
           }
         }

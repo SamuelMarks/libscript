@@ -62,7 +62,17 @@ if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]
   _eb_comp_ver=$(printenv "${_eb_pkg_up}_VERSION" 2>/dev/null || true)
   _eb_ver="${_eb_comp_ver:-${LIBSCRIPT_VERSION:-latest}}"
   export "${_eb_pkg_up}_VERSION=${_eb_ver}"
-  libscript_path_prepend "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin" "${_eb_home}/${_eb_pkg}/default/bin"
+  if [ -d "${_eb_home}/${_eb_pkg}" ]; then
+    for _eb_sub in "${_eb_home}/${_eb_pkg}/"*/bin; do
+      if [ -d "$_eb_sub" ]; then
+        libscript_path_prepend "$_eb_sub"
+      fi
+    done
+  fi
+  if [ -d "${_eb_home}/${_eb_pkg}/default/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_pkg}/default/bin"
+  fi
+  libscript_path_prepend "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin"
 fi
 
 STACK="${STACK%${THIS_FILE}:}"

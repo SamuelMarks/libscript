@@ -11,6 +11,8 @@
 
 setlocal EnableDelayedExpansion
 set "CALLER_FILE=!THIS_FILE!"
+set "_EB_CALLER_DIR=!CALLER_SCRIPT_DIR!"
+if "!_EB_CALLER_DIR!"=="" set "_EB_CALLER_DIR=!SCRIPT_DIR!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -56,7 +58,15 @@ goto :find_root
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 set "_EB_PKG=%~1"
+if not "!_EB_PKG!"=="" if exist "!_EB_PKG!" (
+    for %%D in ("!_EB_PKG!") do set "_EB_PKG=%%~nxD"
+)
 if "!_EB_PKG!"=="" set "_EB_PKG=%PACKAGE_NAME%"
+if "!_EB_PKG!"=="" if not "!_EB_CALLER_DIR!"=="" (
+    set "_EB_DIR=!_EB_CALLER_DIR!"
+    if "!_EB_DIR:~-1!"=="\" set "_EB_DIR=!_EB_DIR:~0,-1!"
+    for %%N in ("!_EB_DIR!") do set "_EB_PKG=%%~nxN"
+)
 if "!_EB_PKG!"=="" if not "!CALLER_FILE!"=="" (
     for %%D in ("!CALLER_FILE!") do set "_EB_DIR=%%~dpD"
     if "!_EB_DIR:~-1!"=="\" set "_EB_DIR=!_EB_DIR:~0,-1!"
@@ -67,6 +77,14 @@ if "!_EB_VER!"=="" set "_EB_VER=%LIBSCRIPT_VERSION%"
 if "!_EB_VER!"=="" set "_EB_VER=latest"
 set "_NEW_PATH=!PATH!"
 if not "!_EB_PKG!"=="" if /i not "!_EB_PKG!"=="_common" if /i not "!_EB_PKG!"=="_noop" (
+    if exist "!LIBSCRIPT_HOME!\!_EB_PKG!" (
+        for /d %%S in ("!LIBSCRIPT_HOME!\!_EB_PKG!\*") do (
+            if exist "%%~fS\bin" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fS\bin;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fS\bin;!_NEW_PATH!"
+            )
+        )
+    )
     for %%C in ("!LIBSCRIPT_HOME!\!_EB_PKG!\default\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\!_EB_VER!\bin") do (
         set "_CAND=%%~C"
         echo ";!_NEW_PATH!;" | findstr /I /C:";!_CAND!;" >nul 2>&1

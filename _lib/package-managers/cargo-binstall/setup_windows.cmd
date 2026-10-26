@@ -66,7 +66,7 @@ if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 
 set "TEMP_ZIP=%TEMP%\cargo-binstall.zip"
 echo Downloading cargo-binstall (%ARCH%) from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download cargo-binstall.
     exit /b 1

@@ -144,7 +144,7 @@ if "%GHCUP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading ghcup %GHCUP_VERSION% to %DOWNLOAD_DIR%\ghcup...
     if not exist "%DOWNLOAD_DIR%\ghcup" mkdir "%DOWNLOAD_DIR%\ghcup"
     if not "%GHCUP_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GHCUP_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\ghcup\ghcup-%GHCUP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GHCUP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ghcup\ghcup-%GHCUP_VERSION%.zip"
     ) else (
         echo GHCUP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GHCUP_INSTALL_METHOD%"=="system" (
-    winget install ghcup --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ghcup
     exit /b !errorlevel!
 )
 if "%GHCUP_INSTALL_METHOD%"=="mise" ( mise install "ghcup@%GHCUP_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\ghcup\ghcup-%GHCUP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GHCUP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GHCUP_DOWNLOAD_URL%" -o "%TEMP%\ghcup.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GHCUP_DOWNLOAD_URL%" "%TEMP%\ghcup.zip"
         tar -xf "%TEMP%\ghcup.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ghcup.

@@ -144,7 +144,7 @@ if "%HELM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading helm %HELM_VERSION% to %DOWNLOAD_DIR%\helm...
     if not exist "%DOWNLOAD_DIR%\helm" mkdir "%DOWNLOAD_DIR%\helm"
     if not "%HELM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%HELM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\helm\helm-%HELM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HELM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\helm\helm-%HELM_VERSION%.zip"
     ) else (
         echo HELM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%HELM_INSTALL_METHOD%"=="system" (
-    winget install helm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends helm
     exit /b !errorlevel!
 )
 if "%HELM_INSTALL_METHOD%"=="mise" ( mise install "helm@%HELM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\helm\helm-%HELM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%HELM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%HELM_DOWNLOAD_URL%" -o "%TEMP%\helm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HELM_DOWNLOAD_URL%" "%TEMP%\helm.zip"
         tar -xf "%TEMP%\helm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for helm.

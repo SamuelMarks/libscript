@@ -144,7 +144,7 @@ if "%CPP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cpp %CPP_VERSION% to %DOWNLOAD_DIR%\cpp...
     if not exist "%DOWNLOAD_DIR%\cpp" mkdir "%DOWNLOAD_DIR%\cpp"
     if not "%CPP_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CPP_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.zip"
     ) else (
         echo CPP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CPP_INSTALL_METHOD%"=="system" (
-    winget install cpp --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cpp
     exit /b !errorlevel!
 )
 if "%CPP_INSTALL_METHOD%"=="mise" ( mise install "cpp@%CPP_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CPP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CPP_DOWNLOAD_URL%" -o "%TEMP%\cpp.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPP_DOWNLOAD_URL%" "%TEMP%\cpp.zip"
         tar -xf "%TEMP%\cpp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cpp.

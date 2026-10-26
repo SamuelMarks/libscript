@@ -144,7 +144,7 @@ if "%WGET_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading wget %WGET_VERSION% to %DOWNLOAD_DIR%\wget...
     if not exist "%DOWNLOAD_DIR%\wget" mkdir "%DOWNLOAD_DIR%\wget"
     if not "%WGET_DOWNLOAD_URL%"=="" (
-        curl -sSL "%WGET_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WGET_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.zip"
     ) else (
         echo WGET_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%WGET_INSTALL_METHOD%"=="system" (
-    winget install wget --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends wget
     exit /b !errorlevel!
 )
 if "%WGET_INSTALL_METHOD%"=="mise" ( mise install "wget@%WGET_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%WGET_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%WGET_DOWNLOAD_URL%" -o "%TEMP%\wget.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WGET_DOWNLOAD_URL%" "%TEMP%\wget.zip"
         tar -xf "%TEMP%\wget.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for wget.

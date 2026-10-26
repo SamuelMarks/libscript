@@ -140,9 +140,6 @@ case "$ACTION" in
       exit 0
     fi
     if [ "${SEVENZIP_INSTALL_METHOD}" = "system" ]; then
-      if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
-      fi
       libscript_depends '7zip'
     elif [ "${SEVENZIP_INSTALL_METHOD}" = "mise" ]; then
       mise install "7zip@${SEVENZIP_VERSION}"

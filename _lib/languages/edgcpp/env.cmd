@@ -58,7 +58,8 @@ endlocal & (
     set "_CAND_P=%_edg_home%\bin"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "edgcpp"
     set "CPFE_BIN=%_edg_home%\bin\cpfe.exe"
     set "CC=%SCRIPT_DIR%\edgcpp_wrapper.cmd"
     set "CXX=%SCRIPT_DIR%\edgcpp_wrapper.cmd"

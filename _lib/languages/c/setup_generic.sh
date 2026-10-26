@@ -134,7 +134,7 @@ case "$ACTION" in
       log_info "Downloading c ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/c..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/c"
       if [ -n "${C_DOWNLOAD_URL:-}" ]; then
-        curl -sSL "${C_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/c/c-${VERSION}.tar.gz"
+        libscript_download "${C_DOWNLOAD_URL}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/c/c-${VERSION}.tar.gz"
       else
         printf '%s\n' "C_DOWNLOAD_URL is not defined. Skipping."
       fi

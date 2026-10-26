@@ -166,7 +166,7 @@ if "%GO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading go %GO_VERSION% to %DOWNLOAD_DIR%\go...
     if not exist "%DOWNLOAD_DIR%\go" mkdir "%DOWNLOAD_DIR%\go"
     if not "%GO_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GO_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\go\go-%GO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\go\go-%GO_VERSION%.zip"
     ) else (
         echo GO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -177,7 +177,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GO_INSTALL_METHOD%"=="system" (
-    winget install go --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends go
     exit /b !errorlevel!
 )
 if "%GO_INSTALL_METHOD%"=="mise" ( mise install "go@%GO_VERSION%" & exit /b 0 )
@@ -197,7 +197,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\go\go-%GO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GO_DOWNLOAD_URL%" -o "%TEMP%\go.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GO_DOWNLOAD_URL%" "%TEMP%\go.zip"
         tar -xf "%TEMP%\go.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for go.

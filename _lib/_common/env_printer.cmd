@@ -61,12 +61,22 @@ if /i "%~1"=="--hydrate" (
     endlocal & (
         set "PATH=%PATH%"
         set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+        set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
         set "NODEJS_VERSION=%NODEJS_VERSION%"
         set "PYTHON_VERSION=%PYTHON_VERSION%"
         set "PYTHONHOME=%PYTHONHOME%"
         set "PYTHONPATH=%PYTHONPATH%"
         set "PYTHON_VENV=%PYTHON_VENV%"
         set "VIRTUAL_ENV=%VIRTUAL_ENV%"
+        set "GOROOT=%GOROOT%"
+        set "GO_VERSION=%GO_VERSION%"
+        set "JAVA_HOME=%JAVA_HOME%"
+        set "JAVA_VERSION=%JAVA_VERSION%"
+        set "RUST_VERSION=%RUST_VERSION%"
+        set "CARGO_HOME=%CARGO_HOME%"
+        set "RUSTUP_HOME=%RUSTUP_HOME%"
+        set "PHP_VERSION=%PHP_VERSION%"
+        set "RUBY_VERSION=%RUBY_VERSION%"
         set "UV_VERSION=%UV_VERSION%"
         set "UV_BIN=%UV_BIN%"
         set "NPX_BIN=%NPX_BIN%"
@@ -186,6 +196,15 @@ if exist "!_HM_TMP!" (
         )
     )
     del /q "!_HM_TMP!" >nul 2>&1
+)
+for %%V in ("!_HM_DIR!\.venv\Scripts" "!_HM_DIR!\node_modules\.bin") do (
+    if exist "%%~fV" (
+        echo ";!PATH!;" | findstr /I /C:";%%~fV;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~fV;!PATH!"
+    )
+)
+if exist "!_HM_DIR!\.venv\Scripts\python.exe" (
+    if "!VIRTUAL_ENV!"=="" set "VIRTUAL_ENV=!_HM_DIR!\.venv"
 )
 if "!UV_BIN!"=="" set "UV_BIN=uv"
 if "!NPX_BIN!"=="" set "NPX_BIN=npx"

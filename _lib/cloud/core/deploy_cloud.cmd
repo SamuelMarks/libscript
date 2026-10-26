@@ -148,8 +148,6 @@ if "!PROVIDER!"=="" (
     exit /b 1
 )
 
-if "!VM_OS!"=="" set "VM_OS=Ubuntu2204"
-if "!ADMIN_USER!"=="" set "ADMIN_USER=azureuser"
 set "VNET_NAME=!NODE!-vnet"
 set "NSG_NAME=!NODE!-nsg"
 set "AZURE_LOCATION=!LOC!"
@@ -161,12 +159,82 @@ if not exist "!CLI!" (
     exit /b 1
 )
 
+call :ensure_cli "jq" "jq"
+if /i "!PROVIDER!"=="azure" call :ensure_cli "az" "azure-cli"
+if /i "!PROVIDER!"=="aws" call :ensure_cli "aws" "awscli"
+if /i "!PROVIDER!"=="gcp" call :ensure_cli "gcloud" "google-cloud-sdk"
+
 if "!APP_SPECS!"=="" (
-    if "!REMOTE_DEST!"=="" set "REMOTE_DEST=!NODE!"
-    set "APP_SPECS=!REPO_PATH!:!REMOTE_DEST!|"
+    if exist "!REPO_PATH!\libscript.json" (
+        jq -e ".applications != null and (.applications | length > 0)" "!REPO_PATH!\libscript.json" >nul 2>&1
+        if not errorlevel 1 (
+            for /f "delims=" %%M in ('jq -r ".applications[] | \"\(.path // .name):\(.remote_dest // .name)@\(.domain // \"\")\"" "!REPO_PATH!\libscript.json" 2^>nul') do (
+                set "_MA_LINE=%%M"
+                for /f "tokens=1* delims=:" %%P in ("!_MA_LINE!") do (
+                    set "_MA_P=%%P"
+                    set "_MA_REST=%%Q"
+                    if "!_MA_P:~1,1!"==":" (
+                        set "APP_SPECS=!APP_SPECS!!_MA_P!:!_MA_REST!|"
+                    ) else (
+                        set "APP_SPECS=!APP_SPECS!!REPO_PATH!\!_MA_P!:!_MA_REST!|"
+                    )
+                )
+            )
+        )
+    )
+    if "!APP_SPECS!"=="" (
+        if "!REMOTE_DEST!"=="" set "REMOTE_DEST=!NODE!"
+        set "APP_SPECS=!REPO_PATH!:!REMOTE_DEST!|"
+    )
 )
 
+set "MANIFEST_FILES="
+set "_REM_MF=!APP_SPECS!"
+:: ## collect_manifests_loop
+:: Collects libscript.json paths across all configured APP_SPECS.
+:collect_manifests_loop
+if "!_REM_MF!"=="" goto :collect_manifests_done
+for /f "tokens=1* delims=|" %%A in ("!_REM_MF!") do (
+    set "_MF_SPEC=%%A"
+    set "_REM_MF=%%B"
+)
+call :parse_spec "!_MF_SPEC!"
+if exist "!_SP_REPO!\libscript.json" (
+    set "MANIFEST_FILES=!MANIFEST_FILES! \"!_SP_REPO!\libscript.json\""
+)
+goto :collect_manifests_loop
+
+:: ## collect_manifests_done
+:: Finalizes manifest collection and extracts node and port configurations.
+:collect_manifests_done
+set "JSON_FILE=!REPO_PATH!\libscript.json"
+if not exist "!JSON_FILE!" (
+    for %%F in (!MANIFEST_FILES!) do (
+        if not exist "!JSON_FILE!" set "JSON_FILE=%%~F"
+    )
+)
+
+if exist "!JSON_FILE!" (
+    if "!VM_OS!"=="" (
+        for /f "delims=" %%O in ('jq -r ".infrastructure.node.os // empty" "!JSON_FILE!" 2^>nul') do set "VM_OS=%%O"
+    )
+    if "!VM_SIZE!"=="" (
+        for /f "delims=" %%S in ('jq -r ".infrastructure.node.size // empty" "!JSON_FILE!" 2^>nul') do set "VM_SIZE=%%S"
+    )
+    if "!ADMIN_USER!"=="" (
+        for /f "delims=" %%U in ('jq -r ".infrastructure.node.admin_user // empty" "!JSON_FILE!" 2^>nul') do set "ADMIN_USER=%%U"
+    )
+)
+if "!VM_OS!"=="" set "VM_OS=Ubuntu2204"
+if "!ADMIN_USER!"=="" set "ADMIN_USER=azureuser"
+
 set "PORTS=22 80 443 3000 4200 8000 8001"
+if not "!MANIFEST_FILES!"=="" (
+    for /f "delims=" %%P in ('jq -r "([22, 80, 443, .infrastructure.network.ports[]?, (.ingress.listen | if type == \"array\" then .[] elif type == \"number\" or type == \"string\" then . else empty end), (.services | if type == \"object\" then .[].port? elif type == \"array\" then .[].port? else empty end)] | map(select(. != null and . != \"\")) | map(tostring) | unique | join(\" \"))" !MANIFEST_FILES! 2^>nul') do (
+        if not "%%P"=="" set "PORTS=%%P"
+    )
+)
+
 set "CTX=!RG!"
 if /i "!PROVIDER!"=="aws" set "CTX=!LOC!"
 if /i "!PROVIDER!"=="gcp" set "CTX=!LOC!"
@@ -184,12 +252,34 @@ if "!SKIP_INFRA!"=="0" (
     if not "!VM_SIZE!"=="" set "_SIZE_ARG=--size !VM_SIZE!"
     call "!CLI!" node create "!NODE!" "!VM_OS!" "!CTX!" !_SIZE_ARG! --vnet-name "!VNET_NAME!" --nsg "!NSG_NAME!" --admin-username "!ADMIN_USER!"
     if errorlevel 1 exit /b 1
+    if exist "!JSON_FILE!" if "!DRY_RUN_MODE!"=="0" (
+        for /f "delims=" %%D in ('jq -c ".infrastructure.node.data_disks[]? // empty" "!JSON_FILE!" 2^>nul') do (
+            set "_DISK_OBJ=%%D"
+            call :attach_manifest_disk
+        )
+    )
 )
 
 call "!CLI!" node sync "!NODE!" "!CTX!"
 if errorlevel 1 exit /b 1
 
 set "PREPARED_STORAGE=0"
+if exist "!REPO_PATH!\libscript.json" (
+    jq -e ".applications != null and (.applications | length > 0)" "!REPO_PATH!\libscript.json" >nul 2>&1
+    if not errorlevel 1 (
+        call "!CLI!" node upload "!NODE!" "!CTX!" "!REPO_PATH!\libscript.json" "libscript.json"
+        set "_SHARED_FLAGS="
+        if "!FORCE_REINSTALL!"=="1" set "_SHARED_FLAGS=!_SHARED_FLAGS! --force-reinstall"
+        if "!SKIP_PREPARE!"=="0" (
+            call "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+            if errorlevel 1 exit /b 1
+            set "PREPARED_STORAGE=1"
+        ) else (
+            call "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+            if errorlevel 1 exit /b 1
+        )
+    )
+)
 set "REM_SPECS=!APP_SPECS!"
 
 :: ## deploy_loop
@@ -246,23 +336,68 @@ if "!_SP_DEST!"=="" (
 )
 exit /b 0
 
+:: ## ensure_cli
+:: Ensures a required CLI binary is available in PATH or installs its LibScript package.
+:ensure_cli
+set "_EC_CMD=%~1"
+set "_EC_PKG=%~2"
+if "!DRY_RUN_MODE!"=="1" exit /b 0
+where "!_EC_CMD!" >nul 2>&1
+if not errorlevel 1 exit /b 0
+echo [INFO] Command '!_EC_CMD!' not found. Installing '!_EC_PKG!' via LibScript...
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "!_EC_PKG!" "latest"
+if errorlevel 1 (
+    echo [ERROR] Failed to auto-install !_EC_PKG!. 1>&2
+    exit /b 1
+)
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+for %%C in ("!LIBSCRIPT_HOME!\!_EC_PKG!\default\bin" "!LIBSCRIPT_HOME!\!_EC_PKG!\latest\bin") do (
+    echo ";!PATH!;" | findstr /I /C:";%%~C;" >nul 2>&1
+    if errorlevel 1 set "PATH=%%~C;!PATH!"
+)
+for /d %%D in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
+    if exist "%%D\!_EC_PKG!\env.cmd" (
+        set "STACK="
+        call "%%D\!_EC_PKG!\env.cmd"
+    )
+)
+exit /b 0
+
+:: ## attach_manifest_disk
+:: Attaches a declarative data disk from _DISK_OBJ onto the target node.
+:attach_manifest_disk
+set "_D_SIZE=100"
+set "_D_MOUNT=/mnt/data"
+set "_D_NAME=data-disk"
+for /f "delims=" %%S in ('echo !_DISK_OBJ! ^| jq -r ".size_gb // 100" 2^>nul') do set "_D_SIZE=%%S"
+for /f "delims=" %%M in ('echo !_DISK_OBJ! ^| jq -r ".mount_path // \"/mnt/data\"" 2^>nul') do set "_D_MOUNT=%%M"
+for /f "delims=" %%N in ('echo !_DISK_OBJ! ^| jq -r ".name // \"data-disk\"" 2^>nul') do set "_D_NAME=%%N"
+call "!CLI!" storage attach-disk "!NODE!" "!CTX!" "!NODE!-!_D_NAME!" "!_D_SIZE!" "!_D_MOUNT!"
+exit /b 0
+
 :: ## check_only_match
-:: Sets _MATCH=1 if the given remote destination matches ONLY_TARGET.
+:: Sets _MATCH=1 if the given remote destination or manifest matches ONLY_TARGET.
 :check_only_match
 set "_CHK_DEST=%~1"
+set "_CHK_REPO=%~2"
 set "_MATCH=0"
 if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="!_CHK_DEST!" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CHK_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CHK_DEST!"=="t1d-analytics" set "_MATCH=1"
+set "_NORM_TARGET=!ONLY_TARGET:_=-!"
+set "_NORM_DEST=!_CHK_DEST:_=-!"
+if /i "!_NORM_TARGET!"=="!_NORM_DEST!" set "_MATCH=1"
+if "!_MATCH!"=="0" if not "!_CHK_REPO!"=="" if exist "!_CHK_REPO!\libscript.json" (
+    jq -e --arg t "!ONLY_TARGET!" --arg tn "!_NORM_TARGET!" "([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub(\"_\"; \"-\") == $tn))" "!_CHK_REPO!\libscript.json" >nul 2>&1
+    if not errorlevel 1 set "_MATCH=1"
+)
 exit /b 0
 
 :: ## deploy_one_spec
 :: Deploys a single application specification onto the shared node.
 :deploy_one_spec
 call :parse_spec "%~1"
-call :check_only_match "!_SP_DEST!"
+call :check_only_match "!_SP_DEST!" "!_SP_REPO!"
 if "!_MATCH!"=="0" exit /b 0
 
 call "!CLI!" node deploy "!NODE!" "!CTX!" "!_SP_REPO!" "!_SP_DEST!"
@@ -294,7 +429,7 @@ exit /b !ERRORLEVEL!
 :: Verifies health and ingress for a single deployed application specification.
 :verify_one_spec
 call :parse_spec "%~1"
-call :check_only_match "!_SP_DEST!"
+call :check_only_match "!_SP_DEST!" "!_SP_REPO!"
 if "!_MATCH!"=="0" exit /b 0
 set "_PUB_ARG="
 if not "!_SP_DOMAIN!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_SP_DOMAIN!"

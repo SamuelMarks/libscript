@@ -117,7 +117,7 @@ case "$ACTION" in
           libscript_depends "packer"
           ;;
         'brew')
-          brew install hashicorp/tap/packer 2>/dev/null || brew install packer
+          libscript_depends_via brew hashicorp/tap/packer 2>/dev/null || libscript_depends_via brew packer
           ;;
         *)
           if ! libscript_depends "packer"; then

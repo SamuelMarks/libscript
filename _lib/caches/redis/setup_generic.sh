@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for redis.
+# Generic setup module for redis with reuse-else-create semantics.
 # 
 # ## Usage
 # Execute this script to perform generic initialization steps for redis.
@@ -47,9 +47,29 @@ REDIS_INSTALL_METHOD="$(libscript_resolve_install_method "REDIS")"
 ACTION="${ACTION:-install}"
 VERSION="${REDIS_VERSION:-latest}"
 
+# ## find_existing_redis
+# Checks LIBSCRIPT_HOME and system PATH for an existing redis-server or valkey-server installation.
+find_existing_redis() {
+  for _fer_cand in \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${VERSION}/bin/redis-server" \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/default/bin/redis-server" \
+    "$(command -v redis-server 2>/dev/null || true)" \
+    "$(command -v valkey-server 2>/dev/null || true)"; do
+    if [ -n "$_fer_cand" ] && [ -x "$_fer_cand" ]; then
+      printf '%s\n' "$_fer_cand"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_redis >/dev/null 2>&1; then
+    EXACT_VERSION="${VERSION:-latest}"
+    return 0
+  fi
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote redis 2>/dev/null | tail -n 1)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
@@ -60,6 +80,22 @@ resolve_exact_version() {
   else
     EXACT_VERSION="${VERSION:-latest}"
   fi
+}
+
+# ## resolve_redis_service_name
+# Resolves the active OS-native or LibScript service unit name for Redis/Valkey.
+resolve_redis_service_name() {
+  if [ -n "${LIBSCRIPT_SERVICE_NAME:-}" ]; then
+    printf '%s\n' "$LIBSCRIPT_SERVICE_NAME"
+    return 0
+  fi
+  for _rrsn_cand in redis-server redis valkey-server valkey; do
+    if [ -f "/lib/systemd/system/${_rrsn_cand}.service" ] || [ -f "/etc/systemd/system/${_rrsn_cand}.service" ] || [ -x "/etc/init.d/${_rrsn_cand}" ]; then
+      printf '%s\n' "$_rrsn_cand"
+      return 0
+    fi
+  done
+  printf '%s\n' "libscript_${PACKAGE_NAME:-redis}"
 }
 
 if [ -z "${REDIS_DOWNLOAD_URL:-}" ]; then
@@ -130,8 +166,6 @@ case "$ACTION" in
       printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
       vfox use "redis@${VERSION}"
-    elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "redis@${VERSION}"
     elif [ "$REDIS_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System packages do not support use here."
     else
@@ -155,6 +189,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_redis >/dev/null 2>&1; then
+        log_info "[REUSE] redis is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading redis ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis"
       if [ -n "${REDIS_DOWNLOAD_URL:-}" ]; then
@@ -172,8 +210,25 @@ case "$ACTION" in
       libscript_build_component_from_source "redis" "${EXACT_VERSION}" "redis-server" "c" "make" "${REDIS_DOWNLOAD_URL:-}"
       exit 0
     fi
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_rd=$(find_existing_redis 2>/dev/null); then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${EXACT_VERSION}"
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$_existing_rd" != "${TARGET_DIR}/bin/redis-server" ]; then
+        ln -sf "$_existing_rd" "${TARGET_DIR}/bin/redis-server" 2>/dev/null || true
+      fi
+      if command -v redis-cli >/dev/null 2>&1; then
+        ln -sf "$(command -v redis-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
+      elif command -v valkey-cli >/dev/null 2>&1; then
+        ln -sf "$(command -v valkey-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
+      fi
+      libscript_symlink_alias "redis" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "redis" "default" "${EXACT_VERSION}"
+      log_info "[REUSE] redis (${VERSION}) is already installed at ${_existing_rd}."
+      exit 0
+    fi
     if [ "$REDIS_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "redis"
+      libscript_depends "redis" || libscript_depends "valkey"
     elif [ "$REDIS_INSTALL_METHOD" = "mise" ]; then
       mise install "redis@${VERSION}"
     elif [ "$REDIS_INSTALL_METHOD" = "asdf" ]; then
@@ -219,10 +274,13 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for redis..."
-              libscript_depends "redis"
+              libscript_depends "redis" || libscript_depends "valkey"
               if command -v redis-server >/dev/null 2>&1; then
                 ln -sf "$(command -v redis-server)" "${TARGET_DIR}/bin/redis-server"
                 ln -sf "$(command -v redis-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
+              elif command -v valkey-server >/dev/null 2>&1; then
+                ln -sf "$(command -v valkey-server)" "${TARGET_DIR}/bin/redis-server"
+                ln -sf "$(command -v valkey-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
               fi
             else
               log_warn "No download URL provided for redis ${VERSION}."
@@ -239,8 +297,9 @@ case "$ACTION" in
     if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ] || [ "$REDIS_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-redis}}"
+      service_name=$(resolve_redis_service_name)
       libscript_service "$ACTION" "$service_name" "$@"
     else
       log_info "$ACTION not natively implemented for $REDIS_INSTALL_METHOD."
@@ -251,6 +310,7 @@ case "$ACTION" in
     if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ] || [ "$REDIS_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-redis}}"
       libscript_install_service "$service_name" "$@"
@@ -263,6 +323,7 @@ case "$ACTION" in
     if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ] || [ "$REDIS_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-redis}}"
       libscript_uninstall_service "$service_name" "$@"

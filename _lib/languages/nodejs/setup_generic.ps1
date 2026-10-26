@@ -40,10 +40,6 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls nodejs; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list nodejs; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls nodejs; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "nodejs"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -51,10 +47,6 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote nodejs; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list all nodejs; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all nodejs; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls-remote directly here."; exit 0 }
     if ($env:NODEJS_RELEASES_URL) {
         Invoke-WebRequest -Uri $env:NODEJS_RELEASES_URL | Select-Object -ExpandProperty Content
@@ -65,10 +57,6 @@ if ($Action -eq "ls-remote") {
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "nodejs@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf global nodejs "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not use explicit versions this way"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "nodejs@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     
 if ($CompVersion -eq "latest" -or $CompVersion -eq "lts") {
@@ -106,10 +94,6 @@ if ($Action -eq "download") {
 
 if ($Action -eq "install") {
     if ($InstallMethod -eq "system") { Write-Output "System package manager installation not implemented natively in ps1 yet."; exit 0 }
-    if ($InstallMethod -eq "mise") { mise install "nodejs@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf install nodejs "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { pkgx install "nodejs@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox add nodejs; vfox install "nodejs@$CompVersion"; exit 0 }
 
     $TargetDir = Join-Path (Join-Path $LibscriptHome "nodejs") $CompVersion
     $TargetBin = Join-Path $TargetDir "bin"

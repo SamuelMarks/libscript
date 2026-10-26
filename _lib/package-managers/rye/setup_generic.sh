@@ -174,7 +174,7 @@ case "$ACTION" in
         TEMP_FILE=$(mktemp)
         libscript_depends "curl"
         libscript_depends "gzip"
-        curl -sSL "$URL" -o "$TEMP_FILE.gz"
+        libscript_download "$URL" "$TEMP_FILE.gz"
         gzip -d "$TEMP_FILE.gz" || true
         cp "$TEMP_FILE" "${TARGET_DIR}/bin/rye"
         chmod +x "${TARGET_DIR}/bin/rye"

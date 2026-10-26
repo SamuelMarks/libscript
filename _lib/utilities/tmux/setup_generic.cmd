@@ -144,7 +144,7 @@ if "%TMUX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading tmux %TMUX_VERSION% to %DOWNLOAD_DIR%\tmux...
     if not exist "%DOWNLOAD_DIR%\tmux" mkdir "%DOWNLOAD_DIR%\tmux"
     if not "%TMUX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%TMUX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\tmux\tmux-%TMUX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TMUX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\tmux\tmux-%TMUX_VERSION%.zip"
     ) else (
         echo TMUX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%TMUX_INSTALL_METHOD%"=="system" (
-    winget install tmux --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends tmux
     exit /b !errorlevel!
 )
 if "%TMUX_INSTALL_METHOD%"=="mise" ( mise install "tmux@%TMUX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\tmux\tmux-%TMUX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%TMUX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%TMUX_DOWNLOAD_URL%" -o "%TEMP%\tmux.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TMUX_DOWNLOAD_URL%" "%TEMP%\tmux.zip"
         tar -xf "%TEMP%\tmux.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for tmux.

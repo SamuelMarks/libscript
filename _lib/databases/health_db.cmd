@@ -3,7 +3,7 @@
 ::
 :: ## Overview
 :: Declarative database content and connectivity health verifier for LibScript manifests on Windows.
-:: Validates PostgreSQL, DuckDB, and SQLite table counts, required tables, row counts, and custom health commands.
+:: Validates PostgreSQL, DuckDB, SQLite, and Valkey/Redis connectivity, table counts, required tables, row counts, and custom health commands.
 ::
 :: ## Usage
 :: Run `health_db.cmd <libscript.json>` to verify declared databases are reachable and populated.
@@ -100,6 +100,7 @@ set "db_pass="
 set "pass_env="
 set "db_host=127.0.0.1"
 set "db_port="
+set "db_index=0"
 set "db_path="
 set "min_tables="
 set "health_cmd="
@@ -111,6 +112,7 @@ for /f "delims=" %%p in ('echo !db_entry! ^| jq -r ".password // empty" 2^>nul')
 for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".password_env // empty" 2^>nul') do set "pass_env=%%k"
 for /f "delims=" %%h in ('echo !db_entry! ^| jq -r ".host // \"127.0.0.1\"" 2^>nul') do set "db_host=%%h"
 for /f "delims=" %%P in ('echo !db_entry! ^| jq -r ".port // empty" 2^>nul') do set "db_port=%%P"
+for /f "delims=" %%x in ('echo !db_entry! ^| jq -r ".db_index // .database // 0" 2^>nul') do set "db_index=%%x"
 for /f "delims=" %%f in ('echo !db_entry! ^| jq -r ".path // .file // .db_path // empty" 2^>nul') do set "db_path=%%f"
 for /f "delims=" %%m in ('echo !db_entry! ^| jq -r "if .min_tables != null then .min_tables elif .require_populated == true then 1 else empty end" 2^>nul') do set "min_tables=%%m"
 for /f "delims=" %%c in ('echo !db_entry! ^| jq -r ".health_command // empty" 2^>nul') do set "health_cmd=%%c"
@@ -129,6 +131,8 @@ if /i "!engine!"=="postgresql" call :check_pg
 if /i "!engine!"=="duckdb" call :check_duckdb
 if /i "!engine!"=="sqlite" call :check_sqlite
 if /i "!engine!"=="sqlite3" call :check_sqlite
+if /i "!engine!"=="valkey" call :check_redis
+if /i "!engine!"=="redis" call :check_redis
 
 if not "!health_cmd!"=="" (
     pushd "!MANIFEST_DIR!"
@@ -288,6 +292,29 @@ set "sqlite_row_count=-1"
 for /f "delims= " %%c in ('sqlite3 "!db_path!" "SELECT count(*) FROM \"!req_tbl!\";" 2^>nul') do set "sqlite_row_count=%%c"
 if !sqlite_row_count! lss !min_rows_req! (
     echo [ERROR] SQLite database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!sqlite_row_count! ^< !min_rows_req!^) >&2
+    set "HEALTH_DB_FAILED=1"
+)
+exit /b 0
+
+:: ## check_redis
+:: Validates Valkey/Redis server connectivity on the configured host, port, and database index.
+:check_redis
+if "!db_port!"=="" set "db_port=6379"
+if "!db_index!"=="" set "db_index=0"
+if "!db_index!"=="null" set "db_index=0"
+set "_vk_has_cli=0"
+set "_vk_ok=0"
+for %%C in (valkey-cli redis-cli) do (
+    where %%C >nul 2>nul
+    if not errorlevel 1 (
+        set "_vk_has_cli=1"
+        for /f "delims=" %%r in ('%%C -h "!db_host!" -p "!db_port!" -n "!db_index!" ping 2^>nul') do (
+            if /i "%%r"=="PONG" set "_vk_ok=1"
+        )
+    )
+)
+if "!_vk_has_cli!"=="1" if "!_vk_ok!"=="0" (
+    echo [ERROR] Valkey/Redis health check failed: no PONG response on !db_host!:!db_port! ^(db !db_index!^). >&2
     set "HEALTH_DB_FAILED=1"
 )
 exit /b 0

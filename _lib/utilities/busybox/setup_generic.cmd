@@ -144,7 +144,7 @@ if "%BUSYBOX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading busybox %BUSYBOX_VERSION% to %DOWNLOAD_DIR%\busybox...
     if not exist "%DOWNLOAD_DIR%\busybox" mkdir "%DOWNLOAD_DIR%\busybox"
     if not "%BUSYBOX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%BUSYBOX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\busybox\busybox-%BUSYBOX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUSYBOX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\busybox\busybox-%BUSYBOX_VERSION%.zip"
     ) else (
         echo BUSYBOX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -159,7 +159,7 @@ if /i "%BUSYBOX_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%BUSYBOX_INSTALL_METHOD%"=="system" (
-    winget install busybox --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends busybox
     exit /b !errorlevel!
 )
 if "%BUSYBOX_INSTALL_METHOD%"=="mise" ( mise install "busybox@%BUSYBOX_VERSION%" & exit /b 0 )
@@ -179,7 +179,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\busybox\busybox-%BUSYBOX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%BUSYBOX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%BUSYBOX_DOWNLOAD_URL%" -o "%TEMP%\busybox.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUSYBOX_DOWNLOAD_URL%" "%TEMP%\busybox.zip"
         tar -xf "%TEMP%\busybox.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for busybox.

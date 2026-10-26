@@ -144,7 +144,7 @@ if "%POWERSHELL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading powershell %POWERSHELL_VERSION% to %DOWNLOAD_DIR%\powershell...
     if not exist "%DOWNLOAD_DIR%\powershell" mkdir "%DOWNLOAD_DIR%\powershell"
     if not "%POWERSHELL_DOWNLOAD_URL%"=="" (
-        curl -sSL "%POWERSHELL_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\powershell\powershell-%POWERSHELL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%POWERSHELL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\powershell\powershell-%POWERSHELL_VERSION%.zip"
     ) else (
         echo POWERSHELL_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%POWERSHELL_INSTALL_METHOD%"=="system" (
-    winget install powershell --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends powershell
     exit /b !errorlevel!
 )
 if "%POWERSHELL_INSTALL_METHOD%"=="mise" ( mise install "powershell@%POWERSHELL_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\powershell\powershell-%POWERSHELL_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%POWERSHELL_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%POWERSHELL_DOWNLOAD_URL%" -o "%TEMP%\powershell.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%POWERSHELL_DOWNLOAD_URL%" "%TEMP%\powershell.zip"
         tar -xf "%TEMP%\powershell.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for powershell.

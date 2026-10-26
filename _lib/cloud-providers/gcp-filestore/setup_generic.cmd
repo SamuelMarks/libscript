@@ -119,7 +119,7 @@ if "%FILESTORE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading filestore %FILESTORE_VERSION% to %DOWNLOAD_DIR%\filestore...
     if not exist "%DOWNLOAD_DIR%\filestore" mkdir "%DOWNLOAD_DIR%\filestore"
     if not "%FILESTORE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%FILESTORE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\filestore\filestore-%FILESTORE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FILESTORE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\filestore\filestore-%FILESTORE_VERSION%.zip"
     ) else (
         echo FILESTORE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -134,7 +134,7 @@ if exist "%LIBSCRIPT_HOME%\gcp-filestore\%VERSION%" (
     exit /b 0
 )
 if "%FILESTORE_INSTALL_METHOD%"=="system" (
-    winget install filestore --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends filestore
     exit /b !errorlevel!
 )
 @echo off

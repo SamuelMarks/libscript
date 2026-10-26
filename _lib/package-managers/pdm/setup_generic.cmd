@@ -144,7 +144,7 @@ if "%PDM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pdm %PDM_VERSION% to %DOWNLOAD_DIR%\pdm...
     if not exist "%DOWNLOAD_DIR%\pdm" mkdir "%DOWNLOAD_DIR%\pdm"
     if not "%PDM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PDM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pdm\pdm-%PDM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PDM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pdm\pdm-%PDM_VERSION%.zip"
     ) else (
         echo PDM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PDM_INSTALL_METHOD%"=="system" (
-    winget install pdm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pdm
     exit /b !errorlevel!
 )
 if "%PDM_INSTALL_METHOD%"=="mise" ( mise install "pdm@%PDM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pdm\pdm-%PDM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PDM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PDM_DOWNLOAD_URL%" -o "%TEMP%\pdm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PDM_DOWNLOAD_URL%" "%TEMP%\pdm.zip"
         tar -xf "%TEMP%\pdm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pdm.

@@ -154,6 +154,22 @@ if /i "!_civ_comp!"=="python" (
     )
     exit /b 1
 )
+if /i "!_civ_comp!"=="valkey" (
+    where valkey-server >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    where redis-server >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    if exist "!_civ_home!\valkey\!_civ_req!\bin" exit /b 0
+    exit /b 1
+)
+if /i "!_civ_comp!"=="redis" (
+    where redis-server >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    where valkey-server >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    if exist "!_civ_home!\redis\!_civ_req!\bin" exit /b 0
+    exit /b 1
+)
 if /i "!_civ_comp!"=="postgres" (
     where psql >nul 2>&1
     if not errorlevel 1 exit /b 0

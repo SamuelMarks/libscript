@@ -1,13 +1,12 @@
 #!/bin/sh
 # ## Overview
 # Provides specialized installation logic for Valkey on Debian/Ubuntu systems.
-# It handles fetching the source from GitHub, compiling it with TLS and Systemd support,
-# creating default configurations (including socket or port bindings), and registering
-# the service with Systemd and `netctl`. It also sets connection string environment exports.
+# It handles reusing an existing Valkey/Redis server, installing via apt or compiling
+# from source with TLS and Systemd support, ensuring the daemon is running, and
+# setting connection string environment exports.
 # 
 # ## Usage
 # Typically called automatically by `setup.sh` when running on a Debian-like operating system.
-
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -38,10 +37,8 @@ export LIBSCRIPT_DATA_DIR
 PREVIOUS_WD="$(pwd)"
 _DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/git-servers/utils/git.sh"; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/git-servers/utils/git.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -54,35 +51,108 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
+# ## _valkey_debian_is_active
+# Checks whether a Valkey or Redis server is already accepting connections on the target port.
+_valkey_debian_is_active() {
+  _vk_port="${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-6379}}"
+  for _vk_cli in valkey-cli redis-cli; do
+    if command -v "$_vk_cli" >/dev/null 2>&1; then
+      _vk_pong=$("$_vk_cli" -h 127.0.0.1 -p "$_vk_port" ping 2>/dev/null || true)
+      if [ "$_vk_pong" = "PONG" ]; then
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
 
-TARGET="${VALKEY_BUILD_DIR}"'/valkey'
-git_get https://github.com/valkey-io/valkey "${TARGET}"
-cd -- "${TARGET}"
-HASH="$(git rev-list HEAD -1)"
+# ## _valkey_debian_ensure_started
+# Ensures an installed Valkey or Redis service is enabled and running under systemd or init.d.
+_valkey_debian_ensure_started() {
+  if _valkey_debian_is_active; then
+    return 0
+  fi
+  if [ "$(ps -q 1 -o comm= 2>/dev/null || true)" = 'systemd' ] && command -v systemctl >/dev/null 2>&1; then
+    for _vk_svc in "${LIBSCRIPT_SERVICE_NAME:-}" valkey-server valkey redis-server redis; do
+      [ -n "$_vk_svc" ] || continue
+      if [ -f "/lib/systemd/system/${_vk_svc}.service" ] || [ -f "/etc/systemd/system/${_vk_svc}.service" ]; then
+        priv systemctl enable "$_vk_svc" >/dev/null 2>&1 || true
+        priv systemctl start "$_vk_svc" >/dev/null 2>&1 || true
+        if _valkey_debian_is_active; then
+          return 0
+        fi
+      fi
+    done
+  fi
+  if command -v service >/dev/null 2>&1; then
+    for _vk_svc in "${LIBSCRIPT_SERVICE_NAME:-}" valkey-server valkey redis-server redis; do
+      [ -n "$_vk_svc" ] || continue
+      if [ -x "/etc/init.d/${_vk_svc}" ]; then
+        priv service "$_vk_svc" start >/dev/null 2>&1 || true
+        if _valkey_debian_is_active; then
+          return 0
+        fi
+      fi
+    done
+  fi
+  return 0
+}
 
 # ## build_install
-# Performs the build_install operation and updates component state.
+# Performs the build_install operation from source and updates component state.
 build_install() {
   [ -d 'build' ] || mkdir -p -- 'build'
   touch 'build/'"${HASH}"
   make BUILD_TLS='yes' USE_SYSTEMD='yes'
-  priv  make install
+  priv make install
 }
 
-NOOP=0
-
-if [ -f 'build/'"${HASH}" ]; then
+if [ "${FORCE_REINSTALL:-0}" != "1" ] && _valkey_debian_is_active; then
+  log_info "[REUSE] Valkey/Redis server already active on port ${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-6379}}."
+  _valkey_debian_ensure_started
   NOOP=1
-elif [ -f './src/rand.o' ]; then
-  make distclean
-  build_install
 else
-  build_install
+  NOOP=0
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && { command -v valkey-server >/dev/null 2>&1 || command -v redis-server >/dev/null 2>&1; }; then
+    _valkey_debian_ensure_started
+    log_info "[REUSE] Valkey/Redis binary already installed."
+    NOOP=1
+  elif [ "${VALKEY_BUILD_FROM_SOURCE:-0}" = "1" ]; then
+    libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
+    TARGET="${VALKEY_BUILD_DIR}"'/valkey'
+    git_get https://github.com/valkey-io/valkey "${TARGET}"
+    cd -- "${TARGET}"
+    HASH="$(git rev-list HEAD -1)"
+    if [ -f 'build/'"${HASH}" ]; then
+      NOOP=1
+    elif [ -f './src/rand.o' ]; then
+      make distclean
+      build_install
+    else
+      build_install
+    fi
+    cd -- "${PREVIOUS_WD}"
+  else
+    if priv apt-get update -qq 2>/dev/null && priv apt-get install -y valkey >/dev/null 2>&1; then
+      _valkey_debian_ensure_started
+      NOOP=1
+    elif priv apt-get install -y valkey-server >/dev/null 2>&1; then
+      _valkey_debian_ensure_started
+      NOOP=1
+    elif priv apt-get install -y redis-server >/dev/null 2>&1; then
+      _valkey_debian_ensure_started
+      NOOP=1
+    else
+      libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
+      TARGET="${VALKEY_BUILD_DIR}"'/valkey'
+      git_get https://github.com/valkey-io/valkey "${TARGET}"
+      cd -- "${TARGET}"
+      HASH="$(git rev-list HEAD -1)"
+      build_install
+      cd -- "${PREVIOUS_WD}"
+    fi
+  fi
 fi
-
-
-cd -- "${PREVIOUS_WD}"
 
 if [ "${NOOP}" -eq 0 ]; then
   SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-valkey}"
@@ -99,11 +169,11 @@ if [ "${NOOP}" -eq 0 ]; then
       sed -i "s|^port .*|port ${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${VALKEY_CONF}"
     fi
   fi
-  priv  install -m 0644 -o 'root' -- "${VALKEY_CONF}" /etc/valkey.conf
+  priv install -m 0644 -o 'root' -- "${VALKEY_CONF}" /etc/valkey.conf
   rm -f -- "${VALKEY_CONF}"
-  priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/systemd/'"${SERVICE_NAME}"'.service' /etc/systemd/system/
-  priv  systemctl daemon-reload
-  priv  systemctl reload-or-restart -- "${SERVICE_NAME}"
+  priv install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/systemd/'"${SERVICE_NAME}"'.service' /etc/systemd/system/
+  priv systemctl daemon-reload
+  priv systemctl reload-or-restart -- "${SERVICE_NAME}"
 fi
 
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"

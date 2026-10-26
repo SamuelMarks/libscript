@@ -144,7 +144,7 @@ if "%KAFKA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kafka %KAFKA_VERSION% to %DOWNLOAD_DIR%\kafka...
     if not exist "%DOWNLOAD_DIR%\kafka" mkdir "%DOWNLOAD_DIR%\kafka"
     if not "%KAFKA_DOWNLOAD_URL%"=="" (
-        curl -sSL "%KAFKA_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\kafka\kafka-%KAFKA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KAFKA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\kafka\kafka-%KAFKA_VERSION%.zip"
     ) else (
         echo KAFKA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%KAFKA_INSTALL_METHOD%"=="system" (
-    winget install kafka --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends kafka
     exit /b !errorlevel!
 )
 if "%KAFKA_INSTALL_METHOD%"=="mise" ( mise install "kafka@%KAFKA_VERSION%" & exit /b 0 )
@@ -175,8 +175,9 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\kafka\kafka-%KAFKA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%KAFKA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%KAFKA_DOWNLOAD_URL%" -o "%TEMP%\kafka.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KAFKA_DOWNLOAD_URL%" "%TEMP%\kafka.zip"
         tar -xf "%TEMP%\kafka.zip" -C "%TARGET_DIR%"
+        del /f /q "%TEMP%\kafka.zip" 2>nul
     ) else (
         echo No download URL or cache available for kafka.
         exit /b 1

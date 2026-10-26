@@ -137,6 +137,29 @@ exit /b !_rc!
 if "%LIBSCRIPT_SKIP_SYSTEM_DEPS%"=="1" exit /b 0
 if defined LIBSCRIPT_PKG_MGR call :detect_pkg_mgr
 if not defined PKG_MGR call :detect_pkg_mgr
+goto :depends_loop
+
+:: ## is_installed
+:: Checks whether a mapped package is already installed under the active Windows package manager.
+:is_installed
+set "_chk_pkg=%~1"
+if /i "!PKG_MGR!"=="winget" (
+    winget list --exact --id "!_chk_pkg!" >nul 2>&1
+    exit /b !errorlevel!
+)
+if /i "!PKG_MGR!"=="choco" (
+    choco list --local-only "!_chk_pkg!" 2>nul | findstr /I /B /C:"!_chk_pkg! " >nul 2>&1
+    exit /b !errorlevel!
+)
+if /i "!PKG_MGR!"=="scoop" (
+    scoop list "!_chk_pkg!" 2>nul | findstr /I /C:"!_chk_pkg!" >nul 2>&1
+    exit /b !errorlevel!
+)
+if /i "!PKG_MGR!"=="vcpkg" (
+    vcpkg list 2>nul | findstr /I /B /C:"!_chk_pkg!:" >nul 2>&1
+    exit /b !errorlevel!
+)
+exit /b 1
 
 :: ## depends_loop
 :: Iterates over requested package arguments, mapping and installing each dependency.
@@ -147,6 +170,12 @@ call "%MAPPER_CMD%" :map_package "!_generic_pkg!"
 if "!MAPPED_PKG!"=="" set "MAPPED_PKG=!_generic_pkg!"
 if "%LIBSCRIPT_DRY_RUN_PKG_MGR%"=="1" (
     echo [INFO] [DRY-RUN] ^(!PKG_MGR!^) install !MAPPED_PKG!
+    shift
+    goto :depends_loop
+)
+call :is_installed "!MAPPED_PKG!"
+if not errorlevel 1 (
+    call "!LOG_CMD!" :log_info "[REUSE] Package '!MAPPED_PKG!' is already installed via !PKG_MGR!."
     shift
     goto :depends_loop
 )

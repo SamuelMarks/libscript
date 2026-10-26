@@ -144,7 +144,7 @@ if "%AZURE_CLI_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading azure-cli %AZURE_CLI_VERSION% to %DOWNLOAD_DIR%\azure-cli...
     if not exist "%DOWNLOAD_DIR%\azure-cli" mkdir "%DOWNLOAD_DIR%\azure-cli"
     if not "%AZURE_CLI_DOWNLOAD_URL%"=="" (
-        curl -sSL "%AZURE_CLI_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\azure-cli\azure-cli-%AZURE_CLI_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AZURE_CLI_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\azure-cli\azure-cli-%AZURE_CLI_VERSION%.zip"
     ) else (
         echo AZURE_CLI_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%AZURE_CLI_INSTALL_METHOD%"=="system" (
-    winget install azure-cli --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends azure-cli
     exit /b !errorlevel!
 )
 if "%AZURE_CLI_INSTALL_METHOD%"=="mise" ( mise install "azure-cli@%AZURE_CLI_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\azure-cli\azure-cli-%AZURE_CLI_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%AZURE_CLI_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%AZURE_CLI_DOWNLOAD_URL%" -o "%TEMP%\azure-cli.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AZURE_CLI_DOWNLOAD_URL%" "%TEMP%\azure-cli.zip"
         tar -xf "%TEMP%\azure-cli.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for azure-cli.

@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Declarative database content and connectivity health verifier for LibScript manifests.
-# Validates PostgreSQL, DuckDB, and SQLite table counts, required tables, row counts, and custom health commands.
+# Validates PostgreSQL, DuckDB, SQLite, and Valkey/Redis connectivity, table counts, required tables, row counts, and custom health commands.
 #
 # ## Usage
 # Run `health_db.sh <libscript.json>` to verify declared databases are reachable and populated.
@@ -283,6 +283,27 @@ EOF_DUCK_REQ
 $REQ_TABLES
 EOF_SQLITE_REQ
         fi
+      fi
+      ;;
+    valkey|redis)
+      : "${DB_PORT:=6379}"
+      DB_IDX=$(printf '%s\n' "$db_entry" | jq -r '.db_index // .database // 0' 2>/dev/null || printf '0')
+      [ -z "$DB_IDX" ] || [ "$DB_IDX" = "null" ] && DB_IDX="0"
+      _vk_ok=0
+      for _vk_cli in valkey-cli redis-cli; do
+        if command -v "$_vk_cli" >/dev/null 2>&1; then
+          if "$_vk_cli" -h "$DB_HOST" -p "$DB_PORT" -n "$DB_IDX" ping 2>/dev/null | grep -qi "PONG"; then
+            _vk_ok=1
+            break
+          fi
+        fi
+      done
+      if [ "$_vk_ok" -eq 0 ] && ! command -v valkey-cli >/dev/null 2>&1 && ! command -v redis-cli >/dev/null 2>&1; then
+        _vk_ok=1
+      fi
+      if [ "$_vk_ok" -eq 0 ]; then
+        log_error "Valkey/Redis health check failed: no PONG response on ${DB_HOST}:${DB_PORT} (db ${DB_IDX})."
+        HEALTH_DB_FAILED=1
       fi
       ;;
   esac

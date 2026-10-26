@@ -144,7 +144,7 @@ if "%GUIX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading guix %GUIX_VERSION% to %DOWNLOAD_DIR%\guix...
     if not exist "%DOWNLOAD_DIR%\guix" mkdir "%DOWNLOAD_DIR%\guix"
     if not "%GUIX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GUIX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GUIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.zip"
     ) else (
         echo GUIX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GUIX_INSTALL_METHOD%"=="system" (
-    winget install guix --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends guix
     exit /b !errorlevel!
 )
 if "%GUIX_INSTALL_METHOD%"=="mise" ( mise install "guix@%GUIX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GUIX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GUIX_DOWNLOAD_URL%" -o "%TEMP%\guix.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GUIX_DOWNLOAD_URL%" "%TEMP%\guix.zip"
         tar -xf "%TEMP%\guix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for guix.

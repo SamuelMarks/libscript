@@ -144,7 +144,7 @@ if "%MIX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mix %MIX_VERSION% to %DOWNLOAD_DIR%\mix...
     if not exist "%DOWNLOAD_DIR%\mix" mkdir "%DOWNLOAD_DIR%\mix"
     if not "%MIX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MIX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.zip"
     ) else (
         echo MIX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MIX_INSTALL_METHOD%"=="system" (
-    winget install mix --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mix
     exit /b !errorlevel!
 )
 if "%MIX_INSTALL_METHOD%"=="mise" ( mise install "mix@%MIX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MIX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MIX_DOWNLOAD_URL%" -o "%TEMP%\mix.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MIX_DOWNLOAD_URL%" "%TEMP%\mix.zip"
         tar -xf "%TEMP%\mix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mix.

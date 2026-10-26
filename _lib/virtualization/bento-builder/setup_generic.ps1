@@ -20,9 +20,7 @@ if ($Action -eq "install") {
     & (Join-Path $LibscriptRoot "_lib\orchestration\vagrant\setup.ps1")
     
     if (-not (Get-Command 7z -ErrorAction SilentlyContinue)) {
-        if (Get-Command winget -ErrorAction SilentlyContinue) {
-            winget install --silent --force --id=7zip.7zip -e --accept-package-agreements --accept-source-agreements
-        }
+        & (Join-Path $LibscriptRoot "libscript.cmd") install 7zip latest
     }
     Write-Output "Bento Builder environment provisioned on Windows."
 }

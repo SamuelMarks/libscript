@@ -218,7 +218,7 @@ case "$ACTION" in
               DL_URL="https://go.dev/dl/go${_actual_version}.linux-amd64.tar.gz"
             fi
             
-            curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+            libscript_download "$DL_URL" "${TEMP_FILE}"
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             rm -f "${TEMP_FILE}"
           fi

@@ -201,13 +201,13 @@ case "$ACTION" in
           # Download standalone binaries
           for bin in kubectl kube-apiserver kube-controller-manager kube-scheduler kube-proxy kubelet; do
              URL="https://dl.k8s.io/${EXACT_VERSION}/bin/linux/${ARCH}/${bin}"
-             curl -sSLf "$URL" -o "${TARGET_DIR}/bin/${bin}" || log_error "Failed to download ${bin}"
+             libscript_download "$URL" "${TARGET_DIR}/bin/${bin}" || log_error "Failed to download ${bin}"
              chmod +x "${TARGET_DIR}/bin/${bin}" || true
           done
 
           # Download and rename runc
           URL="https://github.com/opencontainers/runc/releases/download/${RUNC_VERSION}/runc.${ARCH}"
-          curl -sSLf "$URL" -o "${TARGET_DIR}/bin/runc" || log_error "Failed to download runc"
+          libscript_download "$URL" "${TARGET_DIR}/bin/runc" || log_error "Failed to download runc"
           chmod +x "${TARGET_DIR}/bin/runc" || true
 
           # Download and extract tarballs
@@ -215,23 +215,23 @@ case "$ACTION" in
           
           # crictl
           URL="https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz"
-          curl -sSLf "$URL" -o "${TEMP_DIR}/crictl.tar.gz" || log_error "Failed to download crictl"
+          libscript_download "$URL" "${TEMP_DIR}/crictl.tar.gz" || log_error "Failed to download crictl"
           tar -xzf "${TEMP_DIR}/crictl.tar.gz" -C "${TARGET_DIR}/bin" || true
           
           # cni-plugins
           mkdir -p "${TARGET_DIR}/bin/cni"
           URL="https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-${ARCH}-${CNI_VERSION}.tgz"
-          curl -sSLf "$URL" -o "${TEMP_DIR}/cni.tgz" || log_error "Failed to download CNI"
+          libscript_download "$URL" "${TEMP_DIR}/cni.tgz" || log_error "Failed to download CNI"
           tar -xzf "${TEMP_DIR}/cni.tgz" -C "${TARGET_DIR}/bin/cni" || true
           
           # containerd
           URL="https://github.com/containerd/containerd/releases/download/${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-${ARCH}.tar.gz"
-          curl -sSLf "$URL" -o "${TEMP_DIR}/containerd.tar.gz" || log_error "Failed to download containerd"
+          libscript_download "$URL" "${TEMP_DIR}/containerd.tar.gz" || log_error "Failed to download containerd"
           tar -xzf "${TEMP_DIR}/containerd.tar.gz" -C "${TARGET_DIR}" bin/ || true
           
           # etcd
           URL="https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-${ARCH}.tar.gz"
-          curl -sSLf "$URL" -o "${TEMP_DIR}/etcd.tar.gz" || log_error "Failed to download etcd"
+          libscript_download "$URL" "${TEMP_DIR}/etcd.tar.gz" || log_error "Failed to download etcd"
           tar -xzf "${TEMP_DIR}/etcd.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 "etcd-${ETCD_VERSION}-linux-${ARCH}/etcd" "etcd-${ETCD_VERSION}-linux-${ARCH}/etcdctl" || true
           
           rm -rf "${TEMP_DIR}"

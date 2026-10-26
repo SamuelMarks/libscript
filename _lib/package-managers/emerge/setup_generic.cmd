@@ -144,7 +144,7 @@ if "%EMERGE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading emerge %EMERGE_VERSION% to %DOWNLOAD_DIR%\emerge...
     if not exist "%DOWNLOAD_DIR%\emerge" mkdir "%DOWNLOAD_DIR%\emerge"
     if not "%EMERGE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%EMERGE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\emerge\emerge-%EMERGE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EMERGE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\emerge\emerge-%EMERGE_VERSION%.zip"
     ) else (
         echo EMERGE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%EMERGE_INSTALL_METHOD%"=="system" (
-    winget install emerge --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends emerge
     exit /b !errorlevel!
 )
 if "%EMERGE_INSTALL_METHOD%"=="mise" ( mise install "emerge@%EMERGE_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\emerge\emerge-%EMERGE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%EMERGE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%EMERGE_DOWNLOAD_URL%" -o "%TEMP%\emerge.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EMERGE_DOWNLOAD_URL%" "%TEMP%\emerge.zip"
         tar -xf "%TEMP%\emerge.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for emerge.

@@ -144,7 +144,7 @@ if "%SBT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading sbt %SBT_VERSION% to %DOWNLOAD_DIR%\sbt...
     if not exist "%DOWNLOAD_DIR%\sbt" mkdir "%DOWNLOAD_DIR%\sbt"
     if not "%SBT_DOWNLOAD_URL%"=="" (
-        curl -sSL "%SBT_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\sbt\sbt-%SBT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SBT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\sbt\sbt-%SBT_VERSION%.zip"
     ) else (
         echo SBT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SBT_INSTALL_METHOD%"=="system" (
-    winget install sbt --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends sbt
     exit /b !errorlevel!
 )
 if "%SBT_INSTALL_METHOD%"=="mise" ( mise install "sbt@%SBT_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\sbt\sbt-%SBT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SBT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%SBT_DOWNLOAD_URL%" -o "%TEMP%\sbt.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SBT_DOWNLOAD_URL%" "%TEMP%\sbt.zip"
         tar -xf "%TEMP%\sbt.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for sbt.

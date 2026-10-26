@@ -144,7 +144,7 @@ if "%YAY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading yay %YAY_VERSION% to %DOWNLOAD_DIR%\yay...
     if not exist "%DOWNLOAD_DIR%\yay" mkdir "%DOWNLOAD_DIR%\yay"
     if not "%YAY_DOWNLOAD_URL%"=="" (
-        curl -sSL "%YAY_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\yay\yay-%YAY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YAY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\yay\yay-%YAY_VERSION%.zip"
     ) else (
         echo YAY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%YAY_INSTALL_METHOD%"=="system" (
-    winget install yay --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends yay
     exit /b !errorlevel!
 )
 if "%YAY_INSTALL_METHOD%"=="mise" ( mise install "yay@%YAY_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\yay\yay-%YAY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%YAY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%YAY_DOWNLOAD_URL%" -o "%TEMP%\yay.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YAY_DOWNLOAD_URL%" "%TEMP%\yay.zip"
         tar -xf "%TEMP%\yay.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for yay.

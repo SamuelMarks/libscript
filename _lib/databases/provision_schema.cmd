@@ -139,7 +139,14 @@ if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
 set "PGPASSWORD=%ADMIN_PASS%"
 call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='%TENANT_USER%'" | findstr "1" >nul
 if not errorlevel 1 (
-    echo [REUSE] PostgreSQL role '%TENANT_USER%' already exists.
+    set "PGPASSWORD=%TENANT_PASS%"
+    psql -h "%HOST%" -p "%PORT%" -U "%TENANT_USER%" -d postgres -tAc "SELECT 1" >nul 2>&1
+    if not errorlevel 1 (
+        echo [REUSE] PostgreSQL role '%TENANT_USER%' already exists.
+    ) else (
+        echo [REUSE] PostgreSQL role '%TENANT_USER%' exists; synchronizing password...
+        call :run_psql_admin postgres -c "ALTER USER \"%TENANT_USER%\" WITH LOGIN PASSWORD '%TENANT_PASS%';" >nul 2>&1
+    )
 ) else (
     echo [CREATE] Creating PostgreSQL role '%TENANT_USER%'...
     call :run_psql_admin postgres -c "CREATE USER \"%TENANT_USER%\" WITH LOGIN ENCRYPTED PASSWORD '%TENANT_PASS%';" >nul 2>&1
@@ -148,8 +155,23 @@ call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_database WHERE datname='%SC
 if not errorlevel 1 (
     echo [REUSE] PostgreSQL database '%SCHEMA_NAME%' already exists.
 ) else (
-    echo [CREATE] Creating PostgreSQL database '%SCHEMA_NAME%' owned by '%TENANT_USER%'...
-    call :run_psql_admin postgres -c "CREATE DATABASE \"%SCHEMA_NAME%\" OWNER \"%TENANT_USER%\";" >nul 2>&1
+    set "_MIGRATED_LEGACY=0"
+    if not "!LEGACY_NAMES!"=="" (
+        for %%L in (!LEGACY_NAMES!) do (
+            if "!_MIGRATED_LEGACY!"=="0" if /i not "%%~L"=="%SCHEMA_NAME%" (
+                call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_database WHERE datname='%%~L'" | findstr "1" >nul
+                if not errorlevel 1 (
+                    echo [REUSE] Renaming legacy PostgreSQL database '%%~L' -^> '%SCHEMA_NAME%'...
+                    call :run_psql_admin postgres -c "ALTER DATABASE \"%%~L\" RENAME TO \"%SCHEMA_NAME%\";" >nul 2>&1
+                    if not errorlevel 1 set "_MIGRATED_LEGACY=1"
+                )
+            )
+        )
+    )
+    if "!_MIGRATED_LEGACY!"=="0" (
+        echo [CREATE] Creating PostgreSQL database '%SCHEMA_NAME%' owned by '%TENANT_USER%'...
+        call :run_psql_admin postgres -c "CREATE DATABASE \"%SCHEMA_NAME%\" OWNER \"%TENANT_USER%\";" >nul 2>&1
+    )
 )
 call :run_psql_admin postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"%SCHEMA_NAME%\" TO \"%TENANT_USER%\";" >nul 2>&1
 call :run_psql_admin "%SCHEMA_NAME%" -c "ALTER SCHEMA public OWNER TO \"%TENANT_USER%\";" >nul 2>&1

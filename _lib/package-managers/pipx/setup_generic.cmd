@@ -144,7 +144,7 @@ if "%PIPX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pipx %PIPX_VERSION% to %DOWNLOAD_DIR%\pipx...
     if not exist "%DOWNLOAD_DIR%\pipx" mkdir "%DOWNLOAD_DIR%\pipx"
     if not "%PIPX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PIPX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pipx\pipx-%PIPX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PIPX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pipx\pipx-%PIPX_VERSION%.zip"
     ) else (
         echo PIPX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PIPX_INSTALL_METHOD%"=="system" (
-    winget install pipx --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pipx
     exit /b !errorlevel!
 )
 if "%PIPX_INSTALL_METHOD%"=="mise" ( mise install "pipx@%PIPX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pipx\pipx-%PIPX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PIPX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PIPX_DOWNLOAD_URL%" -o "%TEMP%\pipx.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PIPX_DOWNLOAD_URL%" "%TEMP%\pipx.zip"
         tar -xf "%TEMP%\pipx.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pipx.

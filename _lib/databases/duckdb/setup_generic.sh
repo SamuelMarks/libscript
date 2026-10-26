@@ -259,7 +259,7 @@ case "$ACTION" in
               else
                 DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-amd64${_musl_suffix}.zip"
               fi
-              curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+              libscript_download "$DL_URL" "${TEMP_FILE}"
               unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
               chmod +x "${TARGET_DIR}/bin/duckdb" || true
               rm -f "${TEMP_FILE}"

@@ -231,9 +231,9 @@ case "$ACTION" in
           _src_sync="${SRC%/}/"
         fi
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
         elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
+          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
         else
           scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         fi
@@ -277,7 +277,7 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
+          rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="logs" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         else
           scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         fi
@@ -400,6 +400,14 @@ case "$ACTION" in
         fi
         shift 3
         PRIORITY=1000
+        _max_prio=$(az network nsg rule list -g "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --query "max([].priority)" -o tsv 2>/dev/null | tr -d "[:space:]" || true)
+        case "$_max_prio" in
+          [0-9]*)
+            if [ "$_max_prio" -ge 1000 ] && [ "$_max_prio" -lt 4000 ]; then
+              PRIORITY=$((_max_prio + 10))
+            fi
+            ;;
+        esac
         SEEN_PORTS=""
         while [ $# -gt 0 ]; do
           case "$1" in
@@ -415,9 +423,13 @@ case "$ACTION" in
               *" $PORT "*) continue ;;
             esac
             SEEN_PORTS="$SEEN_PORTS $PORT"
-            printf '%s\n' "Opening port $PORT on $RESOURCE_NAME"
-            az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT" --priority "$PRIORITY" --destination-port-ranges "$PORT" --access Allow --protocol Tcp || true
-            PRIORITY=$((PRIORITY + 10))
+            if az network nsg rule show -g "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" -n "Allow_$PORT" >/dev/null 2>&1; then
+              printf '%s\n' "[REUSE] Firewall rule Allow_$PORT (port $PORT) already exists on $RESOURCE_NAME"
+            else
+              printf '%s\n' "[CREATE] Opening port $PORT on $RESOURCE_NAME (priority $PRIORITY)"
+              az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT" --priority "$PRIORITY" --destination-port-ranges "$PORT" --access Allow --protocol Tcp || true
+              PRIORITY=$((PRIORITY + 10))
+            fi
           done
           shift
         done

@@ -144,7 +144,7 @@ if "%MAMBA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mamba %MAMBA_VERSION% to %DOWNLOAD_DIR%\mamba...
     if not exist "%DOWNLOAD_DIR%\mamba" mkdir "%DOWNLOAD_DIR%\mamba"
     if not "%MAMBA_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MAMBA_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\mamba\mamba-%MAMBA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAMBA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mamba\mamba-%MAMBA_VERSION%.zip"
     ) else (
         echo MAMBA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MAMBA_INSTALL_METHOD%"=="system" (
-    winget install mamba --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mamba
     exit /b !errorlevel!
 )
 if "%MAMBA_INSTALL_METHOD%"=="mise" ( mise install "mamba@%MAMBA_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mamba\mamba-%MAMBA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MAMBA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MAMBA_DOWNLOAD_URL%" -o "%TEMP%\mamba.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAMBA_DOWNLOAD_URL%" "%TEMP%\mamba.zip"
         tar -xf "%TEMP%\mamba.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mamba.

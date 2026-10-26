@@ -184,7 +184,7 @@ case "$ACTION" in
           URL="https://github.com/Jguer/yay/releases/download/v${EXACT_VERSION}/yay_${EXACT_VERSION}_${ARCH}.tar.gz"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "tar" || true
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download yay from $URL"
             rm -f "$TEMP_FILE.tar.gz"
             exit 1

@@ -109,13 +109,23 @@ libscript_write_service_runner() {
     _wsr_home="/home/${_wsr_user}"
   fi
 
+  _wsr_path="$PATH"
+  for _wsr_local_bin in "${_wsr_wd}/.venv/bin" "${_wsr_wd}/node_modules/.bin" "${_wsr_manifest_dir}/.venv/bin" "${_wsr_manifest_dir}/node_modules/.bin"; do
+    if [ -d "$_wsr_local_bin" ]; then
+      case ":${_wsr_path}:" in
+        *":${_wsr_local_bin}:"*) ;;
+        *) _wsr_path="${_wsr_local_bin}:${_wsr_path}" ;;
+      esac
+    fi
+  done
+
   _wsr_runner="${_wsr_data}/run_${_wsr_name}.sh"
   {
     printf '#!/bin/sh\n'
     printf 'export HOME="%s"\n' "$_wsr_home"
     printf 'export UV_PYTHON_INSTALL_DIR="%s/.local/share/uv/python"\n' "$_wsr_home"
     printf 'export UV_CACHE_DIR="%s/.cache/uv"\n' "$_wsr_home"
-    printf 'export PATH="%s"\n' "$PATH"
+    printf 'export PATH="%s"\n' "$_wsr_path"
     printf 'export REMOTE_USER="%s" REMOTE_GROUP="%s" REMOTE_HOME="%s" REMOTE_APP_DIR="%s"\n' "${REMOTE_USER:-$_wsr_user}" "${REMOTE_GROUP:-$_wsr_user}" "${REMOTE_HOME:-$_wsr_home}" "${REMOTE_APP_DIR:-$_wsr_manifest_dir}"
     printf 'if [ -f "%s/env.sh" ]; then . "%s/env.sh" >/dev/null 2>&1 || true; fi\n' "$LIBSCRIPT_ROOT_DIR" "$LIBSCRIPT_ROOT_DIR"
     printf 'if [ -f "/etc/libscript/%s/service.env" ]; then set -a; . "/etc/libscript/%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_wsr_name" "$_wsr_name"
@@ -315,6 +325,17 @@ directory="$_working_dir"
 output_log="/var/log/${_service_name}.log"
 error_log="/var/log/${_service_name}_err.log"
 
+# ## start_pre
+# Hydrates .env.libscript and SERVICE_PATH prior to starting the OpenRC daemon.
+start_pre() {
+    if [ -f "${_manifest_dir}/.env.libscript" ]; then
+        set -a
+        . "${_manifest_dir}/.env.libscript" 2>/dev/null || true
+        set +a
+    fi
+    export PATH="\${SERVICE_PATH:-${PATH}}"
+}
+
 # ## depend
 # Declares OpenRC network dependency for the service.
 depend() {
@@ -329,6 +350,7 @@ EOF_OPENRC
       log_info "Installing SMF manifest: $_service_name"
       _tmp_file=$(mktemp)
       _xml_exec=$(printf '/bin/sh %s' "$_runner_script" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+      _xml_path=$(printf '%s' "${SERVICE_PATH:-$PATH}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
       cat > "$_tmp_file" <<EOF_SMF
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
@@ -337,7 +359,13 @@ EOF_OPENRC
     <create_default_instance enabled='true' />
     <single_instance />
     <exec_method type='method' name='start' exec='$_xml_exec' timeout_seconds='60'>
-      <method_context working_directory='$_working_dir' />
+      <method_context working_directory='$_working_dir'>
+        <method_environment>
+          <envvar name='PATH' value='$_xml_path' />
+          <envvar name='SERVICE_PATH' value='$_xml_path' />
+          <envvar name='HOME' value='$_svc_home' />
+        </method_environment>
+      </method_context>
     </exec_method>
     <exec_method type='method' name='stop' exec=':kill' timeout_seconds='60' />
     <property_group name='startd' type='framework'>
@@ -369,6 +397,13 @@ EOF_SMF
 name="$_rc_name"
 rcvar="\${name}_enable"
 pidfile="/var/run/\${name}.pid"
+if [ -f "${_manifest_dir}/.env.libscript" ]; then
+  set -a
+  . "${_manifest_dir}/.env.libscript" 2>/dev/null || true
+  set +a
+fi
+export PATH="\${SERVICE_PATH:-${PATH}}"
+export HOME="${_svc_home}"
 command="/usr/sbin/daemon"
 command_args="-P \${pidfile} -r -f ${_bsd_user_arg}-o /var/log/\${name}.log /bin/sh ${_runner_script}"
 
@@ -395,6 +430,33 @@ EOF_BSD
     <string>com.libscript.${_service_name}</string>
     <key>WorkingDirectory</key>
     <string>${_working_dir}</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>${SERVICE_PATH:-$PATH}</string>
+        <key>SERVICE_PATH</key>
+        <string>${SERVICE_PATH:-$PATH}</string>
+        <key>HOME</key>
+        <string>${_svc_home}</string>
+PLIST
+      if [ -f "${_manifest_dir}/.env.libscript" ]; then
+        while IFS= read -r _pl_line; do
+          case "$_pl_line" in
+            ""|"#"*) continue ;;
+            *=*)
+              _pl_k="${_pl_line%%=*}"
+              _pl_v="${_pl_line#*=}"
+              case "$_pl_k" in
+                PATH|SERVICE_PATH|HOME) continue ;;
+              esac
+              _pl_v_esc=$(printf '%s' "$_pl_v" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+              printf '        <key>%s</key>\n        <string>%s</string>\n' "$_pl_k" "$_pl_v_esc" >> "$_plist_file"
+              ;;
+          esac
+        done < "${_manifest_dir}/.env.libscript"
+      fi
+      cat << PLIST_END >> "$_plist_file"
+    </dict>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/sh</string>
@@ -410,7 +472,7 @@ EOF_BSD
     <true/>
 </dict>
 </plist>
-PLIST
+PLIST_END
       launchctl load -w "$_plist_file" 2>/dev/null || true
       ;;
     runit)
@@ -419,6 +481,9 @@ PLIST
       _tmp_file=$(mktemp)
       cat > "$_tmp_file" <<EOF_RUNIT
 #!/bin/sh
+export HOME="${_svc_home}"
+export PATH="${PATH}"
+if [ -f "${_manifest_dir}/.env.libscript" ]; then set -a; . "${_manifest_dir}/.env.libscript" 2>/dev/null || true; set +a; fi
 exec /bin/sh "${_runner_script}" 2>&1
 EOF_RUNIT
       priv install -m 0755 -o 'root' -- "$_tmp_file" "/etc/service/${_service_name}/run"
@@ -432,6 +497,9 @@ EOF_RUNIT
       _tmp_file=$(mktemp)
       cat > "$_tmp_file" <<EOF_S6
 #!/bin/sh
+export HOME="${_svc_home}"
+export PATH="${PATH}"
+if [ -f "${_manifest_dir}/.env.libscript" ]; then set -a; . "${_manifest_dir}/.env.libscript" 2>/dev/null || true; set +a; fi
 exec /bin/sh "${_runner_script}" 2>&1
 EOF_S6
       priv install -m 0755 -o 'root' -- "$_tmp_file" "${_s6_base}/${_service_name}/run"
@@ -451,6 +519,10 @@ EOF_S6
 # Short-Description: ${_description}
 ### END INIT INFO
 
+export HOME="${_svc_home}"
+export PATH="${PATH}"
+[ -f "/etc/default/${_service_name}" ] && . "/etc/default/${_service_name}"
+[ -f "${_manifest_dir}/.env.libscript" ] && { set -a; . "${_manifest_dir}/.env.libscript" 2>/dev/null || true; set +a; }
 PIDFILE="/var/run/${_service_name}.pid"
 LOGFILE="/var/log/${_service_name}.log"
 

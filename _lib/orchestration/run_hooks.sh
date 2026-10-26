@@ -44,6 +44,7 @@ HOOK_TYPE="${2:-}"
 
 SCRIPT_DIR=$(cd "${SCRIPT_DIR}" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+# shellcheck disable=SC1090,SC1091
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
 
 if [ -z "$JSON_FILE" ] || [ -z "$HOOK_TYPE" ] || [ ! -f "$JSON_FILE" ]; then
@@ -159,7 +160,18 @@ while IFS= read -r hook <&3; do
 
     if [ -n "$cmd" ]; then
       log_info "Executing hook '$NAME' (in $HOOK_WD): $cmd"
-      if ! (cd "$HOOK_WD" && sh -c "$cmd"); then
+      if ! (
+        cd "$HOOK_WD"
+        for _hw_bin in "${HOOK_WD}/.venv/bin" "${HOOK_WD}/node_modules/.bin" "${MANIFEST_DIR}/.venv/bin" "${MANIFEST_DIR}/node_modules/.bin"; do
+          if [ -d "$_hw_bin" ]; then
+            case ":${PATH:-}:" in
+              *":${_hw_bin}:"*) ;;
+              *) export PATH="${_hw_bin}:${PATH:-/usr/bin:/bin}" ;;
+            esac
+          fi
+        done
+        sh -c "$cmd"
+      ); then
         log_error "Hook '$NAME' failed with non-zero exit status."
         exit 1
       fi

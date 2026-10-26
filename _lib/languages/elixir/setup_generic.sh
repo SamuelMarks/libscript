@@ -155,24 +155,8 @@ case "$ACTION" in
       vfox install "elixir@${VERSION}"
     else
       # libscript_native implementation
-      if command -v dnf >/dev/null 2>&1; then
-        if ! command -v erl >/dev/null 2>&1; then
-          priv dnf install -y epel-release || true
-          priv dnf install -y erlang unzip || true
-        fi
-      elif command -v apt-get >/dev/null 2>&1; then
-        if ! command -v erl >/dev/null 2>&1; then
-          priv apt-get update -qq || true
-          priv apt-get install -y erlang-base unzip || true
-        fi
-      elif command -v pkg >/dev/null 2>&1; then
-        if ! command -v erl >/dev/null 2>&1; then
-          priv pkg install -y erlang unzip || true
-        fi
-      elif command -v brew >/dev/null 2>&1; then
-        if ! command -v erl >/dev/null 2>&1; then
-          brew install erlang unzip || true
-        fi
+      if ! command -v erl >/dev/null 2>&1; then
+        libscript_depends erlang unzip || libscript_depends erlang-base unzip || true
       fi
       if [ -z "${ELIXIR_DOWNLOAD_URL:-}" ]; then
         if [ "$VERSION" = "latest" ]; then

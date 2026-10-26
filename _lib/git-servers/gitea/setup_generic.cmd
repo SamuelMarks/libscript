@@ -144,7 +144,7 @@ if "%GITEA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gitea %GITEA_VERSION% to %DOWNLOAD_DIR%\gitea...
     if not exist "%DOWNLOAD_DIR%\gitea" mkdir "%DOWNLOAD_DIR%\gitea"
     if not "%GITEA_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GITEA_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\gitea\gitea-%GITEA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GITEA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gitea\gitea-%GITEA_VERSION%.zip"
     ) else (
         echo GITEA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GITEA_INSTALL_METHOD%"=="system" (
-    winget install gitea --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gitea
     exit /b !errorlevel!
 )
 if "%GITEA_INSTALL_METHOD%"=="mise" ( mise install "gitea@%GITEA_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\gitea\gitea-%GITEA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GITEA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GITEA_DOWNLOAD_URL%" -o "%TEMP%\gitea.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GITEA_DOWNLOAD_URL%" "%TEMP%\gitea.zip"
         tar -xf "%TEMP%\gitea.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gitea.

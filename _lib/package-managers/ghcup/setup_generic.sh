@@ -203,7 +203,7 @@ case "$ACTION" in
               _ghcup_url="https://downloads.haskell.org/~ghcup/${_arch}-linux-ghcup"
             fi
             libscript_depends "curl"
-            curl -fsSL "$_ghcup_url" -o "${TARGET_DIR}/bin/ghcup" || true
+            libscript_download "$_ghcup_url" "${TARGET_DIR}/bin/ghcup" || true
             chmod +x "${TARGET_DIR}/bin/ghcup" || true
           fi
         fi

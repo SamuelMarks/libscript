@@ -50,12 +50,14 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "celery"
 
 if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.11"
 if "%PYTHON_VENV%"=="" set "PYTHON_VENV=C:\venvs\celery-%PYTHON_VERSION%"
 
 endlocal & (
+    set "PATH=%PATH%"
     set "PYTHON_VENV=%PYTHON_VENV%"
     set "PYTHON_VERSION=%PYTHON_VERSION%"
 )

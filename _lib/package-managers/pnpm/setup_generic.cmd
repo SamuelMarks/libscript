@@ -144,7 +144,7 @@ if "%PNPM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pnpm %PNPM_VERSION% to %DOWNLOAD_DIR%\pnpm...
     if not exist "%DOWNLOAD_DIR%\pnpm" mkdir "%DOWNLOAD_DIR%\pnpm"
     if not "%PNPM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PNPM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pnpm\pnpm-%PNPM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PNPM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pnpm\pnpm-%PNPM_VERSION%.zip"
     ) else (
         echo PNPM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PNPM_INSTALL_METHOD%"=="system" (
-    winget install pnpm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pnpm
     exit /b !errorlevel!
 )
 if "%PNPM_INSTALL_METHOD%"=="mise" ( mise install "pnpm@%PNPM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pnpm\pnpm-%PNPM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PNPM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PNPM_DOWNLOAD_URL%" -o "%TEMP%\pnpm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PNPM_DOWNLOAD_URL%" "%TEMP%\pnpm.zip"
         tar -xf "%TEMP%\pnpm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pnpm.

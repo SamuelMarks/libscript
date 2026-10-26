@@ -65,7 +65,7 @@ set "URL=https://github.com/openbao/openbao/releases/download/v2.6.2/openbao_2.6
 set "TEMP_ZIP=%TEMP%\openbao.zip"
 
 echo Downloading OpenBao (%ARCH%) from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download OpenBao.
     exit /b 1

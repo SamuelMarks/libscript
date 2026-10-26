@@ -50,11 +50,13 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "drupal"
 
 if not "%DRUPAL_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%DRUPAL_LISTEN%"
 
 endlocal & (
+    set "PATH=%PATH%"
     set "LIBSCRIPT_LISTEN_PORT=%LIBSCRIPT_LISTEN_PORT%"
 )
 exit /b 0

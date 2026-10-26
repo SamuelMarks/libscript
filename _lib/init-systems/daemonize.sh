@@ -297,6 +297,14 @@ EOF_HC_ENV_FILE
 $_hc_env_pairs
 EOF_HC_ENV_KV
     fi
+    for _hc_bin in "${_hc_wd}/.venv/bin" "${_hc_wd}/node_modules/.bin" "${MANIFEST_DIR}/.venv/bin" "${MANIFEST_DIR}/node_modules/.bin"; do
+      if [ -d "$_hc_bin" ]; then
+        case ":${PATH:-}:" in
+          *":${_hc_bin}:"*) ;;
+          *) export PATH="${_hc_bin}:${PATH:-/usr/bin:/bin}" ;;
+        esac
+      fi
+    done
     cd "$_hc_wd" && sh -c "$_hc_cmd"
   )
 }

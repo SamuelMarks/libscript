@@ -50,7 +50,8 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "jupyterhub"
 
 if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.10"
 if "%JUPYTERHUB_NOTEBOOK_DIR%"=="" set "JUPYTERHUB_NOTEBOOK_DIR=C:\notebooks"
@@ -58,6 +59,7 @@ if "%JUPYTERHUB_IP%"=="" set "JUPYTERHUB_IP=127.0.0.1"
 if "%JUPYTERHUB_PORT%"=="" set "JUPYTERHUB_PORT=8888"
 
 endlocal & (
+    set "PATH=%PATH%"
     set "JUPYTERHUB_IP=%JUPYTERHUB_IP%"
     set "JUPYTERHUB_NOTEBOOK_DIR=%JUPYTERHUB_NOTEBOOK_DIR%"
     set "JUPYTERHUB_PORT=%JUPYTERHUB_PORT%"

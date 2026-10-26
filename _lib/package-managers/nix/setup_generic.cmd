@@ -144,7 +144,7 @@ if "%NIX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nix %NIX_VERSION% to %DOWNLOAD_DIR%\nix...
     if not exist "%DOWNLOAD_DIR%\nix" mkdir "%DOWNLOAD_DIR%\nix"
     if not "%NIX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%NIX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NIX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.zip"
     ) else (
         echo NIX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NIX_INSTALL_METHOD%"=="system" (
-    winget install nix --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nix
     exit /b !errorlevel!
 )
 if "%NIX_INSTALL_METHOD%"=="mise" ( mise install "nix@%NIX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NIX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%NIX_DOWNLOAD_URL%" -o "%TEMP%\nix.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NIX_DOWNLOAD_URL%" "%TEMP%\nix.zip"
         tar -xf "%TEMP%\nix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nix.

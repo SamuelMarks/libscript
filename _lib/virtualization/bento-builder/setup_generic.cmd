@@ -65,11 +65,11 @@ if exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%" (
 
     where 7z >nul 2>&1
     if !errorlevel! neq 0 (
-        winget install --silent --force --id=7zip.7zip -e --accept-package-agreements --accept-source-agreements 2>nul
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install 7zip latest
     )
     where git >nul 2>&1
     if !errorlevel! neq 0 (
-        winget install --silent --force --id=Git.Git -e --accept-package-agreements --accept-source-agreements 2>nul
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install git latest
     )
     echo Bento Builder environment provisioned on Windows.
 )

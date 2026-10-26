@@ -144,7 +144,7 @@ if "%VFOX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading vfox %VFOX_VERSION% to %DOWNLOAD_DIR%\vfox...
     if not exist "%DOWNLOAD_DIR%\vfox" mkdir "%DOWNLOAD_DIR%\vfox"
     if not "%VFOX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%VFOX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\vfox\vfox-%VFOX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vfox\vfox-%VFOX_VERSION%.zip"
     ) else (
         echo VFOX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%VFOX_INSTALL_METHOD%"=="system" (
-    winget install vfox --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vfox
     exit /b !errorlevel!
 )
 if "%VFOX_INSTALL_METHOD%"=="mise" ( mise install "vfox@%VFOX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\vfox\vfox-%VFOX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%VFOX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%VFOX_DOWNLOAD_URL%" -o "%TEMP%\vfox.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%TEMP%\vfox.zip"
         tar -xf "%TEMP%\vfox.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for vfox.

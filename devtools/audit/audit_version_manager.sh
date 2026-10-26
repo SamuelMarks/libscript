@@ -104,6 +104,11 @@ audit_component_dir() {
     if grep -qi "setlocal" "${_comp_dir}/env.cmd" && ! grep -qi "endlocal" "${_comp_dir}/env.cmd"; then
       log_vm_violation "${_rel_dir}/env.cmd" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; environment mutations will be lost on return."
     fi
+    if grep -Eq '^[[:space:]]*call "%LIBSCRIPT_ROOT_DIR%\\_lib\\_common\\env_base\.cmd"[[:space:]]*$' "${_comp_dir}/env.cmd"; then
+      if ! grep -q 'CALLER_SCRIPT_DIR' "${_comp_dir}/env.cmd"; then
+        log_vm_violation "${_rel_dir}/env.cmd" "ENV_BASE_CALLER_CONTEXT" "env.cmd calls env_base.cmd without CALLER_SCRIPT_DIR or explicit component name argument."
+      fi
+    fi
   fi
 
   # 4. Verify Tier 1 leaf recipes do not invoke kernel/partitioning primitives
@@ -116,6 +121,34 @@ audit_component_dir() {
           log_vm_violation "${_rel_dir}/setup_generic.sh" "RECIPE_BOUNDARY" "Tier 1 leaf recipe must not invoke disk/VFS partitioning primitives."
         fi
       fi
+      ;;
+  esac
+
+  # 5. Ban raw winget/choco install in setup*.cmd (must delegate to pkg_mgr.cmd :libscript_depends)
+  case "$_rel_dir" in
+    _lib/package-managers/winget|_lib/package-managers/choco)
+      ;;
+    *)
+      for _cmd_file in "$_comp_dir"/setup*.cmd; do
+        [ -f "$_cmd_file" ] || continue
+        if grep -Eiq '^[[:space:]]*(call[[:space:]]+)?(winget|choco)[[:space:]]+install([[:space:]]|$)' "$_cmd_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_WINGET_IN_RECIPE" "Direct winget/choco install in setup*.cmd; delegate to pkg_mgr.cmd :libscript_depends."
+        fi
+      done
+      ;;
+  esac
+
+  # 6. Ban raw apt-get/brew/dnf/apk install in Tier 1 leaf recipes (must delegate to pkg_mgr.sh)
+  case "$_rel_dir" in
+    _lib/package-managers/apt|_lib/package-managers/brew|_lib/package-managers/dnf|_lib/package-managers/yum|_lib/package-managers/apk|_lib/package-managers/pacman|_lib/package-managers/zypper|_lib/package-managers/pkg)
+      ;;
+    *)
+      for _sh_file in "$_comp_dir"/setup*.sh; do
+        [ -f "$_sh_file" ] || continue
+        if grep -Eq '^[[:space:]]*(priv[[:space:]]+)?(apt-get[[:space:]]+install|brew[[:space:]]+install|dnf[[:space:]]+install[[:space:]]+-y[[:space:]]+epel-release|apk[[:space:]]+add)[[:space:]]' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_OS_PKG_MGR_IN_RECIPE" "Direct OS package manager install in setup*.sh; delegate to _lib/_common/pkg_mgr.sh (depends / libscript_depends)."
+        fi
+      done
       ;;
   esac
 }

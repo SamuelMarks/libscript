@@ -144,7 +144,7 @@ if "%MARIADB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mariadb %MARIADB_VERSION% to %DOWNLOAD_DIR%\mariadb...
     if not exist "%DOWNLOAD_DIR%\mariadb" mkdir "%DOWNLOAD_DIR%\mariadb"
     if not "%MARIADB_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MARIADB_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip"
     ) else (
         echo MARIADB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MARIADB_INSTALL_METHOD%"=="system" (
-    winget install mariadb --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mariadb
     exit /b !errorlevel!
 )
 if "%MARIADB_INSTALL_METHOD%"=="mise" ( mise install "mariadb@%MARIADB_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MARIADB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MARIADB_DOWNLOAD_URL%" -o "%TEMP%\mariadb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%TEMP%\mariadb.zip"
         tar -xf "%TEMP%\mariadb.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mariadb.

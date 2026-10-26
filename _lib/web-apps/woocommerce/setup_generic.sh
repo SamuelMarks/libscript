@@ -46,7 +46,9 @@ export WOOCOMMERCE_WWWROOT
 
 PLUGIN_DIR="${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
 if [ ! -d "${PLUGIN_DIR}" ]; then
-# # libscript_depends 'unzip'
+  if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+    libscript_depends 'unzip' || true
+  fi
   printf '%s\n' "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WOOCOMMERCE_WWWROOT}..."
   if [ "${WOOCOMMERCE_VERSION}" = "latest" ]; then
     dl_url="https://downloads.wordpress.org/plugin/woocommerce.zip"
@@ -55,11 +57,7 @@ if [ ! -d "${PLUGIN_DIR}" ]; then
   fi
 
   tmp_woo=$(mktemp)
-  if command -v libscript_download >/dev/null 2>&1; then
-    libscript_download "${dl_url:-}" "${tmp_woo}"
-  else
-    wget -qO "${tmp_woo}" "${dl_url}"
-  fi
+  libscript_download "${dl_url:-}" "${tmp_woo}"
   priv unzip -q -o "${tmp_woo}" -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins"
   rm -f "${tmp_woo}"
   if ! priv chown -R www-data:www-data "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" ; then

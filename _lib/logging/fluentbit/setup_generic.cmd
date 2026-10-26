@@ -144,7 +144,7 @@ if "%FLUENTBIT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading fluentbit %FLUENTBIT_VERSION% to %DOWNLOAD_DIR%\fluentbit...
     if not exist "%DOWNLOAD_DIR%\fluentbit" mkdir "%DOWNLOAD_DIR%\fluentbit"
     if not "%FLUENTBIT_DOWNLOAD_URL%"=="" (
-        curl -sSL "%FLUENTBIT_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\fluentbit\fluentbit-%FLUENTBIT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLUENTBIT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\fluentbit\fluentbit-%FLUENTBIT_VERSION%.zip"
     ) else (
         echo FLUENTBIT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%FLUENTBIT_INSTALL_METHOD%"=="system" (
-    winget install fluentbit --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends fluentbit
     exit /b !errorlevel!
 )
 if "%FLUENTBIT_INSTALL_METHOD%"=="mise" ( mise install "fluentbit@%FLUENTBIT_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\fluentbit\fluentbit-%FLUENTBIT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%FLUENTBIT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%FLUENTBIT_DOWNLOAD_URL%" -o "%TEMP%\fluentbit.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLUENTBIT_DOWNLOAD_URL%" "%TEMP%\fluentbit.zip"
         tar -xf "%TEMP%\fluentbit.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for fluentbit.

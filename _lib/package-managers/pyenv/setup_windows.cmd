@@ -58,13 +58,20 @@ if exist "%USERPROFILE%\.pyenv\pyenv-win\bin\pyenv.bat" exit /b 0
 
 where choco >nul 2>&1
 if %errorlevel% equ 0 (
-    echo Installing pyenv-win via choco...
-    choco install -y pyenv-win
+    echo Installing pyenv-win via pkg_mgr...
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco pyenv-win
     if not errorlevel 1 exit /b 0
 )
 
-echo Installing pyenv-win via PowerShell bootstrap...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1' -OutFile '$env:TEMP\install-pyenv-win.ps1'; & '$env:TEMP\install-pyenv-win.ps1'; Remove-Item '$env:TEMP\install-pyenv-win.ps1' -Force -ErrorAction SilentlyContinue"
+echo Installing pyenv-win via cached bootstrap script...
+set "_PYENV_PS1=%TEMP%\install-pyenv-win.ps1"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" "!_PYENV_PS1!"
+if exist "!_PYENV_PS1!" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "!_PYENV_PS1!"
+    del /f /q "!_PYENV_PS1!" >nul 2>&1
+)
 
 if exist "%USERPROFILE%\.pyenv\pyenv-win\bin\pyenv.bat" (
     echo pyenv-win installed successfully.

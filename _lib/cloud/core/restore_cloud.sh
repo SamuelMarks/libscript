@@ -58,25 +58,24 @@ LOCAL_SRC=""
 APP_SPECS=""
 
 # ## matches_only_target
-# Checks whether an application remote destination matches the --only selector.
+# Checks whether an application remote destination or manifest alias matches the --only selector.
 matches_only_target() {
   _mot_dest="$1"
+  _mot_repo="${2:-}"
   case "$ONLY_TARGET" in
     all|both|"") return 0 ;;
-    pulse|pulse_query|pulse-query|hospital_dashboard_platform|hospital-dashboard-platform)
-      case "$_mot_dest" in
-        *hospital-dashboard-platform*|*pulse*) return 0 ;;
-      esac
-      return 1
-      ;;
-    t1d|t1d_analytics|t1d-analytics)
-      case "$_mot_dest" in
-        *t1d*) return 0 ;;
-      esac
-      return 1
-      ;;
     *)
       [ "$_mot_dest" = "$ONLY_TARGET" ] && return 0
+      _mot_norm_target=$(printf '%s' "$ONLY_TARGET" | tr '_-' '--')
+      _mot_norm_dest=$(printf '%s' "$_mot_dest" | tr '_-' '--')
+      [ "$_mot_norm_dest" = "$_mot_norm_target" ] && return 0
+      for _mot_cand in "${_mot_repo}/libscript.json" "${_mot_dest}/libscript.json" "./${_mot_dest}/libscript.json"; do
+        if [ -f "$_mot_cand" ] && command -v jq >/dev/null 2>&1; then
+          if jq -e --arg t "$ONLY_TARGET" --arg tn "$_mot_norm_target" '([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub("_"; "-") == $tn))' "$_mot_cand" >/dev/null 2>&1; then
+            return 0
+          fi
+        fi
+      done
       return 1
       ;;
   esac
@@ -145,8 +144,8 @@ if [ "$IMPORT_MODE" -eq 1 ]; then
   CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
   log_info "Importing state from '${LOCAL_SRC}' into '${NODE}' for '${ONLY_TARGET}'..."
   "$CLI" node sync "$NODE" "$RG_CTX"
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/stanford_import_stage && mkdir -p /tmp/stanford_import_stage"
-  "$CLI" node upload "$NODE" "$RG_CTX" "${LOCAL_SRC}/" "/tmp/stanford_import_stage/"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_import_stage && mkdir -p /tmp/libscript_import_stage"
+  "$CLI" node upload "$NODE" "$RG_CTX" "${LOCAL_SRC}/" "/tmp/libscript_import_stage/"
   OIFS="$IFS"
   IFS="|"
   # shellcheck disable=SC2086
@@ -154,17 +153,28 @@ if [ "$IMPORT_MODE" -eq 1 ]; then
   IFS="$OIFS"
   for _im_spec in "$@"; do
     [ -n "$_im_spec" ] || continue
-    _im_no_dom="${_im_spec%%@*}"
+    _im_domain=""
+    case "$_im_spec" in
+      *@*)
+        _im_domain="${_im_spec#*@}"
+        _im_no_dom="${_im_spec%%@*}"
+        ;;
+      *) _im_no_dom="$_im_spec" ;;
+    esac
+    _im_repo=""
     case "$_im_no_dom" in
-      *:*) _im_dest="${_im_no_dom#*:}" ;;
+      *:*)
+        _im_repo="${_im_no_dom%%:*}"
+        _im_dest="${_im_no_dom#*:}"
+        ;;
       *) _im_dest="$_im_no_dom" ;;
     esac
-    if ! matches_only_target "$_im_dest"; then
+    if ! matches_only_target "$_im_dest" "$_im_repo" && ! matches_only_target "${_im_domain%%.*}" "$_im_repo"; then
       continue
     fi
-    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh import-state libscript.json /tmp/stanford_import_stage"
+    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
   done
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/stanford_import_stage"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_import_stage"
   if [ "$SKIP_VERIFY" -eq 0 ]; then
     for _im_spec in "$@"; do
       [ -n "$_im_spec" ] || continue
@@ -176,11 +186,15 @@ if [ "$IMPORT_MODE" -eq 1 ]; then
           ;;
         *) _im_no_dom="$_im_spec" ;;
       esac
+      _im_repo=""
       case "$_im_no_dom" in
-        *:*) _im_dest="${_im_no_dom#*:}" ;;
+        *:*)
+          _im_repo="${_im_no_dom%%:*}"
+          _im_dest="${_im_no_dom#*:}"
+          ;;
         *) _im_dest="$_im_no_dom" ;;
       esac
-      if ! matches_only_target "$_im_dest"; then
+      if ! matches_only_target "$_im_dest" "$_im_repo" && ! matches_only_target "${_im_domain%%.*}" "$_im_repo"; then
         continue
       fi
       _pub_arg=""

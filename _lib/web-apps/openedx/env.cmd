@@ -51,7 +51,8 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "openedx"
 
 if "%OPENEDX_VERSION%"=="" set "OPENEDX_VERSION=master"
 if "%LMS_HOST%"=="" set "LMS_HOST=openedx.local"
@@ -62,6 +63,7 @@ if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%OPENEDX_INSTALL_DIR%"=="" set "OPENEDX_INSTALL_DIR=%LIBSCRIPT_HOME%\openedx"
 
 endlocal & (
+    set "PATH=%PATH%"
     set "CMS_HOST=%CMS_HOST%"
     set "CMS_PORT=%CMS_PORT%"
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"

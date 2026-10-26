@@ -144,7 +144,7 @@ if "%CPANM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cpanm %CPANM_VERSION% to %DOWNLOAD_DIR%\cpanm...
     if not exist "%DOWNLOAD_DIR%\cpanm" mkdir "%DOWNLOAD_DIR%\cpanm"
     if not "%CPANM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CPANM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.zip"
     ) else (
         echo CPANM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CPANM_INSTALL_METHOD%"=="system" (
-    winget install cpanm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cpanm
     exit /b !errorlevel!
 )
 if "%CPANM_INSTALL_METHOD%"=="mise" ( mise install "cpanm@%CPANM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CPANM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CPANM_DOWNLOAD_URL%" -o "%TEMP%\cpanm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%TEMP%\cpanm.zip"
         tar -xf "%TEMP%\cpanm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cpanm.

@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for redis
+:: Windows setup for redis with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -106,7 +106,17 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_redis
+:: Checks LIBSCRIPT_HOME and system PATH for an existing redis-server.exe or valkey-server.exe binary.
+:find_existing_redis
+if exist "%LIBSCRIPT_HOME%\redis\%REDIS_VERSION%\bin\redis-server.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\redis\default\bin\redis-server.exe" exit /b 0
+where redis-server >nul 2>&1
+if not errorlevel 1 exit /b 0
+where valkey-server >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -163,10 +173,17 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%REDIS_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_redis
+        if not errorlevel 1 (
+            echo [REUSE] redis is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading redis %REDIS_VERSION% to %DOWNLOAD_DIR%\redis...
     if not exist "%DOWNLOAD_DIR%\redis" mkdir "%DOWNLOAD_DIR%\redis"
     if not "%REDIS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%REDIS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%REDIS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip"
     ) else (
         echo REDIS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -176,12 +193,19 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_redis
+    if not errorlevel 1 (
+        echo [REUSE] redis ^(%REDIS_VERSION%^) is already installed.
+        exit /b 0
+    )
+)
 if /i "%REDIS_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "redis" "%REDIS_VERSION%" "redis-server" "c"
     exit /b !errorlevel!
 )
 if "%REDIS_INSTALL_METHOD%"=="system" (
-    winget install redis --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends redis
     exit /b !errorlevel!
 )
 if "%REDIS_INSTALL_METHOD%"=="mise" ( mise install "redis@%REDIS_VERSION%" & exit /b 0 )
@@ -211,7 +235,7 @@ if not exist "%TARGET_DIR%\bin\redis-server.exe" if not exist "%TARGET_DIR%\redi
         tar -xf "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%REDIS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%REDIS_DOWNLOAD_URL%" -o "%TEMP%\redis.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%REDIS_DOWNLOAD_URL%" "%TEMP%\redis.zip"
         tar -xf "%TEMP%\redis.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for redis.

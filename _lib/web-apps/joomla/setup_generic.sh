@@ -46,9 +46,11 @@ export JOOMLA_WEBSERVER
 JOOMLA_DB_TYPE="${JOOMLA_DB_TYPE:-mariadb}"
 export JOOMLA_DB_TYPE
 
-# # libscript_depends 'php'
-if [ "${JOOMLA_WEBSERVER}" = "nginx" ] || [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
-  : # # libscript_depends 'php-fpm' || true # Some package managers include FPM in 'php'
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'php' || true
+  if [ "${JOOMLA_WEBSERVER}" = "nginx" ] || [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
+    libscript_depends 'php-fpm' || true
+  fi
 fi
 
 # SQLite is not strictly supported in Joomla 4+, so we map "sqlite" to warning
@@ -57,8 +59,10 @@ if [ "${JOOMLA_DB_TYPE}" = "sqlite" ]; then
   JOOMLA_DB_TYPE="mariadb"
 fi
 
-# # libscript_depends "${JOOMLA_DB_TYPE}"
-# # libscript_depends "${JOOMLA_WEBSERVER}"
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends "${JOOMLA_DB_TYPE}" || true
+  libscript_depends "${JOOMLA_WEBSERVER}" || true
+fi
 
 # Download and extract Joomla
 JOOMLA_VERSION="${JOOMLA_VERSION:-latest}"
@@ -82,17 +86,8 @@ if [ ! -d "${JOOMLA_WWWROOT}/administrator" ]; then
   dl_url="https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.tar.gz"
 
   tmp_j=$(mktemp)
-  if command -v libscript_download >/dev/null 2>&1; then
-    libscript_download "${dl_url:-}" "${tmp_j}"
-    priv tar xzf "${tmp_j}" -C "${JOOMLA_WWWROOT}"
-  else
-    if command -v wget >/dev/null 2>&1; then
-        wget -qO "${tmp_j}" "${dl_url}"
-    else
-        curl -sL -o "${tmp_j}" "${dl_url}"
-    fi
-    priv tar xzf "${tmp_j}" -C "${JOOMLA_WWWROOT}"
-  fi
+  libscript_download "${dl_url:-}" "${tmp_j}"
+  priv tar xzf "${tmp_j}" -C "${JOOMLA_WWWROOT}"
   rm -f "${tmp_j}"
 fi
 
@@ -103,25 +98,18 @@ DB_PASS="${JOOMLA_DB_PASS:-joomla}"
 
 printf '%s\n' "Configuring Database..."
 if [ "${JOOMLA_DB_TYPE}" = "mariadb" ] || [ "${JOOMLA_DB_TYPE}" = "mysql" ]; then
-  if command -v mysql >/dev/null 2>&1; then
-    if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
-      priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-      priv mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-      priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
-      priv mysql -u root -e "FLUSH PRIVILEGES;"
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql --host "127.0.0.1" --port "3306" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
-    fi
   fi
 elif [ "${JOOMLA_DB_TYPE}" = "postgres" ] || [ "${JOOMLA_DB_TYPE}" = "postgresql" ]; then
-  if command -v psql >/dev/null 2>&1; then
-    if priv -u postgres psql -c "SELECT 1" >/dev/null 2>&1; then
-      priv -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'" | grep -q 1 || priv -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
-      priv -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" | grep -q 1 || priv -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
-      priv -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine postgres --host "127.0.0.1" --port "5432" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: PostgreSQL is not running or login failed. Skipping automated DB setup."
-    fi
   fi
 fi
 

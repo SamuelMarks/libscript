@@ -57,8 +57,8 @@ if %errorlevel% equ 0 exit /b 0
 where tea >nul 2>&1
 if %errorlevel% equ 0 exit /b 0
 
-echo Installing Gitea CLI via winget...
-winget install --id Gitea.tea --silent --accept-package-agreements --accept-source-agreements
+echo Installing Gitea CLI via pkg_mgr...
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends Gitea.tea
 if not errorlevel 1 exit /b 0
 
 echo Gitea wrapper configured.

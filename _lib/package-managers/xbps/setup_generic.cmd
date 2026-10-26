@@ -144,7 +144,7 @@ if "%XBPS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading xbps %XBPS_VERSION% to %DOWNLOAD_DIR%\xbps...
     if not exist "%DOWNLOAD_DIR%\xbps" mkdir "%DOWNLOAD_DIR%\xbps"
     if not "%XBPS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%XBPS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\xbps\xbps-%XBPS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%XBPS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\xbps\xbps-%XBPS_VERSION%.zip"
     ) else (
         echo XBPS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%XBPS_INSTALL_METHOD%"=="system" (
-    winget install xbps --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends xbps
     exit /b !errorlevel!
 )
 if "%XBPS_INSTALL_METHOD%"=="mise" ( mise install "xbps@%XBPS_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\xbps\xbps-%XBPS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%XBPS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%XBPS_DOWNLOAD_URL%" -o "%TEMP%\xbps.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%XBPS_DOWNLOAD_URL%" "%TEMP%\xbps.zip"
         tar -xf "%TEMP%\xbps.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for xbps.

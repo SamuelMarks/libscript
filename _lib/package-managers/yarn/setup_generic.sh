@@ -186,7 +186,7 @@ case "$ACTION" in
           URL="https://github.com/yarnpkg/yarn/releases/download/v${EXACT_VERSION}/yarn-v${EXACT_VERSION}.tar.gz"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "tar" "nodejs" || true
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download yarn from $URL"
             rm -f "$TEMP_FILE.tar.gz"
             exit 1

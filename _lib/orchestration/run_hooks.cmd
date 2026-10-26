@@ -79,6 +79,18 @@ if not exist "!json_file!" exit /b 0
 for %%P in ("!json_file!") do set "MANIFEST_DIR=%%~dpP"
 if "!MANIFEST_DIR:~-1!"=="\" set "MANIFEST_DIR=!MANIFEST_DIR:~0,-1!"
 
+for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\.env.libscript") do (
+    if exist "%%~fE" (
+        for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
+            if not "%%A"=="" (
+                set "_rh_k=%%A"
+                if not "!_rh_k:~0,1!"=="#" set "%%A=%%~B"
+            )
+        )
+    )
+)
+if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
+
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
@@ -173,6 +185,13 @@ if not "!cond!"=="" (
 
 if "!skip!"=="1" exit /b 0
 if "!cmd!"=="" exit /b 0
+
+for %%B in ("!hook_wd!\.venv\Scripts" "!hook_wd!\node_modules\.bin" "!MANIFEST_DIR!\.venv\Scripts" "!MANIFEST_DIR!\node_modules\.bin") do (
+    if exist "%%~fB" (
+        echo ";!PATH!;" | findstr /I /C:";%%~fB;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~fB;!PATH!"
+    )
+)
 
 echo Executing hook '!name!' (in !hook_wd!): !cmd!
 pushd "!hook_wd!"

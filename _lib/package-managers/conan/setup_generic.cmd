@@ -144,7 +144,7 @@ if "%CONAN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading conan %CONAN_VERSION% to %DOWNLOAD_DIR%\conan...
     if not exist "%DOWNLOAD_DIR%\conan" mkdir "%DOWNLOAD_DIR%\conan"
     if not "%CONAN_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CONAN_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\conan\conan-%CONAN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CONAN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\conan\conan-%CONAN_VERSION%.zip"
     ) else (
         echo CONAN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CONAN_INSTALL_METHOD%"=="system" (
-    winget install conan --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends conan
     exit /b !errorlevel!
 )
 if "%CONAN_INSTALL_METHOD%"=="mise" ( mise install "conan@%CONAN_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\conan\conan-%CONAN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CONAN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CONAN_DOWNLOAD_URL%" -o "%TEMP%\conan.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CONAN_DOWNLOAD_URL%" "%TEMP%\conan.zip"
         tar -xf "%TEMP%\conan.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for conan.

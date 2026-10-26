@@ -90,10 +90,10 @@ install_libvirt_plugin() {
     log_info "Installing libvirt build dependencies for vagrant-libvirt..."
     case "${PKG_MGR}" in
       'apt-get')
-        priv apt-get install -y libvirt-dev build-essential ruby-dev libxml2-dev libxslt-dev libyaml-dev 2>/dev/null || true
+        libscript_depends libvirt-dev build-essential ruby-dev libxml2-dev libxslt-dev libyaml-dev 2>/dev/null || true
         ;;
       'dnf'|'yum')
-        priv "${PKG_MGR}" install -y libvirt-devel gcc make ruby-devel libxml2-devel libxslt-devel 2>/dev/null || true
+        libscript_depends libvirt-devel gcc make ruby-devel libxml2-devel libxslt-devel 2>/dev/null || true
         ;;
     esac
 
@@ -147,7 +147,7 @@ case "$ACTION" in
           ;;
         'brew')
           if ! command -v vagrant >/dev/null 2>&1; then
-            brew install hashicorp/tap/vagrant 2>/dev/null || brew install --cask vagrant || true
+            libscript_depends_via brew hashicorp/tap/vagrant 2>/dev/null || libscript_depends_via brew vagrant || true
           fi
           ;;
         'dnf'|'yum')

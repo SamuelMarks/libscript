@@ -50,11 +50,13 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "firecrawl"
 
 if "%FIRECRAWL_BUILD_DIR%"=="" set "FIRECRAWL_BUILD_DIR=%TEMP%\firecrawl"
 
 endlocal & (
+    set "PATH=%PATH%"
     set "FIRECRAWL_BUILD_DIR=%FIRECRAWL_BUILD_DIR%"
 )
 exit /b 0

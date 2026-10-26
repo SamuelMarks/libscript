@@ -144,7 +144,7 @@ if "%RYE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rye %RYE_VERSION% to %DOWNLOAD_DIR%\rye...
     if not exist "%DOWNLOAD_DIR%\rye" mkdir "%DOWNLOAD_DIR%\rye"
     if not "%RYE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%RYE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\rye\rye-%RYE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rye\rye-%RYE_VERSION%.zip"
     ) else (
         echo RYE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RYE_INSTALL_METHOD%"=="system" (
-    winget install rye --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rye
     exit /b !errorlevel!
 )
 if "%RYE_INSTALL_METHOD%"=="mise" ( mise install "rye@%RYE_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rye\rye-%RYE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RYE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%RYE_DOWNLOAD_URL%" -o "%TEMP%\rye.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%TEMP%\rye.zip"
         tar -xf "%TEMP%\rye.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rye.

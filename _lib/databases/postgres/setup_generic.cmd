@@ -160,7 +160,7 @@ if "%POSTGRES_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading postgres %POSTGRES_VERSION% to %DOWNLOAD_DIR%\postgres...
     if not exist "%DOWNLOAD_DIR%\postgres" mkdir "%DOWNLOAD_DIR%\postgres"
     if not "%POSTGRES_DOWNLOAD_URL%"=="" (
-        curl -sSL "%POSTGRES_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%POSTGRES_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.zip"
     ) else (
         echo POSTGRES_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -182,7 +182,7 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if "%POSTGRES_INSTALL_METHOD%"=="system" (
-    winget install postgres --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends postgres
     exit /b !errorlevel!
 )
 if "%POSTGRES_INSTALL_METHOD%"=="mise" ( mise install "postgres@%POSTGRES_VERSION%" & exit /b 0 )
@@ -202,7 +202,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%POSTGRES_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%POSTGRES_DOWNLOAD_URL%" -o "%TEMP%\postgres.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%POSTGRES_DOWNLOAD_URL%" "%TEMP%\postgres.zip"
         tar -xf "%TEMP%\postgres.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for postgres.

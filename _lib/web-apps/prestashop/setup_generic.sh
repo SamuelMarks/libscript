@@ -44,22 +44,30 @@ export PRESTASHOP_WEBSERVER
 PRESTASHOP_DB_TYPE="${PRESTASHOP_DB_TYPE:-mariadb}"
 export PRESTASHOP_DB_TYPE
 
-# # libscript_depends 'php'
-if [ "${PRESTASHOP_WEBSERVER}" = "nginx" ] || [ "${PRESTASHOP_WEBSERVER}" = "caddy" ]; then
-#   if false ; then # libscript_depends 'php-fpm' ; then
-    true
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'php' || true
+  if [ "${PRESTASHOP_WEBSERVER}" = "nginx" ] || [ "${PRESTASHOP_WEBSERVER}" = "caddy" ]; then
+    libscript_depends 'php-fpm' || true
   fi
 fi
 
 case "${PRESTASHOP_DB_TYPE}" in
-#   mysql|mariadb) libscript_depends 'mariadb' ;;
-#   pgsql|postgres|postgresql) libscript_depends 'postgres' ;;
-#   sqlite) libscript_depends 'sqlite' ;;
+  mysql|mariadb)
+    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'mariadb' || true
+    ;;
+  pgsql|postgres|postgresql)
+    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'postgres' || true
+    ;;
+  sqlite)
+    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'sqlite' || true
+    ;;
   *) printf '%s\n' "Unsupported DB type: ${PRESTASHOP_DB_TYPE}"; exit 1 ;;
 esac
 
-# # libscript_depends "${PRESTASHOP_WEBSERVER}"
-# # libscript_depends 'unzip'
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends "${PRESTASHOP_WEBSERVER}" || true
+  libscript_depends 'unzip' || true
+fi
 
 PRESTASHOP_VERSION="${PRESTASHOP_VERSION:-8.2.4}"
 if [ "${PRESTASHOP_VERSION}" = "latest" ]; then
@@ -76,11 +84,7 @@ if [ ! -d "${PRESTASHOP_WWWROOT}/classes" ] && [ ! -d "${PRESTASHOP_WWWROOT}/ins
   dl_url="https://github.com/PrestaShop/PrestaShop/releases/download/${PRESTASHOP_VERSION}/prestashop_${PRESTASHOP_VERSION}.zip"
 
   tmp_zip=$(mktemp)
-  if command -v libscript_download >/dev/null 2>&1; then
-    libscript_download "${dl_url:-}" "${tmp_zip}"
-  else
-    wget -qO "${tmp_zip}" "${dl_url}"
-  fi
+  libscript_download "${dl_url:-}" "${tmp_zip}"
 
   tmp_dir=$(mktemp -d)
   priv unzip -q "${tmp_zip}" -d "${tmp_dir}"
@@ -99,25 +103,18 @@ DB_PASS="${PRESTASHOP_DB_PASS:-prestashop}"
 
 printf '%s\n' "Configuring Database..."
 if [ "${PRESTASHOP_DB_TYPE}" = "mariadb" ] || [ "${PRESTASHOP_DB_TYPE}" = "mysql" ]; then
-  if command -v mysql >/dev/null 2>&1; then
-    if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
-      priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-      priv mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-      priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
-      priv mysql -u root -e "FLUSH PRIVILEGES;"
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql --host "127.0.0.1" --port "3306" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
-    fi
   fi
 elif [ "${PRESTASHOP_DB_TYPE}" = "postgres" ] || [ "${PRESTASHOP_DB_TYPE}" = "postgresql" ] || [ "${PRESTASHOP_DB_TYPE}" = "pgsql" ]; then
-  if command -v psql >/dev/null 2>&1; then
-    if priv su - postgres -c "psql -c 'SELECT 1'" >/dev/null 2>&1; then
-      priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'\"" | grep -q 1 || priv su - postgres -c "createdb ${DB_NAME}"
-      priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv su - postgres -c "psql -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}'\""
-      priv su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER}\""
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine postgres --host "127.0.0.1" --port "5432" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
-    fi
   fi
 elif [ "${PRESTASHOP_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${PRESTASHOP_WWWROOT}/var/sqlite"

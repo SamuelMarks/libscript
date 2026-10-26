@@ -165,7 +165,7 @@ case "$ACTION" in
         URL="https://dl.min.io/aistor/minio/release/${OS}-${ARCH}/minio"
         TEMP_FILE=$(mktemp)
         libscript_depends "curl"
-        if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+        if ! libscript_download "$URL" "$TEMP_FILE"; then
           log_error "Failed to download minio from $URL"
           rm -f "$TEMP_FILE"
           exit 1

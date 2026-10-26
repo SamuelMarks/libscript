@@ -144,7 +144,7 @@ if "%STACK_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading stack %STACK_VERSION% to %DOWNLOAD_DIR%\stack...
     if not exist "%DOWNLOAD_DIR%\stack" mkdir "%DOWNLOAD_DIR%\stack"
     if not "%STACK_DOWNLOAD_URL%"=="" (
-        curl -sSL "%STACK_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%STACK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.zip"
     ) else (
         echo STACK_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%STACK_INSTALL_METHOD%"=="system" (
-    winget install stack --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends stack
     exit /b !errorlevel!
 )
 if "%STACK_INSTALL_METHOD%"=="mise" ( mise install "stack@%STACK_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%STACK_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%STACK_DOWNLOAD_URL%" -o "%TEMP%\stack.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%STACK_DOWNLOAD_URL%" "%TEMP%\stack.zip"
         tar -xf "%TEMP%\stack.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for stack.

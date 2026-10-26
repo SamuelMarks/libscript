@@ -56,25 +56,24 @@ LOCAL_DST=""
 APP_SPECS=""
 
 # ## matches_only_target
-# Checks whether an application remote destination matches the --only selector.
+# Checks whether an application remote destination or manifest alias matches the --only selector.
 matches_only_target() {
   _mot_dest="$1"
+  _mot_repo="${2:-}"
   case "$ONLY_TARGET" in
     all|both|"") return 0 ;;
-    pulse|pulse_query|pulse-query|hospital_dashboard_platform|hospital-dashboard-platform)
-      case "$_mot_dest" in
-        *hospital-dashboard-platform*|*pulse*) return 0 ;;
-      esac
-      return 1
-      ;;
-    t1d|t1d_analytics|t1d-analytics)
-      case "$_mot_dest" in
-        *t1d*) return 0 ;;
-      esac
-      return 1
-      ;;
     *)
       [ "$_mot_dest" = "$ONLY_TARGET" ] && return 0
+      _mot_norm_target=$(printf '%s' "$ONLY_TARGET" | tr '_-' '--')
+      _mot_norm_dest=$(printf '%s' "$_mot_dest" | tr '_-' '--')
+      [ "$_mot_norm_dest" = "$_mot_norm_target" ] && return 0
+      for _mot_cand in "${_mot_repo}/libscript.json" "${_mot_dest}/libscript.json" "./${_mot_dest}/libscript.json"; do
+        if [ -f "$_mot_cand" ] && command -v jq >/dev/null 2>&1; then
+          if jq -e --arg t "$ONLY_TARGET" --arg tn "$_mot_norm_target" '([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub("_"; "-") == $tn))' "$_mot_cand" >/dev/null 2>&1; then
+            return 0
+          fi
+        fi
+      done
       return 1
       ;;
   esac
@@ -142,7 +141,7 @@ if [ "$EXPORT_MODE" -eq 1 ]; then
   CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
   log_info "Exporting remote state for '${ONLY_TARGET}' from '${NODE}' into '${LOCAL_DST}'..."
   "$CLI" node sync "$NODE" "$RG_CTX"
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/stanford_export_stage && mkdir -p /tmp/stanford_export_stage"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_export_stage && mkdir -p /tmp/libscript_export_stage"
   OIFS="$IFS"
   IFS="|"
   # shellcheck disable=SC2086
@@ -150,18 +149,29 @@ if [ "$EXPORT_MODE" -eq 1 ]; then
   IFS="$OIFS"
   for _ex_spec in "$@"; do
     [ -n "$_ex_spec" ] || continue
-    _ex_no_dom="${_ex_spec%%@*}"
+    _ex_domain=""
+    case "$_ex_spec" in
+      *@*)
+        _ex_domain="${_ex_spec#*@}"
+        _ex_no_dom="${_ex_spec%%@*}"
+        ;;
+      *) _ex_no_dom="$_ex_spec" ;;
+    esac
+    _ex_repo=""
     case "$_ex_no_dom" in
-      *:*) _ex_dest="${_ex_no_dom#*:}" ;;
+      *:*)
+        _ex_repo="${_ex_no_dom%%:*}"
+        _ex_dest="${_ex_no_dom#*:}"
+        ;;
       *) _ex_dest="$_ex_no_dom" ;;
     esac
-    if ! matches_only_target "$_ex_dest"; then
+    if ! matches_only_target "$_ex_dest" "$_ex_repo" && ! matches_only_target "${_ex_domain%%.*}" "$_ex_repo"; then
       continue
     fi
-    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_ex_dest} && sudo LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh export-state libscript.json /tmp/stanford_export_stage"
+    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_ex_dest} && sudo LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
   done
-  "$CLI" node download "$NODE" "$RG_CTX" "/tmp/stanford_export_stage/" "${LOCAL_DST}/"
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/stanford_export_stage"
+  "$CLI" node download "$NODE" "$RG_CTX" "/tmp/libscript_export_stage/" "${LOCAL_DST}/"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_export_stage"
   log_info "Export completed successfully into '${LOCAL_DST}'."
   exit 0
 fi

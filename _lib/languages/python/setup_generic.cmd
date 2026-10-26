@@ -205,12 +205,41 @@ if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## link_discovered_python
+:: Links a discovered system or uv Python directory into LIBSCRIPT_HOME\python\<version> and default.
+:link_discovered_python
+set "_LDP_EXE=%~1"
+if "!_LDP_EXE!"=="" exit /b 0
+for %%F in ("!_LDP_EXE!") do set "_LDP_DIR=%%~dpF"
+if "!_LDP_DIR:~-1!"=="\" set "_LDP_DIR=!_LDP_DIR:~0,-1!"
+for %%N in ("!_LDP_DIR!") do (
+    if /i "%%~nxN"=="bin" for %%P in ("!_LDP_DIR!\..") do set "_LDP_DIR=%%~fP"
+)
+if not exist "%LIBSCRIPT_HOME%\python" mkdir "%LIBSCRIPT_HOME%\python"
+set "_LDP_VER_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
+if /i not "!_LDP_DIR!"=="!_LDP_VER_DIR!" (
+    if not exist "!_LDP_VER_DIR!" mklink /J "!_LDP_VER_DIR!" "!_LDP_DIR!" >nul 2>&1
+)
+set "_LDP_DEF_DIR=%LIBSCRIPT_HOME%\python\default"
+if /i not "!_LDP_DIR!"=="!_LDP_DEF_DIR!" (
+    if exist "!_LDP_DEF_DIR!" rmdir "!_LDP_DEF_DIR!" 2>nul
+    mklink /J "!_LDP_DEF_DIR!" "!_LDP_DIR!" >nul 2>&1
+)
+exit /b 0
+
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
 if not "%FORCE_REINSTALL%"=="1" (
     call :find_existing_python
     if not errorlevel 1 (
+        for /f "delims=" %%P in ('where python 2^>nul') do (
+            call :link_discovered_python "%%~fP"
+            goto :reuse_done
+        )
+        :: ## reuse_done
+        :: Finishes linking existing Python installation.
+        :reuse_done
         echo [REUSE] python %PYTHON_VERSION% is already installed.
         exit /b 0
     )
@@ -219,6 +248,9 @@ where uv >nul 2>&1
 if not errorlevel 1 (
     uv python install "%PYTHON_VERSION%" >nul 2>&1
     if not errorlevel 1 (
+        for /f "delims=" %%U in ('uv python find "%PYTHON_VERSION%" 2^>nul') do (
+            call :link_discovered_python "%%~fU"
+        )
         echo Installed Python %PYTHON_VERSION% via uv.
         exit /b 0
     )
@@ -233,7 +265,7 @@ if "%PYTHON_INSTALL_METHOD%"=="pkgx" ( pkgx install "python@%PYTHON_VERSION%" & 
 if "%PYTHON_INSTALL_METHOD%"=="vfox" ( vfox add python & vfox install "python@%PYTHON_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
-if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe" if not exist "C:\Program Files\Python312\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe" (
+if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe" if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
     echo Installing python %PYTHON_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     set "_PY_CACHED="
@@ -263,7 +295,7 @@ if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe
         if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
         )
-        if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe" (
+        if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
             echo Downloading portable Python 3.12...
             set "_PY_ARCH=amd64"
             if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_PY_ARCH=arm64"

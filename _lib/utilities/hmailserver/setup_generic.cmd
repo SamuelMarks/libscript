@@ -60,8 +60,9 @@ if "%ACTION%"=="install" (
     )
     where choco >nul 2>&1
     if not errorlevel 1 (
-        echo [INFO] Installing hMailServer via chocolatey...
-        choco install hmailserver -y >nul 2>&1
+        echo [INFO] Installing hMailServer via pkg_mgr...
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco hmailserver >nul 2>&1
     )
     echo [INFO] hMailServer configuration ready.
     exit /b 0

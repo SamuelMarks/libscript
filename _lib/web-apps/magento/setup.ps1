@@ -52,11 +52,7 @@ if (-not (Test-Path "$WwwRoot\app")) {
     $tmpZip = Join-Path $env:TEMP "magento_$(Get-Random).zip"
     $dlUrl = "https://github.com/magento/magento2/archive/refs/tags/${MagentoVersion}.zip"
 
-    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-        curl.exe -sSL "$dlUrl" -o "$tmpZip"
-    } else {
-        Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip -UseBasicParsing
-    }
+    & (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
 
     if (Test-Path $tmpZip) {
         $sevenZip = "C:\Program Files\7-Zip\7z.exe"
@@ -76,10 +72,10 @@ if (-not (Test-Path "$WwwRoot\app")) {
 }
 
 Write-Host "Configuring Database ($DbDriver)..."
+$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
 if ($DbDriver -in @("mariadb", "mysql")) {
     try {
-        $mysqlCmd = "CREATE DATABASE IF NOT EXISTS `$DbName`; CREATE USER IF NOT EXISTS '$DbUser'@'$DbHost' IDENTIFIED BY '$DbPass'; GRANT ALL PRIVILEGES ON `$DbName`.* TO '$DbUser'@'$DbHost'; FLUSH PRIVILEGES;"
-        mysql -u root -e $mysqlCmd 2>$null
+        & $provSchema --engine mysql --host $DbHost --port 3306 --schema $DbName --user $DbUser --password $DbPass
     } catch {
         Write-Warning "Failed to automatically configure MariaDB. Continuing."
     }

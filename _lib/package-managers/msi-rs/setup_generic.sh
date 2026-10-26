@@ -276,7 +276,7 @@ case "$ACTION" in
         log_info "Downloading pre-compiled binary release: ${release_url}"
         
         tmp_archive="${TMPDIR:-/tmp}/msi_rs_build_$$.tar.gz"
-        if libscript_download "${release_url}" "${tmp_archive}" || curl -sSLf "${release_url}" -o "${tmp_archive}"; then
+        if libscript_download "${release_url}" "${tmp_archive}" || libscript_download "${release_url}" "${tmp_archive}"; then
           tar -xzf "${tmp_archive}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
           rm -f "${tmp_archive}"
           chmod +x "${TARGET_DIR}/bin"/* 2>/dev/null || true

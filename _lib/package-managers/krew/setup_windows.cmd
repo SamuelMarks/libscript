@@ -62,7 +62,7 @@ set "URL=https://github.com/kubernetes-sigs/krew/releases/download/v0.5.0/krew-w
 set "TEMP_TAR=%TEMP%\krew.tar.gz"
 
 echo Downloading krew from %URL%...
-curl -sSL "%URL%" -o "%TEMP_TAR%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_TAR%"
 if errorlevel 1 (
     echo Failed to download krew.
     exit /b 1

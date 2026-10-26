@@ -138,9 +138,6 @@ case "$ACTION" in
     ;;
   install)
     if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
-      if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
-      fi
       if ! libscript_depends 'caddy'; then
         log_info "System package manager unavailable for caddy. Falling back to native..."
         CADDY_INSTALL_METHOD="libscript_native"
@@ -170,7 +167,7 @@ case "$ACTION" in
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
           libscript_depends "tar"
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download caddy from $URL"
             rm -f "$TEMP_FILE.tar.gz"
             exit 1

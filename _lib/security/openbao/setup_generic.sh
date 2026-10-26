@@ -180,7 +180,7 @@ case "$ACTION" in
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
           libscript_depends "tar"
-          curl -fsSL "$URL" -o "$TEMP_FILE.tar.gz"
+          libscript_download "$URL" "$TEMP_FILE.tar.gz"
           tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "bao" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/bao"
           chmod +x "${TARGET_DIR}/bin/bao"
           rm -f "$TEMP_FILE.tar.gz"

@@ -144,7 +144,7 @@ if "%NIMBLE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nimble %NIMBLE_VERSION% to %DOWNLOAD_DIR%\nimble...
     if not exist "%DOWNLOAD_DIR%\nimble" mkdir "%DOWNLOAD_DIR%\nimble"
     if not "%NIMBLE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%NIMBLE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\nimble\nimble-%NIMBLE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NIMBLE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nimble\nimble-%NIMBLE_VERSION%.zip"
     ) else (
         echo NIMBLE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NIMBLE_INSTALL_METHOD%"=="system" (
-    winget install nimble --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nimble
     exit /b !errorlevel!
 )
 if "%NIMBLE_INSTALL_METHOD%"=="mise" ( mise install "nimble@%NIMBLE_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nimble\nimble-%NIMBLE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NIMBLE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%NIMBLE_DOWNLOAD_URL%" -o "%TEMP%\nimble.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NIMBLE_DOWNLOAD_URL%" "%TEMP%\nimble.zip"
         tar -xf "%TEMP%\nimble.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nimble.

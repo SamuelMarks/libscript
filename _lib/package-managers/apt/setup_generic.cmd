@@ -146,7 +146,7 @@ if "%APT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading apt %APT_VERSION% to %DOWNLOAD_DIR%\apt...
     if not exist "%DOWNLOAD_DIR%\apt" mkdir "%DOWNLOAD_DIR%\apt"
     if not "%APT_DOWNLOAD_URL%"=="" (
-        curl -sSL "%APT_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.zip"
     ) else (
         echo APT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -157,7 +157,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%APT_INSTALL_METHOD%"=="system" (
-    winget install apt --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends apt
     exit /b !errorlevel!
 )
 if "%APT_INSTALL_METHOD%"=="mise" ( mise install "apt@%APT_VERSION%" & exit /b 0 )
@@ -177,7 +177,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%APT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%APT_DOWNLOAD_URL%" -o "%TEMP%\apt.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APT_DOWNLOAD_URL%" "%TEMP%\apt.zip"
         tar -xf "%TEMP%\apt.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for apt.

@@ -144,7 +144,7 @@ if "%MINIO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading minio %MINIO_VERSION% to %DOWNLOAD_DIR%\minio...
     if not exist "%DOWNLOAD_DIR%\minio" mkdir "%DOWNLOAD_DIR%\minio"
     if not "%MINIO_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MINIO_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\minio\minio-%MINIO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MINIO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\minio\minio-%MINIO_VERSION%.zip"
     ) else (
         echo MINIO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MINIO_INSTALL_METHOD%"=="system" (
-    winget install minio --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends minio
     exit /b !errorlevel!
 )
 if "%MINIO_INSTALL_METHOD%"=="mise" ( mise install "minio@%MINIO_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\minio\minio-%MINIO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MINIO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MINIO_DOWNLOAD_URL%" -o "%TEMP%\minio.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MINIO_DOWNLOAD_URL%" "%TEMP%\minio.zip"
         tar -xf "%TEMP%\minio.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for minio.

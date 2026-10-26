@@ -55,8 +55,14 @@ fi
 export SQLITE_PREFIX="${_sqlite_prefix}"
 libscript_path_prepend "${_sqlite_prefix}/bin"
 if [ -d "${_sqlite_prefix}/include" ]; then
-  export CPATH="${_sqlite_prefix}/include${CPATH:+:${CPATH}}"
+  case ":${CPATH:-}:" in
+    *":${_sqlite_prefix}/include:"*) ;;
+    *) export CPATH="${_sqlite_prefix}/include${CPATH:+:${CPATH}}" ;;
+  esac
 fi
 if [ -d "${_sqlite_prefix}/lib" ]; then
-  export LIBRARY_PATH="${_sqlite_prefix}/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}"
+  case ":${LIBRARY_PATH:-}:" in
+    *":${_sqlite_prefix}/lib:"*) ;;
+    *) export LIBRARY_PATH="${_sqlite_prefix}/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}" ;;
+  esac
 fi

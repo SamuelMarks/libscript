@@ -144,7 +144,7 @@ if "%MAS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mas %MAS_VERSION% to %DOWNLOAD_DIR%\mas...
     if not exist "%DOWNLOAD_DIR%\mas" mkdir "%DOWNLOAD_DIR%\mas"
     if not "%MAS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MAS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.zip"
     ) else (
         echo MAS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MAS_INSTALL_METHOD%"=="system" (
-    winget install mas --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mas
     exit /b !errorlevel!
 )
 if "%MAS_INSTALL_METHOD%"=="mise" ( mise install "mas@%MAS_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MAS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MAS_DOWNLOAD_URL%" -o "%TEMP%\mas.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MAS_DOWNLOAD_URL%" "%TEMP%\mas.zip"
         tar -xf "%TEMP%\mas.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mas.

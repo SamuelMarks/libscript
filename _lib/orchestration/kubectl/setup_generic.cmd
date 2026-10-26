@@ -119,7 +119,7 @@ if "%KUBECTL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kubectl %KUBECTL_VERSION% to %DOWNLOAD_DIR%\kubectl...
     if not exist "%DOWNLOAD_DIR%\kubectl" mkdir "%DOWNLOAD_DIR%\kubectl"
     if not "%KUBECTL_DOWNLOAD_URL%"=="" (
-        curl -sSL "%KUBECTL_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\kubectl\kubectl-%KUBECTL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KUBECTL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\kubectl\kubectl-%KUBECTL_VERSION%.zip"
     ) else (
         echo KUBECTL_DOWNLOAD_URL is not defined. Skipping.
     )

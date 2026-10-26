@@ -144,7 +144,7 @@ if "%BUNDLER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading bundler %BUNDLER_VERSION% to %DOWNLOAD_DIR%\bundler...
     if not exist "%DOWNLOAD_DIR%\bundler" mkdir "%DOWNLOAD_DIR%\bundler"
     if not "%BUNDLER_DOWNLOAD_URL%"=="" (
-        curl -sSL "%BUNDLER_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\bundler\bundler-%BUNDLER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUNDLER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\bundler\bundler-%BUNDLER_VERSION%.zip"
     ) else (
         echo BUNDLER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%BUNDLER_INSTALL_METHOD%"=="system" (
-    winget install bundler --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends bundler
     exit /b !errorlevel!
 )
 if "%BUNDLER_INSTALL_METHOD%"=="mise" ( mise install "bundler@%BUNDLER_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\bundler\bundler-%BUNDLER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%BUNDLER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%BUNDLER_DOWNLOAD_URL%" -o "%TEMP%\bundler.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUNDLER_DOWNLOAD_URL%" "%TEMP%\bundler.zip"
         tar -xf "%TEMP%\bundler.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for bundler.

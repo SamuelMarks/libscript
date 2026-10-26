@@ -57,10 +57,10 @@ if %errorlevel% equ 0 exit /b 0
 if exist "C:\Program Files\Vagrant\bin\vagrant.exe" exit /b 0
 if exist "C:\HashiCorp\Vagrant\bin\vagrant.exe" exit /b 0
 
-echo Installing Vagrant via winget...
-winget install --id Hashicorp.Vagrant --silent --accept-package-agreements --accept-source-agreements
+echo Installing Vagrant via pkg_mgr...
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vagrant
 if errorlevel 1 (
-    echo Failed to install Vagrant via winget.
+    echo Failed to install Vagrant.
     exit /b 1
 )
 

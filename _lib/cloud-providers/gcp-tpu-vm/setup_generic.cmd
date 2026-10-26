@@ -119,7 +119,7 @@ if "%TPU_VM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading tpu-vm %TPU_VM_VERSION% to %DOWNLOAD_DIR%\tpu-vm...
     if not exist "%DOWNLOAD_DIR%\tpu-vm" mkdir "%DOWNLOAD_DIR%\tpu-vm"
     if not "%TPU_VM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%TPU_VM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\tpu-vm\tpu-vm-%TPU_VM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TPU_VM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\tpu-vm\tpu-vm-%TPU_VM_VERSION%.zip"
     ) else (
         echo TPU_VM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -134,7 +134,7 @@ if exist "%LIBSCRIPT_HOME%\gcp-tpu-vm\%VERSION%" (
     exit /b 0
 )
 if "%TPU_VM_INSTALL_METHOD%"=="system" (
-    winget install tpu-vm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends tpu-vm
     exit /b !errorlevel!
 )
 @echo off

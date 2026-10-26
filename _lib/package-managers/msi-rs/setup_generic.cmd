@@ -183,7 +183,7 @@ set "RELEASE_URL=%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-tools-%
 echo [INFO] Attempting to download pre-compiled binary release: %RELEASE_URL%
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
 if errorlevel 1 (
-    curl -sSLf "%RELEASE_URL%" -o "%TEMP%\msi_rs_prebuilt.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
 )
 if not errorlevel 1 (
     echo Extracting pre-compiled binary release...
@@ -273,7 +273,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 ) else if not "%MSI_RS_DOWNLOAD_URL%"=="" (
     echo Downloading prebuilt msi-rs binary archive...
-    curl -sSL "%MSI_RS_DOWNLOAD_URL%" -o "%TEMP%\msi_rs_prebuilt.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%TEMP%\msi_rs_prebuilt.zip"
     tar -xf "%TEMP%\msi_rs_prebuilt.zip" -C "%TARGET_DIR%"
     del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
 ) else (

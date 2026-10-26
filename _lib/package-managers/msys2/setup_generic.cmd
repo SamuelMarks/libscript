@@ -144,7 +144,7 @@ if "%MSYS2_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading msys2 %MSYS2_VERSION% to %DOWNLOAD_DIR%\msys2...
     if not exist "%DOWNLOAD_DIR%\msys2" mkdir "%DOWNLOAD_DIR%\msys2"
     if not "%MSYS2_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MSYS2_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\msys2\msys2-%MSYS2_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSYS2_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\msys2\msys2-%MSYS2_VERSION%.zip"
     ) else (
         echo MSYS2_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MSYS2_INSTALL_METHOD%"=="system" (
-    winget install msys2 --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends msys2
     exit /b !errorlevel!
 )
 if "%MSYS2_INSTALL_METHOD%"=="mise" ( mise install "msys2@%MSYS2_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\msys2\msys2-%MSYS2_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MSYS2_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MSYS2_DOWNLOAD_URL%" -o "%TEMP%\msys2.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSYS2_DOWNLOAD_URL%" "%TEMP%\msys2.zip"
         tar -xf "%TEMP%\msys2.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for msys2.

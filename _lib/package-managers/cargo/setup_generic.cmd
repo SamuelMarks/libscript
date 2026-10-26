@@ -144,7 +144,7 @@ if "%CARGO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cargo %CARGO_VERSION% to %DOWNLOAD_DIR%\cargo...
     if not exist "%DOWNLOAD_DIR%\cargo" mkdir "%DOWNLOAD_DIR%\cargo"
     if not "%CARGO_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CARGO_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cargo\cargo-%CARGO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CARGO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cargo\cargo-%CARGO_VERSION%.zip"
     ) else (
         echo CARGO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CARGO_INSTALL_METHOD%"=="system" (
-    winget install cargo --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cargo
     exit /b !errorlevel!
 )
 if "%CARGO_INSTALL_METHOD%"=="mise" ( mise install "cargo@%CARGO_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cargo\cargo-%CARGO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CARGO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CARGO_DOWNLOAD_URL%" -o "%TEMP%\cargo.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CARGO_DOWNLOAD_URL%" "%TEMP%\cargo.zip"
         tar -xf "%TEMP%\cargo.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cargo.

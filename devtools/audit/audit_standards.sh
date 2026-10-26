@@ -288,6 +288,8 @@ audit_single_file() {
         has_echo_off = 0; has_delayed = 0; has_this_file = 0;
         has_overview = 0; has_usage = 0; has_dup_stack = 0;
         mkdir_hits = ""; git_push_hits = ""; script_dir_hits = ""; chained_if_else_hits = "";
+        bad_script_dir_strip = ""; tab_path_hits = ""; endlocal_delayed_hits = "";
+        in_endlocal = 0;
       }
       { sub(/\r$/, "", $0) }
       NR == 1 {
@@ -312,6 +314,19 @@ audit_single_file() {
         if ($0 ~ /SCRIPT_DIR[%!][^\\/"[:space:]\)]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
         }
+        if ($0 ~ /SCRIPT_DIR:~-1(%|!)""==""/ || $0 ~ /SCRIPT_DIR:~-1%"==""/ || $0 ~ /SCRIPT_DIR:~-1%"=="\\\\"/) {
+          bad_script_dir_strip = (bad_script_dir_strip ? bad_script_dir_strip "; " : "") NR ":" $0
+        }
+        if ($0 ~ /(LIBSCRIPT_ROOT_DIR|SCRIPT_DIR)[%!]\t/) {
+          tab_path_hits = (tab_path_hits ? tab_path_hits "; " : "") NR ":" $0
+        }
+        if (tolower($0) ~ /^endlocal[[:space:]]*&[[:space:]]*\(/) {
+          in_endlocal = 1
+        } else if (in_endlocal && $0 ~ /^[[:space:]]*\)/) {
+          in_endlocal = 0
+        } else if (in_endlocal && $0 ~ /!PATH!/) {
+          endlocal_delayed_hits = (endlocal_delayed_hits ? endlocal_delayed_hits "; " : "") NR ":" $0
+        }
         match($0, /^[[:space:]]*/)
         ind = RLENGTH
         if (tolower($0) ~ /^[[:space:]]*[)][[:space:]]*else([[:space:]]|$)/ && (ind in chained_if)) {
@@ -334,6 +349,9 @@ audit_single_file() {
         if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir in batch script: " mkdir_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (script_dir_hits != "") print "BATCH_SCRIPT_DIR_SEPARATOR|Missing backslash after SCRIPT_DIR: " script_dir_hits
+        if (bad_script_dir_strip != "") print "BATCH_SCRIPT_DIR_STRIP|Corrupted SCRIPT_DIR:~-1 backslash check: " bad_script_dir_strip
+        if (tab_path_hits != "") print "BATCH_TAB_CORRUPTION|Literal TAB character in path variable expansion: " tab_path_hits
+        if (endlocal_delayed_hits != "") print "BATCH_ENDLOCAL_DELAYED|Delayed expansion !PATH! inside endlocal block: " endlocal_delayed_hits
         if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
       }
     ' "$file" 2>/dev/null || true)
@@ -406,9 +424,28 @@ audit_single_file() {
   # 8d. Ban hardcoded user/project paths and .volta in core substrate (_lib/ and cli/)
   case "$file" in
     _lib/*|cli/*)
-      leak_hits=$(grep -nE '(pulse-query-backend|t1d-analytics-backend|/home/azureuser|\.volta/bin)' "$file" 2>/dev/null || true)
+      leak_hits=$(grep -nE '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' "$file" 2>/dev/null || true)
       if [ -n "$leak_hits" ]; then
         log_failure "$file" "NO_HARDCODED_USER_PATHS" "Hardcoded user/project path or .volta reference in substrate: $leak_hits"
+      fi
+      ;;
+  esac
+
+  # 8e. Ban commented-out libscript_depends in recipe setup scripts
+  case "$file" in
+    _lib/*/*/setup*.sh)
+      commented_dep_hits=$(grep -nE '^[[:space:]]*#[[:space:]]*#[[:space:]]*libscript_depends' "$file" 2>/dev/null || true)
+      if [ -n "$commented_dep_hits" ]; then
+        log_failure "$file" "COMMENTED_DEPENDS" "Commented-out '# # libscript_depends' found in recipe setup script: $commented_dep_hits"
+      fi
+      ;;
+  esac
+
+  # 8f. Ensure _lib/_common/env_base.cmd preserves caller context and never resolves PACKAGE_NAME to _common
+  case "$file" in
+    _lib/_common/env_base.cmd)
+      if ! grep -q 'CALLER_SCRIPT_DIR' "$file"; then
+        log_failure "$file" "ENV_BASE_CMD_CALL" "env_base.cmd must support CALLER_SCRIPT_DIR to prevent resolving PACKAGE_NAME to _common."
       fi
       ;;
   esac

@@ -144,7 +144,7 @@ if "%PUB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pub %PUB_VERSION% to %DOWNLOAD_DIR%\pub...
     if not exist "%DOWNLOAD_DIR%\pub" mkdir "%DOWNLOAD_DIR%\pub"
     if not "%PUB_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PUB_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pub\pub-%PUB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PUB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pub\pub-%PUB_VERSION%.zip"
     ) else (
         echo PUB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PUB_INSTALL_METHOD%"=="system" (
-    winget install pub --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pub
     exit /b !errorlevel!
 )
 if "%PUB_INSTALL_METHOD%"=="mise" ( mise install "pub@%PUB_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pub\pub-%PUB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PUB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PUB_DOWNLOAD_URL%" -o "%TEMP%\pub.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PUB_DOWNLOAD_URL%" "%TEMP%\pub.zip"
         tar -xf "%TEMP%\pub.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pub.

@@ -10,7 +10,7 @@ param(
     [int]$CmsPort = 8001
 )
 
-$openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } elseif (Test-Path "C:\Users\vagrant\.libscript\openedx") { "C:\Users\vagrant\.libscript\openedx" } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
+$openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } elseif (Test-Path "$env:USERPROFILE\.libscript\openedx") { "$env:USERPROFILE\.libscript\openedx" } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
 $codebaseDir = $openEdxDir
 if (Test-Path (Join-Path $openEdxDir "codebase\manage.py")) {
     $codebaseDir = Join-Path $openEdxDir "codebase"
@@ -32,12 +32,12 @@ if (-not (Test-Path $runDir)) { New-Item -ItemType Directory -Path $runDir -Forc
 $pyExe = $null
 $candidates = @(
     (Join-Path $openEdxDir ".venv\Scripts\python.exe"),
-    "C:\Users\vagrant\.libscript\openedx\.venv\Scripts\python.exe",
+    "$env:USERPROFILE\.libscript\openedx\.venv\Scripts\python.exe",
     "C:\OpenEdX\app\.venv\Scripts\python.exe",
-    "C:\Users\vagrant\.libscript\python\latest\bin\python.exe",
-    "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe",
-    "C:\Users\vagrant\AppData\Local\Programs\Python\Python311-arm64\python.exe",
-    "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe",
+    "$env:USERPROFILE\.libscript\python\latest\bin\python.exe",
+    "$env:LOCALAPPDATA\Programs\Python\Python312-arm64\python.exe",
+    "$env:LOCALAPPDATA\Programs\Python\Python311-arm64\python.exe",
+    "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
     "C:\Program Files\Python312\python.exe",
     "C:\Program Files\Python311\python.exe"
 )

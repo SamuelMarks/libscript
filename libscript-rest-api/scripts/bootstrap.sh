@@ -94,6 +94,14 @@ install_deps_linux() {
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq latest
+  for _env_f in "_lib/languages/c/env.sh" "_lib/git-servers/git/env.sh" "_lib/toolchains/cmake/env.sh" "_lib/utilities/jq/env.sh"; do
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/${_env_f}" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_env_f}"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+  done
 }
 
 # ## install_deps_macos
@@ -109,6 +117,14 @@ install_deps_macos() {
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq latest
+  for _env_f in "_lib/languages/c/env.sh" "_lib/git-servers/git/env.sh" "_lib/toolchains/cmake/env.sh" "_lib/utilities/jq/env.sh"; do
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/${_env_f}" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_env_f}"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+  done
 }
 
 # ## install_deps_windows

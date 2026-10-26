@@ -391,6 +391,7 @@ mkdir -p "${TEST_TMP}/app_a" "${TEST_TMP}/app_b" "${TEST_TMP}/state_dir"
 cat << 'EOF' > "${TEST_TMP}/app_a/libscript.json"
 {
   "name": "hospital-dashboard-platform",
+  "aliases": ["pulse_query", "pulse-query"],
   "domain": "pulse-query.healthplatform.io",
   "infrastructure": {"network": {"ports": ["8000", "4200"]}}
 }
@@ -398,6 +399,7 @@ EOF
 cat << 'EOF' > "${TEST_TMP}/app_b/libscript.json"
 {
   "name": "t1d-analytics",
+  "aliases": ["t1d_analytics"],
   "domain": "t1d-analytics.healthplatform.io",
   "infrastructure": {"network": {"ports": ["8001", "3000"]}}
 }
@@ -413,7 +415,7 @@ assert_contains "$PROV_ONLY" "t1d-analytics" "provision --only=t1d_analytics dep
 TEARDOWN_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" deprovision --provider azure --node test-node --rg TEST-RG --location eastus --keep-infra --purge-data --only t1d-analytics --app "${TEST_TMP}/app_a:hospital-dashboard-platform" --app "${TEST_TMP}/app_b:t1d-analytics" --dry-run 2>&1)
 assert_contains "$TEARDOWN_DRY" "--remove --purge-data" "deprovision --keep-infra --purge-data runs down --remove --purge-data"
 
-BK_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" backup test-node --provider azure --rg TEST-RG --only pulse_query --app hospital-dashboard-platform --app t1d-analytics --export-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
+BK_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" backup test-node --provider azure --rg TEST-RG --only pulse_query --app "${TEST_TMP}/app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "${TEST_TMP}/app_b:t1d-analytics@t1d-analytics.healthplatform.io" --export-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
 assert_contains "$BK_DRY" "export-state libscript.json" "backup --export-state exports selected app state"
 
 RS_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" restore test-node --provider azure --rg TEST-RG --only pulse_query --app "hospital-dashboard-platform@pulse-query.healthplatform.io" --app "t1d-analytics@t1d-analytics.healthplatform.io" --import-state "${TEST_TMP}/state_dir" --dry-run 2>&1)

@@ -61,7 +61,7 @@ if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 set "URL=https://downloads.haskell.org/~ghcup/x86_64-mingw64-ghcup.exe"
 
 echo Downloading ghcup from %URL%...
-curl -sSL "%URL%" -o "%DEST_DIR%\ghcup.exe"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%DEST_DIR%\ghcup.exe"
 if errorlevel 1 (
     echo Failed to download ghcup.
     exit /b 1

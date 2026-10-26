@@ -14,9 +14,9 @@ Execute this script to install and configure gitea on the local system.
 
 $ErrorActionPreference = "Stop"
 
-$MinioVersion = $env:GITEA_VERSION
-if ([string]::IsNullOrEmpty($MinioVersion)) {
-    $MinioVersion = "latest"
+$GiteaVersion = $env:GITEA_VERSION
+if ([string]::IsNullOrEmpty($GiteaVersion)) {
+    $GiteaVersion = "latest"
 }
 
 $InstallMethod = $env:GITEA_INSTALL_METHOD
@@ -27,22 +27,14 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
     $InstallMethod = "libscript_native"
 }
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $ScriptDir "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
+
 if ($InstallMethod -eq "system") {
-    $PkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-    if ([string]::IsNullOrEmpty($PkgMgr)) {
-        $PkgMgr = "winget"
-    }
-    if ($PkgMgr -eq "winget") {
-        winget install MinIO.MinIO
-    } elseif ($PkgMgr -eq "choco") {
-        choco install gitea
-    } else {
-        Write-Error "Unsupported Windows package manager: $PkgMgr"
-    }
+    & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends gitea
 } else {
     $Prefix = $env:PREFIX
     if ([string]::IsNullOrEmpty($Prefix)) {
-        $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
         $Prefix = "$LibscriptRootDir\installed\gitea"
     }
 
@@ -58,7 +50,7 @@ if ($InstallMethod -eq "system") {
     $Url = "https://dl.gitea.com/gitea/${GiteaVersion}/gitea-${GiteaVersion}-windows-4.0-amd64.exe"
 
     Write-Host "Downloading Gitea from $Url ..."
-    Invoke-WebRequest -Uri $Url -OutFile $ExePath -UseBasicParsing
+    & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $Url $ExePath
 
     Write-Host "Gitea installed to $ExePath"
 }

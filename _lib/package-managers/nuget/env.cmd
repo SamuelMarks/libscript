@@ -53,7 +53,8 @@ IF "%NUGET_VERSION%"=="" SET "NUGET_VERSION=latest"
 set "_CAND_P=%LIBSCRIPT_HOME%\nuget\%NUGET_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nuget"
 
 endlocal & (
     set "NUGET_VERSION=%NUGET_VERSION%"

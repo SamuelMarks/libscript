@@ -144,7 +144,7 @@ if "%MOSQUITTO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mosquitto %MOSQUITTO_VERSION% to %DOWNLOAD_DIR%\mosquitto...
     if not exist "%DOWNLOAD_DIR%\mosquitto" mkdir "%DOWNLOAD_DIR%\mosquitto"
     if not "%MOSQUITTO_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MOSQUITTO_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\mosquitto\mosquitto-%MOSQUITTO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MOSQUITTO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mosquitto\mosquitto-%MOSQUITTO_VERSION%.zip"
     ) else (
         echo MOSQUITTO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MOSQUITTO_INSTALL_METHOD%"=="system" (
-    winget install mosquitto --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mosquitto
     exit /b !errorlevel!
 )
 if "%MOSQUITTO_INSTALL_METHOD%"=="mise" ( mise install "mosquitto@%MOSQUITTO_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\mosquitto\mosquitto-%MOSQUITTO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MOSQUITTO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MOSQUITTO_DOWNLOAD_URL%" -o "%TEMP%\mosquitto.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MOSQUITTO_DOWNLOAD_URL%" "%TEMP%\mosquitto.zip"
         tar -xf "%TEMP%\mosquitto.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mosquitto.

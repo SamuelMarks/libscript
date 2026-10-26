@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for valkey.
+# Generic setup module for valkey with reuse-else-create semantics.
 # 
 # ## Usage
 # Execute this script to perform generic initialization steps for valkey.
@@ -47,9 +47,29 @@ VALKEY_INSTALL_METHOD="$(libscript_resolve_install_method "VALKEY")"
 ACTION="${ACTION:-install}"
 VERSION="${VALKEY_VERSION:-latest}"
 
+# ## find_existing_valkey
+# Checks LIBSCRIPT_HOME and system PATH for an existing valkey-server or redis-server installation.
+find_existing_valkey() {
+  for _fev_cand in \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/${VERSION}/bin/valkey-server" \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/default/bin/valkey-server" \
+    "$(command -v valkey-server 2>/dev/null || true)" \
+    "$(command -v redis-server 2>/dev/null || true)"; do
+    if [ -n "$_fev_cand" ] && [ -x "$_fev_cand" ]; then
+      printf '%s\n' "$_fev_cand"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_valkey >/dev/null 2>&1; then
+    EXACT_VERSION="${VERSION:-latest}"
+    return 0
+  fi
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote valkey 2>/dev/null | tail -n 1)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
@@ -60,6 +80,22 @@ resolve_exact_version() {
   else
     EXACT_VERSION="${VERSION:-latest}"
   fi
+}
+
+# ## resolve_valkey_service_name
+# Resolves the active OS-native or LibScript service unit name for Valkey/Redis.
+resolve_valkey_service_name() {
+  if [ -n "${LIBSCRIPT_SERVICE_NAME:-}" ]; then
+    printf '%s\n' "$LIBSCRIPT_SERVICE_NAME"
+    return 0
+  fi
+  for _rvsn_cand in valkey-server valkey redis-server redis; do
+    if [ -f "/lib/systemd/system/${_rvsn_cand}.service" ] || [ -f "/etc/systemd/system/${_rvsn_cand}.service" ] || [ -x "/etc/init.d/${_rvsn_cand}" ]; then
+      printf '%s\n' "$_rvsn_cand"
+      return 0
+    fi
+  done
+  printf '%s\n' "libscript_${PACKAGE_NAME:-valkey}"
 }
 
 if [ -z "${VALKEY_DOWNLOAD_URL:-}" ]; then
@@ -130,8 +166,6 @@ case "$ACTION" in
       printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
       vfox use "valkey@${VERSION}"
-    elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "valkey@${VERSION}"
     elif [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System packages do not support use here."
     else
@@ -155,6 +189,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ]; then
+      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_valkey >/dev/null 2>&1; then
+        log_info "[REUSE] valkey is already installed; skipping download."
+        exit 0
+      fi
       log_info "Downloading valkey ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey"
       if [ -n "${VALKEY_DOWNLOAD_URL:-}" ]; then
@@ -172,8 +210,25 @@ case "$ACTION" in
       libscript_build_component_from_source "valkey" "${EXACT_VERSION}" "valkey-server" "c" "make" "${VALKEY_DOWNLOAD_URL:-}"
       exit 0
     fi
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_vk=$(find_existing_valkey 2>/dev/null); then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/${EXACT_VERSION}"
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$_existing_vk" != "${TARGET_DIR}/bin/valkey-server" ]; then
+        ln -sf "$_existing_vk" "${TARGET_DIR}/bin/valkey-server" 2>/dev/null || true
+      fi
+      if command -v valkey-cli >/dev/null 2>&1; then
+        ln -sf "$(command -v valkey-cli)" "${TARGET_DIR}/bin/valkey-cli" 2>/dev/null || true
+      elif command -v redis-cli >/dev/null 2>&1; then
+        ln -sf "$(command -v redis-cli)" "${TARGET_DIR}/bin/valkey-cli" 2>/dev/null || true
+      fi
+      libscript_symlink_alias "valkey" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "valkey" "default" "${EXACT_VERSION}"
+      log_info "[REUSE] valkey (${VERSION}) is already installed at ${_existing_vk}."
+      exit 0
+    fi
     if [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "valkey"
+      libscript_depends "valkey" || libscript_depends "redis"
     elif [ "$VALKEY_INSTALL_METHOD" = "mise" ]; then
       mise install "valkey@${VERSION}"
     elif [ "$VALKEY_INSTALL_METHOD" = "asdf" ]; then
@@ -219,10 +274,13 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for valkey..."
-              libscript_depends "valkey"
+              libscript_depends "valkey" || libscript_depends "redis"
               if command -v valkey-server >/dev/null 2>&1; then
                 ln -sf "$(command -v valkey-server)" "${TARGET_DIR}/bin/valkey-server"
                 ln -sf "$(command -v valkey-cli)" "${TARGET_DIR}/bin/valkey-cli" 2>/dev/null || true
+              elif command -v redis-server >/dev/null 2>&1; then
+                ln -sf "$(command -v redis-server)" "${TARGET_DIR}/bin/valkey-server"
+                ln -sf "$(command -v redis-cli)" "${TARGET_DIR}/bin/valkey-cli" 2>/dev/null || true
               fi
             else
               log_warn "No download URL provided for valkey ${VERSION}."
@@ -239,8 +297,9 @@ case "$ACTION" in
     if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ] || [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-valkey}}"
+      service_name=$(resolve_valkey_service_name)
       libscript_service "$ACTION" "$service_name" "$@"
     else
       log_info "$ACTION not natively implemented for $VALKEY_INSTALL_METHOD."
@@ -251,6 +310,7 @@ case "$ACTION" in
     if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ] || [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-valkey}}"
       libscript_install_service "$service_name" "$@"
@@ -263,6 +323,7 @@ case "$ACTION" in
     if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ] || [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-valkey}}"
       libscript_uninstall_service "$service_name" "$@"

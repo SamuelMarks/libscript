@@ -66,8 +66,9 @@ if "%ACTION%"=="install" (
     )
     where choco >nul 2>&1
     if not errorlevel 1 (
-        echo [INFO] Installing elasticsearch via chocolatey...
-        choco install elasticsearch -y
+        echo [INFO] Installing elasticsearch via pkg_mgr...
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco elasticsearch
         exit /b 0
     )
     exit /b 0

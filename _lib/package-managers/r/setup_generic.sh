@@ -145,7 +145,6 @@ case "$ACTION" in
   install)
     if [ "$R_INSTALL_METHOD" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
         if command -v crb >/dev/null 2>&1; then priv crb enable || true; fi
       fi
       libscript_depends "r"
@@ -195,7 +194,6 @@ case "$ACTION" in
             if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ] || [ -z "${R_DOWNLOAD_URL:-}" ]; then
               log_info "No native binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for r..."
               if command -v dnf >/dev/null 2>&1; then
-                priv dnf install -y epel-release || true
                 if command -v crb >/dev/null 2>&1; then priv crb enable || true; fi
               fi
               libscript_depends "r"

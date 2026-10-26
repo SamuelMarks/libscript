@@ -146,6 +146,10 @@ if "!is_json!"=="1" (
         echo Error: jq is required to parse !json_file!. 1>&2
         exit /b 1
     )
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
+    )
     if "!skip_hooks!"=="0" (
         if /i "!action!"=="start" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
@@ -160,7 +164,7 @@ if "!is_json!"=="1" (
     )
     if /i not "!action!"=="uninstall" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
-        for /f "tokens=1,2 delims=	 " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
+        for /f "tokens=1,2 delims=       " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
             set "pkg=%%A"
             set "ver=%%B"
             if "!ver!"=="null" set "ver=latest"

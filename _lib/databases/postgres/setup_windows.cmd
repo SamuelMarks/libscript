@@ -62,7 +62,7 @@ set "URL=https://get.enterprisedb.com/postgresql/postgresql-16.6-1-windows-x64-b
 set "TEMP_ZIP=%TEMP%\postgresql.zip"
 
 echo Downloading PostgreSQL binaries from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download PostgreSQL.
     exit /b 1

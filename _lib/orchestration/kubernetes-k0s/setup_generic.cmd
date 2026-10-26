@@ -144,7 +144,7 @@ if "%KUBERNETES_K0S_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kubernetes-k0s %KUBERNETES_K0S_VERSION% to %DOWNLOAD_DIR%\kubernetes-k0s...
     if not exist "%DOWNLOAD_DIR%\kubernetes-k0s" mkdir "%DOWNLOAD_DIR%\kubernetes-k0s"
     if not "%KUBERNETES_K0S_DOWNLOAD_URL%"=="" (
-        curl -sSL "%KUBERNETES_K0S_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\kubernetes-k0s\kubernetes-k0s-%KUBERNETES_K0S_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KUBERNETES_K0S_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\kubernetes-k0s\kubernetes-k0s-%KUBERNETES_K0S_VERSION%.zip"
     ) else (
         echo KUBERNETES_K0S_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="system" (
-    winget install kubernetes-k0s --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends kubernetes-k0s
     exit /b !errorlevel!
 )
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="mise" ( mise install "kubernetes-k0s@%KUBERNETES_K0S_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\kubernetes-k0s\kubernetes-k0s-%KUBERNETES_K0S_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%KUBERNETES_K0S_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%KUBERNETES_K0S_DOWNLOAD_URL%" -o "%TEMP%\kubernetes-k0s.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%KUBERNETES_K0S_DOWNLOAD_URL%" "%TEMP%\kubernetes-k0s.zip"
         tar -xf "%TEMP%\kubernetes-k0s.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for kubernetes-k0s.

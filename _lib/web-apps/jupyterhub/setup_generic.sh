@@ -42,7 +42,9 @@ for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" \
 done
 
 if ! command -v python3 >/dev/null 2>&1 && ! command -v uv >/dev/null 2>&1; then
-  : # # libscript_depends "python"
+  if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+    libscript_depends "python" || true
+  fi
 fi
 
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then

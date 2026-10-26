@@ -30,6 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _DEPLOY_SCRIPT_DIR="$SCRIPT_DIR"
+# shellcheck disable=SC1090,SC1091
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 SCRIPT_DIR="$_DEPLOY_SCRIPT_DIR"
 
@@ -115,27 +116,27 @@ export AZURE_LOCATION="$LOC"
 export LOCATION="$LOC"
 
 # ## matches_only_target
-# Checks whether a given application name or remote destination matches the --only selector.
+# Checks whether a given application name, remote destination, or manifest alias matches the --only selector.
 matches_only_target() {
   _mot_name="$1"
   _mot_dest="$2"
+  _mot_repo="${3:-}"
   case "$ONLY_TARGET" in
     all|both|"") return 0 ;;
-    pulse|pulse_query|pulse-query|hospital_dashboard_platform|hospital-dashboard-platform)
-      case "$_mot_name:$_mot_dest" in
-        *hospital-dashboard-platform*|*pulse*) return 0 ;;
-      esac
-      return 1
-      ;;
-    t1d|t1d_analytics|t1d-analytics)
-      case "$_mot_name:$_mot_dest" in
-        *t1d*) return 0 ;;
-      esac
-      return 1
-      ;;
     *)
       if [ "$_mot_name" = "$ONLY_TARGET" ] || [ "$_mot_dest" = "$ONLY_TARGET" ]; then
         return 0
+      fi
+      _mot_norm_target=$(printf '%s' "$ONLY_TARGET" | tr '_-' '--')
+      _mot_norm_name=$(printf '%s' "$_mot_name" | tr '_-' '--')
+      _mot_norm_dest=$(printf '%s' "$_mot_dest" | tr '_-' '--')
+      if [ "$_mot_norm_name" = "$_mot_norm_target" ] || [ "$_mot_norm_dest" = "$_mot_norm_target" ]; then
+        return 0
+      fi
+      if [ -n "$_mot_repo" ] && [ -f "${_mot_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        if jq -e --arg t "$ONLY_TARGET" --arg tn "$_mot_norm_target" '([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub("_"; "-") == $tn))' "${_mot_repo}/libscript.json" >/dev/null 2>&1; then
+          return 0
+        fi
       fi
       return 1
       ;;
@@ -217,7 +218,22 @@ ensure_cli() {
       log "ERROR" "Failed to auto-install $pkg. Please install it manually."
       exit 1
     }
-    export PATH="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$pkg}/bin:$PATH"
+    _ec_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+    for _ec_cand in "${_ec_home}/${pkg}/default/bin" "${_ec_home}/${pkg}/latest/bin"; do
+      case ":${PATH}:" in
+        *":${_ec_cand}:"*) ;;
+        *) export PATH="${_ec_cand}:${PATH}" ;;
+      esac
+    done
+    for _ec_cat in $(ls -1 "${LIBSCRIPT_ROOT_DIR}/_lib" 2>/dev/null || true); do
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/${_ec_cat}/${pkg}/env.sh" ]; then
+        STACK=""
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/${_ec_cat}/${pkg}/env.sh"
+        # shellcheck disable=SC1090
+        . "$SCRIPT_NAME" || true
+        unset SCRIPT_NAME || true
+      fi
+    done
   fi
 }
 
@@ -286,7 +302,7 @@ if [ -f "$JSON_FILE" ] && command -v jq >/dev/null 2>&1; then
   STATE_ENDPOINT=$(jq -r '.state.endpoint // ""' "$JSON_FILE" 2>/dev/null || true)
   STATE_PATHS=$(jq -r '.state.paths[]? // empty' "$JSON_FILE" 2>/dev/null || true)
 fi
-export ADMIN_USER
+export ADMIN_USER DOMAIN DNS_RG STATE_BUCKET STATE_ENDPOINT STATE_PATHS
 
 STATE_FILE="$REPO_PATH/.deploy_state"
 # ## record_state
@@ -401,8 +417,23 @@ fi
 log "SYNC" "Syncing LibScript runtime to '$NODE'..."
 run_with_auth_check "$CLI" node sync "$NODE" "$CTX"
 
-# Deploy each selected application repository and run prepare-storage once if not skipped
 PREPARED_STORAGE=0
+if [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -e '.applications != null and (.applications | length > 0)' "${REPO_PATH}/libscript.json" >/dev/null 2>&1; then
+  log "CONFIG" "Uploading shared-stack manifest '${REPO_PATH}/libscript.json' to '$NODE'..."
+  run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${REPO_PATH}/libscript.json" "libscript.json" || true
+  _shared_deps_flags=""
+  [ "$FORCE_REINSTALL" -eq 1 ] && _shared_deps_flags="${_shared_deps_flags} --force-reinstall"
+  if [ "$SKIP_PREPARE" -eq 0 ]; then
+    log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '$NODE' from root manifest..."
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+    PREPARED_STORAGE=1
+  else
+    log "PREPARE" "Provisioning shared runtimes and databases on '$NODE' from root manifest..."
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+  fi
+fi
+
+# Deploy each selected application repository and run prepare-storage once if not skipped
 OIFS="$IFS"
 IFS="|"
 # shellcheck disable=SC2086
@@ -440,7 +471,7 @@ for _app_entry in "$@"; do
     fi
   fi
 
-  if ! matches_only_target "$_ae_name" "$_ae_dest"; then
+  if ! matches_only_target "$_ae_name" "$_ae_dest" "$_ae_repo"; then
     continue
   fi
 

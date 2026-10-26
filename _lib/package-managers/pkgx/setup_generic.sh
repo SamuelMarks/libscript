@@ -160,7 +160,7 @@ case "$ACTION" in
         libscript_depends "curl"
         libscript_depends "tar"
         libscript_depends "xz"
-        if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+        if ! libscript_download "$URL" "$TEMP_FILE"; then
           log_error "Failed to download pkgx from $URL"
           rm -f "$TEMP_FILE"
           exit 1

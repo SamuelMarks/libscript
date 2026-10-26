@@ -72,8 +72,8 @@ if "%ACTION%"=="install" (
     for %%P in (
         "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
         "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
-        "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe"
-        "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe"
+        "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
+        "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
         "C:\Program Files\Python312\python.exe"
         "C:\Program Files\Python311\python.exe"
         "C:\Program Files\Python310\python.exe"
@@ -88,7 +88,7 @@ if "%ACTION%"=="install" (
         echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
         exit /b 0
     )
-    if exist "C:\Users\vagrant\.libscript\python\latest\bin\python.exe" (
+    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" (
         echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
         exit /b 0
     )

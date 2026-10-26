@@ -50,19 +50,15 @@ MAGENTO_DB_DRIVER="${MAGENTO_DB_DRIVER:-mariadb}"
 export MAGENTO_DB_DRIVER
 
 # Check if required tools are available
-# # libscript_depends 'php'
-if [ "${MAGENTO_WEBSERVER}" = "nginx" ] || [ "${MAGENTO_WEBSERVER}" = "caddy" ]; then
-#   if false ; then # libscript_depends 'php-fpm' ; then
-    true
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'php' || true
+  if [ "${MAGENTO_WEBSERVER}" = "nginx" ] || [ "${MAGENTO_WEBSERVER}" = "caddy" ]; then
+    libscript_depends 'php-fpm' || true
   fi
+  libscript_depends 'composer' || true
+  libscript_depends "${MAGENTO_DB_DRIVER}" || true
+  libscript_depends "${MAGENTO_WEBSERVER}" || true
 fi
-# if false ; then # libscript_depends 'composer' ; then
-  true
-fi
-# if false ; then # libscript_depends "${MAGENTO_DB_DRIVER}" ; then
-  true
-fi
-# # libscript_depends "${MAGENTO_WEBSERVER}"
 
 MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"
 export MAGENTO_WWWROOT
@@ -74,14 +70,10 @@ if [ ! -d "${MAGENTO_WWWROOT}/app" ]; then
   # For a full install without auth.json typically use a pre-packaged tarball, but we use github releases for simplicity
   dl_url="https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
 
-  if command -v libscript_download >/dev/null 2>&1; then
-    tmp_magento=$(mktemp)
-    libscript_download "${dl_url:-}" "${tmp_magento}"
-    priv tar xzf "${tmp_magento}" --strip-components=1 -C "${MAGENTO_WWWROOT}"
-    rm -f "${tmp_magento}"
-  else
-    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${MAGENTO_WWWROOT}"
-  fi
+  tmp_magento=$(mktemp)
+  libscript_download "${dl_url:-}" "${tmp_magento}"
+  priv tar xzf "${tmp_magento}" --strip-components=1 -C "${MAGENTO_WWWROOT}"
+  rm -f "${tmp_magento}"
 
   if command -v composer >/dev/null 2>&1; then
     (
@@ -99,21 +91,21 @@ DB_HOST="${MAGENTO_DB_HOST:-127.0.0.1}"
 
 printf '%s\n' "Configuring Database (${MAGENTO_DB_DRIVER})..."
 if [ "${MAGENTO_DB_DRIVER}" = "mariadb" ] || [ "${MAGENTO_DB_DRIVER}" = "mysql" ]; then
-  if command -v mysql >/dev/null 2>&1 && priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
-    priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-    priv mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'${DB_HOST}' IDENTIFIED BY '${DB_PASS}';"
-    priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'${DB_HOST}';"
-    priv mysql -u root -e "FLUSH PRIVILEGES;"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql --host "${DB_HOST}" --port "3306" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || true
   fi
 elif [ "${MAGENTO_DB_DRIVER}" = "postgres" ] || [ "${MAGENTO_DB_DRIVER}" = "postgresql" ]; then
-  if command -v psql >/dev/null 2>&1 && priv sudo -u postgres psql -c "SELECT 1" >/dev/null 2>&1; then
-    priv sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" | grep -q 1 || priv sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
-    priv sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'" | grep -q 1 || priv sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';"
-    priv sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine postgres --host "${DB_HOST}" --port "5432" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || true
   fi
 elif [ "${MAGENTO_DB_DRIVER}" = "sqlite" ]; then
-  if command -v sqlite3 >/dev/null 2>&1; then
-    priv sqlite3 "${MAGENTO_WWWROOT}/magento.sqlite" "VACUUM;" || true
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine sqlite --schema "${MAGENTO_WWWROOT}/magento.sqlite" >/dev/null 2>&1 || true
   fi
 fi
 

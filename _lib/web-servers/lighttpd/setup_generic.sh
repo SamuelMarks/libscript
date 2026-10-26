@@ -140,9 +140,6 @@ case "$ACTION" in
       exit 0
     fi
     if [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
-      if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
-      fi
       libscript_depends 'lighttpd'
     elif [ "${LIGHTTPD_INSTALL_METHOD}" = "mise" ]; then
       mise install "lighttpd@${LIGHTTPD_VERSION}"

@@ -144,7 +144,7 @@ if "%SWIFT_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading swift %SWIFT_VERSION% to %DOWNLOAD_DIR%\swift...
     if not exist "%DOWNLOAD_DIR%\swift" mkdir "%DOWNLOAD_DIR%\swift"
     if not "%SWIFT_DOWNLOAD_URL%"=="" (
-        curl -sSL "%SWIFT_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.zip"
     ) else (
         echo SWIFT_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SWIFT_INSTALL_METHOD%"=="system" (
-    winget install swift --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends swift
     exit /b !errorlevel!
 )
 if "%SWIFT_INSTALL_METHOD%"=="mise" ( mise install "swift@%SWIFT_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SWIFT_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%SWIFT_DOWNLOAD_URL%" -o "%TEMP%\swift.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%TEMP%\swift.zip"
         tar -xf "%TEMP%\swift.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for swift.

@@ -119,7 +119,7 @@ if "%GPU_VM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gpu-vm %GPU_VM_VERSION% to %DOWNLOAD_DIR%\gpu-vm...
     if not exist "%DOWNLOAD_DIR%\gpu-vm" mkdir "%DOWNLOAD_DIR%\gpu-vm"
     if not "%GPU_VM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GPU_VM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\gpu-vm\gpu-vm-%GPU_VM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GPU_VM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gpu-vm\gpu-vm-%GPU_VM_VERSION%.zip"
     ) else (
         echo GPU_VM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -134,6 +134,6 @@ if exist "%LIBSCRIPT_HOME%\gcp-gpu-vm\%VERSION%" (
     exit /b 0
 )
 if "%GPU_VM_INSTALL_METHOD%"=="system" (
-    winget install gpu-vm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gpu-vm
     exit /b !errorlevel!
 )

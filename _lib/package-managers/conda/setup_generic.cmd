@@ -144,7 +144,7 @@ if "%CONDA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading conda %CONDA_VERSION% to %DOWNLOAD_DIR%\conda...
     if not exist "%DOWNLOAD_DIR%\conda" mkdir "%DOWNLOAD_DIR%\conda"
     if not "%CONDA_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CONDA_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\conda\conda-%CONDA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CONDA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\conda\conda-%CONDA_VERSION%.zip"
     ) else (
         echo CONDA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CONDA_INSTALL_METHOD%"=="system" (
-    winget install conda --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends conda
     exit /b !errorlevel!
 )
 if "%CONDA_INSTALL_METHOD%"=="mise" ( mise install "conda@%CONDA_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\conda\conda-%CONDA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CONDA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CONDA_DOWNLOAD_URL%" -o "%TEMP%\conda.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CONDA_DOWNLOAD_URL%" "%TEMP%\conda.zip"
         tar -xf "%TEMP%\conda.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for conda.

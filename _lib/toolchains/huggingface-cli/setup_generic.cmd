@@ -144,7 +144,7 @@ if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading huggingface-cli %HUGGINGFACE_CLI_VERSION% to %DOWNLOAD_DIR%\huggingface-cli...
     if not exist "%DOWNLOAD_DIR%\huggingface-cli" mkdir "%DOWNLOAD_DIR%\huggingface-cli"
     if not "%HUGGINGFACE_CLI_DOWNLOAD_URL%"=="" (
-        curl -sSL "%HUGGINGFACE_CLI_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HUGGINGFACE_CLI_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.zip"
     ) else (
         echo HUGGINGFACE_CLI_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="system" (
-    winget install huggingface-cli --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends huggingface-cli
     exit /b !errorlevel!
 )
 if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="mise" ( mise install "huggingface-cli@%HUGGINGFACE_CLI_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%HUGGINGFACE_CLI_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%HUGGINGFACE_CLI_DOWNLOAD_URL%" -o "%TEMP%\huggingface-cli.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HUGGINGFACE_CLI_DOWNLOAD_URL%" "%TEMP%\huggingface-cli.zip"
         tar -xf "%TEMP%\huggingface-cli.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for huggingface-cli.

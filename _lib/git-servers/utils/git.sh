@@ -38,9 +38,11 @@ git_get() {
     GIT_DIR_="${target}"'/.git'
     if [ -d "${GIT_DIR_}" ]; then
         if [ -n "${branch}" ]; then
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch origin "${branch}":"${branch}"
+            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch origin "${branch}" 2>/dev/null || true
+            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git reset --hard "origin/${branch}" 2>/dev/null || true
         else
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git pull --ff-only
+            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch --depth=1 origin HEAD 2>/dev/null || true
+            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git reset --hard FETCH_HEAD 2>/dev/null || true
         fi
     else
         mkdir -p -- "${target}"

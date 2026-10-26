@@ -144,7 +144,7 @@ if "%SWUPD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading swupd %SWUPD_VERSION% to %DOWNLOAD_DIR%\swupd...
     if not exist "%DOWNLOAD_DIR%\swupd" mkdir "%DOWNLOAD_DIR%\swupd"
     if not "%SWUPD_DOWNLOAD_URL%"=="" (
-        curl -sSL "%SWUPD_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\swupd\swupd-%SWUPD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWUPD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\swupd\swupd-%SWUPD_VERSION%.zip"
     ) else (
         echo SWUPD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SWUPD_INSTALL_METHOD%"=="system" (
-    winget install swupd --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends swupd
     exit /b !errorlevel!
 )
 if "%SWUPD_INSTALL_METHOD%"=="mise" ( mise install "swupd@%SWUPD_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\swupd\swupd-%SWUPD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SWUPD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%SWUPD_DOWNLOAD_URL%" -o "%TEMP%\swupd.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWUPD_DOWNLOAD_URL%" "%TEMP%\swupd.zip"
         tar -xf "%TEMP%\swupd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for swupd.

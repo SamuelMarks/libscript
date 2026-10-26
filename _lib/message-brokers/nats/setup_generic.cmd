@@ -144,7 +144,7 @@ if "%NATS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nats %NATS_VERSION% to %DOWNLOAD_DIR%\nats...
     if not exist "%DOWNLOAD_DIR%\nats" mkdir "%DOWNLOAD_DIR%\nats"
     if not "%NATS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%NATS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NATS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.zip"
     ) else (
         echo NATS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%NATS_INSTALL_METHOD%"=="system" (
-    winget install nats --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nats
     exit /b !errorlevel!
 )
 if "%NATS_INSTALL_METHOD%"=="mise" ( mise install "nats@%NATS_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%NATS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%NATS_DOWNLOAD_URL%" -o "%TEMP%\nats.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NATS_DOWNLOAD_URL%" "%TEMP%\nats.zip"
         tar -xf "%TEMP%\nats.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nats.

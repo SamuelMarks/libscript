@@ -144,7 +144,7 @@ if "%ELIXIR_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading elixir %ELIXIR_VERSION% to %DOWNLOAD_DIR%\elixir...
     if not exist "%DOWNLOAD_DIR%\elixir" mkdir "%DOWNLOAD_DIR%\elixir"
     if not "%ELIXIR_DOWNLOAD_URL%"=="" (
-        curl -sSL "%ELIXIR_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\elixir\elixir-%ELIXIR_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\elixir\elixir-%ELIXIR_VERSION%.zip"
     ) else (
         echo ELIXIR_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ELIXIR_INSTALL_METHOD%"=="system" (
-    winget install elixir --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends elixir
     exit /b !errorlevel!
 )
 if "%ELIXIR_INSTALL_METHOD%"=="mise" ( mise install "elixir@%ELIXIR_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\elixir\elixir-%ELIXIR_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ELIXIR_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%ELIXIR_DOWNLOAD_URL%" -o "%TEMP%\elixir.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%TEMP%\elixir.zip"
         tar -xf "%TEMP%\elixir.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for elixir.

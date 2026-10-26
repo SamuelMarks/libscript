@@ -132,15 +132,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then
-      mise ls node
-    elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list nodejs
-    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls nodejs
-    elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
+    if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       node -v 2>/dev/null || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/" 2>/dev/null || true
@@ -148,15 +140,7 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote node
-    elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all
-    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all nodejs
-    elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
+    if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
       curl -sL https://nodejs.org/dist/index.tab | awk 'NR>1 {print $1}' | sed 's/^v//'
@@ -164,15 +148,7 @@ case "$ACTION" in
     exit 0
     ;;
   use)
-    if [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then
-      mise use "node@${NODEJS_VERSION}"
-    elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
-      asdf global nodejs "${NODEJS_VERSION}"
-    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nodejs@${NODEJS_VERSION}"
-    elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
+    if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -221,15 +197,6 @@ case "$ACTION" in
     fi
     if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'nodejs'
-    elif [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then
-      mise install "node@${NODEJS_VERSION}"
-    elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
-      asdf install nodejs "${NODEJS_VERSION}"
-    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "nodejs@${NODEJS_VERSION}"
-    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
-      vfox add nodejs || true
-      vfox install "nodejs@${NODEJS_VERSION}"
     else
       resolve_exact_version
       libscript_depends 'curl' 'tar'

@@ -144,7 +144,7 @@ if "%TENSORBOARD_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading tensorboard %TENSORBOARD_VERSION% to %DOWNLOAD_DIR%\tensorboard...
     if not exist "%DOWNLOAD_DIR%\tensorboard" mkdir "%DOWNLOAD_DIR%\tensorboard"
     if not "%TENSORBOARD_DOWNLOAD_URL%"=="" (
-        curl -sSL "%TENSORBOARD_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TENSORBOARD_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip"
     ) else (
         echo TENSORBOARD_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%TENSORBOARD_INSTALL_METHOD%"=="system" (
-    winget install tensorboard --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends tensorboard
     exit /b !errorlevel!
 )
 if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise install "tensorboard@%TENSORBOARD_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%TENSORBOARD_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%TENSORBOARD_DOWNLOAD_URL%" -o "%TEMP%\tensorboard.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%TENSORBOARD_DOWNLOAD_URL%" "%TEMP%\tensorboard.zip"
         tar -xf "%TEMP%\tensorboard.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for tensorboard.

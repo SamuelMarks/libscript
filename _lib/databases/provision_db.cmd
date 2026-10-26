@@ -100,6 +100,7 @@ set "db_pass="
 set "pass_env="
 set "db_host=127.0.0.1"
 set "db_port="
+set "db_index=0"
 set "url_env=DATABASE_URL"
 set "sync_url_env="
 set "async_url_env="
@@ -118,6 +119,7 @@ for /f "delims=" %%p in ('echo !db_entry! ^| jq -r ".password // empty" 2^>nul')
 for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".password_env // empty" 2^>nul') do set "pass_env=%%k"
 for /f "delims=" %%h in ('echo !db_entry! ^| jq -r ".host // \"127.0.0.1\"" 2^>nul') do set "db_host=%%h"
 for /f "delims=" %%P in ('echo !db_entry! ^| jq -r ".port // empty" 2^>nul') do set "db_port=%%P"
+for /f "delims=" %%x in ('echo !db_entry! ^| jq -r ".db_index // .database // 0" 2^>nul') do set "db_index=%%x"
 for /f "delims=" %%v in ('echo !db_entry! ^| jq -r ".url_env // \"DATABASE_URL\"" 2^>nul') do set "url_env=%%v"
 for /f "delims=" %%y in ('echo !db_entry! ^| jq -r ".sync_url_env // empty" 2^>nul') do set "sync_url_env=%%y"
 for /f "delims=" %%a in ('echo !db_entry! ^| jq -r ".async_url_env // empty" 2^>nul') do set "async_url_env=%%a"
@@ -204,13 +206,21 @@ if not "!seed_cmd!"=="" (
 exit /b 0
 
 :: ## check_pg_populated
-:: Checks whether all required_tables and min_rows in a PostgreSQL database are satisfied on Windows.
+:: Checks whether all min_tables, required_tables, and min_rows in a PostgreSQL database are satisfied on Windows.
 :check_pg_populated
 if "!LIBSCRIPT_FORCE_SEED!"=="1" exit /b 1
 where psql >nul 2>nul
 if errorlevel 1 exit /b 1
 set "_cpp_has_req=0"
+set "_cpp_min_tbl="
 set "PGPASSWORD=!db_pass!"
+for /f "delims=" %%m in ('echo !db_entry! ^| jq -r ".min_tables // empty" 2^>nul') do set "_cpp_min_tbl=%%m"
+if not "!_cpp_min_tbl!"=="" (
+    set "_cpp_has_req=1"
+    set "_cpp_cnt=0"
+    for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2^>nul') do set "_cpp_cnt=%%c"
+    if !_cpp_cnt! lss !_cpp_min_tbl! exit /b 1
+)
 for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
     set "_cpp_has_req=1"
     set "_cpp_tbl=%%t"
@@ -341,13 +351,21 @@ if not "!seed_cmd!"=="" (
 exit /b 0
 
 :: ## check_duckdb_populated
-:: Checks whether all required_tables and min_rows in a DuckDB database file are satisfied on Windows.
+:: Checks whether all min_tables, required_tables, and min_rows in a DuckDB database file are satisfied on Windows.
 :check_duckdb_populated
 if "!LIBSCRIPT_FORCE_SEED!"=="1" exit /b 1
 if not exist "!db_path!" exit /b 1
 where duckdb >nul 2>nul
 if errorlevel 1 exit /b 1
 set "_cdp_has_req=0"
+set "_cdp_min_tbl="
+for /f "delims=" %%m in ('echo !db_entry! ^| jq -r ".min_tables // empty" 2^>nul') do set "_cdp_min_tbl=%%m"
+if not "!_cdp_min_tbl!"=="" (
+    set "_cdp_has_req=1"
+    set "_cdp_cnt=0"
+    for /f "delims=" %%c in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a _cdp_cnt+=1
+    if !_cdp_cnt! lss !_cdp_min_tbl! exit /b 1
+)
 for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
     set "_cdp_has_req=1"
     set "_cdp_min_r=1"
@@ -380,15 +398,37 @@ if not errorlevel 1 (
 exit /b 0
 
 :: ## prov_redis
-:: Starts Valkey/Redis service if available and writes REDIS_URL / VALKEY_URL.
+:: Starts Valkey/Redis service if available and writes REDIS_URL / VALKEY_URL with reuse-else-create semantics.
 :prov_redis
 if "!db_port!"=="" set "db_port=6379"
-echo [INFO] Provisioning Valkey/Redis cache endpoint (!db_host!:!db_port!)...
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\cli.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\cli.cmd" start >nul 2>&1
+if "!db_index!"=="" set "db_index=0"
+if "!db_index!"=="null" set "db_index=0"
+echo [INFO] Provisioning Valkey/Redis cache endpoint (!db_host!:!db_port!/!db_index!)...
+set "_valkey_ready=0"
+for %%C in (valkey-cli redis-cli) do (
+    where %%C >nul 2>nul
+    if not errorlevel 1 (
+        for /f "delims=" %%r in ('%%C -h "!db_host!" -p "!db_port!" -n "!db_index!" ping 2^>nul') do (
+            if /i "%%r"=="PONG" set "_valkey_ready=1"
+        )
+    )
 )
-call :set_env_var "REDIS_URL" "redis://!db_host!:!db_port!/0"
-call :set_env_var "VALKEY_URL" "redis://!db_host!:!db_port!/0"
+if "!_valkey_ready!"=="1" (
+    echo [REUSE] Valkey/Redis server already active on !db_host!:!db_port! ^(db !db_index!^).
+) else (
+    echo [CREATE] Starting Valkey/Redis server on !db_host!:!db_port!...
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\cli.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\cli.cmd" start >nul 2>&1
+    )
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\caches\redis\cli.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\caches\redis\cli.cmd" start >nul 2>&1
+    )
+)
+call :set_env_var "REDIS_URL" "redis://!db_host!:!db_port!/!db_index!"
+call :set_env_var "VALKEY_URL" "redis://!db_host!:!db_port!/!db_index!"
+if not "!url_env!"=="" if not "!url_env!"=="DATABASE_URL" (
+    call :set_env_var "!url_env!" "redis://!db_host!:!db_port!/!db_index!"
+)
 exit /b 0
 
 :: ## set_env_var

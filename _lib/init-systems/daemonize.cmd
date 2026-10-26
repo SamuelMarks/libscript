@@ -216,6 +216,12 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!svc_workdir!" "%PYTHON_VERSION%"
 )
+for %%B in ("!svc_workdir!\.venv\Scripts" "!svc_workdir!\node_modules\.bin" "!MANIFEST_DIR!\.venv\Scripts" "!MANIFEST_DIR!\node_modules\.bin") do (
+    if exist "%%~fB" (
+        echo ";!PATH!;" | findstr /I /C:";%%~fB;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~fB;!PATH!"
+    )
+)
 (
     echo @echo off
     echo setlocal EnableDelayedExpansion
@@ -225,6 +231,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
     )
     if exist "!MANIFEST_DIR!\.env.libscript" (
         echo for /f "usebackq tokens=* delims=" %%%%L in ^("!MANIFEST_DIR!\.env.libscript"^) do set "%%%%L"
+        echo if defined SERVICE_PATH set "PATH=%%SERVICE_PATH%%;!PATH!"
+        echo if defined SERVICE_EXTRA_PATH set "PATH=%%SERVICE_EXTRA_PATH%%;!PATH!"
     )
 ) > "!runner_file!"
 
@@ -312,6 +320,12 @@ if not "!hc_cmd!"=="" (
     )
     for /f "delims=" %%e in ('echo !svc! ^| jq -r "(.env // .environment // {}) | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do (
         set "%%e"
+    )
+    for %%B in ("!svc_workdir!\.venv\Scripts" "!svc_workdir!\node_modules\.bin" "!MANIFEST_DIR!\.venv\Scripts" "!MANIFEST_DIR!\node_modules\.bin") do (
+        if exist "%%~fB" (
+            echo ";!PATH!;" | findstr /I /C:";%%~fB;" >nul 2>&1
+            if errorlevel 1 set "PATH=%%~fB;!PATH!"
+        )
     )
     pushd "!svc_workdir!"
     cmd.exe /c "!hc_cmd!"
@@ -405,7 +419,7 @@ if exist "!hc_body_file!" del /f /q "!hc_body_file!" >nul 2>&1
 exit /b 0
 
 :: ## verify_public_ingress
-:: Polls the public HTTPS ingress URL and verifies HTML content when --verify-ingress is set.
+:: Polls the public HTTPS ingress URL and verifies HTML content and public health endpoints when --verify-ingress is set.
 :verify_public_ingress
 set "_ing_domain=!PUBLIC_URL!"
 if "!_ing_domain!"=="" (
@@ -415,6 +429,7 @@ if "!_ing_domain!"=="" exit /b 0
 set "_ing_base=https://!_ing_domain!"
 if /i "!_ing_domain:~0,7!"=="http://" set "_ing_base=!_ing_domain!"
 if /i "!_ing_domain:~0,8!"=="https://" set "_ing_base=!_ing_domain!"
+if "!_ing_base:~-1!"=="/" set "_ing_base=!_ing_base:~0,-1!"
 set "_expect_html="
 for /f "delims=" %%H in ('jq -r ".ingress.expect_html // empty" "!json_file!" 2^>nul') do set "_expect_html=%%H"
 set "_ing_html_file=!DATA_BASE!\ingress_check.html"
@@ -432,6 +447,40 @@ if not "!_expect_html!"=="" (
     )
 )
 if exist "!_ing_html_file!" del /f /q "!_ing_html_file!" >nul 2>&1
+for /f "delims=" %%s in ('jq -c "!JQ_FILTER!" "!json_file!" 2^>nul') do (
+    set "_ing_svc=%%s"
+    call :verify_public_service_hc
+)
+exit /b 0
+
+:: ## verify_public_service_hc
+:: Verifies the public HTTPS health check endpoint and expect_json assertion for a single service.
+:verify_public_service_hc
+set "_s_url="
+set "_s_json="
+for /f "delims=" %%u in ('echo !_ing_svc! ^| jq -r "(.health_check // .healthcheck) as $hc | if ($hc | type) == \"object\" then ($hc.url // empty) else empty end" 2^>nul') do set "_s_url=%%u"
+for /f "delims=" %%j in ('echo !_ing_svc! ^| jq -r "(.health_check // .healthcheck) as $hc | if ($hc | type) == \"object\" then ($hc.expect_json // empty) else empty end" 2^>nul') do set "_s_json=%%j"
+if "!_s_url!"=="" exit /b 0
+set "_s_path="
+for /f "delims=" %%p in ('echo !_s_url! ^| jq -Rr "sub(\"^https?://[^/]+\"; \"\")" 2^>nul') do set "_s_path=%%p"
+if "!_s_path!"=="" exit /b 0
+if "!_s_path!"=="/" exit /b 0
+set "_pub_hc_url=!_ing_base!!_s_path!"
+set "_pub_hc_file=!DATA_BASE!\pub_hc_body.json"
+curl -sfL -m 10 -o "!_pub_hc_file!" "!_pub_hc_url!" 2>nul
+if errorlevel 1 (
+    echo [ERROR] Public health endpoint unreachable: !_pub_hc_url! >&2
+    set "HEALTH_FAILED=1"
+    exit /b 0
+)
+if not "!_s_json!"=="" (
+    jq -e "!_s_json!" "!_pub_hc_file!" >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] Public health JSON assertion failed for !_pub_hc_url!: !_s_json! >&2
+        set "HEALTH_FAILED=1"
+    )
+)
+if exist "!_pub_hc_file!" del /f /q "!_pub_hc_file!" >nul 2>&1
 exit /b 0
 
 :: ## do_logs

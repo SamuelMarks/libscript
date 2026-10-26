@@ -53,7 +53,8 @@ IF "%MAMBA_VERSION%"=="" SET "MAMBA_VERSION=latest"
 set "_CAND_P=%LIBSCRIPT_HOME%\mamba\%MAMBA_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "mamba"
 
 endlocal & (
     set "MAMBA_VERSION=%MAMBA_VERSION%"

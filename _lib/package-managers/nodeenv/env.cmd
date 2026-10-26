@@ -59,12 +59,14 @@ if exist "%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/Scripts" (
     set "_CAND_P=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/Scripts"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nodeenv"
 ) else if exist "%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin" (
     set "_CAND_P=%LIBSCRIPT_HOME%/nodeenv/%NODEENV_VERSION%/bin"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nodeenv"
 )
 
 endlocal & (

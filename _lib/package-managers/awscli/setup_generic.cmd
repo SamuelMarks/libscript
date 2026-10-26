@@ -144,7 +144,7 @@ if "%AWSCLI_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading awscli %AWSCLI_VERSION% to %DOWNLOAD_DIR%\awscli...
     if not exist "%DOWNLOAD_DIR%\awscli" mkdir "%DOWNLOAD_DIR%\awscli"
     if not "%AWSCLI_DOWNLOAD_URL%"=="" (
-        curl -sSL "%AWSCLI_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\awscli\awscli-%AWSCLI_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AWSCLI_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\awscli\awscli-%AWSCLI_VERSION%.zip"
     ) else (
         echo AWSCLI_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%AWSCLI_INSTALL_METHOD%"=="system" (
-    winget install awscli --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends awscli
     exit /b !errorlevel!
 )
 if "%AWSCLI_INSTALL_METHOD%"=="mise" ( mise install "awscli@%AWSCLI_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\awscli\awscli-%AWSCLI_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%AWSCLI_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%AWSCLI_DOWNLOAD_URL%" -o "%TEMP%\awscli.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AWSCLI_DOWNLOAD_URL%" "%TEMP%\awscli.zip"
         tar -xf "%TEMP%\awscli.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for awscli.

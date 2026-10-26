@@ -73,10 +73,16 @@ if "!PYTHON_EXE!"=="" (
 )
 
 if "!PYTHON_EXE!"=="" (
-    echo Python not found. Installing Python 3.12 via winget...
-    winget install --id Python.Python.3.12 --silent --accept-package-agreements --accept-source-agreements
-    for /d %%P in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
+    echo Python not found. Installing Python 3.12 via LibScript...
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install python 3.12
+    for /d %%P in ("%USERPROFILE%\.libscript\python\*") do (
         if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
+        if exist "%%P\bin\python.exe" set "PYTHON_EXE=%%P\bin\python.exe"
+    )
+    if "!PYTHON_EXE!"=="" (
+        for /d %%P in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
+            if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
+        )
     )
     if "!PYTHON_EXE!"=="" (
         for /d %%P in ("%ProgramFiles%\Python*") do (
@@ -94,7 +100,7 @@ set "URL=https://github.com/spack/spack/archive/refs/tags/v1.2.2.zip"
 set "TEMP_ZIP=%TEMP%\spack.zip"
 
 echo Downloading Spack from %URL%...
-curl.exe -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Spack.
     exit /b 1

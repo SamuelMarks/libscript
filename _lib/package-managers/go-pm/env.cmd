@@ -58,7 +58,8 @@ if "%GO_PM_VERSION%"=="" (
 set "_CAND_P=%LIBSCRIPT_HOME%\go-pm\%GO_PM_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "go-pm"
 
 endlocal & (
     set "GO_PM_VERSION=%GO_PM_VERSION%"

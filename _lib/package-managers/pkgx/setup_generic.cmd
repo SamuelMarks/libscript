@@ -144,7 +144,7 @@ if "%PKGX_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pkgx %PKGX_VERSION% to %DOWNLOAD_DIR%\pkgx...
     if not exist "%DOWNLOAD_DIR%\pkgx" mkdir "%DOWNLOAD_DIR%\pkgx"
     if not "%PKGX_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PKGX_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pkgx\pkgx-%PKGX_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PKGX_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pkgx\pkgx-%PKGX_VERSION%.zip"
     ) else (
         echo PKGX_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PKGX_INSTALL_METHOD%"=="system" (
-    winget install pkgx --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pkgx
     exit /b !errorlevel!
 )
 if "%PKGX_INSTALL_METHOD%"=="mise" ( mise install "pkgx@%PKGX_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pkgx\pkgx-%PKGX_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PKGX_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PKGX_DOWNLOAD_URL%" -o "%TEMP%\pkgx.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PKGX_DOWNLOAD_URL%" "%TEMP%\pkgx.zip"
         tar -xf "%TEMP%\pkgx.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pkgx.

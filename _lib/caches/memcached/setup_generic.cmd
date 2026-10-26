@@ -161,7 +161,7 @@ if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading memcached %MEMCACHED_VERSION% to %DOWNLOAD_DIR%\memcached...
     if not exist "%DOWNLOAD_DIR%\memcached" mkdir "%DOWNLOAD_DIR%\memcached"
     if not "%MEMCACHED_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MEMCACHED_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MEMCACHED_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.zip"
     ) else (
         echo MEMCACHED_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -176,7 +176,7 @@ if /i "%MEMCACHED_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%MEMCACHED_INSTALL_METHOD%"=="system" (
-    winget install memcached --accept-package-agreements --accept-source-agreements 2>nul || choco install memcached -y
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends memcached
     exit /b !errorlevel!
 )
 if "%MEMCACHED_INSTALL_METHOD%"=="mise" ( mise install "memcached@%MEMCACHED_VERSION%" & exit /b 0 )
@@ -196,7 +196,7 @@ if not exist "%TARGET_DIR%\bin\memcached.exe" (
         tar -xf "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.tar.gz" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%DOWNLOAD_DIR%\memcached\memcached-%MEMCACHED_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MEMCACHED_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MEMCACHED_DOWNLOAD_URL%" -o "%TEMP%\memcached.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MEMCACHED_DOWNLOAD_URL%" "%TEMP%\memcached.zip"
         tar -xf "%TEMP%\memcached.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\memcached.zip" -C "%TARGET_DIR%" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\memcached.zip' -DestinationPath '%TARGET_DIR%' -Force"
         del /f /q "%TEMP%\memcached.zip" 2>nul
     ) else (

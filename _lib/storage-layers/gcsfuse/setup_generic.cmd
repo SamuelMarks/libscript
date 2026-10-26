@@ -144,7 +144,7 @@ if "%GCSFUSE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gcsfuse %GCSFUSE_VERSION% to %DOWNLOAD_DIR%\gcsfuse...
     if not exist "%DOWNLOAD_DIR%\gcsfuse" mkdir "%DOWNLOAD_DIR%\gcsfuse"
     if not "%GCSFUSE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GCSFUSE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\gcsfuse\gcsfuse-%GCSFUSE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GCSFUSE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gcsfuse\gcsfuse-%GCSFUSE_VERSION%.zip"
     ) else (
         echo GCSFUSE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GCSFUSE_INSTALL_METHOD%"=="system" (
-    winget install gcsfuse --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gcsfuse
     exit /b !errorlevel!
 )
 if "%GCSFUSE_INSTALL_METHOD%"=="mise" ( mise install "gcsfuse@%GCSFUSE_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\gcsfuse\gcsfuse-%GCSFUSE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GCSFUSE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GCSFUSE_DOWNLOAD_URL%" -o "%TEMP%\gcsfuse.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GCSFUSE_DOWNLOAD_URL%" "%TEMP%\gcsfuse.zip"
         tar -xf "%TEMP%\gcsfuse.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gcsfuse.

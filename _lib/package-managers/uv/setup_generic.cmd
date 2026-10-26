@@ -156,7 +156,7 @@ if "%UV_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading uv %UV_VERSION% to %DOWNLOAD_DIR%\uv...
     if not exist "%DOWNLOAD_DIR%\uv" mkdir "%DOWNLOAD_DIR%\uv"
     if not "%UV_DOWNLOAD_URL%"=="" (
-        curl -sSL "%UV_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%UV_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip"
     ) else (
         echo UV_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -174,7 +174,7 @@ if not "%FORCE_REINSTALL%"=="1" (
     )
 )
 if "%UV_INSTALL_METHOD%"=="system" (
-    winget install uv --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends uv
     exit /b !errorlevel!
 )
 if "%UV_INSTALL_METHOD%"=="mise" ( mise install "uv@%UV_VERSION%" & exit /b 0 )
@@ -194,12 +194,12 @@ if not exist "%TARGET_DIR%\bin\uv.exe" (
         tar -xf "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%UV_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%UV_DOWNLOAD_URL%" -o "%TEMP%\uv.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%UV_DOWNLOAD_URL%" "%TEMP%\uv.zip"
         tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%"
     ) else (
         set "_UV_ARCH=x86_64"
         if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_UV_ARCH=aarch64"
-        curl -sSLf "https://github.com/astral-sh/uv/releases/latest/download/uv-!_UV_ARCH!-pc-windows-msvc.zip" -o "%TEMP%\uv.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/uv/releases/latest/download/uv-!_UV_ARCH!-pc-windows-msvc.zip" "%TEMP%\uv.zip"
         if not errorlevel 1 (
             tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%\bin"
             del /f /q "%TEMP%\uv.zip" 2>nul

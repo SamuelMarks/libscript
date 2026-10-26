@@ -144,7 +144,7 @@ if "%APK_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading apk %APK_VERSION% to %DOWNLOAD_DIR%\apk...
     if not exist "%DOWNLOAD_DIR%\apk" mkdir "%DOWNLOAD_DIR%\apk"
     if not "%APK_DOWNLOAD_URL%"=="" (
-        curl -sSL "%APK_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.zip"
     ) else (
         echo APK_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%APK_INSTALL_METHOD%"=="system" (
-    winget install apk --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends apk
     exit /b !errorlevel!
 )
 if "%APK_INSTALL_METHOD%"=="mise" ( mise install "apk@%APK_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%APK_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%APK_DOWNLOAD_URL%" -o "%TEMP%\apk.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%APK_DOWNLOAD_URL%" "%TEMP%\apk.zip"
         tar -xf "%TEMP%\apk.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for apk.

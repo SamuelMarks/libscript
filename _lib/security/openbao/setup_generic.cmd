@@ -144,7 +144,7 @@ if "%OPENBAO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading openbao %OPENBAO_VERSION% to %DOWNLOAD_DIR%\openbao...
     if not exist "%DOWNLOAD_DIR%\openbao" mkdir "%DOWNLOAD_DIR%\openbao"
     if not "%OPENBAO_DOWNLOAD_URL%"=="" (
-        curl -sSL "%OPENBAO_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\openbao\openbao-%OPENBAO_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENBAO_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\openbao\openbao-%OPENBAO_VERSION%.zip"
     ) else (
         echo OPENBAO_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%OPENBAO_INSTALL_METHOD%"=="system" (
-    winget install openbao --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openbao
     exit /b !errorlevel!
 )
 if "%OPENBAO_INSTALL_METHOD%"=="mise" ( mise install "openbao@%OPENBAO_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\openbao\openbao-%OPENBAO_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%OPENBAO_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%OPENBAO_DOWNLOAD_URL%" -o "%TEMP%\openbao.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENBAO_DOWNLOAD_URL%" "%TEMP%\openbao.zip"
         tar -xf "%TEMP%\openbao.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for openbao.

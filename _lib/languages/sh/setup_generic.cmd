@@ -144,7 +144,7 @@ if "%SH_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading sh %SH_VERSION% to %DOWNLOAD_DIR%\sh...
     if not exist "%DOWNLOAD_DIR%\sh" mkdir "%DOWNLOAD_DIR%\sh"
     if not "%SH_DOWNLOAD_URL%"=="" (
-        curl -sSL "%SH_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\sh\sh-%SH_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SH_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\sh\sh-%SH_VERSION%.zip"
     ) else (
         echo SH_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SH_INSTALL_METHOD%"=="system" (
-    winget install sh --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends sh
     exit /b !errorlevel!
 )
 if "%SH_INSTALL_METHOD%"=="mise" ( mise install "sh@%SH_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\sh\sh-%SH_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SH_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%SH_DOWNLOAD_URL%" -o "%TEMP%\sh.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SH_DOWNLOAD_URL%" "%TEMP%\sh.zip"
         tar -xf "%TEMP%\sh.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for sh.

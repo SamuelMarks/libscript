@@ -144,7 +144,7 @@ if "%ZYPPER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading zypper %ZYPPER_VERSION% to %DOWNLOAD_DIR%\zypper...
     if not exist "%DOWNLOAD_DIR%\zypper" mkdir "%DOWNLOAD_DIR%\zypper"
     if not "%ZYPPER_DOWNLOAD_URL%"=="" (
-        curl -sSL "%ZYPPER_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\zypper\zypper-%ZYPPER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ZYPPER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\zypper\zypper-%ZYPPER_VERSION%.zip"
     ) else (
         echo ZYPPER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ZYPPER_INSTALL_METHOD%"=="system" (
-    winget install zypper --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends zypper
     exit /b !errorlevel!
 )
 if "%ZYPPER_INSTALL_METHOD%"=="mise" ( mise install "zypper@%ZYPPER_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\zypper\zypper-%ZYPPER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ZYPPER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%ZYPPER_DOWNLOAD_URL%" -o "%TEMP%\zypper.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ZYPPER_DOWNLOAD_URL%" "%TEMP%\zypper.zip"
         tar -xf "%TEMP%\zypper.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for zypper.

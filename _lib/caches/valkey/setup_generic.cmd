@@ -1,7 +1,7 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for valkey
+:: Windows setup for valkey with reuse-else-create semantics.
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
@@ -101,7 +101,17 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
+
+:: ## find_existing_valkey
+:: Checks LIBSCRIPT_HOME and system PATH for an existing valkey-server.exe or redis-server.exe binary.
+:find_existing_valkey
+if exist "%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%\bin\valkey-server.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\valkey\default\bin\valkey-server.exe" exit /b 0
+where valkey-server >nul 2>&1
+if not errorlevel 1 exit /b 0
+where redis-server >nul 2>&1
+if not errorlevel 1 exit /b 0
+exit /b 1
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -158,10 +168,17 @@ exit /b 0
 :: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        call :find_existing_valkey
+        if not errorlevel 1 (
+            echo [REUSE] valkey is already installed; skipping download.
+            exit /b 0
+        )
+    )
     echo Downloading valkey %VALKEY_VERSION% to %DOWNLOAD_DIR%\valkey...
     if not exist "%DOWNLOAD_DIR%\valkey" mkdir "%DOWNLOAD_DIR%\valkey"
     if not "%VALKEY_DOWNLOAD_URL%"=="" (
-        curl -sSL "%VALKEY_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VALKEY_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.zip"
     ) else (
         echo VALKEY_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -171,12 +188,19 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if not "%FORCE_REINSTALL%"=="1" (
+    call :find_existing_valkey
+    if not errorlevel 1 (
+        echo [REUSE] valkey ^(%VALKEY_VERSION%^) is already installed.
+        exit /b 0
+    )
+)
 if /i "%VALKEY_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "valkey" "%VALKEY_VERSION%" "valkey-server" "c"
     exit /b !errorlevel!
 )
 if "%VALKEY_INSTALL_METHOD%"=="system" (
-    winget install valkey --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends valkey
     exit /b !errorlevel!
 )
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise install "valkey@%VALKEY_VERSION%" & exit /b 0 )
@@ -196,7 +220,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%VALKEY_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%VALKEY_DOWNLOAD_URL%" -o "%TEMP%\valkey.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VALKEY_DOWNLOAD_URL%" "%TEMP%\valkey.zip"
         tar -xf "%TEMP%\valkey.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for valkey.

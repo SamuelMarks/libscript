@@ -8,7 +8,7 @@
 :: UTF-8 preservation, and strict idempotency on consecutive runs.
 ::
 :: ## Usage
-:: tests	est_generate_markdown_docs.cmd [--help]
+:: tests\test_generate_markdown_docs.cmd [--help]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -23,7 +23,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

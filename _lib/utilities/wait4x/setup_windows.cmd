@@ -66,7 +66,7 @@ if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 set "TEMP_TAR=%TEMP%\wait4x.tar.gz"
 
 echo Downloading wait4x %VERSION% (%ARCH%) from %URL%...
-curl -sSL "%URL%" -o "%TEMP_TAR%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_TAR%"
 if errorlevel 1 (
     echo Failed to download wait4x.
     exit /b 1

@@ -144,7 +144,7 @@ if "%RBENV_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rbenv %RBENV_VERSION% to %DOWNLOAD_DIR%\rbenv...
     if not exist "%DOWNLOAD_DIR%\rbenv" mkdir "%DOWNLOAD_DIR%\rbenv"
     if not "%RBENV_DOWNLOAD_URL%"=="" (
-        curl -sSL "%RBENV_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\rbenv\rbenv-%RBENV_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RBENV_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rbenv\rbenv-%RBENV_VERSION%.zip"
     ) else (
         echo RBENV_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RBENV_INSTALL_METHOD%"=="system" (
-    winget install rbenv --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rbenv
     exit /b !errorlevel!
 )
 if "%RBENV_INSTALL_METHOD%"=="mise" ( mise install "rbenv@%RBENV_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rbenv\rbenv-%RBENV_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RBENV_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%RBENV_DOWNLOAD_URL%" -o "%TEMP%\rbenv.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RBENV_DOWNLOAD_URL%" "%TEMP%\rbenv.zip"
         tar -xf "%TEMP%\rbenv.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rbenv.

@@ -144,7 +144,7 @@ if "%DASH_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading dash %DASH_VERSION% to %DOWNLOAD_DIR%\dash...
     if not exist "%DOWNLOAD_DIR%\dash" mkdir "%DOWNLOAD_DIR%\dash"
     if not "%DASH_DOWNLOAD_URL%"=="" (
-        curl -sSL "%DASH_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\dash\dash-%DASH_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DASH_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\dash\dash-%DASH_VERSION%.zip"
     ) else (
         echo DASH_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -159,7 +159,7 @@ if /i "%DASH_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%DASH_INSTALL_METHOD%"=="system" (
-    winget install dash --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends dash
     exit /b !errorlevel!
 )
 if "%DASH_INSTALL_METHOD%"=="mise" ( mise install "dash@%DASH_VERSION%" & exit /b 0 )
@@ -179,7 +179,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\dash\dash-%DASH_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DASH_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%DASH_DOWNLOAD_URL%" -o "%TEMP%\dash.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DASH_DOWNLOAD_URL%" "%TEMP%\dash.zip"
         tar -xf "%TEMP%\dash.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for dash.

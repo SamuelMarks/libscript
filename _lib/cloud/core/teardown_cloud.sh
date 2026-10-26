@@ -116,25 +116,24 @@ CTX="$RG"
 if [ "$PROVIDER" = "aws" ] || [ "$PROVIDER" = "gcp" ]; then CTX="$LOC"; fi
 
 # ## matches_only_target
-# Checks whether an application name or remote destination matches the --only selector.
+# Checks whether an application remote destination or manifest alias matches the --only selector.
 matches_only_target() {
   _mot_dest="$1"
+  _mot_repo="${2:-}"
   case "$ONLY_TARGET" in
     all|both|"") return 0 ;;
-    pulse|pulse_query|pulse-query|hospital_dashboard_platform|hospital-dashboard-platform)
-      case "$_mot_dest" in
-        *hospital-dashboard-platform*|*pulse*) return 0 ;;
-      esac
-      return 1
-      ;;
-    t1d|t1d_analytics|t1d-analytics)
-      case "$_mot_dest" in
-        *t1d*) return 0 ;;
-      esac
-      return 1
-      ;;
     *)
       [ "$_mot_dest" = "$ONLY_TARGET" ] && return 0
+      _mot_norm_target=$(printf '%s' "$ONLY_TARGET" | tr '_-' '--')
+      _mot_norm_dest=$(printf '%s' "$_mot_dest" | tr '_-' '--')
+      [ "$_mot_norm_dest" = "$_mot_norm_target" ] && return 0
+      for _mot_cand in "${_mot_repo}/libscript.json" "${_mot_dest}/libscript.json" "./${_mot_dest}/libscript.json"; do
+        if [ -f "$_mot_cand" ] && command -v jq >/dev/null 2>&1; then
+          if jq -e --arg t "$ONLY_TARGET" --arg tn "$_mot_norm_target" '([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub("_"; "-") == $tn))' "$_mot_cand" >/dev/null 2>&1; then
+            return 0
+          fi
+        fi
+      done
       return 1
       ;;
   esac
@@ -154,10 +153,10 @@ if [ "$KEEP_INFRA" -eq 1 ] && [ -n "$APP_SPECS" ]; then
     [ -n "$_rm_spec" ] || continue
     _rm_no_dom="${_rm_spec%%@*}"
     case "$_rm_no_dom" in
-      *:*) _rm_dest="${_rm_no_dom#*:}" ;;
-      *) _rm_dest=$(basename "$_rm_no_dom") ;;
+      *:*) _rm_repo="${_rm_no_dom%%:*}"; _rm_dest="${_rm_no_dom#*:}" ;;
+      *) _rm_repo="$_rm_no_dom"; _rm_dest=$(basename "$_rm_no_dom") ;;
     esac
-    if ! matches_only_target "$_rm_dest"; then
+    if ! matches_only_target "$_rm_dest" "$_rm_repo"; then
       continue
     fi
     log_info "Decommissioning '${_rm_dest}' on '${NODE}' via LibScript..."

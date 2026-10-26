@@ -177,7 +177,7 @@ case "$ACTION" in
            libscript_depends "curl"
            if [ "$OS" = "linux" ]; then
              URL="https://github.com/GoogleCloudPlatform/gcsfuse/releases/download/v${EXACT_VERSION}/gcsfuse_${EXACT_VERSION}_${ARCH}.deb"
-             if ! curl -sSLf "$URL" -o "$TEMP_FILE.deb"; then
+             if ! libscript_download "$URL" "$TEMP_FILE.deb"; then
                 log_error "Failed to download gcsfuse from $URL"
                 rm -f "$TEMP_FILE.deb"
                 exit 1
@@ -204,7 +204,7 @@ case "$ACTION" in
              rm -f "$TEMP_FILE.deb" "$TEMP_FILE"
            elif [ "$OS" = "darwin" ]; then
              if command -v brew >/dev/null 2>&1; then
-               brew install gcsfuse 2>/dev/null || true
+               libscript_depends_via brew gcsfuse 2>/dev/null || true
              fi
              if [ -x "/opt/homebrew/bin/gcsfuse" ]; then
                cp "/opt/homebrew/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true

@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -54,7 +54,7 @@ goto :find_root
 
 set "TARGET_DIR=_lib\web-apps\openedx"
 set "VARIANT=online"
-set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!	mp\compare_msi"
+set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\tmp\compare_msi"
 
 :: ## parse_args
 :: Parses command-line options for compare_msirs_wix.cmd.

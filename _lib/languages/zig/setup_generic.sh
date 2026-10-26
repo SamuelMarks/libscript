@@ -190,7 +190,7 @@ case "$ACTION" in
           URL="https://ziglang.org/download/${EXACT_VERSION}/zig-${OS}-${ARCH}-${EXACT_VERSION}.tar.xz"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "tar" "xz" || true
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.xz"; then
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.xz"; then
             log_error "Failed to download zig from $URL"
             rm -f "$TEMP_FILE.tar.xz"
             exit 1

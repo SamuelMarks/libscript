@@ -72,7 +72,7 @@ set "DEST_DIR=%USERPROFILE%\.libscript\composer\latest\bin"
 if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 
 echo Downloading composer.phar from https://getcomposer.org/composer.phar...
-curl -sSL "https://getcomposer.org/composer.phar" -o "%DEST_DIR%\composer.phar"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://getcomposer.org/composer.phar" "%DEST_DIR%\composer.phar"
 if errorlevel 1 (
     echo Failed to download composer.phar.
     exit /b 1

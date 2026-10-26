@@ -184,7 +184,7 @@ case "$ACTION" in
     if [ "$QEMU_INSTALL_METHOD" = "system" ]; then
       libscript_depends "qemu"
     elif [ "$QEMU_INSTALL_METHOD" = "brew" ]; then
-      brew install qemu
+      libscript_depends_via brew qemu
     fi
 
     case "${TARGET_OS:-}${UNAME:-}" in

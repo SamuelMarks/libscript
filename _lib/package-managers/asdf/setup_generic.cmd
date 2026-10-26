@@ -144,7 +144,7 @@ if "%ASDF_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading asdf %ASDF_VERSION% to %DOWNLOAD_DIR%\asdf...
     if not exist "%DOWNLOAD_DIR%\asdf" mkdir "%DOWNLOAD_DIR%\asdf"
     if not "%ASDF_DOWNLOAD_URL%"=="" (
-        curl -sSL "%ASDF_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ASDF_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.zip"
     ) else (
         echo ASDF_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%ASDF_INSTALL_METHOD%"=="system" (
-    winget install asdf --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends asdf
     exit /b !errorlevel!
 )
 if "%ASDF_INSTALL_METHOD%"=="mise" ( mise install "asdf@%ASDF_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%ASDF_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%ASDF_DOWNLOAD_URL%" -o "%TEMP%\asdf.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ASDF_DOWNLOAD_URL%" "%TEMP%\asdf.zip"
         tar -xf "%TEMP%\asdf.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for asdf.

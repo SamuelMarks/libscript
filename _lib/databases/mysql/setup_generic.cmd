@@ -78,18 +78,8 @@ if "%ACTION%"=="install" (
         )
     )
     if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
-        where winget >nul 2>&1
-        if not errorlevel 1 (
-            echo [INFO] Installing MySQL via winget...
-            winget install --id Oracle.MySQL -e --silent --accept-package-agreements --accept-source-agreements
-            exit /b 0
-        )
-        where choco >nul 2>&1
-        if not errorlevel 1 (
-            echo [INFO] Installing MySQL via chocolatey...
-            choco install mysql -y
-            exit /b 0
-        )
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mysql
+        if not errorlevel 1 exit /b 0
     )
     echo [INFO] Provisioning MySQL native service directory at %LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%...
     if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin"

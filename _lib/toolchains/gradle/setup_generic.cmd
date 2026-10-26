@@ -144,7 +144,7 @@ if "%GRADLE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gradle %GRADLE_VERSION% to %DOWNLOAD_DIR%\gradle...
     if not exist "%DOWNLOAD_DIR%\gradle" mkdir "%DOWNLOAD_DIR%\gradle"
     if not "%GRADLE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%GRADLE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GRADLE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.zip"
     ) else (
         echo GRADLE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%GRADLE_INSTALL_METHOD%"=="system" (
-    winget install gradle --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends gradle
     exit /b !errorlevel!
 )
 if "%GRADLE_INSTALL_METHOD%"=="mise" ( mise install "gradle@%GRADLE_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%GRADLE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%GRADLE_DOWNLOAD_URL%" -o "%TEMP%\gradle.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GRADLE_DOWNLOAD_URL%" "%TEMP%\gradle.zip"
         tar -xf "%TEMP%\gradle.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gradle.

@@ -37,8 +37,6 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-if command -v dnf >/dev/null 2>&1 && ! command -v openvpn >/dev/null 2>&1; then
-  priv dnf install -y epel-release || true
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'openvpn' || true
 fi
-
-# # libscript_depends 'openvpn'

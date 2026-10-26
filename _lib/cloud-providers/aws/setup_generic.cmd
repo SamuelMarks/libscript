@@ -144,7 +144,7 @@ if "%AWS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading aws %AWS_VERSION% to %DOWNLOAD_DIR%\aws...
     if not exist "%DOWNLOAD_DIR%\aws" mkdir "%DOWNLOAD_DIR%\aws"
     if not "%AWS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%AWS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\aws\aws-%AWS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AWS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\aws\aws-%AWS_VERSION%.zip"
     ) else (
         echo AWS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%AWS_INSTALL_METHOD%"=="system" (
-    winget install aws --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends aws
     exit /b !errorlevel!
 )
 if "%AWS_INSTALL_METHOD%"=="mise" ( mise install "aws@%AWS_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\aws\aws-%AWS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%AWS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%AWS_DOWNLOAD_URL%" -o "%TEMP%\aws.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%AWS_DOWNLOAD_URL%" "%TEMP%\aws.zip"
         tar -xf "%TEMP%\aws.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aws.

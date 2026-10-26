@@ -144,7 +144,7 @@ if "%YARN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading yarn %YARN_VERSION% to %DOWNLOAD_DIR%\yarn...
     if not exist "%DOWNLOAD_DIR%\yarn" mkdir "%DOWNLOAD_DIR%\yarn"
     if not "%YARN_DOWNLOAD_URL%"=="" (
-        curl -sSL "%YARN_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.zip"
     ) else (
         echo YARN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%YARN_INSTALL_METHOD%"=="system" (
-    winget install yarn --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends yarn
     exit /b !errorlevel!
 )
 if "%YARN_INSTALL_METHOD%"=="mise" ( mise install "yarn@%YARN_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%YARN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%YARN_DOWNLOAD_URL%" -o "%TEMP%\yarn.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%TEMP%\yarn.zip"
         tar -xf "%TEMP%\yarn.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for yarn.

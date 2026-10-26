@@ -49,7 +49,9 @@ fi
 libscript_depends 'git' || true
 git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 D="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
-# # libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'postgres' 'sqlite' 'mariadb' || true
+fi
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${D}"
 if command -v rustup >/dev/null 2>&1; then
   rustup toolchain install nightly || true

@@ -145,7 +145,7 @@ if "%FNM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading fnm %FNM_VERSION% to %DOWNLOAD_DIR%\fnm...
     if not exist "%DOWNLOAD_DIR%\fnm" mkdir "%DOWNLOAD_DIR%\fnm"
     if not "%FNM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%FNM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FNM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.zip"
     ) else (
         echo FNM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -156,7 +156,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%FNM_INSTALL_METHOD%"=="system" (
-    winget install fnm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends fnm
     exit /b !errorlevel!
 )
 if "%FNM_INSTALL_METHOD%"=="mise" ( mise install "fnm@%FNM_VERSION%" & exit /b 0 )
@@ -176,7 +176,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%FNM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%FNM_DOWNLOAD_URL%" -o "%TEMP%\fnm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FNM_DOWNLOAD_URL%" "%TEMP%\fnm.zip"
         tar -xf "%TEMP%\fnm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for fnm.

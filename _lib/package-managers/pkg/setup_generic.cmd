@@ -144,7 +144,7 @@ if "%PKG_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pkg %PKG_VERSION% to %DOWNLOAD_DIR%\pkg...
     if not exist "%DOWNLOAD_DIR%\pkg" mkdir "%DOWNLOAD_DIR%\pkg"
     if not "%PKG_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PKG_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PKG_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.zip"
     ) else (
         echo PKG_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PKG_INSTALL_METHOD%"=="system" (
-    winget install pkg --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pkg
     exit /b !errorlevel!
 )
 if "%PKG_INSTALL_METHOD%"=="mise" ( mise install "pkg@%PKG_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PKG_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PKG_DOWNLOAD_URL%" -o "%TEMP%\pkg.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PKG_DOWNLOAD_URL%" "%TEMP%\pkg.zip"
         tar -xf "%TEMP%\pkg.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pkg.

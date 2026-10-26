@@ -63,7 +63,7 @@ set "TEMP_ZIP=%TEMP%\nim.zip"
 set "TEMP_EXTRACT=%TEMP%\nim_extract"
 
 echo Downloading Nim and Nimble from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Nim.
     exit /b 1

@@ -144,7 +144,7 @@ if "%PYENV_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading pyenv %PYENV_VERSION% to %DOWNLOAD_DIR%\pyenv...
     if not exist "%DOWNLOAD_DIR%\pyenv" mkdir "%DOWNLOAD_DIR%\pyenv"
     if not "%PYENV_DOWNLOAD_URL%"=="" (
-        curl -sSL "%PYENV_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\pyenv\pyenv-%PYENV_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYENV_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\pyenv\pyenv-%PYENV_VERSION%.zip"
     ) else (
         echo PYENV_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PYENV_INSTALL_METHOD%"=="system" (
-    winget install pyenv --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends pyenv
     exit /b !errorlevel!
 )
 if "%PYENV_INSTALL_METHOD%"=="mise" ( mise install "pyenv@%PYENV_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\pyenv\pyenv-%PYENV_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PYENV_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%PYENV_DOWNLOAD_URL%" -o "%TEMP%\pyenv.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYENV_DOWNLOAD_URL%" "%TEMP%\pyenv.zip"
         tar -xf "%TEMP%\pyenv.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pyenv.

@@ -190,7 +190,7 @@ case "$ACTION" in
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ] || [ "$UNAME_LOWER" = "darwin" ]; then
               log_info "Falling back to system package manager or pip for ansible-galaxy..."
               if command -v brew >/dev/null 2>&1; then
-                brew install ansible || true
+                libscript_depends_via brew ansible || true
               fi
               libscript_depends "ansible-galaxy" || true
               if ! command -v ansible-galaxy >/dev/null 2>&1; then

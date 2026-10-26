@@ -58,10 +58,11 @@ if exist "%APPDATA%\Apache24\bin\httpd.exe" goto :create_shims
 if exist "C:\Apache24\bin\httpd.exe" goto :create_shims
 if exist "%ProgramFiles%\Apache24\bin\httpd.exe" goto :create_shims
 
-echo Installing Apache HTTP Server via Chocolatey...
+echo Installing Apache HTTP Server via pkg_mgr...
 where choco >nul 2>&1
 if not errorlevel 1 (
-    choco install apache-httpd -y --no-progress
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco apache-httpd
 )
 
 :: ## create_shims

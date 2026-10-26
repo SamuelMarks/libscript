@@ -171,7 +171,7 @@ case "$ACTION" in
         TEMP_FILE=$(mktemp)
         libscript_depends "curl"
         libscript_depends "unzip"
-        if ! curl -sSLf "$URL" -o "$TEMP_FILE.zip"; then
+        if ! libscript_download "$URL" "$TEMP_FILE.zip"; then
           log_error "Failed to download dart SDK from $URL"
           rm -f "$TEMP_FILE.zip"
           exit 1

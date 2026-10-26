@@ -144,7 +144,7 @@ if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading snap %SNAP_VERSION% to %DOWNLOAD_DIR%\snap...
     if not exist "%DOWNLOAD_DIR%\snap" mkdir "%DOWNLOAD_DIR%\snap"
     if not "%SNAP_DOWNLOAD_URL%"=="" (
-        curl -sSL "%SNAP_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SNAP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.zip"
     ) else (
         echo SNAP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%SNAP_INSTALL_METHOD%"=="system" (
-    winget install snap --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends snap
     exit /b !errorlevel!
 )
 if "%SNAP_INSTALL_METHOD%"=="mise" ( mise install "snap@%SNAP_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%SNAP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%SNAP_DOWNLOAD_URL%" -o "%TEMP%\snap.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SNAP_DOWNLOAD_URL%" "%TEMP%\snap.zip"
         tar -xf "%TEMP%\snap.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for snap.

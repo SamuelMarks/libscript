@@ -50,7 +50,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0\..\..\_common\env_base.cmd" %*
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "gcp-gke-tpu-cluster"
 
 endlocal & (
     set "PATH=%PATH%"

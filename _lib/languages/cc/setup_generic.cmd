@@ -144,7 +144,7 @@ if "%CC_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cc %CC_VERSION% to %DOWNLOAD_DIR%\cc...
     if not exist "%DOWNLOAD_DIR%\cc" mkdir "%DOWNLOAD_DIR%\cc"
     if not "%CC_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CC_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cc\cc-%CC_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CC_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cc\cc-%CC_VERSION%.zip"
     ) else (
         echo CC_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -179,7 +179,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cc\cc-%CC_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CC_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CC_DOWNLOAD_URL%" -o "%TEMP%\cc.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CC_DOWNLOAD_URL%" "%TEMP%\cc.zip"
         tar -xf "%TEMP%\cc.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cc.

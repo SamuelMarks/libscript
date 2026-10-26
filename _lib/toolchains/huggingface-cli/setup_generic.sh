@@ -127,7 +127,7 @@ case "$ACTION" in
       log_info "Downloading huggingface-cli ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli"
       if [ -n "${HUGGINGFACE_CLI_DOWNLOAD_URL:-}" ]; then
-        curl -sSL "${HUGGINGFACE_CLI_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/huggingface-cli-${VERSION:-}.tar.gz"
+        libscript_download "${HUGGINGFACE_CLI_DOWNLOAD_URL}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/huggingface-cli-${VERSION:-}.tar.gz"
       else
         printf '%s\n' "HUGGINGFACE_CLI_DOWNLOAD_URL is not defined. Skipping."
       fi

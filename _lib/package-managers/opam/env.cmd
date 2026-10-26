@@ -53,7 +53,8 @@ IF "%OPAM_VERSION%"=="" SET "OPAM_VERSION=latest"
 set "_CAND_P=%LIBSCRIPT_HOME%\opam\%OPAM_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "opam"
 
 endlocal & (
     set "OPAM_VERSION=%OPAM_VERSION%"

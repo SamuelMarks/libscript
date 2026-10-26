@@ -53,7 +53,8 @@ IF "%RBENV_VERSION%"=="" SET "RBENV_VERSION=latest"
 set "_CAND_P=%LIBSCRIPT_HOME%\rbenv\%RBENV_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rbenv"
 
 endlocal & (
     set "PATH=%PATH%"

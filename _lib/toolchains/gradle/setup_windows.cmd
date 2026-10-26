@@ -61,7 +61,7 @@ set "URL=https://services.gradle.org/distributions/gradle-8.10.2-bin.zip"
 set "TEMP_ZIP=%TEMP%\gradle.zip"
 
 echo Downloading Gradle from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Gradle.
     exit /b 1

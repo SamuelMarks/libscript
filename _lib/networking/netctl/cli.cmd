@@ -110,6 +110,19 @@ if /I "%~1"=="init" (
 ) else if /I "%~1"=="apply" (
     shift
     goto :apply_manifest
+) else if /I "%~1"=="ingress" (
+    shift
+    set "APPLY_FORCE_RELOAD=1"
+    goto :apply_manifest
+) else if /I "%~1"=="remove-ingress" (
+    shift
+    goto :remove_ingress
+) else if /I "%~1"=="unroute" (
+    shift
+    goto :remove_ingress
+) else if /I "%~1"=="reload" (
+    shift
+    goto :reload_proxy
 ) else if /I "%~1"=="emit" (
     call "%NETCTL_DIR%lib\%~2.cmd"
     exit /b %ERRORLEVEL%
@@ -208,6 +221,7 @@ shift
 set "APPLY_FORMAT="
 set "APPLY_OUT="
 set "APPLY_RELOAD=0"
+if "!APPLY_FORCE_RELOAD!"=="1" set "APPLY_RELOAD=1"
 
 :: ## apply_arg_loop
 :: Parses optional flags for the apply subcommand.
@@ -307,10 +321,32 @@ exit /b 1
 echo netctl is a native shell module. No installation or daemon management required.
 exit /b 0
 
+:: ## reload_proxy
+:: Reloads the specified reverse proxy service (nginx, caddy, apache, httpd, or iis) on Windows.
+:reload_proxy
+set "_RP_FMT=%~1"
+if "!_RP_FMT!"=="" set "_RP_FMT=nginx"
+if /I "!_RP_FMT!"=="iis" (
+    where iisreset >nul 2>&1
+    if not errorlevel 1 iisreset /noforce >nul 2>&1
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart "!_RP_FMT!" >nul 2>&1
+)
+exit /b 0
+
 :: ## remove_ingress
 :: Removes reverse proxy ingress configuration for the specified manifest or domain on Windows.
 :remove_ingress
 set "_RMI_ARG=%~1"
 if "!_RMI_ARG!"=="" set "_RMI_ARG=libscript.json"
+set "_RMI_FMT=nginx"
+if exist "!_RMI_ARG!" (
+    for /f "delims=" %%f in ('jq -r ".ingress.provider // .ingress.engine // \"nginx\"" "!_RMI_ARG!" 2^>nul') do set "_RMI_FMT=%%f"
+)
+if exist "%TEMP%\data\ingress\!_RMI_FMT!.conf" del /f /q "%TEMP%\data\ingress\!_RMI_FMT!.conf" >nul 2>&1
 if exist "%TEMP%\data\ingress\nginx.conf" del /f /q "%TEMP%\data\ingress\nginx.conf" >nul 2>&1
+call :reload_proxy "!_RMI_FMT!"
 exit /b 0

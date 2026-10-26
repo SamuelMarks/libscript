@@ -144,7 +144,7 @@ if "%DOCKER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading docker %DOCKER_VERSION% to %DOWNLOAD_DIR%\docker...
     if not exist "%DOWNLOAD_DIR%\docker" mkdir "%DOWNLOAD_DIR%\docker"
     if not "%DOCKER_DOWNLOAD_URL%"=="" (
-        curl -sSL "%DOCKER_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\docker\docker-%DOCKER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DOCKER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\docker\docker-%DOCKER_VERSION%.zip"
     ) else (
         echo DOCKER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%DOCKER_INSTALL_METHOD%"=="system" (
-    winget install docker --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends docker
     exit /b !errorlevel!
 )
 if "%DOCKER_INSTALL_METHOD%"=="mise" ( mise install "docker@%DOCKER_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\docker\docker-%DOCKER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DOCKER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%DOCKER_DOWNLOAD_URL%" -o "%TEMP%\docker.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DOCKER_DOWNLOAD_URL%" "%TEMP%\docker.zip"
         tar -xf "%TEMP%\docker.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for docker.

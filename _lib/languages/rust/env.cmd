@@ -59,13 +59,20 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 
-set "_CAND_P=%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\bin"
-echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+if "%CARGO_HOME%"=="" set "CARGO_HOME=%USERPROFILE%\.cargo"
+if "%RUSTUP_HOME%"=="" set "RUSTUP_HOME=%USERPROFILE%\.rustup"
+
+for %%P in ("%CARGO_HOME%\bin" "%LIBSCRIPT_BASE_DIR%\rust\default\bin" "%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\bin") do (
+    set "_CAND_P=%%~P"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+)
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rust" "%RUST_VERSION%"
 
 endlocal & (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "CARGO_HOME=%CARGO_HOME%"
+    set "RUSTUP_HOME=%RUSTUP_HOME%"
     set "PATH=%PATH%"
     set "RUST_VERSION=%RUST_VERSION%"
 )

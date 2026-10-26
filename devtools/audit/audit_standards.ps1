@@ -259,6 +259,22 @@ function Audit-File {
             Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "Tier 1 leaf recipe directly invokes kernel/storage primitive."
         }
     }
+
+    # 8d. Ban hardcoded user/project paths in core substrate (_lib/ and cli/)
+    if ($normPath -match '^(_lib|cli)/') {
+        $leakMatch = Select-String -Path $FilePath -Pattern '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' -Quiet
+        if ($leakMatch) {
+            Log-Violation -File $FilePath -Rule "NO_HARDCODED_USER_PATHS" -Details "Hardcoded user/project path or .volta reference in substrate."
+        }
+    }
+
+    # 8e. Ban commented-out libscript_depends in recipe setup scripts
+    if ($normPath -match '^_lib/[^/]+/[^/]+/setup.*\.sh$') {
+        $commentedDepMatch = Select-String -Path $FilePath -Pattern '^\s*#\s*#\s*libscript_depends' -Quiet
+        if ($commentedDepMatch) {
+            Log-Violation -File $FilePath -Rule "COMMENTED_DEPENDS" -Details "Commented-out '# # libscript_depends' found in recipe setup script."
+        }
+    }
 }
 
 # Determine target files

@@ -144,7 +144,7 @@ if "%RVM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rvm %RVM_VERSION% to %DOWNLOAD_DIR%\rvm...
     if not exist "%DOWNLOAD_DIR%\rvm" mkdir "%DOWNLOAD_DIR%\rvm"
     if not "%RVM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%RVM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\rvm\rvm-%RVM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RVM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rvm\rvm-%RVM_VERSION%.zip"
     ) else (
         echo RVM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RVM_INSTALL_METHOD%"=="system" (
-    winget install rvm --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rvm
     exit /b !errorlevel!
 )
 if "%RVM_INSTALL_METHOD%"=="mise" ( mise install "rvm@%RVM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rvm\rvm-%RVM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RVM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%RVM_DOWNLOAD_URL%" -o "%TEMP%\rvm.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RVM_DOWNLOAD_URL%" "%TEMP%\rvm.zip"
         tar -xf "%TEMP%\rvm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rvm.

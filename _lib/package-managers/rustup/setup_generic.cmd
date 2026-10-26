@@ -144,7 +144,7 @@ if "%RUSTUP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rustup %RUSTUP_VERSION% to %DOWNLOAD_DIR%\rustup...
     if not exist "%DOWNLOAD_DIR%\rustup" mkdir "%DOWNLOAD_DIR%\rustup"
     if not "%RUSTUP_DOWNLOAD_URL%"=="" (
-        curl -sSL "%RUSTUP_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\rustup\rustup-%RUSTUP_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RUSTUP_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rustup\rustup-%RUSTUP_VERSION%.zip"
     ) else (
         echo RUSTUP_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RUSTUP_INSTALL_METHOD%"=="system" (
-    winget install rustup --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rustup
     exit /b !errorlevel!
 )
 if "%RUSTUP_INSTALL_METHOD%"=="mise" ( mise install "rustup@%RUSTUP_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rustup\rustup-%RUSTUP_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RUSTUP_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%RUSTUP_DOWNLOAD_URL%" -o "%TEMP%\rustup.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RUSTUP_DOWNLOAD_URL%" "%TEMP%\rustup.zip"
         tar -xf "%TEMP%\rustup.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rustup.

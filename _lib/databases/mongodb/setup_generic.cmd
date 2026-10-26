@@ -144,7 +144,7 @@ if "%MONGODB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading mongodb %MONGODB_VERSION% to %DOWNLOAD_DIR%\mongodb...
     if not exist "%DOWNLOAD_DIR%\mongodb" mkdir "%DOWNLOAD_DIR%\mongodb"
     if not "%MONGODB_DOWNLOAD_URL%"=="" (
-        curl -sSL "%MONGODB_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MONGODB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip"
     ) else (
         echo MONGODB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%MONGODB_INSTALL_METHOD%"=="system" (
-    winget install --id MongoDB.Server -e --silent --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mongodb
     exit /b !errorlevel!
 )
 if "%MONGODB_INSTALL_METHOD%"=="mise" ( mise install "mongodb@%MONGODB_VERSION%" & exit /b 0 )
@@ -184,23 +184,17 @@ if not exist "%TARGET_DIR%\bin\mongod.exe" (
         tar -xf "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%MONGODB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%MONGODB_DOWNLOAD_URL%" -o "%TEMP%\mongodb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MONGODB_DOWNLOAD_URL%" "%TEMP%\mongodb.zip"
         tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
     ) else (
         set "_MONGO_URL=https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-8.0.4.zip"
         echo Downloading MongoDB from !_MONGO_URL!...
-        curl -f -sSL "!_MONGO_URL!" -o "%TEMP%\mongodb.zip" 2>nul
-        if not errorlevel 1 (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_MONGO_URL!" "%TEMP%\mongodb.zip"
+        if not errorlevel 1 if exist "%TEMP%\mongodb.zip" (
             tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
             del /f /q "%TEMP%\mongodb.zip" 2>nul
         ) else (
-            where winget >nul 2>&1
-            if not errorlevel 1 (
-                winget install --id MongoDB.Server -e --silent --accept-package-agreements --accept-source-agreements
-            ) else (
-                echo No download URL or cache available for mongodb.
-                exit /b 1
-            )
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mongodb
         )
     )
 ) else (

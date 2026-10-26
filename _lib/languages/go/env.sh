@@ -38,7 +38,20 @@ unset SCRIPT_NAME || true
 
 export GO_INSTALL_METHOD="${GO_INSTALL_METHOD:-system}"
 GO_VERSION="${GO_VERSION:-latest}"
-if [ "$GO_INSTALL_METHOD" = "libscript_native" ]; then
-  export GOROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/go/${GO_VERSION}"
+export GO_VERSION
+_go_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/go"
+if [ "$GO_INSTALL_METHOD" = "libscript_native" ] || [ -d "${_go_home}/${GO_VERSION}" ] || [ -d "${_go_home}/default" ]; then
+  if [ -d "${_go_home}/${GO_VERSION}" ]; then
+    export GOROOT="${_go_home}/${GO_VERSION}"
+  elif [ -d "${_go_home}/default" ]; then
+    export GOROOT="${_go_home}/default"
+  else
+    export GOROOT="${_go_home}/${GO_VERSION}"
+  fi
   libscript_path_prepend "${GOROOT}/bin"
 fi
+for _go_sys_cand in "/usr/local/go/bin" "/opt/ooce/go/bin" "${HOME:-/root}/go/bin"; do
+  if [ -d "$_go_sys_cand" ]; then
+    libscript_path_prepend "$_go_sys_cand"
+  fi
+done

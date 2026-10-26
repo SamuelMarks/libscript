@@ -161,10 +161,6 @@ exit /b 1
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise ls nodejs & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf list nodejs & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="vfox" ( vfox ls nodejs & exit /b 0 )
 if "%NODEJS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\nodejs" ( dir /b "%LIBSCRIPT_HOME%\nodejs" )
 exit /b 0
@@ -172,10 +168,6 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise ls-remote nodejs & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf list all nodejs & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="vfox" ( vfox ls all nodejs & exit /b 0 )
 if "%NODEJS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%NODEJS_RELEASES_URL%"=="" (
     curl -sSL "%NODEJS_RELEASES_URL%"
@@ -187,10 +179,6 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise use "nodejs@%NODEJS_VERSION%" & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf global nodejs "%NODEJS_VERSION%" & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="vfox" ( vfox use "nodejs@%NODEJS_VERSION%" & exit /b 0 )
 if "%NODEJS_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
 if "%NODEJS_VERSION%"=="latest" (set "EXACT_VERSION=%NODEJS_VERSION%"
@@ -254,10 +242,6 @@ if "%NODEJS_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nodejs
     exit /b !errorlevel!
 )
-if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise install "nodejs@%NODEJS_VERSION%" & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf install nodejs "%NODEJS_VERSION%" & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="pkgx" ( pkgx install "nodejs@%NODEJS_VERSION%" & exit /b 0 )
-if "%NODEJS_INSTALL_METHOD%"=="vfox" ( vfox add nodejs & vfox install "nodejs@%NODEJS_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nodejs\%NODEJS_VERSION%"
 if not exist "%TARGET_DIR%\bin\node.exe" if not exist "%TARGET_DIR%\node.exe" (

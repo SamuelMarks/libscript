@@ -144,7 +144,7 @@ if "%CYGWIN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cygwin %CYGWIN_VERSION% to %DOWNLOAD_DIR%\cygwin...
     if not exist "%DOWNLOAD_DIR%\cygwin" mkdir "%DOWNLOAD_DIR%\cygwin"
     if not "%CYGWIN_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CYGWIN_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cygwin\cygwin-%CYGWIN_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CYGWIN_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cygwin\cygwin-%CYGWIN_VERSION%.zip"
     ) else (
         echo CYGWIN_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CYGWIN_INSTALL_METHOD%"=="system" (
-    winget install cygwin --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cygwin
     exit /b !errorlevel!
 )
 if "%CYGWIN_INSTALL_METHOD%"=="mise" ( mise install "cygwin@%CYGWIN_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cygwin\cygwin-%CYGWIN_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CYGWIN_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CYGWIN_DOWNLOAD_URL%" -o "%TEMP%\cygwin.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CYGWIN_DOWNLOAD_URL%" "%TEMP%\cygwin.zip"
         tar -xf "%TEMP%\cygwin.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cygwin.

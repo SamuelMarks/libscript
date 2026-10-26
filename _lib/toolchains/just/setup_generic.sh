@@ -196,7 +196,7 @@ case "$ACTION" in
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
           libscript_depends "tar"
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download just from $URL"
             rm -f "$TEMP_FILE.tar.gz"
             exit 1

@@ -50,6 +50,19 @@ libscript_resolve_install_method() {
   requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
   : "${requested:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
 
+  if [ "${1:-}" = "NODEJS" ]; then
+    case "${requested}" in
+      ""|libscript_native|mise|fnm|asdf|vfox|pkgx)
+        printf '%s\n' "libscript_native"
+        return 0
+        ;;
+      system|from-source)
+        printf '%s\n' "$requested"
+        return 0
+        ;;
+    esac
+  fi
+
   case "${requested}" in
     pkg_mgr:*)
       export LIBSCRIPT_PKG_MGR="${requested#pkg_mgr:}"
@@ -67,7 +80,7 @@ libscript_resolve_install_method() {
       ;;
   esac
 
-  chain="libscript_native mise asdf pkgx vfox system"
+  chain="libscript_native system"
   check_chain=""
   
   if [ -n "$requested" ]; then
@@ -98,7 +111,7 @@ libscript_resolve_install_method() {
     fi
   done
   
-  printf '%s\n' "system"
+  printf '%s\n' "libscript_native"
   return 0
 }
 
@@ -353,6 +366,9 @@ libscript_depends() {
           fi ;;
         'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
         'dnf')
+          if ! rpm -q epel-release >/dev/null 2>&1; then
+            priv dnf install -y epel-release >/dev/null 2>&1 || true
+          fi
           _dnf_cache="${LIBSCRIPT_DNF_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/dnf}"
           if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_dnf_cache" ]; then
             log_info "Offline mode: installing rpm packages from $_dnf_cache..."
@@ -373,7 +389,11 @@ libscript_depends() {
         'port')   priv  port install          ${pkgs_to_install} || _install_failed=1 ;;
         'swupd')  priv  swupd bundle-add      ${pkgs_to_install} || _install_failed=1 ;;
         'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;
-        'yum')    priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
+        'yum')
+          if ! rpm -q epel-release >/dev/null 2>&1; then
+            priv yum install -y epel-release >/dev/null 2>&1 || true
+          fi
+          priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
         'zypper') priv  zypper install -y     ${pkgs_to_install} || _install_failed=1 ;;
         'nix')
           for _npkg in ${pkgs_to_install}; do

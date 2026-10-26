@@ -144,7 +144,7 @@ if "%LUAROCKS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading luarocks %LUAROCKS_VERSION% to %DOWNLOAD_DIR%\luarocks...
     if not exist "%DOWNLOAD_DIR%\luarocks" mkdir "%DOWNLOAD_DIR%\luarocks"
     if not "%LUAROCKS_DOWNLOAD_URL%"=="" (
-        curl -sSL "%LUAROCKS_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\luarocks\luarocks-%LUAROCKS_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LUAROCKS_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\luarocks\luarocks-%LUAROCKS_VERSION%.zip"
     ) else (
         echo LUAROCKS_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%LUAROCKS_INSTALL_METHOD%"=="system" (
-    winget install luarocks --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends luarocks
     exit /b !errorlevel!
 )
 if "%LUAROCKS_INSTALL_METHOD%"=="mise" ( mise install "luarocks@%LUAROCKS_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\luarocks\luarocks-%LUAROCKS_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%LUAROCKS_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%LUAROCKS_DOWNLOAD_URL%" -o "%TEMP%\luarocks.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%LUAROCKS_DOWNLOAD_URL%" "%TEMP%\luarocks.zip"
         tar -xf "%TEMP%\luarocks.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for luarocks.

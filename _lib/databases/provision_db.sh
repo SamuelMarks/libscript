@@ -29,6 +29,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+# shellcheck disable=SC1090,SC1091
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 JSON_FILE="${1:-libscript.json}"
@@ -202,6 +203,63 @@ ensure_duckdb_cli() {
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb/cli.sh" install latest >/dev/null 2>&1 || true
   fi
   command -v duckdb >/dev/null 2>&1
+}
+
+# ## ensure_valkey_running
+# Ensures a Valkey or Redis server is installed and responding to PING on the target host and port.
+ensure_valkey_running() {
+  _evr_host="${1:-127.0.0.1}"
+  _evr_port="${2:-6379}"
+  _evr_db_idx="${3:-0}"
+
+  for _evr_cli in valkey-cli redis-cli; do
+    if command -v "$_evr_cli" >/dev/null 2>&1; then
+      if "$_evr_cli" -h "$_evr_host" -p "$_evr_port" -n "$_evr_db_idx" ping 2>/dev/null | grep -qi "PONG"; then
+        log_info "[REUSE] Valkey/Redis server already active on ${_evr_host}:${_evr_port} (db ${_evr_db_idx})."
+        return 0
+      fi
+    fi
+  done
+
+  log_info "[CREATE] Valkey/Redis not responding on ${_evr_host}:${_evr_port}; installing/starting service..."
+  for _evr_comp in valkey redis; do
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/caches/${_evr_comp}/env.sh" ]; then
+      STACK=""
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/caches/${_evr_comp}/env.sh"
+      # shellcheck disable=SC1090,SC1091
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/caches/${_evr_comp}/env.sh" || true
+      unset SCRIPT_NAME || true
+    fi
+  done
+
+  if ! command -v valkey-server >/dev/null 2>&1 && ! command -v redis-server >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/cli.sh" ]; then
+      env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/cli.sh" install latest >/dev/null 2>&1 || true
+    fi
+  fi
+
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/cli.sh" ]; then
+    env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/cli.sh" start >/dev/null 2>&1 || true
+  fi
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/cli.sh" ]; then
+    env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/cli.sh" start >/dev/null 2>&1 || true
+  fi
+
+  for _evr_cli in valkey-cli redis-cli; do
+    if command -v "$_evr_cli" >/dev/null 2>&1; then
+      if "$_evr_cli" -h "$_evr_host" -p "$_evr_port" -n "$_evr_db_idx" ping 2>/dev/null | grep -qi "PONG"; then
+        log_info "[CREATE] Started Valkey/Redis server on ${_evr_host}:${_evr_port} (db ${_evr_db_idx})."
+        return 0
+      fi
+    fi
+  done
+
+  if command -v valkey-server >/dev/null 2>&1; then
+    valkey-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || sudo valkey-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || true
+  elif command -v redis-server >/dev/null 2>&1; then
+    redis-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || sudo redis-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || true
+  fi
+  return 0
 }
 
 # ## check_postgres_populated
@@ -492,12 +550,15 @@ while IFS= read -r db_entry <&3; do
       ;;
     valkey|redis)
       : "${DB_PORT:=6379}"
-      log_info "Provisioning Valkey/Redis cache endpoint ($DB_HOST:$DB_PORT)..."
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/cli.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/cli.sh" start >/dev/null 2>&1 || true
+      DB_IDX=$(printf '%s\n' "$db_entry" | jq -r '.db_index // .database // 0' 2>/dev/null || printf '0')
+      [ -z "$DB_IDX" ] || [ "$DB_IDX" = "null" ] && DB_IDX="0"
+      log_info "Provisioning Valkey/Redis cache endpoint ($DB_HOST:$DB_PORT/${DB_IDX})..."
+      ensure_valkey_running "$DB_HOST" "$DB_PORT" "$DB_IDX" || true
+      set_env_var "REDIS_URL" "redis://${DB_HOST}:${DB_PORT}/${DB_IDX}"
+      set_env_var "VALKEY_URL" "redis://${DB_HOST}:${DB_PORT}/${DB_IDX}"
+      if [ -n "$ENV_VAR_NAME" ] && [ "$ENV_VAR_NAME" != "DATABASE_URL" ]; then
+        set_env_var "$ENV_VAR_NAME" "redis://${DB_HOST}:${DB_PORT}/${DB_IDX}"
       fi
-      set_env_var "REDIS_URL" "redis://${DB_HOST}:${DB_PORT}/0"
-      set_env_var "VALKEY_URL" "redis://${DB_HOST}:${DB_PORT}/0"
       ;;
   esac
 done 3<< EOF_DBS

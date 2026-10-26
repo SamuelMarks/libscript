@@ -191,22 +191,18 @@ case "$ACTION" in
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ]; then
               log_info "Falling back to system package manager for nuget (via mono/dotnet)..."
               if command -v brew >/dev/null 2>&1; then
-                brew install nuget || true
+                libscript_depends_via brew nuget || true
               fi
               if ! libscript_depends "nuget" 2>/dev/null; then
                 if [ "$UNAME_LOWER" = "linux" ]; then
                   log_info "Installing mono runtime and downloading nuget.exe..."
                   libscript_depends "mono-complete" || libscript_depends "mono-devel" || true
                   if ! command -v mono >/dev/null 2>&1; then
-                    if command -v dnf >/dev/null 2>&1; then
-                      priv dnf install -y dotnet-sdk-8.0 || true
-                    elif command -v apt-get >/dev/null 2>&1; then
-                      priv apt-get install -y dotnet-sdk-8.0 2>/dev/null || true
-                    fi
+                    libscript_depends "dotnet-sdk-8.0" 2>/dev/null || true
                   fi
                   NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
                   libscript_depends "curl"
-                  if [ -f "${TARGET_DIR}/bin/nuget.exe" ] || curl -sSLf "$NUGET_URL" -o "${TARGET_DIR}/bin/nuget.exe"; then
+                  if [ -f "${TARGET_DIR}/bin/nuget.exe" ] || libscript_download "$NUGET_URL" "${TARGET_DIR}/bin/nuget.exe"; then
                     cat <<'EOF' > "${TARGET_DIR}/bin/nuget"
 #!/bin/sh
 # ## Overview

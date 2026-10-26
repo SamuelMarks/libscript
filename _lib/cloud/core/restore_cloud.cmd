@@ -149,9 +149,9 @@ if "!DRY_RUN_MODE!"=="0" (
 set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
 call "!CLI!" node sync "!NODE!" "!RG_CTX!"
 if errorlevel 1 exit /b 1
-call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/stanford_import_stage && mkdir -p /tmp/stanford_import_stage"
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_import_stage && mkdir -p /tmp/libscript_import_stage"
 if errorlevel 1 exit /b 1
-call "!CLI!" node upload "!NODE!" "!RG_CTX!" "!LOCAL_SRC!/" "/tmp/stanford_import_stage/"
+call "!CLI!" node upload "!NODE!" "!RG_CTX!" "!LOCAL_SRC!/" "/tmp/libscript_import_stage/"
 if errorlevel 1 exit /b 1
 set "REM_SPECS=!APP_SPECS!"
 
@@ -172,10 +172,15 @@ set "_MATCH=0"
 if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+set "_NORM_TARGET=!ONLY_TARGET:_=-!"
+set "_NORM_DEST=!_CUR_DEST:_=-!"
+if /i "!_NORM_TARGET!"=="!_NORM_DEST!" set "_MATCH=1"
+if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
+    jq -e --arg t "!ONLY_TARGET!" --arg tn "!_NORM_TARGET!" "([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub(\"_\"; \"-\") == $tn))" "!_CUR_DEST!\libscript.json" >nul 2>&1
+    if not errorlevel 1 set "_MATCH=1"
+)
 if "!_MATCH!"=="1" (
-    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh import-state libscript.json /tmp/stanford_import_stage"
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
     if errorlevel 1 exit /b 1
 )
 goto :import_next_app
@@ -183,7 +188,7 @@ goto :import_next_app
 :: ## import_finish
 :: Cleans up remote staging directory and verifies post-import health if enabled.
 :import_finish
-call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/stanford_import_stage"
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_import_stage"
 if "!SKIP_VERIFY!"=="0" (
     set "REM_SPECS=!APP_SPECS!"
     call :verify_imported_apps
@@ -213,8 +218,13 @@ set "_MATCH=0"
 if /i "!ONLY_TARGET!"=="all" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="both" set "_MATCH=1"
 if /i "!ONLY_TARGET!"=="!_CUR_DEST!" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="pulse_query" if /i "!_CUR_DEST!"=="hospital-dashboard-platform" set "_MATCH=1"
-if /i "!ONLY_TARGET!"=="t1d_analytics" if /i "!_CUR_DEST!"=="t1d-analytics" set "_MATCH=1"
+set "_NORM_TARGET=!ONLY_TARGET:_=-!"
+set "_NORM_DEST=!_CUR_DEST:_=-!"
+if /i "!_NORM_TARGET!"=="!_NORM_DEST!" set "_MATCH=1"
+if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
+    jq -e --arg t "!ONLY_TARGET!" --arg tn "!_NORM_TARGET!" "([.name, .remote_dest, (.aliases // [])[]?] | map(select(. != null) | tostring)) | any(. == $t or (gsub(\"_\"; \"-\") == $tn))" "!_CUR_DEST!\libscript.json" >nul 2>&1
+    if not errorlevel 1 set "_MATCH=1"
+)
 if "!_MATCH!"=="1" (
     set "_PUB_ARG="
     if not "!_CUR_DOM!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_CUR_DOM!"

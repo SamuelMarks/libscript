@@ -213,7 +213,7 @@ case "$ACTION" in
               DL_URL=""
             fi
             if [ -n "$DL_URL" ]; then
-                curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+                libscript_download "$DL_URL" "${TEMP_FILE}"
                 tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
             else
                 log_warn "Unsupported architecture $OS_ARCH for etcd."

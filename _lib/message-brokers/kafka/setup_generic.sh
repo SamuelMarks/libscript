@@ -200,9 +200,9 @@ case "$ACTION" in
             fi
             # We assume Scala 2.13 build as it's the current default
             DL_URL="https://downloads.apache.org/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
-            if ! curl -fsSL "$DL_URL" -o "${TEMP_FILE}"; then
+            if ! libscript_download "$DL_URL" "${TEMP_FILE}"; then
               DL_URL="https://archive.apache.org/dist/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
-              curl -fsSL "$DL_URL" -o "${TEMP_FILE}" || true
+              libscript_download "$DL_URL" "${TEMP_FILE}" || true
             fi
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             rm -f "${TEMP_FILE}"

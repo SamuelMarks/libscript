@@ -31,9 +31,11 @@ if ((Test-Path (Join-Path $WwwRoot "configuration.php")) -or (Test-Path (Join-Pa
 
 Write-Host "Installing dependencies for Joomla ($WebServer)..."
 
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$rootDir = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+$libDir = Join-Path $rootDir "_lib"
+
 if ($WebServer -eq "iis") {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-    $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib")
     $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
     if (Test-Path $iisSetup) {
         Write-Host "Running IIS Setup..."
@@ -49,11 +51,7 @@ if (-not (Test-Path $WwwRoot)) {
 $tmpZip = Join-Path $env:TEMP "joomla_$(Get-Random).zip"
 $dlUrl = "https://github.com/joomla/joomla-cms/releases/download/$JoomlaVersion/Joomla_$JoomlaVersion-Stable-Full_Package.zip"
 
-if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-    curl.exe -sSL "$dlUrl" -o "$tmpZip"
-} else {
-    Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip -UseBasicParsing
-}
+& (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
 
 if (Test-Path $tmpZip) {
     Expand-Archive -Path $tmpZip -DestinationPath $WwwRoot -Force
@@ -61,12 +59,18 @@ if (Test-Path $tmpZip) {
 }
 
 Write-Host "Configuring Database..."
+$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
 if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     try {
-        $mysqlCmd = "CREATE DATABASE IF NOT EXISTS `$DbName`; CREATE USER IF NOT EXISTS '$DbUser'@'localhost' IDENTIFIED BY '$DbPass'; GRANT ALL PRIVILEGES ON `$DbName`.* TO '$DbUser'@'localhost'; FLUSH PRIVILEGES;"
-        mysql -u root -e $mysqlCmd 2>$null
+        & $provSchema --engine mysql --host 127.0.0.1 --port 3306 --schema $DbName --user $DbUser --password $DbPass
     } catch {
         Write-Warning "Failed to automatically configure MariaDB. Continuing."
+    }
+} elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
+    try {
+        & $provSchema --engine postgres --host 127.0.0.1 --port 5432 --schema $DbName --user $DbUser --password $DbPass
+    } catch {
+        Write-Warning "Failed to automatically configure PostgreSQL. Continuing."
     }
 }
 

@@ -60,8 +60,6 @@ goto :main
 :: ## show_help
 :: Displays command-line usage instructions and available options.
 :show_help
-:: ## show_help
-:: Displays command-line usage instructions and available options.
 echo Usage: %~nx0
 echo Dependency resolution script for bootstrapping the libscript REST API development environment on Windows.
 echo.
@@ -72,18 +70,14 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-:: ## main
-:: Resolve directories
-:: Remove trailing backslash
-for %%I in ("%SCRIPT_DIR%\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-
 echo [INFO] Detected Windows. Checking for required build tools...
 
 :: Check for Git
 where git >nul 2>&1
 if errorlevel 1 (
     echo [INFO] Git not found. Attempting to install via libscript...
-    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install git
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install git latest
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\git-servers\git\env.cmd" call "%LIBSCRIPT_ROOT_DIR%\_lib\git-servers\git\env.cmd"
 ) else (
     echo [INFO] Git is already installed.
 )
@@ -92,7 +86,8 @@ if errorlevel 1 (
 where cmake >nul 2>&1
 if errorlevel 1 (
     echo [INFO] CMake not found. Attempting to install via libscript...
-    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install cmake
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install cmake latest
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\cmake\env.cmd" call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\cmake\env.cmd"
 ) else (
     echo [INFO] CMake is already installed.
 )
@@ -102,7 +97,8 @@ where cl >nul 2>&1
 if errorlevel 1 (
     echo [INFO] MSVC compiler ^(cl.exe^) not found in PATH.
     echo [INFO] Attempting to install via libscript...
-    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install c
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install c latest
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\c\env.cmd" call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\c\env.cmd"
     echo [INFO] NOTE: You may need to run this script from a 'x64 Native Tools Command Prompt for VS' after installation.
 ) else (
     echo [INFO] MSVC compiler is already installed.
@@ -112,7 +108,8 @@ if errorlevel 1 (
 where jq >nul 2>&1
 if errorlevel 1 (
     echo [INFO] jq not found. Attempting to install via libscript...
-    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install jq
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install jq latest
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\jq\env.cmd" call "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\jq\env.cmd"
 ) else (
     echo [INFO] jq is already installed.
 )
@@ -127,10 +124,10 @@ if not exist "%VENDOR_DIR%\c-rest-framework\.git" (
     git clone https://github.com/SamuelMarks/c-rest-framework "%VENDOR_DIR%\c-rest-framework"
 ) else (
     echo [INFO] c-rest-framework already cloned. Pulling latest...
-    cd /d "%VENDOR_DIR%\c-rest-framework"
+    pushd "%VENDOR_DIR%\c-rest-framework"
     git fetch --all
     git reset --hard @{upstream}
-    cd /d "%SCRIPT_DIR%"
+    popd
 )
 
 echo [INFO] Framework acquisition complete.

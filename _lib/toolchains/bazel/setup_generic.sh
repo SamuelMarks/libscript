@@ -174,7 +174,7 @@ case "$ACTION" in
             URL="https://github.com/bazelbuild/bazel/releases/download/${EXACT_VERSION}/bazel-${EXACT_VERSION}-${OS}-${ARCH}"
             TEMP_FILE=$(mktemp)
             libscript_depends "curl"
-            if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+            if ! libscript_download "$URL" "$TEMP_FILE"; then
               log_error "Failed to download bazel from $URL"
               rm -f "$TEMP_FILE"
               exit 1

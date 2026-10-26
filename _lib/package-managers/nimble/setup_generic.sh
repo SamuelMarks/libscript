@@ -171,7 +171,7 @@ case "$ACTION" in
             fi
           fi
         elif command -v brew >/dev/null 2>&1; then
-          brew install nim || true
+          libscript_depends_via brew nim || true
           if command -v nimble >/dev/null 2>&1; then
             ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
             installed=1
@@ -197,7 +197,7 @@ case "$ACTION" in
             TEMP_XZ=$(mktemp)
             TEMP_DIR=$(mktemp -d)
             libscript_depends "curl" "tar" "xz-utils" || true
-            if curl -sSLf "$NIM_URL" -o "$TEMP_XZ"; then
+            if libscript_download "$NIM_URL" "$TEMP_XZ"; then
               tar -xJf "$TEMP_XZ" -C "$TEMP_DIR" --strip-components=1 || true
               if [ -f "$TEMP_DIR/bin/nimble" ]; then
                 cp -a "$TEMP_DIR/bin/"* "${TARGET_DIR}/bin/" 2>/dev/null || cp "$TEMP_DIR/bin/nimble" "${TARGET_DIR}/bin/nimble"

@@ -146,13 +146,10 @@ case "$ACTION" in
       exit 0
     fi
     if [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
-      if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
-      fi
       if [ "$(uname -s)" = "Darwin" ]; then
         if ! command -v busybox >/dev/null 2>&1; then
           if command -v brew >/dev/null 2>&1; then
-            brew install busybox 2>/dev/null || true
+            libscript_depends_via brew busybox 2>/dev/null || true
           fi
           if ! command -v busybox >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
             cargo install busybox 2>/dev/null || true

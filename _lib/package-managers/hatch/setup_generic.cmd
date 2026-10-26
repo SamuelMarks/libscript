@@ -144,7 +144,7 @@ if "%HATCH_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading hatch %HATCH_VERSION% to %DOWNLOAD_DIR%\hatch...
     if not exist "%DOWNLOAD_DIR%\hatch" mkdir "%DOWNLOAD_DIR%\hatch"
     if not "%HATCH_DOWNLOAD_URL%"=="" (
-        curl -sSL "%HATCH_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\hatch\hatch-%HATCH_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HATCH_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\hatch\hatch-%HATCH_VERSION%.zip"
     ) else (
         echo HATCH_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%HATCH_INSTALL_METHOD%"=="system" (
-    winget install hatch --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends hatch
     exit /b !errorlevel!
 )
 if "%HATCH_INSTALL_METHOD%"=="mise" ( mise install "hatch@%HATCH_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\hatch\hatch-%HATCH_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%HATCH_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%HATCH_DOWNLOAD_URL%" -o "%TEMP%\hatch.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%HATCH_DOWNLOAD_URL%" "%TEMP%\hatch.zip"
         tar -xf "%TEMP%\hatch.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for hatch.

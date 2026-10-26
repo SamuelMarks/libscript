@@ -144,7 +144,7 @@ if "%VCPKG_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading vcpkg %VCPKG_VERSION% to %DOWNLOAD_DIR%\vcpkg...
     if not exist "%DOWNLOAD_DIR%\vcpkg" mkdir "%DOWNLOAD_DIR%\vcpkg"
     if not "%VCPKG_DOWNLOAD_URL%"=="" (
-        curl -sSL "%VCPKG_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\vcpkg\vcpkg-%VCPKG_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VCPKG_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vcpkg\vcpkg-%VCPKG_VERSION%.zip"
     ) else (
         echo VCPKG_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%VCPKG_INSTALL_METHOD%"=="system" (
-    winget install vcpkg --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vcpkg
     exit /b !errorlevel!
 )
 if "%VCPKG_INSTALL_METHOD%"=="mise" ( mise install "vcpkg@%VCPKG_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\vcpkg\vcpkg-%VCPKG_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%VCPKG_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%VCPKG_DOWNLOAD_URL%" -o "%TEMP%\vcpkg.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VCPKG_DOWNLOAD_URL%" "%TEMP%\vcpkg.zip"
         tar -xf "%TEMP%\vcpkg.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for vcpkg.

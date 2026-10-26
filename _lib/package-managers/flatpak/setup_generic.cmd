@@ -144,7 +144,7 @@ if "%FLATPAK_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading flatpak %FLATPAK_VERSION% to %DOWNLOAD_DIR%\flatpak...
     if not exist "%DOWNLOAD_DIR%\flatpak" mkdir "%DOWNLOAD_DIR%\flatpak"
     if not "%FLATPAK_DOWNLOAD_URL%"=="" (
-        curl -sSL "%FLATPAK_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLATPAK_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.zip"
     ) else (
         echo FLATPAK_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%FLATPAK_INSTALL_METHOD%"=="system" (
-    winget install flatpak --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends flatpak
     exit /b !errorlevel!
 )
 if "%FLATPAK_INSTALL_METHOD%"=="mise" ( mise install "flatpak@%FLATPAK_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%FLATPAK_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%FLATPAK_DOWNLOAD_URL%" -o "%TEMP%\flatpak.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLATPAK_DOWNLOAD_URL%" "%TEMP%\flatpak.zip"
         tar -xf "%TEMP%\flatpak.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for flatpak.

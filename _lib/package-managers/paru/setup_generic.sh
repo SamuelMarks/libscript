@@ -173,7 +173,7 @@ case "$ACTION" in
         libscript_depends "curl"
         libscript_depends "zstd"
         libscript_depends "tar"
-        if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+        if ! libscript_download "$URL" "$TEMP_FILE"; then
           log_error "Failed to download paru from $URL"
           rm -f "$TEMP_FILE"
           exit 1

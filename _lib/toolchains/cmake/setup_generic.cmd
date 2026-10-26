@@ -144,7 +144,7 @@ if "%CMAKE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cmake %CMAKE_VERSION% to %DOWNLOAD_DIR%\cmake...
     if not exist "%DOWNLOAD_DIR%\cmake" mkdir "%DOWNLOAD_DIR%\cmake"
     if not "%CMAKE_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CMAKE_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CMAKE_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.zip"
     ) else (
         echo CMAKE_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CMAKE_INSTALL_METHOD%"=="system" (
-    winget install cmake --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cmake
     exit /b !errorlevel!
 )
 if "%CMAKE_INSTALL_METHOD%"=="mise" ( mise install "cmake@%CMAKE_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CMAKE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CMAKE_DOWNLOAD_URL%" -o "%TEMP%\cmake.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CMAKE_DOWNLOAD_URL%" "%TEMP%\cmake.zip"
         tar -xf "%TEMP%\cmake.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cmake.

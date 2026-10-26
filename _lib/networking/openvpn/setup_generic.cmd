@@ -58,8 +58,8 @@ if %errorlevel% equ 0 exit /b 0
 if exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" goto :create_shims
 if exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" goto :create_shims
 
-echo Installing OpenVPN via winget...
-winget install --id OpenVPNTechnologies.OpenVPN --silent --accept-package-agreements --accept-source-agreements
+echo Installing OpenVPN via pkg_mgr...
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openvpn
 
 :: ## create_shims
 :: Creates executable command shims in the local binary directory.

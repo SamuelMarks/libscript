@@ -184,7 +184,7 @@ case "$ACTION" in
         log_info "Downloading micromamba for ${OS}-${MAMBA_ARCH}..."
         TEMP_DIR=$(mktemp -d)
         TEMP_FILE=$(mktemp)
-        if ! curl -sSLf "https://micro.mamba.pm/api/micromamba/${OS}-${MAMBA_ARCH}/latest" -o "$TEMP_FILE"; then
+        if ! libscript_download "https://micro.mamba.pm/api/micromamba/${OS}-${MAMBA_ARCH}/latest" "$TEMP_FILE"; then
           log_error "Failed to download micromamba"
           rm -rf "$TEMP_DIR" "$TEMP_FILE"
           exit 1

@@ -214,7 +214,17 @@ libscript_print_env() {
     if [ -z "$_comp_ver" ] && [ -n "$_prefix_path" ]; then
       _comp_ver=$(basename "$_prefix_path")
     fi
-    env -i PATH="/usr/bin:/bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" sh << 'EOF_SH'
+    _lpe_base_path="/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"
+    _lpe_jq_bin="jq"
+    if command -v jq >/dev/null 2>&1; then
+      _lpe_jq_bin=$(command -v jq)
+      _jq_dir=$(dirname -- "$_lpe_jq_bin")
+      case ":${_lpe_base_path}:" in
+        *":${_jq_dir}:"*) ;;
+        *) _lpe_base_path="${_jq_dir}:${_lpe_base_path}" ;;
+      esac
+    fi
+    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" sh << 'EOF_SH'
             SCRIPT_NAME="$COMP_DIR/env.sh"
             export SCRIPT_NAME
             # shellcheck disable=SC1090
@@ -229,7 +239,9 @@ libscript_print_env() {
               IFS=":"
               for _p in $PATH; do
                 [ -z "$_p" ] && continue
-                [ "$_p" = "/usr/bin" ] || [ "$_p" = "/bin" ] && continue
+                case ":${BASE_PATH:-/usr/bin:/bin}:" in
+                  *":${_p}:"*) continue ;;
+                esac
                 [ -n "$PREFIX" ] && [ "$_p" = "$PREFIX/bin" ] && continue
                 case "$FORMAT" in
                   docker)         printf 'ENV PATH="%s:$PATH"
@@ -255,7 +267,7 @@ fi
               IFS="$_old_ifs"
             fi
 
-            _filter="^(PWD|SHLVL|_|PATH|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_HOME|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE)="
+            _filter="^(PWD|SHLVL|_|PATH|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_HOME|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE)="
 
             case "$FORMAT" in
               docker)
@@ -283,15 +295,13 @@ fi
                 done
                 ;;
               json)
-                if command -v jq >/dev/null 2>&1; then
-                  env | grep -vE "^(PWD|SHLVL|_|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE)=" | jq -R -s '
-                    split("
-") | map(select(length > 0)) |
+                if [ -x "${_JQ_BIN:-}" ] || command -v "${_JQ_BIN:-jq}" >/dev/null 2>&1; then
+                  env | grep -vE "^(PWD|SHLVL|_|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE)=" | "${_JQ_BIN:-jq}" -c -R -s '
+                    split("\n") | map(select(length > 0)) |
                     map(split("=")) | map({(.[0]): (.[1:] | join("="))}) | add
                   '
                 else
-                  printf '{"PATH":"%s"}
-' "${PREFIX:+$PREFIX/bin:}$PATH"
+                  printf '{"PATH":"%s"}\n' "${PREFIX:+$PREFIX/bin:}$PATH"
                 fi
                 ;;
               *)
@@ -365,6 +375,18 @@ libscript_hydrate_manifest_env() {
   export STACK
   unset SCRIPT_NAME || true
   rm -f "$_hm_tmp"
+
+  for _hm_local_bin in "${_hm_dir}/.venv/bin" "${_hm_dir}/node_modules/.bin"; do
+    if [ -d "$_hm_local_bin" ]; then
+      case ":${PATH:-}:" in
+        *":${_hm_local_bin}:"*) ;;
+        *) export PATH="${_hm_local_bin}:${PATH:-/usr/bin:/bin}" ;;
+      esac
+    fi
+  done
+  if [ -d "${_hm_dir}/.venv" ] && [ -z "${VIRTUAL_ENV:-}" ]; then
+    export VIRTUAL_ENV="${_hm_dir}/.venv"
+  fi
 
   if [ -z "${UV_BIN:-}" ]; then
     UV_BIN=$(command -v uv 2>/dev/null || printf 'uv')

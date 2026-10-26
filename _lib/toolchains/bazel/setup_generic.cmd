@@ -144,7 +144,7 @@ if "%BAZEL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading bazel %BAZEL_VERSION% to %DOWNLOAD_DIR%\bazel...
     if not exist "%DOWNLOAD_DIR%\bazel" mkdir "%DOWNLOAD_DIR%\bazel"
     if not "%BAZEL_DOWNLOAD_URL%"=="" (
-        curl -sSL "%BAZEL_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BAZEL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.zip"
     ) else (
         echo BAZEL_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%BAZEL_INSTALL_METHOD%"=="system" (
-    winget install bazel --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends bazel
     exit /b !errorlevel!
 )
 if "%BAZEL_INSTALL_METHOD%"=="mise" ( mise install "bazel@%BAZEL_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%BAZEL_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%BAZEL_DOWNLOAD_URL%" -o "%TEMP%\bazel.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BAZEL_DOWNLOAD_URL%" "%TEMP%\bazel.zip"
         tar -xf "%TEMP%\bazel.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for bazel.

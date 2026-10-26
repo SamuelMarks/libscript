@@ -73,8 +73,8 @@ if %errorlevel% equ 0 (
 )
 
 if "%ESCRIPT_BIN%"=="" (
-    echo Erlang OTP not detected. Installing via winget...
-    winget install --id Erlang.ErlangOTP --silent --accept-package-agreements --accept-source-agreements
+    echo Erlang OTP not detected. Installing via pkg_mgr...
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends Erlang.ErlangOTP
     for /d %%E in ("%ProgramFiles%\Erlang*") do (
         if exist "%%E\bin\escript.exe" set "ESCRIPT_BIN=%%E\bin\escript.exe"
     )
@@ -89,7 +89,7 @@ set "URL=https://github.com/erlang/rebar3/releases/download/3.27.0/rebar3"
 set "REBAR_PATH=%DEST_DIR%/rebar3"
 
 echo Downloading rebar3 from %URL%...
-curl.exe -sSL "%URL%" -o "%REBAR_PATH%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%REBAR_PATH%"
 if errorlevel 1 (
     echo Failed to download rebar3.
     exit /b 1

@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -72,8 +72,8 @@ exit /b 0
 :: ## logs_aggregate
 :: Configures integrated log aggregation and health monitoring.
 :logs_aggregate
-if exist "!LIBSCRIPT_ROOT_DIR!	raits\logging\agent.cmd" call "!LIBSCRIPT_ROOT_DIR!	raits\logging\agent.cmd"
-if exist "!LIBSCRIPT_ROOT_DIR!	raits\metrics\agent.cmd" call "!LIBSCRIPT_ROOT_DIR!	raits\metrics\agent.cmd"
+if exist "!LIBSCRIPT_ROOT_DIR!\traits\logging\agent.cmd" call "!LIBSCRIPT_ROOT_DIR!\traits\logging\agent.cmd"
+if exist "!LIBSCRIPT_ROOT_DIR!\traits\metrics\agent.cmd" call "!LIBSCRIPT_ROOT_DIR!\traits\metrics\agent.cmd"
 echo [OK] Integrated log aggregation and health monitoring configured.
 exit /b 0
 

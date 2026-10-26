@@ -119,7 +119,7 @@ if "%CLI_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cli %CLI_VERSION% to %DOWNLOAD_DIR%\cli...
     if not exist "%DOWNLOAD_DIR%\cli" mkdir "%DOWNLOAD_DIR%\cli"
     if not "%CLI_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CLI_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cli\cli-%CLI_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CLI_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cli\cli-%CLI_VERSION%.zip"
     ) else (
         echo CLI_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -134,6 +134,6 @@ if exist "%LIBSCRIPT_HOME%\gcp-cli\%VERSION%" (
     exit /b 0
 )
 if "%CLI_INSTALL_METHOD%"=="system" (
-    winget install cli --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cli
     exit /b !errorlevel!
 )

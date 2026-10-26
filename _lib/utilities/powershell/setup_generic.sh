@@ -180,7 +180,7 @@ case "$ACTION" in
             TEMP_FILE=$(mktemp)
             libscript_depends "curl" "tar"
             if [ "$OS" = "linux" ]; then libscript_depends "libicu" || true; fi
-            if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
               log_error "Failed to download powershell from $URL"
               rm -f "$TEMP_FILE.tar.gz"
               exit 1

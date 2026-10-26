@@ -139,11 +139,11 @@ case "$ACTION" in
         'apt-get')
           configure_virtualbox_repo_debian
           kver=$(uname -r)
-          priv apt-get install -y "linux-headers-$kver" build-essential dkms 2>/dev/null || true
+          libscript_depends "linux-headers-$kver" build-essential dkms 2>/dev/null || true
           libscript_depends "virtualbox"
           ;;
         'brew')
-          brew install --cask virtualbox
+          libscript_depends_via brew virtualbox
           ;;
         *)
           libscript_depends "virtualbox"

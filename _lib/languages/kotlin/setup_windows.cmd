@@ -61,7 +61,7 @@ set "URL=https://github.com/JetBrains/kotlin/releases/download/v2.1.10/kotlin-co
 set "TEMP_ZIP=%TEMP%\kotlin.zip"
 
 echo Downloading Kotlin compiler from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Kotlin compiler.
     exit /b 1

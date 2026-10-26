@@ -144,7 +144,7 @@ if "%R_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading r %R_VERSION% to %DOWNLOAD_DIR%\r...
     if not exist "%DOWNLOAD_DIR%\r" mkdir "%DOWNLOAD_DIR%\r"
     if not "%R_DOWNLOAD_URL%"=="" (
-        curl -sSL "%R_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\r\r-%R_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%R_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\r\r-%R_VERSION%.zip"
     ) else (
         echo R_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%R_INSTALL_METHOD%"=="system" (
-    winget install r --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends r
     exit /b !errorlevel!
 )
 if "%R_INSTALL_METHOD%"=="mise" ( mise install "r@%R_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\r\r-%R_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%R_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%R_DOWNLOAD_URL%" -o "%TEMP%\r.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%R_DOWNLOAD_URL%" "%TEMP%\r.zip"
         tar -xf "%TEMP%\r.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for r.

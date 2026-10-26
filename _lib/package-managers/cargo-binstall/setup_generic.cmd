@@ -144,7 +144,7 @@ if "%CARGO_BINSTALL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cargo-binstall %CARGO_BINSTALL_VERSION% to %DOWNLOAD_DIR%\cargo-binstall...
     if not exist "%DOWNLOAD_DIR%\cargo-binstall" mkdir "%DOWNLOAD_DIR%\cargo-binstall"
     if not "%CARGO_BINSTALL_DOWNLOAD_URL%"=="" (
-        curl -sSL "%CARGO_BINSTALL_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\cargo-binstall\cargo-binstall-%CARGO_BINSTALL_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CARGO_BINSTALL_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\cargo-binstall\cargo-binstall-%CARGO_BINSTALL_VERSION%.zip"
     ) else (
         echo CARGO_BINSTALL_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%CARGO_BINSTALL_INSTALL_METHOD%"=="system" (
-    winget install cargo-binstall --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends cargo-binstall
     exit /b !errorlevel!
 )
 if "%CARGO_BINSTALL_INSTALL_METHOD%"=="mise" ( mise install "cargo-binstall@%CARGO_BINSTALL_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\cargo-binstall\cargo-binstall-%CARGO_BINSTALL_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%CARGO_BINSTALL_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%CARGO_BINSTALL_DOWNLOAD_URL%" -o "%TEMP%\cargo-binstall.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CARGO_BINSTALL_DOWNLOAD_URL%" "%TEMP%\cargo-binstall.zip"
         tar -xf "%TEMP%\cargo-binstall.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cargo-binstall.

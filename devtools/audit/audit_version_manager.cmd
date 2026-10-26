@@ -69,6 +69,16 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
                     set /a ERRORS+=1
                 )
             )
+            set "COMP_NAME=%%~nxD"
+            if /i not "!COMP_NAME!"=="winget" if /i not "!COMP_NAME!"=="choco" (
+                for %%S in ("%%D\setup*.cmd") do (
+                    findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" "%%S" >nul 2>&1
+                    if not errorlevel 1 (
+                        echo [VM CONTRACT VIOLATION] [RAW_WINGET_IN_RECIPE] %%S: Direct winget/choco install in setup*.cmd >&2
+                        set /a ERRORS+=1
+                    )
+                )
+            )
         )
     )
 )

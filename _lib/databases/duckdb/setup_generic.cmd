@@ -159,7 +159,7 @@ if "%DUCKDB_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading duckdb %DUCKDB_VERSION% to %DOWNLOAD_DIR%\duckdb...
     if not exist "%DOWNLOAD_DIR%\duckdb" mkdir "%DOWNLOAD_DIR%\duckdb"
     if not "%DUCKDB_DOWNLOAD_URL%"=="" (
-        curl -sSL "%DUCKDB_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip"
     ) else (
         echo DUCKDB_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -181,7 +181,7 @@ if /i "%DUCKDB_INSTALL_METHOD%"=="from-source" (
     exit /b !errorlevel!
 )
 if "%DUCKDB_INSTALL_METHOD%"=="system" (
-    winget install duckdb --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends duckdb
     exit /b !errorlevel!
 )
 if "%DUCKDB_INSTALL_METHOD%"=="mise" ( mise install "duckdb@%DUCKDB_VERSION%" & exit /b 0 )
@@ -201,10 +201,10 @@ if not exist "%TARGET_DIR%\bin\duckdb.exe" (
         tar -xf "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%DUCKDB_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%DUCKDB_DOWNLOAD_URL%" -o "%TEMP%\duckdb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb.zip"
         tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%"
     ) else (
-        curl -sSLf "https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-windows-amd64.zip" -o "%TEMP%\duckdb.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb.zip"
         if not errorlevel 1 (
             tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%\bin"
             del /f /q "%TEMP%\duckdb.zip" 2>nul

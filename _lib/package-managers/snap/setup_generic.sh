@@ -143,9 +143,6 @@ case "$ACTION" in
     ;;
   install)
     if [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      if command -v dnf >/dev/null 2>&1; then
-        priv dnf install -y epel-release || true
-      fi
       libscript_depends "snapd"
       if [ -d /run/systemd/system ]; then
         priv systemctl enable --now snapd.socket 2>/dev/null || true
@@ -173,9 +170,6 @@ case "$ACTION" in
         mkdir -p "${TARGET_DIR}/bin"
         if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info "Falling back to system package manager for snap..."
-          if command -v dnf >/dev/null 2>&1; then
-            priv dnf install -y epel-release || true
-          fi
           libscript_depends "snapd"
           if [ -d /run/systemd/system ]; then
             priv systemctl enable --now snapd.socket 2>/dev/null || true

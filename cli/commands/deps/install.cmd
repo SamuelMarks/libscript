@@ -150,10 +150,22 @@ for %%F in ("!json_file!") do set "_MANIFEST_DIR=%%~dpF"
 if "!_MANIFEST_DIR:~-1!"=="\" set "_MANIFEST_DIR=!_MANIFEST_DIR:~0,-1!"
 set "_ENV_OUT=!_MANIFEST_DIR!\.env.libscript"
 if exist "!_ENV_OUT!" (
-    findstr /v /b /c:"PATH=" "!_ENV_OUT!" > "!_ENV_OUT!.tmp" 2>nul
+    findstr /v /b /c:"PATH=" /c:"SERVICE_PATH=" "!_ENV_OUT!" > "!_ENV_OUT!.tmp" 2>nul
     move /y "!_ENV_OUT!.tmp" "!_ENV_OUT!" >nul 2>&1
 )
 echo PATH=!PATH!>> "!_ENV_OUT!"
+echo SERVICE_PATH=!PATH!>> "!_ENV_OUT!"
+
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
+    set "_PY_VER=3.12"
+    for /f "delims=" %%V in ('jq -r "(.deps.python // .dependencies.python // \"3.12\")" "!json_file!" 2^>nul') do set "_PY_VER=%%V"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!_MANIFEST_DIR!" "!_PY_VER!"
+    for /d %%P in ("!_MANIFEST_DIR!\*") do (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "%%~fP" "!_PY_VER!"
+    )
+)
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "install"
 if errorlevel 1 exit /b 1
@@ -169,15 +181,29 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_m
 if errorlevel 1 exit /b 1
 endlocal & (
     set "PATH=%PATH%"
+    set "SERVICE_PATH=%PATH%"
     set "NODEJS_VERSION=%NODEJS_VERSION%"
     set "PYTHON_VERSION=%PYTHON_VERSION%"
     set "PYTHONHOME=%PYTHONHOME%"
     set "PYTHONPATH=%PYTHONPATH%"
+    set "PYTHON_VENV=%PYTHON_VENV%"
     set "VIRTUAL_ENV=%VIRTUAL_ENV%"
+    set "GOROOT=%GOROOT%"
+    set "GO_VERSION=%GO_VERSION%"
+    set "JAVA_HOME=%JAVA_HOME%"
+    set "JAVA_VERSION=%JAVA_VERSION%"
+    set "RUST_VERSION=%RUST_VERSION%"
+    set "CARGO_HOME=%CARGO_HOME%"
+    set "RUSTUP_HOME=%RUSTUP_HOME%"
+    set "PHP_VERSION=%PHP_VERSION%"
+    set "RUBY_VERSION=%RUBY_VERSION%"
     set "POSTGRES_VERSION=%POSTGRES_VERSION%"
+    set "POSTGRESQL_VERSION=%POSTGRESQL_VERSION%"
     set "POSTGRES_URL=%POSTGRES_URL%"
     set "DATABASE_URL=%DATABASE_URL%"
     set "DUCKDB_PATH=%DUCKDB_PATH%"
     set "SQLITE_PATH=%SQLITE_PATH%"
+    set "REDIS_URL=%REDIS_URL%"
+    set "VALKEY_URL=%VALKEY_URL%"
 )
 exit /b 0

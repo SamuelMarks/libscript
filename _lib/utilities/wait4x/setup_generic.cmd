@@ -144,7 +144,7 @@ if "%WAIT4X_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading wait4x %WAIT4X_VERSION% to %DOWNLOAD_DIR%\wait4x...
     if not exist "%DOWNLOAD_DIR%\wait4x" mkdir "%DOWNLOAD_DIR%\wait4x"
     if not "%WAIT4X_DOWNLOAD_URL%"=="" (
-        curl -sSL "%WAIT4X_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WAIT4X_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.zip"
     ) else (
         echo WAIT4X_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%WAIT4X_INSTALL_METHOD%"=="system" (
-    winget install wait4x --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends wait4x
     exit /b !errorlevel!
 )
 if "%WAIT4X_INSTALL_METHOD%"=="mise" ( mise install "wait4x@%WAIT4X_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%WAIT4X_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%WAIT4X_DOWNLOAD_URL%" -o "%TEMP%\wait4x.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%WAIT4X_DOWNLOAD_URL%" "%TEMP%\wait4x.zip"
         tar -xf "%TEMP%\wait4x.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for wait4x.

@@ -173,13 +173,13 @@ case "$ACTION" in
           URL="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-${ARCH}-${OS}.gz"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "gzip" "java"
-          if curl -sSLf "$URL" -o "$TEMP_FILE.gz"; then
+          if libscript_download "$URL" "$TEMP_FILE.gz"; then
             gzip -df "$TEMP_FILE.gz" || true
             cp "$TEMP_FILE" "${TARGET_DIR}/bin/coursier"
             rm -f "$TEMP_FILE"
           else
             URL_STANDALONE="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/coursier"
-            if ! curl -sSLf "$URL_STANDALONE" -o "${TARGET_DIR}/bin/coursier"; then
+            if ! libscript_download "$URL_STANDALONE" "${TARGET_DIR}/bin/coursier"; then
               log_error "Failed to download coursier from $URL and $URL_STANDALONE"
               rm -f "$TEMP_FILE.gz" "$TEMP_FILE"
               exit 1

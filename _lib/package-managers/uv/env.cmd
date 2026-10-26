@@ -49,13 +49,16 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-IF "%UV_VERSION%"=="" SET "UV_VERSION=latest"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%UV_VERSION%"=="" set "UV_VERSION=latest"
 set "_CAND_P=%LIBSCRIPT_HOME%\uv\%UV_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "uv" "%UV_VERSION%"
 
 endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "PATH=%PATH%"
     set "UV_VERSION=%UV_VERSION%"
 )

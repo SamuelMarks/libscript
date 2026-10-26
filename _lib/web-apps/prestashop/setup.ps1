@@ -24,27 +24,31 @@ $ServerName = if ($env:PRESTASHOP_SERVER_NAME) { $env:PRESTASHOP_SERVER_NAME } e
 $ListenPort = if ($env:PRESTASHOP_LISTEN) { $env:PRESTASHOP_LISTEN } else { "80" }
 $WebServer = if ($env:PRESTASHOP_WEBSERVER) { $env:PRESTASHOP_WEBSERVER } else { "iis" }
 
-Write-Host "Installing dependencies for PrestaShop ($WebServer)..."
-if (-not (Get-Command "php" -ErrorAction SilentlyContinue)) {
-    Write-Host "PHP not found. Attempting to install via Winget..."
-    winget install --silent --force --id=PHP.PHP --accept-package-agreements --accept-source-agreements
-}
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$rootDir = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+$libDir = Join-Path $rootDir "_lib"
 
-if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
-    if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
-        Write-Host "MariaDB not found. Attempting to install via Winget..."
-        winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+Write-Host "Installing dependencies for PrestaShop ($WebServer)..."
+if ($env:LIBSCRIPT_SKIP_SYSTEM_DEPS -ne "1") {
+    if (-not (Get-Command "php" -ErrorAction SilentlyContinue)) {
+        Write-Host "PHP not found. Delegating to LibScript php component..."
+        & (Join-Path $rootDir "libscript.cmd") install php latest
     }
-} elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
-    if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
-        Write-Host "PostgreSQL not found. Attempting to install via Winget..."
-        winget install --silent --force --id=PostgreSQL.PostgreSQL --accept-package-agreements --accept-source-agreements
+
+    if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
+        if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
+            Write-Host "MariaDB not found. Delegating to LibScript mariadb component..."
+            & (Join-Path $rootDir "libscript.cmd") install mariadb latest
+        }
+    } elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
+        if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
+            Write-Host "PostgreSQL not found. Delegating to LibScript postgres component..."
+            & (Join-Path $rootDir "libscript.cmd") install postgres latest
+        }
     }
 }
 
 if ($WebServer -eq "iis") {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-    $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib\")
     $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
     if (Test-Path $iisSetup) {
         Write-Host "Running IIS Setup..."
@@ -64,7 +68,7 @@ if (-not (Test-Path (Join-Path $WwwRoot "classes")) -and -not (Test-Path (Join-P
     $tmpExtDir = Join-Path $env:TEMP "ps_extract_$(Get-Random)"
     $dlUrl = "https://github.com/PrestaShop/PrestaShop/releases/download/$PrestashopVersion/prestashop_$PrestashopVersion.zip"
 
-    Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip
+    & (Join-Path $libDir "_common\pkg_mgr.cmd") :libscript_download $dlUrl $tmpZip
     New-Item -ItemType Directory -Force -Path $tmpExtDir | Out-Null
     Expand-Archive -Path $tmpZip -DestinationPath $tmpExtDir -Force
     
@@ -79,24 +83,16 @@ if (-not (Test-Path (Join-Path $WwwRoot "classes")) -and -not (Test-Path (Join-P
 }
 
 Write-Host "Configuring Database..."
+$provSchema = Join-Path $libDir "databases\provision_schema.cmd"
 if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     try {
-        $mysqlCmd = "CREATE DATABASE IF NOT EXISTS `$DbName`; CREATE USER IF NOT EXISTS '$DbUser'@'localhost' IDENTIFIED BY '$DbPass'; GRANT ALL PRIVILEGES ON `$DbName`.* TO '$DbUser'@'localhost'; FLUSH PRIVILEGES;"
-        mysql -u root -e $mysqlCmd
+        & $provSchema --engine mysql --host 127.0.0.1 --port 3306 --schema $DbName --user $DbUser --password $DbPass
     } catch {
         Write-Warning "Failed to automatically configure MariaDB. You may need to create the database manually."
     }
 } elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
     try {
-        $dbExists = & psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$DbName'"
-        if (-not ($dbExists -match "1")) {
-            & psql -U postgres -c "CREATE DATABASE $DbName"
-        }
-        $userExists = & psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '$DbUser'"
-        if (-not ($userExists -match "1")) {
-            & psql -U postgres -c "CREATE USER $DbUser WITH PASSWORD '$DbPass'"
-        }
-        & psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $DbName TO $DbUser"
+        & $provSchema --engine postgres --host 127.0.0.1 --port 5432 --schema $DbName --user $DbUser --password $DbPass
     } catch {
         Write-Warning "Failed to automatically configure PostgreSQL. You may need to create the database manually."
     }

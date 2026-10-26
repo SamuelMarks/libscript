@@ -97,7 +97,7 @@ exit /b 0
 if not exist "%DOWNLOAD_DIR%\android-sdk" mkdir "%DOWNLOAD_DIR%\android-sdk"
 set "DL_URL=https://dl.google.com/android/repository/commandlinetools-win-%ANDROID_SDK_VERSION%_latest.zip"
 if not "%ANDROID_SDK_DOWNLOAD_URL%"=="" set "DL_URL=%ANDROID_SDK_DOWNLOAD_URL%"
-curl -sSL "!DL_URL!" -o "%DOWNLOAD_DIR%\android-sdk\commandlinetools-%ANDROID_SDK_VERSION%.zip"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "%DOWNLOAD_DIR%\android-sdk\commandlinetools-%ANDROID_SDK_VERSION%.zip"
 exit /b 0
 
 :: ## action_install
@@ -112,7 +112,7 @@ if not exist "%TARGET_DIR%\cmdline-tools" mkdir "%TARGET_DIR%\cmdline-tools"
 set "DL_URL=https://dl.google.com/android/repository/commandlinetools-win-%ANDROID_SDK_VERSION%_latest.zip"
 if not "%ANDROID_SDK_DOWNLOAD_URL%"=="" set "DL_URL=%ANDROID_SDK_DOWNLOAD_URL%"
 set "ZIP_FILE=%TEMP%\android_cmdtools_%RANDOM%.zip"
-curl -sSL "!DL_URL!" -o "!ZIP_FILE!"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!DL_URL!" "!ZIP_FILE!"
 set "EXT_DIR=%TEMP%\android_ext_%RANDOM%"
 if not exist "!EXT_DIR!" mkdir "!EXT_DIR!"
 tar -xf "!ZIP_FILE!" -C "!EXT_DIR!"

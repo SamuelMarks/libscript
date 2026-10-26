@@ -58,7 +58,8 @@ if "%GUIX_VERSION%"=="" (
 set "_CAND_P=%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "guix"
 
 endlocal & (
     set "GUIX_VERSION=%GUIX_VERSION%"

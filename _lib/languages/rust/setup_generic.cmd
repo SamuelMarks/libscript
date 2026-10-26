@@ -171,7 +171,7 @@ if "%RUST_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rust %RUST_VERSION% to %DOWNLOAD_DIR%\rust...
     if not exist "%DOWNLOAD_DIR%\rust" mkdir "%DOWNLOAD_DIR%\rust"
     if not "%RUST_DOWNLOAD_URL%"=="" (
-        curl -sSL "%RUST_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\rust\rust-%RUST_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RUST_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\rust\rust-%RUST_VERSION%.zip"
     ) else (
         echo RUST_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -182,7 +182,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%RUST_INSTALL_METHOD%"=="system" (
-    winget install rust --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends rust
     exit /b !errorlevel!
 )
 if "%RUST_INSTALL_METHOD%"=="mise" ( mise install "rust@%RUST_VERSION%" & exit /b 0 )
@@ -202,7 +202,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\rust\rust-%RUST_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%RUST_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%RUST_DOWNLOAD_URL%" -o "%TEMP%\rust.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RUST_DOWNLOAD_URL%" "%TEMP%\rust.zip"
         tar -xf "%TEMP%\rust.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rust.

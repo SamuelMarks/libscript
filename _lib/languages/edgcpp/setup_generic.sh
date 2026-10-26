@@ -158,7 +158,7 @@ stage_edgcpp_wrappers() {
   if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ] && [ "$(uname -s 2>/dev/null || true)" = "Linux" ]; then
     if [ -f "/etc/alpine-release" ]; then
       if [ ! -e "/lib/ld-linux-aarch64.so.1" ] && [ ! -e "/lib/ld-linux-x86-64.so.2" ] || [ ! -e "/usr/lib/libgccjit.so.0" ]; then
-        priv apk add --no-cache gcompat libstdc++ ncurses-libs zlib zstd-libs libgccjit gcc g++ musl-dev >/dev/null 2>&1 || true
+        libscript_depends gcompat libstdc++ ncurses-libs zlib zstd-libs libgccjit gcc g++ musl-dev >/dev/null 2>&1 || true
       fi
       if [ -e "/usr/lib/libncursesw.so.6" ]; then
         ln -sf "/usr/lib/libncursesw.so.6" "${_target_dir}/lib/libtinfo.so.6" 2>/dev/null || true
@@ -211,8 +211,7 @@ EOF
     elif [ -f "/etc/debian_version" ]; then
       if command -v ldd >/dev/null 2>&1 && [ -x "${_target_dir}/bin/cpfe" ]; then
         if ldd "${_target_dir}/bin/cpfe" 2>/dev/null | grep -q "not found"; then
-          priv apt-get update -qq >/dev/null 2>&1 || true
-          priv env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libgccjit0 libzstd1 zlib1g libtinfo6 gcc g++ libc6-dev >/dev/null 2>&1 || true
+          libscript_depends libgccjit0 libzstd1 zlib1g libtinfo6 gcc g++ libc6-dev >/dev/null 2>&1 || true
         fi
       fi
     fi

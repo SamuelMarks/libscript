@@ -144,7 +144,7 @@ if "%COURSIER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading coursier %COURSIER_VERSION% to %DOWNLOAD_DIR%\coursier...
     if not exist "%DOWNLOAD_DIR%\coursier" mkdir "%DOWNLOAD_DIR%\coursier"
     if not "%COURSIER_DOWNLOAD_URL%"=="" (
-        curl -sSL "%COURSIER_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\coursier\coursier-%COURSIER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%COURSIER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\coursier\coursier-%COURSIER_VERSION%.zip"
     ) else (
         echo COURSIER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%COURSIER_INSTALL_METHOD%"=="system" (
-    winget install coursier --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends coursier
     exit /b !errorlevel!
 )
 if "%COURSIER_INSTALL_METHOD%"=="mise" ( mise install "coursier@%COURSIER_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\coursier\coursier-%COURSIER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%COURSIER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%COURSIER_DOWNLOAD_URL%" -o "%TEMP%\coursier.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%COURSIER_DOWNLOAD_URL%" "%TEMP%\coursier.zip"
         tar -xf "%TEMP%\coursier.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for coursier.

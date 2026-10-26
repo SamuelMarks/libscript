@@ -144,7 +144,7 @@ if "%OPENRC_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading openrc %OPENRC_VERSION% to %DOWNLOAD_DIR%\openrc...
     if not exist "%DOWNLOAD_DIR%\openrc" mkdir "%DOWNLOAD_DIR%\openrc"
     if not "%OPENRC_DOWNLOAD_URL%"=="" (
-        curl -sSL "%OPENRC_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENRC_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.zip"
     ) else (
         echo OPENRC_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%OPENRC_INSTALL_METHOD%"=="system" (
-    winget install openrc --accept-package-agreements --accept-source-agreements
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openrc
     exit /b !errorlevel!
 )
 if "%OPENRC_INSTALL_METHOD%"=="mise" ( mise install "openrc@%OPENRC_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%OPENRC_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%OPENRC_DOWNLOAD_URL%" -o "%TEMP%\openrc.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENRC_DOWNLOAD_URL%" "%TEMP%\openrc.zip"
         tar -xf "%TEMP%\openrc.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for openrc.

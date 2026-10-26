@@ -44,21 +44,29 @@ export DRUPAL_WEBSERVER
 DRUPAL_DB_TYPE="${DRUPAL_DB_TYPE:-sqlite}"
 export DRUPAL_DB_TYPE
 
-# # libscript_depends 'php'
-if [ "${DRUPAL_WEBSERVER}" = "nginx" ] || [ "${DRUPAL_WEBSERVER}" = "caddy" ]; then
-#   if false ; then # libscript_depends 'php-fpm' ; then
-    true
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'php' || true
+  if [ "${DRUPAL_WEBSERVER}" = "nginx" ] || [ "${DRUPAL_WEBSERVER}" = "caddy" ]; then
+    libscript_depends 'php-fpm' || true
   fi
 fi
 
 case "${DRUPAL_DB_TYPE}" in
-#   mysql|mariadb) libscript_depends 'mariadb' ;;
-#   pgsql|postgres|postgresql) libscript_depends 'postgres' ;;
-#   sqlite) libscript_depends 'sqlite' ;;
+  mysql|mariadb)
+    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'mariadb' || true
+    ;;
+  pgsql|postgres|postgresql)
+    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'postgres' || true
+    ;;
+  sqlite)
+    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'sqlite' || true
+    ;;
   *) printf '%s\n' "Unsupported DB type: ${DRUPAL_DB_TYPE}"; exit 1 ;;
 esac
 
-# # libscript_depends "${DRUPAL_WEBSERVER}"
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends "${DRUPAL_WEBSERVER}" || true
+fi
 
 DRUPAL_VERSION="${DRUPAL_VERSION:-10.3.5}"
 if [ "${DRUPAL_VERSION}" = "latest" ]; then

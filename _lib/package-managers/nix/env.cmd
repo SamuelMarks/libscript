@@ -53,7 +53,8 @@ IF "%NIX_VERSION%"=="" SET "NIX_VERSION=latest"
 set "_CAND_P=%LIBSCRIPT_HOME%\nix\%NIX_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nix"
 
 endlocal & (
     set "NIX_VERSION=%NIX_VERSION%"

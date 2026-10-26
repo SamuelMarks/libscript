@@ -34,22 +34,16 @@ SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
-if ! command -v priv >/dev/null 2>&1; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-fi
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
 
 if [ "${ETCD_VERSION}" = 'v3.5.16' ]; then
   ETCD_VERSION='3.5.16-r6'
 fi
 if ! apk info -e 'etcd' >/dev/null 2>&1; then
-  if [ "${ETCD_VERSION}" = "latest" ]; then
-    priv apk add --no-cache etcd etcd-ctl || priv apk add --no-cache etcd
-  else
-    priv apk add --no-cache "etcd=${ETCD_VERSION}" "etcd-ctl=${ETCD_VERSION}" || priv apk add --no-cache "etcd=${ETCD_VERSION}" || priv apk add --no-cache etcd etcd-ctl || priv apk add --no-cache etcd
-  fi
+  libscript_depends etcd etcd-ctl || libscript_depends etcd
 fi
 
 if [ -n "${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then

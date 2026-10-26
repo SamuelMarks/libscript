@@ -61,7 +61,7 @@ set "URL=https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-mav
 set "TEMP_ZIP=%TEMP%\maven.zip"
 
 echo Downloading Maven from %URL%...
-curl -sSL "%URL%" -o "%TEMP_ZIP%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Maven.
     exit /b 1

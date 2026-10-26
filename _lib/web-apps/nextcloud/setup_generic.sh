@@ -45,22 +45,20 @@ export NEXTCLOUD_WEBSERVER
 NEXTCLOUD_DB_TYPE="${NEXTCLOUD_DB_TYPE:-sqlite}"
 export NEXTCLOUD_DB_TYPE
 
-# # libscript_depends 'php'
-if [ "${NEXTCLOUD_WEBSERVER}" = "nginx" ] || [ "${NEXTCLOUD_WEBSERVER}" = "caddy" ]; then
-#   if false ; then # libscript_depends 'php-fpm' ; then
-    true
+if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+  libscript_depends 'php' || true
+  if [ "${NEXTCLOUD_WEBSERVER}" = "nginx" ] || [ "${NEXTCLOUD_WEBSERVER}" = "caddy" ]; then
+    libscript_depends 'php-fpm' || true
   fi
+  if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ] || [ "${NEXTCLOUD_DB_TYPE}" = "mysql" ]; then
+    libscript_depends 'mariadb' || true
+  elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "postgresql" ]; then
+    libscript_depends 'postgres' || true
+  elif [ "${NEXTCLOUD_DB_TYPE}" = "sqlite" ]; then
+    libscript_depends 'sqlite' || true
+  fi
+  libscript_depends "${NEXTCLOUD_WEBSERVER}" || true
 fi
-
-if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ]; then
-# # libscript_depends 'mariadb'
-elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "postgresql" ]; then
-# # libscript_depends 'postgres'
-elif [ "${NEXTCLOUD_DB_TYPE}" = "sqlite" ]; then
-# # libscript_depends 'sqlite'
-fi
-
-# # libscript_depends "${NEXTCLOUD_WEBSERVER}"
 
 NEXTCLOUD_VERSION="${NEXTCLOUD_VERSION:-latest}"
 export NEXTCLOUD_VERSION
@@ -77,15 +75,10 @@ if [ ! -d "${NEXTCLOUD_WWWROOT}/core" ]; then
     dl_url="https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
   fi
 
-  if command -v libscript_download >/dev/null 2>&1; then
-    tmp_nc=$(mktemp)
-    libscript_download "${dl_url:-}" "${tmp_nc}"
-    priv tar xjf "${tmp_nc}" --strip-components=1 -C "${NEXTCLOUD_WWWROOT}"
-    rm -f "${tmp_nc}"
-  else
-    # fallback
-    wget -qO- "${dl_url}" | priv tar xjf - --strip-components=1 -C "${NEXTCLOUD_WWWROOT}"
-  fi
+  tmp_nc=$(mktemp)
+  libscript_download "${dl_url:-}" "${tmp_nc}"
+  priv tar xjf "${tmp_nc}" --strip-components=1 -C "${NEXTCLOUD_WWWROOT}"
+  rm -f "${tmp_nc}"
 fi
 
 DB_NAME="${NEXTCLOUD_DB_NAME:-nextcloud}"
@@ -94,25 +87,18 @@ DB_PASS="${NEXTCLOUD_DB_PASS:-nextcloud}"
 
 printf '%s\n' "Configuring Database (${NEXTCLOUD_DB_TYPE})..."
 if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ] || [ "${NEXTCLOUD_DB_TYPE}" = "mysql" ]; then
-  if command -v mysql >/dev/null 2>&1; then
-    if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
-      priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-      priv mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-      priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
-      priv mysql -u root -e "FLUSH PRIVILEGES;"
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql --host "127.0.0.1" --port "3306" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: MariaDB is not running or root login failed."
-    fi
   fi
 elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "postgresql" ]; then
-  if command -v psql >/dev/null 2>&1; then
-    if priv -u postgres psql -c "SELECT 1" >/dev/null 2>&1; then
-      priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'\"" | grep -q 1 || priv -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
-      priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
-      priv -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
-    else
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine postgres --host "127.0.0.1" --port "5432" \
+      --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
       printf '%s\n' "Warning: Postgres is not running or postgres login failed."
-    fi
   fi
 fi
 

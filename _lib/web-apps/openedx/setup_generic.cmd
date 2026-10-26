@@ -64,8 +64,8 @@ if not exist "!LIBSCRIPT_BIN!" if exist "!INSTALLFOLDER!\libscript\libscript.cmd
 
 if "%ACTION%"=="" set "ACTION=install"
 if "%OPENEDX_INSTALL_DIR%"=="" (
-    if exist "C:\Users\vagrant" (
-        set "OPENEDX_INSTALL_DIR=C:\Users\vagrant\.libscript\openedx"
+    if exist "%USERPROFILE%" (
+        set "OPENEDX_INSTALL_DIR=%USERPROFILE%\.libscript\openedx"
     ) else (
         set "OPENEDX_INSTALL_DIR=%USERPROFILE%\.libscript\openedx"
     )
@@ -292,13 +292,13 @@ if "%ACTION%"=="install" (
     if exist "C:\Program Files\Python312\python.exe" set "PY_EXE=C:\Program Files\Python312\python.exe"
     if exist "C:\Program Files\Python310\python.exe" set "PY_EXE=C:\Program Files\Python310\python.exe"
     if exist "%LIBSCRIPT_HOME%\python\latest\bin\python.exe" set "PY_EXE=%LIBSCRIPT_HOME%\python\latest\bin\python.exe"
-    if exist "C:\Users\vagrant\.libscript\python\latest\bin\python.exe" set "PY_EXE=C:\Users\vagrant\.libscript\python\latest\bin\python.exe"
+    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" set "PY_EXE=%USERPROFILE%\.libscript\python\latest\bin\python.exe"
     if exist "C:\Windows\Temp\.libscript\python\latest\bin\python.exe" set "PY_EXE=C:\Windows\Temp\.libscript\python\latest\bin\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python310\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python310\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe"
-    if exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe" set "PY_EXE=C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe"
-    if exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe"
+    if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+    if exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
 
     echo [DEBUG] PY_EXE resolved to: !PY_EXE!
     "!PY_EXE!" --version
