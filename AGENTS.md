@@ -123,7 +123,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -148,8 +147,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 - `STACK` Recursion Guard: Prevents infinite recursion when sourcing common scripts or circular
   dependencies.
 - `LIBSCRIPT_ROOT_DIR` Resolution: Ascends the filesystem looking for `libscript.sh`.
-- No `eval`: The `audit_standards.sh` linter rejects `eval` unless tagged with
-  `# libscript-allow-eval` for authorized shims.
+- No `eval`: The `audit_standards.sh` linter strictly rejects `eval`. Use
+  `# shellcheck disable=SC2296` for the `ZSH_VERSION` parameter expansion in the canonical
+  `THIS_FILE` header.
 
 ---
 

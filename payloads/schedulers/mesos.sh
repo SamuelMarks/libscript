@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -113,7 +112,7 @@ case "$ACTION" in
       CTYPE="$(jq -r '.container.type // "MESOS"' "${MARATHON_STATE}/v2/apps/${WID}.spec.json")"
       INST="$(jq -r '.instances // 1' "${MARATHON_STATE}/v2/apps/${WID}.spec.json")"
     else
-      CTYPE="MESOS"
+      CTYPE='MESOS'
       INST=1
     fi
     printf '{"id":"/%s","containerType":"%s","instances":%s,"tasksRunning":%s,"state":"TASK_RUNNING","transitions":["TASK_STAGING","TASK_RUNNING"]}
@@ -129,7 +128,7 @@ case "$ACTION" in
       TSTATE="$(jq -r '.state // "TASK_RUNNING"' "${MARATHON_STATE}/v2/apps/${WID}.json")"
       INST="$(jq -r '.instances // 1' "${MARATHON_STATE}/v2/apps/${WID}.json")"
     else
-      TSTATE="TASK_RUNNING"
+      TSTATE='TASK_RUNNING'
       INST=1
     fi
     printf '{"scheduler":"mesos","framework":"marathon","action":"status","workload":"%s","id":"/%s","instances":%s,"task_state":"%s","status":"ok"}

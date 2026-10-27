@@ -46,6 +46,7 @@ if ($Help -or -not $TargetInput) {
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Resolve-Path (Join-Path $ScriptDir "..")).Path
+. (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.ps1")
 
 # Resolve Target Path
 if (Test-Path $TargetInput) {
@@ -118,14 +119,14 @@ function Resolve-SpdxFile {
         return $cachedFile
     }
     try {
-        Invoke-WebRequest -Uri "$ghBase/$spdx.txt" -OutFile $cachedFile -UseBasicParsing -ErrorAction Stop
-        return $cachedFile
+        libscript_download "$ghBase/$spdx.txt" $cachedFile
+        if (Test-Path $cachedFile) { return $cachedFile }
     } catch {
         # Fallback to MIT
         $cachedMit = Join-Path $cacheDir "MIT.txt"
         try {
-            Invoke-WebRequest -Uri "$ghBase/MIT.txt" -OutFile $cachedMit -UseBasicParsing -ErrorAction Stop
-            return $cachedMit
+            libscript_download "$ghBase/MIT.txt" $cachedMit
+            if (Test-Path $cachedMit) { return $cachedMit }
         } catch {
             return $null
         }

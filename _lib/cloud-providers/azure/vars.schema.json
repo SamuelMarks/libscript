@@ -17,8 +17,32 @@
     "AZURE_INSTALL_METHOD": {
       "description": "How to install AZURE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
+    },
+    "AZURE_CONTAINER": {
+      "type": "string",
+      "description": "Configuration variable AZURE_CONTAINER for azure."
+    },
+    "AZURE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading azure binary or archive artifacts."
+    },
+    "AZURE_IMAGE_NAME": {
+      "type": "string",
+      "description": "Configuration variable AZURE_IMAGE_NAME for azure."
+    },
+    "AZURE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying azure available remote releases."
+    },
+    "AZURE_STORAGE_ACCOUNT": {
+      "type": "string",
+      "description": "Configuration variable AZURE_STORAGE_ACCOUNT for azure."
+    },
+    "AZURE_VERSION": {
+      "type": "string",
+      "description": "Specific version of azure to install (e.g., latest, lts, or exact version)."
     }
   }
 }

@@ -6,5 +6,6 @@
   "os_blacklist": ["freebsd", "alpine", "sunos"],
   "title": "nuget",
   "description": "Bootstrap module for the `nuget` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/NuGet/NuGet.Client"
 }

@@ -6,5 +6,6 @@
   "os_blacklist": ["sunos"],
   "category": "package-manager",
   "title": "Azure Cli",
-  "description": "Bootstrap module for the `azure-cli` package manager."
+  "description": "Bootstrap module for the `azure-cli` package manager.",
+  "repository": "https://github.com/Azure/azure-cli"
 }

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -71,7 +70,7 @@ fi
 
 PRESTASHOP_VERSION="${PRESTASHOP_VERSION:-8.2.4}"
 if [ "${PRESTASHOP_VERSION}" = "latest" ]; then
-  PRESTASHOP_VERSION="8.2.4"
+  PRESTASHOP_VERSION='8.2.4'
 fi
 export PRESTASHOP_VERSION
 
@@ -101,20 +100,20 @@ DB_NAME="${PRESTASHOP_DB_NAME:-prestashop}"
 DB_USER="${PRESTASHOP_DB_USER:-prestashop}"
 DB_PASS="${PRESTASHOP_DB_PASS:-prestashop}"
 
-printf '%s\n' "Configuring Database..."
+printf '%s\n' 'Configuring Database...'
 if [ "${PRESTASHOP_DB_TYPE}" = "mariadb" ] || [ "${PRESTASHOP_DB_TYPE}" = "mysql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine mysql --host "127.0.0.1" --port "3306" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${PRESTASHOP_DB_TYPE}" = "postgres" ] || [ "${PRESTASHOP_DB_TYPE}" = "postgresql" ] || [ "${PRESTASHOP_DB_TYPE}" = "pgsql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine postgres --host "127.0.0.1" --port "5432" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${PRESTASHOP_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${PRESTASHOP_WWWROOT}/var/sqlite"
@@ -124,13 +123,13 @@ priv chown -R www-data:www-data "${PRESTASHOP_WWWROOT}" 2>/dev/null || priv chow
 
 if [ -z "${PRESTASHOP_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export PRESTASHOP_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export PRESTASHOP_PHP_FPM_LISTEN='unix:/run/php/php-fpm.sock'
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export PRESTASHOP_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export PRESTASHOP_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   elif [ -e /var/run/php-fpm.sock ]; then
-    export PRESTASHOP_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export PRESTASHOP_PHP_FPM_LISTEN='unix:/var/run/php-fpm.sock'
   else
-    export PRESTASHOP_PHP_FPM_LISTEN="127.0.0.1:9000"
+    export PRESTASHOP_PHP_FPM_LISTEN='127.0.0.1:9000'
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export PRESTASHOP_PHP_FPM_LISTEN="unix:$sock"
@@ -201,7 +200,7 @@ elif [ "${PRESTASHOP_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${PRESTASHOP_SERVER_NAME}.caddy"
   else

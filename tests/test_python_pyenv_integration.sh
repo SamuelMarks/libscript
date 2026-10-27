@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,40 +31,40 @@ export DIR="${SCRIPT_DIR}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 if ! command -v pyenv >/dev/null 2>&1; then
-  log_warn "pyenv is not installed or not in PATH. Skipping pyenv integration validation."
+  log_warn 'pyenv is not installed or not in PATH. Skipping pyenv integration validation.'
   exit 0
 fi
 
 # Set global environment variables to force 'pyenv'
-export LIBSCRIPT_PYTHON_BACKEND="pyenv"
+export LIBSCRIPT_PYTHON_BACKEND='pyenv'
 export LIBSCRIPT_PYTHON_VENV_BACKEND="venv" # venv will use the resolved pyenv path
 export LIBSCRIPT_HOME="${TMPDIR:-/tmp}/libscript_pyenv_test"
-export PYENV_VERSION="3.12.13"
+export PYENV_VERSION='3.12.13'
 
-log_info "Testing pyenv integration..."
+log_info 'Testing pyenv integration...'
 
 # Test 1: Resolve python executable via pyenv
-log_info "Testing Python resolution via pyenv..."
+log_info 'Testing Python resolution via pyenv...'
 # Source abstraction
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
 py_path=$(libscript_python_resolve)
 if [ -z "$py_path" ]; then
-    log_error "Failed to resolve python via pyenv."
+    log_error 'Failed to resolve python via pyenv.'
     exit 1
 fi
 log_info "Resolved python: $py_path"
 
 # Test 2: Create a venv using the resolved pyenv executable
-log_info "Testing venv creation using pyenv executable..."
+log_info 'Testing venv creation using pyenv executable...'
 VENV_DIR="${LIBSCRIPT_HOME}/test_venv"
 libscript_python_venv "${VENV_DIR}"
 if [ ! -d "${VENV_DIR}/bin" ] && [ ! -d "${VENV_DIR}/Scripts" ]; then
-    log_error "Failed to create venv using pyenv."
+    log_error 'Failed to create venv using pyenv.'
     exit 1
 fi
 log_info "Successfully created venv via pyenv at ${VENV_DIR}."
 
-log_info "Cleaning up..."
+log_info 'Cleaning up...'
 rm -rf "${LIBSCRIPT_HOME}"
 
-log_info "pyenv integration validation complete."
+log_info 'pyenv integration validation complete.'

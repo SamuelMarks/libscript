@@ -6,5 +6,6 @@
   "os_blacklist": ["sunos", "freebsd", "bsd"],
   "title": "rvm",
   "description": "Bootstrap module for the `rvm` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/rvm/rvm"
 }

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,6 +36,8 @@ unset SCRIPT_NAME || true
 
 export ELASTICSEARCH_HTTP_PORT="${ELASTICSEARCH_HTTP_PORT:-9200}"
 ELASTICSEARCH_VERSION="${ELASTICSEARCH_VERSION:-7.17.21}"
-if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${ELASTICSEARCH_VERSION}/bin" ]; then
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${ELASTICSEARCH_VERSION}/bin"
+if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${ELASTICSEARCH_VERSION}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elasticsearch/${ELASTICSEARCH_VERSION}/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

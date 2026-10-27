@@ -18,6 +18,14 @@
       "description": "Specific version of bun to install.",
       "type": "string",
       "default": "latest"
+    },
+    "BUN_PM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading bun-pm binary or archive artifacts."
+    },
+    "BUN_PM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying bun-pm available remote releases."
     }
   }
 }

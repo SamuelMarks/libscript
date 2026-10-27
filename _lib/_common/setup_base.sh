@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,6 +47,11 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
+# Source versioning and generic lifecycle action helpers
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/versioning.sh'
+export SCRIPT_NAME
+. "${SCRIPT_NAME}"
+
 # Source path resolution
 _SCRIPT_DIR_NAME="$(dirname -- "${THIS_FILE}")"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'
@@ -66,7 +70,7 @@ libscript_install_binary() {
   mkdir -p "$dest_dir"
 
   if [ -w "/usr/local/bin" ] && [ "${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}" = "system" ]; then
-    dest_dir="/usr/local/bin"
+    dest_dir='/usr/local/bin'
   fi
 
   log_info "Installing $bin_name to $dest_dir..."

@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -117,7 +116,7 @@ check_manifest_support() {
     }
     END {
       if (result == "yes" && has_wl && !wl_match) {
-        result="no"
+        result='no'
       }
       print result
     }
@@ -190,9 +189,9 @@ discover_all_entries() {
       # Disambiguate freebsd/distro and illumos/distro from orchestration/distro
       _display_comp="${_comp}"
       if [ "${_cat}" = "freebsd" ] && [ "${_comp}" = "distro" ]; then
-        _display_comp="freebsd/distro"
+        _display_comp='freebsd/distro'
       elif [ "${_cat}" = "illumos" ] && [ "${_comp}" = "distro" ]; then
-        _display_comp="illumos/distro"
+        _display_comp='illumos/distro'
       fi
       _tier=$(classify_tier "${_cat}" "${_comp}")
       _mfile=""
@@ -304,13 +303,13 @@ update_supported_components() {
       esac
     fi
 
-    _apk_status="-"
-    _deb_status="-"
-    _rpm_status="-"
-    _win_status="-"
-    _sunos_status="-"
-    _freebsd_status="-"
-    _macos_status="-"
+    _apk_status='-'
+    _deb_status='-'
+    _rpm_status='-'
+    _win_status='-'
+    _sunos_status='-'
+    _freebsd_status='-'
+    _macos_status='-'
 
     if [ -n "${_mfile}" ] && [ -f "${_mfile}" ]; then
       [ "$(check_manifest_support "${_mfile}" "alpine")" = "yes" ] && _apk_status="❓"
@@ -326,10 +325,10 @@ update_supported_components() {
           _apk_status="✅"
           _deb_status="✅"
           _rpm_status="✅"
-          _win_status="-"
-          _sunos_status="-"
+          _win_status='-'
+          _sunos_status='-'
           _freebsd_status="✅"
-          _macos_status="-"
+          _macos_status='-'
           ;;
         storage|runtimes|ml-training|topologies|payloads|traits)
           _apk_status="✅"
@@ -386,10 +385,10 @@ update_supported_components() {
       [ -n "${_e_macos}" ] && [ "${_macos_status}" != "-" ] && _macos_status="${_e_macos}"
     fi
 
-    _idempotent="false"
+    _idempotent='false'
     if [ -d "${_tests_tmp_dir}" ]; then
       if [ -f "${_tests_tmp_dir}/${_short_comp}.idempotent.success" ]; then
-        _idempotent="true"
+        _idempotent='true'
       fi
 
       # Alpine / apk

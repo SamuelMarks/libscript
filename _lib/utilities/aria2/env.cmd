@@ -7,12 +7,12 @@
 :: ## Usage
 :: Executes initialization, logic, or testing for aria2.
 
-:: Windows env stub for aria2
+:: Windows environment configuration and PATH probes for aria2
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -64,7 +64,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "aria2"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "aria2" "%ARIA2_VERSION%"
 
 endlocal & (
     set "ARIA2_VERSION=%ARIA2_VERSION%"

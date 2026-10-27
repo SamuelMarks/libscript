@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -66,7 +65,7 @@ if [ "${1:-}" = "--purge-db" ]; then
   if [ -x "${SCRIPT_DIR}/dbshell.sh" ] && [ -f "${WWWROOT}/wp-config.php" ]; then
     WORDPRESS_WWWROOT="${WWWROOT}" "${SCRIPT_DIR}/dbshell.sh" query "DROP DATABASE IF EXISTS \`${DB_NAME}\`; DROP USER IF EXISTS '${DB_USER}'@'localhost'; DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1'; FLUSH PRIVILEGES;" 2>/dev/null || true
   else
-    _client="mysql"
+    _client='mysql'
     command -v mariadb >/dev/null 2>&1 && _client="mariadb"
     if command -v "$_client" >/dev/null 2>&1; then
       priv "$_client" -u root -e \

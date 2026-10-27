@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": ["sunos"],
-  "ports": ["9092"]
+  "ports": ["9092"],
+  "repository": "https://github.com/apache/kafka"
 }

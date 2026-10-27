@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,20 +36,20 @@ export LIBSCRIPT_ROOT_DIR
 # Displays usage instructions and supported filesystem options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <device_or_slice> [fs_type] [pool_name]"
-  printf '%s\n' "Formats block partitions or creates structured ZFS root pools."
+  printf '%s\n' 'Formats block partitions or creates structured ZFS root pools.'
   printf '
 '
-  printf '%s\n' "Filesystem Types:"
-  printf '%s\n' "  fat32     - EFI System Partition (FAT32)"
-  printf '%s\n' "  ext4      - Linux Fourth Extended Filesystem (default)"
-  printf '%s\n' "  xfs       - Linux XFS high-performance filesystem"
-  printf '%s\n' "  btrfs     - Linux Btrfs copy-on-write filesystem"
-  printf '%s\n' "  ufs2      - FreeBSD Unix File System 2 with soft-updates"
-  printf '%s\n' "  zfs       - OpenZFS root pool with canonical dataset hierarchy"
+  printf '%s\n' 'Filesystem Types:'
+  printf '%s\n' '  fat32     - EFI System Partition (FAT32)'
+  printf '%s\n' '  ext4      - Linux Fourth Extended Filesystem (default)'
+  printf '%s\n' '  xfs       - Linux XFS high-performance filesystem'
+  printf '%s\n' '  btrfs     - Linux Btrfs copy-on-write filesystem'
+  printf '%s\n' '  ufs2      - FreeBSD Unix File System 2 with soft-updates'
+  printf '%s\n' '  zfs       - OpenZFS root pool with canonical dataset hierarchy'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then

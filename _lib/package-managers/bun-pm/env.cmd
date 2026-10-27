@@ -7,12 +7,12 @@
 :: ## Usage
 :: Executes initialization, logic, or testing for bun-pm.
 
-:: Windows env stub for bun-pm
+:: Windows environment configuration and PATH probes for bun-pm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -64,7 +64,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\bun-pm\%BUN_PM_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "bun-pm"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "bun-pm" "%BUN_PM_VERSION%"
 
 if exist "%~dp0..\..\languages\bun\env.cmd" (
     call "%~dp0..\..\languages\bun\env.cmd"
@@ -76,7 +76,7 @@ if exist "%~dp0..\..\languages\bun\env.cmd" (
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
     set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "bun-pm"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "bun-pm" "%BUN_PM_VERSION%"
 )
 
 endlocal & (

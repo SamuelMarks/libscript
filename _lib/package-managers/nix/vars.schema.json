@@ -13,6 +13,14 @@
       "description": "Specific version of nix to install.",
       "type": "string",
       "default": "latest"
+    },
+    "NIX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nix binary or archive artifacts."
+    },
+    "NIX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nix available remote releases."
     }
   },
   "description": "Configuration variables for nix"

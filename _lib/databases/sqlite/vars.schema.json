@@ -18,10 +18,6 @@
         "libscript_native",
         "from-source",
         "system",
-        "mise",
-        "asdf",
-        "pkgx",
-        "vfox",
         "nix",
         "brew",
         "winget",
@@ -97,6 +93,38 @@
     "SQLITE_LISTEN_SOCKET": {
       "type": "string",
       "description": "Unix socket for SQLITE to listen on"
+    },
+    "SQLITE_BIN": {
+      "type": "string",
+      "description": "Configuration variable SQLITE_BIN for sqlite."
+    },
+    "SQLITE_COMPARE_COMPILERS": {
+      "type": "string",
+      "description": "Configuration variable SQLITE_COMPARE_COMPILERS for sqlite."
+    },
+    "SQLITE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading sqlite binary or archive artifacts."
+    },
+    "SQLITE_EFFECTIVE_CFLAGS": {
+      "type": "string",
+      "description": "Configuration variable SQLITE_EFFECTIVE_CFLAGS for sqlite."
+    },
+    "SQLITE_EFFECTIVE_LDFLAGS": {
+      "type": "string",
+      "description": "Configuration variable SQLITE_EFFECTIVE_LDFLAGS for sqlite."
+    },
+    "SQLITE_PATH": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for sqlite (SQLITE_PATH)."
+    },
+    "SQLITE_PREFIX": {
+      "type": "string",
+      "description": "Configuration variable SQLITE_PREFIX for sqlite."
+    },
+    "SQLITE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying sqlite available remote releases."
     }
   }
 }

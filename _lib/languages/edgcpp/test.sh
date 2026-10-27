@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,8 +35,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 export LIBSCRIPT_ROOT_DIR
+_EDGCPP_DIR="${SCRIPT_DIR}"
 
-if [ ! -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default" ] && [ ! -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/7.0.1" ]; then
+if [ ! -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default" ] && [ ! -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1" ]; then
   unset SCRIPT_NAME || true
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install edgcpp 7.0.1
 fi
@@ -47,7 +47,9 @@ if [ -f "${SCRIPT_DIR}/env.sh" ]; then
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
 fi
+SCRIPT_DIR="${_EDGCPP_DIR}"
 
 # ## verify_edgcpp_binaries_and_headers
 # Verifies that the edgcpp installation contains cpfe, cpfe-cp, cdisp, mk_errinfo, edg_decode, and bundled standard headers.

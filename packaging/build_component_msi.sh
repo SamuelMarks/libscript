@@ -1,24 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
-# Decomposes full stack deployments into modular, reference-counted component MSIs.
-# Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
 #
 # ## Usage
-#   ./packaging/build_component_msi.sh [OPTIONS]
-#
-# ## Parameters
-#   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
-#   --version <ver>          Component release version (default: auto-detected from offline bundle)
-#   --variant <var>          Installer variant: online, offline, or all (default: all)
-#   --online                 Shorthand for --variant online
-#   --offline                Shorthand for --variant offline
-#   --out <name>             Output file base name or path (default: dist/msi/libscript-<component>-<version>.msi)
-#   --out-dir <dir>          Target directory for generated .msi (default: dist/msi)
-#   --offline-source <dir>   Cache directory containing source archives/binaries (default: cache)
-#   --hydrate                Force hydration of offline cache before building
-#   --branch <name>          Branch or tag ref (optional)
-#   --help, -h               Show this help text
+# ./packaging/build_component_msi.sh --component <name> [--version <ver>] [--variant <online|offline|all>] [--out <path>] [--hydrate]
 
 set -feu
 
@@ -27,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 COMPONENT=""
 VERSION=""
-VARIANT="all"
+VARIANT='all'
 OUT_FILE=""
 TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-x64}"
 BRANCH=""
@@ -113,11 +97,11 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --online)
-      VARIANT="online"
+      VARIANT='online'
       shift
       ;;
     --offline)
-      VARIANT="offline"
+      VARIANT='offline'
       shift
       ;;
     --out)
@@ -564,8 +548,8 @@ build_single_variant() {
     fi
   fi
 
-  _candle="candle"
-  _light="light"
+  _candle='candle'
+  _light='light'
   if [ "${OS:-}" = "Windows_NT" ]; then
     command -v candle.exe >/dev/null 2>&1 && _candle="candle.exe"
     command -v light.exe >/dev/null 2>&1 && _light="light.exe"

@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -58,7 +58,9 @@ if %errorlevel% equ 0 (
 )
 
 echo Installing scoop via official PowerShell bootstrap...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1 -OutFile $env:TEMP\install_scoop.ps1; & $env:TEMP\install_scoop.ps1 -RunAsAdmin; Remove-Item $env:TEMP\install_scoop.ps1 -Force -ErrorAction SilentlyContinue"
+set "_scoop_ps1=%TEMP%\install_scoop.ps1"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1" "!_scoop_ps1!" "SKIP"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '!_scoop_ps1!' -RunAsAdmin; Remove-Item '!_scoop_ps1!' -Force -ErrorAction SilentlyContinue"
 
 if exist "%USERPROFILE%\scoop\shims\scoop.cmd" (
     echo scoop installed successfully.

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,9 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${DRUPAL_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
 if [ "$(uname -s)" = "Darwin" ]; then
-  export DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-$HOME/.libscript/www/drupal}"
+  export DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-${HOME:-/root}/.libscript/www/drupal}"
 else
   export DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-/var/www/drupal}"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

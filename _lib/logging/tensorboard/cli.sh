@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ SCRIPT_DIR="$COMP_DIR"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0 <action> [args...]"
-  printf '%s\n' "See README.md for details."
+  printf '%s\n' 'See README.md for details.'
   exit 0
 fi
 
@@ -52,14 +51,14 @@ case "$ACTION" in
     PORT="${3:-6006}"
     # Ensure tensorboard is available
     if ! command -v tensorboard >/dev/null 2>&1; then
-      log_error "tensorboard not found. Please install the logging/tensorboard component first."
+      log_error 'tensorboard not found. Please install the logging/tensorboard component first.'
       exit 1
     fi
     log_info "Starting TensorBoard on port $PORT tracking $LOGDIR..."
     tensorboard --logdir="$LOGDIR" --port="$PORT" --host=0.0.0.0
     ;;
   *)
-    export PACKAGE_NAME="tensorboard"
+    export PACKAGE_NAME='tensorboard'
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
     export SCRIPT_NAME
     . "${SCRIPT_NAME}"

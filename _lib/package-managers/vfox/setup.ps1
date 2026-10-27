@@ -13,10 +13,13 @@ Execute this script to install and configure vfox on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 if (-not (Get-Command vfox -ErrorAction SilentlyContinue)) {
     Write-Host "Installing vfox using winget..."
-    winget install -e --id version-fox.vfox --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"version-fox.vfox\")
 } else {
     Write-Host "vfox is already installed."
 }

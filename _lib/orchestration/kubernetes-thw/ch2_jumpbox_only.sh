@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -54,7 +53,7 @@ while read -r URL || [ -n "$URL" ]; do
   URL=$(printf '%s' "$URL" | tr -d '\r')
   FILE="downloads/$(basename "$URL")"
   if [ ! -f "$FILE" ]; then
-    curl -sL -o "$FILE" "$URL"
+    libscript_download "$URL" "$FILE" "SKIP"
   fi
 done < "downloads-${ARCH}.txt"
 

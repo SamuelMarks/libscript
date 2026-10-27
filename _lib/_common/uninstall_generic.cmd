@@ -3,8 +3,7 @@
 ::
 :: ## Overview
 :: Provides fallback uninstallation logic for components on Windows.
-:: It handles delegating to third-party managers like mise/vfox,
-:: or safely removing the isolated native installation directories.
+:: Safely removes the isolated native installation directories and junctions.
 ::
 :: ## Usage
 :: Typically called internally by uninstall.cmd.
@@ -14,7 +13,7 @@ set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0

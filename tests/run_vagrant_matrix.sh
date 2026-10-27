@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -76,7 +75,7 @@ for vdir in $VAGRANT_DIRS; do
     for script_name in $TEST_SCRIPTS; do
         printf '\n[TEST] -> %s (in %s)\n' "$script_name" "$vdir"
         export LIBSCRIPT_TEST_TARGET="$script_name"
-        export VAGRANT_VAGRANTFILE="Vagrantfile"
+        export VAGRANT_VAGRANTFILE='Vagrantfile'
         
         # Determine the name of the VM so we can clean it up
         VM_NAME="${vdir}-test-${script_name}"

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ VERSION="${MYSQL_VERSION:-8.4.11}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ]; then
-    EXACT_VERSION="8.4.11"
+    EXACT_VERSION='8.4.11'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -82,27 +81,27 @@ case "$ACTION" in
     log_info "Installing MySQL (${VERSION}) via ${MYSQL_INSTALL_METHOD}..."
     if [ "$MYSQL_INSTALL_METHOD" = "system" ]; then
       if [ "${UNAME_LOWER}" = "freebsd" ]; then
-        log_info "Installing MySQL on FreeBSD via pkg..."
+        log_info 'Installing MySQL on FreeBSD via pkg...'
         libscript_depends "mysql84-client" "mysql84-server" || libscript_depends "mysql80-client" "mysql80-server" || libscript_depends "mysql-client" "mysql-server"
         if command -v sysrc >/dev/null 2>&1; then
           sysrc mysql_enable="YES" || true
         fi
       elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
-        log_info "Installing MySQL on SunOS / OmniOS..."
+        log_info 'Installing MySQL on SunOS / OmniOS...'
         libscript_depends "database/mysql-80" || libscript_depends "mysql"
         if command -v svcadm >/dev/null 2>&1; then
           svcadm enable svc:/database/mysql:default 2>/dev/null || true
         fi
       else
-        libscript_depends "mysql"
+        libscript_depends 'mysql'
         if [ -f "/etc/my.cnf.d/mariadb-server.cnf" ]; then
-          sed -i 's/^skip-networking/#skip-networking/' /etc/my.cnf.d/mariadb-server.cnf 2>/dev/null || true
+          libscript_sed_in_place 's/^skip-networking/#skip-networking/' /etc/my.cnf.d/mariadb-server.cnf 2>/dev/null || true
         fi
       fi
     else
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
-      libscript_depends "mysql"
+      libscript_depends 'mysql'
       if command -v mysqld >/dev/null 2>&1; then
         ln -sf "$(command -v mysqld)" "${TARGET_DIR}/bin/mysqld" 2>/dev/null || true
       fi
@@ -120,47 +119,7 @@ case "$ACTION" in
       mysqld --initialize-insecure --datadir="${DATA_DIR}" 2>/dev/null || true
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-mysql}"
-    libscript_service "$ACTION" "$service_name" "$@"
-    exit 0
-    ;;
-  install-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-mysql}"
-    libscript_install_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-mysql}"
-    libscript_uninstall_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall)
-    resolve_exact_version
-    log_info "Uninstalling MySQL ${EXACT_VERSION}..."
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${VERSION}"
-    exit 0
-    ;;
-  test)
-    if command -v mysql >/dev/null 2>&1; then
-      mysql --version
-      exit 0
-    elif command -v mysqld >/dev/null 2>&1; then
-      mysqld --version
-      exit 0
-    else
-      printf 'mysql binary not found in PATH\n' >&2
-      exit 1
-    fi
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "mysql" "$ACTION" "$VERSION" "${MYSQL_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

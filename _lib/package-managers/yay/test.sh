@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ -f /etc/alpine-release ]; then
-  echo "yay requires pacman and is not supported on Alpine Linux."
+  echo 'yay requires pacman and is not supported on Alpine Linux.'
   exit 0
 fi
 
@@ -49,7 +48,7 @@ fi
 if ! yay --version 2>/dev/null; then
   # On non-Arch distributions without compatible ALPM runtime, skip gracefully
   if [ ! -f /etc/arch-release ]; then
-    echo "yay requires an Arch Linux compatible ALPM runtime; skipping on non-Arch distribution."
+    echo 'yay requires an Arch Linux compatible ALPM runtime; skipping on non-Arch distribution.'
     exit 0
   fi
   yay --version

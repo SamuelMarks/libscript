@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,13 +36,13 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ -f /etc/alpine-release ]; then
-  echo "sdkman contains binaries compiled against glibc and cannot run properly on Alpine Linux."
+  echo 'sdkman contains binaries compiled against glibc and cannot run properly on Alpine Linux.'
   exit 0
 fi
 
 if command -v bash >/dev/null 2>&1; then
   bash -c "set +u +e; export SDKMAN_DIR=\"\${LIBSCRIPT_HOME:-\$HOME/.libscript}/sdkman/latest\"; . \"\$SDKMAN_DIR/bin/sdkman-init.sh\"; sdk version"
 else
-  printf '%s\n' "sdkman requires bash, which is not available."
+  printf '%s\n' 'sdkman requires bash, which is not available.'
   exit 0
 fi

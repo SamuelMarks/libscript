@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,7 +33,7 @@ export LIBSCRIPT_ROOT_DIR
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0"
-  printf '%s\n' "See README.md for details."
+  printf '%s\n' 'See README.md for details.'
   exit 0
 fi
 
@@ -48,7 +47,7 @@ fi
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 TPU_ZONE="${TPU_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$TPU_ZONE" ]; then
-  printf '%s\n' "[INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete."
+  printf '%s\n' '[INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete.'
   exit 0
 fi
 
@@ -59,4 +58,4 @@ gcloud auth print-access-token >/dev/null 2>&1 || gcloud auth login
 printf '%s\n' "Provisioning TPU VM with $TPU_DATA_DISK_SIZE GB persistent disk..."
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" create "$TPU_NAME"
 
-printf '%s\n' "Setup complete."
+printf '%s\n' 'Setup complete.'

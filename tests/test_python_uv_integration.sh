@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,48 +31,48 @@ export DIR="${SCRIPT_DIR}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 if ! command -v uv >/dev/null 2>&1; then
-  log_warn "uv is not installed. Skipping uv integration validation."
+  log_warn 'uv is not installed. Skipping uv integration validation.'
   exit 0
 fi
 
 # Set global environment variables to force 'uv'
-export LIBSCRIPT_PYTHON_BACKEND="uv"
-export LIBSCRIPT_PYTHON_VENV_BACKEND="uv"
+export LIBSCRIPT_PYTHON_BACKEND='uv'
+export LIBSCRIPT_PYTHON_VENV_BACKEND='uv'
 export LIBSCRIPT_HOME="${TMPDIR:-/tmp}/libscript_uv_test"
 export DOWNLOAD_DIR="${LIBSCRIPT_HOME}/downloads"
 
-log_info "Testing uv integration..."
+log_info 'Testing uv integration...'
 
 # Test 1: Resolve python executable via uv
-log_info "Testing Python resolution via uv..."
+log_info 'Testing Python resolution via uv...'
 # Source abstraction
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
 py_path=$(libscript_python_resolve)
 if [ -z "$py_path" ]; then
-    log_error "Failed to resolve python via uv."
+    log_error 'Failed to resolve python via uv.'
     exit 1
 fi
 log_info "Resolved python: $py_path"
 
 # Test 2: xpk setup
-log_info "Testing xpk setup via uv..."
-export ACTION="install"
-export VERSION="latest"
-export PACKAGE_NAME="xpk"
-export XPK_INSTALL_METHOD="libscript_native"
+log_info 'Testing xpk setup via uv...'
+export ACTION='install'
+export VERSION='latest'
+export PACKAGE_NAME='xpk'
+export XPK_INSTALL_METHOD='libscript_native'
 sh "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/xpk/setup_generic.sh"
 
 if [ ! -f "${LIBSCRIPT_HOME}/xpk/latest/bin/xpk" ] && [ ! -f "${LIBSCRIPT_HOME}/xpk/latest/Scripts/xpk.exe" ]; then
     # Note: latest might not be the exact version name used if xpk defaults to something else
     # Let's just check if the directory was created by uv
     if [ ! -d "${LIBSCRIPT_HOME}/xpk" ]; then
-      log_error "xpk installation via uv failed."
+      log_error 'xpk installation via uv failed.'
       exit 1
     fi
 fi
-log_info "xpk setup via uv successful."
+log_info 'xpk setup via uv successful.'
 
-log_info "Cleaning up..."
+log_info 'Cleaning up...'
 rm -rf "${LIBSCRIPT_HOME}"
 
-log_info "uv integration validation complete."
+log_info 'uv integration validation complete.'

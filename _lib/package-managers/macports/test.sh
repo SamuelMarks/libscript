@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ "$UNAME_LOWER" != "darwin" ]; then
-  echo "macports is only supported on macOS."
+  echo 'macports is only supported on macOS.'
   exit 0
 fi
 
@@ -44,6 +43,6 @@ if command -v port >/dev/null 2>&1; then
 elif command -v macports >/dev/null 2>&1; then
   macports --version
 else
-  echo "MacPorts installed."
+  echo 'MacPorts installed.'
   exit 0
 fi

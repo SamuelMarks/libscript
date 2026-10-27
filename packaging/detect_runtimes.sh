@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,9 +34,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 detect_python() {
   _py=""
   if command -v python3 >/dev/null 2>&1; then
-    _py="python3"
+    _py='python3'
   elif command -v python >/dev/null 2>&1; then
-    _py="python"
+    _py='python'
   fi
 
   if [ -n "$_py" ]; then

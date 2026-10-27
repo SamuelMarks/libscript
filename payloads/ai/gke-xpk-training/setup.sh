@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,14 +47,14 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-libscript_depends "gcp-cli" "python" "kubectl" "xpk"
+libscript_depends 'gcp-cli' 'python' 'kubectl' 'xpk'
 
 CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
 
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  log_info "GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete."
+  log_info 'GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete.'
   exit 0
 fi
 
@@ -71,4 +70,4 @@ else
     --project "$GCP_PROJECT_ID" \
     --zone "$GCP_ZONE"
 fi
-log_info "Setup complete."
+log_info 'Setup complete.'

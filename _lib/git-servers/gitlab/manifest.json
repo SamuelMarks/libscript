@@ -8,5 +8,6 @@
   "ports": ["80", "443", "22"],
   "title": "Gitlab",
   "description": "LibScript component for GITLAB",
-  "category": "uncategorized"
+  "category": "uncategorized",
+  "repository": "https://gitlab.com/gitlab-org/gitlab"
 }

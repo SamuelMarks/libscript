@@ -21,8 +21,28 @@
     "AWS_INSTALL_METHOD": {
       "description": "How to install AWS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
+    },
+    "AWS_AMI_NAME": {
+      "type": "string",
+      "description": "Configuration variable AWS_AMI_NAME for aws."
+    },
+    "AWS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading aws binary or archive artifacts."
+    },
+    "AWS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying aws available remote releases."
+    },
+    "AWS_S3_BUCKET": {
+      "type": "string",
+      "description": "Configuration variable AWS_S3_BUCKET for aws."
+    },
+    "AWS_VERSION": {
+      "type": "string",
+      "description": "Specific version of aws to install (e.g., latest, lts, or exact version)."
     }
   }
 }

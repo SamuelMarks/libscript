@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ VERSION="${UWSGI_VERSION:-2.0.24}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ]; then
-    EXACT_VERSION="2.0.24"
+    EXACT_VERSION='2.0.24'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -82,7 +81,7 @@ case "$ACTION" in
     TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
     mkdir -p "${TARGET_DIR}/bin"
     if [ "$(uname -s)" = "FreeBSD" ]; then
-      libscript_depends "uwsgi"
+      libscript_depends 'uwsgi'
       if command -v uwsgi >/dev/null 2>&1; then
         ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
       fi
@@ -90,11 +89,11 @@ case "$ACTION" in
     elif [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ]; then
       if ! command -v uv >/dev/null 2>&1; then
         if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
-          log_info "Python runtime required for uwsgi. Installing python..."
-          libscript_depends "python" || true
+          log_info 'Python runtime required for uwsgi. Installing python...'
+          libscript_depends 'python' || true
         fi
         if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
-          libscript_depends "c" || true
+          libscript_depends 'c' || true
         fi
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
@@ -128,50 +127,13 @@ case "$ACTION" in
         elif command -v pip >/dev/null 2>&1; then
           pip install --user uwsgi || python3 -m pip install --user uwsgi
         else
-          libscript_depends "python"
+          libscript_depends 'python'
           python3 -m pip install --user uwsgi || true
         fi
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-uwsgi}"
-    libscript_service "$ACTION" "$service_name" "$@"
-    exit 0
-    ;;
-  install-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-uwsgi}"
-    libscript_install_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-uwsgi}"
-    libscript_uninstall_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall)
-    resolve_exact_version
-    log_info "Uninstalling uWSGI ${EXACT_VERSION}..."
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${VERSION}"
-    exit 0
-    ;;
-  test)
-    if command -v uwsgi >/dev/null 2>&1; then
-      uwsgi --version
-      exit 0
-    else
-      printf 'uwsgi binary not found in PATH\n' >&2
-      exit 1
-    fi
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "uwsgi" "$ACTION" "$VERSION" "${UWSGI_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

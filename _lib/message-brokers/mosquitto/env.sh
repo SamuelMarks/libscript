@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,4 +38,6 @@ export LIBSCRIPT_LISTEN_PORT="${MOSQUITTO_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
 
 export MOSQUITTO_INSTALL_METHOD="${MOSQUITTO_INSTALL_METHOD:-system}"
 MOSQUITTO_VERSION="${MOSQUITTO_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/mosquitto/${MOSQUITTO_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mosquitto/${MOSQUITTO_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

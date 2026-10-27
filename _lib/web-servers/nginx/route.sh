@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,7 +33,7 @@ LOCATION="$2"
 DESTINATION="$3"
 
 if [ -z "$DOMAIN" ] || [ -z "$LOCATION" ] || [ -z "$DESTINATION" ]; then
-  printf '%s\n' "Usage: ./libscript.sh route nginx <version> <domain> <location> <destination>" >&2
+  printf '%s\n' 'Usage: ./libscript.sh route nginx <version> <domain> <location> <destination>' >&2
   exit 1
 fi
 
@@ -46,10 +45,10 @@ CONF_FILE="$NGINX_CONF_DIR/sites-available/${DOMAIN}.conf"
 
 if [ ! -f "$CONF_FILE" ]; then
   {
-    printf '%s\n' "server {"
-    printf '%s\n' "    listen 80;"
+    printf '%s\n' 'server {'
+    printf '%s\n' '    listen 80;'
     printf '%s\n' "    server_name $DOMAIN;"
-    printf '%s\n' "}"
+    printf '%s\n' '}'
   } > "$CONF_FILE"
 fi
 

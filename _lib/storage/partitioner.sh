@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,22 +36,22 @@ export LIBSCRIPT_ROOT_DIR
 # Displays usage information and supported options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <device_or_image> [scheme] [boot_mode] [swap_mib]"
-  printf '%s\n' "Partitions storage media for Linux, FreeBSD, or illumos installations."
+  printf '%s\n' 'Partitions storage media for Linux, FreeBSD, or illumos installations.'
   printf '
 '
-  printf '%s\n' "Schemes:"
-  printf '%s\n' "  gpt       - GUID Partition Table for modern UEFI and hybrid systems (default)"
-  printf '%s\n' "  mbr       - Master Boot Record for legacy BIOS hardware"
-  printf '%s\n' "  vtoc      - Solaris / illumos SMI VTOC slice partition table"
+  printf '%s\n' 'Schemes:'
+  printf '%s\n' '  gpt       - GUID Partition Table for modern UEFI and hybrid systems (default)'
+  printf '%s\n' '  mbr       - Master Boot Record for legacy BIOS hardware'
+  printf '%s\n' '  vtoc      - Solaris / illumos SMI VTOC slice partition table'
   printf '
 '
-  printf '%s\n' "Boot Modes:"
-  printf '%s\n' "  uefi      - UEFI boot (creates 512MB FAT32 ESP partition)"
-  printf '%s\n' "  bios      - Legacy BIOS boot (creates 1MB BIOS boot partition on GPT)"
+  printf '%s\n' 'Boot Modes:'
+  printf '%s\n' '  uefi      - UEFI boot (creates 512MB FAT32 ESP partition)'
+  printf '%s\n' '  bios      - Legacy BIOS boot (creates 1MB BIOS boot partition on GPT)'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then

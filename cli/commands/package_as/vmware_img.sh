@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,7 +64,7 @@ case "$OUT_FILE" in
     rm -rf "$OVA_STAGE"
     mkdir -p "$OVA_STAGE"
 
-    VMDK_NAME="disk.vmdk"
+    VMDK_NAME='disk.vmdk'
     mv -f "$OUT_FILE" "$OVA_STAGE/$VMDK_NAME"
 
     cat <<EOF > "$OVA_STAGE/appliance.ovf"

@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,8 +34,8 @@ THIS_DIR="$(dirname "$THIS_FILE")"
 
 APP_ID=""
 SERVER_NAME=""
-PROXY_ENGINE="nginx"
-LISTEN_PORT="80"
+PROXY_ENGINE='nginx'
+LISTEN_PORT='80'
 TARGET=""
 DOC_ROOT=""
 CONF_FILE=""

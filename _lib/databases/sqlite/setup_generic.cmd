@@ -13,7 +13,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -124,10 +124,6 @@ if /i "%SQLITE_INSTALL_METHOD%"=="winget" goto :install_sqlite_via_pkg_mgr
 if /i "%SQLITE_INSTALL_METHOD%"=="choco" goto :install_sqlite_via_pkg_mgr
 if /i "%SQLITE_INSTALL_METHOD%"=="scoop" goto :install_sqlite_via_pkg_mgr
 if /i "%SQLITE_INSTALL_METHOD%"=="vcpkg" goto :install_sqlite_via_pkg_mgr
-if /i "%SQLITE_INSTALL_METHOD%"=="mise" ( mise install "sqlite@%SQLITE_VERSION%" & exit /b 0 )
-if /i "%SQLITE_INSTALL_METHOD%"=="asdf" ( asdf install sqlite "%SQLITE_VERSION%" & exit /b 0 )
-if /i "%SQLITE_INSTALL_METHOD%"=="pkgx" ( pkgx install "sqlite@%SQLITE_VERSION%" & exit /b 0 )
-if /i "%SQLITE_INSTALL_METHOD%"=="vfox" ( vfox add sqlite & vfox install "sqlite@%SQLITE_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\sqlite\%EXACT_VERSION%"
 if exist "%TARGET_DIR%\bin\sqlite3.exe" (
@@ -186,25 +182,14 @@ if exist "%LIBSCRIPT_HOME%\sqlite\%EXACT_VERSION%" rmdir /s /q "%LIBSCRIPT_HOME%
 exit /b 0
 
 :: ## action_service
-:: Routes service actions for SQLite to service.cmd.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-set "SVC_NAME=libscript_sqlite"
-if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-exit /b 0
-
 :: ## action_install_service
-:: Installs a service definition for SQLite via service_install.cmd.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
-set "SVC_NAME=libscript_sqlite"
-if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-exit /b 0
-
 :: ## action_uninstall_service
-:: Uninstalls the service definition for SQLite via service_install.cmd.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
-set "SVC_NAME=libscript_sqlite"
-if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "sqlite" "%ACTION%" "%SQLITE_VERSION%" "%SQLITE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\\bin\\sqlite.exe\"" "%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
+exit /b !errorlevel!

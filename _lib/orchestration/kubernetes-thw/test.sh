@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -53,7 +52,7 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
 
   for i in $(dc -e '0 1 '"${VAGRANT_N}"' stsisb[pli+dlt>a]salblax'); do
     if [ "$i" -eq 0 ]; then
-      HOST="server"
+      HOST='server'
       SUBNET=""
     else
       HOST="node-$((i-1))"
@@ -67,7 +66,7 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
     fi
     
     FQDN="${HOST}.kubernetes.local"
-    printf '%s %s %s %s\n' "$IP" "$FQDN" "$HOST" "$SUBNET" >> "${MACHINES_TXT}"
+    grep -qF "$IP $FQDN $HOST $SUBNET" "${MACHINES_TXT}" 2>/dev/null || printf '%s %s %s %s\n' "$IP" "$FQDN" "$HOST" "$SUBNET" >> "${MACHINES_TXT}"
   done
 
   if [ ! -d ~/.ssh ]; then
@@ -102,8 +101,11 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
     fi
     
     touch ~/.ssh/config
-    sed -i.bak "/^Host $HOST$/,/^$/d" ~/.ssh/config 2>/dev/null || true
-    rm -f ~/.ssh/config.bak
+    if sed "/^Host $HOST$/,/^$/d" ~/.ssh/config > ~/.ssh/config.tmp 2>/dev/null; then
+      mv ~/.ssh/config.tmp ~/.ssh/config
+    else
+      rm -f ~/.ssh/config.tmp
+    fi
     printf 'Host %s
   HostName %s
   Port %s
@@ -161,10 +163,10 @@ EOF'" < /dev/null
 
   ssh root@server "kubectl get nodes --kubeconfig admin.kubeconfig"
   if ! ssh root@server "kubectl get nodes --kubeconfig admin.kubeconfig" | grep -qi ready; then
-    echo "Kubernetes nodes are not ready!"
+    echo 'Kubernetes nodes are not ready!'
     exit 1
   fi
-  echo "Kubernetes is fully green!"
+  echo 'Kubernetes is fully green!'
   exit 0
 fi
 

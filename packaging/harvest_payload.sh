@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,8 +45,8 @@ SOURCE_DIR=""
 OUTPUT_DIR=""
 MANIFEST_FILE=""
 WIX_FRAGMENT=""
-COMPONENT_GROUP="LibscriptHarvestedComponents"
-DIRECTORY_ID="LIBSCRIPT_FOLDER"
+COMPONENT_GROUP='LibscriptHarvestedComponents'
+DIRECTORY_ID='LIBSCRIPT_FOLDER'
 ROOT_DIR="${LIBSCRIPT_ROOT_DIR}"
 INCLUDE_CACHE=""
 INCLUDE_MSI=0

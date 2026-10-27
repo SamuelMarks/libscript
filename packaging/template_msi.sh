@@ -20,7 +20,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,7 +45,7 @@ fi
 shift
 
 OUT_FILE=""
-VARIANT="online"
+VARIANT='online'
 VERSION_OVERRIDE=""
 TARGET_ARCH="${TARGET_ARCH:-x64}"
 MSI_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"

@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,11 +35,16 @@ unset SCRIPT_NAME || true
 
 HUGGINGFACE_CLI_VERSION="${HUGGINGFACE_CLI_VERSION:-latest}"
 if [ "${HUGGINGFACE_CLI_VERSION}" = "latest" ]; then
-  EXACT_VERSION="latest"
+  EXACT_VERSION='latest'
 else
   EXACT_VERSION="${HUGGINGFACE_CLI_VERSION}"
 fi
 
-export HUGGINGFACE_CLI_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/${EXACT_VERSION}"
+export HUGGINGFACE_CLI_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/huggingface-cli/${EXACT_VERSION}"
 libscript_path_prepend "${HUGGINGFACE_CLI_DIR}/bin"
-export PYTHONPATH="${HUGGINGFACE_CLI_DIR}:${PYTHONPATH:-}"
+case ":${PYTHONPATH:-}:" in
+  *":${HUGGINGFACE_CLI_DIR}:"*) ;;
+  *) export PYTHONPATH="${HUGGINGFACE_CLI_DIR}${PYTHONPATH:+:${PYTHONPATH}}" ;;
+esac
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

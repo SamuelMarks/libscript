@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,10 +44,10 @@ BUILD_DIR="${2:-${REPO_ROOT}/build/live-freebsd}"
 # Displays usage instructions and supported options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [output_path] [build_dir]"
-  printf '%s\n' "Synthesizes live-CD/live-USB bootable FreeBSD images with msi-rs."
+  printf '%s\n' 'Synthesizes live-CD/live-USB bootable FreeBSD images with msi-rs.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -70,7 +69,7 @@ mkdir -p "$(dirname "$OUTPUT_PATH")"
 ROOTFS="$BUILD_DIR/rootfs"
 mkdir -p "$ROOTFS"
 
-FREEBSD_VERSION="14.1-RELEASE"
+FREEBSD_VERSION='14.1-RELEASE'
 BASE_URL="https://download.freebsd.org/ftp/releases/amd64/${FREEBSD_VERSION}/base.txz"
 KERNEL_URL="https://download.freebsd.org/ftp/releases/amd64/${FREEBSD_VERSION}/kernel.txz"
 
@@ -78,19 +77,11 @@ BASE_ARCHIVE="${BUILD_DIR}/base.txz"
 KERNEL_ARCHIVE="${BUILD_DIR}/kernel.txz"
 
 if [ ! -f "${BASE_ARCHIVE}" ]; then
-  if type libscript_download >/dev/null 2>&1; then
-    libscript_download "${BASE_URL}" "${BASE_ARCHIVE}"
-  else
-    curl -sSLf "${BASE_URL}" -o "${BASE_ARCHIVE}" || wget -qO "${BASE_ARCHIVE}" "${BASE_URL}"
-  fi
+  libscript_download "${BASE_URL}" "${BASE_ARCHIVE}"
 fi
 
 if [ ! -f "${KERNEL_ARCHIVE}" ]; then
-  if type libscript_download >/dev/null 2>&1; then
-    libscript_download "${KERNEL_URL}" "${KERNEL_ARCHIVE}"
-  else
-    curl -sSLf "${KERNEL_URL}" -o "${KERNEL_ARCHIVE}" || wget -qO "${KERNEL_ARCHIVE}" "${KERNEL_URL}"
-  fi
+  libscript_download "${KERNEL_URL}" "${KERNEL_ARCHIVE}"
 fi
 
 if [ ! -f "${BUILD_DIR}/.rootfs_extracted" ]; then

@@ -14,6 +14,14 @@
       "description": "Specific version of swupd to install.",
       "type": "string",
       "default": "latest"
+    },
+    "SWUPD_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading swupd binary or archive artifacts."
+    },
+    "SWUPD_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying swupd available remote releases."
     }
   }
 }

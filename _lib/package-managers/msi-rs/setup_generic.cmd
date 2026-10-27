@@ -15,7 +15,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -109,7 +109,7 @@ exit /b 0
 :: Lists upstream release versions available for download.
 :action_ls_remote
 if not "%MSI_RS_RELEASES_URL%"=="" (
-    curl -sSL "%MSI_RS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MSI_RS_RELEASES_URL%"
 ) else (
     git ls-remote --tags "%MSI_RS_REPO_URL%" 2>nul | findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
     if errorlevel 1 echo 0.0.1
@@ -132,8 +132,11 @@ if not exist "%TARGET_DIR%" (
 )
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%"
 mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
@@ -292,8 +295,11 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
 :: Performs the link_aliases operation and updates component state.
 :link_aliases
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%"
 mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
@@ -320,46 +326,14 @@ if exist "%TARGET_DIR%\bin\msi-cli.exe" (
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-set "SVC_NAME=libscript_msi-rs"
-if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-)
-exit /b 0
-
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
-set "SVC_NAME=libscript_msi-rs"
-if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-)
-exit /b 0
-
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
-set "SVC_NAME=libscript_msi-rs"
-if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-)
-exit /b 0
-
-:: ## action_uninstall
-:: Uninstalls the component and removes its isolated version directory.
-:action_uninstall
-set "EXACT_VERSION=%MSI_RS_VERSION%"
-if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=v0.0.1"
-set "TARGET_DIR=%LIBSCRIPT_HOME%\msi-rs\%EXACT_VERSION%"
-set "ALIAS_DIR=%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%"
-set "DEFAULT_DIR=%LIBSCRIPT_HOME%\msi-rs\default"
-
-if exist "%TARGET_DIR%" rmdir /s /q "%TARGET_DIR%"
-if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%"
-echo msi-rs %EXACT_VERSION% uninstalled.
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "msi-rs" "%ACTION%" "%MSI_RS_VERSION%" "%MSI_RS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%\\bin\\msi-rs.exe\"" "%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%"
+exit /b !errorlevel!

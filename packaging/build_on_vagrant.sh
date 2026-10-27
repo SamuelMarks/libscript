@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,10 +38,10 @@ KEY=~/.vagrant.d/insecure_private_key
 SSH_CMD="ssh -p $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY vagrant@$VM_IP"
 SCP_CMD="scp -P $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY"
 
-echo "[INFO] Creating directories on VM..."
+echo '[INFO] Creating directories on VM...'
 $SSH_CMD "powershell -Command \"New-Item -ItemType Directory -Force -Path C:\libscript\packaging\""
 
-echo "[INFO] Uploading WXS files..."
+echo '[INFO] Uploading WXS files...'
 $SCP_CMD OpenEdX-Setup.wxs OpenEdX-Setup_payload.wxs OpenEdX-Setup-Offline.wxs OpenEdX-Setup-Offline_payload.wxs vagrant@$VM_IP:C:/libscript/packaging/
 
 cat << 'PS1_EOF' > build.ps1
@@ -62,7 +61,7 @@ PS1_EOF
 $SCP_CMD build.ps1 vagrant@$VM_IP:C:/libscript/packaging/build.ps1
 $SSH_CMD "powershell -ExecutionPolicy Bypass -File C:\libscript\packaging\build.ps1"
 
-echo "[INFO] Downloading MSIs..."
+echo '[INFO] Downloading MSIs...'
 $SCP_CMD vagrant@$VM_IP:C:/libscript/packaging/OpenEdX-Setup.msi .
 $SCP_CMD vagrant@$VM_IP:C:/libscript/packaging/OpenEdX-Setup-Offline.msi .
-echo "[PASS] Done!"
+echo '[PASS] Done!'

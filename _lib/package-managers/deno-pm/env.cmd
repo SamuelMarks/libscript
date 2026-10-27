@@ -7,12 +7,12 @@
 :: ## Usage
 :: Executes initialization, logic, or testing for deno-pm.
 
-:: Windows env stub for deno-pm
+:: Windows environment configuration and PATH probes for deno-pm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -64,7 +64,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\deno-pm\%DENO_PM_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "deno-pm"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "deno-pm" "%DENO_PM_VERSION%"
 
 if exist "%~dp0..\..\languages\deno\env.cmd" (
     call "%~dp0..\..\languages\deno\env.cmd"
@@ -73,7 +73,7 @@ if exist "%~dp0..\..\languages\deno\env.cmd" (
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
     set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "deno-pm"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "deno-pm" "%DENO_PM_VERSION%"
 )
 
 endlocal & (

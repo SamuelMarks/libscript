@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -67,7 +66,7 @@ MODEL_NAME="${MODEL_NAME:-your-org/your-model-name}"
 WORKLOAD_CMD="${WORKLOAD_CMD:-${SERVE_CMD:-}}"
 if [ -z "$WORKLOAD_CMD" ]; then
   if [ "$MODEL_NAME" = "your-org/your-model-name" ] || [ -z "$MODEL_NAME" ]; then
-    log_error "MODEL_NAME or WORKLOAD_CMD must be explicitly specified."
+    log_error 'MODEL_NAME or WORKLOAD_CMD must be explicitly specified.'
     exit 1
   fi
   WORKLOAD_CMD="python -m vllm.entrypoints.openai.api_server --model $MODEL_NAME --tensor-parallel-size ${TPU_TENSOR_PARALLEL_SIZE:-1}"
@@ -80,7 +79,7 @@ NUM_SLICES="${NUM_SLICES:-${TPU_SLICE_COUNT:-1}}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  log_error "GCP_PROJECT_ID and GCP_ZONE must be explicitly specified."
+  log_error 'GCP_PROJECT_ID and GCP_ZONE must be explicitly specified.'
   exit 1
 fi
 
@@ -106,4 +105,4 @@ log_info "Deploying workload $WORKLOAD_NAME to XPK cluster $CLUSTER_NAME..."
 # shellcheck disable=SC2086
 xpk workload create --cluster "$CLUSTER_NAME" --workload "$WORKLOAD_NAME" --command "$WORKLOAD_CMD" --tpu-type "${TPU_ACCELERATOR_TYPE:-v4-8}" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --docker-image "$DOCKER_IMAGE" $EXTRA_XPK_FLAGS
 
-log_info "Deploy complete."
+log_info 'Deploy complete.'

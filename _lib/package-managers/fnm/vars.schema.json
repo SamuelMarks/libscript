@@ -18,6 +18,14 @@
       "description": "Specific version of fnm to install.",
       "type": "string",
       "default": "latest"
+    },
+    "FNM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading fnm binary or archive artifacts."
+    },
+    "FNM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying fnm available remote releases."
     }
   }
 }

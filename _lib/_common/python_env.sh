@@ -1,33 +1,17 @@
 #!/bin/sh
 # ## Overview
-# This module provides utilities for managing Python virtual environments,
-# resolving Python executable versions, and ensuring ownership/symlink integrity.
-# It abstracts the underlying toolchain (`venv`, `uv`, `pyenv`, etc.) behind common functions.
+# Utilities for managing Python virtual environments, resolving Python versions, and ensuring ownership/symlink integrity.
 #
 # ## Usage
-# Source this file to use `libscript_python_venv`, `libscript_python_resolve`, and
-# `libscript_python_ensure_venv_owner`.
-#
-# ```sh
-# . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-#
-# # Resolve a Python executable
-# PYTHON_EXE=$(libscript_python_resolve "3.11")
-#
-# # Create a virtual environment
-# libscript_python_venv "/path/to/venv" "3.11"
-#
-# # Ensure a project directory's .venv is accessible by the service user
-# libscript_python_ensure_venv_owner "/path/to/project" "3.12" "azureuser" "/home/ubuntu"
-# ```
+# Source this file (`. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"`) to use `libscript_python_venv`, `libscript_python_resolve`, and `libscript_python_ensure_venv_owner`.
 
 set -feu
+_pe_caller_this="${THIS_FILE:-}"; _pe_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,6 +21,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_pe_caller_this" ] && THIS_FILE="$_pe_caller_this"
+    [ -n "$_pe_caller_dir" ] && SCRIPT_DIR="$_pe_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -44,7 +30,11 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 # ## libscript_resolve_user_home
 # Resolves the home directory for a given system username across Linux, BSD, and macOS.
@@ -101,7 +91,7 @@ libscript_python_resolve() {
           pyenv which python || return 1
         fi
       else
-        log_error "pyenv is not installed or not in PATH."
+        log_error 'pyenv is not installed or not in PATH.'
         return 1
       fi
       ;;
@@ -154,7 +144,7 @@ libscript_python_resolve() {
 # Creates a Python virtual environment at the specified directory.
 libscript_python_venv() {
   if [ "$#" -lt 1 ]; then
-    log_error "Usage: libscript_python_venv <target_dir> [python_version]"
+    log_error 'Usage: libscript_python_venv <target_dir> [python_version]'
     return 1
   fi
 
@@ -180,7 +170,7 @@ libscript_python_venv() {
       fi
       _venv_args=""
       if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${PIP_NO_INDEX:-0}" = "1" ]; then
-        _venv_args="--without-pip"
+        _venv_args='--without-pip'
       fi
       if ! "${_python_exe}" -m venv ${_venv_args} "${_target_dir}"; then
         if [ -z "${_venv_args}" ]; then
@@ -220,7 +210,7 @@ libscript_python_ensure_venv_owner() {
   fi
 
   if [ -z "$_venv_ver" ] || [ "$_venv_ver" = "null" ] || [ "$_venv_ver" = "latest" ] || [ "$_venv_ver" = "default" ]; then
-    _venv_ver="3.12"
+    _venv_ver='3.12'
   fi
   if [ -z "$_venv_home" ]; then
     _venv_home=$(libscript_resolve_user_home "$_venv_user")
@@ -252,3 +242,9 @@ libscript_python_ensure_venv_owner() {
     chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || sudo -n chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || true
   fi
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_pe_caller_dir:-}" ] && SCRIPT_DIR="$_pe_caller_dir"
+[ -n "${_pe_caller_this:-}" ] && THIS_FILE="$_pe_caller_this"
+unset _pe_caller_this _pe_caller_dir || true

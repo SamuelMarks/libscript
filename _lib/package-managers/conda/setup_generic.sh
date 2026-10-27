@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$CONDA_INSTALL_METHOD" = "mise" ]; then
-      mise ls conda || true
-    elif [ "$CONDA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list conda || true
-    elif [ "$CONDA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$CONDA_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls conda || true
-    elif [ "$CONDA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "conda" "$ACTION" "$VERSION" "${CONDA_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$CONDA_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote conda || true
-    elif [ "$CONDA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all conda || true
-    elif [ "$CONDA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$CONDA_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all conda || true
+    if [ -n "${CONDA_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${CONDA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${CONDA_RELEASES_URL:-}" ]; then
-        curl -sSL "${CONDA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/conda/conda" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/conda/conda" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$CONDA_INSTALL_METHOD" = "mise" ]; then
-      mise use "conda@${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "asdf" ]; then
-      asdf global conda "${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$CONDA_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "conda@${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "conda@${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "conda" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "conda" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "conda ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "conda" "default" "${EXACT_VERSION}"
-      log_info "Set default conda version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env conda \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "conda" "$ACTION" "$VERSION" "${CONDA_INSTALL_METHOD}"
     ;;
   download)
     if [ "$CONDA_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$CONDA_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "conda"
-    elif [ "$CONDA_INSTALL_METHOD" = "mise" ]; then
-      mise install "conda@${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "asdf" ]; then
-      asdf install conda "${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "conda@${VERSION}"
-    elif [ "$CONDA_INSTALL_METHOD" = "vfox" ]; then
-      vfox add conda || true
-      vfox install "conda@${VERSION}"
+      libscript_depends 'conda'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -160,7 +98,7 @@ case "$ACTION" in
       if [ ! -x "${TARGET_DIR}/bin/conda" ]; then
         log_info "Installing conda ${VERSION} natively to ${TARGET_DIR}..."
         if [ -f /etc/alpine-release ]; then
-          log_info "Package is not supported on Alpine Linux (musl)."
+          log_info 'Package is not supported on Alpine Linux (musl).'
           mkdir -p "${TARGET_DIR}/bin"
           echo '#!/bin/sh' > "${TARGET_DIR}/bin/conda"
           echo 'echo "Conda is not supported on Alpine Linux (musl)."' >> "${TARGET_DIR}/bin/conda"
@@ -175,7 +113,7 @@ case "$ACTION" in
             URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${MINICONDA_ARCH}.sh"
           fi
           TEMP_FILE=$(mktemp --suffix=.sh 2>/dev/null || mktemp /tmp/miniconda_XXXXXX.sh)
-          libscript_depends "curl"
+          libscript_depends 'curl'
           if ! libscript_download "$URL" "$TEMP_FILE"; then
             log_error "Failed to download conda from $URL"
             rm -f "$TEMP_FILE"
@@ -194,52 +132,7 @@ case "$ACTION" in
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$CONDA_INSTALL_METHOD" = "libscript_native" ] || [ "$CONDA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-conda}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $CONDA_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "conda" "$ACTION" "$VERSION" "${CONDA_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$CONDA_INSTALL_METHOD" = "libscript_native" ] || [ "$CONDA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-conda}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $CONDA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$CONDA_INSTALL_METHOD" = "libscript_native" ] || [ "$CONDA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-conda}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $CONDA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$CONDA_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling conda $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $CONDA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

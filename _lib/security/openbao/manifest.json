@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "ports": [8200, 8201]
+  "ports": [8200, 8201],
+  "repository": "https://github.com/openbao/openbao"
 }

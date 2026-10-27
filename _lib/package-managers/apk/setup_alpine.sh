@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,7 @@ done
 
 APK_BIN=$(command -v apk 2>/dev/null || printf '/sbin/apk')
 if [ ! -x "$APK_BIN" ]; then
-  log_error "apk executable not found on Alpine Linux"
+  log_error 'apk executable not found on Alpine Linux'
   exit 1
 fi
 

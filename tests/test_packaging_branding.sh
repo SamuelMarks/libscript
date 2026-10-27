@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,11 +46,11 @@ touch "$TEST_TMP_DIR/custom_icon.ico"
 touch "$TEST_TMP_DIR/banner_top.bmp"
 touch "$TEST_TMP_DIR/banner_side.bmp"
 
-export APP_NAME="BrandApp"
-export APP_VERSION="2.5.0"
-export APP_PUBLISHER="BrandCorp"
+export APP_NAME='BrandApp'
+export APP_VERSION='2.5.0'
+export APP_PUBLISHER='BrandCorp'
 export PRODUCT_CODE="*"
-export UPGRADE_CODE="12345678-1234-5678-1234-567812345678"
+export UPGRADE_CODE='12345678-1234-5678-1234-567812345678'
 export OUT_FILE="$TEST_TMP_DIR/BrandApp"
 export ICON_PATH="$TEST_TMP_DIR/custom_icon.ico"
 export BANNER_TOP_PATH="$TEST_TMP_DIR/banner_top.bmp"

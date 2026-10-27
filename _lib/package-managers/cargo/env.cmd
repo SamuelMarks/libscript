@@ -7,12 +7,12 @@
 :: ## Usage
 :: Executes initialization, logic, or testing for cargo.
 
-:: Windows env stub for cargo
+:: Windows environment configuration and PATH probes for cargo
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -64,7 +64,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\cargo\%CARGO_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "cargo"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "cargo" "%CARGO_VERSION%"
 
 endlocal & (
     set "CARGO_VERSION=%CARGO_VERSION%"

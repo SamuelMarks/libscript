@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,12 +64,15 @@ fi
 
 libscript_depends 'git' || true
 
-if ! libscript_cmd_avail pnpm && libscript_cmd_avail npm; then
-  _node_maj=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || echo 0)
-  if [ "$_node_maj" -lt 22 ]; then
-    priv env "PATH=$PATH:/usr/local/bin" npm install -g pnpm@9 || true
-  else
-    priv env "PATH=$PATH:/usr/local/bin" npm install -g pnpm@latest-10 || true
+if ! libscript_cmd_avail pnpm; then
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install pnpm latest || libscript_depends 'pnpm' || true
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pnpm/env.sh" ]; then
+    STACK=""
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pnpm/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
   fi
 fi
 

@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,7 +49,7 @@ if [ -n "$GCP_PROJECT_ID" ]; then PROJECT_FLAG="--project=$GCP_PROJECT_ID"; fi
 
 case "$ACTION" in
   --help|-h|/\?|-\?)
-    printf '%s\n' "Usage: gcp-filestore [create|delete|install|test] <name>"
+    printf '%s\n' 'Usage: gcp-filestore [create|delete|install|test] <name>'
     exit 0
     ;;
   install)
@@ -106,7 +105,7 @@ case "$ACTION" in
     fi
     ;;
   logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
-    printf '%s\n' "Action not applicable for this provisioning module."
+    printf '%s\n' 'Action not applicable for this provisioning module.'
     exit 0
     ;;
   *)

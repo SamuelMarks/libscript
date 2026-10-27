@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,7 +37,7 @@ done
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0 <action> [args...]"
-  printf '%s\n' "See README.md for details."
+  printf '%s\n' 'See README.md for details.'
   exit 0
 fi
 
@@ -49,12 +48,12 @@ case "$ACTION" in
     DB_PATH="${2:-:memory:}"
     QUERY="${3:-}"
     if [ -z "$QUERY" ]; then
-      log_error "Usage: duckdb execute <db_path> <query>"
+      log_error 'Usage: duckdb execute <db_path> <query>'
       exit 1
     fi
     # Ensure duckdb is available
     if ! command -v duckdb >/dev/null 2>&1; then
-      log_error "duckdb not found. Please install the databases/duckdb component first."
+      log_error 'duckdb not found. Please install the databases/duckdb component first.'
       exit 1
     fi
     log_info "Executing query on DuckDB $DB_PATH..."
@@ -64,14 +63,14 @@ case "$ACTION" in
     DB_PATH="${2:-:memory:}"
     # Ensure duckdb is available
     if ! command -v duckdb >/dev/null 2>&1; then
-      log_error "duckdb not found. Please install the databases/duckdb component first."
+      log_error 'duckdb not found. Please install the databases/duckdb component first.'
       exit 1
     fi
     log_info "Starting DuckDB REPL on $DB_PATH..."
     duckdb "$DB_PATH"
     ;;
   *)
-    export PACKAGE_NAME="duckdb"
+    export PACKAGE_NAME='duckdb'
     SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb"
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
     export SCRIPT_NAME

@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -59,6 +59,20 @@ if not "%CC_BACKEND%"=="" if not "%CC_BACKEND%"=="default" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\%CC_BACKEND%\env.cmd"
     )
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "" "" "%LIBSCRIPT_HOME%\cc\%CC_VERSION%\bin"
-endlocal & set "PATH=%PATH%"
+if "%CC%"=="" (
+    for %%B in (cl.exe gcc.exe clang.exe cc.exe) do (
+        if "!CC!"=="" (
+            for /f "delims=" %%F in ('where %%B 2^>nul') do if "!CC!"=="" set "CC=%%F"
+        )
+    )
+)
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "cc" "%CC_VERSION%" "%LIBSCRIPT_HOME%\cc\%CC_VERSION%\bin"
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "CC_VERSION=%CC_VERSION%"
+    set "CC_INSTALL_METHOD=%CC_INSTALL_METHOD%"
+    set "CC=%CC%"
+    set "PATH=%PATH%"
+)
 exit /b 0

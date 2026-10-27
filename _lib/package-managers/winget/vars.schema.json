@@ -14,6 +14,14 @@
       "description": "Specific version of winget to install.",
       "type": "string",
       "default": "latest"
+    },
+    "WINGET_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading winget binary or archive artifacts."
+    },
+    "WINGET_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying winget available remote releases."
     }
   }
 }

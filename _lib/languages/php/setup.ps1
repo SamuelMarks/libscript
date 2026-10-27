@@ -13,6 +13,9 @@ Execute this script to install and configure php on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -57,15 +60,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls php
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls php
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             php -v
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -77,15 +72,7 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote php
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls php
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
             Write-Host "8.2.23`n8.3.11"
@@ -93,15 +80,7 @@ switch ($Action) {
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "php@${PhpVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls php
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -172,18 +151,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=PHP.PHP -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"PHP.PHP\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y php
+    libscript_depends @(\"php\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "php@${PhpVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls php; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -213,7 +184,7 @@ switch ($Action) {
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
             Write-Host "Downloading $DownloadUrl"
             try {
-                Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+                libscript_download $DownloadUrl $TempZip
             } catch {
                 Write-Host "Failed to download PHP. The version might not exist or the URL changed."
                 throw

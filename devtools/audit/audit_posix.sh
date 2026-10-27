@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -84,6 +83,58 @@ audit_file() {
     printf '[FAIL] [%s] Banned bashism: `echo -e` used instead of `printf`\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
+
+  if grep -v '^[[:space:]]*#' "$file" | grep -E '\bsort[[:space:]]+-V\b' >/dev/null 2>&1; then
+    printf '[FAIL] [%s] Non-POSIX `sort -V` detected; use `libscript_sort_versions`\n' "$file" >&2
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  if grep -v '^[[:space:]]*#' "$file" | grep -E '\bsed[[:space:]]+-i' >/dev/null 2>&1; then
+    printf '[FAIL] [%s] Non-portable `sed -i` detected; use temp file or `libscript_sed_in_place`\n' "$file" >&2
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 4b. Unnecessary double quotes check (outside comments and heredocs)
+  _dq_hits=$(awk '
+    {
+      sub(/\r$/, "", $0)
+      if (in_hd) {
+        if ($0 == hd_delim || (hd_tab && $0 ~ "^[[:space:]]*" hd_delim "$")) {
+          in_hd = 0
+          hd_delim = ""
+          hd_tab = 0
+        }
+        next
+      }
+      if ($0 ~ /<<-?[[:space:]]*["'\'']?[A-Za-z0-9_]+["'\'']?[[:space:]]*(>|2>|$)/ && $0 !~ /^[[:space:]]*#/) {
+        in_hd = 1
+        hd_tab = ($0 ~ /<<-/)
+        hd_delim = $0
+        sub(/^.*<<-?[[:space:]]*["'\'']?/, "", hd_delim)
+        sub(/["'\'']?[[:space:]]*(>|2>|$).*$/, "", hd_delim)
+        next
+      }
+      if ($0 ~ /^[[:space:]]*#/) next
+      if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
+          $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+'\''%s\\n'\''|echo)[[:space:]]+"[^$`\\'\''"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
+          $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
+        print NR ":" $0
+      }
+    }
+  ' "$file" 2>/dev/null || true)
+  if [ -n "$_dq_hits" ]; then
+    printf '[FAIL] [%s] Unnecessary double quotes where single quotes suffice: %s\n' "$file" "$(printf '%s' "$_dq_hits" | head -n 1)" >&2
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  case "$file" in
+    */_lib/*/*/env.sh)
+      if grep -v '^[[:space:]]*#' "$file" | grep -E '\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})' >/dev/null 2>&1; then
+        printf '[FAIL] [%s] Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety\n' "$file" >&2
+        ERRORS=$((ERRORS + 1))
+      fi
+      ;;
+  esac
 
   # 5. Matching .cmd companion check
   cmd_companion="${file%.sh}.cmd"

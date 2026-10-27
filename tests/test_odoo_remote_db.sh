@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -27,19 +26,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
-fi
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
@@ -60,12 +46,12 @@ printf '[PASS] Remote simulated DB strategy effectively omits postgres via prope
 
 printf '==> Simulating silent install with remote IP...\n'
 
-export ODOO_DB_HOST="192.168.200.99"
-export ODOO_DB_PORT="5432"
-export ODOO_DB_NAME="odoo_prod"
-export ODOO_DB_USER="odoo_admin"
-export ODOO_DB_PASS="RemoteS3cr3t"
-export ODOO_WEBSERVER="none"
+export ODOO_DB_HOST='192.168.200.99'
+export ODOO_DB_PORT='5432'
+export ODOO_DB_NAME='odoo_prod'
+export ODOO_DB_USER='odoo_admin'
+export ODOO_DB_PASS='RemoteS3cr3t'
+export ODOO_WEBSERVER='none'
 export ODOO_WWWROOT="$TMP_DIR/odoo_www"
 
 # We skip dependencies in setup to prevent network calls/apt-get during this unit test

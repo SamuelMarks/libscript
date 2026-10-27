@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,3 +39,5 @@ export LIBSCRIPT_ROOT_DIR
 export LINUX_VERSION="${LINUX_VERSION:-6.6.52}"
 export LINUX_CONFIG_TARGET="${LINUX_CONFIG_TARGET:-tinyconfig}"
 export LINUX_BUILD_TOOLCHAIN="${LINUX_BUILD_TOOLCHAIN:-${LINUX_COMPILER:-default}}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

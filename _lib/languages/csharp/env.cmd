@@ -10,7 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -52,11 +52,12 @@ goto :find_root
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "csharp"
 
-if "%CSHARP_VERSION%"=="" set CSHARP_VERSION=latest
-if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
+if "%CSHARP_VERSION%"=="" set "CSHARP_VERSION=latest"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
-set DOTNET_ROOT=%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%
-set PATH=%DOTNET_ROOT%;%PATH%
+set "DOTNET_ROOT=%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%"
+echo ";!PATH!;" | findstr /I /C:";!DOTNET_ROOT!;" >nul 2>&1
+if errorlevel 1 set "PATH=!DOTNET_ROOT!;!PATH!"
 
 endlocal & (
     set "CSHARP_VERSION=%CSHARP_VERSION%"

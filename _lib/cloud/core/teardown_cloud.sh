@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,9 +27,15 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-_DEPLOY_SCRIPT_DIR="$SCRIPT_DIR"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-SCRIPT_DIR="$_DEPLOY_SCRIPT_DIR"
+_TEARDOWN_SCRIPT_DIR="$SCRIPT_DIR"
+_TEARDOWN_THIS_FILE="$THIS_FILE"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+SCRIPT_DIR="$_TEARDOWN_SCRIPT_DIR"
+THIS_FILE="$_TEARDOWN_THIS_FILE"
 
 IS_TPU=0
 export SHARED_STORAGE=0
@@ -42,7 +47,7 @@ ONLY_TARGET="${ONLY_TARGET:-all}"
 DRY_RUN_MODE=0
 if [ "${DRY_RUN:-false}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
   DRY_RUN_MODE=1
-  export DRY_RUN="true"
+  export DRY_RUN='true'
 fi
 
 PROVIDER="${CLOUD_PROVIDER:-${PROVIDER:-}}"
@@ -98,7 +103,7 @@ REPO_PATH="${_p5:-.}"
 REMOTE_DEST="${_p6:-~/$NODE}"
 
 if [ -z "$PROVIDER" ] || [ -z "$NODE" ] || [ -z "$RG" ]; then
-  log_info "Usage: teardown_cloud.sh [options] <provider> <node_name> <rg_or_vpc_or_project> [region_or_zone] [local_repo_path] [remote_dest]"
+  log_info 'Usage: teardown_cloud.sh [options] <provider> <node_name> <rg_or_vpc_or_project> [region_or_zone] [local_repo_path] [remote_dest]'
   exit 1
 fi
 

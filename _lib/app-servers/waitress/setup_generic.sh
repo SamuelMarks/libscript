@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -63,9 +62,9 @@ case "$ACTION" in
     fi
     log_info "Installing Waitress WSGI server via ${WAITRESS_INSTALL_METHOD}..."
     if command -v waitress-serve >/dev/null 2>&1; then
-      log_info "waitress is already available on the system."
+      log_info 'waitress is already available on the system.'
     elif [ "$(uname -s)" = "FreeBSD" ]; then
-      libscript_depends "waitress"
+      libscript_depends 'waitress'
     elif command -v uv >/dev/null 2>&1; then
       uv tool install waitress 2>/dev/null || uv pip install waitress
     elif command -v pipx >/dev/null 2>&1; then
@@ -75,12 +74,12 @@ case "$ACTION" in
     elif command -v pip >/dev/null 2>&1; then
       pip install --user waitress
     else
-      libscript_depends "python"
+      libscript_depends 'python'
       pip3 install --user waitress || true
     fi
     ;;
   uninstall)
-    log_info "Uninstalling Waitress..."
+    log_info 'Uninstalling Waitress...'
     if command -v uv >/dev/null 2>&1; then uv tool uninstall waitress 2>/dev/null || true; fi
     if command -v pipx >/dev/null 2>&1; then pipx uninstall waitress 2>/dev/null || true; fi
     if command -v pip3 >/dev/null 2>&1; then pip3 uninstall -y waitress 2>/dev/null || true; fi

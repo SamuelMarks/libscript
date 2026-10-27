@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,7 +37,7 @@ TEST_DIR="${LIBSCRIPT_ROOT_DIR}/build/test_pkg_roundtrip"
 rm -rf "$TEST_DIR"
 mkdir -p "$TEST_DIR/stage/usr/bin"
 printf '#!/bin/sh
-echo "test-ok"
+echo '\''test-ok'\''
 ' > "$TEST_DIR/stage/usr/bin/test-bin"
 chmod 755 "$TEST_DIR/stage/usr/bin/test-bin"
 

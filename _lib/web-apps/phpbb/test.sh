@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,7 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-printf '%s\n' "Validating phpBB installation..."
+printf '%s\n' 'Validating phpBB installation...'
 PHPBB_WWWROOT="${PHPBB_WWWROOT:-/var/www/phpbb}"
 if [ -d "${PHPBB_WWWROOT}/phpbb" ] || [ -d "${PHPBB_WWWROOT}/install" ]; then
     printf '%s\n' "phpBB directory found at ${PHPBB_WWWROOT}"

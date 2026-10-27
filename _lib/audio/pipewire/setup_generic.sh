@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -58,7 +57,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "pipewire" >/dev/null 2>&1; then
-  libscript_depends "pipewire"
+  libscript_depends 'pipewire'
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "pipewire" "$TARGET_SYSROOT" "$ACTION"

@@ -6,5 +6,6 @@
   "title": "pub",
   "description": "Bootstrap module for `pub` (Dart / Flutter package manager).",
   "category": "package-manager",
-  "os_blacklist": ["freebsd", "alpine", "sunos"]
+  "os_blacklist": ["freebsd", "alpine", "sunos"],
+  "repository": "https://github.com/dart-lang/pub"
 }

@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -133,17 +132,17 @@ do_status() {
   _run_dir="$1"
 
   printf '%-20s %-12s %s\n' "SERVICE" "STATUS" "DETAILS"
-  printf '%s\n' "--------------------------------------------------"
+  printf '%s\n' '--------------------------------------------------'
 
   for _svc in lms-worker cms-worker celery-beat; do
     _pid_file="${_run_dir}/${_svc}.pid"
-    _status="STOPPED"
+    _status='STOPPED'
     _details=""
 
     if [ -f "${_pid_file}" ]; then
       _pid=$(head -n 1 "${_pid_file}" 2>/dev/null || true)
       if [ -n "${_pid}" ] && is_pid_alive "${_pid}"; then
-        _status="RUNNING"
+        _status='RUNNING'
         _details="(PID: ${_pid})"
       fi
     fi

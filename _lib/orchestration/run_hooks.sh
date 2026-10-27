@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,8 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 case "${1:-}" in
   --help|-h|"-?"|"/?")
-    printf '%s\n' "Usage: run_hooks.sh <json_file> <hook_type>"
-    printf '%s\n' "Supported hook types: pre_install, post_install, build, db_migrate, seed, pre_start, post_start, pre_stop, post_stop, health"
+    printf '%s\n' 'Usage: run_hooks.sh <json_file> <hook_type>'
+    printf '%s\n' 'Supported hook types: pre_install, post_install, build, db_migrate, seed, pre_start, post_start, pre_stop, post_stop, health'
     exit 0
     ;;
 esac
@@ -53,23 +52,18 @@ fi
 
 MANIFEST_DIR=$(cd -- "$(dirname -- "$JSON_FILE")" && pwd)
 
-for _rh_ef in "${MANIFEST_DIR}/.env" "${MANIFEST_DIR}/.env.secrets" "${MANIFEST_DIR}/.env.libscript"; do
-  if [ -f "$_rh_ef" ]; then
-    set -a
-    set +u
-    # shellcheck disable=SC1090,SC1091
-    . "$_rh_ef" 2>/dev/null || true
-    set -u
-    set +a
-  fi
-done
-
 if [ -f "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh" ]; then
   SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
   # shellcheck disable=SC1090
   . "$SCRIPT_NAME"
   unset SCRIPT_NAME || true
   libscript_hydrate_manifest_env "$JSON_FILE" || true
+fi
+if [ -n "${SERVICE_PATH:-}" ]; then
+  export PATH="${SERVICE_PATH}:${PATH}"
+fi
+if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then
+  export PATH="${SERVICE_EXTRA_PATH}:${PATH}"
 fi
 
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
@@ -103,7 +97,7 @@ resolve_hook_path() {
   fi
 }
 
-log_info "Running $HOOK_TYPE hooks..."
+log_info "[HOOKS:${HOOK_TYPE}] Running ${HOOK_TYPE} lifecycle hooks from ${JSON_FILE}..."
 while IFS= read -r hook <&3; do
   [ -n "$hook" ] || continue
   if printf '%s\n' "$hook" | grep -q '^{'; then
@@ -122,7 +116,7 @@ while IFS= read -r hook <&3; do
     ' 2>/dev/null || printf '1')
 
     if [ "$OS_MATCH" = "0" ]; then
-      log_info "Skipping hook '$NAME': OS filter does not match $CURRENT_OS"
+      log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': OS filter does not match $CURRENT_OS"
       continue
     fi
 
@@ -139,51 +133,72 @@ while IFS= read -r hook <&3; do
         FILE=$(printf '%s\n' "$COND" | sed 's/^unless_exists //')
         TARGET_FILE=$(resolve_hook_path "$FILE" "$HOOK_WD")
         if [ -e "$TARGET_FILE" ] || [ -e "$FILE" ]; then
-          log_info "Skipping hook '$NAME': $FILE exists"
+          log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': $FILE exists"
           continue
         fi
       elif printf '%s\n' "$COND" | grep -q "^if_exists "; then
         FILE=$(printf '%s\n' "$COND" | sed 's/^if_exists //')
         TARGET_FILE=$(resolve_hook_path "$FILE" "$HOOK_WD")
         if [ ! -e "$TARGET_FILE" ] && [ ! -e "$FILE" ]; then
-          log_info "Skipping hook '$NAME': $FILE does not exist"
+          log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': $FILE does not exist"
           continue
         fi
       elif printf '%s\n' "$COND" | grep -q "^unless_command "; then
         CHK_CMD=$(printf '%s\n' "$COND" | sed 's/^unless_command //')
         if command -v "$CHK_CMD" >/dev/null 2>&1; then
-          log_info "Skipping hook '$NAME': command $CHK_CMD already in PATH"
+          log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': command $CHK_CMD already in PATH"
           continue
         fi
       fi
     fi
 
     if [ -n "$cmd" ]; then
-      log_info "Executing hook '$NAME' (in $HOOK_WD): $cmd"
+      _h_start=$(date +%s 2>/dev/null || printf '0')
+      log_info "[HOOK:${HOOK_TYPE}] ($NAME) working_dir=${HOOK_WD}: Executing hook..."
+      _hook_path="${PATH:-/usr/bin:/bin}"
+      for _hw_bin in "${MANIFEST_DIR}/.venv/bin" "${MANIFEST_DIR}/node_modules/.bin" "${HOOK_WD}/.venv/bin" "${HOOK_WD}/node_modules/.bin"; do
+        if [ -d "$_hw_bin" ]; then
+          case ":${_hook_path}:" in
+            *":${_hw_bin}:"*) ;;
+            *) _hook_path="${_hw_bin}:${_hook_path}" ;;
+          esac
+        fi
+      done
       if ! (
         cd "$HOOK_WD"
-        for _hw_bin in "${HOOK_WD}/.venv/bin" "${HOOK_WD}/node_modules/.bin" "${MANIFEST_DIR}/.venv/bin" "${MANIFEST_DIR}/node_modules/.bin"; do
-          if [ -d "$_hw_bin" ]; then
-            case ":${PATH:-}:" in
-              *":${_hw_bin}:"*) ;;
-              *) export PATH="${_hw_bin}:${PATH:-/usr/bin:/bin}" ;;
-            esac
-          fi
-        done
-        sh -c "$cmd"
+        PATH="$_hook_path" sh -c "$cmd"
       ); then
-        log_error "Hook '$NAME' failed with non-zero exit status."
+        log_error "[HOOK:${HOOK_TYPE}] ($NAME) failed with non-zero exit status: $cmd"
         exit 1
       fi
+      _h_end=$(date +%s 2>/dev/null || printf '0')
+      _h_dur=$((_h_end - _h_start))
+      log_info "[HOOK:${HOOK_TYPE}] ($NAME) completed in ${_h_dur}s"
     fi
   else
     cmd=$(printf '%s\n' "$hook" | sed 's/^"//; s/"$//')
     if [ -n "$cmd" ]; then
-      log_info "Executing hook (in $MANIFEST_DIR): $cmd"
-      if ! (cd "$MANIFEST_DIR" && sh -c "$cmd"); then
-        log_error "Hook failed with non-zero exit status: $cmd"
+      _h_start=$(date +%s 2>/dev/null || printf '0')
+      log_info "[HOOK:${HOOK_TYPE}] (inline) working_dir=${MANIFEST_DIR}: Executing hook..."
+      _hook_path="${PATH:-/usr/bin:/bin}"
+      for _hw_bin in "${MANIFEST_DIR}/.venv/bin" "${MANIFEST_DIR}/node_modules/.bin"; do
+        if [ -d "$_hw_bin" ]; then
+          case ":${_hook_path}:" in
+            *":${_hw_bin}:"*) ;;
+            *) _hook_path="${_hw_bin}:${_hook_path}" ;;
+          esac
+        fi
+      done
+      if ! (
+        cd "$MANIFEST_DIR"
+        PATH="$_hook_path" sh -c "$cmd"
+      ); then
+        log_error "[HOOK:${HOOK_TYPE}] (inline) failed with non-zero exit status: $cmd"
         exit 1
       fi
+      _h_end=$(date +%s 2>/dev/null || printf '0')
+      _h_dur=$((_h_end - _h_start))
+      log_info "[HOOK:${HOOK_TYPE}] (inline) completed in ${_h_dur}s"
     fi
   fi
 done 3<< EOF_HOOKS

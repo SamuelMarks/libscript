@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,12 +34,12 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ "${TARGET_OS:-}" = "alpine" ]; then
-  echo "nix is not supported on Alpine natively."
+  echo 'nix is not supported on Alpine natively.'
   exit 0
 fi
 
 if command -v nix >/dev/null 2>&1; then
   nix --version
 else
-  printf '%s\n' "nix is not installed, skipping test."
+  printf '%s\n' 'nix is not installed, skipping test.'
 fi

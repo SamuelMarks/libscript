@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,4 +38,6 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 AWSCLI_VERSION="${AWSCLI_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/awscli/${AWSCLI_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/awscli/${AWSCLI_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -63,10 +62,10 @@ EOF2
         printf '%s\n' "Section \"Core\""
         printf '%s\n' "  SetOutPath \"\$INSTDIR\""
         printf '%s\n' "  File /r \"$LIBSCRIPT_ROOT_DIR\\*.*\""
-        printf '%s\n' "SectionEnd"
+        printf '%s\n' 'SectionEnd'
       fi
-      printf '%s\n' "Include nsDialogs.nsh"
-      printf '%s\n' "Page components"
+      printf '%s\n' 'Include nsDialogs.nsh'
+      printf '%s\n' 'Page components'
 
 # shellcheck disable=SC2086
       set -- $deps_list
@@ -88,9 +87,9 @@ EOF2
       done
 
       if [ -n "$LICENSE_PATH" ]; then printf '%s\n' "Page license \"\" \"$LICENSE_PATH\""; fi
-      printf '%s\n' "Page custom ActionPageCreate ActionPageLeave"
-      printf '%s\n' "Page custom OptionsPageCreate OptionsPageLeave"
-      printf '%s\n' "Page instfiles"
+      printf '%s\n' 'Page custom ActionPageCreate ActionPageLeave'
+      printf '%s\n' 'Page custom OptionsPageCreate OptionsPageLeave'
+      printf '%s\n' 'Page instfiles'
       printf '%s\n' ""
 
 # shellcheck disable=SC2086
@@ -114,7 +113,7 @@ EOF2
         printf '%s\n' "  \${If} \$Action_Choice == \"install\""
         printf '%s\n' "  ExecWait 'cmd.exe $run_params'"
         printf '%s\n' "  \${EndIf}"
-        printf '%s\n' "SectionEnd"
+        printf '%s\n' 'SectionEnd'
       done
 
 # shellcheck disable=SC2086
@@ -129,8 +128,8 @@ EOF2
             printf '%s\n' "  SectionGetFlags \${SEC_$pkg} \$0"
             printf '%s\n' "  IntOp \$0 \$0 & 1"
             printf '%s\n' "  IntCmp \$0 1 +2"
-            printf '%s\n' "    Abort"
-            printf '%s\n' "  nsDialogs::Create 1018"
+            printf '%s\n' '    Abort'
+            printf '%s\n' '  nsDialogs::Create 1018'
             printf '%s\n' "  Pop \$Dialog_$pkg"
 
             y=0
@@ -152,8 +151,8 @@ EOF2
               printf '%s\n' "  Pop \$HWND_${pkg}_${varname}"
               y=$((y + 14))
             done
-            printf '%s\n' "  nsDialogs::Show"
-            printf '%s\n' "FunctionEnd"
+            printf '%s\n' '  nsDialogs::Show'
+            printf '%s\n' 'FunctionEnd'
 
             printf '%s\n' "Function pgLeave_$pkg"
             printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
@@ -165,41 +164,41 @@ EOF2
                 printf '%s\n' "  Pop \$0"
                 printf '%s\n' "  IntCmp \$0 0 0 +3"
                 printf '%s\n' "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
-                printf '%s\n' "    Abort"
+                printf '%s\n' '    Abort'
               fi
             done
-            printf '%s\n' "FunctionEnd"
+            printf '%s\n' 'FunctionEnd'
           fi
         fi
       done
 
-      printf '%s\n' "Var Dialog_Action"
-      printf '%s\n' "Var R_Install"
-      printf '%s\n' "Var R_Docker"
-      printf '%s\n' "Var R_DC"
-      printf '%s\n' "Var R_MSI"
-      printf '%s\n' "Var R_Inno"
-      printf '%s\n' "Var R_NSIS"
-      printf '%s\n' "Var R_PKG"
-      printf '%s\n' "Var R_DMG"
-      printf '%s\n' "Var R_Deb"
-      printf '%s\n' "Var R_RPM"
-      printf '%s\n' "Var Action_Choice"
-      printf '%s\n' "Var Dialog_Options"
-      printf '%s\n' "Var C_Offline"
-      printf '%s\n' "Var C_Win"
-      printf '%s\n' "Var C_DOS"
-      printf '%s\n' "Var C_Linux"
-      printf '%s\n' "Var C_Mac"
-      printf '%s\n' "Var C_BSD"
-      printf '%s\n' "Var Opt_Offline"
-      printf '%s\n' "Var Opt_Win"
-      printf '%s\n' "Var Opt_DOS"
-      printf '%s\n' "Var Opt_Linux"
-      printf '%s\n' "Var Opt_Mac"
-      printf '%s\n' "Var Opt_BSD"
-      printf '%s\n' "Function ActionPageCreate"
-      printf '%s\n' "  nsDialogs::Create 1018"
+      printf '%s\n' 'Var Dialog_Action'
+      printf '%s\n' 'Var R_Install'
+      printf '%s\n' 'Var R_Docker'
+      printf '%s\n' 'Var R_DC'
+      printf '%s\n' 'Var R_MSI'
+      printf '%s\n' 'Var R_Inno'
+      printf '%s\n' 'Var R_NSIS'
+      printf '%s\n' 'Var R_PKG'
+      printf '%s\n' 'Var R_DMG'
+      printf '%s\n' 'Var R_Deb'
+      printf '%s\n' 'Var R_RPM'
+      printf '%s\n' 'Var Action_Choice'
+      printf '%s\n' 'Var Dialog_Options'
+      printf '%s\n' 'Var C_Offline'
+      printf '%s\n' 'Var C_Win'
+      printf '%s\n' 'Var C_DOS'
+      printf '%s\n' 'Var C_Linux'
+      printf '%s\n' 'Var C_Mac'
+      printf '%s\n' 'Var C_BSD'
+      printf '%s\n' 'Var Opt_Offline'
+      printf '%s\n' 'Var Opt_Win'
+      printf '%s\n' 'Var Opt_DOS'
+      printf '%s\n' 'Var Opt_Linux'
+      printf '%s\n' 'Var Opt_Mac'
+      printf '%s\n' 'Var Opt_BSD'
+      printf '%s\n' 'Function ActionPageCreate'
+      printf '%s\n' '  nsDialogs::Create 1018'
       printf '%s\n' "  Pop \$Dialog_Action"
       printf '%s\n' "  \${NSD_CreateLabel} 0 0 100% 12u \"What would you like to produce?\""
       printf '%s\n' "  Pop \$0"
@@ -224,9 +223,9 @@ EOF2
       printf '%s\n' "  Pop \$R_Deb"
       printf '%s\n' "  \${NSD_CreateRadioButton} 0 150u 100% 12u \".rpm package\""
       printf '%s\n' "  Pop \$R_RPM"
-      printf '%s\n' "  nsDialogs::Show"
-      printf '%s\n' "FunctionEnd"
-      printf '%s\n' "Function ActionPageLeave"
+      printf '%s\n' '  nsDialogs::Show'
+      printf '%s\n' 'FunctionEnd'
+      printf '%s\n' 'Function ActionPageLeave'
       printf '%s\n' "  StrCpy \$Action_Choice \"install\""
       printf '%s\n' "  \${NSD_GetState} \$R_Docker \$0"
       printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
@@ -256,9 +255,9 @@ EOF2
       printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
       printf '%s\n' "    StrCpy \$Action_Choice \"rpm\""
       printf '%s\n' "  \${EndIf}"
-      printf '%s\n' "FunctionEnd"
-      printf '%s\n' "Function OptionsPageCreate"
-      printf '%s\n' "  nsDialogs::Create 1018"
+      printf '%s\n' 'FunctionEnd'
+      printf '%s\n' 'Function OptionsPageCreate'
+      printf '%s\n' '  nsDialogs::Create 1018'
       printf '%s\n' "  Pop \$Dialog_Options"
       printf '%s\n' "  \${NSD_CreateLabel} 0 0 100% 12u \"Options & OS Targets\""
       printf '%s\n' "  Pop \$0"
@@ -276,9 +275,9 @@ EOF2
       printf '%s\n' "  Pop \$C_Mac"
       printf '%s\n' "  \${NSD_CreateCheckbox} 0 90u 100% 12u \"Target: BSD\""
       printf '%s\n' "  Pop \$C_BSD"
-      printf '%s\n' "  nsDialogs::Show"
-      printf '%s\n' "FunctionEnd"
-      printf '%s\n' "Function OptionsPageLeave"
+      printf '%s\n' '  nsDialogs::Show'
+      printf '%s\n' 'FunctionEnd'
+      printf '%s\n' 'Function OptionsPageLeave'
       printf '%s\n' "  \${NSD_GetState} \$C_Offline \$0"
       printf '%s\n' "  StrCpy \$Opt_Offline \$0"
       printf '%s\n' "  \${NSD_GetState} \$C_Win \$0"
@@ -291,10 +290,10 @@ EOF2
       printf '%s\n' "  StrCpy \$Opt_Mac \$0"
       printf '%s\n' "  \${NSD_GetState} \$C_BSD \$0"
       printf '%s\n' "  StrCpy \$Opt_BSD \$0"
-      printf '%s\n' "FunctionEnd"
+      printf '%s\n' 'FunctionEnd'
       printf '%s\n' "Section \"-Generate\" SEC_GENERATE"
       printf '%s\n' "  \${If} \$Action_Choice != \"install\""
-      printf '%s\n' "    Var /GLOBAL GenCmd"
+      printf '%s\n' '    Var /GLOBAL GenCmd'
       printf '%s\n' "    StrCpy \$GenCmd \"\""
       printf '%s\n' "    \${If} \$Opt_Offline == \${BST_CHECKED}"
       printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --offline \""
@@ -314,7 +313,7 @@ EOF2
       printf '%s\n' "    \${If} \$Opt_BSD == \${BST_CHECKED}"
       printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --os-bsd \""
       printf '%s\n' "    \${EndIf}"
-      printf '%s\n' "    Var /GLOBAL PkgArgs"
+      printf '%s\n' '    Var /GLOBAL PkgArgs'
       printf '%s\n' "    StrCpy \$PkgArgs \"\""
 # shellcheck disable=SC2086
       set -- $deps_list
@@ -332,7 +331,7 @@ EOF2
         printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd package-as \$Action_Choice \$PkgArgs \$GenCmd'"
       fi
       printf '%s\n' "  \${EndIf}"
-      printf '%s\n' "SectionEnd"
+      printf '%s\n' 'SectionEnd'
       # Uninstaller
       printf '%s\n' "Section \"Uninstall\""
 # shellcheck disable=SC2086
@@ -355,6 +354,6 @@ EOF2
         fi
         printf '%s\n' "  end_$pkg:"
       done
-      printf '%s\n' "SectionEnd"
+      printf '%s\n' 'SectionEnd'
 
       exit 0

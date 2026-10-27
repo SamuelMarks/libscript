@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,7 +63,7 @@ case "${DM}" in
 greeter-session=lightdm-gtk-greeter
 user-session=default
 EOF
-    if [ -n "${AUTOLOGIN_USER}" ]; then
+    if [ -n "${AUTOLOGIN_USER}" ] && ! grep -q '^autologin-user=' "${SYSROOT}/etc/lightdm/lightdm.conf" 2>/dev/null; then
       cat << EOF >> "${SYSROOT}/etc/lightdm/lightdm.conf"
 autologin-user=${AUTOLOGIN_USER}
 autologin-user-timeout=0
@@ -81,7 +80,7 @@ default_path        /usr/bin:/usr/sbin:/sbin
 login_cmd           exec /bin/sh - ~/.xinitrc
 sessions            mate,xfce4,cde,openbox
 EOF
-    if [ -n "${AUTOLOGIN_USER}" ]; then
+    if [ -n "${AUTOLOGIN_USER}" ] && ! grep -q '^auto_login' "${SYSROOT}/etc/slim.conf" 2>/dev/null; then
       cat << EOF >> "${SYSROOT}/etc/slim.conf"
 auto_login          yes
 default_user        ${AUTOLOGIN_USER}

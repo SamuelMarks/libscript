@@ -17,7 +17,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -123,7 +122,7 @@ mounts_list() {
   if [ -f "${MOUNTS_FILE}" ] && [ -s "${MOUNTS_FILE}" ]; then
     cat "${MOUNTS_FILE}"
   else
-    log_info "No mounts currently configured."
+    log_info 'No mounts currently configured.'
   fi
 }
 

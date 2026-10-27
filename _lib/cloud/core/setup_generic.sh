@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,52 +43,52 @@ done
 # ## handle_list_managed
 # Performs the handle_list_managed operation and updates component state.
 handle_list_managed() {
-  printf '%s\n' "--- AWS Resources"
+  printf '%s\n' '--- AWS Resources'
   if command -v aws >/dev/null 2>&1; then
     # We will implement actual listing logic later. For now mock it to pass tests.
-    printf '%s\n' "AWS Managed Resource Listing Placeholder"
+    printf '%s\n' 'AWS Managed Resource Listing Placeholder'
   fi
-  printf '%s\n' "--- Azure Resources"
+  printf '%s\n' '--- Azure Resources'
   if command -v az >/dev/null 2>&1; then
-    printf '%s\n' "Azure Managed Resource Listing Placeholder"
+    printf '%s\n' 'Azure Managed Resource Listing Placeholder'
   fi
-  printf '%s\n' "--- GCP Resources"
+  printf '%s\n' '--- GCP Resources'
   if command -v gcloud >/dev/null 2>&1; then
-    printf '%s\n' "GCP Managed Resource Listing Placeholder"
+    printf '%s\n' 'GCP Managed Resource Listing Placeholder'
   fi
-  printf '%s\n' "--- DigitalOcean Resources"
+  printf '%s\n' '--- DigitalOcean Resources'
   if command -v doctl >/dev/null 2>&1; then
-    printf '%s\n' "DigitalOcean Managed Resource Listing Placeholder"
+    printf '%s\n' 'DigitalOcean Managed Resource Listing Placeholder'
   fi
-  printf '%s\n' "--- Linode Resources"
+  printf '%s\n' '--- Linode Resources'
   if command -v linode-cli >/dev/null 2>&1; then
-    printf '%s\n' "Linode Managed Resource Listing Placeholder"
+    printf '%s\n' 'Linode Managed Resource Listing Placeholder'
   fi
-  printf '%s\n' "--- Vultr Resources"
+  printf '%s\n' '--- Vultr Resources'
   if command -v vultr-cli >/dev/null 2>&1; then
-    printf '%s\n' "Vultr Managed Resource Listing Placeholder"
+    printf '%s\n' 'Vultr Managed Resource Listing Placeholder'
   fi
 }
 
 # ## handle_diff
 # Performs the handle_diff operation and updates component state.
 handle_diff() {
-  printf '%s\n' "Comparing local .libscript_state.json with cloud provider reality..."
+  printf '%s\n' 'Comparing local .libscript_state.json with cloud provider reality...'
   if [ ! -f ".libscript_state.json" ]; then
-    printf '%s\n' "No local .libscript_state.json found. All discovered resources are untracked."
+    printf '%s\n' 'No local .libscript_state.json found. All discovered resources are untracked.'
   fi
-  printf '%s\n' "--- AWS Drift"
-  printf '%s\n' "AWS Diff Placeholder"
-  printf '%s\n' "--- Azure Drift"
-  printf '%s\n' "Azure Diff Placeholder"
-  printf '%s\n' "--- GCP Drift"
-  printf '%s\n' "GCP Diff Placeholder"
-  printf '%s\n' "--- DigitalOcean Drift"
-  printf '%s\n' "DigitalOcean Diff Placeholder"
-  printf '%s\n' "--- Linode Drift"
-  printf '%s\n' "Linode Diff Placeholder"
-  printf '%s\n' "--- Vultr Drift"
-  printf '%s\n' "Vultr Diff Placeholder"
+  printf '%s\n' '--- AWS Drift'
+  printf '%s\n' 'AWS Diff Placeholder'
+  printf '%s\n' '--- Azure Drift'
+  printf '%s\n' 'Azure Diff Placeholder'
+  printf '%s\n' '--- GCP Drift'
+  printf '%s\n' 'GCP Diff Placeholder'
+  printf '%s\n' '--- DigitalOcean Drift'
+  printf '%s\n' 'DigitalOcean Diff Placeholder'
+  printf '%s\n' '--- Linode Drift'
+  printf '%s\n' 'Linode Diff Placeholder'
+  printf '%s\n' '--- Vultr Drift'
+  printf '%s\n' 'Vultr Diff Placeholder'
 }
 
 case "$action" in
@@ -151,7 +150,7 @@ case "$action" in
     exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/$action/cli.sh" "$@"
     ;;
   cleanup)
-    printf '%s\n' "Cleaning up all cloud resources..."
+    printf '%s\n' 'Cleaning up all cloud resources...'
     if command -v aws >/dev/null 2>&1; then printf '%s\n' "Cleaning up aws..."; fi
     if command -v az >/dev/null 2>&1; then printf '%s\n' "Cleaning up azure..."; fi
     if command -v gcloud >/dev/null 2>&1; then printf '%s\n' "Cleaning up gcp..."; fi

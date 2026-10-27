@@ -72,6 +72,10 @@
     "db_url": {
       "type": "string",
       "description": "Full database connection string or URL."
+    },
+    "ODOO_PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "Listen endpoint (address:port or socket) for odoo."
     }
   }
 }

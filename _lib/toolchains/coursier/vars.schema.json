@@ -8,7 +8,7 @@
     "COURSIER_INSTALL_METHOD": {
       "description": "How to install COURSIER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "COURSIER_VERSION": {
@@ -40,6 +40,14 @@
     "COURSIER_LISTEN_SOCKET": {
       "type": "string",
       "description": "Unix socket for COURSIER to listen on"
+    },
+    "COURSIER_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading coursier binary or archive artifacts."
+    },
+    "COURSIER_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying coursier available remote releases."
     }
   }
 }

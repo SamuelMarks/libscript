@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -56,7 +55,7 @@ EOF_HELP
 fi
 
 # 1. Probe PHP Runtime via status_runtimes.sh and CLI
-STATUS_PHP="FAIL"
+STATUS_PHP='FAIL'
 if [ -f "${SCRIPT_DIR}/status_runtimes.sh" ] && "${SCRIPT_DIR}/status_runtimes.sh" "languages/php" >/dev/null 2>&1; then
   STATUS_PHP="OK ($(php -r 'echo PHP_VERSION;' 2>/dev/null || echo 'installed'))"
 elif command -v php >/dev/null 2>&1; then
@@ -64,18 +63,18 @@ elif command -v php >/dev/null 2>&1; then
 fi
 
 # 2. Probe Core Files
-STATUS_CORE="FAIL"
+STATUS_CORE='FAIL'
 if [ -f "${WWWROOT}/index.php" ] && [ -f "${WP_CONFIG}" ]; then
-  STATUS_CORE="OK"
+  STATUS_CORE='OK'
 fi
 
 # 3. Probe Database Connectivity via status_databases.sh and dbshell.sh
-STATUS_DB="FAIL"
-DB_HOST="127.0.0.1"
-DB_PORT="3306"
-DB_USER="wordpress"
-DB_PASS="wordpress"
-DB_NAME="wordpress"
+STATUS_DB='FAIL'
+DB_HOST='127.0.0.1'
+DB_PORT='3306'
+DB_USER='wordpress'
+DB_PASS='wordpress'
+DB_NAME='wordpress'
 
 if [ -f "$WP_CONFIG" ]; then
   _val=$(grep "define( *'DB_NAME'" "$WP_CONFIG" 2>/dev/null | sed -E "s/.*'DB_NAME' *, *'([^']*)'.*/\1/" || true)
@@ -100,39 +99,39 @@ fi
 
 if [ -f "${SCRIPT_DIR}/dbshell.sh" ] && [ -f "$WP_CONFIG" ]; then
   if WORDPRESS_WWWROOT="${WWWROOT}" "${SCRIPT_DIR}/dbshell.sh" query "SELECT 1;" >/dev/null 2>&1; then
-    STATUS_DB="OK"
+    STATUS_DB='OK'
   fi
 fi
 if [ "$STATUS_DB" = "FAIL" ] && [ -f "${SCRIPT_DIR}/status_databases.sh" ]; then
   if "${SCRIPT_DIR}/status_databases.sh" "databases/mysql" >/dev/null 2>&1 || "${SCRIPT_DIR}/status_databases.sh" "databases/mariadb" >/dev/null 2>&1; then
-    STATUS_DB="OK"
+    STATUS_DB='OK'
   fi
 fi
 if [ "$STATUS_DB" = "FAIL" ]; then
-  _client="mysql"
-  command -v mariadb >/dev/null 2>&1 && _client="mariadb"
+  _client='mysql'
+  command -v mariadb >/dev/null 2>&1 && _client='mariadb'
   if command -v "$_client" >/dev/null 2>&1; then
     export MYSQL_PWD="$DB_PASS"
     if "$_client" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e "SELECT 1;" "$DB_NAME" >/dev/null 2>&1; then
-      STATUS_DB="OK"
+      STATUS_DB='OK'
     fi
   fi
 fi
 
 # 4. Probe Web Server Listener
-STATUS_WEB="FAIL"
+STATUS_WEB='FAIL'
 if command -v curl >/dev/null 2>&1; then
   if curl -s -o /dev/null -m 2 "http://${HTTP_HOST}:${HTTP_PORT}/" 2>/dev/null; then
-    STATUS_WEB="OK"
+    STATUS_WEB='OK'
   fi
 elif command -v nc >/dev/null 2>&1; then
   if nc -z -w 2 127.0.0.1 "$HTTP_PORT" 2>/dev/null; then
-    STATUS_WEB="OK"
+    STATUS_WEB='OK'
   fi
 fi
 
 # 5. Probe PHP-FPM FastCGI
-STATUS_FPM="SKIP"
+STATUS_FPM='SKIP'
 if [ -e /run/php/php-fpm.sock ] || [ -e /var/run/php-fpm.sock ]; then
   STATUS_FPM="OK (socket)"
 elif command -v nc >/dev/null 2>&1 && nc -z -w 1 127.0.0.1 9000 2>/dev/null; then

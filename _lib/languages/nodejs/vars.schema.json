@@ -35,6 +35,14 @@
     "YARN_OFFLINE_MIRROR": {
       "description": "Directory of offline tarball mirror for yarn package installation.",
       "type": "string"
+    },
+    "NODEJS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nodejs binary or archive artifacts."
+    },
+    "NODEJS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nodejs available remote releases."
     }
   }
 }

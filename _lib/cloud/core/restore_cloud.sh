@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,9 +33,9 @@ SCRIPT_DIR="$_RS_SCRIPT_DIR"
 
 if [ "$#" -lt 1 ]; then
   printf '%s\n' "Usage: ${THIS_FILE} <node_name> [options]"
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --from-backup <id>             Restore from a specific backup ID/archive"
-  printf '%s\n' "  --import-state [app] <dir>     Import application state from <dir> onto remote node"
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --from-backup <id>             Restore from a specific backup ID/archive'
+  printf '%s\n' '  --import-state [app] <dir>     Import application state from <dir> onto remote node'
   exit 1
 fi
 
@@ -50,9 +49,9 @@ SKIP_VERIFY=0
 DRY_RUN_MODE=0
 if [ "${DRY_RUN:-false}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
   DRY_RUN_MODE=1
-  export DRY_RUN="true"
+  export DRY_RUN='true'
 fi
-BACKUP_ID="latest"
+BACKUP_ID='latest'
 IMPORT_MODE=0
 LOCAL_SRC=""
 APP_SPECS=""
@@ -208,28 +207,28 @@ fi
 
 printf '%s\n' "[RESTORE] Starting restoration & reprovisioning for node: $NODE"
 
-STATE_FILE=".libscript_state.json"
+STATE_FILE='.libscript_state.json'
 if [ -f "$STATE_FILE" ] && command -v jq >/dev/null 2>&1; then
   if [ -f ".deploy_state" ]; then
     PROVIDER=$(grep "^PROVIDER=" .deploy_state | cut -d= -f2-)
   fi
 fi
 
-printf '%s\n' "[RESTORE] 1. Validating hardware architecture & quotas..."
-printf '%s\n' "[RESTORE] 2. Identifying retained IPs and Disks..."
+printf '%s\n' '[RESTORE] 1. Validating hardware architecture & quotas...'
+printf '%s\n' '[RESTORE] 2. Identifying retained IPs and Disks...'
 
 if [ "$PROVIDER" = "aws" ]; then
-  printf '%s\n' "  -> Mapping retained Elastic IP to new EC2 instance."
+  printf '%s\n' '  -> Mapping retained Elastic IP to new EC2 instance.'
 elif [ "$PROVIDER" = "azure" ]; then
-  printf '%s\n' "  -> Associating retained Public IP with new VM Network Interface."
+  printf '%s\n' '  -> Associating retained Public IP with new VM Network Interface.'
 elif [ "$PROVIDER" = "gcp" ]; then
-  printf '%s\n' "  -> Binding preserved Static IP to new Compute Engine instance."
+  printf '%s\n' '  -> Binding preserved Static IP to new Compute Engine instance.'
 fi
 
-printf '%s\n' "[RESTORE] 3. Re-attaching cloud data disks (ensuring size >= original)..."
+printf '%s\n' '[RESTORE] 3. Re-attaching cloud data disks (ensuring size >= original)...'
 printf '%s\n' "[RESTORE] 4. Pulling config/data from backup archive: $BACKUP_ID..."
-printf '%s\n' "[RESTORE] 5. Retemplating IP dependencies (e.g. bind_address configs)..."
-printf '%s\n' "[RESTORE] 6. Running application resumption hooks..."
+printf '%s\n' '[RESTORE] 5. Retemplating IP dependencies (e.g. bind_address configs)...'
+printf '%s\n' '[RESTORE] 6. Running application resumption hooks...'
 
-printf '%s\n' "[RESTORE] Restore complete."
+printf '%s\n' '[RESTORE] Restore complete.'
 exit 0

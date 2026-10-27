@@ -1,13 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Behavioral test suite verifying the LibScript Version Manager Contract
-# (WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md):
-# - Non-invasive environment isolation (no mutation of ~/.bashrc, ~/.profile, ~/.zshrc)
-# - Scoped env output format matrix (--format=sh, cmd, ps1, fish, json)
-# - Side-by-side multi-version coexistence (v1 and v2 in LIBSCRIPT_HOME)
-# - Offline caching & air-gapped reproducibility (--offline / --force-offline / --cache-dir)
-# - Dependency resolution strategies (reuse, install-alongside, upgrade, overwrite)
-# - Multi-instance service flags (--service-name, --port)
+# Behavioral test suite verifying the LibScript Version Manager Contract (`WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md`).
 #
 # ## Usage
 # ./tests/test_vm_contract.sh
@@ -19,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,16 +20,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TEST_SANDBOX=$(mktemp -d)

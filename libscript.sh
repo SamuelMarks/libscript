@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,61 +41,61 @@ done
 # ## show_help
 # Displays command-line usage instructions and available options.
 show_help() {
-  printf '%s\n' "LibScript Global CLI"
-  printf '%s\n' "===================="
+  printf '%s\n' 'LibScript Global CLI'
+  printf '%s\n' '===================='
   printf '%s\n' ""
   printf '%s\n' "Usage: ${LIBSCRIPT_ENTRY_FILE##*/} [COMMAND] [ARGS...]"
   printf '%s\n' ""
-  printf '%s\n' "Commands:"
-  printf '%s\n' "  list                        List all available components"
-  printf '%s\n' "  search <query>              Search available components by name or description"
-  printf '%s\n' "  process-downloads [file]    Process an aria2-formatted download list"
-  printf '%s\n' "  env <component> <version>   Print environment variables for a component"
-  printf '%s\n' "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
-  printf '%s\n' "  package-as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
-  printf '%s\n' "  install <package_name> <version> Install a specific version of a component"
-  printf '%s\n' "  use <package_name> <version> Set the default version of a component"
-  printf '%s\n' "  download <package_name> <version> Download artifacts for a component to the local cache without installing"
-  printf '%s\n' "  start [package_name...]     Start services (or all deps in json)"
-  printf '%s\n' "  stop [package_name...]      Stop services"
-  printf '%s\n' "  status [package_name...]    Show service status"
-  printf '%s\n' "  health [package_name...]    Check service health"
-  printf '%s\n' "  restart [package_name...]   Restart services"
-  printf '%s\n' "  logs [-f] [package_name...]  Show service logs (real-time stream)"
-  printf '%s\n' "  up [package_name...]        Alias for start"
-  printf '%s\n' "  down [package_name...]      Alias for stop"
-  printf '%s\n' "  provision <provider> ...    Provision a cloud environment"
-  printf '%s\n' "  deprovision <provider> ...  Deprovision a cloud environment"
-  printf '%s\n' "  deploy [repo_or_path] ...   Git-driven application and cloud deployment workflow"
-  printf '%s\n' "  deploy-remote <user@host>   Idempotently deploy multiple apps to a remote host"
-  printf '%s\n' "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
+  printf '%s\n' 'Commands:'
+  printf '%s\n' '  list                        List all available components'
+  printf '%s\n' '  search <query>              Search available components by name or description'
+  printf '%s\n' '  process-downloads [file]    Process an aria2-formatted download list'
+  printf '%s\n' '  env <component> <version>   Print environment variables for a component'
+  printf '%s\n' '  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)'
+  printf '%s\n' '  package-as <format> [args]  Package libscript usage (e.g., docker, docker_compose)'
+  printf '%s\n' '  install <package_name> <version> Install a specific version of a component'
+  printf '%s\n' '  use <package_name> <version> Set the default version of a component'
+  printf '%s\n' '  download <package_name> <version> Download artifacts for a component to the local cache without installing'
+  printf '%s\n' '  start [package_name...]     Start services (or all deps in json)'
+  printf '%s\n' '  stop [package_name...]      Stop services'
+  printf '%s\n' '  status [package_name...]    Show service status'
+  printf '%s\n' '  health [package_name...]    Check service health'
+  printf '%s\n' '  restart [package_name...]   Restart services'
+  printf '%s\n' '  logs [-f] [package_name...]  Show service logs (real-time stream)'
+  printf '%s\n' '  up [package_name...]        Alias for start'
+  printf '%s\n' '  down [package_name...]      Alias for stop'
+  printf '%s\n' '  provision <provider> ...    Provision a cloud environment'
+  printf '%s\n' '  deprovision <provider> ...  Deprovision a cloud environment'
+  printf '%s\n' '  deploy [repo_or_path] ...   Git-driven application and cloud deployment workflow'
+  printf '%s\n' '  deploy-remote <user@host>   Idempotently deploy multiple apps to a remote host'
+  printf '%s\n' '  <component> [OPTIONS...]    Invoke the CLI for a specific component'
   printf '%s\n' ""
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?          Show this extensive help text"
-  printf '%s\n' "  --offline, -o               Enable offline execution mode (prohibits remote network requests)"
-  printf '%s\n' "  --force-offline             Strictly abort execution if network calls are attempted"
-  printf '%s\n' "  --online                    Explicitly enable online execution mode"
-  printf '%s\n' "  --cache-dir=<dir>           Set local artifact cache directory (LIBSCRIPT_CACHE_DIR)"
-  printf '%s\n' "  --download-dir=<dir>        Set temporary download staging directory (DOWNLOAD_DIR)"
-  printf '%s\n' "  --prefix=<dir>              Set local installation prefix"
-  printf '%s\n' "  --log-format=<text|json>    Set log output format"
-  printf '%s\n' "  --log-level=<0-4>           Set minimum log level (0=DEBUG, 1=INFO, etc)"
-  printf '%s\n' "  --log-file=<path>           Set a file to mirror all logs to"
-  printf '%s\n' "  --service-name=<name>       Set a custom service/daemon name"
-  printf '%s\n' "  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL"
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?          Show this extensive help text'
+  printf '%s\n' '  --offline, -o               Enable offline execution mode (prohibits remote network requests)'
+  printf '%s\n' '  --force-offline             Strictly abort execution if network calls are attempted'
+  printf '%s\n' '  --online                    Explicitly enable online execution mode'
+  printf '%s\n' '  --cache-dir=<dir>           Set local artifact cache directory (LIBSCRIPT_CACHE_DIR)'
+  printf '%s\n' '  --download-dir=<dir>        Set temporary download staging directory (DOWNLOAD_DIR)'
+  printf '%s\n' '  --prefix=<dir>              Set local installation prefix'
+  printf '%s\n' '  --log-format=<text|json>    Set log output format'
+  printf '%s\n' '  --log-level=<0-4>           Set minimum log level (0=DEBUG, 1=INFO, etc)'
+  printf '%s\n' '  --log-file=<path>           Set a file to mirror all logs to'
+  printf '%s\n' '  --service-name=<name>       Set a custom service/daemon name'
+  printf '%s\n' '  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL'
   printf '%s\n' "  --listen=<str>                Global listen (port, addr:port, unix:socket)
   --listen-port=<port>        Global port to listen on"
-  printf '%s\n' "  --listen-address=<addr>     Global address to listen on"
-  printf '%s\n' "  --listen-socket=<socket>    Global unix socket to listen on"
+  printf '%s\n' '  --listen-address=<addr>     Global address to listen on'
+  printf '%s\n' '  --listen-socket=<socket>    Global unix socket to listen on'
   printf '%s\n' ""
-  printf '%s\n' "Examples:"
+  printf '%s\n' 'Examples:'
   printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} list"
   printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} search ruby"
   printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} ruby --help"
   printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} postgres --help"
   printf '%s\n' ""
   printf '%s\n' "You can specify components by their short name (e.g., 'ruby' instead of '_lib/languages/ruby')."
-  printf '%s\n' "If there are multiple matches, it will ask you to be more specific."
+  printf '%s\n' 'If there are multiple matches, it will ask you to be more specific.'
   printf '%s\n' ""
 }
 
@@ -313,8 +312,8 @@ case "$CMD" in
   train|infer|serve-ml|eval-ml) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/ml/actions.sh" "$CMD" "$@" ;;
   env)
     if [ "${1:-}" = "--manifest" ] || [ -z "${1:-}" ] || [ -f "${1:-}" ]; then
-      _env_manifest="libscript.json"
-      _env_fmt="sh"
+      _env_manifest='libscript.json'
+      _env_fmt='sh'
       if [ "${1:-}" = "--manifest" ]; then
         shift || true
         if [ -n "${1:-}" ] && [ "${1#--}" = "$1" ]; then
@@ -328,6 +327,7 @@ case "$CMD" in
       for _e_arg in "$@"; do
         case "$_e_arg" in
           --format=*) _env_fmt="${_e_arg#*=}" ;;
+          sh|bash|zsh|fish|cmd|powershell|ps1|docker|dockerfile|docker_compose|dotenv|envfile|systemd|json) _env_fmt="$_e_arg" ;;
         esac
       done
       SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
@@ -366,6 +366,7 @@ if [ "$IS_ACTION" = "1" ]; then
 fi
 
 ACTION_PKG="$(normalize_component_alias "$ACTION_PKG")"
+SCRIPT_DIR="$LIBSCRIPT_CLI_DIR"
 
 TARGET=""
 if [ "$ACTION_PKG" = "cloud" ]; then

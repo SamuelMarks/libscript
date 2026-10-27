@@ -5,5 +5,6 @@
   "os_whitelist": ["all"],
   "title": "rbenv",
   "description": "Bootstrap module for the `rbenv` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/rbenv/rbenv"
 }

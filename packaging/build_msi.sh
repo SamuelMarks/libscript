@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -58,23 +57,23 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Prints script usage instructions and available command-line switches.
 show_help() {
   printf '%s\n' "Usage: $0 [TARGET_DIR] [OPTIONS]"
-  printf '%s\n' "Generates a generic WiX Windows Installer (.msi) package."
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --out <name>          Output base file name"
-  printf '%s\n' "  --version <ver>       Package version"
-  printf '%s\n' "  --upgrade-code <guid> Upgrade code GUID"
-  printf '%s\n' "  --icon <path>         Path to .ico icon file"
-  printf '%s\n' "  --banner-top <path>   Path to 493x58 top banner BMP"
-  printf '%s\n' "  --banner-side <path>  Path to 164x312 side splash BMP"
-  printf '%s\n' "  --license <path>      Path to EULA (RTF or TXT)"
-  printf '%s\n' "  --install-dir <dir>   Default application installation folder"
-  printf '%s\n' "  --data-dir <dir>      Default mutable datastore folder"
-  printf '%s\n' "  --log-dir <dir>       Default logs folder"
-  printf '%s\n' "  --repo <url>          Source Git repository URL"
-  printf '%s\n' "  --branch <branch>     Target Git release branch or tag"
-  printf '%s\n' "  --auth-token <token>  Private repository authentication token"
-  printf '%s\n' "  --mode <mode>         Default setup mode (Simple or Advanced)"
-  printf '%s\n' "  --help, -h            Show this help text"
+  printf '%s\n' 'Generates a generic WiX Windows Installer (.msi) package.'
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --out <name>          Output base file name'
+  printf '%s\n' '  --version <ver>       Package version'
+  printf '%s\n' '  --upgrade-code <guid> Upgrade code GUID'
+  printf '%s\n' '  --icon <path>         Path to .ico icon file'
+  printf '%s\n' '  --banner-top <path>   Path to 493x58 top banner BMP'
+  printf '%s\n' '  --banner-side <path>  Path to 164x312 side splash BMP'
+  printf '%s\n' '  --license <path>      Path to EULA (RTF or TXT)'
+  printf '%s\n' '  --install-dir <dir>   Default application installation folder'
+  printf '%s\n' '  --data-dir <dir>      Default mutable datastore folder'
+  printf '%s\n' '  --log-dir <dir>       Default logs folder'
+  printf '%s\n' '  --repo <url>          Source Git repository URL'
+  printf '%s\n' '  --branch <branch>     Target Git release branch or tag'
+  printf '%s\n' '  --auth-token <token>  Private repository authentication token'
+  printf '%s\n' '  --mode <mode>         Default setup mode (Simple or Advanced)'
+  printf '%s\n' '  --help, -h            Show this help text'
 }
 
 TARGET_DIR=""
@@ -91,9 +90,9 @@ LOGS_DIR=""
 REPO_URL=""
 REPO_BRANCH=""
 REPO_AUTH_TOKEN=""
-SETUP_MODE="Simple"
+SETUP_MODE='Simple'
 
-VARIANT="online"
+VARIANT='online'
 [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && VARIANT="offline"
 CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
 USE_WIX="${LIBSCRIPT_USE_WIX:-0}"
@@ -102,7 +101,7 @@ TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-x64}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --use-wix)
-      USE_WIX="1"
+      USE_WIX='1'
       shift
       ;;
     --arch)
@@ -126,11 +125,11 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --offline)
-      VARIANT="offline"
+      VARIANT='offline'
       shift
       ;;
     --online)
-      VARIANT="online"
+      VARIANT='online'
       shift
       ;;
     --cache-dir)
@@ -211,7 +210,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$TARGET_DIR" ]; then
-  TARGET_DIR="_lib/web-apps/openedx"
+  TARGET_DIR='_lib/web-apps/openedx'
 fi
 
 # Resolve absolute path to TARGET_DIR
@@ -230,9 +229,9 @@ export MANIFEST_JSON="${RESOLVED_TARGET_DIR}/manifest.json"
 
 # Extract metadata from packaging.json if present
 APP_NAME="Open edX Platform"
-export APP_IDENTIFIER="openedx"
+export APP_IDENTIFIER='openedx'
 APP_PUBLISHER="LibScript Open Source Project"
-APP_URL="https://openedx.org"
+APP_URL='https://openedx.org'
 PRODUCT_CODE="*"
 
 if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
@@ -302,7 +301,7 @@ _clean_branch="${_clean_branch%.master}"
 [ -z "$_clean_branch" ] && _clean_branch="${APP_VERSION}"
 
 if [ "$VARIANT" = "offline" ]; then
-  PROP_OPENEDX_OFFLINE="1"
+  PROP_OPENEDX_OFFLINE='1'
   case "$APP_NAME" in
     *"(Offline"*) ;;
     *) APP_NAME="${APP_NAME} (Offline Air-Gapped)" ;;
@@ -316,7 +315,7 @@ if [ "$VARIANT" = "offline" ]; then
   : "${WELCOME_DESC:=The Setup Wizard will deploy ${APP_NAME} and pre-bundled air-gapped runtimes on your computer.}"
   COMP_TAG=" [Pre-bundled / Offline]"
 else
-  PROP_OPENEDX_OFFLINE="0"
+  PROP_OPENEDX_OFFLINE='0'
   case "$APP_NAME" in
     *"(Online)"*) ;;
     *) APP_NAME="${APP_NAME} (Online)" ;;
@@ -351,8 +350,8 @@ RAD_RT2_EX="Reuse existing system toolchain (Detected)"
 RAD_RT2_ISO="Install isolated private toolchain via LibScript"
 LBL_PORT1="Primary Service Port:"
 LBL_PORT2="Management Port:"
-DEFAULT_PORT1="8000"
-DEFAULT_PORT2="8001"
+DEFAULT_PORT1='8000'
+DEFAULT_PORT2='8001'
 DEFAULT_ADMIN_EMAIL="admin@${APP_IDENTIFIER}.local"
 
 if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
@@ -572,9 +571,9 @@ generate_wxs() {
   MULTI_LICENSE_UI_SEQ=""
   MULTI_LICENSE_PROPS=""
   MULTI_LICENSE_EXEC_COND=""
-  LAST_LICENSE_DLG="Dlg_License"
+  LAST_LICENSE_DLG='Dlg_License'
 
-  _lic_mode="consolidated_eula"
+  _lic_mode='consolidated_eula'
   if [ -n "$TARGET_DIR" ] && [ -f "${TARGET_DIR}/packaging.json" ]; then
     _lic_mode=$(jq -r '.branding.license_mode // "consolidated_eula"' "${TARGET_DIR}/packaging.json" 2>/dev/null || printf 'consolidated_eula')
   fi
@@ -1329,8 +1328,8 @@ compile_msi() {
     fi
   fi
 
-  _candle_cmd="candle"
-  _light_cmd="light"
+  _candle_cmd='candle'
+  _light_cmd='light'
   if [ "${OS:-}" = "Windows_NT" ]; then
     command -v candle.exe >/dev/null 2>&1 && _candle_cmd="candle.exe"
     command -v light.exe >/dev/null 2>&1 && _light_cmd="light.exe"

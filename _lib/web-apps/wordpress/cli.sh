@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -130,7 +129,7 @@ EOF_HELP
     exit 0
     ;;
   *)
-    export PACKAGE_NAME="wordpress"
+    export PACKAGE_NAME='wordpress'
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
     export SCRIPT_NAME
     # shellcheck disable=SC1090

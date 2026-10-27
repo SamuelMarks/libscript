@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,8 +49,9 @@ libscript_verify_signature() {
     # Download the signature and sums file
     tmp_sig="$(mktemp)"
     tmp_sums="$(mktemp)"
-    curl -sL "${sig_url:-}" -o "$tmp_sig"
-    curl -sL "${sums_url:-}" -o "$tmp_sums"
+
+    libscript_download "${sig_url:-}" "$tmp_sig" "SKIP"
+    libscript_download "${sums_url:-}" "$tmp_sums" "SKIP"
     
     # Basic check if gpg is available. If not, we might log a warning and continue,
     # or fail. Assuming we want strict validation if possible.

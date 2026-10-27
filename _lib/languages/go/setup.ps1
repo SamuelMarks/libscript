@@ -13,6 +13,9 @@ Execute this script to install and configure go on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -43,7 +46,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 function Resolve-ExactVersion {
     if ($GoVersion -eq "latest" -or $GoVersion -eq "stable") {
         $GoVerFile = Join-Path [System.IO.Path]::GetTempPath() "go_version.txt"
-        Invoke-WebRequest -Uri "https://go.dev/VERSION?m=text" -OutFile $GoVerFile
+        libscript_download "https://go.dev/VERSION?m=text" $GoVerFile
         $ExactVersion = (Get-Content $GoVerFile | Select-Object -First 1).Replace("go", "")
         Remove-Item -Force $GoVerFile
     } else {
@@ -62,15 +65,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls go
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls go
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             go version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -82,32 +77,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote go
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls go
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://go.dev/dl/?mode=json&include=all"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://go.dev/dl/?mode=json&include=all"
             $Resp | ForEach-Object { $_.version.Replace("go", "") } | Select-Object -First 100
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "go@${GoVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls go
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -178,18 +157,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=GoLang.Go -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"GoLang.Go\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y golang
+    libscript_depends @(\"golang\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "go@${GoVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls go; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -216,7 +187,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $GoDir"
             Expand-Archive -Path $TempZip -DestinationPath $GoDir -Force

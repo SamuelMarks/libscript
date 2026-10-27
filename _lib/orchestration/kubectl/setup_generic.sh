@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -69,19 +68,19 @@ resolve_exact_version() {
 case "$ACTION" in
   ls)
     if [ "${KUBECTL_INSTALL_METHOD:-}" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
+      printf '%s\n' 'System packages do not support ls here.'
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/kubectl/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    git ls-remote --tags "https://github.com/kubectl" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+    git ls-remote --tags "https://github.com/kubectl" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     exit 0
     ;;
   use)
     if [ "${KUBECTL_INSTALL_METHOD:-}" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "kubectl" "$VERSION" "${EXACT_VERSION}"
@@ -96,7 +95,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "kubectl" "default" "${EXACT_VERSION}"
       log_info "Set default kubectl version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env kubectl \"$VERSION\")"
     fi
     exit 0
@@ -120,7 +119,7 @@ case "$ACTION" in
       log_info "Installing kubectl ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
       if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kubectl/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
+        log_info 'Extracting from cache...'
         cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kubectl/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -134,9 +133,9 @@ case "$ACTION" in
         fi
       else
         if [ -z "${KUBECTL_DOWNLOAD_URL:-}" ]; then
-          _kver="1.31.0"
+          _kver='1.31.0'
           [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
-          _karch="amd64"
+          _karch='amd64'
           case "$(uname -m)" in
             aarch64|arm64) _karch="arm64" ;;
             *) _karch="amd64" ;;
@@ -145,8 +144,8 @@ case "$ACTION" in
           KUBECTL_DOWNLOAD_URL="https://dl.k8s.io/release/v${_kver}/bin/${_kos}/${_karch}/kubectl"
         fi
         if [ "${_kos:-}" = "freebsd" ]; then
-          log_info "FreeBSD detected, installing kubectl via system package manager..."
-          libscript_depends "kubectl"
+          log_info 'FreeBSD detected, installing kubectl via system package manager...'
+          libscript_depends 'kubectl'
           if command -v kubectl >/dev/null 2>&1; then
             ln -sf "$(command -v kubectl)" "${TARGET_DIR}/bin/kubectl"
           fi

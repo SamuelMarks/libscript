@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -69,36 +68,36 @@ configure_bento_repo() {
     log_info "Found Bento repository at $b_dir"
 
     if [ -f "$b_dir/packer_templates/pkr-plugins.pkr.hcl" ] && command -v packer >/dev/null 2>&1; then
-      log_info "Initializing Packer plugins for Bento..."
+      log_info 'Initializing Packer plugins for Bento...'
       (cd "$b_dir/packer_templates" && packer init pkr-plugins.pkr.hcl) || log_warn "Packer plugin init failed."
     fi
 
     if [ -f "$b_dir/Gemfile" ] && command -v bundle >/dev/null 2>&1; then
-      log_info "Installing Bento Ruby bundle dependencies..."
+      log_info 'Installing Bento Ruby bundle dependencies...'
       (cd "$b_dir" && bundle install) || log_warn "Bundle install failed."
     fi
   else
-    log_info "No local Bento repository detected; skipping repo-specific initialization."
+    log_info 'No local Bento repository detected; skipping repo-specific initialization.'
   fi
 }
 
 case "$ACTION" in
   ls)
-    printf '%s\n' "Bento Builder virtualization environment"
+    printf '%s\n' 'Bento Builder virtualization environment'
     ;;
   install)
     if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bento-builder/${VERSION:-latest}/bin/bento-builder" ]; then
       log_info "bento-builder ${VERSION:-latest} is already installed."
       exit 0
     fi
-    log_info "Starting Bento Builder environment provisioning..."
+    log_info 'Starting Bento Builder environment provisioning...'
     configure_bento_repo
-    log_info "Bento Builder environment successfully provisioned!"
+    log_info 'Bento Builder environment successfully provisioned!'
     ;;
   test)
     exec "$DIR/test.sh"
     ;;
   uninstall)
-    log_info "Uninstalling Bento Builder stack components..."
+    log_info 'Uninstalling Bento Builder stack components...'
     ;;
 esac

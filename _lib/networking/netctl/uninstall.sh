@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,8 +34,8 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   printf '%s\n' "Usage: $(basename "$0")"
   printf '%s\n' "Handles the removal and uninstallation process for the component 'netctl' stack."
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
 
@@ -54,4 +53,4 @@ export PATH
 [ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 
-printf '%s\n' "Uninstalling netctl is not supported via this script."
+printf '%s\n' 'Uninstalling netctl is not supported via this script.'

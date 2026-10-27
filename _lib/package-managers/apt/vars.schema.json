@@ -14,6 +14,14 @@
       "description": "Specific version of apt to install.",
       "type": "string",
       "default": "latest"
+    },
+    "APT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading apt binary or archive artifacts."
+    },
+    "APT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying apt available remote releases."
     }
   }
 }

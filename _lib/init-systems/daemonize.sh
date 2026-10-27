@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -86,7 +85,7 @@ case "$ACTION" in
   remove|uninstall-service) ACTION="uninstall" ;;
   stop|down)
     if [ "$REMOVE_UNITS" -eq 1 ]; then
-      ACTION="uninstall"
+      ACTION='uninstall'
     fi
     ;;
 esac
@@ -124,7 +123,7 @@ if [ -z "${UV_BIN:-}" ] || { [ "${UV_BIN#/}" != "${UV_BIN:-}" ] && [ ! -x "${UV_
   elif [ -n "${REMOTE_HOME:-}" ] && [ -x "${REMOTE_HOME}/.local/bin/uv" ]; then
     export UV_BIN="${REMOTE_HOME}/.local/bin/uv"
   else
-    export UV_BIN="uv"
+    export UV_BIN='uv'
   fi
 fi
 if [ -z "${NPX_BIN:-}" ] || { [ "${NPX_BIN#/}" != "${NPX_BIN:-}" ] && [ ! -x "${NPX_BIN}" ]; }; then
@@ -132,7 +131,7 @@ if [ -z "${NPX_BIN:-}" ] || { [ "${NPX_BIN#/}" != "${NPX_BIN:-}" ] && [ ! -x "${
     NPX_BIN=$(command -v npx)
     export NPX_BIN
   else
-    export NPX_BIN="npx"
+    export NPX_BIN='npx'
   fi
 fi
 
@@ -343,7 +342,7 @@ while IFS= read -r svc <&3; do
   if [ "$ACTION" = "uninstall" ]; then
     libscript_uninstall_service "$NAME"
     [ -n "$CMD" ] && pkill -f "$CMD" 2>/dev/null || true
-    log_info "Uninstalled service '$NAME'."
+    log_info "[DAEMON] [UNINSTALL] Removed service unit '$NAME'."
     continue
   fi
 
@@ -354,11 +353,16 @@ while IFS= read -r svc <&3; do
   SVC_WORKDIR=$(resolve_workdir "$RAW_WORKDIR")
   SVC_USER=$(printf '%s\n' "$svc" | jq -r '.user // empty')
   SVC_USER=$(expand_manifest_vars "$SVC_USER")
+  SVC_PORT=$(printf '%s\n' "$svc" | jq -r '.port // empty' 2>/dev/null || true)
+  SVC_PORT=$(expand_manifest_vars "$SVC_PORT")
   SVC_DATA="${DATA_BASE}/${NAME}"
   mkdir -p "$SVC_DATA" 2>/dev/null || true
 
   if [ "$ACTION" = "start" ] || [ "$ACTION" = "up" ]; then
-    log_info "Configuring service '$NAME' (workdir: $SVC_WORKDIR)..."
+    _dm_init=$(libscript_detect_init_system)
+    _port_info=""
+    [ -n "$SVC_PORT" ] && _port_info=", port: $SVC_PORT"
+    log_info "[DAEMON] Configuring service '$NAME' (init: ${_dm_init}, workdir: ${SVC_WORKDIR}${_port_info})..."
     SVC_ENV_FILES=$(collect_service_env_files "$svc" "$SVC_WORKDIR")
     SVC_ENV_VARS=$(collect_service_env_vars "$svc")
     LIBSCRIPT_SERVICE_MANIFEST_DIR="$MANIFEST_DIR" \
@@ -368,17 +372,30 @@ while IFS= read -r svc <&3; do
       libscript_install_service "$NAME" "$CMD" "$SVC_WORKDIR" "$NAME service managed by libscript" "$SVC_ENV_VARS" "$SVC_USER" "$SVC_ENV_FILES"
     _dm_hc_url=$(printf '%s\n' "$svc" | jq -r '(.health_check // .healthcheck) as $hc | if ($hc | type) == "object" then ($hc.url // empty) else empty end' 2>/dev/null || true)
     _dm_hc_url=$(expand_manifest_vars "$_dm_hc_url")
-    if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_SERVICE_UNIT_UNCHANGED:-0}" = "1" ] && [ "$(libscript_detect_init_system)" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null && { [ -z "$_dm_hc_url" ] || curl -sf -m 3 "$_dm_hc_url" >/dev/null 2>&1; }; then
-      log_info "[REUSE] Daemon '$NAME' is already running and healthy."
-    elif ! libscript_service restart "$NAME" 2>/dev/null; then
-      libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_SERVICE_UNIT_UNCHANGED:-0}" = "1" ] && [ "$_dm_init" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null && { [ -z "$_dm_hc_url" ] || curl -sf -m 3 "$_dm_hc_url" >/dev/null 2>&1; }; then
+      log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
+    elif [ "$_dm_init" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null; then
+      log_info "[DAEMON] [RESTART] Restarting service '$NAME' via ${_dm_init}..."
+      libscript_service restart "$NAME" 2>/dev/null || libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
+      log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
+    elif libscript_service status "$NAME" >/dev/null 2>&1; then
+      log_info "[DAEMON] [RESTART] Restarting service '$NAME' via ${_dm_init}..."
+      libscript_service restart "$NAME" 2>/dev/null || libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
+      log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
+    else
+      log_info "[DAEMON] [START] Starting service '$NAME' via ${_dm_init}..."
+      if ! libscript_service restart "$NAME" 2>/dev/null; then
+        libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
+      fi
+      log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
     fi
   elif [ "$ACTION" = "stop" ] || [ "$ACTION" = "down" ]; then
+    log_info "[DAEMON] [STOP] Stopping service '$NAME'..."
     libscript_service stop "$NAME" >/dev/null 2>&1 || true
     libscript_service disable "$NAME" >/dev/null 2>&1 || true
     libscript_service_fallback stop "$NAME" >/dev/null 2>&1 || true
     pkill -f "$CMD" 2>/dev/null || true
-    log_info "Stopped service '$NAME'."
+    log_info "[DAEMON] [STOP] Stopped service '$NAME'."
   elif [ "$ACTION" = "status" ]; then
     PID_FILE="${SVC_DATA}/service.pid"
     if [ -f "$PID_FILE" ]; then

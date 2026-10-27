@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,7 +35,7 @@ export LIBSCRIPT_ROOT_DIR
 libscript_hook_configure() {
   comp="$1"
   shift
-  role="standalone"
+  role='standalone'
   sysroot="${LIBSCRIPT_TARGET_SYSROOT:-/}"
   tpl_file=""
   out_file=""
@@ -107,8 +106,8 @@ libscript_hook_probe() {
 libscript_hook_announce() {
   comp="$1"
   port=8080
-  proto="tcp"
-  vis="internal"
+  proto='tcp'
+  vis='internal'
   case "$comp" in
     postgres) port=5432; proto="tcp"; vis="internal" ;;
     mysql|mariadb) port=3306; proto="tcp"; vis="internal" ;;
@@ -124,7 +123,7 @@ libscript_hook_announce() {
 # Emits structured JSON listing active log file paths, system supervisor identifiers, and log format.
 libscript_hook_log_stream() {
   comp="$1"
-  fmt="syslog"
+  fmt='syslog'
   case "$comp" in
     postgres) fmt="postgres" ;;
     nginx|httpd|iis) fmt="clf" ;;
@@ -138,7 +137,7 @@ libscript_hook_log_stream() {
 libscript_hook_metrics() {
   comp="$1"
   mport=9100
-  mpath="/metrics"
+  mpath='/metrics'
   case "$comp" in
     postgres) mport=9187 ;;
     mysql|mariadb) mport=9104 ;;

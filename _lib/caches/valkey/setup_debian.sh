@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -115,7 +114,7 @@ else
   NOOP=0
   if [ "${FORCE_REINSTALL:-0}" != "1" ] && { command -v valkey-server >/dev/null 2>&1 || command -v redis-server >/dev/null 2>&1; }; then
     _valkey_debian_ensure_started
-    log_info "[REUSE] Valkey/Redis binary already installed."
+    log_info '[REUSE] Valkey/Redis binary already installed.'
     NOOP=1
   elif [ "${VALKEY_BUILD_FROM_SOURCE:-0}" = "1" ]; then
     libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
@@ -133,13 +132,13 @@ else
     fi
     cd -- "${PREVIOUS_WD}"
   else
-    if priv apt-get update -qq 2>/dev/null && priv apt-get install -y valkey >/dev/null 2>&1; then
+    if libscript_depends valkey >/dev/null 2>&1; then
       _valkey_debian_ensure_started
       NOOP=1
-    elif priv apt-get install -y valkey-server >/dev/null 2>&1; then
+    elif libscript_depends valkey-server >/dev/null 2>&1; then
       _valkey_debian_ensure_started
       NOOP=1
-    elif priv apt-get install -y redis-server >/dev/null 2>&1; then
+    elif libscript_depends redis-server >/dev/null 2>&1; then
       _valkey_debian_ensure_started
       NOOP=1
     else
@@ -159,14 +158,16 @@ if [ "${NOOP}" -eq 0 ]; then
   VALKEY_CONF="/tmp/valkey_$$.conf"
   cp -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/valkey.conf' "${VALKEY_CONF}"
   if [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-    grep -q "^port 0" "${VALKEY_CONF}" || sed -i "s|^port |port 0\n# port |g" "${VALKEY_CONF}"
-    sed -i -e "s|^bind |# bind |g" -e "s|^# unixsocket .*|unixsocket ${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}\nunixsocketperm 777|" "${VALKEY_CONF}"
+    grep -q "^port 0" "${VALKEY_CONF}" || {
+      sed "s|^port |port 0\n# port |g" "${VALKEY_CONF}" > "${VALKEY_CONF}.tmp" && mv "${VALKEY_CONF}.tmp" "${VALKEY_CONF}"
+    }
+    sed -e "s|^bind |# bind |g" -e "s|^# unixsocket .*|unixsocket ${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}\nunixsocketperm 777|" "${VALKEY_CONF}" > "${VALKEY_CONF}.tmp" && mv "${VALKEY_CONF}.tmp" "${VALKEY_CONF}"
   else
     if [ -n "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ]; then
-      sed -i "s|^bind .*|bind ${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}|" "${VALKEY_CONF}"
+      sed "s|^bind .*|bind ${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}|" "${VALKEY_CONF}" > "${VALKEY_CONF}.tmp" && mv "${VALKEY_CONF}.tmp" "${VALKEY_CONF}"
     fi
     if [ -n "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-      sed -i "s|^port .*|port ${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${VALKEY_CONF}"
+      sed "s|^port .*|port ${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${VALKEY_CONF}" > "${VALKEY_CONF}.tmp" && mv "${VALKEY_CONF}.tmp" "${VALKEY_CONF}"
     fi
   fi
   priv install -m 0644 -o 'root' -- "${VALKEY_CONF}" /etc/valkey.conf

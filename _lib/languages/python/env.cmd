@@ -10,7 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -71,27 +71,49 @@ if /i "%PYTHON_VERSION%"=="latest" (
         set "PYTHON_VERSION=3.12"
     )
 )
-set "PYTHONHOME=%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%"
+set "_PY_DIR=%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%"
 set "_NEW_PATH=!PATH!"
-echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!\Scripts;" >nul 2>&1
-if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!\Scripts;!_NEW_PATH!"
-echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!\bin;" >nul 2>&1
-if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!\bin;!_NEW_PATH!"
-echo ";!_NEW_PATH!;" | findstr /I /C:";!PYTHONHOME!;" >nul 2>&1
-if errorlevel 1 set "_NEW_PATH=!PYTHONHOME!;!_NEW_PATH!"
+echo ";!_NEW_PATH!;" | findstr /I /C:";!_PY_DIR!\Scripts;" >nul 2>&1
+if errorlevel 1 set "_NEW_PATH=!_PY_DIR!\Scripts;!_NEW_PATH!"
+echo ";!_NEW_PATH!;" | findstr /I /C:";!_PY_DIR!\bin;" >nul 2>&1
+if errorlevel 1 set "_NEW_PATH=!_PY_DIR!\bin;!_NEW_PATH!"
+echo ";!_NEW_PATH!;" | findstr /I /C:";!_PY_DIR!;" >nul 2>&1
+if errorlevel 1 set "_NEW_PATH=!_PY_DIR!;!_NEW_PATH!"
+
+for %%U in ("%UV_PYTHON_INSTALL_DIR%" "%APPDATA%\uv\python" "%LOCALAPPDATA%\uv\python") do (
+    if not "%%~U"=="" if exist "%%~U" (
+        for /d %%P in ("%%~U\cpython-%PYTHON_VERSION%*") do (
+            if exist "%%~fP\Scripts" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fP\Scripts;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fP\Scripts;!_NEW_PATH!"
+            )
+            if exist "%%~fP" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fP;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fP;!_NEW_PATH!"
+            )
+        )
+    )
+)
 
 set "_NEW_PYPATH=!PYTHONPATH!"
-echo ";!_NEW_PYPATH!;" | findstr /I /C:";!PYTHONHOME!\Lib\site-packages;" >nul 2>&1
-if errorlevel 1 (
-    if "!_NEW_PYPATH!"=="" (
-        set "_NEW_PYPATH=!PYTHONHOME!\Lib\site-packages"
-    ) else (
-        set "_NEW_PYPATH=!PYTHONHOME!\Lib\site-packages;!_NEW_PYPATH!"
+if exist "!_PY_DIR!\Lib\encodings" (
+    set "PYTHONHOME=!_PY_DIR!"
+    echo ";!_NEW_PYPATH!;" | findstr /I /C:";!PYTHONHOME!\Lib\site-packages;" >nul 2>&1
+    if errorlevel 1 (
+        if "!_NEW_PYPATH!"=="" (
+            set "_NEW_PYPATH=!PYTHONHOME!\Lib\site-packages"
+        ) else (
+            set "_NEW_PYPATH=!PYTHONHOME!\Lib\site-packages;!_NEW_PYPATH!"
+        )
     )
+) else (
+    set "PYTHONHOME="
 )
 
 set "_NEW_VENV=%VIRTUAL_ENV%"
 if not "%PYTHON_VENV%"=="" (
+    echo ";!_NEW_PATH!;" | findstr /I /C:";%PYTHON_VENV%;" >nul 2>&1
+    if errorlevel 1 set "_NEW_PATH=%PYTHON_VENV%;!_NEW_PATH!"
     echo ";!_NEW_PATH!;" | findstr /I /C:";%PYTHON_VENV%\Scripts;" >nul 2>&1
     if errorlevel 1 set "_NEW_PATH=%PYTHON_VENV%\Scripts;!_NEW_PATH!"
     set "_NEW_VENV=%PYTHON_VENV%"
@@ -100,6 +122,7 @@ if not "%PYTHON_VENV%"=="" (
 
 endlocal & (
     set "PYTHON_VERSION=%PYTHON_VERSION%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_BASE_DIR%"
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
     set "PYTHONHOME=%PYTHONHOME%"
     set "PYTHONPATH=%_NEW_PYPATH%"

@@ -14,7 +14,7 @@
     "HUGGINGFACE_CLI_INSTALL_METHOD": {
       "description": "How to install HUGGINGFACE_CLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "LIBSCRIPT_LISTEN_PORT": {
@@ -40,6 +40,14 @@
     "HUGGINGFACE_CLI_LISTEN_SOCKET": {
       "type": "string",
       "description": "Unix socket for HUGGINGFACE_CLI to listen on"
+    },
+    "HUGGINGFACE_CLI_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading huggingface-cli binary or archive artifacts."
+    },
+    "HUGGINGFACE_CLI_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying huggingface-cli available remote releases."
     }
   }
 }

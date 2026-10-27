@@ -13,6 +13,18 @@
       "description": "Specific version of choco to install.",
       "type": "string",
       "default": "latest"
+    },
+    "CHOCO_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading choco binary or archive artifacts."
+    },
+    "CHOCO_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying choco available remote releases."
+    },
+    "CHOCO_SOURCE": {
+      "type": "string",
+      "description": "Configuration variable CHOCO_SOURCE for choco."
     }
   },
   "description": "Configuration variables for choco"

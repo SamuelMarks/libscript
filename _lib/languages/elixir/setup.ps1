@@ -13,6 +13,8 @@ Execute this script to install and configure elixir on the local system.
 #>
 
 #!/usr/bin/env pwsh
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $InstallMethod = $env:ELIXIR_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
@@ -47,15 +49,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls elixir
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls elixir
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             elixir -v
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -67,32 +61,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote elixir
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls elixir
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/elixir-lang/elixir/releases"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/elixir-lang/elixir/releases"
             $Resp | ForEach-Object { $_.tag_name.Replace("v", "") } | Select-Object -First 100
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "elixir@${ElixirVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls elixir
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -172,18 +150,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Elixir.Elixir -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Elixir.Elixir\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y elixir
+    libscript_depends @(\"elixir\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "elixir@${ElixirVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls elixir; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $ElixirDir = Get-LibscriptVersionDir -Component "elixir" -Version $ExactVersion
@@ -197,7 +167,7 @@ switch ($Action) {
             $ZipName = "elixir-otp-25.zip" # Fallback to OTP 25 zip if needed, or better, use winget for Windows
             Write-Host "For Windows, Elixir binaries are tightly coupled with Erlang."
             Write-Host "Falling back to system installation for Windows..."
-            winget install --silent --force --id=Elixir.Elixir -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Elixir.Elixir\")
             
             Set-LibscriptAlias -Component "elixir" -AliasName $ElixirVersion -ExactVersion $ExactVersion
         }

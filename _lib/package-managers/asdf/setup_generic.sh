@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -68,11 +67,11 @@ case "$ACTION" in
     elif [ "$ASDF_INSTALL_METHOD" = "asdf" ]; then
       asdf list asdf || true
     elif [ "$ASDF_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
+      printf '%s\n' 'pkgx does not have a local list command'
     elif [ "$ASDF_INSTALL_METHOD" = "vfox" ]; then
       vfox ls asdf || true
     elif [ "$ASDF_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
+      printf '%s\n' 'System packages do not support ls here.'
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/" 2>/dev/null || true
     fi
@@ -84,14 +83,14 @@ case "$ACTION" in
     elif [ "$ASDF_INSTALL_METHOD" = "asdf" ]; then
       asdf list all asdf || true
     elif [ "$ASDF_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
+      printf '%s\n' 'pkgx does not have a local list command'
     elif [ "$ASDF_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all asdf || true
     else
       if [ -n "${ASDF_RELEASES_URL:-}" ]; then
-        curl -sSL "${ASDF_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+        libscript_fetch_stdout "${ASDF_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/libscript/asdf" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+      git ls-remote --tags "https://github.com/asdf-vm/asdf" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,21 +101,21 @@ case "$ACTION" in
     elif [ "$ASDF_INSTALL_METHOD" = "asdf" ]; then
       asdf global asdf "${VERSION}"
     elif [ "$ASDF_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
+      printf '%s\n' 'pkgx does not use explicit versions this way'
     elif [ "$ASDF_INSTALL_METHOD" = "vfox" ]; then
       vfox use "asdf@${VERSION}"
     elif [ "$ASDF_INSTALL_METHOD" = "vfox" ]; then
       vfox use "asdf@${VERSION}"
     elif [ "$ASDF_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "asdf" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "asdf" "default" "${EXACT_VERSION}"
       
       if [ "${EXACT_VERSION}" = "latest" ]; then
-        libscript_depends "curl"
-        EXACT_VERSION=$(curl -sL https://api.github.com/repos/asdf-vm/asdf/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
+        libscript_depends 'curl'
+        EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/asdf-vm/asdf/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
@@ -127,7 +126,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "asdf" "default" "${EXACT_VERSION}"
       log_info "Set default asdf version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env asdf \"$VERSION\")"
     fi
     exit 0
@@ -150,7 +149,7 @@ case "$ACTION" in
       exit 0
     fi
     if [ "$ASDF_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "asdf"
+      libscript_depends 'asdf'
     elif [ "$ASDF_INSTALL_METHOD" = "mise" ]; then
       mise install "asdf@${VERSION}"
     elif [ "$ASDF_INSTALL_METHOD" = "asdf" ]; then
@@ -164,12 +163,12 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       if [ "${EXACT_VERSION}" = "latest" ]; then
-        libscript_depends "curl"
-        EXACT_VERSION=$(curl -sL https://api.github.com/repos/asdf-vm/asdf/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
+        libscript_depends 'curl'
+        EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/asdf-vm/asdf/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
-        libscript_depends "curl" "tar"
+        libscript_depends 'curl' 'tar'
         log_info "Installing asdf ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -188,52 +187,7 @@ case "$ACTION" in
       libscript_symlink_alias "asdf" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$ASDF_INSTALL_METHOD" = "libscript_native" ] || [ "$ASDF_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-asdf}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $ASDF_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "asdf" "$ACTION" "$VERSION" "${ASDF_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$ASDF_INSTALL_METHOD" = "libscript_native" ] || [ "$ASDF_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-asdf}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $ASDF_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$ASDF_INSTALL_METHOD" = "libscript_native" ] || [ "$ASDF_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-asdf}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $ASDF_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$ASDF_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling asdf $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $ASDF_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

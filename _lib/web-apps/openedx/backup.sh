@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -85,7 +84,7 @@ backup_create() {
     esac
   done
 
-  log_info "Creating Open edX backup archive..."
+  log_info 'Creating Open edX backup archive...'
   "${BACKUP_HELPER}" backup "${OPENEDX_BACKUP_DIR}" "${OPENEDX_INSTALL_DIR}" "${_out}"
 }
 
@@ -94,7 +93,7 @@ backup_create() {
 backup_list() {
   log_info "Listing available backups in ${OPENEDX_BACKUP_DIR}..."
   if [ ! -d "${OPENEDX_BACKUP_DIR}" ]; then
-    log_info "No backups directory found."
+    log_info 'No backups directory found.'
     return 0
   fi
   _found=0
@@ -107,7 +106,7 @@ backup_list() {
   done
   set -f
   if [ "$_found" -eq 0 ]; then
-    log_info "No backup archives found."
+    log_info 'No backup archives found.'
   fi
 }
 

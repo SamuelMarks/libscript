@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 NVM_VERSION="${NVM_VERSION:-latest}"
-export NVM_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/${NVM_VERSION}"
+export NVM_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nvm/${NVM_VERSION}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
   if ! type local >/dev/null 2>&1; then
     alias local=typeset 2>/dev/null || true
@@ -43,3 +42,5 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   # shellcheck disable=SC1091
   . "$NVM_DIR/nvm.sh"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

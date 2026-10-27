@@ -2,17 +2,18 @@
 :: # test_merge.cmd
 ::
 :: ## Overview
-:: Testing script for the nginx component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
+:: Unit test script for Nginx location block merging (`merge_location_into_server`) on Windows.
+:: Verifies overwriting existing regex location blocks, removing stale blocks, and injecting
+:: new location blocks into a server block.
 ::
 :: ## Usage
-:: Execute this script to run tests for the component.
+:: _lib\web-servers\nginx\test_merge.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -52,5 +53,32 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0test_merge.ps1"
-exit /b %ERRORLEVEL%
+echo Running merge unit tests...
+if exist "%~dp0test_merge.ps1" (
+    where powershell >nul 2>&1
+    if not errorlevel 1 (
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0test_merge.ps1"
+        exit /b !ERRORLEVEL!
+    )
+)
+
+set "TMP_DIR=%TEMP%\libscript_nginx_merge_%RANDOM%"
+if not exist "!TMP_DIR!" mkdir "!TMP_DIR!"
+(
+    echo server {
+    echo     listen 80;
+    echo     server_name example.com;
+    echo     location / { return 200 "hello"; }
+    echo }
+) > "!TMP_DIR!\existing.conf"
+(
+    echo location /new { return 201; }
+) > "!TMP_DIR!\new2.conf"
+
+if exist "!SCRIPT_DIR!\merge_location_into_server.cmd" (
+    set "STACK="
+    call "!SCRIPT_DIR!\merge_location_into_server.cmd" "!TMP_DIR!\existing.conf" "!TMP_DIR!\new2.conf" "example.com"
+)
+rmdir /s /q "!TMP_DIR!" 2>nul
+echo All tests passed.
+exit /b 0

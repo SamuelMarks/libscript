@@ -16,31 +16,17 @@ $ErrorActionPreference = "Stop"
 
 #!/usr/bin/env pwsh
 
-$InstallMethod = $env:CC_INSTALL_METHOD
-if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
-}
-if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = "system"
-}
-
-$WinPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-if ([string]::IsNullOrEmpty($WinPkgMgr)) {
-    $WinPkgMgr = "winget"
-}
-
-if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --silent --force --id=LLVM.LLVM -e --accept-package-agreements --accept-source-agreements
-} elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    choco install -y LLVM.LLVM
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
+. (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.ps1")
+$CSetup = Join-Path $LibscriptRootDir "_lib\languages\c\setup.ps1"
+if (Test-Path $CSetup) {
+    & $CSetup
 } else {
-    Write-Host "From-source or alternative Windows package manager requested for cc."
-    winget install --silent --force --id=LLVM.LLVM -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @("LLVM.LLVM")
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls cc; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls cc; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "cc"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -48,15 +34,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote cc; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all cc; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "cc@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "cc@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

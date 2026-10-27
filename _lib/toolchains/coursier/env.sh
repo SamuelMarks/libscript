@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,11 +35,13 @@ unset SCRIPT_NAME || true
 
 COURSIER_VERSION="${COURSIER_VERSION:-latest}"
 if [ "${COURSIER_VERSION}" = "latest" ]; then
-  EXACT_VERSION="latest"
+  EXACT_VERSION='latest'
 else
   EXACT_VERSION="${COURSIER_VERSION}"
 fi
 
-export COURSIER_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
+export COURSIER_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/coursier/${EXACT_VERSION}"
 libscript_path_prepend "$COURSIER_ROOT/bin"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

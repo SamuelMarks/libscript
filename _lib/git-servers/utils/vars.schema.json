@@ -16,6 +16,22 @@
     "3": {
       "description": "branch",
       "type": "string"
+    },
+    "UTILS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading utils binary or archive artifacts."
+    },
+    "UTILS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Installation method for utils (libscript_native, system, or from-source)."
+    },
+    "UTILS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying utils available remote releases."
+    },
+    "UTILS_VERSION": {
+      "type": "string",
+      "description": "Specific version of utils to install (e.g., latest, lts, or exact version)."
     }
   },
   "required": ["1", "2"]

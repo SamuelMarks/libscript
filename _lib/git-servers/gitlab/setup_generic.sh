@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$GITLAB_INSTALL_METHOD" = "mise" ]; then
-      mise ls gitlab || true
-    elif [ "$GITLAB_INSTALL_METHOD" = "asdf" ]; then
-      asdf list gitlab || true
-    elif [ "$GITLAB_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$GITLAB_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls gitlab || true
-    elif [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gitlab/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "gitlab" "$ACTION" "$VERSION" "${GITLAB_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$GITLAB_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote gitlab || true
-    elif [ "$GITLAB_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all gitlab || true
-    elif [ "$GITLAB_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$GITLAB_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all gitlab || true
+    if [ -n "${GITLAB_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${GITLAB_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${GITLAB_RELEASES_URL:-}" ]; then
-        curl -sSL "${GITLAB_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/gitlab" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://gitlab.com/gitlab-org/gitlab" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$GITLAB_INSTALL_METHOD" = "mise" ]; then
-      mise use "gitlab@${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "asdf" ]; then
-      asdf global gitlab "${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$GITLAB_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "gitlab@${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "gitlab@${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "gitlab" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "gitlab" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gitlab/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "gitlab ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "gitlab" "default" "${EXACT_VERSION}"
-      log_info "Set default gitlab version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env gitlab \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "gitlab" "$ACTION" "$VERSION" "${GITLAB_INSTALL_METHOD}"
     ;;
   download)
     if [ "$GITLAB_INSTALL_METHOD" = "libscript_native" ]; then
@@ -144,108 +91,52 @@ case "$ACTION" in
   install)
     if [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "gitlab"; then
-        log_info "System package manager does not have gitlab. Falling back to native..."
-        GITLAB_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have gitlab. Falling back to native...'
+        GITLAB_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "$GITLAB_INSTALL_METHOD" = "mise" ]; then
-      mise install "gitlab@${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "asdf" ]; then
-      asdf install gitlab "${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "gitlab@${VERSION}"
-    elif [ "$GITLAB_INSTALL_METHOD" = "vfox" ]; then
-      vfox add gitlab || true
-      vfox install "gitlab@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gitlab/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing gitlab ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitlab/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitlab/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/gitlab" || true
-              chmod +x "${TARGET_DIR}/bin/gitlab" || true
-            fi
-          fi
-        else
-          if [ -n "${GITLAB_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${GITLAB_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${GITLAB_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${GITLAB_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gitlab" || true
-              chmod +x "${TARGET_DIR}/bin/gitlab" || true
-            fi
-            rm -f "${TEMP_FILE}"
+    # libscript_native implementation
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gitlab/${EXACT_VERSION}"
+    if [ ! -d "${TARGET_DIR}" ]; then
+      log_info "Installing gitlab ${VERSION} natively to ${TARGET_DIR}..."
+      mkdir -p "${TARGET_DIR}/bin"
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitlab/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info 'Extracting from cache...'
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitlab/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
           else
-            log_warn "No download URL provided for gitlab ${VERSION}."
+            cp "$cache_file" "${TARGET_DIR}/bin/gitlab" || true
+            chmod +x "${TARGET_DIR}/bin/gitlab" || true
           fi
         fi
       else
-        log_info "gitlab ${VERSION} is already installed."
+        if [ -n "${GITLAB_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${GITLAB_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${GITLAB_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${GITLAB_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gitlab" || true
+            chmod +x "${TARGET_DIR}/bin/gitlab" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for gitlab ${VERSION}."
+        fi
       fi
-      libscript_symlink_alias "gitlab" "$VERSION" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$GITLAB_INSTALL_METHOD" = "libscript_native" ] || [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gitlab}}"
-      libscript_service "$ACTION" "$service_name" "$@"
     else
-      log_info "$ACTION not natively implemented for $GITLAB_INSTALL_METHOD."
+      log_info "gitlab ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "gitlab" "$VERSION" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$GITLAB_INSTALL_METHOD" = "libscript_native" ] || [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gitlab}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $GITLAB_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "gitlab" "$ACTION" "$VERSION" "${GITLAB_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$GITLAB_INSTALL_METHOD" = "libscript_native" ] || [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gitlab}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $GITLAB_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$GITLAB_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling gitlab $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/gitlab/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/gitlab/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $GITLAB_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

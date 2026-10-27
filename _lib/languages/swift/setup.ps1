@@ -13,6 +13,8 @@ Execute this script to install and configure swift on the local system.
 #>
 
 #!/usr/bin/env pwsh
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $InstallMethod = $env:SWIFT_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
@@ -47,15 +49,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls swift
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls swift
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             swift --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -67,15 +61,7 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote swift
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls swift
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
             Write-Host "5.9.2"
@@ -86,15 +72,7 @@ switch ($Action) {
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "swift@${SwiftVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls swift
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -174,18 +152,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Apple.Swift -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Apple.Swift\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y swift
+    libscript_depends @(\"swift\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "swift@${SwiftVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls swift; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $SwiftDir = Get-LibscriptVersionDir -Component "swift" -Version $ExactVersion
@@ -198,7 +168,7 @@ switch ($Action) {
 
             Write-Host "Downloading Swift for Windows natively is currently better handled by Winget."
             Write-Host "Falling back to system winget installation..."
-            winget install --silent --force --id=Apple.Swift -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Apple.Swift\")
             
             Set-LibscriptAlias -Component "swift" -AliasName $SwiftVersion -ExactVersion $ExactVersion
         }

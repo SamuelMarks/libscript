@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$NVM_INSTALL_METHOD" = "mise" ]; then
-      mise ls nvm || true
-    elif [ "$NVM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list nvm || true
-    elif [ "$NVM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NVM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls nvm || true
-    elif [ "$NVM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "nvm" "$ACTION" "$VERSION" "${NVM_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$NVM_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote nvm || true
-    elif [ "$NVM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all nvm || true
-    elif [ "$NVM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NVM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all nvm || true
+    if [ -n "${NVM_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${NVM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${NVM_RELEASES_URL:-}" ]; then
-        curl -sSL "${NVM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/nvm-sh/nvm.git" 2>/dev/null | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/nvm-sh/nvm.git" 2>/dev/null | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$NVM_INSTALL_METHOD" = "mise" ]; then
-      mise use "nvm@${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "asdf" ]; then
-      asdf global nvm "${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$NVM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nvm@${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nvm@${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "nvm" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "nvm" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "nvm ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "nvm" "default" "${EXACT_VERSION}"
-      log_info "Set default nvm version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nvm \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "nvm" "$ACTION" "$VERSION" "${NVM_INSTALL_METHOD}"
     ;;
   download)
     if [ "$NVM_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,25 +90,16 @@ case "$ACTION" in
     ;;
   install)
     if [ "$NVM_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "nvm"
-    elif [ "$NVM_INSTALL_METHOD" = "mise" ]; then
-      mise install "nvm@${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "asdf" ]; then
-      asdf install nvm "${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "nvm@${VERSION}"
-    elif [ "$NVM_INSTALL_METHOD" = "vfox" ]; then
-      vfox add nvm || true
-      vfox install "nvm@${VERSION}"
+      libscript_depends 'nvm'
     else
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing nvm ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "git"
+        libscript_depends 'git'
         if [ "${EXACT_VERSION}" = "latest" ]; then
-           EXACT_VERSION=$(git ls-remote --tags "https://github.com/nvm-sh/nvm.git" | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | sort -V | tail -n1)
+           EXACT_VERSION=$(git ls-remote --tags "https://github.com/nvm-sh/nvm.git" | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | libscript_sort_versions | tail -n1)
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
@@ -174,52 +112,7 @@ case "$ACTION" in
 
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NVM_INSTALL_METHOD" = "libscript_native" ] || [ "$NVM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nvm}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $NVM_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nvm" "$ACTION" "$VERSION" "${NVM_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$NVM_INSTALL_METHOD" = "libscript_native" ] || [ "$NVM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nvm}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NVM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$NVM_INSTALL_METHOD" = "libscript_native" ] || [ "$NVM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nvm}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NVM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NVM_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nvm $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nvm/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NVM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

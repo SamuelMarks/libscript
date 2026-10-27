@@ -207,6 +207,10 @@
     "db_url": {
       "type": "string",
       "description": "Full database connection string or URL."
+    },
+    "WORDPRESS_SKIP_DEPS": {
+      "type": "string",
+      "description": "Configuration variable WORDPRESS_SKIP_DEPS for wordpress."
     }
   }
 }

@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,9 +35,11 @@ unset SCRIPT_NAME || true
 
 ARIA2_VERSION="${ARIA2_VERSION:-latest}"
 if [ "${ARIA2_VERSION}" = "latest" ]; then
-  EXACT_VERSION="latest"
+  EXACT_VERSION='latest'
 else
   EXACT_VERSION="${ARIA2_VERSION}"
 fi
 
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/${EXACT_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/aria2/${EXACT_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

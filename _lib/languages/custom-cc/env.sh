@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +38,9 @@ unset SCRIPT_NAME || true
 export LIBSCRIPT_ROOT_DIR
 
 _cc_ver="${CUSTOM_CC_VERSION:-default}"
-_cc_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/${_cc_ver}"
-if [ ! -d "${_cc_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/default" ]; then
-  _cc_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/default"
+_cc_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/${_cc_ver}"
+if [ ! -d "${_cc_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/default" ]; then
+  _cc_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/default"
 fi
 
 if [ -d "${_cc_prefix}/bin" ]; then
@@ -57,5 +56,7 @@ else
 fi
 
 export HOSTCC="${CC}"
-export CC_BACKEND="custom-cc"
-export CUSTOM_CC_LOG_FILE="${CUSTOM_CC_LOG_FILE:-${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/compile_events.jsonl}"
+export CC_BACKEND='custom-cc'
+export CUSTOM_CC_LOG_FILE="${CUSTOM_CC_LOG_FILE:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/compile_events.jsonl}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

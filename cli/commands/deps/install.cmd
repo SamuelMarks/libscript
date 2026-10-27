@@ -10,7 +10,7 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -96,20 +96,68 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
 )
 
+for %%F in ("!json_file!") do set "_manifest_dir=%%~dpF"
+if "!_manifest_dir:~-1!"=="\" set "_manifest_dir=!_manifest_dir:~0,-1!"
+if "!force_reinstall!"=="1" (
+    echo [INFO] [FORCE-REINSTALL] Cleaning local virtualenvs and node_modules in !_manifest_dir!...
+    for /d %%D in ("!_manifest_dir!" "!_manifest_dir!\*") do (
+        if exist "%%~fD\.venv" rmdir /s /q "%%~fD\.venv" 2>nul
+        if exist "%%~fD\venv" rmdir /s /q "%%~fD\venv" 2>nul
+        if exist "%%~fD\node_modules" rmdir /s /q "%%~fD\node_modules" 2>nul
+    )
+)
+if "!force_rebuild!"=="1" (
+    echo [INFO] [FORCE-REBUILD] Cleaning frontend build caches ^(dist, build, .angular^) in !_manifest_dir!...
+    for /d %%D in ("!_manifest_dir!" "!_manifest_dir!\*") do (
+        if exist "%%~fD\dist" rmdir /s /q "%%~fD\dist" 2>nul
+        if exist "%%~fD\build" rmdir /s /q "%%~fD\build" 2>nul
+        if exist "%%~fD\.angular" rmdir /s /q "%%~fD\.angular" 2>nul
+    )
+)
+
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_install"
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
 REM Parallel Download Phase
 echo Checking and downloading missing dependencies in parallel...
+set "_DL_LOCK_DIR=%TEMP%\libscript_dl_%RANDOM%"
+if not exist "!_DL_LOCK_DIR!" mkdir "!_DL_LOCK_DIR!"
+set /a _DL_COUNT=0
 for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
-    if "%%c"=="" (
-        start "" /b cmd /c "call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" download "%%a" "%%b""
-    ) else if "%%c"=="null" (
-        start "" /b cmd /c "call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" download "%%a" "%%b""
+    set "_dl_skip=0"
+    if not "%%c"=="" (
+        if not "%%c"=="null" set "_dl_skip=1"
+    )
+    if "!_dl_skip!"=="0" (
+        if "!force_reinstall!"=="0" (
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" (
+                set "STACK="
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_check_installed_version "%%a" "%%b" >nul 2>&1
+                if not errorlevel 1 set "_dl_skip=1"
+            )
+        )
+    )
+    if "!_dl_skip!"=="0" (
+        set /a _DL_COUNT+=1
+        echo pending > "!_DL_LOCK_DIR!\dl_!_DL_COUNT!.lock"
+        start "" /b cmd /c "call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" download "%%a" "%%b" & del /f /q "!_DL_LOCK_DIR!\dl_!_DL_COUNT!.lock" >nul 2>&1"
     )
 )
 
-ping 127.0.0.1 -n 4 >nul
+set /a _DL_WAIT_ITER=0
+:: ## wait_parallel_downloads
+:: Polls active background download lock files until all parallel downloads complete.
+:wait_parallel_downloads
+set "_DL_REMAINING=0"
+if exist "!_DL_LOCK_DIR!\*.lock" set "_DL_REMAINING=1"
+if "!_DL_REMAINING!"=="1" (
+    if !_DL_WAIT_ITER! lss 300 (
+        set /a _DL_WAIT_ITER+=1
+        ping 127.0.0.1 -n 2 >nul
+        goto :wait_parallel_downloads
+    )
+)
+if exist "!_DL_LOCK_DIR!" rmdir /s /q "!_DL_LOCK_DIR!" 2>nul
 
 REM Serial Reuse-Else-Create Install Phase
 echo Resolving dependencies ^(reuse-else-create^)...
@@ -140,20 +188,33 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
         if exist "%%C\%%a\env.cmd" (
             set "STACK="
             set "LIBSCRIPT_VERSION=%%b"
+            set "_pkg_up=%%a"
+            set "_pkg_up=!_pkg_up:-=_!"
+            for %%U in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do set "_pkg_up=!_pkg_up:%%U=%%U!"
+            set "!_pkg_up!_VERSION=%%b"
             call "%%C\%%a\env.cmd"
+            set "LIBSCRIPT_VERSION="
         )
     )
 )
+set "LIBSCRIPT_VERSION="
 if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
+
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
+)
 
 for %%F in ("!json_file!") do set "_MANIFEST_DIR=%%~dpF"
 if "!_MANIFEST_DIR:~-1!"=="\" set "_MANIFEST_DIR=!_MANIFEST_DIR:~0,-1!"
 set "_ENV_OUT=!_MANIFEST_DIR!\.env.libscript"
 if exist "!_ENV_OUT!" (
-    findstr /v /b /c:"PATH=" /c:"SERVICE_PATH=" "!_ENV_OUT!" > "!_ENV_OUT!.tmp" 2>nul
+    findstr /v /b /c:"PATH=" /c:"SERVICE_PATH=" /c:"SERVICE_EXTRA_PATH=" "!_ENV_OUT!" > "!_ENV_OUT!.tmp" 2>nul
     move /y "!_ENV_OUT!.tmp" "!_ENV_OUT!" >nul 2>&1
 )
-echo PATH=!PATH!>> "!_ENV_OUT!"
+if defined SERVICE_EXTRA_PATH (
+    echo SERVICE_EXTRA_PATH=!SERVICE_EXTRA_PATH!>> "!_ENV_OUT!"
+)
 echo SERVICE_PATH=!PATH!>> "!_ENV_OUT!"
 
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
@@ -178,6 +239,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_install"
 if errorlevel 1 exit /b 1
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
+if errorlevel 1 exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
 if errorlevel 1 exit /b 1
 endlocal & (
     set "PATH=%PATH%"

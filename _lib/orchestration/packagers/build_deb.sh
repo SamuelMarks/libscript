@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -62,7 +61,7 @@ if [ -d "$STAGE_DIR" ]; then
 else
   mkdir -p "$WORK_DIR/data/usr/bin"
   printf '#!/bin/sh
-echo "%s %s"
+echo '\''%s %s'\''
 ' "$PKG_NAME" "$PKG_VER" > "$WORK_DIR/data/usr/bin/$PKG_NAME"
   chmod 755 "$WORK_DIR/data/usr/bin/$PKG_NAME"
 fi

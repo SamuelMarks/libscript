@@ -10,7 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,6 +50,9 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "xpk"
+if "%XPK_VERSION%"=="" set "XPK_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"
 ) else (
@@ -59,14 +62,18 @@ set "XPK_DIR=%LIBSCRIPT_BASE_DIR%\xpk\%XPK_VERSION%"
 set "_CAND_P=%XPK_DIR%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "xpk"
-set "PYTHONPATH=%XPK_DIR%;%PYTHONPATH%"
+if "%PYTHONPATH%"=="" (
+    set "PYTHONPATH=%XPK_DIR%"
+) else (
+    echo ";!PYTHONPATH!;" | findstr /I /C:";!XPK_DIR!;" >nul 2>&1
+    if errorlevel 1 set "PYTHONPATH=%XPK_DIR%;%PYTHONPATH%"
+)
 
 endlocal & (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
     set "PATH=%PATH%"
     set "PYTHONPATH=%PYTHONPATH%"
     set "XPK_DIR=%XPK_DIR%"
+    set "XPK_VERSION=%XPK_VERSION%"
 )
 exit /b 0

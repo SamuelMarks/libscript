@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,7 +54,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION=$(curl -sL https://api.github.com/repos/pkgxdev/pkgx/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+      EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/pkgxdev/pkgx/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -69,7 +68,7 @@ case "$ACTION" in
     elif [ "$PKGX_INSTALL_METHOD" = "asdf" ]; then
       asdf list pkgx || true
     elif [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
+      printf '%s\n' 'System packages do not support ls here.'
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/" 2>/dev/null || true
     fi
@@ -82,9 +81,9 @@ case "$ACTION" in
       asdf list all pkgx || true
     else
       if [ -n "${PKGX_RELEASES_URL:-}" ]; then
-        curl -sSL "${PKGX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+        libscript_fetch_stdout "${PKGX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/libscript/pkgx" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+      git ls-remote --tags "https://github.com/freebsd/pkgx" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -97,7 +96,7 @@ case "$ACTION" in
     elif [ "$PKGX_INSTALL_METHOD" = "vfox" ]; then
       vfox use "pkgx@${VERSION}"
     elif [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "pkgx" "default" "${EXACT_VERSION}"
@@ -111,7 +110,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "pkgx" "default" "${EXACT_VERSION}"
       log_info "Set default pkgx version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env pkgx \"$VERSION\")"
     fi
     exit 0
@@ -130,7 +129,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pkgx"
+      libscript_depends 'pkgx'
     elif [ "$PKGX_INSTALL_METHOD" = "mise" ]; then
       mise install "pkgx@${VERSION}"
     elif [ "$PKGX_INSTALL_METHOD" = "asdf" ]; then
@@ -144,8 +143,8 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       if [ "${EXACT_VERSION}" = "latest" ]; then
-         libscript_depends "curl"
-         EXACT_VERSION=$(curl -sL https://api.github.com/repos/pkgxdev/pkgx/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+         libscript_depends 'curl'
+         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/pkgxdev/pkgx/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
@@ -157,9 +156,9 @@ case "$ACTION" in
         if [ "$OS" = "darwin" ]; then OS="darwin"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
         URL="https://github.com/pkgxdev/pkgx/releases/download/v${EXACT_VERSION}/pkgx-${EXACT_VERSION}+${OS}+${ARCH}.tar.xz"
         TEMP_FILE=$(mktemp)
-        libscript_depends "curl"
-        libscript_depends "tar"
-        libscript_depends "xz"
+        libscript_depends 'curl'
+        libscript_depends 'tar'
+        libscript_depends 'xz'
         if ! libscript_download "$URL" "$TEMP_FILE"; then
           log_error "Failed to download pkgx from $URL"
           rm -f "$TEMP_FILE"
@@ -174,52 +173,7 @@ case "$ACTION" in
       libscript_symlink_alias "pkgx" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$PKGX_INSTALL_METHOD" = "libscript_native" ] || [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pkgx}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $PKGX_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "pkgx" "$ACTION" "$VERSION" "${PKGX_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$PKGX_INSTALL_METHOD" = "libscript_native" ] || [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pkgx}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $PKGX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$PKGX_INSTALL_METHOD" = "libscript_native" ] || [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pkgx}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $PKGX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$PKGX_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling pkgx $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $PKGX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

@@ -13,6 +13,9 @@ Execute this script to install and configure java on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -43,15 +46,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls java
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls java
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             java -version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -63,15 +58,7 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote java
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls java
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
             Write-Host "8`n11`n17`n21`n22"
@@ -79,15 +66,7 @@ switch ($Action) {
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "java@${JavaVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls java
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             Set-LibscriptAlias -Component "java" -AliasName $JavaVersion -ExactVersion $JavaVersion
@@ -157,18 +136,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Microsoft.OpenJDK.17 -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Microsoft.OpenJDK.17\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y openjdk17
+    libscript_depends @(\"openjdk17\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "java@${JavaVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls java; exit 1
         } else {
             $JavaDir = Get-LibscriptVersionDir -Component "java" -Version $JavaVersion
             $JavaExe = Join-Path $JavaDir "bin\java.exe"
@@ -197,7 +168,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() "java-$JavaVersion.zip"
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $JavaDir"
             Expand-Archive -Path $TempZip -DestinationPath $JavaDir -Force

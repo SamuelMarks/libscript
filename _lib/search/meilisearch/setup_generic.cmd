@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -82,7 +82,7 @@ if "%ACTION%"=="install" (
         set "BIN_URL=https://github.com/meilisearch/meilisearch/releases/download/%MEILISEARCH_VERSION%/meilisearch-windows-amd64.exe"
     )
     echo [INFO] Downloading Meilisearch from !BIN_URL!...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '!BIN_URL!' -OutFile '!TARGET_DIR!\meilisearch.exe'"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!BIN_URL!" "!TARGET_DIR!\meilisearch.exe" "SKIP"
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     rmdir /s /q "%LIBSCRIPT_HOME%\meilisearch\%MEILISEARCH_VERSION%" 2>nul

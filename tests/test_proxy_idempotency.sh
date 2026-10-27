@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -70,7 +69,7 @@ run_idempotency_scenario() {
   # The actual script uses `nginx -t` which fails locally without nginx installed.
   
   # For validation, we use AWK logic identically to the script
-  _app_id="wordpress"
+  _app_id='wordpress'
   _block_file="${THIS_DIR}/.tmp_block"
   
   cat <<EOF > "$_block_file"
@@ -133,8 +132,8 @@ run_rollback_scenario() {
 run_side_by_side_scenario() {
   printf '[TEST] Scenario: Side-by-Side Coexistence...\n'
   
-  _app1="openedx"
-  _app2="drupal"
+  _app1='openedx'
+  _app2='drupal'
   
   printf '\n# BEGIN libscript-managed: %s\nserver1\n# END libscript-managed: %s\n' "$_app1" "$_app1" >> "$TEST_CONF"
   printf '\n# BEGIN libscript-managed: %s\nserver2\n# END libscript-managed: %s\n' "$_app2" "$_app2" >> "$TEST_CONF"

@@ -14,6 +14,14 @@
       "description": "Specific version of rye to install.",
       "type": "string",
       "default": "latest"
+    },
+    "RYE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading rye binary or archive artifacts."
+    },
+    "RYE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying rye available remote releases."
     }
   }
 }

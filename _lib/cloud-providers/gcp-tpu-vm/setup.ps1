@@ -14,81 +14,15 @@ Execute this script to install and configure tpu-vm on the local system.
 
 $ErrorActionPreference = "Stop"
 
-$GcpCliVersion = $env:GCP_CLI_VERSION
-if ([string]::IsNullOrEmpty($GcpCliVersion)) {
-    $GcpCliVersion = "latest"
-}
-
-$InstallMethod = $env:GCP_CLI_INSTALL_METHOD
-if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
-}
-if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = "libscript_native"
-}
-
-if ($InstallMethod -eq "system") {
-    $PkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-    if ([string]::IsNullOrEmpty($PkgMgr)) {
-        $PkgMgr = "winget"
-    }
-    if ($PkgMgr -eq "winget") {
-        winget install Google.CloudSDK
-    } elseif ($PkgMgr -eq "choco") {
-        choco install gcloudsdk
-    } else {
-        Write-Error "Unsupported Windows package manager: $PkgMgr"
-    }
-} else {
-    $Prefix = $env:PREFIX
-    if ([string]::IsNullOrEmpty($Prefix)) {
-        $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-        $Prefix = "$LibscriptRootDir\installed\gcp-cli"
-    }
-
-    if ($GcpCliVersion -eq "latest") {
-        $GcpCliVersion = "476.0.0"
-    }
-
-    if (-not (Test-Path -Path "$Prefix\bin\gcloud.cmd")) {
-        $Url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${GcpCliVersion}-windows-x86_64.zip"
-
-        Write-Host "Downloading GCP CLI from $Url ..."
-        $ZipPath = "$Prefix\google-cloud-cli.zip"
-        
-        if (-not (Test-Path -Path $Prefix)) {
-            New-Item -ItemType Directory -Path $Prefix -Force | Out-Null
-        }
-
-        Invoke-WebRequest -Uri $Url -OutFile $ZipPath -UseBasicParsing
-        Write-Host "Extracting archive..."
-        Expand-Archive -Path $ZipPath -DestinationPath $Prefix -Force
-        Remove-Item -Path $ZipPath
-
-        $ExtractedFolder = "$Prefix\google-cloud-sdk"
-        if (Test-Path -Path $ExtractedFolder) {
-            Move-Item -Path "$ExtractedFolder\*" -Destination $Prefix -Force
-            Remove-Item -Path $ExtractedFolder -Recurse
-        }
-
-        & "$Prefix\install.bat" --quiet
-        & "$Prefix\bin\gcloud.cmd" components install alpha beta compute --quiet
-
-        Write-Host "GCP CLI installed to $Prefix"
-    } else {
-        Write-Host "GCP CLI already installed at $Prefix\bin\gcloud.cmd"
-    }
-
-    $AuthOutput = & "$Prefix\bin\gcloud.cmd" auth print-access-token 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "No valid auth found. Running gcloud auth login..."
-        & "$Prefix\bin\gcloud.cmd" auth login
-    }
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
+. (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.ps1")
+$GcpCliSetup = Join-Path $LibscriptRootDir "_lib\cloud-providers\gcp-cli\setup.ps1"
+if (Test-Path $GcpCliSetup) {
+    & $GcpCliSetup
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls gcp; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls gcp; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "gcp"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -96,15 +30,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote gcp; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all gcp; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "gcp@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "gcp@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

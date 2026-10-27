@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -110,6 +109,17 @@ if printf '%s\n' "$ENV_OUT" | grep -q "_common"; then
   printf '[FAIL] _common path pollution detected in env --manifest output!\n' >&2
   exit 1
 fi
+
+DOTENV_OUT=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" env --manifest "$MANIFEST" dotenv)
+PATH_LINE_COUNT=$(printf '%s\n' "$DOTENV_OUT" | grep -c '^PATH=')
+if [ "$PATH_LINE_COUNT" -ne 1 ]; then
+  printf '[FAIL] Expected exactly 1 PATH= line in dotenv output, got %s\n' "$PATH_LINE_COUNT" >&2
+  exit 1
+fi
+printf '%s\n' "$DOTENV_OUT" | grep '^PATH=' | grep -q "nodejs/22/bin"
+printf '%s\n' "$DOTENV_OUT" | grep '^PATH=' | grep -q "postgres/17/bin"
+printf '%s\n' "$DOTENV_OUT" | grep '^PATH=' | grep -q "python/3.12/bin"
+printf '%s\n' "$DOTENV_OUT" | grep '^SERVICE_PATH=' | grep -q "nodejs/22/bin"
 
 printf '==> Testing run_hooks.sh multi-component PATH inheritance...
 '

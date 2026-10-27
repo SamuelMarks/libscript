@@ -24,8 +24,6 @@ if (Test-Path "$env:RUST_SERVER_DEST\Cargo.toml") {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls rust-server; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls rust-server; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "rust-server"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -33,15 +31,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote rust-server; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all rust-server; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "rust-server@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "rust-server@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

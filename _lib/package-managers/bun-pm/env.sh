@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,11 +39,13 @@ unset SCRIPT_NAME || true
 
 
 BUN_PM_VERSION="${BUN_PM_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun-pm/${BUN_PM_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun-pm/${BUN_PM_VERSION}/bin"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/bun/env.sh" ]; then
   # shellcheck disable=SC1090,SC1091
   . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/bun/env.sh"
 else
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin" "${HOME}/.bun/bin"
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin" "${HOME:-/root}/.bun/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

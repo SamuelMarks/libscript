@@ -14,6 +14,14 @@
       "description": "Specific version of mix to install.",
       "type": "string",
       "default": "latest"
+    },
+    "MIX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading mix binary or archive artifacts."
+    },
+    "MIX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying mix available remote releases."
     }
   }
 }

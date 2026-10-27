@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,23 +34,23 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Displays usage instructions and supported CLI parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") --tag <tag> [OPTIONS]"
-  printf '%s\n' "Publishes installer artifacts and checksums to GitHub Releases."
+  printf '%s\n' 'Publishes installer artifacts and checksums to GitHub Releases.'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --tag <tag>         Release tag name (required, e.g. v1.0.0)."
-  printf '%s\n' "  --dist-dir <dir>    Directory containing built release assets (default: dist)."
-  printf '%s\n' "  --title <title>     Release title (default: matches tag name)."
-  printf '%s\n' "  --draft             Publish release as a draft."
-  printf '%s\n' "  --prerelease        Publish release as a pre-release."
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --tag <tag>         Release tag name (required, e.g. v1.0.0).'
+  printf '%s\n' '  --dist-dir <dir>    Directory containing built release assets (default: dist).'
+  printf '%s\n' '  --title <title>     Release title (default: matches tag name).'
+  printf '%s\n' '  --draft             Publish release as a draft.'
+  printf '%s\n' '  --prerelease        Publish release as a pre-release.'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 TAG=""
-DIST_DIR="dist"
+DIST_DIR='dist'
 TITLE=""
-IS_DRAFT="false"
-IS_PRERELEASE="false"
+IS_DRAFT='false'
+IS_PRERELEASE='false'
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -68,11 +67,11 @@ while [ $# -gt 0 ]; do
       shift 2 || true
       ;;
     --draft)
-      IS_DRAFT="true"
+      IS_DRAFT='true'
       shift
       ;;
     --prerelease)
-      IS_PRERELEASE="true"
+      IS_PRERELEASE='true'
       shift
       ;;
     --help|-h|/\?|-\?)

@@ -13,6 +13,8 @@ Execute this script to install and configure pkgx on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 if (Get-Command pkgx -ErrorAction SilentlyContinue) {
     Write-Host "[INFO] pkgx is already installed."
@@ -21,7 +23,7 @@ if (Get-Command pkgx -ErrorAction SilentlyContinue) {
 
 Write-Host "[INFO] Bootstrapping pkgx for Windows..."
 $installer = Join-Path $env:TEMP "install-pkgx.ps1"
-Invoke-RestMethod -Uri "https://pkgx.sh" -OutFile $installer
+libscript_download "https://pkgx.sh" $installer
 & $installer
 Remove-Item -Force $installer -ErrorAction SilentlyContinue
 Write-Host "[INFO] pkgx successfully installed."

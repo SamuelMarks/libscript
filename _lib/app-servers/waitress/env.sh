@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,3 +37,5 @@ unset SCRIPT_NAME || true
 export WAITRESS_PORT="${WAITRESS_PORT:-8000}"
 export WAITRESS_HOST="${WAITRESS_HOST:-0.0.0.0}"
 export WAITRESS_THREADS="${WAITRESS_THREADS:-4}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

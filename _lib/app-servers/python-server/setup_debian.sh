@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -72,6 +71,7 @@ if [ "${PYTHON_SERVER_VARS-}" ]; then
       grep -v "^export ${key}=" "${LIBSCRIPT_DATA_DIR}/dyn_env.sh" > "${tmp_env}" || true
       cat "${tmp_env}" > "${LIBSCRIPT_DATA_DIR}/dyn_env.sh"
     done
+    rm -f "${tmp_env}"
   fi
   if [ -f "${LIBSCRIPT_DATA_DIR}/dyn_env.csh" ]; then
     tmp_env=$(mktemp)
@@ -81,8 +81,12 @@ if [ "${PYTHON_SERVER_VARS-}" ]; then
     done
     rm -f "${tmp_env}"
   fi
-  libscript_object2key_val "${PYTHON_SERVER_VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
-  libscript_object2key_val "${PYTHON_SERVER_VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
+  libscript_object2key_val "${PYTHON_SERVER_VARS}" 'export ' "'" | while IFS= read -r _kv_line; do
+    grep -qF "$_kv_line" "${LIBSCRIPT_DATA_DIR}/dyn_env.sh" 2>/dev/null || printf '%s\n' "$_kv_line" >> "${LIBSCRIPT_DATA_DIR}/dyn_env.sh"
+  done
+  libscript_object2key_val "${PYTHON_SERVER_VARS}" 'setenv ' "'" | while IFS= read -r _kv_line; do
+    grep -qF "$_kv_line" "${LIBSCRIPT_DATA_DIR}/dyn_env.csh" 2>/dev/null || printf '%s\n' "$_kv_line" >> "${LIBSCRIPT_DATA_DIR}/dyn_env.csh"
+  done
 fi
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,52 +63,19 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$PUB_INSTALL_METHOD" = "mise" ]; then
-      mise ls pub || true
-    elif [ "$PUB_INSTALL_METHOD" = "asdf" ]; then
-      asdf list pub || true
-    elif [ "$PUB_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$PUB_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls pub || true
-    elif [ "$PUB_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/pub/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "pub" "$ACTION" "$VERSION" "${PUB_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$PUB_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote pub || true
-    elif [ "$PUB_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all pub || true
-    elif [ "$PUB_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$PUB_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all pub || true
+    if [ -n "${PUB_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${PUB_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${PUB_RELEASES_URL:-}" ]; then
-        curl -sSL "${PUB_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/pub" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/dart-lang/pub" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$PUB_INSTALL_METHOD" = "mise" ]; then
-      mise use "pub@${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "asdf" ]; then
-      asdf global pub "${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$PUB_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "pub@${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "pub@${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+    if [ "$PUB_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "pub" "default" "${EXACT_VERSION}"
@@ -123,7 +89,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "pub" "default" "${EXACT_VERSION}"
       log_info "Set default pub version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env pub \"$VERSION\")"
     fi
     exit 0
@@ -142,16 +108,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PUB_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pub"
-    elif [ "$PUB_INSTALL_METHOD" = "mise" ]; then
-      mise install "pub@${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "asdf" ]; then
-      asdf install pub "${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "pub@${VERSION}"
-    elif [ "$PUB_INSTALL_METHOD" = "vfox" ]; then
-      vfox add pub || true
-      vfox install "pub@${VERSION}"
+      libscript_depends 'pub'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -164,13 +121,13 @@ case "$ACTION" in
         if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
         if [ "$OS" = "darwin" ]; then OS="macos"; fi
         if [ "$UNAME_LOWER" = "freebsd" ]; then
-          log_error "pub is not officially available for FreeBSD. Consider installing via system packages if available."
+          log_error 'pub is not officially available for FreeBSD. Consider installing via system packages if available.'
           exit 1
         fi
         URL="https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-${OS}-${ARCH}-release.zip"
         TEMP_FILE=$(mktemp)
-        libscript_depends "curl"
-        libscript_depends "unzip"
+        libscript_depends 'curl'
+        libscript_depends 'unzip'
         if ! libscript_download "$URL" "$TEMP_FILE.zip"; then
           log_error "Failed to download dart SDK from $URL"
           rm -f "$TEMP_FILE.zip"
@@ -192,7 +149,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -217,52 +173,7 @@ WRAPPER
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$PUB_INSTALL_METHOD" = "libscript_native" ] || [ "$PUB_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pub}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $PUB_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "pub" "$ACTION" "$VERSION" "${PUB_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$PUB_INSTALL_METHOD" = "libscript_native" ] || [ "$PUB_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pub}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $PUB_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$PUB_INSTALL_METHOD" = "libscript_native" ] || [ "$PUB_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pub}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $PUB_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$PUB_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling pub $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/pub/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/pub/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $PUB_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

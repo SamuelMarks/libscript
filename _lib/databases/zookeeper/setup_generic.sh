@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,7 +49,7 @@ VERSION="${ZOOKEEPER_VERSION:-3.9.2}"
 # Resolves semantic version aliases ('latest' or 'stable') to a concrete ZooKeeper version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="3.9.2"
+    EXACT_VERSION='3.9.2'
   else
     EXACT_VERSION="${VERSION}"
   fi

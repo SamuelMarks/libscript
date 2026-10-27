@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -60,6 +59,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
         case "$_mp" in
           \$\{*) _mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
         esac
+        printf '[STORAGE] Ensuring persistent disk mount "%s" (fstype: %s, owner: %s)...\n' "$_mp" "${_fs:-ext4}" "${SERVICE_USER:-${REMOTE_USER:-root}}"
         "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" --auto-data-disk "$_mp" "${_fs:-ext4}"
       done
     fi
@@ -76,6 +76,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
         if type libscript_expand_manifest_vars >/dev/null 2>&1; then
           _ovr_pairs=$(libscript_expand_manifest_vars "$_ovr_pairs")
         fi
+        printf '[DAEMON] Applying service_overrides for "%s" (%s)...\n' "$_ovr_svc" "$_ovr_pairs"
         # shellcheck disable=SC2086
         libscript_service_override_env "$_ovr_svc" $_ovr_pairs || true
       done
@@ -84,6 +85,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
     if [ "$_has_ollama" = "1" ] || [ -n "${OLLAMA_MODELS:-}" ]; then
       _ol_models="${OLLAMA_MODELS:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
       if [ -x "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" ]; then
+        printf '[DAEMON] Configuring ollama model storage at "%s" and restarting/reloading daemon if needed...\n' "$_ol_models"
         OLLAMA_MODELS="$_ol_models" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" configure || true
       fi
     fi
@@ -98,13 +100,22 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
   if [ "$action" = "uninstall-service" ]; then action="uninstall"; fi
 
   # ## perform_health_check
-  # Executes runtime health checks for the given package and version.
+  # Executes runtime health checks for the given package and version by delegating to component scripts.
   perform_health_check() {
     _pkg="$1"
     _ver="$2"
 
+    for _comp_dir in "${LIBSCRIPT_ROOT_DIR:-.}"/_lib/*/"$_pkg"; do
+      if [ -f "${_comp_dir}/env.sh" ]; then
+        SCRIPT_NAME="${_comp_dir}/env.sh"
+        # shellcheck disable=SC1090
+        . "$SCRIPT_NAME" >/dev/null 2>&1 || true
+        unset SCRIPT_NAME || true
+      fi
+    done
+
     case "$_pkg" in
-        postgres)
+        postgres|postgresql)
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
             if command -v pg_isready >/dev/null 2>&1; then
               pg_isready >/dev/null 2>&1
@@ -138,50 +149,22 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
         nginx|ollama)
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
             ;;
-        duckdb)
-            if command -v duckdb >/dev/null 2>&1; then
-              duckdb :memory: -c 'SELECT 1;' >/dev/null 2>&1 || true
-            else
-              "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver"
-            fi
-            ;;
-        sqlite) sqlite3 :memory: 'SELECT 1;' >/dev/null 2>&1 || true ;;
-        python) python3 -c 'print("hello world!")' || true ;; # libscript-allow-interp
-        ruby) ruby -e 'puts "hello world!"' || true ;; # libscript-allow-interp
-        nodejs) node -e 'console.log("hello world!")' || true ;; # libscript-allow-interp
-        java) java -version || true ;;
-        csharp) dotnet --version || true ;;
-        go) go version || true ;;
-        rust) rustc --version || true ;;
-        php) php -r 'echo "hello world!";' || true ;;
-        elixir) elixir -e 'IO.puts("hello world!")' || true ;;
-        swift) swift --version || true ;;
-        zig) zig version || true ;;
-        deno) deno --version || true ;;
-        bun) bun --version || true ;;
-        c|cc|cpp) gcc --version || clang --version || true ;;
-        sh) sh --version || echo 'sh is present' || true ;;
-        bazel) bazel --version || true ;;
-        cmake) cmake --version || true ;;
-        coursier) cs --version || true ;;
-        gradle) gradle --version || true ;;
-        huggingface-cli) huggingface-cli --version || true ;;
-        just) just --version || true ;;
-        maven) mvn --version || true ;;
-        uv)
-            if command -v uv >/dev/null 2>&1; then
-              uv --version || true
-            else
-              "${LIBSCRIPT_ROOT_DIR:-.}/_lib/package-managers/uv/cli.sh" test >/dev/null 2>&1 || true
-            fi
-            ;;
-        xpk) xpk --version || true ;;
         *)
-          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
-          if command -v "$_pkg" >/dev/null 2>&1; then
-            "$_pkg" --version || true
-          fi
-          ;;
+            _hc_handled=0
+            for _comp_dir in "${LIBSCRIPT_ROOT_DIR:-.}"/_lib/*/"$_pkg"; do
+              if [ -f "${_comp_dir}/test.sh" ]; then
+                sh "${_comp_dir}/test.sh" >/dev/null 2>&1 || true
+                _hc_handled=1
+                break
+              fi
+            done
+            if [ "$_hc_handled" -eq 0 ]; then
+              "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
+              if command -v "$_pkg" >/dev/null 2>&1; then
+                "$_pkg" --version || true
+              fi
+            fi
+            ;;
     esac
   }
 
@@ -244,6 +227,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
 
   follow_logs=0
   skip_hooks=0
+  skip_db_init="${LIBSCRIPT_SKIP_DB_INIT:-0}"
   remove_service=0
   purge_data=0
   remediate=0
@@ -257,6 +241,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     case "$_cur_arg" in
       -f|--follow) follow_logs=1 ;;
       --no-hooks) skip_hooks=1 ;;
+      --skip-db-init|--skip-migrate) skip_db_init=1 ;;
       --remove|--uninstall) remove_service=1 ;;
       --purge-data) purge_data=1 ;;
       --remediate) remediate=1 ;;
@@ -268,7 +253,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
   done
 
   if [ "$action" = "stop" ] && [ "$remove_service" -eq 1 ]; then
-    action="uninstall"
+    action='uninstall'
   fi
 
   if [ $# -eq 0 ] || [ "$1" = "libscript.json" ] || [ "${1##*.}" = "json" ]; then
@@ -297,7 +282,9 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
 
     if [ "$skip_hooks" -eq 0 ]; then
       if [ "$action" = "start" ] || [ "$action" = "up" ]; then
-        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
+        if [ "$skip_db_init" -eq 0 ]; then
+          "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
+        fi
       elif [ "$action" = "stop" ] || [ "$action" = "down" ] || [ "$action" = "uninstall" ]; then
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_stop" || true
       fi
@@ -348,15 +335,17 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     if [ "$action" = "start" ] || [ "$action" = "up" ]; then
       if [ "$skip_hooks" -eq 0 ]; then
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "stop" "$json_file" >/dev/null 2>&1 || true
-        if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" ]; then
-          "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" "$json_file"
+        if [ "$skip_db_init" -eq 0 ]; then
+          if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" ]; then
+            "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" "$json_file"
+          fi
+          "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
         fi
-        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_start"
       fi
       normalize_service_data_ownership "$json_file"
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
-      if jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
+      if [ "$skip_db_init" -eq 0 ] && jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/networking/netctl/cli.sh" apply "$json_file" --reload || true
       fi
       if [ "$skip_hooks" -eq 0 ]; then

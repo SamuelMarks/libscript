@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -102,7 +101,7 @@ case "$ACTION" in
       exit 0
     fi
 
-    libscript_depends "java" "unzip" || true
+    libscript_depends 'java' 'unzip' || true
     mkdir -p "${TARGET_DIR}/cmdline-tools"
 
     DL_URL="${ANDROID_SDK_DOWNLOAD_URL:-$(resolve_cmdtools_url "$EXACT_VERSION")}"
@@ -128,7 +127,7 @@ case "$ACTION" in
     exit 0
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service)
-    log_info "android-sdk is a build toolchain and does not run a background daemon."
+    log_info 'android-sdk is a build toolchain and does not run a background daemon.'
     exit 0
     ;;
   uninstall)

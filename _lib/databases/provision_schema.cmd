@@ -3,7 +3,7 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -101,6 +101,7 @@ exit /b 1
 :do_mysql
 if "%PORT%"=="" set "PORT=3306"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+echo [INFO] [DB:MYSQL] Ensuring schema '%SCHEMA_NAME%' and user '%TENANT_USER%' on %HOST%:%PORT%...
 set "TMP_SQL=%TEMP%\provision_!RANDOM!.sql"
 echo CREATE DATABASE IF NOT EXISTS `%SCHEMA_NAME%` DEFAULT CHARACTER SET %CHARSET% COLLATE %COLLATION%; > "%TMP_SQL%"
 echo CREATE USER IF NOT EXISTS '%TENANT_USER%'@'localhost' IDENTIFIED BY '%TENANT_PASS%'; >> "%TMP_SQL%"
@@ -116,6 +117,7 @@ if "%ADMIN_PASS%"=="" (
     mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" -p"%ADMIN_PASS%" < "%TMP_SQL%"
 )
 del "%TMP_SQL%"
+echo [INFO] [DB:MYSQL] [CONFIRM] Schema '%SCHEMA_NAME%' and user '%TENANT_USER%' ready on %HOST%:%PORT%.
 exit /b 0
 
 :: ## run_psql_admin
@@ -142,18 +144,20 @@ if not errorlevel 1 (
     set "PGPASSWORD=%TENANT_PASS%"
     psql -h "%HOST%" -p "%PORT%" -U "%TENANT_USER%" -d postgres -tAc "SELECT 1" >nul 2>&1
     if not errorlevel 1 (
-        echo [REUSE] PostgreSQL role '%TENANT_USER%' already exists.
+        echo [INFO] [DB:POSTGRES] [CONFIRM] Role '%TENANT_USER%' already exists on %HOST%:%PORT% ^(password ^& privileges synchronized^).
     ) else (
-        echo [REUSE] PostgreSQL role '%TENANT_USER%' exists; synchronizing password...
+        echo [INFO] [DB:POSTGRES] [CONFIRM] Role '%TENANT_USER%' exists on %HOST%:%PORT%; synchronizing password...
         call :run_psql_admin postgres -c "ALTER USER \"%TENANT_USER%\" WITH LOGIN PASSWORD '%TENANT_PASS%';" >nul 2>&1
     )
 ) else (
-    echo [CREATE] Creating PostgreSQL role '%TENANT_USER%'...
+    echo [INFO] [DB:POSTGRES] [CREATE] Creating role '%TENANT_USER%' on %HOST%:%PORT%...
     call :run_psql_admin postgres -c "CREATE USER \"%TENANT_USER%\" WITH LOGIN ENCRYPTED PASSWORD '%TENANT_PASS%';" >nul 2>&1
 )
 call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_database WHERE datname='%SCHEMA_NAME%'" | findstr "1" >nul
 if not errorlevel 1 (
-    echo [REUSE] PostgreSQL database '%SCHEMA_NAME%' already exists.
+    set "_PG_TBL_CNT=0"
+    for /f "delims= " %%T in ('psql -h "%HOST%" -p "%PORT%" -U "%TENANT_USER%" -d "%SCHEMA_NAME%" -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2^>nul') do set "_PG_TBL_CNT=%%T"
+    echo [INFO] [DB:POSTGRES] [CONFIRM] Database '%SCHEMA_NAME%' already exists on %HOST%:%PORT% ^(owner: '%TENANT_USER%', tables: !_PG_TBL_CNT!^).
 ) else (
     set "_MIGRATED_LEGACY=0"
     if not "!LEGACY_NAMES!"=="" (
@@ -161,7 +165,7 @@ if not errorlevel 1 (
             if "!_MIGRATED_LEGACY!"=="0" if /i not "%%~L"=="%SCHEMA_NAME%" (
                 call :run_psql_admin postgres -tAc "SELECT 1 FROM pg_database WHERE datname='%%~L'" | findstr "1" >nul
                 if not errorlevel 1 (
-                    echo [REUSE] Renaming legacy PostgreSQL database '%%~L' -^> '%SCHEMA_NAME%'...
+                    echo [INFO] [DB:POSTGRES] [CONFIRM] Renaming legacy PostgreSQL database '%%~L' -^> '%SCHEMA_NAME%'...
                     call :run_psql_admin postgres -c "ALTER DATABASE \"%%~L\" RENAME TO \"%SCHEMA_NAME%\";" >nul 2>&1
                     if not errorlevel 1 set "_MIGRATED_LEGACY=1"
                 )
@@ -169,7 +173,7 @@ if not errorlevel 1 (
         )
     )
     if "!_MIGRATED_LEGACY!"=="0" (
-        echo [CREATE] Creating PostgreSQL database '%SCHEMA_NAME%' owned by '%TENANT_USER%'...
+        echo [INFO] [DB:POSTGRES] [CREATE] Creating database '%SCHEMA_NAME%' on %HOST%:%PORT% ^(owner: '%TENANT_USER%'^)...
         call :run_psql_admin postgres -c "CREATE DATABASE \"%SCHEMA_NAME%\" OWNER \"%TENANT_USER%\";" >nul 2>&1
     )
 )
@@ -182,17 +186,23 @@ exit /b 0
 :: Performs the do_mongodb operation and updates component state.
 :do_mongodb
 if "%PORT%"=="" set "PORT=27017"
+echo [INFO] [DB:MONGODB] Ensuring database '%SCHEMA_NAME%' and user '%TENANT_USER%' on %HOST%:%PORT%...
 set "MONGO_ARGS=--host %HOST% --port %PORT%"
 if not "%ADMIN_USER%"=="" set "MONGO_ARGS=%MONGO_ARGS% -u %ADMIN_USER% -p %ADMIN_PASS% --authenticationDatabase admin"
 set "JS_CHECK=var res = db.getSiblingDB('%SCHEMA_NAME%').getUser('%TENANT_USER%'); if (!res) { db.getSiblingDB('%SCHEMA_NAME%').createUser({user: '%TENANT_USER%', pwd: '%TENANT_PASS%', roles: [{role: 'readWrite', db: '%SCHEMA_NAME%'}]}); }"
 mongosh %MONGO_ARGS% --eval "%JS_CHECK%" --quiet
+echo [INFO] [DB:MONGODB] [CONFIRM] Database '%SCHEMA_NAME%' and user '%TENANT_USER%' ready on %HOST%:%PORT%.
 exit /b 0
 
 :: ## do_sqlite
 :: Performs the do_sqlite operation and updates component state.
 :do_sqlite
-:: schema_name is treated as the file path
 for %%I in ("%SCHEMA_NAME%") do set "DB_DIR=%%~dpI"
 if not exist "%DB_DIR%" mkdir "%DB_DIR%"
+if exist "%SCHEMA_NAME%" (
+    echo [INFO] [DB:SQLITE] [CONFIRM] SQLite database '%SCHEMA_NAME%' already exists.
+) else (
+    echo [INFO] [DB:SQLITE] [CREATE] Creating SQLite database '%SCHEMA_NAME%'...
+)
 sqlite3 "%SCHEMA_NAME%" "PRAGMA journal_mode=WAL;"
 exit /b 0

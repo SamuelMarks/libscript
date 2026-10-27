@@ -14,8 +14,16 @@
     "BUN_INSTALL_METHOD": {
       "description": "How to install BUN. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
+    },
+    "BUN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading bun binary or archive artifacts."
+    },
+    "BUN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying bun available remote releases."
     }
   }
 }

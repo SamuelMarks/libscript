@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$VLLM_INSTALL_METHOD" = "mise" ]; then
-      mise ls vllm || true
-    elif [ "$VLLM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list vllm || true
-    elif [ "$VLLM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$VLLM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls vllm || true
-    elif [ "$VLLM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "vllm" "$ACTION" "$VERSION" "${VLLM_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$VLLM_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote vllm || true
-    elif [ "$VLLM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all vllm || true
-    elif [ "$VLLM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$VLLM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all vllm || true
+    if [ -n "${VLLM_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${VLLM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${VLLM_RELEASES_URL:-}" ]; then
-        curl -sSL "${VLLM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/vllm-project/vllm" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/vllm-project/vllm" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$VLLM_INSTALL_METHOD" = "mise" ]; then
-      mise use "vllm@${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "asdf" ]; then
-      asdf global vllm "${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$VLLM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "vllm@${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "vllm@${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "vllm" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "vllm" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "vllm ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "vllm" "default" "${EXACT_VERSION}"
-      log_info "Set default vllm version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env vllm \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "vllm" "$ACTION" "$VERSION" "${VLLM_INSTALL_METHOD}"
     ;;
   download)
     if [ "$VLLM_INSTALL_METHOD" = "libscript_native" ]; then
@@ -144,49 +91,39 @@ case "$ACTION" in
   install)
     if [ "$VLLM_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "vllm" 2>/dev/null; then
-        log_warn "System package for vllm failed. Falling back to native venv python3 installation."
-        VLLM_INSTALL_METHOD="libscript_native"
+        log_warn 'System package for vllm failed. Falling back to native venv python3 installation.'
+        VLLM_INSTALL_METHOD='libscript_native'
       fi
     fi
 
-    if [ "$VLLM_INSTALL_METHOD" = "mise" ]; then
-      mise install "vllm@${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "asdf" ]; then
-      asdf install vllm "${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "vllm@${VERSION}"
-    elif [ "$VLLM_INSTALL_METHOD" = "vfox" ]; then
-      vfox add vllm || true
-      vfox install "vllm@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      libscript_depends 'python'
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing vllm ${VERSION} to ${TARGET_DIR}..."
-        if ! type libscript_python_venv >/dev/null 2>&1; then
-          . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-        fi
-        libscript_python_venv "${TARGET_DIR}"
+    # libscript_native implementation
+    resolve_exact_version
+    libscript_depends 'python'
+    
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/${EXACT_VERSION}"
+    if [ ! -d "${TARGET_DIR}" ]; then
+      log_info "Installing vllm ${VERSION} to ${TARGET_DIR}..."
+      if ! type libscript_python_venv >/dev/null 2>&1; then
+        . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+      fi
+      libscript_python_venv "${TARGET_DIR}"
 
-        PIP_EXTRA_ARGS=""
-        if [ "$UNAME_LOWER" = "linux" ]; then
-          PIP_EXTRA_ARGS="--extra-index-url https://download.pytorch.org/whl/cpu"
-        fi
+      PIP_EXTRA_ARGS=""
+      if [ "$UNAME_LOWER" = "linux" ]; then
+        PIP_EXTRA_ARGS="--extra-index-url https://download.pytorch.org/whl/cpu"
+      fi
 
-        if [ "$EXACT_VERSION" = "latest" ]; then
-          # shellcheck disable=SC2086
-          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
-        else
-          # shellcheck disable=SC2086
-          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
-        fi
+      if [ "$EXACT_VERSION" = "latest" ]; then
+        # shellcheck disable=SC2086
+        TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
+      else
+        # shellcheck disable=SC2086
+        TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
+      fi
 
-        # Ensure vllm executable wrapper exists if pip failed to generate console script
-        if [ ! -s "${TARGET_DIR}/bin/vllm" ]; then
-          cat <<'EOF' > "${TARGET_DIR}/bin/vllm"
+      # Ensure vllm executable wrapper exists if pip failed to generate console script
+      if [ ! -s "${TARGET_DIR}/bin/vllm" ]; then
+        cat <<'EOF' > "${TARGET_DIR}/bin/vllm"
 #!/bin/sh
 # ## Overview
 # Executable wrapper for vllm.
@@ -196,108 +133,61 @@ case "$ACTION" in
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
+THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
+# shellcheck disable=SC2296
+THIS_FILE="${(%):-%x}"
 else
-  THIS_FILE="${0}"
+THIS_FILE="${0}"
 fi
 
 VENV_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")/.." && pwd)
 export VLLM_TARGET_DEVICE="${VLLM_TARGET_DEVICE:-cpu}"
 exec "${VENV_DIR}/bin/python3" -m vllm.entrypoints.cli.main "$@"
 EOF
-          chmod +x "${TARGET_DIR}/bin/vllm"
-        fi
-        
-        if [ "${PIP_FAILED:-0}" = "1" ]; then
-          log_error "Failed to install vllm via pip."
-          if [ "${TARGET_OS:-}" = "alpine" ]; then
-            log_warn "vllm is known to fail on Alpine due to lack of PyTorch musl wheels. Falling back to build from source."
-            
-            # Install build dependencies
-            libscript_depends "git" "c" "cmake" "ninja" "python" || true
-            
-            # Create a temporary directory for the source
-            VLLM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/vllm-src"
-            if [ ! -d "${VLLM_SRC_DIR}/.git" ]; then
-                git clone "https://github.com/vllm-project/vllm.git" "${VLLM_SRC_DIR}"
-            else
-                log_info "vLLM source already present, pulling latest..."
-                (cd "${VLLM_SRC_DIR}" && git fetch --all && git reset --hard '@{upstream}')
-            fi
-            
-            # Build and install
-            (
-              cd "${VLLM_SRC_DIR}"
-              if [ "$EXACT_VERSION" != "latest" ]; then
-                git checkout "v${EXACT_VERSION}" || git checkout "${EXACT_VERSION}"
-              fi
-              "${TARGET_DIR}/bin/pip" install -e .
-            ) || {
-              log_error "Failed to build vllm from source."
-              exit 1
-            }
-          else
-            exit 1
-          fi
-        fi
-      else
-        log_info "vllm ${VERSION} is already installed."
+        chmod +x "${TARGET_DIR}/bin/vllm"
       fi
-      libscript_symlink_alias "vllm" "$VERSION" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$VLLM_INSTALL_METHOD" = "libscript_native" ] || [ "$VLLM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-vllm}}"
-      libscript_service "$ACTION" "$service_name" "$@"
+      
+      if [ "${PIP_FAILED:-0}" = "1" ]; then
+        log_error 'Failed to install vllm via pip.'
+        if [ "${TARGET_OS:-}" = "alpine" ]; then
+          log_warn 'vllm is known to fail on Alpine due to lack of PyTorch musl wheels. Falling back to build from source.'
+          
+          # Install build dependencies
+          libscript_depends 'git' 'c' 'cmake' 'ninja' 'python' || true
+          
+          # Create a temporary directory for the source
+          VLLM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/vllm-src"
+          if [ ! -d "${VLLM_SRC_DIR}/.git" ]; then
+              git clone "https://github.com/vllm-project/vllm.git" "${VLLM_SRC_DIR}"
+          else
+              log_info 'vLLM source already present, pulling latest...'
+              (cd "${VLLM_SRC_DIR}" && git fetch --all && git reset --hard '@{upstream}')
+          fi
+          
+          # Build and install
+          (
+            cd "${VLLM_SRC_DIR}"
+            if [ "$EXACT_VERSION" != "latest" ]; then
+              git checkout "v${EXACT_VERSION}" || git checkout "${EXACT_VERSION}"
+            fi
+            "${TARGET_DIR}/bin/pip" install -e .
+          ) || {
+            log_error 'Failed to build vllm from source.'
+            exit 1
+          }
+        else
+          exit 1
+        fi
+      fi
     else
-      log_info "$ACTION not natively implemented for $VLLM_INSTALL_METHOD."
+      log_info "vllm ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "vllm" "$VERSION" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$VLLM_INSTALL_METHOD" = "libscript_native" ] || [ "$VLLM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-vllm}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $VLLM_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "vllm" "$ACTION" "$VERSION" "${VLLM_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$VLLM_INSTALL_METHOD" = "libscript_native" ] || [ "$VLLM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-vllm}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $VLLM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$VLLM_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling vllm $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $VLLM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

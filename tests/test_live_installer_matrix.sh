@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,28 +33,28 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SUMMARY_FILE="${REPO_ROOT}/tests_tmp/live_installer_matrix_summary.json"
-TARGET_PLATFORM="all"
+TARGET_PLATFORM='all'
 LIVE_MODE=0
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s\n' "Runs multi-platform live installer verification strictly inside Vagrant VMs."
+  printf '%s\n' 'Runs multi-platform live installer verification strictly inside Vagrant VMs.'
   printf '\n'
-  printf '%s\n' "Platforms:"
-  printf '%s\n' "  --all                  Execute verification across all 5 target environments (default)"
-  printf '%s\n' "  --platform <name>      Target specific VM: linux, freebsd, sunos, windows, macos"
-  printf '%s\n' "  --live                 Boot and run inside live Vagrant VMs"
+  printf '%s\n' 'Platforms:'
+  printf '%s\n' '  --all                  Execute verification across all 5 target environments (default)'
+  printf '%s\n' '  --platform <name>      Target specific VM: linux, freebsd, sunos, windows, macos'
+  printf '%s\n' '  --live                 Boot and run inside live Vagrant VMs'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?     Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?     Show this help message.'
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --all)
-      TARGET_PLATFORM="all"
+      TARGET_PLATFORM='all'
       shift
       ;;
     --live)
@@ -134,54 +133,54 @@ run_vagrant_suite() {
   fi
 }
 
-LINUX_STATUS="SKIPPED"
-FREEBSD_STATUS="SKIPPED"
-SUNOS_STATUS="SKIPPED"
-WINDOWS_STATUS="SKIPPED"
-MACOS_STATUS="SKIPPED"
+LINUX_STATUS='SKIPPED'
+FREEBSD_STATUS='SKIPPED'
+SUNOS_STATUS='SKIPPED'
+WINDOWS_STATUS='SKIPPED'
+MACOS_STATUS='SKIPPED'
 OVERALL_SUCCESS=1
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "linux" ]; then
   if run_vagrant_suite "debian-13"; then
-    LINUX_STATUS="PASS"
+    LINUX_STATUS='PASS'
   else
-    LINUX_STATUS="FAIL"
+    LINUX_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "freebsd" ]; then
   if run_vagrant_suite "freebsd-15.1"; then
-    FREEBSD_STATUS="PASS"
+    FREEBSD_STATUS='PASS'
   else
-    FREEBSD_STATUS="FAIL"
+    FREEBSD_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "sunos" ]; then
   if run_vagrant_suite "omnios"; then
-    SUNOS_STATUS="PASS"
+    SUNOS_STATUS='PASS'
   else
-    SUNOS_STATUS="FAIL"
+    SUNOS_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "windows" ]; then
   if run_vagrant_suite "windows-11"; then
-    WINDOWS_STATUS="PASS"
+    WINDOWS_STATUS='PASS'
   else
-    WINDOWS_STATUS="FAIL"
+    WINDOWS_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "macos" ]; then
   if run_vagrant_suite "macos-14-arm64"; then
-    MACOS_STATUS="PASS"
+    MACOS_STATUS='PASS'
   else
-    MACOS_STATUS="FAIL"
+    MACOS_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi

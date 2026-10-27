@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -135,7 +134,7 @@ case "$ACTION" in
       KIND="$(jq -r '.kind' "${STATE_DIR}/manifests/${WID}.json")"
       REPLICAS="$(jq -r '.spec.replicas // 1' "${STATE_DIR}/manifests/${WID}.json")"
     else
-      KIND="Deployment"
+      KIND='Deployment'
       REPLICAS=1
     fi
     printf '{"id":"/%s","kind":"%s","instances":%s,"tasksRunning":%s,"state":"TASK_RUNNING","k8sReconciled":true}
@@ -152,9 +151,9 @@ case "$ACTION" in
       INST_VAL="$(jq -r '.instances // 1' "${STATE_DIR}/v2/apps/${WID}.json")"
       KIND_VAL="$(jq -r '.kind // "Deployment"' "${STATE_DIR}/v2/apps/${WID}.json")"
     else
-      STATE_VAL="TASK_RUNNING"
+      STATE_VAL='TASK_RUNNING'
       INST_VAL=1
-      KIND_VAL="Deployment"
+      KIND_VAL='Deployment'
     fi
     printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"status","workload":"%s","id":"/%s","kind":"%s","instances":%s,"state":"%s","status":"ok"}
 ' "$TARGET" "$WID" "$KIND_VAL" "$INST_VAL" "$STATE_VAL"

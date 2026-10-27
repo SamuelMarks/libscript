@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ unset SCRIPT_NAME || true
 
 
 RVM_VERSION="${RVM_VERSION:-latest}"
-export rvm_path="${LIBSCRIPT_HOME:-$HOME/.libscript}/rvm/${RVM_VERSION}"
+export rvm_path="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rvm/${RVM_VERSION}"
 libscript_path_prepend "$rvm_path/bin"
 if [ -s "$rvm_path/scripts/rvm" ]; then
   # shellcheck disable=SC1091
@@ -50,3 +49,5 @@ if [ -s "$rvm_path/scripts/rvm" ]; then
 
 fi
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

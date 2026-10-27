@@ -1,23 +1,23 @@
 @echo off
-setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
-
-if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2^>^&1
-    if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" ^>^&2
-        exit /b 0
-    )
-)
-set "STACK=%STACK%:%THIS_FILE%:"
-
 :: # pre-commit.cmd
 ::
 :: ## Overview
 :: Handles operations related to the component '.githooks'.
-:: 
+::
 :: ## Usage
 :: Execute this script to perform actions for .githooks.
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -113,14 +113,36 @@ if exist "devtools\audit\audit_standards.cmd" (
     )
 )
 
+if exist "devtools\audit\audit_version_manager.cmd" (
+    echo Running Version Manager Contract audit...
+    call "devtools\audit\audit_version_manager.cmd"
+    if errorlevel 1 (
+        echo [ERROR] Version Manager Contract audit failed.
+        exit /b 1
+    )
+)
+
+if exist "devtools\audit\audit_schema_vars.cmd" (
+    echo Running Schema Variable Coverage audit...
+    call "devtools\audit\audit_schema_vars.cmd" !AUDIT_MODE!
+    if errorlevel 1 (
+        echo [ERROR] Schema Variable Coverage audit failed.
+        exit /b 1
+    )
+)
+
 :: 4. ShellCheck (if available)
 where shellcheck >nul 2>&1
 if not errorlevel 1 (
     echo Running shellcheck...
-    shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2296,SC2154,SC2034 libscript.sh
-    if errorlevel 1 (
-        echo [ERROR] ShellCheck failed.
-        exit /b 1
+    for /f "tokens=*" %%F in ('!GIT_FILE_CMD! 2^>nul ^| findstr /R "\.sh$" ^| findstr /V /R "node_modules \.git top\.sh bottom\.sh template_ patch_ fix_ update_ _gen\.sh gen/"') do (
+        if exist "%%F" (
+            shellcheck -s sh -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2251,SC2081,SC2054 "%%F"
+            if errorlevel 1 (
+                echo [ERROR] ShellCheck failed on %%F.
+                exit /b 1
+            )
+        )
     )
 )
 

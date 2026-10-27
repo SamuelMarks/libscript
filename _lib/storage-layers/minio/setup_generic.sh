@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,52 +63,19 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$MINIO_INSTALL_METHOD" = "mise" ]; then
-      mise ls minio || true
-    elif [ "$MINIO_INSTALL_METHOD" = "asdf" ]; then
-      asdf list minio || true
-    elif [ "$MINIO_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$MINIO_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls minio || true
-    elif [ "$MINIO_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/minio/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "minio" "$ACTION" "$VERSION" "${MINIO_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$MINIO_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote minio || true
-    elif [ "$MINIO_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all minio || true
-    elif [ "$MINIO_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$MINIO_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all minio || true
+    if [ -n "${MINIO_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${MINIO_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${MINIO_RELEASES_URL:-}" ]; then
-        curl -sSL "${MINIO_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/minio" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/minio/minio" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$MINIO_INSTALL_METHOD" = "mise" ]; then
-      mise use "minio@${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "asdf" ]; then
-      asdf global minio "${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$MINIO_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "minio@${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "minio@${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+    if [ "$MINIO_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "minio" "default" "${EXACT_VERSION}"
@@ -123,7 +89,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "minio" "default" "${EXACT_VERSION}"
       log_info "Set default minio version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env minio \"$VERSION\")"
     fi
     exit 0
@@ -142,16 +108,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$MINIO_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "minio"
-    elif [ "$MINIO_INSTALL_METHOD" = "mise" ]; then
-      mise install "minio@${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "asdf" ]; then
-      asdf install minio "${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "minio@${VERSION}"
-    elif [ "$MINIO_INSTALL_METHOD" = "vfox" ]; then
-      vfox add minio || true
-      vfox install "minio@${VERSION}"
+      libscript_depends 'minio'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -164,7 +121,7 @@ case "$ACTION" in
         if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
         URL="https://dl.min.io/aistor/minio/release/${OS}-${ARCH}/minio"
         TEMP_FILE=$(mktemp)
-        libscript_depends "curl"
+        libscript_depends 'curl'
         if ! libscript_download "$URL" "$TEMP_FILE"; then
           log_error "Failed to download minio from $URL"
           rm -f "$TEMP_FILE"
@@ -183,52 +140,7 @@ case "$ACTION" in
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$MINIO_INSTALL_METHOD" = "libscript_native" ] || [ "$MINIO_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-minio}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $MINIO_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "minio" "$ACTION" "$VERSION" "${MINIO_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$MINIO_INSTALL_METHOD" = "libscript_native" ] || [ "$MINIO_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-minio}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $MINIO_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$MINIO_INSTALL_METHOD" = "libscript_native" ] || [ "$MINIO_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-minio}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $MINIO_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$MINIO_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling minio $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/minio/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/minio/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $MINIO_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

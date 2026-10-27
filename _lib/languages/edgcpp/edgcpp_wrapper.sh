@@ -17,7 +17,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -85,16 +84,16 @@ resolve_edgcpp_binaries() {
         esac
         ;;
       *)
-        _raw_be_mode="llvm_backend"
+        _raw_be_mode='llvm_backend'
         ;;
     esac
   fi
   case "${_raw_be_mode}" in
     gcc|gcc-be|gcc_gen_be|gcc_backend)
-      EDGCPP_ACTIVE_CODEGEN_BACKEND="gcc_backend"
+      EDGCPP_ACTIVE_CODEGEN_BACKEND='gcc_backend'
       ;;
     *)
-      EDGCPP_ACTIVE_CODEGEN_BACKEND="llvm_backend"
+      EDGCPP_ACTIVE_CODEGEN_BACKEND='llvm_backend'
       ;;
   esac
 
@@ -108,11 +107,11 @@ resolve_edgcpp_binaries() {
     if [ -n "${EDGCPP_BACKEND_CXX:-}" ] && command -v "${EDGCPP_BACKEND_CXX}" >/dev/null 2>&1; then
       EDGCPP_RESOLVED_BACKEND="$(command -v "${EDGCPP_BACKEND_CXX}")"
     elif [ -x "/usr/bin/clang++" ]; then
-      EDGCPP_RESOLVED_BACKEND="/usr/bin/clang++"
+      EDGCPP_RESOLVED_BACKEND='/usr/bin/clang++'
     elif [ -x "/usr/bin/g++" ]; then
-      EDGCPP_RESOLVED_BACKEND="/usr/bin/g++"
+      EDGCPP_RESOLVED_BACKEND='/usr/bin/g++'
     elif [ -x "/usr/bin/c++" ]; then
-      EDGCPP_RESOLVED_BACKEND="/usr/bin/c++"
+      EDGCPP_RESOLVED_BACKEND='/usr/bin/c++'
     else
       EDGCPP_RESOLVED_BACKEND="$(command -v clang++ 2>/dev/null || command -v g++ 2>/dev/null || command -v c++ 2>/dev/null || printf '/usr/bin/c++')"
     fi
@@ -120,11 +119,11 @@ resolve_edgcpp_binaries() {
     if [ -n "${EDGCPP_BACKEND_CC:-}" ] && command -v "${EDGCPP_BACKEND_CC}" >/dev/null 2>&1; then
       EDGCPP_RESOLVED_BACKEND="$(command -v "${EDGCPP_BACKEND_CC}")"
     elif [ -x "/usr/bin/clang" ]; then
-      EDGCPP_RESOLVED_BACKEND="/usr/bin/clang"
+      EDGCPP_RESOLVED_BACKEND='/usr/bin/clang'
     elif [ -x "/usr/bin/gcc" ]; then
-      EDGCPP_RESOLVED_BACKEND="/usr/bin/gcc"
+      EDGCPP_RESOLVED_BACKEND='/usr/bin/gcc'
     elif [ -x "/usr/bin/cc" ]; then
-      EDGCPP_RESOLVED_BACKEND="/usr/bin/cc"
+      EDGCPP_RESOLVED_BACKEND='/usr/bin/cc'
     else
       EDGCPP_RESOLVED_BACKEND="$(command -v clang 2>/dev/null || command -v gcc 2>/dev/null || command -v cc 2>/dev/null || printf '/usr/bin/cc')"
     fi
@@ -140,7 +139,7 @@ configure_gccjit_library_path() {
     if [ -n "${_emutls_dir}" ]; then
       _extra_lib_path="${_emutls_dir}:/opt/homebrew/lib/gcc/current"
     else
-      _extra_lib_path="/opt/homebrew/lib/gcc/current"
+      _extra_lib_path='/opt/homebrew/lib/gcc/current'
     fi
     _mac_sdk="$(xcrun --show-sdk-path 2>/dev/null || true)"
     if [ -n "${_mac_sdk}" ] && [ -d "${_mac_sdk}/usr/lib" ]; then
@@ -205,8 +204,8 @@ fi
 
 WRAPPER_SOURCE_FILE=""
 WRAPPER_OUTPUT_FILE=""
-CPFE_STD_FLAG="--c11"
-CPFE_COMPAT_FLAG="--gcc"
+CPFE_STD_FLAG='--c11'
+CPFE_COMPAT_FLAG='--gcc'
 HAS_SOURCE_FILE=0
 IS_COMPILE_ONLY=0
 IS_PREPROCESS_ONLY=0
@@ -220,7 +219,7 @@ case "$(uname -s 2>/dev/null || true)" in
 esac
 
 if [ "${EDGCPP_ACTIVE_LANG}" = "c++" ]; then
-  CPFE_STD_FLAG="--c++17"
+  CPFE_STD_FLAG='--c++17'
 fi
 
 # ## inspect_driver_args
@@ -243,29 +242,29 @@ inspect_driver_args() {
       -std=c99|-std=gnu99) CPFE_STD_FLAG="--c99" ;;
       -std=c11|-std=gnu11|-std=c17|-std=gnu17|-std=c2x|-std=gnu2x) CPFE_STD_FLAG="--c11" ;;
       -std=c++11|-std=gnu++11)
-        EDGCPP_ACTIVE_LANG="c++"
-        CPFE_STD_FLAG="--c++11"
+        EDGCPP_ACTIVE_LANG='c++'
+        CPFE_STD_FLAG='--c++11'
         ;;
       -std=c++14|-std=gnu++14)
-        EDGCPP_ACTIVE_LANG="c++"
-        CPFE_STD_FLAG="--c++14"
+        EDGCPP_ACTIVE_LANG='c++'
+        CPFE_STD_FLAG='--c++14'
         ;;
       -std=c++17|-std=gnu++17)
-        EDGCPP_ACTIVE_LANG="c++"
-        CPFE_STD_FLAG="--c++17"
+        EDGCPP_ACTIVE_LANG='c++'
+        CPFE_STD_FLAG='--c++17'
         ;;
       -std=c++20|-std=gnu++20|-std=c++2a)
-        EDGCPP_ACTIVE_LANG="c++"
-        CPFE_STD_FLAG="--c++20"
+        EDGCPP_ACTIVE_LANG='c++'
+        CPFE_STD_FLAG='--c++20'
         ;;
       -std=c++23|-std=gnu++23|-std=c++2b)
-        EDGCPP_ACTIVE_LANG="c++"
-        CPFE_STD_FLAG="--c++23"
+        EDGCPP_ACTIVE_LANG='c++'
+        CPFE_STD_FLAG='--c++23'
         ;;
       *.cc|*.cpp|*.cxx|*.C)
         WRAPPER_SOURCE_FILE="${_arg}"
         HAS_SOURCE_FILE=1
-        EDGCPP_ACTIVE_LANG="c++"
+        EDGCPP_ACTIVE_LANG='c++'
         case "${CPFE_STD_FLAG}" in
           --c++*) ;;
           *) CPFE_STD_FLAG="--c++17" ;;
@@ -321,7 +320,7 @@ run_cpfe_frontend_and_codegen() {
   fi
 
   if [ "${EDGCPP_ACTIVE_LANG}" = "c++" ] && [ "${CPFE_COMPAT_FLAG}" = "--gcc" ]; then
-    CPFE_COMPAT_FLAG="--g++"
+    CPFE_COMPAT_FLAG='--g++'
   fi
 
   _src_abs="${WRAPPER_SOURCE_FILE}"
@@ -368,7 +367,7 @@ run_cpfe_frontend_and_codegen() {
     _cpfe_inc_args="-I${EDGCPP_RESOLVED_HOME}/include_c99"
   elif [ -d "${EDGCPP_RESOLVED_HOME}/include_c++" ] && [ "${EDGCPP_ACTIVE_LANG}" = "c++" ]; then
     _cpfe_inc_args="-I${EDGCPP_RESOLVED_HOME}/include_c++"
-    _cxx_extra_flags="--no_auto_instantiation"
+    _cxx_extra_flags='--no_auto_instantiation'
   fi
 
   set -- "$@"
@@ -488,9 +487,9 @@ _elapsed_ms=$((_t1 - _t0))
 [ "${_elapsed_ms}" -le 0 ] && _elapsed_ms=1
 
 if [ -n "${WRAPPER_SOURCE_FILE}" ]; then
-  _fb_str="false"
+  _fb_str='false'
   if [ "${NATIVE_BACKEND_RC}" -ne 0 ] || [ "${_cpfe_status}" -ne 0 ]; then
-    _fb_str="true"
+    _fb_str='true'
   fi
   record_edgcpp_event "${WRAPPER_SOURCE_FILE}" "${_cpfe_status}" "${_be_status}" "${_fb_str}" "${_elapsed_ms}" "${EDGCPP_ACTIVE_LANG}" "${NATIVE_BACKEND_RC}" "${LAST_PEAK_RSS_KB}" "${EDGCPP_ACTIVE_CODEGEN_BACKEND}"
 fi

@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -52,15 +52,17 @@ goto :find_root
 :root_found
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "_CAND_P=%LIBSCRIPT_HOME%\custom-cc\default\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "custom-cc"
 endlocal & (
-    set "_CAND_P=%LIBSCRIPT_HOME%\custom-cc\default\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "custom-cc"
-    set "CC=!SCRIPT_DIR!\cc_wrapper.cmd"
-    set "HOSTCC=!SCRIPT_DIR!\cc_wrapper.cmd"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "CC=%SCRIPT_DIR%\cc_wrapper.cmd"
+    set "HOSTCC=%SCRIPT_DIR%\cc_wrapper.cmd"
     set "CC_BACKEND=custom-cc"
     set "CUSTOM_CC_LOG_FILE=%LIBSCRIPT_HOME%\custom-cc\compile_events.jsonl"
+    set "PATH=%PATH%"
 )
 exit /b 0

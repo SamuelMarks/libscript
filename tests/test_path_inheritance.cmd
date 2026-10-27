@@ -13,7 +13,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "%THIS_FILE%" >&2
         exit /b 0
@@ -125,6 +125,15 @@ set "PATH_PASS_2=!PATH!"
 
 if not "!PATH_PASS_1!"=="!PATH_PASS_2!" (
     echo [FAIL] PATH mutated on second hydration ^(idempotency violation^)! >&2
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
+set "STACK="
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --manifest "%TEST_TMP%\libscript.json" dotenv > "%TEST_TMP%\dotenv_out.txt"
+findstr /B /C:"SERVICE_PATH=" "%TEST_TMP%\dotenv_out.txt" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] SERVICE_PATH missing from dotenv manifest output! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )

@@ -13,6 +13,9 @@ Managed by libscript. Provides download, install, ls, ls-remote, use capabilitie
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -40,10 +43,6 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls bundler; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list bundler; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls bundler; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "bundler"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -51,13 +50,9 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote bundler; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list all bundler; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all bundler; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls-remote directly here."; exit 0 }
     if ($env:BUNDLER_RELEASES_URL) {
-        Invoke-WebRequest -Uri $env:BUNDLER_RELEASES_URL | Select-Object -ExpandProperty Content
+        Invoke-LibscriptFetchContent -Uri $env:BUNDLER_RELEASES_URL
     } else {
         Write-Output "ls-remote not fully implemented natively yet."
     }
@@ -65,10 +60,6 @@ if ($Action -eq "ls-remote") {
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "bundler@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf global bundler "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not use explicit versions this way"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "bundler@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     
 if ($CompVersion -eq "latest" -or $CompVersion -eq "lts") {
@@ -96,7 +87,7 @@ if ($Action -eq "download") {
             New-Item -ItemType Directory -Force -Path $CompDownloadDir | Out-Null
         }
         if ($env:BUNDLER_DOWNLOAD_URL) {
-            Invoke-WebRequest -Uri $env:BUNDLER_DOWNLOAD_URL -OutFile "$CompDownloadDir\bundler-$CompVersion.zip"
+            libscript_download $env:BUNDLER_DOWNLOAD_URL "$CompDownloadDir\bundler-$CompVersion.zip"
         } else {
             Write-Output "BUNDLER_DOWNLOAD_URL is not defined. Skipping."
         }
@@ -106,10 +97,6 @@ if ($Action -eq "download") {
 
 if ($Action -eq "install") {
     if ($InstallMethod -eq "system") { Write-Output "System package manager installation not implemented natively in ps1 yet."; exit 0 }
-    if ($InstallMethod -eq "mise") { mise install "bundler@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf install bundler "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { pkgx install "bundler@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox add bundler; vfox install "bundler@$CompVersion"; exit 0 }
 
     $TargetDir = Join-Path (Join-Path $LibscriptHome "bundler") $CompVersion
     $TargetBin = Join-Path $TargetDir "bin"
@@ -127,7 +114,7 @@ if ($Action -eq "install") {
         } elseif ($env:BUNDLER_DOWNLOAD_URL) {
             Write-Output "Downloading and extracting..."
             $TempFile = Join-Path $env:TEMP "bundler.zip"
-            Invoke-WebRequest -Uri $env:BUNDLER_DOWNLOAD_URL -OutFile $TempFile
+            libscript_download $env:BUNDLER_DOWNLOAD_URL $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
             Write-Error "No download URL or cache available for bundler."

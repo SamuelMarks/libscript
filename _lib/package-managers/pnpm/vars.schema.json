@@ -14,6 +14,14 @@
       "description": "Specific version of pnpm to install.",
       "type": "string",
       "default": "latest"
+    },
+    "PNPM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading pnpm binary or archive artifacts."
+    },
+    "PNPM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying pnpm available remote releases."
     }
   }
 }

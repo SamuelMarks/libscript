@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -73,11 +72,11 @@ restore_apply() {
   _archive="$1"
   shift
 
-  _force="0"
+  _force='0'
   while [ $# -gt 0 ]; do
     case "$1" in
       --yes|-y)
-        _force="1"
+        _force='1'
         shift
         ;;
       *)

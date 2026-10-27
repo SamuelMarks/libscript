@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -83,16 +83,29 @@ if "%ACTION%"=="up" goto :action_service
 if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
-goto :action_install
+if /i "%ACTION%"=="group" goto :action_group
+if /i "%ACTION%"=="project" goto :action_group
+if /i "%ACTION%"=="network" goto :action_network
+if /i "%ACTION%"=="firewall" goto :action_firewall
+if /i "%ACTION%"=="storage" goto :action_storage
+if /i "%ACTION%"=="dns" goto :action_dns
+if /i "%ACTION%"=="auth" goto :action_auth
+if /i "%ACTION%"=="location" goto :action_location
+if /i "%ACTION%"=="node" goto :action_node
+if /i "%~1"=="group" goto :action_group
+if /i "%~1"=="project" goto :action_group
+if /i "%~1"=="network" goto :action_network
+if /i "%~1"=="firewall" goto :action_firewall
+if /i "%~1"=="storage" goto :action_storage
+if /i "%~1"=="dns" goto :action_dns
+if /i "%~1"=="auth" goto :action_auth
+if /i "%~1"=="location" goto :action_location
+if /i "%~1"=="node" goto :action_node
 goto :action_install
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%AWS_INSTALL_METHOD%"=="mise" ( mise ls aws & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="asdf" ( asdf list aws & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="vfox" ( vfox ls aws & exit /b 0 )
 if "%AWS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\aws" ( dir /b "%LIBSCRIPT_HOME%\aws" )
 exit /b 0
@@ -100,13 +113,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%AWS_INSTALL_METHOD%"=="mise" ( mise ls-remote aws & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="asdf" ( asdf list all aws & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="vfox" ( vfox ls all aws & exit /b 0 )
 if "%AWS_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%AWS_RELEASES_URL%"=="" (
-    curl -sSL "%AWS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%AWS_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/swoodford/aws" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -115,10 +124,6 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%AWS_INSTALL_METHOD%"=="mise" ( mise use "aws@%AWS_VERSION%" & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="asdf" ( asdf global aws "%AWS_VERSION%" & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="vfox" ( vfox use "aws@%AWS_VERSION%" & exit /b 0 )
 if "%AWS_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
 if "%AWS_VERSION%"=="latest" (set "EXACT_VERSION=%AWS_VERSION%"
@@ -132,8 +137,11 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\aws\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\aws\%AWS_VERSION%"
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -158,10 +166,6 @@ if "%AWS_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends aws
     exit /b !errorlevel!
 )
-if "%AWS_INSTALL_METHOD%"=="mise" ( mise install "aws@%AWS_VERSION%" & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="asdf" ( asdf install aws "%AWS_VERSION%" & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="pkgx" ( pkgx install "aws@%AWS_VERSION%" & exit /b 0 )
-if "%AWS_INSTALL_METHOD%"=="vfox" ( vfox add aws & vfox install "aws@%AWS_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\aws\%AWS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
@@ -186,70 +190,23 @@ if not exist "%TARGET_DIR%\bin" (
 )
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\aws\%AWS_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_aws"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%AWS_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else if "%AWS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else (
-    echo %ACTION% not natively implemented for %AWS_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_aws"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%AWS_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else if "%AWS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else (
-    echo install-service not implemented for %AWS_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_aws"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%AWS_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else if "%AWS_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else (
-    echo uninstall-service not implemented for %AWS_INSTALL_METHOD%.
-)
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "aws" "%ACTION%" "%AWS_VERSION%" "%AWS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\aws\%AWS_VERSION%\\bin\\aws.exe\"" "%LIBSCRIPT_HOME%\aws\%AWS_VERSION%"
+exit /b !errorlevel!

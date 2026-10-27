@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 DB_FILE="${LIBSCRIPT_ROOT_DIR}/libscript.sqlite"
 
 if ! command -v sqlite3 >/dev/null 2>&1; then
-  printf '%s\n' "Error: sqlite3 is required to update database." >&2
+  printf '%s\n' 'Error: sqlite3 is required to update database.' >&2
   exit 1
 fi
 
@@ -49,4 +48,4 @@ for comp_path in "$LIBSCRIPT_ROOT_DIR"/_lib/*/*; do
   sqlite3 "$DB_FILE" "INSERT OR IGNORE INTO components (name) VALUES ('$comp_name');"
 done
 
-printf '%s\n' "Registry database updated successfully."
+printf '%s\n' 'Registry database updated successfully.'

@@ -83,6 +83,42 @@
     "EDGCPP_LOG_FILE": {
       "description": "Path to the JSONL compilation telemetry log file written by edgcpp_wrapper.",
       "type": "string"
+    },
+    "EDGCPP_ACTIVE_CODEGEN_BACKEND": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_ACTIVE_CODEGEN_BACKEND for edgcpp."
+    },
+    "EDGCPP_BACKEND_MODE": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_BACKEND_MODE for edgcpp."
+    },
+    "EDGCPP_BUILD_FROM_GIT": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_BUILD_FROM_GIT for edgcpp."
+    },
+    "EDGCPP_DOWNLOAD_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for edgcpp (EDGCPP_DOWNLOAD_DIR)."
+    },
+    "EDGCPP_DRIVER_LANG": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_DRIVER_LANG for edgcpp."
+    },
+    "EDGCPP_FORCE_LINUX_LLVM_OBJ": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_FORCE_LINUX_LLVM_OBJ for edgcpp."
+    },
+    "EDGCPP_HOME": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for edgcpp (EDGCPP_HOME)."
+    },
+    "EDGCPP_STRICT_BACKEND": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_STRICT_BACKEND for edgcpp."
+    },
+    "EDGCPP_USE_NATIVE_CODEGEN": {
+      "type": "string",
+      "description": "Configuration variable EDGCPP_USE_NATIVE_CODEGEN for edgcpp."
     }
   }
 }

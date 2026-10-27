@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +38,9 @@ unset SCRIPT_NAME || true
 export LIBSCRIPT_ROOT_DIR
 
 _gcc_ver="${GCC_VERSION:-default}"
-_gcc_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/${_gcc_ver}"
-if [ ! -d "${_gcc_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/default" ]; then
-  _gcc_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/default"
+_gcc_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/${_gcc_ver}"
+if [ ! -d "${_gcc_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default" ]; then
+  _gcc_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default"
 fi
 
 if [ -d "${_gcc_prefix}/bin" ]; then
@@ -54,7 +53,7 @@ elif command -v gcc >/dev/null 2>&1; then
   CC="$(command -v gcc)"
   export CC
 else
-  export CC="gcc"
+  export CC='gcc'
 fi
 
 if [ -x "${_gcc_prefix}/bin/g++" ]; then
@@ -63,9 +62,11 @@ elif command -v g++ >/dev/null 2>&1; then
   CXX="$(command -v g++)"
   export CXX
 else
-  export CXX="g++"
+  export CXX='g++'
 fi
 
 export HOSTCC="${CC}"
-export CC_BACKEND="gcc"
+export CC_BACKEND='gcc'
 export CFLAGS="${GCC_CFLAGS:--O2}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

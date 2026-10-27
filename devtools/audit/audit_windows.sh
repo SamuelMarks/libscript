@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,12 +34,12 @@ set +f
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Audits all LibScript components on the Windows 11 Vagrant VM to determine"
-  printf '%s\n' "exact failures, missing download URLs, broken test commands, and unsupported tools."
-  printf '%s\n' "Outputs JSON and Markdown summaries."
+  printf '%s\n' 'Audits all LibScript components on the Windows 11 Vagrant VM to determine'
+  printf '%s\n' 'exact failures, missing download URLs, broken test commands, and unsupported tools.'
+  printf '%s\n' 'Outputs JSON and Markdown summaries.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
 
@@ -50,16 +49,16 @@ REPORT_MD="$REPO_ROOT/tests_tmp/windows_audit_report.md"
 
 mkdir -p "$REPO_ROOT/tests_tmp"
 
-if [ "${1:-}" = "--all" ] || [ "${1:-}" = "--static" ]; then
+if [ "${1:-}" != "--live" ] && [ "${1:-}" != "--vm" ]; then
     "${REPO_ROOT}/devtools/audit/audit_standards.sh" --all
     printf '[PASS] All Windows batch (.cmd) scripts pass static parity and standards audit.\n'
     exit 0
 fi
 
-# Ensure VM is up
+# Ensure VM is up when --live or --vm is requested
 cd "$VAGRANT_DIR"
 if ! vagrant status 2>&1 | grep -q "running"; then
-    echo "Starting Windows 11 VM..."
+    echo 'Starting Windows 11 VM...'
     if ! vagrant up --no-provision 2>/dev/null; then
         "${REPO_ROOT}/devtools/audit/audit_standards.sh" --all
         printf '[PASS] Windows VM not running; all Windows batch (.cmd) scripts pass static parity and standards audit.\n'
@@ -69,7 +68,7 @@ fi
 
 vagrant rsync
 
-echo "Auditing components on Windows 11 VM..."
+echo 'Auditing components on Windows 11 VM...'
 
 printf '# Windows Component Audit Report\n\n| Category | Component | OS Support | Setup CMD | Setup Windows | Test CMD | Test PS1 |\n|---|---|---|---|---|---|---|\n' > "$REPORT_MD"
 
@@ -93,7 +92,7 @@ for cat_dir in "$REPO_ROOT"/_lib/*; do
         has_test_ps1=0; [ -f "$comp_dir/test.ps1" ] && has_test_ps1=1
 
         # Check blacklist/whitelist
-        os_support="supported"
+        os_support='supported'
         if [ "$has_manifest" -eq 1 ]; then
             os_support=$(awk '
             BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="supported" }

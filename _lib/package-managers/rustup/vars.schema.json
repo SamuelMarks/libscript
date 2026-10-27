@@ -14,6 +14,14 @@
       "description": "Specific version of rustup to install.",
       "type": "string",
       "default": "latest"
+    },
+    "RUSTUP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading rustup binary or archive artifacts."
+    },
+    "RUSTUP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying rustup available remote releases."
     }
   }
 }

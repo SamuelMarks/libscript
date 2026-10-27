@@ -1,19 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Implements packaging logic for the 'docker' format.
-# Generates Dockerfile with ADD layer caching in online mode or air-gapped COPY cache/ mode.
+# Implements packaging logic for the `docker` format (online ADD caching, air-gapped COPY cache, or OS artifact layers).
 #
 # ## Usage
-# This script is called by the packaging system and should not be executed manually.
-#   ./libscript.sh package-as docker [OPTIONS] [PKG] [VERSION] [URL]
-#
-# ## Parameters
-# - `--offline`, `-o`: Generate completely air-gapped Dockerfile using pre-populated cache/
-# - `--online`: Generate Dockerfile using ADD layer caching for remote dependencies
-# - `--base`, `--base-image <image>`: Override base container image (default: debian:bookworm-slim)
-# - `--layer`, `-l <layer>`: Filter components by architectural layer
-# - `--artifact`, `-a <type>`: Target specific OS packaging artifact (deb, rpm, apk, txz, msi, exe)
-# - `--cache-dir <dir>`: Override default LibScript cache directory
+# ./libscript.sh package-as docker [--offline|--online] [--base <image>] [--layer <layer>] [--artifact <type>] [--cache-dir <dir>] [PKG] [VERSION] [URL]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,7 +27,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-base_image="debian:bookworm-slim"
+base_image='debian:bookworm-slim'
 layer_filter=""
 artifact_type=""
 is_offline=0
@@ -71,25 +60,25 @@ while [ $# -gt 0 ]; do
     --artifact|-a)
       artifact_type="${2:-}"
       if [ "$artifact_type" = "deb" ]; then
-        base_image="debian:bookworm-slim"
+        base_image='debian:bookworm-slim'
       elif [ "$artifact_type" = "rpm" ]; then
-        base_image="almalinux:9"
+        base_image='almalinux:9'
       elif [ "$artifact_type" = "apk" ]; then
-        base_image="alpine:latest"
+        base_image='alpine:latest'
       elif [ "$artifact_type" = "txz" ]; then
-        base_image="freebsd"
+        base_image='freebsd'
       elif [ "$artifact_type" = "msi" ] || [ "$artifact_type" = "exe" ]; then
-        base_image="mcr.microsoft.com/windows/servercore:ltsc2022"
+        base_image='mcr.microsoft.com/windows/servercore:ltsc2022'
       fi
       shift 2
       ;;
     --base|--base-image)
       base_image="${2:-}"
       if [ "$base_image" = "debian" ]; then
-        base_image="debian:bookworm-slim"
+        base_image='debian:bookworm-slim'
         layer_filter=""
       elif [ "$base_image" = "alpine" ]; then
-        base_image="alpine:latest"
+        base_image='alpine:latest'
       fi
       shift 2
       ;;
@@ -108,9 +97,9 @@ fi
 
 # Print Dockerfile Header
 printf '%s\n' "FROM $base_image"
-printf '%s\n' "ARG TARGETOS=linux"
-printf '%s\n' "ARG TARGETARCH=amd64"
-printf '%s\n' "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8"
+printf '%s\n' 'ARG TARGETOS=linux'
+printf '%s\n' 'ARG TARGETARCH=amd64'
+printf '%s\n' 'ENV LC_ALL=C.UTF-8 LANG=C.UTF-8'
 printf '%s\n' 'ENV LIBSCRIPT_ROOT_DIR="/opt/libscript"'
 printf '%s\n' 'ENV LIBSCRIPT_BUILD_DIR="/opt/libscript_build"'
 printf '%s\n' 'ENV LIBSCRIPT_DATA_DIR="/opt/libscript_data"'
@@ -186,7 +175,7 @@ if [ -s "$tmp_args" ]; then
     elif [ -z "$cur_ver" ]; then
       case "$token" in
         http://*|https://*)
-          cur_ver="latest"
+          cur_ver='latest'
           cur_override="$token"
           deps_list="${deps_list}cli ${cur_pkg} ${cur_ver} ${cur_override}
 "
@@ -289,8 +278,8 @@ if [ -s "$tmp_add" ]; then
   cat "$tmp_add"
 fi
 
-printf '%s\n' "COPY . /opt/libscript"
-printf '%s\n' "WORKDIR /opt/libscript"
+printf '%s\n' 'COPY . /opt/libscript'
+printf '%s\n' 'WORKDIR /opt/libscript'
 
 if [ -s "$tmp_run" ]; then
   cat "$tmp_run"

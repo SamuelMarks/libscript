@@ -13,6 +13,9 @@ Execute this script to install and configure ruby on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -44,7 +47,7 @@ function Resolve-ExactVersion {
     if ($RubyVersion -eq "latest" -or $RubyVersion -eq "stable") {
         $ExactVersion = "3.3.0"
         try {
-            $Resp = Invoke-RestMethod -Uri "https://cache.ruby-lang.org/pub/ruby/index.txt"
+            $Resp = Invoke-LibscriptFetchContent -Uri "https://cache.ruby-lang.org/pub/ruby/index.txt"
             $Lines = $Resp -split "`n"
             foreach ($Line in $Lines) {
                 if ($Line -match "^ruby-(\d+\.\d+\.\d+).*") {
@@ -66,15 +69,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls ruby
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls ruby
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             ruby --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -86,32 +81,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote ruby
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls ruby
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://cache.ruby-lang.org/pub/ruby/index.txt"
+            $Resp = Invoke-LibscriptFetchContent -Uri "https://cache.ruby-lang.org/pub/ruby/index.txt"
             $Resp -split "`n" | Where-Object { $_ -match "^ruby-(\d+\.\d+\.\d+)" } | ForEach-Object { $matches[1] } | Sort-Object -Unique
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "ruby@${RubyVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls ruby
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -182,18 +161,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=RubyInstallerTeam.Ruby -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"RubyInstallerTeam.Ruby\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y ruby
+    libscript_depends @(\"ruby\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "ruby@${RubyVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls ruby; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -221,7 +192,7 @@ switch ($Action) {
             $TempExe = Join-Path [System.IO.Path]::GetTempPath() $ExeName
             Write-Host "Downloading $DownloadUrl"
             try {
-                Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempExe
+                libscript_download $DownloadUrl $TempExe
             } catch {
                 Write-Host "Failed to download RubyInstaller. You may need to specify an exact sub-version available on github."
                 throw

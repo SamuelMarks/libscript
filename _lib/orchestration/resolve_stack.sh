@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: ${THIS_FILE} <path_to_config.json> [output_plan.json]"
-  printf '%s\n' "Resolves component dependencies and emits an execution plan."
+  printf '%s\n' 'Resolves component dependencies and emits an execution plan.'
   exit 0
 fi
 
@@ -84,22 +83,12 @@ if [ ! -s "$CONFIG_FILE" ] || ! jq -e '.' "$CONFIG_FILE" >/dev/null 2>&1; then
   exit 0
 fi
 
-# Find all manifests within _lib
-MANIFEST_ARGS=""
-tmp_manifests=$(mktemp 2>/dev/null || printf '%s' "/tmp/libscript_manifests.$$")
-find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" 2>/dev/null > "$tmp_manifests" || true
-if [ -f "$tmp_manifests" ]; then
-  while IFS= read -r m; do
-    [ -n "$m" ] && MANIFEST_ARGS="${MANIFEST_ARGS} \"${m}\""
-  done < "$tmp_manifests"
-  rm -f "$tmp_manifests"
-fi
-
-# If no manifests found or empty, safely provide an empty list
-if [ -z "$MANIFEST_ARGS" ]; then
-  SOLVER_CMD="jq --arg target_os \"$TARGET_OS\" -n '{config: input, manifests: []}' \"$CONFIG_FILE\""
-else
-  SOLVER_CMD="jq --arg target_os \"$TARGET_OS\" -n '{config: input, manifests: [inputs]}' \"$CONFIG_FILE\" $MANIFEST_ARGS"
+# Stream all manifests within _lib into a single temporary JSON array file
+tmp_manifests=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_manifests.$$")
+trap 'rm -f "$tmp_manifests"' EXIT INT TERM
+find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -exec jq -s '.' {} + 2>/dev/null | jq -s 'add // []' > "$tmp_manifests" 2>/dev/null || printf '[]\n' > "$tmp_manifests"
+if [ ! -s "$tmp_manifests" ]; then
+  printf '[]\n' > "$tmp_manifests"
 fi
 
 # Execute resolution
@@ -108,10 +97,9 @@ if [ -n "$OUTPUT_FILE" ]; then
   if [ ! -d "$OUT_DIR" ]; then
     mkdir -p "$OUT_DIR"
   fi
-  # shellcheck disable=SC2086
-  sh -c "$SOLVER_CMD" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq" > "$OUTPUT_FILE"
+  jq --arg target_os "$TARGET_OS" --slurpfile manifests "$tmp_manifests" -n '{config: input, manifests: ($manifests[0] // [])}' "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq" > "$OUTPUT_FILE"
   printf '[INFO] Execution plan generated at %s\n' "$OUTPUT_FILE"
 else
-  # shellcheck disable=SC2086
-  sh -c "$SOLVER_CMD" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
+  jq --arg target_os "$TARGET_OS" --slurpfile manifests "$tmp_manifests" -n '{config: input, manifests: ($manifests[0] // [])}' "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
 fi
+rm -f "$tmp_manifests"

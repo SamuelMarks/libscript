@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -57,9 +56,9 @@ GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-${GPU_ZONE:-}}"
 
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  log_info "GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete."
+  log_info 'GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete.'
   exit 0
 fi
 
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-gpu-vm/cli.sh" create "$GPU_NAME"
-log_info "GPU VM setup complete."
+log_info 'GPU VM setup complete.'

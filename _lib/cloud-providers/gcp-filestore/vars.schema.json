@@ -27,6 +27,10 @@
       "type": "string",
       "default": "default",
       "description": "VPC network name connected to the Filestore instance."
+    },
+    "GCP_FILESTORE_ENABLED": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating whether gcp-filestore is enabled in the execution plan."
     }
   },
   "additionalProperties": false

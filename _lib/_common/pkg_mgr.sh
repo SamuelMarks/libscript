@@ -11,12 +11,12 @@
 
 
 set -feu
+_pmgr_caller_this="${THIS_FILE:-}"; _pmgr_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -26,6 +26,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_pmgr_caller_this" ] && THIS_FILE="$_pmgr_caller_this"
+    [ -n "$_pmgr_caller_dir" ] && SCRIPT_DIR="$_pmgr_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -39,6 +41,7 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/os_info.sh" "_lib/_common/priv.sh
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
 PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
 export PKG_MGR_UPDATE_REGISTRY
@@ -50,23 +53,10 @@ libscript_resolve_install_method() {
   requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
   : "${requested:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
 
-  if [ "${1:-}" = "NODEJS" ]; then
-    case "${requested}" in
-      ""|libscript_native|mise|fnm|asdf|vfox|pkgx)
-        printf '%s\n' "libscript_native"
-        return 0
-        ;;
-      system|from-source)
-        printf '%s\n' "$requested"
-        return 0
-        ;;
-    esac
-  fi
-
   case "${requested}" in
     pkg_mgr:*)
       export LIBSCRIPT_PKG_MGR="${requested#pkg_mgr:}"
-      printf '%s\n' "system"
+      printf '%s\n' 'system'
       return 0
       ;;
     from-source|libscript_native|system)
@@ -75,44 +65,14 @@ libscript_resolve_install_method() {
       ;;
     brew|winget|choco|scoop|nix|guix|spack|vcpkg|conan)
       export LIBSCRIPT_PKG_MGR="$requested"
-      printf '%s\n' "system"
+      printf '%s\n' 'system'
+      return 0
+      ;;
+    *)
+      printf '%s\n' 'libscript_native'
       return 0
       ;;
   esac
-
-  chain="libscript_native system"
-  check_chain=""
-  
-  if [ -n "$requested" ]; then
-    # Start chain from the requested method
-    found=0
-    for m in $chain; do
-      if [ "$m" = "$requested" ]; then found=1; fi
-      if [ "$found" = "1" ]; then
-        check_chain="${check_chain:+$check_chain }$m"
-      fi
-    done
-    # If requested method is not in our known chain, just check it directly then fallback to full chain
-    if [ "$found" = "0" ]; then
-      check_chain="$requested $chain"
-    fi
-  else
-    check_chain="$chain"
-  fi
-
-  for m in $check_chain; do
-    if [ "$m" = "libscript_native" ] || [ "$m" = "system" ] || [ "$m" = "from-source" ]; then
-      printf '%s\n' "$m"
-      return 0
-    fi
-    if libscript_cmd_avail "$m"; then
-      printf '%s\n' "$m"
-      return 0
-    fi
-  done
-  
-  printf '%s\n' "libscript_native"
-  return 0
 }
 
 # ## libscript_cmd_avail
@@ -294,7 +254,7 @@ libscript_depends_via() {
 # Performs the libscript_depends operation and updates component state.
 libscript_depends() {
   if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then
-    log_info "Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
+    log_info 'Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1'
     return 0
   fi
   if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ]; then
@@ -650,6 +610,50 @@ libscript_fetch() {
   libscript_download "$@"
 }
 
+# ## libscript_fetch_stdout
+# Fetches the contents of a URL to stdout while respecting offline mode and curl/wget fallbacks.
+libscript_fetch_stdout() {
+  _lfs_url="${1:-}"
+  [ -n "$_lfs_url" ] || return 1
+  if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${LIBSCRIPT_FORCE_OFFLINE:-0}" = "1" ]; then
+    return 1
+  fi
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$_lfs_url" 2>/dev/null
+    return $?
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO- "$_lfs_url" 2>/dev/null
+    return $?
+  else
+    _lfs_tmp=$(mktemp)
+    if libscript_download "$_lfs_url" "$_lfs_tmp" "SKIP" >/dev/null 2>&1; then
+      cat "$_lfs_tmp"
+      rm -f "$_lfs_tmp"
+      return 0
+    fi
+    rm -f "$_lfs_tmp"
+    return 1
+  fi
+}
+
+# ## libscript_uninstall_pkg
+# Uninstalls one or more packages via the active OS package manager.
+libscript_uninstall_pkg() {
+  [ -n "${PKG_MGR:-}" ] || detect_pkg_mgr
+  for _up_pkg in "$@"; do
+    case "${PKG_MGR}" in
+      'apk')     priv apk del "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'apt-get') priv apt-get remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'brew')    brew uninstall "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'dnf')     priv dnf remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'yum')     priv yum remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'pacman')  priv pacman -Rns --noconfirm "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'pkg')     priv pkg delete -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'zypper')  priv zypper remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
+    esac
+  done
+}
+
 
 # ## libscript_process_aria2_file
 # Performs the libscript_process_aria2_file operation and updates component state.
@@ -695,3 +699,9 @@ libscript_process_aria2_file() {
   done < "$list_file"
   process_entry
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_pmgr_caller_dir:-}" ] && SCRIPT_DIR="$_pmgr_caller_dir"
+[ -n "${_pmgr_caller_this:-}" ] && THIS_FILE="$_pmgr_caller_this"
+unset _pmgr_caller_this _pmgr_caller_dir || true

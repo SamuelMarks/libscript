@@ -13,6 +13,9 @@ Execute this script to install and configure duckdb on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $DuckdbVersion = $env:DUCKDB_VERSION
 if ([string]::IsNullOrEmpty($DuckdbVersion)) {
@@ -33,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-        winget install duckdb.duckdb
+    libscript_depends @(\"duckdb.duckdb\")
     } elseif ($PkgMgr -eq "choco") {
-        choco install duckdb
+    libscript_depends @(\"duckdb\")
     }
 } else {
     $Prefix = $env:PREFIX
@@ -60,7 +63,7 @@ if ($InstallMethod -eq "system") {
         Write-Host "Attempting to download duckdb from $Url ..."
         
         $ZipPath = "$Prefix\duckdb.zip"
-        Invoke-WebRequest -Uri $Url -OutFile $ZipPath -UseBasicParsing
+        libscript_download $Url $ZipPath
         Expand-Archive -Path $ZipPath -DestinationPath $BinDir -Force
         Remove-Item -Path $ZipPath
         Write-Host "duckdb downloaded."
@@ -70,8 +73,6 @@ if ($InstallMethod -eq "system") {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls duckdb; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls duckdb; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "duckdb"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -79,15 +80,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote duckdb; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all duckdb; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "duckdb@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "duckdb@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

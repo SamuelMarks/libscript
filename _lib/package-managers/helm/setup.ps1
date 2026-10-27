@@ -13,19 +13,20 @@ Execute this script to install and configure helm on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 if (-Not (Get-Command helm -ErrorAction SilentlyContinue)) {
   Write-Host "Installing helm via choco (if available)..."
   if (Get-Command choco -ErrorAction SilentlyContinue) {
-    choco install kubernetes-helm -y
+    libscript_depends @(\"kubernetes-helm\")
   } else {
     Write-Host "Please install helm manually or via Winget/Chocolatey."
   }
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls helm; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls helm; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "helm"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -33,15 +34,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote helm; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all helm; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "helm@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "helm@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

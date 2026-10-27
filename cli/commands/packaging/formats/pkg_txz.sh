@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,8 +39,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
   else
     deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
   fi
-      printf '%s\n' "#!/bin/sh"
-      printf '%s\n' "set -e"
+      printf '%s\n' '#!/bin/sh'
+      printf '%s\n' 'set -e'
       printf '%s\n' "OUT_DIR=\"${OUT_DIR:-.}\""
       printf '%s\n' "mkdir -p \"\$OUT_DIR\""
       meta_depends=""

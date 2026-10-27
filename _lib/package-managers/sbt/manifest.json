@@ -6,5 +6,6 @@
   "title": "sbt",
   "description": "Bootstrap module for the `sbt` package manager.",
   "category": "package-manager",
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "repository": "https://github.com/sbt/sbt"
 }

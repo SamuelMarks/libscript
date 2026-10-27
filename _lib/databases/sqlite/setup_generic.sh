@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -60,7 +59,7 @@ VERSION="${SQLITE_VERSION:-${VERSION:-latest}}"
 # Resolves semantic version aliases (such as 'latest' or 'stable') to a concrete SQLite version string.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="3.46.1"
+    EXACT_VERSION='3.46.1'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -92,7 +91,7 @@ install_sqlite_via_pkg_mgr() {
   if [ -n "${SQLITE_PKG_MGR:-}" ]; then
     export LIBSCRIPT_PKG_MGR="${SQLITE_PKG_MGR}"
   fi
-  libscript_depends "sqlite"
+  libscript_depends 'sqlite'
   if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" = "1" ]; then
     return 0
   fi
@@ -116,7 +115,7 @@ compile_sqlite_amalgamation_callback() {
 
   if [ "${SQLITE_SINGLE_THREADED:-false}" = "true" ] || [ "${SQLITE_SINGLE_THREADED:-0}" = "1" ] || [ "${LIBSCRIPT_RESOLVED_CC_ID:-default}" = "tcc" ]; then
     _cflags="-O2 -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE"
-    _ldflags="-lm"
+    _ldflags='-lm'
   fi
   if [ -n "${LIBSCRIPT_BUILD_CFLAGS:-}" ]; then
     _cflags="${_cflags} ${LIBSCRIPT_BUILD_CFLAGS}"
@@ -176,30 +175,14 @@ build_sqlite_from_source() {
 
 case "$ACTION" in
   ls)
-    if [ "$SQLITE_INSTALL_METHOD" = "mise" ]; then
-      mise ls sqlite || true
-    elif [ "$SQLITE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list sqlite || true
-    elif [ "$SQLITE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SQLITE_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls sqlite || true
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/" 2>/dev/null || true
-    fi
+    ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/" 2>/dev/null || true
     exit 0
     ;;
   ls-remote)
-    if [ "$SQLITE_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote sqlite || true
-    elif [ "$SQLITE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all sqlite || true
-    else
-      printf '3.45.3
+    printf '3.45.3
 3.46.0
 3.46.1
 '
-    fi
     exit 0
     ;;
   use)
@@ -237,19 +220,6 @@ case "$ACTION" in
       system|pkg_mgr:*|brew|winget|choco|scoop|nix|spack|vcpkg)
         install_sqlite_via_pkg_mgr
         ;;
-      mise)
-        mise install "sqlite@${VERSION}"
-        ;;
-      asdf)
-        asdf install sqlite "${VERSION}"
-        ;;
-      pkgx)
-        pkgx install "sqlite@${VERSION}"
-        ;;
-      vfox)
-        vfox add sqlite || true
-        vfox install "sqlite@${VERSION}"
-        ;;
       *)
         resolve_exact_version
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${EXACT_VERSION}"
@@ -283,38 +253,7 @@ case "$ACTION" in
         ;;
     esac
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090,SC1091
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sqlite}}"
-    libscript_service "$ACTION" "$service_name" "$@"
-    exit 0
-    ;;
-  install-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090,SC1091
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sqlite}}"
-    libscript_install_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090,SC1091
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sqlite}}"
-    libscript_uninstall_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall)
-    resolve_exact_version
-    log_info "Uninstalling sqlite ${VERSION}..."
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${EXACT_VERSION}"*
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${VERSION}"
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "sqlite" "$ACTION" "$VERSION" "${SQLITE_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,10 +32,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Generates markdown documentation for the libscript codebase."
+  printf '%s\n' 'Generates markdown documentation for the libscript codebase.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -104,13 +103,12 @@ trap 'handle_interrupt' INT TERM HUP
 export ROOT_DIR
 "${SCRIPT_DIR}/inject_markers.sh"
 
-printf '%s\n' "Generating markdown docs..."
+printf '%s\n' 'Generating markdown docs...'
 
 modified_tmp=$(mktemp)
 base_vars_tmp=$(mktemp)
 if [ -f "$ROOT_DIR/_lib/_common/base_vars.schema.json" ]; then
-  jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$ROOT_DIR/_lib/_common/base_vars.schema.json" > "$base_vars_tmp"
-  sed -i '' 's/ |"$/ |/' "$base_vars_tmp" 2>/dev/null || sed -i 's/ |"$/ |/' "$base_vars_tmp"
+  jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$ROOT_DIR/_lib/_common/base_vars.schema.json" | sed 's/ |"$/ |/' > "$base_vars_tmp"
 fi
 
 plat_tmp=$(mktemp)
@@ -138,10 +136,7 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologi
         fi
         
         # Process component vars
-        jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$schema" >> "$vars_tmp"
-        
-        # Clean up commas in empty arrays and pipes
-        sed -i '' 's/ |"$/ |/' "$vars_tmp" 2>/dev/null || sed -i 's/ |"$/ |/' "$vars_tmp"
+        jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$schema" | sed 's/ |"$/ |/' >> "$vars_tmp"
 
         vars_norm=$(normalize_markdown_section < "$vars_tmp")
         existing_vars_norm=$(extract_marker_section "$readme" "<!-- BEGIN_VARS -->" "<!-- END_VARS -->" | normalize_markdown_section)
@@ -207,4 +202,4 @@ if [ -s "$modified_tmp" ]; then
 fi
 rm -f "$modified_tmp"
 
-printf '%s\n' "Done."
+printf '%s\n' 'Done.'

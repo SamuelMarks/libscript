@@ -15,7 +15,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -109,7 +109,7 @@ exit /b 0
 :: Lists upstream release versions available for download.
 :action_ls_remote
 if not "%MSI_RS_RELEASES_URL%"=="" (
-    curl -sSL "%MSI_RS_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%MSI_RS_RELEASES_URL%"
 ) else (
     git ls-remote --tags "%MSI_RS_REPO_URL%" 2>nul | findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
     if errorlevel 1 echo 0.0.1

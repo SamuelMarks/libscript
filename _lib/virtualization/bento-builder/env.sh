@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,3 +39,5 @@ export INSTALL_VIRTUALBOX="${INSTALL_VIRTUALBOX:-1}"
 export INSTALL_PACKER="${INSTALL_PACKER:-1}"
 export INSTALL_VAGRANT="${INSTALL_VAGRANT:-1}"
 export INSTALL_IMAGE_TOOLS="${INSTALL_IMAGE_TOOLS:-1}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 PS_SCRIPT="${SCRIPT_DIR}/click_button.ps1"
 if [ ! -f "${PS_SCRIPT}" ] && [ -f "C:/libscript/click_button.ps1" ]; then
-  PS_SCRIPT="C:/libscript/click_button.ps1"
+  PS_SCRIPT='C:/libscript/click_button.ps1'
 fi
 
 TARGET_TEXT="${1:-}"
@@ -50,6 +49,6 @@ if command -v powershell.exe >/dev/null 2>&1; then
 elif command -v pwsh >/dev/null 2>&1; then
   pwsh -ExecutionPolicy Bypass -File "${PS_SCRIPT}" > "${LOG_FILE}" 2>&1
 else
-  printf '%s\n' "GUI control automation requires PowerShell on Windows." >&2
+  printf '%s\n' 'GUI control automation requires PowerShell on Windows.' >&2
   exit 1
 fi

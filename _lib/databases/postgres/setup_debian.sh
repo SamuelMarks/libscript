@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -120,15 +119,19 @@ if ! dpkg -s -- 'postgresql-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
     [ -d '/var/log/postgresql' ] || mkdir -p -- '/var/log/postgresql'
     PG_CONF="/etc/postgresql/${POSTGRES_VERSION}/main/postgresql.conf"
     if [ -f "${PG_CONF}" ]; then
+      _pg_tmp_conf=$(mktemp)
+      cat "${PG_CONF}" > "$_pg_tmp_conf"
       if [ -n "${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-        priv sed -i "s|^#*unix_socket_directories = .*|unix_socket_directories = '${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}'|" "${PG_CONF}"
+        libscript_sed_in_place "s|^#*unix_socket_directories = .*|unix_socket_directories = '${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}'|" "$_pg_tmp_conf"
       fi
       if [ -n "${POSTGRES_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ]; then
-        priv sed -i "s|^#*listen_addresses = .*|listen_addresses = '${POSTGRES_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}'|" "${PG_CONF}"
+        libscript_sed_in_place "s|^#*listen_addresses = .*|listen_addresses = '${POSTGRES_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}'|" "$_pg_tmp_conf"
       fi
       if [ -n "${POSTGRES_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-        priv sed -i "s|^#*port = .*|port = ${POSTGRES_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${PG_CONF}"
+        libscript_sed_in_place "s|^#*port = .*|port = ${POSTGRES_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "$_pg_tmp_conf"
       fi
+      priv cp -- "$_pg_tmp_conf" "${PG_CONF}"
+      rm -f "$_pg_tmp_conf"
     fi
     priv_as "${POSTGRES_SERVICE_USER?}" \
       '/usr/lib/postgresql/'"${POSTGRES_VERSION}"'/bin/postgres' \

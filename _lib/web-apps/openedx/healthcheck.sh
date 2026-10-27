@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -104,9 +103,9 @@ EOF
   exit 0
 }
 
-JSON_OUTPUT="0"
+JSON_OUTPUT='0'
 if [ "${1:-}" = "--json" ]; then
-  JSON_OUTPUT="1"
+  JSON_OUTPUT='1'
 elif [ "${1:-}" = "help" ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   show_help
 fi

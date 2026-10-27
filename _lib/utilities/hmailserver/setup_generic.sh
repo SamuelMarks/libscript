@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,12 +27,12 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-log_info "hMailServer is the native mail transfer agent for Microsoft Windows."
+log_info 'hMailServer is the native mail transfer agent for Microsoft Windows.'
 if [ "$(uname -s)" != "CYGWIN_NT" ] && [ "$(uname -s)" != "MINGW64_NT" ]; then
   if command -v exim >/dev/null 2>&1 || command -v exim4 >/dev/null 2>&1; then
-    log_info "Mail transfer agent (exim) is already installed."
+    log_info 'Mail transfer agent (exim) is already installed.'
     exit 0
   fi
-  log_info "On POSIX platforms, Exim is recommended. Invoking Exim setup..."
+  log_info 'On POSIX platforms, Exim is recommended. Invoking Exim setup...'
   "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim/setup.sh" "$@"
 fi

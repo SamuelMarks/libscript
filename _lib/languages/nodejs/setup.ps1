@@ -60,7 +60,7 @@ function Resolve-ExactVersion {
         } else {
             $BaseUrl = "https://nodejs.org/dist/latest-v${CleanVersion}.x"
         }
-        $ShaSums = Invoke-RestMethod -Uri "$BaseUrl/SHASUMS256.txt"
+        $ShaSums = Invoke-LibscriptFetchContent -Uri "$BaseUrl/SHASUMS256.txt"
         if ($ShaSums -match "node-v([\d\.]+)-win-$Arch\.zip") {
             $ExactVersion = $matches[1]
         } else {
@@ -91,7 +91,7 @@ switch ($Action) {
         if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Tab = Invoke-RestMethod -Uri "https://nodejs.org/dist/index.tab"
+            $Tab = Invoke-LibscriptFetchContent -Uri "https://nodejs.org/dist/index.tab"
             $Tab -split "`n" | Select-Object -Skip 1 | ForEach-Object { ($_ -split "`t")[0].TrimStart('v') }
         }
         break

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,7 +42,7 @@ done
 
 if ! command -v python3 >/dev/null 2>&1 && ! command -v uv >/dev/null 2>&1; then
   if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
-    libscript_depends "python" || true
+    libscript_depends 'python' || true
   fi
 fi
 
@@ -65,11 +64,11 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
     "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip setuptools wheel "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator || true
   fi
 fi
-if ! libscript_cmd_avail configurable-http-proxy; then
+if ! libscript_cmd_avail configurable-http-proxy && [ ! -x "${JUPYTERHUB_VENV}/bin/configurable-http-proxy" ]; then
   if [ "$(uname -s)" = "Darwin" ]; then
-    npm install -g configurable-http-proxy || true
+    npm install --prefix "${JUPYTERHUB_VENV}" configurable-http-proxy || true
   else
-    priv env "PATH=$PATH" npm install -g configurable-http-proxy || true
+    priv env "PATH=$PATH" npm install --prefix "${JUPYTERHUB_VENV}" configurable-http-proxy || true
   fi
 fi
 

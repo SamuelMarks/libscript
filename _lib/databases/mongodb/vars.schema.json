@@ -14,7 +14,7 @@
     "MONGODB_INSTALL_METHOD": {
       "description": "How to install MONGODB. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "LIBSCRIPT_LISTEN_PORT": {
@@ -57,6 +57,14 @@
       "description": "Custom name for the Windows Service (allows side-by-side installations)",
       "type": "string",
       "default": "libscript_mongodb"
+    },
+    "MONGODB_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading mongodb binary or archive artifacts."
+    },
+    "MONGODB_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying mongodb available remote releases."
     }
   }
 }

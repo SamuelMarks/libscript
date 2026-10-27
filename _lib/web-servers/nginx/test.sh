@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,6 +34,6 @@ if command -v nginx >/dev/null 2>&1; then
 elif [ -x /usr/sbin/nginx ]; then
   /usr/sbin/nginx -v
 else
-  echo "nginx command not found"
+  echo 'nginx command not found'
   exit 1
 fi

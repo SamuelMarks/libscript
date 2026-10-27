@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,12 +39,30 @@ unset SCRIPT_NAME || true
 NODEJS_VERSION="${NODEJS_VERSION:-latest}"
 export NODEJS_VERSION
 _nodejs_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs"
-for _nodejs_cand in "${_nodejs_home}/${NODEJS_VERSION}/bin" "${_nodejs_home}/v${NODEJS_VERSION#v}/bin" "${_nodejs_home}/default/bin"; do
-  if [ -d "$_nodejs_cand" ] || [ "$_nodejs_cand" = "${_nodejs_home}/${NODEJS_VERSION}/bin" ]; then
-    case ":${PATH:-}:" in
-      *":${_nodejs_cand}:"*) ;;
-      *) PATH="${_nodejs_cand}${PATH:+:${PATH}}" ;;
-    esac
+_nodejs_added=0
+for _nodejs_cand in "${_nodejs_home}/${NODEJS_VERSION}/bin" "${_nodejs_home}/v${NODEJS_VERSION#v}/bin" "${_nodejs_home}/default/bin" "${_nodejs_home}/latest/bin"; do
+  if [ -d "$_nodejs_cand" ]; then
+    libscript_path_prepend "$_nodejs_cand"
+    _nodejs_added=1
+    break
   fi
 done
+if [ "$_nodejs_added" -eq 0 ] && [ -d "$_nodejs_home" ]; then
+  _nodejs_major="${NODEJS_VERSION#v}"
+  _nodejs_major="${_nodejs_major%%.*}"
+  set +f
+  for _nodejs_match in "${_nodejs_home}/v${_nodejs_major}."*/bin "${_nodejs_home}/"*/bin; do
+    if [ -d "$_nodejs_match" ]; then
+      libscript_path_prepend "$_nodejs_match"
+      _nodejs_added=1
+      break
+    fi
+  done
+  set -f
+fi
+if [ "$_nodejs_added" -eq 0 ]; then
+  libscript_path_prepend "${_nodejs_home}/${NODEJS_VERSION}/bin"
+fi
 export PATH
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

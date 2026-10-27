@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,12 +37,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 
-TARGET="all"
-OS_LIST="all"
-VARIANT="both"
-FLOW="both"
-MODE="all"
-LIVE_VAGRANT="0"
+TARGET='all'
+OS_LIST='all'
+VARIANT='both'
+FLOW='both'
+MODE='all'
+LIVE_VAGRANT='0'
 OUT_BASE="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript"
 
 # ## show_help
@@ -111,7 +110,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --live-vagrant)
-      LIVE_VAGRANT="1"
+      LIVE_VAGRANT='1'
       shift
       ;;
     --out-dir|--output-dir)
@@ -232,7 +231,7 @@ capture_wizard_stages() {
   _os="$3"
   _v="$4"
   _msi_file=$(ensure_msi_built "$_tdir" "$_tname" "$_v")
-  _prefix="online_"
+  _prefix='online_'
   [ "$_v" = "offline" ] && _prefix="offline_"
 
   _target_out="${OUT_BASE}/${_tname}/screenshots"
@@ -771,9 +770,9 @@ else:
 
   _wp_load=""
   if [ -f "/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php" ]; then
-    _wp_load="/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php"
+    _wp_load='/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php'
   elif [ -f "/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php" ]; then
-    _wp_load="/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php"
+    _wp_load='/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php'
   fi
   if [ "$_tname" = "wordpress" ] && [ -z "${WORDPRESS_COOKIES_JSON:-}" ] && [ -n "$_wp_load" ]; then
     # shellcheck disable=SC2016

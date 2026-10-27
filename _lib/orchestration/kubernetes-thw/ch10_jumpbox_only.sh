@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,7 +41,7 @@ libscript_depends kubectl
 MACHINES_TXT="${DIR}/kubernetes-the-hard-way/machines.txt"
 KUBERNETES_PUBLIC_ADDRESS=$(awk '/server/ {print $1}' "${MACHINES_TXT}")
 # Use localhost to avoid timeout in QEMU isolated network
-KUBERNETES_PUBLIC_ADDRESS="127.0.0.1"
+KUBERNETES_PUBLIC_ADDRESS='127.0.0.1'
 
 PREVIOUS_WD="$(pwd)"
 cd kubernetes-the-hard-way || exit 1

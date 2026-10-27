@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -278,16 +277,7 @@ case "$ACTION" in
     exit 0
     ;;
   ls)
-    if [ "$DIGITALOCEAN_INSTALL_METHOD" = "mise" ]; then
-      mise ls doctl || true
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "asdf" ]; then
-      asdf list doctl || true
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s
-' "pkgx does not have a local list command"
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls doctl || true
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "system" ]; then
+    if [ "$DIGITALOCEAN_INSTALL_METHOD" = "system" ]; then
       printf '%s
 ' "System packages do not support ls here."
     else
@@ -296,19 +286,8 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "$DIGITALOCEAN_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote doctl || true
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all doctl || true
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s
-' "pkgx does not have a local list command"
-    elif [ "$DIGITALOCEAN_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all doctl || true
-    else
-      git ls-remote --tags "https://github.com/digitalocean/doctl" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
+    git ls-remote --tags "https://github.com/digitalocean/doctl" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s
 ' "No versions found"
-    fi
     exit 0
     ;;
   use)
@@ -323,7 +302,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$DIGITALOCEAN_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "doctl" || true
+      libscript_depends 'doctl' || true
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/digitalocean/${EXACT_VERSION}"

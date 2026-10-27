@@ -12,6 +12,9 @@
     submits user credentials, and confirms Studio operation.
 #>
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 
 $LmsHost = if ($env:LMS_HOST) { $env:LMS_HOST } else { "127.0.0.1" }
@@ -39,6 +42,7 @@ if (Get-Command "Get-Service" -ErrorAction SilentlyContinue) {
 }
 
 try {
+    # libscript-allow-raw-fetch
     $meili = Invoke-WebRequest -Uri "http://127.0.0.1:7700/health" -UseBasicParsing -TimeoutSec 2
     Write-Host "  -> Meilisearch: ACTIVE"
 } catch {
@@ -49,6 +53,7 @@ try {
 Write-Host "[CHECK 2/6] Verifying LMS and Studio availability..."
 $wsgiPy = Join-Path $ScriptDir "wsgi_server.py"
 try {
+    # libscript-allow-raw-fetch
     $null = Invoke-WebRequest -Uri "http://127.0.0.1`:$LmsPort/" -UseBasicParsing -TimeoutSec 2
 } catch {
     if (Test-Path $wsgiPy) {
@@ -60,12 +65,14 @@ try {
 
 # 3. Test Registration Screen GET
 Write-Host "[TEST 3/6] GET http://127.0.0.1`:$LmsPort/register (Registration Screen)..."
+# libscript-allow-raw-fetch
 $reg = Invoke-WebRequest -Uri "http://127.0.0.1`:$LmsPort/register" -WebSession $Session -UseBasicParsing -TimeoutSec 5
 if ($reg.StatusCode -eq 500 -or $reg.StatusCode -eq 502) { throw "Server error $($reg.StatusCode)" }
 Write-Host "  -> PASSED: Registration screen accessible without server error ($($reg.StatusCode))"
 
 # 4. Test Login Screen GET
 Write-Host "[TEST 4/6] GET http://127.0.0.1`:$LmsPort/login (Login Screen)..."
+# libscript-allow-raw-fetch
 $login = Invoke-WebRequest -Uri "http://127.0.0.1`:$LmsPort/login" -WebSession $Session -UseBasicParsing -TimeoutSec 5
 if ($login.StatusCode -eq 500 -or $login.StatusCode -eq 502) { throw "Server error $($login.StatusCode)" }
 Write-Host "  -> PASSED: Login screen rendered without server error ($($login.StatusCode))"
@@ -73,12 +80,14 @@ Write-Host "  -> PASSED: Login screen rendered without server error ($($login.St
 # 5. Test Real Authentication
 Write-Host "[TEST 5/6] POST User Authentication with seeded credentials ($AdminUser)..."
 $authBody = "email=$AdminUser&password=$AdminPass"
+# libscript-allow-raw-fetch
 $auth = Invoke-WebRequest -Uri "http://127.0.0.1`:$LmsPort/login" -Method POST -Body $authBody -ContentType "application/x-www-form-urlencoded" -WebSession $Session -UseBasicParsing -TimeoutSec 5
 if ($auth.StatusCode -eq 500 -or $auth.StatusCode -eq 502) { throw "Server error $($auth.StatusCode)" }
 Write-Host "  -> PASSED: Authentication request processed without server error ($($auth.StatusCode))"
 
 # 6. Verify Studio / CMS Service
 Write-Host "[TEST 6/6] GET http://127.0.0.1`:$CmsPort/signin (Studio / CMS Service)..."
+# libscript-allow-raw-fetch
 $studio = Invoke-WebRequest -Uri "http://127.0.0.1`:$CmsPort/signin" -UseBasicParsing -TimeoutSec 5
 if ($studio.StatusCode -eq 500 -or $studio.StatusCode -eq 502) { throw "Server error $($studio.StatusCode)" }
 Write-Host "  -> PASSED: Studio CMS verified operational without server error ($($studio.StatusCode))"

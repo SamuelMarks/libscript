@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ VERSION="${GUNICORN_VERSION:-latest}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ]; then
-    EXACT_VERSION="26.2.0"
+    EXACT_VERSION='26.2.0'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -82,13 +81,13 @@ case "$ACTION" in
     log_info "Installing Gunicorn (${VERSION}) via ${GUNICORN_INSTALL_METHOD}..."
     if [ "$GUNICORN_INSTALL_METHOD" = "libscript_native" ]; then
       if ! command -v uv >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
-        log_info "Python runtime required for gunicorn. Installing python..."
-        libscript_depends "python" || true
+        log_info 'Python runtime required for gunicorn. Installing python...'
+        libscript_depends 'python' || true
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
       if [ "$(uname -s)" = "FreeBSD" ]; then
-        libscript_depends "gunicorn"
+        libscript_depends 'gunicorn'
         if command -v gunicorn >/dev/null 2>&1; then
           mkdir -p "${TARGET_DIR}/bin"
           ln -sf "$(command -v gunicorn)" "${TARGET_DIR}/bin/gunicorn"
@@ -121,49 +120,12 @@ case "$ACTION" in
       elif command -v pip >/dev/null 2>&1; then
         pip install --user gunicorn
       else
-        libscript_depends "python"
+        libscript_depends 'python'
         pip3 install --user gunicorn || true
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-gunicorn}"
-    libscript_service "$ACTION" "$service_name" "$@"
-    exit 0
-    ;;
-  install-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-gunicorn}"
-    libscript_install_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-gunicorn}"
-    libscript_uninstall_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall)
-    resolve_exact_version
-    log_info "Uninstalling Gunicorn ${EXACT_VERSION}..."
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${VERSION}"
-    exit 0
-    ;;
-  test)
-    if command -v gunicorn >/dev/null 2>&1; then
-      gunicorn --version
-      exit 0
-    else
-      printf 'gunicorn binary not found in PATH\n' >&2
-      exit 1
-    fi
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "gunicorn" "$ACTION" "$VERSION" "${GUNICORN_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

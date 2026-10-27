@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -62,9 +61,9 @@ done
 
 if [ -z "$JSON_FILE" ]; then
   if [ -f "libscript.json" ]; then
-    JSON_FILE="libscript.json"
+    JSON_FILE='libscript.json'
   elif [ -f "install.json" ]; then
-    JSON_FILE="install.json"
+    JSON_FILE='install.json'
   fi
 fi
 
@@ -74,7 +73,7 @@ if [ -n "$JSON_FILE" ] && [ -f "$JSON_FILE" ]; then
 fi
 
 ML_BACKEND=""
-ML_TARGET="local"
+ML_TARGET='local'
 ML_TRAIN_CMD=""
 ML_INFER_CMD=""
 ML_ETL_CMD=""
@@ -111,9 +110,9 @@ fi
 # Auto-detect backend if not set
 if [ -z "$ML_BACKEND" ]; then
   if [ "$(uname -s | tr '[:upper:]' '[:lower:]')" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-    ML_BACKEND="mlx"
+    ML_BACKEND='mlx'
   else
-    ML_BACKEND="pytorch"
+    ML_BACKEND='pytorch'
   fi
 fi
 

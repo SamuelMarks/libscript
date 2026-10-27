@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,7 +46,7 @@ if [ "${_backend}" != "default" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 else
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/cc/${CC_VERSION}/bin"
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cc/${CC_VERSION}/bin"
   if command -v cc >/dev/null 2>&1; then
     CC="$(command -v cc)"
     export CC
@@ -59,3 +58,5 @@ else
     export CC
   fi
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

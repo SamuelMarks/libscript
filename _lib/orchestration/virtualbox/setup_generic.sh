@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -54,7 +53,7 @@ configure_virtualbox_repo_debian() {
     return 0
   fi
 
-  log_info "Configuring Oracle VirtualBox APT repository..."
+  log_info 'Configuring Oracle VirtualBox APT repository...'
   priv mkdir -p /usr/share/keyrings
 
   key_tmp=$(mktemp)
@@ -62,14 +61,14 @@ configure_virtualbox_repo_debian() {
   priv gpg --dearmor -o /usr/share/keyrings/virtualbox-archive-keyring.gpg --yes < "$key_tmp"
   rm -f "$key_tmp"
 
-  codename="jammy"
+  codename='jammy'
   if command -v lsb_release >/dev/null 2>&1; then
     codename=$(lsb_release -cs 2>/dev/null || printf '%s' "jammy")
   fi
 
   printf 'deb [arch=amd64 signed-by=/usr/share/keyrings/virtualbox-archive-keyring.gpg] https://download.virtualbox.org/virtualbox/debian %s contrib\n' "$codename" | priv tee /etc/apt/sources.list.d/virtualbox.list >/dev/null
 
-  priv apt-get update -y
+  export PKG_MGR_UPDATED=0
 }
 
 # ## install_extension_pack
@@ -86,7 +85,7 @@ install_extension_pack() {
 
   ext_name="Oracle VM VirtualBox Extension Pack"
   if VBoxManage list extpacks 2>/dev/null | grep -q "$ext_name"; then
-    log_info "VirtualBox Extension Pack is already installed."
+    log_info 'VirtualBox Extension Pack is already installed.'
     return 0
   fi
 
@@ -123,13 +122,13 @@ case "$ACTION" in
     if command -v VBoxManage >/dev/null 2>&1; then
       VBoxManage --version
     else
-      printf '%s\n' "VirtualBox not installed."
+      printf '%s\n' 'VirtualBox not installed.'
     fi
     exit 0
     ;;
   ls-remote)
-    printf '%s\n' "7.0"
-    printf '%s\n' "7.1"
+    printf '%s\n' '7.0'
+    printf '%s\n' '7.1'
     exit 0
     ;;
   install)
@@ -140,13 +139,13 @@ case "$ACTION" in
           configure_virtualbox_repo_debian
           kver=$(uname -r)
           libscript_depends "linux-headers-$kver" build-essential dkms 2>/dev/null || true
-          libscript_depends "virtualbox"
+          libscript_depends 'virtualbox'
           ;;
         'brew')
           libscript_depends_via brew virtualbox
           ;;
         *)
-          libscript_depends "virtualbox"
+          libscript_depends 'virtualbox'
           ;;
       esac
     fi
@@ -160,18 +159,10 @@ case "$ACTION" in
     fi
     ;;
   uninstall)
-    log_info "Uninstalling VirtualBox..."
-    case "${PKG_MGR}" in
-      'apt-get')
-        priv apt-get remove -y virtualbox-7.0 virtualbox 2>/dev/null || true
-        ;;
-      'brew')
-        brew uninstall --cask virtualbox 2>/dev/null || true
-        ;;
-      'dnf'|'yum')
-        priv "${PKG_MGR}" remove -y VirtualBox-7.0 virtualbox 2>/dev/null || true
-        ;;
-    esac
+    log_info 'Uninstalling VirtualBox...'
+    libscript_uninstall_pkg virtualbox-7.0
+    libscript_uninstall_pkg virtualbox
+    libscript_uninstall_pkg VirtualBox-7.0
     exit 0
     ;;
 esac

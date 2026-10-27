@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,4 +33,4 @@ export LIBSCRIPT_ROOT_DIR
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
-log_info "Common loaded successfully"
+log_info 'Common loaded successfully'

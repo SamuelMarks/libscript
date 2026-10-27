@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -89,7 +88,7 @@ if [ -z "${_real_cc}" ] || [ "${_real_cc}" = "${THIS_FILE}" ] || [ ! -x "${_real
   if [ -n "${CUSTOM_CC_FALLBACK_CC:-}" ] && command -v "${CUSTOM_CC_FALLBACK_CC}" >/dev/null 2>&1; then
     _real_cc="$(command -v "${CUSTOM_CC_FALLBACK_CC}")"
   elif [ -x "/usr/bin/cc" ]; then
-    _real_cc="/usr/bin/cc"
+    _real_cc='/usr/bin/cc'
   elif command -v clang >/dev/null 2>&1; then
     _real_cc="$(command -v clang)"
   elif command -v gcc >/dev/null 2>&1; then

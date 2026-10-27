@@ -14,7 +14,7 @@
     "GCC_INSTALL_METHOD": {
       "description": "Installation strategy for GCC ('system' via OS/selected package manager, 'from-source' compiled from source, 'libscript_native' prebuilt archive, or version managers).",
       "type": "string",
-      "enum": ["system", "from-source", "libscript_native", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["system", "from-source", "libscript_native"],
       "default": "system"
     },
     "GCC_PKG_MGR": {

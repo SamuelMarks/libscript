@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ "$CMD" = "search" ]; then
   query="$1"
   if [ -z "$query" ]; then
-    printf '%s\n' "Error: please provide a search query."
+    printf '%s\n' 'Error: please provide a search query.'
     exit 1
   fi
   printf '%s\n' "Searching for '$query'..."

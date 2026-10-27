@@ -6,12 +6,12 @@
 # Sourced to locate libscript root, cache, and prefix directories.
 
 set -feu
+_paths_caller_this="${THIS_FILE:-}"; _paths_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -21,6 +21,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_paths_caller_this" ] && THIS_FILE="$_paths_caller_this"
+    [ -n "$_paths_caller_dir" ] && SCRIPT_DIR="$_paths_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -70,4 +72,10 @@ resolve_component_paths() {
   log_debug "  BIN_DIR:      $BIN_DIR"
   log_debug "  LOGS_DIR:     $LOGS_DIR"
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_paths_caller_dir:-}" ] && SCRIPT_DIR="$_paths_caller_dir"
+[ -n "${_paths_caller_this:-}" ] && THIS_FILE="$_paths_caller_this"
+unset _paths_caller_this _paths_caller_dir || true
 

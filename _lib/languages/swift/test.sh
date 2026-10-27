@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,12 +36,12 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ -f /etc/alpine-release ]; then
-  echo "swift is not available natively on Alpine Linux. Skipping test."
+  echo 'swift is not available natively on Alpine Linux. Skipping test.'
   exit 0
 fi
 
 if command -v swift >/dev/null 2>&1; then
   swift --version
 else
-  printf '%s\n' "swift is not installed (likely unsupported on this OS), skipping test."
+  printf '%s\n' 'swift is not installed (likely unsupported on this OS), skipping test.'
 fi

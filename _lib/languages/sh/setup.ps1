@@ -13,6 +13,8 @@ Execute this script to install and configure sh on the local system.
 #>
 
 #!/usr/bin/env pwsh
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $InstallMethod = $env:SH_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
@@ -47,15 +49,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls sh
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls sh
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             sh --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -71,15 +65,7 @@ switch ($Action) {
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "sh@${ShVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls sh
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -159,12 +145,12 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=MSYS2.MSYS2 -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"MSYS2.MSYS2\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y MSYS2.MSYS2
+    libscript_depends @(\"MSYS2.MSYS2\")
             }
         } else {
-            Write-Host "mise/asdf do not support sh well on Windows."
+            Write-Host "Custom sh install method not supported on Windows."
         }
         break
     }

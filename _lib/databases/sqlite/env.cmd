@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -55,6 +55,7 @@ goto :find_root
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%SQLITE_VERSION%"=="" set "SQLITE_VERSION=default"
 set "SQLITE_PREFIX=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
+if "%SQLITE_PATH%"=="" set "SQLITE_PATH=%SQLITE_PREFIX%\sqlite.db"
 for %%P in ("%LIBSCRIPT_HOME%\sqlite\default\bin" "%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin") do (
     set "_CAND_P=%%~P"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
@@ -67,6 +68,7 @@ endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "SQLITE_VERSION=%SQLITE_VERSION%"
     set "SQLITE_PREFIX=%SQLITE_PREFIX%"
+    set "SQLITE_PATH=%SQLITE_PATH%"
     set "PATH=%PATH%"
 )
 exit /b 0

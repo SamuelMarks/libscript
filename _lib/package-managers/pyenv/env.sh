@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,6 +39,8 @@ unset SCRIPT_NAME || true
 
 
 PYENV_VERSION="${PYENV_VERSION:-latest}"
-export PYENV_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/pyenv/${PYENV_VERSION}"
+export PYENV_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/pyenv/${PYENV_VERSION}"
 libscript_path_prepend "$PYENV_ROOT/shims" "$PYENV_ROOT/bin"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

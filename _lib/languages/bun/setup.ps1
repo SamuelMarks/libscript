@@ -13,6 +13,9 @@ Execute this script to install and configure bun on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -43,7 +46,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 function Resolve-ExactVersion {
     if ($BunVersion -eq "latest") {
         try {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/oven-sh/bun/releases/latest"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/oven-sh/bun/releases/latest"
             $ExactVersion = $Resp.tag_name.TrimStart('v')
         } catch {
             $ExactVersion = "1.1.20"
@@ -64,15 +67,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls bun
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bun
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             bun --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -84,32 +79,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote bun
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bun
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/oven-sh/bun/releases"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/oven-sh/bun/releases"
             $Resp | Select-Object -First 30 | ForEach-Object { $_.tag_name.TrimStart('v') }
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "bun@${BunVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bun
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -180,18 +159,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Oven.Bun -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Oven.Bun\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y bun
+    libscript_depends @(\"bun\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "bun@${BunVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bun; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -223,7 +194,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() "$Target.zip"
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $BinDir"
             Expand-Archive -Path $TempZip -DestinationPath $BinDir -Force

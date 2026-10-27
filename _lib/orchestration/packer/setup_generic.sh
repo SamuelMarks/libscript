@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -54,7 +53,7 @@ configure_hashicorp_repo_debian() {
     return 0
   fi
 
-  log_info "Configuring HashiCorp official APT repository..."
+  log_info 'Configuring HashiCorp official APT repository...'
   libscript_depends "gpg" || libscript_depends "gnupg" || true
   priv mkdir -p /usr/share/keyrings
 
@@ -63,14 +62,14 @@ configure_hashicorp_repo_debian() {
   priv gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg --yes < "$key_tmp"
   rm -f "$key_tmp"
 
-  codename="jammy"
+  codename='jammy'
   if command -v lsb_release >/dev/null 2>&1; then
     codename=$(lsb_release -cs 2>/dev/null || printf '%s' "jammy")
   fi
 
   printf 'deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com %s main\n' "$codename" | priv tee /etc/apt/sources.list.d/hashicorp.list >/dev/null
 
-  priv apt-get update -y
+  export PKG_MGR_UPDATED=0
 }
 
 # ## configure_hashicorp_repo_rhel
@@ -80,8 +79,12 @@ configure_hashicorp_repo_rhel() {
     return 0
   fi
 
-  log_info "Configuring HashiCorp official RPM repository..."
-  priv curl -fsSL https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo -o /etc/yum.repos.d/hashicorp.repo 2>/dev/null || true
+  log_info 'Configuring HashiCorp official RPM repository...'
+  _hc_repo_tmp=$(mktemp)
+  if libscript_download "https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo" "$_hc_repo_tmp" 2>/dev/null; then
+    priv cp "$_hc_repo_tmp" /etc/yum.repos.d/hashicorp.repo 2>/dev/null || true
+  fi
+  rm -f "$_hc_repo_tmp"
   priv rpm --import https://rpm.releases.hashicorp.com/gpg 2>/dev/null || true
 }
 
@@ -90,56 +93,56 @@ case "$ACTION" in
     if command -v packer >/dev/null 2>&1; then
       packer --version
     else
-      printf '%s\n' "Packer not installed."
+      printf '%s\n' 'Packer not installed.'
     fi
     exit 0
     ;;
   ls-remote)
-    curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/packer | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s\n' "latest"
+    libscript_fetch_stdout "https://checkpoint-api.hashicorp.com/v1/check/packer" | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s\n' "latest"
     exit 0
     ;;
   install)
     if [ "$PACKER_INSTALL_METHOD" = "system" ] && [ "${PKG_MGR}" = "apk" ]; then
-      PACKER_INSTALL_METHOD="libscript_native"
+      PACKER_INSTALL_METHOD='libscript_native'
     fi
     log_info "Installing Packer via ${PACKER_INSTALL_METHOD}..."
     if [ "$PACKER_INSTALL_METHOD" = "system" ]; then
       case "${PKG_MGR}" in
         'apt-get')
           configure_hashicorp_repo_debian
-          libscript_depends "packer"
+          libscript_depends 'packer'
           ;;
         'dnf'|'yum')
           configure_hashicorp_repo_rhel
-          libscript_depends "packer"
+          libscript_depends 'packer'
           ;;
         'pkg')
-          libscript_depends "packer"
+          libscript_depends 'packer'
           ;;
         'brew')
           libscript_depends_via brew hashicorp/tap/packer 2>/dev/null || libscript_depends_via brew packer
           ;;
         *)
           if ! libscript_depends "packer"; then
-            log_info "System package manager does not have packer. Falling back to native..."
-            PACKER_INSTALL_METHOD="libscript_native"
+            log_info 'System package manager does not have packer. Falling back to native...'
+            PACKER_INSTALL_METHOD='libscript_native'
           fi
           ;;
       esac
     fi
     if [ "$PACKER_INSTALL_METHOD" = "libscript_native" ]; then
-      ver="1.11.2"
+      ver='1.11.2'
       if [ "$PACKER_VERSION" != "latest" ]; then
         ver="$PACKER_VERSION"
       fi
-      os="linux"
+      os='linux'
       if [ "${TARGET_OS}" = "darwin" ]; then
-        os="darwin"
+        os='darwin'
       fi
       host_arch="${ARCH:-$(uname -m)}"
-      arch="amd64"
+      arch='amd64'
       if [ "${host_arch}" = "aarch64" ] || [ "${host_arch}" = "arm64" ]; then
-        arch="arm64"
+        arch='arm64'
       fi
 
       target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/packer/${ver}/bin"
@@ -149,7 +152,7 @@ case "$ACTION" in
         exit 0
       fi
       mkdir -p "$target_dir"
-      libscript_depends "curl" "unzip"
+      libscript_depends 'curl' 'unzip'
       zip_url="https://releases.hashicorp.com/packer/${ver}/packer_${ver}_${os}_${arch}.zip"
       zip_tmp=$(mktemp)
       log_info "Downloading Packer binary from $zip_url..."
@@ -166,18 +169,8 @@ case "$ACTION" in
     exit 0
     ;;
   uninstall)
-    log_info "Uninstalling Packer..."
-    case "${PKG_MGR}" in
-      'apt-get')
-        priv apt-get remove -y packer 2>/dev/null || true
-        ;;
-      'brew')
-        brew uninstall packer 2>/dev/null || true
-        ;;
-      'dnf'|'yum')
-        priv "${PKG_MGR}" remove -y packer 2>/dev/null || true
-        ;;
-    esac
+    log_info 'Uninstalling Packer...'
+    libscript_uninstall_pkg packer
     exit 0
     ;;
 esac

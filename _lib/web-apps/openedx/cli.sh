@@ -1,17 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Command-line interface router for the Open edX stack.
-# Routes subcommands to core lifecycle handlers or dedicated feature modules:
-# user, demo, dbshell, healthcheck, config, backup, restore, workers, theme, xblock, upgrade, mfe, logs,
-# mounts, plugins, plus full Tutor parity commands (do, local, dev, k8s, images).
+# Command-line interface router for the Open edX stack with native Tutor CLI parity (`do`, `local`, `dev`, `k8s`, `images`, `mounts`, `plugins`).
 #
 # ## Usage
-#   ./cli.sh <subcommand> [args...]
-#   ./cli.sh do <job> [args...]
-#   ./cli.sh local <subcommand> [args...]
-#   ./cli.sh mounts <subcommand> [args...]
-#   ./cli.sh plugins <subcommand> [args...]
-#   ./cli.sh help
+# ./cli.sh <subcommand> [args...]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -19,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -292,7 +283,7 @@ case "${1:-}" in
     ;;
 esac
 
-export PACKAGE_NAME="openedx"
+export PACKAGE_NAME='openedx'
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

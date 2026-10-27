@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -77,7 +76,7 @@ fi
 
     case "$1" in
       --help|-h)
-        log_info "Usage: [OPTIONS]"
+        log_info 'Usage: [OPTIONS]'
         exit 0
         ;;
 

@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,7 +48,7 @@ mkdir -p "${REPO_ROOT}/tests_tmp"
 # Displays usage information.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE")"
-  printf '%s\n' "Renders live installer screenshots into ../cc0-assets."
+  printf '%s\n' 'Renders live installer screenshots into ../cc0-assets.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then

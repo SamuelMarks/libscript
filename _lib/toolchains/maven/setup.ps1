@@ -13,6 +13,8 @@ Execute this script to install and configure maven on the local system.
 #>
 
 #!/usr/bin/env pwsh
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $InstallMethod = $env:MAVEN_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
@@ -47,15 +49,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls maven
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls maven
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             mvn -version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -67,32 +61,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote maven
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls maven
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-WebRequest -Uri "https://archive.apache.org/dist/maven/maven-3/"
+            $Resp = @{ Content = (Invoke-LibscriptFetchContent -Uri "https://archive.apache.org/dist/maven/maven-3/") }
             $Resp.Content -split "`n" | Where-Object { $_ -match 'href="(\d+\.\d+\.\d+)/"' } | ForEach-Object { $matches[1] }
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "maven@${MavenVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls maven
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -172,18 +150,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Apache.Maven -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Apache.Maven\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y maven
+    libscript_depends @(\"maven\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "maven@${MavenVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls maven; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $MavenDir = Get-LibscriptVersionDir -Component "maven" -Version $ExactVersion
@@ -204,7 +174,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $MavenDir"
             Expand-Archive -Path $TempZip -DestinationPath $MavenDir -Force

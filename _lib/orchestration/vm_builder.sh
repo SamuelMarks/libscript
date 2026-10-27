@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-WORKER_TYPE="auto"
+WORKER_TYPE='auto'
 case "${1:-}" in
   --worker=*)
     WORKER_TYPE="${1#--worker=}"
@@ -57,15 +56,15 @@ HOST_OS="$(uname -s 2>/dev/null || printf '%s' 'unknown')"
 # If worker is auto, detect best backend
 if [ "$WORKER_TYPE" = "auto" ]; then
   if [ "$HOST_OS" = "Linux" ] && [ "$(id -u 2>/dev/null || printf '%s' '1000')" -eq 0 ]; then
-    WORKER_TYPE="native"
+    WORKER_TYPE='native'
   elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
-    WORKER_TYPE="docker"
+    WORKER_TYPE='docker'
   elif command -v wsl.exe >/dev/null 2>&1 || command -v wsl >/dev/null 2>&1; then
-    WORKER_TYPE="wsl2"
+    WORKER_TYPE='wsl2'
   elif command -v qemu-system-x86_64 >/dev/null 2>&1; then
-    WORKER_TYPE="qemu"
+    WORKER_TYPE='qemu'
   elif [ "$HOST_OS" = "Linux" ]; then
-    WORKER_TYPE="native"
+    WORKER_TYPE='native'
   else
     printf '[ERROR] No supported virtualization backend (docker, wsl2, qemu) detected.\n' >&2
     exit 1
@@ -90,7 +89,7 @@ case "$WORKER_TYPE" in
       sh -c "apk add --no-cache bash coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; $*"
     ;;
   wsl2)
-    WSL_BIN="wsl"
+    WSL_BIN='wsl'
     command -v wsl.exe >/dev/null 2>&1 && WSL_BIN="wsl.exe"
     exec "$WSL_BIN" --cd "$LIBSCRIPT_ROOT_DIR" -- /bin/sh -c "$*"
     ;;

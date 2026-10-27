@@ -14,6 +14,14 @@
       "description": "Specific version of emerge to install.",
       "type": "string",
       "default": "latest"
+    },
+    "EMERGE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading emerge binary or archive artifacts."
+    },
+    "EMERGE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying emerge available remote releases."
     }
   }
 }

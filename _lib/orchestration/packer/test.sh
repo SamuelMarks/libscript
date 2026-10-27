@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if ! command -v packer >/dev/null 2>&1; then
-  printf '%s\n' "packer binary not found in PATH" >&2
+  printf '%s\n' 'packer binary not found in PATH' >&2
   exit 1
 fi
 

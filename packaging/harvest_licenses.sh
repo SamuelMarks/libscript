@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Universal dependency license harvester and bundler for LibScript installers.
-# Discovers all packaged dependencies, extracts and validates their legal terms,
-# and generates formatted plain-text and Rich Text Format (.rtf) license agreements
-# alongside an indexed licenses_manifest.json for WiX, Inno Setup, and NSIS installers.
+# Universal dependency license harvester and bundler for LibScript installers (.rtf, .txt, licenses_manifest.json).
 #
 # ## Usage
-# ./packaging/harvest_licenses.sh <TARGET_DIR_OR_PLAN> [OPTIONS]
-#
-# Options:
-#   --out-dir <dir>       Output directory for harvested license assets (default: ./licenses)
-#   --format <type>       Format to generate: rtf, txt, or all (default: all)
-#   --force               Regenerate licenses even if stamp file exists
-#   --help, -h            Show this help text
+# ./packaging/harvest_licenses.sh <TARGET_DIR_OR_PLAN> [--out-dir <dir>] [--format <rtf|txt|all>] [--force]
 
 set -feu
 
@@ -21,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 TARGET_INPUT=""
 OUT_DIR=""
-FORMAT="all"
+FORMAT='all'
 FORCE=0
 
 # ## show_help

@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,10 +36,10 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 # Displays usage instructions and supported parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [target_dir]"
-  printf '%s\n' "Stages and configures the WordPress web publishing stack in target root."
+  printf '%s\n' 'Stages and configures the WordPress web publishing stack in target root.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -72,9 +71,17 @@ WP_DIR="$TARGET_DIR/var/www/wordpress"
 mkdir -p "$WP_DIR/wp-admin" "$WP_DIR/wp-includes" "$WP_DIR/wp-content/themes" "$WP_DIR/wp-content/plugins"
 mkdir -p "$TARGET_DIR/etc/nginx/conf.d"
 
-# Download genuine latest WordPress if curl is accessible, or populate authentic core files
-if command -v curl >/dev/null 2>&1; then
-  curl -sSL "https://wordpress.org/latest.tar.gz" 2>/dev/null | tar -xz -C "$(dirname "$WP_DIR")" 2>/dev/null || true
+# Download genuine latest WordPress via libscript_download, or populate authentic core files
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  _wp_tmp=$(mktemp)
+  if libscript_download "https://wordpress.org/latest.tar.gz" "$_wp_tmp" "SKIP" 2>/dev/null; then
+    tar -xzf "$_wp_tmp" -C "$(dirname "$WP_DIR")" 2>/dev/null || true
+  fi
+  rm -f "$_wp_tmp"
 fi
 
 if [ ! -f "$WP_DIR/index.php" ]; then

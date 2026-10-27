@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "%THIS_FILE%" >&2
         exit /b 0
@@ -166,9 +166,9 @@ if errorlevel 1 (
     set "HEALTH_DB_FAILED=1"
     exit /b 0
 )
+set "pg_tbl_count=0"
+for /f "delims= " %%t in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2^>nul') do set "pg_tbl_count=%%t"
 if not "!min_tables!"=="" (
-    set "pg_tbl_count=0"
-    for /f "delims= " %%t in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2^>nul') do set "pg_tbl_count=%%t"
     if !pg_tbl_count! lss !min_tables! (
         echo [ERROR] PostgreSQL database '!db_name!' has !pg_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
         set "HEALTH_DB_FAILED=1"
@@ -178,6 +178,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "req_tbl=%%t"
     call :check_pg_table
 )
+echo [INFO] [DB:POSTGRES] [CONFIRM] Database '!db_name!' healthy ^(!pg_tbl_count! table^(s^)^).
 exit /b 0
 
 :: ## check_pg_table
@@ -190,6 +191,8 @@ for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d 
 if !pg_row_count! lss !min_rows_req! (
     echo [ERROR] PostgreSQL database '!db_name!' required table '!req_tbl!' has insufficient rows ^(!pg_row_count! ^< !min_rows_req!^) >&2
     set "HEALTH_DB_FAILED=1"
+) else (
+    echo [INFO] [DB:POSTGRES] [CONFIRM] Table '!db_name!.!req_tbl!' verified ^(!pg_row_count! rows^).
 )
 exit /b 0
 
@@ -220,12 +223,12 @@ if errorlevel 1 (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd"
     )
 )
+set "duck_tbl_count=0"
+where duckdb >nul 2>nul
+if not errorlevel 1 (
+    for /f "delims=" %%t in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a duck_tbl_count+=1
+)
 if not "!min_tables!"=="" (
-    set "duck_tbl_count=0"
-    where duckdb >nul 2>nul
-    if not errorlevel 1 (
-        for /f "delims=" %%t in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a duck_tbl_count+=1
-    )
     if !duck_tbl_count! lss !min_tables! (
         echo [ERROR] DuckDB database '!db_path!' has !duck_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
         set "HEALTH_DB_FAILED=1"
@@ -235,6 +238,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "req_tbl=%%t"
     call :check_duckdb_table
 )
+echo [INFO] [DB:DUCKDB] [CONFIRM] DuckDB '!db_path!' healthy ^(!duck_tbl_count! table^(s^)^).
 exit /b 0
 
 :: ## check_duckdb_table
@@ -250,6 +254,8 @@ if not errorlevel 1 (
 if !duck_row_count! lss !min_rows_req! (
     echo [ERROR] DuckDB database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!duck_row_count! ^< !min_rows_req!^) >&2
     set "HEALTH_DB_FAILED=1"
+) else (
+    echo [INFO] [DB:DUCKDB] [CONFIRM] Table '!db_name!.!req_tbl!' verified ^(!duck_row_count! rows^).
 )
 exit /b 0
 
@@ -269,9 +275,9 @@ if not exist "!db_path!" (
 )
 where sqlite3 >nul 2>nul
 if errorlevel 1 exit /b 0
+set "sqlite_tbl_count=0"
+for /f "delims= " %%t in ('sqlite3 "!db_path!" "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%%';" 2^>nul') do set "sqlite_tbl_count=%%t"
 if not "!min_tables!"=="" (
-    set "sqlite_tbl_count=0"
-    for /f "delims= " %%t in ('sqlite3 "!db_path!" "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%%';" 2^>nul') do set "sqlite_tbl_count=%%t"
     if !sqlite_tbl_count! lss !min_tables! (
         echo [ERROR] SQLite database '!db_path!' has !sqlite_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
         set "HEALTH_DB_FAILED=1"
@@ -281,6 +287,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "req_tbl=%%t"
     call :check_sqlite_table
 )
+echo [INFO] [DB:SQLITE] [CONFIRM] SQLite '!db_path!' healthy ^(!sqlite_tbl_count! table^(s^)^).
 exit /b 0
 
 :: ## check_sqlite_table
@@ -293,6 +300,8 @@ for /f "delims= " %%c in ('sqlite3 "!db_path!" "SELECT count(*) FROM \"!req_tbl!
 if !sqlite_row_count! lss !min_rows_req! (
     echo [ERROR] SQLite database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!sqlite_row_count! ^< !min_rows_req!^) >&2
     set "HEALTH_DB_FAILED=1"
+) else (
+    echo [INFO] [DB:SQLITE] [CONFIRM] Table '!db_name!.!req_tbl!' verified ^(!sqlite_row_count! rows^).
 )
 exit /b 0
 
@@ -313,7 +322,9 @@ for %%C in (valkey-cli redis-cli) do (
         )
     )
 )
-if "!_vk_has_cli!"=="1" if "!_vk_ok!"=="0" (
+if "!_vk_ok!"=="1" (
+    echo [INFO] [DB:VALKEY] [CONFIRM] Valkey/Redis endpoint !db_host!:!db_port! ^(db !db_index!^) healthy.
+) else if "!_vk_has_cli!"=="1" (
     echo [ERROR] Valkey/Redis health check failed: no PONG response on !db_host!:!db_port! ^(db !db_index!^). >&2
     set "HEALTH_DB_FAILED=1"
 )

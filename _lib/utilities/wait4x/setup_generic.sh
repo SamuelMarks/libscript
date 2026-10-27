@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,11 +49,11 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${WAIT4X_VERSION}" = "latest" ] || [ "${WAIT4X_VERSION}" = "lts" ]; then
-    libscript_depends "curl"
+    libscript_depends 'curl'
 
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/atkrad/wait4x/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/atkrad/wait4x/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${WAIT4X_VERSION}"
@@ -63,15 +62,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${WAIT4X_INSTALL_METHOD}" = "mise" ]; then
-      mise ls wait4x
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list wait4x
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls wait4x
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
+    if [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
       wait4x --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/" 2>/dev/null || true
@@ -79,31 +70,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${WAIT4X_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote wait4x
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all wait4x
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all wait4x
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for wait4x"
+      printf '%s\n' 'Fetching remote versions not implemented generically for wait4x'
     fi
     exit 0
     ;;
   use)
-    if [ "${WAIT4X_INSTALL_METHOD}" = "mise" ]; then
-      mise use "wait4x@${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global wait4x "${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "wait4x@${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
+    if [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -119,7 +94,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "wait4x" "default" "${EXACT_VERSION}"
       log_info "Set default wait4x version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env wait4x \"${WAIT4X_VERSION}\")"
     fi
     exit 0
@@ -139,21 +114,12 @@ case "$ACTION" in
   install)
     if [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
       if ! libscript_depends 'wait4x' 2>/dev/null; then
-        log_info "System package manager does not have wait4x, falling back to standalone install..."
-        WAIT4X_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have wait4x, falling back to standalone install...'
+        WAIT4X_INSTALL_METHOD='libscript_native'
       fi
     fi
 
-    if [ "${WAIT4X_INSTALL_METHOD}" = "mise" ]; then
-      mise install "wait4x@${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install wait4x "${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "wait4x@${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add wait4x || true
-      vfox install "wait4x@${WAIT4X_VERSION}"
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "libscript_native" ]; then
+    if [ "${WAIT4X_INSTALL_METHOD}" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${EXACT_VERSION}"
@@ -169,7 +135,7 @@ case "$ACTION" in
           URL="https://github.com/wait4x/wait4x/releases/download/v${EXACT_VERSION}/wait4x-${OS}-${ARCH}.tar.gz"
         fi
         TEMP_FILE=$(mktemp)
-        libscript_depends "curl" "tar" || true
+        libscript_depends 'curl' 'tar' || true
         if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
           log_error "Failed to download wait4x from $URL"
           rm -f "$TEMP_FILE.tar.gz"
@@ -189,52 +155,7 @@ case "$ACTION" in
     fi
 
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$WAIT4X_INSTALL_METHOD" = "libscript_native" ] || [ "$WAIT4X_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-wait4x}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $WAIT4X_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "wait4x" "$ACTION" "$VERSION" "${WAIT4X_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$WAIT4X_INSTALL_METHOD" = "libscript_native" ] || [ "$WAIT4X_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-wait4x}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $WAIT4X_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$WAIT4X_INSTALL_METHOD" = "libscript_native" ] || [ "$WAIT4X_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-wait4x}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $WAIT4X_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$WAIT4X_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling wait4x $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $WAIT4X_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

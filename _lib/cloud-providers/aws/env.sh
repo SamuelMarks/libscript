@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,4 +33,6 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 AWS_VERSION="${AWS_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/aws/${AWS_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/aws/${AWS_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

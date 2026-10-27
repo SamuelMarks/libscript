@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,4 +35,6 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 BUN_VERSION="${BUN_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/${BUN_VERSION}/bin" "${HOME}/.bun/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/${BUN_VERSION}/bin" "${HOME:-/root}/.bun/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -141,11 +140,11 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --import-demo)
-      IMPORT_DEMO="1"
+      IMPORT_DEMO='1'
       shift
       ;;
     --enable-workers)
-      ENABLE_WORKERS="1"
+      ENABLE_WORKERS='1'
       shift
       ;;
     --backup-dir)
@@ -158,7 +157,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --enable-mfes)
-      ENABLE_MFES="1"
+      ENABLE_MFES='1'
       shift
       ;;
     --lms-port)
@@ -240,7 +239,7 @@ case "$ACTION" in
       log_info "openedx ${VERSION:-latest} is already installed."
       exit 0
     fi
-    log_info "=== Initializing Open edX Stack Provisioning ==="
+    log_info '=== Initializing Open edX Stack Provisioning ==='
 
     if [ "$is_offline" -eq 1 ]; then
       if [ -z "$offline_cache_dir" ]; then
@@ -262,12 +261,12 @@ case "$ACTION" in
     fi
 
     # 1. Provision Infrastructure Dependencies
-    log_info "1/8: System and runtime dependencies..."
-    libscript_depends "python" "nodejs" || true
+    log_info '1/8: System and runtime dependencies...'
+    libscript_depends 'python' 'nodejs' || true
     DIR="${OPENEDX_DIR}"
     export DIR
 
-    export MONGODB_INSTALL_METHOD="libscript_native"
+    export MONGODB_INSTALL_METHOD='libscript_native'
     if [ "${RUN_MYSQL:-true}" != "false" ] && [ "${RUN_MYSQL:-1}" != "0" ] && [ -z "${MYSQL_URL}" ]; then
       (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service mysql >/dev/null 2>&1 || true)
       (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start mysql >/dev/null 2>&1 || true)
@@ -290,7 +289,7 @@ case "$ACTION" in
     mkdir -p "${OPENEDX_INSTALL_DIR}/logs" "${OPENEDX_INSTALL_DIR}/codebase"
     touch "${OPENEDX_INSTALL_DIR}/logs/install.log"
     if [ "$is_offline" -eq 1 ] && [ -n "${offline_cache_dir:-}" ] && [ -d "${offline_cache_dir}/codebase" ]; then
-      log_info "Extracting codebase from cache/codebase..."
+      log_info 'Extracting codebase from cache/codebase...'
       for _f in "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
         [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/codebase"
       done
@@ -305,7 +304,7 @@ case "$ACTION" in
       fi
     elif [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       if ! command -v git >/dev/null 2>&1; then
-        libscript_depends "git" || true
+        libscript_depends 'git' || true
       fi
       if command -v git >/dev/null 2>&1; then
         git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || true
@@ -315,8 +314,8 @@ case "$ACTION" in
     if [ "$is_offline" -eq 1 ] && [ -n "${offline_cache_dir:-}" ]; then
       # Step 3: Install wheels offline
       if [ -d "${offline_cache_dir}/wheels" ]; then
-        log_info "Installing Python wheels offline from cache/wheels..."
-        _py="python3"
+        log_info 'Installing Python wheels offline from cache/wheels...'
+        _py='python3'
         if [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3" ]; then
           _py="${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3"
         elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
@@ -331,7 +330,7 @@ case "$ACTION" in
 
       # Step 5: Ingest demo content
       if [ "${IMPORT_DEMO}" = "1" ] && [ -f "${offline_cache_dir}/codebase/demo-course.tar.gz" ]; then
-        log_info "Ingesting demo courseware from cached archive..."
+        log_info 'Ingesting demo courseware from cached archive...'
         extract_archive "${offline_cache_dir}/codebase/demo-course.tar.gz" "${OPENEDX_INSTALL_DIR}/demo-course"
       fi
     fi
@@ -339,17 +338,17 @@ case "$ACTION" in
     mkdir -p "${OPENEDX_INSTALL_DIR}/logs"
 
     # Pre-flight python check
-    _py="python3"
+    _py='python3'
     if [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3" ]; then
       _py="${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3"
     elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
       _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
     elif ! command -v python3 >/dev/null 2>&1 && command -v python >/dev/null 2>&1; then
-      _py="python"
+      _py='python'
     fi
 
     # 3. Setup Virtualenv & Dependencies
-    log_info "3/8: Creating Python virtual environment..."
+    log_info '3/8: Creating Python virtual environment...'
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ ! -d "${VENV_DIR}" ]; then
       if command -v uv >/dev/null 2>&1; then
@@ -374,7 +373,7 @@ case "$ACTION" in
 
     # Install Python Requirements if full mode requested and repo exists
     if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" ] && [ -x "${VENV_DIR}/bin/python" ]; then
-      log_info "Installing Python dependencies via uv/pip..."
+      log_info 'Installing Python dependencies via uv/pip...'
       export CFLAGS="${CFLAGS:-} -Wno-error=incompatible-pointer-types"
       if command -v uv >/dev/null 2>&1; then
         uv pip install --python "${VENV_DIR}/bin/python" factory_boy django-debug-toolbar --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
@@ -386,7 +385,7 @@ case "$ACTION" in
     fi
 
     # 4. Generate Platform Settings via Reusable config.sh Component
-    log_info "4/8: Generating Open edX environment configurations..."
+    log_info '4/8: Generating Open edX environment configurations...'
     CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
     mkdir -p "${CONF_DIR}"
     mkdir -p "${OPENEDX_INSTALL_DIR}/lms/envs" "${OPENEDX_INSTALL_DIR}/cms/envs"
@@ -452,7 +451,7 @@ EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:${REDIS_PORT}/"
 EOF
 
     # 5. Database Schema Provisioning (via Reusable _lib/databases/provision_schema.sh) & Migrations
-    log_info "5/8: Initializing databases via reusable schema provisioner..."
+    log_info '5/8: Initializing databases via reusable schema provisioner...'
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
         --engine mysql \
@@ -463,7 +462,7 @@ EOF
         --port "${MYSQL_PORT}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || log_warn "MySQL server not currently accessible; database schema provisioning skipped."
     fi
 
-    log_info "Applying database migrations and seeding administrator..."
+    log_info 'Applying database migrations and seeding administrator...'
     _codebase="${OPENEDX_INSTALL_DIR}/codebase"
     if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       _codebase="${OPENEDX_INSTALL_DIR}"
@@ -480,7 +479,7 @@ EOF
     fi
 
     # 6. Static Asset Compilation & Theming
-    log_info "6/8: Compiling frontend assets..."
+    log_info '6/8: Compiling frontend assets...'
     if [ -f "${_codebase}/package.json" ]; then
       (cd "${_codebase}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
       if [ -f "${_codebase}/pavement.py" ]; then
@@ -498,18 +497,18 @@ EOF
 
     # 7. Optional Demo Course and MFEs
     if [ "${IMPORT_DEMO}" = "1" ] && [ -f "${DIR}/import_demo.sh" ]; then
-      log_info "Seeding demo courseware and content libraries..."
+      log_info 'Seeding demo courseware and content libraries...'
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" course 2>/dev/null || true
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" libraries 2>/dev/null || true
     fi
     if [ "${ENABLE_MFES}" = "1" ] && [ -f "${DIR}/mfe.sh" ]; then
-      log_info "Building and deploying Micro-Frontends..."
+      log_info 'Building and deploying Micro-Frontends...'
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" build all 2>/dev/null || true
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || true
     fi
 
     # 8. Start Services and Workers via Reusable service.sh & workers.sh
-    log_info "8/8: Launching Open edX LMS, Studio, and background workers..."
+    log_info '8/8: Launching Open edX LMS, Studio, and background workers...'
     if [ -f "${DIR}/service.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${DIR}/service.sh" start || true
     fi
@@ -520,7 +519,7 @@ EOF
 
     # Post-install verification healthcheck
     if [ -f "${DIR}/healthcheck.sh" ]; then
-      log_info "Executing post-installation health diagnostic probe..."
+      log_info 'Executing post-installation health diagnostic probe...'
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" LMS_PORT="${LMS_PORT}" CMS_PORT="${CMS_PORT}" "${DIR}/healthcheck.sh" || true
     fi
 
@@ -529,7 +528,7 @@ EOF
     log_info "Studio available at: http://${CMS_HOST:-studio.openedx.local}:${CMS_PORT}"
     ;;
   start)
-    log_info "Starting Open edX LMS, CMS, and background daemons..."
+    log_info 'Starting Open edX LMS, CMS, and background daemons...'
     if [ -f "${DIR}/service.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${DIR}/service.sh" start
     fi
@@ -539,7 +538,7 @@ EOF
     exit 0
     ;;
   stop)
-    log_info "Stopping Open edX LMS, CMS, and background daemons..."
+    log_info 'Stopping Open edX LMS, CMS, and background daemons...'
     if [ -f "${DIR}/workers.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || true
     fi
@@ -549,7 +548,7 @@ EOF
     exit 0
     ;;
   restart)
-    log_info "Restarting Open edX services..."
+    log_info 'Restarting Open edX services...'
     if [ -f "${DIR}/service.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${DIR}/service.sh" restart
     fi
@@ -566,7 +565,7 @@ EOF
     exit 0
     ;;
   test)
-    log_info "Testing Open edX endpoints..."
+    log_info 'Testing Open edX endpoints...'
     if [ -f "${DIR}/healthcheck.sh" ] && [ -d "${OPENEDX_INSTALL_DIR}" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" LMS_PORT="${LMS_PORT}" CMS_PORT="${CMS_PORT}" "${DIR}/healthcheck.sh" || true
       log_success "Open edX directory verified at ${OPENEDX_INSTALL_DIR}."
@@ -575,7 +574,7 @@ EOF
       log_success "Open edX directory verified at ${OPENEDX_INSTALL_DIR}."
       exit 0
     else
-      log_warn "Open edX not installed yet."
+      log_warn 'Open edX not installed yet.'
       exit 1
     fi
     ;;

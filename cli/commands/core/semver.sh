@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,7 +35,7 @@ op="${2:-}"
 v2="${3:-}"
 if [ -z "$v1" ] || [ -z "$op" ] || [ -z "$v2" ]; then
   printf '%s\n' "Usage: $0 [semver] <v1> <operator> <v2>" >&2
-  printf '%s\n' "Operators: = != > < >= <=" >&2
+  printf '%s\n' 'Operators: = != > < >= <=' >&2
   exit 1
 fi
   res=$(awk -v v1="$v1" -v v2="$v2" '

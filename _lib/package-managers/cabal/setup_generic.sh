@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -59,19 +58,19 @@ resolve_exact_version() {
 case "$ACTION" in
   ls)
     if [ "${CABAL_INSTALL_METHOD:-}" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
+      printf '%s\n' 'System packages do not support ls here.'
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    git ls-remote --tags "https://github.com/haskell/cabal" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+    git ls-remote --tags "https://github.com/haskell/cabal" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     exit 0
     ;;
   use)
     if [ "${CABAL_INSTALL_METHOD:-}" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "cabal" "$VERSION" "${EXACT_VERSION}"
@@ -86,7 +85,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "cabal" "default" "${EXACT_VERSION}"
       log_info "Set default cabal version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env cabal \"$VERSION\")"
     fi
     exit 0
@@ -111,11 +110,11 @@ case "$ACTION" in
     resolve_exact_version
     TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${EXACT_VERSION}"
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "cabal"
+      libscript_depends 'cabal'
     elif [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
       if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-        log_info "Falling back to system package manager for cabal..."
-        libscript_depends "cabal"
+        log_info 'Falling back to system package manager for cabal...'
+        libscript_depends 'cabal'
       else
         if ! command -v cabal >/dev/null 2>&1; then
           if command -v brew >/dev/null 2>&1; then
@@ -147,52 +146,7 @@ case "$ACTION" in
       exit 1
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$CABAL_INSTALL_METHOD" = "libscript_native" ] || [ "$CABAL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cabal}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $CABAL_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "cabal" "$ACTION" "$VERSION" "${CABAL_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$CABAL_INSTALL_METHOD" = "libscript_native" ] || [ "$CABAL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cabal}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $CABAL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$CABAL_INSTALL_METHOD" = "libscript_native" ] || [ "$CABAL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cabal}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $CABAL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling cabal $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $CABAL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

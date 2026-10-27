@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -85,73 +84,23 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$OLLAMA_INSTALL_METHOD" = "mise" ]; then
-      mise ls ollama || true
-    elif [ "$OLLAMA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list ollama || true
-    elif [ "$OLLAMA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls ollama || true
-    elif [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "ollama" "$ACTION" "$VERSION" "${OLLAMA_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$OLLAMA_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote ollama || true
-    elif [ "$OLLAMA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all ollama || true
-    elif [ "$OLLAMA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all ollama || true
+    if [ -n "${OLLAMA_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${OLLAMA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${OLLAMA_RELEASES_URL:-}" ]; then
-        curl -sSL "${OLLAMA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-        git ls-remote --tags "https://github.com/ollama/ollama" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      fi
+      git ls-remote --tags "https://github.com/ollama/ollama" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$OLLAMA_INSTALL_METHOD" = "mise" ]; then
-      mise use "ollama@${VERSION}"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "asdf" ]; then
-      asdf global ollama "${VERSION}"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "ollama@${VERSION}"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "ollama ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
-      log_info "Set default ollama version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env ollama \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "ollama" "$ACTION" "$VERSION" "${OLLAMA_INSTALL_METHOD}"
     ;;
   download)
     if [ "$OLLAMA_INSTALL_METHOD" = "libscript_native" ]; then
       if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_ollama >/dev/null 2>&1; then
-        log_info "[REUSE] ollama is already installed; skipping download."
+        log_info '[REUSE] ollama is already installed; skipping download.'
         exit 0
       fi
       log_info "Downloading ollama ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama..."
@@ -179,134 +128,70 @@ case "$ACTION" in
     fi
     if [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "ollama"; then
-        log_info "System package manager does not have ollama. Falling back to native..."
-        OLLAMA_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have ollama. Falling back to native...'
+        OLLAMA_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "$OLLAMA_INSTALL_METHOD" = "mise" ]; then
-      mise install "ollama@${VERSION}"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "asdf" ]; then
-      asdf install ollama "${VERSION}"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "ollama@${VERSION}"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "vfox" ]; then
-      vfox add ollama || true
-      vfox install "ollama@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
-      if [ ! -x "${TARGET_DIR}/bin/ollama" ]; then
-        log_info "Installing ollama ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/ollama" || true
-              chmod +x "${TARGET_DIR}/bin/ollama" || true
-            fi
-          fi
-        else
-          if [ -n "${OLLAMA_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${OLLAMA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${OLLAMA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${OLLAMA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/ollama" || true
-              chmod +x "${TARGET_DIR}/bin/ollama" || true
-            fi
-            rm -f "${TEMP_FILE}"
+    # libscript_native implementation
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
+    if [ ! -x "${TARGET_DIR}/bin/ollama" ]; then
+      log_info "Installing ollama ${VERSION} natively to ${TARGET_DIR}..."
+      mkdir -p "${TARGET_DIR}/bin"
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info 'Extracting from cache...'
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ollama/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
           else
-            log_info "No download URL provided for ollama ${VERSION}. Attempting fallback to Github..."
-            libscript_depends "curl" "tar"
-            TEMP_FILE=$(mktemp)
-            OS_ARCH=$(uname -m)
-            _actual_version="${EXACT_VERSION}"
-            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-              _actual_version=$(curl -sI https://github.com/ollama/ollama/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
-            fi
-            if [ "$OS_ARCH" = "aarch64" ]; then
-              DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-arm64.tgz"
-            else
-              DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-amd64.tgz"
-            fi
-            if libscript_download "$DL_URL" "$TEMP_FILE"; then
-              tar -xzf "$TEMP_FILE" -C "${TARGET_DIR}" || true
-              chmod +x "${TARGET_DIR}/bin/ollama" 2>/dev/null || true
-            fi
-            rm -f "${TEMP_FILE}"
+            cp "$cache_file" "${TARGET_DIR}/bin/ollama" || true
+            chmod +x "${TARGET_DIR}/bin/ollama" || true
           fi
         fi
       else
-        log_info "ollama ${VERSION} is already installed."
+        if [ -n "${OLLAMA_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${OLLAMA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${OLLAMA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${OLLAMA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/ollama" || true
+            chmod +x "${TARGET_DIR}/bin/ollama" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_info "No download URL provided for ollama ${VERSION}. Attempting fallback to Github..."
+          libscript_depends 'curl' 'tar'
+          TEMP_FILE=$(mktemp)
+          OS_ARCH=$(uname -m)
+          _actual_version="${EXACT_VERSION}"
+          if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+            _actual_version=$(libscript_resolve_github_latest "ollama/ollama" "v0.5.7")
+          fi
+          if [ "$OS_ARCH" = "aarch64" ]; then
+            DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-arm64.tgz"
+          else
+            DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-amd64.tgz"
+          fi
+          if libscript_download "$DL_URL" "$TEMP_FILE"; then
+            tar -xzf "$TEMP_FILE" -C "${TARGET_DIR}" || true
+            chmod +x "${TARGET_DIR}/bin/ollama" 2>/dev/null || true
+          fi
+          rm -f "${TEMP_FILE}"
+        fi
       fi
-      libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$OLLAMA_INSTALL_METHOD" = "libscript_native" ] || [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      unset SCRIPT_NAME || true
-      service_name="${LIBSCRIPT_SERVICE_NAME:-ollama}"
-      if [ "$ACTION" = "start" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "up" ]; then
-        mkdir -p "${OLLAMA_MODELS:-/mnt/data/ollama_models}" 2>/dev/null || true
-        libscript_service_override_env "$service_name" "OLLAMA_MODELS=${OLLAMA_MODELS:-/mnt/data/ollama_models}" || true
-      fi
-      libscript_service "$ACTION" "$service_name" "$@"
     else
-      log_info "$ACTION not natively implemented for $OLLAMA_INSTALL_METHOD."
+      log_info "ollama ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
+    libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$OLLAMA_INSTALL_METHOD" = "libscript_native" ] || [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ollama}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $OLLAMA_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "ollama" "$ACTION" "$VERSION" "${OLLAMA_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$OLLAMA_INSTALL_METHOD" = "libscript_native" ] || [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ollama}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $OLLAMA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$OLLAMA_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling ollama $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $OLLAMA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

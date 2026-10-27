@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,5 +47,5 @@ export PATH
 if command -v _noop >/dev/null 2>&1; then
   _noop --version || printf '%s\n' "_noop found"
 else
-  printf '%s\n' "_noop skipped (not found)"
+  printf '%s\n' '_noop skipped (not found)'
 fi

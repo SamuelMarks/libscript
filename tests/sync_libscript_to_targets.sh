@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,14 +63,14 @@ if [ -d "$TARGET" ] && [ -f "$TARGET/Vagrantfile" ]; then
     if grep -q "windows" "Vagrantfile"; then
         TARGET_HOST="$VAGRANT_HOST"
         # Windows rsync usually puts it in the home dir if we just use a relative path
-        TARGET_PATH="libscript" 
-        echo "[INFO] Detected Windows guest. Syncing to home directory relative path."
+        TARGET_PATH='libscript'
+        echo '[INFO] Detected Windows guest. Syncing to home directory relative path.'
         
         # Ensure target directory exists natively
         vagrant ssh -c "if not exist libscript mkdir libscript" >/dev/null 2>&1 || true
     else
         TARGET_HOST="$VAGRANT_HOST"
-        TARGET_PATH="libscript"
+        TARGET_PATH='libscript'
         vagrant ssh -c "mkdir -p ~/libscript" >/dev/null 2>&1 || true
     fi
     cd "$REPO_ROOT"
@@ -93,4 +92,4 @@ else
     rsync -avz --exclude '.git' --exclude 'build' --exclude 'tests_tmp' --exclude 'vagrant' "$REPO_ROOT/" "$TARGET_HOST:$TARGET_PATH"
 fi
 
-echo "[PASS] Rsync completed successfully."
+echo '[PASS] Rsync completed successfully.'

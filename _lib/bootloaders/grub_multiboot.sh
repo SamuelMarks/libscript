@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,7 @@ OUTPUT_CFG="${1:-/boot/grub/grub.cfg}"
 # Displays usage instructions.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [output_cfg]"
-  printf '%s\n' "Generates a GRUB2 multiboot configuration file."
+  printf '%s\n' 'Generates a GRUB2 multiboot configuration file.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then

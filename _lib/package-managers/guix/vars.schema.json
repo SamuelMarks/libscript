@@ -14,6 +14,14 @@
       "description": "Specific version of guix to install.",
       "type": "string",
       "default": "latest"
+    },
+    "GUIX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading guix binary or archive artifacts."
+    },
+    "GUIX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying guix available remote releases."
     }
   }
 }

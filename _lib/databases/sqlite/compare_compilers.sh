@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -100,9 +99,9 @@ compare_single_compiler() {
     REFERENCE_DIGEST="${_digest}"
   fi
 
-  _match="true"
+  _match='true'
   if [ "${_digest}" != "${REFERENCE_DIGEST}" ]; then
-    _match="false"
+    _match='false'
     log_error "Digest mismatch for ${_cc_id}: got ${_digest}, expected ${REFERENCE_DIGEST}"
     exit 1
   fi

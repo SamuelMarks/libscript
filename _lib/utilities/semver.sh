@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   log_info "Usage: ${THIS_FILE} [OPTIONS]"
-  log_info "See script source or documentation for more details."
+  log_info 'See script source or documentation for more details.'
   exit 0
 fi
 

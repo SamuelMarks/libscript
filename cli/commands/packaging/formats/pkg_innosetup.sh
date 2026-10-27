@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,16 +64,16 @@ EOF2
 
       if [ "$OFFLINE" = "1" ]; then
         printf '%s\n' ""
-        printf '%s\n' "[Files]"
+        printf '%s\n' '[Files]'
         printf '%s\n' "Source: \"$LIBSCRIPT_ROOT_DIR\\*\"; DestDir: \"{app}\"; Flags: ignoreversion recursesubdirs createallsubdirs"
       fi
 
       printf '%s\n' ""
-      printf '%s\n' "[Types]"
+      printf '%s\n' '[Types]'
       printf '%s\n' "Name: \"custom\"; Description: \"Custom installation\"; Flags: iscustom"
       printf '%s\n' "Name: \"full\"; Description: \"Full installation\""
       printf '%s\n' ""
-      printf '%s\n' "[Components]"
+      printf '%s\n' '[Components]'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -83,8 +82,8 @@ EOF2
       done
 
       printf '%s\n' ""
-      printf '%s\n' "[Code]"
-      printf '%s\n' "var"
+      printf '%s\n' '[Code]'
+      printf '%s\n' 'var'
 
 # shellcheck disable=SC2086
       set -- $deps_list
@@ -102,8 +101,8 @@ EOF2
         fi
       done
 
-      printf '%s\n' "procedure InitializeWizard;"
-      printf '%s\n' "begin"
+      printf '%s\n' 'procedure InitializeWizard;'
+      printf '%s\n' 'begin'
       printf '%s\n' "  ActionPage := CreateInputOptionPage(wpSelectComponents, 'Action', 'What would you like to produce?', 'Please select an action to perform with the selected components.', True, False);"
       printf '%s\n' "  ActionPage.Add('Install locally now');"
       printf '%s\n' "  ActionPage.Add('Dockerfile');"
@@ -115,7 +114,7 @@ EOF2
       printf '%s\n' "  ActionPage.Add('.dmg installer');"
       printf '%s\n' "  ActionPage.Add('.deb package');"
       printf '%s\n' "  ActionPage.Add('.rpm package');"
-      printf '%s\n' "  ActionPage.Values[0] := True;"
+      printf '%s\n' '  ActionPage.Values[0] := True;'
       printf '%s\n' "  OfflinePage := CreateInputOptionPage(ActionPage.ID, 'Options & OS Targets', 'Select offline mode and Target OS', '', False, True);"
       printf '%s\n' "  OfflinePage.Add('Enable --offline mode');"
       printf '%s\n' "  OfflinePage.Add('Target: Windows');"
@@ -123,8 +122,8 @@ EOF2
       printf '%s\n' "  OfflinePage.Add('Target: Linux');"
       printf '%s\n' "  OfflinePage.Add('Target: macOS');"
       printf '%s\n' "  OfflinePage.Add('Target: BSD');"
-      printf '%s\n' "  OfflinePage.Values[1] := True;"
-      printf '%s\n' "  OfflinePage.Values[3] := True;"
+      printf '%s\n' '  OfflinePage.Values[1] := True;'
+      printf '%s\n' '  OfflinePage.Values[3] := True;'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -150,11 +149,11 @@ EOF2
           fi
         fi
       done
-      printf '%s\n' "end;"
+      printf '%s\n' 'end;'
 
-      printf '%s\n' "function ShouldSkipPage(PageID: Integer): Boolean;"
-      printf '%s\n' "begin"
-      printf '%s\n' "  Result := False;"
+      printf '%s\n' 'function ShouldSkipPage(PageID: Integer): Boolean;'
+      printf '%s\n' 'begin'
+      printf '%s\n' '  Result := False;'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -163,17 +162,17 @@ EOF2
         if [ -f "$schema_file" ]; then
           if [ -n "$(jq -c '.properties' "$schema_file")" ]; then
             printf '%s\n' "  if (PageID = Page_$pkg.ID) and not IsComponentSelected('$pkg') then"
-            printf '%s\n' "    Result := True;"
+            printf '%s\n' '    Result := True;'
           fi
         fi
       done
-      printf '%s\n' "end;"
+      printf '%s\n' 'end;'
 
-      printf '%s\n' "function NextButtonClick(PageId: Integer): Boolean;"
-      printf '%s\n' "var"
-      printf '%s\n' "  ResultCode: Integer;"
-      printf '%s\n' "begin"
-      printf '%s\n' "  Result := True;"
+      printf '%s\n' 'function NextButtonClick(PageId: Integer): Boolean;'
+      printf '%s\n' 'var'
+      printf '%s\n' '  ResultCode: Integer;'
+      printf '%s\n' 'begin'
+      printf '%s\n' '  Result := True;'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -188,28 +187,28 @@ EOF2
               if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
                 printf '%s\n' "    if (Page_$pkg.Values[$var_idx] <> '') then begin"
                 printf '%s\n' "      if Exec('cmd.exe', '/c netstat -an | findstr /R /C:"":'' + Page_$pkg.Values[$var_idx] + '' .*LISTENING""', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin"
-                printf '%s\n' "        if ResultCode = 0 then begin"
+                printf '%s\n' '        if ResultCode = 0 then begin'
                 printf '%s\n' "          MsgBox('Port ' + Page_$pkg.Values[$var_idx] + ' is already in use. Please select a different port.', mbError, MB_OK);"
-                printf '%s\n' "          Result := False;"
-                printf '%s\n' "          Exit;"
-                printf '%s\n' "        end;"
-                printf '%s\n' "      end;"
-                printf '%s\n' "    end;"
+                printf '%s\n' '          Result := False;'
+                printf '%s\n' '          Exit;'
+                printf '%s\n' '        end;'
+                printf '%s\n' '      end;'
+                printf '%s\n' '    end;'
               fi
               var_idx=$((var_idx + 1))
             done
-            printf '%s\n' "  end;"
+            printf '%s\n' '  end;'
           fi
         fi
       done
-      printf '%s\n' "end;"
+      printf '%s\n' 'end;'
 
       # Uninstallation Hooks
-      printf '%s\n' "procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);"
-      printf '%s\n' "var"
-      printf '%s\n' "  ResultCode: Integer;"
-      printf '%s\n' "begin"
-      printf '%s\n' "  if CurUninstallStep = usUninstall then begin"
+      printf '%s\n' 'procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);'
+      printf '%s\n' 'var'
+      printf '%s\n' '  ResultCode: Integer;'
+      printf '%s\n' 'begin'
+      printf '%s\n' '  if CurUninstallStep = usUninstall then begin'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -220,18 +219,18 @@ EOF2
         else
           printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         fi
-        printf '%s\n' "    end else begin"
+        printf '%s\n' '    end else begin'
         if [ "$OFFLINE" = "1" ]; then
           printf '%s\n' "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         else
           printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         fi
-        printf '%s\n' "    end;"
+        printf '%s\n' '    end;'
       done
-      printf '%s\n' "  end;"
-      printf '%s\n' "end;"
-      printf '%s\n' "  ActionPage: TInputOptionWizardPage;"
-      printf '%s\n' "  OfflinePage: TInputOptionWizardPage;"
+      printf '%s\n' '  end;'
+      printf '%s\n' 'end;'
+      printf '%s\n' '  ActionPage: TInputOptionWizardPage;'
+      printf '%s\n' '  OfflinePage: TInputOptionWizardPage;'
 
 # shellcheck disable=SC2086
       set -- $deps_list
@@ -244,9 +243,9 @@ EOF2
             var_idx=0
             for varname in $vars_json; do
               printf '%s\n' "function Get_${pkg}_${varname}(Param: String): String;"
-              printf '%s\n' "begin"
+              printf '%s\n' 'begin'
               printf '%s\n' "  Result := Page_$pkg.Values[$var_idx];"
-              printf '%s\n' "end;"
+              printf '%s\n' 'end;'
               var_idx=$((var_idx + 1))
             done
           fi
@@ -254,8 +253,8 @@ EOF2
       done
 
       printf '%s\n' ""
-      printf '%s\n' "function GetAction(Param: String): String;"
-      printf '%s\n' "begin"
+      printf '%s\n' 'function GetAction(Param: String): String;'
+      printf '%s\n' 'begin'
       printf '%s\n' "  if ActionPage.Values[1] then Result := 'docker'"
       printf '%s\n' "  else if ActionPage.Values[2] then Result := 'docker_compose'"
       printf '%s\n' "  else if ActionPage.Values[3] then Result := 'msi'"
@@ -266,10 +265,10 @@ EOF2
       printf '%s\n' "  else if ActionPage.Values[8] then Result := 'deb'"
       printf '%s\n' "  else if ActionPage.Values[9] then Result := 'rpm'"
       printf '%s\n' "  else Result := 'install';"
-      printf '%s\n' "end;"
-      printf '%s\n' "function GetExtraArgs(Param: String): String;"
-      printf '%s\n' "var S: String;"
-      printf '%s\n' "begin"
+      printf '%s\n' 'end;'
+      printf '%s\n' 'function GetExtraArgs(Param: String): String;'
+      printf '%s\n' 'var S: String;'
+      printf '%s\n' 'begin'
       printf '%s\n' "  S := '';"
       printf '%s\n' "  if OfflinePage.Values[0] then S := S + ' --offline';"
       printf '%s\n' "  if OfflinePage.Values[1] then S := S + ' --os-windows';"
@@ -277,15 +276,15 @@ EOF2
       printf '%s\n' "  if OfflinePage.Values[3] then S := S + ' --os-linux';"
       printf '%s\n' "  if OfflinePage.Values[4] then S := S + ' --os-macos';"
       printf '%s\n' "  if OfflinePage.Values[5] then S := S + ' --os-bsd';"
-      printf '%s\n' "  Result := S;"
-      printf '%s\n' "end;"
-      printf '%s\n' "function IsInstall: Boolean;"
-      printf '%s\n' "begin Result := ActionPage.Values[0]; end;"
-      printf '%s\n' "function IsGenerate: Boolean;"
-      printf '%s\n' "begin Result := not ActionPage.Values[0]; end;"
-      printf '%s\n' "function GetGenerateParams(Param: String): String;"
-      printf '%s\n' "var S: String;"
-      printf '%s\n' "begin"
+      printf '%s\n' '  Result := S;'
+      printf '%s\n' 'end;'
+      printf '%s\n' 'function IsInstall: Boolean;'
+      printf '%s\n' 'begin Result := ActionPage.Values[0]; end;'
+      printf '%s\n' 'function IsGenerate: Boolean;'
+      printf '%s\n' 'begin Result := not ActionPage.Values[0]; end;'
+      printf '%s\n' 'function GetGenerateParams(Param: String): String;'
+      printf '%s\n' 'var S: String;'
+      printf '%s\n' 'begin'
       printf '%s\n' "  if '{app}' <> '' then"
       printf '%s\n' "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package-as ' + GetAction('') + ' ';";
       printf '%s\n' "  else";
@@ -297,9 +296,9 @@ EOF2
         printf '%s\n' "  if IsComponentSelected('$pkg') then S := S + '$pkg $ver ';";
       done
       printf '%s\n' "  S := S + GetExtraArgs('');"
-      printf '%s\n' "  Result := S;"
-      printf '%s\n' "end;"
-      printf '%s\n' "[Run]"
+      printf '%s\n' '  Result := S;'
+      printf '%s\n' 'end;'
+      printf '%s\n' '[Run]'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do

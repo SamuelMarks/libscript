@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ "$UNAME_LOWER" != "windows" ] && [ "$UNAME_LOWER" != "mingw" ] && [ "$UNAME_LOWER" != "msys" ] && [ "$UNAME_LOWER" != "cygwin" ]; then
-  echo "msys2 is only supported on Windows."
+  echo 'msys2 is only supported on Windows.'
   exit 0
 fi
 

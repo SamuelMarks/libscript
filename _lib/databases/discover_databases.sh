@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,7 +49,7 @@ discover_unix_socket() {
   if [ -S "$_sock" ]; then return 0; else return 1; fi
 }
 
-MODE="eval"
+MODE='eval'
 TARGET_ENGINE=""
 
 while [ $# -gt 0 ]; do

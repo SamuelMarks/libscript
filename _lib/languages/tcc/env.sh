@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +38,9 @@ unset SCRIPT_NAME || true
 export LIBSCRIPT_ROOT_DIR
 
 _tcc_ver="${TCC_VERSION:-default}"
-_tcc_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/${_tcc_ver}"
-if [ ! -d "${_tcc_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/default" ]; then
-  _tcc_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/default"
+_tcc_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/${_tcc_ver}"
+if [ ! -d "${_tcc_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/default" ]; then
+  _tcc_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/default"
 fi
 
 if [ -d "${_tcc_prefix}/bin" ]; then
@@ -54,9 +53,11 @@ elif command -v tcc >/dev/null 2>&1; then
   CC="$(command -v tcc)"
   export CC
 else
-  export CC="tcc"
+  export CC='tcc'
 fi
 
 export HOSTCC="${CC}"
-export CC_BACKEND="tcc"
+export CC_BACKEND='tcc'
 export CFLAGS="${TCC_CFLAGS:--O2}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

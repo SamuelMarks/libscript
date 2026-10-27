@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -59,6 +59,20 @@ if not "%CXX_BACKEND%"=="" if not "%CXX_BACKEND%"=="default" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\%CXX_BACKEND%\env.cmd"
     )
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "" "" "%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin"
-endlocal & set "PATH=%PATH%"
+if "%CXX%"=="" (
+    for %%B in (cl.exe g++.exe clang++.exe c++.exe) do (
+        if "!CXX!"=="" (
+            for /f "delims=" %%F in ('where %%B 2^>nul') do if "!CXX!"=="" set "CXX=%%F"
+        )
+    )
+)
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "cpp" "%CPP_VERSION%" "%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin"
+endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "CPP_VERSION=%CPP_VERSION%"
+    set "CPP_INSTALL_METHOD=%CPP_INSTALL_METHOD%"
+    set "CXX=%CXX%"
+    set "PATH=%PATH%"
+)
 exit /b 0

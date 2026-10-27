@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,14 +44,14 @@ BUILD_DIR="${3:-${REPO_ROOT}/build/live-linux-${FLAVOR}}"
 # Displays usage instructions and supported options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [distro_flavor] [output_path] [build_dir]"
-  printf '%s\n' "Synthesizes live-CD/live-USB bootable Linux images with msi-rs."
+  printf '%s\n' 'Synthesizes live-CD/live-USB bootable Linux images with msi-rs.'
   printf '\n'
-  printf '%s\n' "Flavors:"
-  printf '%s\n' "  alpine    - Minimal Alpine Musl live system with OpenRC (default)"
-  printf '%s\n' "  debian    - Debian live system with squashfs and broad hardware support"
+  printf '%s\n' 'Flavors:'
+  printf '%s\n' '  alpine    - Minimal Alpine Musl live system with OpenRC (default)'
+  printf '%s\n' '  debian    - Debian live system with squashfs and broad hardware support'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -74,17 +73,19 @@ ROOTFS="$BUILD_DIR/rootfs"
 
 # 1. Populate live filesystem root
 if [ "$FLAVOR" = "alpine" ]; then
-  ALPINE_VERSION="3.20.3"
+  ALPINE_VERSION='3.20.3'
   MINIROOTFS_URL="https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-${ALPINE_VERSION}-x86_64.tar.gz"
   MINIROOTFS_ARCHIVE="${BUILD_DIR}/alpine-minirootfs.tar.gz"
 
   if [ ! -f "${MINIROOTFS_ARCHIVE}" ]; then
     printf '[BUILD] Downloading Alpine minirootfs...\n'
-    if type libscript_download >/dev/null 2>&1; then
-      libscript_download "${MINIROOTFS_URL}" "${MINIROOTFS_ARCHIVE}"
-    else
-      curl -sSLf "${MINIROOTFS_URL}" -o "${MINIROOTFS_ARCHIVE}" || wget -qO "${MINIROOTFS_ARCHIVE}" "${MINIROOTFS_URL}"
+    if ! type libscript_download >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
     fi
+    libscript_download "${MINIROOTFS_URL}" "${MINIROOTFS_ARCHIVE}" "SKIP" || true
   fi
 
   if [ ! -f "${BUILD_DIR}/.rootfs_extracted" ]; then

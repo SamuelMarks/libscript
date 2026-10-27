@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,11 +49,11 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${CADDY_VERSION}" = "latest" ] || [ "${CADDY_VERSION}" = "lts" ]; then
-    libscript_depends "curl"
+    libscript_depends 'curl'
 
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/caddyserver/caddy/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/caddyserver/caddy/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${CADDY_VERSION}"
@@ -63,15 +62,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${CADDY_INSTALL_METHOD}" = "mise" ]; then
-      mise ls caddy
-    elif [ "${CADDY_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list caddy
-    elif [ "${CADDY_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${CADDY_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls caddy
-    elif [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
+    if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
       caddy --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/caddy/" 2>/dev/null || true
@@ -79,31 +70,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${CADDY_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote caddy
-    elif [ "${CADDY_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all caddy
-    elif [ "${CADDY_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${CADDY_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all caddy
-    elif [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for caddy"
+      printf '%s\n' 'Fetching remote versions not implemented generically for caddy'
     fi
     exit 0
     ;;
   use)
-    if [ "${CADDY_INSTALL_METHOD}" = "mise" ]; then
-      mise use "caddy@${CADDY_VERSION}"
-    elif [ "${CADDY_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global caddy "${CADDY_VERSION}"
-    elif [ "${CADDY_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${CADDY_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "caddy@${CADDY_VERSION}"
-    elif [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
+    if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -119,7 +94,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "caddy" "default" "${EXACT_VERSION}"
       log_info "Set default caddy version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env caddy \"${CADDY_VERSION}\")"
     fi
     exit 0
@@ -139,95 +114,38 @@ case "$ACTION" in
   install)
     if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
       if ! libscript_depends 'caddy'; then
-        log_info "System package manager unavailable for caddy. Falling back to native..."
-        CADDY_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager unavailable for caddy. Falling back to native...'
+        CADDY_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "${CADDY_INSTALL_METHOD}" = "mise" ]; then
-      mise install "caddy@${CADDY_VERSION}"
-    elif [ "${CADDY_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install caddy "${CADDY_VERSION}"
-    elif [ "${CADDY_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "caddy@${CADDY_VERSION}"
-    elif [ "${CADDY_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add caddy || true
-      vfox install "caddy@${CADDY_VERSION}"
-    else
-        # libscript_native implementation
-        resolve_exact_version
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/caddy/${EXACT_VERSION}"
-        if [ ! -d "${TARGET_DIR}" ]; then
-          log_info "Installing caddy ${VERSION} natively to ${TARGET_DIR}..."
-          mkdir -p "${TARGET_DIR}/bin"
-          ARCH=$(uname -m)
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-          if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-          if [ "$OS" = "darwin" ]; then OS="mac"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
-          URL="https://github.com/caddyserver/caddy/releases/download/v${EXACT_VERSION}/caddy_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
-          TEMP_FILE=$(mktemp)
-          libscript_depends "curl"
-          libscript_depends "tar"
-          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
-            log_error "Failed to download caddy from $URL"
-            rm -f "$TEMP_FILE.tar.gz"
-            exit 1
-          fi
-          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "caddy" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/caddy"
-          chmod +x "${TARGET_DIR}/bin/caddy"
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/caddy/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing caddy ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        ARCH=$(uname -m)
+        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+        if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+        if [ "$OS" = "darwin" ]; then OS="mac"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
+        URL="https://github.com/caddyserver/caddy/releases/download/v${EXACT_VERSION}/caddy_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
+        TEMP_FILE=$(mktemp)
+        libscript_depends 'curl'
+        libscript_depends 'tar'
+        if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
+          log_error "Failed to download caddy from $URL"
           rm -f "$TEMP_FILE.tar.gz"
-        else
-          log_info "caddy ${VERSION} is already installed."
+          exit 1
         fi
-        libscript_symlink_alias "caddy" "$VERSION" "${EXACT_VERSION}"
-        fi
-
+        tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "caddy" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/caddy"
+        chmod +x "${TARGET_DIR}/bin/caddy"
+        rm -f "$TEMP_FILE.tar.gz"
+      else
+        log_info "caddy ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "caddy" "$VERSION" "${EXACT_VERSION}"
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$CADDY_INSTALL_METHOD" = "libscript_native" ] || [ "$CADDY_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-caddy}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $CADDY_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "caddy" "$ACTION" "$VERSION" "${CADDY_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$CADDY_INSTALL_METHOD" = "libscript_native" ] || [ "$CADDY_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-caddy}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $CADDY_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$CADDY_INSTALL_METHOD" = "libscript_native" ] || [ "$CADDY_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-caddy}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $CADDY_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$CADDY_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling caddy $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/caddy/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/caddy/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $CADDY_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

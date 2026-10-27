@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -89,10 +89,6 @@ goto :action_install
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%FLUENTBIT_INSTALL_METHOD%"=="mise" ( mise ls fluentbit & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="asdf" ( asdf list fluentbit & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="vfox" ( vfox ls fluentbit & exit /b 0 )
 if "%FLUENTBIT_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\fluentbit" ( dir /b "%LIBSCRIPT_HOME%\fluentbit" )
 exit /b 0
@@ -100,13 +96,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%FLUENTBIT_INSTALL_METHOD%"=="mise" ( mise ls-remote fluentbit & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="asdf" ( asdf list all fluentbit & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="vfox" ( vfox ls all fluentbit & exit /b 0 )
 if "%FLUENTBIT_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%FLUENTBIT_RELEASES_URL%"=="" (
-    curl -sSL "%FLUENTBIT_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%FLUENTBIT_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/fluent/fluent-bit" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -115,10 +107,6 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%FLUENTBIT_INSTALL_METHOD%"=="mise" ( mise use "fluentbit@%FLUENTBIT_VERSION%" & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="asdf" ( asdf global fluentbit "%FLUENTBIT_VERSION%" & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="vfox" ( vfox use "fluentbit@%FLUENTBIT_VERSION%" & exit /b 0 )
 if "%FLUENTBIT_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
 if "%FLUENTBIT_VERSION%"=="latest" (set "EXACT_VERSION=%FLUENTBIT_VERSION%"
@@ -132,8 +120,11 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\fluentbit\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%"
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -158,10 +149,6 @@ if "%FLUENTBIT_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends fluentbit
     exit /b !errorlevel!
 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="mise" ( mise install "fluentbit@%FLUENTBIT_VERSION%" & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="asdf" ( asdf install fluentbit "%FLUENTBIT_VERSION%" & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="pkgx" ( pkgx install "fluentbit@%FLUENTBIT_VERSION%" & exit /b 0 )
-if "%FLUENTBIT_INSTALL_METHOD%"=="vfox" ( vfox add fluentbit & vfox install "fluentbit@%FLUENTBIT_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
@@ -186,70 +173,23 @@ if not exist "%TARGET_DIR%\bin" (
 )
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_fluentbit"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%FLUENTBIT_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else if "%FLUENTBIT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else (
-    echo %ACTION% not natively implemented for %FLUENTBIT_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_fluentbit"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%FLUENTBIT_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else if "%FLUENTBIT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else (
-    echo install-service not implemented for %FLUENTBIT_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_fluentbit"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%FLUENTBIT_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else if "%FLUENTBIT_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else (
-    echo uninstall-service not implemented for %FLUENTBIT_INSTALL_METHOD%.
-)
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "fluentbit" "%ACTION%" "%FLUENTBIT_VERSION%" "%FLUENTBIT_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%\\bin\\fluentbit.exe\"" "%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%"
+exit /b !errorlevel!

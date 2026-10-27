@@ -14,7 +14,7 @@ set "THIS_FILE=%~f0"
 
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -81,7 +81,9 @@ if "!_req:~0,8!"=="pkg_mgr:" (
     set "LIBSCRIPT_PKG_MGR=!_req:~8!"
     set "_req=system"
 )
-if "!_req!"=="" set "_req=system"
+if /i not "!_req!"=="libscript_native" if /i not "!_req!"=="system" if /i not "!_req!"=="from-source" (
+    set "_req=system"
+)
 endlocal & (
     set "LIBSCRIPT_PKG_MGR=%LIBSCRIPT_PKG_MGR%"
     set "RESOLVED_INSTALL_METHOD=%_req%"
@@ -388,3 +390,51 @@ exit /b 0
 :libscript_fetch
 call :libscript_download %*
 exit /b %errorlevel%
+
+:: ## libscript_fetch_stdout
+:: Fetches the contents of a URL to stdout while respecting offline mode and curl/powershell fallbacks.
+:libscript_fetch_stdout
+set "_lfs_url=%~1"
+if "!_lfs_url!"=="" exit /b 1
+if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
+if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
+where curl >nul 2>&1
+if !errorlevel! equ 0 (
+    curl -fsSL "!_lfs_url!" 2>nul
+    exit /b !errorlevel!
+)
+set "_lfs_tmp=%TEMP%\libscript_fetch_%RANDOM%.tmp"
+call :libscript_download "!_lfs_url!" "!_lfs_tmp!" "SKIP" >nul 2>&1
+if exist "!_lfs_tmp!" (
+    type "!_lfs_tmp!"
+    del /f /q "!_lfs_tmp!" >nul 2>&1
+    exit /b 0
+)
+exit /b 1
+
+:: ## libscript_resolve_github_tag
+:: Resolves the latest release tag_name from a GitHub API releases/latest URL, stripping any leading 'v'.
+:libscript_resolve_github_tag
+set "_lrgt_url=%~1"
+if "!_lrgt_url!"=="" exit /b 1
+if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
+if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (Invoke-RestMethod -Uri '!_lrgt_url!').tag_name -replace '^v',''" 2>nul
+exit /b !errorlevel!
+
+:: ## libscript_uninstall_pkg
+:: Uninstalls a package using the active Windows package manager (winget, choco, scoop).
+:libscript_uninstall_pkg
+set "_un_pkg=%~1"
+if "!_un_pkg!"=="" exit /b 0
+if not defined PKG_MGR call :detect_pkg_mgr
+if /i "!PKG_MGR!"=="winget" (
+    where winget >nul 2>&1 && winget uninstall --id "!_un_pkg!" --silent --accept-source-agreements >nul 2>&1
+)
+if /i "!PKG_MGR!"=="choco" (
+    where choco >nul 2>&1 && choco uninstall "!_un_pkg!" -y >nul 2>&1
+)
+if /i "!PKG_MGR!"=="scoop" (
+    where scoop >nul 2>&1 && scoop uninstall "!_un_pkg!" >nul 2>&1
+)
+exit /b 0

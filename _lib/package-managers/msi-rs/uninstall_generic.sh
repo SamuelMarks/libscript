@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,7 +33,7 @@ export DIR="${SCRIPT_DIR}"
 
 VERSION="${MSI_RS_VERSION:-${LIBSCRIPT_VERSION:-latest}}"
 if [ "$VERSION" = "latest" ] || [ "$VERSION" = "lts" ] || [ "$VERSION" = "stable" ] || [ "$VERSION" = "0.0.1" ] || [ -z "$VERSION" ]; then
-  EXACT_VERSION="v0.0.1"
+  EXACT_VERSION='v0.0.1'
 else
   EXACT_VERSION="$VERSION"
 fi

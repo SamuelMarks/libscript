@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,11 +45,11 @@ TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
 mkdir -p "$TESTS_TMP_DIR"
 
 TARGETS=""
-TIER_FILTER="all"
+TIER_FILTER='all'
 STOP_AFTER=""
 SKIP_UNINSTALL=""
 LOOP_MODE=""
-USE_SNAPSHOT="1"
+USE_SNAPSHOT='1'
 
 # ## find_disk_image
 # Finds the active qcow2 disk image for the Rocky Linux Vagrant machine.
@@ -75,11 +74,11 @@ restore_vanilla_snapshot() {
     _img=$(find_disk_image || true)
     if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
         if qemu-img snapshot -U -l "$_img" 2>/dev/null | grep -q "vanilla"; then
-            echo "Halting Rocky Linux VM to restore vanilla snapshot..."
+            echo 'Halting Rocky Linux VM to restore vanilla snapshot...'
             (cd "$VAGRANT_DIR" && vagrant halt) || true
-            echo "Restoring vanilla snapshot..."
+            echo 'Restoring vanilla snapshot...'
             qemu-img snapshot -a vanilla "$_img"
-            echo "Starting Rocky Linux Vagrant VM from vanilla snapshot..."
+            echo 'Starting Rocky Linux Vagrant VM from vanilla snapshot...'
             (cd "$VAGRANT_DIR" && vagrant up --no-provision)
             return 0
         fi
@@ -90,7 +89,7 @@ restore_vanilla_snapshot() {
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest Rocky Linux VM using rsync over SSH.
 sync_repo_to_guest() {
-    echo "=== Syncing LibScript repository to Rocky Linux ==="
+    echo '=== Syncing LibScript repository to Rocky Linux ==='
     _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
     _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
     _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
@@ -129,23 +128,23 @@ while [ $# -gt 0 ]; do
         --help|-h|/?)
             echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop] [--no-snapshot]"
             echo ""
-            echo "Runs local tests sequentially on Rocky Linux (bento/rockylinux-10.2) Vagrant VM."
+            echo 'Runs local tests sequentially on Rocky Linux (bento/rockylinux-10.2) Vagrant VM.'
             echo ""
-            echo "Arguments:"
-            echo "  TARGETS...          A list of categories or components to test."
+            echo 'Arguments:'
+            echo '  TARGETS...          A list of categories or components to test.'
             echo "                      Defaults to 'all' if omitted."
-            echo "  all                 Test all components in the _lib and topologies directories."
-            echo "  --loop, -l          Continuously repeat testing in an automated loop."
-            echo "  --stop-after N      Stop after running N component tests."
-            echo "  --skip-uninstall    Skip uninstallation step after testing each component."
-            echo "  --no-snapshot       Do not restore the vanilla snapshot before each test."
-            echo "  --help, -h, /?      Show this help message."
+            echo '  all                 Test all components in the _lib and topologies directories.'
+            echo '  --loop, -l          Continuously repeat testing in an automated loop.'
+            echo '  --stop-after N      Stop after running N component tests.'
+            echo '  --skip-uninstall    Skip uninstallation step after testing each component.'
+            echo '  --no-snapshot       Do not restore the vanilla snapshot before each test.'
+            echo '  --help, -h, /?      Show this help message.'
             echo ""
-            echo "Results are written to tests_tmp/ (*.linux.rocky.stdout, *.linux.rocky.stderr, *.linux.rocky.success/failure)."
+            echo 'Results are written to tests_tmp/ (*.linux.rocky.stdout, *.linux.rocky.stderr, *.linux.rocky.success/failure).'
             exit 0
             ;;
         --loop|-l)
-            LOOP_MODE="1"
+            LOOP_MODE='1'
             shift
             ;;
         --tier)
@@ -157,11 +156,11 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
         --skip-uninstall)
-            SKIP_UNINSTALL="1"
+            SKIP_UNINSTALL='1'
             shift
             ;;
         --no-snapshot)
-            USE_SNAPSHOT="0"
+            USE_SNAPSHOT='0'
             shift
             ;;
         *)
@@ -172,7 +171,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$(echo "$TARGETS" | tr -d ' ')" ]; then
-    TARGETS="all"
+    TARGETS='all'
 fi
 
 if [ ! -d "$VAGRANT_DIR" ]; then
@@ -239,9 +238,9 @@ iteration=1
 
 while true; do
     if [ "$LOOP_MODE" = "1" ]; then
-        echo "============================================================"
+        echo '============================================================'
         echo "Starting Rocky Linux Test Loop (Iteration $iteration)"
-        echo "============================================================"
+        echo '============================================================'
     fi
 
     DISK_IMG=""
@@ -256,7 +255,7 @@ while true; do
 
         if [ "$_has_vanilla" = "0" ]; then
             if [ -z "$DISK_IMG" ]; then
-                echo "=== Initializing Rocky Linux Vagrant VM to create vanilla snapshot ==="
+                echo '=== Initializing Rocky Linux Vagrant VM to create vanilla snapshot ==='
                 (cd "$VAGRANT_DIR" && vagrant up --no-provision)
                 DISK_IMG=$(find_disk_image || true)
             fi
@@ -269,14 +268,14 @@ while true; do
         fi
     fi
 
-    echo "=== Ensuring Rocky Linux Vagrant VM is running ==="
+    echo '=== Ensuring Rocky Linux Vagrant VM is running ==='
     cd "$VAGRANT_DIR"
     vm_status=$(vagrant status 2>&1 || true)
     if ! echo "$vm_status" | grep -q "running"; then
         if [ -n "$DISK_IMG" ] && [ "$USE_SNAPSHOT" = "1" ]; then
             restore_vanilla_snapshot || vagrant up --no-provision
         else
-            echo "Starting Rocky Linux Vagrant VM..."
+            echo 'Starting Rocky Linux Vagrant VM...'
             vagrant up --no-provision
         fi
     fi
@@ -368,9 +367,9 @@ while true; do
             fi
         fi
 
-        echo "============================================================"
+        echo '============================================================'
         echo "Running test for $target on Rocky Linux..."
-        echo "============================================================"
+        echo '============================================================'
         test_count=$((test_count + 1))
 
         # Restore vanilla snapshot before running if enabled
@@ -414,17 +413,17 @@ while true; do
     fi
 
     echo ""
-    echo "============================================================"
+    echo '============================================================'
     echo "Rocky Linux Tests Complete (Iteration $iteration)"
     echo "Ran: $test_count | Passed: $success_count | Failed: $failure_count | Skipped: $skipped_count"
     echo "Results in: $TESTS_TMP_DIR"
-    echo "============================================================"
+    echo '============================================================'
 
     if [ "$LOOP_MODE" != "1" ]; then
         break
     fi
 
     iteration=$((iteration + 1))
-    echo "Loop mode active. Restarting test loop in 3 seconds..."
+    echo 'Loop mode active. Restarting test loop in 3 seconds...'
     sleep 3
 done

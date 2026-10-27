@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -57,7 +56,7 @@ REPO_URL="${MSI_RS_REPO_URL:-https://github.com/SamuelMarks/msi-rs}"
 # Resolves the exact semver or branch version for msi-rs.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="v0.0.1"
+    EXACT_VERSION='v0.0.1'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -67,12 +66,12 @@ resolve_exact_version() {
 # Verifies presence of a functional C compiler or installs it using libscript languages/c.
 ensure_c_toolchain() {
   if ! command -v cc >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
-    log_info "C toolchain not detected; bootstrapping standard C compiler..."
+    log_info 'C toolchain not detected; bootstrapping standard C compiler...'
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/c/setup.sh" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/c/setup.sh" install c latest || true
     elif type libscript_depends >/dev/null 2>&1; then
-      libscript_depends "c" || true
+      libscript_depends 'c' || true
     fi
   fi
 }
@@ -85,7 +84,7 @@ ensure_rust_toolchain() {
   [ -d "/opt/ooce/bin" ] && export PATH="/opt/ooce/bin:${PATH}"
 
   if ! command -v cargo >/dev/null 2>&1 || ! command -v rustc >/dev/null 2>&1; then
-    log_info "Rust toolchain not detected; bootstrapping Rust and Cargo..."
+    log_info 'Rust toolchain not detected; bootstrapping Rust and Cargo...'
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" install rust latest || true
@@ -97,7 +96,7 @@ ensure_rust_toolchain() {
       [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
       [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
     elif type libscript_depends >/dev/null 2>&1; then
-      libscript_depends "rust" || true
+      libscript_depends 'rust' || true
     fi
   fi
 }
@@ -128,49 +127,29 @@ install_binaries_from_dir() {
 
 case "$ACTION" in
   ls)
-    if [ "$MSI_RS_INSTALL_METHOD" = "mise" ]; then
-      mise ls msi-rs || true
-    elif [ "$MSI_RS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list msi-rs || true
-    elif [ "$MSI_RS_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls msi-rs || true
-    elif [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
+    if [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' 'System packages do not support ls here.'
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    if [ "$MSI_RS_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote msi-rs || true
-    elif [ "$MSI_RS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all msi-rs || true
-    elif [ "$MSI_RS_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all msi-rs || true
+    if [ -n "${MSI_RS_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${MSI_RS_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "0.0.1"
     else
-      if [ -n "${MSI_RS_RELEASES_URL:-}" ]; then
-        curl -sSL "${MSI_RS_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "0.0.1"
+      _remote_tags=$(git ls-remote --tags "${REPO_URL}" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || true)
+      if [ -n "$_remote_tags" ]; then
+        printf '%s\n' "$_remote_tags"
       else
-        _remote_tags=$(git ls-remote --tags "${REPO_URL}" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || true)
-        if [ -n "$_remote_tags" ]; then
-          printf '%s\n' "$_remote_tags"
-        else
-          printf '%s\n' "0.0.1"
-        fi
+        printf '%s\n' '0.0.1'
       fi
     fi
     exit 0
     ;;
   use)
-    if [ "$MSI_RS_INSTALL_METHOD" = "mise" ]; then
-      mise use "msi-rs@${VERSION}"
-    elif [ "$MSI_RS_INSTALL_METHOD" = "asdf" ]; then
-      asdf global msi-rs "${VERSION}"
-    elif [ "$MSI_RS_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "msi-rs@${VERSION}"
-    elif [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+    if [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"
@@ -185,7 +164,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
       log_info "Set default msi-rs version to ${EXACT_VERSION}."
-      log_info "To apply to current shell, run:"
+      log_info 'To apply to current shell, run:'
       log_info "  . \"${DIR}/env.sh\""
     fi
     exit 0
@@ -207,14 +186,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "msi-rs" || true
-    elif [ "$MSI_RS_INSTALL_METHOD" = "mise" ]; then
-      mise install "msi-rs@${VERSION}"
-    elif [ "$MSI_RS_INSTALL_METHOD" = "asdf" ]; then
-      asdf install msi-rs "${VERSION}"
-    elif [ "$MSI_RS_INSTALL_METHOD" = "vfox" ]; then
-      vfox add msi-rs || true
-      vfox install "msi-rs@${VERSION}"
+      libscript_depends 'msi-rs' || true
     else
       # libscript_native implementation
       resolve_exact_version
@@ -238,9 +210,9 @@ case "$ACTION" in
       target_tuple=""
       if [ "$os_name" = "darwin" ]; then
         if [ "$arch_name" = "arm64" ] || [ "$arch_name" = "aarch64" ]; then
-          target_tuple="aarch64-apple-darwin"
+          target_tuple='aarch64-apple-darwin'
         else
-          target_tuple="x86_64-apple-darwin"
+          target_tuple='x86_64-apple-darwin'
         fi
       elif [ "$os_name" = "linux" ]; then
         is_musl=0
@@ -249,15 +221,15 @@ case "$ACTION" in
         fi
         if [ "$arch_name" = "arm64" ] || [ "$arch_name" = "aarch64" ]; then
           if [ "$is_musl" -eq 1 ]; then
-            target_tuple="aarch64-unknown-linux-musl"
+            target_tuple='aarch64-unknown-linux-musl'
           else
-            target_tuple="aarch64-unknown-linux-gnu"
+            target_tuple='aarch64-unknown-linux-gnu'
           fi
         else
           if [ "$is_musl" -eq 1 ]; then
-            target_tuple="x86_64-unknown-linux-musl"
+            target_tuple='x86_64-unknown-linux-musl'
           else
-            target_tuple="x86_64-unknown-linux-gnu"
+            target_tuple='x86_64-unknown-linux-gnu'
           fi
         fi
       fi
@@ -268,7 +240,7 @@ case "$ACTION" in
         log_info "Downloading pre-compiled binary release: ${release_url}"
         
         tmp_archive="${TMPDIR:-/tmp}/msi_rs_build_$$.tar.gz"
-        if libscript_download "${release_url}" "${tmp_archive}" || curl -sSLf "${release_url}" -o "${tmp_archive}"; then
+        if libscript_download "${release_url}" "${tmp_archive}"; then
           tar -xzf "${tmp_archive}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
           rm -f "${tmp_archive}"
           chmod +x "${TARGET_DIR}/bin"/* 2>/dev/null || true
@@ -299,7 +271,7 @@ case "$ACTION" in
           log_info "msi-rs ${EXACT_VERSION} installed successfully from binary."
           exit 0
         else
-          log_warn "Binary download failed. Falling back to source build..."
+          log_warn 'Binary download failed. Falling back to source build...'
         fi
       fi
 
@@ -310,7 +282,7 @@ case "$ACTION" in
       build_stage_dir="${TMPDIR:-/tmp}/msi_rs_build_$$"
 
       if [ -f "$cache_tarball" ]; then
-        log_info "Extracting from download cache..."
+        log_info 'Extracting from download cache...'
         mkdir -p "${build_stage_dir}"
         tar -xzf "$cache_tarball" -C "${build_stage_dir}" --strip-components=1 || true
         if [ -f "${build_stage_dir}/Cargo.toml" ]; then

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,7 +33,7 @@ export LIBSCRIPT_ROOT_DIR
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0"
-  printf '%s\n' "See README.md for details."
+  printf '%s\n' 'See README.md for details.'
   exit 0
 fi
 
@@ -42,7 +41,7 @@ fi
 TPU_NAME="${TPU_NAME:-ml-tpu-vm}"
 MODEL_NAME="${MODEL_NAME:-your-org/your-model-name}"
 if [ "$MODEL_NAME" = "your-org/your-model-name" ] || [ -z "$MODEL_NAME" ]; then
-  printf '%s\n' "[ERROR] MODEL_NAME must be explicitly specified (cannot be empty or the placeholder)."
+  printf '%s\n' '[ERROR] MODEL_NAME must be explicitly specified (cannot be empty or the placeholder).'
   exit 1
 fi
 
@@ -77,4 +76,4 @@ EOF
 
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/deploy_tpu.sh "$MODEL_NAME"
 
-printf '%s\n' "Deploy complete."
+printf '%s\n' 'Deploy complete.'

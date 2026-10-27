@@ -8,13 +8,25 @@
     "JAVA_INSTALL_METHOD": {
       "description": "How to install JAVA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "JAVA_VERSION": {
       "description": "Version of Java Toolchain to install",
       "type": "string",
       "default": "latest"
+    },
+    "JAVA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading java binary or archive artifacts."
+    },
+    "JAVA_HOME": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for java (JAVA_HOME)."
+    },
+    "JAVA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying java available remote releases."
     }
   }
 }

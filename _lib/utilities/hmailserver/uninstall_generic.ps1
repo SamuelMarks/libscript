@@ -8,5 +8,7 @@
 .SYNOPSIS
     PowerShell generic uninstallation script for hMailServer.
 #>
-if (Get-Command "choco" -ErrorAction SilentlyContinue) { & choco uninstall hmailserver -y }
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+libscript_uninstall_pkg -Packages @("hmailserver")
 exit 0

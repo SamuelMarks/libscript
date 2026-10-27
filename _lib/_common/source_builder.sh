@@ -17,7 +17,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -69,14 +68,14 @@ libscript_resolve_build_toolchain() {
   fi
   [ -z "${_tc_spec}" ] && _tc_spec="default"
 
-  LIBSCRIPT_RESOLVED_CC_ID="default"
+  LIBSCRIPT_RESOLVED_CC_ID='default'
   LIBSCRIPT_RESOLVED_CC_BIN="${CC:-cc}"
 
   case "${_tc_spec}" in
     /*|./*|../*|*/*)
       export CUSTOM_CC_BIN="${_tc_spec}"
       export LIBSCRIPT_CUSTOM_CC_BIN="${_tc_spec}"
-      _tc_spec="custom-cc"
+      _tc_spec='custom-cc'
       ;;
   esac
 
@@ -100,9 +99,9 @@ libscript_resolve_build_toolchain() {
     elif command -v clang >/dev/null 2>&1; then
       LIBSCRIPT_RESOLVED_CC_BIN="$(command -v clang)"
     else
-      LIBSCRIPT_RESOLVED_CC_BIN="cc"
+      LIBSCRIPT_RESOLVED_CC_BIN='cc'
     fi
-    LIBSCRIPT_RESOLVED_CC_ID="default"
+    LIBSCRIPT_RESOLVED_CC_ID='default'
     export CC="${LIBSCRIPT_RESOLVED_CC_BIN}"
     export HOSTCC="${HOSTCC:-${CC}}"
     resolve_compiler_flags "default"
@@ -366,7 +365,7 @@ libscript_emit_build_metrics() {
   _text_bytes=0
   _data_bytes=0
   _bss_bytes=0
-  _sha256="unknown"
+  _sha256='unknown'
 
   if [ -f "${_bm_bin_path}" ]; then
     _bin_bytes=$(wc -c < "${_bm_bin_path}" | tr -d '[:space:]' 2>/dev/null || printf '0')

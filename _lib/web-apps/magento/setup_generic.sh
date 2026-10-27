@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -41,7 +40,7 @@ done
 
 MAGENTO_VERSION="${MAGENTO_VERSION:-2.4.6}"
 if [ "${MAGENTO_VERSION}" = "latest" ]; then
-  MAGENTO_VERSION="2.4.6"
+  MAGENTO_VERSION='2.4.6'
 fi
 export MAGENTO_VERSION
 MAGENTO_WEBSERVER="${MAGENTO_WEBSERVER:-nginx}"
@@ -113,13 +112,13 @@ priv chown -R www-data:www-data "${MAGENTO_WWWROOT}" 2>/dev/null || priv chown -
 
 if [ -z "${MAGENTO_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export MAGENTO_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export MAGENTO_PHP_FPM_LISTEN='unix:/run/php/php-fpm.sock'
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export MAGENTO_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export MAGENTO_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   elif [ -e /var/run/php-fpm.sock ]; then
-    export MAGENTO_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export MAGENTO_PHP_FPM_LISTEN='unix:/var/run/php-fpm.sock'
   else
-    export MAGENTO_PHP_FPM_LISTEN="127.0.0.1:9000"
+    export MAGENTO_PHP_FPM_LISTEN='127.0.0.1:9000'
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export MAGENTO_PHP_FPM_LISTEN="unix:$sock"
@@ -191,7 +190,7 @@ elif [ "${MAGENTO_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${MAGENTO_SERVER_NAME}.caddy"
   else

@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,28 +50,11 @@ fi
 # ## expand_manifest_vars
 # Expands ${VAR:-default}, ${VAR}, and $VAR environment references inside a manifest string value.
 expand_manifest_vars() {
-  _emv_val="${1:-}"
-  case "$_emv_val" in
-    *'$'*)
-      if command -v python3 >/dev/null 2>&1; then
-        # libscript-allow-interp
-        _emv_val=$(python3 -c '
-import os, re, sys
-s = sys.argv[1]
-def repl_default(m):
-    k, d = m.group(1), m.group(2)
-    v = os.environ.get(k, "")
-    return v if v != "" else d
-for _ in range(3):
-    s = re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*):-([^}]*)\}", repl_default, s)
-    s = os.path.expandvars(s)
-s = re.sub(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", "", s)
-print(s)
-' "$_emv_val" 2>/dev/null || printf '%s' "$_emv_val")
-      fi
-      ;;
-  esac
-  printf '%s\n' "$_emv_val"
+  if type libscript_expand_manifest_vars >/dev/null 2>&1; then
+    libscript_expand_manifest_vars "${1:-}"
+  else
+    printf '%s\n' "${1:-}"
+  fi
 }
 
 DBS=$(jq -c '((.databases // .infrastructure.databases) | if type == "object" then to_entries | map(.value + {name: (.value.name // .value.db_name // .key)}) elif type == "array" then map(. + {name: (.name // .db_name // .id)}) else [] end)[]?' "$JSON_FILE" 2>/dev/null || true)

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ done
 
 
 set -feu
-printf '%s\n' "Validating Joomla installation..."
+printf '%s\n' 'Validating Joomla installation...'
 JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-/var/www/joomla}"
 if [ -d "${JOOMLA_WWWROOT}/administrator" ]; then
     printf '%s\n' "Joomla directory found at ${JOOMLA_WWWROOT}"

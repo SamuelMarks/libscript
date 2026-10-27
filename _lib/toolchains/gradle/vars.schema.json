@@ -8,13 +8,21 @@
     "GRADLE_INSTALL_METHOD": {
       "description": "How to install GRADLE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "system"
     },
     "GRADLE_VERSION": {
       "description": "Specific version of gradle to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
+    },
+    "GRADLE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading gradle binary or archive artifacts."
+    },
+    "GRADLE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying gradle available remote releases."
     }
   }
 }

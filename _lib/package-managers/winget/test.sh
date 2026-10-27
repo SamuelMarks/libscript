@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,7 @@ fi
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*|Windows_NT) ;;
   *)
-    printf '%s\n' "winget is a Windows package manager and cannot run on Linux."
+    printf '%s\n' 'winget is a Windows package manager and cannot run on Linux.'
     exit 0
     ;;
 esac

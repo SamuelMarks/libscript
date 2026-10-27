@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -70,7 +69,7 @@ if [ ! -d "${NEXTCLOUD_WWWROOT}/core" ]; then
   printf '%s\n' "Downloading Nextcloud (${NEXTCLOUD_VERSION}) to ${NEXTCLOUD_WWWROOT}..."
   priv mkdir -p "${NEXTCLOUD_WWWROOT}"
   if [ "${NEXTCLOUD_VERSION}" = "latest" ]; then
-    dl_url="https://download.nextcloud.com/server/releases/latest.tar.bz2"
+    dl_url='https://download.nextcloud.com/server/releases/latest.tar.bz2'
   else
     dl_url="https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
   fi
@@ -91,14 +90,14 @@ if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ] || [ "${NEXTCLOUD_DB_TYPE}" = "mysql" 
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine mysql --host "127.0.0.1" --port "3306" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: MariaDB is not running or root login failed."
+      printf '%s\n' 'Warning: MariaDB is not running or root login failed.'
   fi
 elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "postgresql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine postgres --host "127.0.0.1" --port "5432" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: Postgres is not running or postgres login failed."
+      printf '%s\n' 'Warning: Postgres is not running or postgres login failed.'
   fi
 fi
 
@@ -130,13 +129,13 @@ priv chown -R www-data:www-data "${NEXTCLOUD_WWWROOT}" 2>/dev/null || priv chown
 
 if [ -z "${NEXTCLOUD_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN='unix:/run/php/php-fpm.sock'
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   elif [ -e /var/run/php-fpm.sock ]; then
-    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   else
-    export NEXTCLOUD_PHP_FPM_LISTEN="127.0.0.1:9000"
+    export NEXTCLOUD_PHP_FPM_LISTEN='127.0.0.1:9000'
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export NEXTCLOUD_PHP_FPM_LISTEN="unix:$sock"
@@ -205,7 +204,7 @@ elif [ "${NEXTCLOUD_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${NEXTCLOUD_SERVER_NAME}.caddy"
   else

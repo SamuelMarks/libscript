@@ -4,7 +4,7 @@
 ::
 :: ## Overview
 :: Network control utility for managing local services, reverse proxies, SPAs, WebSockets, and declarative ingress.
-:: 
+::
 :: ## Usage
 :: Execute this script to manage networking configurations or apply a libscript.json ingress definition.
 
@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -261,25 +261,60 @@ for %%P in ("!APPLY_JSON!") do set "MANIFEST_DIR=%%~dpP"
 if "!MANIFEST_DIR:~-1!"=="\" set "MANIFEST_DIR=!MANIFEST_DIR:~0,-1!"
 set "MANIFEST_DIR_FWD=!MANIFEST_DIR:\=/!"
 
+for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\.env.libscript") do (
+    if exist "%%~fE" (
+        for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
+            if not "%%A"=="" (
+                set "_nk=%%A"
+                if not "!_nk:~0,1!"=="#" set "%%A=%%~B"
+            )
+        )
+    )
+)
+
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!APPLY_JSON!"
+)
+
 if "!APPLY_FORMAT!"=="" (
     for /f "delims=" %%f in ('jq -r ".ingress.provider // .ingress.engine // \"nginx\"" "!APPLY_JSON!" 2^>nul') do set "APPLY_FORMAT=%%f"
 )
 if "!APPLY_FORMAT!"=="" set "APPLY_FORMAT=nginx"
 
 set "NETCTL_STATE_FILE=%TEMP%\netctl_apply_%RANDOM%.json"
-jq -n --arg mdir "!MANIFEST_DIR_FWD!" --slurpfile doc "!APPLY_JSON!" "($doc[0].ingress // {}) as $ing | def resolve_path(p): if p == null or p == \"\" then \"\" elif (p | startswith(\"/\")) then p elif (p | startswith(\"./\")) then ($mdir + \"/\" + (p | ltrimstr(\"./\"))) else ($mdir + \"/\" + p) end; { domain: ($ing.domain // $ing.server_name // \"_\"), listen: (if ($ing.listen | type) == \"array\" then [ $ing.listen[] | tostring ] elif ($ing.listen != null) then [ ($ing.listen | tostring) ] else [\"80\"] end), routes: (($ing.routes // {}) | if type == \"object\" then with_entries(.key as $k | .value as $v | if ($v | type) == \"string\" then (if ($v | startswith(\"http://\") or startswith(\"https://\")) then {key: $k, value: {type: \"proxy\", target: $v}} elif ($v | startswith(\"ws://\") or startswith(\"wss://\")) then {key: $k, value: {type: \"ws\", target: $v}} else {key: $k, value: {type: \"static\", target: resolve_path($v)}} end) elif ($v | type) == \"object\" then (if $v.ws then {key: $k, value: {type: \"ws\", target: $v.ws}} elif $v.proxy then {key: $k, value: {type: \"proxy\", target: $v.proxy}} elif $v.spa == true or $v.type == \"spa\" then {key: $k, value: {type: \"spa\", target: resolve_path($v.static // $v.target // \".\")}} elif $v.static then {key: $k, value: {type: \"static\", target: resolve_path($v.static)}} elif $v.type == \"ws\" then {key: $k, value: {type: \"ws\", target: $v.target}} elif $v.type == \"proxy\" then {key: $k, value: {type: \"proxy\", target: $v.target}} else {key: $k, value: {type: \"static\", target: resolve_path($v.target // \".\")}} end) else empty end) else {} end) }" > "!NETCTL_STATE_FILE!"
+jq -n --arg mdir "!MANIFEST_DIR_FWD!" --slurpfile doc "!APPLY_JSON!" "($doc[0].ingress // {}) as $ing | def expand_env(s): if (s | type) != \"string\" then s else reduce range(3) as $_ (s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\")) end; def resolve_path(p): (expand_env(p)) as $ep | if $ep == null or $ep == \"\" then \"\" elif ($ep | startswith(\"/\")) then $ep elif ($ep | startswith(\"./\")) then ($mdir + \"/\" + ($ep | ltrimstr(\"./\"))) else ($mdir + \"/\" + $ep) end; { domain: expand_env($ing.domain // $ing.server_name // \"_\"), listen: (if ($ing.listen | type) == \"array\" then [ $ing.listen[] | tostring | expand_env(.) ] elif ($ing.listen != null) then [ ($ing.listen | tostring | expand_env(.)) ] else [\"80\"] end), routes: (($ing.routes // {}) | if type == \"object\" then with_entries(.key as $k | .value as $v | if ($v | type) == \"string\" then (expand_env($v)) as $ev | (if ($ev | startswith(\"http://\") or startswith(\"https://\")) then {key: $k, value: {type: \"proxy\", target: $ev}} elif ($ev | startswith(\"ws://\") or startswith(\"wss://\")) then {key: $k, value: {type: \"ws\", target: $ev}} else {key: $k, value: {type: \"static\", target: resolve_path($ev)}} end) elif ($v | type) == \"object\" then (if $v.ws then {key: $k, value: {type: \"ws\", target: expand_env($v.ws)}} elif $v.proxy then {key: $k, value: {type: \"proxy\", target: expand_env($v.proxy)}} elif $v.spa == true or $v.type == \"spa\" then {key: $k, value: {type: \"spa\", target: resolve_path($v.static // $v.target // \".\")}} elif $v.static then {key: $k, value: {type: \"static\", target: resolve_path($v.static)}} elif $v.type == \"ws\" then {key: $k, value: {type: \"ws\", target: expand_env($v.target)}} elif $v.type == \"proxy\" then {key: $k, value: {type: \"proxy\", target: expand_env($v.target)}} else {key: $k, value: {type: \"static\", target: resolve_path($v.target // \".\")}} end) else empty end) elif type == \"array\" then reduce .[] as $item ({}; ($item.path // \"/\") as $k | if $item.type == \"spa\" or $item.spa == true then . + {($k): {type: \"spa\", target: resolve_path($item.target // $item.static // \".\")}} elif $item.type == \"ws\" or $item.ws != null then . + {($k): {type: \"ws\", target: expand_env($item.target // $item.ws)}} elif $item.type == \"proxy\" or $item.proxy != null then . + {($k): {type: \"proxy\", target: expand_env($item.target // $item.proxy)}} elif $item.type == \"rewrite\" then . + {($k): {type: \"rewrite\", pattern: expand_env($item.pattern)}} else . + {($k): {type: \"static\", target: resolve_path($item.target // $item.static // \".\")}} end) else {} end) }" > "!NETCTL_STATE_FILE!"
 
 if not "!APPLY_OUT!"=="" (
+    call :log_state_routes
     for %%D in ("!APPLY_OUT!") do if not exist "%%~dpD" mkdir "%%~dpD"
     call "%NETCTL_DIR%lib\!APPLY_FORMAT!.cmd" > "!APPLY_OUT!"
+    echo [INFO] [ROUTES] [WRITE] Wrote !APPLY_FORMAT! config -^> !APPLY_OUT! 1>&2
 ) else if "!APPLY_RELOAD!"=="1" (
+    call :log_state_routes
     set "ING_DIR=%TEMP%\data\ingress"
     if not exist "!ING_DIR!" mkdir "!ING_DIR!"
     call "%NETCTL_DIR%lib\!APPLY_FORMAT!.cmd" > "!ING_DIR!\!APPLY_FORMAT!.conf"
+    echo [INFO] [ROUTES] [WRITE] Installed !APPLY_FORMAT! virtual host config -^> !ING_DIR!\!APPLY_FORMAT!.conf 1>&2
+    call :reload_proxy "!APPLY_FORMAT!"
 ) else (
     call "%NETCTL_DIR%lib\!APPLY_FORMAT!.cmd"
 )
 if exist "!NETCTL_STATE_FILE!" del "!NETCTL_STATE_FILE!"
+exit /b 0
+
+:: ## log_state_routes
+:: Logs the domain, listen ports, and each route in NETCTL_STATE_FILE to stderr on Windows.
+:log_state_routes
+if not exist "!NETCTL_STATE_FILE!" exit /b 0
+set "_LSR_DOM=_"
+set "_LSR_PORTS=80"
+for /f "delims=" %%D in ('jq -r ".domain // \"_\"" "!NETCTL_STATE_FILE!" 2^>nul') do set "_LSR_DOM=%%D"
+for /f "delims=" %%P in ('jq -r "(.listen // [\"80\"]) | join(\", \")" "!NETCTL_STATE_FILE!" 2^>nul') do set "_LSR_PORTS=%%P"
+echo [INFO] [ROUTES] Configuring !APPLY_FORMAT! ingress for domain '!_LSR_DOM!' ^(listen: !_LSR_PORTS!^)... 1>&2
+for /f "delims=" %%R in ('jq -r --arg dom "!_LSR_DOM!" ".routes // {} | to_entries[]? | \"[INFO] [ROUTE] [\((.value.type // \"static\") | ascii_upcase)] \($dom)\(.key) -> \(.value.target // .value.pattern // \"\")\"" "!NETCTL_STATE_FILE!" 2^>nul') do (
+    echo %%R 1>&2
+)
 exit /b 0
 
 :: ## usage
@@ -326,15 +361,18 @@ exit /b 0
 :reload_proxy
 set "_RP_FMT=%~1"
 if "!_RP_FMT!"=="" set "_RP_FMT=nginx"
+echo [INFO] [DAEMON] [RELOAD] Reloading !_RP_FMT! reverse proxy daemon... 1>&2
 if /I "!_RP_FMT!"=="iis" (
     where iisreset >nul 2>&1
     if not errorlevel 1 iisreset /noforce >nul 2>&1
+    echo [INFO] [DAEMON] [ACTIVE] !_RP_FMT! reverse proxy reloaded successfully. 1>&2
     exit /b 0
 )
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart "!_RP_FMT!" >nul 2>&1
 )
+echo [INFO] [DAEMON] [ACTIVE] !_RP_FMT! reverse proxy reloaded successfully. 1>&2
 exit /b 0
 
 :: ## remove_ingress

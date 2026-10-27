@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -84,7 +83,7 @@ else
 fi
 
 # Compute uncompressed diff_id
-DIFF_ID="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+DIFF_ID='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 if command -v sha256sum >/dev/null 2>&1; then
   DIFF_ID=$(sha256sum "$TMP_LAYER_TAR" | cut -d' ' -f1)
 elif command -v shasum >/dev/null 2>&1; then
@@ -94,7 +93,7 @@ fi
 # Create compressed version for OCI blob
 gzip -9c "$TMP_LAYER_TAR" > "$TMP_LAYER_GZ"
 LAYER_SIZE=$(wc -c < "$TMP_LAYER_GZ" | tr -d ' ' 2>/dev/null || echo 1024)
-LAYER_DIGEST="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+LAYER_DIGEST='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 if command -v sha256sum >/dev/null 2>&1; then
   LAYER_DIGEST=$(sha256sum "$TMP_LAYER_GZ" | cut -d' ' -f1)
 elif command -v shasum >/dev/null 2>&1; then
@@ -127,7 +126,7 @@ cat <<EOF > "$CONFIG_FILE"
 EOF
 
 CONFIG_SIZE=$(wc -c < "$CONFIG_FILE" | tr -d ' ' 2>/dev/null || echo 256)
-CONFIG_DIGEST="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+CONFIG_DIGEST='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 if command -v sha256sum >/dev/null 2>&1; then
   CONFIG_DIGEST=$(sha256sum "$CONFIG_FILE" | cut -d' ' -f1)
 elif command -v shasum >/dev/null 2>&1; then
@@ -157,7 +156,7 @@ cat <<EOF > "$MANIFEST_FILE"
 EOF
 
 MANIFEST_SIZE=$(wc -c < "$MANIFEST_FILE" | tr -d ' ' 2>/dev/null || echo 512)
-MANIFEST_DIGEST="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+MANIFEST_DIGEST='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 if command -v sha256sum >/dev/null 2>&1; then
   MANIFEST_DIGEST=$(sha256sum "$MANIFEST_FILE" | cut -d' ' -f1)
 elif command -v shasum >/dev/null 2>&1; then

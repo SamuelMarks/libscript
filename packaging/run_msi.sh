@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,9 +35,9 @@ if [ -z "${MSI_FILE}" ]; then
   if [ -f "${SCRIPT_DIR}/OpenEdX-Setup.msi" ]; then
     MSI_FILE="${SCRIPT_DIR}/OpenEdX-Setup.msi"
   elif [ -f "C:/libscript/OpenEdX-Setup.msi" ]; then
-    MSI_FILE="C:/libscript/OpenEdX-Setup.msi"
+    MSI_FILE='C:/libscript/OpenEdX-Setup.msi'
   else
-    printf '%s\n' "[ERROR] No MSI installer package found. Please specify the path to the .msi file." >&2
+    printf '%s\n' '[ERROR] No MSI installer package found. Please specify the path to the .msi file.' >&2
     exit 1
   fi
 fi
@@ -49,6 +48,6 @@ if command -v msiexec.exe >/dev/null 2>&1; then
 elif command -v wine >/dev/null 2>&1; then
   wine msiexec /i "${MSI_FILE}"
 else
-  printf '%s\n' "Launching MSI packages requires Windows msiexec.exe or Wine." >&2
+  printf '%s\n' 'Launching MSI packages requires Windows msiexec.exe or Wine.' >&2
   exit 1
 fi

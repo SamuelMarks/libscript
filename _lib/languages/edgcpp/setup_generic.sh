@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -58,7 +57,7 @@ VERSION="${EDGCPP_VERSION:-${VERSION:-7.0.1}}"
 resolve_exact_version() {
   case "${VERSION:-latest}" in
     latest|stable|7.0|v7.0.1|7.0.1|"")
-      EXACT_VERSION="7.0.1"
+      EXACT_VERSION='7.0.1'
       ;;
     v*)
       EXACT_VERSION="${VERSION#v}"
@@ -73,28 +72,28 @@ resolve_exact_version() {
 # Determines the GitHub release archive filename, download URL, and SHA-256 checksum for the current OS, architecture, and EDGCPP_FLAVOR.
 resolve_edgcpp_release_asset() {
   resolve_exact_version
-  _os_tag="linux"
-  _arch_tag="x86_64"
-  _ext="tar.gz"
+  _os_tag='linux'
+  _arch_tag='x86_64'
+  _ext='tar.gz'
 
   _uname_s="$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'linux')"
   _uname_m="$(uname -m 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'x86_64')"
 
   case "${_uname_s}" in
     darwin*|macos*)
-      _os_tag="macos"
-      _arch_tag="aarch64"
+      _os_tag='macos'
+      _arch_tag='aarch64'
       ;;
     msys*|mingw*|cygwin*|windows*)
-      _os_tag="windows"
-      _ext="zip"
+      _os_tag='windows'
+      _ext='zip'
       case "${_uname_m}" in
         arm64|aarch64) _arch_tag="arm64" ;;
         *) _arch_tag="x86_64" ;;
       esac
       ;;
     *)
-      _os_tag="linux"
+      _os_tag='linux'
       case "${_uname_m}" in
         arm64|aarch64) _arch_tag="aarch64" ;;
         *) _arch_tag="x86_64" ;;

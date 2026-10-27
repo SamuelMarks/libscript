@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,9 +42,10 @@ for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
 done
 
 # Detect available postgresql version if default 15 is not available
-if ! apk info -e 'postgresql'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
+detect_pkg_mgr
+if ! is_installed 'postgresql'"${POSTGRES_VERSION}"; then
   for v in 18 17 16 15; do
-    if apk search -e "postgresql$v" 2>/dev/null | grep -q "postgresql$v"; then
+    if pkg_mgr 'openrc' "postgresql$v" "postgresql$v-client" "postgresql$v-contrib" "postgresql$v-openrc" 2>/dev/null; then
       POSTGRES_VERSION="$v"
       export POSTGRES_VERSION
       break
@@ -53,7 +53,7 @@ if ! apk info -e 'postgresql'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
   done
 fi
 
-if ! apk info -e 'postgresql'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
+if ! is_installed 'postgresql'"${POSTGRES_VERSION}"; then
   pkg_mgr 'openrc' 'postgresql'"${POSTGRES_VERSION}" 'postgresql'"${POSTGRES_VERSION}"'-client' 'postgresql'"${POSTGRES_VERSION}"'-contrib' 'postgresql'"${POSTGRES_VERSION}"'-openrc'
 fi
 EXISTED=0

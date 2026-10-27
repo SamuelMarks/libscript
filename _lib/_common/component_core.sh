@@ -1,37 +1,16 @@
 #!/bin/sh
 # ## Overview
-# This module provides the unified CLI routing and lifecycle management logic
-# for LibScript components. It eliminates redundancy by centralizing the
-# 600+ lines of boilerplate previously duplicated in every component's `cli.sh`.
+# Unified CLI routing and lifecycle management logic for LibScript components.
 #
 # ## Usage
-# In your component's `cli.sh`, source this file:
-#
-# ```sh
-# #!/bin/sh
-# # PACKAGE_NAME is inferred from directory name
-# # (Optional: set PACKAGE_NAME="my-component" to override)
-# for LIB in "_lib/_common/component_core.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
-#   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-#   export SCRIPT_NAME
-#   # shellcheck disable=SC1090
-#   . "${SCRIPT_NAME}"
-# done
-# ```
-#
-# ## Requirements
-# - A `vars.schema.json` in the component directory for dynamic argument parsing.
-# - A `setup.sh` in the component directory for installation logic.
+# Source this file from your component's `cli.sh`: `. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"`
 
-# # LibScript Component Core Module
-#
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -77,7 +56,7 @@ get_merged_properties() {
   elif [ -f "$BASE_SCHEMA_FILE" ]; then
     jq -r '.properties' "$BASE_SCHEMA_FILE"
   else
-    log_info "{}"
+    log_info '{}'
   fi
 }
 
@@ -86,30 +65,30 @@ get_merged_properties() {
 show_help() {
   log_info "Usage: ${THIS_FILE##*/} [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
   log_info ""
-  log_info "Commands:"
-  log_info "  install <package_name> <version>"
-  log_info "  use <package_name> <version>"
-  log_info "  remove <package_name> [version]"
-  log_info "  uninstall <package_name> [version]"
-  log_info "  install-service <package_name> <version>"
-  log_info "  uninstall-service <package_name> <version>"
-  log_info "  status <package_name> [version]"
-  log_info "  health <package_name> [version]"
-  log_info "  start <package_name> [version]"
-  log_info "  stop <package_name> [version]"
-  log_info "  restart <package_name> [version]"
-  log_info "  logs <package_name> [version] [-f|--follow]"
-  log_info "  up <package_name> [version]"
-  log_info "  down <package_name> [version]"
-  log_info "  test <package_name> [version]"
-  log_info "  run <package_name> <version> [args...]"
-  log_info "  which <package_name> <version>"
-  log_info "  exec <package_name> <version> <cmd> [args...]"
-  log_info "  ls <package_name>"
-  log_info "  download <package_name> <version>"
-  log_info "  ls-remote <package_name> [version]"
+  log_info 'Commands:'
+  log_info '  install <package_name> <version>'
+  log_info '  use <package_name> <version>'
+  log_info '  remove <package_name> [version]'
+  log_info '  uninstall <package_name> [version]'
+  log_info '  install-service <package_name> <version>'
+  log_info '  uninstall-service <package_name> <version>'
+  log_info '  status <package_name> [version]'
+  log_info '  health <package_name> [version]'
+  log_info '  start <package_name> [version]'
+  log_info '  stop <package_name> [version]'
+  log_info '  restart <package_name> [version]'
+  log_info '  logs <package_name> [version] [-f|--follow]'
+  log_info '  up <package_name> [version]'
+  log_info '  down <package_name> [version]'
+  log_info '  test <package_name> [version]'
+  log_info '  run <package_name> <version> [args...]'
+  log_info '  which <package_name> <version>'
+  log_info '  exec <package_name> <version> <cmd> [args...]'
+  log_info '  ls <package_name>'
+  log_info '  download <package_name> <version>'
+  log_info '  ls-remote <package_name> [version]'
   log_info ""
-  log_info "Description:"
+  log_info 'Description:'
   if command -v jq >/dev/null 2>&1 && [ -f "$MANIFEST_FILE" ]; then
     DESC=$(jq -r 'if .description then .description else "" end' "$MANIFEST_FILE")
     TITLE=$(jq -r 'if .title then .title else "" end' "$MANIFEST_FILE")
@@ -125,7 +104,7 @@ show_help() {
     [ -n "$VERSIONS" ] && printf '%s\n' "  Supported Versions: $VERSIONS"
   fi
   log_info ""
-  log_info "Available Options:"
+  log_info 'Available Options:'
   if command -v jq >/dev/null 2>&1; then
     _props=$(get_merged_properties)
     printf '%s\n' "$_props" | jq -r '
@@ -139,12 +118,12 @@ show_help() {
       "--\(.key)_STRATEGY=VALUE|Strategy for \(.key) (reuse, install-alongside, upgrade, downgrade, overwrite) [default: reuse]"
     ' | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
   else
-    log_info "  (jq is required to parse vars.schema.json for dynamic options)"
+    log_info '  (jq is required to parse vars.schema.json for dynamic options)'
     log_info "  See $SCHEMA_FILE for available variables."
   fi
   log_info ""
-  log_info "  --help, -h, /?                      Show this help message"
-  log_info "  --version, -v                       Show version"
+  log_info '  --help, -h, /?                      Show this help message'
+  log_info '  --version, -v                       Show version'
   log_info ""
 }
 
@@ -172,7 +151,7 @@ case "${1:-}" in
         PACKAGE_NAME="$(basename "$COMP_DIR")"
       fi
       if [ "${2:-}" = "${PACKAGE_NAME:-}" ] || [ "${2:-}" = "$(basename "$COMP_DIR")" ]; then
-        VERSION="latest"
+        VERSION='latest'
       else
         VERSION="${2:-}"
       fi
@@ -215,7 +194,7 @@ case "${1:-}" in
   *)
     if [ -n "${1:-}" ]; then
       log_info "Unknown command: $1"
-      log_info "Use --help to see available options."
+      log_info 'Use --help to see available options.'
       exit 1
     else
       show_help
@@ -298,7 +277,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --from-source)
-      export LIBSCRIPT_DEFAULT_INSTALL_METHOD="from-source"
+      export LIBSCRIPT_DEFAULT_INSTALL_METHOD='from-source'
       if [ -n "${pkg_upper:-}" ]; then
         export "${pkg_upper}_INSTALL_METHOD=from-source"
       fi
@@ -329,8 +308,8 @@ while [ $# -gt 0 ]; do
       _cc_val="${1#*=}"
       export CUSTOM_CC_BIN="${_cc_val}"
       export LIBSCRIPT_CUSTOM_CC_BIN="${_cc_val}"
-      export LIBSCRIPT_BUILD_TOOLCHAIN="custom-cc"
-      export LIBSCRIPT_DEFAULT_INSTALL_METHOD="from-source"
+      export LIBSCRIPT_BUILD_TOOLCHAIN='custom-cc'
+      export LIBSCRIPT_DEFAULT_INSTALL_METHOD='from-source'
       if [ -n "${pkg_upper:-}" ]; then
         export "${pkg_upper}_BUILD_TOOLCHAIN=custom-cc"
         export "${pkg_upper}_COMPILER=custom-cc"
@@ -505,12 +484,12 @@ elif [ "$ACTION" = "info" ]; then
   printf '%s\n' "Version: $VERSION"
   printf '%s\n' "Install Path: $INSTALLED_DIR"
   if [ -d "$INSTALLED_DIR" ]; then
-    printf '%s\n' "Status: Installed"
+    printf '%s\n' 'Status: Installed'
   else
-    printf '%s\n' "Status: Not Installed"
+    printf '%s\n' 'Status: Not Installed'
   fi
   if [ -f "$SCHEMA_FILE" ] && command -v jq >/dev/null 2>&1; then
-    printf '%s\n' "Dynamic Variables:"
+    printf '%s\n' 'Dynamic Variables:'
     jq -r '.properties | to_entries[] | "  \(.key): \(.value.description // "") [default: \(.value.default // "")]"' "$SCHEMA_FILE" 2>/dev/null || true
   fi
   exit 0

@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,20 +41,20 @@ TEMP_DIR="${REPO_ROOT}/tests_tmp/live_screenshots_$$"
 # Displays usage and command-line options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --mode <headless|tui|gui|bootloader|login|loggedin>]"
-  printf '%s\n' "Captures and stores live installer screenshots into ../cc0-assets."
+  printf '%s\n' 'Captures and stores live installer screenshots into ../cc0-assets.'
   printf '\n'
-  printf '%s\n' "Modes:"
-  printf '%s\n' "  headless    - Capture headless transaction logs and disk operations"
-  printf '%s\n' "  tui         - Capture terminal user interface wizard steps"
-  printf '%s\n' "  gui         - Capture fullscreen kiosk graphical installer dialogs"
-  printf '%s\n' "  bootloader  - Capture GRUB2, FreeBSD, and illumos bootloader screens"
-  printf '%s\n' "  login       - Capture text console and display manager login screens"
-  printf '%s\n' "  loggedin    - Capture logged-in terminals with uname -a and os-release"
+  printf '%s\n' 'Modes:'
+  printf '%s\n' '  headless    - Capture headless transaction logs and disk operations'
+  printf '%s\n' '  tui         - Capture terminal user interface wizard steps'
+  printf '%s\n' '  gui         - Capture fullscreen kiosk graphical installer dialogs'
+  printf '%s\n' '  bootloader  - Capture GRUB2, FreeBSD, and illumos bootloader screens'
+  printf '%s\n' '  login       - Capture text console and display manager login screens'
+  printf '%s\n' '  loggedin    - Capture logged-in terminals with uname -a and os-release'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --all                 Capture all interaction and boot modes (default)."
-  printf '%s\n' "  --mode <name>         Capture only the specified mode."
-  printf '%s\n' "  --help, -h, /?, -?    Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --all                 Capture all interaction and boot modes (default).'
+  printf '%s\n' '  --mode <name>         Capture only the specified mode.'
+  printf '%s\n' '  --help, -h, /?, -?    Show this help message.'
 }
 
 # ## cleanup
@@ -248,11 +247,11 @@ capture_loggedin_mode() {
   fi
 }
 
-TARGET_MODE="all"
+TARGET_MODE='all'
 while [ $# -gt 0 ]; do
   case "$1" in
     --all)
-      TARGET_MODE="all"
+      TARGET_MODE='all'
       shift
       ;;
     --mode)

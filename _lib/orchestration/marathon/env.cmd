@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,16 +50,22 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%MARATHON_VERSION%"=="" set "MARATHON_VERSION=latest"
+if "%MARATHON_HTTP_PORT%"=="" set "MARATHON_HTTP_PORT=8080"
+set "MARATHON_HOME=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%"
+set "MARATHON_URL=http://127.0.0.1:%MARATHON_HTTP_PORT%"
+set "_CAND_P=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "marathon" "%MARATHON_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%MARATHON_VERSION%"=="" set "MARATHON_VERSION=latest"
-    if "%MARATHON_HTTP_PORT%"=="" set "MARATHON_HTTP_PORT=8080"
-    set "MARATHON_HOME=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%"
-    set "MARATHON_URL=http://127.0.0.1:%MARATHON_HTTP_PORT%"
-    set "_CAND_P=%LIBSCRIPT_HOME%\marathon\%MARATHON_VERSION%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "marathon"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MARATHON_VERSION=%MARATHON_VERSION%"
+    set "MARATHON_HTTP_PORT=%MARATHON_HTTP_PORT%"
+    set "MARATHON_HOME=%MARATHON_HOME%"
+    set "MARATHON_URL=%MARATHON_URL%"
+    set "PATH=%PATH%"
 )
 exit /b 0

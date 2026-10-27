@@ -14,6 +14,14 @@
       "description": "Specific version of wget to install.",
       "type": "string",
       "default": "latest"
+    },
+    "WGET_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading wget binary or archive artifacts."
+    },
+    "WGET_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying wget available remote releases."
     }
   }
 }

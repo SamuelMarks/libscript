@@ -13,6 +13,9 @@ Execute this script to install and configure mosquitto on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $MosquittoVersion = $env:MOSQUITTO_VERSION
 if ([string]::IsNullOrEmpty($MosquittoVersion)) {
@@ -24,16 +27,14 @@ if ([string]::IsNullOrEmpty($PkgMgr)) {
     $PkgMgr = "winget"
 }
 if ($PkgMgr -eq "winget") {
-    winget install EclipseFoundation.Mosquitto
+    libscript_depends @(\"EclipseFoundation.Mosquitto\")
 } elseif ($PkgMgr -eq "choco") {
-    choco install mosquitto
+    libscript_depends @(\"mosquitto\")
 } else {
     Write-Error "Unsupported Windows package manager: $PkgMgr"
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls mosquitto; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls mosquitto; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "mosquitto"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -41,15 +42,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote mosquitto; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all mosquitto; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "mosquitto@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "mosquitto@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

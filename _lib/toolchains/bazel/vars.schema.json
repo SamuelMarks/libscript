@@ -8,7 +8,7 @@
     "BAZEL_INSTALL_METHOD": {
       "description": "How to install BAZEL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "BAZEL_VERSION": {
@@ -40,6 +40,14 @@
     "BAZEL_LISTEN_SOCKET": {
       "type": "string",
       "description": "Unix socket for BAZEL to listen on"
+    },
+    "BAZEL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading bazel binary or archive artifacts."
+    },
+    "BAZEL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying bazel available remote releases."
     }
   }
 }

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,12 +41,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
   . "${SCRIPT_NAME}"
 done
 
-# libscript_depends 'postgresql'"${POSTGRES_VERSION}"'-server' 'postgresql'"${POSTGRES_VERSION}"'-client'
-for pkg in 'postgresql'"${POSTGRES_VERSION}"'-server' 'postgresql'"${POSTGRES_VERSION}"'-client'; do
-  if ! pkg info -e "${pkg}"; then
-    priv pkg install -y "${pkg}"
-  fi
-done
+libscript_depends 'postgresql'"${POSTGRES_VERSION}"'-server' 'postgresql'"${POSTGRES_VERSION}"'-client'
 
 priv sysrc postgresql_enable='YES'
 if [ ! -d '/var/db/postgres/data'"${POSTGRES_VERSION}" ]; then

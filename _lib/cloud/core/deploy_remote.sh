@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ for _dr_arg in "$@"; do
 done
 
 if [ $# -lt 1 ]; then
-  log_error "Usage: deploy_remote.sh <user@host> [--app <path>@<domain>]... [--shared-db <engine>]"
+  log_error 'Usage: deploy_remote.sh <user@host> [--app <path>@<domain>]... [--shared-db <engine>]'
   exit 1
 fi
 
@@ -55,7 +54,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --app)
       if [ -z "${2:-}" ]; then
-        log_error "--app requires an argument format: <path>@<domain>"
+        log_error '--app requires an argument format: <path>@<domain>'
         exit 1
       fi
       raw_app="$2"
@@ -67,7 +66,7 @@ while [ $# -gt 0 ]; do
       ;;
     --shared-db)
       if [ -z "${2:-}" ]; then
-        log_error "--shared-db requires an engine (e.g. postgres)"
+        log_error '--shared-db requires an engine (e.g. postgres)'
         exit 1
       fi
       SHARED_DB="$2"
@@ -115,7 +114,7 @@ setup_app_db() {
   app_name="$1"
   needs_db="$2"
   # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"\$HOME/apps/$app_name\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
+  ssh "$TARGET_HOST" "cd \"\$HOME/apps/$app_name\" && if [ -f libscript.json ]; then REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
   if [ "$needs_db" -eq 1 ] && [ "$SHARED_DB" = "postgres" ]; then
     safe_db_name=$(printf "%s" "$app_name" | tr '-' '_')
     log_info "Ensuring DB $safe_db_name exists on $TARGET_HOST..."
@@ -133,7 +132,7 @@ execute_lifecycle_hooks() {
   app_name="$2"
   log_info "Executing lifecycle hooks for $app_name..."
   # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then \$HOME/libscript/libscript.sh install-deps libscript.json && \$HOME/libscript/libscript.sh start libscript.json; fi"
+  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh install-deps libscript.json && REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh start libscript.json; fi"
 }
 
 # ## configure_routing
@@ -214,7 +213,7 @@ for app_path in "$@"; do
     ssh "$TARGET_HOST" "mkdir -p \$HOME/apps/$app_name"
 
     if command -v rsync >/dev/null 2>&1; then
-      rsync -avz --exclude=".git" --exclude="node_modules" "$app_path/" "$TARGET_HOST:apps/$app_name/"
+      rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "$app_path/" "$TARGET_HOST:apps/$app_name/"
     else
       scp -r "$app_path/"* "$TARGET_HOST:apps/$app_name/"
     fi
@@ -257,4 +256,4 @@ if [ -n "$HEALTH_APPS" ]; then
   done
 fi
 
-log_info "Deployment remote complete."
+log_info 'Deployment remote complete.'

@@ -1,26 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Micro-Frontend (MFE) build, configuration, and delivery pipeline for Open edX.
-# Manages learning, authn, account, and course-authoring MFEs.
 #
 # ## Usage
-#   ./mfe.sh build <mfe_name> [--version <version>]
-#   ./mfe.sh deploy <mfe_name> [--dest <path>]
-#   ./mfe.sh list
-#   ./mfe.sh help
-#
-# ## Parameters
-# - `build`: Clones MFE source repository and runs production npm build.
-# - `deploy`: Configures runtime env variables and publishes dist artifacts to web directory.
-# - `list`: Lists available and built Micro-Frontends.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success.
-# - `1`: Node.js or build pipeline error.
+# ./mfe.sh <build|deploy|list|help> [mfe_name] [--version <version>] [--dest <path>]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -81,7 +63,7 @@ mfe_build() {
   _name="$1"
   shift
 
-  _version="release/verawood.1"
+  _version='release/verawood.1'
   while [ $# -gt 0 ]; do
     case "$1" in
       --version)
@@ -136,7 +118,7 @@ mfe_deploy() {
 # ## mfe_list
 # Lists all managed MFEs via mfe_helper.sh.
 mfe_list() {
-  log_info "Listing Open edX Micro-Frontends (MFEs)..."
+  log_info 'Listing Open edX Micro-Frontends (MFEs)...'
   printf '============================================================\n'
   "${MFE_HELPER}" list "${MFE_ROOT_DIR}"
   printf '============================================================\n'

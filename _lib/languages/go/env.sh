@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,3 +54,5 @@ for _go_sys_cand in "/usr/local/go/bin" "/opt/ooce/go/bin" "${HOME:-/root}/go/bi
     libscript_path_prepend "$_go_sys_cand"
   fi
 done
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

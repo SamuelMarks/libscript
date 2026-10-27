@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -97,11 +96,11 @@ aws() {
 # Ensure aws-cli and jq are installed
 check_deps() {
   if ! command -v aws >/dev/null 2>&1; then
-    printf '%s\n' "aws-cli not found, installing..."
+    printf '%s\n' 'aws-cli not found, installing...'
     "$LIBSCRIPT_ROOT_DIR/libscript.sh" install awscli latest
   fi
   if ! command -v jq >/dev/null 2>&1; then
-    printf '%s\n' "jq not found, installing..."
+    printf '%s\n' 'jq not found, installing...'
     "$LIBSCRIPT_ROOT_DIR/libscript.sh" install jq latest
   fi
 }
@@ -120,9 +119,9 @@ aws_auth() {
       ;;
     logout)
       if aws sso logout 2>/dev/null; then
-        printf '%s\n' "SSO logout successful."
+        printf '%s\n' 'SSO logout successful.'
       else
-        printf '%s\n' "SSO logout not applicable or failed."
+        printf '%s\n' 'SSO logout not applicable or failed.'
       fi
       ;;
     status)
@@ -206,7 +205,7 @@ aws_dns() {
           if [ "$SUBACTION" = "update" ] || [ "$SUBACTION" = "delete" ]; then
             libscript_verify_managed aws dns "$ZONE_ID" || exit 1
           fi
-          ACTION_MAPPED="UPSERT"
+          ACTION_MAPPED='UPSERT'
           if [ "$SUBACTION" = "create" ]; then ACTION_MAPPED="CREATE"; fi
           if [ "$SUBACTION" = "delete" ]; then ACTION_MAPPED="DELETE"; fi
           BATCH="{\"Changes\":[{\"Action\":\"$ACTION_MAPPED\",\"ResourceRecordSet\":{\"Name\":\"$NAME\",\"Type\":\"$TYPE\",\"TTL\":$TTL,\"ResourceRecords\":[{\"Value\":\"$VALUE\"}]}}]}"
@@ -370,7 +369,7 @@ aws_node() {
     create)
       NAME=$1; IMAGE_ID=$2; VPC_NAME=$3; TYPE=${4:-t2.micro}
       if [ -z "$NAME" ] || [ -z "$IMAGE_ID" ] || [ -z "$VPC_NAME" ]; then 
-        printf '%s\n' "Usage: node create <name> <image_id> <vpc_name> [type] [--bootstrap <script>] [--tags T] [--no-default-tags]"
+        printf '%s\n' 'Usage: node create <name> <image_id> <vpc_name> [type] [--bootstrap <script>] [--tags T] [--no-default-tags]'
         exit 1
       fi
       
@@ -487,7 +486,7 @@ aws_node() {
         exit 0
       fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
-      rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST" || scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST"
+      rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST" || scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST"
       ;;
     download|scp-from)
       NAME=$1; CTX=$2; SRC=$3; DST=$4
@@ -667,7 +666,7 @@ case "$CMD" in
   cleanup) aws_cleanup "$@" ;;
   install) check_deps ;;
   logs|status|use|env|ls|download|uninstall)
-    printf '%s\n' "AWS provider does not require daemon management or local versioning for this action."
+    printf '%s\n' 'AWS provider does not require daemon management or local versioning for this action.'
     exit 0
     ;;
   test)
@@ -682,12 +681,12 @@ case "$CMD" in
     fi
     ;;
   --help|-h|/\?|"-?")
-    printf '%s\n' "LibScript AWS Cloud Wrapper"
+    printf '%s\n' 'LibScript AWS Cloud Wrapper'
     printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 0
     ;;
   *)
-    printf '%s\n' "LibScript AWS Cloud Wrapper"
+    printf '%s\n' 'LibScript AWS Cloud Wrapper'
     printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;

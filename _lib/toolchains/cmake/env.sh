@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,9 +39,11 @@ unset SCRIPT_NAME || true
 
 CMAKE_VERSION="${CMAKE_VERSION:-latest}"
 if [ "${CMAKE_VERSION}" = "latest" ]; then
-  EXACT_VERSION="3.31.2"
+  EXACT_VERSION='3.31.2'
 else
   EXACT_VERSION="${CMAKE_VERSION}"
 fi
 
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/cmake/${EXACT_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cmake/${EXACT_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -17,8 +17,6 @@ $ErrorActionPreference = "Stop"
 Write-Host "mas is only supported on macOS. Skipping."
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls mas; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls mas; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "mas"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -26,15 +24,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote mas; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all mas; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "mas@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "mas@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

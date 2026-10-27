@@ -14,7 +14,7 @@
     "NOMAD_INSTALL_METHOD": {
       "description": "How to install HashiCorp Nomad ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "NOMAD_HTTP_PORT": {
@@ -26,6 +26,14 @@
       "description": "Filesystem directory path for Nomad Raft state and allocation sandboxes.",
       "type": "string",
       "default": "/var/lib/nomad"
+    },
+    "NOMAD_ADDR": {
+      "type": "string",
+      "description": "Configuration variable NOMAD_ADDR for nomad."
+    },
+    "NOMAD_HOME": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for nomad (NOMAD_HOME)."
     }
   }
 }

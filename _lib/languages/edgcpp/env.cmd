@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -53,13 +53,14 @@ goto :find_root
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\default"
 if not exist "!_edg_home!" set "_edg_home=%LIBSCRIPT_HOME%\edgcpp\7.0.1"
+set "_CAND_P=!_edg_home!\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "edgcpp"
 endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "EDGCPP_HOME=%_edg_home%"
-    set "_CAND_P=%_edg_home%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "edgcpp"
     set "CPFE_BIN=%_edg_home%\bin\cpfe.exe"
     set "CC=%SCRIPT_DIR%\edgcpp_wrapper.cmd"
     set "CXX=%SCRIPT_DIR%\edgcpp_wrapper.cmd"
@@ -67,5 +68,6 @@ endlocal & (
     set "CC_BACKEND=edgcpp"
     set "CXX_BACKEND=edgcpp"
     set "EDGCPP_LOG_FILE=%LIBSCRIPT_HOME%\edgcpp\compile_events.jsonl"
+    set "PATH=%PATH%"
 )
 exit /b 0

@@ -13,6 +13,9 @@ Execute this script to install and configure fluentbit on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -30,7 +33,7 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    choco install -y fluent-bit
+    libscript_depends @(\"fluent-bit\")
 } else {
     Write-Host "[INFO] Fluent Bit is not officially on winget. Falling back to native zip installation..."
     $Prefix = "$env:LIBSCRIPT_ROOT_DIR\installed\fluent-bit"
@@ -40,7 +43,7 @@ if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     $ZipPath = Join-Path $Prefix "fluent-bit.zip"
     if (-not (Test-Path -Path $ZipPath)) {
         Write-Host "[INFO] Downloading Fluent Bit..."
-        Invoke-WebRequest -Uri "https://packages.fluentbit.io/windows/fluent-bit-3.0.0-win64.zip" -OutFile $ZipPath
+        libscript_download "https://packages.fluentbit.io/windows/fluent-bit-3.0.0-win64.zip" $ZipPath
     }
     if (Test-Path -Path $ZipPath) {
         Write-Host "[INFO] Extracting Fluent Bit..."
@@ -58,8 +61,6 @@ if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls fluentbit; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls fluentbit; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "fluentbit"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -67,15 +68,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote fluentbit; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all fluentbit; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "fluentbit@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "fluentbit@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

@@ -158,19 +158,23 @@ function libscript_download {
 }
 
 # ## libscript_depends
-# Ensures that required package dependencies are installed on Windows using winget or choco.
+# Ensures that required package dependencies are installed on Windows using winget, choco, or scoop.
 function libscript_depends {
     param (
         [string[]]$Packages
     )
 
     $winPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-    if ([string]::IsNullOrEmpty($winPkgMgr)) { $winPkgMgr = "winget" }
+    if ([string]::IsNullOrEmpty($winPkgMgr)) {
+        if (Get-Command "winget" -ErrorAction SilentlyContinue) { $winPkgMgr = "winget" }
+        elseif (Get-Command "choco" -ErrorAction SilentlyContinue) { $winPkgMgr = "choco" }
+        elseif (Get-Command "scoop" -ErrorAction SilentlyContinue) { $winPkgMgr = "scoop" }
+        else { $winPkgMgr = "winget" }
+    }
 
     foreach ($pkg in $Packages) {
         log_info "Ensuring dependency: $pkg (via $winPkgMgr)"
         if ($winPkgMgr -eq "winget") {
-            # Basic check if installed (winget list is slow, but fairly reliable)
             $list = winget list --name $pkg -e 2>$null
             if ($null -eq $list -or $list.Count -lt 3) {
                 log_info "Installing $pkg via winget..."
@@ -180,6 +184,11 @@ function libscript_depends {
             if (-not (choco list -l | Select-String -SimpleMatch $pkg)) {
                 log_info "Installing $pkg via choco..."
                 choco install -y $pkg
+            }
+        } elseif ($winPkgMgr -eq "scoop") {
+            if (-not (scoop list 2>$null | Select-String -SimpleMatch $pkg)) {
+                log_info "Installing $pkg via scoop..."
+                scoop install $pkg
             }
         }
     }
@@ -192,3 +201,84 @@ function libscript_fetch {
 }
 
 # Export functions
+
+# ## Invoke-LibscriptDownload
+# Alias wrapper around libscript_download for PowerShell callers.
+function Invoke-LibscriptDownload {
+    param (
+        [string]$Uri,
+        [string]$OutFile,
+        [string]$Checksum
+    )
+    libscript_download -Url $Uri -Dest $OutFile -ProvidedChecksum $Checksum
+}
+
+# ## Invoke-LibscriptFetchContent
+# Fetches text content from a remote URL using TLS 1.2 while respecting offline mode.
+function Invoke-LibscriptFetchContent {
+    param (
+        [string]$Uri
+    )
+    if ($env:LIBSCRIPT_OFFLINE -eq "1" -or $env:LIBSCRIPT_FORCE_OFFLINE -eq "1") {
+        return ""
+    }
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    return (Invoke-WebRequest -Uri $Uri -UseBasicParsing).Content
+}
+
+# ## Invoke-LibscriptFetchJson
+# Fetches and parses JSON content from a remote REST endpoint while respecting offline mode.
+function Invoke-LibscriptFetchJson {
+    param (
+        [string]$Uri
+    )
+    if ($env:LIBSCRIPT_OFFLINE -eq "1" -or $env:LIBSCRIPT_FORCE_OFFLINE -eq "1") {
+        return $null
+    }
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    return (Invoke-RestMethod -Uri $Uri)
+}
+
+# ## libscript_fetch_json
+# Alias wrapper around Invoke-LibscriptFetchJson for PowerShell callers.
+function libscript_fetch_json {
+    param (
+        [string]$Uri
+    )
+    return (Invoke-LibscriptFetchJson -Uri $Uri)
+}
+
+# ## libscript_uninstall_pkg
+# Uninstalls a package using the configured Windows package manager (winget, choco, or scoop).
+function libscript_uninstall_pkg {
+    param (
+        [string[]]$Packages
+    )
+    $winPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
+    if ([string]::IsNullOrEmpty($winPkgMgr)) { $winPkgMgr = "winget" }
+
+    foreach ($pkg in $Packages) {
+        if ($winPkgMgr -eq "winget") {
+            if (Get-Command "winget" -ErrorAction SilentlyContinue) {
+                & winget uninstall --id $pkg --silent --accept-source-agreements 2>$null
+            }
+        } elseif ($winPkgMgr -eq "choco") {
+            if (Get-Command "choco" -ErrorAction SilentlyContinue) {
+                & choco uninstall $pkg -y 2>$null
+            }
+        } elseif ($winPkgMgr -eq "scoop") {
+            if (Get-Command "scoop" -ErrorAction SilentlyContinue) {
+                & scoop uninstall $pkg 2>$null
+            }
+        }
+    }
+}
+
+# ## Install-LibscriptPackage
+# Installs a package via the configured Windows package manager (winget or choco).
+function Install-LibscriptPackage {
+    param (
+        [string]$Package
+    )
+    libscript_depends -Packages @($Package)
+}

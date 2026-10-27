@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$CSHARP_INSTALL_METHOD" = "mise" ]; then
-      mise ls csharp || true
-    elif [ "$CSHARP_INSTALL_METHOD" = "asdf" ]; then
-      asdf list csharp || true
-    elif [ "$CSHARP_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$CSHARP_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls csharp || true
-    elif [ "$CSHARP_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/csharp/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "csharp" "$ACTION" "$VERSION" "${CSHARP_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$CSHARP_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote csharp || true
-    elif [ "$CSHARP_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all csharp || true
-    elif [ "$CSHARP_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$CSHARP_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all csharp || true
+    if [ -n "${CSHARP_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${CSHARP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${CSHARP_RELEASES_URL:-}" ]; then
-        curl -sSL "${CSHARP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/csharp" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/dotnet/sdk" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$CSHARP_INSTALL_METHOD" = "mise" ]; then
-      mise use "csharp@${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "asdf" ]; then
-      asdf global csharp "${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$CSHARP_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "csharp@${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "csharp@${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "csharp" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "csharp" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/csharp/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "csharp ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "csharp" "default" "${EXACT_VERSION}"
-      log_info "Set default csharp version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env csharp \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "csharp" "$ACTION" "$VERSION" "${CSHARP_INSTALL_METHOD}"
     ;;
   download)
     if [ "$CSHARP_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$CSHARP_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "csharp"
-    elif [ "$CSHARP_INSTALL_METHOD" = "mise" ]; then
-      mise install "csharp@${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "asdf" ]; then
-      asdf install csharp "${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "csharp@${VERSION}"
-    elif [ "$CSHARP_INSTALL_METHOD" = "vfox" ]; then
-      vfox add csharp || true
-      vfox install "csharp@${VERSION}"
+      libscript_depends 'csharp'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -161,12 +99,12 @@ case "$ACTION" in
         log_info "Installing csharp ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if [ "$(uname -s)" = "FreeBSD" ]; then
-          libscript_depends "csharp"
+          libscript_depends 'csharp'
           if command -v dotnet >/dev/null 2>&1; then
             ln -sf "$(command -v dotnet)" "${TARGET_DIR}/bin/dotnet"
           fi
         elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/csharp/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/csharp/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -194,7 +132,7 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ]; then
               log_info "No native binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for csharp..."
-              libscript_depends "csharp"
+              libscript_depends 'csharp'
               mkdir -p "${TARGET_DIR}/bin"
               if command -v dotnet >/dev/null 2>&1; then
                 ln -sf "$(command -v dotnet)" "${TARGET_DIR}/bin/dotnet"
@@ -202,7 +140,7 @@ case "$ACTION" in
               fi
             else
               log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
-              libscript_depends "curl" "tar" "wget" "libicu"
+              libscript_depends 'curl' 'tar' 'wget' 'libicu'
               TEMP_FILE=$(mktemp)
               libscript_download "https://dot.net/v1/dotnet-install.sh" "${TEMP_FILE}"
               chmod +x "${TEMP_FILE}"
@@ -214,7 +152,7 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
             # dotnet-install.sh installs everything into the dir, but dotnet is the binary
             if [ ! -f "${TARGET_DIR}/bin/dotnet" ]; then
-                log_error "Installation via dotnet-install.sh failed."
+                log_error 'Installation via dotnet-install.sh failed.'
                 exit 1
             fi
             # Add alias so `csharp` executes `dotnet` maybe?
@@ -228,52 +166,7 @@ fi
       libscript_symlink_alias "csharp" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$CSHARP_INSTALL_METHOD" = "libscript_native" ] || [ "$CSHARP_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-csharp}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $CSHARP_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "csharp" "$ACTION" "$VERSION" "${CSHARP_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$CSHARP_INSTALL_METHOD" = "libscript_native" ] || [ "$CSHARP_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-csharp}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $CSHARP_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$CSHARP_INSTALL_METHOD" = "libscript_native" ] || [ "$CSHARP_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-csharp}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $CSHARP_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$CSHARP_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling csharp $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/csharp/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/csharp/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $CSHARP_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

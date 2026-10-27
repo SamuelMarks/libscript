@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,3 +46,5 @@ if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ -d "${_java_home}/${JAVA
   fi
   libscript_path_prepend "${JAVA_HOME}/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

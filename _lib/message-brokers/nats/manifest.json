@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "ports": ["4222", "6222", "8222"]
+  "ports": ["4222", "6222", "8222"],
+  "repository": "https://github.com/nats-io/nats-server"
 }

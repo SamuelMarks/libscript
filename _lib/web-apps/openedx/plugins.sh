@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -77,9 +76,9 @@ plugins_list() {
   printf '%-16s %-12s %s
 ' "NAME" "STATUS" "VERSION"
   for _p in ${BUILTIN_PLUGINS}; do
-    _status="disabled"
+    _status='disabled'
     if grep -qxF "${_p}" "${ENABLED_FILE}" 2>/dev/null; then
-      _status="enabled"
+      _status='enabled'
     fi
     printf '%-16s %-12s %s
 ' "${_p}" "${_status}" "22.1.0"

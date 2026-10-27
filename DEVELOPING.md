@@ -325,8 +325,12 @@ states depend on the component and strategy.
 Before submitting changes, execute the repository's automated compliance and audit suites:
 
 ```sh
-# 1. Audit all modified scripts against engineering standards
-./devtools/audit/audit_standards.sh <path_to_script>
+# 1. Audit all modified scripts against engineering standards (POSIX, quoting, raw fetch/pkg-mgr, JSON, checksums)
+./devtools/audit/audit_standards.sh --all
+./devtools/audit/audit_posix.sh --all
+./devtools/audit/audit_version_manager.sh
+./devtools/audit/audit_schema_vars.sh --all
+./devtools/audit/doc_coverage.sh --strict
 
 # 2. Run the 2x consecutive idempotency verification test
 ./tests/test_idempotency_matrix.sh

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "mise" ]; then
-      mise ls kubernetes-k0s || true
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "asdf" ]; then
-      asdf list kubernetes-k0s || true
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls kubernetes_k0s || true
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/kubernetes-k0s/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "kubernetes-k0s" "$ACTION" "$VERSION" "${KUBERNETES_K0S_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote kubernetes-k0s || true
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all kubernetes-k0s || true
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all kubernetes_k0s || true
+    if [ -n "${KUBERNETES_K0S_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${KUBERNETES_K0S_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${KUBERNETES_K0S_RELEASES_URL:-}" ]; then
-        curl -sSL "${KUBERNETES_K0S_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/kubernetes-k0s" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/k0sproject/k0s" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "mise" ]; then
-      mise use "kubernetes-k0s@${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "asdf" ]; then
-      asdf global kubernetes-k0s "${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "kubernetes_k0s@${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "kubernetes-k0s@${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "kubernetes-k0s" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "kubernetes-k0s" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kubernetes-k0s/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "kubernetes-k0s ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "kubernetes-k0s" "default" "${EXACT_VERSION}"
-      log_info "Set default kubernetes-k0s version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env kubernetes-k0s \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "kubernetes-k0s" "$ACTION" "$VERSION" "${KUBERNETES_K0S_INSTALL_METHOD}"
     ;;
   download)
     if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "kubernetes-k0s"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "mise" ]; then
-      mise install "kubernetes-k0s@${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "asdf" ]; then
-      asdf install kubernetes-k0s "${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "kubernetes-k0s@${VERSION}"
-    elif [ "$KUBERNETES_K0S_INSTALL_METHOD" = "vfox" ]; then
-      vfox add kubernetes-k0s || true
-      vfox install "kubernetes-k0s@${VERSION}"
+      libscript_depends 'kubernetes-k0s'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -161,7 +99,7 @@ case "$ACTION" in
         log_info "Installing kubernetes-k0s ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kubernetes-k0s/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kubernetes-k0s/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -190,7 +128,7 @@ case "$ACTION" in
             if [ "$UNAME_LOWER" = "linux" ]; then
               _actual_version="${EXACT_VERSION}"
               if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-                _actual_version=$(curl -sI https://github.com/k0sproject/k0s/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
+                _actual_version=$(libscript_fetch_stdout "https://api.github.com/repos/k0sproject/k0s/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4)
               fi
               case "${ARCH:-}" in
                 aarch64|arm64) _k0s_arch="arm64" ;;
@@ -212,52 +150,7 @@ case "$ACTION" in
       libscript_symlink_alias "kubernetes-k0s" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "libscript_native" ] || [ "$KUBERNETES_K0S_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-kubernetes-k0s}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $KUBERNETES_K0S_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "kubernetes-k0s" "$ACTION" "$VERSION" "${KUBERNETES_K0S_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "libscript_native" ] || [ "$KUBERNETES_K0S_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-kubernetes-k0s}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $KUBERNETES_K0S_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "libscript_native" ] || [ "$KUBERNETES_K0S_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-kubernetes-k0s}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $KUBERNETES_K0S_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$KUBERNETES_K0S_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling kubernetes-k0s $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/kubernetes-k0s/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/kubernetes-k0s/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $KUBERNETES_K0S_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,9 @@ unset SCRIPT_NAME || true
 
 
 RUSTUP_VERSION="${RUSTUP_VERSION:-latest}"
-export RUSTUP_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${RUSTUP_VERSION}/.rustup"
-export CARGO_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${RUSTUP_VERSION}/.cargo"
+export RUSTUP_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rustup/${RUSTUP_VERSION}/.rustup"
+export CARGO_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rustup/${RUSTUP_VERSION}/.cargo"
 libscript_path_prepend "$CARGO_HOME/bin"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -6,5 +6,6 @@
   "os_blacklist": ["sunos"],
   "title": "helm",
   "description": "Bootstrap module for the `helm` Kubernetes package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/helm/helm"
 }

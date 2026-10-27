@@ -1,13 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Audits all LibScript components in _lib/<category>/<component>/ for strict
-# compliance with the Version Manager Contract (WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md
-# and AGENTS.md Section 2):
-# - Mandatory files (cli, setup, env, service, test, uninstall, manifest.json, vars.schema.json, README.md)
-# - Delegation of cli.* to component_core.* (or full verb routing) and setup.* to setup_base.*
-# - Zero ad-hoc OS package manager calls in devtools/ or tests/
-# - Tier 1 recipe boundaries (no raw mount/fdisk/mkfs in leaf packages)
-# - Zero git push invocations
+# Audits all LibScript components in `_lib/<category>/<component>/` for strict compliance with the Version Manager Contract.
 #
 # ## Usage
 # ./devtools/audit/audit_version_manager.sh [component_dir ...]
@@ -19,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -109,6 +101,14 @@ audit_component_dir() {
         log_vm_violation "${_rel_dir}/env.cmd" "ENV_BASE_CALLER_CONTEXT" "env.cmd calls env_base.cmd without CALLER_SCRIPT_DIR or explicit component name argument."
       fi
     fi
+    if grep -Eiq '^[[:space:]]*set[[:space:]]+"?PATH=[^;]+;%PATH%"?[[:space:]]*$' "${_comp_dir}/env.cmd"; then
+      log_vm_violation "${_rel_dir}/env.cmd" "NON_IDEMPOTENT_PATH_CMD" "env.cmd prepends to PATH unconditionally; guard with findstr or delegate to env_base.cmd."
+    fi
+  fi
+  if [ -f "${_comp_dir}/env.sh" ]; then
+    if grep -Eq '^[[:space:]]*(export[[:space:]]+)?PATH="[^"]+:\$\{?PATH\}?"' "${_comp_dir}/env.sh"; then
+      log_vm_violation "${_rel_dir}/env.sh" "NON_IDEMPOTENT_PATH_SH" "env.sh prepends to PATH without idempotency guard; use libscript_path_prepend or a case check."
+    fi
   fi
 
   # 4. Verify Tier 1 leaf recipes do not invoke kernel/partitioning primitives
@@ -124,29 +124,50 @@ audit_component_dir() {
       ;;
   esac
 
-  # 5. Ban raw winget/choco install in setup*.cmd (must delegate to pkg_mgr.cmd :libscript_depends)
+  # 5. Ban raw winget/choco/scoop and raw network calls in Tier 1 leaf recipes (must delegate to _lib/_common/pkg_mgr.*)
   case "$_rel_dir" in
-    _lib/package-managers/winget|_lib/package-managers/choco)
+    _lib/package-managers/*)
       ;;
     *)
-      for _cmd_file in "$_comp_dir"/setup*.cmd; do
+      for _cmd_file in "$_comp_dir"/setup*.cmd "$_comp_dir"/uninstall*.cmd; do
         [ -f "$_cmd_file" ] || continue
-        if grep -Eiq '^[[:space:]]*(call[[:space:]]+)?(winget|choco)[[:space:]]+install([[:space:]]|$)' "$_cmd_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_WINGET_IN_RECIPE" "Direct winget/choco install in setup*.cmd; delegate to pkg_mgr.cmd :libscript_depends."
+        if grep -Eiq '^[ 	]*(where[ 	]+(winget|choco|scoop).*&&[ 	]*)?(call[ 	]+)?(winget|choco|scoop)[ 	]+(install|uninstall|upgrade|update)([ 	]|$)' "$_cmd_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PACKAGE_MANAGER" "Direct winget/choco/scoop install/uninstall in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
+        fi
+        if grep -Eiq '(Invoke-WebRequest|Invoke-RestMethod|[ 	"]iwr[ 	]|[ 	"]irm[ 	]|certutil[ 	]+-urlcache)' "$_cmd_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_NETWORK_FETCH" "Raw network fetch in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
+        fi
+      done
+      for _ps1_file in "$_comp_dir"/setup*.ps1 "$_comp_dir"/uninstall*.ps1; do
+        [ -f "$_ps1_file" ] || continue
+        if grep -Eiq '^[ 	]*(&[ 	]+)?(winget|choco|scoop)[ 	]+(install|uninstall|upgrade|update)([ 	]|$)' "$_ps1_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_ps1_file")" "RAW_PACKAGE_MANAGER" "Direct winget/choco/scoop install/uninstall in $(basename "$_ps1_file"); delegate to pkg_mgr.ps1."
+        fi
+        if grep -Eiq '^[ 	]*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b)' "$_ps1_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_ps1_file")" "RAW_NETWORK_FETCH" "Raw Invoke-WebRequest/Invoke-RestMethod in $(basename "$_ps1_file"); delegate to pkg_mgr.ps1."
         fi
       done
       ;;
   esac
 
-  # 6. Ban raw apt-get/brew/dnf/apk install in Tier 1 leaf recipes (must delegate to pkg_mgr.sh)
+  # 6. Ban raw apt-get/brew/dnf/apk/pkg install/remove, brew services, and raw curl/wget/aria2c in Tier 1 leaf recipes (must delegate to pkg_mgr.sh)
   case "$_rel_dir" in
-    _lib/package-managers/apt|_lib/package-managers/brew|_lib/package-managers/dnf|_lib/package-managers/yum|_lib/package-managers/apk|_lib/package-managers/pacman|_lib/package-managers/zypper|_lib/package-managers/pkg)
+    _lib/package-managers/*)
+      for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/install*.sh; do
+        [ -f "$_sh_file" ] || continue
+        if grep -Eq '^[ 	]*[^#]*(curl[ 	]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[ 	]+-[a-zA-Z0-9-]*[qO]|aria2c[ 	]+-[dox])' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_NETWORK_FETCH" "Raw curl/wget/aria2c in $(basename "$_sh_file"); delegate to libscript_fetch_stdout or libscript_download."
+        fi
+      done
       ;;
     *)
-      for _sh_file in "$_comp_dir"/setup*.sh; do
+      for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/uninstall*.sh; do
         [ -f "$_sh_file" ] || continue
-        if grep -Eq '^[[:space:]]*(priv[[:space:]]+)?(apt-get[[:space:]]+install|brew[[:space:]]+install|dnf[[:space:]]+install[[:space:]]+-y[[:space:]]+epel-release|apk[[:space:]]+add)[[:space:]]' "$_sh_file"; then
-          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_OS_PKG_MGR_IN_RECIPE" "Direct OS package manager install in setup*.sh; delegate to _lib/_common/pkg_mgr.sh (depends / libscript_depends)."
+        if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(apt-get[ 	]+(install|remove|purge)|apt[ 	]+(install|remove|purge)|brew[ 	]+(install|uninstall|services)|dnf[ 	]+(install|remove)|yum[ 	]+(install|remove)|apk[ 	]+(add|del)|pacman[ 	]+(-S|-R)|zypper[ 	]+(install|remove)|pkg[ 	]+(install|delete))[ 	]' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PACKAGE_MANAGER" "Direct OS package manager call in $(basename "$_sh_file"); delegate to _lib/_common/pkg_mgr.sh or _lib/_common/service.sh."
+        fi
+        if grep -Eq '^[ 	]*[^#]*(curl[ 	]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[ 	]+-[a-zA-Z0-9-]*[qO]|aria2c[ 	]+-[dox])' "$_sh_file" && ! grep -Eq '(--unix-socket|libscript-allow-raw-)' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_NETWORK_FETCH" "Raw curl/wget/aria2c in $(basename "$_sh_file"); delegate to libscript_fetch_stdout or libscript_download."
         fi
       done
       ;;

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,8 +54,8 @@ fi
 
 # SQLite is not strictly supported in Joomla 4+, so we map "sqlite" to warning
 if [ "${JOOMLA_DB_TYPE}" = "sqlite" ]; then
-  printf '%s\n' "Warning: SQLite is not natively supported by Joomla 4+. Defaulting to mariadb installation."
-  JOOMLA_DB_TYPE="mariadb"
+  printf '%s\n' 'Warning: SQLite is not natively supported by Joomla 4+. Defaulting to mariadb installation.'
+  JOOMLA_DB_TYPE='mariadb'
 fi
 
 if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
@@ -76,10 +75,9 @@ if [ ! -d "${JOOMLA_WWWROOT}/administrator" ]; then
   priv mkdir -p "${JOOMLA_WWWROOT}"
 
   if [ "${JOOMLA_VERSION}" = "latest" ]; then
-    if command -v curl >/dev/null 2>&1; then
-      JOOMLA_VERSION=$(curl -s "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-    else
-      JOOMLA_VERSION="5.2.0" # Fallback if curl unavailable
+    JOOMLA_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || true)
+    if [ -z "${JOOMLA_VERSION}" ]; then
+      JOOMLA_VERSION='5.2.0'
     fi
   fi
 
@@ -96,20 +94,20 @@ DB_NAME="${JOOMLA_DB_NAME:-joomla}"
 DB_USER="${JOOMLA_DB_USER:-joomla}"
 DB_PASS="${JOOMLA_DB_PASS:-joomla}"
 
-printf '%s\n' "Configuring Database..."
+printf '%s\n' 'Configuring Database...'
 if [ "${JOOMLA_DB_TYPE}" = "mariadb" ] || [ "${JOOMLA_DB_TYPE}" = "mysql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine mysql --host "127.0.0.1" --port "3306" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${JOOMLA_DB_TYPE}" = "postgres" ] || [ "${JOOMLA_DB_TYPE}" = "postgresql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine postgres --host "127.0.0.1" --port "5432" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: PostgreSQL is not running or login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: PostgreSQL is not running or login failed. Skipping automated DB setup.'
   fi
 fi
 
@@ -118,14 +116,14 @@ priv chown -R www-data:www-data "${JOOMLA_WWWROOT}" 2>/dev/null || priv chown -R
 # Determine PHP_FPM Socket (OS specific usually)
 if [ -z "${JOOMLA_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export JOOMLA_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN='unix:/run/php/php-fpm.sock'
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   elif [ -e /var/run/php-fpm.sock ]; then
-    export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   else
     # Let's try to find it dynamically or fallback to localhost port
-    export JOOMLA_PHP_FPM_LISTEN="127.0.0.1:9000"
+    export JOOMLA_PHP_FPM_LISTEN='127.0.0.1:9000'
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export JOOMLA_PHP_FPM_LISTEN="unix:$sock"
@@ -198,7 +196,7 @@ elif [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${JOOMLA_SERVER_NAME}.caddy"
   else

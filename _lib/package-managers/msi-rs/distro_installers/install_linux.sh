@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -41,18 +40,18 @@ TARGET_DIR="${3:-/mnt/target}"
 # Displays usage instructions and supported Linux distributions.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <target_dev> [flavor] [target_dir]"
-  printf '%s\n' "Installs a complete Linux base operating system to target storage."
+  printf '%s\n' 'Installs a complete Linux base operating system to target storage.'
   printf '
 '
-  printf '%s\n' "Flavors:"
-  printf '%s\n' "  alpine    - Alpine Linux minimal Musl system (default)"
-  printf '%s\n' "  debian    - Debian GNU/Linux standard glibc system"
-  printf '%s\n' "  rocky     - Rocky Linux Enterprise RPM system"
-  printf '%s\n' "  lfs       - Linux From Scratch minimal synthesized sysroot"
+  printf '%s\n' 'Flavors:'
+  printf '%s\n' '  alpine    - Alpine Linux minimal Musl system (default)'
+  printf '%s\n' '  debian    - Debian GNU/Linux standard glibc system'
+  printf '%s\n' '  rocky     - Rocky Linux Enterprise RPM system'
+  printf '%s\n' '  lfs       - Linux From Scratch minimal synthesized sysroot'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -102,8 +101,16 @@ EOF
     ;;
   alpine)
     printf '[STAGE] Deploying Alpine base rootfs...\n'
-    if command -v curl >/dev/null 2>&1; then
-      curl -sSL "https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.3-x86_64.tar.gz" 2>/dev/null | tar -xz -C "$TARGET_DIR" 2>/dev/null || true
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      _alp_tmp=$(mktemp)
+      if libscript_download "https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.3-x86_64.tar.gz" "$_alp_tmp" "SKIP" 2>/dev/null; then
+        tar -xzf "$_alp_tmp" -C "$TARGET_DIR" 2>/dev/null || true
+      fi
+      rm -f "$_alp_tmp"
     elif command -v apk >/dev/null 2>&1; then
       apk add --root "$TARGET_DIR" --initdb alpine-base linux-lts || true
     fi

@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,16 +50,22 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%MESOS_VERSION%"=="" set "MESOS_VERSION=latest"
+set "MESOS_HOME=%LIBSCRIPT_HOME%\mesos\%MESOS_VERSION%"
+set "MESOS_WORK_DIR=%LIBSCRIPT_HOME%\mesos\work"
+set "MESOS_MASTER=127.0.0.1:5050"
+set "_CAND_P=%LIBSCRIPT_HOME%\mesos\%MESOS_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "mesos" "%MESOS_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%MESOS_VERSION%"=="" set "MESOS_VERSION=latest"
-    set "MESOS_HOME=%LIBSCRIPT_HOME%\mesos\%MESOS_VERSION%"
-    set "MESOS_WORK_DIR=%LIBSCRIPT_HOME%\mesos\work"
-    set "MESOS_MASTER=127.0.0.1:5050"
-    set "_CAND_P=%LIBSCRIPT_HOME%\mesos\%MESOS_VERSION%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "mesos"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "MESOS_VERSION=%MESOS_VERSION%"
+    set "MESOS_HOME=%MESOS_HOME%"
+    set "MESOS_WORK_DIR=%MESOS_WORK_DIR%"
+    set "MESOS_MASTER=%MESOS_MASTER%"
+    set "PATH=%PATH%"
 )
 exit /b 0

@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ THIS_DIR="${SCRIPT_DIR}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 set +f
 
-OS_TARGET="alpine-3.24"
+OS_TARGET='alpine-3.24'
 TARGETS=""
 REUSE_VM=""
 
@@ -43,20 +42,20 @@ while [ $# -gt 0 ]; do
         --help|-h|/?)
             echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--os OS_NAME] [--reuse-vm]"
             echo ""
-            echo "Runs local tests using Vagrant across specified categories or individual targets"
-            echo "to verify libscript installation and testing."
+            echo 'Runs local tests using Vagrant across specified categories or individual targets'
+            echo 'to verify libscript installation and testing.'
             echo ""
-            echo "Arguments:"
-            echo "  TARGETS...     A list of categories (e.g., databases, languages) or specific targets."
-            echo "                 If no targets are provided, defaults to: databases languages toolchains"
-            echo "  all            Run tests across all categories in the _lib directory."
-            echo "  --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24)."
-            echo "                 Example: --os debian-13, --os rockylinux-10.2, --os omnios"
-            echo "  --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target."
-            echo "  --fast         Alias for --reuse-vm."
-            echo "  --help, -h, /? Show this help message."
+            echo 'Arguments:'
+            echo '  TARGETS...     A list of categories (e.g., databases, languages) or specific targets.'
+            echo '                 If no targets are provided, defaults to: databases languages toolchains'
+            echo '  all            Run tests across all categories in the _lib directory.'
+            echo '  --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24).'
+            echo '                 Example: --os debian-13, --os rockylinux-10.2, --os omnios'
+            echo '  --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target.'
+            echo '  --fast         Alias for --reuse-vm.'
+            echo '  --help, -h, /? Show this help message.'
             echo ""
-            echo "Results are written to the tests_tmp directory."
+            echo 'Results are written to the tests_tmp directory.'
             exit 0
             ;;
         --os)
@@ -225,9 +224,9 @@ for target in $UNIQUE_TARGETS; do
             continue
         fi
     fi
-    echo "============================================================"
+    echo '============================================================'
     echo "Running test for $target on $OS_TARGET..."
-    echo "============================================================"
+    echo '============================================================'
     
     stdout_file="$TESTS_TMP_DIR/$target.$OS_TAG.stdout"
     stderr_file="$TESTS_TMP_DIR/$target.$OS_TAG.stderr"

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,7 +48,7 @@ netctl_emit_nginx() {
 
   domain=$(jq -r '.domain // "_"' "$state_file" 2>/dev/null || printf '_')
   if [ -z "$domain" ] || [ "$domain" = "null" ]; then
-    domain="_"
+    domain='_'
   fi
 
   printf '%s
@@ -59,17 +58,17 @@ netctl_emit_nginx() {
   jq -r '.listen[]' "$state_file" | while read -r port; do
     if [ "$port" = "443" ]; then
       if [ -f "/etc/letsencrypt/live/${domain}/fullchain.pem" ]; then
-        printf '%s\n' "    listen 443 ssl;"
+        printf '%s\n' '    listen 443 ssl;'
         printf '%s\n' "    ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;"
         printf '%s\n' "    ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;"
         if [ -f "/etc/letsencrypt/options-ssl-nginx.conf" ]; then
-          printf '%s\n' "    include /etc/letsencrypt/options-ssl-nginx.conf;"
+          printf '%s\n' '    include /etc/letsencrypt/options-ssl-nginx.conf;'
         fi
         if [ -f "/etc/letsencrypt/ssl-dhparams.pem" ]; then
-          printf '%s\n' "    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;"
+          printf '%s\n' '    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;'
         fi
       elif [ -f "/etc/nginx/ssl/${domain}.crt" ] && [ -f "/etc/nginx/ssl/${domain}.key" ]; then
-        printf '%s\n' "    listen 443 ssl;"
+        printf '%s\n' '    listen 443 ssl;'
         printf '%s\n' "    ssl_certificate /etc/nginx/ssl/${domain}.crt;"
         printf '%s\n' "    ssl_certificate_key /etc/nginx/ssl/${domain}.key;"
       fi

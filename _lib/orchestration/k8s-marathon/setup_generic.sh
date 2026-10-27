@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ VERSION="${K8S_MARATHON_VERSION:-1.0.0}"
 # Resolves semantic version aliases ('latest' or 'stable') to a concrete k8s-marathon version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="1.0.0"
+    EXACT_VERSION='1.0.0'
   else
     EXACT_VERSION="${VERSION}"
   fi

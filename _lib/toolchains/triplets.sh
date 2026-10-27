@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -68,7 +67,7 @@ resolve_compiler_flags() {
   _cc_id="${1:-${CC_BACKEND:-default}}"
   case "${_cc_id}" in
     tcc|custom-cc|edgcpp)
-      LIBSCRIPT_COMPILER_CFLAGS="-O2"
+      LIBSCRIPT_COMPILER_CFLAGS='-O2'
       LIBSCRIPT_COMPILER_LDFLAGS=""
       ;;
     clang)

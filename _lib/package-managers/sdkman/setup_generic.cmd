@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -89,10 +89,6 @@ goto :action_install
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%SDKMAN_INSTALL_METHOD%"=="mise" ( mise ls sdkman & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="asdf" ( asdf list sdkman & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="vfox" ( vfox ls sdkman & exit /b 0 )
 if "%SDKMAN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\sdkman" ( dir /b "%LIBSCRIPT_HOME%\sdkman" )
 exit /b 0
@@ -100,13 +96,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%SDKMAN_INSTALL_METHOD%"=="mise" ( mise ls-remote sdkman & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="asdf" ( asdf list all sdkman & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="vfox" ( vfox ls all sdkman & exit /b 0 )
 if "%SDKMAN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SDKMAN_RELEASES_URL%"=="" (
-    curl -sSL "%SDKMAN_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SDKMAN_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/sdkman/sdkman-cli" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -115,10 +107,6 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%SDKMAN_INSTALL_METHOD%"=="mise" ( mise use "sdkman@%SDKMAN_VERSION%" & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="asdf" ( asdf global sdkman "%SDKMAN_VERSION%" & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="vfox" ( vfox use "sdkman@%SDKMAN_VERSION%" & exit /b 0 )
 if "%SDKMAN_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
 if "%SDKMAN_VERSION%"=="latest" (set "EXACT_VERSION=%SDKMAN_VERSION%"
@@ -132,8 +120,11 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\sdkman\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%"
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -158,10 +149,6 @@ if "%SDKMAN_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends sdkman
     exit /b !errorlevel!
 )
-if "%SDKMAN_INSTALL_METHOD%"=="mise" ( mise install "sdkman@%SDKMAN_VERSION%" & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="asdf" ( asdf install sdkman "%SDKMAN_VERSION%" & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="pkgx" ( pkgx install "sdkman@%SDKMAN_VERSION%" & exit /b 0 )
-if "%SDKMAN_INSTALL_METHOD%"=="vfox" ( vfox add sdkman & vfox install "sdkman@%SDKMAN_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
@@ -186,70 +173,23 @@ if not exist "%TARGET_DIR%\bin" (
 )
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_sdkman"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%SDKMAN_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else if "%SDKMAN_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else (
-    echo %ACTION% not natively implemented for %SDKMAN_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_sdkman"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%SDKMAN_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else if "%SDKMAN_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else (
-    echo install-service not implemented for %SDKMAN_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_sdkman"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%SDKMAN_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else if "%SDKMAN_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else (
-    echo uninstall-service not implemented for %SDKMAN_INSTALL_METHOD%.
-)
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "sdkman" "%ACTION%" "%SDKMAN_VERSION%" "%SDKMAN_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%\\bin\\sdkman.exe\"" "%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%"
+exit /b !errorlevel!

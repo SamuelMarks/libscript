@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,9 +36,11 @@ unset SCRIPT_NAME || true
 
 export UWSGI_WORKERS="${UWSGI_WORKERS:-2}"
 UWSGI_VERSION="${UWSGI_VERSION:-2.0.24}"
-if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${UWSGI_VERSION}/bin" ]; then
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${UWSGI_VERSION}/bin"
+if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${UWSGI_VERSION}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${UWSGI_VERSION}/bin"
 fi
-if [ -d "${HOME}/.local/bin" ]; then
-  libscript_path_prepend "${HOME}/.local/bin"
+if [ -d "${HOME:-/root}/.local/bin" ]; then
+  libscript_path_prepend "${HOME:-/root}/.local/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

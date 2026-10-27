@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,11 +32,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 
-LOG_FILE="/var/log/msi_install.log"
+LOG_FILE='/var/log/msi_install.log'
 TARGET_DISK=""
-OS_FLAVOR="alpine"
-WORKLOAD="none"
-SILENT_MODE="0"
+OS_FLAVOR='alpine'
+WORKLOAD='none'
+SILENT_MODE='0'
 CONFIG_FILE=""
 MSI_PACKAGE=""
 
@@ -45,17 +44,17 @@ MSI_PACKAGE=""
 # Displays usage instructions and supported CLI parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS] [KEY=VALUE...]"
-  printf '%s\n' "Executes headless automated installations using msi-rs msiexec CLI semantics."
+  printf '%s\n' 'Executes headless automated installations using msi-rs msiexec CLI semantics.'
   printf '\n'
-  printf '%s\n' "msiexec Parity Options:"
-  printf '%s\n' "  /i <package.msi>        Install target MSI package."
-  printf '%s\n' "  /qn                     Completely quiet execution (no UI, non-interactive)."
-  printf '%s\n' "  /passive                Unattended progress-only execution."
-  printf '%s\n' "  TARGET_DISK=<path>      Target storage disk to partition and install to."
-  printf '%s\n' "  OS_FLAVOR=<name>        Distribution to deploy (alpine, debian, freebsd, illumos)."
-  printf '%s\n' "  WORKLOAD=none           Clean base installation without any LibScript packages."
-  printf '%s\n' "  --config <file.json>    Path to declarative autoinstall response file."
-  printf '%s\n' "  --help, -h, /?, -?      Show this help message."
+  printf '%s\n' 'msiexec Parity Options:'
+  printf '%s\n' '  /i <package.msi>        Install target MSI package.'
+  printf '%s\n' '  /qn                     Completely quiet execution (no UI, non-interactive).'
+  printf '%s\n' '  /passive                Unattended progress-only execution.'
+  printf '%s\n' '  TARGET_DISK=<path>      Target storage disk to partition and install to.'
+  printf '%s\n' '  OS_FLAVOR=<name>        Distribution to deploy (alpine, debian, freebsd, illumos).'
+  printf '%s\n' '  WORKLOAD=none           Clean base installation without any LibScript packages.'
+  printf '%s\n' '  --config <file.json>    Path to declarative autoinstall response file.'
+  printf '%s\n' '  --help, -h, /?, -?      Show this help message.'
 }
 
 # ## log_msg
@@ -88,11 +87,11 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     /qn|--quiet|-q)
-      SILENT_MODE="1"
+      SILENT_MODE='1'
       shift
       ;;
     /passive|--passive)
-      SILENT_MODE="0"
+      SILENT_MODE='0'
       shift
       ;;
     --config)

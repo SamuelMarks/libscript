@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,8 +32,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-TARGET_OS="debian-13"
-STEP="0"
+TARGET_OS='debian-13'
+STEP='0'
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -46,7 +45,7 @@ while [ $# -gt 0 ]; do
 done
 
 VAGRANT_DIR="${LIBSCRIPT_ROOT_DIR}/vagrant/${TARGET_OS}"
-export LIBSCRIPT_TEST_TARGET="openedx"
+export LIBSCRIPT_TEST_TARGET='openedx'
 
 # ## run_step_0
 # Executes Step 0 of the Open edX test plan: Provision local Vagrant machine

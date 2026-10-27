@@ -23,6 +23,10 @@
     "MSI_RS_DOWNLOAD_URL": {
       "description": "Direct download URL for prebuilt binary archive if available.",
       "type": "string"
+    },
+    "MSI_RS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying msi-rs available remote releases."
     }
   }
 }

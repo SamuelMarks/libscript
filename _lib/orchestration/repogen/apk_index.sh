@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,7 +60,7 @@ for pkg in "$TARGET_DIR"/*.apk; do
   pver="${pver_full%.apk}"
   psize=$(wc -c < "$pkg" | tr -d ' ' 2>/dev/null || echo 1024)
 
-  chksum="dummy"
+  chksum='dummy'
   if command -v sha1sum >/dev/null 2>&1; then
     chksum=$(sha1sum "$pkg" | cut -d' ' -f1)
   elif command -v shasum >/dev/null 2>&1; then

@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ unset SCRIPT_NAME || true
 
 
 SPACK_VERSION="${SPACK_VERSION:-latest}"
-export SPACK_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${SPACK_VERSION}"
+export SPACK_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/spack/${SPACK_VERSION}"
 libscript_path_prepend "$SPACK_ROOT/bin"
 if [ -s "$SPACK_ROOT/share/spack/setup-env.sh" ]; then
   if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
@@ -49,3 +48,5 @@ if [ -s "$SPACK_ROOT/share/spack/setup-env.sh" ]; then
   fi
 fi
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

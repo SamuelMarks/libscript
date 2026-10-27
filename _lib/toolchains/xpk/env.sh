@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,11 +35,16 @@ unset SCRIPT_NAME || true
 
 XPK_VERSION="${XPK_VERSION:-latest}"
 if [ "${XPK_VERSION}" = "latest" ]; then
-  EXACT_VERSION="latest"
+  EXACT_VERSION='latest'
 else
   EXACT_VERSION="${XPK_VERSION}"
 fi
 
-export XPK_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}"
+export XPK_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/xpk/${EXACT_VERSION}"
 libscript_path_prepend "${XPK_DIR}/bin"
-export PYTHONPATH="${XPK_DIR}:${PYTHONPATH:-}"
+case ":${PYTHONPATH:-}:" in
+  *":${XPK_DIR}:"*) ;;
+  *) export PYTHONPATH="${XPK_DIR}${PYTHONPATH:+:${PYTHONPATH}}" ;;
+esac
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

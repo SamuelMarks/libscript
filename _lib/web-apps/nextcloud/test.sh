@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ done
 
 
 set -feu
-printf '%s\n' "Validating Nextcloud installation..."
+printf '%s\n' 'Validating Nextcloud installation...'
 NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT:-/var/www/nextcloud}"
 if [ -d "${NEXTCLOUD_WWWROOT}/core" ]; then
     printf '%s\n' "Nextcloud directory found at ${NEXTCLOUD_WWWROOT}"

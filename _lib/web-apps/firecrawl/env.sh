@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,3 +35,5 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export FIRECRAWL_BUILD_DIR="${FIRECRAWL_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}}/firecrawl}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

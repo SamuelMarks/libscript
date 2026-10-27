@@ -13,6 +13,8 @@ $Version = if ($env:MEILISEARCH_VERSION) { $env:MEILISEARCH_VERSION } else { "v1
 $LibHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $env:USERPROFILE ".libscript" }
 
 if ($Action -eq "install") {
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
     if (Get-Command "meilisearch" -ErrorAction SilentlyContinue) {
         Write-Host "Meilisearch is already installed on the system."
         exit 0
@@ -26,7 +28,7 @@ if ($Action -eq "install") {
     New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
     $Url = "https://github.com/meilisearch/meilisearch/releases/download/$Version/meilisearch-windows-amd64.exe"
     Write-Host "Downloading Meilisearch from $Url..."
-    Invoke-WebRequest -Uri $Url -OutFile $TargetExe
+    libscript_download $Url $TargetExe
     exit 0
 } elseif ($Action -eq "uninstall") {
     $TargetDir = Join-Path $LibHome "meilisearch\$Version"

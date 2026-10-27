@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,7 +46,7 @@ LOOP_MODE=""
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest VM using vagrant rsync.
 sync_repo_to_guest() {
-    echo "=== Syncing LibScript repository to SunOS/OmniOS ==="
+    echo '=== Syncing LibScript repository to SunOS/OmniOS ==='
     (cd "$VAGRANT_DIR" && vagrant rsync)
 }
 
@@ -73,22 +72,22 @@ while [ $# -gt 0 ]; do
         --help|-h|/?)
             echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop]"
             echo ""
-            echo "Runs local tests sequentially on SunOS / OmniOS (bento/omnios) Vagrant VM."
+            echo 'Runs local tests sequentially on SunOS / OmniOS (bento/omnios) Vagrant VM.'
             echo ""
-            echo "Arguments:"
-            echo "  TARGETS...          A list of categories or components to test."
+            echo 'Arguments:'
+            echo '  TARGETS...          A list of categories or components to test.'
             echo "                      Defaults to 'all' if omitted."
-            echo "  all                 Test all components in the _lib directory."
-            echo "  --loop, -l          Continuously repeat testing in an automated loop."
-            echo "  --stop-after N      Stop after running N component tests."
-            echo "  --skip-uninstall    Skip uninstallation step after testing each component."
-            echo "  --help, -h, /?      Show this help message."
+            echo '  all                 Test all components in the _lib directory.'
+            echo '  --loop, -l          Continuously repeat testing in an automated loop.'
+            echo '  --stop-after N      Stop after running N component tests.'
+            echo '  --skip-uninstall    Skip uninstallation step after testing each component.'
+            echo '  --help, -h, /?      Show this help message.'
             echo ""
-            echo "Results are written to tests_tmp/ (*.sunos.stdout, *.sunos.stderr, *.sunos.success/failure)."
+            echo 'Results are written to tests_tmp/ (*.sunos.stdout, *.sunos.stderr, *.sunos.success/failure).'
             exit 0
             ;;
         --loop|-l)
-            LOOP_MODE="1"
+            LOOP_MODE='1'
             shift
             ;;
         --stop-after)
@@ -96,7 +95,7 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
         --skip-uninstall)
-            SKIP_UNINSTALL="1"
+            SKIP_UNINSTALL='1'
             shift
             ;;
         *)
@@ -107,7 +106,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$(echo "$TARGETS" | tr -d ' ')" ]; then
-    TARGETS="all"
+    TARGETS='all'
 fi
 
 if [ ! -d "$VAGRANT_DIR" ]; then
@@ -115,11 +114,11 @@ if [ ! -d "$VAGRANT_DIR" ]; then
     exit 1
 fi
 
-echo "=== Ensuring SunOS/OmniOS Vagrant VM is running ==="
+echo '=== Ensuring SunOS/OmniOS Vagrant VM is running ==='
 cd "$VAGRANT_DIR"
 vm_status=$(vagrant status 2>&1 || true)
 if ! echo "$vm_status" | grep -q "running"; then
-    echo "Starting SunOS/OmniOS Vagrant VM..."
+    echo 'Starting SunOS/OmniOS Vagrant VM...'
     vagrant up --no-provision
 fi
 
@@ -131,6 +130,6 @@ _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
 : "${_port:=50022}"
 : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
 
-echo "============================================================"
-echo "SunOS / OmniOS Test Suite Ready."
-echo "============================================================"
+echo '============================================================'
+echo 'SunOS / OmniOS Test Suite Ready.'
+echo '============================================================'

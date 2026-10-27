@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,7 +44,7 @@ mkdir -p "${SYSROOT%/}/etc"
 NFT_CONF="${SYSROOT%/}/etc/nftables.conf"
 PF_CONF="${SYSROOT%/}/etc/pf.conf"
 
-SSH_PORT="22"
+SSH_PORT='22'
 if [ -n "${SSH_CONNECTION:-}" ]; then
   SSH_PORT="$(printf '%s\n' "$SSH_CONNECTION" | awk '{print $4}')"
   [ -z "$SSH_PORT" ] && SSH_PORT="22"

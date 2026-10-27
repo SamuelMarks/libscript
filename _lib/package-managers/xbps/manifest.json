@@ -6,5 +6,6 @@
   "os_blacklist": ["darwin", "windows", "freebsd"],
   "title": "xbps",
   "description": "Bootstrap module for the Void Linux `xbps` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/void-linux/xbps"
 }

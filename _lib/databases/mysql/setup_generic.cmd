@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -85,8 +85,11 @@ if "%ACTION%"=="install" (
     if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin"
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
-    where winget >nul 2>&1 && winget uninstall --id Oracle.MySQL --silent
-    where choco >nul 2>&1 && choco uninstall mysql -y
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg Oracle.MySQL
+    set "STACK="
+    set "LIBSCRIPT_PKG_MGR=choco"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg mysql
     exit /b 0
 ) else if "%ACTION%"=="test" (
     mysql --version

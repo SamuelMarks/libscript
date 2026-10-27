@@ -14,6 +14,14 @@
       "description": "Specific version of go to install.",
       "type": "string",
       "default": "latest"
+    },
+    "GO_PM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading go-pm binary or archive artifacts."
+    },
+    "GO_PM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying go-pm available remote releases."
     }
   }
 }

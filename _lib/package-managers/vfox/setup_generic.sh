@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,7 +54,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="1.0.12"
+      EXACT_VERSION='1.0.12'
     fi
   else
     EXACT_VERSION="${VERSION:-1.0.12}"
@@ -69,11 +68,11 @@ case "$ACTION" in
     elif [ "$VFOX_INSTALL_METHOD" = "asdf" ]; then
       asdf list vfox || true
     elif [ "$VFOX_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
+      printf '%s\n' 'pkgx does not have a local list command'
     elif [ "$VFOX_INSTALL_METHOD" = "vfox" ]; then
       vfox ls vfox || true
     elif [ "$VFOX_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
+      printf '%s\n' 'System packages do not support ls here.'
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/" 2>/dev/null || true
     fi
@@ -85,14 +84,14 @@ case "$ACTION" in
     elif [ "$VFOX_INSTALL_METHOD" = "asdf" ]; then
       asdf list all vfox || true
     elif [ "$VFOX_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
+      printf '%s\n' 'pkgx does not have a local list command'
     elif [ "$VFOX_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all vfox || true
     else
       if [ -n "${VFOX_RELEASES_URL:-}" ]; then
-        curl -sSL "${VFOX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+        libscript_fetch_stdout "${VFOX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/version-fox/vfox" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+      git ls-remote --tags "https://github.com/version-fox/vfox" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -103,13 +102,13 @@ case "$ACTION" in
     elif [ "$VFOX_INSTALL_METHOD" = "asdf" ]; then
       asdf global vfox "${VERSION}"
     elif [ "$VFOX_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
+      printf '%s\n' 'pkgx does not use explicit versions this way'
     elif [ "$VFOX_INSTALL_METHOD" = "vfox" ]; then
       vfox use "vfox@${VERSION}"
     elif [ "$VFOX_INSTALL_METHOD" = "vfox" ]; then
       vfox use "vfox@${VERSION}"
     elif [ "$VFOX_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "vfox" "$VERSION" "${EXACT_VERSION}"
@@ -124,7 +123,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "vfox" "default" "${EXACT_VERSION}"
       log_info "Set default vfox version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env vfox \"$VERSION\")"
     fi
     exit 0
@@ -143,7 +142,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$VFOX_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "vfox"
+      libscript_depends 'vfox'
     elif [ "$VFOX_INSTALL_METHOD" = "mise" ]; then
       mise install "vfox@${VERSION}"
     elif [ "$VFOX_INSTALL_METHOD" = "asdf" ]; then
@@ -159,9 +158,9 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/vfox" ]; then
         log_info "Installing vfox ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "curl"
-        libscript_depends "tar"
-        libscript_depends "unzip"
+        libscript_depends 'curl'
+        libscript_depends 'tar'
+        libscript_depends 'unzip'
 
         mkdir -p "${TARGET_DIR}/bin"
         os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -174,8 +173,8 @@ case "$ACTION" in
           'aarch64'|'arm64') arch='aarch64' ;;
         esac
         vfox_ver="${EXACT_VERSION}"
-        curl -sSL "https://github.com/version-fox/vfox/releases/download/v${vfox_ver}/vfox_${vfox_ver}_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" --strip-components=1 2>/dev/null || \
-        curl -sSL "https://github.com/version-fox/vfox/releases/download/v${vfox_ver}/vfox_${vfox_ver}_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" 2>/dev/null || true
+        libscript_fetch_stdout "https://github.com/version-fox/vfox/releases/download/v${vfox_ver}/vfox_${vfox_ver}_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" --strip-components=1 2>/dev/null || \
+        libscript_fetch_stdout "https://github.com/version-fox/vfox/releases/download/v${vfox_ver}/vfox_${vfox_ver}_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" 2>/dev/null || true
         find "${TARGET_DIR}" -type f -name vfox -exec mv {} "${TARGET_DIR}/bin/vfox" \; 2>/dev/null || true
         chmod +x "${TARGET_DIR}/bin/vfox" 2>/dev/null || true
       else
@@ -186,52 +185,7 @@ case "$ACTION" in
 
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$VFOX_INSTALL_METHOD" = "libscript_native" ] || [ "$VFOX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-vfox}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $VFOX_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "vfox" "$ACTION" "$VERSION" "${VFOX_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$VFOX_INSTALL_METHOD" = "libscript_native" ] || [ "$VFOX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-vfox}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $VFOX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$VFOX_INSTALL_METHOD" = "libscript_native" ] || [ "$VFOX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-vfox}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $VFOX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$VFOX_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling vfox $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $VFOX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,7 +54,7 @@ if [ "${run_before}" -eq 0 ]; then
   if [ ! -f '/etc/apt/preferences.d/99nginx' ]; then
     printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
       | priv  tee /etc/apt/preferences.d/99nginx
-    priv apt-get update -qq
+    run_before=0
   fi
 
   libscript_depends nginx
@@ -139,8 +138,12 @@ if [ "${NGINX_VARS-}" ] || [ "${NGINX_WWWROOT_NAME-}" ] || [ "${NGINX_SERVER_NAM
     libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
   fi
   
-  [ "${NGINX_WWWROOT_NAME-}" ] && printf '%s\n' "export NGINX_SERVER_NAME='${NGINX_WWWROOT_NAME}'" >> "${ENV_SCRIPT_FILE}"
-  [ "${NGINX_WWWROOT_PATH-}" ] && printf '%s\n' "export NGINX_WWWROOT='${NGINX_WWWROOT_PATH}'" >> "${ENV_SCRIPT_FILE}"
+  if [ "${NGINX_WWWROOT_NAME-}" ] && ! grep -q "^export NGINX_SERVER_NAME=" "${ENV_SCRIPT_FILE}" 2>/dev/null; then
+    printf '%s\n' "export NGINX_SERVER_NAME='${NGINX_WWWROOT_NAME}'" >> "${ENV_SCRIPT_FILE}"
+  fi
+  if [ "${NGINX_WWWROOT_PATH-}" ] && ! grep -q "^export NGINX_WWWROOT=" "${ENV_SCRIPT_FILE}" 2>/dev/null; then
+    printf '%s\n' "export NGINX_WWWROOT='${NGINX_WWWROOT_PATH}'" >> "${ENV_SCRIPT_FILE}"
+  fi
   
   . "${ENV_SCRIPT_FILE}"
 

@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,13 +39,13 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 # Displays usage and help information for the audit tool.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --staged | <file>...]"
-  printf '%s\n' "Audits files for adherence to LibScript engineering standards."
+  printf '%s\n' 'Audits files for adherence to LibScript engineering standards.'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --all               Audit all tracked script files in repository."
-  printf '%s\n' "  --staged            Audit git-staged files (default if no files given)."
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --all               Audit all tracked script files in repository.'
+  printf '%s\n' '  --staged            Audit git-staged files (default if no files given).'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -114,7 +113,7 @@ audit_single_file() {
       BEGIN {
         in_heredoc = 0; delim = ""; shebang_count = 0; shebang_lines = "";
         has_this_file = 0; has_stack = 0; has_root_dir = 0; has_zsh_eval = 0;
-        has_overview = 0; has_usage = 0;
+        has_overview = 0; has_usage = 0; has_set_feu = 0;
         mkdir_hits = ""; ln_hits = ""; eval_hits = ""; git_push_hits = "";
       }
       NR == 1 {
@@ -124,11 +123,12 @@ audit_single_file() {
         if ($0 ~ /## Overview/) has_overview = 1
         if ($0 ~ /## Usage/) has_usage = 1
       }
-      NR <= 45 {
+      NR <= 38 {
+        if ($0 ~ /set -feu/) has_set_feu = 1
         if ($0 ~ /THIS_FILE=/) has_this_file = 1
         if ($0 ~ /STACK/) has_stack = 1
         if ($0 ~ /LIBSCRIPT_ROOT_DIR/) has_root_dir = 1
-        if ($0 ~ /# libscript-allow-eval/) has_zsh_eval = 1
+        if ($0 ~ /# shellcheck disable=SC2296/) has_zsh_sc = 1
       }
       {
         if (in_heredoc) {
@@ -163,11 +163,30 @@ audit_single_file() {
         if ($0 ~ /^[[:space:]]*ln[[:space:]]+-s[[:space:]]+[^-]/) {
           ln_hits = (ln_hits ? ln_hits "; " : "") NR ":" $0
         }
-        if (($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || $0 ~ /;[[:space:]]*eval([[:space:]]|$)/) && $0 !~ /libscript-allow-eval/) {
+        if ($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || $0 ~ /;[[:space:]]*eval([[:space:]]|$)/) {
           eval_hits = (eval_hits ? eval_hits "; " : "") NR ":" $0
         }
         if ($0 ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
+        }
+        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-pkg/) {
+          if ($0 ~ /(^|[[:space:];|&])(priv[[:space:]]+|sudo[[:space:]]+)?(apt-get[[:space:]]+(install|remove|purge|update)|apt[[:space:]]+(install|remove|purge)|apk[[:space:]]+(add|del|update)|dnf[[:space:]]+(install|remove|groupinstall)|yum[[:space:]]+(install|remove|groupinstall)|pacman[[:space:]]+(-S|-R|-Rns|-Syu)|zypper[[:space:]]+(install|in|remove|rm)|brew[[:space:]]+(install|uninstall|tap|services)|port[[:space:]]+(install|uninstall)|pkg[[:space:]]+(install|delete|add)|xbps-install|xbps-remove|emerge[[:space:]]|swupd[[:space:]]+bundle-add|winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update)|vcpkg[[:space:]]+(install|remove)|conan[[:space:]]+install|nix[[:space:]]+profile[[:space:]]+install|nix-env[[:space:]]+-i|guix[[:space:]]+(install|package)|spack[[:space:]]+(install|uninstall)|npm[[:space:]]+install[[:space:]]+-g|composer[[:space:]]+global[[:space:]]+require)([[:space:]]|$)/) {
+            if ($0 !~ /--root/) {
+              adhoc_pkg_hits = (adhoc_pkg_hits ? adhoc_pkg_hits "; " : "") NR ":" $0
+            }
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
+          if ($0 ~ /(^|[[:space:];|&(])(curl[[:space:]]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[[:space:]]+-[a-zA-Z0-9-]*[qO]|aria2c[[:space:]]+-[dox])([[:space:]]|$)/ && $0 !~ /(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w[[:space:]]+"%\{http_code\}")/) {
+            raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/) {
+          if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
+              $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+'\''%s\\n'\''|echo)[[:space:]]+"[^$`\\'\''"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
+              $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
+            unnecessary_dq_hits = (unnecessary_dq_hits ? unnecessary_dq_hits "; " : "") NR ":" $0
+          }
         }
       }
       END {
@@ -179,16 +198,20 @@ audit_single_file() {
         if (shebang_count > 1) {
           print "DUPLICATE_SHEBANG|Multiple shebangs found outside of heredocs at lines: " shebang_lines "."
         }
+        if (!has_set_feu) print "SET_FEU_SAFETY|Missing set -feu in first 38 lines."
         if (!has_this_file) print "THIS_FILE_DANCE|Missing canonical THIS_FILE= resolution in first 30 lines."
         if (!has_stack) print "RECURSION_GUARD|Missing STACK recursion guard in first 35 lines."
         if (!has_root_dir) print "ROOT_DIR_RESOLUTION|Missing LIBSCRIPT_ROOT_DIR resolution in header."
-        if (!has_zsh_eval) print "ZSH_ALLOW_EVAL_TAG|Missing # libscript-allow-eval in ZSH_VERSION header block."
+        if (!has_zsh_sc) print "ZSH_SHELLCHECK_TAG|Missing # shellcheck disable=SC2296 in ZSH_VERSION header block."
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
         if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
         if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir found without -p: " mkdir_hits
         if (ln_hits != "") print "IDEMPOTENCY|Unguarded ln -s found without -f: " ln_hits
         if (eval_hits != "") print "BAN_EVAL|Disallowed use of eval found: " eval_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
+        if (adhoc_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends): " adhoc_pkg_hits
+        if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout): " raw_fetch_hits
+        if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
       }
     ' "$file" 2>/dev/null || true)
 
@@ -206,9 +229,27 @@ audit_single_file() {
               *) log_failure "$file" "POSIX_SHEBANG" "$v_msg" ;;
             esac
             ;;
-          THIS_FILE_DANCE|RECURSION_GUARD|ROOT_DIR_RESOLUTION|ZSH_ALLOW_EVAL_TAG)
+          THIS_FILE_DANCE|RECURSION_GUARD|ROOT_DIR_RESOLUTION|ZSH_SHELLCHECK_TAG)
             case "$file" in
               *Dockerfile*|*.tpl|*dockerfiles-ssh*|*docker/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_PACKAGE_MANAGER)
+            case "$file" in
+              *_lib/_common/pkg_mgr.sh|*_lib/_common/service.sh|*_lib/package-managers/*|*_lib/orchestration/vm_builder.sh|*_lib/orchestration/distro/*|*tests/*|*devtools/*|*docker*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_NETWORK_FETCH)
+            case "$file" in
+              *_lib/_common/pkg_mgr.sh|*_lib/_common/fetch_checksum.sh|*_lib/init-systems/daemonize.sh|*_lib/utilities/curl/test.sh|*_lib/utilities/wget/test.sh|*_lib/utilities/aria2/test.sh|*_lib/web-apps/*/test_harness.sh|*_lib/web-apps/*/health*.sh|*_lib/web-apps/*/service.sh|*tests/*|*devtools/*|*docker*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          UNNECESSARY_DOUBLE_QUOTES)
+            case "$file" in
+              *audit_posix.sh|*audit_standards.sh|*.tpl) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -245,25 +286,39 @@ audit_single_file() {
       log_failure "$file" "WINDOWS_PARITY" "Missing Windows batch equivalent file ('$cmd_equiv') for PowerShell script."
     fi
     ps1_violations=$(awk '
-      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = "" }
+      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; allow_fetch_next = 0 }
       { sub(/\r$/, "", $0) }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
         if ($0 ~ /## Usage/) has_usage = 1
       }
       {
-        if (tolower($0) ~ /^[[:space:]]*(invoke-expression|iex)([[:space:]]|$)/ && $0 !~ /libscript-allow-eval/) {
+        if ($0 ~ /libscript-allow-raw-fetch/) { allow_fetch_next = 1; next }
+        if (tolower($0) ~ /^[[:space:]]*(invoke-expression|iex)([[:space:]]|$)/) {
           eval_hits = (eval_hits ? eval_hits "; " : "") NR ":" $0
         }
         if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
         }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_fetch_next) {
+          if (tolower($0) ~ /(^|[[:space:];|&(])(invoke-webrequest|invoke-restmethod|iwr|irm|start-bitstransfer|net\.webclient)([[:space:]]|$)/) {
+            raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-pkg/) {
+          if (tolower($0) ~ /(^|[[:space:];|&&])(winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update))([[:space:]]|$)/) {
+            raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
+          }
+        }
+        allow_fetch_next = 0
       }
       END {
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
         if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
         if (eval_hits != "") print "BAN_EVAL|Disallowed use of Invoke-Expression found: " eval_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
+        if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1): " raw_fetch_hits
+        if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop invocation found (delegate to pkg_mgr.ps1): " raw_pkg_hits
       }
     ' "$file" 2>/dev/null || true)
     if [ -n "$ps1_violations" ]; then
@@ -271,7 +326,25 @@ audit_single_file() {
       IFS='
 '
       for v_line in $ps1_violations; do
-        log_failure "$file" "${v_line%%|*}" "${v_line#*|}"
+        v_rule="${v_line%%|*}"
+        v_msg="${v_line#*|}"
+        case "$v_rule" in
+          RAW_NETWORK_FETCH)
+            case "$file" in
+              *_lib/_common/pkg_mgr.ps1|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_PACKAGE_MANAGER)
+            case "$file" in
+              *_lib/_common/pkg_mgr.ps1|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          *)
+            log_failure "$file" "$v_rule" "$v_msg"
+            ;;
+        esac
       done
       IFS="$OIFS_V"
     fi
@@ -289,6 +362,7 @@ audit_single_file() {
         has_overview = 0; has_usage = 0; has_dup_stack = 0;
         mkdir_hits = ""; git_push_hits = ""; script_dir_hits = ""; chained_if_else_hits = "";
         bad_script_dir_strip = ""; tab_path_hits = ""; endlocal_delayed_hits = "";
+        raw_fetch_hits = ""; raw_pkg_hits = "";
         in_endlocal = 0;
       }
       { sub(/\r$/, "", $0) }
@@ -311,10 +385,23 @@ audit_single_file() {
         if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
         }
-        if ($0 ~ /SCRIPT_DIR[%!][^\\/"[:space:]\)]/) {
+        if (tolower($0) ~ /^[[:space:]]*exit[[:space:]]+[0-9]+[[:space:]]*$/) {
+          bare_exit_hits = (bare_exit_hits ? bare_exit_hits "; " : "") NR ":" $0
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && $0 !~ /libscript-allow-raw-fetch/) {
+          if (tolower($0) ~ /(invoke-webrequest|invoke-restmethod|[[:space:]"]iwr[[:space:]]|[[:space:]"]irm[[:space:]]|certutil[[:space:]]+-urlcache|curl[[:space:]]+-[a-z0-9]*[sflo])/ && tolower($0) !~ /(127\.0\.0\.1|localhost|--cacert)/) {
+            raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
+          }
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/ && $0 !~ /libscript-allow-raw-pkg/) {
+          if (tolower($0) ~ /(^|[[:space:]&(])(call[[:space:]]+)?(winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update))([[:space:]]|$)/) {
+            raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 ~ /SCRIPT_DIR[%!][^\\\/"[:space:])]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
         }
-        if ($0 ~ /SCRIPT_DIR:~-1(%|!)""==""/ || $0 ~ /SCRIPT_DIR:~-1%"==""/ || $0 ~ /SCRIPT_DIR:~-1%"=="\\\\"/) {
+        if ($0 ~ /SCRIPT_DIR:~-1(%|!)""==""/ || $0 ~ /SCRIPT_DIR:~-1%"==""/ || index($0, "SCRIPT_DIR:~-1%\"==\"\\\\\"") > 0) {
           bad_script_dir_strip = (bad_script_dir_strip ? bad_script_dir_strip "; " : "") NR ":" $0
         }
         if ($0 ~ /(LIBSCRIPT_ROOT_DIR|SCRIPT_DIR)[%!]\t/) {
@@ -353,6 +440,9 @@ audit_single_file() {
         if (tab_path_hits != "") print "BATCH_TAB_CORRUPTION|Literal TAB character in path variable expansion: " tab_path_hits
         if (endlocal_delayed_hits != "") print "BATCH_ENDLOCAL_DELAYED|Delayed expansion !PATH! inside endlocal block: " endlocal_delayed_hits
         if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
+        if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
+        if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits
+        if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
       }
     ' "$file" 2>/dev/null || true)
     if [ -n "$cmd_violations" ]; then
@@ -360,7 +450,25 @@ audit_single_file() {
       IFS='
 '
       for v_line in $cmd_violations; do
-        log_failure "$file" "${v_line%%|*}" "${v_line#*|}"
+        v_rule="${v_line%%|*}"
+        v_msg="${v_line#*|}"
+        case "$v_rule" in
+          RAW_NETWORK_FETCH)
+            case "$file" in
+              *_lib/_common/pkg_mgr.cmd|*_lib/init-systems/daemonize.cmd|*_lib/utilities/curl/test.cmd|*_lib/utilities/wget/test.cmd|*_lib/utilities/aria2/test.cmd|*devtools/*|*tests/*|cli/commands/packaging/formats/pkg_docker_compose.cmd) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_PACKAGE_MANAGER)
+            case "$file" in
+              *_lib/_common/pkg_mgr.cmd|*_lib/package-managers/*|*_lib/orchestration/vm_builder.cmd|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          *)
+            log_failure "$file" "$v_rule" "$v_msg"
+            ;;
+        esac
       done
       IFS="$OIFS_V"
     fi
@@ -394,7 +502,7 @@ audit_single_file() {
 
   # 8b. Verify _lib/*/*/env.cmd exports across endlocal boundary and idempotent PATH updates
   case "$file" in
-    _lib/*/env.cmd|_lib/*/*/env.cmd)
+    _lib/*/env.cmd)
       if grep -qi "setlocal" "$file" && ! grep -qi "endlocal" "$file"; then
         log_failure "$file" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; PATH and variable updates will be lost on return."
       fi
@@ -403,7 +511,7 @@ audit_single_file() {
         log_failure "$file" "ENV_PATH_IDEMPOTENCY" "Unguarded set \"PATH=...;%PATH%\" in env.cmd duplicates PATH entries on re-run: $unguarded_cmd_path"
       fi
       ;;
-    _lib/*/env.sh|_lib/*/*/env.sh)
+    _lib/*/env.sh)
       unguarded_sh_path=$(grep -nE '^[[:space:]]*export[[:space:]]+PATH="[^"]+:\$\{?PATH(\:-)?\}?"' "$file" 2>/dev/null || true)
       if [ -n "$unguarded_sh_path" ]; then
         log_failure "$file" "ENV_PATH_IDEMPOTENCY" "Unguarded export PATH=\"...:\$PATH\" in env.sh duplicates PATH entries on re-run: $unguarded_sh_path"
@@ -413,8 +521,8 @@ audit_single_file() {
 
   # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, _lib/orchestration/, _lib/init-systems/, _lib/databases/, _lib/cloud/core/, cli/)
   case "$file" in
-    _lib/_common/*.sh|_lib/orchestration/*.sh|_lib/init-systems/*.sh|_lib/databases/*.sh|_lib/cloud/core/*.sh|cli/*.sh|cli/*/*.sh|cli/*/*/*.sh)
-      interp_hits=$(grep -nE '^[[:space:]]*(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]' "$file" 2>/dev/null || true)
+    _lib/_common/*.sh|_lib/orchestration/*.sh|_lib/init-systems/*.sh|_lib/databases/*.sh|_lib/cloud/core/*.sh|cli/*.sh)
+      interp_hits=$(grep -nE '(^[[:space:]]*|\$\()(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]|libscript-allow-interp' "$file" 2>/dev/null || true)
       if [ -n "$interp_hits" ]; then
         log_failure "$file" "ZERO_DEP_SUBSTRATE" "Core orchestration script invokes external interpreter inline: $interp_hits"
       fi
@@ -441,16 +549,60 @@ audit_single_file() {
       ;;
   esac
 
-  # 8f. Ensure _lib/_common/env_base.cmd preserves caller context and never resolves PACKAGE_NAME to _common
+  # 8f. Ensure _lib/_common/env_base.cmd and pkg_mgr.sh preserve caller context and STACK hygiene
   case "$file" in
     _lib/_common/env_base.cmd)
       if ! grep -q 'CALLER_SCRIPT_DIR' "$file"; then
-        log_failure "$file" "ENV_BASE_CMD_CALL" "env_base.cmd must support CALLER_SCRIPT_DIR to prevent resolving PACKAGE_NAME to _common."
+        log_failure "$file" "STACK_HYGIENE" "env_base.cmd must support CALLER_SCRIPT_DIR to prevent resolving PACKAGE_NAME to _common."
+      fi
+      ;;
+    _lib/_common/pkg_mgr.sh|_lib/_common/os_info.sh)
+      if ! grep -q 'STACK=.*THIS_FILE' "$file"; then
+        log_failure "$file" "STACK_HYGIENE" "Common library script must pop THIS_FILE from STACK on completion."
+      fi
+      ;;
+    _lib/*/*/env.sh)
+      if grep -v '^[[:space:]]*#' "$file" | grep -Eq '\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})'; then
+        log_failure "$file" "SET_FEU_SAFETY" "Unguarded \$HOME reference in env.sh; use \${HOME:-/root} for set -u daemon safety."
+      fi
+      ;;
+    _lib/checksums.txt)
+      _cs_err=$(awk '
+        /^[[:space:]]*#/ || NF == 0 { next }
+        NF != 2 || $2 !~ /^[0-9a-fA-F]{64}$/ { print "line " NR ": malformed entry"; next }
+        {
+          if (($1 in seen) && seen[$1] != tolower($2)) {
+            print "line " NR ": conflicting SHA256 for " $1
+          }
+          seen[$1] = tolower($2)
+        }
+      ' "$file" 2>/dev/null || true)
+      if [ -n "$_cs_err" ]; then
+        log_failure "$file" "CHECKSUM_INTEGRITY" "Invalid checksum entry: $_cs_err"
       fi
       ;;
   esac
 
-  # 9. Schema 100% Property Description Coverage
+  # 9. JSON Validity & Schema 100% Property Description Coverage
+  case "$file" in
+    *.json)
+      if command -v jq >/dev/null 2>&1; then
+        if ! jq empty "$file" >/dev/null 2>&1; then
+          log_failure "$file" "JSON_VALIDITY" "File is not syntactically valid JSON."
+        fi
+      fi
+      ;;
+  esac
+  case "$file" in
+    _lib/*/*/manifest.json)
+      if command -v jq >/dev/null 2>&1; then
+        _bad_os=$(jq -r '((.os_whitelist // []) + (.os_blacklist // []))[]' "$file" 2>/dev/null | grep -Ev '^(all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)$' || true)
+        if [ -n "$_bad_os" ]; then
+          log_failure "$file" "JSON_VALIDITY" "Invalid OS identifier in manifest.json: $_bad_os"
+        fi
+      fi
+      ;;
+  esac
   case "$file" in
     *.schema.json)
       if command -v jq >/dev/null 2>&1; then
@@ -489,7 +641,7 @@ if [ "${1:-}" = "--all" ]; then
   OIFS="$IFS"
   IFS='
 '
-  for candidate in $(git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" "*.schema.json"); do
+  for candidate in $(git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt"); do
     [ -f "$candidate" ] && audit_single_file "$candidate"
   done
   IFS="$OIFS"
@@ -508,7 +660,7 @@ if [ "${1:-}" = "--all" ]; then
 elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
   staged_files=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM || true)
   if [ -z "$staged_files" ]; then
-    printf '%s\n' "[AUDIT] No matching files to audit."
+    printf '%s\n' '[AUDIT] No matching files to audit.'
     exit 0
   fi
   OIFS="$IFS"
@@ -533,5 +685,5 @@ if [ "$ERRORS" -gt 0 ]; then
   exit 1
 fi
 
-printf '%s\n' "[AUDIT] All inspected files adhere to LibScript engineering standards."
+printf '%s\n' '[AUDIT] All inspected files adhere to LibScript engineering standards.'
 exit 0

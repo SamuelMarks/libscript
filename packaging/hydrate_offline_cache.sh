@@ -1,20 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Hydrates and verifies the offline air-gapped artifact cache for LibScript installers.
-# Downloads runtimes (Python, Node.js), datastores (MySQL, Redis, MongoDB, Meilisearch),
-# pre-compiled wheels, codebase archives, and demo courseware as defined in an offline
-# manifest schema (e.g., _lib/web-apps/openedx/offline_bundle.json).
 #
 # ## Usage
-# ./packaging/hydrate_offline_cache.sh [OPTIONS]
-#
-# Options:
-#   --manifest <path>      Path to offline_bundle.json manifest (default: _lib/web-apps/openedx/offline_bundle.json)
-#   --cache-dir <dir>      Target directory to stage artifacts (default: cache/)
-#   --verify-only          Verify SHA-256 checksums of existing cached artifacts without downloading
-#   --wheels               Download Python wheels matching requirements into cache/wheels/
-#   --codebase             Download or clone edx-platform codebase archive into cache/codebase/
-#   --help, -h             Show this help text
+# ./packaging/hydrate_offline_cache.sh [--manifest <path>] [--cache-dir <dir>] [--verify-only] [--wheels] [--codebase]
 
 set -feu
 
@@ -23,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -140,7 +128,7 @@ compute_sha256() {
   elif command -v openssl >/dev/null 2>&1; then
     openssl dgst -sha256 "$_file" | awk '{print $NF}'
   else
-    log_error "No SHA-256 utility available (sha256sum, shasum, openssl)."
+    log_error 'No SHA-256 utility available (sha256sum, shasum, openssl).'
     return 1
   fi
 }
@@ -219,15 +207,14 @@ process_artifact() {
   fi
 
   log_info "[FETCHING] [${_category}] $(basename "$_dest") from ${_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    if ! curl -fL -C - "$_url" -o "$_dest" 2>/dev/null; then
-      # If resume (-C -) is unsupported by remote server, perform standard fetch
-      curl -fL "$_url" -o "$_dest" || return 1
-    fi
-  elif command -v wget >/dev/null 2>&1; then
-    wget -c "$_url" -O "$_dest" || return 1
-  else
-    log_error "curl or wget required for downloading."
+  if ! type libscript_download >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+  fi
+  if ! libscript_download "$_url" "$_dest" "SKIP"; then
+    log_error "Failed to download $_url"
     return 1
   fi
 

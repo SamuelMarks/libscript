@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 PS_SCRIPT="${SCRIPT_DIR}/inspect_window.ps1"
 if [ ! -f "${PS_SCRIPT}" ] && [ -f "C:/libscript/inspect_window.ps1" ]; then
-  PS_SCRIPT="C:/libscript/inspect_window.ps1"
+  PS_SCRIPT='C:/libscript/inspect_window.ps1'
 fi
 
 if command -v powershell.exe >/dev/null 2>&1; then
@@ -42,6 +41,6 @@ if command -v powershell.exe >/dev/null 2>&1; then
 elif command -v pwsh >/dev/null 2>&1; then
   pwsh -NoProfile -ExecutionPolicy Bypass -File "${PS_SCRIPT}" "$@"
 else
-  printf '%s\n' "Window inspection requires PowerShell on Windows." >&2
+  printf '%s\n' 'Window inspection requires PowerShell on Windows.' >&2
   exit 1
 fi

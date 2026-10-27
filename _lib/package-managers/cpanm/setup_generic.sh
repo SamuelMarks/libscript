@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,70 +64,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$CPANM_INSTALL_METHOD" = "mise" ]; then
-      mise ls cpanm || true
-    elif [ "$CPANM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list cpanm || true
-    elif [ "$CPANM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$CPANM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls cpanm || true
-    elif [ "$CPANM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/cpanm/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "cpanm" "$ACTION" "$VERSION" "${CPANM_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$CPANM_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote cpanm || true
-    elif [ "$CPANM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all cpanm || true
-    elif [ "$CPANM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$CPANM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all cpanm || true
+    if [ -n "${CPANM_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${CPANM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${CPANM_RELEASES_URL:-}" ]; then
-        curl -sSL "${CPANM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/miyagawa/cpanminus" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/miyagawa/cpanminus" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$CPANM_INSTALL_METHOD" = "mise" ]; then
-      mise use "cpanm@${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "asdf" ]; then
-      asdf global cpanm "${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$CPANM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "cpanm@${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "cpanm@${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "cpanm" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "cpanm" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cpanm/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "cpanm ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "cpanm" "default" "${EXACT_VERSION}"
-      log_info "Set default cpanm version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env cpanm \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "cpanm" "$ACTION" "$VERSION" "${CPANM_INSTALL_METHOD}"
     ;;
   download)
     if [ "$CPANM_INSTALL_METHOD" = "libscript_native" ]; then
@@ -144,16 +91,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$CPANM_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "cpanm"
-    elif [ "$CPANM_INSTALL_METHOD" = "mise" ]; then
-      mise install "cpanm@${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "asdf" ]; then
-      asdf install cpanm "${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "cpanm@${VERSION}"
-    elif [ "$CPANM_INSTALL_METHOD" = "vfox" ]; then
-      vfox add cpanm || true
-      vfox install "cpanm@${VERSION}"
+      libscript_depends 'cpanm'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -162,7 +100,7 @@ case "$ACTION" in
         log_info "Installing cpanm ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpanm/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpanm/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -193,14 +131,14 @@ case "$ACTION" in
               if command -v cpanm >/dev/null 2>&1; then
                 cpanm_bin=$(command -v cpanm)
               elif [ -x /usr/bin/cpanm ]; then
-                cpanm_bin="/usr/bin/cpanm"
+                cpanm_bin='/usr/bin/cpanm'
               fi
               if [ -n "$cpanm_bin" ]; then
                 ln -sf "$cpanm_bin" "${TARGET_DIR}/bin/cpanm"
               fi
             else
-              libscript_depends "perl" "curl" || true
-              curl -sSLf https://cpanmin.us -o "${TARGET_DIR}/bin/cpanm" || true
+              libscript_depends 'perl' 'curl' || true
+              libscript_download "https://cpanmin.us" "${TARGET_DIR}/bin/cpanm" || true
               chmod +x "${TARGET_DIR}/bin/cpanm" || true
             fi
           fi
@@ -215,52 +153,7 @@ case "$ACTION" in
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$CPANM_INSTALL_METHOD" = "libscript_native" ] || [ "$CPANM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cpanm}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $CPANM_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "cpanm" "$ACTION" "$VERSION" "${CPANM_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$CPANM_INSTALL_METHOD" = "libscript_native" ] || [ "$CPANM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cpanm}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $CPANM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$CPANM_INSTALL_METHOD" = "libscript_native" ] || [ "$CPANM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cpanm}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $CPANM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$CPANM_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling cpanm $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/cpanm/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/cpanm/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $CPANM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

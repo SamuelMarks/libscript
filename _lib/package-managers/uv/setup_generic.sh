@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -81,7 +80,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION=$(curl -sL https://api.github.com/repos/astral-sh/uv/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
+      EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/astral-sh/uv/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
     fi
     [ -z "${EXACT_VERSION:-}" ] && EXACT_VERSION="latest"
   else
@@ -91,73 +90,23 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$UV_INSTALL_METHOD" = "mise" ]; then
-      mise ls uv || true
-    elif [ "$UV_INSTALL_METHOD" = "asdf" ]; then
-      asdf list uv || true
-    elif [ "$UV_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls uv || true
-    elif [ "$UV_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "uv" "$ACTION" "$VERSION" "${UV_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$UV_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote uv || true
-    elif [ "$UV_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all uv || true
-    elif [ "$UV_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all uv || true
+    if [ -n "${UV_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${UV_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${UV_RELEASES_URL:-}" ]; then
-        curl -sSL "${UV_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-        git ls-remote --tags "https://github.com/astral-sh/uv" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      fi
+      git ls-remote --tags "https://github.com/astral-sh/uv" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$UV_INSTALL_METHOD" = "mise" ]; then
-      mise use "uv@${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "asdf" ]; then
-      asdf global uv "${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "uv@${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "uv" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "uv" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "uv ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "uv" "default" "${EXACT_VERSION}"
-      log_info "Set default uv version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env uv \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "uv" "$ACTION" "$VERSION" "${UV_INSTALL_METHOD}"
     ;;
   download)
     if [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
       if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_uv >/dev/null 2>&1; then
-        log_info "[REUSE] uv is already installed; skipping download."
+        log_info '[REUSE] uv is already installed; skipping download.'
         exit 0
       fi
       log_info "Downloading uv ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/uv..."
@@ -189,21 +138,12 @@ case "$ACTION" in
 
     if [ "$UV_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "uv" 2>/dev/null; then
-        log_info "System package manager does not have uv, falling back to standalone install..."
-        UV_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have uv, falling back to standalone install...'
+        UV_INSTALL_METHOD='libscript_native'
       fi
     fi
 
-    if [ "$UV_INSTALL_METHOD" = "mise" ]; then
-      mise install "uv@${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "asdf" ]; then
-      asdf install uv "${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "uv@${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
-      vfox add uv || true
-      vfox install "uv@${VERSION}"
-    elif [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
+    if [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
@@ -211,7 +151,7 @@ case "$ACTION" in
         log_info "Installing uv ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/uv/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/uv/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -234,7 +174,7 @@ case "$ACTION" in
             URL="https://github.com/astral-sh/uv/releases/download/${EXACT_VERSION}/uv-${ARCH}-${OS}.tar.gz"
           fi
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl" "tar" || true
+          libscript_depends 'curl' 'tar' || true
           if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download uv from $URL"
             rm -f "$TEMP_FILE.tar.gz"
@@ -255,52 +195,7 @@ case "$ACTION" in
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$UV_INSTALL_METHOD" = "libscript_native" ] || [ "$UV_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-uv}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $UV_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "uv" "$ACTION" "$VERSION" "${UV_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$UV_INSTALL_METHOD" = "libscript_native" ] || [ "$UV_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-uv}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $UV_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$UV_INSTALL_METHOD" = "libscript_native" ] || [ "$UV_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-uv}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $UV_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling uv $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $UV_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

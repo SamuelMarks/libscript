@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -148,7 +147,7 @@ do_list() {
   _reg_file="${_root_dir}/registry.json"
 
   printf '%-24s %-8s %-10s %-12s\n' "MFE IDENTIFIER" "BUILT" "DEPLOYED" "VERSION"
-  printf '%s\n' "------------------------------------------------------------"
+  printf '%s\n' '------------------------------------------------------------'
 
   if [ -f "${_reg_file}" ] && command -v jq >/dev/null 2>&1; then
     jq -r 'to_entries[] | "\(.key) \(.value.built // false) \(.value.deployed // false) \(.value.version // "master")"' "${_reg_file}" 2>/dev/null | while read -r _name _built _dep _ver; do

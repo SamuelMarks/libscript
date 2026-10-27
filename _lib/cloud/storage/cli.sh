@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -27,6 +26,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+_STORAGE_SCRIPT_DIR="${SCRIPT_DIR}"
 
 CMD="${1:-}"
 if [ -n "$CMD" ]; then
@@ -89,6 +89,7 @@ while [ $# -gt 0 ]; do
     exit 0
     ;;
   test)
+    SCRIPT_DIR="${_STORAGE_SCRIPT_DIR}"
     if [ -f "$SCRIPT_DIR/test.sh" ]; then
       SCRIPT_NAME="$SCRIPT_DIR/test.sh"
       export SCRIPT_NAME
@@ -101,7 +102,13 @@ while [ $# -gt 0 ]; do
     ;;
   create|delete|list|sync)
     # Execution
-    . "$SCRIPT_DIR/api.sh"
+    SCRIPT_DIR="${_STORAGE_SCRIPT_DIR}"
+    SCRIPT_NAME="$SCRIPT_DIR/api.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "$SCRIPT_NAME"
+    unset SCRIPT_NAME || true
+    SCRIPT_DIR="${_STORAGE_SCRIPT_DIR}"
     case "$CMD" in
       create)
         libscript_storage_create "$LIBSCRIPT_CLOUD" "$LIBSCRIPT_BUCKET" "${LIBSCRIPT_STORAGE_PUBLIC_WEB:-false}"

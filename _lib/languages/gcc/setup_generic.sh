@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -52,7 +51,7 @@ VERSION="${GCC_VERSION:-latest}"
 # Resolves semantic version aliases (such as 'latest' or 'stable') to a concrete GCC release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="14.2.0"
+    EXACT_VERSION='14.2.0'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -71,9 +70,9 @@ stage_system_gcc_shim() {
   fi
 
   if ! command -v gcc >/dev/null 2>&1; then
-    libscript_depends "gcc" "c" || true
+    libscript_depends 'gcc' 'c' || true
   elif [ -f /etc/alpine-release ] && [ ! -f /usr/include/stdio.h ]; then
-    libscript_depends "c" || true
+    libscript_depends 'c' || true
   fi
 
   _sys_gcc="$(command -v gcc 2>/dev/null || command -v cc 2>/dev/null || true)"
@@ -132,14 +131,6 @@ case "${ACTION}" in
       libscript_emit_build_metrics "gcc" "${EXACT_VERSION}" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/gcc" "${GCC_CFLAGS:--O2}" ""
       libscript_symlink_alias "gcc" "${VERSION}" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
       libscript_symlink_alias "gcc" "default" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
-    elif [ "${GCC_INSTALL_METHOD}" = "mise" ]; then
-      mise install "gcc@${VERSION}"
-    elif [ "${GCC_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install gcc "${VERSION}"
-    elif [ "${GCC_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "gcc@${VERSION}"
-    elif [ "${GCC_INSTALL_METHOD}" = "vfox" ]; then
-      vfox install "gcc@${VERSION}"
     else
       stage_system_gcc_shim
     fi

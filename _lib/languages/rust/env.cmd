@@ -10,7 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -62,14 +62,16 @@ if "%LIBSCRIPT_HOME%"=="" (
 if "%CARGO_HOME%"=="" set "CARGO_HOME=%USERPROFILE%\.cargo"
 if "%RUSTUP_HOME%"=="" set "RUSTUP_HOME=%USERPROFILE%\.rustup"
 
-for %%P in ("%CARGO_HOME%\bin" "%LIBSCRIPT_BASE_DIR%\rust\default\bin" "%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\bin") do (
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rust" "%RUST_VERSION%"
+for %%P in ("%LIBSCRIPT_BASE_DIR%\rust\default\bin" "%CARGO_HOME%\bin" "%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\bin") do (
     set "_CAND_P=%%~P"
     echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
     if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rust" "%RUST_VERSION%"
 
 endlocal & (
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_BASE_DIR%"
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
     set "CARGO_HOME=%CARGO_HOME%"
     set "RUSTUP_HOME=%RUSTUP_HOME%"

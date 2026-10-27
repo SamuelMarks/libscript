@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,6 +47,6 @@ elif [ -x /opt/homebrew/sbin/openvpn ]; then
 elif [ -x /usr/local/sbin/openvpn ]; then
   /usr/local/sbin/openvpn --version
 else
-  printf '%s\n' "openvpn not found"
+  printf '%s\n' 'openvpn not found'
   exit 1
 fi

@@ -1,26 +1,9 @@
 #!/bin/sh
 # ## Overview
 # XBlock and stack plugin management utility for Open edX.
-# Installs, uninstalls, and enumerates XBlocks and Python extension plugins.
 #
 # ## Usage
-#   ./xblock.sh install <package_spec_or_git_url>
-#   ./xblock.sh uninstall <package_name>
-#   ./xblock.sh list
-#   ./xblock.sh help
-#
-# ## Parameters
-# - `install`: Installs XBlock into Python environment and executes migrations & asset collection.
-# - `uninstall`: Uninstalls XBlock from virtual environment.
-# - `list`: Enumerates installed XBlocks detected via entry point metadata.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success.
-# - `1`: Installation or package manager failure.
+# ./xblock.sh <install|uninstall|list|help> [package_spec]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -118,10 +100,10 @@ xblock_install() {
 
   # Run migrations and asset collection if Django manage.py is present
   if [ -f "${MANAGE_PY}" ] && [ -x "${PYTHON_BIN}" ]; then
-    log_info "Running Django migrations for newly installed XBlock..."
+    log_info 'Running Django migrations for newly installed XBlock...'
     "${PYTHON_BIN}" "${MANAGE_PY}" lms migrate --noinput 2>/dev/null || true
     "${PYTHON_BIN}" "${MANAGE_PY}" cms migrate --noinput 2>/dev/null || true
-    log_info "Collecting static assets..."
+    log_info 'Collecting static assets...'
     "${PYTHON_BIN}" "${MANAGE_PY}" lms collectstatic --noinput 2>/dev/null || true
   fi
 
@@ -175,7 +157,7 @@ EOF
 # ## xblock_list
 # Lists installed XBlocks.
 xblock_list() {
-  log_info "Discovering installed XBlock extensions..."
+  log_info 'Discovering installed XBlock extensions...'
   _py="$(resolve_python)"
   if [ -n "${_py}" ]; then
     "${_py}" - <<EOF

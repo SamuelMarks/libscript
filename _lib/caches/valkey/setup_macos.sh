@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,11 +44,11 @@ export SCRIPT_NAME
 if [ ! -f '/opt/homebrew/bin/valkey-server' ] && [ ! -f '/usr/local/bin/valkey-server' ] && ! command -v valkey-server >/dev/null 2>&1; then
   libscript_depends_via brew 'valkey' || true
 fi
-if command -v brew >/dev/null 2>&1; then
-  if ! brew services list 2>/dev/null | grep valkey | grep -q started; then
-    brew services start valkey || true
-  fi
-fi
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+libscript_service start valkey || true
 
 if [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,70 +64,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$REBAR3_INSTALL_METHOD" = "mise" ]; then
-      mise ls rebar3 || true
-    elif [ "$REBAR3_INSTALL_METHOD" = "asdf" ]; then
-      asdf list rebar3 || true
-    elif [ "$REBAR3_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$REBAR3_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls rebar3 || true
-    elif [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "rebar3" "$ACTION" "$VERSION" "${REBAR3_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$REBAR3_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote rebar3 || true
-    elif [ "$REBAR3_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all rebar3 || true
-    elif [ "$REBAR3_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$REBAR3_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all rebar3 || true
+    if [ -n "${REBAR3_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${REBAR3_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${REBAR3_RELEASES_URL:-}" ]; then
-        curl -sSL "${REBAR3_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/rebar3" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/wch/r-sourceebar3" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$REBAR3_INSTALL_METHOD" = "mise" ]; then
-      mise use "rebar3@${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "asdf" ]; then
-      asdf global rebar3 "${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$REBAR3_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "rebar3@${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "rebar3@${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "rebar3" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "rebar3" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "rebar3 ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "rebar3" "default" "${EXACT_VERSION}"
-      log_info "Set default rebar3 version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env rebar3 \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "rebar3" "$ACTION" "$VERSION" "${REBAR3_INSTALL_METHOD}"
     ;;
   download)
     if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ]; then
@@ -144,26 +91,17 @@ case "$ACTION" in
     ;;
   install)
     if [ "$REBAR3_INSTALL_METHOD" = "system" ] && command -v dnf >/dev/null 2>&1; then
-      REBAR3_INSTALL_METHOD="libscript_native"
+      REBAR3_INSTALL_METHOD='libscript_native'
     fi
     if [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "rebar3"
-    elif [ "$REBAR3_INSTALL_METHOD" = "mise" ]; then
-      mise install "rebar3@${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "asdf" ]; then
-      asdf install rebar3 "${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "rebar3@${VERSION}"
-    elif [ "$REBAR3_INSTALL_METHOD" = "vfox" ]; then
-      vfox add rebar3 || true
-      vfox install "rebar3@${VERSION}"
+      libscript_depends 'rebar3'
     else
       # libscript_native implementation
       if [ -z "${REBAR3_DOWNLOAD_URL:-}" ]; then
         if ! command -v erl >/dev/null 2>&1; then
-          libscript_depends "erlang" || true
+          libscript_depends 'erlang' || true
         fi
-        REBAR3_DOWNLOAD_URL="https://s3.amazonaws.com/rebar3/rebar3"
+        REBAR3_DOWNLOAD_URL='https://s3.amazonaws.com/rebar3/rebar3'
       fi
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/${EXACT_VERSION}"
@@ -171,7 +109,7 @@ case "$ACTION" in
         log_info "Installing rebar3 ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rebar3/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rebar3/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -202,7 +140,7 @@ case "$ACTION" in
               if command -v rebar3 >/dev/null 2>&1; then
                 ln -sf "$(command -v rebar3)" "${TARGET_DIR}/bin/rebar3"
               elif [ "${TARGET_OS:-}" = "alpine" ]; then
-                libscript_depends "rebar3" || true
+                libscript_depends 'rebar3' || true
                 if command -v rebar3 >/dev/null 2>&1; then
                   ln -sf "$(command -v rebar3)" "${TARGET_DIR}/bin/rebar3"
                 fi
@@ -218,55 +156,7 @@ case "$ACTION" in
       libscript_symlink_alias "rebar3" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ] || [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rebar3}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $REBAR3_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "rebar3" "$ACTION" "$VERSION" "${REBAR3_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ] || [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rebar3}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $REBAR3_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ] || [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rebar3}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $REBAR3_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling rebar3 $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $REBAR3_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

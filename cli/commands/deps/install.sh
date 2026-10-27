@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -29,7 +28,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$CMD" = "install-deps" ]; then
-  json_file="libscript.json"
+  json_file='libscript.json'
   force_reinstall=0
   force_rebuild=0
   for _id_arg in "$@"; do
@@ -115,7 +114,7 @@ if [ "$CMD" = "install-deps" ]; then
     printf '%s\n' "No dependencies found in $json_file."
   else
     # Parallel Download Phase (only for missing dependencies)
-    printf '%s\n' "Checking and downloading missing dependencies in parallel..."
+    printf '%s\n' 'Checking and downloading missing dependencies in parallel...'
     printf '%s\n' "$deps" | while read -r pkg ver override; do
       if [ -n "$pkg" ]; then
         if [ "$ver" = "null" ]; then ver="latest"; fi
@@ -130,30 +129,28 @@ if [ "$CMD" = "install-deps" ]; then
     done
     wait
 
-    # Serial Reuse-Else-Create Install Phase
-    printf '%s\n' "Resolving dependencies (reuse-else-create)..."
-    printf '%s\n' "$deps" | while read -r pkg ver override; do
+    # Serial Reuse-Else-Create Install Phase (in main shell so each component env.sh updates parent PATH)
+    printf '%s\n' 'Resolving dependencies (reuse-else-create)...'
+    tmp_deps_env=$(mktemp 2>/dev/null || printf '%s' "/tmp/libscript_deps_env.$$")
+    printf '%s\n' "$deps" > "$tmp_deps_env"
+    _inst_saved_script_dir="${SCRIPT_DIR:-}"
+    _inst_saved_this_file="${THIS_FILE:-}"
+    _inst_saved_stack="${STACK:-}"
+    _inst_saved_ls_ver="${LIBSCRIPT_VERSION:-}"
+    while read -r pkg ver override <&3; do
       if [ -n "$pkg" ]; then
-        if [ "$ver" = "null" ]; then ver="latest"; fi
+        if [ "$ver" = "null" ] || [ -z "$ver" ]; then ver="latest"; fi
         if [ -n "$override" ] && [ "$override" != "null" ]; then
           printf '%s\n' "Skipping installation of $pkg (override provided: $override)"
         elif [ "$force_reinstall" -eq 0 ] && type libscript_check_installed_version >/dev/null 2>&1 && _reused_bin=$(libscript_check_installed_version "$pkg" "$ver" 2>/dev/null); then
           printf '[REUSE] Dependency '\''%s'\'' (%s) is already installed at %s; reusing existing installation.\n' "$pkg" "$ver" "${_reused_bin:-system}"
         else
           printf '[CREATE] Installing missing dependency '\''%s'\'' (%s)...\n' "$pkg" "$ver"
-          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver"
+          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver" </dev/null
         fi
-      fi
-    done
-
-    # Export resolved component env.sh paths into current execution environment
-    tmp_deps_env=$(mktemp 2>/dev/null || printf '%s' "/tmp/libscript_deps_env.$$")
-    printf '%s\n' "$deps" > "$tmp_deps_env"
-    while read -r pkg ver _override; do
-      if [ -n "$pkg" ]; then
-        if [ "$ver" = "null" ] || [ -z "$ver" ]; then ver="latest"; fi
         _pkg_up=$(printf '%s' "$pkg" | tr '[:lower:]-' '[:upper:]_')
         export "${_pkg_up}_VERSION=${ver}"
+        export LIBSCRIPT_VERSION="${ver}"
         if type libscript_check_installed_version >/dev/null 2>&1 && _comp_bin_dir=$(libscript_check_installed_version "$pkg" "$ver" 2>/dev/null); then
           if [ -n "$_comp_bin_dir" ] && [ -d "$_comp_bin_dir" ]; then
             case ":${PATH}:" in
@@ -172,20 +169,33 @@ if [ "$CMD" = "install-deps" ]; then
             STACK=""
             SCRIPT_NAME="${_cat_dir}/${pkg}/env.sh"
             # shellcheck disable=SC1090
-            . "${SCRIPT_NAME}" || true
+            . "${SCRIPT_NAME}" </dev/null || true
           fi
         done
+        unset LIBSCRIPT_VERSION || true
       fi
-    done < "$tmp_deps_env"
-    unset SCRIPT_NAME || true
+    done 3< "$tmp_deps_env"
+    SCRIPT_DIR="$_inst_saved_script_dir"
+    THIS_FILE="$_inst_saved_this_file"
+    STACK="$_inst_saved_stack"
+    export STACK
+    if [ -n "$_inst_saved_ls_ver" ]; then
+      export LIBSCRIPT_VERSION="$_inst_saved_ls_ver"
+    else
+      unset LIBSCRIPT_VERSION || true
+    fi
+    unset SCRIPT_NAME _inst_saved_script_dir _inst_saved_this_file _inst_saved_stack _inst_saved_ls_ver || true
     rm -f "$tmp_deps_env"
 
-    # Persist resolved PATH and SERVICE_EXTRA_PATH idempotently into .env.libscript alongside manifest
+    if type libscript_hydrate_manifest_env >/dev/null 2>&1; then
+      libscript_hydrate_manifest_env "$json_file"
+    fi
+
+    # Persist resolved SERVICE_PATH and SERVICE_EXTRA_PATH idempotently into .env.libscript alongside manifest
     _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
     _env_out="${_manifest_dir}/.env.libscript"
     touch "$_env_out"
     grep -v -E "^(PATH|SERVICE_EXTRA_PATH|SERVICE_PATH)=" "$_env_out" > "${_env_out}.tmp" 2>/dev/null || true
-    printf 'PATH="%s"\n' "$PATH" >> "${_env_out}.tmp"
     if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then
       printf 'SERVICE_EXTRA_PATH="%s"\n' "$SERVICE_EXTRA_PATH" >> "${_env_out}.tmp"
       printf 'SERVICE_PATH="%s:%s"\n' "$SERVICE_EXTRA_PATH" "$PATH" >> "${_env_out}.tmp"
@@ -232,5 +242,6 @@ if [ "$CMD" = "install-deps" ]; then
 
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
+  "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
   exit 0
 fi

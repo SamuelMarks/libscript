@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -69,16 +68,16 @@ case "$ACTION" in
     fi
     log_info "Installing Elasticsearch (${VERSION}) via ${ELASTICSEARCH_INSTALL_METHOD}..."
     if command -v elasticsearch >/dev/null 2>&1; then
-      log_info "elasticsearch is already available on the system."
+      log_info 'elasticsearch is already available on the system.'
     elif [ "${UNAME_LOWER}" = "freebsd" ]; then
       libscript_depends "elasticsearch8" || libscript_depends "textproc/elasticsearch8" || libscript_depends "textproc/elasticsearch7" || true
     else
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}"
       if [ ! -f "${TARGET_DIR}/bin/elasticsearch" ]; then
         mkdir -p "${TARGET_DIR}"
-        OS_NAME="linux"
+        OS_NAME='linux'
         [ "${UNAME_LOWER}" = "darwin" ] && OS_NAME="darwin"
-        ARCH_NAME="x86_64"
+        ARCH_NAME='x86_64'
         [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ] && ARCH_NAME="aarch64"
         TAR_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${VERSION}-${OS_NAME}-${ARCH_NAME}.tar.gz"
         TEMP_TAR=$(mktemp)
@@ -87,7 +86,7 @@ case "$ACTION" in
           rm -f "${TEMP_TAR}"
         else
           rm -f "${TEMP_TAR}"
-          log_info "Downloading generic Elasticsearch tarball..."
+          log_info 'Downloading generic Elasticsearch tarball...'
           libscript_depends "languages/java" || true
         fi
       fi
@@ -102,7 +101,7 @@ case "$ACTION" in
     exit 0
     ;;
   uninstall)
-    log_info "Uninstalling Elasticsearch..."
+    log_info 'Uninstalling Elasticsearch...'
     rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}"
     exit 0
     ;;

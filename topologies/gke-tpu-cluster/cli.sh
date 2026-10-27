@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -94,7 +93,7 @@ case "$ACTION" in
     log_info "Cluster $CLUSTER_NAME deleted."
     ;;
   status|logs|use|env|ls|ls-remote|download|uninstall|install|test|which|exec|run)
-    printf '%s\n' "Topology status check complete for gke-tpu-cluster."
+    printf '%s\n' 'Topology status check complete for gke-tpu-cluster.'
     exit 0
     ;;
   *)

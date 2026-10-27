@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -70,7 +69,7 @@ fi
 
 PHPBB_VERSION="${PHPBB_VERSION:-3.3.11}"
 if [ "${PHPBB_VERSION}" = "latest" ]; then
-  PHPBB_VERSION="3.3.11"
+  PHPBB_VERSION='3.3.11'
 fi
 export PHPBB_VERSION
 
@@ -97,20 +96,20 @@ DB_NAME="${PHPBB_DB_NAME:-phpbb}"
 DB_USER="${PHPBB_DB_USER:-phpbb}"
 DB_PASS="${PHPBB_DB_PASS:-phpbb}"
 
-printf '%s\n' "Configuring Database..."
+printf '%s\n' 'Configuring Database...'
 if [ "${PHPBB_DB_TYPE}" = "mariadb" ] || [ "${PHPBB_DB_TYPE}" = "mysql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine mysql --host "127.0.0.1" --port "3306" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${PHPBB_DB_TYPE}" = "postgres" ] || [ "${PHPBB_DB_TYPE}" = "postgresql" ] || [ "${PHPBB_DB_TYPE}" = "pgsql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine postgres --host "127.0.0.1" --port "5432" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${PHPBB_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${PHPBB_WWWROOT}/store"
@@ -128,13 +127,13 @@ fi
 
 if [ -z "${PHPBB_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export PHPBB_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export PHPBB_PHP_FPM_LISTEN='unix:/run/php/php-fpm.sock'
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export PHPBB_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export PHPBB_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   elif [ -e /var/run/php-fpm.sock ]; then
-    export PHPBB_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export PHPBB_PHP_FPM_LISTEN='unix:/var/run/php-fpm.sock'
   else
-    export PHPBB_PHP_FPM_LISTEN="127.0.0.1:9000"
+    export PHPBB_PHP_FPM_LISTEN='127.0.0.1:9000'
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export PHPBB_PHP_FPM_LISTEN="unix:$sock"
@@ -207,7 +206,7 @@ elif [ "${PHPBB_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${PHPBB_SERVER_NAME}.caddy"
   else

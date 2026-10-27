@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -66,9 +65,9 @@ find_existing_nginx() {
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${NGINX_VERSION}" = "latest" ] || [ "${NGINX_VERSION}" = "lts" ]; then
-    EXACT_VERSION="1.25.4"
+    EXACT_VERSION='1.25.4'
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${NGINX_VERSION}"
@@ -77,15 +76,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
-      mise ls nginx
-    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list nginx
-    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls nginx
-    elif [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+    if [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
       nginx --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/" 2>/dev/null || true
@@ -93,31 +84,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote nginx
-    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all nginx
-    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all nginx
-    elif [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for nginx"
+      printf '%s\n' 'Fetching remote versions not implemented generically for nginx'
     fi
     exit 0
     ;;
   use)
-    if [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
-      mise use "nginx@${NGINX_VERSION}"
-    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global nginx "${NGINX_VERSION}"
-    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "nginx@${NGINX_VERSION}"
-    elif [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+    if [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -133,7 +108,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "nginx" "default" "${EXACT_VERSION}"
       log_info "Set default nginx version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nginx \"${NGINX_VERSION}\")"
     fi
     exit 0
@@ -141,7 +116,7 @@ case "$ACTION" in
   download)
     if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ]; then
       if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_nginx >/dev/null 2>&1; then
-        log_info "[REUSE] nginx is already installed; skipping download."
+        log_info '[REUSE] nginx is already installed; skipping download.'
         exit 0
       fi
       log_info "Downloading nginx ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx..."
@@ -167,15 +142,6 @@ case "$ACTION" in
 
     if [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'nginx'
-    elif [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
-      mise install "nginx@${NGINX_VERSION}"
-    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install nginx "${NGINX_VERSION}"
-    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "nginx@${NGINX_VERSION}"
-    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add nginx || true
-      vfox install "nginx@${NGINX_VERSION}"
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${EXACT_VERSION}"
@@ -186,10 +152,10 @@ case "$ACTION" in
       fi
 
       if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-        log_info "Falling back to system package manager for nginx..."
-        libscript_depends "nginx"
+        log_info 'Falling back to system package manager for nginx...'
+        libscript_depends 'nginx'
       else
-        log_error "Native installation for nginx from source is not supported yet."
+        log_error 'Native installation for nginx from source is not supported yet.'
         exit 1
       fi
       
@@ -204,59 +170,7 @@ case "$ACTION" in
       libscript_apply_hardware_tuning "nginx" || true
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-}"
-      if [ -z "$service_name" ]; then
-        if [ "$NGINX_INSTALL_METHOD" = "system" ] || [ -f "/lib/systemd/system/nginx.service" ] || [ -f "/etc/init.d/nginx" ]; then
-          service_name="nginx"
-        else
-          service_name="libscript_${PACKAGE_NAME:-nginx}"
-        fi
-      fi
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $NGINX_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nginx" "$ACTION" "$VERSION" "${NGINX_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nginx}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NGINX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nginx}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NGINX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nginx $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NGINX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

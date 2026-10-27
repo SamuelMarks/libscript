@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,6 +36,8 @@ unset SCRIPT_NAME || true
 
 export MEILISEARCH_PORT="${MEILISEARCH_PORT:-7700}"
 MEILISEARCH_VERSION="${MEILISEARCH_VERSION:-v1.36.0}"
-if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${MEILISEARCH_VERSION}/bin" ]; then
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${MEILISEARCH_VERSION}/bin"
+if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/meilisearch/${MEILISEARCH_VERSION}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/meilisearch/${MEILISEARCH_VERSION}/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

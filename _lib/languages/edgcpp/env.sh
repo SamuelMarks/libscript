@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,11 +44,11 @@ _edg_ver="${EDGCPP_VERSION:-default}"
 case "${_edg_ver}" in
   latest|stable|7.0|v7.0.1) _edg_ver="7.0.1" ;;
 esac
-_edg_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${_edg_ver}"
-if [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default" ]; then
-  _edg_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default"
-elif [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/7.0.1" ]; then
-  _edg_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/7.0.1"
+_edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${_edg_ver}"
+if [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default" ]; then
+  _edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default"
+elif [ ! -d "${_edg_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1" ]; then
+  _edg_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/7.0.1"
 fi
 
 export EDGCPP_HOME="${_edg_prefix}"
@@ -77,6 +76,8 @@ else
 fi
 
 export HOSTCC="${CC}"
-export CC_BACKEND="edgcpp"
-export CXX_BACKEND="edgcpp"
-export EDGCPP_LOG_FILE="${EDGCPP_LOG_FILE:-${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/compile_events.jsonl}"
+export CC_BACKEND='edgcpp'
+export CXX_BACKEND='edgcpp'
+export EDGCPP_LOG_FILE="${EDGCPP_LOG_FILE:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/compile_events.jsonl}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

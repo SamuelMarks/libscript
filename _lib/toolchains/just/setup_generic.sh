@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,11 +48,11 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${JUST_VERSION}" = "latest" ] || [ "${JUST_VERSION}" = "lts" ] || [ -z "${JUST_VERSION}" ]; then
-    libscript_depends "curl"
+    libscript_depends 'curl'
 
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/casey/just/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/casey/just/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="1.34.0"
+      EXACT_VERSION='1.34.0'
     fi
   else
     EXACT_VERSION="${JUST_VERSION}"
@@ -62,15 +61,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${JUST_INSTALL_METHOD}" = "mise" ]; then
-      mise ls just
-    elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list just
-    elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls just
-    elif [ "${JUST_INSTALL_METHOD}" = "system" ]; then
+    if [ "${JUST_INSTALL_METHOD}" = "system" ]; then
       just --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/just/" 2>/dev/null || true
@@ -78,31 +69,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${JUST_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote just
-    elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all just
-    elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all just
-    elif [ "${JUST_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${JUST_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for just"
+      printf '%s\n' 'Fetching remote versions not implemented generically for just'
     fi
     exit 0
     ;;
   use)
-    if [ "${JUST_INSTALL_METHOD}" = "mise" ]; then
-      mise use "just@${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global just "${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "just@${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "system" ]; then
+    if [ "${JUST_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -118,7 +93,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "just" "default" "${EXACT_VERSION}"
       log_info "Set default just version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env just \"${JUST_VERSION}\")"
     fi
     exit 0
@@ -146,7 +121,7 @@ case "$ACTION" in
         if command -v just >/dev/null 2>&1; then
           sys_just=$(command -v just)
         elif [ -x /usr/bin/just ]; then
-          sys_just="/usr/bin/just"
+          sys_just='/usr/bin/just'
         fi
         if [ -n "$sys_just" ]; then
           ln -sf "$sys_just" "${TARGET_DIR}/bin/just"
@@ -157,26 +132,17 @@ case "$ACTION" in
           libscript_symlink_alias "just" "$VERSION" "${EXACT_VERSION}"
         fi
       else
-        log_info "System package manager does not have just, falling back to standalone install..."
-        JUST_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have just, falling back to standalone install...'
+        JUST_INSTALL_METHOD='libscript_native'
       fi
     fi
 
-    if [ "${JUST_INSTALL_METHOD}" = "mise" ]; then
-      mise install "just@${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install just "${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "just@${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add just || true
-      vfox install "just@${JUST_VERSION}"
-    elif [ "${JUST_INSTALL_METHOD}" = "libscript_native" ]; then
+    if [ "${JUST_INSTALL_METHOD}" = "libscript_native" ]; then
         # libscript_native implementation
         resolve_exact_version
         if [ "${EXACT_VERSION}" = "latest" ] || [ -z "${EXACT_VERSION}" ]; then
-           libscript_depends "curl"
-           EXACT_VERSION=$(curl -sL https://api.github.com/repos/casey/just/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
+           libscript_depends 'curl'
+           EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/casey/just/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
            EXACT_VERSION="${EXACT_VERSION:-1.40.0}"
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
@@ -188,14 +154,14 @@ case "$ACTION" in
           OS_SUFFIX=""
           OS_NAME=$(uname -s | tr "[:upper:]" "[:lower:]")
           if [ "$OS_NAME" = "linux" ]; then
-            OS_SUFFIX="-unknown-linux-musl"
+            OS_SUFFIX='-unknown-linux-musl'
           elif [ "$OS_NAME" = "darwin" ]; then
-            OS_SUFFIX="-apple-darwin"
+            OS_SUFFIX='-apple-darwin'
           fi
           URL="https://github.com/casey/just/releases/download/${EXACT_VERSION}/just-${EXACT_VERSION}-${ARCH}${OS_SUFFIX}.tar.gz"
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl"
-          libscript_depends "tar"
+          libscript_depends 'curl'
+          libscript_depends 'tar'
           if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download just from $URL"
             rm -f "$TEMP_FILE.tar.gz"
@@ -215,52 +181,7 @@ case "$ACTION" in
         fi
 
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$JUST_INSTALL_METHOD" = "libscript_native" ] || [ "$JUST_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-just}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $JUST_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "just" "$ACTION" "$VERSION" "${JUST_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$JUST_INSTALL_METHOD" = "libscript_native" ] || [ "$JUST_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-just}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $JUST_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$JUST_INSTALL_METHOD" = "libscript_native" ] || [ "$JUST_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-just}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $JUST_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$JUST_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling just $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/just/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $JUST_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

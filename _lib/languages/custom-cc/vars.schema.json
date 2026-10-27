@@ -62,6 +62,14 @@
       "description": "Whether cc_wrapper should retry failed compilation units with CUSTOM_CC_FALLBACK_CC and record fallback telemetry.",
       "type": "boolean",
       "default": false
+    },
+    "CUSTOM_CC_LOG_FILE": {
+      "type": "string",
+      "description": "Configuration variable CUSTOM_CC_LOG_FILE for custom-cc."
+    },
+    "CUSTOM_CC_REAL_BIN": {
+      "type": "string",
+      "description": "Configuration variable CUSTOM_CC_REAL_BIN for custom-cc."
     }
   }
 }

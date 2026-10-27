@@ -17,7 +17,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -58,7 +57,7 @@ case "$CMD" in
     EMAIL="$2"
     shift 2
     PASSWORD=""
-    ROLE="administrator"
+    ROLE='administrator'
     while [ $# -gt 0 ]; do
       case "$1" in
         --password)

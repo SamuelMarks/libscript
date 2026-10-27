@@ -40,8 +40,20 @@
     "NODEJS_SERVER_INSTALL_METHOD": {
       "description": "How to install NODEJS SERVER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
+    },
+    "NODEJS_SERVER_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nodejs-server binary or archive artifacts."
+    },
+    "NODEJS_SERVER_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nodejs-server available remote releases."
+    },
+    "NODEJS_SERVER_VERSION": {
+      "type": "string",
+      "description": "Specific version of nodejs-server to install (e.g., latest, lts, or exact version)."
     }
   }
 }

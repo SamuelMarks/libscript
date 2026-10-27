@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,8 +37,8 @@ unset SCRIPT_NAME || true
 export PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 
 if [ "$(uname -s)" = "Darwin" ]; then
-  export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-$HOME/.libscript/notebooks}"
-  export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-$HOME/.libscript/venvs/jupyter-${PYTHON_VERSION}}"
+  export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-${HOME:-/root}/.libscript/notebooks}"
+  export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-${HOME:-/root}/.libscript/venvs/jupyter-${PYTHON_VERSION}}"
 else
   export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-/opt/notebooks}"
   export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-/opt/venvs/jupyter-${PYTHON_VERSION}}"
@@ -51,3 +50,5 @@ export JUPYTERHUB_PORT="${JUPYTERHUB_PORT:-8888}"
 export JUPYTERHUB_SERVICE_GROUP="${JUPYTERHUB_SERVICE_GROUP:-jupyter}"
 export JUPYTERHUB_SERVICE_USER="${JUPYTERHUB_SERVICE_USER:-jupyter}"
 export JUPYTERHUB_USERNAME="${JUPYTERHUB_USERNAME:-jupyter}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

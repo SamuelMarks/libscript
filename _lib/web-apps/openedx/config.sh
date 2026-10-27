@@ -1,22 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Configuration management engine for Open edX.
-# Provides get, set, list, generate, validate, save, printvalue, printroot, and patches
-# operations for environment configurations with full Tutor `config` CLI parity.
+# Configuration management engine for Open edX with Tutor `config` CLI parity.
 #
 # ## Usage
-#   ./config.sh [get|set|list|generate|validate|save|printvalue|printroot|patches|help] [options]
-#
-# ## Parameters
-# - `get <key>`: Prints the current value of a dot-separated configuration key.
-# - `set <key> <value>`: Updates a configuration key across LMS and Studio configs.
-# - `list`: Lists all active configuration parameters.
-# - `generate` / `save`: Generates or saves default LMS, Studio, and Caddy configurations.
-# - `printvalue <key>`: Prints a configuration value (Tutor parity).
-# - `printroot`: Prints the root Open edX configuration directory (Tutor parity).
-# - `patches [list|show <name>]`: Lists or displays Tutor patch slots.
-# - `validate`: Validates configuration files against `vars.schema.json`.
-# - `help`: Displays usage instructions.
+# ./config.sh [get|set|list|generate|validate|save|printvalue|printroot|patches|help] [options]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -24,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else

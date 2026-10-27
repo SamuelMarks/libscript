@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,11 +33,11 @@ SCRIPT_DIR="$_BK_SCRIPT_DIR"
 
 if [ "$#" -lt 1 ]; then
   printf '%s\n' "Usage: ${THIS_FILE} <node_name> [options]"
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --keep-last <N>                Number of backups to retain"
-  printf '%s\n' "  --target <local|s3>            Backup target"
-  printf '%s\n' "  --snapshot                     Take a cloud-native disk snapshot"
-  printf '%s\n' "  --export-state [app] <dir>     Export remote application state into <dir>"
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --keep-last <N>                Number of backups to retain'
+  printf '%s\n' '  --target <local|s3>            Backup target'
+  printf '%s\n' '  --snapshot                     Take a cloud-native disk snapshot'
+  printf '%s\n' '  --export-state [app] <dir>     Export remote application state into <dir>'
   exit 1
 fi
 
@@ -49,7 +48,7 @@ LOCATION="${LOCATION:-eastus}"
 ADMIN_USER="${ADMIN_USER:-azureuser}"
 ONLY_TARGET="${ONLY_TARGET:-all}"
 KEEP_LAST=5
-TARGET="local"
+TARGET='local'
 TAKE_SNAPSHOT=0
 EXPORT_MODE=0
 LOCAL_DST=""
@@ -178,18 +177,18 @@ fi
 
 printf '%s\n' "[BACKUP] Starting backup for node: $NODE"
 
-STATE_FILE=".libscript_state.json"
+STATE_FILE='.libscript_state.json'
 if [ -f "$STATE_FILE" ] && command -v jq >/dev/null 2>&1; then
   if [ -f ".deploy_state" ]; then
     PROVIDER=$(grep "^PROVIDER=" .deploy_state | cut -d= -f2-)
   fi
 fi
 
-printf '%s\n' "[BACKUP] Pre-backup hooks: Quiescing database/filesystem..."
-printf '%s\n' "  -> Running fsfreeze / FLUSH TABLES WITH READ LOCK equivalent..."
+printf '%s\n' '[BACKUP] Pre-backup hooks: Quiescing database/filesystem...'
+printf '%s\n' '  -> Running fsfreeze / FLUSH TABLES WITH READ LOCK equivalent...'
 
 if [ "$TAKE_SNAPSHOT" -eq 1 ]; then
-  printf '%s\n' "[BACKUP] Initiating cloud-native snapshot..."
+  printf '%s\n' '[BACKUP] Initiating cloud-native snapshot...'
   if [ "$PROVIDER" = "aws" ]; then
     printf '%s\n' "  -> Triggering AWS EBS snapshot for $NODE"
   elif [ "$PROVIDER" = "azure" ]; then
@@ -197,7 +196,7 @@ if [ "$TAKE_SNAPSHOT" -eq 1 ]; then
   elif [ "$PROVIDER" = "gcp" ]; then
     printf '%s\n' "  -> Triggering GCP Persistent Disk snapshot for $NODE"
   else
-    printf '%s\n' "  -> Provider unknown or local. Skipping cloud-native snapshot."
+    printf '%s\n' '  -> Provider unknown or local. Skipping cloud-native snapshot.'
   fi
 fi
 
@@ -213,18 +212,18 @@ if [ "$TARGET" = "local" ]; then
   ARCHIVE="$BACKUP_DIR/backup-${TIMESTAMP}.tar.zst"
   printf '%s\n' "[BACKUP] Creating local encrypted archive at $ARCHIVE..."
   touch "$ARCHIVE"
-  printf '%s\n' "  -> Mocked AES-256 encryption applied."
+  printf '%s\n' '  -> Mocked AES-256 encryption applied.'
   printf '%s\n' "[BACKUP] Enforcing retention policy: keeping last $KEEP_LAST backups."
   # shellcheck disable=SC2012
   ls -1t "$BACKUP_DIR"/backup-*.tar.zst 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs rm -f 2>/dev/null || true
 elif [ "$TARGET" = "s3" ] || [ "$TARGET" = "gcs" ] || [ "$TARGET" = "azure" ]; then
   printf '%s\n' "[BACKUP] Streaming backup to remote object storage ($TARGET)..."
-  printf '%s\n' "  -> Handling multipart uploads for large files."
-  printf '%s\n' "  -> Enforcing retention via object lifecycle policies."
+  printf '%s\n' '  -> Handling multipart uploads for large files.'
+  printf '%s\n' '  -> Enforcing retention via object lifecycle policies.'
 fi
 
-printf '%s\n' "[BACKUP] Post-backup hooks: Unquiescing database/filesystem..."
-printf '%s\n' "  -> Database unlocked."
+printf '%s\n' '[BACKUP] Post-backup hooks: Unquiescing database/filesystem...'
+printf '%s\n' '  -> Database unlocked.'
 
 printf '%s\n' "[BACKUP] Backup completed successfully for $NODE."
 exit 0

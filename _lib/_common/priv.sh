@@ -9,12 +9,12 @@
 
 
 set -feu
+_priv_caller_this="${THIS_FILE:-}"; _priv_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -24,6 +24,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_priv_caller_this" ] && THIS_FILE="$_priv_caller_this"
+    [ -n "$_priv_caller_dir" ] && SCRIPT_DIR="$_priv_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -33,6 +35,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(dirname "$THIS_FILE")/..}/_lib/_common/os_info.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}" 2>/dev/null || true
+unset SCRIPT_NAME || true
 
 
 
@@ -106,3 +109,9 @@ else
   # Executes command without elevated privileges fallback.
   priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; "$@"; }
 fi
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_priv_caller_dir:-}" ] && SCRIPT_DIR="$_priv_caller_dir"
+[ -n "${_priv_caller_this:-}" ] && THIS_FILE="$_priv_caller_this"
+unset _priv_caller_this _priv_caller_dir || true

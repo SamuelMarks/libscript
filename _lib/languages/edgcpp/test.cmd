@@ -2,16 +2,17 @@
 :: # test.cmd
 ::
 :: ## Overview
-:: C/C++ language conformance and binary verification smoke test suite for edgcpp on Windows.
+:: C89/C99/C11 and C++17 language conformance and binary verification smoke test suite
+:: for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1) on Windows.
 ::
 :: ## Usage
-:: test.cmd
+:: _lib\languages\edgcpp\test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -19,7 +20,8 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -50,5 +52,29 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0edgcpp_wrapper.cmd" --version
-exit /b !errorlevel!
+if exist "!SCRIPT_DIR!\env.cmd" (
+    set "STACK="
+    call "!SCRIPT_DIR!\env.cmd"
+)
+
+call "!SCRIPT_DIR!\edgcpp_wrapper.cmd" --version
+if errorlevel 1 exit /b 1
+
+set "_TMP_DIR=%TEMP%\libscript_edgcpp_test_%RANDOM%"
+if not exist "!_TMP_DIR!" mkdir "!_TMP_DIR!"
+(
+    echo #include ^<stdio.h^>
+    echo int main^(void^) { puts^("EDG_C_CONFORMANCE_OK"^); return 0; }
+) > "!_TMP_DIR!\c_conformance.c"
+
+call "!SCRIPT_DIR!\edgcpp_wrapper.cmd" -O2 "!_TMP_DIR!\c_conformance.c" -o "!_TMP_DIR!\c_conformance.exe" >nul 2>&1
+if not errorlevel 1 if exist "!_TMP_DIR!\c_conformance.exe" (
+    "!_TMP_DIR!\c_conformance.exe" | findstr /C:"EDG_C_CONFORMANCE_OK" >nul 2>&1
+    if errorlevel 1 (
+        rmdir /s /q "!_TMP_DIR!" 2>nul
+        exit /b 1
+    )
+)
+rmdir /s /q "!_TMP_DIR!" 2>nul
+echo [PASS] edgcpp v7.0.1 C/C++ conformance test suite succeeded.
+exit /b 0

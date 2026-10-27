@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -140,12 +140,44 @@ for %%B in ("!_WORKING_DIR!\.venv\Scripts" "!_WORKING_DIR!\node_modules\.bin" "!
     )
     if exist "!_MANIFEST_DIR!\.env.libscript" (
         echo for /f "usebackq tokens=* delims=" %%%%L in ^("!_MANIFEST_DIR!\.env.libscript"^) do set "%%%%L"
-        echo if defined SERVICE_PATH set "PATH=%%SERVICE_PATH%%"
+        echo if defined SERVICE_PATH set "PATH=%%SERVICE_PATH%%;!PATH!"
+        echo if defined SERVICE_EXTRA_PATH set "PATH=%%SERVICE_EXTRA_PATH%%;!PATH!"
     )
+) > "!_RUNNER_FILE!"
+
+if defined LIBSCRIPT_SERVICE_ENV_FILES (
+    for %%F in ("!LIBSCRIPT_SERVICE_ENV_FILES:;=" "!") do (
+        set "_EF_ITEM=%%~F"
+        if not "!_EF_ITEM!"=="" (
+            set "_EF_WIN=!_EF_ITEM:/=\!"
+            if exist "!_WORKING_DIR!\!_EF_WIN!" (
+                echo for /f "usebackq tokens=* delims=" %%%%L in ^("!_WORKING_DIR!\!_EF_WIN!"^) do set "%%%%L" >> "!_RUNNER_FILE!"
+            ) else if exist "!_MANIFEST_DIR!\!_EF_WIN!" (
+                echo for /f "usebackq tokens=* delims=" %%%%L in ^("!_MANIFEST_DIR!\!_EF_WIN!"^) do set "%%%%L" >> "!_RUNNER_FILE!"
+            ) else if exist "!_EF_WIN!" (
+                echo for /f "usebackq tokens=* delims=" %%%%L in ^("!_EF_WIN!"^) do set "%%%%L" >> "!_RUNNER_FILE!"
+            )
+        )
+    )
+)
+
+if defined LIBSCRIPT_SERVICE_ENV_JSON (
+    for /f "delims=" %%e in ('echo !LIBSCRIPT_SERVICE_ENV_JSON! ^| jq -r "(.env // {}) | to_entries[]? | \"set \\\"\(.key)=\(.value)\\\"\"" 2^>nul') do (
+        echo %%e >> "!_RUNNER_FILE!"
+    )
+)
+
+for %%B in ("!_MANIFEST_DIR!\node_modules\.bin" "!_MANIFEST_DIR!\.venv\Scripts" "!_WORKING_DIR!\node_modules\.bin" "!_WORKING_DIR!\.venv\Scripts") do (
+    if exist "%%~fB" (
+        echo echo ";%%PATH%%;" ^| findstr /I /C:";%%~fB;" ^>nul 2^>^&1 ^|^| set "PATH=%%~fB;%%PATH%%" >> "!_RUNNER_FILE!"
+    )
+)
+
+(
     echo pushd "!_WORKING_DIR!"
     echo call !_EXEC_START! ^>^> "!_LOG_FILE!" 2^>^&1
     echo popd
-) > "!_RUNNER_FILE!"
+) >> "!_RUNNER_FILE!"
 
 set "_INIT_SYS=%LIBSCRIPT_INIT_SYSTEM%"
 if "!_INIT_SYS!"=="" set "_INIT_SYS=%INIT_SYSTEM%"
@@ -159,11 +191,12 @@ if /i "!_INIT_SYS!"=="none" (
     exit /b 0
 )
 
-echo Installing Windows service: !_SERVICE_NAME!
 sc.exe query "!_SERVICE_NAME!" >nul 2>&1
 if not errorlevel 1 (
+    echo [INFO] [DAEMON] [UPDATE] Updated Windows service unit for '!_SERVICE_NAME!' ^(!_RUNNER_FILE!^).
     sc.exe config "!_SERVICE_NAME!" binPath= "cmd.exe /c \"!_RUNNER_FILE!\"" start= auto obj= LocalSystem >nul 2>&1
 ) else (
+    echo [INFO] [DAEMON] [CREATE] Installed Windows service unit for '!_SERVICE_NAME!' ^(!_RUNNER_FILE!^).
     sc.exe create "!_SERVICE_NAME!" binPath= "cmd.exe /c \"!_RUNNER_FILE!\"" start= auto obj= LocalSystem >nul 2>&1
 )
 sc.exe description "!_SERVICE_NAME!" "!_DESCRIPTION!" >nul 2>&1
@@ -209,24 +242,28 @@ set "_DATA_BASE=%TEMP%\data"
 if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
 if not exist "!_DATA_BASE!\!_OVR_SVC!" mkdir "!_DATA_BASE!\!_OVR_SVC!"
 set "_ENV_FILE=!_DATA_BASE!\!_OVR_SVC!\.env.service"
-type nul > "!_ENV_FILE!"
-set "_REG_MULTI="
 for %%K in ("%~2" "%~3" "%~4" "%~5") do (
     set "_KV=%%~K"
     if not "!_KV!"=="" (
-        echo !_KV!>> "!_ENV_FILE!"
         for /f "tokens=1* delims==" %%A in ("!_KV!") do (
+            if exist "!_ENV_FILE!" (
+                findstr /v /b /c:"%%A=" "!_ENV_FILE!" > "!_ENV_FILE!.tmp" 2>nul
+                move /y "!_ENV_FILE!.tmp" "!_ENV_FILE!" >nul 2>&1
+            )
+            echo !_KV!>> "!_ENV_FILE!"
             setx %%A "%%B" /M >nul 2>&1
         )
-        if defined _REG_MULTI (
-            set "_REG_MULTI=!_REG_MULTI!\0!_KV!"
-        ) else (
-            set "_REG_MULTI=!_KV!"
-        )
+    )
+)
+set "_REG_MULTI=PATH=!PATH!\0SERVICE_PATH=!PATH!"
+if exist "!_ENV_FILE!" (
+    for /f "usebackq tokens=* delims=" %%L in ("!_ENV_FILE!") do (
+        if not "%%L"=="" set "_REG_MULTI=!_REG_MULTI!\0%%L"
     )
 )
 reg query "HKLM\SYSTEM\CurrentControlSet\Services\!_OVR_SVC!" >nul 2>&1
 if not errorlevel 1 (
     reg add "HKLM\SYSTEM\CurrentControlSet\Services\!_OVR_SVC!" /v Environment /t REG_MULTI_SZ /d "!_REG_MULTI!" /f >nul 2>&1
 )
+echo [INFO] [DAEMON] [OVERRIDE] Configured environment overrides for '!_OVR_SVC!' in !_ENV_FILE! and Windows Service Registry.
 exit /b 0

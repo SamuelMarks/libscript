@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ -f /etc/alpine-release ]; then
-  echo "pkgx binary releases are compiled against glibc and cannot run on Alpine Linux."
+  echo 'pkgx binary releases are compiled against glibc and cannot run on Alpine Linux.'
   exit 0
 fi
 

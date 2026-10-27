@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,7 +41,7 @@ SCRIPT_DIR="${COMP_DIR}"
 case "${1:-}" in
   --help|-h|/\?|-\?)
     printf '%s\n' "Usage: $0 <action> [args...]"
-    printf '%s\n' "See README.md for details."
+    printf '%s\n' 'See README.md for details.'
     exit 0
     ;;
   install)
@@ -60,14 +59,14 @@ case "${1:-}" in
     exit 0
     ;;
   logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
-    printf '%s\n' "Action not applicable for this provisioning module."
+    printf '%s\n' 'Action not applicable for this provisioning module.'
     exit 0
     ;;
 esac
 
 # Ensure gcloud is available
 if ! command -v gcloud >/dev/null 2>&1; then
-  log_error "gcloud not found in PATH. Please install the gcp-cli component first."
+  log_error 'gcloud not found in PATH. Please install the gcp-cli component first.'
   exit 1
 fi
 
@@ -76,13 +75,13 @@ TPU_NAME="${2:-${TPU_NAME:-}}"
 
 TPU_ZONE="${TPU_ZONE:-}"
 if [ -z "$TPU_ZONE" ]; then
-  log_error "TPU_ZONE must be explicitly specified (e.g., us-central2-b)."
+  log_error 'TPU_ZONE must be explicitly specified (e.g., us-central2-b).'
   exit 1
 fi
 
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 if [ -z "$GCP_PROJECT_ID" ]; then
-  log_error "GCP_PROJECT_ID must be explicitly specified to prevent accidental provisioning."
+  log_error 'GCP_PROJECT_ID must be explicitly specified to prevent accidental provisioning.'
   exit 1
 fi
 
@@ -92,9 +91,9 @@ TPU_VERSION="${TPU_VERSION:-tpu-ubuntu2204-base}"
 TPU_SCHEDULING_TYPE="${TPU_SCHEDULING_TYPE:-on-demand}"
 SCHEDULING_FLAG=""
 if [ "$TPU_SCHEDULING_TYPE" = "spot" ]; then
-  SCHEDULING_FLAG="--spot"
+  SCHEDULING_FLAG='--spot'
 elif [ "$TPU_SCHEDULING_TYPE" = "preemptible" ]; then
-  SCHEDULING_FLAG="--preemptible"
+  SCHEDULING_FLAG='--preemptible'
 fi
 
 
@@ -166,7 +165,7 @@ case "$ACTION" in
             $DISK_FLAG \
             $NETWORK_FLAG \
             "$PROJECT_FLAG" $TAGS_ARG; then
-            log_error "Queued Resource Provisioning failed. Check TFRC quota availability."
+            log_error 'Queued Resource Provisioning failed. Check TFRC quota availability.'
             exit 1
           fi
           log_info "TPU Queued Resource ${INSTANCE_NAME}-qr submitted successfully."
@@ -194,7 +193,7 @@ case "$ACTION" in
             $DISK_FLAG \
             $NETWORK_FLAG \
             "$PROJECT_FLAG" $TAGS_ARG; then
-            log_error "Provisioning failed. If using spot/preemptible, check TFRC quota availability."
+            log_error 'Provisioning failed. If using spot/preemptible, check TFRC quota availability.'
             exit 1
           fi
           log_info "TPU VM $INSTANCE_NAME created successfully."
@@ -325,8 +324,8 @@ case "$ACTION" in
     # Usage: tpu-vm profile <name> [--port 9012] [--duration 1000]
     if [ -z "$TPU_NAME" ]; then log_error "Usage: tpu-vm profile <name> [--port 9012] [--duration 1000]"; exit 1; fi
     shift 2
-    PORT="9012"
-    DURATION="1000"
+    PORT='9012'
+    DURATION='1000'
     while [ $# -gt 0 ]; do
       case "$1" in
         --port) PORT="$2"; shift 2 ;;
@@ -359,7 +358,7 @@ case "$ACTION" in
       esac
     done
     if [ -z "$SRC" ] || [ -z "$DEST" ]; then
-      log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
+      log_error 'Usage: tpu-vm scp <name> <src> <dest> [--all-workers]'
       exit 1
     fi
     SCP_FLAGS=""
@@ -420,7 +419,7 @@ case "$ACTION" in
     fi
     ;;
   logs|use|env|ls|download|uninstall)
-    printf '%s\n' "Action not applicable for TPU VM provisioning module."
+    printf '%s\n' 'Action not applicable for TPU VM provisioning module.'
     exit 0
     ;;
   *)

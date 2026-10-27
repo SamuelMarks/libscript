@@ -13,6 +13,9 @@ Execute this script to install and configure sbt on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -43,7 +46,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 function Resolve-ExactVersion {
     if ($SbtVersion -eq "latest") {
         try {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/sbt/sbt/releases/latest"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/sbt/sbt/releases/latest"
             $ExactVersion = $Resp.tag_name.TrimStart('v')
         } catch {
             $ExactVersion = "1.9.9"
@@ -57,15 +60,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls sbt
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls sbt
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             sbt --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -77,32 +72,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote sbt
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls sbt
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/sbt/sbt/releases"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/sbt/sbt/releases"
             $Resp | Select-Object -First 30 | ForEach-Object { $_.tag_name.TrimStart('v') }
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "sbt@${SbtVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls sbt
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -173,18 +152,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Scala.sbt -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Scala.sbt\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y sbt
+    libscript_depends @(\"sbt\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "sbt@${SbtVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls sbt; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -209,7 +180,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() "sbt-${ExactVersion}.zip"
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $SbtDir"
             Expand-Archive -Path $TempZip -DestinationPath $SbtDir -Force

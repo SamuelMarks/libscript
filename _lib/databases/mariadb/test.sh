@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,6 +37,6 @@ if command -v mariadb >/dev/null 2>&1; then
 elif command -v mysql >/dev/null 2>&1; then
   mysql --version
 else
-  printf '%s\n' "Neither mariadb nor mysql is available."
+  printf '%s\n' 'Neither mariadb nor mysql is available.'
   exit 1
 fi

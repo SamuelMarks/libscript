@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,11 +49,9 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${XPK_VERSION}" = "latest" ] || [ "${XPK_VERSION}" = "lts" ]; then
-    libscript_depends "curl"
-
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/google/xpk/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/google/xpk/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${XPK_VERSION}"
@@ -63,15 +60,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${XPK_INSTALL_METHOD}" = "mise" ]; then
-      mise ls xpk
-    elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list xpk
-    elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls xpk
-    elif [ "${XPK_INSTALL_METHOD}" = "system" ]; then
+    if [ "${XPK_INSTALL_METHOD}" = "system" ]; then
       xpk --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/" 2>/dev/null || true
@@ -79,31 +68,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${XPK_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote xpk
-    elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all xpk
-    elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all xpk
-    elif [ "${XPK_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${XPK_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for xpk"
+      printf '%s\n' 'Fetching remote versions not implemented generically for xpk'
     fi
     exit 0
     ;;
   use)
-    if [ "${XPK_INSTALL_METHOD}" = "mise" ]; then
-      mise use "xpk@${XPK_VERSION}"
-    elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global xpk "${XPK_VERSION}"
-    elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "xpk@${XPK_VERSION}"
-    elif [ "${XPK_INSTALL_METHOD}" = "system" ]; then
+    if [ "${XPK_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -119,7 +92,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "xpk" "default" "${EXACT_VERSION}"
       log_info "Set default xpk version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env xpk \"${XPK_VERSION}\")"
     fi
     exit 0
@@ -131,7 +104,7 @@ case "$ACTION" in
       if [ -n "${XPK_DOWNLOAD_URL:-}" ]; then
         libscript_download "${XPK_DOWNLOAD_URL}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/xpk/xpk-${VERSION:-}.tar.gz"
       else
-        printf '%s\n' "XPK_DOWNLOAD_URL is not defined. Skipping."
+        printf '%s\n' 'XPK_DOWNLOAD_URL is not defined. Skipping.'
       fi
     fi
     exit 0
@@ -140,33 +113,24 @@ case "$ACTION" in
 
     if [ "${XPK_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'xpk'
-    elif [ "${XPK_INSTALL_METHOD}" = "mise" ]; then
-      mise install "xpk@${XPK_VERSION}"
-    elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install xpk "${XPK_VERSION}"
-    elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "xpk@${XPK_VERSION}"
-    elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add xpk || true
-      vfox install "xpk@${XPK_VERSION}"
     else
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing xpk ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "python3" "pip" "python3-venv" || true
+        libscript_depends 'python3' 'pip' 'python3-venv' || true
         if ! type libscript_python_venv >/dev/null 2>&1; then
           . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
         if ! (command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'); then
-          libscript_depends "python3.11" || true
+          libscript_depends 'python3.11' || true
         fi
         _py_ver=""
         if command -v python3.11 >/dev/null 2>&1; then
-          _py_ver="3.11"
+          _py_ver='3.11'
         elif command -v python3.12 >/dev/null 2>&1; then
-          _py_ver="3.12"
+          _py_ver='3.12'
         fi
         libscript_python_venv "${TARGET_DIR}" "${_py_ver}"
         if [ "${EXACT_VERSION}" = "latest" ]; then
@@ -185,52 +149,7 @@ case "$ACTION" in
         fi
 
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$XPK_INSTALL_METHOD" = "libscript_native" ] || [ "$XPK_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-xpk}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $XPK_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "xpk" "$ACTION" "$VERSION" "${XPK_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$XPK_INSTALL_METHOD" = "libscript_native" ] || [ "$XPK_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-xpk}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $XPK_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$XPK_INSTALL_METHOD" = "libscript_native" ] || [ "$XPK_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-xpk}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $XPK_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$XPK_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling xpk $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $XPK_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

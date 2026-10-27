@@ -5,5 +5,6 @@
   "os_whitelist": ["all"],
   "title": "pyenv",
   "description": "Bootstrap module for `pyenv` (Python Version Manager).",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/pyenv/pyenv"
 }

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -30,16 +29,18 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
+_WP_SCRIPT_DIR="${SCRIPT_DIR}"
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+SCRIPT_DIR="${_WP_SCRIPT_DIR}"
 
 
 set -feu
-printf '%s\n' "Validating WordPress installation..."
+printf '%s\n' 'Validating WordPress installation...'
 WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
 if [ -f "${SCRIPT_DIR}/healthcheck.sh" ]; then
     WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}" "${SCRIPT_DIR}/healthcheck.sh" >/dev/null 2>&1 || true

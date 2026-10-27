@@ -10,7 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,6 +50,9 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "huggingface-cli"
+if "%HUGGINGFACE_CLI_VERSION%"=="" set "HUGGINGFACE_CLI_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"
 ) else (
@@ -59,12 +62,16 @@ set "HUGGINGFACE_CLI_DIR=%LIBSCRIPT_BASE_DIR%\huggingface-cli\%HUGGINGFACE_CLI_V
 set "_CAND_P=%HUGGINGFACE_CLI_DIR%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "huggingface-cli"
-set "PYTHONPATH=%HUGGINGFACE_CLI_DIR%;%PYTHONPATH%"
+if "%PYTHONPATH%"=="" (
+    set "PYTHONPATH=%HUGGINGFACE_CLI_DIR%"
+) else (
+    echo ";!PYTHONPATH!;" | findstr /I /C:";!HUGGINGFACE_CLI_DIR!;" >nul 2>&1
+    if errorlevel 1 set "PYTHONPATH=%HUGGINGFACE_CLI_DIR%;%PYTHONPATH%"
+)
 
 endlocal & (
     set "HUGGINGFACE_CLI_DIR=%HUGGINGFACE_CLI_DIR%"
+    set "HUGGINGFACE_CLI_VERSION=%HUGGINGFACE_CLI_VERSION%"
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
     set "PATH=%PATH%"
     set "PYTHONPATH=%PYTHONPATH%"

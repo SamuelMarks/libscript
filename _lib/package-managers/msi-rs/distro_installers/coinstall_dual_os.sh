@@ -16,7 +16,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,11 +42,11 @@ ESP_PART="${4:-}"
 # Displays usage instructions and supported parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <disk_dev> <linux_part> <freebsd_part> [esp_part]"
-  printf '%s\n' "Concurrently deploys Linux and FreeBSD to separate partitions with dual-boot GRUB."
+  printf '%s\n' 'Concurrently deploys Linux and FreeBSD to separate partitions with dual-boot GRUB.'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -61,7 +60,7 @@ if [ -z "$DISK_DEV" ] || [ -z "$LINUX_PART" ] || [ -z "$FREEBSD_PART" ]; then
   exit 1
 fi
 
-STAMP_FILE="/mnt/target/.coinstall_complete.stamp"
+STAMP_FILE='/mnt/target/.coinstall_complete.stamp'
 if [ -f "$STAMP_FILE" ]; then
   printf '[INFO] Co-installation already completed on %s. Skipping.\n' "$DISK_DEV"
   exit 0
@@ -78,8 +77,8 @@ if [ -x "${REPO_ROOT}/_lib/storage/format.sh" ]; then
 fi
 
 # 2. Mount targets
-TARGET_LINUX="/mnt/target/linux"
-TARGET_FREEBSD="/mnt/target/freebsd"
+TARGET_LINUX='/mnt/target/linux'
+TARGET_FREEBSD='/mnt/target/freebsd'
 mkdir -p "$TARGET_LINUX" "$TARGET_FREEBSD"
 
 if [ -x "${REPO_ROOT}/_lib/storage/mount_sysroot.sh" ]; then

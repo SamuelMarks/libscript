@@ -14,7 +14,7 @@
     "CLANG_INSTALL_METHOD": {
       "description": "Installation strategy for Clang ('system' via package manager, 'from-source' compiled from source, 'libscript_native' prebuilt archive, or version managers).",
       "type": "string",
-      "enum": ["system", "from-source", "libscript_native", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["system", "from-source", "libscript_native"],
       "default": "system"
     },
     "CLANG_PKG_MGR": {

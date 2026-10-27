@@ -28,7 +28,7 @@
     "PYTHON_INSTALL_METHOD": {
       "description": "How to install PYTHON. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "PIP_FIND_LINKS": {
@@ -43,6 +43,14 @@
     "PIP_WHEEL_DIR": {
       "description": "Directory location of pre-downloaded .whl packages for offline pip installs.",
       "type": "string"
+    },
+    "PYTHON_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading python binary or archive artifacts."
+    },
+    "PYTHON_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying python available remote releases."
     }
   }
 }

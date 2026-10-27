@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,6 +38,6 @@ fi
 if command -v kubectl >/dev/null 2>&1; then
   kubectl version --client
 else
-  echo "kubectl not found"
+  echo 'kubectl not found'
   exit 1
 fi

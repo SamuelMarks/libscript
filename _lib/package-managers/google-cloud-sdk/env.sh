@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 GOOGLE_CLOUD_SDK_VERSION="${GOOGLE_CLOUD_SDK_VERSION:-latest}"
-_GCLOUD_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/google-cloud-sdk/${GOOGLE_CLOUD_SDK_VERSION}/bin"
+_GCLOUD_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/google-cloud-sdk/${GOOGLE_CLOUD_SDK_VERSION}/bin"
 case ":${PATH}:" in
   *":${_GCLOUD_BIN}:"*) ;;
   *) PATH="${_GCLOUD_BIN}:${PATH}"; export PATH ;;
@@ -52,3 +51,5 @@ elif command -v python3.11 >/dev/null 2>&1; then
   CLOUDSDK_PYTHON="$(command -v python3.11)"
   export CLOUDSDK_PYTHON
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

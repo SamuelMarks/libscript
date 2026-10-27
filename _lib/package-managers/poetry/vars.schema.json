@@ -17,6 +17,14 @@
     "POETRY_VERSION": {
       "type": "string",
       "description": "Specific version of Poetry to install."
+    },
+    "POETRY_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading poetry binary or archive artifacts."
+    },
+    "POETRY_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying poetry available remote releases."
     }
   }
 }

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,6 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
+export POSTGRES_VERSION="${POSTGRES_URL_VERSION:-${POSTGRES_VERSION:-${POSTGRESQL_VERSION:-latest}}}"
 _EB_CALLER_THIS="${THIS_FILE}"
 _EB_CALLER_DIR="${SCRIPT_DIR}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
@@ -39,20 +39,19 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 _pg_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/postgres"
-export POSTGRES_VERSION="${POSTGRES_URL_VERSION:-${POSTGRES_VERSION:-${POSTGRESQL_VERSION:-latest}}}"
 if [ "$POSTGRES_VERSION" = "latest" ]; then
   if [ -d "${_pg_home}/default/bin" ]; then
-    export POSTGRES_VERSION="default"
+    export POSTGRES_VERSION='default'
   elif [ -d "${_pg_home}/latest/bin" ]; then
-    export POSTGRES_VERSION="latest"
+    export POSTGRES_VERSION='latest'
   elif [ -d "${_pg_home}/17/bin" ] || [ -d "/usr/lib/postgresql/17/bin" ] || [ -d "/opt/homebrew/opt/postgresql@17/bin" ]; then
-    export POSTGRES_VERSION="17"
+    export POSTGRES_VERSION='17'
   elif [ -d "${_pg_home}/16/bin" ] || [ -d "/usr/lib/postgresql/16/bin" ] || [ -d "/opt/homebrew/opt/postgresql@16/bin" ]; then
-    export POSTGRES_VERSION="16"
+    export POSTGRES_VERSION='16'
   elif [ -d "${_pg_home}/15/bin" ] || [ -d "/usr/lib/postgresql/15/bin" ] || [ -d "/opt/homebrew/opt/postgresql@15/bin" ]; then
-    export POSTGRES_VERSION="15"
+    export POSTGRES_VERSION='15'
   else
-    export POSTGRES_VERSION="17"
+    export POSTGRES_VERSION='17'
   fi
 fi
 export POSTGRESQL_VERSION="${POSTGRES_VERSION}"
@@ -92,12 +91,11 @@ else
   export POSTGRES_URL="${POSTGRES_URL:-postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}}"
 fi
 
-for _pg_cand in "${_pg_home}/${POSTGRES_VERSION}/bin" "${_pg_home}/latest/bin" "${_pg_home}/default/bin" "${_pg_home}/17/bin" "${_pg_home}/16/bin" "${_pg_home}/15/bin" "/usr/lib/postgresql/${POSTGRES_VERSION}/bin" "/usr/lib/postgresql/17/bin" "/usr/lib/postgresql/16/bin" "/usr/lib/postgresql/15/bin" "/opt/homebrew/opt/postgresql@${POSTGRES_VERSION}/bin" "/opt/homebrew/opt/postgresql@17/bin" "/opt/homebrew/opt/libpq/bin" "/usr/local/opt/postgresql@${POSTGRES_VERSION}/bin" "/opt/ooce/pgsql-${POSTGRES_VERSION}/bin" "/opt/ooce/pgsql-17/bin" "/opt/ooce/bin"; do
+for _pg_cand in "/opt/ooce/bin" "/opt/ooce/pgsql-17/bin" "/opt/ooce/pgsql-${POSTGRES_VERSION}/bin" "/opt/homebrew/opt/libpq/bin" "/usr/local/opt/postgresql@${POSTGRES_VERSION}/bin" "/opt/homebrew/opt/postgresql@17/bin" "/opt/homebrew/opt/postgresql@${POSTGRES_VERSION}/bin" "/usr/lib/postgresql/15/bin" "/usr/lib/postgresql/16/bin" "/usr/lib/postgresql/17/bin" "/usr/lib/postgresql/${POSTGRES_VERSION}/bin" "${_pg_home}/15/bin" "${_pg_home}/16/bin" "${_pg_home}/17/bin" "${_pg_home}/default/bin" "${_pg_home}/latest/bin" "${_pg_home}/${POSTGRES_VERSION}/bin"; do
   if [ -d "$_pg_cand" ] || [ "$_pg_cand" = "${_pg_home}/${POSTGRES_VERSION}/bin" ]; then
-    case ":${PATH:-}:" in
-      *":${_pg_cand}:"*) ;;
-      *) PATH="${_pg_cand}${PATH:+:${PATH}}" ;;
-    esac
+    libscript_path_prepend "$_pg_cand"
   fi
 done
 export PATH
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -63,9 +62,9 @@ case "$ACTION" in
     fi
     log_info "Installing Uvicorn ASGI server via ${UVICORN_INSTALL_METHOD}..."
     if command -v uvicorn >/dev/null 2>&1; then
-      log_info "uvicorn is already available on the system."
+      log_info 'uvicorn is already available on the system.'
     elif [ "$(uname -s)" = "FreeBSD" ]; then
-      libscript_depends "uvicorn"
+      libscript_depends 'uvicorn'
     elif command -v uv >/dev/null 2>&1; then
       uv tool install uvicorn 2>/dev/null || uv pip install uvicorn
     elif command -v pipx >/dev/null 2>&1; then
@@ -75,12 +74,12 @@ case "$ACTION" in
     elif command -v pip >/dev/null 2>&1; then
       pip install --user uvicorn
     else
-      libscript_depends "python"
+      libscript_depends 'python'
       pip3 install --user uvicorn || true
     fi
     ;;
   uninstall)
-    log_info "Uninstalling Uvicorn..."
+    log_info 'Uninstalling Uvicorn...'
     if command -v uv >/dev/null 2>&1; then uv tool uninstall uvicorn 2>/dev/null || true; fi
     if command -v pipx >/dev/null 2>&1; then pipx uninstall uvicorn 2>/dev/null || true; fi
     if command -v pip3 >/dev/null 2>&1; then pip3 uninstall -y uvicorn 2>/dev/null || true; fi

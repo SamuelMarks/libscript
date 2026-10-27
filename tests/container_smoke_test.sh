@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ mkdir -p "$TEST_DIR"
 STAGE_ROOTFS="$TEST_DIR/rootfs"
 mkdir -p "$STAGE_ROOTFS/bin" "$STAGE_ROOTFS/etc"
 printf '#!/bin/sh
-echo "container_ok"
+echo '\''container_ok'\''
 ' > "$STAGE_ROOTFS/bin/sh"
 chmod 755 "$STAGE_ROOTFS/bin/sh"
 

@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,14 +36,14 @@ export LIBSCRIPT_ROOT_DIR
 # Displays usage instructions and supported options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s\n' "Manages hierarchical mount operations and sysroot staging under /mnt/target."
+  printf '%s\n' 'Manages hierarchical mount operations and sysroot staging under /mnt/target.'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --mount <root_dev> [esp_dev]   Mount root and optional ESP partition."
-  printf '%s\n' "  --unmount                      Recursively and cleanly unmount all target paths."
-  printf '%s\n' "  --fstab <target_dir>           Generate /etc/fstab or /etc/vfstab in target dir."
-  printf '%s\n' "  --help, -h, /?, -?             Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --mount <root_dev> [esp_dev]   Mount root and optional ESP partition.'
+  printf '%s\n' '  --unmount                      Recursively and cleanly unmount all target paths.'
+  printf '%s\n' '  --fstab <target_dir>           Generate /etc/fstab or /etc/vfstab in target dir.'
+  printf '%s\n' '  --help, -h, /?, -?             Show this help message.'
 }
 
 # ## detect_os
@@ -53,8 +52,8 @@ detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
-TARGET_DIR="/mnt/target"
-ACTION="help"
+TARGET_DIR='/mnt/target'
+ACTION='help'
 ROOT_DEV=""
 ESP_DEV=""
 
@@ -171,7 +170,7 @@ EOF
 # Device        Mountpoint      FStype  Options Dump    Pass#
 $_rdev          /               ufs     rw,noatime      1       1
 EOF
-      if [ -n "$_edev" ]; then
+      if [ -n "$_edev" ] && ! grep -q "/boot/efi" "${_tgt}/etc/fstab" 2>/dev/null; then
         printf '%s          /boot/efi       msdosfs rw              2       2\n' "$_edev" >> "${_tgt}/etc/fstab"
       fi
       printf '[OK] Generated %s/etc/fstab\n' "$_tgt"
@@ -181,10 +180,12 @@ EOF
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
 $_rdev          /               ext4    errors=remount-ro 0       1
 EOF
-      if [ -n "$_edev" ]; then
+      if [ -n "$_edev" ] && ! grep -q "/boot/efi" "${_tgt}/etc/fstab" 2>/dev/null; then
         printf '%s       /boot/efi       vfat    umask=0077      0       1\n' "$_edev" >> "${_tgt}/etc/fstab"
       fi
-      printf 'tmpfs           /tmp            tmpfs   defaults,nodev,nosuid 0       0\n' >> "${_tgt}/etc/fstab"
+      if ! grep -q "[[:space:]]/tmp[[:space:]]" "${_tgt}/etc/fstab" 2>/dev/null; then
+        printf 'tmpfs           /tmp            tmpfs   defaults,nodev,nosuid 0       0\n' >> "${_tgt}/etc/fstab"
+      fi
       printf '[OK] Generated %s/etc/fstab\n' "$_tgt"
       ;;
   esac
@@ -193,24 +194,24 @@ EOF
 while [ $# -gt 0 ]; do
   case "$1" in
     --mount-dual)
-      ACTION="mount_dual"
+      ACTION='mount_dual'
       ROOT_DEV="${2:-}"
       FREEBSD_DEV="${3:-}"
       ESP_DEV="${4:-}"
       shift $#
       ;;
     --mount)
-      ACTION="mount"
+      ACTION='mount'
       ROOT_DEV="${2:-}"
       ESP_DEV="${3:-}"
       shift $#
       ;;
     --unmount)
-      ACTION="unmount"
+      ACTION='unmount'
       shift
       ;;
     --fstab)
-      ACTION="fstab"
+      ACTION='fstab'
       TARGET_DIR="${2:-/mnt/target}"
       shift 2
       ;;

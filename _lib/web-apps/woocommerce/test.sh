@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,7 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-printf '%s\n' "Validating WooCommerce installation..."
+printf '%s\n' 'Validating WooCommerce installation...'
 WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-/var/www/wordpress}"
 if [ -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" ]; then
     printf '%s\n' "WooCommerce directory found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,10 +38,10 @@ elif [ -x "/usr/libexec/qemu-kvm" ]; then
 elif command -v qemu-img >/dev/null 2>&1; then
   qemu-img --version
 else
-  printf '%s\n' "QEMU binaries not found in PATH" >&2
+  printf '%s\n' 'QEMU binaries not found in PATH' >&2
   exit 1
 fi
 
 if [ -e "/dev/kvm" ]; then
-  printf '%s\n' "KVM device /dev/kvm found."
+  printf '%s\n' 'KVM device /dev/kvm found.'
 fi

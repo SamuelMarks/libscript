@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +38,9 @@ unset SCRIPT_NAME || true
 export LIBSCRIPT_ROOT_DIR
 
 _clang_ver="${CLANG_VERSION:-default}"
-_clang_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/${_clang_ver}"
-if [ ! -d "${_clang_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/default" ]; then
-  _clang_prefix="${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/default"
+_clang_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/${_clang_ver}"
+if [ ! -d "${_clang_prefix}" ] && [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default" ]; then
+  _clang_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default"
 fi
 
 if [ -d "${_clang_prefix}/bin" ]; then
@@ -54,7 +53,7 @@ elif command -v clang >/dev/null 2>&1; then
   CC="$(command -v clang)"
   export CC
 else
-  export CC="clang"
+  export CC='clang'
 fi
 
 if [ -x "${_clang_prefix}/bin/clang++" ]; then
@@ -63,9 +62,11 @@ elif command -v clang++ >/dev/null 2>&1; then
   CXX="$(command -v clang++)"
   export CXX
 else
-  export CXX="clang++"
+  export CXX='clang++'
 fi
 
 export HOSTCC="${CC}"
-export CC_BACKEND="clang"
+export CC_BACKEND='clang'
 export CFLAGS="${CLANG_CFLAGS:--O2}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

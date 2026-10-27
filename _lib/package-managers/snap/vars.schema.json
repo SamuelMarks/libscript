@@ -14,6 +14,14 @@
       "description": "Specific version of snap to install.",
       "type": "string",
       "default": "latest"
+    },
+    "SNAP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading snap binary or archive artifacts."
+    },
+    "SNAP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying snap available remote releases."
     }
   }
 }

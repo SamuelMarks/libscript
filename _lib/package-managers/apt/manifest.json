@@ -5,5 +5,6 @@
   "os_whitelist": ["debian", "ubuntu"],
   "title": "apt",
   "description": "Bootstrap module for the `apt` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://salsa.debian.org/apt-team/apt"
 }

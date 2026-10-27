@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,7 +47,7 @@ VERSION="${NOMAD_VERSION:-1.9.0}"
 # Resolves semantic version aliases ('latest' or 'stable') to a concrete Nomad version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="1.9.0"
+    EXACT_VERSION='1.9.0'
   else
     EXACT_VERSION="${VERSION}"
   fi

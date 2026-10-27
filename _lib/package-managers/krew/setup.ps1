@@ -13,6 +13,9 @@ Execute this script to install and configure krew on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 if (-Not (Get-Command kubectl-krew -ErrorAction SilentlyContinue)) {
   Write-Host "Installing krew..."
@@ -22,15 +25,13 @@ if (-Not (Get-Command kubectl-krew -ErrorAction SilentlyContinue)) {
   New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
   $downloadUrl = "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew-windows_amd64.tar.gz"
   $downloadPath = Join-Path $tempDir "krew.tar.gz"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath
+  libscript_download $downloadUrl $downloadPath
   tar xvf $downloadPath -C $tempDir
   & (Join-Path $tempDir "krew-windows_amd64.exe") install krew
   Remove-Item -Recurse -Force $tempDir
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls krew; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls krew; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "krew"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -38,15 +39,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote krew; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all krew; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "krew@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "krew@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

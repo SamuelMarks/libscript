@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,52 +63,19 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$PDM_INSTALL_METHOD" = "mise" ]; then
-      mise ls pdm || true
-    elif [ "$PDM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list pdm || true
-    elif [ "$PDM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$PDM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls pdm || true
-    elif [ "$PDM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "pdm" "$ACTION" "$VERSION" "${PDM_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$PDM_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote pdm || true
-    elif [ "$PDM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all pdm || true
-    elif [ "$PDM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$PDM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all pdm || true
+    if [ -n "${PDM_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${PDM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${PDM_RELEASES_URL:-}" ]; then
-        curl -sSL "${PDM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/pdm" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/pdm-project/pdm" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$PDM_INSTALL_METHOD" = "mise" ]; then
-      mise use "pdm@${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "asdf" ]; then
-      asdf global pdm "${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$PDM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "pdm@${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "pdm@${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+    if [ "$PDM_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "pdm" "default" "${EXACT_VERSION}"
@@ -123,7 +89,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "pdm" "default" "${EXACT_VERSION}"
       log_info "Set default pdm version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env pdm \"$VERSION\")"
     fi
     exit 0
@@ -142,38 +108,29 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PDM_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pdm"
-    elif [ "$PDM_INSTALL_METHOD" = "mise" ]; then
-      mise install "pdm@${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "asdf" ]; then
-      asdf install pdm "${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "pdm@${VERSION}"
-    elif [ "$PDM_INSTALL_METHOD" = "vfox" ]; then
-      vfox add pdm || true
-      vfox install "pdm@${VERSION}"
+      libscript_depends 'pdm'
     else
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pdm ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "python" || true
-        libscript_depends "curl"
+        libscript_depends 'python' || true
+        libscript_depends 'curl'
         if [ "${EXACT_VERSION}" = "latest" ]; then
-           EXACT_VERSION=$(curl -sL https://api.github.com/repos/pdm-project/pdm/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
+           EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/pdm-project/pdm/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
            if [ -z "${EXACT_VERSION}" ]; then EXACT_VERSION="latest"; fi
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
-        PY_BIN="python3"
+        PY_BIN='python3'
         if command -v python3.12 >/dev/null 2>&1; then
-          PY_BIN="python3.12"
+          PY_BIN='python3.12'
         elif command -v python3.11 >/dev/null 2>&1; then
-          PY_BIN="python3.11"
+          PY_BIN='python3.11'
         elif ! (command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'); then
-          libscript_depends "python3.11" || true
+          libscript_depends 'python3.11' || true
           if command -v python3.11 >/dev/null 2>&1; then
-            PY_BIN="python3.11"
+            PY_BIN='python3.11'
           fi
         fi
         if [ ! -d "${TARGET_DIR}" ]; then
@@ -189,52 +146,7 @@ case "$ACTION" in
       libscript_symlink_alias "pdm" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$PDM_INSTALL_METHOD" = "libscript_native" ] || [ "$PDM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pdm}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $PDM_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "pdm" "$ACTION" "$VERSION" "${PDM_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$PDM_INSTALL_METHOD" = "libscript_native" ] || [ "$PDM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pdm}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $PDM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$PDM_INSTALL_METHOD" = "libscript_native" ] || [ "$PDM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pdm}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $PDM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$PDM_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling pdm $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $PDM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

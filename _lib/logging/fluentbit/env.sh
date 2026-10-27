@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,4 +37,6 @@ unset SCRIPT_NAME || true
 
 export FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-libscript_native}"
 FLUENTBIT_VERSION="${FLUENTBIT_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/fluentbit/${FLUENTBIT_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/fluentbit/${FLUENTBIT_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

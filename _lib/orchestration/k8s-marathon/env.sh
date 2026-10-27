@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,3 +60,5 @@ if [ -d "${K8S_MARATHON_HOME}/bin" ]; then
   esac
   export PATH
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

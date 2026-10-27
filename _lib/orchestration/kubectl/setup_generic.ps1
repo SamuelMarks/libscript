@@ -16,8 +16,6 @@ Executes initialization, logic, or testing for kubectl.
 $Action = if ($env:ACTION) { $env:ACTION } else { 'install' }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls kubernetes; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls kubernetes; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "kubernetes"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -25,15 +23,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote kubernetes; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all kubernetes; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "kubernetes@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "kubernetes@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

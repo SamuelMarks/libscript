@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,10 +39,12 @@ unset SCRIPT_NAME || true
 
 MSI_RS_VERSION="${MSI_RS_VERSION:-latest}"
 if [ -d "${LIBSCRIPT_ROOT_DIR}/tools/wix" ]; then
-  PATH="${LIBSCRIPT_ROOT_DIR}/tools/wix:${PATH}"
+  libscript_path_prepend "${LIBSCRIPT_ROOT_DIR}/tools/wix"
 fi
-if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
-  PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/default/bin"
 fi
-PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${MSI_RS_VERSION}/bin:${PATH}"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/msi-rs/${MSI_RS_VERSION}/bin"
 export PATH
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

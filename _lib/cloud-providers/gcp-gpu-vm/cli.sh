@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -58,7 +57,7 @@ shift || true
 
 case "$ACTION" in
   --help|-h|/\?|-\?)
-    printf '%s\n' "Usage: gcp-gpu-vm <create|delete|start|stop|ssh|install|test> [name]"
+    printf '%s\n' 'Usage: gcp-gpu-vm <create|delete|start|stop|ssh|install|test> [name]'
     exit 0
     ;;
   install)
@@ -76,7 +75,7 @@ case "$ACTION" in
     exit 0
     ;;
   logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
-    printf '%s\n' "Action not applicable for this provisioning module."
+    printf '%s\n' 'Action not applicable for this provisioning module.'
     exit 0
     ;;
 esac
@@ -89,13 +88,13 @@ fi
 # Load variables (would normally come from libscript env setup)
 GPU_ZONE="${GPU_ZONE:-}"
 if [ -z "$GPU_ZONE" ]; then
-  log_error "GPU_ZONE must be explicitly specified (e.g., us-central1-a)."
+  log_error 'GPU_ZONE must be explicitly specified (e.g., us-central1-a).'
   exit 1
 fi
 
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 if [ -z "$GCP_PROJECT_ID" ]; then
-  log_error "GCP_PROJECT_ID must be explicitly specified to prevent accidental provisioning."
+  log_error 'GCP_PROJECT_ID must be explicitly specified to prevent accidental provisioning.'
   exit 1
 fi
 
@@ -194,7 +193,7 @@ case "$ACTION" in
   ssh)
     if [ -z "$GPU_NAME" ]; then log_error "Usage: gpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [command]"; exit 1; fi
     
-    DETACHED="false"
+    DETACHED='false'
     FORWARD_PORT=""
     
     while [ $# -gt 0 ]; do
@@ -224,7 +223,7 @@ case "$ACTION" in
     fi
     ;;
   logs|status|use|env|ls|download|uninstall)
-    printf '%s\n' "Action not applicable for GPU VM provisioning module."
+    printf '%s\n' 'Action not applicable for GPU VM provisioning module.'
     exit 0
     ;;
   *)

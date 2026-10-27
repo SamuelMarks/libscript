@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -166,12 +165,12 @@ stage_compiled_assets() {
 run_kmp_gradle_build() {
   _kmp_dir="$1"
   _kmp_target="${2:-kmp-js}"
-  _gradle_cmd="gradle"
+  _gradle_cmd='gradle'
   if [ -x "$_kmp_dir/gradlew" ]; then
-    _gradle_cmd="./gradlew"
+    _gradle_cmd='./gradlew'
   elif [ -f "$_kmp_dir/gradlew" ]; then
     chmod +x "$_kmp_dir/gradlew"
-    _gradle_cmd="./gradlew"
+    _gradle_cmd='./gradlew'
   fi
 
   (

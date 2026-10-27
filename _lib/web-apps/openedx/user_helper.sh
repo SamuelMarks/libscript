@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -149,7 +148,7 @@ do_list() {
   _p="${_install_dir}/users.json"
 
   printf '%-20s %-30s %-8s %-10s\n' "USERNAME" "EMAIL" "STAFF" "SUPERUSER"
-  printf '%s\n' "------------------------------------------------------------------------"
+  printf '%s\n' '------------------------------------------------------------------------'
 
   if [ -f "${_p}" ] && command -v jq >/dev/null 2>&1; then
     jq -r 'to_entries[] | "\(.key) \(.value.email // "") \(.value.is_staff // false) \(.value.is_superuser // false)"' "${_p}" 2>/dev/null | while read -r _u _e _s _su; do

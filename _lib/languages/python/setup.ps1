@@ -13,6 +13,9 @@ Execute this script to install and configure python on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -60,15 +63,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls python
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls python
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             python --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -80,15 +75,7 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote python
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls python
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
             Write-Host "Please visit https://www.python.org/downloads/windows/"
@@ -96,15 +83,7 @@ switch ($Action) {
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "python@${PythonVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls python
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -175,18 +154,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Python.Python.3.11 -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Python.Python.3.11\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y python311
+    libscript_depends @(\"python311\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "python@${PythonVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls python; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -214,7 +185,7 @@ switch ($Action) {
 
                 $TempExe = Join-Path [System.IO.Path]::GetTempPath() $ExeName
                 Write-Host "Downloading $DownloadUrl"
-                Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempExe
+                libscript_download $DownloadUrl $TempExe
 
                 Write-Host "Installing $TempExe to $PyDir"
                 Start-Process -FilePath $TempExe -ArgumentList "/quiet InstallAllUsers=0 TargetDir=`"$PyDir`" Include_test=0" -Wait -NoNewWindow

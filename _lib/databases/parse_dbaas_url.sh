@@ -17,7 +17,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -96,7 +95,7 @@ case "$url_body" in
 esac
 
 # 3. Extract database path
-db_name="wordpress"
+db_name='wordpress'
 case "$url_body" in
   */*)
     db_name="${url_body#*/}"
@@ -105,7 +104,7 @@ case "$url_body" in
 esac
 
 # 4. Extract user:password vs host:port
-db_user="root"
+db_user='root'
 db_pass=""
 case "$url_body" in
   *@*)
@@ -127,8 +126,8 @@ case "$url_body" in
 esac
 
 # 5. Extract host vs port
-db_host="127.0.0.1"
-db_port="3306"
+db_host='127.0.0.1'
+db_port='3306'
 case "$host_part" in
   *:*)
     db_host="${host_part%%:*}"

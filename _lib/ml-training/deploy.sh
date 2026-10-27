@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -137,14 +136,14 @@ EOF
 
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/ml_deploy.sh "$BUCKET_NAME"
 
-REMOTE_RUN_DIR="/mnt/ml_data"
+REMOTE_RUN_DIR='/mnt/ml_data'
 if [ -z "$BUCKET_NAME" ]; then
   REMOTE_RUN_DIR="\$HOME/workspace"
 elif [ -n "$APP_DIR" ]; then
   REMOTE_RUN_DIR="\$HOME/workspace"
 fi
 
-printf '%s\n' "Triggering detached training session and port-forwarding TensorBoard..."
+printf '%s\n' 'Triggering detached training session and port-forwarding TensorBoard...'
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" --detached --forward-port 6006:localhost:6006 "if [ -f ~/.env.ml_secrets ]; then . ~/.env.ml_secrets; fi && cd $REMOTE_RUN_DIR && $ML_SCRIPT"
 
 printf '%s

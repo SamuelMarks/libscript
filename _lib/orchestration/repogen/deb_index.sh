@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -66,8 +65,8 @@ for deb in "$POOL_DIR"/*.deb; do
   parch="${parch%.deb}"
   fsize=$(wc -c < "$deb" | tr -d ' ' 2>/dev/null || echo 1024)
 
-  md5_hash="d41d8cd98f00b204e9800998ecf8427e"
-  sha256_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  md5_hash='d41d8cd98f00b204e9800998ecf8427e'
+  sha256_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
   if command -v md5sum >/dev/null 2>&1; then
     md5_hash=$(md5sum "$deb" | cut -d' ' -f1)
@@ -104,7 +103,7 @@ gzip -9 -c "$PACKAGES_FILE" > "${PACKAGES_FILE}.gz"
 
 # Generate Release
 PKG_GZ_SIZE=$(wc -c < "${PACKAGES_FILE}.gz" | tr -d ' ' 2>/dev/null || echo 100)
-PKG_GZ_SHA256="dummy"
+PKG_GZ_SHA256='dummy'
 if command -v sha256sum >/dev/null 2>&1; then
   PKG_GZ_SHA256=$(sha256sum "${PACKAGES_FILE}.gz" | cut -d' ' -f1)
 elif command -v shasum >/dev/null 2>&1; then

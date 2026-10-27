@@ -19,8 +19,6 @@ if (-Not (Get-Command rye -ErrorAction SilentlyContinue)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls rye; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls rye; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "rye"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -28,15 +26,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote rye; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all rye; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "rye@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "rye@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

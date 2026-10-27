@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ ! -f /usr/lib/os-release ] || ! grep -q "ID=clear-linux-os" /usr/lib/os-release; then
-  echo "swupd is the package manager for Clear Linux. Skipping test."
+  echo 'swupd is the package manager for Clear Linux. Skipping test.'
   exit 0
 fi
 

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$KOTLIN_INSTALL_METHOD" = "mise" ]; then
-      mise ls kotlin || true
-    elif [ "$KOTLIN_INSTALL_METHOD" = "asdf" ]; then
-      asdf list kotlin || true
-    elif [ "$KOTLIN_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls kotlin || true
-    elif [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "kotlin" "$ACTION" "$VERSION" "${KOTLIN_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$KOTLIN_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote kotlin || true
-    elif [ "$KOTLIN_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all kotlin || true
-    elif [ "$KOTLIN_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all kotlin || true
+    if [ -n "${KOTLIN_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${KOTLIN_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${KOTLIN_RELEASES_URL:-}" ]; then
-        curl -sSL "${KOTLIN_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/kotlin" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/JetBrains/kotlin" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$KOTLIN_INSTALL_METHOD" = "mise" ]; then
-      mise use "kotlin@${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "asdf" ]; then
-      asdf global kotlin "${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "kotlin@${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "kotlin@${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "kotlin" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "kotlin" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "kotlin ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "kotlin" "default" "${EXACT_VERSION}"
-      log_info "Set default kotlin version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env kotlin \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "kotlin" "$ACTION" "$VERSION" "${KOTLIN_INSTALL_METHOD}"
     ;;
   download)
     if [ "$KOTLIN_INSTALL_METHOD" = "libscript_native" ]; then
@@ -144,126 +91,70 @@ case "$ACTION" in
   install)
     if [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "kotlin"; then
-        log_info "System package manager does not have kotlin. Falling back to native..."
-        KOTLIN_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have kotlin. Falling back to native...'
+        KOTLIN_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "$KOTLIN_INSTALL_METHOD" = "mise" ]; then
-      mise install "kotlin@${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "asdf" ]; then
-      asdf install kotlin "${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "kotlin@${VERSION}"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "vfox" ]; then
-      vfox add kotlin || true
-      vfox install "kotlin@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing kotlin ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if [ "$(uname -s)" = "FreeBSD" ]; then
-          libscript_depends "kotlin"
-          if command -v kotlinc >/dev/null 2>&1; then
-            ln -sf "$(command -v kotlinc)" "${TARGET_DIR}/bin/kotlinc"
-            ln -sf "$(command -v kotlin)" "${TARGET_DIR}/bin/kotlin"
-          fi
-        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/kotlin" || true
-              chmod +x "${TARGET_DIR}/bin/kotlin" || true
-            fi
-          fi
-        else
-          libscript_depends "java" "unzip" || true
-          if [ -z "${KOTLIN_DOWNLOAD_URL:-}" ]; then
-            _kver="2.1.0"
-            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
-            KOTLIN_DOWNLOAD_URL="https://github.com/JetBrains/kotlin/releases/download/v${_kver}/kotlin-compiler-${_kver}.zip"
-          fi
-          if [ -n "${KOTLIN_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${KOTLIN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${KOTLIN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${KOTLIN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              EXTRACT_DIR=$(mktemp -d)
-              unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
-              top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-              if [ -n "$top_dir" ]; then
-                cp -R "${top_dir}/." "${TARGET_DIR}/"
-              fi
-              rm -rf "${EXTRACT_DIR}"
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kotlin" || true
-              chmod +x "${TARGET_DIR}/bin/kotlin" || true
-            fi
-            rm -f "${TEMP_FILE}"
+    # libscript_native implementation
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/${EXACT_VERSION}"
+    if [ ! -d "${TARGET_DIR}" ]; then
+      log_info "Installing kotlin ${VERSION} natively to ${TARGET_DIR}..."
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$(uname -s)" = "FreeBSD" ]; then
+        libscript_depends 'kotlin'
+        if command -v kotlinc >/dev/null 2>&1; then
+          ln -sf "$(command -v kotlinc)" "${TARGET_DIR}/bin/kotlinc"
+          ln -sf "$(command -v kotlin)" "${TARGET_DIR}/bin/kotlin"
+        fi
+      elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info 'Extracting from cache...'
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
           else
-            log_warn "No download URL provided for kotlin ${VERSION}."
+            cp "$cache_file" "${TARGET_DIR}/bin/kotlin" || true
+            chmod +x "${TARGET_DIR}/bin/kotlin" || true
           fi
         fi
       else
-        log_info "kotlin ${VERSION} is already installed."
+        libscript_depends 'java' 'unzip' || true
+        if [ -z "${KOTLIN_DOWNLOAD_URL:-}" ]; then
+          _kver='2.1.0'
+          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
+          KOTLIN_DOWNLOAD_URL="https://github.com/JetBrains/kotlin/releases/download/v${_kver}/kotlin-compiler-${_kver}.zip"
+        fi
+        if [ -n "${KOTLIN_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${KOTLIN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${KOTLIN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${KOTLIN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            EXTRACT_DIR=$(mktemp -d)
+            unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
+            top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            if [ -n "$top_dir" ]; then
+              cp -R "${top_dir}/." "${TARGET_DIR}/"
+            fi
+            rm -rf "${EXTRACT_DIR}"
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kotlin" || true
+            chmod +x "${TARGET_DIR}/bin/kotlin" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for kotlin ${VERSION}."
+        fi
       fi
-      libscript_symlink_alias "kotlin" "$VERSION" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$KOTLIN_INSTALL_METHOD" = "libscript_native" ] || [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-kotlin}}"
-      libscript_service "$ACTION" "$service_name" "$@"
     else
-      log_info "$ACTION not natively implemented for $KOTLIN_INSTALL_METHOD."
+      log_info "kotlin ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "kotlin" "$VERSION" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$KOTLIN_INSTALL_METHOD" = "libscript_native" ] || [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-kotlin}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $KOTLIN_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "kotlin" "$ACTION" "$VERSION" "${KOTLIN_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$KOTLIN_INSTALL_METHOD" = "libscript_native" ] || [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-kotlin}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $KOTLIN_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$KOTLIN_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling kotlin $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $KOTLIN_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,6 +34,6 @@ if command -v httpd >/dev/null 2>&1; then
 elif command -v apache2 >/dev/null 2>&1; then
   apache2 -v
 else
-  echo "httpd or apache2 command not found"
+  echo 'httpd or apache2 command not found'
   exit 1
 fi

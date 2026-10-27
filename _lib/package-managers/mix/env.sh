@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,10 +39,12 @@ unset SCRIPT_NAME || true
 
 
 MIX_VERSION="${MIX_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/mix/${MIX_VERSION}/bin" "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/latest/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mix/${MIX_VERSION}/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/elixir/latest/bin"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/env.sh" ]; then
   # shellcheck disable=SC1090,SC1091
   unset SCRIPT_NAME || true
   . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/env.sh"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

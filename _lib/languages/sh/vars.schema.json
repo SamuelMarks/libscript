@@ -8,13 +8,21 @@
     "SH_INSTALL_METHOD": {
       "description": "How to install SH. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "SH_VERSION": {
       "description": "Version of Shell Toolchain to install",
       "type": "string",
       "default": "0.5.12"
+    },
+    "SH_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading sh binary or archive artifacts."
+    },
+    "SH_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying sh available remote releases."
     }
   }
 }

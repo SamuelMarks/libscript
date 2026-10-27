@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -97,7 +96,7 @@ theme_install() {
   _url="$2"
   shift 2
 
-  _branch="master"
+  _branch='master'
   while [ $# -gt 0 ]; do
     case "$1" in
       --branch)
@@ -194,7 +193,7 @@ theme_apply() {
   _name="$1"
   shift
 
-  _domain="openedx.local"
+  _domain='openedx.local'
   while [ $# -gt 0 ]; do
     case "$1" in
       --site)
@@ -254,7 +253,7 @@ EOF
 # ## theme_list
 # Lists all themes.
 theme_list() {
-  log_info "Listing installed Open edX themes..."
+  log_info 'Listing installed Open edX themes...'
   _py="$(resolve_python)"
   if [ -n "${_py}" ] && [ -f "${THEME_REGISTRY}" ]; then
     "${_py}" - <<EOF
@@ -267,7 +266,7 @@ for k, v in d.items():
 EOF
   else
     printf '%-24s %-10s %-40s\n' "THEME NAME" "ACTIVE" "SOURCE URL"
-    printf '%s\n' "----------------------------------------------------------------------------"
+    printf '%s\n' '----------------------------------------------------------------------------'
     set +f
     for d in "${THEMES_DIR}"/*; do
       if [ -d "$d" ]; then

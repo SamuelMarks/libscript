@@ -450,6 +450,38 @@
         "description": "Custom configuration or Python settings snippet injected into the named patch slot."
       },
       "default": {}
+    },
+    "OPENEDX_BACKUP_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for openedx (OPENEDX_BACKUP_DIR)."
+    },
+    "OPENEDX_CMS_PORT": {
+      "type": "string",
+      "description": "TCP port on which openedx listens."
+    },
+    "OPENEDX_DATABASE_PASSWORD": {
+      "type": "string",
+      "description": "Configuration variable OPENEDX_DATABASE_PASSWORD for openedx."
+    },
+    "OPENEDX_EDX_PLATFORM_REPOSITORY": {
+      "type": "string",
+      "description": "Configuration variable OPENEDX_EDX_PLATFORM_REPOSITORY for openedx."
+    },
+    "OPENEDX_INSTALL_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for openedx (OPENEDX_INSTALL_DIR)."
+    },
+    "OPENEDX_LMS_PORT": {
+      "type": "string",
+      "description": "TCP port on which openedx listens."
+    },
+    "OPENEDX_OFFLINE": {
+      "type": "string",
+      "description": "Configuration variable OPENEDX_OFFLINE for openedx."
+    },
+    "OPENEDX_VERSION": {
+      "type": "string",
+      "description": "Specific version of openedx to install (e.g., latest, lts, or exact version)."
     }
   }
 }

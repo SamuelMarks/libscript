@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # shellcheck disable=SC1091
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
-JSON_FILE="libscript.json"
+JSON_FILE='libscript.json'
 REMEDIATE_DB=0
 for _h_arg in "$@"; do
   case "$_h_arg" in
@@ -172,7 +171,7 @@ while IFS= read -r db_entry <&3; do
     DB_PASS=$(printenv "$PASS_ENV" 2>/dev/null || true)
   fi
   if [ -z "$DB_PASS" ]; then
-    DB_PASS="postgres"
+    DB_PASS='postgres'
   fi
 
   case "$ENGINE" in
@@ -184,14 +183,15 @@ while IFS= read -r db_entry <&3; do
           log_error "PostgreSQL health check failed: cannot connect to database '$DB_NAME' on ${DB_HOST}:${DB_PORT} as '$DB_USER'."
           HEALTH_DB_FAILED=1
         else
+          PG_TBL_COUNT=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2>/dev/null | tr -d '[:space:]' || printf '0')
+          : "${PG_TBL_COUNT:=0}"
           if [ -n "$MIN_TABLES" ]; then
-            PG_TBL_COUNT=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2>/dev/null | tr -d '[:space:]' || printf '0')
-            : "${PG_TBL_COUNT:=0}"
             if [ "$PG_TBL_COUNT" -lt "$MIN_TABLES" ] 2>/dev/null; then
               log_error "PostgreSQL database '$DB_NAME' has $PG_TBL_COUNT tables (expected >= $MIN_TABLES)."
               HEALTH_DB_FAILED=1
             fi
           fi
+          _pg_tbl_summary=""
           if [ -n "$REQ_TABLES" ]; then
             while IFS= read -r req_tbl; do
               [ -n "$req_tbl" ] || continue
@@ -201,11 +201,14 @@ while IFS= read -r db_entry <&3; do
               if [ -z "$PG_ROW_COUNT" ] || [ "$PG_ROW_COUNT" -lt "$MIN_ROWS_REQ" ] 2>/dev/null; then
                 log_error "PostgreSQL database '$DB_NAME' required table '$req_tbl' missing or has insufficient rows (${PG_ROW_COUNT:-0} < $MIN_ROWS_REQ)."
                 HEALTH_DB_FAILED=1
+              else
+                _pg_tbl_summary="${_pg_tbl_summary:+$_pg_tbl_summary, }${req_tbl}=${PG_ROW_COUNT} rows"
               fi
             done << EOF_PG_REQ
 $REQ_TABLES
 EOF_PG_REQ
           fi
+          log_info "[DB:POSTGRES] [CONFIRM] Database '$DB_NAME' healthy (${PG_TBL_COUNT} table(s)${_pg_tbl_summary:+: $_pg_tbl_summary})."
         fi
       fi
       ;;
@@ -225,14 +228,15 @@ EOF_PG_REQ
         log_error "DuckDB database file '$DB_PATH' does not exist or is empty."
         HEALTH_DB_FAILED=1
       else
+        DUCK_TBL_COUNT=$(query_duckdb_scalar "$DB_PATH" "SHOW TABLES;" "len" || printf '0')
+        : "${DUCK_TBL_COUNT:=0}"
         if [ -n "$MIN_TABLES" ]; then
-          DUCK_TBL_COUNT=$(query_duckdb_scalar "$DB_PATH" "SHOW TABLES;" "len" || printf '0')
-          : "${DUCK_TBL_COUNT:=0}"
           if [ "$DUCK_TBL_COUNT" -lt "$MIN_TABLES" ] 2>/dev/null; then
             log_error "DuckDB database '$DB_PATH' has $DUCK_TBL_COUNT tables (expected >= $MIN_TABLES)."
             HEALTH_DB_FAILED=1
           fi
         fi
+        _duck_tbl_summary=""
         if [ -n "$REQ_TABLES" ]; then
           while IFS= read -r req_tbl; do
             [ -n "$req_tbl" ] || continue
@@ -242,11 +246,14 @@ EOF_PG_REQ
             if [ -z "$DUCK_ROW_COUNT" ] || [ "$DUCK_ROW_COUNT" -lt "$MIN_ROWS_REQ" ] 2>/dev/null; then
               log_error "DuckDB database '$DB_PATH' required table '$req_tbl' missing or has insufficient rows (${DUCK_ROW_COUNT:-0} < $MIN_ROWS_REQ)."
               HEALTH_DB_FAILED=1
+            else
+              _duck_tbl_summary="${_duck_tbl_summary:+$_duck_tbl_summary, }${req_tbl}=${DUCK_ROW_COUNT} rows"
             fi
           done << EOF_DUCK_REQ
 $REQ_TABLES
 EOF_DUCK_REQ
         fi
+        log_info "[DB:DUCKDB] [CONFIRM] DuckDB '$DB_PATH' healthy (${DUCK_TBL_COUNT} table(s)${_duck_tbl_summary:+: $_duck_tbl_summary})."
       fi
       ;;
     sqlite|sqlite3)
@@ -261,14 +268,15 @@ EOF_DUCK_REQ
         log_error "SQLite database file '$DB_PATH' does not exist."
         HEALTH_DB_FAILED=1
       elif command -v sqlite3 >/dev/null 2>&1; then
+        SQLITE_TBL_COUNT=$(sqlite3 "$DB_PATH" "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';" 2>/dev/null | tr -d '[:space:]' || printf '0')
+        : "${SQLITE_TBL_COUNT:=0}"
         if [ -n "$MIN_TABLES" ]; then
-          SQLITE_TBL_COUNT=$(sqlite3 "$DB_PATH" "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';" 2>/dev/null | tr -d '[:space:]' || printf '0')
-          : "${SQLITE_TBL_COUNT:=0}"
           if [ "$SQLITE_TBL_COUNT" -lt "$MIN_TABLES" ] 2>/dev/null; then
             log_error "SQLite database '$DB_PATH' has $SQLITE_TBL_COUNT tables (expected >= $MIN_TABLES)."
             HEALTH_DB_FAILED=1
           fi
         fi
+        _sqlite_tbl_summary=""
         if [ -n "$REQ_TABLES" ]; then
           while IFS= read -r req_tbl; do
             [ -n "$req_tbl" ] || continue
@@ -278,11 +286,14 @@ EOF_DUCK_REQ
             if [ -z "$SQLITE_ROW_COUNT" ] || [ "$SQLITE_ROW_COUNT" -lt "$MIN_ROWS_REQ" ] 2>/dev/null; then
               log_error "SQLite database '$DB_PATH' required table '$req_tbl' missing or has insufficient rows (${SQLITE_ROW_COUNT:-0} < $MIN_ROWS_REQ)."
               HEALTH_DB_FAILED=1
+            else
+              _sqlite_tbl_summary="${_sqlite_tbl_summary:+$_sqlite_tbl_summary, }${req_tbl}=${SQLITE_ROW_COUNT} rows"
             fi
           done << EOF_SQLITE_REQ
 $REQ_TABLES
 EOF_SQLITE_REQ
         fi
+        log_info "[DB:SQLITE] [CONFIRM] SQLite '$DB_PATH' healthy (${SQLITE_TBL_COUNT} table(s)${_sqlite_tbl_summary:+: $_sqlite_tbl_summary})."
       fi
       ;;
     valkey|redis)
@@ -294,6 +305,7 @@ EOF_SQLITE_REQ
         if command -v "$_vk_cli" >/dev/null 2>&1; then
           if "$_vk_cli" -h "$DB_HOST" -p "$DB_PORT" -n "$DB_IDX" ping 2>/dev/null | grep -qi "PONG"; then
             _vk_ok=1
+            log_info "[DB:VALKEY] [CONFIRM] Valkey/Redis endpoint ${DB_HOST}:${DB_PORT} (db ${DB_IDX}) healthy."
             break
           fi
         fi
@@ -321,7 +333,7 @@ EOF_DBS
 
 if [ "$HEALTH_DB_FAILED" -ne 0 ]; then
   if [ "$REMEDIATE_DB" -eq 1 ] && [ "${_HDB_REMEDIATING:-0}" != "1" ]; then
-    log_info "Database health check failed; attempting auto-remediation via provision_db.sh..."
+    log_info 'Database health check failed; attempting auto-remediation via provision_db.sh...'
     LIBSCRIPT_FORCE_SEED=1 "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_db.sh" "$JSON_FILE" || true
     "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "$JSON_FILE" "db_migrate" || true
     _HDB_REMEDIATING=1 STACK="" exec "${THIS_FILE}" "$JSON_FILE"

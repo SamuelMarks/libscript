@@ -11,12 +11,12 @@
 # libscript_service_override_env <service_name> <KEY=VALUE...>
 
 set -feu
+_si_outer_this="${THIS_FILE:-}"; _si_outer_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -26,6 +26,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_si_outer_this" ] && THIS_FILE="$_si_outer_this"
+    [ -n "$_si_outer_dir" ] && SCRIPT_DIR="$_si_outer_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -33,6 +35,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+_si_caller_this="${THIS_FILE}"
+_si_caller_dir="${SCRIPT_DIR}"
 for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh" "_lib/_common/python_env.sh"; do
   if [ -f "${LIBSCRIPT_ROOT_DIR}/${LIB}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
@@ -41,20 +45,23 @@ for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh
     . "${SCRIPT_NAME}"
   fi
 done
-unset SCRIPT_NAME || true
+THIS_FILE="${_si_caller_this}"
+SCRIPT_DIR="${_si_caller_dir}"
+unset SCRIPT_NAME _si_caller_this _si_caller_dir || true
+unset SCRIPT_NAME _si_caller_this || true
 
 # ## libscript_detect_init_system
 # Detects the active or requested init system based on LIBSCRIPT_INIT_SYSTEM, INIT_SYSTEM,
 # LIBSCRIPT_FORCE_FALLBACK_DAEMON, and runtime capabilities.
 libscript_detect_init_system() {
   if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" = "1" ]; then
-    printf '%s\n' "fallback"
+    printf '%s\n' 'fallback'
     return 0
   fi
   _req_init="${LIBSCRIPT_INIT_SYSTEM:-${INIT_SYSTEM:-auto}}"
   case "$_req_init" in
     fallback|none|pid)
-      printf '%s\n' "fallback"
+      printf '%s\n' 'fallback'
       return 0
       ;;
     systemd|openrc|sysvinit|bsd_rc|launchd|smf|runit|s6|sc)
@@ -65,25 +72,25 @@ libscript_detect_init_system() {
 
   _uname_l="${UNAME_LOWER:-$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'linux')}"
   if command -v systemctl >/dev/null 2>&1 && { [ -d /run/systemd/system ] || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; }; then
-    printf '%s\n' "systemd"
+    printf '%s\n' 'systemd'
   elif command -v rc-service >/dev/null 2>&1; then
-    printf '%s\n' "openrc"
+    printf '%s\n' 'openrc'
   elif command -v svccfg >/dev/null 2>&1 && command -v svcadm >/dev/null 2>&1; then
-    printf '%s\n' "smf"
+    printf '%s\n' 'smf'
   elif [ "$_uname_l" = "freebsd" ] || [ "$_uname_l" = "openbsd" ] || [ "$_uname_l" = "netbsd" ] || command -v sysrc >/dev/null 2>&1; then
-    printf '%s\n' "bsd_rc"
+    printf '%s\n' 'bsd_rc'
   elif [ "$_uname_l" = "darwin" ] && command -v launchctl >/dev/null 2>&1 && [ "${LIBSCRIPT_USE_LAUNCHD:-0}" = "1" ]; then
-    printf '%s\n' "launchd"
+    printf '%s\n' 'launchd'
   elif command -v sv >/dev/null 2>&1 && [ -d /etc/service ]; then
-    printf '%s\n' "runit"
+    printf '%s\n' 'runit'
   elif command -v s6-svc >/dev/null 2>&1 && { [ -d /run/service ] || [ -d /etc/s6/sv ]; }; then
-    printf '%s\n' "s6"
+    printf '%s\n' 's6'
   elif [ -d /etc/init.d ] && command -v service >/dev/null 2>&1 && { [ "$(id -u 2>/dev/null || printf '1000')" -eq 0 ] || sudo -n true 2>/dev/null; }; then
-    printf '%s\n' "sysvinit"
+    printf '%s\n' 'sysvinit'
   elif command -v sc.exe >/dev/null 2>&1; then
-    printf '%s\n' "sc"
+    printf '%s\n' 'sc'
   else
-    printf '%s\n' "fallback"
+    printf '%s\n' 'fallback'
   fi
 }
 
@@ -133,6 +140,8 @@ libscript_write_service_runner() {
     if [ -f "${_wsr_manifest_dir}/.env.libscript" ]; then
       printf 'if [ -f "%s/.env.libscript" ]; then set -a; . "%s/.env.libscript" 2>/dev/null || true; set +a; fi\n' "$_wsr_manifest_dir" "$_wsr_manifest_dir"
     fi
+    printf 'if [ -n "${SERVICE_PATH:-}" ]; then export PATH="${SERVICE_PATH}:${PATH}"; fi\n'
+    printf 'if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then export PATH="${SERVICE_EXTRA_PATH}:${PATH}"; fi\n'
     if [ -n "$_wsr_env_files" ]; then
       printf '%s\n' "$_wsr_env_files" | while IFS= read -r _ef_item; do
         [ -n "$_ef_item" ] || continue
@@ -160,6 +169,11 @@ libscript_write_service_runner() {
         esac
       done
     fi
+    for _wsr_re_bin in "${_wsr_manifest_dir}/node_modules/.bin" "${_wsr_manifest_dir}/.venv/bin" "${_wsr_wd}/node_modules/.bin" "${_wsr_wd}/.venv/bin"; do
+      if [ -d "$_wsr_re_bin" ]; then
+        printf 'case ":${PATH}:" in *":%s:"*) ;; *) export PATH="%s:${PATH}" ;; esac\n' "$_wsr_re_bin" "$_wsr_re_bin"
+      fi
+    done
     printf 'cd "%s" || exit 1\n' "$_wsr_wd"
     case "$_wsr_exec" in
       *";"*|*"&&"*|*"||"*|*"|"*|"set "*|"for "*|"if "*)
@@ -261,12 +275,19 @@ SYSTEMD
 WantedBy=multi-user.target
 SYSTEMD_INST
         if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ -f "/etc/systemd/system/${_service_name}.service" ] && cmp -s "$_tmp_file" "/etc/systemd/system/${_service_name}.service" 2>/dev/null; then
-          log_info "[REUSE] Systemd unit for '${_service_name}' is unchanged."
+          log_info "[DAEMON] [CONFIRM] systemd unit for '${_service_name}' (/etc/systemd/system/${_service_name}.service) is up-to-date."
           export LIBSCRIPT_SERVICE_UNIT_UNCHANGED=1
+        elif [ -f "/etc/systemd/system/${_service_name}.service" ]; then
+          priv install -m 0644 -o 'root' -- "$_tmp_file" "/etc/systemd/system/${_service_name}.service"
+          priv systemctl daemon-reload
+          priv systemctl enable "$_service_name"
+          log_info "[DAEMON] [UPDATE] Updated systemd unit for '${_service_name}' (/etc/systemd/system/${_service_name}.service), ran daemon-reload, and marked for restart."
+          export LIBSCRIPT_SERVICE_UNIT_UNCHANGED=0
         else
           priv install -m 0644 -o 'root' -- "$_tmp_file" "/etc/systemd/system/${_service_name}.service"
           priv systemctl daemon-reload
           priv systemctl enable "$_service_name"
+          log_info "[DAEMON] [CREATE] Installed systemd unit for '${_service_name}' (/etc/systemd/system/${_service_name}.service) and reloaded daemon manager."
           export LIBSCRIPT_SERVICE_UNIT_UNCHANGED=0
         fi
         rm -f "$_tmp_file"
@@ -484,6 +505,7 @@ PLIST_END
 export HOME="${_svc_home}"
 export PATH="${PATH}"
 if [ -f "${_manifest_dir}/.env.libscript" ]; then set -a; . "${_manifest_dir}/.env.libscript" 2>/dev/null || true; set +a; fi
+export PATH="\${SERVICE_PATH:-${PATH}}"
 exec /bin/sh "${_runner_script}" 2>&1
 EOF_RUNIT
       priv install -m 0755 -o 'root' -- "$_tmp_file" "/etc/service/${_service_name}/run"
@@ -491,7 +513,7 @@ EOF_RUNIT
       ;;
     s6)
       log_info "Installing s6 service: $_service_name"
-      _s6_base="/run/service"
+      _s6_base='/run/service'
       [ -d /etc/s6/sv ] && _s6_base="/etc/s6/sv"
       priv mkdir -p "${_s6_base}/${_service_name}"
       _tmp_file=$(mktemp)
@@ -500,6 +522,7 @@ EOF_RUNIT
 export HOME="${_svc_home}"
 export PATH="${PATH}"
 if [ -f "${_manifest_dir}/.env.libscript" ]; then set -a; . "${_manifest_dir}/.env.libscript" 2>/dev/null || true; set +a; fi
+export PATH="\${SERVICE_PATH:-${PATH}}"
 exec /bin/sh "${_runner_script}" 2>&1
 EOF_S6
       priv install -m 0755 -o 'root' -- "$_tmp_file" "${_s6_base}/${_service_name}/run"
@@ -523,6 +546,7 @@ export HOME="${_svc_home}"
 export PATH="${PATH}"
 [ -f "/etc/default/${_service_name}" ] && . "/etc/default/${_service_name}"
 [ -f "${_manifest_dir}/.env.libscript" ] && { set -a; . "${_manifest_dir}/.env.libscript" 2>/dev/null || true; set +a; }
+export PATH="\${SERVICE_PATH:-${PATH}}"
 PIDFILE="/var/run/${_service_name}.pid"
 LOGFILE="/var/log/${_service_name}.log"
 
@@ -583,24 +607,31 @@ libscript_service_override_env() {
   _ovr_service="${1:-}"
   shift || true
   if [ -z "$_ovr_service" ] || [ $# -eq 0 ]; then
-    log_error "Usage: libscript_service_override_env <service_name> <KEY=VALUE...>"
+    log_error 'Usage: libscript_service_override_env <service_name> <KEY=VALUE...>'
     return 1
   fi
   _ovr_rc_name=$(printf '%s\n' "$_ovr_service" | tr '-' '_')
 
-  # 1. Generic / fallback env file (always written so runner scripts and fallback daemons pick it up)
+  # 1. Generic / fallback env file (idempotently merged so runner scripts and fallback daemons keep existing keys)
   _ovr_fb_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_ovr_service}"
   mkdir -p "$_ovr_fb_dir" 2>/dev/null || true
   if [ -w "$_ovr_fb_dir" ]; then
-    : > "${_ovr_fb_dir}/service.env"
+    touch "${_ovr_fb_dir}/service.env"
     for _kv in "$@"; do
+      _k="${_kv%%=*}"
+      grep -v "^export ${_k}=" "${_ovr_fb_dir}/service.env" > "${_ovr_fb_dir}/service.env.tmp" 2>/dev/null || true
+      mv "${_ovr_fb_dir}/service.env.tmp" "${_ovr_fb_dir}/service.env"
       printf 'export %s\n' "$_kv" >> "${_ovr_fb_dir}/service.env"
     done
   fi
   if [ "$(id -u 2>/dev/null || printf '1000')" -eq 0 ] || sudo -n true 2>/dev/null; then
     priv mkdir -p "/etc/libscript/${_ovr_service}" 2>/dev/null || true
     _tmp_gen=$(mktemp)
+    [ -f "/etc/libscript/${_ovr_service}/service.env" ] && cat "/etc/libscript/${_ovr_service}/service.env" > "$_tmp_gen" || true
     for _kv in "$@"; do
+      _k="${_kv%%=*}"
+      grep -v "^export ${_k}=" "$_tmp_gen" > "${_tmp_gen}.new" 2>/dev/null || true
+      mv "${_tmp_gen}.new" "$_tmp_gen"
       printf 'export %s\n' "$_kv" >> "$_tmp_gen"
     done
     priv install -m 0644 -- "$_tmp_gen" "/etc/libscript/${_ovr_service}/service.env" 2>/dev/null || true
@@ -609,18 +640,26 @@ libscript_service_override_env() {
 
   _init_sys=$(libscript_detect_init_system)
 
-  # 2. Systemd drop-in override
+  # 2. Systemd drop-in override (idempotently merged)
   if [ "$_init_sys" = "systemd" ]; then
     _ovr_dir="/etc/systemd/system/${_ovr_service}.service.d"
     priv mkdir -p "$_ovr_dir"
     _tmp_ovr=$(mktemp)
-    printf '[Service]\n' > "$_tmp_ovr"
+    if [ -f "${_ovr_dir}/override.conf" ]; then
+      cat "${_ovr_dir}/override.conf" > "$_tmp_ovr"
+    else
+      printf '[Service]\n' > "$_tmp_ovr"
+    fi
     for _kv in "$@"; do
+      _k="${_kv%%=*}"
+      grep -v "^Environment=\"${_k}=" "$_tmp_ovr" > "${_tmp_ovr}.new" 2>/dev/null || true
+      mv "${_tmp_ovr}.new" "$_tmp_ovr"
       printf 'Environment="%s"\n' "$_kv" >> "$_tmp_ovr"
     done
     priv install -m 0644 -- "$_tmp_ovr" "${_ovr_dir}/override.conf"
     rm -f "$_tmp_ovr"
     priv systemctl daemon-reload 2>/dev/null || true
+    log_info "[DAEMON] [OVERRIDE] Configured environment overrides for '${_ovr_service}' ($*) in ${_ovr_dir}/override.conf and reloaded init daemon."
     return 0
   fi
 
@@ -755,3 +794,9 @@ if [ "${THIS_FILE}" = "${0}" ] && [ $# -gt 0 ]; then
     *) libscript_install_service "$_si_cmd" "$@" ;;
   esac
 fi
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_si_outer_dir:-}" ] && SCRIPT_DIR="$_si_outer_dir"
+[ -n "${_si_outer_this:-}" ] && THIS_FILE="$_si_outer_this"
+unset _si_outer_this _si_outer_dir || true

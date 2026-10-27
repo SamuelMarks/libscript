@@ -11,12 +11,12 @@
 
 
 set -feu
+_oi_caller_this="${THIS_FILE:-}"; _oi_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -26,6 +26,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_oi_caller_this" ] && THIS_FILE="$_oi_caller_this"
+    [ -n "$_oi_caller_dir" ] && SCRIPT_DIR="$_oi_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -51,9 +53,9 @@ if [ -z ${UNAME+x} ]; then
         export HOMEBREW_INSTALL="${HOMEBREW_INSTALL:-1}"
         export NGINX_SERVERS_ROOT='/opt/homebrew/etc/nginx/servers'
         if [ ! -f '/opt/homebrew/bin/brew' ] && [ ! -f '/usr/local/bin/brew' ]; then
-          NONINTERACTIVE=1 /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
         fi
-        TARGET_OS="darwin"
+        TARGET_OS='darwin'
         TARGET_OS_NAME="$(sw_vers --productName)"
         export TARGET_OS_NAME
         ;;
@@ -219,3 +221,9 @@ if [ -z "${INIT_SYS+x}" ]; then
     esac
   fi
 fi
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_oi_caller_dir:-}" ] && SCRIPT_DIR="$_oi_caller_dir"
+[ -n "${_oi_caller_this:-}" ] && THIS_FILE="$_oi_caller_this"
+unset _oi_caller_this _oi_caller_dir || true

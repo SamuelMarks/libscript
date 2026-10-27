@@ -10,7 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -52,11 +52,13 @@ goto :find_root
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "sh"
 
-if "%SH_VERSION%"=="" set SH_VERSION=0.5.12
-if "%SH_VERSION%"=="latest" set SH_VERSION=0.5.12
-if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript
+if "%SH_VERSION%"=="" set "SH_VERSION=0.5.12"
+if "%SH_VERSION%"=="latest" set "SH_VERSION=0.5.12"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
-set PATH=%LIBSCRIPT_HOME%\sh\%SH_VERSION%\bin;%PATH%
+set "_CAND_P=%LIBSCRIPT_HOME%\sh\%SH_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"

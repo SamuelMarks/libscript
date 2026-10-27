@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,10 +36,10 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 # Displays usage instructions and supported parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [target_dir]"
-  printf '%s\n' "Stages and configures the Open edX platform stack in target root."
+  printf '%s\n' 'Stages and configures the Open edX platform stack in target root.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then

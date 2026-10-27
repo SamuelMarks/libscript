@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": []
+  "ports": [],
+  "repository": "https://github.com/rust-lang/rust"
 }

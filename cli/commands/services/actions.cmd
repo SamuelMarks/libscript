@@ -11,7 +11,7 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -77,6 +77,7 @@ if /i "!action!"=="prepare-storage" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!_ps_json!"
     )
     for /f "tokens=1,2" %%M in ('jq -r "(.infrastructure.node.data_disks // [])[]? | \"\(.mount_path // \"/mnt/data\") \(.fstype // \"NTFS\")\"" "!_ps_json!" 2^>nul') do (
+        echo [STORAGE] Ensuring persistent disk mount "%%M" ^(fstype: %%N^)...
         call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
     )
     set "_has_ol=0"
@@ -84,6 +85,7 @@ if /i "!action!"=="prepare-storage" (
     if not "!OLLAMA_MODELS!"=="" set "_has_ol=1"
     if "!_has_ol!"=="1" (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" (
+            echo [DAEMON] Configuring ollama model storage and restarting/reloading daemon if needed...
             set "STACK="
             call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" configure
         )
@@ -96,6 +98,8 @@ if /i "!action!"=="down" set "action=stop"
 if /i "!action!"=="uninstall-service" set "action=uninstall"
 
 set "skip_hooks=0"
+set "skip_db_init=%LIBSCRIPT_SKIP_DB_INIT%"
+if "!skip_db_init!"=="" set "skip_db_init=0"
 set "remove_service=0"
 set "purge_data=0"
 set "remediate=0"
@@ -107,6 +111,10 @@ for %%A in (%2 %3 %4 %5 %6 %7 %8 %9) do (
     set "_ca=%%~A"
     if /i "!_ca!"=="--no-hooks" (
         set "skip_hooks=1"
+    ) else if /i "!_ca!"=="--skip-db-init" (
+        set "skip_db_init=1"
+    ) else if /i "!_ca!"=="--skip-migrate" (
+        set "skip_db_init=1"
     ) else if /i "!_ca!"=="--remove" (
         set "remove_service=1"
     ) else if /i "!_ca!"=="--uninstall" (
@@ -152,8 +160,10 @@ if "!is_json!"=="1" (
     )
     if "!skip_hooks!"=="0" (
         if /i "!action!"=="start" (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
-            if errorlevel 1 exit /b 1
+            if "!skip_db_init!"=="0" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
+                if errorlevel 1 exit /b 1
+            )
         )
         if /i "!action!"=="stop" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_stop"
@@ -164,7 +174,7 @@ if "!is_json!"=="1" (
     )
     if /i not "!action!"=="uninstall" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
-        for /f "tokens=1,2 delims=       " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
+        for /f "tokens=1,2 delims=	 " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
             set "pkg=%%A"
             set "ver=%%B"
             if "!ver!"=="null" set "ver=latest"
@@ -200,20 +210,24 @@ if "!is_json!"=="1" (
 
     if /i "!action!"=="start" (
         if "!skip_hooks!"=="0" (
-            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+            if "!skip_db_init!"=="0" (
+                if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
+                    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
+                    if errorlevel 1 exit /b 1
+                )
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
                 if errorlevel 1 exit /b 1
             )
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
-            if errorlevel 1 exit /b 1
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
             if errorlevel 1 exit /b 1
         )
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
         if errorlevel 1 exit /b 1
-        jq -e ".ingress != null" "!json_file!" >nul 2>&1
-        if not errorlevel 1 (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+        if "!skip_db_init!"=="0" (
+            jq -e ".ingress != null" "!json_file!" >nul 2>&1
+            if not errorlevel 1 (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+            )
         )
         if "!skip_hooks!"=="0" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_start"
@@ -285,12 +299,79 @@ if "!is_json!"=="1" (
     if not "!pkg!"=="" (
         set "LIBSCRIPT_INTERNAL_START=1"
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
+        if /i "!action!"=="health" (
+            call :perform_health_check "!pkg!" "%~3"
+            if errorlevel 1 exit /b 1
+        ) else (
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
+        )
         shift
         goto loop_services
     )
     exit /b 0
 )
+
+:: ## perform_health_check
+:: Executes a health check for a single component on Windows by hydrating its env and delegating to test.cmd or daemon readiness tools.
+:perform_health_check
+set "_hc_pkg=%~1"
+set "_hc_ver=%~2"
+if "!_hc_ver!"=="" set "_hc_ver=latest"
+for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
+    if exist "%%C\!_hc_pkg!\env.cmd" (
+        set "STACK="
+        call "%%C\!_hc_pkg!\env.cmd" >nul 2>&1
+    )
+)
+if /i "!_hc_pkg!"=="postgres" goto :hc_pg
+if /i "!_hc_pkg!"=="postgresql" goto :hc_pg
+if /i "!_hc_pkg!"=="mariadb" goto :hc_mysql
+if /i "!_hc_pkg!"=="mysql" goto :hc_mysql
+if /i "!_hc_pkg!"=="valkey" goto :hc_redis
+if /i "!_hc_pkg!"=="redis" goto :hc_redis
+for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
+    if exist "%%C\!_hc_pkg!\test.cmd" (
+        set "STACK="
+        call "%%C\!_hc_pkg!\test.cmd" >nul 2>&1
+        exit /b 0
+    )
+)
+exit /b 0
+
+:: ## hc_pg
+:: Verifies PostgreSQL daemon readiness via pg_isready on Windows.
+:hc_pg
+where pg_isready >nul 2>&1
+if not errorlevel 1 (
+    pg_isready -q
+    exit /b !ERRORLEVEL!
+)
+exit /b 0
+
+:: ## hc_mysql
+:: Verifies MariaDB/MySQL daemon readiness via mysqladmin on Windows.
+:hc_mysql
+where mysqladmin >nul 2>&1
+if not errorlevel 1 (
+    mysqladmin ping --silent >nul 2>&1
+    exit /b 0
+)
+exit /b 0
+
+:: ## hc_redis
+:: Verifies Valkey/Redis daemon readiness via valkey-cli or redis-cli on Windows.
+:hc_redis
+where valkey-cli >nul 2>&1
+if not errorlevel 1 (
+    valkey-cli ping >nul 2>&1
+    exit /b 0
+)
+where redis-cli >nul 2>&1
+if not errorlevel 1 (
+    redis-cli ping >nul 2>&1
+    exit /b 0
+)
+exit /b 0
 
 :: ## run_health_check
 :: Runs database, daemon, and hook health checks for the target manifest.

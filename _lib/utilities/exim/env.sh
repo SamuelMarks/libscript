@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,3 +36,5 @@ unset SCRIPT_NAME || true
 
 export EXIM_SMTP_PORT="${EXIM_SMTP_PORT:-25}"
 export EXIM_RELAY_FROM_HOSTS="${EXIM_RELAY_FROM_HOSTS:-127.0.0.1 : ::::1}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

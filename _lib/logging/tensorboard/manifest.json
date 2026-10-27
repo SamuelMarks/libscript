@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": ["windows", "freebsd", "sunos"],
-  "ports": ["6006"]
+  "ports": ["6006"],
+  "repository": "https://github.com/tensorflow/tensorboard"
 }

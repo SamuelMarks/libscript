@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,4 +36,6 @@ unset SCRIPT_NAME || true
 
 export VIRTUALBOX_INSTALL_METHOD="${VIRTUALBOX_INSTALL_METHOD:-system}"
 VIRTUALBOX_VERSION="${VIRTUALBOX_VERSION:-7.0}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/virtualbox/${VIRTUALBOX_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/virtualbox/${VIRTUALBOX_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -6,16 +6,12 @@
   "type": "object",
   "properties": {
     "LIBSCRIPT_DEFAULT_INSTALL_METHOD": {
-      "description": "Global override for how software should be installed ('libscript_native' prebuilt binary, 'from-source' compiled from source code, 'system' via OS/selected package manager, or third-party version managers).",
+      "description": "Global override for how software should be installed ('libscript_native' prebuilt binary, 'from-source' compiled from source code, or 'system' via OS/selected package manager).",
       "type": "string",
       "enum": [
         "libscript_native",
         "from-source",
         "system",
-        "mise",
-        "asdf",
-        "pkgx",
-        "vfox",
         "nix",
         "guix",
         "spack",
@@ -29,7 +25,7 @@
       "default": "libscript_native"
     },
     "LIBSCRIPT_PKG_MGR": {
-      "description": "Explicit package manager override for 'system' or package-manager-driven installations (e.g., 'apt-get', 'apk', 'dnf', 'yum', 'zypper', 'pacman', 'brew', 'port', 'pkg', 'xbps', 'emerge', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan', 'pkgx'). When set, overrides auto-detection in detect_pkg_mgr.",
+      "description": "Explicit package manager override for 'system' or package-manager-driven installations (e.g., 'apt-get', 'apk', 'dnf', 'yum', 'zypper', 'pacman', 'brew', 'port', 'pkg', 'xbps', 'emerge', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan'). When set, overrides auto-detection in detect_pkg_mgr.",
       "type": "string"
     },
     "LIBSCRIPT_BUILD_TOOLCHAIN": {
@@ -174,6 +170,162 @@
     "JETSTREAM_IMAGE": {
       "type": "string",
       "description": "Docker image for JetStream TPU inference"
+    },
+    "LIBSCRIPT_HOME": {
+      "type": "string",
+      "description": "Base installation prefix where LibScript installs isolated component versions."
+    },
+    "LIBSCRIPT_DATA_DIR": {
+      "type": "string",
+      "description": "Base data directory for runtime component state, databases, and service configurations."
+    },
+    "LIBSCRIPT_BUILD_DIR": {
+      "type": "string",
+      "description": "Scratch build directory used when compiling components from source."
+    },
+    "LIBSCRIPT_TARGET_SYSROOT": {
+      "type": "string",
+      "description": "Optional target root filesystem path when provisioning chroots or OS images."
+    },
+    "LIBSCRIPT_SKIP_SYSTEM_DEPS": {
+      "type": "string",
+      "description": "Flag (0 or 1) to skip OS-level system dependency installation during setup."
+    },
+    "LIBSCRIPT_DRY_RUN_PKG_MGR": {
+      "type": "string",
+      "description": "Flag (0 or 1) to simulate package manager operations without mutating the system."
+    },
+    "LIBSCRIPT_ARIA2_EXPORT_FILE": {
+      "type": "string",
+      "description": "File path to export aria2-compatible download URLs instead of downloading immediately."
+    },
+    "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB": {
+      "type": "string",
+      "description": "Flag (0 or 1) to prevent auto-fetching remote SHA-256 checksums when missing from checksums.txt."
+    },
+    "LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE": {
+      "type": "string",
+      "description": "Flag (0 or 1) to prevent appending newly discovered SHA-256 hashes to _lib/checksums.txt."
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": "string",
+      "description": "Global fallback TCP port for network-listening components."
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global fallback bind address for network-listening components."
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global fallback UNIX domain socket path for listening components."
+    },
+    "LIBSCRIPT_SERVICE_RUN_AS_USER": {
+      "type": "string",
+      "description": "System user account under which daemonized services should execute."
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Global installation strategy override applied across all components."
+    },
+    "FORCE_REINSTALL": {
+      "type": "string",
+      "description": "Flag (0 or 1) to force re-downloading and reinstalling a component even if already present."
+    },
+    "FORCE_REBUILD": {
+      "type": "string",
+      "description": "Flag (0 or 1) to force rebuilding a component or service unit from scratch."
+    },
+    "LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION": {
+      "type": "string",
+      "description": "Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters."
+    },
+    "LIBSCRIPT_AZURE_RESOURCE_GROUP": {
+      "type": "string",
+      "description": "Default Azure Resource Group name for cloud provisioning operations."
+    },
+    "LIBSCRIPT_DASHBOARD_DIR": {
+      "type": "string",
+      "description": "Directory path for generated monitoring and observability dashboards."
+    },
+    "LIBSCRIPT_DEBUG": {
+      "type": "string",
+      "description": "Flag (0 or 1) enabling verbose debug tracing across LibScript lifecycle actions."
+    },
+    "LIBSCRIPT_FORCE_FETCH": {
+      "type": "string",
+      "description": "Flag (0 or 1) forcing remote artifact re-fetching even when present in local cache."
+    },
+    "LIBSCRIPT_HOST_ROOT": {
+      "type": "string",
+      "description": "Host root directory mount point when executing inside a container or chroot."
+    },
+    "LIBSCRIPT_HW_CORES": {
+      "type": "string",
+      "description": "Detected or overridden CPU core count for auto-tuning services and parallel builds."
+    },
+    "LIBSCRIPT_HW_MEM_MB": {
+      "type": "string",
+      "description": "Detected or overridden system memory in MiB for auto-tuning service buffer pools."
+    },
+    "LIBSCRIPT_HW_NVME": {
+      "type": "string",
+      "description": "Detected or overridden NVMe storage presence flag for I/O scheduler and database tuning."
+    },
+    "LIBSCRIPT_HW_SIMD": {
+      "type": "string",
+      "description": "Detected or overridden CPU SIMD instruction set capabilities (e.g., avx2, avx512, neon)."
+    },
+    "LIBSCRIPT_PROFILE": {
+      "type": "string",
+      "description": "Active configuration profile name (e.g., dev, prod, minimal, hpc)."
+    },
+    "LIBSCRIPT_RESOLVED_CC_BIN": {
+      "type": "string",
+      "description": "Resolved path to the active C compiler binary for source builds."
+    },
+    "LIBSCRIPT_RESOLVED_CC_ID": {
+      "type": "string",
+      "description": "Resolved compiler identifier (gcc, clang, tcc, msvc) for source builds."
+    },
+    "LIBSCRIPT_RESOLVED_CC_VERSION": {
+      "type": "string",
+      "description": "Resolved version string of the active C compiler."
+    },
+    "LIBSCRIPT_SOURCE_WORKDIR": {
+      "type": "string",
+      "description": "Working directory used for extracting and compiling source tarballs."
+    },
+    "LIBSCRIPT_TAG_ENABLE": {
+      "type": "string",
+      "description": "Flag (0 or 1) enabling resource tagging on cloud provider assets."
+    },
+    "LIBSCRIPT_TAG_KEY": {
+      "type": "string",
+      "description": "Tag key applied to provisioned cloud provider resources."
+    },
+    "LIBSCRIPT_TAG_VALUE": {
+      "type": "string",
+      "description": "Tag value applied to provisioned cloud provider resources."
+    },
+    "LIBSCRIPT_TARGET_ARCH": {
+      "type": "string",
+      "description": "Target CPU architecture when cross-compiling or building OS images."
+    },
+    "LIBSCRIPT_TARGET_LIBC": {
+      "type": "string",
+      "description": "Target C standard library implementation (glibc, musl, uclibc, msvcrt)."
+    },
+    "LIBSCRIPT_TARGET_OS": {
+      "type": "string",
+      "description": "Target operating system identifier when provisioning or cross-compiling."
+    },
+    "LIBSCRIPT_TARGET_ROOTFS": {
+      "type": "string",
+      "description": "Filesystem path to the target rootfs directory for image synthesis."
+    },
+    "LIBSCRIPT_VOLUME_NAME": {
+      "type": "string",
+      "description": "Logical storage volume name for persistent data mounts."
     }
   }
 }

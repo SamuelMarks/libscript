@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -41,16 +40,16 @@ KEY=~/.vagrant.d/insecure_private_key
 SSH_CMD="ssh -p $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY vagrant@$VM_IP"
 SCP_CMD="scp -P $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY"
 
-echo "[INFO] Creating directories on VM..."
+echo '[INFO] Creating directories on VM...'
 $SSH_CMD "powershell -Command \"New-Item -ItemType Directory -Force -Path C:\libscript\""
 
-echo "[INFO] Archiving repo..."
+echo '[INFO] Archiving repo...'
 tar -czf payload.tar.gz --exclude='.git' --exclude='vagrant' --exclude='tests_tmp' .
 
-echo "[INFO] Uploading archive..."
+echo '[INFO] Uploading archive...'
 $SCP_CMD payload.tar.gz vagrant@$VM_IP:C:/libscript/payload.tar.gz
 
-echo "[INFO] Extracting archive on VM..."
+echo '[INFO] Extracting archive on VM...'
 $SSH_CMD "powershell -Command \"cd C:\libscript; tar -xzf payload.tar.gz\""
 if [ -d "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets" ]; then
     $SCP_CMD "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/"* vagrant@$VM_IP:C:/libscript/packaging/assets/
@@ -66,7 +65,7 @@ $SCP_CMD build.ps1 vagrant@$VM_IP:C:/libscript/build.ps1
 rm -f payload.tar.gz build.ps1
 $SSH_CMD "powershell -ExecutionPolicy Bypass -File C:\libscript\build.ps1"
 
-echo "[INFO] Downloading MSIs..."
+echo '[INFO] Downloading MSIs...'
 $SCP_CMD vagrant@$VM_IP:C:/libscript/OpenEdX-Setup.msi packaging/OpenEdX-Setup.msi
 $SCP_CMD vagrant@$VM_IP:C:/libscript/OpenEdX-Setup-Offline.msi packaging/OpenEdX-Setup-Offline.msi
-echo "[PASS] Done!"
+echo '[PASS] Done!'

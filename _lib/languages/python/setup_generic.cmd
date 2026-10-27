@@ -8,7 +8,7 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -123,8 +123,11 @@ if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\python.exe" exit /b 0
 where python >nul 2>&1
 if not errorlevel 1 (
     if /i "%PYTHON_VERSION%"=="latest" exit /b 0
-    python -c "import sys; sys.exit(0 if f'{sys.version_info[0]}.{sys.version_info[1]}'.startswith('%PYTHON_VERSION%') else 1)" >nul 2>&1
-    if not errorlevel 1 exit /b 0
+    for /f "tokens=2" %%V in ('python --version 2^>^&1') do (
+        echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
+        if not errorlevel 1 exit /b 0
+        if "%%V"=="%PYTHON_VERSION%" exit /b 0
+    )
 )
 where uv >nul 2>&1
 if not errorlevel 1 (
@@ -136,10 +139,6 @@ exit /b 1
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise ls python & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="asdf" ( asdf list python & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="vfox" ( vfox ls python & exit /b 0 )
 if "%PYTHON_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\python" ( dir /b "%LIBSCRIPT_HOME%\python" )
 exit /b 0
@@ -147,13 +146,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise ls-remote python & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="asdf" ( asdf list all python & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="vfox" ( vfox ls all python & exit /b 0 )
 if "%PYTHON_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%PYTHON_RELEASES_URL%"=="" (
-    curl -sSL "%PYTHON_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%PYTHON_RELEASES_URL%"
 ) else (
     echo ls-remote not fully implemented natively yet.
 )
@@ -162,10 +157,6 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise use "python@%PYTHON_VERSION%" & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="asdf" ( asdf global python "%PYTHON_VERSION%" & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="vfox" ( vfox use "python@%PYTHON_VERSION%" & exit /b 0 )
 if "%PYTHON_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
 if "%PYTHON_VERSION%"=="latest" (set "EXACT_VERSION=%PYTHON_VERSION%"
@@ -179,8 +170,11 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\python\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -259,10 +253,6 @@ if "%PYTHON_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python3
     exit /b !errorlevel!
 )
-if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise install "python@%PYTHON_VERSION%" & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="asdf" ( asdf install python "%PYTHON_VERSION%" & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="pkgx" ( pkgx install "python@%PYTHON_VERSION%" & exit /b 0 )
-if "%PYTHON_INSTALL_METHOD%"=="vfox" ( vfox add python & vfox install "python@%PYTHON_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
 if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe" if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
@@ -311,8 +301,11 @@ if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe
 )
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\python\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
@@ -322,64 +315,14 @@ if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_python"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else (
-    echo %ACTION% not natively implemented for %PYTHON_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_python"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else (
-    echo install-service not implemented for %PYTHON_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_python"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else (
-    echo uninstall-service not implemented for %PYTHON_INSTALL_METHOD%.
-)
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "python" "%ACTION%" "%PYTHON_VERSION%" "%PYTHON_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\\bin\\python.exe\"" "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
+exit /b !errorlevel!

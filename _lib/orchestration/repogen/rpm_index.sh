@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -101,7 +100,7 @@ EOF
   gzip -9 -c "$PRIMARY_XML" > "${REPODATA_DIR}/primary.xml.gz"
   gzip -9 -c "$FILELISTS_XML" > "${REPODATA_DIR}/filelists.xml.gz"
 
-  PRIMARY_SHA256="dummy"
+  PRIMARY_SHA256='dummy'
   if command -v sha256sum >/dev/null 2>&1; then
     PRIMARY_SHA256=$(sha256sum "${REPODATA_DIR}/primary.xml.gz" | cut -d' ' -f1)
   elif command -v shasum >/dev/null 2>&1; then

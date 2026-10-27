@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -60,7 +59,7 @@ comconsole_speed="115200"
 console="comconsole,vidconsole"
 EOF
 
-if [ "${FILESYSTEM}" = "zfs" ]; then
+if [ "${FILESYSTEM}" = "zfs" ] && ! grep -q '^zfs_load=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
   cat << 'EOF' >> "${SYSROOT}/boot/loader.conf"
 zfs_load="YES"
 vfs.root.mountfrom="zfs:zroot/ROOT/default"
@@ -77,7 +76,7 @@ sendmail_enable="NONE"
 dumpdev="NO"
 EOF
 
-if [ "${FILESYSTEM}" = "zfs" ]; then
+if [ "${FILESYSTEM}" = "zfs" ] && ! grep -q '^zfs_enable=' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
   printf 'zfs_enable="YES"\n' >> "${SYSROOT}/etc/rc.conf"
 fi
 

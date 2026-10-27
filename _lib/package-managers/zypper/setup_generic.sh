@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$ZYPPER_INSTALL_METHOD" = "mise" ]; then
-      mise ls zypper || true
-    elif [ "$ZYPPER_INSTALL_METHOD" = "asdf" ]; then
-      asdf list zypper || true
-    elif [ "$ZYPPER_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls zypper || true
-    elif [ "$ZYPPER_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/zypper/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "zypper" "$ACTION" "$VERSION" "${ZYPPER_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$ZYPPER_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote zypper || true
-    elif [ "$ZYPPER_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all zypper || true
-    elif [ "$ZYPPER_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all zypper || true
+    if [ -n "${ZYPPER_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${ZYPPER_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${ZYPPER_RELEASES_URL:-}" ]; then
-        curl -sSL "${ZYPPER_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/zypper" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/openSUSE/zypper" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$ZYPPER_INSTALL_METHOD" = "mise" ]; then
-      mise use "zypper@${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "asdf" ]; then
-      asdf global zypper "${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "zypper@${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "zypper@${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "zypper" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "zypper" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/zypper/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "zypper ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "zypper" "default" "${EXACT_VERSION}"
-      log_info "Set default zypper version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env zypper \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "zypper" "$ACTION" "$VERSION" "${ZYPPER_INSTALL_METHOD}"
     ;;
   download)
     if [ "$ZYPPER_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,20 +90,11 @@ case "$ACTION" in
     ;;
   install)
     if [ "$ZYPPER_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "zypper"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "mise" ]; then
-      mise install "zypper@${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "asdf" ]; then
-      asdf install zypper "${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "zypper@${VERSION}"
-    elif [ "$ZYPPER_INSTALL_METHOD" = "vfox" ]; then
-      vfox add zypper || true
-      vfox install "zypper@${VERSION}"
+      libscript_depends 'zypper'
     else
       # libscript_native implementation
       if [ ! -f /etc/os-release ] || ! grep -qi "suse" /etc/os-release; then
-        log_info "zypper is only for openSUSE/SLES. Skipping installation."
+        log_info 'zypper is only for openSUSE/SLES. Skipping installation.'
         exit 0
       fi
 
@@ -166,7 +104,7 @@ case "$ACTION" in
         log_info "Installing zypper ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/zypper/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/zypper/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -201,52 +139,7 @@ case "$ACTION" in
       libscript_symlink_alias "zypper" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$ZYPPER_INSTALL_METHOD" = "libscript_native" ] || [ "$ZYPPER_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-zypper}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $ZYPPER_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "zypper" "$ACTION" "$VERSION" "${ZYPPER_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$ZYPPER_INSTALL_METHOD" = "libscript_native" ] || [ "$ZYPPER_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-zypper}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $ZYPPER_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$ZYPPER_INSTALL_METHOD" = "libscript_native" ] || [ "$ZYPPER_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-zypper}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $ZYPPER_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$ZYPPER_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling zypper $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/zypper/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/zypper/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $ZYPPER_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

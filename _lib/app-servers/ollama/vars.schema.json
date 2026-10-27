@@ -7,13 +7,25 @@
     "OLLAMA_INSTALL_METHOD": {
       "description": "How to install OLLAMA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "OLLAMA_MODELS": {
       "description": "Directory path where Ollama stores downloaded model weights and manifests.",
       "type": "string",
       "default": "/mnt/data/ollama_models"
+    },
+    "OLLAMA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ollama binary or archive artifacts."
+    },
+    "OLLAMA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ollama available remote releases."
+    },
+    "OLLAMA_VERSION": {
+      "type": "string",
+      "description": "Specific version of ollama to install (e.g., latest, lts, or exact version)."
     }
   }
 }

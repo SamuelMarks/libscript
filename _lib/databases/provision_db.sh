@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -215,13 +214,14 @@ ensure_valkey_running() {
   for _evr_cli in valkey-cli redis-cli; do
     if command -v "$_evr_cli" >/dev/null 2>&1; then
       if "$_evr_cli" -h "$_evr_host" -p "$_evr_port" -n "$_evr_db_idx" ping 2>/dev/null | grep -qi "PONG"; then
-        log_info "[REUSE] Valkey/Redis server already active on ${_evr_host}:${_evr_port} (db ${_evr_db_idx})."
+        _evr_keys=$("$_evr_cli" -h "$_evr_host" -p "$_evr_port" -n "$_evr_db_idx" dbsize 2>/dev/null | tr -d '[:space:]' || printf '0')
+        log_info "[DB:VALKEY] [CONFIRM] Valkey/Redis endpoint active at ${_evr_host}:${_evr_port} (db ${_evr_db_idx}, keys: ${_evr_keys:-0})."
         return 0
       fi
     fi
   done
 
-  log_info "[CREATE] Valkey/Redis not responding on ${_evr_host}:${_evr_port}; installing/starting service..."
+  log_info "[DB:VALKEY] [CREATE] Starting Valkey/Redis on ${_evr_host}:${_evr_port} (db ${_evr_db_idx})..."
   for _evr_comp in valkey redis; do
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/caches/${_evr_comp}/env.sh" ]; then
       STACK=""
@@ -248,7 +248,7 @@ ensure_valkey_running() {
   for _evr_cli in valkey-cli redis-cli; do
     if command -v "$_evr_cli" >/dev/null 2>&1; then
       if "$_evr_cli" -h "$_evr_host" -p "$_evr_port" -n "$_evr_db_idx" ping 2>/dev/null | grep -qi "PONG"; then
-        log_info "[CREATE] Started Valkey/Redis server on ${_evr_host}:${_evr_port} (db ${_evr_db_idx})."
+        log_info "[DB:VALKEY] [CREATE] Started Valkey/Redis server on ${_evr_host}:${_evr_port} (db ${_evr_db_idx})."
         return 0
       fi
     fi
@@ -281,6 +281,7 @@ check_postgres_populated() {
     : "${_cpp_cnt:=0}"
     [ "$_cpp_cnt" -lt "$_cpp_min_tbl" ] 2>/dev/null && return 1
   fi
+  _cpp_summary=""
   if [ -n "$_cpp_req" ]; then
     while IFS= read -r _cpp_tbl; do
       [ -n "$_cpp_tbl" ] || continue
@@ -289,10 +290,12 @@ check_postgres_populated() {
       if [ -z "$_cpp_rc" ] || [ "$_cpp_rc" -lt "$_cpp_min_r" ] 2>/dev/null; then
         return 1
       fi
+      _cpp_summary="${_cpp_summary:+$_cpp_summary, }${_cpp_tbl}=${_cpp_rc} rows"
     done << EOF_CPP_REQ
 $_cpp_req
 EOF_CPP_REQ
   fi
+  log_info "[DB:POSTGRES] [CONFIRM] Database '${_cpp_db}' tables verified (${_cpp_summary:-populated})."
   return 0
 }
 
@@ -307,11 +310,12 @@ check_duckdb_populated() {
   _cdp_req=$(printf '%s\n' "$_cdp_entry" | jq -r '.required_tables[]?' 2>/dev/null || true)
   _cdp_min_tbl=$(printf '%s\n' "$_cdp_entry" | jq -r '.min_tables // empty' 2>/dev/null || true)
   [ -z "$_cdp_req" ] && [ -z "$_cdp_min_tbl" ] && return 1
+  _cdp_cnt=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
+  : "${_cdp_cnt:=0}"
   if [ -n "$_cdp_min_tbl" ]; then
-    _cdp_cnt=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
-    : "${_cdp_cnt:=0}"
     [ "$_cdp_cnt" -lt "$_cdp_min_tbl" ] 2>/dev/null && return 1
   fi
+  _cdp_summary=""
   if [ -n "$_cdp_req" ]; then
     while IFS= read -r _cdp_tbl; do
       [ -n "$_cdp_tbl" ] || continue
@@ -320,10 +324,12 @@ check_duckdb_populated() {
       if [ -z "$_cdp_rc" ] || [ "$_cdp_rc" -lt "$_cdp_min_r" ] 2>/dev/null; then
         return 1
       fi
+      _cdp_summary="${_cdp_summary:+$_cdp_summary, }${_cdp_tbl}=${_cdp_rc} rows"
     done << EOF_CDP_REQ
 $_cdp_req
 EOF_CDP_REQ
   fi
+  log_info "[DB:DUCKDB] [CONFIRM] DuckDB '${_cdp_path}' verified (${_cdp_cnt} tables: ${_cdp_summary:-populated})."
   return 0
 }
 
@@ -381,17 +387,17 @@ while IFS= read -r db_entry <&3; do
     DB_PASS=$(printenv "$PASS_ENV" 2>/dev/null || true)
   fi
   if [ -z "$DB_PASS" ]; then
-    DB_PASS="postgres"
+    DB_PASS='postgres'
   fi
 
   case "$ENGINE" in
     postgres|postgresql)
       : "${DB_PORT:=5432}"
-      log_info "Provisioning PostgreSQL database '$DB_NAME' (user: '$DB_USER', host: $DB_HOST:$DB_PORT)..."
+      log_info "[DB:POSTGRES] Provisioning PostgreSQL database '$DB_NAME' (user: '$DB_USER', host: $DB_HOST:$DB_PORT)..."
       if command -v pg_isready >/dev/null 2>&1 && pg_isready -h "$DB_HOST" -p "$DB_PORT" -q 2>/dev/null; then
-        log_info "[REUSE] PostgreSQL server is already active on ${DB_HOST}:${DB_PORT}."
+        log_info "[DB:POSTGRES] [CONFIRM] PostgreSQL server is active on ${DB_HOST}:${DB_PORT}."
       elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/cli.sh" ]; then
-        log_info "[CREATE] Starting PostgreSQL server on ${DB_HOST}:${DB_PORT}..."
+        log_info "[DB:POSTGRES] [CREATE] Starting PostgreSQL server on ${DB_HOST}:${DB_PORT}..."
         "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/cli.sh" start >/dev/null 2>&1 || true
       fi
       set_env_var "$ENV_VAR_NAME" "postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
@@ -428,26 +434,26 @@ while IFS= read -r db_entry <&3; do
           log_info "[REUSE] PostgreSQL database '$DB_NAME' already has required tables and minimum rows; skipping full re-seed."
         else
           ensure_manifest_python_venvs
-          log_info "[CREATE] Running PostgreSQL seed_command for '$DB_NAME': $SEED_CMD"
+          log_info "[UPSERT:POSTGRES] Running PostgreSQL seed_command for '$DB_NAME': $SEED_CMD"
           (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
         fi
       fi
       ;;
     mysql|mariadb)
       : "${DB_PORT:=3306}"
-      log_info "Provisioning MySQL/MariaDB database '$DB_NAME' (user: '$DB_USER', host: $DB_HOST:$DB_PORT)..."
+      log_info "[DB:MYSQL] Provisioning MySQL/MariaDB database '$DB_NAME' (user: '$DB_USER', host: $DB_HOST:$DB_PORT)..."
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/mariadb/cli.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/databases/mariadb/cli.sh" start >/dev/null 2>&1 || true
       fi
       if command -v mysql >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
         env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
           --engine mysql --host "$DB_HOST" --port "$DB_PORT" \
-          --admin-user root --schema "$DB_NAME" --user "$DB_USER" --password "$DB_PASS" >/dev/null 2>&1 || true
+          --admin-user root --schema "$DB_NAME" --user "$DB_USER" --password "$DB_PASS" || true
       fi
       set_env_var "$ENV_VAR_NAME" "mysql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
       if [ -n "$SEED_CMD" ]; then
         ensure_manifest_python_venvs
-        log_info "Running MySQL/MariaDB seed_command for '$DB_NAME': $SEED_CMD"
+        log_info "[UPSERT:MYSQL] Running MySQL/MariaDB seed_command for '$DB_NAME': $SEED_CMD"
         (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
       fi
       ;;
@@ -460,10 +466,10 @@ while IFS= read -r db_entry <&3; do
         DB_PATH="${MANIFEST_DIR}/${DB_PATH}"
       fi
       mkdir -p "$(dirname -- "$DB_PATH")"
-      log_info "Provisioning SQLite database at '$DB_PATH'..."
+      log_info "[DB:SQLITE] Provisioning SQLite database at '$DB_PATH'..."
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ] && command -v sqlite3 >/dev/null 2>&1; then
         env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
-          --engine sqlite --schema "$DB_PATH" --user "$DB_USER" --password "$DB_PASS" >/dev/null 2>&1 || true
+          --engine sqlite --schema "$DB_PATH" --user "$DB_USER" --password "$DB_PASS" || true
       fi
       set_env_var "$ENV_VAR_NAME" "sqlite:///${DB_PATH}"
       set_env_var "SQLITE_PATH" "$DB_PATH"
@@ -475,7 +481,7 @@ while IFS= read -r db_entry <&3; do
       fi
       if [ -n "$SEED_CMD" ]; then
         ensure_manifest_python_venvs
-        log_info "Running SQLite seed_command for '$DB_NAME': $SEED_CMD"
+        log_info "[UPSERT:SQLITE] Running SQLite seed_command for '$DB_NAME': $SEED_CMD"
         (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
       fi
       ;;
@@ -493,7 +499,6 @@ while IFS= read -r db_entry <&3; do
       fi
       DB_PARENT_DIR=$(dirname -- "$DB_PATH")
       mkdir -p "$DB_PARENT_DIR"
-      log_info "Provisioning DuckDB database at '$DB_PATH'..."
       PATH_ENV_VAR=$(printf '%s\n' "$db_entry" | jq -r '.path_env // .env_var // "DUCKDB_PATH"')
       set_env_var "$PATH_ENV_VAR" "$DB_PATH"
       if [ "$PATH_ENV_VAR" != "DUCKDB_PATH" ]; then
@@ -503,9 +508,17 @@ while IFS= read -r db_entry <&3; do
         set_env_var "$ENV_VAR_NAME" "duckdb:///${DB_PATH}"
       fi
       if [ ! -s "$DB_PATH" ]; then
+        log_info "[DB:DUCKDB] [CREATE] Initializing new DuckDB database at '$DB_PATH'..."
         if ensure_duckdb_cli; then
           duckdb "$DB_PATH" -c "SELECT 1;" >/dev/null 2>&1 || true
         fi
+      else
+        _duck_sz=$(du -sh "$DB_PATH" 2>/dev/null | awk '{print $1}' || printf '0B')
+        _duck_tcnt=0
+        if ensure_duckdb_cli; then
+          _duck_tcnt=$(duckdb "$DB_PATH" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
+        fi
+        log_info "[DB:DUCKDB] [CONFIRM] DuckDB database exists at '$DB_PATH' (${_duck_sz:-0B}, ${_duck_tcnt:-0} table(s))."
       fi
       if [ -n "$SEED_FILE" ]; then
         RES_SEED_FILE=$(resolve_db_asset_path "$SEED_FILE")
@@ -530,7 +543,7 @@ while IFS= read -r db_entry <&3; do
           log_info "[REUSE] DuckDB database '$DB_PATH' already has required tables and minimum rows; skipping full re-seed."
         else
           ensure_manifest_python_venvs
-          log_info "[CREATE] Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
+          log_info "[UPSERT:DUCKDB] Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
           (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
         fi
       fi
@@ -552,7 +565,7 @@ while IFS= read -r db_entry <&3; do
       : "${DB_PORT:=6379}"
       DB_IDX=$(printf '%s\n' "$db_entry" | jq -r '.db_index // .database // 0' 2>/dev/null || printf '0')
       [ -z "$DB_IDX" ] || [ "$DB_IDX" = "null" ] && DB_IDX="0"
-      log_info "Provisioning Valkey/Redis cache endpoint ($DB_HOST:$DB_PORT/${DB_IDX})..."
+      log_info "[DB:VALKEY] Provisioning Valkey/Redis cache endpoint ($DB_HOST:$DB_PORT/${DB_IDX})..."
       ensure_valkey_running "$DB_HOST" "$DB_PORT" "$DB_IDX" || true
       set_env_var "REDIS_URL" "redis://${DB_HOST}:${DB_PORT}/${DB_IDX}"
       set_env_var "VALKEY_URL" "redis://${DB_HOST}:${DB_PORT}/${DB_IDX}"

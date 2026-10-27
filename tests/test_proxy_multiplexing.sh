@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,7 +42,7 @@ fi
 THIS_DIR="$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)"
 REPO_ROOT="$(cd -- "${THIS_DIR}/.." && pwd)"
 
-TARGET_PLATFORM="all"
+TARGET_PLATFORM='all'
 
 ## parse_args
 ## Parses arguments

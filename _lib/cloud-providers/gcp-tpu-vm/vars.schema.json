@@ -14,7 +14,7 @@
     "TPU_VM_INSTALL_METHOD": {
       "description": "How to install TPU-VM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "TPU_SCHEDULING_TYPE": {
@@ -54,6 +54,10 @@
       "description": "Type of the persistent data disk (e.g., pd-balanced).",
       "type": "string",
       "default": "pd-balanced"
+    },
+    "GCP_TPU_VM_ENABLED": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating whether gcp-tpu-vm is enabled in the execution plan."
     }
   }
 }

@@ -1,26 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Demo course and library content ingestion utility for Open edX.
-# Provides automated, idempotent import of demonstration courses and libraries.
 #
 # ## Usage
-#   ./import_demo.sh course [--course-id <id>] [--repo <url>]
-#   ./import_demo.sh libraries [--owner <username>]
-#   ./import_demo.sh help
-#
-# ## Parameters
-# - `course`: Downloads and imports the official edX demo course into the CMS course store.
-# - `libraries`: Imports standard component libraries for Studio authoring.
-# - `--course-id`: Optional course run identifier (default: `course-v1:edX+DemoX+Demo_Course`).
-# - `--repo`: Git repository or archive URL (default: `https://github.com/openedx/edx-demo-course.git`).
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success (or already imported).
-# - `1`: Import failure or missing required runtimes.
+# ./import_demo.sh <course|libraries|help> [--course-id <id>] [--repo <url>] [--owner <username>]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -145,8 +127,8 @@ EOF
 #     --course-id <id>
 #     --repo <url>
 import_course() {
-  _course_id="course-v1:edX+DemoX+Demo_Course"
-  _repo_url="https://github.com/openedx/edx-demo-course.git"
+  _course_id='course-v1:edX+DemoX+Demo_Course'
+  _repo_url='https://github.com/openedx/edx-demo-course.git'
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -184,12 +166,12 @@ import_course() {
 
   _py="$(resolve_python)"
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
-    log_info "Importing course XML/tarball via Studio cms import..."
+    log_info 'Importing course XML/tarball via Studio cms import...'
     (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py cms import "${OPENEDX_INSTALL_DIR}/data" "${_staging_dir}") || exit 1
     log_info "Reindexing search index for course '${_course_id}'..."
     (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py lms reindex_course --course-id "${_course_id}") || exit 1
   else
-    log_warn "manage.py not found in codebase, skipping demo import."
+    log_warn 'manage.py not found in codebase, skipping demo import.'
   fi
 
   record_course "${_course_id}"
@@ -219,7 +201,7 @@ import_libraries() {
     esac
   done
 
-  _lib_id="library-v1:edX+DemoLib"
+  _lib_id='library-v1:edX+DemoLib'
   log_info "Checking if demo library '${_lib_id}' is already registered..."
   _meta="${DATA_DIR}/libraries.json"
   if [ -f "${_meta}" ] && grep -F "${_lib_id}" "${_meta}" >/dev/null 2>&1; then

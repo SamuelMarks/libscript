@@ -6,5 +6,6 @@
   "os_blacklist": ["sunos", "freebsd", "bsd"],
   "title": "rye",
   "description": "Bootstrap module for the `rye` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/astral-sh/rye"
 }

@@ -13,6 +13,9 @@ Execute this script to install and configure rust on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -46,7 +49,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 function Resolve-ExactVersion {
     if ($RustVersion -eq "stable") {
         try {
-            $Resp = Invoke-RestMethod -Uri "https://static.rust-lang.org/dist/channel-rust-stable.toml"
+            $Resp = Invoke-LibscriptFetchContent -Uri "https://static.rust-lang.org/dist/channel-rust-stable.toml"
             $Lines = $Resp -split "`n"
             foreach ($Line in $Lines) {
                 if ($Line -match "^pkg_version\s*=\s*`"(.+?)`"") {
@@ -67,14 +70,6 @@ switch ($Action) {
     "ls" {
         if ($InstallMethod -eq "rustup") {
             rustup toolchain list
-        } elseif ($InstallMethod -eq "mise") {
-            mise ls rust
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls rust
         } elseif ($InstallMethod -eq "system") {
             rustc --version
         } else {
@@ -99,14 +94,6 @@ switch ($Action) {
     "use" {
         if ($InstallMethod -eq "rustup") {
             rustup default "${RustVersion}"
-        } elseif ($InstallMethod -eq "mise") {
-            mise use "rust@${RustVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls rust
         } elseif ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
@@ -178,27 +165,19 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Rustlang.Rustup -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Rustlang.Rustup\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y rust
+    libscript_depends @(\"rust\")
             }
         } elseif ($InstallMethod -eq "rustup") {
             if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
                 $RustupInit = Join-Path [System.IO.Path]::GetTempPath() "rustup-init.exe"
-                Invoke-WebRequest -Uri "https://win.rustup.rs" -OutFile $RustupInit
+                libscript_download "https://win.rustup.rs" $RustupInit
                 Start-Process -FilePath $RustupInit -ArgumentList "-y --default-toolchain $RustVersion" -Wait -NoNewWindow
                 Remove-Item -Force $RustupInit
             } else {
                 rustup toolchain install $RustVersion
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "rust@${RustVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls rust; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $RustDir = Get-LibscriptVersionDir -Component "rust" -Version $ExactVersion
@@ -222,7 +201,7 @@ switch ($Action) {
             $env:RUSTUP_HOME = $RustDir
             
             $RustupInit = Join-Path [System.IO.Path]::GetTempPath() "rustup-init.exe"
-            Invoke-WebRequest -Uri "https://win.rustup.rs" -OutFile $RustupInit
+            libscript_download "https://win.rustup.rs" $RustupInit
             Write-Host "Installing Rust natively to $RustDir using rustup-init..."
             Start-Process -FilePath $RustupInit -ArgumentList "-y --no-modify-path --default-toolchain $RustVersion" -Wait -NoNewWindow
             Remove-Item -Force $RustupInit

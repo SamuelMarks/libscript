@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,5 +36,7 @@ unset SCRIPT_NAME || true
 
 export QEMU_INSTALL_METHOD="${QEMU_INSTALL_METHOD:-system}"
 QEMU_VERSION="${QEMU_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/qemu/${QEMU_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/qemu/${QEMU_VERSION}/bin"
 export LIBVIRT_DEFAULT_URI="${LIBVIRT_DEFAULT_URI:-qemu:///system}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

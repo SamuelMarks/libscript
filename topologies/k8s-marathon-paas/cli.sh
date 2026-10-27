@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ fi
 
 ACTION="${1:-status}"
 if [ "$ACTION" = "down" ]; then
-  ACTION="destroy"
+  ACTION='destroy'
 fi
 shift 1 2>/dev/null || true
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh"

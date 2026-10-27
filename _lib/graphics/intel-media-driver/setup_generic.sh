@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,7 +60,7 @@ _arch=$(uname -m 2>/dev/null || printf 'unknown')
 case "$_arch" in
   x86_64|amd64)
     if ! command -v "intel-media-driver" >/dev/null 2>&1; then
-      libscript_depends "intel-media-driver"
+      libscript_depends 'intel-media-driver'
     fi
     ;;
   *)

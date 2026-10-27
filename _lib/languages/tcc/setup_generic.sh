@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,13 +54,13 @@ stage_tcc_shim_or_fallback() {
   _target_dir="${1}"
   mkdir -p "${_target_dir}/bin"
   if [ -f /etc/alpine-release ] && [ ! -f /usr/include/stdio.h ]; then
-    libscript_depends "c" || true
+    libscript_depends 'c' || true
   fi
   if command -v tcc >/dev/null 2>&1; then
     ln -sf "$(command -v tcc)" "${_target_dir}/bin/tcc"
   else
     if ! command -v cc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1; then
-      libscript_depends "c" || true
+      libscript_depends 'c' || true
     fi
     _fallback_cc="$(command -v cc 2>/dev/null || command -v clang 2>/dev/null || command -v gcc 2>/dev/null || printf 'cc')"
     cat <<EOF > "${_target_dir}/bin/tcc.tmp"

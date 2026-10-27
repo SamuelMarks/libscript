@@ -389,9 +389,7 @@ switch ($Action) {
         break
     }
     "ls" {
-        if ($InstallMethod -eq "mise") { mise ls azure }
-        elseif ($InstallMethod -eq "vfox") { vfox ls azure }
-        elseif ($InstallMethod -eq "system") { Write-Host "System packages do not support ls here." }
+        if ($InstallMethod -eq "system") { Write-Host "System packages do not support ls here." }
         else {
             if (Get-Command Get-LibscriptBaseDir -ErrorAction SilentlyContinue) {
                 $LibscriptHome = Get-LibscriptBaseDir
@@ -404,15 +402,11 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") { mise ls-remote azure }
-        elseif ($InstallMethod -eq "vfox") { vfox ls all azure }
-        else { Write-Host "ls-remote not fully implemented natively yet." }
+Write-Host "ls-remote not fully implemented natively yet."
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") { mise use "azure@`$Version" }
-        elseif ($InstallMethod -eq "vfox") { vfox use "azure@`$Version" }
-        elseif ($InstallMethod -eq "system") { Write-Host "System packages do not support use here." }
+        if ($InstallMethod -eq "system") { Write-Host "System packages do not support use here." }
         else { Write-Host "Native 'use' requires symlink support which is partially implemented." }
         break
     }

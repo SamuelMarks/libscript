@@ -14,6 +14,14 @@
       "description": "Specific version of nvm to install.",
       "type": "string",
       "default": "latest"
+    },
+    "NVM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nvm binary or archive artifacts."
+    },
+    "NVM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nvm available remote releases."
     }
   }
 }

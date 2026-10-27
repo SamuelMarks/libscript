@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -162,7 +162,7 @@ exit /b 0
 :: Provisions a PostgreSQL database with reuse-else-create semantics and writes connection URLs.
 :prov_pg
 if "!db_port!"=="" set "db_port=5432"
-echo [INFO] Provisioning PostgreSQL database '!db_name!' (user: !db_user!, host: !db_host!:!db_port!)...
+echo [INFO] [DB:POSTGRES] Provisioning PostgreSQL database '!db_name!' ^(user: !db_user!, host: !db_host!:!db_port!^)...
 set "_pg_ready=0"
 where pg_isready >nul 2>nul
 if not errorlevel 1 (
@@ -170,8 +170,9 @@ if not errorlevel 1 (
     if not errorlevel 1 set "_pg_ready=1"
 )
 if "!_pg_ready!"=="1" (
-    echo [REUSE] PostgreSQL server is already active on !db_host!:!db_port!.
+    echo [INFO] [DB:POSTGRES] [CONFIRM] PostgreSQL server is active on !db_host!:!db_port!.
 ) else if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" (
+    echo [INFO] [DB:POSTGRES] [CREATE] Starting PostgreSQL server on !db_host!:!db_port!...
     call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\cli.cmd" start >nul 2>&1
 )
 call :set_env_var "!url_env!" "postgresql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
@@ -182,7 +183,7 @@ where psql >nul 2>nul
 if not errorlevel 1 (
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine postgres --host "!db_host!" --port "!db_port!" --admin-user postgres --admin-pass "!db_pass!" --schema "!db_name!" --legacy-names "!legacy_names!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine postgres --host "!db_host!" --port "!db_port!" --admin-user postgres --admin-pass "!db_pass!" --schema "!db_name!" --legacy-names "!legacy_names!" --user "!db_user!" --password "!db_pass!"
     )
     if not "!seed_file!"=="" (
         set "sf_win=!seed_file:/=\!"
@@ -194,8 +195,9 @@ if not errorlevel 1 (
 if not "!seed_cmd!"=="" (
     call :check_pg_populated
     if not errorlevel 1 (
-        echo [REUSE] PostgreSQL database '!db_name!' already has required tables and minimum rows; skipping full re-seed.
+        echo [INFO] [REUSE] PostgreSQL database '!db_name!' already has required tables and minimum rows; skipping full re-seed.
     ) else (
+        echo [INFO] [UPSERT:POSTGRES] Running PostgreSQL seed_command for '!db_name!': !seed_cmd!
         pushd "!MANIFEST_DIR!"
         cmd.exe /c "!seed_cmd!"
         set "rc=!errorlevel!"
@@ -229,6 +231,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "_cpp_rc=-1"
     for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM \"%%t\";" 2^>nul') do set "_cpp_rc=%%c"
     if !_cpp_rc! lss !_cpp_min_r! exit /b 1
+    echo [INFO] [DB:POSTGRES] [CONFIRM] Table '!db_name!.%%t' verified ^(!_cpp_rc! rows^).
 )
 if "!_cpp_has_req!"=="0" exit /b 1
 exit /b 0
@@ -237,7 +240,7 @@ exit /b 0
 :: Provisions a MySQL or MariaDB database and writes DATABASE_URL.
 :prov_mysql
 if "!db_port!"=="" set "db_port=3306"
-echo [INFO] Provisioning MySQL/MariaDB database '!db_name!' (user: !db_user!, host: !db_host!:!db_port!)...
+echo [INFO] [DB:MYSQL] Provisioning MySQL/MariaDB database '!db_name!' ^(user: !db_user!, host: !db_host!:!db_port!^)...
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\mariadb\cli.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\mariadb\cli.cmd" start >nul 2>&1
 )
@@ -245,11 +248,12 @@ where mysql >nul 2>nul
 if not errorlevel 1 (
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "!db_host!" --port "!db_port!" --admin-user root --schema "!db_name!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "!db_host!" --port "!db_port!" --admin-user root --schema "!db_name!" --user "!db_user!" --password "!db_pass!"
     )
 )
 call :set_env_var "!url_env!" "mysql://!db_user!:!db_pass!@!db_host!:!db_port!/!db_name!"
 if not "!seed_cmd!"=="" (
+    echo [INFO] [UPSERT:MYSQL] Running MySQL/MariaDB seed_command for '!db_name!': !seed_cmd!
     pushd "!MANIFEST_DIR!"
     cmd.exe /c "!seed_cmd!"
     set "rc=!errorlevel!"
@@ -259,7 +263,7 @@ if not "!seed_cmd!"=="" (
 exit /b 0
 
 :: ## prov_sqlite
-:: Ensures parent directory for SQLite database exists and writes SQLITE_PATH / DATABASE_URL.
+:: Provisions a SQLite database file and writes SQLITE_PATH.
 :prov_sqlite
 if "!db_path!"=="" (
     set "db_path=!MANIFEST_DIR!\data\!db_name!.sqlite"
@@ -269,17 +273,18 @@ if "!db_path!"=="" (
 )
 for %%D in ("!db_path!") do set "db_dir=%%~dpD"
 if not exist "!db_dir!" mkdir "!db_dir!"
-echo [INFO] Provisioning SQLite database at '!db_path!'...
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
-    where sqlite3 >nul 2>nul
-    if not errorlevel 1 (
+echo [INFO] [DB:SQLITE] Provisioning SQLite database at '!db_path!'...
+where sqlite3 >nul 2>nul
+if not errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
         set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine sqlite --schema "!db_path!" --user "!db_user!" --password "!db_pass!" >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine sqlite --schema "!db_path!" --user "!db_user!" --password "!db_pass!"
     )
 )
 call :set_env_var "!url_env!" "sqlite:///!db_path:\=/!"
 call :set_env_var "SQLITE_PATH" "!db_path!"
 if not "!seed_cmd!"=="" (
+    echo [INFO] [UPSERT:SQLITE] Running SQLite seed_command for '!db_name!': !seed_cmd!
     pushd "!MANIFEST_DIR!"
     cmd.exe /c "!seed_cmd!"
     set "rc=!errorlevel!"
@@ -289,7 +294,7 @@ if not "!seed_cmd!"=="" (
 exit /b 0
 
 :: ## prov_duckdb
-:: Ensures parent directory and valid DuckDB database file exist, runs seeds, and writes DUCKDB_PATH.
+:: Provisions a DuckDB database file, imports seed SQL/CSV/Parquet, and writes DUCKDB_PATH.
 :prov_duckdb
 if "!db_path!"=="" (
     set "db_path=!MANIFEST_DIR!\data\!db_name!.duckdb"
@@ -299,7 +304,6 @@ if "!db_path!"=="" (
 )
 for %%D in ("!db_path!") do set "db_dir=%%~dpD"
 if not exist "!db_dir!" mkdir "!db_dir!"
-echo [INFO] Provisioning DuckDB database at '!db_path!'...
 set "path_env=DUCKDB_PATH"
 for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".path_env // .env_var // \"DUCKDB_PATH\"" 2^>nul') do set "path_env=%%k"
 call :set_env_var "!path_env!" "!db_path!"
@@ -317,10 +321,19 @@ if errorlevel 1 (
     )
 )
 if not exist "!db_path!" (
+    echo [INFO] [DB:DUCKDB] [CREATE] Initializing new DuckDB database at '!db_path!'...
     where duckdb >nul 2>nul
     if not errorlevel 1 (
         duckdb "!db_path!" -c "SELECT 1;" >nul 2>&1
     )
+) else (
+    set "_duck_tcnt=0"
+    where duckdb >nul 2>nul
+    if not errorlevel 1 (
+        for /f "delims=" %%t in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a _duck_tcnt+=1
+    )
+    for %%Z in ("!db_path!") do set "_duck_sz=%%~zZ"
+    echo [INFO] [DB:DUCKDB] [CONFIRM] DuckDB database exists at '!db_path!' ^(!_duck_sz! bytes, !_duck_tcnt! table^(s^)^).
 )
 if not "!seed_file!"=="" (
     set "sf_win=!seed_file:/=\!"
@@ -339,8 +352,9 @@ if not "!seed_dir!"=="" (
 if not "!seed_cmd!"=="" (
     call :check_duckdb_populated
     if not errorlevel 1 (
-        echo [REUSE] DuckDB database '!db_path!' already has required tables and minimum rows; skipping full re-seed.
+        echo [INFO] [REUSE] DuckDB database '!db_path!' already has required tables and minimum rows; skipping full re-seed.
     ) else (
+        echo [INFO] [UPSERT:DUCKDB] Running DuckDB seed_command for '!db_name!': !seed_cmd!
         pushd "!MANIFEST_DIR!"
         cmd.exe /c "!seed_cmd!"
         set "rc=!errorlevel!"
@@ -373,6 +387,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "_cdp_rc=-1"
     for /f "delims=" %%c in ('duckdb "!db_path!" -readonly -csv -noheader -c "SELECT COUNT(*) FROM \"%%t\";" 2^>nul') do set "_cdp_rc=%%c"
     if !_cdp_rc! lss !_cdp_min_r! exit /b 1
+    echo [INFO] [DB:DUCKDB] [CONFIRM] Table '!db_name!.%%t' verified ^(!_cdp_rc! rows^).
 )
 if "!_cdp_has_req!"=="0" exit /b 1
 exit /b 0
@@ -403,7 +418,7 @@ exit /b 0
 if "!db_port!"=="" set "db_port=6379"
 if "!db_index!"=="" set "db_index=0"
 if "!db_index!"=="null" set "db_index=0"
-echo [INFO] Provisioning Valkey/Redis cache endpoint (!db_host!:!db_port!/!db_index!)...
+echo [INFO] [DB:VALKEY] Provisioning Valkey/Redis cache endpoint ^(!db_host!:!db_port!/!db_index!^)...
 set "_valkey_ready=0"
 for %%C in (valkey-cli redis-cli) do (
     where %%C >nul 2>nul
@@ -414,9 +429,9 @@ for %%C in (valkey-cli redis-cli) do (
     )
 )
 if "!_valkey_ready!"=="1" (
-    echo [REUSE] Valkey/Redis server already active on !db_host!:!db_port! ^(db !db_index!^).
+    echo [INFO] [DB:VALKEY] [CONFIRM] Valkey/Redis endpoint active at !db_host!:!db_port! ^(db !db_index!^).
 ) else (
-    echo [CREATE] Starting Valkey/Redis server on !db_host!:!db_port!...
+    echo [INFO] [DB:VALKEY] [CREATE] Starting Valkey/Redis on !db_host!:!db_port!...
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\cli.cmd" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\cli.cmd" start >nul 2>&1
     )

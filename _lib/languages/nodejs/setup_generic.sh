@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -110,20 +109,20 @@ resolve_exact_version() {
   fi
   clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed -e 's/^v//' -e 's/\.x$//' -e 's/\.\*$//')
   if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
-    EXACT_VERSION="20.17.0"
+    EXACT_VERSION='20.17.0'
     NODEJS_BASE_URL="file://${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/runtimes"
     return 0
   fi
   if [ "${clean_version}" = "latest" ] || [ "${clean_version}" = "lts" ]; then
     if [ "${clean_version}" = "latest" ]; then
-      NODEJS_BASE_URL="https://nodejs.org/dist/latest"
+      NODEJS_BASE_URL='https://nodejs.org/dist/latest'
     else
-      NODEJS_BASE_URL="https://nodejs.org/dist/latest-v22.x"
+      NODEJS_BASE_URL='https://nodejs.org/dist/latest-v22.x'
     fi
-    EXACT_VERSION=$(curl -s "${NODEJS_BASE_URL}/SHASUMS256.txt" | head -n 1 | grep -o 'node-v[0-9\.]*-' | sed 's/node-v//' | sed 's/-//')
+    EXACT_VERSION=$(libscript_fetch_stdout "${NODEJS_BASE_URL}/SHASUMS256.txt" | head -n 1 | grep -o 'node-v[0-9\.]*-' | sed 's/node-v//' | sed 's/-//')
   elif ! printf '%s\n' "${clean_version}" | grep -q '\.'; then
     NODEJS_BASE_URL="https://nodejs.org/dist/latest-v${clean_version}.x"
-    EXACT_VERSION=$(curl -s "${NODEJS_BASE_URL}/SHASUMS256.txt" | head -n 1 | grep -o 'node-v[0-9\.]*-' | sed 's/node-v//' | sed 's/-//')
+    EXACT_VERSION=$(libscript_fetch_stdout "${NODEJS_BASE_URL}/SHASUMS256.txt" | head -n 1 | grep -o 'node-v[0-9\.]*-' | sed 's/node-v//' | sed 's/-//')
   else
     NODEJS_BASE_URL="https://nodejs.org/dist/v${clean_version}"
     EXACT_VERSION="${clean_version}"
@@ -141,9 +140,9 @@ case "$ACTION" in
     ;;
   ls-remote)
     if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      curl -sL https://nodejs.org/dist/index.tab | awk 'NR>1 {print $1}' | sed 's/^v//'
+      libscript_fetch_stdout "https://nodejs.org/dist/index.tab" | awk 'NR>1 {print $1}' | sed 's/^v//'
     fi
     exit 0
     ;;
@@ -164,7 +163,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
       log_info "Set default nodejs version to v${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nodejs \"${NODEJS_VERSION}\")"
     fi
     exit 0
@@ -230,7 +229,7 @@ case "$ACTION" in
       if [ ! -d "${NODE_DIR}" ]; then
         mkdir -p "${NODE_DIR}"
         if [ -f "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs/node-v${EXACT_VERSION}-${os}-${arch}.tar.gz" ]; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           tar -xzf "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs/node-v${EXACT_VERSION}-${os}-${arch}.tar.gz" -C "${NODE_DIR}" --strip-components=1
         else
           TARBALL=$(mktemp)
@@ -251,54 +250,14 @@ case "$ACTION" in
       [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}.x" "v${EXACT_VERSION}"
       libscript_symlink_alias "nodejs" "default" "v${EXACT_VERSION}"
       libscript_symlink_alias "nodejs" "latest" "v${EXACT_VERSION}"
+      _node_owner="${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-}}}"
+      if [ -n "$_node_owner" ] && [ "$_node_owner" != "root" ]; then
+        chmod 0755 "${LIBSCRIPT_HOME:-$HOME/.libscript}" "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs" 2>/dev/null || true
+        chown -R "${_node_owner}:${SERVICE_GROUP:-${REMOTE_GROUP:-$_node_owner}}" "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs" 2>/dev/null || true
+      fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ] || [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nodejs}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $NODEJS_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nodejs" "$ACTION" "${NODEJS_VERSION:-latest}" "${NODEJS_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ] || [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nodejs}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NODEJS_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ] || [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nodejs}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NODEJS_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nodejs $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NODEJS_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

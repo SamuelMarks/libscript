@@ -8,7 +8,7 @@
     "NGINX_INSTALL_METHOD": {
       "description": "How to install NGINX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "system"
     },
     "NGINX_WWWROOT_NAME": {
@@ -85,6 +85,34 @@
       "description": "Version of Nginx to install",
       "type": "string",
       "default": "latest"
+    },
+    "NGINX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nginx binary or archive artifacts."
+    },
+    "NGINX_FRAGMENT_CONF": {
+      "type": "string",
+      "description": "Configuration variable NGINX_FRAGMENT_CONF for nginx."
+    },
+    "NGINX_LISTEN": {
+      "type": "string",
+      "description": "Listen endpoint (address:port or socket) for nginx."
+    },
+    "NGINX_PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "Listen endpoint (address:port or socket) for nginx."
+    },
+    "NGINX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nginx available remote releases."
+    },
+    "NGINX_SERVER_NAME": {
+      "type": "string",
+      "description": "Configuration variable NGINX_SERVER_NAME for nginx."
+    },
+    "NGINX_WWWROOT": {
+      "type": "string",
+      "description": "Configuration variable NGINX_WWWROOT for nginx."
     }
   }
 }

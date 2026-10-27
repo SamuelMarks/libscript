@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,3 +39,5 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 if (return 0 2>/dev/null); then return 0; else exit 0; fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

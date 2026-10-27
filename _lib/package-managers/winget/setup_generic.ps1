@@ -13,6 +13,8 @@ Managed by libscript. Provides download, install, ls, ls-remote, use capabilitie
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -40,10 +42,6 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls winget; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list winget; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls winget; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "winget"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -51,13 +49,9 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote winget; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list all winget; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all winget; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls-remote directly here."; exit 0 }
     if ($env:WINGET_RELEASES_URL) {
-        Invoke-WebRequest -Uri $env:WINGET_RELEASES_URL | Select-Object -ExpandProperty Content
+        Invoke-LibscriptFetchContent -Uri $env:WINGET_RELEASES_URL
     } else {
         Write-Output "ls-remote not fully implemented natively yet."
     }
@@ -65,10 +59,6 @@ if ($Action -eq "ls-remote") {
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "winget@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf global winget "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not use explicit versions this way"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "winget@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     
 if ($CompVersion -eq "latest" -or $CompVersion -eq "lts") {
@@ -96,7 +86,7 @@ if ($Action -eq "download") {
             New-Item -ItemType Directory -Force -Path $CompDownloadDir | Out-Null
         }
         if ($env:WINGET_DOWNLOAD_URL) {
-            Invoke-WebRequest -Uri $env:WINGET_DOWNLOAD_URL -OutFile "$CompDownloadDir\winget-$CompVersion.zip"
+            libscript_download $env:WINGET_DOWNLOAD_URL "$CompDownloadDir\winget-$CompVersion.zip"
         } else {
             Write-Output "WINGET_DOWNLOAD_URL is not defined. Skipping."
         }
@@ -106,10 +96,6 @@ if ($Action -eq "download") {
 
 if ($Action -eq "install") {
     if ($InstallMethod -eq "system") { Write-Output "System package manager installation not implemented natively in ps1 yet."; exit 0 }
-    if ($InstallMethod -eq "mise") { mise install "winget@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf install winget "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { pkgx install "winget@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox add winget; vfox install "winget@$CompVersion"; exit 0 }
 
     $TargetDir = Join-Path (Join-Path $LibscriptHome "winget") $CompVersion
     $TargetBin = Join-Path $TargetDir "bin"
@@ -127,7 +113,7 @@ if ($Action -eq "install") {
         } elseif ($env:WINGET_DOWNLOAD_URL) {
             Write-Output "Downloading and extracting..."
             $TempFile = Join-Path $env:TEMP "winget.zip"
-            Invoke-WebRequest -Uri $env:WINGET_DOWNLOAD_URL -OutFile $TempFile
+            libscript_download $env:WINGET_DOWNLOAD_URL $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
             Write-Error "No download URL or cache available for winget."

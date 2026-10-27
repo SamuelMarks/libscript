@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,13 +31,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Runs the pre-commit hook dance in CI to ensure code quality."
+  printf '%s\n' 'Runs the pre-commit hook dance in CI to ensure code quality.'
   exit 0
 fi
 
 cd "${SCRIPT_DIR}/../.." || exit 1
 
-printf '%s\n' ">>> RUNNING PRE-COMMIT DANCE <<<"
+printf '%s\n' '>>> RUNNING PRE-COMMIT DANCE <<<'
 
 # Stage all files so the pre-commit hook thinks they are staged
 git add -A
@@ -48,9 +47,9 @@ git add -A
 
 # Check if anything changed in index or working tree
 if ! git diff --no-ext-diff --cached --exit-code || ! git diff --no-ext-diff --exit-code; then
-  printf '%s\n' "Error: The pre-commit hook modified files. Please run the pre-commit hook locally and commit the changes."
+  printf '%s\n' 'Error: The pre-commit hook modified files. Please run the pre-commit hook locally and commit the changes.'
   git status --short -uno >&2
   exit 1
 fi
 
-printf '%s\n' "Pre-commit dance completed successfully."
+printf '%s\n' 'Pre-commit dance completed successfully.'

@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ unset SCRIPT_NAME || true
 
 
 SDKMAN_VERSION="${SDKMAN_VERSION:-latest}"
-export SDKMAN_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sdkman/${SDKMAN_VERSION:-latest}"
+export SDKMAN_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sdkman/${SDKMAN_VERSION:-latest}"
 if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
   if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
     # shellcheck disable=SC1091
@@ -54,3 +53,5 @@ if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
   fi
 fi
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

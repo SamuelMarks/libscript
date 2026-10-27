@@ -13,13 +13,15 @@ $Action = if ($env:ACTION) { $env:ACTION } else { "install" }
 if ($Action -eq "install") {
     $Service = Get-Service -Name "hMailServer" -ErrorAction SilentlyContinue
     if ($Service) {
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
         Write-Host "hMailServer is already installed."
         if ($Service.Status -ne "Running") { Start-Service "hMailServer" }
         exit 0
     }
     if (Get-Command "choco" -ErrorAction SilentlyContinue) {
         Write-Host "Installing hMailServer via chocolatey..."
-        & choco install hmailserver -y
+    libscript_depends @(\"hmailserver\")
         exit 0
     }
     Write-Host "hMailServer requires chocolatey or manual installation."
@@ -33,6 +35,8 @@ if ($Action -eq "install") {
     Write-Host "hMailServer test completed."
     exit 0
 } elseif ($Action -eq "uninstall") {
-    if (Get-Command "choco" -ErrorAction SilentlyContinue) { & choco uninstall hmailserver -y }
+    $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+    . (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+    libscript_uninstall_pkg -Packages @("hmailserver")
     exit 0
 }

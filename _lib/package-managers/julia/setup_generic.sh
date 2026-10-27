@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,70 +64,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$JULIA_INSTALL_METHOD" = "mise" ]; then
-      mise ls julia || true
-    elif [ "$JULIA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list julia || true
-    elif [ "$JULIA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$JULIA_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls julia || true
-    elif [ "$JULIA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "julia" "$ACTION" "$VERSION" "${JULIA_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$JULIA_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote julia || true
-    elif [ "$JULIA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all julia || true
-    elif [ "$JULIA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$JULIA_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all julia || true
+    if [ -n "${JULIA_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${JULIA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${JULIA_RELEASES_URL:-}" ]; then
-        curl -sSL "${JULIA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/julia" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/JuliaLang/julia" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$JULIA_INSTALL_METHOD" = "mise" ]; then
-      mise use "julia@${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "asdf" ]; then
-      asdf global julia "${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$JULIA_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "julia@${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "julia@${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "julia" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "julia" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "julia ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "julia" "default" "${EXACT_VERSION}"
-      log_info "Set default julia version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env julia \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "julia" "$ACTION" "$VERSION" "${JULIA_INSTALL_METHOD}"
     ;;
   download)
     if [ "$JULIA_INSTALL_METHOD" = "libscript_native" ]; then
@@ -145,118 +92,62 @@ case "$ACTION" in
   install)
     if [ "$JULIA_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "julia"; then
-        log_info "System package manager unavailable for julia. Falling back to native..."
-        JULIA_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager unavailable for julia. Falling back to native...'
+        JULIA_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "$JULIA_INSTALL_METHOD" = "mise" ]; then
-      mise install "julia@${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "asdf" ]; then
-      asdf install julia "${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "julia@${VERSION}"
-    elif [ "$JULIA_INSTALL_METHOD" = "vfox" ]; then
-      vfox add julia || true
-      vfox install "julia@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing julia ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/julia" || true
-              chmod +x "${TARGET_DIR}/bin/julia" || true
-            fi
-          fi
-        else
-          if [ -z "${JULIA_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
-            _jver="1.10.5"
-            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _jver="${EXACT_VERSION}"
-            case "${ARCH:-}" in
-              aarch64|arm64) _jarch="aarch64" ;;
-              *) _jarch="x86_64" ;;
-            esac
-            _jminor="${_jver%.*}"
-            JULIA_DOWNLOAD_URL="https://julialang-s3.julialang.org/bin/linux/${_jarch}/${_jminor}/julia-${_jver}-linux-${_jarch}.tar.gz"
-          fi
-          if [ -n "${JULIA_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${JULIA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${JULIA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${JULIA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/julia" || true
-              chmod +x "${TARGET_DIR}/bin/julia" || true
-            fi
-            rm -f "${TEMP_FILE}"
+    # libscript_native implementation
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/${EXACT_VERSION}"
+    if [ ! -d "${TARGET_DIR}" ]; then
+      log_info "Installing julia ${VERSION} natively to ${TARGET_DIR}..."
+      mkdir -p "${TARGET_DIR}/bin"
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info 'Extracting from cache...'
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
           else
-            log_warn "No download URL provided for julia ${VERSION}."
+            cp "$cache_file" "${TARGET_DIR}/bin/julia" || true
+            chmod +x "${TARGET_DIR}/bin/julia" || true
           fi
         fi
       else
-        log_info "julia ${VERSION} is already installed."
+        if [ -z "${JULIA_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
+          _jver='1.10.5'
+          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _jver="${EXACT_VERSION}"
+          case "${ARCH:-}" in
+            aarch64|arm64) _jarch="aarch64" ;;
+            *) _jarch="x86_64" ;;
+          esac
+          _jminor="${_jver%.*}"
+          JULIA_DOWNLOAD_URL="https://julialang-s3.julialang.org/bin/linux/${_jarch}/${_jminor}/julia-${_jver}-linux-${_jarch}.tar.gz"
+        fi
+        if [ -n "${JULIA_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${JULIA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${JULIA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${JULIA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/julia" || true
+            chmod +x "${TARGET_DIR}/bin/julia" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for julia ${VERSION}."
+        fi
       fi
-      libscript_symlink_alias "julia" "$VERSION" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$JULIA_INSTALL_METHOD" = "libscript_native" ] || [ "$JULIA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-julia}}"
-      libscript_service "$ACTION" "$service_name" "$@"
     else
-      log_info "$ACTION not natively implemented for $JULIA_INSTALL_METHOD."
+      log_info "julia ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "julia" "$VERSION" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$JULIA_INSTALL_METHOD" = "libscript_native" ] || [ "$JULIA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-julia}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $JULIA_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "julia" "$ACTION" "$VERSION" "${JULIA_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$JULIA_INSTALL_METHOD" = "libscript_native" ] || [ "$JULIA_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-julia}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $JULIA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$JULIA_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling julia $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $JULIA_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

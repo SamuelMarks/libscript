@@ -125,6 +125,9 @@ function Audit-File {
         }
 
         if ($FilePath -notmatch "(Dockerfile|\.tpl|dockerfiles-ssh|docker/)") {
+            if ($headerText -notmatch 'set -feu') {
+                Log-Violation -File $FilePath -Rule "SET_FEU_SAFETY" -Details "Missing 'set -feu' in first 40 lines."
+            }
             if ($headerText -notmatch 'THIS_FILE=') {
                 Log-Violation -File $FilePath -Rule "THIS_FILE_DANCE" -Details "Missing canonical 'THIS_FILE=' resolution in first 40 lines."
             }
@@ -134,8 +137,8 @@ function Audit-File {
             if ($headerText -notmatch 'LIBSCRIPT_ROOT_DIR') {
                 Log-Violation -File $FilePath -Rule "ROOT_DIR_RESOLUTION" -Details "Missing 'LIBSCRIPT_ROOT_DIR' resolution in header."
             }
-            if ($headerText -notmatch '# libscript-allow-eval') {
-                Log-Violation -File $FilePath -Rule "ZSH_ALLOW_EVAL_TAG" -Details "Missing '# libscript-allow-eval' in ZSH_VERSION header block."
+            if ($headerText -notmatch '# shellcheck disable=SC2296') {
+                Log-Violation -File $FilePath -Rule "ZSH_SHELLCHECK_TAG" -Details "Missing '# shellcheck disable=SC2296' in ZSH_VERSION header block."
             }
         }
 
@@ -194,6 +197,12 @@ function Audit-File {
         if ($allContent -match 'SCRIPT_DIR[%!][^\\/"\s\)]') {
             Log-Violation -File $FilePath -Rule "BATCH_SCRIPT_DIR_SEPARATOR" -Details "Missing backslash separator after SCRIPT_DIR."
         }
+        if ($allContent -match 'SCRIPT_DIR:~-1%"=="\\\\"') {
+            Log-Violation -File $FilePath -Rule "BATCH_SCRIPT_DIR_STRIP" -Details "Corrupted SCRIPT_DIR:~-1 double-backslash check."
+        }
+        if ($allContent -match '(?mi)^[ \t]*exit[ \t]+[0-9]+[ \t]*$') {
+            Log-Violation -File $FilePath -Rule "BATCH_HYGIENE" -Details "Bare exit without /b found in batch script."
+        }
         $chainedIf = @{}
         $lineIdx = 0
         foreach ($bLine in ($allContent -split "`r?`n")) {
@@ -213,11 +222,11 @@ function Audit-File {
 
     # 4. Ban eval checks
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[ \t]*eval([ \t]|$)|;[ \t]*eval([ \t]|$)' -and $allContent -notmatch 'libscript-allow-eval') {
+        if ($allContent -match '(?m)^[ \t]*eval([ \t]|$)|;[ \t]*eval([ \t]|$)') {
             Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'eval' found."
         }
     } elseif ($ext -eq "ps1") {
-        if ($allContent -match '(?mi)^[ \t]*(Invoke-Expression|iex)\b|;[ \t]*(Invoke-Expression|iex)\b' -and $allContent -notmatch 'libscript-allow-eval') {
+        if ($allContent -match '(?mi)^[ \t]*(Invoke-Expression|iex)\b|;[ \t]*(Invoke-Expression|iex)\b') {
             Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'Invoke-Expression' found."
         }
     }
@@ -260,6 +269,14 @@ function Audit-File {
         }
     }
 
+    # 8c. Enforce Zero-Dependency Substrate in core orchestration
+    if ($normPath -match '^(_lib/(_common|orchestration|init-systems|databases|cloud/core)|cli)/.*\.sh$') {
+        $interpMatch = Select-String -Path $FilePath -Pattern '(^\s*|\$\()(python3?\s+-c|node\s+-e|perl\s+-e|ruby\s+-e)\s|libscript-allow-interp' -Quiet
+        if ($interpMatch) {
+            Log-Violation -File $FilePath -Rule "ZERO_DEP_SUBSTRATE" -Details "Core orchestration script invokes external interpreter inline."
+        }
+    }
+
     # 8d. Ban hardcoded user/project paths in core substrate (_lib/ and cli/)
     if ($normPath -match '^(_lib|cli)/') {
         $leakMatch = Select-String -Path $FilePath -Pattern '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' -Quiet
@@ -273,6 +290,62 @@ function Audit-File {
         $commentedDepMatch = Select-String -Path $FilePath -Pattern '^\s*#\s*#\s*libscript_depends' -Quiet
         if ($commentedDepMatch) {
             Log-Violation -File $FilePath -Rule "COMMENTED_DEPENDS" -Details "Commented-out '# # libscript_depends' found in recipe setup script."
+        }
+    }
+
+    # 8f. Ban non-POSIX sort -V and bare sed -i in .sh scripts
+    if ($ext -eq "sh" -and $normPath -ne 'devtools/audit/audit_posix.sh' -and $normPath -ne 'devtools/audit/audit_standards.sh') {
+        $nonPosixFlagMatch = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(sort\s+-V|sed\s+-i)' -Quiet
+        if ($nonPosixFlagMatch) {
+            Log-Violation -File $FilePath -Rule "NON_POSIX_TOOL_FLAG" -Details "Non-POSIX sort -V or sed -i detected."
+        }
+        $dqMatch = Select-String -Path $FilePath -Pattern '^\s*((export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"|(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?|libscript_depends(\s+"[A-Za-z0-9_.-]+")+)(\s*\|\|\s*true)?\s*$'
+        if ($dqMatch) {
+            Log-Violation -File $FilePath -Rule "UNNECESSARY_DOUBLE_QUOTES" -Details "Double quotes used where single quotes suffice."
+        }
+    }
+
+    # 8g. Raw Network Fetch & Raw Package Manager Audit
+    if ($normPath -notmatch '^(devtools|tests|docker)/') {
+        if ($ext -eq "sh") {
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr|_common/fetch_checksum|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health|service))\.sh$') {
+                $rawFetchSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])\b' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|libscript-allow-raw-(fetch|curl))' }
+                if ($rawFetchSh) {
+                    Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout)."
+                }
+            }
+            if ($normPath -notmatch '_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/(vm_builder|distro/))') {
+                $rawPkgSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)\b' | Where-Object { $_.Line -notmatch '(--root|libscript-allow-raw-pkg)' }
+                if ($rawPkgSh) {
+                    Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
+                }
+            }
+        } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
+            if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|cli/commands/packaging/formats/pkg_docker_compose)\.cmd$') {
+                $rawFetchCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s|echo\s).*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-fetch)' }
+                if ($rawFetchCmd) {
+                    Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
+                }
+            }
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr\.cmd|package-managers/|orchestration/vm_builder\.cmd)') {
+                $rawPkgCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s).*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' }
+                if ($rawPkgCmd) {
+                    Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
+                }
+            }
+        } elseif ($ext -eq "ps1") {
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr|web-apps/openedx/test_harness)\.ps1$') {
+                $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-fetch' }
+                if ($rawFetchPs1) {
+                    Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1)."
+                }
+            }
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr\.ps1|package-managers/)') {
+                $rawPkgPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' }
+                if ($rawPkgPs1) {
+                    Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in PowerShell script (delegate to pkg_mgr.ps1)."
+                }
+            }
         }
     }
 }

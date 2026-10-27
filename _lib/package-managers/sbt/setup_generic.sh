@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,52 +63,19 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$SBT_INSTALL_METHOD" = "mise" ]; then
-      mise ls sbt || true
-    elif [ "$SBT_INSTALL_METHOD" = "asdf" ]; then
-      asdf list sbt || true
-    elif [ "$SBT_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SBT_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls sbt || true
-    elif [ "$SBT_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "sbt" "$ACTION" "$VERSION" "${SBT_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$SBT_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote sbt || true
-    elif [ "$SBT_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all sbt || true
-    elif [ "$SBT_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SBT_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all sbt || true
+    if [ -n "${SBT_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${SBT_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${SBT_RELEASES_URL:-}" ]; then
-        curl -sSL "${SBT_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/sbt" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/sbt/sbt" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$SBT_INSTALL_METHOD" = "mise" ]; then
-      mise use "sbt@${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "asdf" ]; then
-      asdf global sbt "${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$SBT_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "sbt@${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "sbt@${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
+    if [ "$SBT_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' 'System packages do not support use here.'
     else
       resolve_exact_version
       libscript_symlink_alias "sbt" "default" "${EXACT_VERSION}"
@@ -123,7 +89,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "sbt" "default" "${EXACT_VERSION}"
       log_info "Set default sbt version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env sbt \"$VERSION\")"
     fi
     exit 0
@@ -131,8 +97,8 @@ case "$ACTION" in
   download)
     if [ "$SBT_INSTALL_METHOD" = "libscript_native" ]; then
       log_info "Downloading sbt ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sbt..."
-        libscript_depends "java"
-        libscript_depends "bash"
+        libscript_depends 'java'
+        libscript_depends 'bash'
 
 
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sbt"
@@ -146,42 +112,33 @@ case "$ACTION" in
     ;;
   install)
     if [ "$SBT_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "sbt"
-    elif [ "$SBT_INSTALL_METHOD" = "mise" ]; then
-      mise install "sbt@${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "asdf" ]; then
-      asdf install sbt "${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "sbt@${VERSION}"
-    elif [ "$SBT_INSTALL_METHOD" = "vfox" ]; then
-      vfox add sbt || true
-      vfox install "sbt@${VERSION}"
+      libscript_depends 'sbt'
     else
       # libscript_native implementation
       resolve_exact_version
       if [ "${EXACT_VERSION}" = "latest" ]; then
-         libscript_depends "curl"
-         EXACT_VERSION=$(curl -sL https://api.github.com/repos/sbt/sbt/releases/latest 2>/dev/null | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+         libscript_depends 'curl'
+         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/sbt/sbt/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
          if [ -z "${EXACT_VERSION}" ] || [ "${EXACT_VERSION}" = "latest" ]; then EXACT_VERSION="1.10.7"; fi
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing sbt ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "java"
-        libscript_depends "bash"
+        libscript_depends 'java'
+        libscript_depends 'bash'
 
 
         mkdir -p "${TARGET_DIR}/bin"
         if [ "$(uname -s)" = "FreeBSD" ]; then
-          libscript_depends "sbt"
+          libscript_depends 'sbt'
           if command -v sbt >/dev/null 2>&1; then
             ln -sf "$(command -v sbt)" "${TARGET_DIR}/bin/sbt"
           fi
         else
           URL="https://github.com/sbt/sbt/releases/download/v${EXACT_VERSION}/sbt-${EXACT_VERSION}.tgz"
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl"
-          libscript_depends "tar"
+          libscript_depends 'curl'
+          libscript_depends 'tar'
           libscript_download "$URL" "$TEMP_FILE.tgz"
           tar -xzf "$TEMP_FILE.tgz" -C "${TARGET_DIR}" --strip-components=1
           rm -f "$TEMP_FILE.tgz"
@@ -192,52 +149,7 @@ case "$ACTION" in
       libscript_symlink_alias "sbt" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$SBT_INSTALL_METHOD" = "libscript_native" ] || [ "$SBT_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sbt}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $SBT_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "sbt" "$ACTION" "$VERSION" "${SBT_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$SBT_INSTALL_METHOD" = "libscript_native" ] || [ "$SBT_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sbt}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $SBT_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$SBT_INSTALL_METHOD" = "libscript_native" ] || [ "$SBT_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sbt}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $SBT_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$SBT_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling sbt $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $SBT_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

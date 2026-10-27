@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,10 +32,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Performs an audit and validation of all defined application stacks."
+  printf '%s\n' 'Performs an audit and validation of all defined application stacks.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
 for stack_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/web-apps/* "$LIBSCRIPT_ROOT_DIR"/topologies/* "$LIBSCRIPT_ROOT_DIR"/payloads/*/*; do
@@ -59,4 +58,4 @@ for stack_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/web-apps/* "$LIBSCRIPT_ROOT_DIR"/top
         fi
     fi
 done
-printf '%s\n' "Stack audit complete."
+printf '%s\n' 'Stack audit complete.'

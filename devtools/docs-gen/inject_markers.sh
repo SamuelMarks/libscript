@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,10 +32,10 @@ set +f
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Injects specific markers or tags into documentation files."
+  printf '%s\n' 'Injects specific markers or tags into documentation files.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
 : "${ROOT_DIR:=${LIBSCRIPT_ROOT_DIR}}"
@@ -132,4 +131,4 @@ for component_dir in "$ROOT_DIR"/_lib/*/* "$ROOT_DIR"/_lib/*/*/* "$ROOT_DIR"/top
         rm -f "$TEMP_README" 2>/dev/null || true
     fi
 done
-printf '%s\n' "Markers injected."
+printf '%s\n' 'Markers injected.'

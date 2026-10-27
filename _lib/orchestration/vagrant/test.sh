@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -30,10 +29,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if ! command -v vagrant >/dev/null 2>&1; then
   if [ "$(uname -m)" = "aarch64" ] && [ "$(uname -s)" = "Linux" ]; then
-    printf '%s\n' "Vagrant is unsupported upstream on Linux aarch64, skipping."
+    printf '%s\n' 'Vagrant is unsupported upstream on Linux aarch64, skipping.'
     exit 0
   fi
-  printf '%s\n' "vagrant binary not found in PATH" >&2
+  printf '%s\n' 'vagrant binary not found in PATH' >&2
   exit 1
 fi
 

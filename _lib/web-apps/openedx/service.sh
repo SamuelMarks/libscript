@@ -1,21 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Service lifecycle manager for the Open edX stack.
-# Controls starting, stopping, restarting, and status monitoring of LMS, Studio CMS,
-# and supporting stack infrastructure.
+# Service lifecycle manager for the Open edX stack (LMS, Studio CMS, and supporting infrastructure).
 #
 # ## Usage
-# ./service.sh start
-# ./service.sh stop
-# ./service.sh restart
-# ./service.sh status
-# ./service.sh lms
-# ./service.sh studio
-# ./service.sh help
-#
-# ## Exit Codes
-# 0 - Success
-# 1 - Error
+# ./service.sh <start|stop|restart|status|lms|studio|help>
 
 set -feu
 
@@ -24,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -104,7 +91,7 @@ start_services() {
   if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
     _codebase="${OPENEDX_INSTALL_DIR}"
   fi
-  _py="python3"
+  _py='python3'
   if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
     _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
   fi
@@ -247,7 +234,7 @@ install_services() {
   printf '[INFO] Installing Open edX native services...\n'
   mkdir -p "${OPENEDX_INSTALL_DIR}/codebase" "${OPENEDX_INSTALL_DIR}/logs" "${OPENEDX_INSTALL_DIR}/run"
   
-  _py="python3"
+  _py='python3'
   if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
     _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
   fi

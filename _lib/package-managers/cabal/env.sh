@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,4 +39,6 @@ unset SCRIPT_NAME || true
 
 
 CABAL_VERSION="${CABAL_VERSION:-latest}"
-libscript_path_prepend "${HOME}/.ghcup/bin" "${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${CABAL_VERSION}/bin"
+libscript_path_prepend "${HOME:-/root}/.ghcup/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cabal/${CABAL_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

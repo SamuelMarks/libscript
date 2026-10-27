@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,8 +34,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # ## build_msirs
 # Orchestrates the building of the nodejs MSI artifact using the compiled msi-rs toolchain.
 build_msirs() {
-  COMPONENT="nodejs"
-  VERSION="20.17.0"
+  COMPONENT='nodejs'
+  VERSION='20.17.0'
   STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}_offline"
 
   # Ensure the runtime payload is downloaded idempotently
@@ -64,7 +63,7 @@ build_msirs() {
   "${LIBSCRIPT_ROOT_DIR}/packaging/template_component_msi.sh" --component "$COMPONENT" --version "$VERSION" --variant offline --out "$MAIN_WXS"
   "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_payload.sh" --source-dir "$STAGE_ROOT" --wix-fragment "$PAYLOAD_WXS" --component-group PayloadComponents --directory-id INSTALLFOLDER
 
-  echo "[INFO] Syncing files to guest..."
+  echo '[INFO] Syncing files to guest...'
   cd "${LIBSCRIPT_ROOT_DIR}/vagrant/windows-11"
   vagrant rsync
   PORT=$(vagrant ssh-config | awk '/Port / {print $2}')
@@ -75,7 +74,7 @@ build_msirs() {
   SSH_CMD="ssh -p $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY vagrant@$VM_IP"
   SCP_CMD="scp -P $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY"
 
-  echo "[INFO] Building MSI via msi-rs on guest..."
+  echo '[INFO] Building MSI via msi-rs on guest...'
   cat << 'PS1_EOF' > "${LIBSCRIPT_ROOT_DIR}/tmp/build_msirs.ps1"
 $ErrorActionPreference = 'Stop'
 Set-Location C:\libscript\tmp\stage_component_nodejs_offline

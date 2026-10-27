@@ -7,12 +7,12 @@
 :: ## Usage
 :: Executes initialization, logic, or testing for duckdb.
 
-:: Windows env stub for duckdb
+:: Windows environment configuration and PATH probes for duckdb
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -64,7 +64,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "duckdb"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "duckdb" "%DUCKDB_VERSION%"
 
 endlocal & (
     set "DUCKDB_VERSION=%DUCKDB_VERSION%"

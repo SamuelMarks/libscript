@@ -13,6 +13,9 @@ Execute this script to install and configure kubectl on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $KubectlVersion = $env:KUBECTL_VERSION
 if ([string]::IsNullOrEmpty($KubectlVersion)) {
@@ -33,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-        winget install Kubernetes.kubectl
+    libscript_depends @(\"Kubernetes.kubectl\")
     } elseif ($PkgMgr -eq "choco") {
-        choco install kubernetes-cli
+    libscript_depends @(\"kubernetes-cli\")
     } else {
         Write-Error "Unsupported Windows package manager: $PkgMgr"
     }
@@ -54,14 +57,14 @@ if ($InstallMethod -eq "system") {
     $ExePath = "$BinDir\kubectl.exe"
     
     if ($KubectlVersion -eq "latest") {
-        $KubectlVersion = (Invoke-WebRequest -Uri "https://dl.k8s.io/release/stable.txt" -UseBasicParsing).Content.Trim()
+        $KubectlVersion = (Invoke-LibscriptFetchContent -Uri "https://dl.k8s.io/release/stable.txt").Trim()
     }
     
     if (-not (Test-Path -Path $ExePath)) {
         $Url = "https://dl.k8s.io/release/${KubectlVersion}/bin/windows/amd64/kubectl.exe"
 
         Write-Host "Downloading kubectl from $Url ..."
-        Invoke-WebRequest -Uri $Url -OutFile $ExePath -UseBasicParsing
+        libscript_download $Url $ExePath
 
         Write-Host "kubectl installed to $ExePath"
     } else {
@@ -70,8 +73,6 @@ if ($InstallMethod -eq "system") {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls kubernetes; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls kubernetes; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "kubernetes"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -79,15 +80,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote kubernetes; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all kubernetes; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "kubernetes@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "kubernetes@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

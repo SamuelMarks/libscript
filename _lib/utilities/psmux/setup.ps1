@@ -13,6 +13,9 @@ Execute this script to install and configure psmux on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Version = $env:PSMUX_VERSION
 if ([string]::IsNullOrEmpty($Version)) {
@@ -62,8 +65,6 @@ if ($CurrentPath -notmatch [regex]::Escape($InstallDir)) {
 Write-Host "psmux installed successfully."
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls psmux; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls psmux; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "psmux"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -71,15 +72,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote psmux; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all psmux; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "psmux@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "psmux@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

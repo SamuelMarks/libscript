@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,9 +39,9 @@ MANIFEST_FILE=""
 # Determines whether traits run in Tier 2 offline sysroot bake mode or Tier 3 live runtime mode.
 get_execution_mode() {
   if [ "${LIBSCRIPT_TARGET_SYSROOT:-/}" != "/" ] || [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
-    printf '%s\n' "offline_sysroot_bake"
+    printf '%s\n' 'offline_sysroot_bake'
   else
-    printf '%s\n' "live_runtime"
+    printf '%s\n' 'live_runtime'
   fi
 }
 
@@ -104,7 +103,7 @@ run_single_trait() {
 
 ACTION="${1:-list}"
 shift 2>/dev/null || true
-TARGET_TRAIT="all"
+TARGET_TRAIT='all'
 
 while [ $# -gt 0 ]; do
   case "$1" in

@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -70,7 +70,10 @@ if /i "%ACTION%"=="start" (
             if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
             "%MYSQL_DIR%\bin\mysqld.exe" --initialize-insecure --datadir="%DATA_DIR%" >nul 2>&1
         )
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process mysqld -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%MYSQL_DIR%\bin\mysqld.exe' -ArgumentList '--datadir=\"%DATA_DIR%\"','--port=3306' -WindowStyle Hidden }" 2>nul
+        tasklist /FI "IMAGENAME eq mysqld.exe" 2>nul | findstr /I "mysqld.exe" >nul 2>&1
+        if errorlevel 1 (
+            start "" /b "%MYSQL_DIR%\bin\mysqld.exe" --datadir="%DATA_DIR%" --port=3306 >nul 2>&1
+        )
     )
     exit /b 0
 )
@@ -86,7 +89,7 @@ if /i "%ACTION%"=="restart" (
 )
 if /i "%ACTION%"=="status" (
     sc.exe query mysql 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] mysql & exit /b 0)
-    powershell -NoProfile -Command "if (Get-Process mysqld -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] mysqld.exe & exit /b 0)
+    tasklist /FI "IMAGENAME eq mysqld.exe" 2>nul | findstr /I "mysqld.exe" >nul 2>&1 && (echo [RUNNING] mysqld.exe & exit /b 0)
     echo [STOPPED] mysql
     exit /b 1
 )

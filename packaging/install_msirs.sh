@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # ## install_msirs
 # Connects to the Windows Vagrant guest via SSH and invokes LibScript's msi-rs recipe.
 install_msirs() {
-  VM_IP="192.168.56.10"
+  VM_IP='192.168.56.10'
   KEY="${LIBSCRIPT_ROOT_DIR}/vagrant/windows-11/.vagrant/machines/default/vmware_desktop/private_key"
   SSH_CMD="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY vagrant@$VM_IP"
 

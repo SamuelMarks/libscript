@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,5 +38,5 @@ fi
 if command -v gem >/dev/null 2>&1; then
   gem --version
 else
-  printf '%s\n' "gem is not installed (likely unsupported on this OS), skipping test."
+  printf '%s\n' 'gem is not installed (likely unsupported on this OS), skipping test.'
 fi

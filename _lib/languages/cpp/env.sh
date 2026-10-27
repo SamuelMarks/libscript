@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,5 +44,7 @@ if [ "${_cxx_backend}" != "default" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/langua
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 else
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/cpp/${CPP_VERSION}/bin"
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/cpp/${CPP_VERSION}/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

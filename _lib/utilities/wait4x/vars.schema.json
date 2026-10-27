@@ -14,6 +14,14 @@
       "description": "Specific version of Wait4X to install.",
       "type": "string",
       "default": "latest"
+    },
+    "WAIT4X_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading wait4x binary or archive artifacts."
+    },
+    "WAIT4X_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying wait4x available remote releases."
     }
   }
 }

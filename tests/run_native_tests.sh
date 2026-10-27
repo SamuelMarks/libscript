@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,18 +43,18 @@ set +f
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--category <category>] [--os <os_name>] [--dry-run] [--help]"
   printf '%s\n' ""
-  printf '%s\n' "Runs native tests on the current host across specified categories or components"
-  printf '%s\n' "to verify libscript installation and test commands directly."
+  printf '%s\n' 'Runs native tests on the current host across specified categories or components'
+  printf '%s\n' 'to verify libscript installation and test commands directly.'
   printf '%s\n' ""
-  printf '%s\n' "Options:"
-  printf '%s\n' "  TARGETS...           One or more component names to test (e.g., sqlite redis)."
-  printf '%s\n' "  all                  Test all discovered components in _lib/."
-  printf '%s\n' "  --category <cat>     Test all components within a given category (e.g. databases)."
-  printf '%s\n' "  --os <os_name>       Manually specify target OS identifier (default: auto-detected)."
-  printf '%s\n' "  --dry-run            Simulate test execution without calling libscript install/test."
-  printf '%s\n' "  --help, -h, /?       Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  TARGETS...           One or more component names to test (e.g., sqlite redis).'
+  printf '%s\n' '  all                  Test all discovered components in _lib/.'
+  printf '%s\n' '  --category <cat>     Test all components within a given category (e.g. databases).'
+  printf '%s\n' '  --os <os_name>       Manually specify target OS identifier (default: auto-detected).'
+  printf '%s\n' '  --dry-run            Simulate test execution without calling libscript install/test.'
+  printf '%s\n' '  --help, -h, /?       Show this help message.'
   printf '%s\n' ""
-  printf '%s\n' "Outputs status files (*.success / *.failure) and logs into the tests_tmp/ directory."
+  printf '%s\n' 'Outputs status files (*.success / *.failure) and logs into the tests_tmp/ directory.'
 }
 
 # ## detect_host_os
@@ -159,9 +158,7 @@ check_manifest_support() {
       if ($0 ~ /\]/) { in_wl=0 }
     }
     END {
-      if (result == "yes" && has_wl && !wl_match) {
-        result="no"
-      }
+      if (result == "yes" && has_wl && !wl_match) { result="no" }
       print result
     }
   ' "${_manifest_file}"

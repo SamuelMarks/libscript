@@ -6,5 +6,6 @@
   "category": "storage-layer",
   "provides": ["minio", "object-storage", "s3"],
   "os_whitelist": ["linux", "darwin"],
-  "ports": ["9000", "9001"]
+  "ports": ["9000", "9001"],
+  "repository": "https://github.com/minio/minio"
 }

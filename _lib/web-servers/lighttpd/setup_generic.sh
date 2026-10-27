@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,9 +49,9 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${LIGHTTPD_VERSION}" = "latest" ] || [ "${LIGHTTPD_VERSION}" = "lts" ]; then
-    EXACT_VERSION="1.4.74"
+    EXACT_VERSION='1.4.74'
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${LIGHTTPD_VERSION}"
@@ -61,15 +60,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${LIGHTTPD_INSTALL_METHOD}" = "mise" ]; then
-      mise ls lighttpd
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list lighttpd
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls lighttpd
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
+    if [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
       lighttpd --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/lighttpd/" 2>/dev/null || true
@@ -77,31 +68,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${LIGHTTPD_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote lighttpd
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all lighttpd
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all lighttpd
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for lighttpd"
+      printf '%s\n' 'Fetching remote versions not implemented generically for lighttpd'
     fi
     exit 0
     ;;
   use)
-    if [ "${LIGHTTPD_INSTALL_METHOD}" = "mise" ]; then
-      mise use "lighttpd@${LIGHTTPD_VERSION}"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global lighttpd "${LIGHTTPD_VERSION}"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "lighttpd@${LIGHTTPD_VERSION}"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
+    if [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -117,7 +92,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "lighttpd" "default" "${EXACT_VERSION}"
       log_info "Set default lighttpd version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env lighttpd \"${LIGHTTPD_VERSION}\")"
     fi
     exit 0
@@ -141,15 +116,6 @@ case "$ACTION" in
     fi
     if [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'lighttpd'
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "mise" ]; then
-      mise install "lighttpd@${LIGHTTPD_VERSION}"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install lighttpd "${LIGHTTPD_VERSION}"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "lighttpd@${LIGHTTPD_VERSION}"
-    elif [ "${LIGHTTPD_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add lighttpd || true
-      vfox install "lighttpd@${LIGHTTPD_VERSION}"
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/lighttpd/${EXACT_VERSION}"
@@ -162,7 +128,7 @@ case "$ACTION" in
       mkdir -p "${TARGET_DIR}/bin"
       
       if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/lighttpd/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
+        log_info 'Extracting from cache...'
         cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/lighttpd/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -197,52 +163,7 @@ case "$ACTION" in
 
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$LIGHTTPD_INSTALL_METHOD" = "libscript_native" ] || [ "$LIGHTTPD_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-lighttpd}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $LIGHTTPD_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "lighttpd" "$ACTION" "$VERSION" "${LIGHTTPD_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$LIGHTTPD_INSTALL_METHOD" = "libscript_native" ] || [ "$LIGHTTPD_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-lighttpd}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $LIGHTTPD_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$LIGHTTPD_INSTALL_METHOD" = "libscript_native" ] || [ "$LIGHTTPD_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-lighttpd}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $LIGHTTPD_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$LIGHTTPD_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling lighttpd $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/lighttpd/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/lighttpd/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $LIGHTTPD_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

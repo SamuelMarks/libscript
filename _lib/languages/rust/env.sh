@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,6 +36,8 @@ unset SCRIPT_NAME || true
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 RUST_VERSION="${RUST_VERSION:-latest}"
 if [ "${RUST_VERSION}" = "latest" ]; then
-  RUST_VERSION="stable"
+  RUST_VERSION='stable'
 fi
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/${RUST_VERSION}/bin" "/opt/ooce/rust/bin" "/opt/ooce/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rust/${RUST_VERSION}/bin" "/opt/ooce/rust/bin" "/opt/ooce/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,11 +41,11 @@ generate_cluster_ca() {
   ca_key="${pki_dir}/${cname}-root-ca.key"
   if [ ! -f "$ca_crt" ]; then
     umask 0077
-    printf '-----BEGIN PRIVATE KEY-----
+    printf -- '-----BEGIN PRIVATE KEY-----
 LIBSCRIPT_CA_KEY_%s
 -----END PRIVATE KEY-----
 ' "$cname" > "$ca_key"
-    printf '-----BEGIN CERTIFICATE-----
+    printf -- '-----BEGIN CERTIFICATE-----
 LIBSCRIPT_CA_CERT_%s
 -----END CERTIFICATE-----
 ' "$cname" > "$ca_crt"

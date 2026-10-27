@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,6 +39,8 @@ unset SCRIPT_NAME || true
 
 
 VCPKG_VERSION="${VCPKG_VERSION:-latest}"
-export VCPKG_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/vcpkg/${VCPKG_VERSION}"
+export VCPKG_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/vcpkg/${VCPKG_VERSION}"
 libscript_path_prepend "$VCPKG_ROOT"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ ! -f /etc/void-release ] && [ ! -d /var/db/xbps ]; then
-  echo "xbps is the package manager for Void Linux. Skipping test."
+  echo 'xbps is the package manager for Void Linux. Skipping test.'
   exit 0
 fi
 

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,6 +39,8 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 ANDROID_SDK_VERSION="${ANDROID_SDK_VERSION:-latest}"
-export ANDROID_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/android-sdk/${ANDROID_SDK_VERSION}"
+export ANDROID_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/android-sdk/${ANDROID_SDK_VERSION}"
 export ANDROID_SDK_ROOT="${ANDROID_HOME}"
 libscript_path_prepend "${ANDROID_HOME}/cmdline-tools/latest/bin" "${ANDROID_HOME}/platform-tools"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -55,6 +55,7 @@ if "%ZOOKEEPER_VERSION%"=="" set "ZOOKEEPER_VERSION=latest"
 if "%ZOOKEEPER_CLIENT_PORT%"=="" set "ZOOKEEPER_CLIENT_PORT=2181"
 set "ZOOKEEPER_HOME=%LIBSCRIPT_HOME%\zookeeper\%ZOOKEEPER_VERSION%"
 set "ZOOKEEPER_DATA_DIR=%LIBSCRIPT_HOME%\zookeeper\data"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "zookeeper" "%ZOOKEEPER_VERSION%"
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"

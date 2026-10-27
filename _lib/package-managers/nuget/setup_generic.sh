@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$NUGET_INSTALL_METHOD" = "mise" ]; then
-      mise ls nuget || true
-    elif [ "$NUGET_INSTALL_METHOD" = "asdf" ]; then
-      asdf list nuget || true
-    elif [ "$NUGET_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NUGET_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls nuget || true
-    elif [ "$NUGET_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nuget/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "nuget" "$ACTION" "$VERSION" "${NUGET_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$NUGET_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote nuget || true
-    elif [ "$NUGET_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all nuget || true
-    elif [ "$NUGET_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NUGET_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all nuget || true
+    if [ -n "${NUGET_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${NUGET_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${NUGET_RELEASES_URL:-}" ]; then
-        curl -sSL "${NUGET_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/nuget" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/NuGet/NuGet.Client" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$NUGET_INSTALL_METHOD" = "mise" ]; then
-      mise use "nuget@${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "asdf" ]; then
-      asdf global nuget "${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$NUGET_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nuget@${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nuget@${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "nuget" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "nuget" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nuget/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "nuget ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "nuget" "default" "${EXACT_VERSION}"
-      log_info "Set default nuget version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nuget \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "nuget" "$ACTION" "$VERSION" "${NUGET_INSTALL_METHOD}"
     ;;
   download)
     if [ "$NUGET_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$NUGET_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "nuget"
-    elif [ "$NUGET_INSTALL_METHOD" = "mise" ]; then
-      mise install "nuget@${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "asdf" ]; then
-      asdf install nuget "${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "nuget@${VERSION}"
-    elif [ "$NUGET_INSTALL_METHOD" = "vfox" ]; then
-      vfox add nuget || true
-      vfox install "nuget@${VERSION}"
+      libscript_depends 'nuget'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -162,7 +100,7 @@ case "$ACTION" in
         mkdir -p "${TARGET_DIR}/bin"
 
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -189,19 +127,19 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ]; then
-              log_info "Falling back to system package manager for nuget (via mono/dotnet)..."
+              log_info 'Falling back to system package manager for nuget (via mono/dotnet)...'
               if command -v brew >/dev/null 2>&1; then
                 libscript_depends_via brew nuget || true
               fi
               if ! libscript_depends "nuget" 2>/dev/null; then
                 if [ "$UNAME_LOWER" = "linux" ]; then
-                  log_info "Installing mono runtime and downloading nuget.exe..."
+                  log_info 'Installing mono runtime and downloading nuget.exe...'
                   libscript_depends "mono-complete" || libscript_depends "mono-devel" || true
                   if ! command -v mono >/dev/null 2>&1; then
                     libscript_depends "dotnet-sdk-8.0" 2>/dev/null || true
                   fi
-                  NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-                  libscript_depends "curl"
+                  NUGET_URL='https://dist.nuget.org/win-x86-commandline/latest/nuget.exe'
+                  libscript_depends 'curl'
                   if [ -f "${TARGET_DIR}/bin/nuget.exe" ] || libscript_download "$NUGET_URL" "${TARGET_DIR}/bin/nuget.exe"; then
                     cat <<'EOF' > "${TARGET_DIR}/bin/nuget"
 #!/bin/sh
@@ -217,7 +155,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -262,7 +199,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -275,8 +211,8 @@ EOF
               fi
             else
               if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for nuget..."
-              libscript_depends "nuget"
+              log_info 'No native binary for FreeBSD. Falling back to system package manager for nuget...'
+              libscript_depends 'nuget'
             else
               log_warn "No download URL provided for nuget ${VERSION}."
             fi
@@ -293,52 +229,7 @@ EOF
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NUGET_INSTALL_METHOD" = "libscript_native" ] || [ "$NUGET_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nuget}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $NUGET_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nuget" "$ACTION" "$VERSION" "${NUGET_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$NUGET_INSTALL_METHOD" = "libscript_native" ] || [ "$NUGET_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nuget}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NUGET_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$NUGET_INSTALL_METHOD" = "libscript_native" ] || [ "$NUGET_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nuget}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NUGET_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NUGET_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nuget $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nuget/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nuget/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NUGET_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

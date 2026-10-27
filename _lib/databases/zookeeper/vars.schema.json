@@ -14,7 +14,7 @@
     "ZOOKEEPER_INSTALL_METHOD": {
       "description": "How to install Apache ZooKeeper ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "ZOOKEEPER_CLIENT_PORT": {
@@ -31,6 +31,10 @@
       "description": "Comma-separated list of ensemble server quorum definitions (e.g. 'server.1=127.0.0.1:2888:3888').",
       "type": "string",
       "default": "server.1=127.0.0.1:2888:3888"
+    },
+    "ZOOKEEPER_HOME": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for zookeeper (ZOOKEEPER_HOME)."
     }
   }
 }

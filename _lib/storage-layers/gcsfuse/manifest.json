@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": ["freebsd", "windows", "sunos"],
-  "ports": []
+  "ports": [],
+  "repository": "https://github.com/GoogleCloudPlatform/gcsfuse"
 }

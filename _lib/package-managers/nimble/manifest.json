@@ -6,5 +6,6 @@
   "os_blacklist": [],
   "title": "nimble",
   "description": "Bootstrap script for [Nimble](https://github.com/nim-lang/nimble), the package manager for the Nim programming language. Typically installed via `choosenim`.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/nim-lang/nimble"
 }

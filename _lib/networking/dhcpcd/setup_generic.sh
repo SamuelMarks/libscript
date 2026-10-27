@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -58,7 +57,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "dhcpcd" >/dev/null 2>&1; then
-  libscript_depends "dhcpcd"
+  libscript_depends 'dhcpcd'
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "dhcpcd" "$TARGET_SYSROOT" "$ACTION"

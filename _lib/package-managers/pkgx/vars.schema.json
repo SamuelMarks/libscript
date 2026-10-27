@@ -13,6 +13,14 @@
       "description": "Specific version of pkgx to install.",
       "type": "string",
       "default": "latest"
+    },
+    "PKGX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading pkgx binary or archive artifacts."
+    },
+    "PKGX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying pkgx available remote releases."
     }
   },
   "description": "Configuration variables for pkgx"

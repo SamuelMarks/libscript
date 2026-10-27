@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -123,10 +122,10 @@ elif [ -d '/usr/local/etc/rc.d' ]; then
 elif [ "${TARGET_OS:-}" = "sunos" ] || [ "$(uname -s)" = "SunOS" ]; then
   # SunOS / OmniOS
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
-  log_info "Celery installed successfully on SunOS."
+  log_info 'Celery installed successfully on SunOS.'
   exit 0
 elif [ -d '/Library/LaunchDaemons' ] || [ "$(uname -s)" = "Darwin" ]; then
-  log_info "Celery installed successfully on macOS."
+  log_info 'Celery installed successfully on macOS.'
   exit 0
 else
   "${PYTHON_VENV}"'/bin/celery' worker -A "${CELERY_APP:-openedx}" -c "${CELERY_CONCURRENCY:-2}" &

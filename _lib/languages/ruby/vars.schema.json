@@ -14,7 +14,7 @@
     "RUBY_INSTALL_METHOD": {
       "description": "How to install RUBY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "GEM_OFFLINE": {
@@ -26,6 +26,14 @@
       "description": "Flag ('true' or 'false') instructing Bundler to run in local offline mode without remote queries.",
       "type": "string",
       "default": "false"
+    },
+    "RUBY_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ruby binary or archive artifacts."
+    },
+    "RUBY_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ruby available remote releases."
     }
   }
 }

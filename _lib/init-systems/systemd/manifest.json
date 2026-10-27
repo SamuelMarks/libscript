@@ -6,5 +6,6 @@
   "title": "Systemd",
   "description": "systemd",
   "category": "init-systems",
-  "os_blacklist": ["freebsd", "windows", "alpine", "darwin", "sunos"]
+  "os_blacklist": ["freebsd", "windows", "alpine", "darwin", "sunos"],
+  "repository": "https://github.com/systemd/systemd"
 }

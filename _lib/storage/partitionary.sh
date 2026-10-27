@@ -1,20 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Universal cross-platform storage partitioning and disk geometry abstraction engine.
-# Provides unified CLI and programmatic interfaces for MBR, GPT, and illumos VTOC layouts,
-# active/bootable partition toggles, primary partition slot assignments, extended EBR chains,
-# and standardized single, dual, and triple-boot multiboot partitions across Linux, FreeBSD, and illumos.
+# Universal cross-platform storage partitioning and disk geometry abstraction engine (MBR, GPT, VTOC).
 #
 # ## Usage
-# Execute partitionary directly from the shell:
-#   ./_lib/storage/partitionary.sh <subcommand> [options...]
-#
-# Subcommands:
-#   inspect   - Probe device geometry, sector size, and partition table status
-#   layout    - Synthesize single, dual, or triple-boot partition layouts (GPT or MBR)
-#   activate  - Mark target MBR primary partition as active/bootable (0x80 byte)
-#   slice     - Create FreeBSD bsdlabel or illumos VTOC sub-slices inside partition
-#   wipe      - Sanitize and erase partition table headers safely
+# ./_lib/storage/partitionary.sh <inspect|layout|activate|slice|wipe> [options...]
 
 set -feu
 
@@ -23,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,23 +33,23 @@ export LIBSCRIPT_ROOT_DIR
 # Displays comprehensive usage, subcommands, and flags for partitionary.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <subcommand> [options...]"
-  printf '%s\n' "Universal cross-platform partition & geometry abstraction engine."
+  printf '%s\n' 'Universal cross-platform partition & geometry abstraction engine.'
   printf '\n'
-  printf '%s\n' "Subcommands:"
-  printf '%s\n' "  inspect   <device>                    Inspect device geometry and existing partitions"
-  printf '%s\n' "  layout    --disk <dev> [options...]   Synthesize partition layout on storage device"
-  printf '%s\n' "  activate  --disk <dev> --part <num>   Toggle active/bootable flag (0x80) on MBR partition"
-  printf '%s\n' "  slice     --disk <dev> --type <type>  Initialize FreeBSD bsdlabel or illumos VTOC slices"
-  printf '%s\n' "  wipe      <device>                    Sanitize partition table headers (LBA 0..33 and backup)"
+  printf '%s\n' 'Subcommands:'
+  printf '%s\n' '  inspect   <device>                    Inspect device geometry and existing partitions'
+  printf '%s\n' '  layout    --disk <dev> [options...]   Synthesize partition layout on storage device'
+  printf '%s\n' '  activate  --disk <dev> --part <num>   Toggle active/bootable flag (0x80) on MBR partition'
+  printf '%s\n' '  slice     --disk <dev> --type <type>  Initialize FreeBSD bsdlabel or illumos VTOC slices'
+  printf '%s\n' '  wipe      <device>                    Sanitize partition table headers (LBA 0..33 and backup)'
   printf '\n'
-  printf '%s\n' "Layout Options:"
-  printf '%s\n' "  --scheme   <gpt|mbr|vtoc>             Partition table scheme (default: gpt)"
-  printf '%s\n' "  --layout   <triple|dual|single>       Multiboot target layout (default: triple)"
-  printf '%s\n' "  --esp-size <mib>                      EFI System Partition size in MiB (default: 512)"
-  printf '%s\n' "  --swap     <mib>                      Swap partition size in MiB (default: 2048)"
+  printf '%s\n' 'Layout Options:'
+  printf '%s\n' '  --scheme   <gpt|mbr|vtoc>             Partition table scheme (default: gpt)'
+  printf '%s\n' '  --layout   <triple|dual|single>       Multiboot target layout (default: triple)'
+  printf '%s\n' '  --esp-size <mib>                      EFI System Partition size in MiB (default: 512)'
+  printf '%s\n' '  --swap     <mib>                      Swap partition size in MiB (default: 2048)'
   printf '\n'
-  printf '%s\n' "General Options:"
-  printf '%s\n' "  --help, -h, /?, -?                    Show this help message and exit."
+  printf '%s\n' 'General Options:'
+  printf '%s\n' '  --help, -h, /?, -?                    Show this help message and exit.'
 }
 
 # ## detect_platform
@@ -360,7 +348,7 @@ main() {
       ;;
     activate)
       _target_disk=""
-      _part_num="1"
+      _part_num='1'
       while [ $# -gt 0 ]; do
         case "$1" in
           --disk) _target_disk="$2"; shift 2 ;;
@@ -372,8 +360,8 @@ main() {
       ;;
     slice)
       _target_disk=""
-      _slice_t="bsdlabel"
-      _part_num="2"
+      _slice_t='bsdlabel'
+      _part_num='2'
       while [ $# -gt 0 ]; do
         case "$1" in
           --disk) _target_disk="$2"; shift 2 ;;
@@ -386,10 +374,10 @@ main() {
       ;;
     layout)
       _target_disk=""
-      _scheme="gpt"
-      _layout="triple"
-      _esp="512"
-      _swap="2048"
+      _scheme='gpt'
+      _layout='triple'
+      _esp='512'
+      _swap='2048'
       while [ $# -gt 0 ]; do
         case "$1" in
           --disk) _target_disk="$2"; shift 2 ;;

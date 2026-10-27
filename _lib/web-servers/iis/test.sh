@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*|Windows_NT) ;;
   *)
-    printf '%s\n' "iis is a Windows web server and cannot run on Linux."
+    printf '%s\n' 'iis is a Windows web server and cannot run on Linux.'
     exit 0
     ;;
 esac

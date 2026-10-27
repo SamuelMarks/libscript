@@ -47,15 +47,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls bazel
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bazel
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             bazel --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -67,32 +59,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote bazel
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bazel
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/bazelbuild/bazelisk/releases"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/bazelbuild/bazelisk/releases"
             $Resp | ForEach-Object { $_.tag_name.Replace("v", "") } | Select-Object -First 100
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "bazel@${BazelVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bazel
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -168,14 +144,6 @@ switch ($Action) {
         # download and install
         if ($InstallMethod -eq "system") {
             & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_depends bazel
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "bazel@${BazelVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls bazel; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $BazelDir = Get-LibscriptVersionDir -Component "bazel" -Version $ExactVersion

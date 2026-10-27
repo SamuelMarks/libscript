@@ -14,6 +14,18 @@
       "description": "Specific version of spack to install.",
       "type": "string",
       "default": "latest"
+    },
+    "SPACK_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading spack binary or archive artifacts."
+    },
+    "SPACK_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying spack available remote releases."
+    },
+    "SPACK_SCRIPT": {
+      "type": "string",
+      "description": "Configuration variable SPACK_SCRIPT for spack."
     }
   }
 }

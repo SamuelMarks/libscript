@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -56,7 +55,7 @@ configure_hashicorp_repo_debian() {
     return 0
   fi
 
-  log_info "Configuring HashiCorp official APT repository..."
+  log_info 'Configuring HashiCorp official APT repository...'
   priv mkdir -p /usr/share/keyrings
 
   key_tmp=$(mktemp)
@@ -64,14 +63,14 @@ configure_hashicorp_repo_debian() {
   priv gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg --yes < "$key_tmp"
   rm -f "$key_tmp"
 
-  codename="jammy"
+  codename='jammy'
   if command -v lsb_release >/dev/null 2>&1; then
     codename=$(lsb_release -cs 2>/dev/null || printf '%s' "jammy")
   fi
 
   printf 'deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com %s main\n' "$codename" | priv tee /etc/apt/sources.list.d/hashicorp.list >/dev/null
 
-  priv apt-get update -y
+  export PKG_MGR_UPDATED=0
 }
 
 # ## install_libvirt_plugin
@@ -82,12 +81,12 @@ install_libvirt_plugin() {
   fi
 
   if vagrant plugin list 2>/dev/null | grep -q "vagrant-libvirt"; then
-    log_info "vagrant-libvirt plugin is already installed."
+    log_info 'vagrant-libvirt plugin is already installed.'
     return 0
   fi
 
   if [ "${TARGET_OS}" != "darwin" ]; then
-    log_info "Installing libvirt build dependencies for vagrant-libvirt..."
+    log_info 'Installing libvirt build dependencies for vagrant-libvirt...'
     case "${PKG_MGR}" in
       'apt-get')
         libscript_depends libvirt-dev build-essential ruby-dev libxml2-dev libxslt-dev libyaml-dev 2>/dev/null || true
@@ -97,7 +96,7 @@ install_libvirt_plugin() {
         ;;
     esac
 
-    log_info "Installing vagrant-libvirt plugin..."
+    log_info 'Installing vagrant-libvirt plugin...'
     vagrant plugin install vagrant-libvirt || log_warn "Failed to install vagrant-libvirt plugin."
   fi
 }
@@ -110,12 +109,12 @@ install_qemu_plugin() {
   fi
 
   if vagrant plugin list 2>/dev/null | grep -q "vagrant-qemu"; then
-    log_info "vagrant-qemu plugin is already installed."
+    log_info 'vagrant-qemu plugin is already installed.'
     return 0
   fi
 
   if [ "${TARGET_OS}" != "darwin" ]; then
-    log_info "Installing vagrant-qemu plugin..."
+    log_info 'Installing vagrant-qemu plugin...'
     vagrant plugin install vagrant-qemu 2>/dev/null || log_warn "Failed to install vagrant-qemu plugin."
   fi
 }
@@ -125,17 +124,17 @@ case "$ACTION" in
     if command -v vagrant >/dev/null 2>&1; then
       vagrant --version
     else
-      printf '%s\n' "Vagrant not installed."
+      printf '%s\n' 'Vagrant not installed.'
     fi
     exit 0
     ;;
   ls-remote)
-    curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/vagrant | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s\n' "latest"
+    libscript_fetch_stdout "https://checkpoint-api.hashicorp.com/v1/check/vagrant" | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s\n' "latest"
     exit 0
     ;;
   install)
     if [ "$UNAME_LOWER" = "linux" ] && { [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ]; }; then
-      log_warn "HashiCorp does not provide Vagrant binaries for Linux aarch64."
+      log_warn 'HashiCorp does not provide Vagrant binaries for Linux aarch64.'
       exit 0
     fi
     log_info "Installing Vagrant via ${VAGRANT_INSTALL_METHOD}..."
@@ -143,7 +142,7 @@ case "$ACTION" in
       case "${PKG_MGR}" in
         'apt-get')
           configure_hashicorp_repo_debian
-          libscript_depends "vagrant"
+          libscript_depends 'vagrant'
           ;;
         'brew')
           if ! command -v vagrant >/dev/null 2>&1; then
@@ -152,28 +151,28 @@ case "$ACTION" in
           ;;
         'dnf'|'yum')
           if ! libscript_depends "vagrant"; then
-            log_info "Falling back to native HashiCorp binary for Vagrant..."
-            VAGRANT_INSTALL_METHOD="libscript_native"
+            log_info 'Falling back to native HashiCorp binary for Vagrant...'
+            VAGRANT_INSTALL_METHOD='libscript_native'
           fi
           ;;
         *)
-          libscript_depends "vagrant"
+          libscript_depends 'vagrant'
           ;;
       esac
     fi
     if [ "$VAGRANT_INSTALL_METHOD" = "libscript_native" ]; then
-      ver="2.4.3"
+      ver='2.4.3'
       if [ "$VAGRANT_VERSION" != "latest" ]; then
         ver="$VAGRANT_VERSION"
       fi
-      os="linux"
+      os='linux'
       if [ "${TARGET_OS}" = "darwin" ]; then
-        os="darwin"
+        os='darwin'
       fi
       host_arch="${ARCH:-$(uname -m)}"
-      arch="amd64"
+      arch='amd64'
       if [ "${host_arch}" = "aarch64" ] || [ "${host_arch}" = "arm64" ]; then
-        arch="arm64"
+        arch='arm64'
       fi
 
       target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/vagrant/${ver}/bin"
@@ -197,18 +196,8 @@ case "$ACTION" in
     fi
     ;;
   uninstall)
-    log_info "Uninstalling Vagrant..."
-    case "${PKG_MGR}" in
-      'apt-get')
-        priv apt-get remove -y vagrant 2>/dev/null || true
-        ;;
-      'brew')
-        brew uninstall vagrant 2>/dev/null || true
-        ;;
-      'dnf'|'yum')
-        priv "${PKG_MGR}" remove -y vagrant 2>/dev/null || true
-        ;;
-    esac
+    log_info 'Uninstalling Vagrant...'
+    libscript_uninstall_pkg vagrant
     exit 0
     ;;
 esac

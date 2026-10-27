@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,8 +31,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 THIS_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Default values
-DB_HOST="127.0.0.1"
-DB_PORT="3306"
+DB_HOST='127.0.0.1'
+DB_PORT='3306'
 DB_NAME=""
 DB_URL=""
 

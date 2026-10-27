@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,23 +32,23 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 
-TEST_MODE="0"
+TEST_MODE='0'
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s\n' "Runs interactive terminal user interface wizard for msi-rs live installer."
+  printf '%s\n' 'Runs interactive terminal user interface wizard for msi-rs live installer.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --test              Run in automated non-interactive validation test mode."
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --test              Run in automated non-interactive validation test mode.'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --test)
-      TEST_MODE="1"
+      TEST_MODE='1'
       shift
       ;;
     --help|-h|/\?|-\?)
@@ -63,9 +62,9 @@ while [ $# -gt 0 ]; do
 done
 
 if command -v whiptail >/dev/null 2>&1; then
-  DIALOG_PROG="whiptail"
+  DIALOG_PROG='whiptail'
 elif command -v dialog >/dev/null 2>&1; then
-  DIALOG_PROG="dialog"
+  DIALOG_PROG='dialog'
 else
   printf "[ERROR] Neither 'whiptail' nor 'dialog' found. TUI mode requires one of these tools.\n" >&2
   exit 1
@@ -73,9 +72,9 @@ fi
 
 if [ "$TEST_MODE" = "1" ]; then
   printf "Running in TEST_MODE. Simulating TUI choices...\n"
-  TARGET_DISK="/dev/sda"
-  OS_FLAVOR="alpine"
-  WORKLOAD="none"
+  TARGET_DISK='/dev/sda'
+  OS_FLAVOR='alpine'
+  WORKLOAD='none'
 else
   $DIALOG_PROG --title "LibScript msi-rs Universal Live Installer" --msgbox "Welcome to the cross-platform installer for Linux, FreeBSD, and illumos.\n\nThis wizard will guide you through partitioning, installing the base OS, and preloading application stacks." 10 60
 

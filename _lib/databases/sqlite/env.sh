@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ export LIBSCRIPT_ROOT_DIR
 
 SQLITE_VERSION="${SQLITE_VERSION:-default}"
 _tc="${SQLITE_BUILD_TOOLCHAIN:-${SQLITE_COMPILER:-${LIBSCRIPT_BUILD_TOOLCHAIN:-default}}}"
-_sqlite_base="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite"
+_sqlite_base="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite"
 
 if [ "${_tc}" != "default" ] && [ -d "${_sqlite_base}/default-${_tc}/bin" ]; then
   _sqlite_prefix="${_sqlite_base}/default-${_tc}"
@@ -66,3 +65,5 @@ if [ -d "${_sqlite_prefix}/lib" ]; then
     *) export LIBRARY_PATH="${_sqlite_prefix}/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}" ;;
   esac
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

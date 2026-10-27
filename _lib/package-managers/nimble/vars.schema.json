@@ -22,6 +22,14 @@
       "description": "Specific version of nimble to install.",
       "type": "string",
       "default": "latest"
+    },
+    "NIMBLE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nimble binary or archive artifacts."
+    },
+    "NIMBLE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nimble available remote releases."
     }
   }
 }

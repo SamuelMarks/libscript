@@ -18,7 +18,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,7 +44,7 @@ TARGETS=""
 STOP_AFTER=""
 SKIP_UNINSTALL=""
 LOOP_MODE=""
-USE_SNAPSHOT="1"
+USE_SNAPSHOT='1'
 USE_NATIVE=""
 
 # ## find_utm_vm_name
@@ -67,16 +66,16 @@ find_utm_vm_name() {
 # ## restore_vanilla_snapshot
 # Restores the vanilla snapshot on the macOS Vagrant VM using vagrant snapshot or utmctl.
 restore_vanilla_snapshot() {
-    echo "Restoring macOS vanilla snapshot..."
+    echo 'Restoring macOS vanilla snapshot...'
     if [ -d "$VAGRANT_DIR" ]; then
         if (cd "$VAGRANT_DIR" && vagrant snapshot restore vanilla --no-provision 2>/dev/null); then
-            echo "Successfully restored vanilla snapshot via Vagrant."
+            echo 'Successfully restored vanilla snapshot via Vagrant.'
             return 0
         fi
     fi
     _vm_name=$(find_utm_vm_name || true)
     if [ -n "$_vm_name" ]; then
-        _utmctl="utmctl"
+        _utmctl='utmctl'
         [ ! -x "$(command -v utmctl 2>/dev/null)" ] && [ -x "/Applications/UTM.app/Contents/MacOS/utmctl" ] && _utmctl="/Applications/UTM.app/Contents/MacOS/utmctl"
         if "$_utmctl" list 2>/dev/null | grep -q "${_vm_name}-snapshot-vanilla"; then
             "$_utmctl" stop "$_vm_name" 2>/dev/null || true
@@ -92,16 +91,16 @@ restore_vanilla_snapshot() {
 # ## save_vanilla_snapshot
 # Creates a vanilla snapshot on the running macOS VM if not already present.
 save_vanilla_snapshot() {
-    echo "Creating vanilla snapshot for macOS VM..."
+    echo 'Creating vanilla snapshot for macOS VM...'
     if [ -d "$VAGRANT_DIR" ]; then
         if (cd "$VAGRANT_DIR" && vagrant snapshot save vanilla 2>/dev/null); then
-            echo "Successfully saved vanilla snapshot."
+            echo 'Successfully saved vanilla snapshot.'
             return 0
         fi
     fi
     _vm_name=$(find_utm_vm_name || true)
     if [ -n "$_vm_name" ]; then
-        _utmctl="utmctl"
+        _utmctl='utmctl'
         [ ! -x "$(command -v utmctl 2>/dev/null)" ] && [ -x "/Applications/UTM.app/Contents/MacOS/utmctl" ] && _utmctl="/Applications/UTM.app/Contents/MacOS/utmctl"
         "$_utmctl" clone "$_vm_name" --name "${_vm_name}-snapshot-vanilla" 2>/dev/null || true
         return 0
@@ -112,7 +111,7 @@ save_vanilla_snapshot() {
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the macOS Vagrant VM.
 sync_repo_to_guest() {
-    echo "=== Syncing LibScript repository to macOS Vagrant VM ==="
+    echo '=== Syncing LibScript repository to macOS Vagrant VM ==='
     (cd "$VAGRANT_DIR" && vagrant rsync 2>/dev/null) || true
 }
 
@@ -138,24 +137,24 @@ while [ $# -gt 0 ]; do
         --help|-h|/?)
             echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop] [--no-snapshot] [--native]"
             echo ""
-            echo "Runs local tests sequentially on macOS (Darwin)."
+            echo 'Runs local tests sequentially on macOS (Darwin).'
             echo ""
-            echo "Arguments:"
-            echo "  TARGETS...          A list of categories or components to test."
+            echo 'Arguments:'
+            echo '  TARGETS...          A list of categories or components to test.'
             echo "                      Defaults to 'all' if omitted."
-            echo "  all                 Test all components in the _lib directory."
-            echo "  --loop, -l          Continuously repeat testing in an automated loop."
-            echo "  --stop-after N      Stop after running N component tests."
-            echo "  --skip-uninstall    Skip uninstallation step after testing each component."
-            echo "  --no-snapshot       Do not restore the vanilla snapshot before each test."
-            echo "  --native            Execute tests natively on the current macOS host."
-            echo "  --help, -h, /?      Show this help message."
+            echo '  all                 Test all components in the _lib directory.'
+            echo '  --loop, -l          Continuously repeat testing in an automated loop.'
+            echo '  --stop-after N      Stop after running N component tests.'
+            echo '  --skip-uninstall    Skip uninstallation step after testing each component.'
+            echo '  --no-snapshot       Do not restore the vanilla snapshot before each test.'
+            echo '  --native            Execute tests natively on the current macOS host.'
+            echo '  --help, -h, /?      Show this help message.'
             echo ""
-            echo "Results are written to tests_tmp/ (*.darwin.stdout, *.darwin.stderr, *.darwin.success/failure)."
+            echo 'Results are written to tests_tmp/ (*.darwin.stdout, *.darwin.stderr, *.darwin.success/failure).'
             exit 0
             ;;
         --loop|-l)
-            LOOP_MODE="1"
+            LOOP_MODE='1'
             shift
             ;;
         --stop-after)
@@ -163,15 +162,15 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
         --skip-uninstall)
-            SKIP_UNINSTALL="1"
+            SKIP_UNINSTALL='1'
             shift
             ;;
         --no-snapshot)
-            USE_SNAPSHOT="0"
+            USE_SNAPSHOT='0'
             shift
             ;;
         --native)
-            USE_NATIVE="1"
+            USE_NATIVE='1'
             shift
             ;;
         *)
@@ -182,7 +181,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$(echo "$TARGETS" | tr -d ' ')" ]; then
-    TARGETS="all"
+    TARGETS='all'
 fi
 
 EXPANDED_TARGETS=""
@@ -233,9 +232,9 @@ iteration=1
 
 while true; do
     if [ "$LOOP_MODE" = "1" ]; then
-        echo "============================================================"
+        echo '============================================================'
         echo "Starting macOS Test Loop (Iteration $iteration)"
-        echo "============================================================"
+        echo '============================================================'
     fi
 
     # Determine execution mode: Vagrant VM vs Native macOS
@@ -250,7 +249,7 @@ while true; do
     fi
 
     if [ "$VAGRANT_ACTIVE" = "1" ]; then
-        echo "=== Connected to macOS Vagrant VM ==="
+        echo '=== Connected to macOS Vagrant VM ==='
         if [ "$USE_SNAPSHOT" = "1" ]; then
             restore_vanilla_snapshot || true
         fi
@@ -261,7 +260,7 @@ while true; do
         : "${_port:=22}"
         : "${_key:=$HOME/.vagrant.d/insecure_private_key}"
     else
-        echo "=== Running tests natively on macOS host ==="
+        echo '=== Running tests natively on macOS host ==='
     fi
 
     test_count=0
@@ -318,9 +317,9 @@ while true; do
             fi
         fi
 
-        echo "============================================================"
+        echo '============================================================'
         echo "Running test for $target on macOS..."
-        echo "============================================================"
+        echo '============================================================'
         test_count=$((test_count + 1))
 
         # Restore vanilla snapshot before running if enabled and in Vagrant mode
@@ -390,17 +389,17 @@ while true; do
     fi
 
     echo ""
-    echo "============================================================"
+    echo '============================================================'
     echo "macOS Tests Complete (Iteration $iteration)"
     echo "Ran: $test_count | Passed: $success_count | Failed: $failure_count | Skipped: $skipped_count"
     echo "Results in: $TESTS_TMP_DIR"
-    echo "============================================================"
+    echo '============================================================'
 
     if [ "$LOOP_MODE" != "1" ]; then
         break
     fi
 
     iteration=$((iteration + 1))
-    echo "Loop mode active. Restarting test loop in 3 seconds..."
+    echo 'Loop mode active. Restarting test loop in 3 seconds...'
     sleep 3
 done

@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -78,10 +78,6 @@ goto :action_install
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 dir /b "%LIBSCRIPT_HOME%\kubectl\" 2>nul
 exit /b 0
@@ -89,13 +85,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls-remote kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list all kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls all kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%KUBECTL_RELEASES_URL%"=="" (
-    curl -sSL "%KUBECTL_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%KUBECTL_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/kubectl" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -104,12 +96,8 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise use "kubectl@%KUBECTL_VERSION%" & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf global kubectl "%KUBECTL_VERSION%" & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox use "kubectl@%KUBECTL_VERSION%" & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
-echo libscript_symlink_alias not implemented natively in cmd yet.
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "kubectl" "default" "%KUBECTL_VERSION%"
 exit /b 0
 
 :: ## action_download

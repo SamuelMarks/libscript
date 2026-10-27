@@ -13,6 +13,9 @@ Managed by libscript. Provides download, install, ls, ls-remote, use capabilitie
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -40,10 +43,6 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls coursier; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list coursier; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls coursier; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "coursier"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -51,13 +50,9 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote coursier; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list all coursier; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all coursier; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls-remote directly here."; exit 0 }
     if ($env:COURSIER_RELEASES_URL) {
-        Invoke-WebRequest -Uri $env:COURSIER_RELEASES_URL | Select-Object -ExpandProperty Content
+        Invoke-LibscriptFetchContent -Uri $env:COURSIER_RELEASES_URL
     } else {
         Write-Output "ls-remote not fully implemented natively yet."
     }
@@ -65,15 +60,11 @@ if ($Action -eq "ls-remote") {
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "coursier@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf global coursier "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not use explicit versions this way"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "coursier@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     
 if ($CompVersion -eq "latest" -or $CompVersion -eq "lts") {
     try {
-        $response = Invoke-RestMethod -Uri "https://api.github.com/repos/coursier/coursier/releases/latest" -ErrorAction Stop
+        $response = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/coursier/coursier/releases/latest"
         $ExactVersion = $response.tag_name -replace '^v',''
     } catch {
         Write-Warning "Failed to fetch latest version from GitHub API"
@@ -102,7 +93,7 @@ if ($Action -eq "download") {
             New-Item -ItemType Directory -Force -Path $CompDownloadDir | Out-Null
         }
         if ($env:COURSIER_DOWNLOAD_URL) {
-            Invoke-WebRequest -Uri $env:COURSIER_DOWNLOAD_URL -OutFile "$CompDownloadDir\coursier-$CompVersion.zip"
+            libscript_download $env:COURSIER_DOWNLOAD_URL "$CompDownloadDir\coursier-$CompVersion.zip"
         } else {
             Write-Output "COURSIER_DOWNLOAD_URL is not defined. Skipping."
         }
@@ -112,10 +103,6 @@ if ($Action -eq "download") {
 
 if ($Action -eq "install") {
     if ($InstallMethod -eq "system") { Write-Output "System package manager installation not implemented natively in ps1 yet."; exit 0 }
-    if ($InstallMethod -eq "mise") { mise install "coursier@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf install coursier "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { pkgx install "coursier@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox add coursier; vfox install "coursier@$CompVersion"; exit 0 }
 
     $TargetDir = Join-Path (Join-Path $LibscriptHome "coursier") $CompVersion
     $TargetBin = Join-Path $TargetDir "bin"
@@ -133,7 +120,7 @@ if ($Action -eq "install") {
         } elseif ($env:COURSIER_DOWNLOAD_URL) {
             Write-Output "Downloading and extracting..."
             $TempFile = Join-Path $env:TEMP "coursier.zip"
-            Invoke-WebRequest -Uri $env:COURSIER_DOWNLOAD_URL -OutFile $TempFile
+            libscript_download $env:COURSIER_DOWNLOAD_URL $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
             Write-Error "No download URL or cache available for coursier."

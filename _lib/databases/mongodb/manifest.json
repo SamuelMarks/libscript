@@ -9,5 +9,6 @@
   "provides": ["database", "mongodb"],
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["freebsd", "alpine"]
+  "os_blacklist": ["freebsd", "alpine"],
+  "repository": "https://github.com/mongodb/mongo"
 }

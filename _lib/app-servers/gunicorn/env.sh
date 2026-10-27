@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,6 +38,8 @@ export GUNICORN_WORKERS="${GUNICORN_WORKERS:-2}"
 export GUNICORN_BIND="${GUNICORN_BIND:-0.0.0.0:8000}"
 
 GUNICORN_VERSION="${GUNICORN_VERSION:-latest}"
-if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${GUNICORN_VERSION}/bin" ]; then
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${GUNICORN_VERSION}/bin"
+if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gunicorn/${GUNICORN_VERSION}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gunicorn/${GUNICORN_VERSION}/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

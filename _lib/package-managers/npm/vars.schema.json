@@ -14,6 +14,14 @@
       "description": "Specific version of npm to install.",
       "type": "string",
       "default": "latest"
+    },
+    "NPM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading npm binary or archive artifacts."
+    },
+    "NPM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying npm available remote releases."
     }
   }
 }

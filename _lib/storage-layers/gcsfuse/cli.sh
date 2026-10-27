@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ done
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0 <action> [args...]"
-  printf '%s\n' "See README.md for details."
+  printf '%s\n' 'See README.md for details.'
   exit 0
 fi
 
@@ -51,7 +50,7 @@ check_gcsfuse() {
     if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin/gcsfuse" ]; then
       export PATH="${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin:${PATH}"
     else
-      log_error "gcsfuse not found. Please install the storage-layers/gcsfuse component first."
+      log_error 'gcsfuse not found. Please install the storage-layers/gcsfuse component first.'
       exit 1
     fi
   fi
@@ -64,7 +63,7 @@ case "$ACTION" in
   mount)
       check_gcsfuse
     if [ -z "$BUCKET_NAME" ] || [ -z "$MOUNT_POINT" ]; then
-      log_error "Usage: gcsfuse mount <bucket_name> <mount_point>"
+      log_error 'Usage: gcsfuse mount <bucket_name> <mount_point>'
       exit 1
     fi
     # Strip gs:// prefix if present
@@ -74,21 +73,21 @@ case "$ACTION" in
     log_info "Mounting bucket $BUCKET_NAME to $MOUNT_POINT..."
     # If not running on GCP metadata server, it will use application default credentials.
     gcsfuse --implicit-dirs "$BUCKET_NAME" "$MOUNT_POINT"
-    log_info "Mounted successfully."
+    log_info 'Mounted successfully.'
     ;;
   unmount)
       check_gcsfuse
     if [ -z "$BUCKET_NAME" ]; then
       # Here bucket name acts as the mount point
-      log_error "Usage: gcsfuse unmount <mount_point>"
+      log_error 'Usage: gcsfuse unmount <mount_point>'
       exit 1
     fi
     log_info "Unmounting $BUCKET_NAME..."
     fusermount -u "$BUCKET_NAME"
-    log_info "Unmounted."
+    log_info 'Unmounted.'
     ;;
     *)
-      export PACKAGE_NAME="gcsfuse"
+      export PACKAGE_NAME='gcsfuse'
       SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/storage-layers/gcsfuse"
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
       export SCRIPT_NAME

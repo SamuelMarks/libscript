@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -78,10 +78,6 @@ goto :action_install
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls tpu-vm & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 dir /b "%LIBSCRIPT_HOME%\tpu-vm\" 2>nul
 exit /b 0
@@ -89,13 +85,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls-remote tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list all tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls all tpu-vm & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%TPU_VM_RELEASES_URL%"=="" (
-    curl -sSL "%TPU_VM_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%TPU_VM_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/google/jax" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -104,12 +96,8 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise use "tpu-vm@%TPU_VM_VERSION%" & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf global tpu-vm "%TPU_VM_VERSION%" & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox use "tpu-vm@%TPU_VM_VERSION%" & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
-echo libscript_symlink_alias not implemented natively in cmd yet.
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcp-tpu-vm" "default" "%TPU_VM_VERSION%"
 exit /b 0
 
 :: ## action_download
@@ -129,6 +117,7 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if "%VERSION%"=="" set "VERSION=%TPU_VM_VERSION%"
 if exist "%LIBSCRIPT_HOME%\gcp-tpu-vm\%VERSION%" (
     echo [INFO] gcp-tpu-vm %VERSION% is already installed.
     exit /b 0

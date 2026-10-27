@@ -14,6 +14,14 @@
       "description": "Specific version of brew to install.",
       "type": "string",
       "default": "latest"
+    },
+    "BREW_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading brew binary or archive artifacts."
+    },
+    "BREW_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying brew available remote releases."
     }
   }
 }

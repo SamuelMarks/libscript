@@ -1,24 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Universal Multiboot Co-Installation Orchestrator across Linux, FreeBSD, and illumos.
-# Deploys Linux, FreeBSD, and illumos sysroots concurrently onto separate target partitions,
-# configures shared EFI System Partition (ESP), and synthesizes a unified master GRUB2
-# multiboot menu chainloading FreeBSD loader.efi and illumos bootx64.efi / direct kernel.
 #
 # ## Usage
-# Execute this script with target device and partition paths:
-#   ./_lib/package-managers/msi-rs/distro_installers/multiboot_orchestrator.sh <disk_dev> [options...]
-#
-# Arguments:
-#   <disk_dev>              Target storage device path (e.g. /dev/nvme0n1 or /dev/sda)
-#
-# Options:
-#   --linux-part <dev>      Dedicated partition for Linux root (ext4/btrfs)
-#   --freebsd-part <dev>    Dedicated partition for FreeBSD root (UFS2 or ZFS zroot)
-#   --illumos-part <dev>    Dedicated partition for illumos ZFS root pool (rpool)
-#   --esp-part <dev>        Shared EFI System Partition (FAT32, /boot/efi)
-#   --default-os <name>     Default OS in GRUB boot menu (debian, freebsd, or omnios)
-#   --timeout <seconds>     Bootloader countdown timer (default: 5)
+# ./_lib/package-managers/msi-rs/distro_installers/multiboot_orchestrator.sh <disk_dev> [--linux-part <dev>] [--freebsd-part <dev>] [--illumos-part <dev>] [--esp-part <dev>] [--default-os <name>] [--timeout <sec>]
 
 set -feu
 
@@ -27,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,17 +33,17 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 # Displays usage instructions and supported parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <disk_dev> [options...]"
-  printf '%s\n' "Concurrently deploys Linux, FreeBSD, and illumos to separate partitions with master GRUB2."
+  printf '%s\n' 'Concurrently deploys Linux, FreeBSD, and illumos to separate partitions with master GRUB2.'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --linux-part <dev>      Dedicated Linux partition path"
-  printf '%s\n' "  --freebsd-part <dev>    Dedicated FreeBSD partition path"
-  printf '%s\n' "  --illumos-part <dev>    Dedicated illumos partition path"
-  printf '%s\n' "  --esp-part <dev>        Shared EFI System Partition path"
-  printf '%s\n' "  --default-os <name>     Default boot entry: debian, freebsd, omnios (default: debian)"
-  printf '%s\n' "  --timeout <sec>         Bootloader menu timeout in seconds (default: 5)"
-  printf '%s\n' "  --help, -h, /?, -?      Show this help message and exit."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --linux-part <dev>      Dedicated Linux partition path'
+  printf '%s\n' '  --freebsd-part <dev>    Dedicated FreeBSD partition path'
+  printf '%s\n' '  --illumos-part <dev>    Dedicated illumos partition path'
+  printf '%s\n' '  --esp-part <dev>        Shared EFI System Partition path'
+  printf '%s\n' '  --default-os <name>     Default boot entry: debian, freebsd, omnios (default: debian)'
+  printf '%s\n' '  --timeout <sec>         Bootloader menu timeout in seconds (default: 5)'
+  printf '%s\n' '  --help, -h, /?, -?      Show this help message and exit.'
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -79,8 +63,8 @@ LINUX_PART=""
 FREEBSD_PART=""
 ILLUMOS_PART=""
 ESP_PART=""
-DEFAULT_OS="debian"
-TIMEOUT_SEC="5"
+DEFAULT_OS='debian'
+TIMEOUT_SEC='5'
 
 # Parse arguments
 while [ $# -gt 0 ]; do
@@ -110,7 +94,7 @@ done
 : "${ILLUMOS_PART:=${DISK_DEV}p6}"
 : "${ESP_PART:=${DISK_DEV}p1}"
 
-STAMP_FILE="/mnt/target/.multiboot_complete.stamp"
+STAMP_FILE='/mnt/target/.multiboot_complete.stamp'
 if [ -f "$STAMP_FILE" ]; then
   printf '[INFO] Multiboot co-installation already completed on %s. Skipping.\n' "$DISK_DEV"
   exit 0
@@ -135,10 +119,10 @@ if [ -x "${REPO_ROOT}/_lib/storage/format.sh" ]; then
 fi
 
 # 2. Stage sysroot directory hierarchy
-TARGET_ESP="/mnt/target/esp"
-TARGET_LINUX="/mnt/target/linux"
-TARGET_FREEBSD="/mnt/target/freebsd"
-TARGET_ILLUMOS="/mnt/target/illumos"
+TARGET_ESP='/mnt/target/esp'
+TARGET_LINUX='/mnt/target/linux'
+TARGET_FREEBSD='/mnt/target/freebsd'
+TARGET_ILLUMOS='/mnt/target/illumos'
 mkdir -p "$TARGET_ESP" "$TARGET_LINUX" "$TARGET_FREEBSD" "$TARGET_ILLUMOS"
 
 # 3. Concurrent Multi-OS Base Deployment

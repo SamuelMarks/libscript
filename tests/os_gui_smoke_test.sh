@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,8 +44,8 @@ printf '=== LibScript Headless Graphical Desktop Smoke Test ===\n'
 printf '[TEST] Validating graphical stack on image: %s (dry-run: %s)\n' "$TARGET_IMAGE" "$DRY_RUN"
 
 # Wayland Compositor Assertion
-WAYLAND_SOCKET="/run/user/1000/wayland-0"
-PIPEWIRE_SOCKET="/run/user/1000/pipewire-0"
+WAYLAND_SOCKET='/run/user/1000/wayland-0'
+PIPEWIRE_SOCKET='/run/user/1000/pipewire-0'
 
 printf '[ASSERT] Wayland compositor socket binding: %s\n' "$WAYLAND_SOCKET"
 printf '[PASS] Verified: Wayland compositor bound runtime socket\n'

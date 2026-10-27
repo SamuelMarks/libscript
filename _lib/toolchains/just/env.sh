@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,11 +35,13 @@ unset SCRIPT_NAME || true
 
 JUST_VERSION="${JUST_VERSION:-latest}"
 if [ "${JUST_VERSION}" = "latest" ]; then
-  EXACT_VERSION="latest"
+  EXACT_VERSION='latest'
 else
   EXACT_VERSION="${JUST_VERSION}"
 fi
 
-export JUST_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
+export JUST_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/just/${EXACT_VERSION}"
 libscript_path_prepend "$JUST_ROOT/bin"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

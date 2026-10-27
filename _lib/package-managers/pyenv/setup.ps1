@@ -13,10 +13,13 @@ Execute this script to install and configure pyenv on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 if (-Not (Get-Command pyenv -ErrorAction SilentlyContinue)) {
     Write-Host "Installing pyenv-win..."
-    Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "$env:TEMP\install-pyenv-win.ps1"
+    libscript_download "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" "$env:TEMP\install-pyenv-win.ps1"
     & "$env:TEMP\install-pyenv-win.ps1"
     
     # Reload PATH
@@ -28,8 +31,6 @@ if (-Not (Get-Command pyenv -ErrorAction SilentlyContinue)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls pyenv; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls pyenv; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "pyenv"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -37,15 +38,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote pyenv; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all pyenv; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "pyenv@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "pyenv@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$NATS_INSTALL_METHOD" = "mise" ]; then
-      mise ls nats || true
-    elif [ "$NATS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list nats || true
-    elif [ "$NATS_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NATS_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls nats || true
-    elif [ "$NATS_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "nats" "$ACTION" "$VERSION" "${NATS_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$NATS_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote nats || true
-    elif [ "$NATS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all nats || true
-    elif [ "$NATS_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NATS_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all nats || true
+    if [ -n "${NATS_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${NATS_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${NATS_RELEASES_URL:-}" ]; then
-        curl -sSL "${NATS_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/nats" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/nats-io/nats-server" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$NATS_INSTALL_METHOD" = "mise" ]; then
-      mise use "nats@${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "asdf" ]; then
-      asdf global nats "${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$NATS_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nats@${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nats@${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "nats" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "nats" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "nats ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "nats" "default" "${EXACT_VERSION}"
-      log_info "Set default nats version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nats \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "nats" "$ACTION" "$VERSION" "${NATS_INSTALL_METHOD}"
     ;;
   download)
     if [ "$NATS_INSTALL_METHOD" = "libscript_native" ]; then
@@ -144,131 +91,76 @@ case "$ACTION" in
   install)
     if [ "$NATS_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "nats"; then
-        log_info "System package manager unavailable for nats. Falling back to native..."
-        NATS_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager unavailable for nats. Falling back to native...'
+        NATS_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "$NATS_INSTALL_METHOD" = "mise" ]; then
-      mise install "nats@${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "asdf" ]; then
-      asdf install nats "${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "nats@${VERSION}"
-    elif [ "$NATS_INSTALL_METHOD" = "vfox" ]; then
-      vfox add nats || true
-      vfox install "nats@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing nats ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/nats" || true
-              chmod +x "${TARGET_DIR}/bin/nats" || true
-            fi
-          fi
-        else
-          if [ -n "${NATS_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${NATS_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${NATS_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${NATS_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/nats" || true
-              chmod +x "${TARGET_DIR}/bin/nats" || true
-            fi
-            rm -f "${TEMP_FILE}"
+    # libscript_native implementation
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${EXACT_VERSION}"
+    if [ ! -d "${TARGET_DIR}" ]; then
+      log_info "Installing nats ${VERSION} natively to ${TARGET_DIR}..."
+      mkdir -p "${TARGET_DIR}/bin"
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info 'Extracting from cache...'
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
           else
-            if [ "$UNAME_LOWER" = "linux" ]; then
-              _actual_version="${EXACT_VERSION}"
-              if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-                _actual_version=$(curl -sI https://github.com/nats-io/nats-server/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
-              fi
-              case "${ARCH:-}" in
-                aarch64|arm64) _nats_arch="arm64" ;;
-                *) _nats_arch="amd64" ;;
-              esac
-              DL_URL="https://github.com/nats-io/nats-server/releases/download/${_actual_version}/nats-server-${_actual_version}-linux-${_nats_arch}.tar.gz"
-              TEMP_FILE=$(mktemp)
-              libscript_download "$DL_URL" "$TEMP_FILE"
-              tar -xzf "$TEMP_FILE" -C "$TARGET_DIR" --strip-components=1 || true
-              mkdir -p "${TARGET_DIR}/bin"
-              if [ -f "${TARGET_DIR}/nats-server" ]; then
-                mv "${TARGET_DIR}/nats-server" "${TARGET_DIR}/bin/nats-server"
-              fi
-              rm -f "$TEMP_FILE"
-            elif [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-              log_info "Falling back to system package manager for nats..."
-              libscript_depends "nats-server"
-            else
-              log_warn "No download URL provided for nats ${VERSION}."
-            fi
+            cp "$cache_file" "${TARGET_DIR}/bin/nats" || true
+            chmod +x "${TARGET_DIR}/bin/nats" || true
           fi
         fi
       else
-        log_info "nats ${VERSION} is already installed."
+        if [ -n "${NATS_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${NATS_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${NATS_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${NATS_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/nats" || true
+            chmod +x "${TARGET_DIR}/bin/nats" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          if [ "$UNAME_LOWER" = "linux" ]; then
+            _actual_version="${EXACT_VERSION}"
+            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+              _actual_version=$(libscript_fetch_stdout "https://api.github.com/repos/nats-io/nats-server/releases/latest" | grep -oE '"tag_name":[[:space:]]*"v[^"]+"' | sed -E 's/.*"v([^"]+)".*/v\1/' | head -n 1)
+              [ -z "$_actual_version" ] && _actual_version="v2.10.22"
+            fi
+            case "${ARCH:-}" in
+              aarch64|arm64) _nats_arch="arm64" ;;
+              *) _nats_arch="amd64" ;;
+            esac
+            DL_URL="https://github.com/nats-io/nats-server/releases/download/${_actual_version}/nats-server-${_actual_version}-linux-${_nats_arch}.tar.gz"
+            TEMP_FILE=$(mktemp)
+            libscript_download "$DL_URL" "$TEMP_FILE"
+            tar -xzf "$TEMP_FILE" -C "$TARGET_DIR" --strip-components=1 || true
+            mkdir -p "${TARGET_DIR}/bin"
+            if [ -f "${TARGET_DIR}/nats-server" ]; then
+              mv "${TARGET_DIR}/nats-server" "${TARGET_DIR}/bin/nats-server"
+            fi
+            rm -f "$TEMP_FILE"
+          elif [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+            log_info 'Falling back to system package manager for nats...'
+            libscript_depends 'nats-server'
+          else
+            log_warn "No download URL provided for nats ${VERSION}."
+          fi
+        fi
       fi
-      libscript_symlink_alias "nats" "$VERSION" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NATS_INSTALL_METHOD" = "libscript_native" ] || [ "$NATS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nats}}"
-      libscript_service "$ACTION" "$service_name" "$@"
     else
-      log_info "$ACTION not natively implemented for $NATS_INSTALL_METHOD."
+      log_info "nats ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "nats" "$VERSION" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$NATS_INSTALL_METHOD" = "libscript_native" ] || [ "$NATS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nats}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NATS_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nats" "$ACTION" "$VERSION" "${NATS_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$NATS_INSTALL_METHOD" = "libscript_native" ] || [ "$NATS_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nats}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NATS_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NATS_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nats $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NATS_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

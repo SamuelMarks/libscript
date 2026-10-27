@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,7 +27,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
-printf '%s\n' "Running merge unit tests..."
+printf '%s\n' 'Running merge unit tests...'
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT HUP INT QUIT TERM
@@ -71,18 +70,18 @@ CONF
 merge_location_into_server "$TMP_DIR/existing.conf" "$TMP_DIR/new.conf" "example.com"
 
 if grep -q '"new regex"' "$TMP_DIR/existing.conf"; then
-    printf '%s\n' "Test 1 Passed: Overwrote existing location block."
+    printf '%s\n' 'Test 1 Passed: Overwrote existing location block.'
 else
-    printf '%s\n' "Test 1 Failed: Did not overwrite existing location block."
+    printf '%s\n' 'Test 1 Failed: Did not overwrite existing location block.'
     cat "$TMP_DIR/existing.conf"
     exit 1
 fi
 
 if grep -q '"regex"' "$TMP_DIR/existing.conf"; then
-    printf '%s\n' "Test 2 Failed: Old regex still present."
+    printf '%s\n' 'Test 2 Failed: Old regex still present.'
     exit 1
 else
-    printf '%s\n' "Test 2 Passed: Old regex block completely removed."
+    printf '%s\n' 'Test 2 Passed: Old regex block completely removed.'
 fi
 
 cat << 'CONF' > "$TMP_DIR/new2.conf"
@@ -94,10 +93,10 @@ CONF
 merge_location_into_server "$TMP_DIR/existing.conf" "$TMP_DIR/new2.conf" "example.com"
 
 if grep -q 'return 201' "$TMP_DIR/existing.conf"; then
-    printf '%s\n' "Test 3 Passed: Injected new location block."
+    printf '%s\n' 'Test 3 Passed: Injected new location block.'
 else
-    printf '%s\n' "Test 3 Failed: Did not inject new location block."
+    printf '%s\n' 'Test 3 Failed: Did not inject new location block.'
     exit 1
 fi
 
-printf '%s\n' "All tests passed."
+printf '%s\n' 'All tests passed.'

@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "ports": [5672, 15672]
+  "ports": [5672, 15672],
+  "repository": "https://github.com/rabbitmq/rabbitmq-server"
 }

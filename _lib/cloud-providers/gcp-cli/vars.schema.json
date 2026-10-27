@@ -14,7 +14,7 @@
     "CLI_INSTALL_METHOD": {
       "description": "How to install CLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "LIBSCRIPT_LISTEN_PORT": {
@@ -40,6 +40,18 @@
     "CLI_LISTEN_SOCKET": {
       "type": "string",
       "description": "Unix socket for CLI to listen on"
+    },
+    "GCP_CLI_ENABLED": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating whether gcp-cli is enabled in the execution plan."
+    },
+    "GCP_CLI_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Installation method for gcp-cli (libscript_native, system, or from-source)."
+    },
+    "GCP_CLI_VERSION": {
+      "type": "string",
+      "description": "Specific version of gcp-cli to install (e.g., latest, lts, or exact version)."
     }
   }
 }

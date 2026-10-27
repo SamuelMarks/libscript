@@ -14,6 +14,14 @@
       "description": "Specific version of julia to install.",
       "type": "string",
       "default": "latest"
+    },
+    "JULIA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading julia binary or archive artifacts."
+    },
+    "JULIA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying julia available remote releases."
     }
   }
 }

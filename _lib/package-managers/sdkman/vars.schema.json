@@ -18,6 +18,14 @@
       "description": "Specific version of sdkman to install.",
       "type": "string",
       "default": "latest"
+    },
+    "SDKMAN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading sdkman binary or archive artifacts."
+    },
+    "SDKMAN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying sdkman available remote releases."
     }
   }
 }

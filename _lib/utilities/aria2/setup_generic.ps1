@@ -13,6 +13,9 @@ Managed by libscript. Provides download, install, ls, ls-remote, use capabilitie
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -40,10 +43,6 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls aria2; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list aria2; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls aria2; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "aria2"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -51,13 +50,9 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote aria2; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf list all aria2; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not have a local list command"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all aria2; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls-remote directly here."; exit 0 }
     if ($env:ARIA2_RELEASES_URL) {
-        Invoke-WebRequest -Uri $env:ARIA2_RELEASES_URL | Select-Object -ExpandProperty Content
+        Invoke-LibscriptFetchContent -Uri $env:ARIA2_RELEASES_URL
     } else {
         Write-Output "ls-remote not fully implemented natively yet."
     }
@@ -65,15 +60,11 @@ if ($Action -eq "ls-remote") {
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "aria2@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf global aria2 "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { Write-Output "pkgx does not use explicit versions this way"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "aria2@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     
 if ($CompVersion -eq "latest" -or $CompVersion -eq "lts") {
     try {
-        $response = Invoke-RestMethod -Uri "https://api.github.com/repos/aria2/aria2/releases/latest" -ErrorAction Stop
+        $response = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/aria2/aria2/releases/latest"
         $ExactVersion = $response.tag_name -replace '^v',''
     } catch {
         Write-Warning "Failed to fetch latest version from GitHub API"
@@ -102,7 +93,7 @@ if ($Action -eq "download") {
             New-Item -ItemType Directory -Force -Path $CompDownloadDir | Out-Null
         }
         if ($env:ARIA2_DOWNLOAD_URL) {
-            Invoke-WebRequest -Uri $env:ARIA2_DOWNLOAD_URL -OutFile "$CompDownloadDir\aria2-$CompVersion.zip"
+            libscript_download $env:ARIA2_DOWNLOAD_URL "$CompDownloadDir\aria2-$CompVersion.zip"
         } else {
             Write-Output "ARIA2_DOWNLOAD_URL is not defined. Skipping."
         }
@@ -112,10 +103,6 @@ if ($Action -eq "download") {
 
 if ($Action -eq "install") {
     if ($InstallMethod -eq "system") { Write-Output "System package manager installation not implemented natively in ps1 yet."; exit 0 }
-    if ($InstallMethod -eq "mise") { mise install "aria2@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "asdf") { asdf install aria2 "$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "pkgx") { pkgx install "aria2@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox add aria2; vfox install "aria2@$CompVersion"; exit 0 }
 
     $TargetDir = Join-Path (Join-Path $LibscriptHome "aria2") $CompVersion
     $TargetBin = Join-Path $TargetDir "bin"
@@ -133,7 +120,7 @@ if ($Action -eq "install") {
         } elseif ($env:ARIA2_DOWNLOAD_URL) {
             Write-Output "Downloading and extracting..."
             $TempFile = Join-Path $env:TEMP "aria2.zip"
-            Invoke-WebRequest -Uri $env:ARIA2_DOWNLOAD_URL -OutFile $TempFile
+            libscript_download $env:ARIA2_DOWNLOAD_URL $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
             Write-Error "No download URL or cache available for aria2."

@@ -20,7 +20,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,7 +42,13 @@ libscript_path_prepend() {
   for _dir in "$@"; do
     [ -z "$_dir" ] && continue
     case ":${PATH:-}:" in
-      *":${_dir}:"*) ;;
+      ":${_dir}:"*) ;;
+      *":${_dir}:"*)
+        _eb_clean_p=$(printf '%s' ":${PATH}:" | sed "s|:${_dir}:|:|g")
+        _eb_clean_p="${_eb_clean_p#:}"
+        _eb_clean_p="${_eb_clean_p%:}"
+        PATH="${_dir}${_eb_clean_p:+:${_eb_clean_p}}"
+        ;;
       *) PATH="${_dir}${PATH:+:${PATH}}" ;;
     esac
   done
@@ -57,25 +62,53 @@ elif [ -z "$_eb_pkg" ] && [ -n "${DIR:-}" ]; then
   _eb_pkg=$(basename "$DIR")
 fi
 if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]; then
-  _eb_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  if [ -z "${LIBSCRIPT_HOME:-}" ]; then
+    if [ -n "${REMOTE_HOME:-}" ] && [ -d "${REMOTE_HOME}" ]; then
+      LIBSCRIPT_HOME="${REMOTE_HOME}/.libscript"
+    elif [ -n "${SERVICE_USER:-}" ] && [ "${SERVICE_USER}" != "root" ] && [ -d "/home/${SERVICE_USER}" ]; then
+      LIBSCRIPT_HOME="/home/${SERVICE_USER}/.libscript"
+    elif [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ] && [ -d "/home/${SUDO_USER}" ]; then
+      LIBSCRIPT_HOME="/home/${SUDO_USER}/.libscript"
+    else
+      LIBSCRIPT_HOME="${HOME:-/root}/.libscript"
+    fi
+    export LIBSCRIPT_HOME
+  fi
+  _eb_home="${LIBSCRIPT_HOME}"
   _eb_pkg_up=$(printf '%s' "$_eb_pkg" | tr '[:lower:]-' '[:upper:]_')
   _eb_comp_ver=$(printenv "${_eb_pkg_up}_VERSION" 2>/dev/null || true)
-  _eb_ver="${_eb_comp_ver:-${LIBSCRIPT_VERSION:-latest}}"
+  if [ -n "$_eb_comp_ver" ]; then
+    _eb_ver="$_eb_comp_ver"
+  elif [ -n "${LIBSCRIPT_VERSION:-}" ] && { [ -z "${PACKAGE_NAME:-}" ] || [ "${PACKAGE_NAME:-}" = "$_eb_pkg" ]; }; then
+    _eb_ver="${LIBSCRIPT_VERSION}"
+  else
+    _eb_ver='latest'
+  fi
   export "${_eb_pkg_up}_VERSION=${_eb_ver}"
-  if [ -d "${_eb_home}/${_eb_pkg}" ]; then
+  if [ -d "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin"
+  elif [ -d "${_eb_home}/${_eb_pkg}/v${_eb_ver}/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_pkg}/v${_eb_ver}/bin"
+  elif [ -d "${_eb_home}/${_eb_pkg}/default/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_pkg}/default/bin"
+  elif [ -d "${_eb_home}/${_eb_pkg}/latest/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_pkg}/latest/bin"
+  elif [ -d "${_eb_home}/${_eb_pkg}" ]; then
+    _eb_fallback_bin=""
+    set +f
     for _eb_sub in "${_eb_home}/${_eb_pkg}/"*/bin; do
       if [ -d "$_eb_sub" ]; then
-        libscript_path_prepend "$_eb_sub"
+        _eb_fallback_bin="$_eb_sub"
       fi
     done
+    set -f
+    if [ -n "$_eb_fallback_bin" ]; then
+      libscript_path_prepend "$_eb_fallback_bin"
+    fi
   fi
-  if [ -d "${_eb_home}/${_eb_pkg}/default/bin" ]; then
-    libscript_path_prepend "${_eb_home}/${_eb_pkg}/default/bin"
-  fi
-  libscript_path_prepend "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin"
 fi
 
-STACK="${STACK%${THIS_FILE}:}"
+STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 if [ -n "$_eb_caller_dir" ]; then
   SCRIPT_DIR="$_eb_caller_dir"

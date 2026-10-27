@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,11 +32,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # Backend detection
-TUI_BACKEND="vt100"
+TUI_BACKEND='vt100'
 if command -v whiptail >/dev/null 2>&1; then
-  TUI_BACKEND="whiptail"
+  TUI_BACKEND='whiptail'
 elif command -v dialog >/dev/null 2>&1; then
-  TUI_BACKEND="dialog"
+  TUI_BACKEND='dialog'
 fi
 
 # ## tui_msgbox

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ if [ -f "$SCRIPT_DIR/../../_common/os_info.sh" ]; then
 fi
 
 if ! command -v vllm >/dev/null 2>&1; then
-  printf '%s\n' "vllm is not installed, skipping test."
+  printf '%s\n' 'vllm is not installed, skipping test.'
   exit 0
 fi
 

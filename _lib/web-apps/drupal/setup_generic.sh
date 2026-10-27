@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -70,7 +69,7 @@ fi
 
 DRUPAL_VERSION="${DRUPAL_VERSION:-10.3.5}"
 if [ "${DRUPAL_VERSION}" = "latest" ]; then
-  DRUPAL_VERSION="10.3.5"
+  DRUPAL_VERSION='10.3.5'
 fi
 export DRUPAL_VERSION
 
@@ -91,20 +90,20 @@ DB_NAME="${DRUPAL_DB_NAME:-drupal}"
 DB_USER="${DRUPAL_DB_USER:-drupal}"
 DB_PASS="${DRUPAL_DB_PASS:-drupal}"
 
-printf '%s\n' "Configuring Database..."
+printf '%s\n' 'Configuring Database...'
 if [ "${DRUPAL_DB_TYPE}" = "mariadb" ] || [ "${DRUPAL_DB_TYPE}" = "mysql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine mysql --host "127.0.0.1" --port "3306" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${DRUPAL_DB_TYPE}" = "postgres" ] || [ "${DRUPAL_DB_TYPE}" = "postgresql" ] || [ "${DRUPAL_DB_TYPE}" = "pgsql" ]; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine postgres --host "127.0.0.1" --port "5432" \
       --schema "${DB_NAME}" --user "${DB_USER}" --password "${DB_PASS}" >/dev/null 2>&1 || \
-      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' 'Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup.'
   fi
 elif [ "${DRUPAL_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${DRUPAL_WWWROOT}/sites/default/files"
@@ -114,13 +113,13 @@ priv chown -R www-data:www-data "${DRUPAL_WWWROOT}" 2>/dev/null || priv chown -R
 
 if [ -z "${DRUPAL_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export DRUPAL_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export DRUPAL_PHP_FPM_LISTEN='unix:/run/php/php-fpm.sock'
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export DRUPAL_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export DRUPAL_PHP_FPM_LISTEN='unix:/var/run/php-fpm/php-fpm.sock'
   elif [ -e /var/run/php-fpm.sock ]; then
-    export DRUPAL_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export DRUPAL_PHP_FPM_LISTEN='unix:/var/run/php-fpm.sock'
   else
-    export DRUPAL_PHP_FPM_LISTEN="127.0.0.1:9000"
+    export DRUPAL_PHP_FPM_LISTEN='127.0.0.1:9000'
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
         export DRUPAL_PHP_FPM_LISTEN="unix:$sock"
@@ -191,7 +190,7 @@ elif [ "${DRUPAL_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${DRUPAL_SERVER_NAME}.caddy"
   else

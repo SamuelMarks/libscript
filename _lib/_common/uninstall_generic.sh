@@ -1,8 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Provides fallback uninstallation logic for components on Unix systems.
-# It handles delegating to third-party managers like mise/asdf/vfox,
-# or safely removing the isolated native installation directories.
+# Safely removes the isolated native installation directories and symlinks.
 #
 # ## Usage
 # Typically called internally by uninstall.sh.
@@ -13,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,26 +43,6 @@ INSTALL_METHOD="$(printenv "${COMPONENT_UPPER}_INSTALL_METHOD" 2>/dev/null || tr
 if [ "$INSTALL_METHOD" = "system" ]; then
     log_info "Uninstalling ${COMPONENT_NAME} via system package manager is not implemented."
     exit 0
-elif [ "$INSTALL_METHOD" = "mise" ]; then
-    if [ -n "${VERSION:-}" ]; then
-        mise uninstall "${COMPONENT_NAME}@${VERSION}"
-    else
-        log_info "Please specify a version to uninstall with mise."
-    fi
-elif [ "$INSTALL_METHOD" = "asdf" ]; then
-    if [ -n "${VERSION:-}" ]; then
-        asdf uninstall "${COMPONENT_NAME}" "${VERSION}"
-    else
-        log_info "Please specify a version to uninstall with asdf."
-    fi
-elif [ "$INSTALL_METHOD" = "pkgx" ]; then
-    log_info "Uninstall is not supported via pkgx."
-elif [ "$INSTALL_METHOD" = "vfox" ]; then
-    if [ -n "${VERSION:-}" ]; then
-        vfox uninstall "${COMPONENT_NAME}@${VERSION}"
-    else
-        log_info "Please specify a version to uninstall with vfox."
-    fi
 else
     if [ -n "${VERSION:-}" ]; then
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/${COMPONENT_NAME}/${VERSION}"

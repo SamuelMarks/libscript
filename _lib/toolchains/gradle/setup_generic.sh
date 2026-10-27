@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,9 +49,9 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${GRADLE_VERSION}" = "latest" ] || [ "${GRADLE_VERSION}" = "lts" ]; then
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/gradle/gradle/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/gradle/gradle/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${GRADLE_VERSION}"
@@ -61,15 +60,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${GRADLE_INSTALL_METHOD}" = "mise" ]; then
-      mise ls gradle
-    elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list gradle
-    elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls gradle
-    elif [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
+    if [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
       gradle --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/" 2>/dev/null || true
@@ -77,31 +68,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${GRADLE_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote gradle
-    elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all gradle
-    elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all gradle
-    elif [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for gradle"
+      printf '%s\n' 'Fetching remote versions not implemented generically for gradle'
     fi
     exit 0
     ;;
   use)
-    if [ "${GRADLE_INSTALL_METHOD}" = "mise" ]; then
-      mise use "gradle@${GRADLE_VERSION}"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global gradle "${GRADLE_VERSION}"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "gradle@${GRADLE_VERSION}"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
+    if [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -117,7 +92,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "gradle" "default" "${EXACT_VERSION}"
       log_info "Set default gradle version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env gradle \"${GRADLE_VERSION}\")"
     fi
     exit 0
@@ -142,129 +117,73 @@ case "$ACTION" in
 
     if [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
       if ! libscript_depends 'gradle'; then
-        log_info "System package manager does not have gradle. Falling back to native..."
-        GRADLE_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have gradle. Falling back to native...'
+        GRADLE_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "${GRADLE_INSTALL_METHOD}" = "mise" ]; then
-      mise install "gradle@${GRADLE_VERSION}"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install gradle "${GRADLE_VERSION}"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "gradle@${GRADLE_VERSION}"
-    elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add gradle || true
-      vfox install "gradle@${GRADLE_VERSION}"
-    else
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/${EXACT_VERSION}"
-      
-      if [ -x "${TARGET_DIR}/bin/gradle" ]; then
-        libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
-        exit 0
-      fi
-
-      mkdir -p "${TARGET_DIR}/bin"
-
-      if [ "$(uname -s)" = "FreeBSD" ]; then
-        libscript_depends "gradle"
-        if command -v gradle >/dev/null 2>&1; then
-          ln -sf "$(command -v gradle)" "${TARGET_DIR}/bin/gradle"
-        fi
-      elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/"*"${VERSION:-}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-          else
-            cp "$cache_file" "${TARGET_DIR}/bin/gradle" || true
-            chmod +x "${TARGET_DIR}/bin/gradle" || true
-          fi
-        fi
-      else
-        libscript_depends "java" "unzip" || true
-        if [ -z "${GRADLE_DOWNLOAD_URL:-}" ]; then
-          _gver="8.10.2"
-          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _gver="${EXACT_VERSION}"
-          GRADLE_DOWNLOAD_URL="https://services.gradle.org/distributions/gradle-${_gver}-bin.zip"
-        fi
-        if [ -n "${GRADLE_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${GRADLE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${GRADLE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${GRADLE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            EXTRACT_DIR=$(mktemp -d)
-            unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
-            top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-            if [ -n "$top_dir" ]; then
-              cp -R "${top_dir}/." "${TARGET_DIR}/"
-            fi
-            rm -rf "${EXTRACT_DIR}"
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gradle" || true
-            chmod +x "${TARGET_DIR}/bin/gradle" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_error "No download URL provided for gradle ${VERSION:-}."
-          exit 1
-        fi
-      fi
-      
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/${EXACT_VERSION}"
+    
+    if [ -x "${TARGET_DIR}/bin/gradle" ]; then
       libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
+      exit 0
+    fi
 
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$GRADLE_INSTALL_METHOD" = "libscript_native" ] || [ "$GRADLE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gradle}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $GRADLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  install-service)
-    if [ "$GRADLE_INSTALL_METHOD" = "libscript_native" ] || [ "$GRADLE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gradle}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $GRADLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$GRADLE_INSTALL_METHOD" = "libscript_native" ] || [ "$GRADLE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gradle}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $GRADLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$GRADLE_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling gradle $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $GRADLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
+    mkdir -p "${TARGET_DIR}/bin"
 
+    if [ "$(uname -s)" = "FreeBSD" ]; then
+      libscript_depends 'gradle'
+      if command -v gradle >/dev/null 2>&1; then
+        ln -sf "$(command -v gradle)" "${TARGET_DIR}/bin/gradle"
+      fi
+    elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/"*"${VERSION:-}"* >/dev/null 2>&1; then
+      log_info 'Extracting from cache...'
+      cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
+      if [ -n "$cache_file" ]; then
+        if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+          tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+        elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+          unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+        else
+          cp "$cache_file" "${TARGET_DIR}/bin/gradle" || true
+          chmod +x "${TARGET_DIR}/bin/gradle" || true
+        fi
+      fi
+    else
+      libscript_depends 'java' 'unzip' || true
+      if [ -z "${GRADLE_DOWNLOAD_URL:-}" ]; then
+        _gver='8.10.2'
+        [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _gver="${EXACT_VERSION}"
+        GRADLE_DOWNLOAD_URL="https://services.gradle.org/distributions/gradle-${_gver}-bin.zip"
+      fi
+      if [ -n "${GRADLE_DOWNLOAD_URL:-}" ]; then
+        TEMP_FILE=$(mktemp)
+        libscript_download "${GRADLE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+        if case "${GRADLE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+          tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+        elif case "${GRADLE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+          EXTRACT_DIR=$(mktemp -d)
+          unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
+          top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          if [ -n "$top_dir" ]; then
+            cp -R "${top_dir}/." "${TARGET_DIR}/"
+          fi
+          rm -rf "${EXTRACT_DIR}"
+        else
+          cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gradle" || true
+          chmod +x "${TARGET_DIR}/bin/gradle" || true
+        fi
+        rm -f "${TEMP_FILE}"
+      else
+        log_error "No download URL provided for gradle ${VERSION:-}."
+        exit 1
+      fi
+    fi
+    
+    libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
+
+    ;;
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "gradle" "$ACTION" "$VERSION" "${GRADLE_INSTALL_METHOD}" "" "" "" "$@"
+    ;;
 esac

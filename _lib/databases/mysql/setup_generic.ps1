@@ -13,23 +13,26 @@ $Action = if ($env:ACTION) { $env:ACTION } else { "install" }
 if ($Action -eq "install") {
     if (Get-Command "mysql" -ErrorAction SilentlyContinue) {
         Write-Host "MySQL is already installed on the system."
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
         exit 0
     }
     if (Get-Command "winget" -ErrorAction SilentlyContinue) {
         Write-Host "Installing MySQL via winget..."
-        & winget install --id Oracle.MySQL -e --silent --accept-package-agreements --accept-source-agreements
+        libscript_depends @("Oracle.MySQL")
         exit 0
     }
     if (Get-Command "choco" -ErrorAction SilentlyContinue) {
         Write-Host "Installing MySQL via chocolatey..."
-        & choco install mysql -y
+    libscript_depends @(\"mysql\")
         exit 0
     }
     Write-Error "winget or choco is required to install MySQL on Windows."
     exit 1
 } elseif ($Action -eq "uninstall") {
-    if (Get-Command "winget" -ErrorAction SilentlyContinue) { & winget uninstall --id Oracle.MySQL --silent }
-    if (Get-Command "choco" -ErrorAction SilentlyContinue) { & choco uninstall mysql -y }
+    $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+    . (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+    libscript_uninstall_pkg -Packages @("Oracle.MySQL", "mysql")
     exit 0
 } elseif ($Action -eq "test") {
     & mysql --version

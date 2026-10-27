@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,28 +36,28 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 # Displays usage and CLI option details for Vagrant msi-rs testing.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --platform <macos|windows|freebsd|sunos|linux>]"
-  printf '%s\n' "Runs msi-rs verification exclusively inside isolated Vagrant virtual machines."
+  printf '%s\n' 'Runs msi-rs verification exclusively inside isolated Vagrant virtual machines.'
   printf '
 '
-  printf '%s\n' "Platforms:"
-  printf '%s\n' "  macos    - Apple Silicon macOS 14 (vagrant/macos-14-arm64)"
-  printf '%s\n' "  windows  - Windows 11 (vagrant/windows-11)"
-  printf '%s\n' "  freebsd  - FreeBSD 15.1 (vagrant/freebsd-15.1)"
-  printf '%s\n' "  sunos    - OmniOS / illumos (vagrant/omnios)"
-  printf '%s\n' "  linux    - Debian 13 / Alpine Linux (vagrant/debian-13)"
+  printf '%s\n' 'Platforms:'
+  printf '%s\n' '  macos    - Apple Silicon macOS 14 (vagrant/macos-14-arm64)'
+  printf '%s\n' '  windows  - Windows 11 (vagrant/windows-11)'
+  printf '%s\n' '  freebsd  - FreeBSD 15.1 (vagrant/freebsd-15.1)'
+  printf '%s\n' '  sunos    - OmniOS / illumos (vagrant/omnios)'
+  printf '%s\n' '  linux    - Debian 13 / Alpine Linux (vagrant/debian-13)'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --all                 Test across all 5 target Vagrant platforms sequentially."
-  printf '%s\n' "  --platform <name>     Test specifically on one target platform."
-  printf '%s\n' "  --help, -h, /?, -?    Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --all                 Test across all 5 target Vagrant platforms sequentially.'
+  printf '%s\n' '  --platform <name>     Test specifically on one target platform.'
+  printf '%s\n' '  --help, -h, /?, -?    Show this help message.'
 }
 
-TARGET_PLATFORM="all"
+TARGET_PLATFORM='all'
 while [ $# -gt 0 ]; do
   case "$1" in
     --all)
-      TARGET_PLATFORM="all"
+      TARGET_PLATFORM='all'
       shift
       ;;
     --platform)
@@ -95,55 +94,55 @@ run_platform_test() {
   fi
 }
 
-PLAT_MACOS_STATUS="SKIPPED"
-PLAT_WINDOWS_STATUS="SKIPPED"
-PLAT_FREEBSD_STATUS="SKIPPED"
-PLAT_SUNOS_STATUS="SKIPPED"
-PLAT_LINUX_STATUS="SKIPPED"
+PLAT_MACOS_STATUS='SKIPPED'
+PLAT_WINDOWS_STATUS='SKIPPED'
+PLAT_FREEBSD_STATUS='SKIPPED'
+PLAT_SUNOS_STATUS='SKIPPED'
+PLAT_LINUX_STATUS='SKIPPED'
 
 OVERALL_SUCCESS=1
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "linux" ]; then
   if run_platform_test "linux" "run_debian_tests.sh"; then
-    PLAT_LINUX_STATUS="PASS"
+    PLAT_LINUX_STATUS='PASS'
   else
-    PLAT_LINUX_STATUS="FAIL"
+    PLAT_LINUX_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "freebsd" ]; then
   if run_platform_test "freebsd" "run_freebsd_tests.sh"; then
-    PLAT_FREEBSD_STATUS="PASS"
+    PLAT_FREEBSD_STATUS='PASS'
   else
-    PLAT_FREEBSD_STATUS="FAIL"
+    PLAT_FREEBSD_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "sunos" ]; then
   if run_platform_test "sunos" "run_omnios_tests.sh"; then
-    PLAT_SUNOS_STATUS="PASS"
+    PLAT_SUNOS_STATUS='PASS'
   else
-    PLAT_SUNOS_STATUS="FAIL"
+    PLAT_SUNOS_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "macos" ]; then
   if run_platform_test "macos" "run_macos_tests.sh"; then
-    PLAT_MACOS_STATUS="PASS"
+    PLAT_MACOS_STATUS='PASS'
   else
-    PLAT_MACOS_STATUS="FAIL"
+    PLAT_MACOS_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi
 
 if [ "$TARGET_PLATFORM" = "all" ] || [ "$TARGET_PLATFORM" = "windows" ]; then
   if run_platform_test "windows" "run_windows_tests.sh"; then
-    PLAT_WINDOWS_STATUS="PASS"
+    PLAT_WINDOWS_STATUS='PASS'
   else
-    PLAT_WINDOWS_STATUS="FAIL"
+    PLAT_WINDOWS_STATUS='FAIL'
     OVERALL_SUCCESS=0
   fi
 fi

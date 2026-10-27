@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,7 +49,7 @@ VERSION="${MARATHON_VERSION:-1.11.28}"
 # Resolves semantic version aliases ('latest' or 'stable') to a concrete Marathon version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
-    EXACT_VERSION="1.11.28"
+    EXACT_VERSION='1.11.28'
   else
     EXACT_VERSION="${VERSION}"
   fi

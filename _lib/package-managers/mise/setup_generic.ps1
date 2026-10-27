@@ -13,6 +13,9 @@ Managed by libscript. Provides download, install, ls, ls-remote, use capabilitie
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -57,7 +60,7 @@ if ($Action -eq "ls-remote") {
     if ($InstallMethod -eq "vfox") { vfox ls all mise; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls-remote directly here."; exit 0 }
     if ($env:MISE_RELEASES_URL) {
-        Invoke-WebRequest -Uri $env:MISE_RELEASES_URL | Select-Object -ExpandProperty Content
+        Invoke-LibscriptFetchContent -Uri $env:MISE_RELEASES_URL
     } else {
         Write-Output "ls-remote not fully implemented natively yet."
     }
@@ -96,7 +99,7 @@ if ($Action -eq "download") {
             New-Item -ItemType Directory -Force -Path $CompDownloadDir | Out-Null
         }
         if ($env:MISE_DOWNLOAD_URL) {
-            Invoke-WebRequest -Uri $env:MISE_DOWNLOAD_URL -OutFile "$CompDownloadDir\mise-$CompVersion.zip"
+            libscript_download $env:MISE_DOWNLOAD_URL "$CompDownloadDir\mise-$CompVersion.zip"
         } else {
             Write-Output "MISE_DOWNLOAD_URL is not defined. Skipping."
         }
@@ -127,7 +130,7 @@ if ($Action -eq "install") {
         } elseif ($env:MISE_DOWNLOAD_URL) {
             Write-Output "Downloading and extracting..."
             $TempFile = Join-Path $env:TEMP "mise.zip"
-            Invoke-WebRequest -Uri $env:MISE_DOWNLOAD_URL -OutFile $TempFile
+            libscript_download $env:MISE_DOWNLOAD_URL $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
             Write-Error "No download URL or cache available for mise."

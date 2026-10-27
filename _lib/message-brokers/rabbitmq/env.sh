@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,4 +37,6 @@ unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${RABBITMQ_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
 
 RABBITMQ_VERSION="${RABBITMQ_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/rabbitmq/${RABBITMQ_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rabbitmq/${RABBITMQ_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

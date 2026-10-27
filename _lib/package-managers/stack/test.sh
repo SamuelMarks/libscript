@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,7 +36,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if [ -f /etc/alpine-release ] && [ "$(uname -m)" != "x86_64" ]; then
-  echo "stack binary on Alpine is only available for x86_64. Skipping test."
+  echo 'stack binary on Alpine is only available for x86_64. Skipping test.'
   exit 0
 fi
 

@@ -7,12 +7,12 @@
 :: ## Usage
 :: Executes initialization, logic, or testing for maven.
 
-:: Windows env stub for maven
+:: Windows environment configuration and PATH probes for maven
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -64,7 +64,7 @@ set "_CAND_P=%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "maven"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "maven" "%MAVEN_VERSION%"
 
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"

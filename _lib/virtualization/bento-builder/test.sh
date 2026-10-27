@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -30,9 +29,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
 
-printf '%s\n' "=== Checking Hypervisors & Tools ==="
+printf '%s\n' '=== Checking Hypervisors & Tools ==='
 
-printf '%s\n' "--- QEMU ---"
+printf '%s\n' '--- QEMU ---'
 if command -v qemu-system-x86_64 >/dev/null 2>&1; then
   qemu-system-x86_64 --version | head -n 1
 elif command -v qemu-system-aarch64 >/dev/null 2>&1; then
@@ -40,48 +39,48 @@ elif command -v qemu-system-aarch64 >/dev/null 2>&1; then
 elif command -v qemu-img >/dev/null 2>&1; then
   qemu-img --version | head -n 1
 else
-  printf '%s\n' "qemu not found!" >&2
+  printf '%s\n' 'qemu not found!' >&2
 fi
 
 if [ -e "/dev/kvm" ]; then
-  printf '%s\n' "KVM device: /dev/kvm is available."
+  printf '%s\n' 'KVM device: /dev/kvm is available.'
 fi
 
-printf '%s\n' "--- VirtualBox ---"
+printf '%s\n' '--- VirtualBox ---'
 if command -v VBoxManage >/dev/null 2>&1; then
   VBoxManage --version
   VBoxManage list extpacks 2>/dev/null || true
 else
-  printf '%s\n' "VBoxManage not found (optional on arm64/macOS)." >&2
+  printf '%s\n' 'VBoxManage not found (optional on arm64/macOS).' >&2
 fi
 
-printf '%s\n' "--- Packer ---"
+printf '%s\n' '--- Packer ---'
 if command -v packer >/dev/null 2>&1; then
   packer --version
 else
-  printf '%s\n' "packer not found!" >&2
+  printf '%s\n' 'packer not found!' >&2
 fi
 
-printf '%s\n' "--- Vagrant ---"
+printf '%s\n' '--- Vagrant ---'
 if command -v vagrant >/dev/null 2>&1; then
   vagrant --version
   vagrant plugin list 2>/dev/null || true
 else
-  printf '%s\n' "vagrant not found!" >&2
+  printf '%s\n' 'vagrant not found!' >&2
 fi
 
-printf '%s\n' "--- Ruby & Bundler ---"
+printf '%s\n' '--- Ruby & Bundler ---'
 if command -v ruby >/dev/null 2>&1; then
   ruby -v
 else
-  printf '%s\n' "ruby not found!" >&2
+  printf '%s\n' 'ruby not found!' >&2
 fi
 
 if command -v bundle >/dev/null 2>&1; then
   bundle --version
 fi
 
-printf '%s\n' "--- Image Utilities ---"
+printf '%s\n' '--- Image Utilities ---'
 for tool in xorriso genisoimage wimlib-imagex 7z cabextract; do
   if command -v "$tool" >/dev/null 2>&1; then
     printf 'Found %s: %s\n' "$tool" "$(command -v "$tool")"
@@ -103,14 +102,14 @@ if [ -n "$bento_dir" ]; then
   fi
 
   if [ -f "$bento_dir/os_pkrvars/windows/windows-11-x86_64.pkrvars.hcl" ]; then
-    printf '%s\n' "Validating Windows 11 template..."
+    printf '%s\n' 'Validating Windows 11 template...'
     (cd "$bento_dir/packer_templates" && packer validate -var-file=../os_pkrvars/windows/windows-11-x86_64.pkrvars.hcl .)
   fi
 
   if [ -f "$bento_dir/os_pkrvars/windows/windows-2025-x86_64.pkrvars.hcl" ]; then
-    printf '%s\n' "Validating Windows Server 2025 template..."
+    printf '%s\n' 'Validating Windows Server 2025 template...'
     (cd "$bento_dir/packer_templates" && packer validate -var-file=../os_pkrvars/windows/windows-2025-x86_64.pkrvars.hcl .)
   fi
 fi
 
-printf '%s\n' "=== All Bento Builder checks completed successfully! ==="
+printf '%s\n' '=== All Bento Builder checks completed successfully! ==='

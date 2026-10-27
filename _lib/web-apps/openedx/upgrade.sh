@@ -1,25 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Upgrade and release migration engine for Open edX.
-# Performs pre-upgrade backups, repository branch switching, dependency updates,
-# database migrations, asset compilation, cache clearing, and search reindexing.
 #
 # ## Usage
-#   ./upgrade.sh run [--from <release>] [--to <release>]
-#   ./upgrade.sh help
-#
-# ## Parameters
-# - `run`: Executes the comprehensive release migration workflow.
-# - `--from`: Starting release identifier.
-# - `--to`: Target release identifier (branch or tag).
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Upgrade completed successfully.
-# - `1`: Migration failure or error during upgrade.
+# ./upgrade.sh <run|help> [--from <release>] [--to <release>]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -27,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -91,8 +74,8 @@ resolve_python() {
 # Inputs:
 #   [--from <release>] [--to <release>]
 upgrade_run() {
-  _from="current"
-  _to="release/verawood.1"
+  _from='current'
+  _to='release/verawood.1'
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -116,7 +99,7 @@ upgrade_run() {
   log_info "=== Commencing Open edX Upgrade Pipeline (${_from} -> ${_to}) ==="
 
   # 1. Pre-upgrade automated backup
-  log_info "Step 1/8: Creating pre-upgrade state backup..."
+  log_info 'Step 1/8: Creating pre-upgrade state backup...'
   if [ -f "${SCRIPT_DIR}/backup.sh" ]; then
     "${SCRIPT_DIR}/backup.sh" create || log_warn "Backup failed, proceeding with upgrade cautiously."
   fi
@@ -128,7 +111,7 @@ upgrade_run() {
   fi
 
   # 3. Update Python dependencies
-  log_info "Step 3/8: Updating Python requirements..."
+  log_info 'Step 3/8: Updating Python requirements...'
   if [ -f "${CODEBASE_DIR}/requirements/edx/base.txt" ]; then
     if command -v uv >/dev/null 2>&1 && [ -d "${VENV_DIR}" ]; then
       uv pip install --python "${PYTHON_BIN}" -r "${CODEBASE_DIR}/requirements/edx/base.txt" 2>/dev/null || true
@@ -138,7 +121,7 @@ upgrade_run() {
   fi
 
   # 4. Database schema migrations
-  log_info "Step 4/8: Applying database migrations for LMS and CMS..."
+  log_info 'Step 4/8: Applying database migrations for LMS and CMS...'
   _py="$(resolve_python)"
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
     "${_py}" "${MANAGE_PY}" lms migrate --noinput 2>/dev/null || true
@@ -146,7 +129,7 @@ upgrade_run() {
   fi
 
   # 5. Frontend & Static Assets Compilation
-  log_info "Step 5/8: Rebuilding frontend static assets and MFEs..."
+  log_info 'Step 5/8: Rebuilding frontend static assets and MFEs...'
   if [ -f "${CODEBASE_DIR}/package.json" ] && command -v npm >/dev/null 2>&1; then
     (cd "${CODEBASE_DIR}" && npm clean-install --no-audit 2>/dev/null) || true
   fi
@@ -158,19 +141,19 @@ upgrade_run() {
   fi
 
   # 6. Cache Flush
-  log_info "Step 6/8: Flushing cache stores..."
+  log_info 'Step 6/8: Flushing cache stores...'
   if command -v redis-cli >/dev/null 2>&1; then
     redis-cli flushdb 2>/dev/null || true
   fi
 
   # 7. Search Reindexing
-  log_info "Step 7/8: Updating search indices..."
+  log_info 'Step 7/8: Updating search indices...'
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
     "${_py}" "${MANAGE_PY}" lms reindex_course --all 2>/dev/null || true
   fi
 
   # 8. Restart Daemons & Healthcheck
-  log_info "Step 8/8: Restarting services, worker daemons, and running healthcheck..."
+  log_info 'Step 8/8: Restarting services, worker daemons, and running healthcheck...'
   if [ -f "${SCRIPT_DIR}/service.sh" ]; then
     "${SCRIPT_DIR}/service.sh" restart 2>/dev/null || true
   fi

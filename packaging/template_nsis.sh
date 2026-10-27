@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -30,7 +29,7 @@ SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $0 [OPTIONS]"
-  printf '%s\n' "See script source or documentation for more details."
+  printf '%s\n' 'See script source or documentation for more details.'
   exit 0
 fi
 
@@ -53,7 +52,7 @@ VIAddVersionKey "FileVersion" "$APP_VERSION"
 EOF2
       if [ -n "${ICON_PATH:-}" ]; then printf '%s\n' "Icon \"$ICON_PATH\""; fi
       if [ -n "${BANNER_TOP_PATH:-}" ]; then
-        printf '%s\n' "!define MUI_HEADERIMAGE"
+        printf '%s\n' '!define MUI_HEADERIMAGE'
         printf '%s\n' "!define MUI_HEADERIMAGE_BITMAP \"$BANNER_TOP_PATH\""
       fi
       if [ -n "${BANNER_SIDE_PATH:-}" ]; then
@@ -71,8 +70,8 @@ EOF2
         deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
       fi
 
-      printf '%s\n' "Include nsDialogs.nsh"
-      printf '%s\n' "Page components"
+      printf '%s\n' 'Include nsDialogs.nsh'
+      printf '%s\n' 'Page components'
 
       # shellcheck disable=SC2086
       set -- $deps_list
@@ -101,7 +100,7 @@ EOF2
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         pkg_man=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "manifest.json" 2>/dev/null | grep "/$pkg/manifest.json" | head -n 1)
-        pkg_spdx="MIT"
+        pkg_spdx='MIT'
         pkg_title="$pkg"
         if [ -n "$pkg_man" ] && [ -f "$pkg_man" ]; then
           pkg_spdx=$(jq -r '.license // "MIT"' "$pkg_man" 2>/dev/null || printf 'MIT')
@@ -127,9 +126,9 @@ EOF2
         printf '%s\n' "; License Agreement: $pkg_title ($pkg_spdx)"
         printf '%s\n' "LicenseText \"Please review the license terms for $pkg_title ($pkg_spdx) before continuing:\" \"I Agree\""
         printf '%s\n' "LicenseData \"$pkg_lic_txt\""
-        printf '%s\n' "Page license"
+        printf '%s\n' 'Page license'
       done
-      printf '%s\n' "Page instfiles"
+      printf '%s\n' 'Page instfiles'
       printf '%s\n' ""
 
       # shellcheck disable=SC2086
@@ -157,7 +156,7 @@ EOF2
             done
           fi
         fi
-        printf '%s\n' "SectionEnd"
+        printf '%s\n' 'SectionEnd'
 
         if [ -f "$pkg_json" ]; then
           # Features tree from packaging.json
@@ -168,7 +167,7 @@ EOF2
               fid=$(jq -r ".features[$feat_idx].id" "$pkg_json")
               feat_title=$(jq -r ".features[$feat_idx].title" "$pkg_json")
               printf '%s\n' "Section /o \"$feat_title\" SEC_${pkg}_${fid}"
-              printf '%s\n' "SectionEnd"
+              printf '%s\n' 'SectionEnd'
               feat_idx=$((feat_idx + 1))
             done
           fi
@@ -186,7 +185,7 @@ EOF2
               printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\$APP_NAME\\$short_title.lnk\" \"\$INSTDIR\\$short_target\" \"$short_args\""
               short_idx=$((short_idx + 1))
             done
-            printf '%s\n' "SectionEnd"
+            printf '%s\n' 'SectionEnd'
           fi
         fi
       done
@@ -203,8 +202,8 @@ EOF2
             printf '%s\n' "  SectionGetFlags \${SEC_$pkg} \$0"
             printf '%s\n' "  IntOp \$0 \$0 & 1"
             printf '%s\n' "  IntCmp \$0 1 +2"
-            printf '%s\n' "    Abort"
-            printf '%s\n' "  nsDialogs::Create 1018"
+            printf '%s\n' '    Abort'
+            printf '%s\n' '  nsDialogs::Create 1018'
             printf '%s\n' "  Pop \$Dialog_$pkg"
 
             y=0
@@ -226,8 +225,8 @@ EOF2
               printf '%s\n' "  Pop \$HWND_${pkg}_${varname}"
               y=$((y + 14))
             done
-            printf '%s\n' "  nsDialogs::Show"
-            printf '%s\n' "FunctionEnd"
+            printf '%s\n' '  nsDialogs::Show'
+            printf '%s\n' 'FunctionEnd'
 
             printf '%s\n' "Function pgLeave_$pkg"
             printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
@@ -239,10 +238,10 @@ EOF2
                 printf '%s\n' "  Pop \$0"
                 printf '%s\n' "  IntCmp \$0 0 0 +3"
                 printf '%s\n' "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
-                printf '%s\n' "    Abort"
+                printf '%s\n' '    Abort'
               fi
             done
-            printf '%s\n' "FunctionEnd"
+            printf '%s\n' 'FunctionEnd'
           fi
         fi
       done
@@ -263,6 +262,6 @@ EOF2
         printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"
         printf '%s\n' "  end_$pkg:"
       done
-      printf '%s\n' "SectionEnd"
+      printf '%s\n' 'SectionEnd'
 
       exit 0

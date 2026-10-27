@@ -14,8 +14,12 @@
     "LINODE_INSTALL_METHOD": {
       "description": "How to install LINODE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
+    },
+    "LINODE_REGION": {
+      "type": "string",
+      "description": "Configuration variable LINODE_REGION for linode."
     }
   }
 }

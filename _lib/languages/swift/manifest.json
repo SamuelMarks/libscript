@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["alpine", "sunos"],
-  "ports": []
+  "ports": [],
+  "repository": "https://github.com/swiftlang/swift"
 }

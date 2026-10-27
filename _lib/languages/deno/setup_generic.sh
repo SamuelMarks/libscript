@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$DENO_INSTALL_METHOD" = "mise" ]; then
-      mise ls deno || true
-    elif [ "$DENO_INSTALL_METHOD" = "asdf" ]; then
-      asdf list deno || true
-    elif [ "$DENO_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$DENO_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls deno || true
-    elif [ "$DENO_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/deno/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "deno" "$ACTION" "$VERSION" "${DENO_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$DENO_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote deno || true
-    elif [ "$DENO_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all deno || true
-    elif [ "$DENO_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$DENO_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all deno || true
+    if [ -n "${DENO_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${DENO_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${DENO_RELEASES_URL:-}" ]; then
-        curl -sSL "${DENO_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/deno" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/denoland/deno" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$DENO_INSTALL_METHOD" = "mise" ]; then
-      mise use "deno@${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "asdf" ]; then
-      asdf global deno "${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$DENO_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "deno@${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "deno@${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "deno" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "deno" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/deno/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "deno ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "deno" "default" "${EXACT_VERSION}"
-      log_info "Set default deno version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env deno \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "deno" "$ACTION" "$VERSION" "${DENO_INSTALL_METHOD}"
     ;;
   download)
     if [ "$DENO_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$DENO_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "deno"
-    elif [ "$DENO_INSTALL_METHOD" = "mise" ]; then
-      mise install "deno@${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "asdf" ]; then
-      asdf install deno "${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "deno@${VERSION}"
-    elif [ "$DENO_INSTALL_METHOD" = "vfox" ]; then
-      vfox add deno || true
-      vfox install "deno@${VERSION}"
+      libscript_depends 'deno'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -161,7 +99,7 @@ case "$ACTION" in
         log_info "Installing deno ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/deno/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/deno/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -189,14 +127,14 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ]; then
               log_info "No native prebuilt binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for deno..."
-              libscript_depends "deno"
+              libscript_depends 'deno'
               mkdir -p "${TARGET_DIR}/bin"
               if command -v deno >/dev/null 2>&1; then
                 ln -sf "$(command -v deno)" "${TARGET_DIR}/bin/deno"
               fi
             else
               log_info "No download URL provided for deno ${VERSION}. Using official installer..."
-              libscript_depends "curl" "unzip"
+              libscript_depends 'curl' 'unzip'
               _deno_inst=$(mktemp)
               libscript_download "https://deno.land/install.sh" "${_deno_inst}"
               if [ "${EXACT_VERSION}" = "latest" ]; then
@@ -214,52 +152,7 @@ fi
       libscript_symlink_alias "deno" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$DENO_INSTALL_METHOD" = "libscript_native" ] || [ "$DENO_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-deno}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $DENO_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "deno" "$ACTION" "$VERSION" "${DENO_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$DENO_INSTALL_METHOD" = "libscript_native" ] || [ "$DENO_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-deno}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $DENO_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$DENO_INSTALL_METHOD" = "libscript_native" ] || [ "$DENO_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-deno}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $DENO_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$DENO_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling deno $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/deno/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/deno/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $DENO_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

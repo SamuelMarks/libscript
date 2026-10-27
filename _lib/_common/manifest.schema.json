@@ -18,6 +18,10 @@
       "type": "string",
       "description": "Brief description of the component"
     },
+    "repository": {
+      "type": "string",
+      "description": "Canonical upstream repository URL for the component"
+    },
     "provides": {
       "type": "array",
       "items": {

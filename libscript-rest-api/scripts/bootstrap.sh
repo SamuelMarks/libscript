@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,19 +32,21 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Dependency resolution script for bootstrapping the libscript REST API development environment."
+  printf '%s\n' 'Dependency resolution script for bootstrapping the libscript REST API development environment.'
   printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
 
+_BOOTSTRAP_SCRIPT_DIR="${SCRIPT_DIR}"
 # Import common logging if available
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
 else
   # ## log_info
   # Outputs informational log messages.
@@ -54,6 +55,7 @@ else
   # Outputs error log messages.
   log_error() { printf '[ERROR] %s\n' "$1" >&2; }
 fi
+SCRIPT_DIR="${_BOOTSTRAP_SCRIPT_DIR}"
 
 # ## detect_os
 # Detects the host operating system, distribution, and CPU architecture.
@@ -84,12 +86,12 @@ check_deps() {
 # ## install_deps_linux
 # Performs the install_deps_linux operation and updates component state.
 install_deps_linux() {
-  log_info "Detected Linux. Checking dependencies..."
+  log_info 'Detected Linux. Checking dependencies...'
   if check_deps; then
-    log_info "All dependencies are already installed."
+    log_info 'All dependencies are already installed.'
     return 0
   fi
-  log_info "Installing dependencies via libscript..."
+  log_info 'Installing dependencies via libscript...'
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install c latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
@@ -107,12 +109,12 @@ install_deps_linux() {
 # ## install_deps_macos
 # Performs the install_deps_macos operation and updates component state.
 install_deps_macos() {
-  log_info "Detected macOS. Checking dependencies..."
+  log_info 'Detected macOS. Checking dependencies...'
   if check_deps; then
-    log_info "All dependencies are already installed."
+    log_info 'All dependencies are already installed.'
     return 0
   fi
-  log_info "Installing dependencies via libscript..."
+  log_info 'Installing dependencies via libscript...'
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install c latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest
   "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
@@ -130,7 +132,7 @@ install_deps_macos() {
 # ## install_deps_windows
 # Performs the install_deps_windows operation and updates component state.
 install_deps_windows() {
-  log_info "Detected Windows environment in shell. Suggesting use of bootstrap.cmd."
+  log_info 'Detected Windows environment in shell. Suggesting use of bootstrap.cmd.'
   log_error "Please run scripts\bootstrap.cmd from a Command Prompt or PowerShell."
   exit 1
 }
@@ -143,17 +145,18 @@ case "$OS" in
   *)      log_error "Unsupported Operating System: $OS"; exit 1 ;;
 esac
 
-log_info "Dependency resolution complete. C compiler, git, and cmake are ready."
+log_info 'Dependency resolution complete. C compiler, git, and cmake are ready.'
+SCRIPT_DIR="${_BOOTSTRAP_SCRIPT_DIR}"
 
 # Fetch c-rest-framework
 VENDOR_DIR="${SCRIPT_DIR}/../vendor"
 mkdir -p "$VENDOR_DIR"
 if [ ! -d "$VENDOR_DIR/c-rest-framework/.git" ]; then
-  log_info "Cloning c-rest-framework into vendor directory..."
+  log_info 'Cloning c-rest-framework into vendor directory...'
   git clone https://github.com/SamuelMarks/c-rest-framework "$VENDOR_DIR/c-rest-framework"
 else
-  log_info "c-rest-framework already cloned. Pulling latest..."
+  log_info 'c-rest-framework already cloned. Pulling latest...'
   (cd "$VENDOR_DIR/c-rest-framework" && git fetch --all && git reset --hard '@{upstream}')
 fi
 
-log_info "Framework acquisition complete."
+log_info 'Framework acquisition complete.'

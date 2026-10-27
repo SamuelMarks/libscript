@@ -11,12 +11,12 @@
 # Actions: start, stop, restart, reload, status, health, logs, enable, disable, uninstall
 
 set -feu
+_svc_caller_this="${THIS_FILE:-}"; _svc_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -26,6 +26,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_svc_caller_this" ] && THIS_FILE="$_svc_caller_this"
+    [ -n "$_svc_caller_dir" ] && SCRIPT_DIR="$_svc_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -43,6 +45,9 @@ for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh
   fi
 done
 unset SCRIPT_NAME || true
+[ -n "${_svc_caller_dir:-}" ] && SCRIPT_DIR="$_svc_caller_dir"
+[ -n "${_svc_caller_this:-}" ] && THIS_FILE="$_svc_caller_this"
+unset _svc_caller_this _svc_caller_dir || true
 
 # ## libscript_service_fallback
 # Manages a background PID-file daemon when no system init supervisor is active.
@@ -149,7 +154,7 @@ libscript_service() {
   shift 2 || true
 
   if [ -z "$_action" ] || [ -z "$_service" ]; then
-    log_error "Usage: libscript_service [ACTION] [SERVICE_NAME] [OPTIONS]"
+    log_error 'Usage: libscript_service [ACTION] [SERVICE_NAME] [OPTIONS]'
     return 1
   fi
 

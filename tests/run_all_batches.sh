@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 set +f
 
-OS_TARGET="alpine-3.24"
+OS_TARGET='alpine-3.24'
 EXTRA_ARGS=""
 
 # Parse arguments
@@ -60,7 +59,7 @@ done
 cd "$REPO_ROOT" || exit 1
 
 if [ ! -f "TODO_PLAN.md" ]; then
-    echo "TODO_PLAN.md not found. Generating it..."
+    echo 'TODO_PLAN.md not found. Generating it...'
     for COMPONENT_DIR in _lib/*/*/; do
         if [ -d "$COMPONENT_DIR" ] && [ "${COMPONENT_DIR}" != "_lib/_common/_noop/" ]; then
             COMPONENT_PATH="${COMPONENT_DIR%/}"
@@ -72,7 +71,7 @@ fi
 while true; do
     BATCH=$("$THIS_DIR/run_next_batch.sh")
     if [ -z "$BATCH" ]; then
-        echo "No more components to test!"
+        echo 'No more components to test!'
         break
     fi
     echo "Testing batch: $BATCH"
@@ -80,7 +79,7 @@ while true; do
     NEW_BATCH=""
     for pkg in $BATCH; do
         if [ "$pkg" = "vllm" ]; then
-            echo "Skipping vllm due to ENOSPC and marking success."
+            echo 'Skipping vllm due to ENOSPC and marking success.'
             touch "tests_tmp/vllm.linux.debian.success"
             "$THIS_DIR/update_results.sh"
         else

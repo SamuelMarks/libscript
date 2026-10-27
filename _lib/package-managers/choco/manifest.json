@@ -5,5 +5,6 @@
   "os_whitelist": ["windows"],
   "title": "choco",
   "description": "This document describes **Chocolatey (choco)**, a machine-level, command-line package manager and installer for Windows software.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/chocolatey/choco"
 }

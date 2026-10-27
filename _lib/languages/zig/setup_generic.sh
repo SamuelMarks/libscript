@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,7 +42,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-ZIG_INSTALL_METHOD="system"
+ZIG_INSTALL_METHOD='system'
 ACTION="${ACTION:-install}"
 VERSION="${ZIG_VERSION:-latest}"
 
@@ -55,10 +54,10 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ] && [ "$_latest" != "Fetching remote versions not implemented generically for zig" ]; then
       EXACT_VERSION="$_latest"
     else
-      libscript_depends "curl" "jq" || true
-      EXACT_VERSION=$(curl -sL https://ziglang.org/download/index.json | jq -r 'keys | map(select(. != "master")) | sort | last')
+      libscript_depends 'jq' || true
+      EXACT_VERSION=$(libscript_fetch_stdout "https://ziglang.org/download/index.json" | jq -r 'keys | map(select(. != "master")) | sort | last')
       if [ -z "$EXACT_VERSION" ] || [ "$EXACT_VERSION" = "null" ]; then
-         EXACT_VERSION="0.13.0"
+         EXACT_VERSION='0.13.0'
       fi
     fi
   else
@@ -68,70 +67,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$ZIG_INSTALL_METHOD" = "mise" ]; then
-      mise ls zig || true
-    elif [ "$ZIG_INSTALL_METHOD" = "asdf" ]; then
-      asdf list zig || true
-    elif [ "$ZIG_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$ZIG_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls zig || true
-    elif [ "$ZIG_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/zig/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "zig" "$ACTION" "$VERSION" "${ZIG_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$ZIG_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote zig || true
-    elif [ "$ZIG_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all zig || true
-    elif [ "$ZIG_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$ZIG_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all zig || true
+    if [ -n "${ZIG_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${ZIG_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${ZIG_RELEASES_URL:-}" ]; then
-        curl -sSL "${ZIG_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/zig" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/ziglang/zig" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$ZIG_INSTALL_METHOD" = "mise" ]; then
-      mise use "zig@${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "asdf" ]; then
-      asdf global zig "${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$ZIG_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "zig@${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "zig@${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "zig" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "zig" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/zig/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "zig ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "zig" "default" "${EXACT_VERSION}"
-      log_info "Set default zig version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env zig \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "zig" "$ACTION" "$VERSION" "${ZIG_INSTALL_METHOD}"
     ;;
   download)
     if [ "$ZIG_INSTALL_METHOD" = "libscript_native" ]; then
@@ -148,21 +95,12 @@ case "$ACTION" in
   install)
     if [ "$ZIG_INSTALL_METHOD" = "system" ]; then
       if ! libscript_depends "zig" 2>/dev/null; then
-        log_info "System package manager does not have zig, falling back to standalone install..."
-        ZIG_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have zig, falling back to standalone install...'
+        ZIG_INSTALL_METHOD='libscript_native'
       fi
     fi
 
-    if [ "$ZIG_INSTALL_METHOD" = "mise" ]; then
-      mise install "zig@${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "asdf" ]; then
-      asdf install zig "${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "zig@${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "vfox" ]; then
-      vfox add zig || true
-      vfox install "zig@${VERSION}"
-    elif [ "$ZIG_INSTALL_METHOD" = "libscript_native" ]; then
+    if [ "$ZIG_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/zig/${EXACT_VERSION}"
@@ -170,7 +108,7 @@ case "$ACTION" in
         log_info "Installing zig ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/zig/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/zig/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -189,7 +127,7 @@ case "$ACTION" in
           if [ "$OS" = "darwin" ]; then OS="macos"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
           URL="https://ziglang.org/download/${EXACT_VERSION}/zig-${OS}-${ARCH}-${EXACT_VERSION}.tar.xz"
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl" "tar" "xz" || true
+          libscript_depends 'curl' 'tar' 'xz' || true
           if ! libscript_download "$URL" "$TEMP_FILE.tar.xz"; then
             log_error "Failed to download zig from $URL"
             rm -f "$TEMP_FILE.tar.xz"
@@ -211,52 +149,7 @@ case "$ACTION" in
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$ZIG_INSTALL_METHOD" = "libscript_native" ] || [ "$ZIG_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-zig}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $ZIG_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "zig" "$ACTION" "$VERSION" "${ZIG_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$ZIG_INSTALL_METHOD" = "libscript_native" ] || [ "$ZIG_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-zig}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $ZIG_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$ZIG_INSTALL_METHOD" = "libscript_native" ] || [ "$ZIG_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-zig}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $ZIG_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$ZIG_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling zig $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/zig/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/zig/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $ZIG_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

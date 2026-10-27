@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -71,12 +70,12 @@ TPU_SLICE_COUNT="${TPU_SLICE_COUNT:-${NUM_SLICES:-1}}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  log_error "GCP_PROJECT_ID and GCP_ZONE must be explicitly specified for XPK workload."
+  log_error 'GCP_PROJECT_ID and GCP_ZONE must be explicitly specified for XPK workload.'
   exit 1
 fi
 
 if [ -z "${DOCKER_IMAGE:-}" ]; then
-  log_error "DOCKER_IMAGE must be specified."
+  log_error 'DOCKER_IMAGE must be specified.'
   exit 1
 fi
 
@@ -102,4 +101,4 @@ fi
 # shellcheck disable=SC2086
 xpk workload create --cluster "$CLUSTER_NAME" --workload "$WORKLOAD_NAME" --command "$TRAIN_SCRIPT" --tpu-type "${TPU_ACCELERATOR_TYPE:-v4-8}" --docker-image "$DOCKER_IMAGE" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" $EXTRA_XPK_FLAGS
 
-log_info "Deploy complete."
+log_info 'Deploy complete.'

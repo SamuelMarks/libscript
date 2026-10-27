@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,5 +36,5 @@ fi
 if command -v kubectl-krew >/dev/null 2>&1; then
   kubectl-krew --version || kubectl-krew version || true
 else
-  printf '%s\n' "kubectl-krew is not installed (likely unsupported on this OS), skipping test."
+  printf '%s\n' 'kubectl-krew is not installed (likely unsupported on this OS), skipping test.'
 fi

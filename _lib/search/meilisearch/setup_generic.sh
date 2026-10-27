@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ VERSION="${MEILISEARCH_VERSION:-v1.36.0}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ]; then
-    EXACT_VERSION="v1.36.0"
+    EXACT_VERSION='v1.36.0'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -82,21 +81,21 @@ v1.36.0
     else
       mkdir -p "${TARGET_DIR}/bin"
       # Resolve binary download URL
-      OS_NAME="linux"
+      OS_NAME='linux'
       if [ "${UNAME_LOWER}" = "darwin" ]; then
-        OS_NAME="macos"
+        OS_NAME='macos'
       elif [ "${UNAME_LOWER}" = "freebsd" ]; then
-        OS_NAME="freebsd"
+        OS_NAME='freebsd'
       fi
 
-      ARCH_NAME="amd64"
+      ARCH_NAME='amd64'
       case "${ARCH:-$(uname -m)}" in
         x86_64|amd64) ARCH_NAME="amd64" ;;
         aarch64|arm64)
           if [ "$OS_NAME" = "macos" ]; then
-            ARCH_NAME="apple-silicon"
+            ARCH_NAME='apple-silicon'
           else
-            ARCH_NAME="aarch64"
+            ARCH_NAME='aarch64'
           fi
           ;;
       esac
@@ -132,57 +131,16 @@ SHIM
             ln -sf "$(command -v meilisearch)" "${TARGET_DIR}/bin/meilisearch"
           fi
         elif command -v cargo >/dev/null 2>&1; then
-          log_info "Compiling meilisearch from source via cargo..."
+          log_info 'Compiling meilisearch from source via cargo...'
           cargo install meilisearch --root "${TARGET_DIR}" || true
         else
-          log_warn "Unable to download or install Meilisearch binary."
+          log_warn 'Unable to download or install Meilisearch binary.'
         fi
       fi
     fi
     libscript_symlink_alias "meilisearch" "$VERSION" "${EXACT_VERSION}"
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-meilisearch}"
-    libscript_service "$ACTION" "$service_name" "$@"
-    exit 0
-    ;;
-  install-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-meilisearch}"
-    exec_start="${2:-${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/latest/bin/meilisearch}"
-    libscript_install_service "$service_name" "$exec_start"
-    exit 0
-    ;;
-  uninstall-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-meilisearch}"
-    libscript_uninstall_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall)
-    resolve_exact_version
-    log_info "Uninstalling Meilisearch ${EXACT_VERSION}..."
-    rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${EXACT_VERSION}"
-    rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${VERSION}"
-    exit 0
-    ;;
-  test)
-    if command -v meilisearch >/dev/null 2>&1; then
-      meilisearch --version
-      exit 0
-    elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${VERSION}/bin/meilisearch" ]; then
-      "${LIBSCRIPT_HOME:-$HOME/.libscript}/meilisearch/${VERSION}/bin/meilisearch" --version
-      exit 0
-    else
-      printf 'meilisearch binary not found\n' >&2
-      exit 1
-    fi
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "meilisearch" "$ACTION" "$VERSION" "${MEILISEARCH_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

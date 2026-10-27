@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,6 +35,6 @@ fi
 if command -v psql >/dev/null 2>&1; then
   psql --version
 else
-  printf '%s\n' "psql not found"
+  printf '%s\n' 'psql not found'
   exit 1
 fi

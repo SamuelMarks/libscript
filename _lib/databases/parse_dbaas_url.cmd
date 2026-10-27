@@ -15,7 +15,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -68,22 +68,70 @@ if "%RAW_URL%"=="" (
     exit /b 1
 )
 
-:: Use PowerShell to parse URL and query parameters robustly on Windows
-set "PS_CMD=$raw = '%RAW_URL%';"
-set "PS_CMD=!PS_CMD! if ($raw -match '^(mysql|mariadb)://(?:(?<user>[^:@]+)(?::(?<pass>[^@]*))?@)?(?<host>[^:/?#]+)(?::(?<port>[0-9]+))?(?:/(?<db>[^?#]*))?(?:\?(?<query>.*))?$') {"
-set "PS_CMD=!PS_CMD!   $u = [System.Uri]::UnescapeDataString($Matches['user'] ?? 'root');"
-set "PS_CMD=!PS_CMD!   $p = [System.Uri]::UnescapeDataString($Matches['pass'] ?? '');"
-set "PS_CMD=!PS_CMD!   $h = $Matches['host'] ?? '127.0.0.1';"
-set "PS_CMD=!PS_CMD!   $pt = $Matches['port'] ?? '3306';"
-set "PS_CMD=!PS_CMD!   $d = $Matches['db'] ?? 'wordpress';"
-set "PS_CMD=!PS_CMD!   $q = $Matches['query'] ?? '';"
-set "PS_CMD=!PS_CMD!   $ssl = 0; $ca = ''; $mode = '';"
-set "PS_CMD=!PS_CMD!   if ($q) { $ssl = 1; foreach ($part in $q.Split('&')) { $kv = $part.Split('='); if ($kv[0] -match 'ssl-ca|ssl_ca') { $ca = [System.Uri]::UnescapeDataString($kv[1]) } elseif ($kv[0] -match 'ssl-mode|ssl_mode') { $mode = [System.Uri]::UnescapeDataString($kv[1]) } } }"
-set "PS_CMD=!PS_CMD!   if ('%MODE%' -eq '--json') { [PSCustomObject]@{host=$h;port=[int]$pt;name=$d;user=$u;password=$p;use_ssl=[bool]$ssl;ssl_ca=$ca;ssl_mode=$mode} | ConvertTo-Json -Compress } else { Write-Output ('DB_HOST=' + $h); Write-Output ('DB_PORT=' + $pt); Write-Output ('DB_NAME=' + $d); Write-Output ('DB_USER=' + $u); Write-Output ('DB_PASSWORD=' + $p); Write-Output ('DB_USE_SSL=' + $ssl); Write-Output ('DB_SSL_CA=' + $ca); Write-Output ('DB_SSL_MODE=' + $mode) }"
-set "PS_CMD=!PS_CMD! }"
+:: Parse URI using pure Windows Batch token parsing
+set "DB_USER=root"
+set "DB_PASSWORD="
+set "DB_HOST=127.0.0.1"
+set "DB_PORT=3306"
+set "DB_NAME=wordpress"
+set "DB_USE_SSL=0"
+set "DB_SSL_CA="
+set "DB_SSL_MODE="
 
-for /f "usebackq delims=" %%l in (`powershell -NoProfile -Command "!PS_CMD!"`) do (
-    echo %%l
+set "_REST=%RAW_URL:*://=%"
+set "_QUERY="
+for /f "tokens=1* delims=?" %%A in ("!_REST!") do (
+    set "_REST=%%A"
+    set "_QUERY=%%B"
+)
+if defined _QUERY (
+    set "DB_USE_SSL=1"
+    for %%Q in ("!_QUERY:&=" "!") do (
+        for /f "tokens=1,2 delims==" %%K in ("%%~Q") do (
+            if /i "%%K"=="ssl-ca" set "DB_SSL_CA=%%L"
+            if /i "%%K"=="ssl_ca" set "DB_SSL_CA=%%L"
+            if /i "%%K"=="ssl-mode" set "DB_SSL_MODE=%%L"
+            if /i "%%K"=="ssl_mode" set "DB_SSL_MODE=%%L"
+        )
+    )
+)
+
+set "_AUTH_PART="
+set "_HOST_PATH=!_REST!"
+for /f "tokens=1* delims=@" %%A in ("!_REST!") do (
+    if not "%%B"=="" (
+        set "_AUTH_PART=%%A"
+        set "_HOST_PATH=%%B"
+    )
+)
+if defined _AUTH_PART (
+    for /f "tokens=1* delims=:" %%U in ("!_AUTH_PART!") do (
+        set "DB_USER=%%U"
+        set "DB_PASSWORD=%%V"
+    )
+)
+for /f "tokens=1* delims=/" %%H in ("!_HOST_PATH!") do (
+    set "_HOST_PORT=%%H"
+    if not "%%I"=="" set "DB_NAME=%%I"
+)
+for /f "tokens=1,2 delims=:" %%M in ("!_HOST_PORT!") do (
+    if not "%%M"=="" set "DB_HOST=%%M"
+    if not "%%N"=="" set "DB_PORT=%%N"
+)
+
+if /i "%MODE%"=="--json" (
+    set "_SSL_BOOL=false"
+    if "!DB_USE_SSL!"=="1" set "_SSL_BOOL=true"
+    echo {"host":"!DB_HOST!","port":!DB_PORT!,"name":"!DB_NAME!","user":"!DB_USER!","password":"!DB_PASSWORD!","use_ssl":!_SSL_BOOL!,"ssl_ca":"!DB_SSL_CA!","ssl_mode":"!DB_SSL_MODE!"}
+) else (
+    echo DB_HOST=!DB_HOST!
+    echo DB_PORT=!DB_PORT!
+    echo DB_NAME=!DB_NAME!
+    echo DB_USER=!DB_USER!
+    echo DB_PASSWORD=!DB_PASSWORD!
+    echo DB_USE_SSL=!DB_USE_SSL!
+    echo DB_SSL_CA=!DB_SSL_CA!
+    echo DB_SSL_MODE=!DB_SSL_MODE!
 )
 
 exit /b 0

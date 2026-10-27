@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ done
 
 
 set -feu
-printf '%s\n' "Validating Odoo installation..."
+printf '%s\n' 'Validating Odoo installation...'
 ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
 if [ -f "${ODOO_WWWROOT}/odoo-bin" ]; then
     printf '%s\n' "Odoo directory found at ${ODOO_WWWROOT}"

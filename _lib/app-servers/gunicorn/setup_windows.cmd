@@ -13,7 +13,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -53,9 +53,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where python >nul 2>&1
-if not errorlevel 1 (
-    python -m pip install --upgrade --quiet waitress uvicorn >nul 2>&1
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\waitress\setup.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\waitress\setup.cmd" >nul 2>&1
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\uvicorn\setup.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\uvicorn\setup.cmd" >nul 2>&1
 )
 
 set "BIN_DIR=%USERPROFILE%\.libscript\gunicorn\latest\bin"

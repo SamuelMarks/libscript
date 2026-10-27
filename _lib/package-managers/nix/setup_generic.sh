@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,7 +43,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
 done
 
 if [ "${TARGET_OS:-}" = "alpine" ]; then
-  log_info "nix is not supported on Alpine natively."
+  log_info 'nix is not supported on Alpine natively.'
   exit 0
 fi
 
@@ -69,70 +68,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$NIX_INSTALL_METHOD" = "mise" ]; then
-      mise ls nix || true
-    elif [ "$NIX_INSTALL_METHOD" = "asdf" ]; then
-      asdf list nix || true
-    elif [ "$NIX_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NIX_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls nix || true
-    elif [ "$NIX_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nix/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "nix" "$ACTION" "$VERSION" "${NIX_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$NIX_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote nix || true
-    elif [ "$NIX_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all nix || true
-    elif [ "$NIX_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NIX_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all nix || true
+    if [ -n "${NIX_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${NIX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${NIX_RELEASES_URL:-}" ]; then
-        curl -sSL "${NIX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/nix" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/NixOS/nix" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$NIX_INSTALL_METHOD" = "mise" ]; then
-      mise use "nix@${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "asdf" ]; then
-      asdf global nix "${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$NIX_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nix@${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nix@${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "nix" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "nix" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nix/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "nix ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "nix" "default" "${EXACT_VERSION}"
-      log_info "Set default nix version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nix \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "nix" "$ACTION" "$VERSION" "${NIX_INSTALL_METHOD}"
     ;;
   download)
     if [ "$NIX_INSTALL_METHOD" = "libscript_native" ]; then
@@ -148,16 +95,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$NIX_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "nix"
-    elif [ "$NIX_INSTALL_METHOD" = "mise" ]; then
-      mise install "nix@${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "asdf" ]; then
-      asdf install nix "${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "nix@${VERSION}"
-    elif [ "$NIX_INSTALL_METHOD" = "vfox" ]; then
-      vfox add nix || true
-      vfox install "nix@${VERSION}"
+      libscript_depends 'nix'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -166,7 +104,7 @@ case "$ACTION" in
         log_info "Installing nix ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nix/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nix/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -193,11 +131,11 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ]; then
-              log_info "Downloading and installing Nix via Determinate Systems script..."
+              log_info 'Downloading and installing Nix via Determinate Systems script...'
               libscript_depends curl
               
-              if ! curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm; then
-                 log_warn "Nix install script failed or requires attention."
+              if ! libscript_fetch_stdout "https://install.determinate.systems/nix" | sh -s -- install --no-confirm; then
+                 log_warn 'Nix install script failed or requires attention.'
               fi
               
               if [ -e "/nix/var/nix/profiles/default/bin/nix" ]; then
@@ -216,52 +154,7 @@ case "$ACTION" in
       libscript_symlink_alias "nix" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NIX_INSTALL_METHOD" = "libscript_native" ] || [ "$NIX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nix}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $NIX_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nix" "$ACTION" "$VERSION" "${NIX_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$NIX_INSTALL_METHOD" = "libscript_native" ] || [ "$NIX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nix}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NIX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$NIX_INSTALL_METHOD" = "libscript_native" ] || [ "$NIX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nix}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NIX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NIX_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nix $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nix/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nix/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NIX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

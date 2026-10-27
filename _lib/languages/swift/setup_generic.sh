@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$SWIFT_INSTALL_METHOD" = "mise" ]; then
-      mise ls swift || true
-    elif [ "$SWIFT_INSTALL_METHOD" = "asdf" ]; then
-      asdf list swift || true
-    elif [ "$SWIFT_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SWIFT_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls swift || true
-    elif [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "swift" "$ACTION" "$VERSION" "${SWIFT_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$SWIFT_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote swift || true
-    elif [ "$SWIFT_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all swift || true
-    elif [ "$SWIFT_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SWIFT_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all swift || true
+    if [ -n "${SWIFT_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${SWIFT_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${SWIFT_RELEASES_URL:-}" ]; then
-        curl -sSL "${SWIFT_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/swift" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/swiftlang/swift" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$SWIFT_INSTALL_METHOD" = "mise" ]; then
-      mise use "swift@${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "asdf" ]; then
-      asdf global swift "${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$SWIFT_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "swift@${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "swift@${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "swift" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "swift" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "swift ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "swift" "default" "${EXACT_VERSION}"
-      log_info "Set default swift version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env swift \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "swift" "$ACTION" "$VERSION" "${SWIFT_INSTALL_METHOD}"
     ;;
   download)
     if [ "$SWIFT_INSTALL_METHOD" = "libscript_native" ]; then
@@ -149,86 +96,30 @@ case "$ACTION" in
           libscript_depends swift-lang || true
         fi
       elif ! libscript_depends "swift"; then
-        log_warn "System package for swift failed. Falling back to native mock installation."
-        SWIFT_INSTALL_METHOD="libscript_native"
+        log_warn 'System package for swift failed. Falling back to native mock installation.'
+        SWIFT_INSTALL_METHOD='libscript_native'
       fi
     fi
 
-    if [ "$SWIFT_INSTALL_METHOD" = "mise" ]; then
-      mise install "swift@${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "asdf" ]; then
-      asdf install swift "${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "swift@${VERSION}"
-    elif [ "$SWIFT_INSTALL_METHOD" = "vfox" ]; then
-      vfox add swift || true
-      vfox install "swift@${VERSION}"
-    else
-      # libscript_native implementation
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing swift ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-          log_info "Falling back to system package manager for swift..."
-          libscript_depends "swift"
-        else
-          log_error "Native installation for swift from source is not supported yet."
-          exit 1
-        fi
+    # libscript_native implementation
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
+    if [ ! -d "${TARGET_DIR}" ]; then
+      log_info "Installing swift ${VERSION} natively to ${TARGET_DIR}..."
+      mkdir -p "${TARGET_DIR}/bin"
+      if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+        log_info 'Falling back to system package manager for swift...'
+        libscript_depends 'swift'
       else
-        log_info "swift ${VERSION} is already installed."
+        log_error 'Native installation for swift from source is not supported yet.'
+        exit 1
       fi
-      libscript_symlink_alias "swift" "$VERSION" "${EXACT_VERSION}"
-    fi
-    ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$SWIFT_INSTALL_METHOD" = "libscript_native" ] || [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-swift}}"
-      libscript_service "$ACTION" "$service_name" "$@"
     else
-      log_info "$ACTION not natively implemented for $SWIFT_INSTALL_METHOD."
+      log_info "swift ${VERSION} is already installed."
     fi
-    exit 0
+    libscript_symlink_alias "swift" "$VERSION" "${EXACT_VERSION}"
     ;;
-  install-service)
-    if [ "$SWIFT_INSTALL_METHOD" = "libscript_native" ] || [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-swift}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $SWIFT_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "swift" "$ACTION" "$VERSION" "${SWIFT_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  uninstall-service)
-    if [ "$SWIFT_INSTALL_METHOD" = "libscript_native" ] || [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-swift}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $SWIFT_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$SWIFT_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling swift $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $SWIFT_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

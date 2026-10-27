@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,6 +44,6 @@ set -feu
 if [ -x "${JUPYTERHUB_VENV}/bin/jupyterhub" ]; then
   "${JUPYTERHUB_VENV}/bin/jupyterhub" --version
 else
-  printf '%s\n' "JupyterHub test passed"
+  printf '%s\n' 'JupyterHub test passed'
   exit 0
 fi

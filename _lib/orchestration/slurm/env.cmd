@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,15 +50,20 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%SLURM_VERSION%"=="" set "SLURM_VERSION=latest"
+set "SLURM_HOME=%LIBSCRIPT_HOME%\slurm\%SLURM_VERSION%"
+set "SLURM_STATE_DIR=%LIBSCRIPT_HOME%\slurm\state"
+set "_CAND_P=%LIBSCRIPT_HOME%\slurm\%SLURM_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "slurm" "%SLURM_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%SLURM_VERSION%"=="" set "SLURM_VERSION=latest"
-    set "SLURM_HOME=%LIBSCRIPT_HOME%\slurm\%SLURM_VERSION%"
-    set "SLURM_STATE_DIR=%LIBSCRIPT_HOME%\slurm\state"
-    set "_CAND_P=%LIBSCRIPT_HOME%\slurm\%SLURM_VERSION%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "slurm"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "SLURM_VERSION=%SLURM_VERSION%"
+    set "SLURM_HOME=%SLURM_HOME%"
+    set "SLURM_STATE_DIR=%SLURM_STATE_DIR%"
+    set "PATH=%PATH%"
 )
 exit /b 0

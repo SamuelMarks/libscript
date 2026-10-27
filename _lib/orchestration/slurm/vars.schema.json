@@ -14,7 +14,7 @@
     "SLURM_INSTALL_METHOD": {
       "description": "How to install Slurm ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "SLURM_CTLD_PORT": {
@@ -31,6 +31,10 @@
       "description": "Filesystem directory path for Slurm controller job state and spool files.",
       "type": "string",
       "default": "/var/spool/slurm"
+    },
+    "SLURM_HOME": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for slurm (SLURM_HOME)."
     }
   }
 }

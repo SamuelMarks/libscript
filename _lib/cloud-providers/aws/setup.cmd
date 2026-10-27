@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -65,6 +65,13 @@ if "%~1"=="-h" (
 )
 
 set "ACTION=%~1"
+for %%V in (group project network firewall node storage dns auth location) do (
+    if /i "%~1"=="%%V" (
+        set "STACK="
+        call "!SCRIPT_DIR!\setup_generic.cmd" %*
+        exit /b !ERRORLEVEL!
+    )
+)
 if /i "%ACTION%"=="register-image" goto do_register_image
 if /i "%ACTION%"=="--register-image" goto do_register_image
 if /i "%ACTION%"=="image" goto do_register_image

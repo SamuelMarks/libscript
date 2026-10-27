@@ -13,15 +13,18 @@ Execute this script to install and configure mix on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 if (-Not (Get-Command mix -ErrorAction SilentlyContinue)) {
     if (-Not (Get-Command elixir -ErrorAction SilentlyContinue)) {
         if (Get-Command choco -ErrorAction SilentlyContinue) {
             Write-Host "Installing Elixir (with mix) via Chocolatey..."
-            choco install elixir -y
+            libscript_depends @("elixir")
         } elseif (Get-Command scoop -ErrorAction SilentlyContinue) {
             Write-Host "Installing Elixir via Scoop..."
-            scoop install elixir
+            libscript_depends @("elixir")
         } else {
             Write-Host "Neither choco nor scoop found. Cannot automatically install elixir/mix."
             exit 1
@@ -44,8 +47,6 @@ if (Get-Command mix -ErrorAction SilentlyContinue) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls mix; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls mix; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "mix"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -53,15 +54,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote mix; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all mix; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "mix@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "mix@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

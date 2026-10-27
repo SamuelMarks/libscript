@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ if [ ! -d "${PLUGIN_DIR}" ]; then
   fi
   printf '%s\n' "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WOOCOMMERCE_WWWROOT}..."
   if [ "${WOOCOMMERCE_VERSION}" = "latest" ]; then
-    dl_url="https://downloads.wordpress.org/plugin/woocommerce.zip"
+    dl_url='https://downloads.wordpress.org/plugin/woocommerce.zip'
   else
     dl_url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
   fi

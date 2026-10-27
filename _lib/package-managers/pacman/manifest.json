@@ -5,5 +5,6 @@
   "os_whitelist": ["arch", "artix", "manjaro"],
   "title": "pacman",
   "description": "Bootstrap module for the `pacman` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://gitlab.archlinux.org/pacman/pacman"
 }

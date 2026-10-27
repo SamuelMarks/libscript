@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -140,12 +139,12 @@ main() {
   _open_edx_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
   if [ -f "${SCRIPT_DIR}/workers.sh" ]; then
     if OPENEDX_INSTALL_DIR="${_open_edx_dir}" "${SCRIPT_DIR}/workers.sh" status 2>/dev/null | grep -q "RUNNING"; then
-      _workers="OK"
+      _workers='OK'
     fi
   elif [ -f "${_open_edx_dir}/run/lms-worker.pid" ]; then
     _worker_pid=$(cat "${_open_edx_dir}/run/lms-worker.pid" 2>/dev/null || true)
     if [ -n "${_worker_pid}" ] && kill -0 "${_worker_pid}" 2>/dev/null; then
-      _workers="OK"
+      _workers='OK'
     fi
   fi
   _smtp=$(test_tcp "${_sm_h}" "${_sm_p}" || true)
@@ -161,9 +160,9 @@ main() {
   done
 
   if [ "${_is_json}" = "1" ]; then
-    _status="healthy"
+    _status='healthy'
     if [ $_fails -gt 0 ]; then
-      _status="degraded"
+      _status='degraded'
     fi
     cat <<EOF
 {

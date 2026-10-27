@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -67,7 +67,10 @@ if /i "%ACTION%"=="start" (
     sc.exe start MongoDB >nul 2>&1 && exit /b 0
     if exist "%MONGO_DIR%\bin\mongod.exe" (
         if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process mongod -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%MONGO_DIR%\bin\mongod.exe' -ArgumentList '--dbpath','\"%DATA_DIR%\"','--port','27017','--bind_ip','127.0.0.1' -WindowStyle Hidden }" 2>nul
+        tasklist /FI "IMAGENAME eq mongod.exe" 2>nul | findstr /I "mongod.exe" >nul 2>&1
+        if errorlevel 1 (
+            start "" /b "%MONGO_DIR%\bin\mongod.exe" --dbpath "%DATA_DIR%" --port 27017 --bind_ip 127.0.0.1 >nul 2>&1
+        )
     )
     exit /b 0
 )
@@ -83,7 +86,7 @@ if /i "%ACTION%"=="restart" (
 )
 if /i "%ACTION%"=="status" (
     sc.exe query MongoDB 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] MongoDB & exit /b 0)
-    powershell -NoProfile -Command "if (Get-Process mongod -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] mongod.exe & exit /b 0)
+    tasklist /FI "IMAGENAME eq mongod.exe" 2>nul | findstr /I "mongod.exe" >nul 2>&1 && (echo [RUNNING] mongod.exe & exit /b 0)
     echo [STOPPED] mongodb
     exit /b 1
 )

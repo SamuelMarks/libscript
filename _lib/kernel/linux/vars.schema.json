@@ -58,6 +58,14 @@
       "description": "Whether to compile a freestanding multi-TU kernel ELF harness with the target compiler when full Linux kernel source is not cached locally.",
       "type": "boolean",
       "default": true
+    },
+    "LINUX_COMPARE_COMPILERS": {
+      "type": "string",
+      "description": "Configuration variable LINUX_COMPARE_COMPILERS for linux."
+    },
+    "LINUX_SOURCE_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for linux (LINUX_SOURCE_DIR)."
     }
   }
 }

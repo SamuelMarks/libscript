@@ -13,6 +13,9 @@ Execute this script to install and configure wordpress on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 # ## log_info
 # Outputs informational message.
@@ -42,7 +45,7 @@ function libscript_download($url, $dest) {
     if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
         curl.exe -sSL "$url" -o "$dest"
     } else {
-        Invoke-WebRequest -Uri "$url" -OutFile "$dest" -UseBasicParsing
+        libscript_download "$url" "$dest"
     }
 }
 

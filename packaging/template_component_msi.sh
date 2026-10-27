@@ -1,21 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Generates a pure WiX XML (.wxs) manifest for a standalone LibScript component MSI.
-# Utilizes deterministic GUIDs and reference-counted services from packaging/guid_registry.json.
-# Supports 100% pure Windows Installer with zero external .exe dependencies.
 #
 # ## Usage
-#   ./packaging/template_component_msi.sh [OPTIONS]
-#
-# ## Parameters
-#   --component <name>    Component identifier (e.g. mysql, redis, mongodb, python, nodejs, meilisearch)
-#   --version <version>   Component release version (e.g. 8.0.39, 20.17.0)
-#   --variant <var>       Installer variant: online or offline (default: offline)
-#   --online              Shorthand for --variant online
-#   --offline             Shorthand for --variant offline
-#   --out <file.wxs>      Output path for the generated WiX XML file
-#   --source-dir <dir>    Directory containing component payload binaries to package
-#   --help, -h            Show this help text
+# ./packaging/template_component_msi.sh --component <name> [--version <ver>] [--variant <online|offline>] [--out <file.wxs>] [--source-dir <dir>]
 
 set -feu
 
@@ -24,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,8 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 COMPONENT=""
-VERSION="1.0.0"
-VARIANT="offline"
+VERSION='1.0.0'
+VARIANT='offline'
 OUT_FILE=""
 SOURCE_DIR=""
 SERVICE_GUID=""
@@ -84,11 +71,11 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --online)
-      VARIANT="online"
+      VARIANT='online'
       shift
       ;;
     --offline)
-      VARIANT="offline"
+      VARIANT='offline'
       shift
       ;;
     --out)

@@ -5,5 +5,6 @@
   "os_whitelist": ["all"],
   "title": "cargo",
   "description": "Bootstrap module for the `cargo` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/rust-lang/cargo"
 }

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,9 +49,9 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${ARIA2_VERSION}" = "latest" ] || [ "${ARIA2_VERSION}" = "lts" ]; then
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/aria2/aria2/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^release-//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/aria2/aria2/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^release-//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${ARIA2_VERSION}"
@@ -61,15 +60,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
-      mise ls aria2
-    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list aria2
-    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls aria2
-    elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+    if [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
       aria2 --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/" 2>/dev/null || true
@@ -77,31 +68,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote aria2
-    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all aria2
-    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all aria2
-    elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for aria2"
+      printf '%s\n' 'Fetching remote versions not implemented generically for aria2'
     fi
     exit 0
     ;;
   use)
-    if [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
-      mise use "aria2@${ARIA2_VERSION}"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global aria2 "${ARIA2_VERSION}"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "aria2@${ARIA2_VERSION}"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+    if [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -117,7 +92,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "aria2" "default" "${EXACT_VERSION}"
       log_info "Set default aria2 version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env aria2 \"${ARIA2_VERSION}\")"
     fi
     exit 0
@@ -141,15 +116,6 @@ case "$ACTION" in
     fi
     if [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'aria2'
-    elif [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
-      mise install "aria2@${ARIA2_VERSION}"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install aria2 "${ARIA2_VERSION}"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "aria2@${ARIA2_VERSION}"
-    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add aria2 || true
-      vfox install "aria2@${ARIA2_VERSION}"
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/${EXACT_VERSION}"
@@ -162,7 +128,7 @@ case "$ACTION" in
       mkdir -p "${TARGET_DIR}/bin"
       
       if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/"*"${VERSION:-}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
+        log_info 'Extracting from cache...'
         cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -197,52 +163,7 @@ case "$ACTION" in
 
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ] || [ "$ARIA2_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-aria2}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $ARIA2_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "aria2" "$ACTION" "$VERSION" "${ARIA2_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ] || [ "$ARIA2_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-aria2}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $ARIA2_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ] || [ "$ARIA2_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-aria2}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $ARIA2_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling aria2 $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $ARIA2_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

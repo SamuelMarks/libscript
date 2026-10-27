@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,6 +39,8 @@ unset SCRIPT_NAME || true
 
 
 RBENV_VERSION="${RBENV_VERSION:-latest}"
-export RBENV_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/rbenv/${RBENV_VERSION}"
+export RBENV_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rbenv/${RBENV_VERSION}"
 libscript_path_prepend "$RBENV_ROOT/shims" "$RBENV_ROOT/bin"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

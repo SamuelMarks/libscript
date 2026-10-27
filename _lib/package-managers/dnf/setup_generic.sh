@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,70 +64,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$DNF_INSTALL_METHOD" = "mise" ]; then
-      mise ls dnf || true
-    elif [ "$DNF_INSTALL_METHOD" = "asdf" ]; then
-      asdf list dnf || true
-    elif [ "$DNF_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$DNF_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls dnf || true
-    elif [ "$DNF_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/dnf/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "dnf" "$ACTION" "$VERSION" "${DNF_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$DNF_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote dnf || true
-    elif [ "$DNF_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all dnf || true
-    elif [ "$DNF_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$DNF_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all dnf || true
+    if [ -n "${DNF_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${DNF_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${DNF_RELEASES_URL:-}" ]; then
-        curl -sSL "${DNF_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/1995chen/dnf" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/1995chen/dnf" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$DNF_INSTALL_METHOD" = "mise" ]; then
-      mise use "dnf@${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "asdf" ]; then
-      asdf global dnf "${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$DNF_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "dnf@${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "dnf@${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "dnf" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "dnf" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/dnf/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "dnf ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "dnf" "default" "${EXACT_VERSION}"
-      log_info "Set default dnf version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env dnf \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "dnf" "$ACTION" "$VERSION" "${DNF_INSTALL_METHOD}"
     ;;
   download)
     if [ "$DNF_INSTALL_METHOD" = "libscript_native" ]; then
@@ -145,15 +92,6 @@ case "$ACTION" in
   install)
     if [ "$DNF_INSTALL_METHOD" = "system" ]; then
       libscript_depends "dnf" || log_info "dnf is not supported or failed to install natively on this OS."
-    elif [ "$DNF_INSTALL_METHOD" = "mise" ]; then
-      mise install "dnf@${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "asdf" ]; then
-      asdf install dnf "${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "dnf@${VERSION}"
-    elif [ "$DNF_INSTALL_METHOD" = "vfox" ]; then
-      vfox add dnf || true
-      vfox install "dnf@${VERSION}"
     else
       # libscript_native implementation
       resolve_exact_version
@@ -162,7 +100,7 @@ case "$ACTION" in
         log_info "Installing dnf ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/dnf/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/dnf/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -197,52 +135,7 @@ case "$ACTION" in
       libscript_symlink_alias "dnf" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$DNF_INSTALL_METHOD" = "libscript_native" ] || [ "$DNF_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-dnf}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $DNF_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "dnf" "$ACTION" "$VERSION" "${DNF_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$DNF_INSTALL_METHOD" = "libscript_native" ] || [ "$DNF_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-dnf}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $DNF_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$DNF_INSTALL_METHOD" = "libscript_native" ] || [ "$DNF_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-dnf}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $DNF_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$DNF_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling dnf $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/dnf/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/dnf/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $DNF_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

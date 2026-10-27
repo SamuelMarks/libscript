@@ -29,6 +29,14 @@
       "description": "Specific version of ghcup to install.",
       "type": "string",
       "default": "latest"
+    },
+    "GHCUP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ghcup binary or archive artifacts."
+    },
+    "GHCUP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ghcup available remote releases."
     }
   }
 }

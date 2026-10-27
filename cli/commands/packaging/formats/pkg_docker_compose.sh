@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,7 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-    base_image="debian:bookworm-slim"
+    base_image='debian:bookworm-slim'
     is_offline=0
     if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
       is_offline=1
@@ -47,9 +46,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         --base|--base-image)
           base_image="$2"
           if [ "$base_image" = "debian" ]; then
-            base_image="debian:bookworm-slim"
+            base_image='debian:bookworm-slim'
           elif [ "$base_image" = "alpine" ]; then
-            base_image="alpine:latest"
+            base_image='alpine:latest'
           fi
           shift 2
           ;;
@@ -84,7 +83,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
     if [ -n "$deps_list" ]; then
       printf '%s\n' "version: '3.8'"
-      printf '%s\n' "services:"
+      printf '%s\n' 'services:'
 
       sorted_deps=$(printf '%b\n' "$deps_list" | awk '
       function get_priority(pkg) {
@@ -125,9 +124,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           df="Dockerfile.$pkg_clean"
           {
             printf '%s\n' "FROM $base_image"
-            printf '%s\n' "ARG TARGETOS=linux"
-            printf '%s\n' "ARG TARGETARCH=amd64"
-            printf '%s\n' "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8"
+            printf '%s\n' 'ARG TARGETOS=linux'
+            printf '%s\n' 'ARG TARGETARCH=amd64'
+            printf '%s\n' 'ENV LC_ALL=C.UTF-8 LANG=C.UTF-8'
             printf '%s\n' "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\""
             printf '%s\n' "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
             printf '%s\n' "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
@@ -152,8 +151,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               } >> "$df"
           fi
           {
-            printf '%s\n' "COPY . /opt/libscript"
-            printf '%s\n' "WORKDIR /opt/libscript"
+            printf '%s\n' 'COPY . /opt/libscript'
+            printf '%s\n' 'WORKDIR /opt/libscript'
             if [ "$is_offline" -eq 1 ]; then
               printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION} --offline"
             else
@@ -202,46 +201,46 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           fi
 
           printf '%s\n' "  $pkg_clean:"
-          printf '%s\n' "    build:"
-          printf '%s\n' "      context: ."
+          printf '%s\n' '    build:'
+          printf '%s\n' '      context: .'
           printf '%s\n' "      dockerfile: $df"
-          printf '%s\n' "    networks:"
-          printf '%s\n' "      - internal_network"
+          printf '%s\n' '    networks:'
+          printf '%s\n' '      - internal_network'
           if [ "$pkg_clean" = "openedx" ]; then
-            printf '%s\n' "    ports:"
+            printf '%s\n' '    ports:'
             printf '%s\n' "      - \"8000:8000\""
             printf '%s\n' "      - \"8001:8001\""
-            printf '%s\n' "    volumes:"
+            printf '%s\n' '    volumes:'
             if [ "$is_offline" -eq 1 ]; then
-              printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+              printf '%s\n' '      - libscript_offline_cache:/opt/libscript_cache:ro'
             fi
-            printf '%s\n' "      - openedx_data:/opt/openedx/data"
-            printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
-            printf '%s\n' "      - openedx_media:/opt/openedx/media"
-            printf '%s\n' "      - openedx_backups:/opt/openedx/backups"
+            printf '%s\n' '      - openedx_data:/opt/openedx/data'
+            printf '%s\n' '      - openedx_logs:/opt/openedx/logs'
+            printf '%s\n' '      - openedx_media:/opt/openedx/media'
+            printf '%s\n' '      - openedx_backups:/opt/openedx/backups'
           elif [ "$is_offline" -eq 1 ]; then
-            printf '%s\n' "    volumes:"
-            printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+            printf '%s\n' '    volumes:'
+            printf '%s\n' '      - libscript_offline_cache:/opt/libscript_cache:ro'
           fi
-          printf '%s\n' "    healthcheck:"
+          printf '%s\n' '    healthcheck:'
           printf '%s\n' "      test: $healthcheck"
-          printf '%s\n' "      interval: 5s"
-          printf '%s\n' "      retries: 5"
-          printf '%s\n' "      start_period: 5s"
+          printf '%s\n' '      interval: 5s'
+          printf '%s\n' '      retries: 5'
+          printf '%s\n' '      start_period: 5s'
 
           if [ -n "$prev_pkg" ]; then
-              printf '%s\n' "    depends_on:"
+              printf '%s\n' '    depends_on:'
               printf '%s\n' "      $prev_pkg:"
-              printf '%s\n' "        condition: service_healthy"
+              printf '%s\n' '        condition: service_healthy'
           fi
 
-          printf '%s\n' "    environment:"
+          printf '%s\n' '    environment:'
           if [ "$is_offline" -eq 1 ]; then
-            printf '%s\n' "      - LIBSCRIPT_OFFLINE=1"
-            printf '%s\n' "      - MYSQL_HOST=mysql"
-            printf '%s\n' "      - REDIS_HOST=redis"
-            printf '%s\n' "      - MONGODB_HOST=mongodb"
-            printf '%s\n' "      - MEILISEARCH_HOST=meilisearch"
+            printf '%s\n' '      - LIBSCRIPT_OFFLINE=1'
+            printf '%s\n' '      - MYSQL_HOST=mysql'
+            printf '%s\n' '      - REDIS_HOST=redis'
+            printf '%s\n' '      - MONGODB_HOST=mongodb'
+            printf '%s\n' '      - MEILISEARCH_HOST=meilisearch'
           fi
           if [ -n "$override" ] && [ "$override" != "null" ]; then
             printf '%s\n' "      - ${pkg_up}_URL=\"$override\""
@@ -253,58 +252,58 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           prev_pkg="$pkg"
 
           if [ "$pkg" = "openedx" ]; then
-            printf '%s\n' "  openedx-workers:"
-            printf '%s\n' "    build:"
-            printf '%s\n' "      context: ."
+            printf '%s\n' '  openedx-workers:'
+            printf '%s\n' '    build:'
+            printf '%s\n' '      context: .'
             printf '%s\n' "      dockerfile: $df"
             printf '%s\n' "    command: [\"/opt/libscript/_lib/web-apps/openedx/workers.sh\", \"start\"]"
-            printf '%s\n' "    networks:"
-            printf '%s\n' "      - internal_network"
-            printf '%s\n' "    volumes:"
+            printf '%s\n' '    networks:'
+            printf '%s\n' '      - internal_network'
+            printf '%s\n' '    volumes:'
             if [ "$is_offline" -eq 1 ]; then
-              printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+              printf '%s\n' '      - libscript_offline_cache:/opt/libscript_cache:ro'
             fi
-            printf '%s\n' "      - openedx_data:/opt/openedx/data"
-            printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
-            printf '%s\n' "    depends_on:"
-            printf '%s\n' "      - openedx"
-            printf '%s\n' "  openedx-beat:"
-            printf '%s\n' "    build:"
-            printf '%s\n' "      context: ."
+            printf '%s\n' '      - openedx_data:/opt/openedx/data'
+            printf '%s\n' '      - openedx_logs:/opt/openedx/logs'
+            printf '%s\n' '    depends_on:'
+            printf '%s\n' '      - openedx'
+            printf '%s\n' '  openedx-beat:'
+            printf '%s\n' '    build:'
+            printf '%s\n' '      context: .'
             printf '%s\n' "      dockerfile: $df"
             printf '%s\n' "    command: [\"/opt/libscript/_lib/web-apps/openedx/workers.sh\", \"start\"]"
-            printf '%s\n' "    networks:"
-            printf '%s\n' "      - internal_network"
-            printf '%s\n' "    volumes:"
+            printf '%s\n' '    networks:'
+            printf '%s\n' '      - internal_network'
+            printf '%s\n' '    volumes:'
             if [ "$is_offline" -eq 1 ]; then
-              printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+              printf '%s\n' '      - libscript_offline_cache:/opt/libscript_cache:ro'
             fi
-            printf '%s\n' "      - openedx_data:/opt/openedx/data"
-            printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
-            printf '%s\n' "    depends_on:"
-            printf '%s\n' "      - openedx"
+            printf '%s\n' '      - openedx_data:/opt/openedx/data'
+            printf '%s\n' '      - openedx_logs:/opt/openedx/logs'
+            printf '%s\n' '    depends_on:'
+            printf '%s\n' '      - openedx'
           fi
         fi
       done
 
       printf '%s\n' ""
-      printf '%s\n' "networks:"
-      printf '%s\n' "  internal_network:"
+      printf '%s\n' 'networks:'
+      printf '%s\n' '  internal_network:'
       if [ "$is_offline" -eq 1 ]; then
-        printf '%s\n' "    internal: true"
+        printf '%s\n' '    internal: true'
       fi
 
       printf '%s\n' ""
-      printf '%s\n' "volumes:"
+      printf '%s\n' 'volumes:'
       if [ "$is_offline" -eq 1 ]; then
-        printf '%s\n' "  libscript_offline_cache:"
+        printf '%s\n' '  libscript_offline_cache:'
       fi
       case "$deps_list" in
         *"openedx"*)
-          printf '%s\n' "  openedx_data:"
-          printf '%s\n' "  openedx_logs:"
-          printf '%s\n' "  openedx_media:"
-          printf '%s\n' "  openedx_backups:"
+          printf '%s\n' '  openedx_data:'
+          printf '%s\n' '  openedx_logs:'
+          printf '%s\n' '  openedx_media:'
+          printf '%s\n' '  openedx_backups:'
           ;;
       esac
     fi

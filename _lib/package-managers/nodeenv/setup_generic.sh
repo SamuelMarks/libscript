@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -52,7 +51,7 @@ VERSION="${NODEENV_VERSION:-latest}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ]; then
-    EXACT_VERSION="1.9.1"
+    EXACT_VERSION='1.9.1'
   else
     EXACT_VERSION="${VERSION}"
   fi
@@ -78,8 +77,8 @@ case "$ACTION" in
     if [ "$NODEENV_INSTALL_METHOD" = "libscript_native" ]; then
       if ! command -v uv >/dev/null 2>&1; then
         if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
-          log_info "Python runtime required for nodeenv. Installing python..."
-          libscript_depends "python" || true
+          log_info 'Python runtime required for nodeenv. Installing python...'
+          libscript_depends 'python' || true
         fi
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${EXACT_VERSION}"
@@ -110,24 +109,24 @@ case "$ACTION" in
       if command -v nodeenv >/dev/null 2>&1; then
         log_info "nodeenv is already installed on the system: $(nodeenv --version 2>/dev/null || true)"
       elif command -v uv >/dev/null 2>&1; then
-        log_info "Installing nodeenv via uv pip..."
+        log_info 'Installing nodeenv via uv pip...'
         if [ "${VERSION}" = "latest" ]; then
           uv tool install nodeenv 2>/dev/null || uv pip install nodeenv
         else
           uv tool install "nodeenv==${EXACT_VERSION}" 2>/dev/null || uv pip install "nodeenv==${EXACT_VERSION}"
         fi
       elif command -v pipx >/dev/null 2>&1; then
-        log_info "Installing nodeenv via pipx..."
+        log_info 'Installing nodeenv via pipx...'
         pipx install "nodeenv==${EXACT_VERSION}" 2>/dev/null || pipx install nodeenv
       elif command -v pip3 >/dev/null 2>&1; then
-        log_info "Installing nodeenv via pip3..."
+        log_info 'Installing nodeenv via pip3...'
         pip3 install --user "nodeenv==${EXACT_VERSION}" 2>/dev/null || pip3 install --user nodeenv
       elif command -v pip >/dev/null 2>&1; then
-        log_info "Installing nodeenv via pip..."
+        log_info 'Installing nodeenv via pip...'
         pip install --user "nodeenv==${EXACT_VERSION}" 2>/dev/null || pip install --user nodeenv
       else
-        log_info "Python package manager required for nodeenv. Installing python..."
-        libscript_depends "python"
+        log_info 'Python package manager required for nodeenv. Installing python...'
+        libscript_depends 'python'
         pip3 install --user nodeenv || true
       fi
     fi

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "mise" ]; then
-      mise ls ansible-galaxy || true
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
-      asdf list ansible-galaxy || true
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls ansible_galaxy || true
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "ansible-galaxy" "$ACTION" "$VERSION" "${ANSIBLE_GALAXY_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote ansible-galaxy || true
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all ansible-galaxy || true
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all ansible_galaxy || true
+    if [ -n "${ANSIBLE_GALAXY_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${ANSIBLE_GALAXY_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${ANSIBLE_GALAXY_RELEASES_URL:-}" ]; then
-        curl -sSL "${ANSIBLE_GALAXY_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/ansible-galaxy" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/ansible/ansible" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "mise" ]; then
-      mise use "ansible-galaxy@${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
-      asdf global ansible-galaxy "${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "ansible_galaxy@${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "ansible-galaxy@${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "ansible-galaxy" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "ansible-galaxy" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "ansible-galaxy ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "ansible-galaxy" "default" "${EXACT_VERSION}"
-      log_info "Set default ansible-galaxy version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env ansible-galaxy \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "ansible-galaxy" "$ACTION" "$VERSION" "${ANSIBLE_GALAXY_INSTALL_METHOD}"
     ;;
   download)
     if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "ansible-galaxy"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "mise" ]; then
-      mise install "ansible-galaxy@${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
-      asdf install ansible-galaxy "${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "ansible-galaxy@${VERSION}"
-    elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
-      vfox add ansible-galaxy || true
-      vfox install "ansible-galaxy@${VERSION}"
+      libscript_depends 'ansible-galaxy'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -161,7 +99,7 @@ case "$ACTION" in
         log_info "Installing ansible-galaxy ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ansible-galaxy/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ansible-galaxy/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -188,11 +126,11 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ] || [ "$UNAME_LOWER" = "darwin" ]; then
-              log_info "Falling back to system package manager or pip for ansible-galaxy..."
+              log_info 'Falling back to system package manager or pip for ansible-galaxy...'
               if command -v brew >/dev/null 2>&1; then
                 libscript_depends_via brew ansible || true
               fi
-              libscript_depends "ansible-galaxy" || true
+              libscript_depends 'ansible-galaxy' || true
               if ! command -v ansible-galaxy >/dev/null 2>&1; then
                 if command -v uv >/dev/null 2>&1; then
                   uv tool install ansible-core || true
@@ -218,52 +156,7 @@ case "$ACTION" in
       libscript_symlink_alias "ansible-galaxy" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "libscript_native" ] || [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ansible-galaxy}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $ANSIBLE_GALAXY_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "ansible-galaxy" "$ACTION" "$VERSION" "${ANSIBLE_GALAXY_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "libscript_native" ] || [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ansible-galaxy}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $ANSIBLE_GALAXY_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "libscript_native" ] || [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ansible-galaxy}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $ANSIBLE_GALAXY_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling ansible-galaxy $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $ANSIBLE_GALAXY_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

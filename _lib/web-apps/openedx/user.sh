@@ -1,25 +1,9 @@
 #!/bin/sh
 # ## Overview
-# User management utility for Open edX.
-# Provides interactive and scriptable administration for Django users (create, set_password, list).
+# User management utility for Open edX (create, set_password, list).
 #
 # ## Usage
-#   ./user.sh create <username> <email> [--password <password>] [--staff] [--superuser]
-#   ./user.sh set_password <username> <password>
-#   ./user.sh list
-#
-# ## Parameters
-# - `create`: Creates or updates an Open edX user account idempotently.
-# - `set_password`: Updates the password for an existing user account.
-# - `list`: Lists active staff and superuser accounts.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success.
-# - `1`: Invalid arguments, missing dependencies, or command failure.
+# ./user.sh <create|set_password|list> [args...]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -27,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -90,8 +73,8 @@ user_create() {
   shift 2
 
   _password=""
-  _is_staff="False"
-  _is_superuser="False"
+  _is_staff='False'
+  _is_superuser='False'
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -101,12 +84,12 @@ user_create() {
         shift 2
         ;;
       --staff)
-        _is_staff="True"
+        _is_staff='True'
         shift
         ;;
       --superuser)
-        _is_staff="True"
-        _is_superuser="True"
+        _is_staff='True'
+        _is_superuser='True'
         shift
         ;;
       *)
@@ -156,7 +139,7 @@ user_set_password() {
 # ## user_list
 # Lists active staff and superuser accounts via user_helper.sh.
 user_list() {
-  log_info "Listing Open edX staff and superuser accounts..."
+  log_info 'Listing Open edX staff and superuser accounts...'
   "${USER_HELPER}" list "${OPENEDX_INSTALL_DIR}"
 }
 

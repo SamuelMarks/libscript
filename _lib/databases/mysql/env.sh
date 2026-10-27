@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,6 +41,8 @@ export MYSQL_CHARACTER_SET="${MYSQL_CHARACTER_SET:-utf8mb4}"
 export MYSQL_COLLATION="${MYSQL_COLLATION:-utf8mb4_unicode_ci}"
 
 MYSQL_VERSION="${MYSQL_VERSION:-8.4.11}"
-if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${MYSQL_VERSION}/bin" ]; then
-  libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${MYSQL_VERSION}/bin"
+if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mysql/${MYSQL_VERSION}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/mysql/${MYSQL_VERSION}/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,11 +48,11 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${POWERSHELL_VERSION}" = "latest" ] || [ "${POWERSHELL_VERSION}" = "lts" ]; then
-    libscript_depends "curl"
+    libscript_depends 'curl'
 
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/PowerShell/PowerShell/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${POWERSHELL_VERSION}"
@@ -62,15 +61,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${POWERSHELL_INSTALL_METHOD}" = "mise" ]; then
-      mise ls powershell
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list powershell
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls powershell
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
+    if [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
       powershell --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/" 2>/dev/null || true
@@ -78,31 +69,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${POWERSHELL_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote powershell
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all powershell
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all powershell
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for powershell"
+      printf '%s\n' 'Fetching remote versions not implemented generically for powershell'
     fi
     exit 0
     ;;
   use)
-    if [ "${POWERSHELL_INSTALL_METHOD}" = "mise" ]; then
-      mise use "powershell@${POWERSHELL_VERSION}"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global powershell "${POWERSHELL_VERSION}"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "powershell@${POWERSHELL_VERSION}"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
+    if [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -118,7 +93,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "powershell" "default" "${EXACT_VERSION}"
       log_info "Set default powershell version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env powershell \"${POWERSHELL_VERSION}\")"
     fi
     exit 0
@@ -139,114 +114,55 @@ case "$ACTION" in
 
     if [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
       if ! libscript_depends 'powershell'; then
-        log_info "System package manager does not have powershell. Falling back to native..."
-        POWERSHELL_INSTALL_METHOD="libscript_native"
+        log_info 'System package manager does not have powershell. Falling back to native...'
+        POWERSHELL_INSTALL_METHOD='libscript_native'
       fi
     fi
-    if [ "${POWERSHELL_INSTALL_METHOD}" = "mise" ]; then
-      mise install "powershell@${POWERSHELL_VERSION}"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install powershell "${POWERSHELL_VERSION}"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "powershell@${POWERSHELL_VERSION}"
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add powershell || true
-      vfox install "powershell@${POWERSHELL_VERSION}"
-    else
-        # libscript_native implementation
-        resolve_exact_version
-        if [ "${EXACT_VERSION}" = "latest" ]; then
-           libscript_depends "curl"
-    libscript_depends "curl"
-
-           EXACT_VERSION=$(curl -sL https://api.github.com/repos/PowerShell/PowerShell/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
-        fi
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/${EXACT_VERSION}"
-        if [ ! -d "${TARGET_DIR}" ]; then
-          log_info "Installing powershell ${VERSION} natively to ${TARGET_DIR}..."
-          mkdir -p "${TARGET_DIR}/bin"
-          if [ "${TARGET_OS:-}" = "alpine" ] || [ "${UNAME_LOWER:-}" = "freebsd" ]; then
-            libscript_depends "powershell" || true
-            if command -v pwsh >/dev/null 2>&1; then
-              ln -sf "$(command -v pwsh)" "${TARGET_DIR}/bin/pwsh"
-              ln -sf "$(command -v pwsh)" "${TARGET_DIR}/pwsh"
-            fi
-          else
-            ARCH=$(uname -m)
-            OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-            if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-            if [ "$OS" = "darwin" ]; then OS="osx"; fi
-            URL="https://github.com/PowerShell/PowerShell/releases/download/v${EXACT_VERSION}/powershell-${EXACT_VERSION}-${OS}-${ARCH}.tar.gz"
-            TEMP_FILE=$(mktemp)
-            libscript_depends "curl" "tar"
-            if [ "$OS" = "linux" ]; then libscript_depends "libicu" || true; fi
-            if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
-              log_error "Failed to download powershell from $URL"
-              rm -f "$TEMP_FILE.tar.gz"
-              exit 1
-            fi
-            tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" || true
-            ln -sf "${TARGET_DIR}/pwsh" "${TARGET_DIR}/bin/pwsh"
-            chmod +x "${TARGET_DIR}/pwsh" || true
-            rm -f "$TEMP_FILE.tar.gz"
+      # libscript_native implementation
+      resolve_exact_version
+      if [ "${EXACT_VERSION}" = "latest" ]; then
+         libscript_depends 'curl'
+         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+      fi
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing powershell ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if [ "${TARGET_OS:-}" = "alpine" ] || [ "${UNAME_LOWER:-}" = "freebsd" ]; then
+          libscript_depends 'powershell' || true
+          if command -v pwsh >/dev/null 2>&1; then
+            ln -sf "$(command -v pwsh)" "${TARGET_DIR}/bin/pwsh"
+            ln -sf "$(command -v pwsh)" "${TARGET_DIR}/pwsh"
           fi
         else
-          log_info "powershell ${VERSION} is already installed."
+          ARCH=$(uname -m)
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+          if [ "$OS" = "darwin" ]; then OS="osx"; fi
+          URL="https://github.com/PowerShell/PowerShell/releases/download/v${EXACT_VERSION}/powershell-${EXACT_VERSION}-${OS}-${ARCH}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends 'curl' 'tar'
+          if [ "$OS" = "linux" ]; then libscript_depends "libicu" || true; fi
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download powershell from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
+          fi
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" || true
+          ln -sf "${TARGET_DIR}/pwsh" "${TARGET_DIR}/bin/pwsh"
+          chmod +x "${TARGET_DIR}/pwsh" || true
+          rm -f "$TEMP_FILE.tar.gz"
         fi
-        libscript_symlink_alias "powershell" "latest" "${EXACT_VERSION}"
-        libscript_symlink_alias "powershell" "default" "${EXACT_VERSION}"
-        if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
-          libscript_symlink_alias "powershell" "$VERSION" "${EXACT_VERSION}"
-        fi
-        fi
-
+      else
+        log_info "powershell ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "powershell" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "powershell" "default" "${EXACT_VERSION}"
+      if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+        libscript_symlink_alias "powershell" "$VERSION" "${EXACT_VERSION}"
+      fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$POWERSHELL_INSTALL_METHOD" = "libscript_native" ] || [ "$POWERSHELL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-powershell}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $POWERSHELL_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "powershell" "$ACTION" "$VERSION" "${POWERSHELL_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$POWERSHELL_INSTALL_METHOD" = "libscript_native" ] || [ "$POWERSHELL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-powershell}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $POWERSHELL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$POWERSHELL_INSTALL_METHOD" = "libscript_native" ] || [ "$POWERSHELL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-powershell}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $POWERSHELL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$POWERSHELL_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling powershell $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/powershell/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $POWERSHELL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

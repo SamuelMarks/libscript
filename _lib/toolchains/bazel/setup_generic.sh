@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,9 +48,9 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${BAZEL_VERSION}" = "latest" ] || [ "${BAZEL_VERSION}" = "lts" ]; then
-    EXACT_VERSION=$(curl -sL https://api.github.com/repos/bazelbuild/bazel/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/bazelbuild/bazel/releases/latest" | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${BAZEL_VERSION}"
@@ -60,15 +59,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${BAZEL_INSTALL_METHOD}" = "mise" ]; then
-      mise ls bazel
-    elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list bazel
-    elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls bazel
-    elif [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
+    if [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
       bazel --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/" 2>/dev/null || true
@@ -76,31 +67,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${BAZEL_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote bazel
-    elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all bazel
-    elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all bazel
-    elif [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for bazel"
+      printf '%s\n' 'Fetching remote versions not implemented generically for bazel'
     fi
     exit 0
     ;;
   use)
-    if [ "${BAZEL_INSTALL_METHOD}" = "mise" ]; then
-      mise use "bazel@${BAZEL_VERSION}"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global bazel "${BAZEL_VERSION}"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "bazel@${BAZEL_VERSION}"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
+    if [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -116,7 +91,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "bazel" "default" "${EXACT_VERSION}"
       log_info "Set default bazel version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env bazel \"${BAZEL_VERSION}\")"
     fi
     exit 0
@@ -137,25 +112,16 @@ case "$ACTION" in
 
     if [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'bazel'
-    elif [ "${BAZEL_INSTALL_METHOD}" = "mise" ]; then
-      mise install "bazel@${BAZEL_VERSION}"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install bazel "${BAZEL_VERSION}"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "bazel@${BAZEL_VERSION}"
-    elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add bazel || true
-      vfox install "bazel@${BAZEL_VERSION}"
     else
         # libscript_native implementation
         if [ -f /etc/alpine-release ]; then
-          log_info "bazel official binaries require glibc and cannot run on Alpine Linux. Skipping."
+          log_info 'bazel official binaries require glibc and cannot run on Alpine Linux. Skipping.'
           exit 0
         fi
 
         resolve_exact_version
         if [ "${EXACT_VERSION}" = "latest" ]; then
-           EXACT_VERSION="7.4.1"
+           EXACT_VERSION='7.4.1'
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
@@ -165,15 +131,15 @@ case "$ACTION" in
           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
           if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
           if [ "$UNAME_LOWER" = "freebsd" ]; then
-            log_info "No native binary for FreeBSD. Falling back to system package manager for bazel..."
-            libscript_depends "bazel"
+            log_info 'No native binary for FreeBSD. Falling back to system package manager for bazel...'
+            libscript_depends 'bazel'
             if command -v "bazel" >/dev/null 2>&1; then
               ln -sf "$(command -v "bazel")" "${TARGET_DIR}/bin/bazel"
             fi
           else
             URL="https://github.com/bazelbuild/bazel/releases/download/${EXACT_VERSION}/bazel-${EXACT_VERSION}-${OS}-${ARCH}"
             TEMP_FILE=$(mktemp)
-            libscript_depends "curl"
+            libscript_depends 'curl'
             if ! libscript_download "$URL" "$TEMP_FILE"; then
               log_error "Failed to download bazel from $URL"
               rm -f "$TEMP_FILE"
@@ -194,52 +160,7 @@ case "$ACTION" in
       fi
 
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$BAZEL_INSTALL_METHOD" = "libscript_native" ] || [ "$BAZEL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bazel}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $BAZEL_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "bazel" "$ACTION" "$VERSION" "${BAZEL_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$BAZEL_INSTALL_METHOD" = "libscript_native" ] || [ "$BAZEL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bazel}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $BAZEL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$BAZEL_INSTALL_METHOD" = "libscript_native" ] || [ "$BAZEL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bazel}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $BAZEL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$BAZEL_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling bazel $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $BAZEL_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

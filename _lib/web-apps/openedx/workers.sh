@@ -1,28 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Background worker and Celery beat scheduler management utility for Open edX.
-# Manages lms-worker, cms-worker, and celery-beat lifecycle (start, stop, restart, status).
 #
 # ## Usage
-#   ./workers.sh start
-#   ./workers.sh stop
-#   ./workers.sh restart
-#   ./workers.sh status
-#   ./workers.sh help
-#
-# ## Parameters
-# - `start`: Launches background worker daemons idempotently.
-# - `stop`: Gracefully terminates background worker processes.
-# - `restart`: Stops then starts all workers.
-# - `status`: Reports active PID and status for worker daemons.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success.
-# - `1`: Process control failure or missing requirements.
+# ./workers.sh <start|stop|restart|status|help>
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -30,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -94,7 +74,7 @@ resolve_python() {
 # ## workers_start
 # Starts all workers via workers_helper.sh.
 workers_start() {
-  log_info "Starting Open edX Celery workers and scheduler..."
+  log_info 'Starting Open edX Celery workers and scheduler...'
   _py="$(resolve_python)"
   "${WORKERS_HELPER}" start "${RUN_DIR}" "${LOG_DIR}" "${_py}" "${OPENEDX_INSTALL_DIR}"
   log_success "All Open edX background workers started."
@@ -103,7 +83,7 @@ workers_start() {
 # ## workers_stop
 # Stops all workers via workers_helper.sh.
 workers_stop() {
-  log_info "Stopping Open edX Celery workers and scheduler..."
+  log_info 'Stopping Open edX Celery workers and scheduler...'
   "${WORKERS_HELPER}" stop "${RUN_DIR}"
   log_success "All Open edX background workers stopped."
 }

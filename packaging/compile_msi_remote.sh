@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,7 +49,7 @@ candle.exe -nologo -arch arm64 -out "C:\libscript\packaging\${OUT_FILE}_payload.
 light.exe -nologo -sval -ext WixUIExtension -out "C:\libscript\packaging\${OUT_FILE}.msi" "C:\libscript\packaging\${OUT_FILE}.wixobj" "C:\libscript\packaging\${OUT_FILE}_payload.wixobj"
 PS1_EOF
 
-sed -i '' "s|\${OUT_FILE}|${OUT_FILE}|g" /tmp/remote_build.ps1
+sed "s|\${OUT_FILE}|${OUT_FILE}|g" /tmp/remote_build.ps1 > /tmp/remote_build.ps1.tmp && mv /tmp/remote_build.ps1.tmp /tmp/remote_build.ps1
 
 # Sync whole repo to VM for remote build, excluding cache and build stuff
 scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" packaging/${OUT_FILE}.wxs packaging/${OUT_FILE}_payload.wxs /tmp/remote_build.ps1 "vagrant@127.0.0.1:C:/libscript/packaging/"

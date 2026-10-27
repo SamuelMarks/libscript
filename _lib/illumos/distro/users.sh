@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -99,8 +98,11 @@ EOF
 fi
 
 if ! grep -q "staff:.*${PRIMARY_USER}" "${SYSROOT}/etc/group" 2>/dev/null; then
-  sed -i '' "s/^staff::10:/staff::10:${PRIMARY_USER}/" "${SYSROOT}/etc/group" 2>/dev/null || 
-  sed -i "s/^staff::10:/staff::10:${PRIMARY_USER}/" "${SYSROOT}/etc/group" 2>/dev/null || true
+  if sed "s/^staff::10:/staff::10:${PRIMARY_USER}/" "${SYSROOT}/etc/group" > "${SYSROOT}/etc/group.tmp" 2>/dev/null; then
+    mv "${SYSROOT}/etc/group.tmp" "${SYSROOT}/etc/group"
+  else
+    rm -f "${SYSROOT}/etc/group.tmp"
+  fi
 fi
 
 # 3. Solaris / illumos RBAC attributes (/etc/user_attr)

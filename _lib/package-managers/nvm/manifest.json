@@ -5,5 +5,6 @@
   "os_whitelist": ["all"],
   "title": "nvm",
   "description": "Bootstrap module for `nvm` (Node Version Manager).",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/nvm-sh/nvm"
 }

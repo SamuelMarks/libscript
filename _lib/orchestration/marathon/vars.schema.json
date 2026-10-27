@@ -14,7 +14,7 @@
     "MARATHON_INSTALL_METHOD": {
       "description": "How to install Marathon ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     },
     "MARATHON_HTTP_PORT": {
@@ -36,6 +36,18 @@
       "description": "Advertised hostname or IP address for the Marathon scheduler node.",
       "type": "string",
       "default": "127.0.0.1"
+    },
+    "MARATHON_HOME": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for marathon (MARATHON_HOME)."
+    },
+    "MARATHON_STATE_DIR": {
+      "type": "string",
+      "description": "Filesystem directory or path configuration for marathon (MARATHON_STATE_DIR)."
+    },
+    "MARATHON_URL": {
+      "type": "string",
+      "description": "Configuration variable MARATHON_URL for marathon."
     }
   }
 }

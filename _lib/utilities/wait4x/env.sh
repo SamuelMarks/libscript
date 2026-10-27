@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,11 +35,13 @@ unset SCRIPT_NAME || true
 
 WAIT4X_VERSION="${WAIT4X_VERSION:-latest}"
 if [ "${WAIT4X_VERSION}" = "latest" ]; then
-  EXACT_VERSION="latest"
+  EXACT_VERSION='latest'
 else
   EXACT_VERSION="${WAIT4X_VERSION}"
 fi
 
-export WAIT4X_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${EXACT_VERSION}"
+export WAIT4X_ROOT="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/wait4x/${EXACT_VERSION}"
 libscript_path_prepend "$WAIT4X_ROOT/bin"
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

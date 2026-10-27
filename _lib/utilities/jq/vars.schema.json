@@ -14,6 +14,14 @@
       "description": "Specific version of jq to install.",
       "type": "string",
       "default": "latest"
+    },
+    "JQ_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading jq binary or archive artifacts."
+    },
+    "JQ_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying jq available remote releases."
     }
   }
 }

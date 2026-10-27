@@ -14,6 +14,14 @@
       "description": "Specific version of curl to install.",
       "type": "string",
       "default": "latest"
+    },
+    "CURL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading curl binary or archive artifacts."
+    },
+    "CURL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying curl available remote releases."
     }
   }
 }

@@ -10,7 +10,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,7 +34,9 @@ unset SCRIPT_NAME || true
 
 export SWIFT_INSTALL_METHOD="${SWIFT_INSTALL_METHOD:-system}"
 SWIFT_VERSION="${SWIFT_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${SWIFT_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/swift/${SWIFT_VERSION}/bin"
 if [ -d "/usr/local/swift510/bin" ]; then
   libscript_path_prepend "/usr/local/swift510/bin"
 fi
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

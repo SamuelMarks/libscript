@@ -14,6 +14,14 @@
       "description": "Specific version of macports to install.",
       "type": "string",
       "default": "latest"
+    },
+    "MACPORTS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading macports binary or archive artifacts."
+    },
+    "MACPORTS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying macports available remote releases."
     }
   }
 }

@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,7 +31,7 @@ if [ "${CMD:-db-search}" = "db-search" ]; then
   query="$1"
   DB_FILE="${LIBSCRIPT_ROOT_DIR:-$SCRIPT_DIR}/libscript.sqlite"
   if [ ! -f "$DB_FILE" ]; then
-    printf '%s\n' "Error: Database not found. Run update-db first." >&2
+    printf '%s\n' 'Error: Database not found. Run update-db first.' >&2
     exit 1
   fi
   sqlite3 -column -header "$DB_FILE" "

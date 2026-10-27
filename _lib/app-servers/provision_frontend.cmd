@@ -12,7 +12,7 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -187,7 +187,13 @@ if exist "!src_dir!\package.json" (
     set "_check_out=!out_dir!"
     if "!_check_out!"=="" set "_check_out=dist"
     set "_check_out_win=!_check_out:/=\!"
-    if not "%FORCE_REBUILD%"=="1" if exist "!src_dir!\!_check_out_win!\index.html" if exist "!src_dir!\.libscript_build.sha256" (
+    set "_can_reuse_fe=0"
+    if not "%FORCE_REBUILD%"=="1" (
+        if exist "!src_dir!\!_check_out_win!\index.html" (
+            if exist "!src_dir!\.libscript_build.sha256" set "_can_reuse_fe=1"
+        )
+    )
+    if "!_can_reuse_fe!"=="1" (
         echo [REUSE] Frontend build in '!src_dir!\!_check_out_win!' is up-to-date.
     ) else (
         pushd "!src_dir!"

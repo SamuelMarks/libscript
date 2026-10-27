@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,13 +36,13 @@ export LIBSCRIPT_ROOT_DIR
 # Displays usage instructions and command-line options.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s\n' "Discovers and inspects storage devices on Linux, FreeBSD, and illumos."
+  printf '%s\n' 'Discovers and inspects storage devices on Linux, FreeBSD, and illumos.'
   printf '
 '
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --json              Output disk information in JSON format."
-  printf '%s\n' "  --wipe <device>     Destructively wipe partition tables and metadata on device."
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' 'Options:'
+  printf '%s\n' '  --json              Output disk information in JSON format.'
+  printf '%s\n' '  --wipe <device>     Destructively wipe partition tables and metadata on device.'
+  printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
 }
 
 # ## detect_os
@@ -171,11 +170,11 @@ probe_linux_disks() {
       [ -f "$block/size" ] && _size_sectors=$(cat "$block/size")
       _size_bytes=$((_size_sectors * 512))
       _size_gib=$((_size_bytes / 1024 / 1024 / 1024))
-      _rota="1"
+      _rota='1'
       [ -f "$block/queue/rotational" ] && _rota=$(cat "$block/queue/rotational")
-      _model="Unknown"
+      _model='Unknown'
       [ -f "$block/device/model" ] && _model=$(tr -s ' ' < "$block/device/model")
-      _tran="local"
+      _tran='local'
       [ -f "$block/device/transport" ] && _tran=$(cat "$block/device/transport")
 
       printf '%-15s %-10s %-8s %-6s %-12s %-20s\n' "/dev/${_dev_name}" "${_size_gib}G" "disk" "$_rota" "$_tran" "$_model"
@@ -241,13 +240,13 @@ probe_illumos_disks() {
   fi
 }
 
-FORMAT_MODE="table"
+FORMAT_MODE='table'
 WIPE_TARGET=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --json)
-      FORMAT_MODE="json"
+      FORMAT_MODE='json'
       shift
       ;;
     --auto-data-disk)

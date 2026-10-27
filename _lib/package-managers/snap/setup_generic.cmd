@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -89,10 +89,6 @@ goto :action_install
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
-if "%SNAP_INSTALL_METHOD%"=="mise" ( mise ls snap & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf list snap & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="vfox" ( vfox ls snap & exit /b 0 )
 if "%SNAP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\snap" ( dir /b "%LIBSCRIPT_HOME%\snap" )
 exit /b 0
@@ -100,13 +96,9 @@ exit /b 0
 :: ## action_ls_remote
 :: Lists upstream release versions available for download.
 :action_ls_remote
-if "%SNAP_INSTALL_METHOD%"=="mise" ( mise ls-remote snap & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf list all snap & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="vfox" ( vfox ls all snap & exit /b 0 )
 if "%SNAP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
 if not "%SNAP_RELEASES_URL%"=="" (
-    curl -sSL "%SNAP_RELEASES_URL%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "%SNAP_RELEASES_URL%"
 ) else (
     git ls-remote --tags "https://github.com/snap-stanford/snap" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
@@ -115,10 +107,6 @@ exit /b 0
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
-if "%SNAP_INSTALL_METHOD%"=="mise" ( mise use "snap@%SNAP_VERSION%" & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf global snap "%SNAP_VERSION%" & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="vfox" ( vfox use "snap@%SNAP_VERSION%" & exit /b 0 )
 if "%SNAP_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
 if "%SNAP_VERSION%"=="latest" (set "EXACT_VERSION=%SNAP_VERSION%"
@@ -132,8 +120,11 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\snap\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
 
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
@@ -158,10 +149,6 @@ if "%SNAP_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends snap
     exit /b !errorlevel!
 )
-if "%SNAP_INSTALL_METHOD%"=="mise" ( mise install "snap@%SNAP_VERSION%" & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf install snap "%SNAP_VERSION%" & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="pkgx" ( pkgx install "snap@%SNAP_VERSION%" & exit /b 0 )
-if "%SNAP_INSTALL_METHOD%"=="vfox" ( vfox add snap & vfox install "snap@%SNAP_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
@@ -186,70 +173,23 @@ if not exist "%TARGET_DIR%\bin" (
 )
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
-    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
-    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+    if exist "%ALIAS_DIR%" (
+        dir /al "%ALIAS_DIR%" >nul 2>&1
+        if not errorlevel 1 rmdir "%ALIAS_DIR%" >nul 2>&1
+    )
+    if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
+:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_snap"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else if "%SNAP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
-) else (
-    echo %ACTION% not natively implemented for %SNAP_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_snap"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else if "%SNAP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
-) else (
-    echo install-service not implemented for %SNAP_INSTALL_METHOD%.
-)
-exit /b 0
-
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
-if "%LIBSCRIPT_SERVICE_NAME%"=="" (
-    if "%PACKAGE_NAME%"=="" (
-        set "SVC_NAME=libscript_snap"
-    ) else (
-        set "SVC_NAME=libscript_%PACKAGE_NAME%"
-    )
-) else (
-    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-)
-if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else if "%SNAP_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
-) else (
-    echo uninstall-service not implemented for %SNAP_INSTALL_METHOD%.
-)
-exit /b 0
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "snap" "%ACTION%" "%SNAP_VERSION%" "%SNAP_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%\\bin\\snap.exe\"" "%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
+exit /b !errorlevel!

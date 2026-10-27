@@ -18,6 +18,14 @@
       "description": "Specific version of krew to install.",
       "type": "string",
       "default": "latest"
+    },
+    "KREW_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading krew binary or archive artifacts."
+    },
+    "KREW_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying krew available remote releases."
     }
   }
 }

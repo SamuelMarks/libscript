@@ -5,6 +5,9 @@
 # PowerShell setup_generic script for VirtualBox on Windows.
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -14,9 +17,9 @@ if ($Action -eq "install") {
         Write-Output "VirtualBox is already installed."
     } else {
         if (Get-Command winget -ErrorAction SilentlyContinue) {
-            winget install --silent --force --id=Oracle.VirtualBox -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Oracle.VirtualBox\")
         } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-            choco install -y virtualbox
+    libscript_depends @(\"virtualbox\")
         } else {
             Write-Error "Neither winget nor choco found to install VirtualBox."
             exit 1
@@ -24,8 +27,8 @@ if ($Action -eq "install") {
     }
 
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-        winget install --silent --force --id=Oracle.VirtualBoxExtensionPack -e --accept-package-agreements --accept-source-agreements 2>$null
+    libscript_depends @(\"Oracle.VirtualBoxExtensionPack\")
     } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-        choco install -y virtualbox-extensionpack 2>$null
+    libscript_depends @(\"virtualbox-extensionpack\")
     }
 }

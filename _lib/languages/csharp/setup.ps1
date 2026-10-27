@@ -13,6 +13,8 @@ Execute this script to install and configure csharp on the local system.
 #>
 
 #!/usr/bin/env pwsh
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $InstallMethod = $env:CSHARP_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
@@ -47,15 +49,7 @@ function Resolve-CsharpChannel {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls dotnet
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls csharp
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             dotnet --list-sdks
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -67,15 +61,7 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote dotnet
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls csharp
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
             Write-Host "8.0"
@@ -86,15 +72,7 @@ switch ($Action) {
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "dotnet@${CsharpVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls csharp
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Channel = Resolve-CsharpChannel
@@ -174,18 +152,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Microsoft.DotNet.SDK.8 -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Microsoft.DotNet.SDK.8\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y Microsoft.DotNet.SDK.8
+    libscript_depends @(\"Microsoft.DotNet.SDK.8\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "dotnet@${CsharpVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls csharp; exit 1
         } else {
             $Channel = Resolve-CsharpChannel
             $CsharpDir = Get-LibscriptVersionDir -Component "csharp" -Version $Channel
@@ -201,7 +171,7 @@ switch ($Action) {
             }
 
             $InstallPs1 = Join-Path [System.IO.Path]::GetTempPath() "dotnet-install.ps1"
-            Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile $InstallPs1
+            libscript_download "https://dot.net/v1/dotnet-install.ps1" $InstallPs1
 
             & pwsh -NoProfile -ExecutionPolicy unrestricted -Command $InstallPs1 -Channel $Channel -InstallDir $CsharpDir
 

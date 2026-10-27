@@ -1,25 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Database console and query execution wrapper for Open edX.
-# Provides unified CLI access to MySQL, MongoDB, and Redis datastores.
+# Database console and query execution wrapper for Open edX (MySQL, MongoDB, Redis).
 #
 # ## Usage
-#   ./dbshell.sh [mysql|mongo|redis|query <sql>|help]
-#
-# ## Parameters
-# - `mysql`: Connects to MySQL using configured stack credentials.
-# - `mongo`: Connects to MongoDB via mongosh or mongo client.
-# - `redis`: Connects to Redis via redis-cli.
-# - `query`: Runs a non-interactive SQL query against primary MySQL database.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`, `MYSQL_PORT`.
-# - `MONGODB_HOST`, `MONGODB_PORT`, `MONGODB_DATABASE`.
-# - `REDIS_HOST`, `REDIS_PORT`.
-#
-# ## Exit Codes
-# - `0`: Success; `1`: Client invocation failure or missing database client binary.
+# ./dbshell.sh [mysql|mongo|redis|query <sql>|help]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -27,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else

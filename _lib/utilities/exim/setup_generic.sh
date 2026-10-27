@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -76,49 +75,12 @@ case "$ACTION" in
         sysrc exim_enable="YES" || true
       fi
     elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
-      libscript_depends "exim" || true
+      libscript_depends 'exim' || true
     else
-      libscript_depends "exim"
+      libscript_depends 'exim'
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-exim}"
-    libscript_service "$ACTION" "$service_name" "$@"
-    exit 0
-    ;;
-  install-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-exim}"
-    libscript_install_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall-service)
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-    export SCRIPT_NAME
-    . "${SCRIPT_NAME}"
-    service_name="${LIBSCRIPT_SERVICE_NAME:-exim}"
-    libscript_uninstall_service "$service_name" "$@"
-    exit 0
-    ;;
-  uninstall)
-    log_info "Uninstalling Exim..."
-    exit 0
-    ;;
-  test)
-    if command -v exim >/dev/null 2>&1; then
-      exim -bV
-      exit 0
-    elif command -v exim4 >/dev/null 2>&1; then
-      exim4 -bV
-      exit 0
-    else
-      printf 'exim binary not found in PATH\n' >&2
-      exit 1
-    fi
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "exim" "$ACTION" "$VERSION" "${EXIM_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

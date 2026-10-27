@@ -13,6 +13,9 @@ Execute this script to install and configure gradle on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 #!/usr/bin/env pwsh
 
@@ -43,7 +46,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 function Resolve-ExactVersion {
     if ($GradleVersion -eq "latest") {
         try {
-            $Resp = Invoke-RestMethod -Uri "https://services.gradle.org/versions/current"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://services.gradle.org/versions/current"
             $ExactVersion = $Resp.version
         } catch {
             $ExactVersion = "8.7"
@@ -57,15 +60,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls gradle
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls gradle
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             gradle --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -77,32 +72,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote gradle
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls gradle
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://services.gradle.org/versions/all"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://services.gradle.org/versions/all"
             $Resp | Select-Object -First 30 | ForEach-Object { $_.version }
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "gradle@${GradleVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls gradle
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $Info = Resolve-ExactVersion
@@ -173,18 +152,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Gradle.Gradle -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Gradle.Gradle\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y gradle
+    libscript_depends @(\"gradle\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "gradle@${GradleVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls gradle; exit 1
         } else {
             $Info = Resolve-ExactVersion
             $ExactVersion = $Info.ExactVersion
@@ -209,7 +180,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() "gradle-${ExactVersion}.zip"
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $GradleDir"
             Expand-Archive -Path $TempZip -DestinationPath $GradleDir -Force

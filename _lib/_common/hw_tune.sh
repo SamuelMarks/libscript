@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,20 +60,20 @@ libscript_detect_hardware() {
   export LIBSCRIPT_HW_CORES="${LIBSCRIPT_HW_CORES:-$_cores}"
   export LIBSCRIPT_HW_MEM_MB="${LIBSCRIPT_HW_MEM_MB:-$_mem_mb}"
 
-  _simd="generic"
+  _simd='generic'
   if [ -r /proc/cpuinfo ]; then
     if grep -q "avx512" /proc/cpuinfo 2>/dev/null; then
-      _simd="avx512"
+      _simd='avx512'
     elif grep -q "avx2" /proc/cpuinfo 2>/dev/null; then
-      _simd="avx2"
+      _simd='avx2'
     elif grep -q "asimd\|neon" /proc/cpuinfo 2>/dev/null; then
-      _simd="neon"
+      _simd='neon'
     fi
   elif command -v sysctl >/dev/null 2>&1; then
     if [ "$(uname -m 2>/dev/null || true)" = "arm64" ] || [ "$(uname -m 2>/dev/null || true)" = "aarch64" ]; then
-      _simd="neon"
+      _simd='neon'
     elif sysctl -n machdep.cpu.leaf7_features 2>/dev/null | grep -qi "AVX2"; then
-      _simd="avx2"
+      _simd='avx2'
     fi
   fi
   export LIBSCRIPT_HW_SIMD="${LIBSCRIPT_HW_SIMD:-$_simd}"

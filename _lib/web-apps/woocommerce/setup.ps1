@@ -13,6 +13,9 @@ Execute this script to install and configure woocommerce on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $WwwRoot = if ($env:WOOCOMMERCE_WWWROOT) { $env:WOOCOMMERCE_WWWROOT } else { "C:\inetpub\wwwroot\wordpress" }
 $WooVersion = if ($env:WOOCOMMERCE_VERSION) { $env:WOOCOMMERCE_VERSION } else { "latest" }
@@ -45,7 +48,7 @@ if (-not (Test-Path $pluginDir)) {
     if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
         curl.exe -sSL "$dlUrl" -o "$tmpZip"
     } else {
-        Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip -UseBasicParsing
+        libscript_download $dlUrl $tmpZip
     }
     
     $pluginDest = Join-Path $WwwRoot "wp-content\plugins"

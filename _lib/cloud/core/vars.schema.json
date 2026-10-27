@@ -42,6 +42,22 @@
     "CORE_FROM_BACKUP": {
       "type": "string",
       "description": "Flag: --from-backup <ID>. The ID of the backup or snapshot to restore from."
+    },
+    "CORE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading core binary or archive artifacts."
+    },
+    "CORE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Installation method for core (libscript_native, system, or from-source)."
+    },
+    "CORE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying core available remote releases."
+    },
+    "CORE_VERSION": {
+      "type": "string",
+      "description": "Specific version of core to install (e.g., latest, lts, or exact version)."
     }
   }
 }

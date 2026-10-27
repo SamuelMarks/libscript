@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,7 +41,8 @@ export SCRIPT_NAME
 if [ "${ETCD_VERSION}" = 'v3.5.16' ]; then
   ETCD_VERSION='3.5.16-r6'
 fi
-if ! apk info -e 'etcd' >/dev/null 2>&1; then
+detect_pkg_mgr
+if ! is_installed 'etcd'; then
   libscript_depends etcd etcd-ctl || libscript_depends etcd
 fi
 

@@ -13,11 +13,14 @@ Execute this script to install and configure cpanm on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 if (-Not (Get-Command perl -ErrorAction SilentlyContinue)) {
     if (Get-Command choco -ErrorAction SilentlyContinue) {
         Write-Host "Installing Strawberry Perl via Chocolatey..."
-        choco install strawberryperl -y
+    libscript_depends @(\"strawberryperl\")
         $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
         $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
         $env:PATH = "$userPath;$machinePath"
@@ -36,8 +39,6 @@ if (-Not (Get-Command cpanm -ErrorAction SilentlyContinue)) {
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls cpanm; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls cpanm; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "cpanm"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -45,15 +46,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote cpanm; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all cpanm; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "cpanm@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "cpanm@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

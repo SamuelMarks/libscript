@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -102,12 +101,12 @@ update_readme_shield() {
   _pct="$2"
   [ -f "$_readme" ] || return 0
 
-  _color="brightgreen"
+  _color='brightgreen'
   if [ "$_pct" -lt 100 ]; then
     if [ "$_pct" -ge 80 ]; then
-      _color="yellow"
+      _color='yellow'
     else
-      _color="red"
+      _color='red'
     fi
   fi
 

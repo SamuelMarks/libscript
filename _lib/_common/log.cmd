@@ -16,7 +16,7 @@ setlocal EnableDelayedExpansion
 :: Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -59,6 +59,10 @@ goto :find_root
 if "%LIBSCRIPT_LOG_LEVEL%"=="" set "LIBSCRIPT_LOG_LEVEL=1"
 if "%LIBSCRIPT_LOG_FORMAT%"=="" set "LIBSCRIPT_LOG_FORMAT=text"
 
+if not "%~1"=="" (
+    call %*
+    exit /b !ERRORLEVEL!
+)
 goto :eof
 
 :: ## log_debug
@@ -89,6 +93,54 @@ exit /b
 :: Logs an error message to standard error.
 :log_error
 call :_libscript_log_msg "ERROR" 4 "%~1"
+exit /b
+
+:: ## log_step
+:: Logs a high-level execution step message.
+:log_step
+call :_libscript_log_msg "STEP" 1 "%~1"
+exit /b
+
+:: ## log_create
+:: Logs a resource or artifact creation message.
+:log_create
+call :_libscript_log_msg "CREATE" 1 "%~1"
+exit /b
+
+:: ## log_reuse
+:: Logs a resource or artifact reuse/confirmation message.
+:log_reuse
+call :_libscript_log_msg "REUSE" 1 "%~1"
+exit /b
+
+:: ## log_upsert
+:: Logs a database or state upsert message.
+:log_upsert
+call :_libscript_log_msg "UPSERT" 1 "%~1"
+exit /b
+
+:: ## log_daemon
+:: Logs a service daemon lifecycle action message.
+:log_daemon
+call :_libscript_log_msg "DAEMON" 1 "%~1"
+exit /b
+
+:: ## log_route
+:: Logs an ingress route configuration message.
+:log_route
+call :_libscript_log_msg "ROUTE" 1 "%~1"
+exit /b
+
+:: ## log_build
+:: Logs a frontend or application build message.
+:log_build
+call :_libscript_log_msg "BUILD" 1 "%~1"
+exit /b
+
+:: ## log_db
+:: Logs a database provisioning or confirmation message.
+:log_db
+call :_libscript_log_msg "DB" 1 "%~1"
 exit /b
 
 :: ## _libscript_log_msg

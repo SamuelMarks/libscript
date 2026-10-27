@@ -6,5 +6,6 @@
   "os_blacklist": ["sunos", "alpine", "freebsd", "bsd"],
   "title": "julia",
   "description": "Bootstrap module for the `julia` package manager.",
-  "category": "package-manager"
+  "category": "package-manager",
+  "repository": "https://github.com/JuliaLang/julia"
 }

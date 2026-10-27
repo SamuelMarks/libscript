@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,7 +37,7 @@ _emit_path_entry() {
   [ -z "$_ep_dir" ] && return 0
   case "$_ep_fmt" in
     docker)
-      printf '%s\n' "ENV PATH="${_ep_dir}:\$PATH""
+      printf 'ENV PATH="%s:$PATH"\n' "$_ep_dir"
       ;;
     docker_compose)
       printf '%s\n' "PATH=${_ep_dir}:\$PATH"
@@ -134,7 +133,7 @@ libscript_ensure_default_env_vars() {
   : "${REMOTE_GROUP:=$REMOTE_USER}"
   if [ -z "${REMOTE_HOME:-}" ]; then
     if [ "$REMOTE_USER" = "root" ]; then
-      REMOTE_HOME="/root"
+      REMOTE_HOME='/root'
     elif [ -r "/etc/passwd" ]; then
       REMOTE_HOME=$(awk -F: -v u="$REMOTE_USER" '$1==u {print $6; exit}' /etc/passwd 2>/dev/null || true)
     fi
@@ -214,8 +213,8 @@ libscript_print_env() {
     if [ -z "$_comp_ver" ] && [ -n "$_prefix_path" ]; then
       _comp_ver=$(basename "$_prefix_path")
     fi
-    _lpe_base_path="/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"
-    _lpe_jq_bin="jq"
+    _lpe_base_path='/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'
+    _lpe_jq_bin='jq'
     if command -v jq >/dev/null 2>&1; then
       _lpe_jq_bin=$(command -v jq)
       _jq_dir=$(dirname -- "$_lpe_jq_bin")
@@ -352,6 +351,7 @@ libscript_hydrate_manifest_env() {
   _hm_saved_script_dir="${SCRIPT_DIR:-}"
   _hm_saved_this_file="${THIS_FILE:-}"
   _hm_saved_stack="${STACK:-}"
+  _hm_saved_ls_ver="${LIBSCRIPT_VERSION:-}"
   while read -r _dep_pkg _dep_ver <&3; do
     [ -z "$_dep_pkg" ] && continue
     [ "$_dep_ver" = "null" ] || [ -z "$_dep_ver" ] && _dep_ver="latest"
@@ -368,12 +368,18 @@ libscript_hydrate_manifest_env() {
         unset SCRIPT_NAME || true
       fi
     done
+    unset LIBSCRIPT_VERSION || true
   done 3< "$_hm_tmp"
   SCRIPT_DIR="$_hm_saved_script_dir"
   THIS_FILE="$_hm_saved_this_file"
   STACK="$_hm_saved_stack"
   export STACK
-  unset SCRIPT_NAME || true
+  if [ -n "$_hm_saved_ls_ver" ]; then
+    export LIBSCRIPT_VERSION="$_hm_saved_ls_ver"
+  else
+    unset LIBSCRIPT_VERSION || true
+  fi
+  unset SCRIPT_NAME _hm_saved_ls_ver || true
   rm -f "$_hm_tmp"
 
   for _hm_local_bin in "${_hm_dir}/.venv/bin" "${_hm_dir}/node_modules/.bin"; do
@@ -409,6 +415,39 @@ libscript_print_manifest_env() {
   fi
   command -v jq >/dev/null 2>&1 || return 1
 
+  case "$_pm_fmt" in
+    dockerfile) _pm_fmt="docker" ;;
+    ps1)        _pm_fmt="powershell" ;;
+  esac
+
+  case "$_pm_fmt" in
+    dotenv|envfile|docker_compose|systemd|json)
+      (
+        libscript_hydrate_manifest_env "$_pm_json"
+        _pm_filter="^(PWD|SHLVL|_|PATH|SERVICE_PATH|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_HOME|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)="
+        case "$_pm_fmt" in
+          json)
+            SERVICE_PATH="${PATH}"
+            export SERVICE_PATH
+            env | grep -vE "^(PWD|SHLVL|_|BASE_PATH|_JQ_BIN|FORMAT|COMP_DIR|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_ROOT_DIR|LIBSCRIPT_DATA_DIR|HOME|USER|THIS_FILE|_pm_.*|_hm_.*|_ede_.*)=" | jq -c -R -s '
+              split("\n") | map(select(length > 0)) |
+              map(split("=")) | map({(.[0]): (.[1:] | join("="))}) | add
+            '
+            ;;
+          *)
+            printf 'PATH="%s"\n' "$PATH"
+            printf 'SERVICE_PATH="%s"\n' "$PATH"
+            env | grep -vE "$_pm_filter" | while read -r _pm_line; do
+              [ -z "$_pm_line" ] && continue
+              printf '%s="%s"\n' "${_pm_line%%=*}" "${_pm_line#*=}"
+            done
+            ;;
+        esac
+      )
+      return 0
+      ;;
+  esac
+
   _pm_tmp=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_pm_deps.$$")
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" ]; then
     env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "$_pm_json" 2>/dev/null | jq -r '.selected[]? | "\(.name) \(.version // "latest")"' > "$_pm_tmp" 2>/dev/null || true
@@ -424,6 +463,7 @@ libscript_print_manifest_env() {
     ' "$_pm_json" > "$_pm_tmp" 2>/dev/null || true
   fi
 
+  _pm_agg_path=""
   while read -r _dep_pkg _dep_ver <&3; do
     [ -z "$_dep_pkg" ] && continue
     [ "$_dep_ver" = "null" ] || [ -z "$_dep_ver" ] && _dep_ver="latest"
@@ -434,9 +474,50 @@ libscript_print_manifest_env() {
       if [ -f "${_cat_dir}/${_dep_pkg}/env.sh" ]; then
         COMP_DIR="${_cat_dir}/${_dep_pkg}"
         export COMP_DIR
-        libscript_print_env "$_pm_fmt" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_dep_pkg}/${_dep_ver}" </dev/null
+        _comp_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_dep_pkg}/${_dep_ver}"
+        libscript_print_env "$_pm_fmt" "$_comp_prefix" </dev/null
+        case ":${_pm_agg_path}:" in
+          *":${_comp_prefix}/bin:"*) ;;
+          *) _pm_agg_path="${_pm_agg_path:+${_pm_agg_path}:}${_comp_prefix}/bin" ;;
+        esac
       fi
     done
   done 3< "$_pm_tmp" 2>/dev/null || true
   rm -f "$_pm_tmp"
+
+  _pm_base_path='/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'
+  _pm_hydrated_path=$(
+    PATH="$_pm_base_path"
+    export PATH
+    libscript_hydrate_manifest_env "$_pm_json" >/dev/null 2>&1 || true
+    printf '%s' "$PATH"
+  )
+  if [ -n "$_pm_hydrated_path" ]; then
+    _pm_old_ifs="$IFS"
+    IFS=':'
+    for _pm_hp in $_pm_hydrated_path; do
+      [ -z "$_pm_hp" ] && continue
+      case ":${_pm_base_path}:" in
+        *":${_pm_hp}:"*) continue ;;
+      esac
+      case ":${_pm_agg_path}:" in
+        *":${_pm_hp}:"*) ;;
+        *)
+          _emit_path_entry "$_pm_fmt" "$_pm_hp"
+          _pm_agg_path="${_pm_agg_path:+${_pm_agg_path}:}${_pm_hp}"
+          ;;
+      esac
+    done
+    IFS="$_pm_old_ifs"
+  fi
+
+  if [ -n "$_pm_agg_path" ]; then
+    case "$_pm_fmt" in
+      docker)         printf 'ENV SERVICE_PATH="%s:$PATH"\n' "$_pm_agg_path" ;;
+      powershell|ps1) printf '$env:SERVICE_PATH = "%s;" + $env:PATH\n' "$_pm_agg_path" ;;
+      cmd)            printf 'SET "SERVICE_PATH=%s;%%PATH%%"\n' "$_pm_agg_path" ;;
+      fish)           printf 'set -gx SERVICE_PATH "%s:$PATH"\n' "$_pm_agg_path" ;;
+      *)              printf 'export SERVICE_PATH="%s:${PATH:-/usr/bin:/bin}"\n' "$_pm_agg_path" ;;
+    esac
+  fi
 }

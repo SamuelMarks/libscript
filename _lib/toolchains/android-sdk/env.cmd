@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -51,18 +51,22 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%ANDROID_SDK_VERSION%"=="" set "ANDROID_SDK_VERSION=latest"
+set "ANDROID_HOME=%LIBSCRIPT_HOME%\android-sdk\latest"
+set "ANDROID_SDK_ROOT=%LIBSCRIPT_HOME%\android-sdk\latest"
+for %%P in ("%LIBSCRIPT_HOME%\android-sdk\latest\platform-tools" "%LIBSCRIPT_HOME%\android-sdk\latest\cmdline-tools\latest\bin") do (
+    set "_CAND_P=%%~P"
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+)
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "android-sdk" "%ANDROID_SDK_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%ANDROID_SDK_VERSION%"=="" set "ANDROID_SDK_VERSION=latest"
-    set "ANDROID_HOME=%USERPROFILE%\.libscript\android-sdk\latest"
-    set "ANDROID_SDK_ROOT=%USERPROFILE%\.libscript\android-sdk\latest"
-    set "_CAND_P=%USERPROFILE%\.libscript\android-sdk\latest\platform-tools"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "_CAND_P=%USERPROFILE%\.libscript\android-sdk\latest\cmdline-tools\latest\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "android-sdk"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "ANDROID_SDK_VERSION=%ANDROID_SDK_VERSION%"
+    set "ANDROID_HOME=%ANDROID_HOME%"
+    set "ANDROID_SDK_ROOT=%ANDROID_SDK_ROOT%"
+    set "PATH=%PATH%"
 )
 exit /b 0

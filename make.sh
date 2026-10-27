@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ case "$target" in
     ;;
   test_component)
     if [ -z "${2:-}" ]; then
-      printf '%s\n' "Usage: ./make.sh test_component <component_name>" >&2
+      printf '%s\n' 'Usage: ./make.sh test_component <component_name>' >&2
       exit 1
     fi
     if [ "${LIBSCRIPT_USE_VAGRANT:-0}" = "1" ]; then
@@ -85,13 +84,13 @@ case "$target" in
     "$SCRIPT_DIR/tests/run_vagrant_matrix.sh"
     ;;
   --help|-h|"/?")
-    printf '%s\n' "Usage: ./make.sh <target> [component_name]"
-    printf '%s\n' "Targets: audit, update_results, register_bento_boxes, test_canary_6os, test_matrix_6os, test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases"
+    printf '%s\n' 'Usage: ./make.sh <target> [component_name]'
+    printf '%s\n' 'Targets: audit, update_results, register_bento_boxes, test_canary_6os, test_matrix_6os, test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases'
     exit 0
     ;;
   *)
     printf '%s\n' "Unknown target: $target" >&2
-    printf '%s\n' "Usage: ./make.sh <target> [component_name]" >&2
+    printf '%s\n' 'Usage: ./make.sh <target> [component_name]' >&2
     exit 1
     ;;
 esac

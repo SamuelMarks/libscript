@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,7 +43,7 @@ BACKEND="${LIBSCRIPT_LOCK_BACKEND:-local}"
 # Acquires, releases, or queries an atomic distributed lease lock.
 manage_lease_lock() {
   now_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || printf '2026-10-15T00:00:00Z')"
-  exp_ts="2026-10-15T01:00:00Z"
+  exp_ts='2026-10-15T01:00:00Z'
   case "$ACTION" in
     acquire)
       mkdir -p "$(dirname -- "$LOCK_TARGET")"

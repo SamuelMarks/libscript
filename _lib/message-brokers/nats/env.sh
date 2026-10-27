@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,4 +38,6 @@ export LIBSCRIPT_LISTEN_PORT="${NATS_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
 
 export NATS_INSTALL_METHOD="${NATS_INSTALL_METHOD:-system}"
 NATS_VERSION="${NATS_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${NATS_VERSION}/bin"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nats/${NATS_VERSION}/bin"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

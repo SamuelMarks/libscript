@@ -13,7 +13,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -201,75 +201,51 @@ exit /b 0
 :: ## do_uninstall
 :: Stops and uninstalls the target service and removes its runner and PID files.
 :do_uninstall
-echo Uninstalling service '!name!'...
+echo [INFO] [DAEMON] [UNINSTALL] Removing service unit '!name!'...
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "!name!" >nul 2>&1
 if exist "!pid_file!" del /f /q "!pid_file!" >nul 2>&1
 if exist "!runner_file!" del /f /q "!runner_file!" >nul 2>&1
+echo [INFO] [DAEMON] [UNINSTALL] Removed service unit '!name!'.
 exit /b 0
 
 :: ## do_start
 :: Generates an isolated runner script, delegates registration to service_install.cmd, and starts the service.
 :do_start
-echo Configuring and starting service '!name!' (workdir: !svc_workdir!)...
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
-    set "STACK="
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!svc_workdir!" "%PYTHON_VERSION%"
+if exist "!pid_file!" (
+    echo [INFO] [DAEMON] [RESTART] Restarting service '!name!' ^(workdir: !svc_workdir!^)...
+) else (
+    echo [INFO] [DAEMON] [START] Starting service '!name!' ^(workdir: !svc_workdir!^)...
 )
-for %%B in ("!svc_workdir!\.venv\Scripts" "!svc_workdir!\node_modules\.bin" "!MANIFEST_DIR!\.venv\Scripts" "!MANIFEST_DIR!\node_modules\.bin") do (
-    if exist "%%~fB" (
-        echo ";!PATH!;" | findstr /I /C:";%%~fB;" >nul 2>&1
-        if errorlevel 1 set "PATH=%%~fB;!PATH!"
-    )
-)
-(
-    echo @echo off
-    echo setlocal EnableDelayedExpansion
-    echo set "PATH=!PATH!"
-    if exist "!svc_data!\.env.service" (
-        echo for /f "usebackq tokens=* delims=" %%%%L in ^("!svc_data!\.env.service"^) do set "%%%%L"
-    )
-    if exist "!MANIFEST_DIR!\.env.libscript" (
-        echo for /f "usebackq tokens=* delims=" %%%%L in ^("!MANIFEST_DIR!\.env.libscript"^) do set "%%%%L"
-        echo if defined SERVICE_PATH set "PATH=%%SERVICE_PATH%%;!PATH!"
-        echo if defined SERVICE_EXTRA_PATH set "PATH=%%SERVICE_EXTRA_PATH%%;!PATH!"
-    )
-) > "!runner_file!"
-
+set "LIBSCRIPT_SERVICE_MANIFEST_DIR=!MANIFEST_DIR!"
+set "LIBSCRIPT_SERVICE_ENV_FILES="
 for /f "delims=" %%f in ('echo !svc! ^| jq -r ".env_files[]?" 2^>nul') do (
-    set "ef=%%f"
-    set "ef_win=!ef:/=\!"
-    if exist "!svc_workdir!\!ef_win!" (
-        echo for /f "usebackq tokens=* delims=" %%%%L in ^("!svc_workdir!\!ef_win!"^) do set "%%%%L" >> "!runner_file!"
-    ) else if exist "!MANIFEST_DIR!\!ef_win!" (
-        echo for /f "usebackq tokens=* delims=" %%%%L in ^("!MANIFEST_DIR!\.env.libscript"^) do set "%%%%L" >> "!runner_file!"
-    ) else if exist "!ef_win!" (
-        echo for /f "usebackq tokens=* delims=" %%%%L in ^("!ef_win!"^) do set "%%%%L" >> "!runner_file!"
+    if "!LIBSCRIPT_SERVICE_ENV_FILES!"=="" (
+        set "LIBSCRIPT_SERVICE_ENV_FILES=%%f"
+    ) else (
+        set "LIBSCRIPT_SERVICE_ENV_FILES=!LIBSCRIPT_SERVICE_ENV_FILES!;%%f"
     )
 )
-
-for /f "delims=" %%e in ('echo !svc! ^| jq -r ".env // {} | to_entries[]? | \"set \\\"\(.key)=\(.value)\\\"\"" 2^>nul') do (
-    echo %%e >> "!runner_file!"
-)
-
-(
-    echo pushd "!svc_workdir!"
-    echo call !cmd! ^>^> "!log_file!" 2^>^&1
-    echo popd
-) >> "!runner_file!"
+set "LIBSCRIPT_SERVICE_ENV_JSON=!svc!"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "!name!" "!cmd!" "!svc_workdir!" "!name! service"
+set "LIBSCRIPT_SERVICE_ENV_FILES="
+set "LIBSCRIPT_SERVICE_ENV_JSON="
 
 start "!name!" /B cmd.exe /v:on /c "!runner_file!"
 echo running > "!pid_file!"
+echo [INFO] [DAEMON] [ACTIVE] Service '!name!' is running.
 exit /b 0
 
 :: ## do_stop
 :: Stops the target background service via service.cmd and removes its PID marker.
 :do_stop
-echo Stopping service '!name!'...
+echo [INFO] [DAEMON] [STOP] Stopping service '!name!'...
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop "!name!" >nul 2>&1
 taskkill /fi "WINDOWTITLE eq !name!" /f >nul 2>&1
 if exist "!pid_file!" del /f /q "!pid_file!" >nul 2>&1
+echo [INFO] [DAEMON] [STOP] Stopped service '!name!'.
 exit /b 0
 
 :: ## do_status

@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -89,7 +88,7 @@ if [ -n "$user" ]; then
   }')
 fi
 
-db_use_ssl="0"
+db_use_ssl='0'
 db_ssl_ca=""
 db_ssl_cert=""
 db_ssl_key=""

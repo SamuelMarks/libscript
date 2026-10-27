@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -85,7 +84,7 @@ if [ $# -ge 2 ]; then
   NAMESPACE="$1"
   SEED_NAME="$2"
 elif [ $# -eq 1 ]; then
-  NAMESPACE="6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+  NAMESPACE='6ba7b810-9dad-11d1-80b4-00c04fd430c8'
   SEED_NAME="$1"
 else
   NAMESPACE=""
@@ -93,7 +92,7 @@ else
 fi
 
 if [ -z "${NAMESPACE}" ]; then
-  NAMESPACE="6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+  NAMESPACE='6ba7b810-9dad-11d1-80b4-00c04fd430c8'
 fi
 
 if [ -z "${SEED_NAME}" ]; then

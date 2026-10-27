@@ -13,6 +13,14 @@
       "description": "Specific version of msys2 to install.",
       "type": "string",
       "default": "latest"
+    },
+    "MSYS2_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading msys2 binary or archive artifacts."
+    },
+    "MSYS2_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying msys2 available remote releases."
     }
   },
   "description": "Configuration variables for msys2"

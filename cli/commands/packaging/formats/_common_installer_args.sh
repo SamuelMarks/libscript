@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -29,15 +28,15 @@ case "${STACK+x}" in
     printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2
     export STACK="${STACK:-}${THIS_FILE}"':' ;;
 esac
-    export install_scope="perMachine"
-    export inno_priv="admin"
-    export nsis_admin="admin"
+    export install_scope='perMachine'
+    export inno_priv='admin'
+    export nsis_admin='admin'
     APP_NAME="LibScript Deployment"
-    APP_VERSION="1.0.0.0"
-    export APP_PUBLISHER="LibScript"
+    APP_VERSION='1.0.0.0'
+    export APP_PUBLISHER='LibScript'
     export APP_URL=""
-    UPGRADE_CODE="PUT-GUID-HERE"
-    export OUT_FILE="LibScriptInstaller"
+    UPGRADE_CODE='PUT-GUID-HERE'
+    export OUT_FILE='LibScriptInstaller'
     if [ -n "${pkg_type:-}" ]; then
       case "${pkg_type}" in
         msi|exe|pkg|dmg|innosetup|nsis)
@@ -54,14 +53,14 @@ esac
     export BANNER_TOP_PATH=""
     export BANNER_SIDE_PATH=""
     export LICENSE_PATH=""
-    export LICENSE_TYPE="text"
-    export REQUIRE_AGREE="1"
+    export LICENSE_TYPE='text'
+    export REQUIRE_AGREE='1'
     export AGREEMENT_TEXT=""
     export WELCOME_TITLE=""
     export WELCOME_TEXT="Welcome to the LibScript Deployment Installer"
     export FINISH_TITLE=""
     export FINISH_TEXT=""
-    export OFFLINE="0"
+    export OFFLINE='0'
 
     pos_args=""
     while [ $# -gt 0 ]; do
@@ -98,7 +97,10 @@ esac
           ;;
       esac
     done
-    eval "set -- ${pos_args:-}" # libscript-allow-eval
+    set --
+    for _pos_arg in ${pos_args:-}; do
+      set -- "$@" "$_pos_arg"
+    done
 
     if [ -n "${OUT_FILE:-}" ]; then
       _out_parent=$(dirname -- "$OUT_FILE")
@@ -132,7 +134,7 @@ esac
         ' --args "$_PRODUCT_HASH")
       fi
     elif command -v powershell >/dev/null 2>&1 || command -v pwsh >/dev/null 2>&1; then
-      _PS="powershell"
+      _PS='powershell'
       command -v pwsh >/dev/null 2>&1 && _PS="pwsh"
       _PS_SCRIPT="
         param([string]\$id)

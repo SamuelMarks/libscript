@@ -15,7 +15,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -62,11 +61,11 @@ stage_custom_cc_wrapper() {
     ln -sf "${_underlying_bin}" "${_target_dir}/bin/custom-cc-real"
     _real_ref="${_target_dir}/bin/custom-cc-real"
   elif [ -x "/usr/bin/cc" ]; then
-    _real_ref="/usr/bin/cc"
+    _real_ref='/usr/bin/cc'
   elif [ -x "/usr/bin/clang" ]; then
-    _real_ref="/usr/bin/clang"
+    _real_ref='/usr/bin/clang'
   elif [ -x "/usr/bin/gcc" ]; then
-    _real_ref="/usr/bin/gcc"
+    _real_ref='/usr/bin/gcc'
   else
     _real_ref="$(command -v clang 2>/dev/null || command -v gcc 2>/dev/null || printf '/usr/bin/cc')"
   fi
@@ -148,7 +147,7 @@ latest
       _dl_file="${DOWNLOAD_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/custom-cc}/custom-cc-${EXACT_VERSION}.tar.gz"
       PACKAGE_NAME="custom-cc" libscript_download "${CUSTOM_CC_DOWNLOAD_URL}" "${_dl_file}"
     else
-      log_info "CUSTOM_CC_DOWNLOAD_URL not specified; skipping archive download."
+      log_info 'CUSTOM_CC_DOWNLOAD_URL not specified; skipping archive download.'
     fi
     ;;
   install)

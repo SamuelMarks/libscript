@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,7 +38,7 @@ done
 
 
 set -feu
-printf '%s\n' "Validating Magento installation..."
+printf '%s\n' 'Validating Magento installation...'
 MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"
 if [ -d "${MAGENTO_WWWROOT}/app" ]; then
     printf '%s\n' "Magento directory found at ${MAGENTO_WWWROOT}"

@@ -14,6 +14,14 @@
       "description": "Specific version of zypper to install.",
       "type": "string",
       "default": "latest"
+    },
+    "ZYPPER_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading zypper binary or archive artifacts."
+    },
+    "ZYPPER_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying zypper available remote releases."
     }
   }
 }

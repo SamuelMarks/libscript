@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Network control utility for managing local services, reverse proxies, SPAs, WebSockets, and declarative ingress.
-# 
+#
 # ## Usage
 # Execute this script to manage networking configurations or apply a libscript.json ingress definition.
 
@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -20,20 +19,17 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 NETCTL_DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR NETCTL_DIR
 
-for LIB in "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/log.sh" "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   if [ -f "${SCRIPT_NAME}" ]; then
@@ -41,6 +37,7 @@ for LIB in "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/s
     . "${SCRIPT_NAME}"
   fi
 done
+unset SCRIPT_NAME || true
 
 # ## usage
 # Displays command-line usage instructions and exit status 1.
@@ -89,19 +86,28 @@ netctl_reload_proxy() {
     . "${SCRIPT_NAME}"
     unset SCRIPT_NAME || true
   fi
+  log_info "[DAEMON] [RELOAD] Reloading ${_nrp_fmt} reverse proxy daemon..."
   case "$_nrp_fmt" in
     nginx)
       if command -v nginx >/dev/null 2>&1; then
-        nginx -s reload >/dev/null 2>&1 || sudo nginx -s reload >/dev/null 2>&1 || libscript_service reload nginx >/dev/null 2>&1 || true
+        nginx -t >/dev/null 2>&1 || sudo nginx -t >/dev/null 2>&1 || true
+        if nginx -s reload >/dev/null 2>&1 || sudo nginx -s reload >/dev/null 2>&1 || libscript_service reload nginx >/dev/null 2>&1; then
+          log_info "[DAEMON] [ACTIVE] ${_nrp_fmt} reverse proxy reloaded successfully."
+        else
+          libscript_service restart nginx >/dev/null 2>&1 || true
+          log_info "[DAEMON] [ACTIVE] ${_nrp_fmt} reverse proxy restarted."
+        fi
       fi
       ;;
     caddy)
       if command -v caddy >/dev/null 2>&1; then
         libscript_service reload caddy >/dev/null 2>&1 || true
+        log_info "[DAEMON] [ACTIVE] ${_nrp_fmt} reverse proxy reloaded successfully."
       fi
       ;;
     apache|apache2|httpd)
       libscript_service reload httpd >/dev/null 2>&1 || libscript_service reload apache2 >/dev/null 2>&1 || true
+      log_info "[DAEMON] [ACTIVE] ${_nrp_fmt} reverse proxy reloaded successfully."
       ;;
   esac
 }
@@ -141,7 +147,7 @@ netctl_ensure_static_permissions() {
 netctl_remove_manifest_ingress() {
   _rmi_arg="${1:-libscript.json}"
   _rmi_dom=""
-  _rmi_fmt="nginx"
+  _rmi_fmt='nginx'
   if [ -f "$_rmi_arg" ] && command -v jq >/dev/null 2>&1; then
     _rmi_dom=$(jq -r '.ingress.domain // .domain // empty' "$_rmi_arg" 2>/dev/null || true)
     _rmi_fmt=$(jq -r '.ingress.provider // .ingress.engine // "nginx"' "$_rmi_arg" 2>/dev/null || printf 'nginx')
@@ -151,6 +157,7 @@ netctl_remove_manifest_ingress() {
   if [ -n "$_rmi_dom" ] && [ "$_rmi_dom" != "libscript.json" ]; then
     for _vhost in "/etc/nginx/conf.d/${_rmi_dom}.conf" "/etc/nginx/sites-enabled/${_rmi_dom}" "/etc/nginx/sites-available/${_rmi_dom}" "/etc/httpd/conf.d/${_rmi_dom}.conf" "/etc/apache2/sites-enabled/${_rmi_dom}.conf"; do
       if [ -f "$_vhost" ] || [ -L "$_vhost" ]; then
+        log_info "[ROUTES] [REMOVE] Removing virtual host config ${_vhost}..."
         rm -f "$_vhost" 2>/dev/null || sudo rm -f "$_vhost" 2>/dev/null || true
       fi
     done
@@ -168,9 +175,26 @@ emit_by_format() {
     traefik) netctl_emit_traefik ;;
     dockerfile) netctl_emit_dockerfile ;;
     vagrantfile) netctl_emit_vagrantfile ;;
-    *) printf '%s
-' "Unknown format: $1" >&2; exit 1 ;;
+    *) printf '%s\n' "Unknown format: $1" >&2; exit 1 ;;
   esac
+}
+
+# ## netctl_log_state_routes
+# Logs the configured domain, listen ports, and each route in NETCTL_STATE_FILE to stderr.
+netctl_log_state_routes() {
+  _nls_fmt="$1"
+  _nls_state="$2"
+  [ -f "$_nls_state" ] || return 0
+  _nls_dom=$(jq -r '.domain // "_"' "$_nls_state" 2>/dev/null || printf '_')
+  _nls_ports=$(jq -r '(.listen // ["80"]) | join(", ")' "$_nls_state" 2>/dev/null || printf '80')
+  log_info "[ROUTES] Configuring ${_nls_fmt} ingress for domain '${_nls_dom}' (listen: ${_nls_ports})..."
+  _nls_routes=$(jq -r --arg dom "$_nls_dom" '.routes // {} | to_entries[]? | "[ROUTE] [\((.value.type // "static") | ascii_upcase)] \($dom)\(.key) -> \(.value.target // .value.pattern // "")"' "$_nls_state" 2>/dev/null || true)
+  if [ -n "$_nls_routes" ]; then
+    printf '%s\n' "$_nls_routes" | while IFS= read -r _rline; do
+      [ -n "$_rline" ] || continue
+      log_info "$_rline"
+    done
+  fi
 }
 
 # ## netctl_apply_manifest
@@ -192,8 +216,7 @@ netctl_apply_manifest() {
   done
 
   if [ ! -f "$_json_file" ]; then
-    printf 'Error: Manifest file not found: %s
-' "$_json_file" >&2
+    printf 'Error: Manifest file not found: %s\n' "$_json_file" >&2
     exit 1
   fi
 
@@ -214,6 +237,14 @@ netctl_apply_manifest() {
     fi
   done
 
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+    # shellcheck disable=SC1090,SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_printer.sh"
+    unset SCRIPT_NAME || true
+    libscript_hydrate_manifest_env "$_json_file" || true
+  fi
+
   if [ -z "$_format" ]; then
     _format=$(jq -r '.ingress.provider // .ingress.engine // "nginx"' "$_json_file" 2>/dev/null || printf 'nginx')
   fi
@@ -224,16 +255,25 @@ netctl_apply_manifest() {
 
   jq -n --arg mdir "$_manifest_dir" --slurpfile doc "$_json_file" '
     ($doc[0].ingress // {}) as $ing |
+    def expand_env(s):
+      if (s | type) != "string" then s
+      else
+        reduce range(3) as $_ (s;
+          gsub("\\$\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\}"; (env[.k] // "") | if . == "" then .d else . end) |
+          gsub("\\$\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\}"; env[.k] // "")
+        )
+      end;
     def resolve_path(p):
-      if p == null or p == "" then ""
-      elif (p | startswith("/")) then p
-      elif (p | startswith("./")) then ($mdir + "/" + (p | ltrimstr("./")))
-      else ($mdir + "/" + p) end;
+      (expand_env(p)) as $ep |
+      if $ep == null or $ep == "" then ""
+      elif ($ep | startswith("/")) then $ep
+      elif ($ep | startswith("./")) then ($mdir + "/" + ($ep | ltrimstr("./")))
+      else ($mdir + "/" + $ep) end;
     {
-      domain: ($ing.domain // $ing.server_name // "_"),
+      domain: expand_env($ing.domain // $ing.server_name // "_"),
       listen: (
-        if ($ing.listen | type) == "array" then [ $ing.listen[] | tostring ]
-        elif ($ing.listen != null) then [ ($ing.listen | tostring) ]
+        if ($ing.listen | type) == "array" then [ $ing.listen[] | tostring | expand_env(.) ]
+        elif ($ing.listen != null) then [ ($ing.listen | tostring | expand_env(.)) ]
         else ["80"] end
       ),
       routes: (
@@ -242,30 +282,31 @@ netctl_apply_manifest() {
           with_entries(
             .key as $k | .value as $v |
             if ($v | type) == "string" then
-              if ($v | startswith("http://") or startswith("https://")) then
-                {key: $k, value: {type: "proxy", target: $v}}
-              elif ($v | startswith("ws://") or startswith("wss://")) then
-                {key: $k, value: {type: "ws", target: ($v | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
+              (expand_env($v)) as $ev |
+              if ($ev | startswith("http://") or startswith("https://")) then
+                {key: $k, value: {type: "proxy", target: $ev}}
+              elif ($ev | startswith("ws://") or startswith("wss://")) then
+                {key: $k, value: {type: "ws", target: ($ev | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
               else
-                {key: $k, value: {type: "static", target: resolve_path($v)}}
+                {key: $k, value: {type: "static", target: resolve_path($ev)}}
               end
             elif ($v | type) == "object" then
               if $v.ws then
-                {key: $k, value: {type: "ws", target: ($v.ws | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
+                {key: $k, value: {type: "ws", target: (expand_env($v.ws) | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
               elif $v.proxy then
-                {key: $k, value: {type: "proxy", target: $v.proxy}}
+                {key: $k, value: {type: "proxy", target: expand_env($v.proxy)}}
               elif $v.spa == true or $v.type == "spa" then
                 {key: $k, value: {type: "spa", target: resolve_path($v.static // $v.target // $v.root // ".")}}
               elif $v.static then
                 {key: $k, value: {type: "static", target: resolve_path($v.static)}}
               elif $v.type == "ws" then
-                {key: $k, value: {type: "ws", target: ($v.target | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
+                {key: $k, value: {type: "ws", target: (expand_env($v.target) | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
               elif $v.type == "proxy" then
-                {key: $k, value: {type: "proxy", target: $v.target}}
+                {key: $k, value: {type: "proxy", target: expand_env($v.target)}}
               elif $v.type == "static" then
                 {key: $k, value: {type: "static", target: resolve_path($v.target)}}
               elif $v.type == "rewrite" then
-                {key: $k, value: {type: "rewrite", pattern: $v.pattern}}
+                {key: $k, value: {type: "rewrite", pattern: expand_env($v.pattern)}}
               else
                 {key: $k, value: {type: "static", target: resolve_path($v.target // ".")}}
               end
@@ -277,11 +318,11 @@ netctl_apply_manifest() {
             if $item.type == "spa" or $item.spa == true then
               . + {($k): {type: "spa", target: resolve_path($item.target // $item.static // ".")}}
             elif $item.type == "ws" or $item.ws != null then
-              . + {($k): {type: "ws", target: (($item.target // $item.ws) | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
+              . + {($k): {type: "ws", target: (expand_env($item.target // $item.ws) | sub("^ws://"; "http://") | sub("^wss://"; "https://"))}}
             elif $item.type == "proxy" or $item.proxy != null then
-              . + {($k): {type: "proxy", target: ($item.target // $item.proxy)}}
+              . + {($k): {type: "proxy", target: expand_env($item.target // $item.proxy)}}
             elif $item.type == "rewrite" then
-              . + {($k): {type: "rewrite", pattern: $item.pattern}}
+              . + {($k): {type: "rewrite", pattern: expand_env($item.pattern)}}
             else
               . + {($k): {type: "static", target: resolve_path($item.target // $item.static // ".")}}
             end
@@ -292,17 +333,25 @@ netctl_apply_manifest() {
   ' > "$NETCTL_STATE_FILE"
 
   if [ -n "$_out_file" ]; then
+    netctl_log_state_routes "$_format" "$NETCTL_STATE_FILE"
     mkdir -p "$(dirname -- "$_out_file")"
     emit_by_format "$_format" > "$_out_file"
+    log_info "[ROUTES] [WRITE] Wrote ${_format} config -> ${_out_file}"
   elif [ "$_do_reload" -eq 1 ]; then
+    netctl_log_state_routes "$_format" "$NETCTL_STATE_FILE"
     _conf_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/ingress"
     mkdir -p "$_conf_dir"
     _dom=$(jq -r '.domain // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
-    if [ "$_format" = "nginx" ] && [ -n "$_dom" ] && [ "$_dom" != "_" ] && ! [ -f "/etc/letsencrypt/live/${_dom}/fullchain.pem" ] && command -v openssl >/dev/null 2>&1; then
-      if [ ! -f "/etc/nginx/ssl/${_dom}.crt" ]; then
+    if [ "$_format" = "nginx" ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
+      if [ -f "/etc/letsencrypt/live/${_dom}/fullchain.pem" ]; then
+        log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at /etc/letsencrypt/live/${_dom}/fullchain.pem."
+      elif [ -f "/etc/nginx/ssl/${_dom}.crt" ]; then
+        log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at /etc/nginx/ssl/${_dom}.crt."
+      elif command -v openssl >/dev/null 2>&1; then
         mkdir -p /etc/nginx/ssl 2>/dev/null || sudo mkdir -p /etc/nginx/ssl 2>/dev/null || true
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || \
           sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || true
+        log_info "[ROUTES] [TLS] Generated self-signed SSL certificate for '${_dom}' at /etc/nginx/ssl/${_dom}.crt."
       fi
     fi
     _out_file="${_conf_dir}/${_format}.conf"
@@ -313,26 +362,35 @@ netctl_apply_manifest() {
         if [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
           _dest="/etc/nginx/conf.d/${_dom}.conf"
         else
-          _dest="/etc/nginx/conf.d/libscript_ingress.conf"
+          _dest='/etc/nginx/conf.d/libscript_ingress.conf'
         fi
-        if [ -w /etc/nginx/conf.d ]; then
+        if [ -f "$_dest" ] && cmp -s "$_out_file" "$_dest" 2>/dev/null; then
+          log_info "[ROUTES] [CONFIRM] ${_format} virtual host config ${_dest} is up-to-date."
+        elif [ -w /etc/nginx/conf.d ]; then
           rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
           cp "$_out_file" "$_dest"
           if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
             cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
           fi
+          log_info "[ROUTES] [WRITE] Installed ${_format} virtual host config -> ${_dest}"
         elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
           sudo rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
           sudo cp "$_out_file" "$_dest"
           if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
             sudo cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
           fi
+          log_info "[ROUTES] [WRITE] Installed ${_format} virtual host config -> ${_dest}"
         fi
+        netctl_reload_proxy "nginx"
+      else
+        log_info "[ROUTES] [WRITE] Generated ${_format} virtual host config -> ${_out_file}"
         netctl_reload_proxy "nginx"
       fi
     elif [ "$_format" = "caddy" ] && command -v caddy >/dev/null 2>&1; then
+      log_info "[ROUTES] [WRITE] Installed Caddy config -> ${_out_file}"
       caddy reload --config "$_out_file" >/dev/null 2>&1 || netctl_reload_proxy "caddy"
     else
+      log_info "[ROUTES] [WRITE] Generated ${_format} config -> ${_out_file}"
       netctl_reload_proxy "$_format"
     fi
   else
@@ -347,8 +405,7 @@ EMIT_FORMAT=""
 
 case "$1" in
   download|install|ls|ls-remote|use|start|stop|restart|install-service|uninstall-service|env|logs|status|health)
-    printf '%s
-' "netctl is a native shell module. No installation or daemon management required."
+    printf '%s\n' 'netctl is a native shell module. No installation or daemon management required.'
     exit 0
     ;;
   uninstall)
@@ -436,8 +493,7 @@ if [ "$SINGULAR_MODE" -eq 1 ]; then
         shift 2
         ;;
       *)
-        printf '%s
-' "Unknown option: $1" >&2
+        printf '%s\n' "Unknown option: $1" >&2
         usage
         ;;
     esac

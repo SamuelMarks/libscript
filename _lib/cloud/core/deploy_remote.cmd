@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -222,7 +222,7 @@ exit /b 0
 :setup_app_db
 set "aname=%~1"
 set "needs_db=%~2"
-ssh "!TARGET_HOST!" "cd \"$HOME/apps/!aname!\" && if [ -f libscript.json ]; then LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
+ssh "!TARGET_HOST!" "cd \"$HOME/apps/!aname!\" && if [ -f libscript.json ]; then REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
 if "!needs_db!"=="1" (
     if "!SHARED_DB!"=="postgres" (
         set "safe_db_name=!aname:-=_!"
@@ -239,7 +239,7 @@ exit /b 0
 set "rdir=%~1"
 set "aname=%~2"
 echo [INFO] Executing lifecycle hooks for !aname!...
-ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then $HOME/libscript/libscript.sh install-deps libscript.json && $HOME/libscript/libscript.sh start libscript.json; fi"
+ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json && REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh start libscript.json; fi"
 exit /b 0
 
 :: ## configure_routing

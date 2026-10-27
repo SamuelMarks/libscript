@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -89,17 +88,6 @@ safe_tee() {
 # Performs the safe_cp operation and updates component state.
 safe_cp() {
   cp "$@" 2>/dev/null || sudo -n cp "$@" 2>/dev/null || cp "$@"
-}
-
-# ## safe_rm
-# Removes files safely with optional privilege escalation.
-#
-# ## Parameters
-#   $@ - Arguments to pass to rm
-# ## safe_rm
-# Performs the safe_rm operation and updates component state.
-safe_rm() {
-  rm "$@" 2>/dev/null || sudo -n rm "$@" 2>/dev/null || rm "$@"
 }
 
 # ## safe_tar
@@ -263,7 +251,7 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
   printf '[INFO] Staging WordPress (%s) into %s...\n' "${WORDPRESS_VERSION}" "${WORDPRESS_WWWROOT}"
   safe_mkdir -p "${WORDPRESS_WWWROOT}"
   if [ "${WORDPRESS_VERSION}" = "latest" ] || [ "${WORDPRESS_VERSION}" = "7.1.2" ]; then
-    dl_url="https://wordpress.org/latest.tar.gz"
+    dl_url='https://wordpress.org/latest.tar.gz'
   else
     dl_url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
   fi
@@ -319,8 +307,8 @@ EOF
 elif [ "${WORDPRESS_REUSE_OPENEDX_DB}" -eq 1 ] && "${LIBSCRIPT_ROOT_DIR}/_lib/databases/discover_databases.sh" --check --engine mysql >/dev/null 2>&1; then
   # Mode B: Multi-Tenant Database Coexistence & Reuse
   printf '[INFO] Shared MySQL database detected! Provisioning isolated WordPress schema in shared instance...\n'
-  DETECTED_DB_HOST="127.0.0.1"
-  DETECTED_DB_PORT="3306"
+  DETECTED_DB_HOST='127.0.0.1'
+  DETECTED_DB_PORT='3306'
   _db_disc=$("${LIBSCRIPT_ROOT_DIR}/_lib/databases/discover_databases.sh" --eval --engine mysql)
   while IFS='=' read -r _k _v; do
     _v="${_v%\"}"
@@ -347,7 +335,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
   # Mode C: SQLite integration drop-in
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
     safe_mkdir -p "${WORDPRESS_WWWROOT}/wp-content/mu-plugins"
-    dl_sqlite_url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
+    dl_sqlite_url='https://downloads.wordpress.org/plugin/sqlite-database-integration.zip'
     tmp_sqlite=$(mktemp)
     libscript_download "${dl_sqlite_url}" "${tmp_sqlite}" 2>/dev/null || true
     if [ -s "${tmp_sqlite}" ]; then
@@ -359,7 +347,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
 elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "postgresql" ]; then
   # Mode D: PostgreSQL drop-in
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
-    dl_pg_url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
+    dl_pg_url='https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip'
     tmp_pg=$(mktemp)
     libscript_download "${dl_pg_url}" "${tmp_pg}" 2>/dev/null || true
     if [ -s "${tmp_pg}" ]; then
@@ -516,11 +504,16 @@ chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
 printf '[INFO] Applying WAMP-class PHP optimization tuning...\n'
 for php_ini in /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini /etc/php.ini /usr/local/etc/php.ini; do
   if [ -f "$php_ini" ]; then
-    priv sed -i.bak "s|^memory_limit =.*|memory_limit = ${WORDPRESS_PHP_MEMORY_LIMIT}|" "$php_ini" 2>/dev/null || true
-    priv sed -i.bak "s|^upload_max_filesize =.*|upload_max_filesize = ${WORDPRESS_PHP_UPLOAD_MAX_FILESIZE}|" "$php_ini" 2>/dev/null || true
-    priv sed -i.bak "s|^post_max_size =.*|post_max_size = ${WORDPRESS_PHP_POST_MAX_SIZE}|" "$php_ini" 2>/dev/null || true
-    priv sed -i.bak "s|^max_execution_time =.*|max_execution_time = ${WORDPRESS_PHP_MAX_EXECUTION_TIME}|" "$php_ini" 2>/dev/null || true
-    safe_rm -f "${php_ini}.bak" 2>/dev/null || true
+    _php_tmp=$(mktemp)
+    sed -e "s|^memory_limit =.*|memory_limit = ${WORDPRESS_PHP_MEMORY_LIMIT}|" \
+        -e "s|^upload_max_filesize =.*|upload_max_filesize = ${WORDPRESS_PHP_UPLOAD_MAX_FILESIZE}|" \
+        -e "s|^post_max_size =.*|post_max_size = ${WORDPRESS_PHP_POST_MAX_SIZE}|" \
+        -e "s|^max_execution_time =.*|max_execution_time = ${WORDPRESS_PHP_MAX_EXECUTION_TIME}|" \
+        "$php_ini" > "$_php_tmp" 2>/dev/null || true
+    if [ -s "$_php_tmp" ]; then
+      priv cp "$_php_tmp" "$php_ini" 2>/dev/null || true
+    fi
+    rm -f "$_php_tmp" 2>/dev/null || true
   fi
 done
 
@@ -532,7 +525,7 @@ elif [ -d "/etc/php/8.1/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.1/fpm/p
 elif [ -d "/etc/php-fpm.d" ]; then php_fpm_pool_dir="/etc/php-fpm.d";
 fi
 
-WORDPRESS_PHP_FPM_LISTEN="127.0.0.1:9000"
+WORDPRESS_PHP_FPM_LISTEN='127.0.0.1:9000'
 if [ -n "$php_fpm_pool_dir" ]; then
   cat << EOF_FPM | safe_tee "${php_fpm_pool_dir}/wordpress.conf" >/dev/null
 [wordpress]
@@ -548,7 +541,7 @@ pm.start_servers = 5
 pm.min_spare_servers = 5
 pm.max_spare_servers = 35
 EOF_FPM
-  WORDPRESS_PHP_FPM_LISTEN="unix:/run/php/php-fpm-wordpress.sock"
+  WORDPRESS_PHP_FPM_LISTEN='unix:/run/php/php-fpm-wordpress.sock'
   priv systemctl restart php8.2-fpm 2>/dev/null || priv systemctl restart php8.3-fpm 2>/dev/null || priv systemctl restart php-fpm 2>/dev/null || true
 fi
 

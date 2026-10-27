@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,9 +34,9 @@ boot_vagrant_environment() {
   cd "${LIBSCRIPT_ROOT_DIR}/vagrant/windows-11" || exit 1
   
   if vagrant status 2>/dev/null | grep -q 'running ('; then
-    echo "[INFO] Vagrant environment is already running. Skipping boot."
+    echo '[INFO] Vagrant environment is already running. Skipping boot.'
   else
-    echo "[INFO] Booting Vagrant Windows 11 environment..."
+    echo '[INFO] Booting Vagrant Windows 11 environment...'
     vagrant up
   fi
 }

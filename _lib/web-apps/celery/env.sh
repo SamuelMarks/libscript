@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,8 +36,10 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 export PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
 if [ "$(uname -s)" = "Darwin" ]; then
-  export PYTHON_VENV="${PYTHON_VENV:-$HOME/.libscript/venvs/celery-${PYTHON_VERSION}}"
+  export PYTHON_VENV="${PYTHON_VENV:-${HOME:-/root}/.libscript/venvs/celery-${PYTHON_VERSION}}"
 else
   export PYTHON_VENV="${PYTHON_VENV:-/opt/venvs/celery-${PYTHON_VERSION}}"
 fi
 export CELERY_SERVICE_USER="${CELERY_SERVICE_USER:-celery}"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

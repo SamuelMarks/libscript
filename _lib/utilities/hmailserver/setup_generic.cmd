@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -78,7 +78,9 @@ if "%ACTION%"=="install" (
     echo [INFO] hMailServer verification stub.
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
-    where choco >nul 2>&1 && choco uninstall hmailserver -y >nul 2>&1
+    set "STACK="
+    set "LIBSCRIPT_PKG_MGR=choco"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_uninstall_pkg hmailserver
     exit /b 0
 )
 

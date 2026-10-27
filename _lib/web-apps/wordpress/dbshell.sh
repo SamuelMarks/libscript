@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,11 +34,11 @@ export DIR="${SCRIPT_DIR}"
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
 WP_CONFIG="${WWWROOT}/wp-config.php"
 
-DB_HOST="127.0.0.1"
-DB_PORT="3306"
-DB_NAME="wordpress"
-DB_USER="wordpress"
-DB_PASSWORD="wordpress"
+DB_HOST='127.0.0.1'
+DB_PORT='3306'
+DB_NAME='wordpress'
+DB_USER='wordpress'
+DB_PASSWORD='wordpress'
 DB_SSL_CA=""
 
 # Parse wp-config.php if present
@@ -67,9 +66,9 @@ if [ -f "$WP_CONFIG" ]; then
 fi
 
 # Locate client binary
-CLIENT="mysql"
+CLIENT='mysql'
 command -v mariadb >/dev/null 2>&1 && CLIENT="mariadb"
-DUMP_CLIENT="mysqldump"
+DUMP_CLIENT='mysqldump'
 command -v mariadb-dump >/dev/null 2>&1 && DUMP_CLIENT="mariadb-dump"
 
 if ! command -v "$CLIENT" >/dev/null 2>&1; then

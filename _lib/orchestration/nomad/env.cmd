@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,16 +50,22 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%NOMAD_VERSION%"=="" set "NOMAD_VERSION=latest"
+if "%NOMAD_HTTP_PORT%"=="" set "NOMAD_HTTP_PORT=4646"
+set "NOMAD_HOME=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%"
+set "NOMAD_ADDR=http://127.0.0.1:%NOMAD_HTTP_PORT%"
+set "_CAND_P=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nomad" "%NOMAD_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%NOMAD_VERSION%"=="" set "NOMAD_VERSION=latest"
-    if "%NOMAD_HTTP_PORT%"=="" set "NOMAD_HTTP_PORT=4646"
-    set "NOMAD_HOME=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%"
-    set "NOMAD_ADDR=http://127.0.0.1:%NOMAD_HTTP_PORT%"
-    set "_CAND_P=%LIBSCRIPT_HOME%\nomad\%NOMAD_VERSION%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nomad"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "NOMAD_VERSION=%NOMAD_VERSION%"
+    set "NOMAD_HTTP_PORT=%NOMAD_HTTP_PORT%"
+    set "NOMAD_HOME=%NOMAD_HOME%"
+    set "NOMAD_ADDR=%NOMAD_ADDR%"
+    set "PATH=%PATH%"
 )
 exit /b 0

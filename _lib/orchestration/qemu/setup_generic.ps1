@@ -5,6 +5,9 @@
 # Execute via PowerShell.
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $Action = $env:ACTION
 if ([string]::IsNullOrEmpty($Action)) { $Action = "install" }
@@ -15,9 +18,9 @@ if ($Action -eq "install") {
         exit 0
     }
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-        winget install --silent --force --id=SoftwareFreedomConservancy.QEMU -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"SoftwareFreedomConservancy.QEMU\")
     } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-        choco install -y qemu
+    libscript_depends @(\"qemu\")
     } else {
         Write-Error "Neither winget nor choco found to install QEMU."
         exit 1

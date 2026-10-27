@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,6 +39,8 @@ export LMS_HOST="${LMS_HOST:-openedx.local}"
 export CMS_HOST="${CMS_HOST:-studio.openedx.local}"
 export LMS_PORT="${LMS_PORT:-8000}"
 export CMS_PORT="${CMS_PORT:-8001}"
-export OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+export OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 export LMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
 export CMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$BUNDLER_INSTALL_METHOD" = "mise" ]; then
-      mise ls bundler || true
-    elif [ "$BUNDLER_INSTALL_METHOD" = "asdf" ]; then
-      asdf list bundler || true
-    elif [ "$BUNDLER_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls bundler || true
-    elif [ "$BUNDLER_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/bundler/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "bundler" "$ACTION" "$VERSION" "${BUNDLER_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$BUNDLER_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote bundler || true
-    elif [ "$BUNDLER_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all bundler || true
-    elif [ "$BUNDLER_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all bundler || true
+    if [ -n "${BUNDLER_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${BUNDLER_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${BUNDLER_RELEASES_URL:-}" ]; then
-        curl -sSL "${BUNDLER_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/bundler" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/oven-sh/bundler" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$BUNDLER_INSTALL_METHOD" = "mise" ]; then
-      mise use "bundler@${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "asdf" ]; then
-      asdf global bundler "${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "bundler@${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "bundler@${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "bundler" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "bundler" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bundler/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "bundler ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "bundler" "default" "${EXACT_VERSION}"
-      log_info "Set default bundler version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env bundler \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "bundler" "$ACTION" "$VERSION" "${BUNDLER_INSTALL_METHOD}"
     ;;
   download)
     if [ "$BUNDLER_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$BUNDLER_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "bundler"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "mise" ]; then
-      mise install "bundler@${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "asdf" ]; then
-      asdf install bundler "${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "bundler@${VERSION}"
-    elif [ "$BUNDLER_INSTALL_METHOD" = "vfox" ]; then
-      vfox add bundler || true
-      vfox install "bundler@${VERSION}"
+      libscript_depends 'bundler'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -161,7 +99,7 @@ case "$ACTION" in
         log_info "Installing bundler ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bundler/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bundler/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -188,8 +126,8 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-              log_info "Falling back to system package manager for bundler..."
-              libscript_depends "bundler"
+              log_info 'Falling back to system package manager for bundler...'
+              libscript_depends 'bundler'
               if command -v bundle >/dev/null 2>&1; then
                 ln -sf "$(command -v bundle)" "${TARGET_DIR}/bin/bundle"
                 ln -sf "$(command -v bundle)" "${TARGET_DIR}/bin/bundler"
@@ -205,52 +143,7 @@ case "$ACTION" in
       libscript_symlink_alias "bundler" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$BUNDLER_INSTALL_METHOD" = "libscript_native" ] || [ "$BUNDLER_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bundler}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $BUNDLER_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "bundler" "$ACTION" "$VERSION" "${BUNDLER_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$BUNDLER_INSTALL_METHOD" = "libscript_native" ] || [ "$BUNDLER_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bundler}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $BUNDLER_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$BUNDLER_INSTALL_METHOD" = "libscript_native" ] || [ "$BUNDLER_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bundler}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $BUNDLER_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$BUNDLER_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling bundler $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bundler/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/bundler/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $BUNDLER_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

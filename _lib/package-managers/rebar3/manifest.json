@@ -6,5 +6,6 @@
   "title": "rebar3",
   "description": "Bootstrap module for the `rebar3` package manager.",
   "category": "package-manager",
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "repository": "https://github.com/erlang/rebar3"
 }

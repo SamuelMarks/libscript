@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,10 +60,10 @@ show_deploy_help() {
 ' "  --dry-run                 Print planned Git deployment actions without mutating state"
 }
 
-REPO_SOURCE="."
+REPO_SOURCE='.'
 GIT_REF=""
 TARGET_HOST=""
-TARGET_DOMAIN="localhost"
+TARGET_DOMAIN='localhost'
 CLOUD_PROVIDER=""
 HOOK_DIR=""
 DRY_RUN_MODE="${DRY_RUN:-0}"
@@ -172,7 +171,7 @@ case "$REPO_SOURCE" in
     ;;
 esac
 
-COMMIT_SHA="unknown"
+COMMIT_SHA='unknown'
 if [ -d "${WORK_DIR}/.git" ] && command -v git >/dev/null 2>&1; then
   COMMIT_SHA=$(git -C "$WORK_DIR" rev-parse --short HEAD 2>/dev/null || printf 'unknown')
 fi

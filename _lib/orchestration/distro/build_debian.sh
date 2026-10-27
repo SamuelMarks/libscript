@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -87,7 +86,8 @@ mkdir -p "$PACKAGES_OUT"
 
 # Phase 5: Target Rootfs Installation via Dpkg Status Registration
 printf '[DISTRO-DEBIAN] Phase 5: Finalizing package manager status database...\n'
-cat <<EOF >> "$TARGET_ROOTFS/var/lib/dpkg/status"
+if ! grep -q "^Package: base-files$" "$TARGET_ROOTFS/var/lib/dpkg/status" 2>/dev/null; then
+  cat <<EOF >> "$TARGET_ROOTFS/var/lib/dpkg/status"
 Package: base-files
 Status: install ok installed
 Priority: required
@@ -100,6 +100,7 @@ Description: LibScript Debian Base System Files
  Core filesystem architecture and os-release identification.
 
 EOF
+fi
 
 cat <<EOF > "$TARGET_ROOTFS/etc/os-release"
 NAME="LibScript GNU/Linux (Debian-style)"

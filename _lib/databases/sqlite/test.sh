@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -163,7 +162,7 @@ if command -v sha256sum >/dev/null 2>&1; then
 elif command -v shasum >/dev/null 2>&1; then
   _digest="$(shasum -a 256 "${SQLITE_TRANSCRIPT_FILE}" | awk '{print $1}')"
 else
-  _digest="ok"
+  _digest='ok'
 fi
 
 rm -rf "${_tmp_test_dir}"

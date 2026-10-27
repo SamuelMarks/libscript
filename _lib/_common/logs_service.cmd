@@ -3,7 +3,7 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -56,21 +56,17 @@ set "LOG_FILES=%~3"
 
 if not "%LOG_FILES%"=="" (
     if exist "%LOG_FILES%" (
-        if "%ACTION%"=="tail -f" (
-            powershell -Command "Get-Content -Path '%LOG_FILES%' -Wait -Tail 100"
-            exit /b 0
-        ) else (
-            powershell -Command "Get-Content -Path '%LOG_FILES%' -Tail 100"
-            exit /b 0
-        )
+        type "%LOG_FILES%"
+        exit /b 0
     )
 )
 
-rem Fallback to Windows Event Logs
-if "%ACTION%"=="tail -f" (
-    powershell -Command "Get-EventLog -LogName Application -Source '%SVC_NAME%' -Newest 100"
-) else (
-    powershell -Command "Get-EventLog -LogName Application -Source '%SVC_NAME%' -Newest 100"
+rem Fallback to Windows Event Logs or service data log
+set "_DATA_BASE=%TEMP%\data"
+if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
+if exist "!_DATA_BASE!\%SVC_NAME%\service.log" (
+    type "!_DATA_BASE!\%SVC_NAME%\service.log"
+    exit /b 0
 )
 
 exit /b 0

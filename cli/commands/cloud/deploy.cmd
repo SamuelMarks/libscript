@@ -14,7 +14,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -192,35 +192,77 @@ if not "!CLOUD_PROVIDER!"=="" (
     exit /b !ERRORLEVEL!
 )
 
-set "COMMIT_SHA=unknown"
-if exist "!REPO_SOURCE!\.git" (
-    for /f "delims=" %%H in ('git -C "!REPO_SOURCE!" rev-parse --short HEAD 2^>nul') do set "COMMIT_SHA=%%H"
+set "WORK_DIR=!REPO_SOURCE!"
+set "_IS_REMOTE_GIT=0"
+if /i "!REPO_SOURCE:~0,7!"=="http://" set "_IS_REMOTE_GIT=1"
+if /i "!REPO_SOURCE:~0,8!"=="https://" set "_IS_REMOTE_GIT=1"
+if /i "!REPO_SOURCE:~0,4!"=="git@" set "_IS_REMOTE_GIT=1"
+if /i "!REPO_SOURCE:~0,6!"=="ssh://" set "_IS_REMOTE_GIT=1"
+if /i "!REPO_SOURCE:~-4!"==".git" set "_IS_REMOTE_GIT=1"
+
+if "!_IS_REMOTE_GIT!"=="1" (
+    for %%N in ("!REPO_SOURCE:/=\!") do set "APP_SLUG=%%~nN"
+    if "!APP_SLUG!"=="" set "APP_SLUG=app"
+    set "_DEPLOY_BASE=%USERPROFILE%\.libscript\deployments"
+    if defined LIBSCRIPT_HOME set "_DEPLOY_BASE=!LIBSCRIPT_HOME!\deployments"
+    set "WORK_DIR=!_DEPLOY_BASE!\!APP_SLUG!"
+    if "!DRY_RUN_MODE!"=="1" (
+        set "_REF_DISP=!GIT_REF!"
+        if "!_REF_DISP!"=="" set "_REF_DISP=default"
+        echo [DRY_RUN] Would clone/update !REPO_SOURCE! into !WORK_DIR! ^(ref: !_REF_DISP!^)
+    ) else (
+        if not exist "!_DEPLOY_BASE!" mkdir "!_DEPLOY_BASE!"
+        if exist "!WORK_DIR!\.git" (
+            git -C "!WORK_DIR!" fetch --all --prune
+        ) else (
+            git clone "!REPO_SOURCE!" "!WORK_DIR!"
+        )
+        if not "!GIT_REF!"=="" (
+            git -C "!WORK_DIR!" checkout "!GIT_REF!"
+            git -C "!WORK_DIR!" pull --ff-only origin "!GIT_REF!" 2>nul
+        )
+    )
+) else (
+    if exist "!WORK_DIR!\.git" (
+        if not "!GIT_REF!"=="" (
+            if "!DRY_RUN_MODE!"=="1" (
+                echo [DRY_RUN] Would checkout !GIT_REF! in !WORK_DIR!
+            ) else (
+                git -C "!WORK_DIR!" checkout "!GIT_REF!" 2>nul
+            )
+        )
+    )
 )
 
-echo [DEPLOY] Deploying !REPO_SOURCE! ^(commit: !COMMIT_SHA!^)
+set "COMMIT_SHA=unknown"
+if exist "!WORK_DIR!\.git" (
+    for /f "delims=" %%H in ('git -C "!WORK_DIR!" rev-parse --short HEAD 2^>nul') do set "COMMIT_SHA=%%H"
+)
+
+echo [DEPLOY] Deploying !WORK_DIR! ^(commit: !COMMIT_SHA!^)
 
 if not "!TARGET_HOST!"=="" (
     if "!DRY_RUN_MODE!"=="1" (
-        echo [DRY_RUN] Would execute deploy_remote.cmd !TARGET_HOST! --app !REPO_SOURCE!@!TARGET_DOMAIN!
+        echo [DRY_RUN] Would execute deploy_remote.cmd !TARGET_HOST! --app !WORK_DIR!@!TARGET_DOMAIN!
         exit /b 0
     )
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\deploy_remote.cmd" "!TARGET_HOST!" --app "!REPO_SOURCE!@!TARGET_DOMAIN!"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\deploy_remote.cmd" "!TARGET_HOST!" --app "!WORK_DIR!@!TARGET_DOMAIN!"
     exit /b !ERRORLEVEL!
 )
 
 if "!DRY_RUN_MODE!"=="1" (
-    echo [DRY_RUN] Local Git-driven deployment validated for !REPO_SOURCE! ^(commit: !COMMIT_SHA!^)
+    echo [DRY_RUN] Local Git-driven deployment validated for !WORK_DIR! ^(commit: !COMMIT_SHA!^)
     exit /b 0
 )
 
-if exist "!REPO_SOURCE!\libscript.json" (
-    pushd "!REPO_SOURCE!"
+if exist "!WORK_DIR!\libscript.json" (
+    pushd "!WORK_DIR!"
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install-deps libscript.json
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" start libscript.json
     popd
 )
 
-echo [OK] Deployment of !REPO_SOURCE! ^(commit: !COMMIT_SHA!^) complete.
+echo [OK] Deployment of !WORK_DIR! ^(commit: !COMMIT_SHA!^) complete.
 exit /b 0
 
 :: ## install_git_hook
@@ -231,11 +273,22 @@ set "_H_PATH=!_H_REPO!\hooks"
 if exist "!_H_REPO!\.git\hooks" set "_H_PATH=!_H_REPO!\.git\hooks"
 if not exist "!_H_PATH!" mkdir "!_H_PATH!"
 (
+    echo @echo off
+    echo for /f "tokens=1,2,3" %%%%A in ^('more'^) do ^(
+    echo   set "refname=%%%%C"
+    echo   call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" deploy "!_H_REPO!" --branch "%%%%~nxC"
+    echo ^)
+) > "!_H_PATH!\post-receive.cmd"
+(
     echo #!/bin/sh
     echo set -feu
     echo while read -r oldrev newrev refname; do
     echo   branch="${refname#refs/heads/}"
-    echo   "!LIBSCRIPT_ROOT_DIR!/libscript.sh" deploy "!_H_REPO!" --branch "$branch"
+    echo   if command -v cmd.exe ^>/dev/null 2^>^&1; then
+    echo     cmd.exe /c "\"!LIBSCRIPT_ROOT_DIR!\libscript.cmd\" deploy \"!_H_REPO!\" --branch \"$branch\""
+    echo   else
+    echo     "!LIBSCRIPT_ROOT_DIR!/libscript.sh" deploy "!_H_REPO!" --branch "$branch"
+    echo   fi
     echo done
 ) > "!_H_PATH!\post-receive"
 echo [OK] Installed Git post-receive deployment hook at !_H_PATH!\post-receive

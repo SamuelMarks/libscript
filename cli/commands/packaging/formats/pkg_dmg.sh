@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -183,11 +182,9 @@ EOF_SCRIPT
         # ## sed_in_place
         # Cross-platform in-place sed editing helper.
         sed_in_place() {
-          if [ "$(uname)" = "Darwin" ]; then
-            sed -i '' "$@"
-          else
-            sed -i "$@"
-          fi
+          _sip_expr="$2"
+          _sip_target="$3"
+          sed "$_sip_expr" "$_sip_target" > "${_sip_target}.tmp" && mv "${_sip_target}.tmp" "$_sip_target"
         }
 
         sed_in_place -e '/<installer-gui-script/a\
@@ -222,7 +219,7 @@ EOF_SCRIPT
         rm -rf "$PKG_STAGE"
       else
         printf '%s\n' "Created source files in $PKG_STAGE"
-        printf '%s\n' "pkgbuild/productbuild not found. Cannot build .pkg natively." >&2
+        printf '%s\n' 'pkgbuild/productbuild not found. Cannot build .pkg natively.' >&2
       fi
       exit 0
 

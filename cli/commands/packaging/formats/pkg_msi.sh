@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -63,8 +62,8 @@ EOF2
       printf '%s\n' "    <Directory Id=\"TARGETDIR\" Name=\"SourceDir\">"
       printf '%s\n' "      <Directory Id=\"ProgramFilesFolder\">"
       printf '%s\n' "        <Directory Id=\"INSTALLFOLDER\" Name=\"$APP_NAME\" />"
-      printf '%s\n' "      </Directory>"
-      printf '%s\n' "    </Directory>"
+      printf '%s\n' '      </Directory>'
+      printf '%s\n' '    </Directory>'
 
 # shellcheck disable=SC2086
       set -- $deps_list
@@ -73,7 +72,7 @@ EOF2
         {
           printf '%s\n' "Function CheckPorts_$pkg()"
           printf '%s\n' "  Session.Property(\"VALID_$pkg\") = \"1\""
-          printf '%s\n' "  Dim shell, exec, port"
+          printf '%s\n' '  Dim shell, exec, port'
           printf '%s\n' "  Set shell = CreateObject(\"WScript.Shell\")"
         } > "validate_${pkg}.vbs"
 
@@ -87,12 +86,12 @@ EOF2
                   printf '%s\n' "  port = Session.Property(\"PROP_${pkg}_${varname}\")"
                   printf '%s\n' "  If port <> \"\" Then"
                   printf '%s\n' "    Set exec = shell.Exec(\"cmd.exe /c netstat -an | findstr /R /C:"":\" & port & \" .*LISTENING\"\"\")"
-                  printf '%s\n' "    exec.StdOut.ReadAll()"
-                  printf '%s\n' "    If exec.ExitCode = 0 Then"
+                  printf '%s\n' '    exec.StdOut.ReadAll()'
+                  printf '%s\n' '    If exec.ExitCode = 0 Then'
                   printf '%s\n' "      MsgBox \"Port \" & port & \" is already in use.\", 16, \"Validation Error\""
                   printf '%s\n' "      Session.Property(\"VALID_$pkg\") = \"0\""
-                  printf '%s\n' "    End If"
-                  printf '%s\n' "  End If"
+                  printf '%s\n' '    End If'
+                  printf '%s\n' '  End If'
                 } >> "validate_${pkg}.vbs"
               fi
             done
@@ -110,7 +109,7 @@ EOF2
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    <Feature Id=\"Feature_$pkg\" Title=\"Install $pkg\" Level=\"1\">"
         printf '%s\n' "      <ComponentGroupRef Id=\"ProductComponents\" />"
-        printf '%s\n' "    </Feature>"
+        printf '%s\n' '    </Feature>'
       done
 
       # UI Generation
@@ -129,8 +128,8 @@ EOF2
       done
       printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
       printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
-      printf '%s\n' "        </Control>"
-      printf '%s\n' "      </Dialog>"
+      printf '%s\n' '        </Control>'
+      printf '%s\n' '      </Dialog>'
 
 # shellcheck disable=SC2086
       set -- $deps_list
@@ -171,8 +170,8 @@ EOF2
             printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
             printf '%s\n' "          <Publish Event=\"DoAction\" Value=\"CA_Val_$pkg\">1</Publish>"
             printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[VALID_$pkg=\"1\"]]></Publish>"
-            printf '%s\n' "        </Control>"
-            printf '%s\n' "      </Dialog>"
+            printf '%s\n' '        </Control>'
+            printf '%s\n' '      </Dialog>'
 
             printf '%s\n' "$vars_json" | while read -r item; do
               varname=$(printf '%s\n' "$item" | jq -r '.key')
@@ -195,12 +194,12 @@ EOF2
         printf '%s\n' "        <Control Id=\"YesBtn\" Type=\"PushButton\" X=\"100\" Y=\"100\" Width=\"56\" Height=\"17\" Text=\"Yes\">"
         printf '%s\n' "          <Publish Property=\"PURGE_$pkg\" Value=\"--purge-data\">1</Publish>"
         printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
-        printf '%s\n' "        </Control>"
+        printf '%s\n' '        </Control>'
         printf '%s\n' "        <Control Id=\"NoBtn\" Type=\"PushButton\" X=\"170\" Y=\"100\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"No\">"
         printf '%s\n' "          <Publish Property=\"PURGE_$pkg\" Value=\"\">1</Publish>"
         printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
-        printf '%s\n' "        </Control>"
-        printf '%s\n' "      </Dialog>"
+        printf '%s\n' '        </Control>'
+        printf '%s\n' '      </Dialog>'
         printf '%s\n' "      <Property Id=\"PURGE_$pkg\" Value=\"\" Secure=\"yes\" />"
         dialogs="$dialogs Dlg_Uninst_${pkg}"
       done
@@ -216,12 +215,12 @@ EOF2
       printf '%s\n' "            <RadioButton Value=\"nsis\" X=\"0\" Y=\"100\" Width=\"330\" Height=\"15\" Text=\".exe (NSIS)\" />"
       printf '%s\n' "            <RadioButton Value=\"deb\" X=\"0\" Y=\"120\" Width=\"330\" Height=\"15\" Text=\".deb package\" />"
       printf '%s\n' "            <RadioButton Value=\"rpm\" X=\"0\" Y=\"140\" Width=\"330\" Height=\"15\" Text=\".rpm package\" />"
-      printf '%s\n' "          </RadioButtonGroup>"
-      printf '%s\n' "        </Control>"
+      printf '%s\n' '          </RadioButtonGroup>'
+      printf '%s\n' '        </Control>'
       printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
       printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
-      printf '%s\n' "        </Control>"
-      printf '%s\n' "      </Dialog>"
+      printf '%s\n' '        </Control>'
+      printf '%s\n' '      </Dialog>'
       printf '%s\n' "      <Property Id=\"ACTION_CHOICE\" Value=\"install\" Secure=\"yes\" />"
       printf '%s\n' "      <Dialog Id=\"Dlg_Options\" Width=\"370\" Height=\"270\" Title=\"Options &amp; OS Targets\">"
       printf '%s\n' "        <Control Id=\"Chk_Offline\" Type=\"CheckBox\" X=\"20\" Y=\"20\" Width=\"330\" Height=\"15\" Property=\"OPT_OFFLINE\" CheckBoxValue=\"1\" Text=\"Enable --offline mode\" />"
@@ -232,17 +231,17 @@ EOF2
       printf '%s\n' "        <Control Id=\"Chk_BSD\" Type=\"CheckBox\" X=\"20\" Y=\"120\" Width=\"330\" Height=\"15\" Property=\"OPT_BSD\" CheckBoxValue=\"1\" Text=\"Target: BSD\" />"
       printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
       printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
-      printf '%s\n' "        </Control>"
-      printf '%s\n' "      </Dialog>"
+      printf '%s\n' '        </Control>'
+      printf '%s\n' '      </Dialog>'
       printf '%s\n' "      <Property Id=\"OPT_OFFLINE\" Value=\"0\" Secure=\"yes\" />"
       printf '%s\n' "      <Property Id=\"OPT_WIN\" Value=\"1\" Secure=\"yes\" />"
       printf '%s\n' "      <Property Id=\"OPT_DOS\" Value=\"0\" Secure=\"yes\" />"
       printf '%s\n' "      <Property Id=\"OPT_LINUX\" Value=\"1\" Secure=\"yes\" />"
       printf '%s\n' "      <Property Id=\"OPT_MAC\" Value=\"0\" Secure=\"yes\" />"
       printf '%s\n' "      <Property Id=\"OPT_BSD\" Value=\"0\" Secure=\"yes\" />"
-      printf '%s\n' "      <InstallUISequence>"
+      printf '%s\n' '      <InstallUISequence>'
       printf '%s\n' "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
-      last_dlg="Dlg_Features"
+      last_dlg='Dlg_Features'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -260,7 +259,7 @@ EOF2
       printf '%s\n' "        <Show Dialog=\"Dlg_Action\" After=\"$last_dlg\">NOT Installed</Show>"
       printf '%s\n' "        <Show Dialog=\"Dlg_Options\" After=\"Dlg_Action\">NOT Installed</Show>"
       # UI sequence for uninstall
-      last_uninst_dlg="CostFinalize"
+      last_uninst_dlg='CostFinalize'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -268,8 +267,8 @@ EOF2
         printf '%s\n' "        <Show Dialog=\"Dlg_Uninst_${pkg}\" After=\"$last_uninst_dlg\">REMOVE=\"ALL\"</Show>"
         last_uninst_dlg="Dlg_Uninst_${pkg}"
       done
-      printf '%s\n' "      </InstallUISequence>"
-      printf '%s\n' "    </UI>"
+      printf '%s\n' '      </InstallUISequence>'
+      printf '%s\n' '    </UI>'
 
       # Install Actions
 # shellcheck disable=SC2086
@@ -300,8 +299,8 @@ EOF2
       done
 
       {
-        printf '%s\n' "Function GenerateStack()"
-        printf '%s\n' "  Dim shell, cmd, args, action"
+        printf '%s\n' 'Function GenerateStack()'
+        printf '%s\n' '  Dim shell, cmd, args, action'
         printf '%s\n' "  Set shell = CreateObject(""WScript.Shell"")"
         printf '%s\n' "  action = Session.Property(""ACTION_CHOICE"")"
         printf '%s\n' "  If action = ""install"" Then Exit Function"
@@ -326,13 +325,13 @@ EOF2
         printf '%s\n' "  If Session.Property(""INSTALL_$pkg"") = ""1"" Then cmd = cmd & ""$pkg $ver """ >> "generate_stack.vbs"
       done
       {
-        printf '%s\n' "  cmd = cmd & args"
-        printf '%s\n' "  shell.Run cmd, 0, True"
-        printf '%s\n' "End Function"
+        printf '%s\n' '  cmd = cmd & args'
+        printf '%s\n' '  shell.Run cmd, 0, True'
+        printf '%s\n' 'End Function'
       } >> "generate_stack.vbs"
       printf '%s\n' "    <Binary Id=\"Bin_GenStack\" SourceFile=\"generate_stack.vbs\" />"
       printf '%s\n' "    <CustomAction Id=\"CA_GenStack\" BinaryKey=\"Bin_GenStack\" VBScriptCall=\"GenerateStack\" Return=\"ignore\" Impersonate=\"no\" Execute=\"deferred\" />"
-      printf '%s\n' "    <InstallExecuteSequence>"
+      printf '%s\n' '    <InstallExecuteSequence>'
 # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -341,14 +340,14 @@ EOF2
         printf '%s\n' "      <Custom Action=\"Uninstall$pkg\" Before=\"RemoveFiles\">REMOVE=\"ALL\"</Custom>"
       done
       printf '%s\n' "      <Custom Action=\"CA_GenStack\" Before=\"InstallFinalize\"><![CDATA[NOT Installed AND ACTION_CHOICE<>\"install\"]]></Custom>"
-      printf '%s\n' "    </InstallExecuteSequence>"
+      printf '%s\n' '    </InstallExecuteSequence>'
 
-      printf '%s\n' "  </Product>"
-      printf '%s\n' "  <Fragment>"
+      printf '%s\n' '  </Product>'
+      printf '%s\n' '  <Fragment>'
       printf '%s\n' "    <ComponentGroup Id=\"ProductComponents\" Directory=\"INSTALLFOLDER\">"
-      printf '%s\n' "    </ComponentGroup>"
-      printf '%s\n' "  </Fragment>"
-      printf '%s\n' "</Wix>"
+      printf '%s\n' '    </ComponentGroup>'
+      printf '%s\n' '  </Fragment>'
+      printf '%s\n' '</Wix>'
 
       exec 1>&3 3>&-
 
@@ -368,14 +367,14 @@ EOF2
       fi
 
       if command -v candle >/dev/null 2>&1 || command -v candle.exe >/dev/null 2>&1; then
-        _candle="candle"
-        _light="light"
+        _candle='candle'
+        _light='light'
         command -v candle.exe >/dev/null 2>&1 && _candle="candle.exe"
         command -v light.exe >/dev/null 2>&1 && _light="light.exe"
         "$_candle" -arch x64 -out "${OUT_FILE}.wixobj" "$wxs_file"
         "$_light" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
       elif command -v wix.exe >/dev/null 2>&1 || command -v wix >/dev/null 2>&1; then
-        _wix="wix"
+        _wix='wix'
         command -v wix.exe >/dev/null 2>&1 && _wix="wix.exe"
         "$_wix" build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
       elif command -v wixl >/dev/null 2>&1; then

@@ -18,6 +18,14 @@
       "description": "Specific version of deno to install.",
       "type": "string",
       "default": "latest"
+    },
+    "DENO_PM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading deno-pm binary or archive artifacts."
+    },
+    "DENO_PM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying deno-pm available remote releases."
     }
   }
 }

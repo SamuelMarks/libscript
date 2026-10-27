@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$SNAP_INSTALL_METHOD" = "mise" ]; then
-      mise ls snap || true
-    elif [ "$SNAP_INSTALL_METHOD" = "asdf" ]; then
-      asdf list snap || true
-    elif [ "$SNAP_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SNAP_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls snap || true
-    elif [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/snap/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "snap" "$ACTION" "$VERSION" "${SNAP_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$SNAP_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote snap || true
-    elif [ "$SNAP_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all snap || true
-    elif [ "$SNAP_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$SNAP_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all snap || true
+    if [ -n "${SNAP_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${SNAP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${SNAP_RELEASES_URL:-}" ]; then
-        curl -sSL "${SNAP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/snap-stanford/snap" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/snap-stanford/snap" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$SNAP_INSTALL_METHOD" = "mise" ]; then
-      mise use "snap@${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "asdf" ]; then
-      asdf global snap "${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$SNAP_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "snap@${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "snap@${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "snap" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "snap" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/snap/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "snap ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "snap" "default" "${EXACT_VERSION}"
-      log_info "Set default snap version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env snap \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "snap" "$ACTION" "$VERSION" "${SNAP_INSTALL_METHOD}"
     ;;
   download)
     if [ "$SNAP_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,23 +90,14 @@ case "$ACTION" in
     ;;
   install)
     if [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "snapd"
+      libscript_depends 'snapd'
       if [ -d /run/systemd/system ]; then
         priv systemctl enable --now snapd.socket 2>/dev/null || true
       fi
-    elif [ "$SNAP_INSTALL_METHOD" = "mise" ]; then
-      mise install "snap@${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "asdf" ]; then
-      asdf install snap "${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "snap@${VERSION}"
-    elif [ "$SNAP_INSTALL_METHOD" = "vfox" ]; then
-      vfox add snap || true
-      vfox install "snap@${VERSION}"
     else
       # libscript_native implementation
       if [ -f /etc/alpine-release ]; then
-        log_info "snap is not supported on Alpine Linux. Skipping installation."
+        log_info 'snap is not supported on Alpine Linux. Skipping installation.'
         exit 0
       fi
 
@@ -169,13 +107,13 @@ case "$ACTION" in
         log_info "Installing snap ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-          log_info "Falling back to system package manager for snap..."
-          libscript_depends "snapd"
+          log_info 'Falling back to system package manager for snap...'
+          libscript_depends 'snapd'
           if [ -d /run/systemd/system ]; then
             priv systemctl enable --now snapd.socket 2>/dev/null || true
           fi
         else
-          log_error "Native installation for snap from source is not supported."
+          log_error 'Native installation for snap from source is not supported.'
           exit 1
         fi
       else
@@ -184,52 +122,7 @@ case "$ACTION" in
       libscript_symlink_alias "snap" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$SNAP_INSTALL_METHOD" = "libscript_native" ] || [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-snap}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $SNAP_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "snap" "$ACTION" "$VERSION" "${SNAP_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$SNAP_INSTALL_METHOD" = "libscript_native" ] || [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-snap}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $SNAP_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$SNAP_INSTALL_METHOD" = "libscript_native" ] || [ "$SNAP_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-snap}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $SNAP_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$SNAP_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling snap $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/snap/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/snap/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $SNAP_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

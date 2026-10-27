@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "ports": [6443, 8132, 10250]
+  "ports": [6443, 8132, 10250],
+  "repository": "https://github.com/k0sproject/k0s"
 }

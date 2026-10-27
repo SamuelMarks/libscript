@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -81,7 +80,7 @@ case "$ACTION" in
     SUBACTION=${1:-ensure}
     RG=${2:-}
     if [ -z "$RG" ]; then
-      printf '%s\n' "Usage: group ensure <rg_name> [--location <loc>]"
+      printf '%s\n' 'Usage: group ensure <rg_name> [--location <loc>]'
       exit 1
     fi
     LOC="${AZURE_LOCATION:-${LOCATION:-eastus}}"
@@ -207,7 +206,7 @@ case "$ACTION" in
       attach-disk)
         RG=${3:-}; DISK_NAME=${4:-}
         if [ -z "$DISK_NAME" ] || [ "$DISK_NAME" = "null" ]; then
-          printf '%s\n' "No disk name specified, skipping attach-disk."
+          printf '%s\n' 'No disk name specified, skipping attach-disk.'
           exit 0
         fi
         if az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[?name=='$DISK_NAME'] | [0].name" -o tsv 2>/dev/null | grep -q .; then
@@ -231,7 +230,7 @@ case "$ACTION" in
           _src_sync="${SRC%/}/"
         fi
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
         elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
           tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
         else
@@ -386,7 +385,7 @@ case "$ACTION" in
     case "$SUBACTION" in
       create)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          printf '%s\n' "Usage: firewall create <name> <resource-group> [ports...]"
+          printf '%s\n' 'Usage: firewall create <name> <resource-group> [ports...]'
           exit 1
         fi
         LOC="${AZURE_LOCATION:-eastus}"
@@ -436,7 +435,7 @@ case "$ACTION" in
         ;;
       delete)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          printf '%s\n' "Usage: firewall delete <name> <resource-group>"
+          printf '%s\n' 'Usage: firewall delete <name> <resource-group>'
           exit 1
         fi
         libscript_verify_managed azure firewall "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
@@ -456,7 +455,7 @@ case "$ACTION" in
         ;;
       update)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          printf '%s\n' "Usage: firewall update <name> <resource-group> [--add-port PORT] [--remove-port PORT]"
+          printf '%s\n' 'Usage: firewall update <name> <resource-group> [--add-port PORT] [--remove-port PORT]'
           exit 1
         fi
         libscript_verify_managed azure firewall "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
@@ -490,7 +489,7 @@ case "$ACTION" in
     case "$SUBACTION" in
       create)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          printf '%s\n' "Usage: network create <name> <resource-group>"
+          printf '%s\n' 'Usage: network create <name> <resource-group>'
           exit 1
         fi
         LOC="${AZURE_LOCATION:-eastus}"
@@ -505,7 +504,7 @@ case "$ACTION" in
         ;;
       delete)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          printf '%s\n' "Usage: network delete <name> <resource-group>"
+          printf '%s\n' 'Usage: network delete <name> <resource-group>'
           exit 1
         fi
         libscript_verify_managed azure network "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
@@ -525,7 +524,7 @@ case "$ACTION" in
         ;;
       update)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          printf '%s\n' "Usage: network update <name> <resource-group> [--tags T]"
+          printf '%s\n' 'Usage: network update <name> <resource-group> [--tags T]'
           exit 1
         fi
         libscript_verify_managed azure network "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
@@ -574,7 +573,7 @@ case "$ACTION" in
           az configure --defaults location="$2"
           printf '%s\n' "Default location set to $2."
         else
-          printf '%s\n' "Usage: location select <location>"
+          printf '%s\n' 'Usage: location select <location>'
           exit 1
         fi
         ;;
@@ -585,70 +584,18 @@ case "$ACTION" in
     exit 0
     ;;
   ls)
-    if [ "$AZURE_INSTALL_METHOD" = "mise" ]; then
-      mise ls azure || true
-    elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list azure || true
-    elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls azure || true
-    elif [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/azure/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "azure" "$ACTION" "$VERSION" "${AZURE_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$AZURE_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote azure || true
-    elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all azure || true
-    elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all azure || true
+    if [ -n "${AZURE_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${AZURE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${AZURE_RELEASES_URL:-}" ]; then
-        curl -sSL "${AZURE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/MicrosoftDocs/azure-docs" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/MicrosoftDocs/azure-docs" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$AZURE_INSTALL_METHOD" = "mise" ]; then
-      mise use "azure@${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
-      asdf global azure "${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "azure@${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "azure@${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "azure" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "azure" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/azure/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "azure ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "azure" "default" "${EXACT_VERSION}"
-      log_info "Set default azure version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env azure \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "azure" "$ACTION" "$VERSION" "${AZURE_INSTALL_METHOD}"
     ;;
   download)
     if [ "$AZURE_INSTALL_METHOD" = "libscript_native" ]; then
@@ -664,16 +611,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "azure"
-    elif [ "$AZURE_INSTALL_METHOD" = "mise" ]; then
-      mise install "azure@${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
-      asdf install azure "${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "azure@${VERSION}"
-    elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
-      vfox add azure || true
-      vfox install "azure@${VERSION}"
+      libscript_depends 'azure'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -682,7 +620,7 @@ case "$ACTION" in
         log_info "Installing azure ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/azure/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/azure/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -717,52 +655,7 @@ case "$ACTION" in
       libscript_symlink_alias "azure" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$AZURE_INSTALL_METHOD" = "libscript_native" ] || [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-azure}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $AZURE_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "azure" "$ACTION" "$VERSION" "${AZURE_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$AZURE_INSTALL_METHOD" = "libscript_native" ] || [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-azure}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $AZURE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$AZURE_INSTALL_METHOD" = "libscript_native" ] || [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-azure}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $AZURE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$AZURE_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling azure $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/azure/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/azure/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $AZURE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,7 +39,7 @@ done
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0 <action> [args...]"
-  printf '%s\n' "See README.md for details."
+  printf '%s\n' 'See README.md for details.'
   exit 0
 fi
 
@@ -48,7 +47,7 @@ fi
 # Verifies that tmux binary is installed and available in PATH.
 check_tmux() {
   if ! command -v tmux >/dev/null 2>&1; then
-    log_error "tmux not found. Please install the utilities/tmux component first."
+    log_error 'tmux not found. Please install the utilities/tmux component first.'
     exit 1
   fi
 }
@@ -69,7 +68,7 @@ case "$ACTION" in
       else
         tmux new-session -d -s "$SESSION_NAME"
       fi
-      log_info "Started successfully."
+      log_info 'Started successfully.'
     fi
     ;;
   attach)
@@ -89,7 +88,7 @@ case "$ACTION" in
     tmux list-sessions || true
     ;;
     *)
-      export PACKAGE_NAME="tmux"
+      export PACKAGE_NAME='tmux'
       SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/tmux"
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
       export SCRIPT_NAME

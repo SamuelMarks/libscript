@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,9 +54,9 @@ stage_host_clang_shim() {
   _target_dir="${1}"
   mkdir -p "${_target_dir}/bin"
   if ! command -v clang >/dev/null 2>&1 && ! command -v cc >/dev/null 2>&1; then
-    libscript_depends "clang" "c" || true
+    libscript_depends 'clang' 'c' || true
   elif [ -f /etc/alpine-release ] && [ ! -f /usr/include/stdio.h ]; then
-    libscript_depends "c" || true
+    libscript_depends 'c' || true
   fi
   _host_clang=""
   for _cand in clang-19 clang-18 clang-17 clang-16 clang cc gcc; do
@@ -89,7 +88,7 @@ install_clang_component() {
   case "${CLANG_INSTALL_METHOD}" in
     system|pkg_mgr:*)
       if ! command -v clang >/dev/null 2>&1 || [ -n "${CLANG_PKG_MGR:-}" ] || [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" = "1" ]; then
-        libscript_depends "clang" || true
+        libscript_depends 'clang' || true
       fi
       stage_host_clang_shim "${TARGET_DIR}"
       ;;
@@ -104,18 +103,6 @@ install_clang_component() {
       fi
       TARGET_DIR="${LIBSCRIPT_BUILD_TARGET_DIR}"
       libscript_emit_build_metrics "clang" "${EXACT_VERSION}" "${TARGET_DIR}/bin/clang" "${CLANG_CFLAGS:--O2}" ""
-      ;;
-    mise)
-      mise install "clang@${VERSION}"
-      ;;
-    asdf)
-      asdf install clang "${VERSION}"
-      ;;
-    pkgx)
-      pkgx install "clang@${VERSION}"
-      ;;
-    vfox)
-      vfox install "clang@${VERSION}"
       ;;
     *)
       if [ -n "${CLANG_DOWNLOAD_URL:-}" ]; then
@@ -154,7 +141,7 @@ case "${ACTION}" in
       _dl_file="${DOWNLOAD_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/clang}/clang-${EXACT_VERSION}.tar.xz"
       PACKAGE_NAME="clang" libscript_download "${CLANG_DOWNLOAD_URL}" "${_dl_file}"
     else
-      log_info "CLANG_DOWNLOAD_URL not specified; skipping archive download."
+      log_info 'CLANG_DOWNLOAD_URL not specified; skipping archive download.'
     fi
     ;;
   install)

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,9 +49,9 @@ ACTION="${ACTION:-install}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${BUSYBOX_VERSION}" = "latest" ] || [ "${BUSYBOX_VERSION}" = "lts" ]; then
-    EXACT_VERSION=$(curl -sL 'https://busybox.net/' | grep -o 'BusyBox [0-9.]* (stable)' | head -n1 | grep -o '[0-9.]*')
+    EXACT_VERSION=$(libscript_fetch_stdout 'https://busybox.net/' | grep -o 'BusyBox [0-9.]* (stable)' | head -n1 | grep -o '[0-9.]*')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION='latest'
     fi
   else
     EXACT_VERSION="${BUSYBOX_VERSION}"
@@ -61,15 +60,7 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "${BUSYBOX_INSTALL_METHOD}" = "mise" ]; then
-      mise ls busybox
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list busybox
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls busybox
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
+    if [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
       busybox --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/busybox/" 2>/dev/null || true
@@ -77,31 +68,15 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "${BUSYBOX_INSTALL_METHOD}" = "mise" ]; then
-      mise ls-remote busybox
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf list all busybox
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox ls all busybox
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' 'System package manager does not support ls-remote directly here.'
     else
-      printf '%s\n' "Fetching remote versions not implemented generically for busybox"
+      printf '%s\n' 'Fetching remote versions not implemented generically for busybox'
     fi
     exit 0
     ;;
   use)
-    if [ "${BUSYBOX_INSTALL_METHOD}" = "mise" ]; then
-      mise use "busybox@${BUSYBOX_VERSION}"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf global busybox "${BUSYBOX_VERSION}"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox use "busybox@${BUSYBOX_VERSION}"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
+    if [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -117,7 +92,7 @@ case "$ACTION" in
 
       libscript_symlink_alias "busybox" "default" "${EXACT_VERSION}"
       log_info "Set default busybox version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
+      log_info 'To apply to the current shell, run:'
       log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env busybox \"${BUSYBOX_VERSION}\")"
     fi
     exit 0
@@ -157,15 +132,6 @@ case "$ACTION" in
         fi
       fi
       libscript_depends 'busybox' || true
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "mise" ]; then
-      mise install "busybox@${BUSYBOX_VERSION}"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
-      asdf install busybox "${BUSYBOX_VERSION}"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      pkgx install "busybox@${BUSYBOX_VERSION}"
-    elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
-      vfox add busybox || true
-      vfox install "busybox@${BUSYBOX_VERSION}"
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/busybox/${EXACT_VERSION}"
@@ -178,7 +144,7 @@ case "$ACTION" in
       mkdir -p "${TARGET_DIR}/bin"
       
       if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/busybox/"*"${VERSION:-}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
+        log_info 'Extracting from cache...'
         cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/busybox/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -213,52 +179,7 @@ case "$ACTION" in
 
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$BUSYBOX_INSTALL_METHOD" = "libscript_native" ] || [ "$BUSYBOX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-busybox}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $BUSYBOX_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "busybox" "$ACTION" "$VERSION" "${BUSYBOX_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$BUSYBOX_INSTALL_METHOD" = "libscript_native" ] || [ "$BUSYBOX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-busybox}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $BUSYBOX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$BUSYBOX_INSTALL_METHOD" = "libscript_native" ] || [ "$BUSYBOX_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-busybox}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $BUSYBOX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$BUSYBOX_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling busybox $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/busybox/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/busybox/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $BUSYBOX_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

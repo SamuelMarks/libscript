@@ -13,6 +13,9 @@ Execute this script to install and configure lighttpd on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
+
 
 $LighttpdVersion = $env:LIGHTTPD_VERSION
 if ([string]::IsNullOrEmpty($LighttpdVersion)) {
@@ -26,16 +29,14 @@ if ([string]::IsNullOrEmpty($PkgMgr)) {
 if ($PkgMgr -eq "winget") {
     # Lighttpd natively doesn't have an official winget, sometimes found via third party
     Write-Host "[WARN] Lighttpd may not exist on winget natively, falling back to basic attempt."
-    winget install lighttpd
+    libscript_depends @(\"lighttpd\")
 } elseif ($PkgMgr -eq "choco") {
-    choco install lighttpd
+    libscript_depends @(\"lighttpd\")
 } else {
     Write-Error "Unsupported Windows package manager: $PkgMgr"
 }
 
 if ($Action -eq "ls") {
-    if ($InstallMethod -eq "mise") { mise ls lighttpd; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls lighttpd; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "System package manager does not support ls directly here."; exit 0 }
     $CompDir = Join-Path $LibscriptHome "lighttpd"
     if (Test-Path $CompDir) { Get-ChildItem -Path $CompDir -Name }
@@ -43,15 +44,11 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    if ($InstallMethod -eq "mise") { mise ls-remote lighttpd; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox ls all lighttpd; exit 0 }
     Write-Output "ls-remote not fully implemented natively yet."
     exit 0
 }
 
 if ($Action -eq "use") {
-    if ($InstallMethod -eq "mise") { mise use "lighttpd@$CompVersion"; exit 0 }
-    if ($InstallMethod -eq "vfox") { vfox use "lighttpd@$CompVersion"; exit 0 }
     if ($InstallMethod -eq "system") { Write-Output "Cannot 'use' specific version with system package manager."; exit 0 }
     Write-Output "Native 'use' requires symlink support which is partially implemented."
     exit 0

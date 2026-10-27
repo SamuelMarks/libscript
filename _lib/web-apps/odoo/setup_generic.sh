@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,7 +43,7 @@ ODOO_WEBSERVER="${ODOO_WEBSERVER:-nginx}"
 ODOO_DB_TYPE="${ODOO_DB_TYPE:-postgres}"
 ODOO_VERSION="${ODOO_VERSION:-17.0}"
 if [ "${ODOO_VERSION}" = "latest" ]; then
-  ODOO_VERSION="17.0"
+  ODOO_VERSION='17.0'
 fi
 ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
 ODOO_DB_NAME="${ODOO_DB_NAME:-odoo}"
@@ -102,15 +101,19 @@ if [ ! -f "${ODOO_WWWROOT}/odoo-bin" ]; then
   priv tar xzf "${tmp_odoo}" --strip-components=1 -C "${ODOO_WWWROOT}"
   rm -f "${tmp_odoo}"
 
-  # Install Python dependencies using requirements.txt
+  # Install Python dependencies into an isolated virtual environment
   if [ -f "${ODOO_WWWROOT}/requirements.txt" ]; then
-    log_info "Installing Odoo Python dependencies..."
-    if command -v pip3 >/dev/null 2>&1; then
-      priv pip3 install --break-system-packages -r "${ODOO_WWWROOT}/requirements.txt" || true
-    elif command -v pip >/dev/null 2>&1; then
-      priv pip install --break-system-packages -r "${ODOO_WWWROOT}/requirements.txt" || true
+    log_info "Installing Odoo Python dependencies into ${ODOO_WWWROOT}/.venv..."
+    if command -v uv >/dev/null 2>&1; then
+      priv uv venv "${ODOO_WWWROOT}/.venv" 2>/dev/null || true
+      priv uv pip install --python "${ODOO_WWWROOT}/.venv/bin/python" -r "${ODOO_WWWROOT}/requirements.txt" || true
+    elif command -v python3 >/dev/null 2>&1; then
+      priv python3 -m venv "${ODOO_WWWROOT}/.venv" 2>/dev/null || true
+      if [ -x "${ODOO_WWWROOT}/.venv/bin/pip" ]; then
+        priv "${ODOO_WWWROOT}/.venv/bin/pip" install -r "${ODOO_WWWROOT}/requirements.txt" || true
+      fi
     else
-      log_warn "pip not found. Skipping python dependencies."
+      log_warn 'python3/uv not found. Skipping python dependencies.'
     fi
   fi
 fi
@@ -122,7 +125,7 @@ if [ "${ODOO_DB_TYPE}" = "postgres" ] || [ "${ODOO_DB_TYPE}" = "postgresql" ]; t
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
       --engine postgres --host "${ODOO_DB_HOST}" --port "${ODOO_DB_PORT}" \
       --schema "${ODOO_DB_NAME}" --user "${ODOO_DB_USER}" --password "${ODOO_DB_PASS}" >/dev/null 2>&1 || \
-      log_warn "PostgreSQL is not running or login failed. Skipping automated DB setup."
+      log_warn 'PostgreSQL is not running or login failed. Skipping automated DB setup.'
   fi
   if command -v psql >/dev/null 2>&1; then
     priv -u postgres psql -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" >/dev/null 2>&1 || priv psql -U postgres -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" >/dev/null 2>&1 || true
@@ -135,12 +138,12 @@ elif [ "${ODOO_DB_TYPE}" = "mariadb" ] || [ "${ODOO_DB_TYPE}" = "mysql" ]; then
   fi
 elif [ "${ODOO_DB_TYPE}" = "sqlite" ]; then
   # Odoo doesn't support SQLite. No db-side setup needed, just let Odoo fail or handle it
-  log_warn "Odoo natively supports PostgreSQL. SQLite selected, continuing anyway."
+  log_warn 'Odoo natively supports PostgreSQL. SQLite selected, continuing anyway.'
 fi
 
 # Configure Odoo
 if [ ! -f "${ODOO_WWWROOT}/odoo.conf" ]; then
-  log_info "Creating Odoo configuration..."
+  log_info 'Creating Odoo configuration...'
   cat <<EOF | safe_tee "${ODOO_WWWROOT}/odoo.conf" >/dev/null
 [options]
 admin_passwd = admin
@@ -157,7 +160,7 @@ EOF
 fi
 
 # Start Odoo as a background service or daemon if possible (simplified start script)
-log_info "Starting Odoo in the background..."
+log_info 'Starting Odoo in the background...'
 if command -v python3 >/dev/null 2>&1; then
   priv -u www-data sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" 2>/dev/null || \
   priv sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" 2>/dev/null || true
@@ -220,7 +223,7 @@ elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir="/etc/caddy/conf.d"
+    conf_dir='/etc/caddy/conf.d'
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${ODOO_SERVER_NAME}.caddy"
   else

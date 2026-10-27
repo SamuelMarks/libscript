@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -281,7 +280,7 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    git ls-remote --tags "https://github.com/linode/linode-cli" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
+    git ls-remote --tags "https://github.com/linode/linode-cli" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s
 ' "No versions found"
     exit 0
     ;;
@@ -297,7 +296,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$LINODE_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "linode-cli" || true
+      libscript_depends 'linode-cli' || true
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/linode/${EXACT_VERSION}"

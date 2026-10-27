@@ -12,7 +12,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -30,7 +29,7 @@ SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $0 [OPTIONS]"
-  printf '%s\n' "See script source or documentation for more details."
+  printf '%s\n' 'See script source or documentation for more details.'
   exit 0
 fi
 
@@ -70,11 +69,11 @@ EOF2
       fi
 
       printf '%s\n' ""
-      printf '%s\n' "[Types]"
+      printf '%s\n' '[Types]'
       printf '%s\n' "Name: \"custom\"; Description: \"Custom installation\"; Flags: iscustom"
       printf '%s\n' "Name: \"full\"; Description: \"Full installation\""
       printf '%s\n' ""
-      printf '%s\n' "[Components]"
+      printf '%s\n' '[Components]'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
@@ -126,8 +125,8 @@ EOF2
       done
 
       printf '%s\n' ""
-      printf '%s\n' "[Code]"
-      printf '%s\n' "var"
+      printf '%s\n' '[Code]'
+      printf '%s\n' 'var'
 
       # shellcheck disable=SC2086
       set -- $deps_list
@@ -152,14 +151,14 @@ EOF2
         fi
       done
 
-      printf '%s\n' "procedure InitializeWizard;"
-      printf '%s\n' "begin"
+      printf '%s\n' 'procedure InitializeWizard;'
+      printf '%s\n' 'begin'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         pkg_man=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "manifest.json" 2>/dev/null | grep "/$pkg/manifest.json" | head -n 1)
-        pkg_spdx="MIT"
+        pkg_spdx='MIT'
         pkg_title="$pkg"
         if [ -n "$pkg_man" ] && [ -f "$pkg_man" ]; then
           pkg_spdx=$(jq -r '.license // "MIT"' "$pkg_man" 2>/dev/null || printf 'MIT')
@@ -192,11 +191,11 @@ EOF2
           fi
         fi
       done
-      printf '%s\n' "end;"
+      printf '%s\n' 'end;'
 
-      printf '%s\n' "function ShouldSkipPage(PageID: Integer): Boolean;"
-      printf '%s\n' "begin"
-      printf '%s\n' "  Result := False;"
+      printf '%s\n' 'function ShouldSkipPage(PageID: Integer): Boolean;'
+      printf '%s\n' 'begin'
+      printf '%s\n' '  Result := False;'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
@@ -205,17 +204,17 @@ EOF2
         if [ -f "$schema_file" ]; then
           if [ -n "$(jq -c '.properties' "$schema_file")" ]; then
             printf '%s\n' "  if (PageID = Page_$pkg.ID) and not IsComponentSelected('$pkg') then"
-            printf '%s\n' "    Result := True;"
+            printf '%s\n' '    Result := True;'
           fi
         fi
       done
-      printf '%s\n' "end;"
+      printf '%s\n' 'end;'
 
-      printf '%s\n' "function NextButtonClick(PageId: Integer): Boolean;"
-      printf '%s\n' "var"
-      printf '%s\n' "  ResultCode: Integer;"
-      printf '%s\n' "begin"
-      printf '%s\n' "  Result := True;"
+      printf '%s\n' 'function NextButtonClick(PageId: Integer): Boolean;'
+      printf '%s\n' 'var'
+      printf '%s\n' '  ResultCode: Integer;'
+      printf '%s\n' 'begin'
+      printf '%s\n' '  Result := True;'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
@@ -230,40 +229,40 @@ EOF2
               if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
                 printf '%s\n' "    if (Page_$pkg.Values[$var_idx] <> '') then begin"
                 printf '%s\n' "      if Exec('cmd.exe', '/c netstat -an | findstr /R /C:"":'' + Page_$pkg.Values[$var_idx] + '' .*LISTENING""', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin"
-                printf '%s\n' "        if ResultCode = 0 then begin"
+                printf '%s\n' '        if ResultCode = 0 then begin'
                 printf '%s\n' "          MsgBox('Port ' + Page_$pkg.Values[$var_idx] + ' is already in use. Please select a different port.', mbError, MB_OK);"
-                printf '%s\n' "          Result := False;"
-                printf '%s\n' "          Exit;"
-                printf '%s\n' "        end;"
-                printf '%s\n' "      end;"
-                printf '%s\n' "    end;"
+                printf '%s\n' '          Result := False;'
+                printf '%s\n' '          Exit;'
+                printf '%s\n' '        end;'
+                printf '%s\n' '      end;'
+                printf '%s\n' '    end;'
               fi
               var_idx=$((var_idx + 1))
             done
-            printf '%s\n' "  end;"
+            printf '%s\n' '  end;'
           fi
         fi
       done
-      printf '%s\n' "end;"
+      printf '%s\n' 'end;'
 
       # Uninstallation Hooks
-      printf '%s\n' "procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);"
-      printf '%s\n' "var"
-      printf '%s\n' "  ResultCode: Integer;"
-      printf '%s\n' "begin"
-      printf '%s\n' "  if CurUninstallStep = usUninstall then begin"
+      printf '%s\n' 'procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);'
+      printf '%s\n' 'var'
+      printf '%s\n' '  ResultCode: Integer;'
+      printf '%s\n' 'begin'
+      printf '%s\n' '  if CurUninstallStep = usUninstall then begin'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
         printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
-        printf '%s\n' "    end else begin"
+        printf '%s\n' '    end else begin'
         printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
-        printf '%s\n' "    end;"
+        printf '%s\n' '    end;'
       done
-      printf '%s\n' "  end;"
-      printf '%s\n' "end;"
+      printf '%s\n' '  end;'
+      printf '%s\n' 'end;'
 
       # shellcheck disable=SC2086
       set -- $deps_list
@@ -276,9 +275,9 @@ EOF2
             var_idx=0
             for varname in $vars_json; do
               printf '%s\n' "function Get_${pkg}_${varname}(Param: String): String;"
-              printf '%s\n' "begin"
+              printf '%s\n' 'begin'
               printf '%s\n' "  Result := Page_$pkg.Values[$var_idx];"
-              printf '%s\n' "end;"
+              printf '%s\n' 'end;'
               var_idx=$((var_idx + 1))
             done
           fi
@@ -286,7 +285,7 @@ EOF2
       done
 
       printf '%s\n' ""
-      printf '%s\n' "[Run]"
+      printf '%s\n' '[Run]'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
@@ -306,7 +305,7 @@ EOF2
       done
 
       printf '%s\n' ""
-      printf '%s\n' "[UninstallRun]"
+      printf '%s\n' '[UninstallRun]'
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do

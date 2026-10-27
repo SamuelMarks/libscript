@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,7 +44,7 @@ ONLY_TARGET="${ONLY_TARGET:-all}"
 DRY_RUN_MODE=0
 if [ "${DRY_RUN:-false}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
   DRY_RUN_MODE=1
-  export DRY_RUN="true"
+  export DRY_RUN='true'
 fi
 
 PROVIDER="${CLOUD_PROVIDER:-${PROVIDER:-}}"
@@ -108,7 +107,7 @@ REPO_PATH="${_p5:-.}"
 REMOTE_DEST="${_p6:-}"
 
 if [ -z "$PROVIDER" ] || [ -z "$NODE" ] || [ -z "$RG" ] || [ -z "$LOC" ]; then
-  log_info "Usage: deploy_cloud.sh [options] <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
+  log_info 'Usage: deploy_cloud.sh [options] <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]'
   exit 1
 fi
 
@@ -260,7 +259,7 @@ resolve_manifests_ports() {
       return 0
     fi
   fi
-  printf '%s\n' "22 80 443 3000 4200 8000 8001"
+  printf '%s\n' '22 80 443 3000 4200 8000 8001'
 }
 
 JSON_FILE="$REPO_PATH/libscript.json"
@@ -322,51 +321,86 @@ if [ ! -f "$STATE_FILE" ]; then
   touch "$STATE_FILE" 2>/dev/null || STATE_FILE="${TMPDIR:-/tmp}/.deploy_state"
 fi
 
+# ## _stream_filtered_output
+# Filters out internal recursion-guard lines unless LIBSCRIPT_DEBUG=1 while streaming operational output.
+_stream_filtered_output() {
+  _sfo_out="$1"
+  while IFS= read -r _sfo_line || [ -n "$_sfo_line" ]; do
+    printf '%s\n' "$_sfo_line" >> "$_sfo_out"
+    printf '%s\n' "$_sfo_line" >> "$LOG_FILE"
+    if [ "${LIBSCRIPT_DEBUG:-0}" != "1" ]; then
+      case "$_sfo_line" in
+        '[CONTINUE] processing '*|'[STOP]     processing '*|'hello world!')
+          continue
+          ;;
+      esac
+    fi
+    printf '%s\n' "$_sfo_line"
+  done
+}
+
 # ## run_with_auth_check
-# Executes a provider CLI command with automatic authentication error detection and retry.
+# Executes a provider CLI command with real-time filtered output streaming and automatic authentication retry.
 run_with_auth_check() {
   cmd="$1"
   shift
   if [ "$DRY_RUN_MODE" -eq 1 ]; then
-    "$cmd" "$@"
-    return $?
+    output_file="$LOG_DIR/auth_check.tmp"
+    status_file="$LOG_DIR/auth_status.tmp"
+    : > "$output_file"
+    printf '0\n' > "$status_file"
+    {
+      "$cmd" "$@" 2>&1 || printf '%s\n' "$?" > "$status_file"
+    } | _stream_filtered_output "$output_file"
+    exit_code=$(cat "$status_file" 2>/dev/null || printf '1')
+    rm -f "$status_file" "$output_file"
+    return "$exit_code"
   fi
-  exit_code=0
   output_file="$LOG_DIR/auth_check.tmp"
-  "$cmd" "$@" > "$output_file" 2>&1 || exit_code=$?
+  status_file="$LOG_DIR/auth_status.tmp"
+  : > "$output_file"
+  printf '0\n' > "$status_file"
+  {
+    "$cmd" "$@" 2>&1 || printf '%s\n' "$?" > "$status_file"
+  } | _stream_filtered_output "$output_file"
+  exit_code=$(cat "$status_file" 2>/dev/null || printf '1')
+  rm -f "$status_file"
   if [ "$exit_code" -eq 0 ]; then
-    cat "$output_file" >> "$LOG_FILE"
     rm -f "$output_file"
     return 0
   fi
-  cat "$output_file" >> "$LOG_FILE"
   needs_auth=0
   provider_to_auth=""
   if grep -qEi "(not logged in|az login|Please run 'az login'|AuthenticationError|NoCredentialsError|AuthorizationFailed|InvalidAuthenticationTokenTenant)" "$output_file"; then
     needs_auth=1
-    provider_to_auth="azure"
+    provider_to_auth='azure'
   elif grep -qEi "(Unable to locate credentials|aws configure|ExpiredToken|InvalidClientTokenId|AccessDenied|NotAuthorized)" "$output_file"; then
     needs_auth=1
-    provider_to_auth="aws"
+    provider_to_auth='aws'
   elif grep -qEi "(gcloud auth login|Not authorized|Request had invalid authentication credentials|invalid_grant)" "$output_file"; then
     needs_auth=1
-    provider_to_auth="gcp"
+    provider_to_auth='gcp'
   fi
   if [ "$needs_auth" -eq 1 ]; then
     log "AUTH" "Authentication error detected for $provider_to_auth."
     if [ "$provider_to_auth" = "azure" ]; then
-      az login </dev/tty >/dev/tty 2>&1 || { rm -f "$output_file"; return $exit_code; }
+      az login </dev/tty >/dev/tty 2>&1 || { rm -f "$output_file"; return "$exit_code"; }
     elif [ "$provider_to_auth" = "aws" ]; then
-      aws configure </dev/tty >/dev/tty 2>&1 || { rm -f "$output_file"; return $exit_code; }
+      aws configure </dev/tty >/dev/tty 2>&1 || { rm -f "$output_file"; return "$exit_code"; }
     elif [ "$provider_to_auth" = "gcp" ]; then
-      gcloud auth login </dev/tty >/dev/tty 2>&1 || { rm -f "$output_file"; return $exit_code; }
+      gcloud auth login </dev/tty >/dev/tty 2>&1 || { rm -f "$output_file"; return "$exit_code"; }
     fi
-    rm -f "$output_file"
-    "$cmd" "$@" >> "$LOG_FILE" 2>&1
-    return $?
+    : > "$output_file"
+    printf '0\n' > "$status_file"
+    {
+      "$cmd" "$@" 2>&1 || printf '%s\n' "$?" > "$status_file"
+    } | _stream_filtered_output "$output_file"
+    exit_code=$(cat "$status_file" 2>/dev/null || printf '1')
+    rm -f "$status_file" "$output_file"
+    return "$exit_code"
   fi
   rm -f "$output_file"
-  return $exit_code
+  return "$exit_code"
 }
 
 # -----------------------------------------------------------------------------
@@ -405,6 +439,7 @@ if [ "$SKIP_INFRA" -eq 0 ]; then
         DISK_SIZE=$(printf '%s\n' "$disk_obj" | jq -r '.size_gb // 100')
         DISK_MOUNT=$(printf '%s\n' "$disk_obj" | jq -r '.mount_path // "/mnt/data"')
         DISK_NAME=$(printf '%s\n' "$disk_obj" | jq -r '.name // "data-disk"')
+        log "STORAGE" "Ensuring persistent data disk '${NODE}-${DISK_NAME}' (${DISK_SIZE}GB -> ${DISK_MOUNT})..."
         run_with_auth_check "$CLI" storage attach-disk "$NODE" "$CTX" "${NODE}-${DISK_NAME}" "$DISK_SIZE" "$DISK_MOUNT" || true
       done
     fi
@@ -425,15 +460,15 @@ if [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -
   [ "$FORCE_REINSTALL" -eq 1 ] && _shared_deps_flags="${_shared_deps_flags} --force-reinstall"
   if [ "$SKIP_PREPARE" -eq 0 ]; then
     log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '$NODE' from root manifest..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
     PREPARED_STORAGE=1
   else
     log "PREPARE" "Provisioning shared runtimes and databases on '$NODE' from root manifest..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
   fi
 fi
 
-# Deploy each selected application repository and run prepare-storage once if not skipped
+# Deploy each selected application repository across explicit observable phases
 OIFS="$IFS"
 IFS="|"
 # shellcheck disable=SC2086
@@ -487,7 +522,7 @@ for _app_entry in "$@"; do
 
   if [ "$SKIP_PREPARE" -eq 0 ] && [ "$PREPARED_STORAGE" -eq 0 ]; then
     log "PREPARE" "Preparing persistent storage and daemon overrides on '$NODE' via LibScript..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh prepare-storage libscript.json"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" ~/libscript/libscript.sh prepare-storage libscript.json"
     PREPARED_STORAGE=1
   fi
 
@@ -495,8 +530,14 @@ for _app_entry in "$@"; do
   [ "$FORCE_REINSTALL" -eq 1 ] && _deps_flags="${_deps_flags} --force-reinstall"
   [ "$FORCE_REBUILD" -eq 1 ] && _deps_flags="${_deps_flags} --force-rebuild"
 
-  log "START" "Installing dependencies, starting services, and configuring ingress for '$_ae_name'..."
-  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json && sudo REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" netctl ingress libscript.json"
+  log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '$_ae_name'..."
+  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
+
+  log "DAEMON" "Registering and starting/restarting application daemons for '$_ae_name'..."
+  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
+
+  log "ROUTES" "Updating reverse-proxy routes and reloading ingress for '$_ae_name' (${_ae_domain:-local})..."
+  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" netctl ingress libscript.json"
 done
 
 # -----------------------------------------------------------------------------
@@ -519,7 +560,7 @@ if [ "$SKIP_VERIFY" -eq 0 ]; then
       *:*)
         _ae_repo="${_ae_path_dest%%:*}"
         _ae_dest="${_ae_path_dest#*:}"
-        ;;
+      ;;
       *)
         _ae_repo="$_ae_path_dest"
         _ae_dest=$(basename "$_ae_path_dest")
@@ -534,7 +575,7 @@ if [ "$SKIP_VERIFY" -eq 0 ]; then
       fi
     fi
 
-    if ! matches_only_target "$_ae_name" "$_ae_dest"; then
+    if ! matches_only_target "$_ae_name" "$_ae_dest" "$_ae_repo"; then
       continue
     fi
 
@@ -543,7 +584,7 @@ if [ "$SKIP_VERIFY" -eq 0 ]; then
       _pub_arg=" --verify-ingress --public-url=https://${_ae_domain}"
     fi
     log "HEALTH" "Verifying '$_ae_name' health and ingress (${_ae_domain:-local})..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json --remediate${_pub_arg}"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json --remediate${_pub_arg}"
   done
 fi
 

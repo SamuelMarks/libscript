@@ -5,11 +5,7 @@
 # PowerShell uninstallation script for Vagrant.
 
 $ErrorActionPreference = "Stop"
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
-if (Get-Command winget -ErrorAction SilentlyContinue) {
-    winget uninstall --silent --id=Hashicorp.Vagrant -e
-} elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    choco uninstall -y vagrant
-} else {
-    Write-Output "Uninstall not supported automatically."
-}
+libscript_uninstall_pkg -Packages @("Hashicorp.Vagrant", "vagrant")

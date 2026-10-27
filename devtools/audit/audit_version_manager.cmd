@@ -13,7 +13,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "%THIS_FILE%" >&2
         exit /b 0
@@ -70,11 +70,18 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
                 )
             )
             set "COMP_NAME=%%~nxD"
-            if /i not "!COMP_NAME!"=="winget" if /i not "!COMP_NAME!"=="choco" (
-                for %%S in ("%%D\setup*.cmd") do (
-                    findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" "%%S" >nul 2>&1
+            if exist "%%D\env.cmd" (
+                findstr /I /R /C:"^[ ]*set [^\"]*PATH=.*;%%PATH%%" "%%D\env.cmd" >nul 2>&1
+                if not errorlevel 1 (
+                    echo [VM CONTRACT VIOLATION] [NON_IDEMPOTENT_PATH_CMD] %%D\env.cmd: Unconditional PATH prepend in env.cmd >&2
+                    set /a ERRORS+=1
+                )
+            )
+            if /i not "!CAT_NAME!"=="package-managers" (
+                for %%S in ("%%D\setup*.cmd" "%%D\uninstall*.cmd") do (
+                    findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" /C:"^[ ]*scoop[ ]*install" /C:"winget[ ]*uninstall" /C:"choco[ ]*uninstall" /C:"scoop[ ]*uninstall" /C:"curl[ ]*-s" /C:"Invoke-WebRequest" /C:"Invoke-RestMethod" "%%S" >nul 2>&1
                     if not errorlevel 1 (
-                        echo [VM CONTRACT VIOLATION] [RAW_WINGET_IN_RECIPE] %%S: Direct winget/choco install in setup*.cmd >&2
+                        echo [VM CONTRACT VIOLATION] [RAW_PKG_MGR_OR_FETCH_IN_RECIPE] %%S: Direct package manager or network fetch call in recipe .cmd >&2
                         set /a ERRORS+=1
                     )
                 )

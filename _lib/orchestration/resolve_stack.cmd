@@ -13,7 +13,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -105,30 +105,29 @@ if %errorlevel% neq 0 (
     exit /b 0
 )
 
-REM Gather manifests into a single list
-set "MANIFESTS="
+REM Stream all manifests into a temporary file to avoid cmd.exe 8191-char limit
+set "TMP_RAW=%TEMP%\libscript_manifests_raw_%RANDOM%.jsonl"
+set "TMP_ARR=%TEMP%\libscript_manifests_%RANDOM%.json"
+if exist "!TMP_RAW!" del /f /q "!TMP_RAW!" >nul 2>&1
 for /R "%LIB_DIR%" %%F in (manifest.json) do (
-    set "MANIFESTS=!MANIFESTS! "%%F""
+    type "%%F" >> "!TMP_RAW!" 2>nul
+    echo.>> "!TMP_RAW!"
+)
+if exist "!TMP_RAW!" (
+    jq -s "." "!TMP_RAW!" > "!TMP_ARR!" 2>nul
+    del /f /q "!TMP_RAW!" >nul 2>&1
+) else (
+    echo []> "!TMP_ARR!"
 )
 
-if "!MANIFESTS!"=="" (
-    if "%OUTPUT_FILE%"=="" (
-        jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: []}" "%CONFIG_FILE%" | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq"
-    ) else (
-        for %%P in ("%OUTPUT_FILE%") do set "OUT_DIR=%%~dpP"
-        if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
-        jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: []}" "%CONFIG_FILE%" | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq" > "%OUTPUT_FILE%"
-        echo [INFO] Execution plan generated at %OUTPUT_FILE%
-    )
+if "%OUTPUT_FILE%"=="" (
+    jq --arg target_os "%TARGET_OS%" --slurpfile manifests "!TMP_ARR!" -n "{config: input, manifests: ($manifests[0] // [])}" "%CONFIG_FILE%" | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq"
 ) else (
-    if "%OUTPUT_FILE%"=="" (
-        jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" !MANIFESTS! | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq"
-    ) else (
-        for %%P in ("%OUTPUT_FILE%") do set "OUT_DIR=%%~dpP"
-        if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
-        jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" !MANIFESTS! | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq" > "%OUTPUT_FILE%"
-        echo [INFO] Execution plan generated at %OUTPUT_FILE%
-    )
+    for %%P in ("%OUTPUT_FILE%") do set "OUT_DIR=%%~dpP"
+    if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
+    jq --arg target_os "%TARGET_OS%" --slurpfile manifests "!TMP_ARR!" -n "{config: input, manifests: ($manifests[0] // [])}" "%CONFIG_FILE%" | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq" > "%OUTPUT_FILE%"
+    echo [INFO] Execution plan generated at %OUTPUT_FILE%
 )
+if exist "!TMP_ARR!" del /f /q "!TMP_ARR!" >nul 2>&1
 
 endlocal

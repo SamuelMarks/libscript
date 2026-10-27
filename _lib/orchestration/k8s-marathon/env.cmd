@@ -11,7 +11,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -50,18 +50,26 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%K8S_MARATHON_VERSION%"=="" set "K8S_MARATHON_VERSION=latest"
+if "%K8S_MARATHON_PORT%"=="" set "K8S_MARATHON_PORT=8081"
+if "%K8S_MARATHON_NAMESPACE%"=="" set "K8S_MARATHON_NAMESPACE=default"
+if "%K8S_MARATHON_BACKEND%"=="" set "K8S_MARATHON_BACKEND=k8s"
+set "K8S_MARATHON_HOME=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%"
+set "K8S_MARATHON_URL=http://127.0.0.1:%K8S_MARATHON_PORT%"
+set "_CAND_P=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%\bin"
+echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "k8s-marathon" "%K8S_MARATHON_VERSION%"
 endlocal & (
-    if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-    if "%K8S_MARATHON_VERSION%"=="" set "K8S_MARATHON_VERSION=latest"
-    if "%K8S_MARATHON_PORT%"=="" set "K8S_MARATHON_PORT=8081"
-    if "%K8S_MARATHON_NAMESPACE%"=="" set "K8S_MARATHON_NAMESPACE=default"
-    if "%K8S_MARATHON_BACKEND%"=="" set "K8S_MARATHON_BACKEND=k8s"
-    set "K8S_MARATHON_HOME=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%"
-    set "K8S_MARATHON_URL=http://127.0.0.1:%K8S_MARATHON_PORT%"
-    set "_CAND_P=%LIBSCRIPT_HOME%\k8s-marathon\%K8S_MARATHON_VERSION%\bin"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "k8s-marathon"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "K8S_MARATHON_VERSION=%K8S_MARATHON_VERSION%"
+    set "K8S_MARATHON_PORT=%K8S_MARATHON_PORT%"
+    set "K8S_MARATHON_NAMESPACE=%K8S_MARATHON_NAMESPACE%"
+    set "K8S_MARATHON_BACKEND=%K8S_MARATHON_BACKEND%"
+    set "K8S_MARATHON_HOME=%K8S_MARATHON_HOME%"
+    set "K8S_MARATHON_URL=%K8S_MARATHON_URL%"
+    set "PATH=%PATH%"
 )
 exit /b 0

@@ -43,6 +43,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = Split-Path -Parent $ScriptDir
+. (Join-Path $RootDir "_lib\_common\pkg_mgr.ps1")
 
 if (-not $Manifest) {
     $Manifest = Join-Path $RootDir "_lib\web-apps\openedx\offline_bundle.json"
@@ -173,8 +174,7 @@ function Process-Artifact {
 
     Write-Host "[FETCHING] [$Category] $filename from $Url..."
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing
+        libscript_download -Url $Url -Dest $Destination
     } catch {
         Write-Error "[FAIL] Failed to download $filename`: $_"
         return $false

@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,70 +63,18 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$NIMBLE_INSTALL_METHOD" = "mise" ]; then
-      mise ls nimble || true
-    elif [ "$NIMBLE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list nimble || true
-    elif [ "$NIMBLE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls nimble || true
-    elif [ "$NIMBLE_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nimble/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "nimble" "$ACTION" "$VERSION" "${NIMBLE_INSTALL_METHOD}"
     ;;
   ls-remote)
-    if [ "$NIMBLE_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote nimble || true
-    elif [ "$NIMBLE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all nimble || true
-    elif [ "$NIMBLE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls all nimble || true
+    if [ -n "${NIMBLE_RELEASES_URL:-}" ]; then
+      libscript_fetch_stdout "${NIMBLE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-      if [ -n "${NIMBLE_RELEASES_URL:-}" ]; then
-        curl -sSL "${NIMBLE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-      else
-      git ls-remote --tags "https://github.com/libscript/nimble" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+    git ls-remote --tags "https://github.com/nim-lang/nimble" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     fi
     exit 0
     ;;
   use)
-    if [ "$NIMBLE_INSTALL_METHOD" = "mise" ]; then
-      mise use "nimble@${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "asdf" ]; then
-      asdf global nimble "${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not use explicit versions this way"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nimble@${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "nimble@${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "nimble" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "nimble" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nimble/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "nimble ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "nimble" "default" "${EXACT_VERSION}"
-      log_info "Set default nimble version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nimble \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "nimble" "$ACTION" "$VERSION" "${NIMBLE_INSTALL_METHOD}"
     ;;
   download)
     if [ "$NIMBLE_INSTALL_METHOD" = "libscript_native" ]; then
@@ -143,16 +90,7 @@ case "$ACTION" in
     ;;
   install)
     if [ "$NIMBLE_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "nimble"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "mise" ]; then
-      mise install "nimble@${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "asdf" ]; then
-      asdf install nimble "${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "nimble@${VERSION}"
-    elif [ "$NIMBLE_INSTALL_METHOD" = "vfox" ]; then
-      vfox add nimble || true
-      vfox install "nimble@${VERSION}"
+      libscript_depends 'nimble'
     else
       # libscript_native implementation
       resolve_exact_version
@@ -163,7 +101,7 @@ case "$ACTION" in
 
         installed=0
         if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-          log_info "Attempting system package manager for nimble..."
+          log_info 'Attempting system package manager for nimble...'
           if libscript_depends "nimble" 2>/dev/null; then
             if command -v nimble >/dev/null 2>&1; then
               ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
@@ -190,13 +128,13 @@ case "$ACTION" in
           esac
 
           if [ -n "$NIM_ARCH" ] && [ "$UNAME_LOWER" = "linux" ]; then
-            log_info "Downloading standalone Nim bundle containing nimble..."
-            NIM_VER=$(curl -sSL "https://nim-lang.org/install_unix.html" 2>/dev/null | grep -oE 'nim-[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | sed 's/^nim-//')
+            log_info 'Downloading standalone Nim bundle containing nimble...'
+            NIM_VER=$(libscript_fetch_stdout "https://nim-lang.org/install_unix.html" 2>/dev/null | grep -oE 'nim-[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | sed 's/^nim-//')
             : "${NIM_VER:=2.2.12}"
             NIM_URL="https://nim-lang.org/download/nim-${NIM_VER}-${NIM_ARCH}.tar.xz"
             TEMP_XZ=$(mktemp)
             TEMP_DIR=$(mktemp -d)
-            libscript_depends "curl" "tar" "xz-utils" || true
+            libscript_depends 'curl' 'tar' 'xz-utils' || true
             if libscript_download "$NIM_URL" "$TEMP_XZ"; then
               tar -xJf "$TEMP_XZ" -C "$TEMP_DIR" --strip-components=1 || true
               if [ -f "$TEMP_DIR/bin/nimble" ]; then
@@ -210,7 +148,7 @@ case "$ACTION" in
         fi
 
         if [ "$installed" = "0" ] && ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
+          log_info 'Extracting from cache...'
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
             if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
@@ -237,15 +175,15 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-              log_info "Falling back to system package manager for nimble..."
-              libscript_depends "nimble"
+              log_info 'Falling back to system package manager for nimble...'
+              libscript_depends 'nimble'
               if command -v nimble >/dev/null 2>&1; then
                 ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
               fi
             else
               if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for nimble..."
-              libscript_depends "nimble"
+              log_info 'No native binary for FreeBSD. Falling back to system package manager for nimble...'
+              libscript_depends 'nimble'
             else
               log_warn "No download URL provided for nimble ${VERSION}."
             fi
@@ -262,52 +200,7 @@ case "$ACTION" in
       fi
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$NIMBLE_INSTALL_METHOD" = "libscript_native" ] || [ "$NIMBLE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nimble}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $NIMBLE_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "nimble" "$ACTION" "$VERSION" "${NIMBLE_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$NIMBLE_INSTALL_METHOD" = "libscript_native" ] || [ "$NIMBLE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nimble}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $NIMBLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$NIMBLE_INSTALL_METHOD" = "libscript_native" ] || [ "$NIMBLE_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nimble}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $NIMBLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$NIMBLE_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling nimble $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nimble/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nimble/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $NIMBLE_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

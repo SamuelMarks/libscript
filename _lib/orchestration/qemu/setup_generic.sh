@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -51,7 +50,7 @@ QEMU_SETUP_UEFI_FIRMWARE="${QEMU_SETUP_UEFI_FIRMWARE:-1}"
 # ## setup_uefi_symlinks
 # Configures standard UEFI firmware symlinks for QEMU/KVM.
 setup_uefi_symlinks() {
-  log_info "Configuring QEMU/OVMF UEFI firmware symlinks in /usr/local/share/qemu..."
+  log_info 'Configuring QEMU/OVMF UEFI firmware symlinks in /usr/local/share/qemu...'
   priv mkdir -p /usr/local/share/qemu
 
   # x86_64 code
@@ -167,12 +166,12 @@ case "$ACTION" in
     elif command -v qemu-img >/dev/null 2>&1; then
       qemu-img --version | head -n 1
     else
-      printf '%s\n' "QEMU not installed."
+      printf '%s\n' 'QEMU not installed.'
     fi
     exit 0
     ;;
   ls-remote)
-    printf '%s\n' "Managed via system package manager."
+    printf '%s\n' 'Managed via system package manager.'
     exit 0
     ;;
   install)
@@ -182,7 +181,7 @@ case "$ACTION" in
     fi
     log_info "Installing QEMU and virtualization packages via ${QEMU_INSTALL_METHOD}..."
     if [ "$QEMU_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "qemu"
+      libscript_depends 'qemu'
     elif [ "$QEMU_INSTALL_METHOD" = "brew" ]; then
       libscript_depends_via brew qemu
     fi
@@ -203,25 +202,20 @@ case "$ACTION" in
 
     if command -v systemctl >/dev/null 2>&1; then
       if systemctl list-unit-files libvirtd.service >/dev/null 2>&1; then
-        log_info "Starting and enabling libvirtd service..."
+        log_info 'Starting and enabling libvirtd service...'
         priv systemctl enable --now libvirtd 2>/dev/null || true
         setup_libvirt_network
       fi
     fi
     ;;
   uninstall)
-    log_info "Uninstalling QEMU..."
-    case "${PKG_MGR}" in
-      'apt-get')
-        priv apt-get remove -y qemu-system-x86 qemu-utils libvirt-daemon-system || true
-        ;;
-      'brew')
-        brew uninstall qemu || true
-        ;;
-      'dnf'|'yum')
-        priv "${PKG_MGR}" remove -y qemu-kvm libvirt || true
-        ;;
-    esac
+    log_info 'Uninstalling QEMU...'
+    libscript_uninstall_pkg qemu-system-x86
+    libscript_uninstall_pkg qemu-utils
+    libscript_uninstall_pkg libvirt-daemon-system
+    libscript_uninstall_pkg qemu-kvm
+    libscript_uninstall_pkg libvirt
+    libscript_uninstall_pkg qemu
     exit 0
     ;;
   start|stop|restart|status)

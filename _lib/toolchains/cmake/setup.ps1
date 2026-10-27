@@ -13,6 +13,8 @@ Execute this script to install and configure cmake on the local system.
 #>
 
 #!/usr/bin/env pwsh
+$_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
+. (Join-Path $_ls_root "_lib\_common\pkg_mgr.ps1")
 
 $InstallMethod = $env:CMAKE_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
@@ -47,15 +49,7 @@ function Resolve-ExactVersion {
 
 switch ($Action) {
     "ls" {
-        if ($InstallMethod -eq "mise") {
-            mise ls cmake
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls cmake
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             cmake --version
         } else {
             $LibscriptHome = Get-LibscriptBaseDir
@@ -67,32 +61,16 @@ switch ($Action) {
         break
     }
     "ls-remote" {
-        if ($InstallMethod -eq "mise") {
-            mise ls-remote cmake
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls cmake
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
-            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/Kitware/CMake/releases"
+            $Resp = Invoke-LibscriptFetchJson -Uri "https://api.github.com/repos/Kitware/CMake/releases"
             $Resp | ForEach-Object { $_.tag_name.Replace("v", "") } | Select-Object -First 100
         }
         break
     }
     "use" {
-        if ($InstallMethod -eq "mise") {
-            mise use "cmake@${CmakeVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls cmake
-        } elseif ($InstallMethod -eq "system") {
+        if ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -172,18 +150,10 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-                winget install --silent --force --id=Kitware.CMake -e --accept-package-agreements --accept-source-agreements
+    libscript_depends @(\"Kitware.CMake\")
             } elseif ($WinPkgMgr -eq "choco") {
-                choco install -y cmake
+    libscript_depends @(\"cmake\")
             }
-        } elseif ($InstallMethod -eq "mise") {
-            mise install "cmake@${CmakeVersion}"
-        } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"
-        } elseif ($InstallMethod -eq "pkgx") {
-            Write-Host "pkgx not fully supported natively on Windows"
-        } elseif ($InstallMethod -eq "vfox") {
-            vfox ls cmake; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $CmakeDir = Get-LibscriptVersionDir -Component "cmake" -Version $ExactVersion
@@ -208,7 +178,7 @@ switch ($Action) {
 
             $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
             Write-Host "Downloading $DownloadUrl"
-            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+            libscript_download $DownloadUrl $TempZip
 
             Write-Host "Extracting $TempZip to $CmakeDir"
             Expand-Archive -Path $TempZip -DestinationPath $CmakeDir -Force

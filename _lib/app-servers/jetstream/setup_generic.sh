@@ -11,7 +11,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -64,46 +63,14 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$JETSTREAM_INSTALL_METHOD" = "mise" ]; then
-      mise ls jetstream-pytorch
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "asdf" ]; then
-      asdf list jetstream-pytorch
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx does not have a local list command"
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "vfox" ]; then
-      vfox ls jetstream || true
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support ls here."
-    else
-      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/" 2>/dev/null || true
-    fi
-    exit 0
+    libscript_handle_generic_action "jetstream" "$ACTION" "$VERSION" "${JETSTREAM_INSTALL_METHOD}"
     ;;
   ls-remote)
-    printf '%s\n' "Use pip index versions jetstream-pytorch"
+    printf '%s\n' 'Use pip index versions jetstream-pytorch'
     exit 0
     ;;
   use)
-    if [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System packages do not support use here."
-    else
-      resolve_exact_version
-      libscript_symlink_alias "jetstream" "$VERSION" "${EXACT_VERSION}"
-      libscript_symlink_alias "jetstream" "default" "${EXACT_VERSION}"
-      
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/${EXACT_VERSION}"
-      if [ ! -d "$TARGET_DIR" ]; then
-        log_info "jetstream ${EXACT_VERSION} is not installed. Installing it now..."
-        unset SCRIPT_NAME || true
-        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
-      fi
-
-      libscript_symlink_alias "jetstream" "default" "${EXACT_VERSION}"
-      log_info "Set default jetstream version to ${EXACT_VERSION}."
-      log_info "To apply to the current shell, run:"
-      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env jetstream \"$VERSION\")"
-    fi
-    exit 0
+    libscript_handle_generic_action "jetstream" "$ACTION" "$VERSION" "${JETSTREAM_INSTALL_METHOD}"
     ;;
   download)
     if [ "$JETSTREAM_INSTALL_METHOD" = "libscript_native" ]; then
@@ -119,21 +86,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "system install not implemented for jetstream"
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "mise" ]; then
-      printf '%s\n' "mise install not implemented for jetstream"
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "asdf" ]; then
-      printf '%s\n' "asdf install not implemented for jetstream"
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s\n' "pkgx install not implemented for jetstream"
-    elif [ "$JETSTREAM_INSTALL_METHOD" = "vfox" ]; then
-      printf '%s\n' "vfox install not implemented for jetstream"
+      printf '%s\n' 'system install not implemented for jetstream'
     else
       # libscript_native implementation
       resolve_exact_version
       
       if [ -f "/etc/alpine-release" ]; then
-        log_info "Skipping Jetstream installation on Alpine. Missing jaxlib wheels for musl."
+        log_info 'Skipping Jetstream installation on Alpine. Missing jaxlib wheels for musl.'
         exit 0
       fi
 
@@ -149,16 +108,16 @@ case "$ACTION" in
         if command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'; then
           _py_ver=""
         elif command -v python3.11 >/dev/null 2>&1; then
-          _py_ver="3.11"
+          _py_ver='3.11'
         elif command -v python3.12 >/dev/null 2>&1; then
-          _py_ver="3.12"
+          _py_ver='3.12'
         elif command -v python3.10 >/dev/null 2>&1; then
-          _py_ver="3.10"
+          _py_ver='3.10'
         else
           if [ "${PKG_MGR:-}" = "dnf" ] || [ "${PKG_MGR:-}" = "yum" ]; then
             pkg_mgr_install python3.11 python3.11-pip python3.11-devel || true
             if command -v python3.11 >/dev/null 2>&1; then
-              _py_ver="3.11"
+              _py_ver='3.11'
             fi
           fi
         fi
@@ -168,7 +127,7 @@ case "$ACTION" in
         if [ ! -d "${JETSTREAM_SRC_DIR}/.git" ]; then
             git clone https://github.com/google/JetStream.git "${JETSTREAM_SRC_DIR}"
         else
-            log_info "Jetstream source already present, pulling latest..."
+            log_info 'Jetstream source already present, pulling latest...'
             (cd "${JETSTREAM_SRC_DIR}" && git fetch --all && git reset --hard '@{upstream}')
         fi
         
@@ -180,7 +139,7 @@ case "$ACTION" in
         "${TARGET_DIR}/bin/pip" install -e "${JETSTREAM_SRC_DIR}" || "${TARGET_DIR}/bin/pip" install -e "${JETSTREAM_SRC_DIR}" --no-deps || PIP_FAILED=1
         
         if [ "${PIP_FAILED:-0}" = "1" ]; then
-          log_error "Failed to install Jetstream via pip."
+          log_error 'Failed to install Jetstream via pip.'
           exit 1
         fi
         
@@ -199,7 +158,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -217,52 +175,7 @@ EOF
       libscript_symlink_alias "jetstream" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
-  start|stop|restart|status|health|logs|up|down)
-    if [ "$JETSTREAM_INSTALL_METHOD" = "libscript_native" ] || [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-jetstream}}"
-      libscript_service "$ACTION" "$service_name" "$@"
-    else
-      log_info "$ACTION not natively implemented for $JETSTREAM_INSTALL_METHOD."
-    fi
-    exit 0
+  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+    libscript_handle_generic_action "jetstream" "$ACTION" "$VERSION" "${JETSTREAM_INSTALL_METHOD}" "" "" "" "$@"
     ;;
-  install-service)
-    if [ "$JETSTREAM_INSTALL_METHOD" = "libscript_native" ] || [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-jetstream}}"
-      libscript_install_service "$service_name" "$@"
-    else
-      log_info "install-service not implemented for $JETSTREAM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall-service)
-    if [ "$JETSTREAM_INSTALL_METHOD" = "libscript_native" ] || [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
-      export SCRIPT_NAME
-      . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-jetstream}}"
-      libscript_uninstall_service "$service_name" "$@"
-    else
-      log_info "uninstall-service not implemented for $JETSTREAM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-  uninstall)
-    if [ "$JETSTREAM_INSTALL_METHOD" = "libscript_native" ]; then
-      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling jetstream $VERSION..."
-      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/$VERSION"
-    else
-      log_info "Uninstall not implemented or supported for $JETSTREAM_INSTALL_METHOD."
-    fi
-    exit 0
-    ;;
-
 esac

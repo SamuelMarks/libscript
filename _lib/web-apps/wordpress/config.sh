@@ -13,7 +13,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -72,8 +71,10 @@ case "$CMD" in
     KEY="$1"
     VAL="$2"
     if grep -q "define( *'${KEY}'" "$WP_CONFIG" 2>/dev/null; then
-      sed -i.bak "s|define( *'${KEY}'.*|define( '${KEY}', '${VAL}' );|" "$WP_CONFIG"
-      rm -f "${WP_CONFIG}.bak"
+      TMP_CFG=$(mktemp)
+      sed "s|define( *'${KEY}'.*|define( '${KEY}', '${VAL}' );|" "$WP_CONFIG" > "$TMP_CFG"
+      cp "$TMP_CFG" "$WP_CONFIG"
+      rm -f "$TMP_CFG"
     else
       # Append before wp-settings.php
       TMP_CFG=$(mktemp)

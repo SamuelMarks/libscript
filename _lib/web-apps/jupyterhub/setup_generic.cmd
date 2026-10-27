@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
@@ -65,14 +65,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-where npm >nul 2>&1
-if not errorlevel 1 (
-    echo [INFO] Installing configurable-http-proxy via npm...
-    call npm install -g configurable-http-proxy >nul 2>&1
-)
-
 set "BIN_DIR=%USERPROFILE%\.libscript\jupyterhub\latest\bin"
 if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+
+where npm >nul 2>&1
+if not errorlevel 1 (
+    echo [INFO] Installing configurable-http-proxy into isolated prefix...
+    call npm install --prefix "%USERPROFILE%\.libscript\jupyterhub\latest" configurable-http-proxy >nul 2>&1
+)
 
 (
     echo @echo off

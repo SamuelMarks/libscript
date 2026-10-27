@@ -14,7 +14,6 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
-  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,7 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: ${THIS_FILE} <path_to_execution_plan.json> [--dry-run]"
-  printf '%s\n' "Executes a linear build execution plan step-by-step with stamp tracking."
+  printf '%s\n' 'Executes a linear build execution plan step-by-step with stamp tracking.'
   exit 0
 fi
 
