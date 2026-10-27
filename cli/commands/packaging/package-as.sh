@@ -31,36 +31,120 @@ if [ "$CMD" = "package-as" ]; then
   export pkg_type="$1"
   shift
   if [ "${pkg_type:-}" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "docker_compose" ] || [ "${pkg_type:-}" = "docker-compose" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "msi" ]; then
     case "${1:-}" in
       stacks/*|_lib/web-apps/openedx*|web-apps/openedx*|openedx)
         exec "$LIBSCRIPT_ROOT_DIR/packaging/build_msi.sh" "$@"
         ;;
       *)
-        . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
+        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+        SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
+        export SCRIPT_NAME
+        # shellcheck disable=SC1090,SC1091
+        . "${SCRIPT_NAME}"
+        unset SCRIPT_NAME || true
+        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
         ;;
     esac
   elif [ "${pkg_type:-}" = "innosetup" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "nsis" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_nsis.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_nsis.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "pkg" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_pkg.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_pkg.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "dmg" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "deb" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "rpm" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "apk" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "txz" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "tui" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   elif [ "${pkg_type:-}" = "illumos-distro" ] || [ "${pkg_type:-}" = "illumos_distro" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/illumos_distro.sh" "$@"
   elif [ "${pkg_type:-}" = "freebsd-distro" ] || [ "${pkg_type:-}" = "freebsd_distro" ]; then

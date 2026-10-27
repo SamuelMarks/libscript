@@ -6,6 +6,7 @@
 # Source this file and call libscript_cdn_create, libscript_cdn_delete, etc.
 
 set -feu
+_api_caller_this="${THIS_FILE:-}"; _api_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,6 +21,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_api_caller_this" ] && THIS_FILE="$_api_caller_this"
+    [ -n "$_api_caller_dir" ] && SCRIPT_DIR="$_api_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -28,7 +31,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # shellcheck disable=SC1090
-. "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 # ## libscript_cdn_create
 # Performs the libscript_cdn_create operation and updates component state.
@@ -179,7 +189,14 @@ libscript_cdn_delete() {
   
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
     # shellcheck disable=SC1091
-    . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   fi
   
   case "$provider" in
@@ -241,3 +258,9 @@ libscript_cdn_invalidate() {
       ;;
   esac
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_api_caller_dir:-}" ] && SCRIPT_DIR="$_api_caller_dir"
+[ -n "${_api_caller_this:-}" ] && THIS_FILE="$_api_caller_this"
+unset _api_caller_this _api_caller_dir || true

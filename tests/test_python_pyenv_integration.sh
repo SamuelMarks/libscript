@@ -28,7 +28,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 if ! command -v pyenv >/dev/null 2>&1; then
   log_warn 'pyenv is not installed or not in PATH. Skipping pyenv integration validation.'
@@ -46,7 +53,14 @@ log_info 'Testing pyenv integration...'
 # Test 1: Resolve python executable via pyenv
 log_info 'Testing Python resolution via pyenv...'
 # Source abstraction
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 py_path=$(libscript_python_resolve)
 if [ -z "$py_path" ]; then
     log_error 'Failed to resolve python via pyenv.'

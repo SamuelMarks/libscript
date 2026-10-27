@@ -190,6 +190,18 @@ function Audit-File {
         if ($allContent -match '(?m)^[ \t]*ln[ \t]+-s[ \t]+[^-]') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'ln -s' found without '-f'. Use 'ln -sf' for idempotency."
         }
+        $lastScriptNameLine = -10
+        $shLineIdx = 0
+        foreach ($sLine in ($allContent -split "`r?`n")) {
+            $shLineIdx++
+            if ($sLine -match '^\s*#') { continue }
+            if ($sLine -match 'SCRIPT_NAME=') { $lastScriptNameLine = $shLineIdx }
+            if ($sLine -match '^\s*\.\s+["'']?(\$\{?SCRIPT_DIR\}?|\$\{?LIBSCRIPT_ROOT_DIR\}?|\$\{?REPO_ROOT\}?)/[^\s"'';]+\.sh["'']?(\s|$)') {
+                if (($shLineIdx - $lastScriptNameLine) -gt 4 -and $sLine -notmatch 'SCRIPT_NAME') {
+                    Log-Violation -File $FilePath -Rule "UNGUARDED_SOURCE_SH" -Details "Sourcing LibScript .sh file at line $shLineIdx without setting SCRIPT_NAME first."
+                }
+            }
+        }
     } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
         if ($allContent -match '(?mi)^[ \t]*(mkdir|md)[ \t]+' -and $allContent -notmatch '(?mi)if[ \t]+not[ \t]+exist') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' in batch script. Wrap with 'if not exist <dir> mkdir <dir>'."
@@ -202,6 +214,9 @@ function Audit-File {
         }
         if ($allContent -match '(?mi)^[ \t]*exit[ \t]+[0-9]+[ \t]*$') {
             Log-Violation -File $FilePath -Rule "BATCH_HYGIENE" -Details "Bare exit without /b found in batch script."
+        }
+        if ($allContent -match '(?mi)^[ \t]+endlocal[ \t]*&&?[ \t]*(\(|set[ \t])') {
+            Log-Violation -File $FilePath -Rule "BATCH_ENDLOCAL_DELAYED" -Details "Indented endlocal & (...) inside parenthesized block expands %VAR% before block executes."
         }
         $chainedIf = @{}
         $lineIdx = 0
@@ -308,13 +323,13 @@ function Audit-File {
     # 8g. Raw Network Fetch & Raw Package Manager Audit
     if ($normPath -notmatch '^(devtools|tests|docker)/') {
         if ($ext -eq "sh") {
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr|_common/fetch_checksum|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health|service))\.sh$') {
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health|service))\.sh$') {
                 $rawFetchSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])\b' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|libscript-allow-raw-(fetch|curl))' }
                 if ($rawFetchSh) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout)."
                 }
             }
-            if ($normPath -notmatch '_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/(vm_builder|distro/))') {
+            if ($normPath -notmatch '_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/distro/)') {
                 $rawPkgSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)\b' | Where-Object { $_.Line -notmatch '(--root|libscript-allow-raw-pkg)' }
                 if ($rawPkgSh) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
@@ -327,15 +342,15 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr\.cmd|package-managers/|orchestration/vm_builder\.cmd)') {
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr\.cmd|package-managers/)') {
                 $rawPkgCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s).*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' }
                 if ($rawPkgCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
         } elseif ($ext -eq "ps1") {
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr|web-apps/openedx/test_harness)\.ps1$') {
-                $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-fetch' }
+            if ($normPath -notmatch '_lib/_common/pkg_mgr\.ps1$') {
+                $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|libscript-allow-raw-fetch)' }
                 if ($rawFetchPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1)."
                 }

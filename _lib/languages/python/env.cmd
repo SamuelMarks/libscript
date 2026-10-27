@@ -96,7 +96,7 @@ for %%U in ("%UV_PYTHON_INSTALL_DIR%" "%APPDATA%\uv\python" "%LOCALAPPDATA%\uv\p
 )
 
 set "_NEW_PYPATH=!PYTHONPATH!"
-if exist "!_PY_DIR!\Lib\encodings" (
+if "%LIBSCRIPT_FORCE_PYTHONHOME%"=="1" if "%PYTHON_VENV%"=="" if "%VIRTUAL_ENV%"=="" if exist "!_PY_DIR!\Lib\encodings" (
     set "PYTHONHOME=!_PY_DIR!"
     echo ";!_NEW_PYPATH!;" | findstr /I /C:";!PYTHONHOME!\Lib\site-packages;" >nul 2>&1
     if errorlevel 1 (
@@ -109,6 +109,7 @@ if exist "!_PY_DIR!\Lib\encodings" (
 ) else (
     set "PYTHONHOME="
 )
+if not "%LIBSCRIPT_FORCE_PYTHONHOME%"=="1" set "PYTHONHOME="
 
 set "_NEW_VENV=%VIRTUAL_ENV%"
 if not "%PYTHON_VENV%"=="" (

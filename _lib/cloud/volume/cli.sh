@@ -128,7 +128,14 @@ while [ $# -gt 0 ]; do
     ;;
     create|delete|list|attach|detach|snapshot)
     # Execution
-    . "$SCRIPT_DIR/api.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="$SCRIPT_DIR/api.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     case "$CMD" in
       create)
         libscript_volume_create "$LIBSCRIPT_CLOUD" "$LIBSCRIPT_VOLUME_SIZE" "$LIBSCRIPT_VOLUME_ZONE" "$LIBSCRIPT_VOLUME_TYPE" "${LIBSCRIPT_VOLUME_NAME:-vol-libscript}"

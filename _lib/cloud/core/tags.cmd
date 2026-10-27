@@ -60,6 +60,11 @@ goto :%1
 if "%LIBSCRIPT_TAG_ENABLE%"=="" set "LIBSCRIPT_TAG_ENABLE=true"
 if "%LIBSCRIPT_TAG_KEY%"=="" set "LIBSCRIPT_TAG_KEY=libscript"
 if "%LIBSCRIPT_TAG_VALUE%"=="" set "LIBSCRIPT_TAG_VALUE=managed"
+endlocal & (
+    set "LIBSCRIPT_TAG_ENABLE=%LIBSCRIPT_TAG_ENABLE%"
+    set "LIBSCRIPT_TAG_KEY=%LIBSCRIPT_TAG_KEY%"
+    set "LIBSCRIPT_TAG_VALUE=%LIBSCRIPT_TAG_VALUE%"
+)
 exit /b 0
 
 :: ## libscript_verify_managed

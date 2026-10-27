@@ -43,7 +43,14 @@ libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun-pm/${BU
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/bun/env.sh" ]; then
   # shellcheck disable=SC1090,SC1091
-  . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/bun/env.sh"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/bun/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 else
   libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bun/latest/bin" "${HOME:-/root}/.bun/bin"
 fi

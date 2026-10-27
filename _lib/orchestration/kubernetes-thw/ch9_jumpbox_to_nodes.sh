@@ -46,7 +46,7 @@ for HOST in $NODES; do
   scp "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf" "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml" root@${HOST}:~/
   # shellcheck disable=SC2029
 
-  ssh root@${HOST} "mv -f 10-bridge-${HOST}.conf 10-bridge.conf && mv -f kubelet-config-${HOST}.yaml kubelet-config.yaml"
+  ssh root@${HOST} "cp -f 10-bridge-${HOST}.conf 10-bridge.conf && cp -f kubelet-config-${HOST}.yaml kubelet-config.yaml"
 done
 
 for HOST in $NODES; do
@@ -60,7 +60,13 @@ done
 for HOST in $NODES; do
 ssh root@${HOST} << 'EOF'
   set -eu
-  if command -v apt-get >/dev/null 2>&1; then
+  if [ -f "$HOME/libscript/_lib/_common/pkg_mgr.sh" ]; then
+    SCRIPT_NAME="$HOME/libscript/_lib/_common/pkg_mgr.sh"
+    export SCRIPT_NAME
+    . "$SCRIPT_NAME"
+    unset SCRIPT_NAME || true
+    libscript_depends socat conntrack ipset kmod || true
+  elif command -v apt-get >/dev/null 2>&1; then
     apt-get update
     apt-get -y install socat conntrack ipset kmod
   elif command -v apk >/dev/null 2>&1; then
@@ -79,10 +85,10 @@ ssh root@${HOST} << 'EOF'
     fi
   fi
   mkdir -p /etc/cni/net.d /opt/cni/bin /var/lib/kubelet /var/lib/kube-proxy /var/lib/kubernetes /var/run/kubernetes
-  mv -f crictl kube-proxy kubelet runc /usr/local/bin/ || true
-  mv -f containerd containerd-shim-runc-v2 containerd-stress /bin/ || true
+  cp -f crictl kube-proxy kubelet runc /usr/local/bin/ || true
+  cp -f containerd containerd-shim-runc-v2 containerd-stress /bin/ || true
   cp -rf cni-plugins/* /opt/cni/bin/ || true
-  mv -f 10-bridge.conf 99-loopback.conf /etc/cni/net.d/ || true
+  cp -f 10-bridge.conf 99-loopback.conf /etc/cni/net.d/ || true
   modprobe br-netfilter || true
   modprobe x_tables || true
   modprobe nf_nat || true
@@ -96,13 +102,13 @@ ssh root@${HOST} << 'EOF'
   echo "net.bridge.bridge-nf-call-ip6tables = 1" >> /etc/sysctl.d/kubernetes.conf
   sysctl -p /etc/sysctl.d/kubernetes.conf || true
   mkdir -p /etc/containerd/
-  mv -f containerd-config.toml /etc/containerd/config.toml || true
+  cp -f containerd-config.toml /etc/containerd/config.toml || true
   mkdir -p /etc/systemd/system/
-  mv -f containerd.service /etc/systemd/system/ || true
-  mv -f kubelet-config.yaml /var/lib/kubelet/ || true
-  mv -f kubelet.service /etc/systemd/system/ || true
-  mv -f kube-proxy-config.yaml /var/lib/kube-proxy/ || true
-  mv -f kube-proxy.service /etc/systemd/system/ || true
+  cp -f containerd.service /etc/systemd/system/ || true
+  cp -f kubelet-config.yaml /var/lib/kubelet/ || true
+  cp -f kubelet.service /etc/systemd/system/ || true
+  cp -f kube-proxy-config.yaml /var/lib/kube-proxy/ || true
+  cp -f kube-proxy.service /etc/systemd/system/ || true
   systemctl daemon-reload
   systemctl enable containerd kubelet kube-proxy
   systemctl start containerd kubelet kube-proxy

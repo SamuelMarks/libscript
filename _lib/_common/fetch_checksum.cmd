@@ -72,13 +72,10 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt" (
     )
 )
 
-where curl.exe >nul 2>&1
-if errorlevel 1 exit /b 1
-
 echo "!_URL!" | findstr /I /C:"nodejs.org/dist/" >nul 2>&1
 if not errorlevel 1 (
     for %%U in ("!_URL!") do set "_BASE_URL=%%~dpU"
-    for /f "tokens=1,2" %%A in ('curl.exe -sL "!_URL!/../SHASUMS256.txt" 2^>nul ^| findstr /I /C:"!_FILENAME!"') do (
+    for /f "tokens=1,2" %%A in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!_URL!/../SHASUMS256.txt" 2^>nul ^| findstr /I /C:"!_FILENAME!"') do (
         if not "%%A"=="" (
             echo %%A
             exit /b 0
@@ -86,7 +83,7 @@ if not errorlevel 1 (
     )
 )
 
-for /f "tokens=1" %%A in ('curl.exe -sL "!_URL!.sha256" 2^>nul') do (
+for /f "tokens=1" %%A in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!_URL!.sha256" 2^>nul') do (
     set "_CAND=%%A"
     if not "!_CAND!"=="" (
         if not "!_CAND:~63,1!"=="" if "!_CAND:~64,1!"=="" (

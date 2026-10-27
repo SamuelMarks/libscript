@@ -166,11 +166,39 @@ EOF
     fi
 
     if [ "${pkg_type:-}" = "deb" ]; then
-      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     elif [ "${pkg_type:-}" = "rpm" ]; then
-      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     elif [ "${pkg_type:-}" = "apk" ]; then
-      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     elif [ "${pkg_type:-}" = "txz" ]; then
-      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     fi

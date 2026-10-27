@@ -54,67 +54,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if /i "%~1"=="--hydrate" (
-    set "MANIFEST_FILE=%~2"
-    if "!MANIFEST_FILE!"=="" set "MANIFEST_FILE=libscript.json"
-    call :hydrate_manifest "!MANIFEST_FILE!"
-    endlocal & (
-        set "PATH=%PATH%"
-        set "SERVICE_PATH=%PATH%"
-        set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-        set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
-        set "NODEJS_VERSION=%NODEJS_VERSION%"
-        set "PYTHON_VERSION=%PYTHON_VERSION%"
-        set "PYTHONHOME=%PYTHONHOME%"
-        set "PYTHONPATH=%PYTHONPATH%"
-        set "PYTHON_VENV=%PYTHON_VENV%"
-        set "VIRTUAL_ENV=%VIRTUAL_ENV%"
-        set "GOROOT=%GOROOT%"
-        set "GO_VERSION=%GO_VERSION%"
-        set "JAVA_HOME=%JAVA_HOME%"
-        set "JAVA_VERSION=%JAVA_VERSION%"
-        set "RUST_VERSION=%RUST_VERSION%"
-        set "CARGO_HOME=%CARGO_HOME%"
-        set "RUSTUP_HOME=%RUSTUP_HOME%"
-        set "PHP_VERSION=%PHP_VERSION%"
-        set "RUBY_VERSION=%RUBY_VERSION%"
-        set "UV_VERSION=%UV_VERSION%"
-        set "UV_BIN=%UV_BIN%"
-        set "NPX_BIN=%NPX_BIN%"
-        set "POSTGRES_VERSION=%POSTGRES_VERSION%"
-        set "POSTGRESQL_VERSION=%POSTGRESQL_VERSION%"
-        set "POSTGRES_USER=%POSTGRES_USER%"
-        set "POSTGRES_PASSWORD=%POSTGRES_PASSWORD%"
-        set "POSTGRES_HOST=%POSTGRES_HOST%"
-        set "POSTGRES_PORT=%POSTGRES_PORT%"
-        set "POSTGRES_DB=%POSTGRES_DB%"
-        set "POSTGRES_URL=%POSTGRES_URL%"
-        set "DATABASE_URL=%DATABASE_URL%"
-        set "DUCKDB_PATH=%DUCKDB_PATH%"
-        set "SQLITE_PATH=%SQLITE_PATH%"
-        set "REDIS_URL=%REDIS_URL%"
-        set "VALKEY_URL=%VALKEY_URL%"
-        set "DATA_MOUNT_DIR=%DATA_MOUNT_DIR%"
-        set "DATA_DISK_MOUNT=%DATA_DISK_MOUNT%"
-        set "OLLAMA_MODELS=%OLLAMA_MODELS%"
-        set "REMOTE_USER=%REMOTE_USER%"
-        set "REMOTE_GROUP=%REMOTE_GROUP%"
-        set "REMOTE_HOME=%REMOTE_HOME%"
-        set "REMOTE_APP_DIR=%REMOTE_APP_DIR%"
-        set "SERVICE_EXTRA_PATH=%SERVICE_EXTRA_PATH%"
-    )
-    exit /b 0
-)
-
-if /i "%~1"=="--manifest" (
-    set "MANIFEST_FILE=%~2"
-    if "!MANIFEST_FILE!"=="" set "MANIFEST_FILE=libscript.json"
-    set "FORMAT=%~3"
-    if "!FORMAT!"=="" set "FORMAT=cmd"
-    call :print_manifest "!MANIFEST_FILE!" "!FORMAT!"
-    endlocal
-    exit /b 0
-)
+if /i "%~1"=="--hydrate" goto :do_hydrate
+if /i "%~1"=="--manifest" goto :do_manifest
 
 set "FORMAT=%~1"
 if "%FORMAT%"=="" set "FORMAT=cmd"
@@ -152,6 +93,70 @@ for %%P in ("!PATH:;=" "!") do (
     )
 )
 
+endlocal
+exit /b 0
+
+:: ## do_hydrate
+:: Executes manifest environment hydration and exports resolved variables to the caller scope.
+:do_hydrate
+set "MANIFEST_FILE=%~2"
+if "!MANIFEST_FILE!"=="" set "MANIFEST_FILE=libscript.json"
+call :hydrate_manifest "!MANIFEST_FILE!"
+endlocal & (
+    set "PATH=%PATH%"
+    set "SERVICE_PATH=%PATH%"
+    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
+    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
+    set "NODEJS_VERSION=%NODEJS_VERSION%"
+    set "PYTHON_VERSION=%PYTHON_VERSION%"
+    set "PYTHONHOME=%PYTHONHOME%"
+    set "PYTHONPATH=%PYTHONPATH%"
+    set "PYTHON_VENV=%PYTHON_VENV%"
+    set "VIRTUAL_ENV=%VIRTUAL_ENV%"
+    set "GOROOT=%GOROOT%"
+    set "GO_VERSION=%GO_VERSION%"
+    set "JAVA_HOME=%JAVA_HOME%"
+    set "JAVA_VERSION=%JAVA_VERSION%"
+    set "RUST_VERSION=%RUST_VERSION%"
+    set "CARGO_HOME=%CARGO_HOME%"
+    set "RUSTUP_HOME=%RUSTUP_HOME%"
+    set "PHP_VERSION=%PHP_VERSION%"
+    set "RUBY_VERSION=%RUBY_VERSION%"
+    set "UV_VERSION=%UV_VERSION%"
+    set "UV_BIN=%UV_BIN%"
+    set "NPX_BIN=%NPX_BIN%"
+    set "POSTGRES_VERSION=%POSTGRES_VERSION%"
+    set "POSTGRESQL_VERSION=%POSTGRESQL_VERSION%"
+    set "POSTGRES_USER=%POSTGRES_USER%"
+    set "POSTGRES_PASSWORD=%POSTGRES_PASSWORD%"
+    set "POSTGRES_HOST=%POSTGRES_HOST%"
+    set "POSTGRES_PORT=%POSTGRES_PORT%"
+    set "POSTGRES_DB=%POSTGRES_DB%"
+    set "POSTGRES_URL=%POSTGRES_URL%"
+    set "DATABASE_URL=%DATABASE_URL%"
+    set "DUCKDB_PATH=%DUCKDB_PATH%"
+    set "SQLITE_PATH=%SQLITE_PATH%"
+    set "REDIS_URL=%REDIS_URL%"
+    set "VALKEY_URL=%VALKEY_URL%"
+    set "DATA_MOUNT_DIR=%DATA_MOUNT_DIR%"
+    set "DATA_DISK_MOUNT=%DATA_DISK_MOUNT%"
+    set "OLLAMA_MODELS=%OLLAMA_MODELS%"
+    set "REMOTE_USER=%REMOTE_USER%"
+    set "REMOTE_GROUP=%REMOTE_GROUP%"
+    set "REMOTE_HOME=%REMOTE_HOME%"
+    set "REMOTE_APP_DIR=%REMOTE_APP_DIR%"
+    set "SERVICE_EXTRA_PATH=%SERVICE_EXTRA_PATH%"
+)
+exit /b 0
+
+:: ## do_manifest
+:: Prints combined environment statements for all dependencies in a manifest file.
+:do_manifest
+set "MANIFEST_FILE=%~2"
+if "!MANIFEST_FILE!"=="" set "MANIFEST_FILE=libscript.json"
+set "FORMAT=%~3"
+if "!FORMAT!"=="" set "FORMAT=cmd"
+call :print_manifest "!MANIFEST_FILE!" "!FORMAT!"
 endlocal
 exit /b 0
 
@@ -199,6 +204,10 @@ for %%E in ("!_HM_DIR!\.env" "!_HM_DIR!\.env.secrets" "!_HM_DIR!\.env.libscript"
             )
         )
     )
+)
+if exist "!_HM_DIR!\.venv\Scripts\python.exe" (
+    if "!PYTHON_VENV!"=="" set "PYTHON_VENV=!_HM_DIR!\.venv"
+    if "!VIRTUAL_ENV!"=="" set "VIRTUAL_ENV=!_HM_DIR!\.venv"
 )
 where jq >nul 2>&1
 if errorlevel 1 exit /b 0

@@ -25,7 +25,7 @@ the entire lifecycle through a single, idempotent interface.
 flowchart TD
     subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["299+ Recipes..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["300+ Recipes..."]
     end
 
     subgraph T1["1. Native Installers & Container Packages (package-as)"]
@@ -103,7 +103,7 @@ everything from **Node.js**, **Python**, **Rust**, and **Ruby** to **PostgreSQL*
 | :----------------------- | :----------------------------------------------------------- | :---------------------------------------------------------------- |
 | **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch) |
 | **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`) and PowerShell (`.ps1`)**    |
-| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 299+ tools**                      |
+| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 304+ tools & 324+ subsystems**    |
 | **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**   |
 | **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **Per-shell dynamic path injection via `use` or `env`**           |
 
@@ -310,12 +310,21 @@ system verification via `SamuelMarks/msi-rs` (`./devtools/capture_msi_vagrant_ma
 
 ```sh
 # Generate compressed & raw virtual machine disks
-./libscript.sh package-as qcow2       # QEMU / KVM / Proxmox (qcow2)
-./libscript.sh package-as raw-img     # Partitioned bare-metal / cloud disk image (raw-img)
-./libscript.sh package-as vmdk        # VMware ESXi / Workstation (vmdk)
-./libscript.sh package-as vdi         # Oracle VirtualBox (vdi)
-./libscript.sh package-as vagrant-box # Vagrant Box (QEMU / Libvirt / VirtualBox)
-./libscript.sh package-as iso         # Live bootable hybrid ISO (UEFI + BIOS, SquashFS + OverlayFS)
+./libscript.sh package-as qcow2            # QEMU / KVM / Proxmox (qcow2)
+./libscript.sh package-as raw-img          # Partitioned bare-metal / cloud disk image (raw-img)
+./libscript.sh package-as vmdk             # VMware ESXi / Workstation (vmdk)
+./libscript.sh package-as vdi              # Oracle VirtualBox (vdi)
+./libscript.sh package-as hyperv-vhd       # Microsoft Hyper-V (VHD / VHDX)
+./libscript.sh package-as proxmox-template # Proxmox VE template image
+./libscript.sh package-as vagrant-box      # Vagrant Box (QEMU / Libvirt / VirtualBox)
+./libscript.sh package-as iso              # Live bootable hybrid ISO (UEFI + BIOS, SquashFS + OverlayFS)
+
+# Direct cloud & modular OS distribution image synthesis
+./libscript.sh package-as aws-ami          # Amazon AWS AMI image
+./libscript.sh package-as azure-vhd        # Microsoft Azure VHD image
+./libscript.sh package-as gcp-image        # Google Cloud Platform image
+./libscript.sh package-as freebsd-distro   # Modular FreeBSD distribution image
+./libscript.sh package-as illumos-distro   # Modular illumos / SunOS ZFS distribution image
 ```
 
 Automates virtual disk provisioning (`_lib/storage/`) with UEFI (GPT + ESP) or Hybrid BIOS/UEFI
@@ -373,6 +382,10 @@ Cloud**, **Proxmox VE**, and local hypervisors.
 # Deploy onto Microsoft Azure
 ./libscript.sh provision azure prod-cluster rg-east eastus ./ ~/app
 ./libscript.sh cloud azure node deploy worker-node-01 rg-east ./src ~/app
+
+# Git-driven deployment & multi-app remote host deployment
+./libscript.sh deploy ./
+./libscript.sh deploy-remote deploy@prod.example.com ./
 
 # Clean multicloud teardown
 ./libscript.sh deprovision aws prod-cluster vpc-main us-east-1
@@ -472,6 +485,12 @@ Google Cloud TPU Pods (`xpk`):
 ./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler nomad
 ./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler kubernetes
 ./libscript.sh payload submit payloads/web/openedx/payload.json --scheduler mesos
+
+# Run declarative ML training, evaluation, and inference directly via the unified ML CLI
+./libscript.sh train libscript.json --target gke-xpk
+./libscript.sh eval-ml libscript.json --target gcp-tpu-vm
+./libscript.sh infer libscript.json --backend vllm
+./libscript.sh serve-ml libscript.json --backend ollama
 ```
 
 #### 7. Stateful Backup & Restore (Stage 7)
@@ -586,19 +605,40 @@ Turn raw virtual machines or bare-metal servers into self-healing application pl
 
 ## ☸️ Declarative Stacks: `libscript.json`
 
-Combine software versions, database requirements, and feature variants in a single declarative
-manifest:
+Combine software versions, database provisioning, application service daemons, lifecycle hooks, and
+feature variants in a single declarative manifest governed by
+[`libscript.schema.json`](libscript.schema.json):
 
 ```json
 {
   "name": "enterprise-microservice",
   "version": "1.0.0",
-  "dependencies": {
+  "domain": "api.example.com",
+  "deps": {
     "nodejs": ">=22.0.0",
     "postgres": "16",
-    "valkey": "latest",
-    "pipewire": "latest"
+    "valkey": "latest"
   },
+  "databases": [
+    {
+      "engine": "postgres",
+      "name": "app_prod",
+      "user": "app_user",
+      "password_env": "DB_PASSWORD",
+      "migration_dir": "./migrations"
+    }
+  ],
+  "services": [
+    {
+      "name": "api-server",
+      "command": "node server.js",
+      "port": 8080,
+      "health_check": {
+        "url": "http://127.0.0.1:8080/health",
+        "expect_status": 200
+      }
+    }
+  ],
   "variants": {
     "wayland": true,
     "lto": true
@@ -606,9 +646,9 @@ manifest:
 }
 ```
 
-The underlying constraint solver (`resolve_stack.jq`) resolves dependencies across tiers and uses
-Tarjan's Strongly Connected Components (SCC) algorithm to identify and break circular build cycles
-automatically.
+The underlying constraint solver (`resolve_stack.jq`) resolves dependencies across tiers (`deps` /
+`dependencies`) and uses Tarjan's Strongly Connected Components (SCC) algorithm to identify and
+break circular build cycles automatically.
 
 ---
 
@@ -697,8 +737,10 @@ cd libscript
   and Vagrant verification matrix.
 - [ROADMAP.md](ROADMAP.md) & [DOCS_ROADMAP.md](DOCS_ROADMAP.md): Master development and
   documentation roadmaps across all tiers.
-- [TODO_PLAN.md](TODO_PLAN.md): Open edX & WordPress reusable component delegation and verification
-  checklist.
+- [packaging/README.md](packaging/README.md),
+  [packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md](packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md) &
+  [packaging/ARCHITECTURE_MODULAR_MSI.md](packaging/ARCHITECTURE_MODULAR_MSI.md): Multi-format
+  installer compilation, logical multi-tenant provisioning, and modular MSI chaining.
 - [WHY.md](WHY.md), [DEVELOPING.md](DEVELOPING.md) & [AGENTS.md](AGENTS.md): Project philosophy,
   contributor guidelines, and agent engineering standards.
 

@@ -158,6 +158,8 @@ if "!is_json!"=="1" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
     )
+    if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
+    if defined SERVICE_EXTRA_PATH set "PATH=!SERVICE_EXTRA_PATH!;!PATH!"
     if "!skip_hooks!"=="0" (
         if /i "!action!"=="start" (
             if "!skip_db_init!"=="0" (

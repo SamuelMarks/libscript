@@ -8,6 +8,7 @@
 #   _lib/_common/uuid_gen.sh <NAMESPACE_UUID> <NAME>
 
 set -feu
+_uuid_gen_caller_this="${THIS_FILE:-}"; _uuid_gen_caller_dir="${SCRIPT_DIR:-}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -23,6 +24,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_uuid_gen_caller_this" ] && THIS_FILE="$_uuid_gen_caller_this"
+    [ -n "$_uuid_gen_caller_dir" ] && SCRIPT_DIR="$_uuid_gen_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -100,4 +103,9 @@ if [ -z "${SEED_NAME}" ]; then
   exit 1
 fi
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_uuid_gen_caller_dir:-}" ] && SCRIPT_DIR="$_uuid_gen_caller_dir"
+[ -n "${_uuid_gen_caller_this:-}" ] && THIS_FILE="$_uuid_gen_caller_this"
+unset _uuid_gen_caller_this _uuid_gen_caller_dir || true
 generate_uuid_v5 "${NAMESPACE}" "${SEED_NAME}"

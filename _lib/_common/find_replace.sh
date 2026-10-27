@@ -10,6 +10,7 @@
 
 
 set -feu
+_find_replace_caller_this="${THIS_FILE:-}"; _find_replace_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -24,6 +25,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_find_replace_caller_this" ] && THIS_FILE="$_find_replace_caller_this"
+    [ -n "$_find_replace_caller_dir" ] && SCRIPT_DIR="$_find_replace_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -74,3 +77,9 @@ EOF_AWK
     exit 1
   fi
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_find_replace_caller_dir:-}" ] && SCRIPT_DIR="$_find_replace_caller_dir"
+[ -n "${_find_replace_caller_this:-}" ] && THIS_FILE="$_find_replace_caller_this"
+unset _find_replace_caller_this _find_replace_caller_dir || true

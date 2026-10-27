@@ -8,6 +8,7 @@
 # Called internally by `pkg_mgr.sh` (`libscript_download`) after downloading an artifact.
 
 set -feu
+_verify_signature_caller_this="${THIS_FILE:-}"; _verify_signature_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -22,6 +23,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_verify_signature_caller_this" ] && THIS_FILE="$_verify_signature_caller_this"
+    [ -n "$_verify_signature_caller_dir" ] && SCRIPT_DIR="$_verify_signature_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -70,3 +73,9 @@ libscript_verify_signature() {
 
   return 0
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_verify_signature_caller_dir:-}" ] && SCRIPT_DIR="$_verify_signature_caller_dir"
+[ -n "${_verify_signature_caller_this:-}" ] && THIS_FILE="$_verify_signature_caller_this"
+unset _verify_signature_caller_this _verify_signature_caller_dir || true

@@ -52,7 +52,14 @@ fi
 export LIBSCRIPT_TARGET_ARCH="$TARGET_ARCH"
 export LIBSCRIPT_TARGET_LIBC="$TARGET_LIBC"
 export LIBSCRIPT_TARGET_OS="$TARGET_OS"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/triplets.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/triplets.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 printf '[STAGE1] Building Minimal Userland for %s into %s\n' "$LIBSCRIPT_TARGET_TRIPLET" "$HOST_ROOT"
 

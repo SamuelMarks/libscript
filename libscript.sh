@@ -295,7 +295,14 @@ case "$CMD" in
   start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;
   uninstall-service)
     if [ $# -eq 0 ] || [ "${1:-}" = "libscript.json" ] || [ "${1##*.}" = "json" ] || [ "${1#--}" != "${1:-}" ]; then
-      . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     fi
     ;;
   install-deps) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" ;;

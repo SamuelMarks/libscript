@@ -121,7 +121,14 @@ case "$ACTION" in
         
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
           # shellcheck disable=SC1091
-          . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+          _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090,SC1091
+          . "${SCRIPT_NAME}"
+          unset SCRIPT_NAME || true
+          [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+          [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
         fi
         TAGS_ARG="$(libscript_format_tags gcp)"
         
@@ -139,7 +146,14 @@ case "$ACTION" in
     log_info "Checking if GPU VM $GPU_NAME exists in zone $GPU_ZONE..."
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
       # shellcheck disable=SC1091
-      . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     fi
     TAGS_ARG="$(libscript_format_tags gcp)"
 
@@ -164,7 +178,14 @@ case "$ACTION" in
     if [ -z "$GPU_NAME" ]; then log_error "Usage: gpu-vm delete <name>"; exit 1; fi
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
       # shellcheck disable=SC1091
-      . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     fi
     libscript_verify_managed gcp gpu-vm "$GPU_NAME" "$GPU_ZONE" || exit 1
     log_info "Deleting GPU VM $GPU_NAME in zone $GPU_ZONE..."

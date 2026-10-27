@@ -44,7 +44,14 @@ HOOK_TYPE="${2:-}"
 SCRIPT_DIR=$(cd "${SCRIPT_DIR}" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 # shellcheck disable=SC1090,SC1091
-. "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 if [ -z "$JSON_FILE" ] || [ -z "$HOOK_TYPE" ] || [ ! -f "$JSON_FILE" ]; then
   exit 0

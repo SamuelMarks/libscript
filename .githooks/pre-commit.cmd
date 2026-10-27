@@ -50,6 +50,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" >nul 2>&1
+)
+
 echo Running pre-commit hooks...
 
 set "AUDIT_MODE=--staged"
@@ -137,7 +142,7 @@ if not errorlevel 1 (
     echo Running shellcheck...
     for /f "tokens=*" %%F in ('!GIT_FILE_CMD! 2^>nul ^| findstr /R "\.sh$" ^| findstr /V /R "node_modules \.git top\.sh bottom\.sh template_ patch_ fix_ update_ _gen\.sh gen/"') do (
         if exist "%%F" (
-            shellcheck -s sh -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2251,SC2081,SC2054 "%%F"
+            shellcheck -s sh -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054 "%%F"
             if errorlevel 1 (
                 echo [ERROR] ShellCheck failed on %%F.
                 exit /b 1

@@ -10,6 +10,8 @@
 # return a non-zero exit code if a checksum could not be found.
 
 set -feu
+_fc_caller_this="${THIS_FILE:-}"
+_fc_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -24,6 +26,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_fc_caller_this" ] && THIS_FILE="$_fc_caller_this"
+    [ -n "$_fc_caller_dir" ] && SCRIPT_DIR="$_fc_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -31,6 +35,14 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+
+if ! type libscript_fetch_stdout >/dev/null 2>&1; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+fi
 
 # ## libscript_fetch_checksum
 # Dynamic checksum fetcher
@@ -45,14 +57,14 @@ libscript_fetch_checksum() {
   if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
     base_url="${url%/*}"
     filename="${url##*/}"
-    curl -sL "${base_url:-}/SHASUMS256.txt" | grep "$filename" | awk '{print $1}'
+    libscript_fetch_stdout "${base_url:-}/SHASUMS256.txt" | grep "$filename" | awk '{print $1}'
     return 0
   fi
 
   # 2. Go
   if printf '%s\n' "$url" | grep -q "go.dev/dl/"; then
     filename="${url##*/}"
-    curl -sL "https://go.dev/dl/?mode=json&include=all" | grep -A 5 "$filename" | grep '"sha256":' | awk -F'"' '{print $4}'
+    libscript_fetch_stdout "https://go.dev/dl/?mode=json&include=all" | grep -A 5 "$filename" | grep '"sha256":' | awk -F'"' '{print $4}'
     return 0
   fi
 
@@ -61,7 +73,7 @@ libscript_fetch_checksum() {
      base_url="${url%/*}"
      filename="${url##*/}"
      for sumfile in "SHA256SUMS.txt" "SHA256SUMS" "SHASUMS256.txt" "checksums.txt"; do
-       sums="$(curl -sL "${base_url:-}/${sumfile}")"
+       sums="$(libscript_fetch_stdout "${base_url:-}/${sumfile}" || true)"
        if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -iqE "Not Found|NoSuchKey|<html|<xml"; then
          match_hash="$(printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}')"
          if [ -n "$match_hash" ]; then
@@ -74,7 +86,7 @@ libscript_fetch_checksum() {
   
   # 4. Fallback checking if .sha256 file exists
   sha_url="${url}.sha256"
-  sha_content="$(curl -sL "${sha_url:-}" || true)"
+  sha_content="$(libscript_fetch_stdout "${sha_url:-}" || true)"
   if [ -n "$sha_content" ] && ! printf '%s\n' "$sha_content" | grep -iqE "Not Found|NoSuchKey|<html|<xml"; then
       candidate_hash="$(printf '%s\n' "$sha_content" | grep -oE '[0-9a-fA-F]{64}' | head -n 1 || true)"
       if [ -n "$candidate_hash" ]; then
@@ -86,4 +98,16 @@ libscript_fetch_checksum() {
   return 1
 }
 
-libscript_fetch_checksum "$@"
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_fc_caller_dir:-}" ] && SCRIPT_DIR="$_fc_caller_dir"
+[ -n "${_fc_caller_this:-}" ] && THIS_FILE="$_fc_caller_this"
+unset _fc_caller_this _fc_caller_dir || true
+
+if (return 0 2>/dev/null); then
+  if [ $# -gt 0 ]; then
+    libscript_fetch_checksum "$@"
+  fi
+else
+  libscript_fetch_checksum "$@"
+fi

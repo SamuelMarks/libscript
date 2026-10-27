@@ -10,6 +10,7 @@
 
 
 set -feu
+_setup_base_caller_this="${THIS_FILE:-}"; _setup_base_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -24,6 +25,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_setup_base_caller_this" ] && THIS_FILE="$_setup_base_caller_this"
+    [ -n "$_setup_base_caller_dir" ] && SCRIPT_DIR="$_setup_base_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -35,7 +38,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/log.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
 
 # Source common OS info
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
@@ -136,3 +142,9 @@ elif [ -n "${_LISTEN_PORT}" ]; then
     true
   fi
 fi
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_setup_base_caller_dir:-}" ] && SCRIPT_DIR="$_setup_base_caller_dir"
+[ -n "${_setup_base_caller_this:-}" ] && THIS_FILE="$_setup_base_caller_this"
+unset _setup_base_caller_this _setup_base_caller_dir || true

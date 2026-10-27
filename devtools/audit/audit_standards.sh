@@ -182,6 +182,14 @@ audit_single_file() {
           }
         }
         if ($0 !~ /^[[:space:]]*#/) {
+          if ($0 ~ /SCRIPT_NAME=/) {
+            last_script_name_nr = NR
+          }
+          if ($0 ~ /^[[:space:]]*\.[[:space:]]+["\x27]?(\$[{]?SCRIPT_DIR[}]?|\$[{]?LIBSCRIPT_ROOT_DIR[}]?|\$[{]?REPO_ROOT[}]?)\/[^[:space:]"\x27;]+\.sh["\x27]?([[:space:]]|$)/) {
+            if (NR - last_script_name_nr > 4 && $0 !~ /SCRIPT_NAME/) {
+              unguarded_src_hits = (unguarded_src_hits ? unguarded_src_hits "; " : "") NR ":" $0
+            }
+          }
           if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
               $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+'\''%s\\n'\''|echo)[[:space:]]+"[^$`\\'\''"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
               $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
@@ -211,6 +219,7 @@ audit_single_file() {
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (adhoc_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends): " adhoc_pkg_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout): " raw_fetch_hits
+        if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
       }
     ' "$file" 2>/dev/null || true)
@@ -237,13 +246,13 @@ audit_single_file() {
             ;;
           RAW_PACKAGE_MANAGER)
             case "$file" in
-              *_lib/_common/pkg_mgr.sh|*_lib/_common/service.sh|*_lib/package-managers/*|*_lib/orchestration/vm_builder.sh|*_lib/orchestration/distro/*|*tests/*|*devtools/*|*docker*) ;;
+              *_lib/_common/pkg_mgr.sh|*_lib/_common/service.sh|*_lib/package-managers/*|*_lib/orchestration/distro/*|*tests/*|*devtools/ci/*|*devtools/audit/*|*docker*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
           RAW_NETWORK_FETCH)
             case "$file" in
-              *_lib/_common/pkg_mgr.sh|*_lib/_common/fetch_checksum.sh|*_lib/init-systems/daemonize.sh|*_lib/utilities/curl/test.sh|*_lib/utilities/wget/test.sh|*_lib/utilities/aria2/test.sh|*_lib/web-apps/*/test_harness.sh|*_lib/web-apps/*/health*.sh|*_lib/web-apps/*/service.sh|*tests/*|*devtools/*|*docker*) ;;
+              *_lib/_common/pkg_mgr.sh|*_lib/init-systems/daemonize.sh|*_lib/utilities/curl/test.sh|*_lib/utilities/wget/test.sh|*_lib/utilities/aria2/test.sh|*_lib/web-apps/*/test_harness.sh|*_lib/web-apps/*/health*.sh|*_lib/web-apps/*/service.sh|*tests/*|*devtools/ci/*|*devtools/capture_*|*devtools/render_*|*devtools/verify_*|*devtools/wait_*|*devtools/trigger_*|*docker*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -301,7 +310,7 @@ audit_single_file() {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
         }
         if ($0 !~ /^[[:space:]]*#/ && !allow_fetch_next) {
-          if (tolower($0) ~ /(^|[[:space:];|&(])(invoke-webrequest|invoke-restmethod|iwr|irm|start-bitstransfer|net\.webclient)([[:space:]]|$)/) {
+          if (tolower($0) ~ /(^|[[:space:];|&(])(invoke-webrequest|invoke-restmethod|iwr|irm|start-bitstransfer|net\.webclient)([[:space:]]|$)/ && tolower($0) !~ /(127\.0\.0\.1|localhost)/) {
             raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
           }
         }
@@ -414,6 +423,9 @@ audit_single_file() {
         } else if (in_endlocal && $0 ~ /!PATH!/) {
           endlocal_delayed_hits = (endlocal_delayed_hits ? endlocal_delayed_hits "; " : "") NR ":" $0
         }
+        if (tolower($0) ~ /^[[:space:]]+endlocal[[:space:]]*&&?[[:space:]]*(\(|set[[:space:]])/) {
+          endlocal_delayed_hits = (endlocal_delayed_hits ? endlocal_delayed_hits "; " : "") NR ":" $0
+        }
         match($0, /^[[:space:]]*/)
         ind = RLENGTH
         if (tolower($0) ~ /^[[:space:]]*[)][[:space:]]*else([[:space:]]|$)/ && (ind in chained_if)) {
@@ -461,7 +473,7 @@ audit_single_file() {
             ;;
           RAW_PACKAGE_MANAGER)
             case "$file" in
-              *_lib/_common/pkg_mgr.cmd|*_lib/package-managers/*|*_lib/orchestration/vm_builder.cmd|*devtools/*|*tests/*) ;;
+              *_lib/_common/pkg_mgr.cmd|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;

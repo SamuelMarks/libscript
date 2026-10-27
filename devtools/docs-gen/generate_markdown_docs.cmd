@@ -72,9 +72,11 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-:: ## main
-:: Executes the primary orchestration workflow for this script.
 set "ROOT_DIR=%~dp0..\.."
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" >nul 2>&1
+)
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (

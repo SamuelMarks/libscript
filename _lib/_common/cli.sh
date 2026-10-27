@@ -6,6 +6,7 @@
 # Sourced by component cli.sh scripts to handle standard verbs.
 
 set -feu
+_cli_caller_this="${THIS_FILE:-}"; _cli_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,6 +21,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_cli_caller_this" ] && THIS_FILE="$_cli_caller_this"
+    [ -n "$_cli_caller_dir" ] && SCRIPT_DIR="$_cli_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -113,3 +116,9 @@ fi
 
   export USE_DEFAULT_TAGS CUSTOM_TAGS BOOTSTRAP_SCRIPT DRY_RUN
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_cli_caller_dir:-}" ] && SCRIPT_DIR="$_cli_caller_dir"
+[ -n "${_cli_caller_this:-}" ] && THIS_FILE="$_cli_caller_this"
+unset _cli_caller_this _cli_caller_dir || true

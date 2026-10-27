@@ -31,6 +31,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Ensure we run from the git repository root
 cd "$(git rev-parse --show-toplevel)"
 
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
+  _pc_saved_this="${THIS_FILE:-}"
+  _pc_saved_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  unset SCRIPT_NAME || true
+  THIS_FILE="$_pc_saved_this"
+  SCRIPT_DIR="$_pc_saved_dir"
+  unset _pc_saved_this _pc_saved_dir || true
+fi
+
 printf '%s\n' 'Running pre-commit hooks...'
 
 AUDIT_MODE='--staged'
@@ -138,7 +151,7 @@ fi
 if command -v shellcheck >/dev/null 2>&1; then
   printf '%s\n' 'Running shellcheck...'
   if printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*" >/dev/null 2>&1; then
-    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2251,SC2081,SC2054
+    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054
   fi
 fi
 

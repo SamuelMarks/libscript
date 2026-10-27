@@ -51,6 +51,11 @@
     "PYTHON_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying python available remote releases."
+    },
+    "LIBSCRIPT_FORCE_PYTHONHOME": {
+      "type": ["string", "boolean"],
+      "default": "0",
+      "description": "When set to 1, exports PYTHONHOME to the base LibScript Python installation directory if no virtualenv is active."
     }
   }
 }

@@ -55,5 +55,8 @@ goto :find_root
 :root_found
 
 
+set "EB_CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "_noop" "latest"
+
 endlocal
 exit /b 0

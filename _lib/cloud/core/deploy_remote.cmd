@@ -199,7 +199,7 @@ exit /b 0
 if not "!SHARED_DB!"=="" (
     echo [INFO] Provisioning shared DB ^(!SHARED_DB!^) on !TARGET_HOST! ^(if missing^)...
     if "!SHARED_DB!"=="postgres" (
-        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || $HOME/libscript/libscript.sh install !SHARED_DB! latest; if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || $HOME/libscript/libscript.sh start !SHARED_DB!"
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || $HOME/libscript/libscript.sh install !SHARED_DB! latest; if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || $HOME/libscript/libscript.sh start !SHARED_DB!"
     ) else (
         ssh "!TARGET_HOST!" "$HOME/libscript/libscript.sh install !SHARED_DB! latest && $HOME/libscript/libscript.sh start !SHARED_DB!"
     )
@@ -210,11 +210,23 @@ exit /b 0
 :: Performs the calculate_checksum operation and updates component state.
 :calculate_checksum
 set "tgt_dir=%~1"
+set "_calc_hash="
 if exist "!tgt_dir!\.git" (
-    for /f %%H in ('git -C "!tgt_dir!" rev-parse HEAD 2^>nul') do set "%~2=%%H"
-) else (
-    set "%~2=!RANDOM!-!RANDOM!"
+    for /f %%H in ('git -C "!tgt_dir!" rev-parse HEAD 2^>nul') do set "_calc_hash=%%H"
 )
+if "!_calc_hash!"=="" (
+    if exist "!tgt_dir!\libscript.json" (
+        for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!tgt_dir!\libscript.json" SHA256 2^>nul') do (
+            if "!_calc_hash!"=="" set "_calc_hash=%%H"
+        )
+    )
+)
+if "!_calc_hash!"=="" (
+    set /a _dir_bytes=0
+    for /r "!tgt_dir!" %%F in (*) do set /a _dir_bytes+=%%~zF 2>nul
+    set "_calc_hash=dir-size-!_dir_bytes!"
+)
+set "%~2=!_calc_hash!"
 exit /b 0
 
 :: ## setup_app_db
@@ -222,13 +234,13 @@ exit /b 0
 :setup_app_db
 set "aname=%~1"
 set "needs_db=%~2"
-ssh "!TARGET_HOST!" "cd \"$HOME/apps/!aname!\" && if [ -f libscript.json ]; then REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
+ssh "!TARGET_HOST!" "cd \"$HOME/apps/!aname!\" && if [ -f libscript.json ]; then if [ -f $HOME/libscript/_lib/_common/env_printer.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/_common/env_printer.sh . $HOME/libscript/_lib/_common/env_printer.sh && libscript_hydrate_manifest_env libscript.json || true; fi; REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
 if "!needs_db!"=="1" (
     if "!SHARED_DB!"=="postgres" (
         set "safe_db_name=!aname:-=_!"
         echo [INFO] Ensuring DB !safe_db_name! exists on !TARGET_HOST!...
-        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; $HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema !safe_db_name! --user postgres --password postgres >/dev/null 2>&1 || createdb !safe_db_name! 2>/dev/null || true"
-        ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/!safe_db_name!' $HOME/apps/!aname!/.env || echo DATABASE_URL=postgres://localhost:5432/!safe_db_name! >> $HOME/apps/!aname!/.env"
+        ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; $HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema !safe_db_name! --user postgres --password postgres >/dev/null 2>&1 || createdb !safe_db_name! 2>/dev/null || true"
+        ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -v '^DATABASE_URL=' $HOME/apps/!aname!/.env > $HOME/apps/!aname!/.env.tmp 2>/dev/null || true; printf 'DATABASE_URL=postgres://localhost:5432/%s\n' '!safe_db_name!' >> $HOME/apps/!aname!/.env.tmp && mv $HOME/apps/!aname!/.env.tmp $HOME/apps/!aname!/.env"
     )
 )
 exit /b 0

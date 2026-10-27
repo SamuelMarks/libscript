@@ -134,7 +134,7 @@ libscript_write_service_runner() {
     printf 'export UV_CACHE_DIR="%s/.cache/uv"\n' "$_wsr_home"
     printf 'export PATH="%s"\n' "$_wsr_path"
     printf 'export REMOTE_USER="%s" REMOTE_GROUP="%s" REMOTE_HOME="%s" REMOTE_APP_DIR="%s"\n' "${REMOTE_USER:-$_wsr_user}" "${REMOTE_GROUP:-$_wsr_user}" "${REMOTE_HOME:-$_wsr_home}" "${REMOTE_APP_DIR:-$_wsr_manifest_dir}"
-    printf 'if [ -f "%s/env.sh" ]; then . "%s/env.sh" >/dev/null 2>&1 || true; fi\n' "$LIBSCRIPT_ROOT_DIR" "$LIBSCRIPT_ROOT_DIR"
+    printf 'if [ -f "%s/env.sh" ]; then SCRIPT_NAME="%s/env.sh"; export SCRIPT_NAME; . "$SCRIPT_NAME" >/dev/null 2>&1 || true; unset SCRIPT_NAME || true; fi\n' "$LIBSCRIPT_ROOT_DIR" "$LIBSCRIPT_ROOT_DIR"
     printf 'if [ -f "/etc/libscript/%s/service.env" ]; then set -a; . "/etc/libscript/%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_wsr_name" "$_wsr_name"
     printf 'if [ -f "%s/service.env" ]; then set -a; . "%s/service.env" 2>/dev/null || true; set +a; fi\n' "$_wsr_data" "$_wsr_data"
     if [ -f "${_wsr_manifest_dir}/.env.libscript" ]; then

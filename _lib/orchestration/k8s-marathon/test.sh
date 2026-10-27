@@ -35,7 +35,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${SCRIPT_DIR}/env.sh" ]; then
   unset SCRIPT_NAME || true
   # shellcheck disable=SC1091
-  . "${SCRIPT_DIR}/env.sh"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
 if ! command -v k8s-marathon >/dev/null 2>&1; then
@@ -43,7 +50,14 @@ if ! command -v k8s-marathon >/dev/null 2>&1; then
   ACTION="install" sh "${SCRIPT_DIR}/setup.sh" install k8s-marathon latest >/dev/null
   unset SCRIPT_NAME || true
   # shellcheck disable=SC1091
-  . "${SCRIPT_DIR}/env.sh"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
 k8s-marathon --version >/dev/null

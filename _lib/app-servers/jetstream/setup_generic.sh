@@ -102,7 +102,14 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing Jetstream ${EXACT_VERSION} to ${TARGET_DIR}..."
         if ! type libscript_python_venv >/dev/null 2>&1; then
-          . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+          _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090,SC1091
+          . "${SCRIPT_NAME}"
+          unset SCRIPT_NAME || true
+          [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+          [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
         fi
         _py_ver=""
         if command -v python3 >/dev/null 2>&1 && python3 --version 2>&1 | awk '{split($2, v, "."); exit((v[1] > 3 || (v[1] == 3 && v[2] >= 10)) ? 0 : 1)}'; then

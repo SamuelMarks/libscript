@@ -33,7 +33,14 @@ if [ -f /etc/alpine-release ]; then
 fi
 
 if [ -f "$SCRIPT_DIR/env.sh" ]; then
-  . "$SCRIPT_DIR/env.sh"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="$SCRIPT_DIR/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
 gcsfuse --version

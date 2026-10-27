@@ -78,7 +78,7 @@ case "$WORKER_TYPE" in
     exec "$@"
     ;;
   docker)
-    # Launch lightweight container with required storage/filesystem tools
+    # Launch lightweight container with required storage/filesystem tools via LibScript pkg_mgr
     exec docker run --rm --privileged \
       -v "${LIBSCRIPT_ROOT_DIR}:/workspace" \
       -w /workspace \
@@ -86,7 +86,7 @@ case "$WORKER_TYPE" in
       -e LIBSCRIPT_OFFLINE="${LIBSCRIPT_OFFLINE:-0}" \
       -e LIBSCRIPT_STAGE="${LIBSCRIPT_STAGE:-runtime}" \
       alpine:latest \
-      sh -c "apk add --no-cache bash coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; $*"
+      sh -c "SCRIPT_NAME=/workspace/_lib/_common/pkg_mgr.sh . /workspace/_lib/_common/pkg_mgr.sh >/dev/null 2>&1 && libscript_depends bash coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; $*"
     ;;
   wsl2)
     WSL_BIN='wsl'

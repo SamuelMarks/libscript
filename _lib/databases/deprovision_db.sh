@@ -30,7 +30,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # shellcheck disable=SC1091
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 JSON_FILE="${1:-libscript.json}"
 if [ ! -f "$JSON_FILE" ] || ! command -v jq >/dev/null 2>&1; then

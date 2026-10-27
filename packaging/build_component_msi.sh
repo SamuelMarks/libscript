@@ -535,7 +535,14 @@ build_single_variant() {
   if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
       # shellcheck disable=SC1091
-      . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     fi
   fi
   if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
@@ -543,7 +550,14 @@ build_single_variant() {
       "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
         # shellcheck disable=SC1091
-        . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh"
+        export SCRIPT_NAME
+        # shellcheck disable=SC1090,SC1091
+        . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+        unset SCRIPT_NAME || true
+        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
       fi
     fi
   fi

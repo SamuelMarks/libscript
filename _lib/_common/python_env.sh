@@ -103,7 +103,11 @@ libscript_python_resolve() {
           command -v "python$(printf '%s' "${_version}" | cut -d. -f1)"
         else
           if ! type libscript_get_version_dir >/dev/null 2>&1; then
-            . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090,SC1091
+            . "${SCRIPT_NAME}"
+            unset SCRIPT_NAME || true
           fi
           _py_dir=$(libscript_get_version_dir "python" "${_version}")
           if [ ! -d "${_py_dir}" ]; then

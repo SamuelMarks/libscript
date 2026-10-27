@@ -45,9 +45,6 @@ for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh
   fi
 done
 unset SCRIPT_NAME || true
-[ -n "${_svc_caller_dir:-}" ] && SCRIPT_DIR="$_svc_caller_dir"
-[ -n "${_svc_caller_this:-}" ] && THIS_FILE="$_svc_caller_this"
-unset _svc_caller_this _svc_caller_dir || true
 
 # ## libscript_service_fallback
 # Manages a background PID-file daemon when no system init supervisor is active.
@@ -511,3 +508,9 @@ libscript_check_health() {
   log_error "$_service is NOT healthy"
   return 1
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_svc_caller_dir:-}" ] && SCRIPT_DIR="$_svc_caller_dir"
+[ -n "${_svc_caller_this:-}" ] && THIS_FILE="$_svc_caller_this"
+unset _svc_caller_this _svc_caller_dir || true

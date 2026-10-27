@@ -10,6 +10,7 @@
 # Source this file and call `libscript_detect_hardware` or `libscript_apply_hardware_tuning <component>`.
 
 set -feu
+_hw_tune_caller_this="${THIS_FILE:-}"; _hw_tune_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -174,3 +175,9 @@ EOF
       ;;
   esac
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_hw_tune_caller_dir:-}" ] && SCRIPT_DIR="$_hw_tune_caller_dir"
+[ -n "${_hw_tune_caller_this:-}" ] && THIS_FILE="$_hw_tune_caller_this"
+unset _hw_tune_caller_this _hw_tune_caller_dir || true

@@ -267,7 +267,14 @@ run_service_health_cmd() {
   (
     if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
       # shellcheck disable=SC1091
-      . "${LIBSCRIPT_ROOT_DIR}/env.sh" >/dev/null 2>&1 || true
+      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+      unset SCRIPT_NAME || true
+      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
     fi
     if [ -f "${MANIFEST_DIR}/.env.libscript" ]; then
       set -a

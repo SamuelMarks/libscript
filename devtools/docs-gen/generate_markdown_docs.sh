@@ -41,6 +41,19 @@ fi
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${ROOT_DIR:=$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 
+if [ -f "${ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
+  _gmd_saved_this="${THIS_FILE:-}"
+  _gmd_saved_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${ROOT_DIR}/_lib/languages/nodejs/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  unset SCRIPT_NAME || true
+  THIS_FILE="$_gmd_saved_this"
+  SCRIPT_DIR="$_gmd_saved_dir"
+  unset _gmd_saved_this _gmd_saved_dir || true
+fi
+
 # ## normalize_markdown_section
 # Normalizes a Markdown table or list stream so Prettier column-padding and blank-line differences are ignored when checking if semantic content changed.
 normalize_markdown_section() {

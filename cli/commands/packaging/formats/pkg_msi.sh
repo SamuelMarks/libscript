@@ -27,7 +27,14 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-  . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
       wxs_file="${OUT_FILE}.wxs"
       exec 3>&1
       exec 1> "$wxs_file"
@@ -354,14 +361,28 @@ EOF2
       # Ensure msi-rs is available via libscript mechanisms
       if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1 && ! command -v wix >/dev/null 2>&1 && ! command -v wix.exe >/dev/null 2>&1; then
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
-          . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+          _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090,SC1091
+          . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+          unset SCRIPT_NAME || true
+          [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+          [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
         fi
       fi
       if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1 && ! command -v wix >/dev/null 2>&1 && ! command -v wix.exe >/dev/null 2>&1; then
         if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
           "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
           if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
-            . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+            _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090,SC1091
+            . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+            unset SCRIPT_NAME || true
+            [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+            [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
           fi
         fi
       fi

@@ -33,7 +33,14 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh" ]; then
   # shellcheck disable=SC1090
-  . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
 FLAVOR="${1:-alpine}"

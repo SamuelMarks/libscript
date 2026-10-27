@@ -12,6 +12,7 @@
 
 
 set -feu
+_envsubst_safe_caller_this="${THIS_FILE:-}"; _envsubst_safe_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -26,6 +27,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_envsubst_safe_caller_this" ] && THIS_FILE="$_envsubst_safe_caller_this"
+    [ -n "$_envsubst_safe_caller_dir" ] && SCRIPT_DIR="$_envsubst_safe_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -108,3 +111,9 @@ envsubst_safe() {
     printf '%s\n' "${input}" | awk -- "${awk_script}"
   fi
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_envsubst_safe_caller_dir:-}" ] && SCRIPT_DIR="$_envsubst_safe_caller_dir"
+[ -n "${_envsubst_safe_caller_this:-}" ] && THIS_FILE="$_envsubst_safe_caller_this"
+unset _envsubst_safe_caller_this _envsubst_safe_caller_dir || true

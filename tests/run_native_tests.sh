@@ -77,7 +77,14 @@ detect_host_os() {
 
   if [ -f "${REPO_ROOT}/_lib/_common/os_info.sh" ]; then
     # shellcheck disable=SC1090
-    . "${REPO_ROOT}/_lib/_common/os_info.sh"
+    _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+    SCRIPT_NAME="${REPO_ROOT}/_lib/_common/os_info.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+    [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
   fi
 
   _target="${TARGET_OS:-unknown}"

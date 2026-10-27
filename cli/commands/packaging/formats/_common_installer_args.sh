@@ -7,6 +7,7 @@
 
 
 set -feu
+__common_installer_args_caller_this="${THIS_FILE:-}"; __common_installer_args_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -151,3 +152,8 @@ esac
       fi
     fi
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${__common_installer_args_caller_dir:-}" ] && SCRIPT_DIR="$__common_installer_args_caller_dir"
+[ -n "${__common_installer_args_caller_this:-}" ] && THIS_FILE="$__common_installer_args_caller_this"
+unset __common_installer_args_caller_this __common_installer_args_caller_dir || true

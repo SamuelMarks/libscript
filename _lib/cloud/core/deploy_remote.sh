@@ -26,7 +26,16 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+_dr_saved_this="$THIS_FILE"
+_dr_saved_dir="$SCRIPT_DIR"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+THIS_FILE="$_dr_saved_this"
+SCRIPT_DIR="$_dr_saved_dir"
+unset _dr_saved_this _dr_saved_dir || true
 
 # Delegate to deploy_cloud.sh when --provider is specified
 for _dr_arg in "$@"; do
@@ -100,7 +109,7 @@ provision_shared_db() {
     log_info "Provisioning shared DB ($SHARED_DB) on $TARGET_HOST (if missing)..."
     if [ "$SHARED_DB" = "postgres" ]; then
       # shellcheck disable=SC2029
-      ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || \$HOME/libscript/libscript.sh install $SHARED_DB latest; if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || \$HOME/libscript/libscript.sh start $SHARED_DB"
+      ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=\$HOME/libscript/_lib/databases/postgres/env.sh . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; command -v psql >/dev/null 2>&1 || \$HOME/libscript/libscript.sh install $SHARED_DB latest; if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=\$HOME/libscript/_lib/databases/postgres/env.sh . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; pg_isready >/dev/null 2>&1 || \$HOME/libscript/libscript.sh start $SHARED_DB"
     else
       # shellcheck disable=SC2029
       ssh "$TARGET_HOST" "\$HOME/libscript/libscript.sh install $SHARED_DB latest && \$HOME/libscript/libscript.sh start $SHARED_DB"
@@ -114,14 +123,14 @@ setup_app_db() {
   app_name="$1"
   needs_db="$2"
   # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"\$HOME/apps/$app_name\" && if [ -f libscript.json ]; then REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
+  ssh "$TARGET_HOST" "cd \"\$HOME/apps/$app_name\" && if [ -f libscript.json ]; then if [ -f \$HOME/libscript/_lib/_common/env_printer.sh ]; then STACK='' SCRIPT_NAME=\$HOME/libscript/_lib/_common/env_printer.sh . \$HOME/libscript/_lib/_common/env_printer.sh && libscript_hydrate_manifest_env libscript.json || true; fi; REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/_lib/databases/provision_db.sh libscript.json; fi"
   if [ "$needs_db" -eq 1 ] && [ "$SHARED_DB" = "postgres" ]; then
     safe_db_name=$(printf "%s" "$app_name" | tr '-' '_')
     log_info "Ensuring DB $safe_db_name exists on $TARGET_HOST..."
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; \$HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema $safe_db_name --user postgres --password postgres >/dev/null 2>&1 || createdb $safe_db_name 2>/dev/null || true"
+    ssh "$TARGET_HOST" "if [ -f \$HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=\$HOME/libscript/_lib/databases/postgres/env.sh . \$HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; \$HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema $safe_db_name --user postgres --password postgres >/dev/null 2>&1 || createdb $safe_db_name 2>/dev/null || true"
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "touch \$HOME/apps/$app_name/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/$safe_db_name' \$HOME/apps/$app_name/.env || echo 'DATABASE_URL=postgres://localhost:5432/$safe_db_name' >> \$HOME/apps/$app_name/.env"
+    ssh "$TARGET_HOST" "touch \$HOME/apps/$app_name/.env && grep -v '^DATABASE_URL=' \$HOME/apps/$app_name/.env > \$HOME/apps/$app_name/.env.tmp 2>/dev/null || true; printf 'DATABASE_URL=postgres://localhost:5432/%s\n' '$safe_db_name' >> \$HOME/apps/$app_name/.env.tmp && mv \$HOME/apps/$app_name/.env.tmp \$HOME/apps/$app_name/.env"
   fi
 }
 
@@ -180,7 +189,8 @@ IFS="|"
 
 # Process apps using arrays
 # POSIX hack: set positional parameters to iterate
-set -- "$APPS_PATHS"
+# shellcheck disable=SC2086
+set -- $APPS_PATHS
 path_idx=1
 HEALTH_APPS=""
 

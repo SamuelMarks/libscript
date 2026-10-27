@@ -122,7 +122,14 @@ case "$ACTION" in
           
           if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
             # shellcheck disable=SC1091
-            . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+            _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090,SC1091
+            . "${SCRIPT_NAME}"
+            unset SCRIPT_NAME || true
+            [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+            [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
           fi
           TAGS_ARG="$(libscript_format_tags gcp)"
 
@@ -151,7 +158,14 @@ case "$ACTION" in
           
           if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
             # shellcheck disable=SC1091
-            . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+            _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090,SC1091
+            . "${SCRIPT_NAME}"
+            unset SCRIPT_NAME || true
+            [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+            [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
           fi
           TAGS_ARG="$(libscript_format_tags gcp)"
 
@@ -180,7 +194,14 @@ case "$ACTION" in
           
           if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
             # shellcheck disable=SC1091
-            . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+            _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090,SC1091
+            . "${SCRIPT_NAME}"
+            unset SCRIPT_NAME || true
+            [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+            [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
           fi
           TAGS_ARG="$(libscript_format_tags gcp)"
 
@@ -223,7 +244,14 @@ case "$ACTION" in
 
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
         # shellcheck disable=SC1091
-        . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+        export SCRIPT_NAME
+        # shellcheck disable=SC1090,SC1091
+        . "${SCRIPT_NAME}"
+        unset SCRIPT_NAME || true
+        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
       fi
 
       log_info "Deleting TPU VM $INSTANCE_NAME in zone $TPU_ZONE..."

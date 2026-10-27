@@ -8,6 +8,9 @@
 # Outputs environment configurations for evaluated components.
 
 set -feu
+_ep_caller_this="${_EP_CALLER_THIS:-${THIS_FILE:-}}"
+_ep_caller_dir="${_EP_CALLER_DIR:-${SCRIPT_DIR:-}}"
+unset _EP_CALLER_THIS _EP_CALLER_DIR || true
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -202,7 +205,7 @@ libscript_print_env() {
     ps1)        _format="powershell" ;;
   esac
 
-  if [ -n "$_prefix_path" ] && [ "$_format" != "json" ]; then
+  if [ -n "$_prefix_path" ] && [ "$_format" != "json" ] && { [ -d "${_prefix_path}/bin" ] || [ ! -f "$_comp_dir/env.sh" ]; }; then
     _emit_path_entry "$_format" "${_prefix_path}/bin"
   fi
 
@@ -223,12 +226,14 @@ libscript_print_env() {
         *) _lpe_base_path="${_jq_dir}:${_lpe_base_path}" ;;
       esac
     fi
-    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" sh << 'EOF_SH'
+    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" REMOTE_HOME="${REMOTE_HOME:-}" PYTHON_VENV="${PYTHON_VENV:-}" VIRTUAL_ENV="${VIRTUAL_ENV:-}" UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-}" UV_CACHE_DIR="${UV_CACHE_DIR:-}" POSTGRES_USER="${POSTGRES_USER:-}" POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}" POSTGRES_HOST="${POSTGRES_HOST:-}" POSTGRES_PORT="${POSTGRES_PORT:-}" POSTGRES_DB="${POSTGRES_DB:-}" POSTGRES_URL="${POSTGRES_URL:-}" DATABASE_URL="${DATABASE_URL:-}" REDIS_URL="${REDIS_URL:-}" VALKEY_URL="${VALKEY_URL:-}" DUCKDB_PATH="${DUCKDB_PATH:-}" SQLITE_PATH="${SQLITE_PATH:-}" sh << 'EOF_SH'
             SCRIPT_NAME="$COMP_DIR/env.sh"
             export SCRIPT_NAME
             # shellcheck disable=SC1090
             . "$COMP_DIR/env.sh" >/dev/null 2>&1 || true
             if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
+              SCRIPT_NAME="$LIBSCRIPT_DATA_DIR/dyn_env.sh"
+              export SCRIPT_NAME
               # shellcheck disable=SC1090
               . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1 || true
             fi
@@ -241,7 +246,7 @@ libscript_print_env() {
                 case ":${BASE_PATH:-/usr/bin:/bin}:" in
                   *":${_p}:"*) continue ;;
                 esac
-                [ -n "$PREFIX" ] && [ "$_p" = "$PREFIX/bin" ] && continue
+                [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ] && [ "$_p" = "$PREFIX/bin" ] && continue
                 case "$FORMAT" in
                   docker)         printf 'ENV PATH="%s:$PATH"
 ' "$_p" ;;
@@ -329,6 +334,11 @@ libscript_hydrate_manifest_env() {
     libscript_source_env_preserve_existing "$_hm_ef"
   done
 
+  if [ -d "${_hm_dir}/.venv" ]; then
+    [ -z "${PYTHON_VENV:-}" ] && export PYTHON_VENV="${_hm_dir}/.venv"
+    [ -z "${VIRTUAL_ENV:-}" ] && export VIRTUAL_ENV="${_hm_dir}/.venv"
+  fi
+
   libscript_ensure_default_env_vars "$_hm_dir"
 
   command -v jq >/dev/null 2>&1 || return 0
@@ -402,6 +412,7 @@ libscript_hydrate_manifest_env() {
     NPX_BIN=$(command -v npx 2>/dev/null || printf 'npx')
     export NPX_BIN
   fi
+  export SERVICE_PATH="${PATH:-/usr/bin:/bin}"
 }
 
 # ## libscript_print_manifest_env
@@ -464,6 +475,8 @@ libscript_print_manifest_env() {
   fi
 
   _pm_agg_path=""
+  _pm_raw_out=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_pm_out.$$")
+  : > "$_pm_raw_out"
   while read -r _dep_pkg _dep_ver <&3; do
     [ -z "$_dep_pkg" ] && continue
     [ "$_dep_ver" = "null" ] || [ -z "$_dep_ver" ] && _dep_ver="latest"
@@ -475,15 +488,19 @@ libscript_print_manifest_env() {
         COMP_DIR="${_cat_dir}/${_dep_pkg}"
         export COMP_DIR
         _comp_prefix="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_dep_pkg}/${_dep_ver}"
-        libscript_print_env "$_pm_fmt" "$_comp_prefix" </dev/null
-        case ":${_pm_agg_path}:" in
-          *":${_comp_prefix}/bin:"*) ;;
-          *) _pm_agg_path="${_pm_agg_path:+${_pm_agg_path}:}${_comp_prefix}/bin" ;;
-        esac
+        libscript_print_env "$_pm_fmt" "$_comp_prefix" </dev/null >> "$_pm_raw_out"
+        if [ -d "${_comp_prefix}/bin" ]; then
+          case ":${_pm_agg_path}:" in
+            *":${_comp_prefix}/bin:"*) ;;
+            *) _pm_agg_path="${_pm_agg_path:+${_pm_agg_path}:}${_comp_prefix}/bin" ;;
+          esac
+        fi
       fi
     done
   done 3< "$_pm_tmp" 2>/dev/null || true
   rm -f "$_pm_tmp"
+  awk '!seen[$0]++' "$_pm_raw_out" 2>/dev/null || cat "$_pm_raw_out"
+  rm -f "$_pm_raw_out"
 
   _pm_base_path='/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'
   _pm_hydrated_path=$(
@@ -521,3 +538,9 @@ libscript_print_manifest_env() {
     esac
   fi
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_ep_caller_dir:-}" ] && SCRIPT_DIR="$_ep_caller_dir"
+[ -n "${_ep_caller_this:-}" ] && THIS_FILE="$_ep_caller_this"
+unset _ep_caller_this _ep_caller_dir || true

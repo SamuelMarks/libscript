@@ -110,7 +110,7 @@ if "%WORKER_TYPE%"=="auto" (
 echo [INFO] Executing via virtualization bridge (worker: %WORKER_TYPE%)...
 
 if "%WORKER_TYPE%"=="docker" (
-    docker run --rm --privileged -v "%REPO_ROOT%:/workspace" -w /workspace -e LIBSCRIPT_TARGET_SYSROOT="%LIBSCRIPT_TARGET_SYSROOT%" -e LIBSCRIPT_OFFLINE="%LIBSCRIPT_OFFLINE%" alpine:latest sh -c "apk add --no-cache bash coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; %CMD_ARGS%"
+    docker run --rm --privileged -v "%REPO_ROOT%:/workspace" -w /workspace -e LIBSCRIPT_TARGET_SYSROOT="%LIBSCRIPT_TARGET_SYSROOT%" -e LIBSCRIPT_OFFLINE="%LIBSCRIPT_OFFLINE%" alpine:latest sh -c "SCRIPT_NAME=/workspace/_lib/_common/pkg_mgr.sh . /workspace/_lib/_common/pkg_mgr.sh >/dev/null 2>&1 && libscript_depends bash coreutils util-linux parted e2fsprogs btrfs-progs xfsprogs dosfstools cryptsetup findmnt udev >/dev/null 2>&1 || true; %CMD_ARGS%"
     exit /b !errorlevel!
 )
 

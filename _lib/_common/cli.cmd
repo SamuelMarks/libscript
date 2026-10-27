@@ -85,17 +85,7 @@ set "ARGS="
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
 :parse_loop
-if "%~2"=="" (
-    REM Export variables to parent context before exiting
-    endlocal & (
-        set "USE_DEFAULT_TAGS=%USE_DEFAULT_TAGS%"
-        set "CUSTOM_TAGS=%CUSTOM_TAGS%"
-        set "BOOTSTRAP_SCRIPT=%BOOTSTRAP_SCRIPT%"
-        set "DRY_RUN=%DRY_RUN%"
-        set "ARGS=%ARGS%"
-    )
-    exit /b 0
-)
+if "%~2"=="" goto :parse_done
 set "current_arg=%~2"
 
 if /i "%current_arg%"=="--help" (
@@ -139,6 +129,18 @@ if defined ARGS (
 )
 shift
 goto :parse_loop
+
+:: ## parse_done
+:: Exports parsed CLI argument variables to the parent scope and exits.
+:parse_done
+endlocal & (
+    set "USE_DEFAULT_TAGS=%USE_DEFAULT_TAGS%"
+    set "CUSTOM_TAGS=%CUSTOM_TAGS%"
+    set "BOOTSTRAP_SCRIPT=%BOOTSTRAP_SCRIPT%"
+    set "DRY_RUN=%DRY_RUN%"
+    set "ARGS=%ARGS%"
+)
+exit /b 0
 
 
 

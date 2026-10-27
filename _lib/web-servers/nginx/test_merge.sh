@@ -66,7 +66,14 @@ CONF
 
 # test script logic
 # shellcheck disable=SC1090,SC1091
-. "$SCRIPT_DIR/merge_location_into_server.sh"
+_ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+SCRIPT_NAME="$SCRIPT_DIR/merge_location_into_server.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+[ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+[ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 merge_location_into_server "$TMP_DIR/existing.conf" "$TMP_DIR/new.conf" "example.com"
 
 if grep -q '"new regex"' "$TMP_DIR/existing.conf"; then

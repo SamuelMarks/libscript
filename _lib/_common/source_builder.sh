@@ -11,6 +11,7 @@
 #   . "${SCRIPT_NAME}"
 
 set -feu
+_source_builder_caller_this="${THIS_FILE:-}"; _source_builder_caller_dir="${SCRIPT_DIR:-}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -26,6 +27,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_source_builder_caller_this" ] && THIS_FILE="$_source_builder_caller_this"
+    [ -n "$_source_builder_caller_dir" ] && SCRIPT_DIR="$_source_builder_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -567,3 +570,9 @@ EOF
   libscript_symlink_alias "${_sbc_comp}" "${_sbc_ver}" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
   libscript_symlink_alias "${_sbc_comp}" "default" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_source_builder_caller_dir:-}" ] && SCRIPT_DIR="$_source_builder_caller_dir"
+[ -n "${_source_builder_caller_this:-}" ] && THIS_FILE="$_source_builder_caller_this"
+unset _source_builder_caller_this _source_builder_caller_dir || true

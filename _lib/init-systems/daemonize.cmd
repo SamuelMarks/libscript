@@ -127,6 +127,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
 )
+if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
+if defined SERVICE_EXTRA_PATH set "PATH=!SERVICE_EXTRA_PATH!;!PATH!"
 
 set "DATA_BASE=%TEMP%\data"
 if defined LIBSCRIPT_DATA_DIR set "DATA_BASE=!LIBSCRIPT_DATA_DIR!"

@@ -311,7 +311,14 @@ case "$ACTION" in
         export VENV="${PYTHON_VENV}"
         if [ ! -f "${PYTHON_VENV}/bin/python" ]; then
           if ! type libscript_python_venv >/dev/null 2>&1; then
-            . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+            _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+            export SCRIPT_NAME
+            # shellcheck disable=SC1090,SC1091
+            . "${SCRIPT_NAME}"
+            unset SCRIPT_NAME || true
+            [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+            [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
           fi
           libscript_python_venv "${PYTHON_VENV}" "${EXACT_VERSION}"
           

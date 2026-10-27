@@ -54,6 +54,8 @@ goto :find_root
 :: ## detect_python
 :: Checks for compatible Python executable in PATH.
 :detect_python
+set "FOUND_PY="
+set "FOUND_NODE="
 for /f "tokens=*" %%I in ('where python.exe 2^>nul') do (
     set "FOUND_PY=%%I"
     goto check_py_ver
@@ -67,7 +69,6 @@ if defined FOUND_PY (
     for /f "tokens=2" %%V in ('"%FOUND_PY%" --version 2^>^&1') do set "PY_VER=%%V"
     if defined PY_VER (
         echo Detected Python: !FOUND_PY! ^(!PY_VER!^)
-        endlocal && set "FOUND_PYTHON_EXE=%FOUND_PY%"
     )
 )
 
@@ -87,11 +88,14 @@ if defined FOUND_NODE (
     for /f "tokens=*" %%V in ('"%FOUND_NODE%" --version 2^>^&1') do set "NODE_VER=%%V"
     if defined NODE_VER (
         echo Detected Node.js: !FOUND_NODE! ^(!NODE_VER!^)
-        endlocal && set "FOUND_NODE_EXE=%FOUND_NODE%"
     )
 )
 
 :: ## finish
 :: Finalizes runtime detection.
 :finish
+endlocal & (
+    if not "%FOUND_PY%"=="" set "FOUND_PYTHON_EXE=%FOUND_PY%"
+    if not "%FOUND_NODE%"=="" set "FOUND_NODE_EXE=%FOUND_NODE%"
+)
 exit /b 0
