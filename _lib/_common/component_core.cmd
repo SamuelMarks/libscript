@@ -88,6 +88,7 @@ if /i "%ACTION%"=="-v" (
     exit /b 0
 )
 
+set "RAW_ARGS=%*"
 set "IS_CLOUD_VERB=0"
 for %%V in (auth location group project network node dns firewall ssh backup restore diff list-managed storage dashboard cost usage logs-aggregate aws azure gcp hetzner proxmox digitalocean linode vultr cleanup setup deploy) do (
     if /i "%ACTION%"=="%%V" set "IS_CLOUD_VERB=1"
@@ -528,6 +529,10 @@ if /i not "!ACTION!"=="install" if /i not "!ACTION!"=="setup" (
     )
 )
 if exist "!COMP_DIR!\setup.cmd" (
+    if "!IS_CLOUD_VERB!"=="1" (
+        call "!COMP_DIR!\setup.cmd" !RAW_ARGS!
+        exit /b !errorlevel!
+    )
     call "!COMP_DIR!\setup.cmd" "!ACTION!" %1 %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )

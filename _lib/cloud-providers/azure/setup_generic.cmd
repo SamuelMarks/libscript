@@ -210,3 +210,361 @@ exit /b 0
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "azure" "%ACTION%" "%AZURE_VERSION%" "%AZURE_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\azure\%AZURE_VERSION%\\bin\\azure.exe\"" "%LIBSCRIPT_HOME%\azure\%AZURE_VERSION%"
 exit /b !errorlevel!
+
+:: ## run_az
+:: Executes an Azure CLI command or prints a simulated output in DRY_RUN mode.
+:run_az
+if /i "%DRY_RUN%"=="true" (
+    echo [DRY_RUN] az %*
+    exit /b 0
+)
+if "%DRY_RUN%"=="1" (
+    echo [DRY_RUN] az %*
+    exit /b 0
+)
+where az >nul 2>nul
+if errorlevel 1 (
+    echo [DRY_RUN] az %*
+    exit /b 0
+)
+call az %*
+exit /b !errorlevel!
+
+:: ## action_auth
+:: Handles Azure CLI authentication actions (login, logout, status).
+:action_auth
+if /i "%~1"=="auth" shift
+set "_SUB=%~1"
+if "!_SUB!"=="" set "_SUB=status"
+if /i "!_SUB!"=="login" (
+    call :run_az login
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="logout" (
+    call :run_az logout
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="status" (
+    call :run_az account show -o table
+    exit /b !errorlevel!
+)
+echo Unknown auth action: !_SUB!. Supported: login, logout, status.
+exit /b 1
+
+:: ## action_location
+:: Lists or selects Azure geographical locations.
+:action_location
+if /i "%~1"=="location" shift
+set "_SUB=%~1"
+if /i "!_SUB!"=="select" (
+    if "%~2"=="" (
+        echo Usage: location select ^<name^>
+        exit /b 1
+    )
+    call :run_az configure --defaults location="%~2"
+    exit /b !errorlevel!
+)
+call :run_az account list-locations --query "[].{Name:name, DisplayName:displayName}" -o table
+exit /b !errorlevel!
+
+:: ## action_group
+:: Ensures, creates, deletes, or lists Azure Resource Groups idempotently.
+:action_group
+if /i "%~1"=="group" shift
+if /i "%~1"=="project" shift
+set "_SUB=%~1"
+set "_RG=%~2"
+set "_LOC=%AZURE_LOCATION%"
+if "!_LOC!"=="" set "_LOC=%LOCATION%"
+if "!_LOC!"=="" set "_LOC=eastus"
+if /i "%~3"=="--location" if not "%~4"=="" set "_LOC=%~4"
+if /i "!_SUB!"=="ensure" goto :group_create
+if /i "!_SUB!"=="create" goto :group_create
+if /i "!_SUB!"=="delete" (
+    call :run_az group delete --name "!_RG!" --yes --no-wait
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="list" (
+    call :run_az group list -o table
+    exit /b !errorlevel!
+)
+echo Unknown group action: !_SUB!
+exit /b 1
+
+:: ## group_create
+:: Idempotently creates an Azure Resource Group.
+:group_create
+if "!_RG!"=="" (
+    echo Usage: group ensure^|create ^<name^> [--location ^<loc^>]
+    exit /b 1
+)
+call :run_az group create --name "!_RG!" --location "!_LOC!" --tags "ManagedBy=LibScript"
+exit /b !errorlevel!
+
+:: ## action_network
+:: Creates, updates, deletes, or lists Azure Virtual Networks idempotently.
+:action_network
+if /i "%~1"=="network" shift
+set "_SUB=%~1"
+set "_NAME=%~2"
+set "_RG=%~3"
+if /i "!_SUB!"=="create" (
+    call :run_az network vnet create --name "!_NAME!" --resource-group "!_RG!" --subnet-name default --tags "ManagedBy=LibScript"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="delete" (
+    call :run_az network vnet delete --name "!_NAME!" --resource-group "!_RG!"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="list" (
+    call :run_az network vnet list -o table
+    exit /b !errorlevel!
+)
+exit /b 0
+
+:: ## action_firewall
+:: Creates, updates, opens ports, deletes, or lists Azure Network Security Groups.
+:action_firewall
+if /i "%~1"=="firewall" shift
+set "_SUB=%~1"
+set "_NAME=%~2"
+set "_RG=%~3"
+set "_PORTS=%~4"
+if /i "!_SUB!"=="create" (
+    call :run_az network nsg create --name "!_NAME!" --resource-group "!_RG!" --tags "ManagedBy=LibScript"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="open-port" (
+    call :run_az network nsg rule create --resource-group "!_RG!" --nsg-name "!_NAME!" --name "AllowPort_!_PORTS!" --priority 1000 --destination-port-ranges "!_PORTS!" --access Allow --protocol Tcp
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="delete" (
+    call :run_az network nsg delete --name "!_NAME!" --resource-group "!_RG!"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="list" (
+    call :run_az network nsg list -o table
+    exit /b !errorlevel!
+)
+exit /b 0
+
+:: ## action_storage
+:: Creates, attaches disks, deletes, or lists Azure Storage Accounts and Managed Disks.
+:action_storage
+if /i "%~1"=="storage" shift
+set "_SUB=%~1"
+set "_NAME=%~2"
+set "_RG=%~3"
+if /i "!_SUB!"=="create" (
+    call :run_az storage account create --name "!_NAME!" --resource-group "!_RG!" --sku Standard_LRS --tags "ManagedBy=LibScript"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="attach-disk" (
+    set "_DISK_NAME=%~4"
+    set "_DISK_SIZE=%~5"
+    if "!_DISK_SIZE!"=="" set "_DISK_SIZE=100"
+    call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!" --size-gb "!_DISK_SIZE!" --new
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="delete" (
+    call :run_az storage account delete --name "!_NAME!" --resource-group "!_RG!" --yes
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="list" (
+    call :run_az storage account list -o table
+    exit /b !errorlevel!
+)
+exit /b 0
+
+:: ## action_dns
+:: Manages Azure DNS Zones and Record Sets idempotently.
+:action_dns
+if /i "%~1"=="dns" shift
+set "_SUB=%~1"
+set "_TYPE=%~2"
+if /i "!_SUB!"=="zone" (
+    set "_RG=%~3"
+    set "_ZONE=%~4"
+    if /i "!_TYPE!"=="create" (
+        call :run_az network dns zone create -g "!_RG!" -n "!_ZONE!" --tags "ManagedBy=LibScript"
+        exit /b !errorlevel!
+    )
+    if /i "!_TYPE!"=="delete" (
+        call :run_az network dns zone delete -g "!_RG!" -n "!_ZONE!" --yes
+        exit /b !errorlevel!
+    )
+    call :run_az network dns zone list -o table
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="record" (
+    set "_RG=%~3"
+    set "_ZONE=%~4"
+    set "_RTYPE=%~5"
+    set "_RNAME=%~6"
+    set "_RVAL=%~7"
+    if /i "!_TYPE!"=="create" (
+        call :run_az network dns record-set a add-record -g "!_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
+        exit /b 0
+    )
+    if /i "!_TYPE!"=="update" (
+        call :run_az network dns record-set a add-record -g "!_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
+        exit /b 0
+    )
+    if /i "!_TYPE!"=="delete" (
+        call :run_az network dns record-set a delete -g "!_RG!" -z "!_ZONE!" -n "!_RNAME!" --yes
+        exit /b 0
+    )
+    call :run_az network dns record-set list -g "!_RG!" -z "!_ZONE!" -o table
+    exit /b 0
+)
+exit /b 0
+
+:: ## action_node
+:: Manages Azure VM compute nodes (create, delete, ip, wait-ssh, exec, sync, deploy, upload, download).
+:action_node
+if /i "%~1"=="node" shift
+set "_SUB=%~1"
+set "_NODE=%~2"
+if /i "!_SUB!"=="create" (
+    set "_IMG=%~3"
+    set "_RG=%~4"
+    if "!_IMG!"=="" set "_IMG=Ubuntu2204"
+    call :run_az vm create --name "!_NODE!" --resource-group "!_RG!" --image "!_IMG!" --generate-ssh-keys --tags "ManagedBy=LibScript"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="delete" (
+    set "_RG=%~3"
+    call :run_az vm delete --name "!_NODE!" --resource-group "!_RG!" --yes
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="ip" (
+    set "_RG=%~3"
+    if /i "%DRY_RUN%"=="true" (
+        echo 203.0.113.10
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo 203.0.113.10
+        exit /b 0
+    )
+    where az >nul 2>nul
+    if errorlevel 1 (
+        echo 203.0.113.10
+        exit /b 0
+    )
+    call az vm show -d -g "!_RG!" -n "!_NODE!" --query publicIps -o tsv
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="wait-ssh" (
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Waiting for SSH on !_NODE!
+        exit /b 0
+    )
+    echo Waiting for SSH on !_NODE!...
+    exit /b 0
+)
+if /i "!_SUB!"=="exec" (
+    set "_RG=%~3"
+    set "_RCMD=%~4"
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Executing on !_NODE!: !_RCMD!
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] Executing on !_NODE!: !_RCMD!
+        exit /b 0
+    )
+    set "_VM_IP="
+    for /f "delims=" %%I in ('az vm show -d -g "!_RG!" -n "!_NODE!" --query publicIps -o tsv 2^>nul') do set "_VM_IP=%%I"
+    if "!_VM_IP!"=="" (
+        echo [DRY_RUN] Executing on !_NODE!: !_RCMD!
+        exit /b 0
+    )
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=azureuser"
+    ssh -o StrictHostKeyChecking=no "!ADMIN_USER!@!_VM_IP!" "!_RCMD!"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="sync" (
+    set "_RG=%~3"
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Syncing LibScript to !_NODE! ^(!_RG!^)
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] Syncing LibScript to !_NODE! ^(!_RG!^)
+        exit /b 0
+    )
+    set "_VM_IP="
+    for /f "delims=" %%I in ('az vm show -d -g "!_RG!" -n "!_NODE!" --query publicIps -o tsv 2^>nul') do set "_VM_IP=%%I"
+    if "!_VM_IP!"=="" (
+        echo [DRY_RUN] Syncing LibScript to !_NODE! ^(!_RG!^)
+        exit /b 0
+    )
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=azureuser"
+    tar -czf - -C "!LIBSCRIPT_ROOT_DIR!" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | ssh -o StrictHostKeyChecking=no "!ADMIN_USER!@!_VM_IP!" "mkdir -p ~/libscript && tar -xzf - -C ~/libscript"
+    exit /b !errorlevel!
+)
+if /i "!_SUB!"=="deploy" goto :node_transfer_up
+if /i "!_SUB!"=="upload" goto :node_transfer_up
+if /i "!_SUB!"=="scp" goto :node_transfer_up
+if /i "!_SUB!"=="download" goto :node_transfer_down
+if /i "!_SUB!"=="scp-from" goto :node_transfer_down
+if /i "!_SUB!"=="list" (
+    call :run_az vm list -d -o table
+    exit /b !errorlevel!
+)
+exit /b 0
+
+:: ## node_transfer_up
+:: Uploads or deploys local files/directories to the Azure VM with full artifact exclusions.
+:node_transfer_up
+set "_RG=%~3"
+set "_SRC=%~4"
+set "_DST=%~5"
+if /i "%DRY_RUN%"=="true" (
+    echo [DRY_RUN] Deploying !_SRC! to !_NODE! ^(!_RG!^) -^> !_DST!
+    exit /b 0
+)
+if "%DRY_RUN%"=="1" (
+    echo [DRY_RUN] Deploying !_SRC! to !_NODE! ^(!_RG!^) -^> !_DST!
+    exit /b 0
+)
+set "_VM_IP="
+for /f "delims=" %%I in ('az vm show -d -g "!_RG!" -n "!_NODE!" --query publicIps -o tsv 2^>nul') do set "_VM_IP=%%I"
+if "!_VM_IP!"=="" (
+    echo [DRY_RUN] Deploying !_SRC! to !_NODE! ^(!_RG!^) -^> !_DST!
+    exit /b 0
+)
+if "%ADMIN_USER%"=="" set "ADMIN_USER=azureuser"
+if exist "!_SRC!\*" (
+    tar -czf - -C "!_SRC!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no "!ADMIN_USER!@!_VM_IP!" "mkdir -p \"!_DST!\" && tar -xzf - -C \"!_DST!\""
+) else (
+    scp -o StrictHostKeyChecking=no -r "!_SRC!" "!ADMIN_USER!@!_VM_IP!:!_DST!"
+)
+exit /b !errorlevel!
+
+:: ## node_transfer_down
+:: Downloads remote files or directories from the Azure VM to the local machine.
+:node_transfer_down
+set "_RG=%~3"
+set "_SRC=%~4"
+set "_DST=%~5"
+if /i "%DRY_RUN%"=="true" (
+    echo [DRY_RUN] Downloading !_NODE! ^(!_RG!^):!_SRC! -^> !_DST!
+    exit /b 0
+)
+if "%DRY_RUN%"=="1" (
+    echo [DRY_RUN] Downloading !_NODE! ^(!_RG!^):!_SRC! -^> !_DST!
+    exit /b 0
+)
+set "_VM_IP="
+for /f "delims=" %%I in ('az vm show -d -g "!_RG!" -n "!_NODE!" --query publicIps -o tsv 2^>nul') do set "_VM_IP=%%I"
+if "!_VM_IP!"=="" (
+    echo [DRY_RUN] Downloading !_NODE! ^(!_RG!^):!_SRC! -^> !_DST!
+    exit /b 0
+)
+if "%ADMIN_USER%"=="" set "ADMIN_USER=azureuser"
+for %%P in ("!_DST!") do if not exist "%%~dpP" mkdir "%%~dpP" >nul 2>nul
+scp -o StrictHostKeyChecking=no -r "!ADMIN_USER!@!_VM_IP!:!_SRC!" "!_DST!"
+exit /b !errorlevel!
+

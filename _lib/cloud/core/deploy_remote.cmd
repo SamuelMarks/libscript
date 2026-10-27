@@ -121,6 +121,7 @@ call :provision_shared_db
 set "REMAINING_PATHS=!APPS_PATHS!"
 set "REMAINING_DOMAINS=!APPS_DOMAINS!"
 set "HEALTH_APPS="
+set "REPORT_COUNT=0"
 
 :: ## loop_apps
 :: Performs the loop_apps operation and updates component state.
@@ -147,14 +148,25 @@ for /f "delims=" %%R in ('ssh "!TARGET_HOST!" "cat $HOME/.libscript/deploy_state
     set "REMOTE_SUM=%%R"
 )
 
+set "_SYNC_STATE=SYNCED"
 if "!LOCAL_SUM!"=="!REMOTE_SUM!" (
     echo [INFO] [SKIPPED] !APP_NAME! -^> https://!APP_DOMAIN! is live and up-to-date.
+    set "_SYNC_STATE=UP-TO-DATE"
 ) else (
     echo [INFO] [SYNCING] !APP_NAME! -^> https://!APP_DOMAIN! ^(local: !LOCAL_SUM!, remote: !REMOTE_SUM!^)
     ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME!"
     
-    REM Basic scp fallback
-    scp -r "!APP_PATH!\*" "!TARGET_HOST!:apps/!APP_NAME!/"
+    where rsync >nul 2>nul
+    if not errorlevel 1 (
+        rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "!APP_PATH!/" "!TARGET_HOST!:apps/!APP_NAME!/"
+    ) else (
+        where tar >nul 2>nul
+        if not errorlevel 1 (
+            tar -czf - -C "!APP_PATH!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME! && tar -xzf - -C $HOME/apps/!APP_NAME!"
+        ) else (
+            scp -r "!APP_PATH!\*" "!TARGET_HOST!:apps/!APP_NAME!/"
+        )
+    )
     
     ssh "!TARGET_HOST!" "mkdir -p $HOME/.libscript && echo !LOCAL_SUM! > $HOME/.libscript/deploy_state_!APP_NAME!"
     
@@ -176,21 +188,39 @@ if "!LOCAL_SUM!"=="!REMOTE_SUM!" (
     call :configure_routing "!APP_NAME!" "!APP_DOMAIN!" "apps/!APP_NAME!" "!APP_PATH!"
 )
 
+set "_HC_STATE=STATIC"
 if exist "!APP_PATH!\libscript.json" (
     set "HEALTH_APPS=!HEALTH_APPS! !APP_NAME!"
+    ssh "!TARGET_HOST!" "cd $HOME/apps/!APP_NAME! && LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json"
+    if not errorlevel 1 (
+        set "_HC_STATE=PASS (200 OK)"
+    ) else (
+        set "_HC_STATE=FAIL"
+    )
 )
+set /a REPORT_COUNT+=1
+set "REPORT_ROW_!REPORT_COUNT!=| !APP_NAME! | https://!APP_DOMAIN! | !_SYNC_STATE! | !_HC_STATE! |"
 goto loop_apps
 
 :: ## done
 :: Performs the done operation and updates component state.
 :done
-if not "!HEALTH_APPS!"=="" (
-    echo [INFO] Running health checks for backend services:!HEALTH_APPS!...
-    for %%a in (!HEALTH_APPS!) do (
-        ssh "!TARGET_HOST!" "cd $HOME/apps/%%a && LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json"
-    )
-)
+call :print_remote_deployment_report
 echo [INFO] Deployment remote complete.
+exit /b 0
+
+:: ## print_remote_deployment_report
+:: Outputs an ASCII summary table of deployed applications, DNS domains, and healthcheck results.
+:print_remote_deployment_report
+echo +----------------------------------------------------------------------------------------------------+
+echo ^| LIBSCRIPT REMOTE DEPLOYMENT REPORT ^(Host: !TARGET_HOST!^)
+echo +----------------------------+--------------------------------+-------------------+------------------+
+echo ^| Application                ^| DNS / Public Endpoint          ^| Sync Status       ^| Healthcheck      ^|
+echo +----------------------------+--------------------------------+-------------------+------------------+
+for /L %%I in (1,1,!REPORT_COUNT!) do (
+    echo !REPORT_ROW_%%I!
+)
+echo +----------------------------+--------------------------------+-------------------+------------------+
 exit /b 0
 
 :: ## provision_shared_db
@@ -223,7 +253,7 @@ if "!_calc_hash!"=="" (
 )
 if "!_calc_hash!"=="" (
     set /a _dir_bytes=0
-    for /r "!tgt_dir!" %%F in (*) do set /a _dir_bytes+=%%~zF 2>nul
+    for %%F in ("!tgt_dir!\*") do set /a _dir_bytes+=%%~zF 2>nul
     set "_calc_hash=dir-size-!_dir_bytes!"
 )
 set "%~2=!_calc_hash!"

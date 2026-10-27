@@ -52,13 +52,19 @@ fi
 
 case "${PHPBB_DB_TYPE}" in
   mysql|mariadb)
-    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'mariadb' || true
+    if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+      libscript_depends 'mariadb' || true
+    fi
     ;;
   pgsql|postgres|postgresql)
-    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'postgres' || true
+    if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+      libscript_depends 'postgres' || true
+    fi
     ;;
   sqlite)
-    [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ] && libscript_depends 'sqlite' || true
+    if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+      libscript_depends 'sqlite' || true
+    fi
     ;;
   *) printf '%s\n' "Unsupported DB type: ${PHPBB_DB_TYPE}"; exit 1 ;;
 esac

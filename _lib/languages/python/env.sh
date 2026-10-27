@@ -69,7 +69,9 @@ if [ "${PYTHON_VERSION:-}" ]; then
   export PYTHON_MINOR_VERSION
   set +f
   for _py_uv_root in "${UV_PYTHON_INSTALL_DIR:-}" "${REMOTE_HOME:-${HOME:-/root}}/.local/share/uv/python" "${HOME:-/root}/.local/share/uv/python"; do
-    [ -n "$_py_uv_root" ] && [ -d "$_py_uv_root" ] || continue
+    if [ -z "$_py_uv_root" ] || [ ! -d "$_py_uv_root" ]; then
+      continue
+    fi
     for _py_uv_bin in "$_py_uv_root"/cpython-"${PYTHON_MINOR_VERSION}"*/bin; do
       if [ -d "$_py_uv_bin" ]; then
         libscript_path_prepend "$_py_uv_bin"

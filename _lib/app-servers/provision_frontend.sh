@@ -70,7 +70,9 @@ compute_frontend_fingerprint() {
   (
     cd "$_cff_dir" 2>/dev/null || exit 0
     for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock; do
-      [ -f "$_cff_f" ] && cksum "$_cff_f" 2>/dev/null || true
+      if [ -f "$_cff_f" ]; then
+        cksum "$_cff_f" 2>/dev/null || true
+      fi
     done
     if [ -d "src" ]; then
       find src -type f -exec cksum {} + 2>/dev/null | sort || true

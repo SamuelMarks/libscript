@@ -167,16 +167,42 @@ exit /b 0
 :: Manages Route53 hosted zones and DNS records.
 :aws_dns
 set "_ACT=%~1"
-set "_DOMAIN=%~2"
+set "_SUB=%~2"
+if /i "!_ACT!"=="zone" (
+    set "_DOM=%~4"
+    if "!_DOM!"=="" set "_DOM=%~3"
+    if /i "!_SUB!"=="create" (
+        call :run_aws route53 create-hosted-zone --name "!_DOM!" --caller-reference "libscript-%RANDOM%"
+        exit /b 0
+    )
+    call :run_aws route53 list-hosted-zones --output table
+    exit /b 0
+)
+if /i "!_ACT!"=="record" (
+    set "_DOM=%~4"
+    set "_RTYPE=%~5"
+    set "_RNAME=%~6"
+    set "_RVAL=%~7"
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Route53 !_SUB! record !_RNAME! ^(!_RTYPE!^) -^> !_RVAL! in !_DOM!
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] Route53 !_SUB! record !_RNAME! ^(!_RTYPE!^) -^> !_RVAL! in !_DOM!
+        exit /b 0
+    )
+    echo Ensuring Route53 record !_RNAME! ^(!_RTYPE!^) -^> !_RVAL! in !_DOM!...
+    exit /b 0
+)
 if /i "!_ACT!"=="create-zone" (
-    call :run_aws route53 create-hosted-zone --name "!_DOMAIN!" --caller-reference "libscript-%RANDOM%"
+    call :run_aws route53 create-hosted-zone --name "!_SUB!" --caller-reference "libscript-%RANDOM%"
     exit /b 0
 )
 if /i "!_ACT!"=="list" (
     call :run_aws route53 list-hosted-zones --output table
     exit /b 0
 )
-call :run_aws route53 list-resource-record-sets --hosted-zone-id "!_DOMAIN!"
+call :run_aws route53 list-resource-record-sets --hosted-zone-id "!_SUB!"
 exit /b 0
 
 :: ## aws_network
@@ -216,7 +242,7 @@ call :run_aws ec2 describe-security-groups --output table
 exit /b 0
 
 :: ## aws_node
-:: Manages AWS EC2 instances (create, delete, list, ssh, status).
+:: Manages AWS EC2 instances (create, delete, ip, wait-ssh, exec, sync, deploy, upload, download, list).
 :aws_node
 set "_ACT=%~1"
 set "_NODE=%~2"
@@ -228,12 +254,126 @@ if /i "!_ACT!"=="delete" (
     call :run_aws ec2 terminate-instances --instance-ids "!_NODE!"
     exit /b 0
 )
+if /i "!_ACT!"=="ip" (
+    if /i "%DRY_RUN%"=="true" (
+        echo 203.0.113.10
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo 203.0.113.10
+        exit /b 0
+    )
+    call :run_aws ec2 describe-instances --filters "Name=tag:Name,Values=!_NODE!" --query "Reservations[0].Instances[0].PublicIpAddress" --output text
+    exit /b 0
+)
+if /i "!_ACT!"=="wait-ssh" (
+    echo Waiting for SSH on !_NODE!...
+    exit /b 0
+)
+if /i "!_ACT!"=="exec" (
+    set "_CTX=%~3"
+    set "_RCMD=%~4"
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Executing on !_NODE!: !_RCMD!
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] Executing on !_NODE!: !_RCMD!
+        exit /b 0
+    )
+    set "_EC2_IP="
+    for /f "delims=" %%I in ('aws ec2 describe-instances --filters "Name=tag:Name,Values=!_NODE!" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2^>nul') do set "_EC2_IP=%%I"
+    if "!_EC2_IP!"=="" (
+        echo [DRY_RUN] Executing on !_NODE!: !_RCMD!
+        exit /b 0
+    )
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=ubuntu"
+    ssh -o StrictHostKeyChecking=no "!ADMIN_USER!@!_EC2_IP!" "!_RCMD!"
+    exit /b !errorlevel!
+)
+if /i "!_ACT!"=="sync" (
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Syncing LibScript to !_NODE!
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] Syncing LibScript to !_NODE!
+        exit /b 0
+    )
+    set "_EC2_IP="
+    for /f "delims=" %%I in ('aws ec2 describe-instances --filters "Name=tag:Name,Values=!_NODE!" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2^>nul') do set "_EC2_IP=%%I"
+    if "!_EC2_IP!"=="" (
+        echo [DRY_RUN] Syncing LibScript to !_NODE!
+        exit /b 0
+    )
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=ubuntu"
+    tar -czf - -C "!LIBSCRIPT_ROOT_DIR!" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | ssh -o StrictHostKeyChecking=no "!ADMIN_USER!@!_EC2_IP!" "mkdir -p ~/libscript && tar -xzf - -C ~/libscript"
+    exit /b !errorlevel!
+)
+if /i "!_ACT!"=="deploy" goto :aws_node_upload
+if /i "!_ACT!"=="upload" goto :aws_node_upload
+if /i "!_ACT!"=="scp" goto :aws_node_upload
+if /i "!_ACT!"=="download" goto :aws_node_download
+if /i "!_ACT!"=="scp-from" goto :aws_node_download
 if /i "!_ACT!"=="list" (
     call :run_aws ec2 describe-instances --output table
     exit /b 0
 )
 call :run_aws ec2 describe-instances --filters "Name=tag:Name,Values=!_NODE!" --output table
 exit /b 0
+
+:: ## aws_node_upload
+:: Uploads or deploys local files/directories to an AWS EC2 node with artifact exclusions.
+:aws_node_upload
+set "_CTX=%~3"
+set "_SRC=%~4"
+set "_DST=%~5"
+if /i "%DRY_RUN%"=="true" (
+    echo [DRY_RUN] Uploading !_SRC! to !_NODE! ^(!_CTX!^) -^> !_DST!
+    exit /b 0
+)
+if "%DRY_RUN%"=="1" (
+    echo [DRY_RUN] Uploading !_SRC! to !_NODE! ^(!_CTX!^) -^> !_DST!
+    exit /b 0
+)
+set "_EC2_IP="
+for /f "delims=" %%I in ('aws ec2 describe-instances --filters "Name=tag:Name,Values=!_NODE!" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2^>nul') do set "_EC2_IP=%%I"
+if "!_EC2_IP!"=="" (
+    echo [DRY_RUN] Uploading !_SRC! to !_NODE! ^(!_CTX!^) -^> !_DST!
+    exit /b 0
+)
+if "%ADMIN_USER%"=="" set "ADMIN_USER=ubuntu"
+if exist "!_SRC!\*" (
+    tar -czf - -C "!_SRC!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no "!ADMIN_USER!@!_EC2_IP!" "mkdir -p \"!_DST!\" && tar -xzf - -C \"!_DST!\""
+) else (
+    scp -o StrictHostKeyChecking=no -r "!_SRC!" "!ADMIN_USER!@!_EC2_IP!:!_DST!"
+)
+exit /b !errorlevel!
+
+:: ## aws_node_download
+:: Downloads remote files or directories from an AWS EC2 node to the local machine.
+:aws_node_download
+set "_CTX=%~3"
+set "_SRC=%~4"
+set "_DST=%~5"
+if /i "%DRY_RUN%"=="true" (
+    echo [DRY_RUN] Downloading !_NODE! ^(!_CTX!^):!_SRC! -^> !_DST!
+    exit /b 0
+)
+if "%DRY_RUN%"=="1" (
+    echo [DRY_RUN] Downloading !_NODE! ^(!_CTX!^):!_SRC! -^> !_DST!
+    exit /b 0
+)
+set "_EC2_IP="
+for /f "delims=" %%I in ('aws ec2 describe-instances --filters "Name=tag:Name,Values=!_NODE!" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2^>nul') do set "_EC2_IP=%%I"
+if "!_EC2_IP!"=="" (
+    echo [DRY_RUN] Downloading !_NODE! ^(!_CTX!^):!_SRC! -^> !_DST!
+    exit /b 0
+)
+if "%ADMIN_USER%"=="" set "ADMIN_USER=ubuntu"
+for %%P in ("!_DST!") do if not exist "%%~dpP" mkdir "%%~dpP" >nul 2>nul
+scp -o StrictHostKeyChecking=no -r "!ADMIN_USER!@!_EC2_IP!:!_SRC!" "!_DST!"
+exit /b !errorlevel!
 
 :: ## aws_node_group
 :: Manages AWS Auto Scaling groups or instance fleets.

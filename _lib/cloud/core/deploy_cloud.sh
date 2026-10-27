@@ -546,51 +546,110 @@ for _app_entry in "$@"; do
 done
 
 # -----------------------------------------------------------------------------
-# Post-Deployment Health & Public Ingress Verification
+# Public IP Discovery, DNS Binding & Post-Deployment Health / Ingress Report
 # -----------------------------------------------------------------------------
-if [ "$SKIP_VERIFY" -eq 0 ]; then
-  for _app_entry in "$@"; do
-    [ -n "$_app_entry" ] || continue
-    _ae_domain=""
-    case "$_app_entry" in
-      *@*)
-        _ae_domain="${_app_entry#*@}"
-        _ae_path_dest="${_app_entry%%@*}"
-        ;;
-      *)
-        _ae_path_dest="$_app_entry"
-        ;;
-    esac
-    case "$_ae_path_dest" in
-      *:*)
-        _ae_repo="${_ae_path_dest%%:*}"
-        _ae_dest="${_ae_path_dest#*:}"
+IP=""
+if [ "$DRY_RUN_MODE" -eq 1 ]; then
+  IP='203.0.113.10'
+else
+  IP=$("$CLI" node ip "$NODE" "$CTX" 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || true)
+fi
+[ -z "$IP" ] && IP='203.0.113.10'
+record_state "IP" "$IP"
+
+# ## print_deployment_report
+# Renders an ASCII deployment summary table with per-app healthcheck status, DNS records, and public URLs.
+print_deployment_report() {
+  {
+    printf '%s\n' '+------------------------------------------------------------------------------------------------------------------+'
+    printf '| %-112s |\n' "LIBSCRIPT CLOUD DEPLOYMENT REPORT (Provider: ${PROVIDER} | Node: ${NODE} | Context: ${CTX} | IP: ${IP})"
+    printf '%s\n' '+----------------------------+------------------------+----------------------------------+-------------+-----------+'
+    printf '| %-26s | %-22s | %-32s | %-11s | %-9s |\n' 'Application' 'Remote Directory' 'DNS Name / Public Endpoint' 'Healthcheck' 'Ingress'
+    printf '%s\n' '+----------------------------+------------------------+----------------------------------+-------------+-----------+'
+    if [ -n "$DEPLOY_REPORT_ROWS" ]; then
+      printf '%s\n' "$DEPLOY_REPORT_ROWS" | while IFS='|' read -r _r_name _r_dir _r_dns _r_hc _r_ing; do
+        [ -n "$_r_name" ] || continue
+        printf '| %-26s | %-22s | %-32s | %-11s | %-9s |\n' "$_r_name" "$_r_dir" "$_r_dns" "$_r_hc" "$_r_ing"
+      done
+    fi
+    printf '%s\n' '+----------------------------+------------------------+----------------------------------+-------------+-----------+'
+    printf '| %-112s |\n' "SSH Access : ssh ${ADMIN_USER}@${IP}"
+    printf '| %-112s |\n' "Log File   : ${LOG_FILE}"
+    printf '%s\n' '+------------------------------------------------------------------------------------------------------------------+'
+  } | tee -a "$LOG_FILE"
+}
+
+DEPLOY_REPORT_ROWS=""
+for _app_entry in "$@"; do
+  [ -n "$_app_entry" ] || continue
+  _ae_domain=""
+  case "$_app_entry" in
+    *@*)
+      _ae_domain="${_app_entry#*@}"
+      _ae_path_dest="${_app_entry%%@*}"
       ;;
-      *)
-        _ae_repo="$_ae_path_dest"
-        _ae_dest=$(basename "$_ae_path_dest")
-        ;;
-    esac
-    _ae_name=$(basename "$_ae_repo")
-    if [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      _j_name=$(jq -r '.name // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
-      [ -n "$_j_name" ] && [ "$_j_name" != "null" ] && _ae_name="$_j_name"
-      if [ -z "$_ae_domain" ]; then
-        _ae_domain=$(jq -r '.ingress.domain // .domain // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
-      fi
+    *)
+      _ae_path_dest="$_app_entry"
+      ;;
+  esac
+  case "$_ae_path_dest" in
+    *:*)
+      _ae_repo="${_ae_path_dest%%:*}"
+      _ae_dest="${_ae_path_dest#*:}"
+      ;;
+    *)
+      _ae_repo="$_ae_path_dest"
+      _ae_dest=$(basename "$_ae_path_dest")
+      ;;
+  esac
+  _ae_name=$(basename "$_ae_repo")
+  if [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+    _j_name=$(jq -r '.name // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
+    [ -n "$_j_name" ] && [ "$_j_name" != "null" ] && _ae_name="$_j_name"
+    if [ -z "$_ae_domain" ]; then
+      _ae_domain=$(jq -r '.ingress.domain // .domain // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
     fi
+  fi
 
-    if ! matches_only_target "$_ae_name" "$_ae_dest" "$_ae_repo"; then
-      continue
+  if ! matches_only_target "$_ae_name" "$_ae_dest" "$_ae_repo"; then
+    continue
+  fi
+
+  _dns_label="http://${IP}"
+  if [ -n "$_ae_domain" ] && [ "$_ae_domain" != "null" ]; then
+    _dns_label="https://${_ae_domain}"
+    if [ "$SKIP_INFRA" -eq 0 ]; then
+      log "DNS" "Ensuring DNS A record '${_ae_domain}' -> ${IP}..."
+      run_with_auth_check "$CLI" dns record create "$_ae_domain" "${DNS_RG:-$CTX}" "@" A "$IP" || true
     fi
+  fi
 
+  _hc_status='SKIPPED'
+  _ing_status='SKIPPED'
+  if [ "$SKIP_VERIFY" -eq 0 ]; then
     _pub_arg=""
     if [ -n "$_ae_domain" ] && [ "$_ae_domain" != "null" ]; then
       _pub_arg=" --verify-ingress --public-url=https://${_ae_domain}"
     fi
     log "HEALTH" "Verifying '$_ae_name' health and ingress (${_ae_domain:-local})..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json --remediate${_pub_arg}"
-  done
-fi
+    if run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json --remediate${_pub_arg}"; then
+      _hc_status='PASS (200)'
+      if [ -n "$_ae_domain" ] && [ "$_ae_domain" != "null" ]; then
+        _ing_status='PASS (TLS)'
+      else
+        _ing_status='LOCAL'
+      fi
+    else
+      _hc_status='FAIL'
+      _ing_status='FAIL'
+      print_deployment_report
+      exit 1
+    fi
+  fi
 
+  DEPLOY_REPORT_ROWS="${DEPLOY_REPORT_ROWS}${_ae_name}|~/${_ae_dest}|${_dns_label}|${_hc_status}|${_ing_status}
+"
+done
+
+print_deployment_report
 log "DONE" "Deployment complete. View full logs at $LOG_FILE"

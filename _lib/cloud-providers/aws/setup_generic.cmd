@@ -210,3 +210,32 @@ exit /b 0
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "aws" "%ACTION%" "%AWS_VERSION%" "%AWS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\aws\%AWS_VERSION%\\bin\\aws.exe\"" "%LIBSCRIPT_HOME%\aws\%AWS_VERSION%"
 exit /b !errorlevel!
+
+:: ## action_group
+:: Delegates group/project actions to aws cli.cmd.
+:action_group
+:: ## action_network
+:: Delegates network actions to aws cli.cmd.
+:action_network
+:: ## action_firewall
+:: Delegates firewall actions to aws cli.cmd.
+:action_firewall
+:: ## action_storage
+:: Delegates storage actions to aws cli.cmd.
+:action_storage
+:: ## action_dns
+:: Delegates dns actions to aws cli.cmd.
+:action_dns
+:: ## action_auth
+:: Delegates auth actions to aws cli.cmd.
+:action_auth
+:: ## action_location
+:: Delegates location actions to aws cli.cmd.
+:action_location
+:: ## action_node
+:: Delegates node actions to aws cli.cmd.
+:action_node
+set "STACK="
+call "!SCRIPT_DIR!\cli.cmd" %*
+exit /b !errorlevel!
+

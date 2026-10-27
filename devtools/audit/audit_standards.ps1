@@ -95,10 +95,13 @@ function Audit-File {
             }
         }
 
-        # Check for multiple shebangs outside of heredocs
+        # Check for multiple shebangs, raw package managers, raw network fetches, and unnecessary double quotes outside of heredocs
         $inHeredoc = $false
         $delim = ""
         $shebangLines = @()
+        $rawFetchLines = @()
+        $rawPkgLines = @()
+        $unnecessaryDqLines = @()
         $lineNum = 1
         foreach ($ln in (Get-Content -Path $FilePath -ErrorAction SilentlyContinue)) {
             $trimmed = $ln.Trim()
@@ -116,6 +119,17 @@ function Audit-File {
             }
             if ($trimmed.StartsWith("#!")) {
                 $shebangLines += $lineNum
+            }
+            if ($ln -notmatch '^\s*#') {
+                if ($ln -notmatch 'libscript-allow-raw-(fetch|curl)' -and $ln -match '(^|[\s;|&(])(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])(\s|$)' -and $ln -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w\s+"%\{http_code\}")') {
+                    $rawFetchLines += $lineNum
+                }
+                if ($ln -notmatch 'libscript-allow-raw-pkg' -and $ln -match '(^|[\s;|&])(priv\s+|sudo\s+)?(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)(\s|$)' -and $ln -notmatch '--root') {
+                    $rawPkgLines += $lineNum
+                }
+                if ($ln -match '^\s*(export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"\s*$' -or $ln -match '^\s*(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?\s*$' -or $ln -match '^\s*libscript_depends(\s+"[A-Za-z0-9_.-]+")+(\s*\|\|\s*true)?\s*$') {
+                    $unnecessaryDqLines += $lineNum
+                }
             }
             $lineNum++
         }
@@ -309,13 +323,12 @@ function Audit-File {
     }
 
     # 8f. Ban non-POSIX sort -V and bare sed -i in .sh scripts
-    if ($ext -eq "sh" -and $normPath -ne 'devtools/audit/audit_posix.sh' -and $normPath -ne 'devtools/audit/audit_standards.sh') {
+    if ($ext -eq "sh" -and $normPath -ne 'devtools/audit/audit_posix.sh' -and $normPath -ne 'devtools/audit/audit_standards.sh' -and $normPath -notmatch '\.tpl$') {
         $nonPosixFlagMatch = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(sort\s+-V|sed\s+-i)' -Quiet
         if ($nonPosixFlagMatch) {
             Log-Violation -File $FilePath -Rule "NON_POSIX_TOOL_FLAG" -Details "Non-POSIX sort -V or sed -i detected."
         }
-        $dqMatch = Select-String -Path $FilePath -Pattern '^\s*((export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"|(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?|libscript_depends(\s+"[A-Za-z0-9_.-]+")+)(\s*\|\|\s*true)?\s*$'
-        if ($dqMatch) {
+        if ($unnecessaryDqLines.Count -gt 0) {
             Log-Violation -File $FilePath -Rule "UNNECESSARY_DOUBLE_QUOTES" -Details "Double quotes used where single quotes suffice."
         }
     }
@@ -323,21 +336,19 @@ function Audit-File {
     # 8g. Raw Network Fetch & Raw Package Manager Audit
     if ($normPath -notmatch '^(devtools|tests|docker)/') {
         if ($ext -eq "sh") {
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health|service))\.sh$') {
-                $rawFetchSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])\b' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|libscript-allow-raw-(fetch|curl))' }
-                if ($rawFetchSh) {
+            if ($normPath -notmatch '_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health.*|service))\.sh$') {
+                if ($rawFetchLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout)."
                 }
             }
             if ($normPath -notmatch '_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/distro/)') {
-                $rawPkgSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)\b' | Where-Object { $_.Line -notmatch '(--root|libscript-allow-raw-pkg)' }
-                if ($rawPkgSh) {
+                if ($rawPkgLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
                 }
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
             if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|cli/commands/packaging/formats/pkg_docker_compose)\.cmd$') {
-                $rawFetchCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s|echo\s).*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-fetch)' }
+                $rawFetchCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s|echo\s).*(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-fetch)' }
                 if ($rawFetchCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
                 }

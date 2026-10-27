@@ -209,7 +209,7 @@ if [ -s "$tmp_args" ]; then
   done < "$tmp_args"
 
   if [ -n "$cur_pkg" ]; then
-    if [ -z "$cur_ver" ]; then cur_ver="latest"; fi
+    if [ -z "$cur_ver" ]; then cur_ver='latest'; fi
     deps_list="${deps_list}cli ${cur_pkg} ${cur_ver} ${cur_override}
 "
   fi
@@ -227,7 +227,7 @@ if [ -n "$deps_list" ]; then
 
     pkg_clean=$(basename "$pkg")
     pkg_up=$(printf '%s' "$pkg_clean" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-    [ "$ver" = "null" ] || [ -z "$ver" ] && ver="latest"
+    if [ "$ver" = "null" ] || [ -z "$ver" ]; then ver='latest'; fi
 
     printf 'ENV %s_VERSION="%s"\n' "$pkg_up" "$ver" >> "$tmp_env_add"
 
@@ -265,9 +265,9 @@ if [ -n "$deps_list" ]; then
   done
 else
   if [ "$is_offline" -eq 1 ]; then
-    printf '%s\n' "RUN ./install_gen.sh --offline" >> "$tmp_run"
+    printf '%s\n' 'RUN ./install_gen.sh --offline' >> "$tmp_run"
   else
-    printf '%s\n' "RUN ./install_gen.sh" >> "$tmp_run"
+    printf '%s\n' 'RUN ./install_gen.sh' >> "$tmp_run"
   fi
 fi
 

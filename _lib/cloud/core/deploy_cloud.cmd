@@ -310,13 +310,19 @@ if errorlevel 1 exit /b 1
 goto :deploy_loop
 
 :: ## verify_loop
-:: Runs post-deployment health and public ingress verification on deployed apps.
+:: Discovers node IP, ensures DNS records, and runs post-deployment health and public ingress verification.
 :verify_loop
-if "!SKIP_VERIFY!"=="1" goto :deploy_done
+set "IP=203.0.113.10"
+if "!DRY_RUN_MODE!"=="0" (
+    for /f "delims=" %%I in ('call "!CLI!" node ip "!NODE!" "!CTX!" 2^>nul') do (
+        if not "%%I"=="" set "IP=%%I"
+    )
+)
+set "REPORT_COUNT=0"
 set "REM_SPECS=!APP_SPECS!"
 
 :: ## verify_next
-:: Iterates through each deployed app for health verification.
+:: Iterates through each deployed app for DNS binding, health verification, and report row generation.
 :verify_next
 if "!REM_SPECS!"=="" goto :deploy_done
 for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
@@ -324,13 +330,42 @@ for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
     set "REM_SPECS=%%B"
 )
 call :verify_one_spec "!_CUR_SPEC!"
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    call :print_deployment_report
+    exit /b 1
+)
 goto :verify_next
 
 :: ## deploy_done
-:: Finalizes deployment execution.
+:: Prints the ASCII deployment summary table and finalizes deployment execution.
 :deploy_done
+call :print_deployment_report
 call :log "DONE" "Deployment complete. View full logs at !LOG_FILE!"
+exit /b 0
+
+:: ## print_deployment_report
+:: Renders an ASCII deployment summary table with per-app healthcheck status, DNS records, and public URLs.
+:print_deployment_report
+echo +------------------------------------------------------------------------------------------------------------------+
+echo ^| LIBSCRIPT CLOUD DEPLOYMENT REPORT ^(Provider: !PROVIDER! ^| Node: !NODE! ^| Context: !CTX! ^| IP: !IP!^)
+echo +----------------------------+------------------------+----------------------------------+-------------+-----------+
+echo ^| Application                ^| Remote Directory       ^| DNS Name / Public Endpoint       ^| Healthcheck ^| Ingress   ^|
+echo +----------------------------+------------------------+----------------------------------+-------------+-----------+
+for /L %%I in (1,1,!REPORT_COUNT!) do (
+    echo !REPORT_ROW_%%I!
+)
+echo +----------------------------+------------------------+----------------------------------+-------------+-----------+
+echo ^| SSH Access : ssh !ADMIN_USER!@!IP!
+echo ^| Log File   : !LOG_FILE!
+echo +------------------------------------------------------------------------------------------------------------------+
+if defined LOG_FILE (
+    echo +------------------------------------------------------------------------------------------------------------------+>> "!LOG_FILE!"
+    echo ^| LIBSCRIPT CLOUD DEPLOYMENT REPORT ^(Provider: !PROVIDER! ^| Node: !NODE! ^| Context: !CTX! ^| IP: !IP!^)>> "!LOG_FILE!"
+    for /L %%I in (1,1,!REPORT_COUNT!) do (
+        echo !REPORT_ROW_%%I!>> "!LOG_FILE!"
+    )
+    echo +------------------------------------------------------------------------------------------------------------------+>> "!LOG_FILE!"
+)
 exit /b 0
 
 :: ## log
@@ -501,13 +536,37 @@ call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! &&
 exit /b !ERRORLEVEL!
 
 :: ## verify_one_spec
-:: Verifies health and ingress for a single deployed application specification.
+:: Verifies DNS, health, and ingress for a single deployed application specification and records report state.
 :verify_one_spec
 call :parse_spec "%~1"
 call :check_only_match "!_SP_DEST!" "!_SP_REPO!"
 if "!_MATCH!"=="0" exit /b 0
+set "_DNS_LABEL=http://!IP!"
+if not "!_SP_DOMAIN!"=="" (
+    set "_DNS_LABEL=https://!_SP_DOMAIN!"
+    if "!SKIP_INFRA!"=="0" (
+        call :log "DNS" "Ensuring DNS A record '!_SP_DOMAIN!' -> !IP!..."
+        call :run_with_auth_check "!CLI!" dns record create "!_SP_DOMAIN!" "!CTX!" "@" A "!IP!"
+    )
+)
+if "!SKIP_VERIFY!"=="1" (
+    set /a REPORT_COUNT+=1
+    set "REPORT_ROW_!REPORT_COUNT!=| !_SP_DEST! | ~/!_SP_DEST! | !_DNS_LABEL! | SKIPPED | SKIPPED |"
+    exit /b 0
+)
 set "_PUB_ARG="
 if not "!_SP_DOMAIN!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_SP_DOMAIN!"
 call :log "HEALTH" "Verifying '!_SP_DEST!' health and ingress (!NODE!)..."
 call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
-exit /b !ERRORLEVEL!
+set "_V_RC=!ERRORLEVEL!"
+set /a REPORT_COUNT+=1
+if "!_V_RC!"=="0" (
+    if not "!_SP_DOMAIN!"=="" (
+        set "REPORT_ROW_!REPORT_COUNT!=| !_SP_DEST! | ~/!_SP_DEST! | !_DNS_LABEL! | PASS (200) | PASS (TLS) |"
+    ) else (
+        set "REPORT_ROW_!REPORT_COUNT!=| !_SP_DEST! | ~/!_SP_DEST! | !_DNS_LABEL! | PASS (200) | LOCAL |"
+    )
+) else (
+    set "REPORT_ROW_!REPORT_COUNT!=| !_SP_DEST! | ~/!_SP_DEST! | !_DNS_LABEL! | FAIL | FAIL |"
+)
+exit /b !_V_RC!

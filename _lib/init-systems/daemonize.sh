@@ -65,7 +65,9 @@ while [ $# -gt 0 ]; do
       shift
       PUBLIC_URL="${1:-}"
       VERIFY_INGRESS=1
-      [ $# -gt 0 ] && shift || true
+      if [ $# -gt 0 ]; then
+        shift
+      fi
       ;;
     --remediate)
       shift
@@ -285,7 +287,9 @@ run_service_health_cmd() {
     _hc_ef_list=$(collect_service_env_files "$_hc_svc_json" "$_hc_wd")
     if [ -n "$_hc_ef_list" ]; then
       while IFS= read -r _hc_ef_res; do
-        [ -n "$_hc_ef_res" ] && [ -f "$_hc_ef_res" ] || continue
+        if [ -z "$_hc_ef_res" ] || [ ! -f "$_hc_ef_res" ]; then
+          continue
+        fi
         set -a
         # shellcheck disable=SC1090
         . "$_hc_ef_res" 2>/dev/null || true
@@ -348,7 +352,9 @@ while IFS= read -r svc <&3; do
 
   if [ "$ACTION" = "uninstall" ]; then
     libscript_uninstall_service "$NAME"
-    [ -n "$CMD" ] && pkill -f "$CMD" 2>/dev/null || true
+    if [ -n "$CMD" ]; then
+      pkill -f "$CMD" 2>/dev/null || true
+    fi
     log_info "[DAEMON] [UNINSTALL] Removed service unit '$NAME'."
     continue
   fi

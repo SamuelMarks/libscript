@@ -81,7 +81,9 @@ find_existing_python() {
     return 0
   fi
   for _fep_uv_dir in "${UV_PYTHON_INSTALL_DIR:-}" "${REMOTE_HOME:-$HOME}/.local/share/uv/python" "${HOME}/.local/share/uv/python" "/root/.local/share/uv/python"; do
-    [ -n "$_fep_uv_dir" ] && [ -d "$_fep_uv_dir" ] || continue
+    if [ -z "$_fep_uv_dir" ] || [ ! -d "$_fep_uv_dir" ]; then
+      continue
+    fi
     for _fep_cand in "$_fep_uv_dir"/cpython-"${_fep_req}"*/bin/python3; do
       if [ -x "$_fep_cand" ]; then
         printf '%s\n' "$_fep_cand"

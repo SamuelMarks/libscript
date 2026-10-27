@@ -72,7 +72,9 @@ elif [ "$CMD" = "prepare-storage" ]; then
     _ps_overrides=$(jq -r '(.service_overrides // {}) | to_entries[]? | "\(.key) \(.value | to_entries | map("\(.key)=\(.value)") | join(" "))"' "$json_file" 2>/dev/null || true)
     if [ -n "$_ps_overrides" ] && type libscript_service_override_env >/dev/null 2>&1; then
       printf '%s\n' "$_ps_overrides" | while read -r _ovr_svc _ovr_pairs; do
-        [ -n "$_ovr_svc" ] && [ -n "$_ovr_pairs" ] || continue
+        if [ -z "$_ovr_svc" ] || [ -z "$_ovr_pairs" ]; then
+          continue
+        fi
         if type libscript_expand_manifest_vars >/dev/null 2>&1; then
           _ovr_pairs=$(libscript_expand_manifest_vars "$_ovr_pairs")
         fi

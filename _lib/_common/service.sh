@@ -253,8 +253,8 @@ libscript_service() {
     case "$_action" in
       start|stop|restart|status) priv service "$_rc_svc" "$_action" 2>/dev/null || priv service "$_service" "$_action" ;;
       reload)    priv service "$_rc_svc" reload 2>/dev/null || priv service "$_rc_svc" restart ;;
-      enable)    command -v sysrc >/dev/null 2>&1 && priv sysrc "${_rc_svc}_enable=YES" || true ;;
-      disable)   command -v sysrc >/dev/null 2>&1 && priv sysrc "${_rc_svc}_enable=NO" || true ;;
+      enable)    if command -v sysrc >/dev/null 2>&1; then priv sysrc "${_rc_svc}_enable=YES" || true; fi ;;
+      disable)   if command -v sysrc >/dev/null 2>&1; then priv sysrc "${_rc_svc}_enable=NO" || true; fi ;;
       uninstall) libscript_uninstall_service "$_service" ;;
       logs)
         if [ -f "/var/log/$_rc_svc.log" ]; then
@@ -305,12 +305,12 @@ libscript_service() {
         libscript_service start "$_service"
         ;;
       enable)
-        [ -f "$_plist_usr" ] && launchctl load -w "$_plist_usr" 2>/dev/null || true
-        [ -f "$_plist_sys" ] && priv launchctl load -w "$_plist_sys" 2>/dev/null || true
+        if [ -f "$_plist_usr" ]; then launchctl load -w "$_plist_usr" 2>/dev/null || true; fi
+        if [ -f "$_plist_sys" ]; then priv launchctl load -w "$_plist_sys" 2>/dev/null || true; fi
         ;;
       disable)
-        [ -f "$_plist_usr" ] && launchctl unload -w "$_plist_usr" 2>/dev/null || true
-        [ -f "$_plist_sys" ] && priv launchctl unload -w "$_plist_sys" 2>/dev/null || true
+        if [ -f "$_plist_usr" ]; then launchctl unload -w "$_plist_usr" 2>/dev/null || true; fi
+        if [ -f "$_plist_sys" ]; then priv launchctl unload -w "$_plist_sys" 2>/dev/null || true; fi
         ;;
       uninstall)
         libscript_uninstall_service "$_service"

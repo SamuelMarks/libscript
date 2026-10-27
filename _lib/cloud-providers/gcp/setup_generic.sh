@@ -212,7 +212,11 @@ case "$ACTION" in
           printf '%s\n' "[DRY_RUN] Syncing LibScript to $RESOURCE_NAME"
           exit 0
         fi
-        gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$LIBSCRIPT_ROOT_DIR" "${RESOURCE_NAME}:~/libscript"
+        if command -v tar >/dev/null 2>&1; then
+          tar -czf - -C "$LIBSCRIPT_ROOT_DIR" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | gcloud compute ssh "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --command="mkdir -p ~/libscript && tar -xzf - -C ~/libscript"
+        else
+          gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$LIBSCRIPT_ROOT_DIR" "${RESOURCE_NAME}:~/libscript"
+        fi
         ;;
       deploy|upload|scp)
         ZONE=${3:-${GCP_ZONE:-}}; SRC=${4:-}; DST=${5:-}
@@ -220,7 +224,11 @@ case "$ACTION" in
           printf '%s\n' "[DRY_RUN] Uploading $SRC to $RESOURCE_NAME -> $DST"
           exit 0
         fi
-        gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$SRC" "${RESOURCE_NAME}:${DST}"
+        if command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
+          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | gcloud compute ssh "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --command="mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
+        else
+          gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$SRC" "${RESOURCE_NAME}:${DST}"
+        fi
         ;;
       download|scp-from)
         ZONE=${3:-${GCP_ZONE:-}}; SRC=${4:-}; DST=${5:-}

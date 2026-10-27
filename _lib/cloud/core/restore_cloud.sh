@@ -181,33 +181,56 @@ if [ "$IMPORT_MODE" -eq 1 ]; then
     "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
   done
   "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_import_stage"
-  if [ "$SKIP_VERIFY" -eq 0 ]; then
-    for _im_spec in "$@"; do
-      [ -n "$_im_spec" ] || continue
-      _im_domain=""
-      case "$_im_spec" in
-        *@*)
-          _im_domain="${_im_spec#*@}"
-          _im_no_dom="${_im_spec%%@*}"
-          ;;
-        *) _im_no_dom="$_im_spec" ;;
-      esac
-      _im_repo=""
-      case "$_im_no_dom" in
-        *:*)
-          _im_repo="${_im_no_dom%%:*}"
-          _im_dest="${_im_no_dom#*:}"
-          ;;
-        *) _im_dest="$_im_no_dom" ;;
-      esac
-      if ! matches_only_target "$_im_dest" "$_im_repo" && ! matches_only_target "${_im_domain%%.*}" "$_im_repo"; then
-        continue
-      fi
+  IMPORT_REPORT_ROWS=""
+  for _im_spec in "$@"; do
+    [ -n "$_im_spec" ] || continue
+    _im_domain=""
+    case "$_im_spec" in
+      *@*)
+        _im_domain="${_im_spec#*@}"
+        _im_no_dom="${_im_spec%%@*}"
+        ;;
+      *) _im_no_dom="$_im_spec" ;;
+    esac
+    _im_repo=""
+    case "$_im_no_dom" in
+      *:*)
+        _im_repo="${_im_no_dom%%:*}"
+        _im_dest="${_im_no_dom#*:}"
+        ;;
+      *) _im_dest="$_im_no_dom" ;;
+    esac
+    if ! matches_only_target "$_im_dest" "$_im_repo" && ! matches_only_target "${_im_domain%%.*}" "$_im_repo"; then
+      continue
+    fi
+    _im_url="${_im_domain:+https://${_im_domain}}"
+    [ -z "$_im_url" ] && _im_url='local'
+    _im_hc='SKIPPED'
+    if [ "$SKIP_VERIFY" -eq 0 ]; then
       _pub_arg=""
       [ -n "$_im_domain" ] && _pub_arg=" --verify-ingress --public-url=https://${_im_domain}"
-      "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\$HOME\" LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh health libscript.json --remediate${_pub_arg}"
+      if "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\$HOME\" LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh health libscript.json --remediate${_pub_arg}"; then
+        _im_hc='PASS (200 OK)'
+      else
+        _im_hc='FAIL'
+        exit 1
+      fi
+    fi
+    IMPORT_REPORT_ROWS="${IMPORT_REPORT_ROWS}${_im_dest}|${_im_url}|IMPORTED|${_im_hc}
+"
+  done
+  printf '%s\n' '+----------------------------------------------------------------------------------------------------+'
+  printf '| %-98s |\n' "LIBSCRIPT STATE IMPORT REPORT (Provider: ${PROVIDER} | Node: ${NODE} | Source: ${LOCAL_SRC})"
+  printf '%s\n' '+----------------------------+--------------------------------+-------------------+------------------+'
+  printf '| %-26s | %-30s | %-17s | %-16s |\n' 'Application' 'DNS / Public Endpoint' 'Import Status' 'Healthcheck'
+  printf '%s\n' '+----------------------------+--------------------------------+-------------------+------------------+'
+  if [ -n "$IMPORT_REPORT_ROWS" ]; then
+    printf '%s\n' "$IMPORT_REPORT_ROWS" | while IFS='|' read -r _r_app _r_url _r_st _r_hc; do
+      [ -n "$_r_app" ] || continue
+      printf '| %-26s | %-30s | %-17s | %-16s |\n' "$_r_app" "$_r_url" "$_r_st" "$_r_hc"
     done
   fi
+  printf '%s\n' '+----------------------------+--------------------------------+-------------------+------------------+'
   log_info "Import from '${LOCAL_SRC}' completed successfully."
   exit 0
 fi

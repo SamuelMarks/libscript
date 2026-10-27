@@ -186,19 +186,33 @@ if "!_MATCH!"=="1" (
 goto :import_next_app
 
 :: ## import_finish
-:: Cleans up remote staging directory and verifies post-import health if enabled.
+:: Cleans up remote staging directory, verifies post-import health if enabled, and prints report.
 :import_finish
 call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_import_stage"
-if "!SKIP_VERIFY!"=="0" (
-    set "REM_SPECS=!APP_SPECS!"
-    call :verify_imported_apps
-    if errorlevel 1 exit /b 1
-)
+set "IMPORT_REPORT_COUNT=0"
+set "REM_SPECS=!APP_SPECS!"
+call :verify_imported_apps
+if errorlevel 1 exit /b 1
+call :print_import_report
 echo [INFO] Import from '!LOCAL_SRC!' completed successfully.
 exit /b 0
 
+:: ## print_import_report
+:: Renders an ASCII summary table of imported applications, DNS endpoints, and healthcheck statuses.
+:print_import_report
+echo +----------------------------------------------------------------------------------------------------+
+echo ^| LIBSCRIPT STATE IMPORT REPORT ^(Provider: !PROVIDER! ^| Node: !NODE! ^| Source: !LOCAL_SRC!^)
+echo +----------------------------+--------------------------------+-------------------+------------------+
+echo ^| Application                ^| DNS / Public Endpoint          ^| Import Status     ^| Healthcheck      ^|
+echo +----------------------------+--------------------------------+-------------------+------------------+
+for /L %%I in (1,1,!IMPORT_REPORT_COUNT!) do (
+    echo !IMPORT_ROW_%%I!
+)
+echo +----------------------------+--------------------------------+-------------------+------------------+
+exit /b 0
+
 :: ## verify_imported_apps
-:: Runs health verification for each imported application.
+:: Runs health verification for each imported application and records report rows.
 :verify_imported_apps
 if "!REM_SPECS!"=="" exit /b 0
 for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
@@ -226,9 +240,18 @@ if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
     if not errorlevel 1 set "_MATCH=1"
 )
 if "!_MATCH!"=="1" (
-    set "_PUB_ARG="
-    if not "!_CUR_DOM!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_CUR_DOM!"
-    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
-    if errorlevel 1 exit /b 1
+    set "_IM_URL=local"
+    if not "!_CUR_DOM!"=="" set "_IM_URL=https://!_CUR_DOM!"
+    if "!SKIP_VERIFY!"=="0" (
+        set "_PUB_ARG="
+        if not "!_CUR_DOM!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_CUR_DOM!"
+        call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
+        if errorlevel 1 exit /b 1
+        set /a IMPORT_REPORT_COUNT+=1
+        set "IMPORT_ROW_!IMPORT_REPORT_COUNT!=| !_CUR_DEST! | !_IM_URL! | IMPORTED | PASS (200 OK) |"
+    ) else (
+        set /a IMPORT_REPORT_COUNT+=1
+        set "IMPORT_ROW_!IMPORT_REPORT_COUNT!=| !_CUR_DEST! | !_IM_URL! | IMPORTED | SKIPPED |"
+    )
 )
 goto :verify_imported_apps

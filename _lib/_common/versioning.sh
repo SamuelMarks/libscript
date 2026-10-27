@@ -112,7 +112,9 @@ libscript_check_installed_version() {
         return 0
       fi
       for _civ_uv_py_dir in "${UV_PYTHON_INSTALL_DIR:-}" "${_civ_user_home}/.local/share/uv/python" "/root/.local/share/uv/python"; do
-        [ -n "$_civ_uv_py_dir" ] && [ -d "$_civ_uv_py_dir" ] || continue
+        if [ -z "$_civ_uv_py_dir" ] || [ ! -d "$_civ_uv_py_dir" ]; then
+          continue
+        fi
         for _civ_pyd in "$_civ_uv_py_dir"/cpython-"${_civ_prefix}"*; do
           if [ -x "${_civ_pyd}/bin/python3" ]; then
             printf '%s\n' "${_civ_pyd}/bin"

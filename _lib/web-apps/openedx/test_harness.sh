@@ -61,7 +61,9 @@ PID_FILE="$TMP_DIR/test_services.pid"
 cleanup() {
   if [ -f "$PID_FILE" ]; then
     while read -r p; do
-      [ -n "$p" ] && kill "$p" 2>/dev/null || true
+      if [ -n "$p" ]; then
+        kill "$p" 2>/dev/null || true
+      fi
     done < "$PID_FILE"
     rm -f "$PID_FILE"
   fi

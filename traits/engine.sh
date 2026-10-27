@@ -114,7 +114,9 @@ while [ $# -gt 0 ]; do
     --manifest)
       shift
       MANIFEST_FILE="${1:-}"
-      [ $# -gt 0 ] && shift || true
+      if [ $# -gt 0 ]; then
+        shift
+      fi
       ;;
     *)
       if [ "$TARGET_TRAIT" = "all" ]; then

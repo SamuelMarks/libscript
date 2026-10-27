@@ -230,9 +230,9 @@ case "$ACTION" in
           _src_sync="${SRC%/}/"
         fi
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
         elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
+          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
         else
           scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         fi
@@ -246,7 +246,9 @@ case "$ACTION" in
         fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST" || scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+          rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
+        elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
+          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
         else
           scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
         fi
@@ -276,7 +278,9 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="logs" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
+          rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
+        elif command -v tar >/dev/null 2>&1; then
+          tar -czf - -C "${LIBSCRIPT_ROOT_DIR}" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript && tar -xzf - -C ~/libscript"
         else
           scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
         fi
@@ -327,6 +331,13 @@ case "$ACTION" in
           create|update)
             ZONE=${3:-}; RG=${4:-}; NAME=${5:-}; TYPE=${6:-}; VALUE=${7:-}
             if [ -z "$VALUE" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> <rg> <name> <type> <value>"; exit 1; fi
+            if [ "$TYPE" = "@" ] && { [ "$NAME" = "A" ] || [ "$NAME" = "CNAME" ] || [ "$NAME" = "TXT" ]; }; then
+              _tmp_z="$ZONE"; ZONE="$RG"; RG="$_tmp_z"; TYPE="$NAME"; NAME="@"
+            fi
+            if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
+              printf '[DRY_RUN] az network dns record-set %s (%s) in zone %s (%s) -> %s\n' "$NAME" "$TYPE" "$ZONE" "$RG" "$VALUE"
+              exit 0
+            fi
             if [ "$SUBTYPE" = "update" ]; then
               libscript_verify_managed azure dns "$ZONE" "$RG" || exit 1
             fi

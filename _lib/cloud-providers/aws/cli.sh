@@ -484,7 +484,13 @@ aws_node() {
         exit 0
       fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
-      rsync -avz --exclude=".git" -e "ssh -o StrictHostKeyChecking=no" "$LIBSCRIPT_ROOT_DIR/" "${ADMIN_USER:-ubuntu}@$IP:~/libscript/" || scp -o StrictHostKeyChecking=no -r "$LIBSCRIPT_ROOT_DIR" "${ADMIN_USER:-ubuntu}@$IP:~/libscript"
+      if command -v rsync >/dev/null 2>&1; then
+        rsync -avz --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no" "$LIBSCRIPT_ROOT_DIR/" "${ADMIN_USER:-ubuntu}@$IP:~/libscript/"
+      elif command -v tar >/dev/null 2>&1; then
+        tar -czf - -C "$LIBSCRIPT_ROOT_DIR" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-ubuntu}@$IP" "mkdir -p ~/libscript && tar -xzf - -C ~/libscript"
+      else
+        scp -o StrictHostKeyChecking=no -r "$LIBSCRIPT_ROOT_DIR" "${ADMIN_USER:-ubuntu}@$IP:~/libscript"
+      fi
       ;;
     deploy|upload|scp)
       NAME=$1; CTX=$2; SRC=$3; DST=$4
@@ -493,7 +499,17 @@ aws_node() {
         exit 0
       fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
-      rsync -avz --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST" || scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST"
+      _src_sync="$SRC"
+      if [ -d "$SRC" ]; then
+        _src_sync="${SRC%/}/"
+      fi
+      if command -v rsync >/dev/null 2>&1; then
+        rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$_src_sync" "${ADMIN_USER:-ubuntu}@$IP:${DST%/}/"
+      elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
+        tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-ubuntu}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
+      else
+        scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST"
+      fi
       ;;
     download|scp-from)
       NAME=$1; CTX=$2; SRC=$3; DST=$4

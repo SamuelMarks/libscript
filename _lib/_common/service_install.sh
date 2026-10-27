@@ -256,7 +256,9 @@ SYSTEMD
         fi
         if [ -n "$_env_files" ]; then
           printf '%s\n' "$_env_files" | while IFS= read -r _ef; do
-            [ -n "$_ef" ] && [ -f "$_ef" ] && printf 'EnvironmentFile=-%s\n' "$_ef" >> "$_tmp_file" || true
+            if [ -n "$_ef" ] && [ -f "$_ef" ]; then
+              printf 'EnvironmentFile=-%s\n' "$_ef" >> "$_tmp_file"
+            fi
           done
         fi
         if [ -n "$_env" ]; then
@@ -434,7 +436,9 @@ load_rc_config \$name
 run_rc_command "\$1"
 EOF_BSD
       priv install -m 0755 -o 'root' -- "$_tmp_file" "/usr/local/etc/rc.d/$_rc_name"
-      command -v sysrc >/dev/null 2>&1 && priv sysrc "${_rc_name}_enable=YES" || true
+      if command -v sysrc >/dev/null 2>&1; then
+        priv sysrc "${_rc_name}_enable=YES" || true
+      fi
       rm -f "$_tmp_file"
       ;;
     launchd)
@@ -627,7 +631,9 @@ libscript_service_override_env() {
   if [ "$(id -u 2>/dev/null || printf '1000')" -eq 0 ] || sudo -n true 2>/dev/null; then
     priv mkdir -p "/etc/libscript/${_ovr_service}" 2>/dev/null || true
     _tmp_gen=$(mktemp)
-    [ -f "/etc/libscript/${_ovr_service}/service.env" ] && cat "/etc/libscript/${_ovr_service}/service.env" > "$_tmp_gen" || true
+    if [ -f "/etc/libscript/${_ovr_service}/service.env" ]; then
+      cat "/etc/libscript/${_ovr_service}/service.env" > "$_tmp_gen" || true
+    fi
     for _kv in "$@"; do
       _k="${_kv%%=*}"
       grep -v "^export ${_k}=" "$_tmp_gen" > "${_tmp_gen}.new" 2>/dev/null || true
@@ -667,7 +673,9 @@ libscript_service_override_env() {
   if [ "$_init_sys" = "openrc" ]; then
     priv mkdir -p /etc/conf.d
     _tmp_ovr=$(mktemp)
-    [ -f "/etc/conf.d/${_ovr_service}" ] && cat "/etc/conf.d/${_ovr_service}" > "$_tmp_ovr" || true
+    if [ -f "/etc/conf.d/${_ovr_service}" ]; then
+      cat "/etc/conf.d/${_ovr_service}" > "$_tmp_ovr" || true
+    fi
     for _kv in "$@"; do
       _k="${_kv%%=*}"
       grep -v "^export ${_k}=" "$_tmp_ovr" > "${_tmp_ovr}.new" 2>/dev/null || true
@@ -683,7 +691,9 @@ libscript_service_override_env() {
   if [ "$_init_sys" = "bsd_rc" ]; then
     priv mkdir -p /etc/rc.conf.d
     _tmp_ovr=$(mktemp)
-    [ -f "/etc/rc.conf.d/${_ovr_rc_name}" ] && cat "/etc/rc.conf.d/${_ovr_rc_name}" > "$_tmp_ovr" || true
+    if [ -f "/etc/rc.conf.d/${_ovr_rc_name}" ]; then
+      cat "/etc/rc.conf.d/${_ovr_rc_name}" > "$_tmp_ovr" || true
+    fi
     for _kv in "$@"; do
       _k="${_kv%%=*}"
       grep -v "^export ${_k}=" "$_tmp_ovr" > "${_tmp_ovr}.new" 2>/dev/null || true
@@ -749,7 +759,9 @@ libscript_uninstall_service() {
   elif [ "${UNAME_LOWER:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; then
     log_info "Uninstalling FreeBSD rc.d service: $_service_name"
     priv service "$_rc_name" stop 2>/dev/null || true
-    command -v sysrc >/dev/null 2>&1 && priv sysrc "${_rc_name}_enable=NO" 2>/dev/null || true
+    if command -v sysrc >/dev/null 2>&1; then
+      priv sysrc "${_rc_name}_enable=NO" 2>/dev/null || true
+    fi
     priv rm -f "/usr/local/etc/rc.d/$_rc_name" "/etc/rc.conf.d/$_rc_name"
   elif [ "${UNAME_LOWER:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ] && command -v launchctl >/dev/null 2>&1; then
     log_info "Uninstalling launchd service: $_service_name"
@@ -765,17 +777,25 @@ libscript_uninstall_service() {
     fi
   elif [ -d "/etc/service/${_service_name}" ]; then
     log_info "Uninstalling runit service: $_service_name"
-    command -v sv >/dev/null 2>&1 && priv sv down "$_service_name" 2>/dev/null || true
+    if command -v sv >/dev/null 2>&1; then
+      priv sv down "$_service_name" 2>/dev/null || true
+    fi
     priv rm -rf "/etc/service/${_service_name}"
   elif [ -d "/run/service/${_service_name}" ] || [ -d "/etc/s6/sv/${_service_name}" ]; then
     log_info "Uninstalling s6 service: $_service_name"
-    command -v s6-svc >/dev/null 2>&1 && priv s6-svc -d "/run/service/${_service_name}" 2>/dev/null || true
+    if command -v s6-svc >/dev/null 2>&1; then
+      priv s6-svc -d "/run/service/${_service_name}" 2>/dev/null || true
+    fi
     priv rm -rf "/run/service/${_service_name}" "/etc/s6/sv/${_service_name}"
   elif [ -x "/etc/init.d/${_service_name}" ]; then
     log_info "Uninstalling SysVinit service: $_service_name"
     priv service "$_service_name" stop 2>/dev/null || true
-    command -v update-rc.d >/dev/null 2>&1 && priv update-rc.d -f "$_service_name" remove 2>/dev/null || true
-    command -v chkconfig >/dev/null 2>&1 && priv chkconfig "$_service_name" off 2>/dev/null || true
+    if command -v update-rc.d >/dev/null 2>&1; then
+      priv update-rc.d -f "$_service_name" remove 2>/dev/null || true
+    fi
+    if command -v chkconfig >/dev/null 2>&1; then
+      priv chkconfig "$_service_name" off 2>/dev/null || true
+    fi
     priv rm -f "/etc/init.d/${_service_name}"
   elif command -v sc.exe >/dev/null 2>&1; then
     log_info "Uninstalling Windows service: $_service_name"
