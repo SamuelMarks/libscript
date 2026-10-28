@@ -306,6 +306,28 @@ EOF_CPP_REQ
   return 0
 }
 
+# ## quiesce_duckdb_lock_holders
+# Stops manifest services or processes holding a conflicting lock on the target DuckDB file.
+quiesce_duckdb_lock_holders() {
+  _qdl_path="$1"
+  [ -e "$_qdl_path" ] || return 0
+  ensure_duckdb_cli || return 0
+  if duckdb "$_qdl_path" -c "SELECT 1;" >/dev/null 2>&1; then
+    return 0
+  fi
+  log_info "[DB:DUCKDB] Releasing active service locks on '${_qdl_path}'..."
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" ]; then
+    STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "$JSON_FILE" >/dev/null 2>&1 || true
+  fi
+  if ! duckdb "$_qdl_path" -c "SELECT 1;" >/dev/null 2>&1; then
+    if command -v fuser >/dev/null 2>&1; then
+      fuser -k "$_qdl_path" >/dev/null 2>&1 || sudo fuser -k "$_qdl_path" >/dev/null 2>&1 || true
+      sleep 1
+    fi
+  fi
+  return 0
+}
+
 # ## check_duckdb_populated
 # Checks whether all required_tables and min_rows in a DuckDB database file are already satisfied.
 check_duckdb_populated() {
@@ -317,6 +339,9 @@ check_duckdb_populated() {
   _cdp_req=$(printf '%s\n' "$_cdp_entry" | jq -r '.required_tables[]?' 2>/dev/null || true)
   _cdp_min_tbl=$(printf '%s\n' "$_cdp_entry" | jq -r '.min_tables // empty' 2>/dev/null || true)
   [ -z "$_cdp_req" ] && [ -z "$_cdp_min_tbl" ] && return 1
+  if ! duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" >/dev/null 2>&1; then
+    quiesce_duckdb_lock_holders "$_cdp_path"
+  fi
   _cdp_cnt=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
   : "${_cdp_cnt:=0}"
   if [ -n "$_cdp_min_tbl" ]; then
@@ -436,14 +461,22 @@ while IFS= read -r db_entry <&3; do
           fi
         fi
       fi
+      _pg_up_name=$(printf '%s' "$DB_NAME" | tr '[:lower:]-.' '[:upper:]__')
       if [ -n "$SEED_CMD" ]; then
         if check_postgres_populated "$db_entry" "$DB_HOST" "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB_NAME"; then
           log_info "[REUSE] PostgreSQL database '$DB_NAME' already has required tables and minimum rows; skipping full re-seed."
+          set_env_var "LIBSCRIPT_DB_POSTGRES_POPULATED" "1"
+          set_env_var "LIBSCRIPT_DB_${_pg_up_name}_POPULATED" "1"
         else
           ensure_manifest_python_venvs
           log_info "[UPSERT:POSTGRES] Running PostgreSQL seed_command for '$DB_NAME': $SEED_CMD"
           (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+          set_env_var "LIBSCRIPT_DB_POSTGRES_POPULATED" "1"
+          set_env_var "LIBSCRIPT_DB_${_pg_up_name}_POPULATED" "1"
         fi
+      elif check_postgres_populated "$db_entry" "$DB_HOST" "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB_NAME"; then
+        set_env_var "LIBSCRIPT_DB_POSTGRES_POPULATED" "1"
+        set_env_var "LIBSCRIPT_DB_${_pg_up_name}_POPULATED" "1"
       fi
       ;;
     mysql|mariadb)
@@ -545,14 +578,23 @@ while IFS= read -r db_entry <&3; do
           done
         fi
       fi
+      _duck_up_name=$(printf '%s' "$DB_NAME" | tr '[:lower:]-.' '[:upper:]__')
       if [ -n "$SEED_CMD" ]; then
         if check_duckdb_populated "$db_entry" "$DB_PATH"; then
           log_info "[REUSE] DuckDB database '$DB_PATH' already has required tables and minimum rows; skipping full re-seed."
+          set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
+          set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
         else
+          quiesce_duckdb_lock_holders "$DB_PATH"
           ensure_manifest_python_venvs
           log_info "[UPSERT:DUCKDB] Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
           (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+          set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
+          set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
         fi
+      elif check_duckdb_populated "$db_entry" "$DB_PATH"; then
+        set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
+        set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
       fi
       DB_OWNER=$(printf '%s\n' "$db_entry" | jq -r '.user // empty')
       DB_OWNER=$(expand_manifest_vars "$DB_OWNER")

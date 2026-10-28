@@ -146,33 +146,34 @@ compute_sha256() {
 prune_archive() {
   _dest="$1"
   _category="$2"
-  _stamp="${_dest}.pruned"
-  case "$_dest" in
+  _abs_dest="$(cd -- "$(dirname -- "$_dest")" && pwd)/$(basename -- "$_dest")"
+  _stamp="${_abs_dest}.pruned"
+  case "$_abs_dest" in
     *mongodb-*.zip)
-      log_info "[PRUNING] [${_category}] Pruning debug symbols from $(basename "$_dest")..."
-      _tmp_d="$(dirname "$_dest")/_tmp_mongo_$$"
+      log_info "[PRUNING] [${_category}] Pruning debug symbols from $(basename "$_abs_dest")..."
+      _tmp_d="$(dirname "$_abs_dest")/_tmp_mongo_$$"
       rm -rf "$_tmp_d"
       mkdir -p "$_tmp_d"
-      tar -xf "$_dest" -C "$_tmp_d" --exclude='*.pdb' --exclude='*mongos*' --exclude='*Compass*' --exclude='*vc_redist*' 2>/dev/null || true
-      rm -f "$_dest"
+      tar -xf "$_abs_dest" -C "$_tmp_d" --exclude='*.pdb' --exclude='*mongos*' --exclude='*Compass*' --exclude='*vc_redist*' 2>/dev/null || true
+      rm -f "$_abs_dest"
       _top_dir=$(cd "$_tmp_d" && find . -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | head -n 1)
-      (cd "$_tmp_d" && tar -a -cf "$_dest" "$_top_dir")
+      (cd "$_tmp_d" && tar -a -cf "$_abs_dest" "$_top_dir")
       rm -rf "$_tmp_d"
       printf 'pruned\n' > "$_stamp"
-      log_info "[PRUNED] [${_category}] $(basename "$_dest") successfully pruned"
+      log_info "[PRUNED] [${_category}] $(basename "$_abs_dest") successfully pruned"
       ;;
     *mysql-*.zip)
-      log_info "[PRUNING] [${_category}] Pruning debug symbols and static libs from $(basename "$_dest")..."
-      _tmp_d="$(dirname "$_dest")/_tmp_mysql_$$"
+      log_info "[PRUNING] [${_category}] Pruning debug symbols and static libs from $(basename "$_abs_dest")..."
+      _tmp_d="$(dirname "$_abs_dest")/_tmp_mysql_$$"
       rm -rf "$_tmp_d"
       mkdir -p "$_tmp_d"
-      tar -xf "$_dest" -C "$_tmp_d" --exclude='*.pdb' --exclude='*.lib' --exclude='*debug*' --exclude='*docs*' --exclude='*include*' --exclude='*test*' 2>/dev/null || true
-      rm -f "$_dest"
+      tar -xf "$_abs_dest" -C "$_tmp_d" --exclude='*.pdb' --exclude='*.lib' --exclude='*debug*' --exclude='*docs*' --exclude='*include*' --exclude='*test*' 2>/dev/null || true
+      rm -f "$_abs_dest"
       _top_dir=$(cd "$_tmp_d" && find . -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | head -n 1)
-      (cd "$_tmp_d" && tar -a -cf "$_dest" "$_top_dir")
+      (cd "$_tmp_d" && tar -a -cf "$_abs_dest" "$_top_dir")
       rm -rf "$_tmp_d"
       printf 'pruned\n' > "$_stamp"
-      log_info "[PRUNED] [${_category}] $(basename "$_dest") successfully pruned"
+      log_info "[PRUNED] [${_category}] $(basename "$_abs_dest") successfully pruned"
       ;;
   esac
 }

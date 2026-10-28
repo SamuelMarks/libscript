@@ -684,10 +684,10 @@ elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
   IFS="$OIFS"
 else
   for candidate in "$@"; do
-    if [ -f "$candidate" ]; then
-      audit_single_file "$candidate"
-    elif [ -f "${ORIG_PWD}/${candidate}" ]; then
+    if [ -f "${ORIG_PWD}/${candidate}" ]; then
       audit_single_file "${ORIG_PWD}/${candidate}"
+    elif [ -f "$candidate" ]; then
+      audit_single_file "$candidate"
     fi
   done
 fi

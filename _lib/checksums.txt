@@ -122,3 +122,25 @@ https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2
 https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2Bgcc-v7.0.1-windows-x86_64.zip e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a
 https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2Bgcc-v7.0.1-windows-arm64.zip d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c
 
+https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip 009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b
+https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-windows-amd64.exe ea6151b9add98253015e4e724e82ab176e78b576cc5715855181ec2bbc558663
+https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.12.zip dfbbcf8ea5bbae44ade25b158b67835b142e1da56e2ed8473a9a8c6df3b75423
+https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.39-winx64.zip e6a076113322469205a02c95c6120938b292f480ce82f72819a51c59db2d90d5
+https://github.com/SamuelMarks/redis-windows/releases/download/8.10.2/redis-8.10.2-win64.zip 1c166b61b1480211e238103d3aaaf1022e73a30fc5203438ae2bab01aaed84ba
+https://github.com/caddyserver/caddy/releases/download/v2.8.4/caddy_2.8.4_windows_amd64.zip 2631fbe1c4f6fb08783ed6dc6ac238d6655b4c923abe2bce1433dbd7fd079630
+https://files.pythonhosted.org/packages/5b/a9/485c953a1ac4cb98c28e41fd2c7184072df36bbf99734a51d44d04176878/waitress-3.0.0-py3-none-any.whl 2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669
+https://files.pythonhosted.org/packages/94/2c/6b6c7e493d5ea789416918658ebfa16be7a64c77610307497ed09a93c8c4/Django-4.2.16-py3-none-any.whl 1ddc333a16fc139fd253035a1606bb24261951bbc3a6ca256717fa06cc41a898
+https://files.pythonhosted.org/packages/39/e3/893e8757be2612e6c266d9bb58ad2e3651524b5b40cf56761e985a28b13e/asgiref-3.8.1-py3-none-any.whl 3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47
+https://files.pythonhosted.org/packages/5d/a5/b2860373aa8de1e626b2bdfdd6df4355f0565b47e51f7d0c54fe70faf8fe/sqlparse-0.5.1-py3-none-any.whl 773dcbf9a5ab44a090f3441e2180efe2560220203dc2f8c0b0fa141e18b505e4
+https://files.pythonhosted.org/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd
+https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d
+https://files.pythonhosted.org/packages/f5/8e/cdc7d6263db313030e4c257dd5ba3909ebc4e4fb53ad62d5f09b1a2f5458/uvicorn-0.30.6-py3-none-any.whl 65fd46fe3fda5bdc1b03b94eb634923ff18cd35b2f084813ea79d1f103f711b5
+https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9
+https://files.pythonhosted.org/packages/08/aa/cc0199a5f0ad350994d660967a8efb233fe0416e4639146c089643407ce6/packaging-24.1-py3-none-any.whl 5b8f2217dbdbd2f7f384c41c628544e6d52f2d0f53c6d0c3ea61aa5d1d7ff124
+https://files.pythonhosted.org/packages/00/2e/d53fa4befbf2cfa713304affc7ca780ce4fc1fd8710527771b58311a3229/click-8.1.7-py3-none-any.whl ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28
+https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
+https://files.pythonhosted.org/packages/ec/39/d401756df60a8344848477d54fdf4ce0f50531f6149f3b8eaae9c06ae3dc/aiosmtpd-1.4.6-py3-none-any.whl 72c99179ba5aa9ae0abbda6994668239b64a5ce054471955fe75f581d2592475
+https://files.pythonhosted.org/packages/6b/03/2cb0e5326e19b7d877bc9c3a7ef436a30a06835b638580d1f5e21a0409ed/atpublic-5.0-py3-none-any.whl b651dcd886666b1042d1e38158a22a4f2c267748f4e97fde94bc492a4a28a3f3
+https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl 81921eb96de3191c8258c199618104dd27ac608d9366f5e35d011eae1867ede2
+https://github.com/openedx/openedx-platform/archive/refs/tags/release/verawood.1.zip 830914c1dba85c24f67934d27f0b03bf2ec75afa8b6ddf7d9fd9b57bb46d7c3f
+https://github.com/openedx/edx-demo-course/archive/refs/heads/master.tar.gz b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435

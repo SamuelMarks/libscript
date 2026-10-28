@@ -110,7 +110,14 @@ while IFS= read -r db_entry <&3; do
       fi
       if [ -f "$DB_PATH" ]; then
         log_info "Exporting $ENGINE file '$DB_PATH'..."
-        cp -f "$DB_PATH" "${APP_STAGE}/duckdb/$(basename "$DB_PATH")"
+        _staged_db="${APP_STAGE}/duckdb/$(basename "$DB_PATH")"
+        cp -f "$DB_PATH" "$_staged_db"
+        if [ -f "${DB_PATH}.wal" ]; then
+          cp -f "${DB_PATH}.wal" "${_staged_db}.wal"
+          if [ "$ENGINE" = "duckdb" ] && command -v duckdb >/dev/null 2>&1; then
+            duckdb "$_staged_db" -c "CHECKPOINT;" >/dev/null 2>&1 || true
+          fi
+        fi
       fi
       _extra_paths=$(printf '%s\n' "$db_entry" | jq -r '.fallback_paths[]? // .extra_paths[]? // empty' 2>/dev/null || true)
       if [ -n "$_extra_paths" ]; then
@@ -119,7 +126,14 @@ while IFS= read -r db_entry <&3; do
           _ep=$(expand_manifest_vars "$_ep")
           [ "${_ep#/}" = "$_ep" ] && _ep="${MANIFEST_DIR}/${_ep}"
           if [ -f "$_ep" ] && [ ! -f "${APP_STAGE}/duckdb/$(basename "$_ep")" ]; then
-            cp -f "$_ep" "${APP_STAGE}/duckdb/$(basename "$_ep")"
+            _staged_ep="${APP_STAGE}/duckdb/$(basename "$_ep")"
+            cp -f "$_ep" "$_staged_ep"
+            if [ -f "${_ep}.wal" ]; then
+              cp -f "${_ep}.wal" "${_staged_ep}.wal"
+              if [ "$ENGINE" = "duckdb" ] && command -v duckdb >/dev/null 2>&1; then
+                duckdb "$_staged_ep" -c "CHECKPOINT;" >/dev/null 2>&1 || true
+              fi
+            fi
           fi
         done
       fi

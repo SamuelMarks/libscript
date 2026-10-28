@@ -21,7 +21,7 @@ set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-set "OPENEDX_SCRIPT_DIR=!SCRIPT_DIR!"
+set "OPENEDX_SCRIPT_DIR=%SCRIPT_DIR%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -55,11 +55,11 @@ goto :find_root
 
 
 
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
-)
-set "LIBSCRIPT_BIN=!LIBSCRIPT_ROOT_DIR!\libscript.cmd"
-if not exist "!LIBSCRIPT_BIN!" if exist "!SCRIPT_DIR!\..\..\..\libscript\libscript.cmd" set "LIBSCRIPT_BIN=!SCRIPT_DIR!\..\..\..\libscript\libscript.cmd"
+for %%I in ("%~dp0.") do set "OPENEDX_SCRIPT_DIR=%%~fI"
+for %%I in ("%~dp0..\..\..") do set "OPENEDX_ROOT_DIR=%%~fI"
+set "SCRIPT_DIR=!OPENEDX_SCRIPT_DIR!"
+set "LIBSCRIPT_ROOT_DIR=!OPENEDX_ROOT_DIR!"
+set "LIBSCRIPT_BIN=!OPENEDX_ROOT_DIR!\libscript.cmd"
 if not exist "!LIBSCRIPT_BIN!" if exist "!INSTALLFOLDER!\libscript\libscript.cmd" set "LIBSCRIPT_BIN=!INSTALLFOLDER!\libscript\libscript.cmd"
 
 if "%ACTION%"=="" set "ACTION=install"
@@ -232,18 +232,24 @@ if "%ACTION%"=="install" (
     )
     set "STACK=!_OLD_STACK!"
     set "SCRIPT_DIR=!OPENEDX_SCRIPT_DIR!"
+    set "LIBSCRIPT_ROOT_DIR=!OPENEDX_ROOT_DIR!"
+    set "LIBSCRIPT_BIN=!OPENEDX_ROOT_DIR!\libscript.cmd"
 
     if "!USE_OFFLINE!"=="1" (
-        :: Step 4 (Codebase): Extract openedx-release-verawood.1.zip into codebase
+        :: Step 4 (Codebase & MFEs): Extract openedx-release-verawood.1.zip and mfe-bundle-verawood.1.tar.gz
         if exist "!OFFLINE_CACHE_DIR!\codebase" (
-            echo [INFO] Extracting codebase from cache\codebase...
+            echo [INFO] Extracting codebase and MFE bundles from cache\codebase...
             if not exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
                 if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
                 for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip" "!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip") do (
                     if exist "%%~fF" (
-                        tar -xf "%%~fF" -C "%OPENEDX_INSTALL_DIR%\codebase" --strip-components=1 "*/manage.py" "*/lms/wsgi.py" "*/cms/wsgi.py" "*/lms/static/images/*" "*/cms/static/images/*" "*/themes/dark-theme/cms/static/images/*" 2>nul || tar -xf "%%~fF" -C "%OPENEDX_INSTALL_DIR%\codebase" --strip-components=1 2>nul
+                        tar -xf "%%~fF" -C "%OPENEDX_INSTALL_DIR%\codebase" --strip-components=1 "*/manage.py" "*/lms/wsgi.py" "*/cms/wsgi.py" "*/lms/static/*" "*/cms/static/*" "*/common/static/*" "*/lms/templates/*" "*/cms/templates/*" "*/themes/*" 2>nul || tar -xf "%%~fF" -C "%OPENEDX_INSTALL_DIR%\codebase" --strip-components=1 2>nul
                     )
                 )
+            )
+            if exist "!OFFLINE_CACHE_DIR!\codebase\mfe-bundle-verawood.1.tar.gz" (
+                if not exist "%OPENEDX_INSTALL_DIR%\mfe_dist" mkdir "%OPENEDX_INSTALL_DIR%\mfe_dist" 2>nul
+                tar -xzf "!OFFLINE_CACHE_DIR!\codebase\mfe-bundle-verawood.1.tar.gz" -C "%OPENEDX_INSTALL_DIR%\mfe_dist" 2>nul
             )
         )
 
@@ -360,7 +366,7 @@ if "%ACTION%"=="install" (
         powershell -NoProfile -Command "$lmsLines = @('import json, os', 'from .production import *', 'with open(r''%OPENEDX_INSTALL_DIR%\config\lms.env.json'') as f:', '    ENV_TOKENS = json.load(f)', 'SECRET_KEY = ENV_TOKENS.get(''SECRET_KEY'', ''unsafe-secret'')', 'ALLOWED_HOSTS = ENV_TOKENS.get(''ALLOWED_HOSTS'', [''*''])', 'DATABASES = ENV_TOKENS.get(''DATABASES'', {})', 'CACHES = ENV_TOKENS.get(''CACHES'', {})'); Set-Content -Path '%%~fD\lms\envs\libscript.py' -Value $lmsLines -Encoding Ascii; $cmsLines = @('import json, os', 'from .production import *', 'with open(r''%OPENEDX_INSTALL_DIR%\config\cms.env.json'') as f:', '    ENV_TOKENS = json.load(f)', 'SECRET_KEY = ENV_TOKENS.get(''SECRET_KEY'', ''unsafe-secret'')', 'ALLOWED_HOSTS = ENV_TOKENS.get(''ALLOWED_HOSTS'', [''*''])', 'DATABASES = ENV_TOKENS.get(''DATABASES'', {})', 'CACHES = ENV_TOKENS.get(''CACHES'', {})'); Set-Content -Path '%%~fD\cms\envs\libscript.py' -Value $cmsLines -Encoding Ascii" 2>nul
     )
     if exist "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" (
-        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" -InstallDir "%OPENEDX_INSTALL_DIR%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" -InstallDir "%OPENEDX_INSTALL_DIR%" -AdminUser "%ADMIN_USER%" -AdminEmail "%ADMIN_EMAIL%" -AdminPassword "%ADMIN_PASS%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
     )
 
     :: Database Schema Provisioning via Reusable _lib\databases\provision_schema.cmd
@@ -368,8 +374,8 @@ if "%ACTION%"=="install" (
     echo [INFO] Initializing MySQL database schema ^(%MYSQL_DB% utf8mb4^)... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
     set "_DB_PASS=%MYSQL_PASS%"
     if "!_DB_PASS!"=="" set "_DB_PASS=openedx_password"
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --schema "%MYSQL_DB%" --user "%MYSQL_USER%" --password "!_DB_PASS!" --host "%MYSQL_HOST%" --port "%MYSQL_PORT%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+    if exist "!OPENEDX_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+        call "!OPENEDX_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --schema "%MYSQL_DB%" --user "%MYSQL_USER%" --password "!_DB_PASS!" --host "%MYSQL_HOST%" --port "%MYSQL_PORT%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
     )
 
     :: Database Migrations & Static Asset Collection
@@ -377,12 +383,11 @@ if "%ACTION%"=="install" (
     echo [INFO] Applying LMS and Studio CMS database migrations... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
     set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%\codebase"
     if not exist "!CODEBASE_DIR!\manage.py" set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%"
-    if exist "!CODEBASE_DIR!\manage.py" if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" (
+    if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" (
         pushd "!CODEBASE_DIR!"
-        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms --settings=libscript migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
-        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms --settings=libscript migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
-        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms --settings=libscript collectstatic --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
-        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms --settings=libscript collectstatic --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        set "PYTHONPATH=!CODEBASE_DIR!"
+        set "DJANGO_SETTINGS_MODULE=lms.envs.libscript_win"
+        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" -m django migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
         popd
     )
 

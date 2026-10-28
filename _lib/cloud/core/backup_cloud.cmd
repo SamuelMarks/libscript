@@ -178,7 +178,7 @@ if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
     if not errorlevel 1 set "_MATCH=1"
 )
 if "!_MATCH!"=="1" (
-    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
     if errorlevel 1 exit /b 1
 )
 goto :export_next_app

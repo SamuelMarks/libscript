@@ -66,6 +66,16 @@ if [ -f "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh" ]; then
   unset SCRIPT_NAME || true
   libscript_hydrate_manifest_env "$JSON_FILE" || true
 fi
+for _rh_ef in "${MANIFEST_DIR}/.env" "${MANIFEST_DIR}/.env.secrets" "${MANIFEST_DIR}/.env.libscript"; do
+  if [ -f "$_rh_ef" ]; then
+    set -a
+    set +u
+    # shellcheck disable=SC1090,SC1091
+    . "$_rh_ef" 2>/dev/null || true
+    set -u
+    set +a
+  fi
+done
 if [ -n "${SERVICE_PATH:-}" ]; then
   export PATH="${SERVICE_PATH}:${PATH}"
 fi
@@ -104,6 +114,18 @@ resolve_hook_path() {
   fi
 }
 
+if [ "$HOOK_TYPE" = "db_migrate" ] || [ "$HOOK_TYPE" = "seed" ]; then
+  _rh_has_duck=$(jq -r '[((.databases // .infrastructure.databases) | if type == "object" then [to_entries[].value] elif type == "array" then . else [] end)[]? | (.engine // .type // "") | ascii_downcase | select(. == "duckdb" or . == "sqlite" or . == "sqlite3")] | length' "$JSON_FILE" 2>/dev/null || printf '0')
+  if [ "${_rh_has_duck:-0}" -gt 0 ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" ]; then
+    if [ -n "${DUCKDB_PATH:-}" ] && [ -e "${DUCKDB_PATH}" ] && command -v duckdb >/dev/null 2>&1; then
+      if ! duckdb "${DUCKDB_PATH}" -c "SELECT 1;" >/dev/null 2>&1; then
+        log_info "[HOOKS:${HOOK_TYPE}] Releasing active service locks on '${DUCKDB_PATH}' before ${HOOK_TYPE}..."
+        STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "$JSON_FILE" >/dev/null 2>&1 || true
+      fi
+    fi
+  fi
+fi
+
 log_info "[HOOKS:${HOOK_TYPE}] Running ${HOOK_TYPE} lifecycle hooks from ${JSON_FILE}..."
 while IFS= read -r hook <&3; do
   [ -n "$hook" ] || continue
@@ -111,6 +133,7 @@ while IFS= read -r hook <&3; do
     NAME=$(printf '%s\n' "$hook" | jq -r '.name // "unnamed_hook"')
     cmd=$(printf '%s\n' "$hook" | jq -r '.command // empty')
     COND=$(printf '%s\n' "$hook" | jq -r '.condition // empty')
+    UNLESS_CMD=$(printf '%s\n' "$hook" | jq -r '.unless // empty')
     RAW_WD=$(printf '%s\n' "$hook" | jq -r '.working_dir // .cwd // "."')
 
     # OS filter check
@@ -156,6 +179,22 @@ while IFS= read -r hook <&3; do
           log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': command $CHK_CMD already in PATH"
           continue
         fi
+      elif printf '%s\n' "$COND" | grep -q "^unless_env "; then
+        _u_expr=$(printf '%s\n' "$COND" | sed 's/^unless_env //')
+        _u_key="${_u_expr%%=*}"
+        _u_val="${_u_expr#*=}"
+        _u_cur=$(printenv "$_u_key" 2>/dev/null || true)
+        if [ "$_u_cur" = "$_u_val" ] && [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${LIBSCRIPT_FORCE_SEED:-0}" != "1" ]; then
+          log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': ${_u_key}=${_u_val} already satisfied"
+          continue
+        fi
+      fi
+    fi
+
+    if [ -n "${UNLESS_CMD:-}" ]; then
+      if (cd "$HOOK_WD" && sh -c "$UNLESS_CMD") >/dev/null 2>&1; then
+        log_info "[HOOK:${HOOK_TYPE}] Skipping hook '$NAME': unless condition satisfied"
+        continue
       fi
     fi
 

@@ -52,8 +52,16 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "JSON_FILE=%~1"
-if "!JSON_FILE!"=="" set "JSON_FILE=libscript.json"
+set "JSON_FILE=libscript.json"
+set "REMEDIATE_DB=0"
+for %%A in (%*) do (
+    if /i "%%~A"=="--remediate" (
+        set "REMEDIATE_DB=1"
+    ) else if not "%%~A"=="" (
+        set "_ha=%%~A"
+        if not "!_ha:~0,1!"=="-" set "JSON_FILE=%%~A"
+    )
+)
 if not exist "!JSON_FILE!" exit /b 0
 
 where jq >nul 2>nul
@@ -87,7 +95,30 @@ for /f "delims=" %%i in ('jq -c "!JQ_DB_FILTER!" "!JSON_FILE!" 2^>nul') do (
     call :check_db_entry
 )
 
-if "!HEALTH_DB_FAILED!"=="1" exit /b 1
+if "!HEALTH_DB_FAILED!"=="1" (
+    if "!REMEDIATE_DB!"=="1" if not "!_HDB_REMEDIATING!"=="1" (
+        echo [INFO] Database health check failed; stopping active services and attempting auto-remediation via provision_db.cmd...
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" stop "!JSON_FILE!" >nul 2>&1
+        )
+        set "LIBSCRIPT_FORCE_SEED=1"
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!JSON_FILE!"
+        set "LIBSCRIPT_FORCE_SEED="
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!JSON_FILE!" "db_migrate"
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" start "!JSON_FILE!" >nul 2>&1
+        )
+        set "_HDB_REMEDIATING=1"
+        set "STACK="
+        call "!THIS_FILE!" "!JSON_FILE!"
+        exit /b !ERRORLEVEL!
+    )
+    exit /b 1
+)
 exit /b 0
 
 :: ## check_db_entry

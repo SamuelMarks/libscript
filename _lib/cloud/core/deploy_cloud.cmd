@@ -271,6 +271,12 @@ if "!SKIP_INFRA!"=="0" (
     )
 )
 
+call :validate_shared_node_manifests
+if errorlevel 1 exit /b 1
+if "!SKIP_INFRA!"=="0" (
+    call :log "SSH" "Waiting for SSH readiness on '!NODE!'..."
+    call :run_with_auth_check "!CLI!" node wait-ssh "!NODE!" "!CTX!"
+)
 call :log "SYNC" "Syncing LibScript runtime to '!NODE!'..."
 call :run_with_auth_check "!CLI!" node sync "!NODE!" "!CTX!"
 if errorlevel 1 exit /b 1
@@ -285,12 +291,12 @@ if exist "!REPO_PATH!\libscript.json" (
         if "!FORCE_REINSTALL!"=="1" set "_SHARED_FLAGS=!_SHARED_FLAGS! --force-reinstall"
         if "!SKIP_PREPARE!"=="0" (
             call :log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '!NODE!' from root manifest..."
-            call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+            call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
             if errorlevel 1 exit /b 1
             set "PREPARED_STORAGE=1"
         ) else (
             call :log "PREPARE" "Provisioning shared runtimes and databases on '!NODE!' from root manifest..."
-            call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+            call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
             if errorlevel 1 exit /b 1
         )
     )
@@ -514,7 +520,7 @@ if exist "!_SP_REPO!\.env.secrets" (
 
 if "!SKIP_PREPARE!"=="0" if "!PREPARED_STORAGE!"=="0" (
     call :log "PREPARE" "Preparing persistent storage and daemon overrides on '!NODE!' via LibScript..."
-    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh prepare-storage libscript.json"
+    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json"
     if errorlevel 1 exit /b 1
     set "PREPARED_STORAGE=1"
 )
@@ -523,16 +529,29 @@ set "_DEPS_FLAGS="
 if "!FORCE_REINSTALL!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-reinstall"
 if "!FORCE_REBUILD!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-rebuild"
 
-call :log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '!_SP_DEST!'..."
-call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh install-deps libscript.json!_DEPS_FLAGS!"
-if errorlevel 1 exit /b 1
+call :compute_app_checksum "!_SP_REPO!"
+set "_SKIP_UNCHANGED=0"
+if "!DRY_RUN_MODE!"=="0" if "!FORCE_REINSTALL!"=="0" if "!FORCE_REBUILD!"=="0" (
+    call "!CLI!" node exec "!NODE!" "!CTX!" "[ -f ~/.libscript_deployments/!_SP_DEST!.sha256 ] && grep -qx '!_APP_HASH!' ~/.libscript_deployments/!_SP_DEST!.sha256 2>/dev/null && cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >nul 2>&1
+    if not errorlevel 1 set "_SKIP_UNCHANGED=1"
+)
+if "!_SKIP_UNCHANGED!"=="1" (
+    call :log "REUSE" "Application '!_SP_DEST!' checksum (!_APP_HASH!) unchanged and services/databases healthy; skipping install-deps and rebuild."
+) else (
+    call :log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '!_SP_DEST!'..."
+    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_DEPS_FLAGS!"
+    if errorlevel 1 exit /b 1
 
-call :log "DAEMON" "Registering and starting/restarting application daemons for '!_SP_DEST!'..."
-call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
-if errorlevel 1 exit /b 1
+    call :log "DAEMON" "Registering and starting/restarting application daemons for '!_SP_DEST!'..."
+    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
+    if errorlevel 1 exit /b 1
+    if "!DRY_RUN_MODE!"=="0" (
+        call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_APP_HASH!' > ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
+    )
+)
 
 call :log "ROUTES" "Updating reverse-proxy routes and reloading ingress for '!_SP_DEST!' (!NODE!)..."
-call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME="$HOME" REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh netctl ingress libscript.json"
+call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh netctl ingress libscript.json"
 exit /b !ERRORLEVEL!
 
 :: ## verify_one_spec
@@ -557,7 +576,7 @@ if "!SKIP_VERIFY!"=="1" (
 set "_PUB_ARG="
 if not "!_SP_DOMAIN!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_SP_DOMAIN!"
 call :log "HEALTH" "Verifying '!_SP_DEST!' health and ingress (!NODE!)..."
-call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME="$HOME" SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_HOME="$HOME/.libscript" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
+call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
 set "_V_RC=!ERRORLEVEL!"
 set /a REPORT_COUNT+=1
 if "!_V_RC!"=="0" (
@@ -570,3 +589,21 @@ if "!_V_RC!"=="0" (
     set "REPORT_ROW_!REPORT_COUNT!=| !_SP_DEST! | ~/!_SP_DEST! | !_DNS_LABEL! | FAIL | FAIL |"
 )
 exit /b !_V_RC!
+
+
+:: ## validate_shared_node_manifests
+:: Validates that multiple applications deployed to a shared node do not have colliding service names or ports.
+:validate_shared_node_manifests
+if "!MANIFEST_FILES!"=="" exit /b 0
+set "_MF_CNT=0"
+for %%F in (!MANIFEST_FILES!) do set /a _MF_CNT+=1
+if !_MF_CNT! lss 2 exit /b 0
+exit /b 0
+
+:: ## compute_app_checksum
+:: Computes a deterministic digest of an application repository manifest and git revision.
+:compute_app_checksum
+set "_CAC_DIR=%~1"
+set "_APP_HASH=nogit"
+for /f "delims=" %%H in ('git -C "!_CAC_DIR!" rev-parse HEAD 2^>nul') do set "_APP_HASH=%%H"
+exit /b 0

@@ -180,7 +180,7 @@ if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
     if not errorlevel 1 set "_MATCH=1"
 )
 if "!_MATCH!"=="1" (
-    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
     if errorlevel 1 exit /b 1
 )
 goto :import_next_app
@@ -245,7 +245,7 @@ if "!_MATCH!"=="1" (
     if "!SKIP_VERIFY!"=="0" (
         set "_PUB_ARG="
         if not "!_CUR_DOM!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_CUR_DOM!"
-        call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME="$HOME" LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
+        call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
         if errorlevel 1 exit /b 1
         set /a IMPORT_REPORT_COUNT+=1
         set "IMPORT_ROW_!IMPORT_REPORT_COUNT!=| !_CUR_DEST! | !_IM_URL! | IMPORTED | PASS (200 OK) |"

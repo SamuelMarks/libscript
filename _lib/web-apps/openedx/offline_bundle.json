@@ -212,6 +212,7 @@
     "caddy_2.8.4_windows_amd64.zip": "2631fbe1c4f6fb08783ed6dc6ac238d6655b4c923abe2bce1433dbd7fd079630",
     "waitress-3.0.0-py3-none-any.whl": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669",
     "openedx-release-verawood.1.zip": "830914c1dba85c24f67934d27f0b03bf2ec75afa8b6ddf7d9fd9b57bb46d7c3f",
+    "mfe-bundle-verawood.1.tar.gz": "611ec1c0296e3f8d53b639483b6743cb651afbe5a9798f02f10e83e3248f2a91",
     "demo-course.tar.gz": "b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435"
   }
 }

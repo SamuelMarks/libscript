@@ -1,3 +1,4 @@
+# cspell:words wmiclass
 # ## Overview
 # Manages persistent background WSGI processes for Open edX LMS and Studio CMS on Windows.
 #
@@ -68,25 +69,30 @@ function Start-OpenEdxServices {
     $waitressExe = Join-Path (Split-Path -Parent $pyExe) "waitress-serve.exe"
     $env:LMS_CFG = Join-Path $openEdxDir "config\lms.env.json"
     $env:CMS_CFG = Join-Path $openEdxDir "config\cms.env.json"
+    $env:OPENEDX_LMS_PORT = "$LmsPort"
+    $env:OPENEDX_CMS_PORT = "$CmsPort"
     $env:PYTHONPATH = $codebaseDir
 
-    if (Test-Path $waitressExe) {
-        $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript"
-        $lmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$LmsPort", "lms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
-        $env:DJANGO_SETTINGS_MODULE = "cms.envs.libscript"
-        $cmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$CmsPort", "cms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
-    } else {
-        $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript"
-        $lmsProc = Start-Process -FilePath $pyExe -ArgumentList "-m", "waitress", "--listen=0.0.0.0:$LmsPort", "lms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
-        $env:DJANGO_SETTINGS_MODULE = "cms.envs.libscript"
-        $cmsProc = Start-Process -FilePath $pyExe -ArgumentList "-m", "waitress", "--listen=0.0.0.0:$CmsPort", "cms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
-    }
+    $lmsOut = Join-Path $logDir "lms.log"
+    $lmsErr = Join-Path $logDir "lms_err.log"
+    $cmsOut = Join-Path $logDir "cms.log"
+    $cmsErr = Join-Path $logDir "cms_err.log"
 
-    Set-Content -Path (Join-Path $runDir "lms.pid") -Value $lmsProc.Id -Encoding Ascii
-    Set-Content -Path (Join-Path $runDir "cms.pid") -Value $cmsProc.Id -Encoding Ascii
-    Start-Sleep -Seconds 2
+    $lmsBat = Join-Path $runDir "start_lms.cmd"
+    $cmsBat = Join-Path $runDir "start_cms.cmd"
+    Set-Content -Path $lmsBat -Value "@echo off`r`ncd /d `"$codebaseDir`"`r`nset `"PYTHONPATH=$codebaseDir`"`r`nset `"OPENEDX_LMS_PORT=$LmsPort`"`r`nset `"OPENEDX_CMS_PORT=$CmsPort`"`r`nset `"DJANGO_SETTINGS_MODULE=lms.envs.libscript_win`"`r`n`"$pyExe`" -m waitress --listen=0.0.0.0:$LmsPort lms.wsgi:application > `"$lmsOut`" 2> `"$lmsErr`"`r`n" -Encoding Ascii
+    Set-Content -Path $cmsBat -Value "@echo off`r`ncd /d `"$codebaseDir`"`r`nset `"PYTHONPATH=$codebaseDir`"`r`nset `"OPENEDX_LMS_PORT=$LmsPort`"`r`nset `"OPENEDX_CMS_PORT=$CmsPort`"`r`nset `"DJANGO_SETTINGS_MODULE=cms.envs.libscript_win`"`r`n`"$pyExe`" -m waitress --listen=0.0.0.0:$CmsPort cms.wsgi:application > `"$cmsOut`" 2> `"$cmsErr`"`r`n" -Encoding Ascii
+
+    $si = ([wmiclass]"Win32_ProcessStartup").CreateInstance()
+    $si.ShowWindow = 0
+    $rLms = ([wmiclass]"Win32_Process").Create("cmd.exe /c `"$lmsBat`"", $codebaseDir, $si)
+    $rCms = ([wmiclass]"Win32_Process").Create("cmd.exe /c `"$cmsBat`"", $codebaseDir, $si)
+
+    Set-Content -Path (Join-Path $runDir "lms.pid") -Value $rLms.ProcessId -Encoding Ascii
+    Set-Content -Path (Join-Path $runDir "cms.pid") -Value $rCms.ProcessId -Encoding Ascii
+    Start-Sleep -Seconds 3
     $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Add-Content -Path (Join-Path $logDir "install.log") -Value "[$ts] [INFO] Started real Open edX LMS (:$LmsPort, PID $($lmsProc.Id)) and Studio CMS (:$CmsPort, PID $($cmsProc.Id))."
+    Add-Content -Path (Join-Path $logDir "install.log") -Value "[$ts] [INFO] Started real Open edX LMS (:$LmsPort, PID $($rLms.ProcessId)) and Studio CMS (:$CmsPort, PID $($rCms.ProcessId))."
     Write-Host "[PASS] Started Open edX LMS (:$LmsPort) and Studio CMS (:$CmsPort)"
 }
 

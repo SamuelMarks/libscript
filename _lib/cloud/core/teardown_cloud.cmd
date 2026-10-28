@@ -203,7 +203,7 @@ if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
     if not errorlevel 1 set "_MATCH=1"
 )
 if "!_MATCH!"=="1" (
-    call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_CUR_DEST!/libscript.json ]; then cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh down libscript.json --remove!_PURGE_FLAG! && sudo LIBSCRIPT_ROOT_DIR="$HOME/libscript" $HOME/libscript/libscript.sh netctl remove-ingress libscript.json; fi; sudo rm -rf ~/!_CUR_DEST!"
+    call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_CUR_DEST!/libscript.json ]; then cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh down libscript.json --remove!_PURGE_FLAG! && sudo LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh netctl remove-ingress libscript.json; fi; sudo rm -rf ~/!_CUR_DEST!"
     if errorlevel 1 exit /b 1
 )
 goto :remove_next_app

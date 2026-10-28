@@ -56,12 +56,17 @@ if "%ACTION%"=="" set "ACTION=status"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 set "REDIS_EXE=%LIBSCRIPT_HOME%\redis\latest\bin\redis-server.exe"
 if not exist "%REDIS_EXE%" set "REDIS_EXE=%LIBSCRIPT_HOME%\redis\latest\redis-server.exe"
+if not exist "%REDIS_EXE%" (
+    for /d %%D in ("%LIBSCRIPT_HOME%\redis\latest\redis*") do (
+        if exist "%%~fD\bin\redis-server.exe" set "REDIS_EXE=%%~fD\bin\redis-server.exe"
+    )
+)
 
 if /i "%ACTION%"=="start" (
     sc.exe query Redis 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
     sc.exe start Redis >nul 2>&1 && exit /b 0
     if exist "%REDIS_EXE%" (
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process redis-server -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%REDIS_EXE%' -WindowStyle Hidden }" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 6379 -Executable "%REDIS_EXE%" 2>nul
     )
     exit /b 0
 )

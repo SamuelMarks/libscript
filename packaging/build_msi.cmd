@@ -22,15 +22,14 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+set "BUILD_MSI_SCRIPT_DIR=%SCRIPT_DIR%"
 
 :: ## find_root
 :: Ascends the directory tree looking for ROOT or libscript.cmd.
 :: ## Overview
 :: Finds the root directory of the libscript repository.
-if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=!SCRIPT_DIR!"
-    call :find_root
-)
+set "d=!SCRIPT_DIR!"
+call :find_root
 goto :root_found
 
 :: ## find_root
@@ -55,6 +54,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+set "BUILD_MSI_ROOT_DIR=!LIBSCRIPT_ROOT_DIR!"
 
 set "TARGET_DIR="
 set "OUT_FILE="
@@ -1032,6 +1032,8 @@ echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 :: Performs the harvest_payload operation and updates component state.
 :: ## Overview
 :: Performs the Overview operation and updates component state.
+set "SCRIPT_DIR=%BUILD_MSI_SCRIPT_DIR%"
+set "LIBSCRIPT_ROOT_DIR=%BUILD_MSI_ROOT_DIR%"
 set "PAYLOAD_WXS=%OUT_FILE%_payload.wxs"
 if /I "%VARIANT%"=="offline" (
     if exist "%TARGET_DIR%\offline_bundle.json" (
@@ -1048,14 +1050,16 @@ if /I "%VARIANT%"=="offline" (
             )
         )
     )
-    call "!SCRIPT_DIR!\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
+    call "!SCRIPT_DIR!\harvest_payload.cmd" --root-dir "%BUILD_MSI_ROOT_DIR%" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
 ) else (
-    call "!SCRIPT_DIR!\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents"
+    call "!SCRIPT_DIR!\harvest_payload.cmd" --root-dir "%BUILD_MSI_ROOT_DIR%" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents"
 )
 if errorlevel 1 (
     echo [ERROR] harvest_payload.cmd failed >&2
     exit /b 1
 )
+set "SCRIPT_DIR=%BUILD_MSI_SCRIPT_DIR%"
+set "LIBSCRIPT_ROOT_DIR=%BUILD_MSI_ROOT_DIR%"
 
 :: ## compile_msi
 :: Performs the compile_msi operation and updates component state.
@@ -1126,9 +1130,9 @@ if /I "%VARIANT%"=="offline" (
     if exist "%CACHE_DIR%" set "USE_CACHE_BIND=1"
 )
 if "!USE_CACHE_BIND!"=="1" (
-    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "!LIBSCRIPT_ROOT_DIR!\packaging\assets" -b "%CC0_ASSETS%" -b "%CACHE_DIR%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+    light.exe -nologo -sval -ext WixUIExtension -b "%BUILD_MSI_ROOT_DIR%" -b "%BUILD_MSI_ROOT_DIR%\packaging\assets" -b "%CC0_ASSETS%" -b "%CACHE_DIR%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 ) else (
-    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "!LIBSCRIPT_ROOT_DIR!\packaging\assets" -b "%CC0_ASSETS%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+    light.exe -nologo -sval -ext WixUIExtension -b "%BUILD_MSI_ROOT_DIR%" -b "%BUILD_MSI_ROOT_DIR%\packaging\assets" -b "%CC0_ASSETS%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 )
 if errorlevel 1 (
     echo [ERROR] light linker failed >&2

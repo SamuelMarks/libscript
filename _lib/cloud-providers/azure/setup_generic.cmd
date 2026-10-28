@@ -363,7 +363,31 @@ if /i "!_SUB!"=="attach-disk" (
     set "_DISK_NAME=%~4"
     set "_DISK_SIZE=%~5"
     if "!_DISK_SIZE!"=="" set "_DISK_SIZE=100"
-    call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!" --size-gb "!_DISK_SIZE!" --new
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE!
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE!
+        exit /b 0
+    )
+    where az >nul 2>nul
+    if errorlevel 1 (
+        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE!
+        exit /b 0
+    )
+    set "_ATTACHED_DISK="
+    for /f "delims=" %%D in ('az vm show -g "!_RG!" -n "!_NAME!" --query "storageProfile.dataDisks[?name=='!_DISK_NAME!'] | [0].name" -o tsv 2^>nul') do set "_ATTACHED_DISK=%%D"
+    if not "!_ATTACHED_DISK!"=="" (
+        echo [REUSE] Disk '!_DISK_NAME!' already attached to '!_NAME!'.
+        exit /b 0
+    )
+    az disk show -g "!_RG!" -n "!_DISK_NAME!" >nul 2>&1
+    if not errorlevel 1 (
+        call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!"
+        exit /b !errorlevel!
+    )
+    call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!" --size-gb "!_DISK_SIZE!" --new --sku Premium_LRS
     exit /b !errorlevel!
 )
 if /i "!_SUB!"=="delete" (
@@ -397,17 +421,26 @@ if /i "!_SUB!"=="zone" (
     exit /b !errorlevel!
 )
 if /i "!_SUB!"=="record" (
-    set "_RG=%~3"
-    set "_ZONE=%~4"
-    set "_RTYPE=%~5"
-    set "_RNAME=%~6"
+    set "_ZONE=%~3"
+    set "_RG=%~4"
+    set "_RNAME=%~5"
+    set "_RTYPE=%~6"
     set "_RVAL=%~7"
+    if /i "!_RTYPE!"=="@" (
+        set "_TMP_Z=!_ZONE!"
+        set "_ZONE=!_RG!"
+        set "_RG=!_TMP_Z!"
+        set "_RTYPE=!_RNAME!"
+        set "_RNAME=@"
+    )
+    set "_TARGET_RG=!DNS_RG!"
+    if "!_TARGET_RG!"=="" set "_TARGET_RG=!_RG!"
     if /i "!_TYPE!"=="create" (
-        call :run_az network dns record-set a add-record -g "!_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
+        call :run_az network dns record-set a add-record -g "!_TARGET_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
         exit /b 0
     )
     if /i "!_TYPE!"=="update" (
-        call :run_az network dns record-set a add-record -g "!_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
+        call :run_az network dns record-set a add-record -g "!_TARGET_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
         exit /b 0
     )
     if /i "!_TYPE!"=="delete" (

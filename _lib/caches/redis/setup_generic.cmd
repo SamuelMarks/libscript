@@ -215,7 +215,7 @@ if "!_REDIS_INSTALLED!"=="0" (
     )
     if defined _REDIS_CACHED (
         echo Extracting Redis from offline cache !_REDIS_CACHED!...
-        tar -xf "!_REDIS_CACHED!" -C "%TARGET_DIR%" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '!_REDIS_CACHED!' -DestinationPath '%TARGET_DIR%' -Force" 2>nul
+        tar -xf "!_REDIS_CACHED!" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "!_REDIS_CACHED!" -C "%TARGET_DIR%" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '!_REDIS_CACHED!' -DestinationPath '%TARGET_DIR%' -Force" 2>nul
         if exist "%TARGET_DIR%\redis-server.exe" copy /y "%TARGET_DIR%\redis*.exe" "%TARGET_DIR%\bin\" >nul 2>&1
     ) else if exist "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip" (
         echo Extracting from cache...

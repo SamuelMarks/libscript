@@ -52,15 +52,15 @@ function Do-Create {
 
     $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
     $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
-    $managePy = Join-Path $codebaseDir "manage.py"
-    if ((Test-Path $managePy) -and (Test-Path $pyExe)) {
-        $staffArgs = @("lms", "--settings=libscript", "manage_user", $Username, $Email)
-        if ($IsStaff.ToLower() -eq "true") { $staffArgs += "--staff" }
-        if ($IsSuperuser.ToLower() -eq "true") { $staffArgs += "--superuser" }
+    if (Test-Path $pyExe) {
         Push-Location $codebaseDir
         try {
-            & $pyExe $managePy @staffArgs 2>$null | Out-Null
-            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u, _ = User.objects.get_or_create(username='$Username', defaults={'email': '$Email'}); u.email = '$Email'; u.is_staff = ('$IsStaff'.lower() == 'true' or '$IsSuperuser'.lower() == 'true'); u.is_superuser = ('$IsSuperuser'.lower() == 'true'); u.set_password('$Password'); u.save()" 2>$null | Out-Null
+            $env:PYTHONPATH = $codebaseDir
+            $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript_win"
+            $env:OPENEDX_ADMIN_USERNAME = $Username
+            $env:OPENEDX_ADMIN_EMAIL = $Email
+            $env:OPENEDX_ADMIN_PASSWORD = $Password
+            & $pyExe -c "import os, django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); un = os.environ['OPENEDX_ADMIN_USERNAME']; em = os.environ['OPENEDX_ADMIN_EMAIL']; pw = os.environ['OPENEDX_ADMIN_PASSWORD']; u, _ = User.objects.get_or_create(username=un, defaults={'email': em}); u.email = em; u.is_staff = ('$IsStaff'.lower() == 'true' or '$IsSuperuser'.lower() == 'true'); u.is_superuser = ('$IsSuperuser'.lower() == 'true'); u.is_active = True; u.set_password(pw); u.save()" 2>$null | Out-Null
         } finally {
             Pop-Location
         }
@@ -107,11 +107,12 @@ function Do-SetPassword {
 
     $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
     $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
-    $managePy = Join-Path $codebaseDir "manage.py"
-    if ((Test-Path $managePy) -and (Test-Path $pyExe)) {
+    if (Test-Path $pyExe) {
         Push-Location $codebaseDir
         try {
-            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='$Username').first() or User.objects.filter(email='$Username').first(); (u.set_password('$Password'), u.save()) if u else None" 2>$null | Out-Null
+            $env:PYTHONPATH = $codebaseDir
+            $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript_win"
+            & $pyExe -c "import os, django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='$Username').first() or User.objects.filter(email='$Username').first(); (u.set_password('$Password'), u.save()) if u else None" 2>$null | Out-Null
         } finally {
             Pop-Location
         }

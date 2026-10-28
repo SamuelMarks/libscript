@@ -85,24 +85,33 @@ if ($Username -or $SubmitLogin) {
                 $doSubmit = if ($SubmitLogin) { "true" } else { "false" }
                 $js = @"
 (function() {
-    var u = document.querySelector('#login-email, input[name="email"], input[name="email_or_username"], input[type="email"], input[type="text"]');
-    var p = document.querySelector('#login-password, input[name="password"], input[type="password"]');
+    function setReactVal(el, val) {
+        if (!el) return;
+        el.focus();
+        var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        if (setter) {
+            setter.call(el, val);
+        } else {
+            el.value = val;
+        }
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.blur();
+    }
+    var u = document.querySelector('input[name="emailOrUsername"], #login-email, input[name="email"], input[name="email_or_username"], #user_login, input[type="email"], input[type="text"]');
+    var p = document.querySelector('input[name="password"], #login-password, #user_pass, input[type="password"]');
     if (u && '$uEsc') {
-        u.focus();
-        u.value = '$uEsc';
-        u.dispatchEvent(new Event('input', { bubbles: true }));
-        u.dispatchEvent(new Event('change', { bubbles: true }));
+        setReactVal(u, '$uEsc');
     }
     if (p && '$pEsc') {
-        p.focus();
-        p.value = '$pEsc';
-        p.dispatchEvent(new Event('input', { bubbles: true }));
-        p.dispatchEvent(new Event('change', { bubbles: true }));
+        setReactVal(p, '$pEsc');
     }
     if ($doSubmit) {
-        var btn = document.querySelector('button[type="submit"], input[type="submit"], .login-button, .action-primary');
-        if (btn) { btn.click(); }
-        else if (u && u.form) { u.form.submit(); }
+        setTimeout(function() {
+            var btn = document.querySelector('#sign-in, button[name="sign-in"], button[type="submit"], input[type="submit"], .login-button, .action-primary');
+            if (btn) { btn.click(); }
+            else if (u && u.form) { u.form.submit(); }
+        }, 150);
     }
 })();
 "@
@@ -110,9 +119,9 @@ if ($Username -or $SubmitLogin) {
             }
         }
         if ($SubmitLogin) {
-            Start-Sleep -Seconds 4
+            Start-Sleep -Seconds 6
         } else {
-            Start-Sleep -Seconds 1
+            Start-Sleep -Seconds 2
         }
     } catch {
     }

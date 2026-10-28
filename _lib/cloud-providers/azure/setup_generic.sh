@@ -203,18 +203,45 @@ case "$ACTION" in
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "$@"
         ;;
+      wait-ssh)
+        RG=${3:-}; TIMEOUT=${4:-120}
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
+          printf '[DRY_RUN] Waiting for SSH on %s (%s)\n' "$RESOURCE_NAME" "${RG:-default}"
+          exit 0
+        fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv 2>/dev/null | xargs || true)
+        if [ -z "$IP" ]; then
+          exit 0
+        fi
+        _w_el=0
+        while [ "$_w_el" -lt "$TIMEOUT" ]; do
+          if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "${ADMIN_USER:-azureuser}@$IP" "true" >/dev/null 2>&1; then
+            printf '[INFO] SSH ready on %s (%s)\n' "$RESOURCE_NAME" "$IP"
+            exit 0
+          fi
+          sleep 3
+          _w_el=$((_w_el + 3))
+        done
+        printf '[WARN] Timed out waiting for SSH on %s (%s) after %ss\n' "$RESOURCE_NAME" "$IP" "$TIMEOUT" >&2
+        exit 0
+        ;;
       attach-disk)
-        RG=${3:-}; DISK_NAME=${4:-}
+        RG=${3:-}; DISK_NAME=${4:-}; DISK_SIZE=${5:-100}
         if [ -z "$DISK_NAME" ] || [ "$DISK_NAME" = "null" ]; then
           printf '%s\n' 'No disk name specified, skipping attach-disk.'
           exit 0
         fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
+          printf '[DRY_RUN] az vm disk attach -g %s --vm-name %s --name %s --size-gb %s\n' "$RG" "$RESOURCE_NAME" "$DISK_NAME" "$DISK_SIZE"
+          exit 0
+        fi
         if az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[?name=='$DISK_NAME'] | [0].name" -o tsv 2>/dev/null | grep -q .; then
-          printf '%s\n' "Disk '$DISK_NAME' already attached to '$RESOURCE_NAME'."
+          printf '[REUSE] Disk '%s' already attached to '%s'.
+' "$DISK_NAME" "$RESOURCE_NAME"
         elif az disk show -g "$RG" -n "$DISK_NAME" >/dev/null 2>&1; then
           az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
         else
-          printf '%s\n' "Disk '$DISK_NAME' already attached or managed in '$RG'."
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" || true
         fi
         ;;
       deploy)
@@ -291,6 +318,64 @@ case "$ACTION" in
     esac
     exit 0
     ;;
+  storage)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    RG=${3:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: storage create <account_name> <rg>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
+          printf '[DRY_RUN] az storage account create --name %s --resource-group %s\n' "$RESOURCE_NAME" "$RG"
+          exit 0
+        fi
+        if az storage account show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '[REUSE] Storage account '%s' already exists in '%s'.
+' "$RESOURCE_NAME" "$RG"
+        else
+          TAGS_ARG="$(libscript_format_tags azure)"
+          # shellcheck disable=SC2086
+          az storage account create --name "$RESOURCE_NAME" --resource-group "$RG" --sku Standard_LRS $TAGS_ARG
+        fi
+        ;;
+      attach-disk)
+        DISK_NAME=${4:-}
+        DISK_SIZE=${5:-100}
+        if [ -z "$DISK_NAME" ] || [ "$DISK_NAME" = "null" ]; then
+          printf '%s\n' 'No disk name specified, skipping attach-disk.'
+          exit 0
+        fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
+          printf '[DRY_RUN] az vm disk attach -g %s --vm-name %s --name %s --size-gb %s\n' "$RG" "$RESOURCE_NAME" "$DISK_NAME" "$DISK_SIZE"
+          exit 0
+        fi
+        if az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[?name=='$DISK_NAME'] | [0].name" -o tsv 2>/dev/null | grep -q .; then
+          printf '[REUSE] Disk '%s' already attached to '%s'.
+' "$DISK_NAME" "$RESOURCE_NAME"
+        elif az disk show -g "$RG" -n "$DISK_NAME" >/dev/null 2>&1; then
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
+        else
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" || true
+        fi
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: storage delete <account_name> <rg>"; exit 1; fi
+        libscript_verify_managed azure storage "$RESOURCE_NAME" "$RG" || exit 1
+        az storage account delete --name "$RESOURCE_NAME" --resource-group "$RG" --yes
+        ;;
+      list)
+        if [ -n "$RESOURCE_NAME" ]; then
+          az storage account list -g "$RESOURCE_NAME" -o table
+        else
+          az storage account list -o table
+        fi
+        ;;
+      *)
+        printf '%s\n' "Unknown storage action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
   dns)
     SUBACTION=${1:-}
     SUBTYPE=${2:-}
@@ -334,19 +419,44 @@ case "$ACTION" in
             if [ "$TYPE" = "@" ] && { [ "$NAME" = "A" ] || [ "$NAME" = "CNAME" ] || [ "$NAME" = "TXT" ]; }; then
               _tmp_z="$ZONE"; ZONE="$RG"; RG="$_tmp_z"; TYPE="$NAME"; NAME="@"
             fi
+            _TARGET_RG="${DNS_RG:-$RG}"
             if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
-              printf '[DRY_RUN] az network dns record-set %s (%s) in zone %s (%s) -> %s\n' "$NAME" "$TYPE" "$ZONE" "$RG" "$VALUE"
+              printf '[DRY_RUN] az network dns record-set %s (%s) in zone %s (%s) -> %s\n' "$NAME" "$TYPE" "$ZONE" "$_TARGET_RG" "$VALUE"
               exit 0
             fi
+            if ! az network dns zone show -g "$_TARGET_RG" -n "$ZONE" >/dev/null 2>&1; then
+              if [ "$_TARGET_RG" != "$RG" ] && az network dns zone show -g "$RG" -n "$ZONE" >/dev/null 2>&1; then
+                _TARGET_RG="$RG"
+              elif [ "$NAME" = "@" ] && [ "${ZONE#*.*.}" != "$ZONE" ]; then
+                _p_zone="${ZONE#*.}"
+                _s_name="${ZONE%%.*}"
+                if az network dns zone show -g "$_TARGET_RG" -n "$_p_zone" >/dev/null 2>&1; then
+                  ZONE="$_p_zone"
+                  NAME="$_s_name"
+                elif [ "$_TARGET_RG" != "$RG" ] && az network dns zone show -g "$RG" -n "$_p_zone" >/dev/null 2>&1; then
+                  _TARGET_RG="$RG"
+                  ZONE="$_p_zone"
+                  NAME="$_s_name"
+                fi
+              fi
+            fi
             if [ "$SUBTYPE" = "update" ]; then
-              libscript_verify_managed azure dns "$ZONE" "$RG" || exit 1
+              libscript_verify_managed azure dns "$ZONE" "$_TARGET_RG" || exit 1
             fi
             if [ "$TYPE" = "A" ]; then
-              az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$NAME" -a "$VALUE"
+              _existing_ips=$(az network dns record-set a show -g "$_TARGET_RG" -z "$ZONE" -n "$NAME" --query "aRecords[].ipv4Address" -o tsv 2>/dev/null || true)
+              az network dns record-set a add-record -g "$_TARGET_RG" -z "$ZONE" -n "$NAME" -a "$VALUE"
+              if [ -n "$_existing_ips" ]; then
+                for _old_ip in $_existing_ips; do
+                  if [ -n "$_old_ip" ] && [ "$_old_ip" != "$VALUE" ]; then
+                    az network dns record-set a remove-record -g "$_TARGET_RG" -z "$ZONE" -n "$NAME" -a "$_old_ip" --keep-empty-record-set >/dev/null 2>&1 || true
+                  fi
+                done
+              fi
             elif [ "$TYPE" = "CNAME" ]; then
-              az network dns record-set cname set-record -g "$RG" -z "$ZONE" -n "$NAME" -c "$VALUE"
+              az network dns record-set cname set-record -g "$_TARGET_RG" -z "$ZONE" -n "$NAME" -c "$VALUE"
             elif [ "$TYPE" = "TXT" ]; then
-              az network dns record-set txt add-record -g "$RG" -z "$ZONE" -n "$NAME" -v "$VALUE"
+              az network dns record-set txt add-record -g "$_TARGET_RG" -z "$ZONE" -n "$NAME" -v "$VALUE"
             else
               printf '%s\n' "Type $TYPE not supported yet."; exit 1
             fi

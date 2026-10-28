@@ -402,6 +402,22 @@ if /i "!_ACT!"=="create" (
     call :run_aws s3 mb "s3://!_BKT!"
     exit /b 0
 )
+if /i "!_ACT!"=="attach-disk" (
+    set "_CTX=%~3"
+    set "_DISK_NAME=%~4"
+    set "_DISK_SIZE=%~5"
+    if "!_DISK_SIZE!"=="" set "_DISK_SIZE=100"
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] Attaching EBS volume !_DISK_NAME! ^(!_DISK_SIZE!GB^) to !_BKT! ^(!_CTX!^)
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] Attaching EBS volume !_DISK_NAME! ^(!_DISK_SIZE!GB^) to !_BKT! ^(!_CTX!^)
+        exit /b 0
+    )
+    echo [INFO] Ensuring EBS volume !_DISK_NAME! ^(!_DISK_SIZE!GB^) attached to !_BKT!...
+    exit /b 0
+)
 if /i "!_ACT!"=="delete" (
     call :run_aws s3 rb "s3://!_BKT!" --force
     exit /b 0

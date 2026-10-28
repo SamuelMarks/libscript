@@ -236,8 +236,22 @@ if [ "$CMD" = "install-deps" ]; then
 
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "install"
 
+  _has_embedded_db=$(jq -r '[((.databases // .infrastructure.databases) | if type == "object" then [to_entries[].value] elif type == "array" then . else [] end)[]? | (.engine // .type // "") | ascii_downcase | select(. == "duckdb" or . == "sqlite" or . == "sqlite3")] | length' "$json_file" 2>/dev/null || printf '0')
+  if { [ "${_has_embedded_db:-0}" -gt 0 ] || [ "$force_reinstall" -eq 1 ] || [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ]; } && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" ]; then
+    STACK="" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" stop "$json_file" || true
+  fi
+
   if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/provision_db.sh" "$json_file"
+  fi
+
+  if [ -f "${_manifest_dir}/.env.libscript" ]; then
+    set -a
+    set +u
+    # shellcheck disable=SC1090,SC1091
+    . "${_manifest_dir}/.env.libscript" 2>/dev/null || true
+    set -u
+    set +a
   fi
 
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"

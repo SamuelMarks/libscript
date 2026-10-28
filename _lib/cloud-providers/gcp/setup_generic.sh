@@ -196,6 +196,28 @@ case "$ACTION" in
         fi
         gcloud compute instances describe "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
         ;;
+      wait-ssh)
+        ZONE=${3:-${GCP_ZONE:-}}
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Waiting for SSH on $RESOURCE_NAME"
+          exit 0
+        fi
+        gcloud compute ssh "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --command="true" >/dev/null 2>&1 || true
+        ;;
+      attach-disk)
+        ZONE=${3:-${GCP_ZONE:-}}; DISK_NAME=${4:-}; DISK_SIZE=${5:-100}
+        if [ -z "$DISK_NAME" ] || [ "$DISK_NAME" = "null" ]; then
+          exit 0
+        fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Attaching disk $DISK_NAME (${DISK_SIZE}GB) to $RESOURCE_NAME"
+          exit 0
+        fi
+        if ! gcloud compute disks describe "$DISK_NAME" ${ZONE:+--zone="$ZONE"} >/dev/null 2>&1; then
+          gcloud compute disks create "$DISK_NAME" --size="${DISK_SIZE}GB" ${ZONE:+--zone="$ZONE"} || true
+        fi
+        gcloud compute instances attach-disk "$RESOURCE_NAME" --disk="$DISK_NAME" ${ZONE:+--zone="$ZONE"} 2>/dev/null || true
+        ;;
       exec)
         shift 2
         if [ $# -gt 1 ]; then shift; fi
@@ -245,6 +267,39 @@ case "$ACTION" in
     esac
     exit 0
     ;;
+  storage)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ]; then printf '%s\n' "Usage: storage create <bucket>"; exit 1; fi
+        gcloud storage buckets create "gs://$RESOURCE_NAME" || true
+        ;;
+      attach-disk)
+        ZONE=${3:-${GCP_ZONE:-}}; DISK_NAME=${4:-}; DISK_SIZE=${5:-100}
+        if [ -z "$DISK_NAME" ] || [ "$DISK_NAME" = "null" ]; then exit 0; fi
+        if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+          printf '%s\n' "[DRY_RUN] Attaching disk $DISK_NAME (${DISK_SIZE}GB) to $RESOURCE_NAME"
+          exit 0
+        fi
+        if ! gcloud compute disks describe "$DISK_NAME" ${ZONE:+--zone="$ZONE"} >/dev/null 2>&1; then
+          gcloud compute disks create "$DISK_NAME" --size="${DISK_SIZE}GB" ${ZONE:+--zone="$ZONE"} || true
+        fi
+        gcloud compute instances attach-disk "$RESOURCE_NAME" --disk="$DISK_NAME" ${ZONE:+--zone="$ZONE"} 2>/dev/null || true
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ]; then printf '%s\n' "Usage: storage delete <bucket>"; exit 1; fi
+        gcloud storage buckets delete "gs://$RESOURCE_NAME" --quiet || true
+        ;;
+      list)
+        gcloud storage buckets list
+        ;;
+      *)
+        printf '%s\n' "Unknown storage action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
   dns)
     SUBACTION=${1:-}
     SUBTYPE=${2:-}
@@ -283,12 +338,21 @@ case "$ACTION" in
         case "$SUBTYPE" in
           create|update)
             ZONE=${3:-}; NAME=${4:-}; TYPE=${5:-}; DATA=${6:-}; TTL=${7:-300}
-            if [ -z "$DATA" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> <name> <type> <data> [ttl]"; exit 1; fi
+            if [ "${6:-}" = "A" ] || [ "${6:-}" = "CNAME" ] || [ "${6:-}" = "TXT" ]; then
+              if [ "${7:-}" != "" ]; then
+                NAME=${5:-}; TYPE=${6:-}; DATA=${7:-}; TTL=${8:-300}
+              fi
+            fi
+            if [ -z "$DATA" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> [ctx] <name> <type> <data> [ttl]"; exit 1; fi
+            if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+              printf '[DRY_RUN] gcloud dns record-sets %s %s (%s) in %s -> %s\n' "$SUBTYPE" "$NAME" "$TYPE" "$ZONE" "$DATA"
+              exit 0
+            fi
             if [ "$SUBTYPE" = "update" ]; then
               libscript_verify_managed gcp dns "$ZONE" || exit 1
             fi
             if [ "$SUBTYPE" = "create" ]; then
-              gcloud dns record-sets create "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL"
+              gcloud dns record-sets create "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL" 2>/dev/null || gcloud dns record-sets update "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL"
             else
               gcloud dns record-sets update "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL"
             fi

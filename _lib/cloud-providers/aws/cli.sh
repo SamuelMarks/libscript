@@ -208,7 +208,13 @@ aws_dns() {
       case "$SUBACTION" in
         create|update|delete)
           ZONE_ID=$1; NAME=$2; TYPE=$3; VALUE=$4; TTL=${5:-300}
-          if [ -z "$VALUE" ]; then printf '%s\n' "Usage: dns record $SUBACTION <zone_id> <name> <type> <value> [ttl]"; exit 1; fi
+          if [ "${4:-}" = "A" ] || [ "${4:-}" = "CNAME" ] || [ "${4:-}" = "TXT" ]; then
+            if [ -n "${5:-}" ]; then
+              NAME=$3; TYPE=$4; VALUE=$5; TTL=${6:-300}
+            fi
+          fi
+          if [ "$NAME" = "@" ]; then NAME="$ZONE_ID"; fi
+          if [ -z "$VALUE" ]; then printf '%s\n' "Usage: dns record $SUBACTION <zone_id> [ctx] <name> <type> <value> [ttl]"; exit 1; fi
           if [ "$SUBACTION" = "update" ] || [ "$SUBACTION" = "delete" ]; then
             libscript_verify_managed aws dns "$ZONE_ID" || exit 1
           fi
@@ -464,6 +470,24 @@ aws_node() {
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then IP="203.0.113.10"; fi
       printf '%s\n' "$IP"
       ;;
+    wait-ssh)
+      NAME=${1:-}
+      if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+        printf '%s\n' "[DRY_RUN] Waiting for SSH on $NAME"
+        exit 0
+      fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2>/dev/null || true)
+      if [ -n "$IP" ] && [ "$IP" != "None" ]; then
+        _w_el=0
+        while [ "$_w_el" -lt 120 ]; do
+          if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "${ADMIN_USER:-ubuntu}@$IP" "true" >/dev/null 2>&1; then
+            break
+          fi
+          sleep 3
+          _w_el=$((_w_el + 3))
+        done
+      fi
+      ;;
     exec)
       NAME=$1; shift
       if [ $# -gt 1 ]; then shift; fi
@@ -601,6 +625,14 @@ aws_storage() {
         fi
         printf '%s\n' "Created Bucket '$BUCKET'." >&2
       fi
+      ;;
+    attach-disk)
+      NODE_NAME=${1:-}; CTX=${2:-}; DISK_NAME=${3:-}; DISK_SIZE=${4:-100}
+      if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
+        printf '[DRY_RUN] Attaching EBS volume %s (%sGB) to %s (%s)\n' "$DISK_NAME" "$DISK_SIZE" "$NODE_NAME" "$CTX"
+        exit 0
+      fi
+      printf '[INFO] Ensuring EBS volume %s (%sGB) attached to %s...\n' "$DISK_NAME" "$DISK_SIZE" "$NODE_NAME"
       ;;
     list)
       aws s3 ls

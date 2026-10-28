@@ -342,9 +342,15 @@ EOF_DBS
 
 if [ "$HEALTH_DB_FAILED" -ne 0 ]; then
   if [ "$REMEDIATE_DB" -eq 1 ] && [ "${_HDB_REMEDIATING:-0}" != "1" ]; then
-    log_info 'Database health check failed; attempting auto-remediation via provision_db.sh...'
+    log_info 'Database health check failed; stopping active services and attempting auto-remediation via provision_db.sh...'
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" ]; then
+      STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "$JSON_FILE" || true
+    fi
     LIBSCRIPT_FORCE_SEED=1 "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_db.sh" "$JSON_FILE" || true
     "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "$JSON_FILE" "db_migrate" || true
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" ]; then
+      STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" start "$JSON_FILE" || true
+    fi
     _HDB_REMEDIATING=1 STACK="" exec "${THIS_FILE}" "$JSON_FILE"
   fi
   exit 1

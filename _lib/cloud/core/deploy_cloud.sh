@@ -253,6 +253,40 @@ elif [ "$PROVIDER" = "gcp" ]; then
   ensure_cli "gcloud" "google-cloud-sdk"
 fi
 
+# ## validate_shared_node_manifests
+# Validates that multiple applications deployed to a shared node do not have colliding service names or ports.
+validate_shared_node_manifests() {
+  [ -n "$MANIFEST_FILES" ] && command -v jq >/dev/null 2>&1 || return 0
+  _vsn_count=0
+  for _vsn_f in $MANIFEST_FILES; do
+    _vsn_count=$((_vsn_count + 1))
+  done
+  [ "$_vsn_count" -gt 1 ] || return 0
+  # shellcheck disable=SC2086
+  _dup_ports=$(jq -r '(.services | if type == "object" then [to_entries[].value.port? // empty] elif type == "array" then [.[].port? // empty] else [] end) | map(tostring) | unique | .[]' $MANIFEST_FILES 2>/dev/null | sort | uniq -d || true)
+  if [ -n "$_dup_ports" ]; then
+    log "ERROR" "Shared-node service port collision detected across manifests on port(s): $(printf '%s' "$_dup_ports" | tr '\n' ' ')"
+    exit 1
+  fi
+  # shellcheck disable=SC2086
+  _dup_svcs=$(jq -r '(.services | if type == "object" then [to_entries[].key] elif type == "array" then [.[].name? // empty] else [] end) | unique | .[]' $MANIFEST_FILES 2>/dev/null | sort | uniq -d || true)
+  if [ -n "$_dup_svcs" ]; then
+    log "ERROR" "Shared-node service name collision detected across manifests: $(printf '%s' "$_dup_svcs" | tr '\n' ' ')"
+    exit 1
+  fi
+}
+
+# ## compute_app_checksum
+# Computes a deterministic digest of an application repository manifest, env files, and git revision.
+compute_app_checksum() {
+  _cac_dir="$1"
+  [ -d "$_cac_dir" ] || { printf 'none\n'; return 0; }
+  _cac_git=$(git -C "$_cac_dir" rev-parse HEAD 2>/dev/null || printf 'nogit')
+  _cac_dirty=$(git -C "$_cac_dir" status --porcelain 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  _cac_env=$(cat "${_cac_dir}/libscript.json" "${_cac_dir}/.env" "${_cac_dir}/.env.secrets" 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  printf '%s_%s_%s\n' "$_cac_git" "$_cac_dirty" "$_cac_env"
+}
+
 # ## resolve_manifests_ports
 # Extracts and unions required network ports across all application manifests.
 resolve_manifests_ports() {
@@ -275,6 +309,7 @@ if [ ! -f "$JSON_FILE" ] && [ -n "$MANIFEST_FILES" ]; then
   done
 fi
 
+validate_shared_node_manifests
 PORTS=$(resolve_manifests_ports)
 VNET_NAME="${VNET_NAME:-${NODE}-vnet}"
 NSG_NAME="${NSG_NAME:-${NODE}-nsg}"
@@ -454,6 +489,10 @@ fi
 # -----------------------------------------------------------------------------
 # Shared Node Preparation (Sync LibScript + Declarative Storage & Daemon Config)
 # -----------------------------------------------------------------------------
+if [ "$SKIP_INFRA" -eq 0 ]; then
+  log "SSH" "Waiting for SSH readiness on '$NODE'..."
+  run_with_auth_check "$CLI" node wait-ssh "$NODE" "$CTX" || true
+fi
 log "SYNC" "Syncing LibScript runtime to '$NODE'..."
 run_with_auth_check "$CLI" node sync "$NODE" "$CTX"
 
@@ -535,11 +574,26 @@ for _app_entry in "$@"; do
   [ "$FORCE_REINSTALL" -eq 1 ] && _deps_flags="${_deps_flags} --force-reinstall"
   [ "$FORCE_REBUILD" -eq 1 ] && _deps_flags="${_deps_flags} --force-rebuild"
 
-  log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '$_ae_name'..."
-  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
+  _app_hash=$(compute_app_checksum "$_ae_repo")
+  _skip_unchanged=0
+  if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
+    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && cd ~/${_ae_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ~/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >/dev/null 2>&1; then
+      _skip_unchanged=1
+    fi
+  fi
 
-  log "DAEMON" "Registering and starting/restarting application daemons for '$_ae_name'..."
-  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
+  if [ "$_skip_unchanged" -eq 1 ]; then
+    log "REUSE" "Application '$_ae_name' checksum (${_app_hash}) unchanged and services/databases healthy; skipping install-deps and rebuild."
+  else
+    log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '$_ae_name'..."
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
+
+    log "DAEMON" "Registering and starting/restarting application daemons for '$_ae_name'..."
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
+    if [ "$DRY_RUN_MODE" -eq 0 ]; then
+      "$CLI" node exec "$NODE" "$CTX" "mkdir -p ~/.libscript_deployments && printf '%s\n' '${_app_hash}' > ~/.libscript_deployments/${_ae_dest}.sha256" >/dev/null 2>&1 || true
+    fi
+  fi
 
   log "ROUTES" "Updating reverse-proxy routes and reloading ingress for '$_ae_name' (${_ae_domain:-local})..."
   run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" netctl ingress libscript.json"

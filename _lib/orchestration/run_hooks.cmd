@@ -83,6 +83,13 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!json_file!"
 )
+for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\.env.libscript") do (
+    if exist "%%~fE" (
+        for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
+            if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%~B"
+        )
+    )
+)
 if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
 if defined SERVICE_EXTRA_PATH set "PATH=!SERVICE_EXTRA_PATH!;!PATH!"
 
@@ -187,6 +194,16 @@ if not "!cond!"=="" (
         if not errorlevel 1 (
             echo [INFO] [HOOK:!hook_type!] Skipping hook '!name!': command !chk_cmd! already in PATH
             set "skip=1"
+        )
+    )
+    echo !cond! | findstr /b /c:"unless_env " >nul
+    if not errorlevel 1 (
+        set "_u_expr=!cond:unless_env =!"
+        for /f "tokens=1,2 delims==" %%K in ("!_u_expr!") do (
+            if "!%%K!"=="%%L" if not "!FORCE_REINSTALL!"=="1" if not "!LIBSCRIPT_FORCE_SEED!"=="1" (
+                echo [INFO] [HOOK:!hook_type!] Skipping hook '!name!': %%K=%%L already satisfied
+                set "skip=1"
+            )
         )
     )
 )

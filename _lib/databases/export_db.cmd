@@ -153,5 +153,12 @@ if exist "!_path!" (
     for %%B in ("!_path!") do set "_base_fn=%%~nxB"
     echo [INFO] Exporting !_eng! file '!_path!'...
     copy /y "!_path!" "!APP_STAGE!\duckdb\!_base_fn!" >nul
+    if exist "!_path!.wal" (
+        copy /y "!_path!.wal" "!APP_STAGE!\duckdb\!_base_fn!.wal" >nul
+        where duckdb >nul 2>nul
+        if not errorlevel 1 (
+            duckdb "!APP_STAGE!\duckdb\!_base_fn!" -c "CHECKPOINT;" >nul 2>&1
+        )
+    )
 )
 exit /b 0

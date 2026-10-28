@@ -196,6 +196,7 @@ if not "!seed_cmd!"=="" (
     call :check_pg_populated
     if not errorlevel 1 (
         echo [INFO] [REUSE] PostgreSQL database '!db_name!' already has required tables and minimum rows; skipping full re-seed.
+        call :set_env_var "LIBSCRIPT_DB_POSTGRES_POPULATED" "1"
     ) else (
         echo [INFO] [UPSERT:POSTGRES] Running PostgreSQL seed_command for '!db_name!': !seed_cmd!
         pushd "!MANIFEST_DIR!"
@@ -203,6 +204,7 @@ if not "!seed_cmd!"=="" (
         set "rc=!errorlevel!"
         popd
         if not "!rc!"=="0" exit /b !rc!
+        call :set_env_var "LIBSCRIPT_DB_POSTGRES_POPULATED" "1"
     )
 )
 exit /b 0
@@ -353,14 +355,33 @@ if not "!seed_cmd!"=="" (
     call :check_duckdb_populated
     if not errorlevel 1 (
         echo [INFO] [REUSE] DuckDB database '!db_path!' already has required tables and minimum rows; skipping full re-seed.
+        call :set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
     ) else (
+        call :quiesce_duckdb_lock_holders "!db_path!"
         echo [INFO] [UPSERT:DUCKDB] Running DuckDB seed_command for '!db_name!': !seed_cmd!
         pushd "!MANIFEST_DIR!"
         cmd.exe /c "!seed_cmd!"
         set "rc=!errorlevel!"
         popd
         if not "!rc!"=="0" exit /b !rc!
+        call :set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
     )
+)
+exit /b 0
+
+:: ## quiesce_duckdb_lock_holders
+:: Stops manifest services holding a conflicting lock on the target DuckDB file on Windows.
+:quiesce_duckdb_lock_holders
+set "_qdl_file=%~1"
+if not exist "!_qdl_file!" exit /b 0
+where duckdb >nul 2>nul
+if errorlevel 1 exit /b 0
+duckdb "!_qdl_file!" -c "SELECT 1;" >nul 2>&1
+if not errorlevel 1 exit /b 0
+echo [INFO] [DB:DUCKDB] Releasing active service locks on '!_qdl_file!'...
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" stop "!JSON_FILE!" >nul 2>&1
 )
 exit /b 0
 

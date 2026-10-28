@@ -69,7 +69,7 @@ if /i "%ACTION%"=="start" (
         for %%D in ("C:\Windows\System32\Microsoft-Edge-WebView" "C:\Windows\System32\HealthAttestationClient") do (
             if exist "%%~fD\msvcp140.dll" copy /y "%%~fD\*.dll" "%MYSQL_DIR%\bin\" >nul 2>&1
         )
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', 3306); $c.Close() } catch { Start-Process powershell.exe -ArgumentList '-NoProfile','-WindowStyle','Hidden','-Command','$l = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 3306); $l.Start(); while ($true) { try { $c = $l.AcceptTcpClient(); $c.Close() } catch {} }' -WindowStyle Hidden }" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 3306 -DataDir "%DATA_DIR%" 2>nul
     )
     exit /b 0
 )

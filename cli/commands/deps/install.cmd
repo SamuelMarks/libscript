@@ -231,9 +231,23 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "install"
 if errorlevel 1 exit /b 1
 
+set "_HAS_EMBEDDED_DB=0"
+for /f "delims=" %%E in ('jq -r "[((.databases // .infrastructure.databases) | if type == \"object\" then [to_entries[].value] elif type == \"array\" then . else [] end)[]? | (.engine // .type // \"\") | ascii_downcase | select(. == \"duckdb\" or . == \"sqlite\" or . == \"sqlite3\")] | length" "!json_file!" 2^>nul') do set "_HAS_EMBEDDED_DB=%%E"
+if not "!_HAS_EMBEDDED_DB!"=="0" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" stop "!json_file!" >nul 2>&1
+    )
+)
+
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" "!json_file!"
     if errorlevel 1 exit /b 1
+)
+if exist "!_MANIFEST_DIR!\.env.libscript" (
+    for /f "usebackq tokens=1* delims==" %%A in ("!_MANIFEST_DIR!\.env.libscript") do (
+        if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%~B"
+    )
 )
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post_install"

@@ -334,7 +334,18 @@ if /i "!_SUB!"=="attach-disk" (
     set "_DISK_NAME=%~4"
     set "_DISK_SIZE=%~5"
     if "!_DISK_SIZE!"=="" set "_DISK_SIZE=100"
-    call :run_gcloud compute disks create "!_DISK_NAME!" --size="!_DISK_SIZE!GB" --zone="!_ZONE!"
+    if /i "%DRY_RUN%"=="true" (
+        echo [DRY_RUN] gcloud compute instances attach-disk !_NAME! --disk=!_DISK_NAME! --zone=!_ZONE!
+        exit /b 0
+    )
+    if "%DRY_RUN%"=="1" (
+        echo [DRY_RUN] gcloud compute instances attach-disk !_NAME! --disk=!_DISK_NAME! --zone=!_ZONE!
+        exit /b 0
+    )
+    gcloud compute disks describe "!_DISK_NAME!" --zone="!_ZONE!" >nul 2>&1
+    if errorlevel 1 (
+        call :run_gcloud compute disks create "!_DISK_NAME!" --size="!_DISK_SIZE!GB" --zone="!_ZONE!"
+    )
     call :run_gcloud compute instances attach-disk "!_NAME!" --disk="!_DISK_NAME!" --zone="!_ZONE!"
     exit /b !errorlevel!
 )
