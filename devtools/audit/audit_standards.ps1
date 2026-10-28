@@ -336,25 +336,25 @@ function Audit-File {
     # 8g. Raw Network Fetch & Raw Package Manager Audit
     if ($normPath -notmatch '^(devtools|tests|docker)/') {
         if ($ext -eq "sh") {
-            if ($normPath -notmatch '_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health.*|service))\.sh$') {
+            if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health.*|service))\.sh$|docker)') {
                 if ($rawFetchLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout)."
                 }
             }
-            if ($normPath -notmatch '_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/distro/)') {
+            if ($normPath -notmatch '(_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/distro/)|docker)') {
                 if ($rawPkgLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
                 }
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
             if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|cli/commands/packaging/formats/pkg_docker_compose)\.cmd$') {
-                $rawFetchCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s|echo\s).*(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-fetch)' }
+                $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-fetch)' }
                 if ($rawFetchCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
             if ($normPath -notmatch '_lib/(_common/pkg_mgr\.cmd|package-managers/)') {
-                $rawPkgCmd = Select-String -Path $FilePath -Pattern '^\s*(?!::|rem\s).*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' }
+                $rawPkgCmd = Select-String -Path $FilePath -Pattern '\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-pkg' }
                 if ($rawPkgCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
                 }

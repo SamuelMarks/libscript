@@ -120,13 +120,15 @@ goto :action_install
 :find_existing_python
 if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\bin\python.exe" exit /b 0
 if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\python.exe" exit /b 0
-where python >nul 2>&1
-if not errorlevel 1 (
-    if /i "%PYTHON_VERSION%"=="latest" exit /b 0
-    for /f "tokens=2" %%V in ('python --version 2^>^&1') do (
-        echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
-        if not errorlevel 1 exit /b 0
-        if "%%V"=="%PYTHON_VERSION%" exit /b 0
+for /f "delims=" %%P in ('where python 2^>nul') do (
+    echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
+    if errorlevel 1 (
+        if /i "%PYTHON_VERSION%"=="latest" exit /b 0
+        for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
+            echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
+            if not errorlevel 1 exit /b 0
+            if "%%V"=="%PYTHON_VERSION%" exit /b 0
+        )
     )
 )
 where uv >nul 2>&1
@@ -260,7 +262,7 @@ if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     set "_PY_CACHED="
     if defined LIBSCRIPT_CACHE_DIR (
-        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\runtimes\python*.zip") do set "_PY_CACHED=%%~fZ"
+        for %%Z in ("!LIBSCRIPT_CACHE_DIR!\runtimes\python*.zip") do set "_PY_CACHED=%%~fZ"
     )
     if exist "!LIBSCRIPT_ROOT_DIR!\cache\runtimes" (
         for %%Z in ("!LIBSCRIPT_ROOT_DIR!\cache\runtimes\python*.zip") do set "_PY_CACHED=%%~fZ"

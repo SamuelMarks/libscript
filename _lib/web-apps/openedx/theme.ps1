@@ -174,6 +174,17 @@ function Apply-Theme {
         exit 1
     }
     Write-Host "[INFO] Applying theme '$Name' to $Domain..."
+    $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
+    $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $managePy = Join-Path $codebaseDir "manage.py"
+    if ((Test-Path $managePy) -and (Test-Path $pyExe)) {
+        Push-Location $codebaseDir
+        try {
+            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from openedx.core.djangoapps.theming.models import SiteTheme; from django.contrib.sites.models import Site; site, _ = Site.objects.get_or_create(domain='$Domain', defaults={'name': '$Domain'}); theme, _ = SiteTheme.objects.get_or_create(site=site); theme.theme_dir_name = '$Name'; theme.save()" 2>$null | Out-Null
+        } finally {
+            Pop-Location
+        }
+    }
     $reg = Get-Registry
     foreach ($k in $reg.Keys) {
         $reg[$k]["active"] = ($k -eq $Name)

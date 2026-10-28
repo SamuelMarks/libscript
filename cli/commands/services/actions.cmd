@@ -76,12 +76,12 @@ if /i "!action!"=="prepare-storage" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!_ps_json!"
     )
-    for /f "tokens=1,2" %%M in ('jq -r "(.infrastructure.node.data_disks // [])[]? | \"\(.mount_path // \"/mnt/data\") \(.fstype // \"NTFS\")\"" "!_ps_json!" 2^>nul') do (
+    for /f "tokens=1,2 delims=	 " %%M in ('jq -r --arg mp "/mnt/data" --arg fs "NTFS" ".infrastructure.node.data_disks[]? | [(.mount_path // $mp), (.fstype // $fs)] | @tsv" "!_ps_json!" 2^>nul') do (
         echo [STORAGE] Ensuring persistent disk mount "%%M" ^(fstype: %%N^)...
         call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
     )
     set "_has_ol=0"
-    for /f "delims=" %%O in ('jq -r "if (.deps.ollama != null) or (.dependencies.ollama != null) then \"1\" else \"0\" end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
+    for /f "delims=" %%O in ('jq -r "if .deps.ollama != null or .dependencies.ollama != null then \"1\" else \"0\" end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
     if not "!OLLAMA_MODELS!"=="" set "_has_ol=1"
     if "!_has_ol!"=="1" (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" (
@@ -176,7 +176,7 @@ if "!is_json!"=="1" (
     )
     if /i not "!action!"=="uninstall" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
-        for /f "tokens=1,2 delims=	 " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
+        for /f "tokens=1,2 delims=	 " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, .version // $def] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
             set "pkg=%%A"
             set "ver=%%B"
             if "!ver!"=="null" set "ver=latest"

@@ -90,6 +90,34 @@
         "sha256": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669"
       },
       {
+        "name": "django",
+        "version": "4.2.16",
+        "filename": "Django-4.2.16-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/94/2c/6b6c7e493d5ea789416918658ebfa16be7a64c77610307497ed09a93c8c4/Django-4.2.16-py3-none-any.whl",
+        "sha256": "1ddc333a16fc139fd253035a1606bb24261951bbc3a6ca256717fa06cc41a898"
+      },
+      {
+        "name": "asgiref",
+        "version": "3.8.1",
+        "filename": "asgiref-3.8.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/39/e3/893e8757be2612e6c266d9bb58ad2e3651524b5b40cf56761e985a28b13e/asgiref-3.8.1-py3-none-any.whl",
+        "sha256": "3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47"
+      },
+      {
+        "name": "sqlparse",
+        "version": "0.5.1",
+        "filename": "sqlparse-0.5.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/5d/a5/b2860373aa8de1e626b2bdfdd6df4355f0565b47e51f7d0c54fe70faf8fe/sqlparse-0.5.1-py3-none-any.whl",
+        "sha256": "773dcbf9a5ab44a090f3441e2180efe2560220203dc2f8c0b0fa141e18b505e4"
+      },
+      {
+        "name": "tzdata",
+        "version": "2024.2",
+        "filename": "tzdata-2024.2-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl",
+        "sha256": "a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd"
+      },
+      {
         "name": "gunicorn",
         "version": "23.0.0",
         "filename": "gunicorn-23.0.0-py3-none-any.whl",

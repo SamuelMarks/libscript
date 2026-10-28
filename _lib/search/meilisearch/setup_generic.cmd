@@ -66,9 +66,9 @@ if "%ACTION%"=="install" (
     )
     if not exist "!TARGET_DIR!" mkdir "!TARGET_DIR!" >nul 2>&1
     if defined LIBSCRIPT_CACHE_DIR (
-        if exist "%LIBSCRIPT_CACHE_DIR%\databases\meilisearch-windows-amd64.exe" (
-            echo [INFO] Copying Meilisearch from offline cache %LIBSCRIPT_CACHE_DIR%\databases\meilisearch-windows-amd64.exe...
-            copy /y "%LIBSCRIPT_CACHE_DIR%\databases\meilisearch-windows-amd64.exe" "!TARGET_DIR!\meilisearch.exe" >nul 2>&1
+        if exist "!LIBSCRIPT_CACHE_DIR!\databases\meilisearch-windows-amd64.exe" (
+            echo [INFO] Copying Meilisearch from offline cache !LIBSCRIPT_CACHE_DIR!\databases\meilisearch-windows-amd64.exe...
+            copy /y "!LIBSCRIPT_CACHE_DIR!\databases\meilisearch-windows-amd64.exe" "!TARGET_DIR!\meilisearch.exe" >nul 2>&1
             if not "%MEILISEARCH_VERSION%"=="latest" (
                 if not exist "%LIBSCRIPT_HOME%\meilisearch\latest\bin" mkdir "%LIBSCRIPT_HOME%\meilisearch\latest\bin" >nul 2>&1
                 copy /y "!TARGET_DIR!\meilisearch.exe" "%LIBSCRIPT_HOME%\meilisearch\latest\bin\meilisearch.exe" >nul 2>&1

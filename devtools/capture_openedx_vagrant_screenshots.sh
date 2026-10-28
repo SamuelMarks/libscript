@@ -233,15 +233,24 @@ vm_launch_msi() {
 }
 
 # ## launch_browser_url
-# Helper to launch web browser to a specified URL (and optional secondary tab URL) in Session 1 without console windows.
+# Helper to launch web browser to a specified URL (and optional secondary tab URL and login credentials) in Session 1 without console windows.
 launch_browser_url() {
   _url="$1"
   _url2="${2:-}"
+  _user="${3:-}"
+  _pass="${4:-}"
+  _submit="${5:-0}"
+  _ps_cmd="powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:/libscript/packaging/open_browser.ps1 -Url '${_url}'"
   if [ -n "$_url2" ]; then
-    vm_run "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:/libscript/packaging/open_browser.ps1 -Url '${_url}' -Url2 '${_url2}'"
-  else
-    vm_run "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:/libscript/packaging/open_browser.ps1 -Url '${_url}'"
+    _ps_cmd="${_ps_cmd} -Url2 '${_url2}'"
   fi
+  if [ -n "$_user" ]; then
+    _ps_cmd="${_ps_cmd} -Username '${_user}' -Password '${_pass}'"
+  fi
+  if [ "$_submit" = "1" ]; then
+    _ps_cmd="${_ps_cmd} -SubmitLogin"
+  fi
+  vm_run "${_ps_cmd}"
   sleep 4
 }
 
@@ -494,23 +503,35 @@ printf '=======================================================\n'
 
 # Step 4: browser tab (CMS)
 printf '\n[INFO] Step 4: Opening Studio CMS (:8001/signin) in Browser...\n'
-launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/login"
+launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/login" "admin@openedx.local" "edx_password_2026!" "0"
 capture_screen "12_browser_studio_focused" "BROWSER"
 
 # Step 5: browser tab (LMS)
 printf '\n[INFO] Step 5: Opening LMS Portal (:8000/login) in Browser...\n'
-launch_browser_url "http://localhost:8000/login" "http://localhost:8001/signin"
+launch_browser_url "http://localhost:8000/login" "http://localhost:8001/signin" "admin@openedx.local" "edx_password_2026!" "0"
 capture_screen "11_browser_lms_focused" "BROWSER"
 
 # Step 6: logged in browser tab (CMS)
-printf '\n[INFO] Step 6: Logging in to Studio CMS Dashboard (:8001/home) in Browser...\n'
-launch_browser_url "http://localhost:8001/home" "http://localhost:8000/dashboard"
+printf '\n[INFO] Step 6: Logging in to Studio CMS Dashboard (:8001/signin -> /home/) in Browser...\n'
+launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/dashboard" "admin@openedx.local" "edx_password_2026!" "1"
 capture_screen "14_browser_studio_authenticated" "BROWSER"
 
 # Step 7: logged in browser tab (LMS)
-printf '\n[INFO] Step 7: Logging in to LMS Dashboard (:8000/dashboard) in Browser...\n'
-launch_browser_url "http://localhost:8000/dashboard" "http://localhost:8001/home"
+printf '\n[INFO] Step 7: Logging in to LMS Dashboard (:8000/login -> /dashboard) in Browser...\n'
+launch_browser_url "http://localhost:8000/login" "http://localhost:8001/home/" "admin@openedx.local" "edx_password_2026!" "1"
 capture_screen "13_browser_lms_authenticated" "BROWSER"
+
+if [ -d "${CC0_SCREENSHOTS_DIR}" ]; then
+  for _browser_step in 11_browser_lms_focused 12_browser_studio_focused 13_browser_lms_authenticated 14_browser_studio_authenticated; do
+    if [ -f "${CC0_SCREENSHOTS_DIR}/${_browser_step}.png" ]; then
+      cp -f "${CC0_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_SCREENSHOTS_DIR}/online_${_browser_step}.png"
+      if [ -d "${CC0_SCREENSHOTS_DIR}/windows" ]; then
+        cp -f "${CC0_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_SCREENSHOTS_DIR}/windows/${_browser_step}.png"
+        cp -f "${CC0_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_SCREENSHOTS_DIR}/windows/online_${_browser_step}.png"
+      fi
+    fi
+  done
+fi
 
 # Clean up browser session
 vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'

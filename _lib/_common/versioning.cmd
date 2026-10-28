@@ -154,13 +154,15 @@ if /i "!_civ_comp!"=="nodejs" (
 if /i "!_civ_comp!"=="python" (
     if exist "!_civ_home!\python\!_civ_req!\python.exe" exit /b 0
     if exist "!_civ_home!\python\!_civ_req!\bin\python.exe" exit /b 0
-    where python >nul 2>&1
-    if not errorlevel 1 (
-        if /i "!_civ_req!"=="latest" exit /b 0
-        for /f "tokens=2" %%V in ('python --version 2^>^&1') do (
-            echo %%V | findstr /b /c:"!_civ_prefix!." >nul 2>&1
-            if not errorlevel 1 exit /b 0
-            if "%%V"=="!_civ_prefix!" exit /b 0
+    for /f "delims=" %%P in ('where python 2^>nul') do (
+        echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
+        if errorlevel 1 (
+            if /i "!_civ_req!"=="latest" exit /b 0
+            for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
+                echo %%V | findstr /b /c:"!_civ_prefix!." >nul 2>&1
+                if not errorlevel 1 exit /b 0
+                if "%%V"=="!_civ_prefix!" exit /b 0
+            )
         )
     )
     exit /b 1
@@ -279,6 +281,11 @@ if /i "!_hga_act!"=="download" (
 )
 for %%S in (start stop restart status health logs up down) do (
     if /i "!_hga_act!"=="%%S" (
+        if exist "!SCRIPT_DIR!\service.cmd" (
+            set "STACK="
+            call "!SCRIPT_DIR!\service.cmd" "!_hga_act!"
+            exit /b !errorlevel!
+        )
         if /i "!_hga_method!"=="libscript_native" (
             set "STACK="
             call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "!_hga_act!" "!_hga_svc!"

@@ -209,7 +209,7 @@ if "!_REDIS_INSTALLED!"=="0" (
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     set "_REDIS_CACHED="
     if defined LIBSCRIPT_CACHE_DIR (
-        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\databases\redis*.zip" "%LIBSCRIPT_CACHE_DIR%\datastores\redis*.zip") do (
+        for %%Z in ("!LIBSCRIPT_CACHE_DIR!\databases\redis*.zip" "!LIBSCRIPT_CACHE_DIR!\datastores\redis*.zip") do (
             if exist "%%~fZ" set "_REDIS_CACHED=%%~fZ"
         )
     )

@@ -105,6 +105,18 @@ function Do-SetPassword {
         [string]$Password
     )
 
+    $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
+    $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $managePy = Join-Path $codebaseDir "manage.py"
+    if ((Test-Path $managePy) -and (Test-Path $pyExe)) {
+        Push-Location $codebaseDir
+        try {
+            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='$Username').first() or User.objects.filter(email='$Username').first(); (u.set_password('$Password'), u.save()) if u else None" 2>$null | Out-Null
+        } finally {
+            Pop-Location
+        }
+    }
+
     $p = Join-Path $InstallDir "users.json"
     if (-not (Test-Path $p)) {
         Write-Error "Error: User $Username does not exist."

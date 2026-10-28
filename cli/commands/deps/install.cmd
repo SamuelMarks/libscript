@@ -219,7 +219,7 @@ echo SERVICE_PATH=!PATH!>> "!_ENV_OUT!"
 
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" (
     set "_PY_VER=3.12"
-    for /f "delims=" %%V in ('jq -r "(.deps.python // .dependencies.python // \"3.12\")" "!json_file!" 2^>nul') do set "_PY_VER=%%V"
+    for /f "delims=" %%V in ('jq -r ".deps.python // .dependencies.python // \"3.12\"" "!json_file!" 2^>nul') do set "_PY_VER=%%V"
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "!_MANIFEST_DIR!" "!_PY_VER!"
     for /d %%P in ("!_MANIFEST_DIR!\*") do (

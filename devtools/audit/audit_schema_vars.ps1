@@ -81,11 +81,13 @@ function Audit-ComponentVars {
     foreach ($s in $scripts) {
         foreach ($line in (Get-Content -LiteralPath $s.FullName -ErrorAction SilentlyContinue)) {
             if ($line -match '^\s*(#|::|rem\s)') { continue }
-            $matchesList = [regex]::Matches($line, '\b([A-Z][A-Z0-9_]*_[A-Z0-9_]+)\b')
+            $matchesList = [regex]::Matches($line, '(\$\{[A-Z][A-Z0-9_]*_[A-Z0-9_]+[:-]|\$env:[A-Z][A-Z0-9_]*_[A-Z0-9_]+|if\s+not\s+defined\s+[A-Z][A-Z0-9_]*_[A-Z0-9_]+|if\s+"%[A-Z][A-Z0-9_]*_[A-Z0-9_]+%"==""|printenv\s+"?[A-Z][A-Z0-9_]*_[A-Z0-9_]+)')
             foreach ($m in $matchesList) {
-                $tok = $m.Groups[1].Value
-                if ($tok.StartsWith("${compPrefix}_") -or $tok.StartsWith("LIBSCRIPT_")) {
-                    if ($line -match "(\$\{${tok}[:-]|\$\{${tok}\}|\$${tok}\b|%${tok}%|!${tok}!|\$env:${tok}\b)") {
+                $chunk = $m.Groups[1].Value
+                $tokMatch = [regex]::Match($chunk, '[A-Z][A-Z0-9_]*_[A-Z0-9_]+')
+                if ($tokMatch.Success) {
+                    $tok = $tokMatch.Value
+                    if ($tok.StartsWith("${compPrefix}_") -or $tok.StartsWith("LIBSCRIPT_")) {
                         $foundVars[$tok] = $true
                     }
                 }
@@ -96,7 +98,7 @@ function Audit-ComponentVars {
     foreach ($v in ($foundVars.Keys | Sort-Object)) {
         if (Test-InternalRuntimeVar -VarName $v) { continue }
         if ($globalKeys.ContainsKey($v) -or $localKeys.ContainsKey($v)) { continue }
-        $relDir = $CompDir.Substring($rootDir.Length).TrimStart('', '/').Replace('', '/')
+        $relDir = $CompDir.Substring($rootDir.Length).TrimStart([char]92, [char]47).Replace([char]92, [char]47)
         [Console]::Error.WriteLine("[STANDARDS VIOLATION] [MISSING_JSON_VAR] $relDir/vars.schema.json: Variable `"$v`" is used in component scripts but missing from vars.schema.json (or base_vars.schema.json).")
         $script:errorsCount++
     }
@@ -107,6 +109,25 @@ if ($args.Count -eq 0 -or $args -contains "--all") {
     foreach ($cat in $cats) {
         foreach ($comp in (Get-ChildItem -Path $cat.FullName -Directory)) {
             Audit-ComponentVars -CompDir $comp.FullName
+        }
+    }
+} elseif ($args -contains "--staged") {
+    $stagedFiles = git diff --no-ext-diff --cached --name-only --diff-filter=ACM
+    $stagedComps = @{}
+    foreach ($f in $stagedFiles) {
+        $parts = ([string]$f).Replace([char]92, [char]47).Split('/')
+        if ($parts.Length -ge 3 -and $parts[0] -eq "_lib" -and $parts[1] -ne "_common") {
+            $stagedComps["$($parts[0])/$($parts[1])/$($parts[2])"] = $true
+        }
+    }
+    if ($stagedComps.Count -eq 0) {
+        Write-Host "[PASS] No staged component directories to audit for schema variables."
+        exit 0
+    }
+    foreach ($d in ($stagedComps.Keys | Sort-Object)) {
+        $resolved = Join-Path $rootDir $d
+        if (Test-Path $resolved -PathType Container) {
+            Audit-ComponentVars -CompDir $resolved
         }
     }
 } else {

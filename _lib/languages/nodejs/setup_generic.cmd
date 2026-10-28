@@ -255,7 +255,7 @@ if "!_NODE_INSTALLED!"=="0" (
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     set "_NODE_CACHED="
     if defined LIBSCRIPT_CACHE_DIR (
-        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\runtimes\node*.zip") do set "_NODE_CACHED=%%~fZ"
+        for %%Z in ("!LIBSCRIPT_CACHE_DIR!\runtimes\node*.zip") do set "_NODE_CACHED=%%~fZ"
     )
     if exist "!LIBSCRIPT_ROOT_DIR!\cache\runtimes" (
         for %%Z in ("!LIBSCRIPT_ROOT_DIR!\cache\runtimes\node*.zip") do set "_NODE_CACHED=%%~fZ"

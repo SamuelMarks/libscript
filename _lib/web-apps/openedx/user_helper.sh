@@ -111,6 +111,18 @@ do_set_password() {
   _username="$2"
   _password="$3"
 
+  _py="${_install_dir}/.venv/bin/python"
+  if [ ! -x "${_py}" ]; then
+    _py=$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true)
+  fi
+  _codebase="${_install_dir}/codebase"
+  if [ ! -f "${_codebase}/manage.py" ] && [ -f "${_install_dir}/manage.py" ]; then
+    _codebase="${_install_dir}"
+  fi
+  if [ -f "${_codebase}/manage.py" ] && [ -n "${_py}" ]; then
+    (cd "${_codebase}" && "${_py}" -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='${_username}').first() or User.objects.filter(email='${_username}').first(); (u.set_password('${_password}'), u.save()) if u else None" >/dev/null 2>&1) || true
+  fi
+
   _p="${_install_dir}/users.json"
   if [ ! -f "${_p}" ]; then
     printf 'Error: User %s does not exist.\n' "${_username}" >&2

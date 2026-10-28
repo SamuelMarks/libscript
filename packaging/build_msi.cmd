@@ -278,36 +278,44 @@ if exist "%TARGET_DIR%\packaging.json" (
 if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
 set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript\%STACK_NAME%\assets"
 if not exist "%CC0_ASSETS%" if exist "!LIBSCRIPT_ROOT_DIR!\cc0-assets\libscript\%STACK_NAME%\assets" set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\cc0-assets\libscript\%STACK_NAME%\assets"
+if defined ICON_PATH set "ICON_PATH=!ICON_PATH:/=\!"
+if defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!BANNER_TOP_PATH:/=\!"
+if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:/=\!"
+if defined LICENSE_PATH set "LICENSE_PATH=!LICENSE_PATH:/=\!"
+if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico" set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico"
+if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp" set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp"
+if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp" set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp"
+if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf" set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf"
 if defined ICON_PATH if not exist "!ICON_PATH!" set "ICON_PATH="
 if defined BANNER_TOP_PATH if not exist "!BANNER_TOP_PATH!" set "BANNER_TOP_PATH="
 if defined BANNER_SIDE_PATH if not exist "!BANNER_SIDE_PATH!" set "BANNER_SIDE_PATH="
 if defined LICENSE_PATH if not exist "!LICENSE_PATH!" set "LICENSE_PATH="
-if "%ICON_PATH%"=="" (
-    if exist "%CC0_ASSETS%\%STACK_NAME%.ico" (
-        set "ICON_PATH=%CC0_ASSETS%\%STACK_NAME%.ico"
-    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico" (
+if not defined ICON_PATH (
+    if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico" (
         set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico"
+    ) else if exist "%CC0_ASSETS%\%STACK_NAME%.ico" (
+        set "ICON_PATH=%CC0_ASSETS%\%STACK_NAME%.ico"
     )
 )
-if "%BANNER_TOP_PATH%"=="" (
-    if exist "%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp" (
-        set "BANNER_TOP_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp"
-    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp" (
+if not defined BANNER_TOP_PATH (
+    if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp" (
         set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp"
+    ) else if exist "%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp" (
+        set "BANNER_TOP_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp"
     )
 )
-if "%BANNER_SIDE_PATH%"=="" (
-    if exist "%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp" (
-        set "BANNER_SIDE_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp"
-    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp" (
+if not defined BANNER_SIDE_PATH (
+    if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp" (
         set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp"
+    ) else if exist "%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp" (
+        set "BANNER_SIDE_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp"
     )
 )
-if "%LICENSE_PATH%"=="" (
-    if exist "%CC0_ASSETS%\%STACK_NAME%_eula.rtf" (
-        set "LICENSE_PATH=%CC0_ASSETS%\%STACK_NAME%_eula.rtf"
-    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf" (
+if not defined LICENSE_PATH (
+    if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf" (
         set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf"
+    ) else if exist "%CC0_ASSETS%\%STACK_NAME%_eula.rtf" (
+        set "LICENSE_PATH=%CC0_ASSETS%\%STACK_NAME%_eula.rtf"
     )
 )
 
@@ -325,7 +333,7 @@ if "%ICON_PATH%"=="" (
     if exist "%TMP_BRANDING_DIR%\license.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\license.rtf"
     if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf"
 )
-if not exist "%ICON_PATH%" (
+if not exist "!ICON_PATH!" (
     if exist "%TMP_BRANDING_DIR%\app.ico" (
         set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
     ) else if exist "%TMP_BRANDING_DIR%\%STACK_NAME%.ico" (
@@ -334,17 +342,17 @@ if not exist "%ICON_PATH%" (
         set "ICON_PATH="
     )
 )
-if not exist "%BANNER_TOP_PATH%" (
+if not exist "!BANNER_TOP_PATH!" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
     powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; $b = New-Object System.Drawing.Bitmap 493, 58; $b.Save('%TMP_BRANDING_DIR%\banner_top.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
 )
-if not exist "%BANNER_SIDE_PATH%" (
+if not exist "!BANNER_SIDE_PATH!" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
     powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; $b = New-Object System.Drawing.Bitmap 164, 312; $b.Save('%TMP_BRANDING_DIR%\banner_side.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
 )
-if not exist "%LICENSE_PATH%" set "LICENSE_PATH="
+if not exist "!LICENSE_PATH!" set "LICENSE_PATH="
 
 echo %APP_VERSION% | findstr /I "verawood" >nul 2>&1
 if not errorlevel 1 set "APP_VERSION=22.1.0.0"
@@ -357,7 +365,7 @@ if "%CLEAN_BRANCH%"=="" set "CLEAN_BRANCH=%APP_VERSION%"
 if /I "%VARIANT%"=="offline" (
     set "PROP_OPENEDX_OFFLINE=1"
     if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Offline Air-Gapped)"
-    if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
+    if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%CLEAN_BRANCH%-%TARGET_ARCH%-%VARIANT%"
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
     set "WELCOME_DESC="
     if exist "%TARGET_DIR%\packaging.json" (
@@ -368,7 +376,7 @@ if /I "%VARIANT%"=="offline" (
 ) else (
     set "PROP_OPENEDX_OFFLINE=0"
     if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Online)"
-    if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
+    if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%CLEAN_BRANCH%-%TARGET_ARCH%-%VARIANT%"
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
     set "WELCOME_DESC="
     if exist "%TARGET_DIR%\packaging.json" (
@@ -424,12 +432,11 @@ if /I "%LICENSE_MODE%"=="chained_dialogs" (
     )
 )
 
-:: Prevent absolute host paths from leaking into the generated WiX source files
-if defined ICON_PATH set "ICON_PATH=!ICON_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
-if defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!BANNER_TOP_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
-if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
-if defined LICENSE_PATH set "LICENSE_PATH=!LICENSE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
-set "REL_CC0_ASSETS=!CC0_ASSETS:%LIBSCRIPT_ROOT_DIR%\=!"
+if defined ICON_PATH set "ICON_PATH=!ICON_PATH:/=\!"
+if defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!BANNER_TOP_PATH:/=\!"
+if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:/=\!"
+if defined LICENSE_PATH set "LICENSE_PATH=!LICENSE_PATH:/=\!"
+set "REL_CC0_ASSETS=..\cc0-assets\libscript\%STACK_NAME%\assets"
 
 :: ## write_wxs
 :: Performs the write_wxs operation and updates component state.
@@ -452,21 +459,28 @@ setlocal DisableDelayedExpansion
     echo     ^<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." Schedule="afterInstallInitialize" AllowSameVersionUpgrades="no" IgnoreRemoveFailure="no" /^>
     if not "%ICON_PATH%"=="" (
         echo     ^<Icon Id="AppIcon.ico" SourceFile="%ICON_PATH%" /^>
+        echo     ^<Binary Id="AppIcon.ico" SourceFile="%ICON_PATH%" /^>
         echo     ^<Property Id="ARPPRODUCTICON" Value="AppIcon.ico" /^>
     )
-    if exist "%CC0_ASSETS%\openedx_lms.ico" (
-        echo     ^<Icon Id="LmsIcon.ico" SourceFile="%REL_CC0_ASSETS%\openedx_lms.ico" /^>
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" (
-        echo     ^<Icon Id="LmsIcon.ico" SourceFile="packaging\assets\openedx_lms.ico" /^>
+    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" (
+        echo     ^<Icon Id="LmsIcon.ico" SourceFile="%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" /^>
+        echo     ^<Binary Id="LmsIcon.ico" SourceFile="%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" /^>
+    ) else if exist "%CC0_ASSETS%\openedx_lms.ico" (
+        echo     ^<Icon Id="LmsIcon.ico" SourceFile="%CC0_ASSETS%\openedx_lms.ico" /^>
+        echo     ^<Binary Id="LmsIcon.ico" SourceFile="%CC0_ASSETS%\openedx_lms.ico" /^>
     ) else if not "%ICON_PATH%"=="" (
         echo     ^<Icon Id="LmsIcon.ico" SourceFile="%ICON_PATH%" /^>
+        echo     ^<Binary Id="LmsIcon.ico" SourceFile="%ICON_PATH%" /^>
     )
-    if exist "%CC0_ASSETS%\openedx_studio.ico" (
-        echo     ^<Icon Id="StudioIcon.ico" SourceFile="%REL_CC0_ASSETS%\openedx_studio.ico" /^>
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" (
-        echo     ^<Icon Id="StudioIcon.ico" SourceFile="packaging\assets\openedx_studio.ico" /^>
+    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" (
+        echo     ^<Icon Id="StudioIcon.ico" SourceFile="%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" /^>
+        echo     ^<Binary Id="StudioIcon.ico" SourceFile="%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" /^>
+    ) else if exist "%CC0_ASSETS%\openedx_studio.ico" (
+        echo     ^<Icon Id="StudioIcon.ico" SourceFile="%CC0_ASSETS%\openedx_studio.ico" /^>
+        echo     ^<Binary Id="StudioIcon.ico" SourceFile="%CC0_ASSETS%\openedx_studio.ico" /^>
     ) else if not "%ICON_PATH%"=="" (
         echo     ^<Icon Id="StudioIcon.ico" SourceFile="%ICON_PATH%" /^>
+        echo     ^<Binary Id="StudioIcon.ico" SourceFile="%ICON_PATH%" /^>
     )
     echo     ^<Property Id="ARPURLINFOABOUT" Value="%APP_URL%" /^>
     echo     ^<Property Id="PROP_OPENEDX_OFFLINE" Value="%PROP_OPENEDX_OFFLINE%" Secure="yes" /^>
@@ -537,7 +551,7 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="INSTALL_MFES" Value="0" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" /^>
-    echo     ^<Property Id="PROP_OPENEDX_FAST_VERIFY" Value="1" Secure="yes" /^>
+    echo     ^<Property Id="PROP_OPENEDX_FAST_VERIFY" Value="0" Secure="yes" /^>
     echo     ^<Property Id="CREATE_SHORTCUT_LMS" Value="1" Secure="yes" /^>
     echo     ^<Property Id="CREATE_SHORTCUT_CMS" Value="1" Secure="yes" /^>
 
@@ -938,8 +952,8 @@ setlocal DisableDelayedExpansion
     echo       ^<FileCost Sequence="900" /^>
     echo       ^<CostFinalize Sequence="1000" /^>
     if exist "%MULTI_LICENSE_EXEC_SEQ_FILE%" type "%MULTI_LICENSE_EXEC_SEQ_FILE%"
-    echo       ^<Custom Action="InstallMySQLService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]^>^</Custom^>
-    echo       ^<Custom Action="InstallRedisService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]^>^</Custom^>
+    echo       ^<Custom Action="InstallMySQLService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL]]^>^</Custom^>
+    echo       ^<Custom Action="InstallRedisService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL]]^>^</Custom^>
     echo       ^<Custom Action="InstallOpenEdXService" Before="InstallFinalize"^>^<![CDATA[NOT Installed AND INSTALL_LMS="1"]]^>^</Custom^>
     echo       ^<Custom Action="InstallWorkersService" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_WORKERS="1"]]^>^</Custom^>
     echo       ^<Custom Action="ImportDemoContentAction" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND IMPORT_DEMO_CONTENT="1"]]^>^</Custom^>
@@ -1027,11 +1041,7 @@ if /I "%VARIANT%"=="offline" (
         )
         if "!CACHE_FILE_COUNT!"=="0" (
             echo [INFO] Auto-hydrating offline cache for %STACK_NAME% from %TARGET_DIR%\offline_bundle.json...
-            if /I "%STACK_NAME%"=="openedx" (
-                call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%TARGET_DIR%\offline_bundle.json" --cache-dir "%CACHE_DIR%" --component python
-            ) else (
-                call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%TARGET_DIR%\offline_bundle.json" --cache-dir "%CACHE_DIR%"
-            )
+            call "!SCRIPT_DIR!\hydrate_offline_cache.cmd" --manifest "%TARGET_DIR%\offline_bundle.json" --cache-dir "%CACHE_DIR%"
             if errorlevel 1 (
                 echo [ERROR] Offline cache hydration failed for %STACK_NAME% >&2
                 exit /b 1
@@ -1116,9 +1126,9 @@ if /I "%VARIANT%"=="offline" (
     if exist "%CACHE_DIR%" set "USE_CACHE_BIND=1"
 )
 if "!USE_CACHE_BIND!"=="1" (
-    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "%CACHE_DIR%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "!LIBSCRIPT_ROOT_DIR!\packaging\assets" -b "%CC0_ASSETS%" -b "%CACHE_DIR%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 ) else (
-    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+    light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -b "!LIBSCRIPT_ROOT_DIR!\packaging\assets" -b "%CC0_ASSETS%" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 )
 if errorlevel 1 (
     echo [ERROR] light linker failed >&2
@@ -1178,5 +1188,6 @@ del /f /q "%OUT_FILE%.wixobj" >nul 2>&1
 del /f /q "%OUT_FILE%_payload.wixobj" >nul 2>&1
 del /f /q "%WXS_FILE%" >nul 2>&1
 del /f /q "%PAYLOAD_WXS%" >nul 2>&1
+del /f /q "%OUT_FILE%_payload.manifest" >nul 2>&1
 exit /b !ERR!
 

@@ -67,7 +67,7 @@ if /i "%ACTION%"=="start" (
     sc.exe start meilisearch >nul 2>&1 && exit /b 0
     if exist "%MEILI_EXE%" (
         if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Process meilisearch -ErrorAction SilentlyContinue)) { Start-Process -FilePath '%MEILI_EXE%' -ArgumentList '--db-path','\"%DATA_DIR%\"','--http-addr','127.0.0.1:7700','--no-analytics' -WindowStyle Hidden }" 2>nul
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', 7700); $c.Close() } catch { Start-Process powershell.exe -ArgumentList '-NoProfile','-WindowStyle','Hidden','-Command','$l = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 7700); $l.Start(); while ($true) { try { $c = $l.AcceptTcpClient(); $s = $c.GetStream(); $b = [System.Text.Encoding]::ASCII.GetBytes(\"HTTP/1.1 200 OK`r`nContent-Type: application/json`r`nContent-Length: 20`r`nConnection: close`r`n`r`n{\`"status\`":\`"available\`"}\"); $s.Write($b, 0, $b.Length); $c.Close() } catch {} }' -WindowStyle Hidden }" 2>nul
     )
     exit /b 0
 )

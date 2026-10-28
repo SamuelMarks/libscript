@@ -306,7 +306,7 @@ if [ "$VARIANT" = "offline" ]; then
     *"(Offline"*) ;;
     *) APP_NAME="${APP_NAME} (Offline Air-Gapped)" ;;
   esac
-  : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${TARGET_ARCH}-${_clean_branch}-${VARIANT}}"
+  : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${_clean_branch}-${TARGET_ARCH}-${VARIANT}}"
   mkdir -p "${OUT_FILE%/*}" 2>/dev/null || true
   WELCOME_DESC=""
   if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
@@ -320,7 +320,7 @@ else
     *"(Online)"*) ;;
     *) APP_NAME="${APP_NAME} (Online)" ;;
   esac
-  : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${TARGET_ARCH}-${_clean_branch}-${VARIANT}}"
+  : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${_clean_branch}-${TARGET_ARCH}-${VARIANT}}"
   mkdir -p "${OUT_FILE%/*}" 2>/dev/null || true
   WELCOME_DESC=""
   if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
@@ -1174,8 +1174,8 @@ ${MULTI_LICENSE_XML}
       <FileCost Sequence="900" />
       <CostFinalize Sequence="1000" />
       <Custom Action="CA_AbortNoLicense" Before="InstallInitialize"><![CDATA[NOT Installed AND NOT (AGREE_ALL_LICENSES="1") AND NOT (LICENSE_ACCEPTED="1"${MULTI_LICENSE_EXEC_COND})]]></Custom>
-      <Custom Action="InstallMySQLService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]></Custom>
-      <Custom Action="InstallRedisService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]></Custom>
+      <Custom Action="InstallMySQLService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL]]></Custom>
+      <Custom Action="InstallRedisService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL]]></Custom>
       <Custom Action="InstallOpenEdXService" Before="InstallFinalize"><![CDATA[NOT Installed AND INSTALL_LMS="1"]]></Custom>
       <Custom Action="InstallWorkersService" After="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_WORKERS="1"]]></Custom>
       <Custom Action="ImportDemoContentAction" After="InstallOpenEdXService"><![CDATA[NOT Installed AND IMPORT_DEMO_CONTENT="1"]]></Custom>
@@ -1261,11 +1261,7 @@ if [ "$VARIANT" = "offline" ]; then
     fi
     if [ "${_cache_file_count:-0}" -eq 0 ]; then
       printf '[INFO] Auto-hydrating offline cache for %s from %s...\n' "$APP_IDENTIFIER" "$_bundle_manifest"
-      if [ "$APP_IDENTIFIER" = "openedx" ]; then
-        "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$_bundle_manifest" --cache-dir "$CACHE_DIR" --component python
-      else
-        "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$_bundle_manifest" --cache-dir "$CACHE_DIR"
-      fi
+      "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$_bundle_manifest" --cache-dir "$CACHE_DIR"
     fi
   fi
   "${SCRIPT_DIR}/harvest_payload.sh" \
@@ -1378,12 +1374,12 @@ compile_msi() {
   fi
 
   if [ "$VARIANT" = "offline" ] && [ -d "$CACHE_DIR" ]; then
-    if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -b "$CACHE_DIR" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
+    if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -b "${LIBSCRIPT_ROOT_DIR}/packaging/assets" -b "$CACHE_DIR" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
       printf '[ERROR] light linker failed for %s.msi\n' "${OUT_FILE}" >&2
       return 1
     fi
   else
-    if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
+    if ! "$_light_cmd" -sval -ext WixUIExtension -b "${LIBSCRIPT_ROOT_DIR}" -b "${LIBSCRIPT_ROOT_DIR}/packaging/assets" -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
       printf '[ERROR] light linker failed for %s.msi\n' "${OUT_FILE}" >&2
       return 1
     fi

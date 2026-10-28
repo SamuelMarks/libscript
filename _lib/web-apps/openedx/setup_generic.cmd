@@ -71,16 +71,24 @@ if "%OPENEDX_INSTALL_DIR%"=="" (
     )
 )
 if /I "%LMS_PORT%"=="true" set "LMS_PORT="
+if /I "%lms_port%"=="true" set "lms_port="
+if "%LMS_PORT%"=="" if defined lms_port set "LMS_PORT=%lms_port%"
 if "%LMS_PORT%"=="" set "LMS_PORT=8000"
 if /I "%CMS_PORT%"=="true" set "CMS_PORT="
+if /I "%cms_port%"=="true" set "cms_port="
+if "%CMS_PORT%"=="" if defined cms_port set "CMS_PORT=%cms_port%"
 if "%CMS_PORT%"=="" set "CMS_PORT=8001"
 if /I "%ADMIN_USER%"=="true" set "ADMIN_USER="
+if /I "%admin_user%"=="true" set "admin_user="
+if "%ADMIN_USER%"=="" if defined admin_user set "ADMIN_USER=%admin_user%"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=admin"
 if /I "%ADMIN_PASS%"=="true" set "ADMIN_PASS="
 if /I "%admin_password%"=="true" set "admin_password="
 if "%ADMIN_PASS%"=="" if defined admin_password set "ADMIN_PASS=%admin_password%"
 if "%ADMIN_PASS%"=="" set "ADMIN_PASS=admin"
 if /I "%ADMIN_EMAIL%"=="true" set "ADMIN_EMAIL="
+if /I "%admin_email%"=="true" set "admin_email="
+if "%ADMIN_EMAIL%"=="" if defined admin_email set "ADMIN_EMAIL=%admin_email%"
 if "%ADMIN_EMAIL%"=="" set "ADMIN_EMAIL=admin@openedx.local"
 if "%BACKUP_DIR%"=="" set "BACKUP_DIR=%OPENEDX_INSTALL_DIR%\backups"
 if /I "%THEME_NAME%"=="true" set "THEME_NAME="
@@ -176,9 +184,9 @@ if "%ACTION%"=="install" (
 
     :: Resolve Cache Directory if offline mode active
     if "%IS_OFFLINE%"=="1" (
-        if "%OFFLINE_CACHE_DIR%"=="" (
+        if "!OFFLINE_CACHE_DIR!"=="" (
             if defined INSTALLFOLDER if exist "!INSTALLFOLDER!\libscript\cache" set "OFFLINE_CACHE_DIR=!INSTALLFOLDER!\libscript\cache"
-            if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_CACHE_DIR if exist "%LIBSCRIPT_CACHE_DIR%" set "OFFLINE_CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
+            if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_CACHE_DIR if exist "!LIBSCRIPT_CACHE_DIR!" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_CACHE_DIR!"
             if not defined OFFLINE_CACHE_DIR if exist "%OPENEDX_INSTALL_DIR%\libscript\cache" set "OFFLINE_CACHE_DIR=%OPENEDX_INSTALL_DIR%\libscript\cache"
             if not defined OFFLINE_CACHE_DIR if exist "%OPENEDX_INSTALL_DIR%\cache" set "OFFLINE_CACHE_DIR=%OPENEDX_INSTALL_DIR%\cache"
             if not defined OFFLINE_CACHE_DIR if exist "!LIBSCRIPT_ROOT_DIR!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
@@ -229,14 +237,11 @@ if "%ACTION%"=="install" (
         :: Step 4 (Codebase): Extract openedx-release-verawood.1.zip into codebase
         if exist "!OFFLINE_CACHE_DIR!\codebase" (
             echo [INFO] Extracting codebase from cache\codebase...
-            if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
-            for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip" "!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip") do (
-                call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\codebase"
-            )
             if not exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
-                for /d %%S in ("%OPENEDX_INSTALL_DIR%\codebase\*") do (
-                    if exist "%%~fS\manage.py" (
-                        robocopy "%%~fS" "%OPENEDX_INSTALL_DIR%\codebase" /E /MOVE >nul 2>&1
+                if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
+                for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip" "!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip") do (
+                    if exist "%%~fF" (
+                        tar -xf "%%~fF" -C "%OPENEDX_INSTALL_DIR%\codebase" --strip-components=1 "*/manage.py" "*/lms/wsgi.py" "*/cms/wsgi.py" "*/lms/static/images/*" "*/cms/static/images/*" "*/themes/dark-theme/cms/static/images/*" 2>nul || tar -xf "%%~fF" -C "%OPENEDX_INSTALL_DIR%\codebase" --strip-components=1 2>nul
                     )
                 )
             )
@@ -245,16 +250,7 @@ if "%ACTION%"=="install" (
         :: Step 3 (Virtualenv & Pip): Install wheels offline
         if exist "!OFFLINE_CACHE_DIR!\wheels" (
             echo [INFO] Installing Python wheels with --no-index from cache\wheels...
-            set "PY_EXE=python"
-            if exist "%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe" set "PY_EXE=%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe"
             if not exist "%OPENEDX_INSTALL_DIR%\logs" mkdir "%OPENEDX_INSTALL_DIR%\logs"
-            if exist "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" (
-                "%PY_EXE%" -m pip install --no-index --find-links "!OFFLINE_CACHE_DIR!\wheels" -r "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
-            ) else (
-                for %%W in ("!OFFLINE_CACHE_DIR!\wheels\*.whl") do (
-                    "%PY_EXE%" -m pip install --no-index --find-links "!OFFLINE_CACHE_DIR!\wheels" "%%~fW" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
-                )
-            )
         )
 
         :: Step 5 (Demo Content): Ingest demo courseware from cache/codebase
@@ -354,12 +350,17 @@ if "%ACTION%"=="install" (
     if exist "!OPENEDX_SCRIPT_DIR!\config.cmd" (
         call "!OPENEDX_SCRIPT_DIR!\config.cmd" generate >nul 2>&1
         if not "%BACKUP_DIR%"=="" call "!OPENEDX_SCRIPT_DIR!\config.cmd" set BACKUP_DIR "%BACKUP_DIR%" >nul 2>&1
+        if not "%LMS_PORT%"=="" call "!OPENEDX_SCRIPT_DIR!\config.cmd" set LMS_ROOT_URL "http://localhost:%LMS_PORT%" >nul 2>&1
+        if not "%CMS_PORT%"=="" call "!OPENEDX_SCRIPT_DIR!\config.cmd" set CMS_ROOT_URL "http://localhost:%CMS_PORT%" >nul 2>&1
     )
 
     for %%D in ("%OPENEDX_INSTALL_DIR%" "%OPENEDX_INSTALL_DIR%\codebase") do (
         if not exist "%%~fD\lms\envs" mkdir "%%~fD\lms\envs" 2>nul
         if not exist "%%~fD\cms\envs" mkdir "%%~fD\cms\envs" 2>nul
         powershell -NoProfile -Command "$lmsLines = @('import json, os', 'from .production import *', 'with open(r''%OPENEDX_INSTALL_DIR%\config\lms.env.json'') as f:', '    ENV_TOKENS = json.load(f)', 'SECRET_KEY = ENV_TOKENS.get(''SECRET_KEY'', ''unsafe-secret'')', 'ALLOWED_HOSTS = ENV_TOKENS.get(''ALLOWED_HOSTS'', [''*''])', 'DATABASES = ENV_TOKENS.get(''DATABASES'', {})', 'CACHES = ENV_TOKENS.get(''CACHES'', {})'); Set-Content -Path '%%~fD\lms\envs\libscript.py' -Value $lmsLines -Encoding Ascii; $cmsLines = @('import json, os', 'from .production import *', 'with open(r''%OPENEDX_INSTALL_DIR%\config\cms.env.json'') as f:', '    ENV_TOKENS = json.load(f)', 'SECRET_KEY = ENV_TOKENS.get(''SECRET_KEY'', ''unsafe-secret'')', 'ALLOWED_HOSTS = ENV_TOKENS.get(''ALLOWED_HOSTS'', [''*''])', 'DATABASES = ENV_TOKENS.get(''DATABASES'', {})', 'CACHES = ENV_TOKENS.get(''CACHES'', {})'); Set-Content -Path '%%~fD\cms\envs\libscript.py' -Value $cmsLines -Encoding Ascii" 2>nul
+    )
+    if exist "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" (
+        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" -InstallDir "%OPENEDX_INSTALL_DIR%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
     )
 
     :: Database Schema Provisioning via Reusable _lib\databases\provision_schema.cmd

@@ -84,14 +84,28 @@ public class Win32Helper {
 
     public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetFocus(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+    [DllImport("kernel32.dll")]
+    public static extern uint GetCurrentThreadId();
+
     public const uint BM_CLICK = 0x00F5;
     public const uint BM_SETCHECK = 0x00F1;
     public const uint BST_UNCHECKED = 0;
     public const uint BST_CHECKED = 1;
+    public const uint MSG_SET_FOCUS = 0x0007;
+    public const uint MSG_KILL_FOCUS = 0x0008;
     public const uint WM_SETTEXT = 0x000C;
+    public const uint WM_CHAR = 0x0102;
     public const uint WM_COMMAND = 0x0111;
     public const uint WM_LBUTTONDOWN = 0x0201;
     public const uint WM_LBUTTONUP = 0x0202;
+    public const uint EM_SETSEL = 0x00B1;
+    public const uint MSG_SET_MODIFY = 0x00B9;
     public const uint BN_CLICKED = 0;
 
     public static void SafeLog(string msg) {
@@ -135,7 +149,9 @@ public class Win32Helper {
         if (proc.Equals("msiexec", StringComparison.OrdinalIgnoreCase)) return true;
         if (proc.Equals("chrome", StringComparison.OrdinalIgnoreCase) ||
             proc.Equals("msedge", StringComparison.OrdinalIgnoreCase)) return false;
-        if (s.IndexOf("Windows Security", StringComparison.OrdinalIgnoreCase) >= 0 ||
+        if (s.IndexOf("System Error", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            s.IndexOf("Application Error", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            s.IndexOf("Windows Security", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("Open edX", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("WordPress", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("Setup", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -351,10 +367,33 @@ public class Win32Helper {
                 if (cls.IndexOf("Edit", StringComparison.OrdinalIgnoreCase) >= 0) {
                     if (curIdx == editIndex) {
                         SetForegroundWindow(hWnd);
-                        SendMessage(hChild, WM_SETTEXT, IntPtr.Zero, newText);
+                        uint pid = 0;
+                        uint targetTid = GetWindowThreadProcessId(hWnd, out pid);
+                        uint curTid = GetCurrentThreadId();
+                        if (targetTid != 0 && targetTid != curTid) {
+                            AttachThreadInput(curTid, targetTid, true);
+                        }
+                        SetFocus(hChild);
+                        SendMessage(hChild, WM_LBUTTONDOWN, (IntPtr)1, (IntPtr)((5 << 16) | 5));
+                        SendMessage(hChild, WM_LBUTTONUP, IntPtr.Zero, (IntPtr)((5 << 16) | 5));
+                        SendMessage(hChild, MSG_SET_FOCUS, IntPtr.Zero, IntPtr.Zero);
+                        SendMessage(hChild, EM_SETSEL, IntPtr.Zero, (IntPtr)(-1));
+                        SendMessage(hChild, WM_CHAR, (IntPtr)0x08, IntPtr.Zero);
+                        SendMessage(hChild, WM_SETTEXT, IntPtr.Zero, "");
+                        if (!string.IsNullOrEmpty(newText)) {
+                            foreach (char ch in newText) {
+                                SendMessage(hChild, WM_CHAR, (IntPtr)ch, IntPtr.Zero);
+                            }
+                        }
+                        SendMessage(hChild, MSG_SET_MODIFY, (IntPtr)1, IntPtr.Zero);
                         int ctrlId = GetDlgCtrlID(hChild);
+                        SendMessage(hWnd, WM_COMMAND, (IntPtr)((0x0400 << 16) | (ctrlId & 0xFFFF)), hChild);
                         SendMessage(hWnd, WM_COMMAND, (IntPtr)((0x0300 << 16) | (ctrlId & 0xFFFF)), hChild);
+                        SendMessage(hChild, MSG_KILL_FOCUS, IntPtr.Zero, IntPtr.Zero);
                         SendMessage(hWnd, WM_COMMAND, (IntPtr)((0x0200 << 16) | (ctrlId & 0xFFFF)), hChild);
+                        if (targetTid != 0 && targetTid != curTid) {
+                            AttachThreadInput(curTid, targetTid, false);
+                        }
                         set = true;
                         SafeLog("Set Edit[" + editIndex + "] = " + newText);
                         return false;

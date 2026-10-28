@@ -156,7 +156,7 @@ if not exist "%TARGET_DIR%\bin\mongod.exe" (
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     set "_MONGO_CACHED="
     if defined LIBSCRIPT_CACHE_DIR (
-        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\databases\mongodb*.zip" "%LIBSCRIPT_CACHE_DIR%\datastores\mongodb*.zip") do (
+        for %%Z in ("!LIBSCRIPT_CACHE_DIR!\databases\mongodb*.zip" "!LIBSCRIPT_CACHE_DIR!\datastores\mongodb*.zip") do (
             if exist "%%~fZ" set "_MONGO_CACHED=%%~fZ"
         )
     )

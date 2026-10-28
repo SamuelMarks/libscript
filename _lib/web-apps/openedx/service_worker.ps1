@@ -68,6 +68,7 @@ function Start-OpenEdxServices {
     $waitressExe = Join-Path (Split-Path -Parent $pyExe) "waitress-serve.exe"
     $env:LMS_CFG = Join-Path $openEdxDir "config\lms.env.json"
     $env:CMS_CFG = Join-Path $openEdxDir "config\cms.env.json"
+    $env:PYTHONPATH = $codebaseDir
 
     if (Test-Path $waitressExe) {
         $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript"
@@ -75,8 +76,10 @@ function Start-OpenEdxServices {
         $env:DJANGO_SETTINGS_MODULE = "cms.envs.libscript"
         $cmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$CmsPort", "cms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
     } else {
-        $lmsProc = Start-Process -FilePath $pyExe -ArgumentList "`"$managePy`"", "lms", "--settings=libscript", "runserver", "--insecure", "0.0.0.0:$LmsPort", "--noreload" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
-        $cmsProc = Start-Process -FilePath $pyExe -ArgumentList "`"$managePy`"", "cms", "--settings=libscript", "runserver", "--insecure", "0.0.0.0:$CmsPort", "--noreload" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
+        $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript"
+        $lmsProc = Start-Process -FilePath $pyExe -ArgumentList "-m", "waitress", "--listen=0.0.0.0:$LmsPort", "lms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
+        $env:DJANGO_SETTINGS_MODULE = "cms.envs.libscript"
+        $cmsProc = Start-Process -FilePath $pyExe -ArgumentList "-m", "waitress", "--listen=0.0.0.0:$CmsPort", "cms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
     }
 
     Set-Content -Path (Join-Path $runDir "lms.pid") -Value $lmsProc.Id -Encoding Ascii

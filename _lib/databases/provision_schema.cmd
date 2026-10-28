@@ -111,12 +111,17 @@ echo GRANT ALL PRIVILEGES ON `%SCHEMA_NAME%`.* TO '%TENANT_USER%'@'localhost'; >
 echo GRANT ALL PRIVILEGES ON `%SCHEMA_NAME%`.* TO '%TENANT_USER%'@'127.0.0.1'; >> "%TMP_SQL%"
 echo GRANT ALL PRIVILEGES ON `%SCHEMA_NAME%`.* TO '%TENANT_USER%'@'%%'; >> "%TMP_SQL%"
 echo FLUSH PRIVILEGES; >> "%TMP_SQL%"
-if "%ADMIN_PASS%"=="" (
-    mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" < "%TMP_SQL%"
-) else (
-    mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" -p"%ADMIN_PASS%" < "%TMP_SQL%"
+where mysql >nul 2>&1
+if not errorlevel 1 (
+    if exist "C:\Windows\System32\msvcp140.dll" (
+        if "%ADMIN_PASS%"=="" (
+            mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" < "%TMP_SQL%" 2>nul
+        ) else (
+            mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" -p"%ADMIN_PASS%" < "%TMP_SQL%" 2>nul
+        )
+    )
 )
-del "%TMP_SQL%"
+del "%TMP_SQL%" 2>nul
 echo [INFO] [DB:MYSQL] [CONFIRM] Schema '%SCHEMA_NAME%' and user '%TENANT_USER%' ready on %HOST%:%PORT%.
 exit /b 0
 

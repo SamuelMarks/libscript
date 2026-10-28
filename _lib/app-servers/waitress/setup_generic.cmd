@@ -52,6 +52,10 @@ goto :find_root
 if "%ACTION%"=="" set "ACTION=install"
 
 if "%ACTION%"=="install" (
+    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" (
+        echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
+        exit /b 0
+    )
     where waitress-serve >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] waitress is already installed on Windows.
@@ -63,15 +67,7 @@ if "%ACTION%"=="install" (
         uv tool install waitress >nul 2>&1 || uv pip install waitress
         exit /b 0
     )
-    where pip >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] Installing waitress via pip...
-        pip install --user waitress
-        exit /b 0
-    )
     for %%P in (
-        "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
-        "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
         "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
         "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
         "C:\Program Files\Python312\python.exe"
@@ -84,16 +80,8 @@ if "%ACTION%"=="install" (
             exit /b 0
         )
     )
-    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" (
-        echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
-        exit /b 0
-    )
-    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" (
-        echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
-        exit /b 0
-    )
-    echo [ERROR] Python environment with pip or uv required to install waitress.
-    exit /b 1
+    echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
+    exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     where uv >nul 2>&1 && uv tool uninstall waitress >nul 2>&1
     where pip >nul 2>&1 && pip uninstall -y waitress >nul 2>&1

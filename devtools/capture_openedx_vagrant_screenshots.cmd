@@ -84,6 +84,12 @@ goto :main
 :main
 set "REPO_ROOT=%SCRIPT_DIR%\.."
 
+where sh.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    sh.exe "%SCRIPT_DIR%\capture_openedx_vagrant_screenshots.sh" %*
+    exit /b %ERRORLEVEL%
+)
+
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
     powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\capture_openedx_vagrant_screenshots.ps1" %*
@@ -96,5 +102,5 @@ if %ERRORLEVEL% EQU 0 (
     exit /b %ERRORLEVEL%
 )
 
-echo [ERROR] PowerShell interpreter not found to run screenshot automation. >&2
+echo [ERROR] POSIX sh or PowerShell interpreter not found to run screenshot automation. >&2
 exit /b 1
