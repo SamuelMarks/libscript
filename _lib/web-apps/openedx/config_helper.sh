@@ -125,8 +125,12 @@ do_set() {
   done
 
   _cf_dir=$(dirname "${_cf1}")
-  [ -f "${_cf1}" ] && cp -f "${_cf1}" "${_cf_dir}/lms.yml" 2>/dev/null || true
-  [ -f "${_cf2}" ] && cp -f "${_cf2}" "${_cf_dir}/cms.yml" 2>/dev/null || true
+  if [ -f "${_cf1}" ]; then
+    cp -f "${_cf1}" "${_cf_dir}/lms.yml" 2>/dev/null || true
+  fi
+  if [ -f "${_cf2}" ]; then
+    cp -f "${_cf2}" "${_cf_dir}/cms.yml" 2>/dev/null || true
+  fi
   printf 'Updated %s.
 ' "${_key}"
 }

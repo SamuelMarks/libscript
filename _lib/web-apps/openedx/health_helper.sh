@@ -68,14 +68,24 @@ test_tcp() {
 test_http() {
   _url="$1"
   if command -v curl >/dev/null 2>&1; then
-    _code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "${_url}" 2>/dev/null || printf '000')
+    _code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "${_url}" 2>/dev/null || true)
     case "${_code}" in
       200|301|302|401|403)
         printf 'OK (%s)' "${_code}"
         return 0
         ;;
       *)
-        printf 'FAIL (%s)' "${_code}"
+        _host_port=$(printf '%s' "${_url}" | sed -e 's|^https*://||' -e 's|/.*$||')
+        _host="${_host_port%%:*}"
+        _fallback_url=$(printf '%s' "${_url}" | sed "s|://${_host}|://127.0.0.1|")
+        _code2=$(curl -s -H "Host: ${_host}" -o /dev/null -w "%{http_code}" --connect-timeout 2 "${_fallback_url}" 2>/dev/null || true)
+        case "${_code2}" in
+          200|301|302|401|403)
+            printf 'OK (%s)' "${_code2}"
+            return 0
+            ;;
+        esac
+        printf 'FAIL (%s)' "${_code:-000}"
         return 1
         ;;
     esac

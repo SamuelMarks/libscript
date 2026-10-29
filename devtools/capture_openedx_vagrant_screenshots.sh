@@ -36,11 +36,21 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 set +f
 export LIBSCRIPT_TEST_TARGET="${LIBSCRIPT_TEST_TARGET:-openedx}"
 CC0_SCREENSHOTS_DIR="${REPO_ROOT}/../cc0-assets/libscript/openedx/screenshots"
+CC0_WINDOWS_SCREENSHOTS_DIR="${CC0_SCREENSHOTS_DIR}/windows"
 TEMP_DIR="${REPO_ROOT}/tests_tmp/vagrant_screenshots"
-VAGRANT_DIR="${REPO_ROOT}/vagrant/windows-11"
+if [ -n "${BENTO_VAGRANT_DIR:-}" ] && [ -d "${BENTO_VAGRANT_DIR}" ]; then
+  VAGRANT_DIR="${BENTO_VAGRANT_DIR}"
+elif [ -d "${REPO_ROOT}/vagrant/windows-11/.vagrant" ]; then
+  VAGRANT_DIR="${REPO_ROOT}/vagrant/windows-11"
+elif [ -d "${REPO_ROOT}/../bento" ]; then
+  VAGRANT_DIR="${REPO_ROOT}/../bento"
+else
+  VAGRANT_DIR="${REPO_ROOT}/vagrant/windows-11"
+fi
+RELEASE_MSI_URL="${OPENEDX_RELEASE_MSI_URL:-https://github.com/SamuelMarks/libscript/releases/download/v0.0.1/openedx-verawood.1-x64-offline.msi}"
 mkdir -p "${TEMP_DIR}"
 if [ -d "${REPO_ROOT}/../cc0-assets" ]; then
-  mkdir -p "${CC0_SCREENSHOTS_DIR}"
+  mkdir -p "${CC0_SCREENSHOTS_DIR}" "${CC0_WINDOWS_SCREENSHOTS_DIR}"
 fi
 
 # ## discover_environment
@@ -171,6 +181,9 @@ if len(parts) >= 6:
     if [ -d "${CC0_SCREENSHOTS_DIR}" ]; then
       cp -f "$_png" "${CC0_SCREENSHOTS_DIR}/${_name}.png"
     fi
+    if [ -d "${CC0_WINDOWS_SCREENSHOTS_DIR}" ]; then
+      cp -f "$_png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_name}.png"
+    fi
     rm -f "$_png"
     if [ -f "${CC0_SCREENSHOTS_DIR}/${_name}.png" ]; then
       printf '[CAPTURED] %s.png (%s bytes, mode=%s, bounds=%s)\n' "$_name" "$(wc -c < "${CC0_SCREENSHOTS_DIR}/${_name}.png" | tr -d ' ')" "$_crop_mode" "${_bounds:-full}"
@@ -260,13 +273,6 @@ register_gui_task() {
   vm_run 'New-Item -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Name "DisableNotificationCenter" -Value 1 -Type DWord -ErrorAction SilentlyContinue; New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -Value 0 -Type DWord -ErrorAction SilentlyContinue; $principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive -RunLevel Highest; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force | Out-Null'
 }
 
-# ## clean_guest_installations
-# Helper to uninstall Open edX MSI and stop background processes before a fresh mode run.
-clean_guest_installations() {
-  _msi_path="$1"
-  vm_run "Stop-Process -Name msiexec, chrome, msedge -Force -ErrorAction SilentlyContinue; \$p = Start-Process msiexec.exe -ArgumentList '/x \"${_msi_path}\" /qn /norestart' -Wait -PassThru -ErrorAction SilentlyContinue; Remove-Item -Path 'C:/Program Files/OpenEdX', 'C:/Program Files (x86)/OpenEdX', 'C:/ProgramData/OpenEdX', 'C:/Users/vagrant/.libscript/openedx', 'C:/Users/Public/Desktop/Open edX*.lnk', 'C:/Users/vagrant/Desktop/Open edX*.lnk', 'C:/Users/Public/Desktop/Google Chrome.lnk', 'C:/Users/vagrant/Desktop/Google Chrome.lnk' -Recurse -Force -ErrorAction SilentlyContinue"
-}
-
 # ## sync_guest_environment
 # Rsyncs the libscript repository and MSIs to C:\libscript on the Windows guest.
 sync_guest_environment() {
@@ -317,12 +323,33 @@ run_msi_mode_flows() {
   vm_uncheck "Launch Open edX Studio"
   vm_click "Finish"
   sleep 2
+  vm_run 'Stop-Process -Name msiexec, chrome, msedge -Force -ErrorAction SilentlyContinue'
+  vm_run 'Remove-Item -Path "C:\Users\Public\Desktop\Open edX*.lnk", "C:\Users\vagrant\Desktop\Open edX*.lnk", "C:\Users\Public\Desktop\Google Chrome.lnk", "C:\Users\vagrant\Desktop\Google Chrome.lnk" -Force -ErrorAction SilentlyContinue; cmd.exe /c call C:\libscript\packaging\create_desktop_shortcuts.cmd -Stack openedx; Start-Sleep -Seconds 2'
+  capture_screen "10b_desktop_icons" "FULL"
   verify_openedx_endpoints "${_var} - Simple Mode"
+
+  printf '\n[INFO] Quick Install Verification: Opening Studio CMS (:8001/signin) and LMS (:8000/login) in Browser...\n'
+  launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/login" "admin@openedx.local" "admin" "0"
+  capture_screen "12_browser_studio_focused" "BROWSER"
+  launch_browser_url "http://localhost:8000/login" "http://localhost:8001/signin" "admin@openedx.local" "admin" "0"
+  capture_screen "11_browser_lms_focused" "BROWSER"
+  launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/dashboard" "admin@openedx.local" "admin" "1"
+  capture_screen "14_browser_studio_authenticated" "BROWSER"
+  capture_screen "12b_browser_studio_loggedin" "BROWSER"
+  launch_browser_url "http://localhost:8000/login" "http://localhost:8001/home/" "admin@openedx.local" "admin" "1"
+  capture_screen "13_browser_lms_authenticated" "BROWSER"
+  capture_screen "11b_browser_lms_loggedin" "BROWSER"
+  vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
+
+  printf '\n=======================================================\n'
+  printf '=== Restoring Vanilla Snapshot & Rebooting VM before Custom Mode ===\n'
+  printf '=======================================================\n'
+  restore_vanilla_snapshot
+  sync_guest_environment
 
   printf '\n=======================================================\n'
   printf '=== Running %s Mode MSI Installer (Advanced Mode) ===\n' "$_var"
   printf '=======================================================\n'
-  clean_guest_installations "$_msi_win"
   vm_launch_msi "$_msi_fwd"
   vm_wait_dialog "Welcome"
   vm_click "Next"
@@ -386,24 +413,15 @@ run_msi_mode_flows() {
   sleep 2
   vm_run 'Stop-Process -Name msiexec, chrome, msedge -Force -ErrorAction SilentlyContinue'
   vm_run 'Remove-Item -Path "C:\Users\Public\Desktop\Open edX*.lnk", "C:\Users\vagrant\Desktop\Open edX*.lnk", "C:\Users\Public\Desktop\Google Chrome.lnk", "C:\Users\vagrant\Desktop\Google Chrome.lnk" -Force -ErrorAction SilentlyContinue; cmd.exe /c call C:\libscript\packaging\create_desktop_shortcuts.cmd -Stack openedx; Start-Sleep -Seconds 2'
-  if [ "$_var" = "online" ]; then
-    capture_screen "10b_desktop_icons" "FULL"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_01_simple_welcome.png" "${CC0_SCREENSHOTS_DIR}/01_simple_welcome.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_02_simple_license.png" "${CC0_SCREENSHOTS_DIR}/02_simple_license.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_03_simple_setup_type.png" "${CC0_SCREENSHOTS_DIR}/03_simple_setup_type.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_04_simple_verify_ready.png" "${CC0_SCREENSHOTS_DIR}/04_simple_verify_ready.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_05_simple_exit.png" "${CC0_SCREENSHOTS_DIR}/05_simple_exit.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_06_advanced_setup_type_selected.png" "${CC0_SCREENSHOTS_DIR}/06_advanced_setup_type_selected.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_06a_advanced_features.png" "${CC0_SCREENSHOTS_DIR}/06a_advanced_features.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_06b_advanced_install_location.png" "${CC0_SCREENSHOTS_DIR}/06b_advanced_install_location.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_06c_advanced_runtime_selection.png" "${CC0_SCREENSHOTS_DIR}/06c_advanced_runtime_selection.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_06d_advanced_source_repo.png" "${CC0_SCREENSHOTS_DIR}/06d_advanced_source_repo.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_06e_advanced_config.png" "${CC0_SCREENSHOTS_DIR}/06e_advanced_config.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_07_advanced_db.png" "${CC0_SCREENSHOTS_DIR}/07_advanced_db.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_08_advanced_cache_search.png" "${CC0_SCREENSHOTS_DIR}/08_advanced_cache_search.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_09_advanced_verify_ready.png" "${CC0_SCREENSHOTS_DIR}/09_advanced_verify_ready.png"
-    cp -f "${CC0_SCREENSHOTS_DIR}/online_10_advanced_exit.png" "${CC0_SCREENSHOTS_DIR}/10_advanced_exit.png"
-  fi
+  capture_screen "10b_desktop_icons" "FULL"
+  for _step_stem in 01_simple_welcome 02_simple_license 03_simple_setup_type 04_simple_verify_ready 05_simple_exit 06_advanced_setup_type_selected 06a_advanced_features 06b_advanced_install_location 06c_advanced_runtime_selection 06d_advanced_source_repo 06e_advanced_config 07_advanced_db 08_advanced_cache_search 09_advanced_verify_ready 10_advanced_exit; do
+    if [ -f "${CC0_SCREENSHOTS_DIR}/${_var}_${_step_stem}.png" ]; then
+      cp -f "${CC0_SCREENSHOTS_DIR}/${_var}_${_step_stem}.png" "${CC0_SCREENSHOTS_DIR}/${_step_stem}.png"
+    fi
+    if [ -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_var}_${_step_stem}.png" ]; then
+      cp -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_var}_${_step_stem}.png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_step_stem}.png"
+    fi
+  done
   verify_openedx_endpoints "${_var} - Advanced Mode"
 }
 

@@ -63,6 +63,10 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
+SCRIPT_DIR="${OPENEDX_DIR}"
+DIR="${OPENEDX_DIR}"
+export DIR
 
 ACTION="${ACTION:-install}"
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
@@ -140,11 +144,109 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --import-demo)
-      IMPORT_DEMO='1'
+      if [ "${2:-}" = "0" ] || [ "${2:-}" = "1" ]; then
+        IMPORT_DEMO="$2"
+        shift 2
+      else
+        IMPORT_DEMO='1'
+        shift
+      fi
+      ;;
+    --import-demo=*)
+      IMPORT_DEMO="${1#*=}"
       shift
       ;;
-    --enable-workers)
-      ENABLE_WORKERS='1'
+    --enable-workers|--install-workers)
+      if [ "${2:-}" = "0" ] || [ "${2:-}" = "1" ]; then
+        ENABLE_WORKERS="$2"
+        shift 2
+      else
+        ENABLE_WORKERS='1'
+        shift
+      fi
+      ;;
+    --enable-workers=*|--install-workers=*)
+      ENABLE_WORKERS="${1#*=}"
+      shift
+      ;;
+    --use-existing-python)
+      USE_EXISTING_PYTHON="$2"
+      export USE_EXISTING_PYTHON
+      shift 2
+      ;;
+    --use-existing-python=*)
+      USE_EXISTING_PYTHON="${1#*=}"
+      export USE_EXISTING_PYTHON
+      shift
+      ;;
+    --use-existing-node)
+      USE_EXISTING_NODE="$2"
+      export USE_EXISTING_NODE
+      shift 2
+      ;;
+    --use-existing-node=*)
+      USE_EXISTING_NODE="${1#*=}"
+      export USE_EXISTING_NODE
+      shift
+      ;;
+    --install-mysql)
+      INSTALL_MYSQL="$2"
+      export INSTALL_MYSQL
+      shift 2
+      ;;
+    --install-mysql=*)
+      INSTALL_MYSQL="${1#*=}"
+      export INSTALL_MYSQL
+      shift
+      ;;
+    --install-redis)
+      INSTALL_REDIS="$2"
+      export INSTALL_REDIS
+      shift 2
+      ;;
+    --install-redis=*)
+      INSTALL_REDIS="${1#*=}"
+      export INSTALL_REDIS
+      shift
+      ;;
+    --install-mongodb)
+      INSTALL_MONGODB="$2"
+      export INSTALL_MONGODB
+      shift 2
+      ;;
+    --install-mongodb=*)
+      INSTALL_MONGODB="${1#*=}"
+      export INSTALL_MONGODB
+      shift
+      ;;
+    --install-meilisearch)
+      INSTALL_MEILISEARCH="$2"
+      export INSTALL_MEILISEARCH
+      shift 2
+      ;;
+    --install-meilisearch=*)
+      INSTALL_MEILISEARCH="${1#*=}"
+      export INSTALL_MEILISEARCH
+      shift
+      ;;
+    --install-lms)
+      INSTALL_LMS="$2"
+      export INSTALL_LMS
+      shift 2
+      ;;
+    --install-lms=*)
+      INSTALL_LMS="${1#*=}"
+      export INSTALL_LMS
+      shift
+      ;;
+    --install-cms)
+      INSTALL_CMS="$2"
+      export INSTALL_CMS
+      shift 2
+      ;;
+    --install-cms=*)
+      INSTALL_CMS="${1#*=}"
+      export INSTALL_CMS
       shift
       ;;
     --install-dir)
@@ -172,7 +274,16 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --enable-mfes)
-      ENABLE_MFES='1'
+      if [ "${2:-}" = "0" ] || [ "${2:-}" = "1" ]; then
+        ENABLE_MFES="$2"
+        shift 2
+      else
+        ENABLE_MFES='1'
+        shift
+      fi
+      ;;
+    --enable-mfes=*)
+      ENABLE_MFES="${1#*=}"
       shift
       ;;
     --lms-port)
@@ -429,6 +540,15 @@ case "$ACTION" in
       if [ -f "${DIR}/windows_runtime_setup.sh" ]; then
         export OPENEDX_INSTALL_DIR
         "${DIR}/windows_runtime_setup.sh" -InstallDir "${OPENEDX_INSTALL_DIR}" >/dev/null 2>&1 || true
+      fi
+      if ! "${VENV_DIR}/bin/python" -c "import django" 2>/dev/null; then
+        if [ -d "${offline_cache_dir:-}/wheels" ]; then
+          "${VENV_DIR}/bin/python" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "Django>=4.2,<5.0" waitress >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        elif command -v uv >/dev/null 2>&1; then
+          uv pip install --python "${VENV_DIR}/bin/python" "Django>=4.2,<5.0" waitress >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        else
+          "${VENV_DIR}/bin/python" -m pip install "Django>=4.2,<5.0" waitress >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        fi
       fi
     fi
 

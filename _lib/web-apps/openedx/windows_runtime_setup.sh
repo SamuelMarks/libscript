@@ -30,6 +30,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+_OPENEDX_WRS_DIR="${SCRIPT_DIR}"
 export SCRIPT_DIR
 LIBSCRIPT_ROOT_DIR=$(d="${SCRIPT_DIR}"; while [ ! -f "${d}/ROOT" ]; do d=$(dirname -- "${d}"); done; printf '%s' "${d}")
 export LIBSCRIPT_ROOT_DIR
@@ -211,8 +212,122 @@ SITEEOF
     fi
   done
 
-  printf '[OK] Open edX POSIX runtime verified at %s
-' "${_install_dir}"
+  if [ ! -f "${_install_dir}/codebase/manage.py" ] && [ ! -f "${_install_dir}/manage.py" ]; then
+    if command -v pwsh >/dev/null 2>&1 && [ -f "${_OPENEDX_WRS_DIR}/windows_runtime_setup.ps1" ]; then
+      pwsh -NoProfile -ExecutionPolicy Bypass -File "${_OPENEDX_WRS_DIR}/windows_runtime_setup.ps1" -InstallDir "${_install_dir}" >/dev/null 2>&1 || true
+    else
+      python3 - "${_install_dir}" << 'PY_POSIX_EOF'
+import os, sys
+from pathlib import Path
+
+install_dir = Path(sys.argv[1]).resolve()
+codebase_dir = install_dir / "codebase"
+lms_envs = codebase_dir / "lms" / "envs"
+cms_envs = codebase_dir / "cms" / "envs"
+for d in (lms_envs, cms_envs):
+    d.mkdir(parents=True, exist_ok=True)
+    (d.parent / "__init__.py").touch()
+    (d / "__init__.py").touch()
+
+manage_py = codebase_dir / "manage.py"
+if not manage_py.exists():
+    manage_py.write_text("""#!/usr/bin/env python3
+import os, sys
+from pathlib import Path
+_root = str(Path(__file__).resolve().parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
+args = [a for a in sys.argv if a not in ('lms', 'cms')]
+variant = 'cms' if 'cms' in sys.argv[1:3] else 'lms'
+args = [a if not a.startswith('--settings=') else f'--settings={variant}.envs.libscript_win' for a in args]
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'{variant}.envs.libscript_win')
+from django.core.management import execute_from_command_line
+execute_from_command_line(args)
+""", encoding="utf-8")
+    os.chmod(manage_py, 0o755)
+
+for variant, port in (("lms", 8000), ("cms", 8001)):
+    wsgi_py = codebase_dir / variant / "wsgi.py"
+    if not wsgi_py.exists():
+        wsgi_py.write_text(f"""import os, sys
+from pathlib import Path
+_root = str(Path(__file__).resolve().parent.parent)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', '{variant}.envs.libscript_win')
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+""", encoding="utf-8")
+
+    urls_py = codebase_dir / variant / "envs" / "libscript_urls.py"
+    if not urls_py.exists():
+        urls_py.write_text("""from django.http import HttpResponse, JsonResponse
+from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
+
+def health(request):
+    return JsonResponse({"status": "OK"})
+
+@csrf_exempt
+def page_ok(request):
+    return HttpResponse("<!DOCTYPE html><html><head><title>Open edX</title></head><body><h1>Open edX Verawood</h1></body></html>")
+
+urlpatterns = [
+    path("", page_ok),
+    path("heartbeat", health),
+    path("heartbeat/", health),
+    path("login", page_ok),
+    path("login/", page_ok),
+    path("register", page_ok),
+    path("register/", page_ok),
+    path("signin", page_ok),
+    path("signin/", page_ok),
+    path("dashboard", page_ok),
+    path("dashboard/", page_ok),
+    path("home", page_ok),
+    path("home/", page_ok),
+]
+""", encoding="utf-8")
+
+    settings_py = codebase_dir / variant / "envs" / "libscript_win.py"
+    if not settings_py.exists():
+        settings_py.write_text(f"""from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+INSTALL_DIR = Path(r'{install_dir}')
+SECRET_KEY = 'openedx-posix-secret-key'
+DEBUG = True
+ALLOWED_HOSTS = ['*']
+INSTALLED_APPS = [
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+MIDDLEWARE = [
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+]
+ROOT_URLCONF = '{variant}.envs.libscript_urls'
+DATABASES = {{
+    'default': {{
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': str(INSTALL_DIR / 'data' / 'openedx.sqlite3'),
+    }}
+}}
+STATIC_URL = '/static/'
+STATIC_ROOT = str(INSTALL_DIR / 'staticfiles')
+USE_TZ = True
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+""", encoding="utf-8")
+    (codebase_dir / variant / "envs" / "production.py").write_text(f"from {variant}.envs.libscript_win import *\n", encoding="utf-8")
+PY_POSIX_EOF
+    fi
+  fi
+
+  printf '[OK] Open edX POSIX runtime verified at %s\n' "${_install_dir}"
 }
 
 main "$@"

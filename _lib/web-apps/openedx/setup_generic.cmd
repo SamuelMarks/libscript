@@ -175,14 +175,39 @@ if /I "%~1"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_
 if /I "%~1"=="--admin-username" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--admin-password" ( set "ADMIN_PASS=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--admin-email" ( set "ADMIN_EMAIL=%~2" & shift & shift & goto parse_args )
-if /I "%~1"=="--import-demo" ( set "IMPORT_DEMO=1" & shift & goto parse_args )
-if /I "%~1"=="--enable-workers" ( set "ENABLE_WORKERS=1" & shift & goto parse_args )
+if /I "%~1"=="--import-demo" (
+    if "%~2"=="0" ( set "IMPORT_DEMO=0" & shift & shift & goto parse_args )
+    if "%~2"=="1" ( set "IMPORT_DEMO=1" & shift & shift & goto parse_args )
+    set "IMPORT_DEMO=1" & shift & goto parse_args
+)
+if /I "%~1"=="--enable-workers" (
+    if "%~2"=="0" ( set "ENABLE_WORKERS=0" & shift & shift & goto parse_args )
+    if "%~2"=="1" ( set "ENABLE_WORKERS=1" & shift & shift & goto parse_args )
+    set "ENABLE_WORKERS=1" & shift & goto parse_args
+)
+if /I "%~1"=="--install-workers" (
+    if "%~2"=="0" ( set "ENABLE_WORKERS=0" & shift & shift & goto parse_args )
+    if "%~2"=="1" ( set "ENABLE_WORKERS=1" & shift & shift & goto parse_args )
+    set "ENABLE_WORKERS=1" & shift & goto parse_args
+)
+if /I "%~1"=="--use-existing-python" ( set "USE_EXISTING_PYTHON=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--use-existing-node" ( set "USE_EXISTING_NODE=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--install-mysql" ( set "INSTALL_MYSQL=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--install-redis" ( set "INSTALL_REDIS=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--install-mongodb" ( set "INSTALL_MONGODB=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--install-meilisearch" ( set "INSTALL_MEILISEARCH=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--install-lms" ( set "INSTALL_LMS=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--install-cms" ( set "INSTALL_CMS=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--install-dir" ( set "OPENEDX_INSTALL_DIR=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--data-dir" ( set "OPENEDX_DATA_DIR=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--log-dir" ( set "OPENEDX_LOG_DIR=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--backup-dir" ( set "BACKUP_DIR=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--theme" ( set "THEME_NAME=%~2" & shift & shift & goto parse_args )
-if /I "%~1"=="--enable-mfes" ( set "ENABLE_MFES=1" & shift & goto parse_args )
+if /I "%~1"=="--enable-mfes" (
+    if "%~2"=="0" ( set "ENABLE_MFES=0" & shift & shift & goto parse_args )
+    if "%~2"=="1" ( set "ENABLE_MFES=1" & shift & shift & goto parse_args )
+    set "ENABLE_MFES=1" & shift & goto parse_args
+)
 if /I "%~1"=="--lms-port" ( set "LMS_PORT=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--cms-port" ( set "CMS_PORT=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--mysql-port" ( set "MYSQL_PORT=%~2" & shift & shift & goto parse_args )

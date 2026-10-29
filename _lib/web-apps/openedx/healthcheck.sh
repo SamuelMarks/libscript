@@ -28,9 +28,9 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
-export DIR="${SCRIPT_DIR}"
+_OPENEDX_HEALTH_DIR="${SCRIPT_DIR}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${_OPENEDX_HEALTH_DIR}"
 
 # ## Parameters
 # - `--json`: Formats diagnostic health report in JSON rather than human-readable tabular format.
@@ -110,4 +110,5 @@ elif [ "${1:-}" = "help" ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; th
   show_help
 fi
 
-exec "${SCRIPT_DIR}/health_helper.sh" "${JSON_OUTPUT}" "${LMS_HOST}" "${LMS_PORT}" "${CMS_HOST}" "${CMS_PORT}" "${MYSQL_HOST}" "${MYSQL_PORT}" "${MONGODB_HOST}" "${MONGODB_PORT}" "${REDIS_HOST}" "${REDIS_PORT}" "${MEILISEARCH_HOST}" "${MEILISEARCH_PORT}" "${SMTP_HOST}" "${SMTP_PORT}"
+unset SCRIPT_NAME || true
+exec "${_OPENEDX_HEALTH_DIR}/health_helper.sh" "${JSON_OUTPUT}" "${LMS_HOST}" "${LMS_PORT}" "${CMS_HOST}" "${CMS_PORT}" "${MYSQL_HOST}" "${MYSQL_PORT}" "${MONGODB_HOST}" "${MONGODB_PORT}" "${REDIS_HOST}" "${REDIS_PORT}" "${MEILISEARCH_HOST}" "${MEILISEARCH_PORT}" "${SMTP_HOST}" "${SMTP_PORT}"

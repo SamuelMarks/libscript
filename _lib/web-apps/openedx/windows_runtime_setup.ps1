@@ -523,10 +523,16 @@ _root = str(Path(__file__).resolve().parent.parent)
 if _root not in sys.path:
     sys.path.insert(0, _root)
 from django.core.wsgi import get_wsgi_application
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript_win')
+try:
+    import openedx.core.djangoapps.user_authn
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.production')
+except ImportError:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript_win')
 application = get_wsgi_application()
 "@
-Set-Content -Path $lmsWsgiPath -Value $lmsWsgiContent -Encoding Ascii
+if (-not (Test-Path $lmsWsgiPath)) {
+    Set-Content -Path $lmsWsgiPath -Value $lmsWsgiContent -Encoding Ascii
+}
 
 $cmsWsgiPath = Join-Path $codebaseDir "cms\wsgi.py"
 $cmsWsgiContent = @"
@@ -536,10 +542,16 @@ _root = str(Path(__file__).resolve().parent.parent)
 if _root not in sys.path:
     sys.path.insert(0, _root)
 from django.core.wsgi import get_wsgi_application
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cms.envs.libscript_win')
+try:
+    import openedx.core.djangoapps.user_authn
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cms.envs.production')
+except ImportError:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cms.envs.libscript_win')
 application = get_wsgi_application()
 "@
-Set-Content -Path $cmsWsgiPath -Value $cmsWsgiContent -Encoding Ascii
+if (-not (Test-Path $cmsWsgiPath)) {
+    Set-Content -Path $cmsWsgiPath -Value $cmsWsgiContent -Encoding Ascii
+}
 
 $commonSettingsPy = @"
 import os, sys, json
@@ -1398,6 +1410,12 @@ urlpatterns = common_api_patterns + [
     path("dashboard", lms_dashboard_redirect),
     path("dashboard/", lms_dashboard_redirect),
 ]
+
+try:
+    import lms.urls as _upstream_lms_urls
+    urlpatterns = urlpatterns + list(getattr(_upstream_lms_urls, "urlpatterns", []))
+except Exception:
+    pass
 '@
 
 $cmsUrlsPy = $openedxMfeBackendPy + @'
@@ -1412,6 +1430,12 @@ urlpatterns = common_api_patterns + [
     path("home/", cms_home_redirect),
     path("course/", cms_home_redirect),
 ]
+
+try:
+    import cms.urls as _upstream_cms_urls
+    urlpatterns = urlpatterns + list(getattr(_upstream_cms_urls, "urlpatterns", []))
+except Exception:
+    pass
 '@
 
 Set-Content -Path (Join-Path $lmsEnvsDir "libscript_urls.py") -Value $lmsUrlsPy -Encoding UTF8

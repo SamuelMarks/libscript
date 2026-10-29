@@ -2421,6 +2421,11 @@
     "wmiclass",
     "geteuid",
     "getuid",
+    "getegid",
+    "getgid",
+    "Recognise",
+    "recognise",
+    "sequentials",
     "sitecustomize"
   ],
   "ignorePaths": [

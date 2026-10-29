@@ -797,13 +797,15 @@ echo 'WP_COOKIES_JSON=' . json_encode([
       fi
     done
     if [ "$_tname" = "openedx" ] && [ "$_os" = "windows" ] && [ -x "${SCRIPT_DIR}/capture_openedx_vagrant_screenshots.sh" ]; then
-      "${SCRIPT_DIR}/capture_openedx_vagrant_screenshots.sh" || true
+      "${SCRIPT_DIR}/capture_openedx_vagrant_screenshots.sh"
+      printf '[POST-INSTALL] %s (%s) -> %s\n' "$_tname" "$_os" "$_os_out"
+      return 0
     fi
   fi
 
   python3 - "$_tname" "$_os" "$_target_out" "$_os_out" "$_pkg_json" "$_manifest_json" "${OPENEDX_SAFE_COOKIE:-}" "${WORDPRESS_COOKIES_JSON:-}" << 'PY_EOF'
 import asyncio, base64, io, json, os, shutil, subprocess, sys, tempfile, urllib.request
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 target, os_name, target_out, os_out, pkg_json_path, manifest_json_path, openedx_cookie, wp_cookies_raw = sys.argv[1:9]
 
@@ -1011,127 +1013,7 @@ elif os.path.exists(manifest_json_path):
     except Exception:
         pass
 
-def hex_to_rgb(h, default=(30, 41, 59)):
-    if not h or not isinstance(h, str):
-        return default
-    h = h.lstrip("#")
-    if len(h) == 6:
-        try:
-            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-        except Exception:
-            pass
-    return default
-
-def load_font(size, bold=False):
-    candidates = [
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/System/Library/Fonts/SFNS.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            try:
-                return ImageFont.truetype(c, size)
-            except Exception:
-                pass
-    return ImageFont.load_default()
-
-FONT_SM = load_font(11, False)
-FONT_REG = load_font(12, False)
-FONT_BOLD = load_font(12, True)
-FONT_TITLE = load_font(15, True)
-FONT_BIG = load_font(20, True)
-
-app_title = pkg_meta.get("title") or target.capitalize()
-palette = pkg_meta.get("branding_palette", {})
-prim_hex = palette.get("primary_color", "#0F172A")
-sec_hex = palette.get("secondary_color", "#0284C7")
-
 steps = pkg_meta.get("verification_screenshots", [])
-if not steps:
-    steps = [
-        {
-            "id": "10b_desktop_icons",
-            "title": f"{app_title} Desktop Shortcuts",
-            "capture_type": "desktop",
-            "crop_mode": "FULL",
-            "view_spec": {
-                "layout": "desktop_icons",
-                "desktop_icons": [
-                    {"badge": (target[:3]).upper(), "label": f"{app_title}", "color": prim_hex},
-                    {"badge": "CLI", "label": f"{target.capitalize()} CLI", "color": sec_hex},
-                ],
-            },
-        },
-        {
-            "id": f"11_browser_{target}_status",
-            "title": f"{app_title} Service Status Portal",
-            "capture_type": "browser_unauthenticated",
-            "crop_mode": "BROWSER",
-            "url_template": "http://localhost:8000/status",
-            "view_spec": {
-                "layout": "course_dashboard",
-                "active_tab_title": f"Status | {app_title}",
-                "inactive_tab_title": f"Docs | {app_title}",
-                "active_tab_index": 1,
-                "header_bg": prim_hex,
-                "header_brand": app_title,
-                "header_subtitle": "Healthcheck   Metrics   CLI Status",
-                "user_badge": "Status: Healthy",
-                "heading": f"{app_title} — Active & Verified",
-                "subheading": f"Provisioned autonomously by LibScript on {os_name}",
-                "cards": [
-                    {
-                        "title": f"{app_title} Core Binary & Service",
-                        "subtitle": "Healthcheck: 200 OK | Version Manager: Active",
-                        "detail": f"Component: {target} | OS: {os_name}",
-                        "badge": "Healthy",
-                        "color": sec_hex,
-                    }
-                ],
-            },
-        },
-    ]
-
-def render_desktop_step(step, out_paths, os_tag):
-    W, H = 800, 600
-    bg_colors = {
-        "windows": (0, 78, 152),
-        "macos": (22, 62, 115),
-        "linux": (48, 25, 52),
-        "freebsd": (95, 18, 18),
-        "illumos": (25, 58, 82),
-    }
-    im = Image.new("RGB", (W, H), bg_colors.get(os_tag, (0, 78, 152)))
-    draw = ImageDraw.Draw(im)
-
-    vspec = step.get("view_spec", {})
-    icons = vspec.get("desktop_icons", [])
-    y = 36
-    for ic in icons:
-        badge = ic.get("badge", "APP")
-        label = ic.get("label", app_title)
-        col = hex_to_rgb(ic.get("color"), (0, 115, 170))
-        draw.rounded_rectangle([38, y, 94, y + 56], radius=10, fill=col, outline=(255, 255, 255), width=2)
-        tb = draw.textbbox((0, 0), badge[:4], font=FONT_BOLD)
-        tx = 38 + (56 - (tb[2] - tb[0])) // 2
-        draw.text((tx, y + 20), badge[:4], fill=(255, 255, 255), font=FONT_BOLD)
-        # Shortcut arrow overlay
-        draw.rectangle([38, y + 40, 52, y + 56], fill=(255, 255, 255))
-        draw.text((41, y + 41), "->", fill=col, font=FONT_SM)
-        # Label
-        draw.text((22, y + 62), label[:22], fill=(255, 255, 255), font=FONT_SM)
-        y += 105
-
-    # OS Taskbar / Dock
-    draw.rectangle([0, H - 42, W, H], fill=(20, 24, 32))
-    draw.rounded_rectangle([16, H - 34, 96, H - 8], radius=5, fill=(0, 120, 212))
-    draw.text((32, H - 28), os_tag.upper()[:7], fill=(255, 255, 255), font=FONT_BOLD)
-    draw.text((115, H - 28), f"{app_title} — Installed & Running", fill=(220, 230, 242), font=FONT_REG)
-    draw.text((W - 88, H - 28), "12:00 PM", fill=(220, 230, 242), font=FONT_REG)
-
-    for p in out_paths:
-        im.save(p, "PNG")
 
 for step in steps:
     sid = step["id"]
@@ -1144,20 +1026,17 @@ for step in steps:
         if os_name == "windows":
             outs.append(os.path.join(target_out, f"{st_name}.png"))
             outs.append(os.path.join(target_out, f"online_{st_name}.png"))
+    if all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
+        continue
     if step.get("capture_type") == "desktop" or step.get("crop_mode") == "FULL":
-        if os_name == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
-            continue
-        render_desktop_step(step, outs, os_name)
-    else:
-        if os_name == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
-            continue
-        if not try_capture_live_browser(step, outs):
-            sys.stderr.write(f"[ERROR] Live browser capture failed for step '{sid}'. Synthetic mock UI screenshot generation is prohibited.\n")
-            sys.exit(1)
+        sys.stderr.write(f"[ERROR] Live desktop screenshot missing for step '{sid}'. Synthetic mock desktop generation is prohibited.\n")
+        sys.exit(1)
+    if not try_capture_live_browser(step, outs):
+        sys.stderr.write(f"[ERROR] Live browser capture failed for step '{sid}'. Synthetic mock UI screenshot generation is prohibited.\n")
+        sys.exit(1)
 PY_EOF
 
-  printf '[POST-INSTALL] %s (%s) -> %s
-' "$_tname" "$_os" "$_os_out"
+  printf '[POST-INSTALL] %s (%s) -> %s\n' "$_tname" "$_os" "$_os_out"
 }
 
 ensure_msirs_path
