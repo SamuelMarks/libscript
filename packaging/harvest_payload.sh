@@ -193,7 +193,7 @@ while IFS= read -r _rel || [ -n "$_rel" ]; do
         [ "$INCLUDE_MSI" -eq 1 ] && printf '%s\n' "$_rel" >> "${TMP_FILTERED}"
         continue
         ;;
-      packaging/screenshots/release_test/*) continue ;;
+      packaging/screenshots/release_test/*|TODO_PLAN.md) continue ;;
       *) printf '%s\n' "$_rel" >> "${TMP_FILTERED}" ;;
     esac
   fi

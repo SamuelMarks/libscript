@@ -64,10 +64,5 @@ if exist "%LIBSCRIPT_HOME%\meilisearch\%MEILISEARCH_VERSION%\bin" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "meilisearch"
 )
 
-endlocal & (
-    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-    set "MEILISEARCH_PORT=%MEILISEARCH_PORT%"
-    set "MEILISEARCH_VERSION=%MEILISEARCH_VERSION%"
-    set "PATH=%PATH%"
-)
+endlocal & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "MEILISEARCH_PORT=%MEILISEARCH_PORT%" & set "MEILISEARCH_VERSION=%MEILISEARCH_VERSION%" & set "PATH=%PATH%"
 exit /b 0

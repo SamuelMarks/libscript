@@ -147,8 +147,23 @@ while [ $# -gt 0 ]; do
       ENABLE_WORKERS='1'
       shift
       ;;
+    --install-dir)
+      OPENEDX_INSTALL_DIR="${2%/}"
+      export OPENEDX_INSTALL_DIR
+      shift 2
+      ;;
+    --data-dir)
+      OPENEDX_DATA_DIR="${2%/}"
+      export OPENEDX_DATA_DIR
+      shift 2
+      ;;
+    --log-dir)
+      OPENEDX_LOG_DIR="${2%/}"
+      export OPENEDX_LOG_DIR
+      shift 2
+      ;;
     --backup-dir)
-      BACKUP_DIR="$2"
+      BACKUP_DIR="${2%/}"
       export BACKUP_DIR
       shift 2
       ;;
@@ -168,6 +183,11 @@ while [ $# -gt 0 ]; do
       CMS_PORT="$2"
       shift 2
       ;;
+    --mysql-port)
+      MYSQL_PORT="$2"
+      export MYSQL_PORT
+      shift 2
+      ;;
     --mysql-url)
       MYSQL_URL="$2"
       shift 2
@@ -180,8 +200,23 @@ while [ $# -gt 0 ]; do
       REDIS_URL="$2"
       shift 2
       ;;
+    --mongodb-port)
+      MONGODB_PORT="$2"
+      export MONGODB_PORT
+      shift 2
+      ;;
     --mongodb-uri)
       MONGODB_URI="$2"
+      shift 2
+      ;;
+    --meilisearch-port)
+      MEILISEARCH_PORT="$2"
+      export MEILISEARCH_PORT
+      shift 2
+      ;;
+    --meilisearch-url)
+      MEILISEARCH_URL="$2"
+      export MEILISEARCH_URL
       shift 2
       ;;
     --repo)
@@ -286,8 +321,30 @@ case "$ACTION" in
 
     # 2. Checkout / Setup openedx-platform repository
     log_info "2/8: Preparing openedx-platform (${BRANCH}) codebase at ${OPENEDX_INSTALL_DIR}..."
-    mkdir -p "${OPENEDX_INSTALL_DIR}/logs" "${OPENEDX_INSTALL_DIR}/codebase"
+    mkdir -p \
+      "${OPENEDX_INSTALL_DIR}/config" \
+      "${OPENEDX_INSTALL_DIR}/data" \
+      "${OPENEDX_INSTALL_DIR}/data/mako_lms" \
+      "${OPENEDX_INSTALL_DIR}/data/mako_cms" \
+      "${OPENEDX_INSTALL_DIR}/data/grades" \
+      "${OPENEDX_INSTALL_DIR}/data/financial-reports" \
+      "${OPENEDX_INSTALL_DIR}/data/django-pyfs/static/django-pyfs" \
+      "${OPENEDX_INSTALL_DIR}/logs" \
+      "${OPENEDX_INSTALL_DIR}/media" \
+      "${OPENEDX_INSTALL_DIR}/media/profile-images" \
+      "${OPENEDX_INSTALL_DIR}/media-private" \
+      "${OPENEDX_INSTALL_DIR}/staticfiles" \
+      "${OPENEDX_INSTALL_DIR}/staticfiles/studio" \
+      "${OPENEDX_INSTALL_DIR}/course_repos" \
+      "${OPENEDX_INSTALL_DIR}/export_course_repos" \
+      "${OPENEDX_INSTALL_DIR}/mfe_dist" \
+      "${OPENEDX_INSTALL_DIR}/codebase"
     touch "${OPENEDX_INSTALL_DIR}/logs/install.log"
+    if [ -f "${DIR}/build-constraints.txt" ]; then
+      cp -f "${DIR}/build-constraints.txt" "${OPENEDX_INSTALL_DIR}/build-constraints.txt"
+      export PIP_CONSTRAINT="${OPENEDX_INSTALL_DIR}/build-constraints.txt"
+      export UV_BUILD_CONSTRAINT="${OPENEDX_INSTALL_DIR}/build-constraints.txt"
+    fi
     if [ "$is_offline" -eq 1 ] && [ -n "${offline_cache_dir:-}" ] && [ -d "${offline_cache_dir}/codebase" ]; then
       log_info 'Extracting codebase from cache/codebase...'
       for _f in "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
@@ -358,9 +415,9 @@ case "$ACTION" in
       fi
     fi
 
-    # Inject imghdr for Python 3.13+ compatibility
+    # Inject imghdr and zero-source-edit sitecustomize.py / resource.py
     if [ -x "${VENV_DIR}/bin/python" ]; then
-      _sp_dir=$("${VENV_DIR}/bin/python" -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "${VENV_DIR}/lib/python3.13/site-packages")
+      _sp_dir=$("${VENV_DIR}/bin/python" -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "${VENV_DIR}/lib/python3.12/site-packages")
       mkdir -p "${_sp_dir}" 2>/dev/null || true
       if [ ! -f "${_sp_dir}/imghdr.py" ]; then
         if [ "$is_offline" -eq 1 ]; then
@@ -369,26 +426,38 @@ case "$ACTION" in
           libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" 2>/dev/null || printf 'def what(file, h=None):\n    return None\n' > "${_sp_dir}/imghdr.py"
         fi
       fi
+      if [ -f "${DIR}/windows_runtime_setup.sh" ]; then
+        export OPENEDX_INSTALL_DIR
+        "${DIR}/windows_runtime_setup.sh" -InstallDir "${OPENEDX_INSTALL_DIR}" >/dev/null 2>&1 || true
+      fi
+    fi
+
+    _codebase="${OPENEDX_INSTALL_DIR}/codebase"
+    if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+      _codebase="${OPENEDX_INSTALL_DIR}"
+    fi
+    if [ -f "${DIR}/requirements-windows.txt" ] && [ -d "${_codebase}" ]; then
+      cp -f "${DIR}/requirements-windows.txt" "${_codebase}/requirements-windows.txt" 2>/dev/null || true
     fi
 
     # Install Python Requirements if full mode requested and repo exists
-    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" ] && [ -x "${VENV_DIR}/bin/python" ]; then
-      log_info 'Installing Python dependencies via uv/pip...'
+    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${_codebase}/requirements/edx/base.txt" ] && [ -x "${VENV_DIR}/bin/python" ]; then
+      log_info 'Installing Python dependencies with setuptools==80.9.0 build constraint...'
       export CFLAGS="${CFLAGS:-} -Wno-error=incompatible-pointer-types"
+      "${VENV_DIR}/bin/python" -m pip install setuptools==80.9.0 pip==24.0 wheel==0.43.0 >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
       if command -v uv >/dev/null 2>&1; then
-        uv pip install --python "${VENV_DIR}/bin/python" factory_boy django-debug-toolbar --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
-        uv pip install --python "${VENV_DIR}/bin/python" -e "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        uv pip install --python "${VENV_DIR}/bin/python" -r "${_codebase}/requirements/edx/base.txt" django-redis==5.4.0 "openedx-scorm-xblock>=19.0.0,<20.0.0" click==8.3.3 libsass==0.23.0 waitress==3.0.2 gunicorn==23.0.0 >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        uv pip install --python "${VENV_DIR}/bin/python" --no-deps -e "${_codebase}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
       else
-        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir factory_boy django-debug-toolbar --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
-        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir -e "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir -r "${_codebase}/requirements/edx/base.txt" django-redis==5.4.0 "openedx-scorm-xblock>=19.0.0,<20.0.0" click==8.3.3 libsass==0.23.0 waitress==3.0.2 gunicorn==23.0.0 >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir --no-deps -e "${_codebase}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
       fi
     fi
 
     # 4. Generate Platform Settings via Reusable config.sh Component
-    log_info '4/8: Generating Open edX environment configurations...'
+    log_info '4/8: Generating Open edX environment configurations (lms.yml, cms.yml, revisions.yml, Caddyfile)...'
     CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
     mkdir -p "${CONF_DIR}"
-    mkdir -p "${OPENEDX_INSTALL_DIR}/lms/envs" "${OPENEDX_INSTALL_DIR}/cms/envs"
     if [ -f "${DIR}/config.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/config.sh" generate >/dev/null 2>&1 || true
       if [ -n "${BACKUP_DIR}" ]; then
@@ -396,61 +465,14 @@ case "$ACTION" in
       fi
     fi
 
-    cat <<EOF > "${OPENEDX_INSTALL_DIR}/lms/envs/libscript.py"
-from .devstack import *
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "${MYSQL_DATABASE}",
-        "USER": "${MYSQL_USER}",
-        "PASSWORD": "${OPENEDX_DATABASE_PASSWORD}",
-        "HOST": "${MYSQL_HOST}",
-        "PORT": "${MYSQL_PORT}",
-        "ATOMIC_REQUESTS": True,
-    }
-}
-CACHES["default"]["LOCATION"] = "127.0.0.1:${REDIS_PORT}"
-CONTENTSTORE["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
-CONTENTSTORE["DOC_STORE_CONFIG"]["user"] = ""
-CONTENTSTORE["DOC_STORE_CONFIG"]["password"] = ""
-for store in MODULESTORE["default"]["OPTIONS"]["stores"]:
-    if "DOC_STORE_CONFIG" in store:
-        store["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
-        store["DOC_STORE_CONFIG"]["user"] = ""
-        store["DOC_STORE_CONFIG"]["password"] = ""
-BROKER_URL = "redis://127.0.0.1:${REDIS_PORT}/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:${REDIS_PORT}/0"
-EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:${REDIS_PORT}/"
-EOF
+    export LMS_CFG="${CONF_DIR}/lms.yml"
+    export CMS_CFG="${CONF_DIR}/cms.yml"
+    export STUDIO_CFG="${CONF_DIR}/cms.yml"
+    export REVISION_CFG="${CONF_DIR}/revisions.yml"
+    export STATIC_ROOT_LMS="${OPENEDX_INSTALL_DIR}/staticfiles"
+    export STATIC_ROOT_CMS="${OPENEDX_INSTALL_DIR}/staticfiles/studio"
 
-    cat <<EOF > "${OPENEDX_INSTALL_DIR}/cms/envs/libscript.py"
-from .devstack import *
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "${MYSQL_DATABASE}",
-        "USER": "${MYSQL_USER}",
-        "PASSWORD": "${OPENEDX_DATABASE_PASSWORD}",
-        "HOST": "${MYSQL_HOST}",
-        "PORT": "${MYSQL_PORT}",
-        "ATOMIC_REQUESTS": True,
-    }
-}
-CACHES["default"]["LOCATION"] = "127.0.0.1:${REDIS_PORT}"
-CONTENTSTORE["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
-CONTENTSTORE["DOC_STORE_CONFIG"]["user"] = ""
-CONTENTSTORE["DOC_STORE_CONFIG"]["password"] = ""
-for store in MODULESTORE["default"]["OPTIONS"]["stores"]:
-    if "DOC_STORE_CONFIG" in store:
-        store["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
-        store["DOC_STORE_CONFIG"]["user"] = ""
-        store["DOC_STORE_CONFIG"]["password"] = ""
-BROKER_URL = "redis://127.0.0.1:${REDIS_PORT}/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:${REDIS_PORT}/0"
-EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:${REDIS_PORT}/"
-EOF
-
-    # 5. Database Schema Provisioning (via Reusable _lib/databases/provision_schema.sh) & Migrations
+    # 5. Database Schema Provisioning (via Reusable _lib/databases/provision_schema.sh) & Tutor Init Jobs
     log_info '5/8: Initializing databases via reusable schema provisioner...'
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
@@ -462,33 +484,41 @@ EOF
         --port "${MYSQL_PORT}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || log_warn "MySQL server not currently accessible; database schema provisioning skipped."
     fi
 
-    log_info 'Applying database migrations and seeding administrator...'
-    _codebase="${OPENEDX_INSTALL_DIR}/codebase"
-    if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
-      _codebase="${OPENEDX_INSTALL_DIR}"
-    fi
-    if [ -f "${_codebase}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
-      export LMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
-      export CMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
-      (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
-      (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
+    log_info 'Applying database migrations, Casbin policies, OAuth2 SSO, and waffle switches...'
+    if [ -f "${DIR}/init_platform.sh" ]; then
+      export OPENEDX_INSTALL_DIR
+      "${DIR}/init_platform.sh" --install-dir "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
     fi
     # Idempotently create or update admin superuser using dedicated user tool
     if [ -f "${DIR}/user.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/user.sh" create "${ADMIN_USER}" "${ADMIN_EMAIL}" --password "${ADMIN_PASS}" --staff --superuser 2>/dev/null || true
     fi
 
-    # 6. Static Asset Compilation & Theming
-    log_info '6/8: Compiling frontend assets...'
+    # 6. Translations (atlas / compilemessages / compilejsi18n), Static Asset Compilation & Theming
+    log_info '6/8: Compiling translations and frontend assets...'
+    if [ -f "${_codebase}/manage.py" ] && [ -x "${VENV_DIR}/bin/python" ]; then
+      (
+        cd "${_codebase}"
+        "${VENV_DIR}/bin/python" manage.py lms --settings=production compile_xblock_translations >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" manage.py cms --settings=production compile_xblock_translations >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" manage.py lms --settings=production compile_plugin_translations >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" manage.py lms --settings=production compilemessages -v1 >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" manage.py lms --settings=production compilejsi18n >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" manage.py cms --settings=production compilejsi18n >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+      ) || true
+    fi
     if [ -f "${_codebase}/package.json" ]; then
-      (cd "${_codebase}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
-      if [ -f "${_codebase}/pavement.py" ]; then
-        (cd "${_codebase}" && "${VENV_DIR}/bin/python" -m paver update_assets lms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
-        (cd "${_codebase}" && "${VENV_DIR}/bin/python" -m paver update_assets cms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
-      elif [ -f "${_codebase}/manage.py" ]; then
-        (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript collectstatic --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
-        (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript collectstatic --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
-      fi
+      (
+        cd "${_codebase}"
+        export PATH="${_codebase}/node_modules/.bin:${PATH}"
+        { npm clean-install --no-audit 2>&1 || npm install 2>&1; } >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || true
+        npm run compile-sass >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        npm run webpack >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        if [ -f "${_codebase}/manage.py" ] && [ -x "${VENV_DIR}/bin/python" ]; then
+          "${VENV_DIR}/bin/python" manage.py lms collectstatic --settings=production --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+          "${VENV_DIR}/bin/python" manage.py cms collectstatic --settings=production --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        fi
+      ) || true
     fi
     if [ -n "${THEME_NAME}" ] && [ "${THEME_NAME}" != "none" ] && [ -f "${DIR}/theme.sh" ]; then
       log_info "Activating theme: ${THEME_NAME}..."

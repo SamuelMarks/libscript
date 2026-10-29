@@ -11,7 +11,15 @@ param(
     [int]$CmsPort = 8001
 )
 
-$openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } elseif (Test-Path "$env:USERPROFILE\.libscript\openedx") { "$env:USERPROFILE\.libscript\openedx" } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
+$openEdxDir = if ($env:OPENEDX_INSTALL_DIR) {
+    $env:OPENEDX_INSTALL_DIR.TrimEnd('\')
+} elseif (Test-Path "$env:ProgramData\OpenEdX\install_dir.txt") {
+    (Get-Content "$env:ProgramData\OpenEdX\install_dir.txt" -Raw).Trim().TrimEnd('\')
+} elseif (Test-Path "$env:USERPROFILE\.libscript\openedx") {
+    "$env:USERPROFILE\.libscript\openedx"
+} else {
+    Join-Path $env:USERPROFILE ".libscript\openedx"
+}
 $codebaseDir = $openEdxDir
 if (Test-Path (Join-Path $openEdxDir "codebase\manage.py")) {
     $codebaseDir = Join-Path $openEdxDir "codebase"
@@ -67,21 +75,42 @@ function Start-OpenEdxServices {
     }
 
     $waitressExe = Join-Path (Split-Path -Parent $pyExe) "waitress-serve.exe"
-    $env:LMS_CFG = Join-Path $openEdxDir "config\lms.env.json"
-    $env:CMS_CFG = Join-Path $openEdxDir "config\cms.env.json"
+    $cfgDir = Join-Path $openEdxDir "config"
+    $lmsCfg = if (Test-Path (Join-Path $cfgDir "lms.yml")) { Join-Path $cfgDir "lms.yml" } else { Join-Path $cfgDir "lms.env.json" }
+    $cmsCfg = if (Test-Path (Join-Path $cfgDir "cms.yml")) { Join-Path $cfgDir "cms.yml" } else { Join-Path $cfgDir "cms.env.json" }
+    $revCfg = Join-Path $cfgDir "revisions.yml"
+    $staticLms = Join-Path $openEdxDir "staticfiles"
+    $staticCms = Join-Path $openEdxDir "staticfiles\studio"
+
+    $env:LMS_CFG = $lmsCfg
+    $env:CMS_CFG = $cmsCfg
+    $env:STUDIO_CFG = $cmsCfg
+    $env:REVISION_CFG = $revCfg
+    $env:STATIC_ROOT_LMS = $staticLms
+    $env:STATIC_ROOT_CMS = $staticCms
     $env:OPENEDX_LMS_PORT = "$LmsPort"
     $env:OPENEDX_CMS_PORT = "$CmsPort"
     $env:PYTHONPATH = $codebaseDir
+    $env:OAUTHLIB_INSECURE_TRANSPORT = "1"
 
     $lmsOut = Join-Path $logDir "lms.log"
     $lmsErr = Join-Path $logDir "lms_err.log"
     $cmsOut = Join-Path $logDir "cms.log"
     $cmsErr = Join-Path $logDir "cms_err.log"
 
+    $hasFullEdxDeps = Test-Path (Join-Path $openEdxDir ".venv\Lib\site-packages\edx_django_utils")
+    $lmsSettingsMod = if ($hasFullEdxDeps) { "lms.envs.production" } else { "lms.envs.libscript_win" }
+    $cmsSettingsMod = if ($hasFullEdxDeps) { "cms.envs.production" } else { "cms.envs.libscript_win" }
+
     $lmsBat = Join-Path $runDir "start_lms.cmd"
     $cmsBat = Join-Path $runDir "start_cms.cmd"
-    Set-Content -Path $lmsBat -Value "@echo off`r`ncd /d `"$codebaseDir`"`r`nset `"PYTHONPATH=$codebaseDir`"`r`nset `"OPENEDX_LMS_PORT=$LmsPort`"`r`nset `"OPENEDX_CMS_PORT=$CmsPort`"`r`nset `"DJANGO_SETTINGS_MODULE=lms.envs.libscript_win`"`r`n`"$pyExe`" -m waitress --listen=0.0.0.0:$LmsPort lms.wsgi:application > `"$lmsOut`" 2> `"$lmsErr`"`r`n" -Encoding Ascii
-    Set-Content -Path $cmsBat -Value "@echo off`r`ncd /d `"$codebaseDir`"`r`nset `"PYTHONPATH=$codebaseDir`"`r`nset `"OPENEDX_LMS_PORT=$LmsPort`"`r`nset `"OPENEDX_CMS_PORT=$CmsPort`"`r`nset `"DJANGO_SETTINGS_MODULE=cms.envs.libscript_win`"`r`n`"$pyExe`" -m waitress --listen=0.0.0.0:$CmsPort cms.wsgi:application > `"$cmsOut`" 2> `"$cmsErr`"`r`n" -Encoding Ascii
+    $waitressFlagsLms = "--listen=0.0.0.0:$LmsPort --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 lms.wsgi:application"
+    $waitressFlagsCms = "--listen=0.0.0.0:$CmsPort --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 cms.wsgi:application"
+    $runnerLms = if (Test-Path $waitressExe) { "`"$waitressExe`" $waitressFlagsLms" } else { "`"$pyExe`" -m waitress $waitressFlagsLms" }
+    $runnerCms = if (Test-Path $waitressExe) { "`"$waitressExe`" $waitressFlagsCms" } else { "`"$pyExe`" -m waitress $waitressFlagsCms" }
+
+    Set-Content -Path $lmsBat -Value "@echo off`r`ncd /d `"$codebaseDir`"`r`nset `"PYTHONPATH=$codebaseDir`"`r`nset `"OPENEDX_INSTALL_DIR=$openEdxDir`"`r`nset `"SERVICE_VARIANT=lms`"`r`nset `"DJANGO_SETTINGS_MODULE=$lmsSettingsMod`"`r`nset `"LMS_CFG=$lmsCfg`"`r`nset `"CMS_CFG=$cmsCfg`"`r`nset `"REVISION_CFG=$revCfg`"`r`nset `"STATIC_ROOT_LMS=$staticLms`"`r`nset `"STATIC_ROOT_CMS=$staticCms`"`r`nset `"OAUTHLIB_INSECURE_TRANSPORT=1`"`r`nset `"OPENEDX_LMS_PORT=$LmsPort`"`r`nset `"OPENEDX_CMS_PORT=$CmsPort`"`r`n$runnerLms > `"$lmsOut`" 2> `"$lmsErr`"`r`n" -Encoding Ascii
+    Set-Content -Path $cmsBat -Value "@echo off`r`ncd /d `"$codebaseDir`"`r`nset `"PYTHONPATH=$codebaseDir`"`r`nset `"OPENEDX_INSTALL_DIR=$openEdxDir`"`r`nset `"SERVICE_VARIANT=cms`"`r`nset `"DJANGO_SETTINGS_MODULE=$cmsSettingsMod`"`r`nset `"LMS_CFG=$lmsCfg`"`r`nset `"CMS_CFG=$cmsCfg`"`r`nset `"STUDIO_CFG=$cmsCfg`"`r`nset `"REVISION_CFG=$revCfg`"`r`nset `"STATIC_ROOT_LMS=$staticLms`"`r`nset `"STATIC_ROOT_CMS=$staticCms`"`r`nset `"OAUTHLIB_INSECURE_TRANSPORT=1`"`r`nset `"OPENEDX_LMS_PORT=$LmsPort`"`r`nset `"OPENEDX_CMS_PORT=$CmsPort`"`r`n$runnerCms > `"$cmsOut`" 2> `"$cmsErr`"`r`n" -Encoding Ascii
 
     $si = ([wmiclass]"Win32_ProcessStartup").CreateInstance()
     $si.ShowWindow = 0

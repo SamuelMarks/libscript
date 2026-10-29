@@ -96,15 +96,26 @@ start_services() {
     _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
   fi
 
+  export PYTHONPATH="${_codebase}"
+  export LMS_CFG="${OPENEDX_INSTALL_DIR}/config/lms.yml"
+  export CMS_CFG="${OPENEDX_INSTALL_DIR}/config/cms.yml"
+  export STUDIO_CFG="${OPENEDX_INSTALL_DIR}/config/cms.yml"
+  export REVISION_CFG="${OPENEDX_INSTALL_DIR}/config/revisions.yml"
+  export STATIC_ROOT_LMS="${OPENEDX_INSTALL_DIR}/staticfiles"
+  export STATIC_ROOT_CMS="${OPENEDX_INSTALL_DIR}/staticfiles/studio"
+  export OAUTHLIB_INSECURE_TRANSPORT='1'
+
   # Start LMS if not already listening
   if is_port_listening "$LMS_PORT"; then
     printf '[INFO] Open edX LMS is already running on port %s\n' "$LMS_PORT"
   else
     printf '[INFO] Launching Open edX LMS on port %s...\n' "$LMS_PORT"
     if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -f "${_codebase}/manage.py" ]; then
-      (cd "${_codebase}" && DJANGO_SETTINGS_MODULE="lms.envs.libscript" "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+      (cd "${_codebase}" && SERVICE_VARIANT="lms" DJANGO_SETTINGS_MODULE="lms.envs.production" "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 --timeout 300 --limit-request-line 8190 --limit-request-field_size 32768 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+    elif [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/waitress-serve" ] && [ -f "${_codebase}/manage.py" ]; then
+      (cd "${_codebase}" && SERVICE_VARIANT="lms" DJANGO_SETTINGS_MODULE="lms.envs.production" "${OPENEDX_INSTALL_DIR}/.venv/bin/waitress-serve" --listen="0.0.0.0:${LMS_PORT}" --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
     elif [ -f "${_codebase}/manage.py" ]; then
-      (cd "${_codebase}" && nohup "${_py}" manage.py lms --settings=libscript runserver --insecure "0.0.0.0:${LMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+      (cd "${_codebase}" && SERVICE_VARIANT="lms" nohup "${_py}" manage.py lms --settings=production runserver --insecure "0.0.0.0:${LMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
     else
       printf '[ERROR] Real Open edX codebase (manage.py) not found at %s.\n' "${_codebase}" >&2
       exit 1
@@ -117,13 +128,19 @@ start_services() {
   else
     printf '[INFO] Launching Open edX Studio CMS on port %s...\n' "$CMS_PORT"
     if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -f "${_codebase}/manage.py" ]; then
-      (cd "${_codebase}" && DJANGO_SETTINGS_MODULE="cms.envs.libscript" "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+      (cd "${_codebase}" && SERVICE_VARIANT="cms" DJANGO_SETTINGS_MODULE="cms.envs.production" "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 --timeout 300 --limit-request-line 8190 --limit-request-field_size 32768 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+    elif [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/waitress-serve" ] && [ -f "${_codebase}/manage.py" ]; then
+      (cd "${_codebase}" && SERVICE_VARIANT="cms" DJANGO_SETTINGS_MODULE="cms.envs.production" "${OPENEDX_INSTALL_DIR}/.venv/bin/waitress-serve" --listen="0.0.0.0:${CMS_PORT}" --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
     elif [ -f "${_codebase}/manage.py" ]; then
-      (cd "${_codebase}" && nohup "${_py}" manage.py cms --settings=libscript runserver --insecure "0.0.0.0:${CMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+      (cd "${_codebase}" && SERVICE_VARIANT="cms" nohup "${_py}" manage.py cms --settings=production runserver --insecure "0.0.0.0:${CMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
     else
       printf '[ERROR] Real Open edX codebase (manage.py) not found at %s.\n' "${_codebase}" >&2
       exit 1
     fi
+  fi
+
+  if [ "${RUN_CADDY:-false}" = "true" ] && [ -f "${OPENEDX_INSTALL_DIR}/config/Caddyfile" ] && command -v caddy >/dev/null 2>&1; then
+    caddy start --config "${OPENEDX_INSTALL_DIR}/config/Caddyfile" >/dev/null 2>&1 || true
   fi
 
   # Start background workers
@@ -239,15 +256,15 @@ install_services() {
     _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
   fi
   if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ]; then
-    _exec_lms="${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn --bind 0.0.0.0:${LMS_PORT} --workers 4 lms.wsgi:application"
-    _exec_cms="${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn --bind 0.0.0.0:${CMS_PORT} --workers 2 cms.wsgi:application"
+    _exec_lms="${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn --bind 0.0.0.0:${LMS_PORT} --workers 4 --timeout 300 --limit-request-line 8190 --limit-request-field_size 32768 lms.wsgi:application"
+    _exec_cms="${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn --bind 0.0.0.0:${CMS_PORT} --workers 2 --timeout 300 --limit-request-line 8190 --limit-request-field_size 32768 cms.wsgi:application"
   else
-    _exec_lms="${_py} manage.py lms --settings=libscript runserver --insecure 0.0.0.0:${LMS_PORT} --noreload"
-    _exec_cms="${_py} manage.py cms --settings=libscript runserver --insecure 0.0.0.0:${CMS_PORT} --noreload"
+    _exec_lms="${_py} manage.py lms --settings=production runserver --insecure 0.0.0.0:${LMS_PORT} --noreload"
+    _exec_cms="${_py} manage.py cms --settings=production runserver --insecure 0.0.0.0:${CMS_PORT} --noreload"
   fi
-  _exec_lms_worker="${_py} -m celery -A lms.celery worker --loglevel=INFO -c 2"
-  _exec_cms_worker="${_py} -m celery -A cms.celery worker --loglevel=INFO -c 2"
-  _exec_beat="${_py} -m celery -A lms.celery beat --loglevel=INFO"
+  _exec_lms_worker="${_py} -m celery --app=lms.celery worker --loglevel=info --concurrency=4 --hostname=edx.lms.core.default.%h --queues=edx.lms.core.default,edx.lms.core.high,edx.lms.core.high_mem --prefetch-multiplier=1 --without-gossip --without-mingle"
+  _exec_cms_worker="${_py} -m celery --app=cms.celery worker --loglevel=info --concurrency=2 --hostname=edx.cms.core.default.%h --queues=edx.cms.core.default,edx.cms.core.high,edx.cms.core.low --prefetch-multiplier=1 --without-gossip --without-mingle"
+  _exec_beat="${_py} -m celery --app=lms.celery beat --loglevel=info"
   
   libscript_install_service "openedx-lms" "${_exec_lms}" "${OPENEDX_INSTALL_DIR}/codebase" "Open edX LMS Service" ""
   libscript_install_service "openedx-cms" "${_exec_cms}" "${OPENEDX_INSTALL_DIR}/codebase" "Open edX Studio CMS Service" ""

@@ -74,7 +74,27 @@ trap cleanup EXIT INT TERM
 printf '=== Open edX Real Service Coordination & Authentication Test ===\n'
 
 # 1. Verify Core Infrastructure Services Coordination via Reusable status_databases.sh
-printf '[CHECK 1/6] Verifying backing datastores and caching daemons...\n'
+printf '[CHECK 1/6] Verifying backing datastores, production YAML configs, and runtime directories...\n'
+if [ -f "${SCRIPT_DIR}/config.sh" ]; then
+  OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${SCRIPT_DIR}/config.sh" generate >/dev/null 2>&1 || true
+fi
+if [ -f "${SCRIPT_DIR}/windows_runtime_setup.sh" ]; then
+  export OPENEDX_INSTALL_DIR
+  "${SCRIPT_DIR}/windows_runtime_setup.sh" -InstallDir "${OPENEDX_INSTALL_DIR}" >/dev/null 2>&1 || true
+fi
+for _req_cfg in "lms.yml" "cms.yml" "revisions.yml" "Caddyfile"; do
+  if [ ! -f "${OPENEDX_INSTALL_DIR}/config/${_req_cfg}" ]; then
+    printf '  -> FAILED: Missing generated configuration file %s/config/%s\n' "${OPENEDX_INSTALL_DIR}" "${_req_cfg}" >&2
+    exit 1
+  fi
+done
+for _req_dir in "config" "data" "data/mako_lms" "data/mako_cms" "data/grades" "data/financial-reports" "data/django-pyfs/static/django-pyfs" "logs" "media" "media-private" "staticfiles" "staticfiles/studio" "course_repos" "export_course_repos"; do
+  if [ ! -d "${OPENEDX_INSTALL_DIR}/${_req_dir}" ]; then
+    printf '  -> FAILED: Missing runtime directory %s/%s\n' "${OPENEDX_INSTALL_DIR}" "${_req_dir}" >&2
+    exit 1
+  fi
+done
+printf '  -> PASSED: Production YAML configs (lms.yml, cms.yml, revisions.yml, Caddyfile) and all 14 runtime directories verified.\n'
 if [ -f "${SCRIPT_DIR}/status_databases.sh" ]; then
   if "${SCRIPT_DIR}/status_databases.sh" "databases/mysql" >/dev/null 2>&1; then
     printf '  -> MySQL: ACTIVE (port 3306)\n'

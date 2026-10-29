@@ -168,7 +168,11 @@ set "name="
 set "cmd="
 set "raw_wd=."
 for /f "delims=" %%n in ('echo !svc! ^| jq -r ".name // empty" 2^>nul') do set "name=%%n"
-for /f "delims=" %%c in ('echo !svc! ^| jq -r ".command // empty" 2^>nul') do set "cmd=%%c"
+if /i "%LIBSCRIPT_ENV%"=="development" (
+    for /f "delims=" %%c in ('echo !svc! ^| jq -r ".dev_command // .command // empty" 2^>nul') do set "cmd=%%c"
+) else (
+    for /f "delims=" %%c in ('echo !svc! ^| jq -r ".production_command // .command // empty" 2^>nul') do set "cmd=%%c"
+)
 for /f "delims=" %%w in ('echo !svc! ^| jq -r ".working_dir // .working_directory // .cwd // \".\"" 2^>nul') do set "raw_wd=%%w"
 
 if "!name!"=="" exit /b 0

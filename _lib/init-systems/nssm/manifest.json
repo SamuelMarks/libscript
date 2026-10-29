@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nssm",
+  "title": "NSSM (Non-Sucking Service Manager)",
+  "description": "Windows service wrapper and daemon supervisor for running native Win64 binaries (Waitress, Celery, Caddy, Meilisearch) as resilient Windows Services.",
+  "category": "init-system",
+  "provides": ["nssm", "init-system"],
+  "conflicts": [],
+  "versions": ["latest", "2.24"],
+  "os_whitelist": ["all"],
+  "ports": []
+}

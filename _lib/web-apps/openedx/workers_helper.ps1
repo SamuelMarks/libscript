@@ -94,10 +94,23 @@ function Do-Start {
         $procId = $null
         $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
         if ($resolvedPy -and (Test-Path $resolvedPy)) {
+            $env:PYTHONPATH = $codebaseDir
+            $env:LMS_CFG = Join-Path $InstallDir "config\lms.yml"
+            $env:CMS_CFG = Join-Path $InstallDir "config\cms.yml"
+            $env:STUDIO_CFG = Join-Path $InstallDir "config\cms.yml"
+            $env:REVISION_CFG = Join-Path $InstallDir "config\revisions.yml"
+            if ($svc -eq "cms-worker") {
+                $env:SERVICE_VARIANT = "cms"
+                $env:DJANGO_SETTINGS_MODULE = "cms.envs.production"
+            } else {
+                $env:SERVICE_VARIANT = "lms"
+                $env:DJANGO_SETTINGS_MODULE = "lms.envs.production"
+            }
+            $scheduleFile = Join-Path $RunDir "celerybeat-schedule"
             $celeryArgList = switch ($svc) {
-                "lms-worker"  { @("-m", "celery", "-A", "lms.celery", "worker", "--pool=solo", "--loglevel=INFO") }
-                "cms-worker"  { @("-m", "celery", "-A", "cms.celery", "worker", "--pool=solo", "--loglevel=INFO") }
-                "celery-beat" { @("-m", "celery", "-A", "lms.celery", "beat", "--loglevel=INFO") }
+                "lms-worker"  { @("-m", "celery", "--app=lms.celery", "worker", "--pool=threads", "--concurrency=8", "--loglevel=info", "--hostname=edx.lms.core.default.%h", "--queues=edx.lms.core.default,edx.lms.core.high,edx.lms.core.high_mem", "--prefetch-multiplier=1", "--without-gossip", "--without-mingle") }
+                "cms-worker"  { @("-m", "celery", "--app=cms.celery", "worker", "--pool=threads", "--concurrency=4", "--loglevel=info", "--hostname=edx.cms.core.default.%h", "--queues=edx.cms.core.default,edx.cms.core.high,edx.cms.core.low", "--prefetch-multiplier=1", "--without-gossip", "--without-mingle") }
+                "celery-beat" { @("-m", "celery", "--app=lms.celery", "beat", "--loglevel=info", "--pidfile=$pidFile", "--schedule=$scheduleFile") }
             }
             $proc = Start-Process -FilePath $resolvedPy -ArgumentList $celeryArgList -WorkingDirectory $codebaseDir -RedirectStandardOutput $logFile -RedirectStandardError ($logFile -replace "\.log$", "_err.log") -WindowStyle Hidden -PassThru
             $procId = $proc.Id

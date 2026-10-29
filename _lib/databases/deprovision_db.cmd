@@ -82,6 +82,13 @@ if /i "!_eng!"=="duckdb" (
     if "!_path!"=="" set "_path=!MANIFEST_DIR!\data\!_name!.duckdb"
     set "STACK="
     call "!SCRIPT_DIR!\deprovision_schema.cmd" --engine duckdb --schema "!_path!" --user "!_user!"
+    for /f "delims=" %%F in ('echo !db_entry! ^| jq -r ".fallback_paths[]? // empty" 2^>nul') do (
+        set "_fb_p=%%F"
+        set "_fb_win=!_fb_p:/=\!"
+        if not "!_fb_win:~1,1!"==":" set "_fb_win=!MANIFEST_DIR!\!_fb_win!"
+        set "STACK="
+        call "!SCRIPT_DIR!\deprovision_schema.cmd" --engine duckdb --schema "!_fb_win!" --user "!_user!"
+    )
     exit /b 0
 )
 if /i "!_eng!"=="sqlite" (
@@ -92,4 +99,8 @@ if /i "!_eng!"=="sqlite" (
 )
 set "STACK="
 call "!SCRIPT_DIR!\deprovision_schema.cmd" --engine "!_eng!" --schema "!_name!" --user "!_user!"
+for /f "delims=" %%L in ('echo !db_entry! ^| jq -r ".legacy_names[]? // empty" 2^>nul') do (
+    set "STACK="
+    call "!SCRIPT_DIR!\deprovision_schema.cmd" --engine "!_eng!" --schema "%%L" --user "!_user!"
+)
 exit /b 0

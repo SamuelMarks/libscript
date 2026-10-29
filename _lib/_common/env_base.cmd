@@ -132,9 +132,5 @@ if not "%~3"=="" (
     if errorlevel 1 set "_NEW_PATH=!_EXTRA!;!_NEW_PATH!"
 )
 
-endlocal & (
-    set "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR%"
-    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-    set "PATH=%_NEW_PATH%"
-)
+endlocal & set "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR%" & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "PATH=%_NEW_PATH%"
 exit /b 0

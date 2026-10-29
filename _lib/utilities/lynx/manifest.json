@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lynx",
+  "title": "Lynx",
+  "description": "Text-mode web browser and HTML-to-plaintext renderer used by Open edX bulk email and annotations.",
+  "category": "utility",
+  "provides": ["lynx"],
+  "os_whitelist": ["all"]
+}

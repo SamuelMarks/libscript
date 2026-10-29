@@ -52,15 +52,61 @@ function Do-Create {
 
     $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
     $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $hasFullEdxDeps = Test-Path (Join-Path $InstallDir ".venv\Lib\site-packages\edx_django_utils")
+    $settingsMod = if ($hasFullEdxDeps) { "lms.envs.production" } else { "lms.envs.libscript_win" }
     if (Test-Path $pyExe) {
         Push-Location $codebaseDir
         try {
             $env:PYTHONPATH = $codebaseDir
-            $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript_win"
+            $env:OPENEDX_INSTALL_DIR = $InstallDir
+            $env:LMS_CFG = Join-Path $InstallDir "config\lms.yml"
+            $env:CMS_CFG = Join-Path $InstallDir "config\cms.yml"
+            $env:REVISION_CFG = Join-Path $InstallDir "config\revisions.yml"
+            $env:DJANGO_SETTINGS_MODULE = $settingsMod
             $env:OPENEDX_ADMIN_USERNAME = $Username
             $env:OPENEDX_ADMIN_EMAIL = $Email
             $env:OPENEDX_ADMIN_PASSWORD = $Password
-            & $pyExe -c "import os, django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); un = os.environ['OPENEDX_ADMIN_USERNAME']; em = os.environ['OPENEDX_ADMIN_EMAIL']; pw = os.environ['OPENEDX_ADMIN_PASSWORD']; u, _ = User.objects.get_or_create(username=un, defaults={'email': em}); u.email = em; u.is_staff = ('$IsStaff'.lower() == 'true' or '$IsSuperuser'.lower() == 'true'); u.is_superuser = ('$IsSuperuser'.lower() == 'true'); u.is_active = True; u.set_password(pw); u.save()" 2>$null | Out-Null
+            $staffArgs = @()
+            if ($IsStaff.ToLower() -eq "true") { $staffArgs += "--staff" }
+            if ($IsSuperuser.ToLower() -eq "true") { $staffArgs += "--superuser" }
+            if ($hasFullEdxDeps -and (Test-Path (Join-Path $codebaseDir "manage.py"))) {
+                & $pyExe (Join-Path $codebaseDir "manage.py") lms --settings=production manage_user $Username $Email @staffArgs 2>$null | Out-Null
+            }
+            $setupUserPy = @"
+import os, django
+django.setup()
+from django.contrib.auth import get_user_model
+User = get_user_model()
+un = os.environ['OPENEDX_ADMIN_USERNAME']
+em = os.environ['OPENEDX_ADMIN_EMAIL']
+pw = os.environ['OPENEDX_ADMIN_PASSWORD']
+u = User.objects.filter(username=un).first() or User.objects.filter(email=em).first()
+if not u:
+    u = User.objects.create_user(username=un, email=em, password=pw)
+u.username = un
+u.email = em
+u.is_staff = ('$IsStaff'.lower() == 'true' or '$IsSuperuser'.lower() == 'true')
+u.is_superuser = ('$IsSuperuser'.lower() == 'true')
+u.is_active = True
+u.set_password(pw)
+u.save()
+try:
+    from common.djangoapps.student.models import UserProfile, CourseEnrollment
+    from opaque_keys.edx.keys import CourseKey
+    UserProfile.objects.get_or_create(user=u, defaults={'name': un})
+    ck = CourseKey.from_string('course-v1:edX+DemoX+Demo_Course')
+    CourseEnrollment.enroll(u, ck, check_access=False)
+except Exception:
+    pass
+try:
+    from cms.djangoapps.course_creators.models import CourseCreator
+    cc, _ = CourseCreator.objects.get_or_create(user=u)
+    cc.state = CourseCreator.GRANTED
+    cc.save()
+except Exception:
+    pass
+"@
+            & $pyExe -c $setupUserPy 2>$null | Out-Null
         } finally {
             Pop-Location
         }
@@ -107,11 +153,17 @@ function Do-SetPassword {
 
     $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
     $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $hasFullEdxDeps = Test-Path (Join-Path $InstallDir ".venv\Lib\site-packages\edx_django_utils")
+    $settingsMod = if ($hasFullEdxDeps) { "lms.envs.production" } else { "lms.envs.libscript_win" }
     if (Test-Path $pyExe) {
         Push-Location $codebaseDir
         try {
             $env:PYTHONPATH = $codebaseDir
-            $env:DJANGO_SETTINGS_MODULE = "lms.envs.libscript_win"
+            $env:OPENEDX_INSTALL_DIR = $InstallDir
+            $env:LMS_CFG = Join-Path $InstallDir "config\lms.yml"
+            $env:CMS_CFG = Join-Path $InstallDir "config\cms.yml"
+            $env:REVISION_CFG = Join-Path $InstallDir "config\revisions.yml"
+            $env:DJANGO_SETTINGS_MODULE = $settingsMod
             & $pyExe -c "import os, django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='$Username').first() or User.objects.filter(email='$Username').first(); (u.set_password('$Password'), u.save()) if u else None" 2>$null | Out-Null
         } finally {
             Pop-Location

@@ -157,6 +157,26 @@ function Build-Theme {
             Pop-Location
         }
     }
+    $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    if (Test-Path (Join-Path $codebaseDir "package.json")) {
+        Push-Location $codebaseDir
+        try {
+            $env:LMS_CFG = Join-Path $InstallDir "config\lms.yml"
+            $env:CMS_CFG = Join-Path $InstallDir "config\cms.yml"
+            $env:REVISION_CFG = Join-Path $InstallDir "config\revisions.yml"
+            $env:STATIC_ROOT_LMS = Join-Path $InstallDir "staticfiles"
+            $env:STATIC_ROOT_CMS = Join-Path $InstallDir "staticfiles\studio"
+            npm run compile-sass 2>$null | Out-Null
+            npm run webpack 2>$null | Out-Null
+            $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
+            if (Test-Path $pyExe) {
+                & $pyExe manage.py lms collectstatic --settings=production --noinput 2>$null | Out-Null
+                & $pyExe manage.py cms collectstatic --settings=production --noinput 2>$null | Out-Null
+            }
+        } finally {
+            Pop-Location
+        }
+    }
     Write-Host "[INFO] Theme '$Name' build completed."
 }
 
@@ -180,7 +200,10 @@ function Apply-Theme {
     if ((Test-Path $managePy) -and (Test-Path $pyExe)) {
         Push-Location $codebaseDir
         try {
-            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from openedx.core.djangoapps.theming.models import SiteTheme; from django.contrib.sites.models import Site; site, _ = Site.objects.get_or_create(domain='$Domain', defaults={'name': '$Domain'}); theme, _ = SiteTheme.objects.get_or_create(site=site); theme.theme_dir_name = '$Name'; theme.save()" 2>$null | Out-Null
+            $env:LMS_CFG = Join-Path $InstallDir "config\lms.yml"
+            $env:CMS_CFG = Join-Path $InstallDir "config\cms.yml"
+            $env:REVISION_CFG = Join-Path $InstallDir "config\revisions.yml"
+            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.production'); django.setup(); from openedx.core.djangoapps.theming.models import SiteTheme; from django.contrib.sites.models import Site; site, _ = Site.objects.get_or_create(domain='$Domain', defaults={'name': '$Domain'}); theme, _ = SiteTheme.objects.get_or_create(site=site); theme.theme_dir_name = '$Name'; theme.save()" 2>$null | Out-Null
         } finally {
             Pop-Location
         }

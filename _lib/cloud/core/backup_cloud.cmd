@@ -73,6 +73,9 @@ set "PATHS="
 set "EXPORT_MODE=0"
 set "LOCAL_DST="
 set "APP_SPECS="
+set "DRY_RUN_MODE=0"
+if /i "%DRY_RUN%"=="true" set "DRY_RUN_MODE=1"
+if "%DRY_RUN%"=="1" set "DRY_RUN_MODE=1"
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -95,8 +98,8 @@ if /i "!_BA:~0,13!"=="--admin-user=" ( set "ADMIN_USER=!_BA:~13!" & shift & goto
 if /i "!_BA!"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto :parse_args )
 if /i "!_BA:~0,7!"=="--only=" ( set "ONLY_TARGET=!_BA:~7!" & shift & goto :parse_args )
 if /i "!_BA!"=="--only" ( set "ONLY_TARGET=%~2" & shift & shift & goto :parse_args )
-if /i "!_BA!"=="--dry-run" ( set "DRY_RUN=true" & shift & goto :parse_args )
-if /i "!_BA!"=="-n" ( set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_BA!"=="--dry-run" ( set "DRY_RUN_MODE=1" & set "DRY_RUN=true" & shift & goto :parse_args )
+if /i "!_BA!"=="-n" ( set "DRY_RUN_MODE=1" & set "DRY_RUN=true" & shift & goto :parse_args )
 if /i "!_BA:~0,6!"=="--app=" ( set "APP_SPECS=!APP_SPECS!!_BA:~6!|" & shift & goto :parse_args )
 if /i "!_BA!"=="--app" ( set "APP_SPECS=!APP_SPECS!%~2|" & shift & shift & goto :parse_args )
 if /i "!_BA:~0,15!"=="--export-state=" ( set "EXPORT_MODE=1" & set "LOCAL_DST=!_BA:~15!" & shift & goto :parse_args )
@@ -126,6 +129,17 @@ goto :parse_args
 if "!NODE!"=="" (
     echo Usage: backup_cloud.cmd ^<node_name^> [options]
     exit /b 1
+)
+
+if "!APP_SPECS!"=="" (
+    if exist "libscript.json" (
+        jq -e ".applications != null and (.applications | length > 0)" "libscript.json" >nul 2>&1
+        if not errorlevel 1 (
+            for /f "delims=" %%M in ('jq -r ".applications[] | \"\(.path // .name):\(.remote_dest // .name)@\(.domain // \"\")\"" "libscript.json" 2^>nul') do (
+                set "APP_SPECS=!APP_SPECS!%%M|"
+            )
+        )
+    )
 )
 
 if "!EXPORT_MODE!"=="1" goto :run_export_state

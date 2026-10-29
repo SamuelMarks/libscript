@@ -1,0 +1,30 @@
+# =============================================================================
+# Native Windows Requirements for openedx-platform (Python 3.12 win_amd64)
+#
+# Install with:
+#   $env:PIP_CONSTRAINT = "$PWD\build-constraints.txt"
+#   python -m pip install setuptools==80.9.0 pip==24.0 wheel==0.43.0
+#   pip install -r requirements-windows.txt
+#   pip install -e . --no-deps
+# =============================================================================
+
+# 1. Core Open edX platform dependencies (all 365+ packages in base.txt)
+-r requirements/edx/base.txt
+
+# 2. Native Windows Production WSGI Server (replaces gunicorn & uwsgi)
+waitress==3.0.2
+
+# 3. Tutor Production Extras (from ../tutor/tutor/templates/build/openedx/Dockerfile)
+django-redis==5.4.0
+openedx-scorm-xblock>=19.0.0,<20.0.0
+
+# 4. Frontend Asset & Sass Compilation (replaces requirements/edx/assets.txt)
+# Uses libsass==0.23.0 which provides prebuilt cp312-abi3-win_amd64 wheels on PyPI
+click==8.3.3
+libsass==0.23.0
+
+# 5. Native Win32 API bindings (for Windows Services / Event Log / file locking)
+pywin32==310 ; sys_platform == "win32"
+
+# 6. Optional: File watcher for development asset recompilation
+watchdog==6.0.0

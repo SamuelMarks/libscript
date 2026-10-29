@@ -31,8 +31,19 @@ $Session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
 Write-Host "=== Open edX Real Service Coordination & Authentication Test (PowerShell) ==="
 
-# 1. Backing Services Check
-Write-Host "[CHECK 1/6] Verifying backing services..."
+# 1. Backing Services Check & Production YAML Config Verification
+Write-Host "[CHECK 1/6] Verifying backing services, production YAML configs, and zero-source-edit runtime..."
+if (Test-Path (Join-Path $ScriptDir "config_helper.ps1")) {
+    & (Join-Path $ScriptDir "config_helper.ps1") generate (Join-Path $InstallDir "config\lms.env.json") (Join-Path $InstallDir "config\cms.env.json") | Out-Null
+}
+if (Test-Path (Join-Path $ScriptDir "windows_runtime_setup.ps1")) {
+    & (Join-Path $ScriptDir "windows_runtime_setup.ps1") -InstallDir $InstallDir | Out-Null
+}
+foreach ($reqCfg in @("lms.yml", "cms.yml", "revisions.yml", "Caddyfile")) {
+    if (-not (Test-Path (Join-Path $InstallDir "config\$reqCfg"))) {
+        throw "Missing generated configuration file: $InstallDir\config\$reqCfg"
+    }
+}
 if (Get-Command "Get-Service" -ErrorAction SilentlyContinue) {
     $mysqlSvc = Get-Service -Name "mysql" -ErrorAction SilentlyContinue
     if ($mysqlSvc) { Write-Host "  -> MySQL: $($mysqlSvc.Status)" }
@@ -50,13 +61,12 @@ try {
 
 # 2. Verify LMS and CMS are reachable
 Write-Host "[CHECK 2/6] Verifying LMS and Studio availability..."
-$wsgiPy = Join-Path $ScriptDir "wsgi_server.py"
 try {
     $null = Invoke-WebRequest -Uri "http://127.0.0.1`:$LmsPort/" -UseBasicParsing -TimeoutSec 2
 } catch {
-    if (Test-Path $wsgiPy) {
-        Write-Host "  -> Starting Open edX WSGI server..."
-        Start-Process -NoNewWindow python -ArgumentList @($wsgiPy, "--lms-port", "$LmsPort", "--cms-port", "$CmsPort")
+    if (Test-Path (Join-Path $ScriptDir "service_worker.ps1")) {
+        Write-Host "  -> Starting Open edX WSGI services via service_worker.ps1..."
+        & (Join-Path $ScriptDir "service_worker.ps1") start $LmsPort $CmsPort
         Start-Sleep -Seconds 3
     }
 }

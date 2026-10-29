@@ -66,12 +66,5 @@ if exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "mysql"
 )
 
-endlocal & (
-    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-    set "MYSQL_DATABASE=%MYSQL_DATABASE%"
-    set "MYSQL_PORT=%MYSQL_PORT%"
-    set "MYSQL_USER=%MYSQL_USER%"
-    set "MYSQL_VERSION=%MYSQL_VERSION%"
-    set "PATH=%PATH%"
-)
+endlocal & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "MYSQL_DATABASE=%MYSQL_DATABASE%" & set "MYSQL_PORT=%MYSQL_PORT%" & set "MYSQL_USER=%MYSQL_USER%" & set "MYSQL_VERSION=%MYSQL_VERSION%" & set "PATH=%PATH%"
 exit /b 0

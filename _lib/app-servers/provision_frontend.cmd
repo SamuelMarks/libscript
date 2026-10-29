@@ -7,7 +7,7 @@
 :: (jsBrowserDistribution, wasmJsBrowserDistribution, Compose Desktop) targets, and stages to webroots.
 ::
 :: ## Usage
-::   call provision_frontend.cmd --app-dir <dir> --manifest <path> --packaging <path>
+::   call provision_frontend.cmd --app-dir <dir> --manifest <path> [--packaging <path>] [--force-rebuild] [--force-reinstall]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -77,6 +77,16 @@ if "%~1"=="--packaging" (
     shift
     goto parse_args
 )
+if /i "%~1"=="--force-rebuild" (
+    set "FORCE_REBUILD=1"
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--force-reinstall" (
+    set "FORCE_REINSTALL=1"
+    shift
+    goto parse_args
+)
 shift
 goto parse_args
 
@@ -98,7 +108,7 @@ for %%A in ("!APP_DIR!") do set "APP_DIR=%%~fA"
 set "WEBROOT_BASE=!APP_DIR!\webroot"
 if not exist "!WEBROOT_BASE!" mkdir "!WEBROOT_BASE!"
 
-call :install_node_deps "!APP_DIR!"
+call :install_node_deps "!APP_DIR!" ""
 
 where jq >nul 2>nul
 if errorlevel 1 exit /b 0
@@ -122,19 +132,25 @@ exit /b 0
 :: Installs npm/pnpm/yarn dependencies in a target directory if package.json exists.
 :install_node_deps
 set "nd_dir=%~1"
+set "nd_cmd=%~2"
 if exist "!nd_dir!\package.json" (
     pushd "!nd_dir!"
+    if "%FORCE_REINSTALL%"=="1" (
+        if exist "node_modules" rmdir /s /q "node_modules" 2>nul
+    )
     if not "%FORCE_REINSTALL%"=="1" if exist "node_modules\.libscript_pkg_hash" (
         echo [REUSE] Frontend dependencies in !nd_dir! are up-to-date.
         popd
         exit /b 0
     )
-    if exist "package-lock.json" (
-        call npm ci --prefer-offline --no-audit
+    if not "!nd_cmd!"=="" (
+        call !nd_cmd!
+    ) else if exist "package-lock.json" (
+        call npm ci --prefer-offline --no-audit --no-fund
     ) else if exist "npm-shrinkwrap.json" (
-        call npm ci --prefer-offline --no-audit
+        call npm ci --prefer-offline --no-audit --no-fund
     ) else (
-        call npm install --no-audit
+        call npm install --no-audit --no-fund
     )
     if exist "node_modules" echo installed> "node_modules\.libscript_pkg_hash"
     popd
@@ -146,14 +162,22 @@ exit /b 0
 :build_single_frontend
 set "svc_id=default"
 set "src_rel=."
+set "inst_cmd="
 set "build_cmd="
 set "out_dir="
+set "art_chk="
+set "stage_override="
+set "framework="
 set "kmp_target="
 
 for /f "delims=" %%a in ('echo !svc! ^| jq -r ".id // .name // \"default\"" 2^>nul') do set "svc_id=%%a"
 for /f "delims=" %%b in ('echo !svc! ^| jq -r ".source_dir // .working_dir // .cwd // \".\"" 2^>nul') do set "src_rel=%%b"
+for /f "delims=" %%i in ('echo !svc! ^| jq -r ".install_command // empty" 2^>nul') do set "inst_cmd=%%i"
 for /f "delims=" %%c in ('echo !svc! ^| jq -r ".build_command // empty" 2^>nul') do set "build_cmd=%%c"
 for /f "delims=" %%d in ('echo !svc! ^| jq -r ".output_dir // .dist_dir // empty" 2^>nul') do set "out_dir=%%d"
+for /f "delims=" %%k in ('echo !svc! ^| jq -r ".artifact_check // empty" 2^>nul') do set "art_chk=%%k"
+for /f "delims=" %%s in ('echo !svc! ^| jq -r ".stage_dir // empty" 2^>nul') do set "stage_override=%%s"
+for /f "delims=" %%f in ('echo !svc! ^| jq -r "(.framework // \"\") | ascii_downcase" 2^>nul') do set "framework=%%f"
 for /f "delims=" %%e in ('echo !svc! ^| jq -r ".target // empty" 2^>nul') do set "kmp_target=%%e"
 
 set "src_dir=!APP_DIR!"
@@ -167,7 +191,23 @@ if not "!src_rel!"=="." (
 )
 
 set "target_webroot=!WEBROOT_BASE!\!svc_id!"
+if not "!stage_override!"=="" (
+    set "stage_win=!stage_override:/=\!"
+    if "!stage_win:~1,1!"==":" (
+        set "target_webroot=!stage_win!"
+    ) else (
+        set "target_webroot=!APP_DIR!\!stage_win!"
+    )
+)
 if not exist "!target_webroot!" mkdir "!target_webroot!"
+
+if "%FORCE_REBUILD%"=="1" (
+    if exist "!src_dir!\dist" rmdir /s /q "!src_dir!\dist" 2>nul
+    if exist "!src_dir!\build" rmdir /s /q "!src_dir!\build" 2>nul
+    if exist "!src_dir!\.angular" rmdir /s /q "!src_dir!\.angular" 2>nul
+    if exist "!src_dir!\.vite" rmdir /s /q "!src_dir!\.vite" 2>nul
+    if exist "!src_dir!\.libscript_build.sha256" del /f /q "!src_dir!\.libscript_build.sha256" 2>nul
+)
 
 set "is_kmp=0"
 if exist "!src_dir!\build.gradle.kts" set "is_kmp=1"
@@ -182,24 +222,32 @@ if "!is_kmp!"=="1" (
 
 if exist "!src_dir!\package.json" (
     if /i not "!src_dir!"=="!APP_DIR!" (
-        call :install_node_deps "!src_dir!"
+        call :install_node_deps "!src_dir!" "!inst_cmd!"
+    ) else if not "!inst_cmd!"=="" (
+        call :install_node_deps "!src_dir!" "!inst_cmd!"
     )
-    set "_check_out=!out_dir!"
-    if "!_check_out!"=="" set "_check_out=dist"
-    set "_check_out_win=!_check_out:/=\!"
     set "_can_reuse_fe=0"
     if not "%FORCE_REBUILD%"=="1" (
-        if exist "!src_dir!\!_check_out_win!\index.html" (
-            if exist "!src_dir!\.libscript_build.sha256" set "_can_reuse_fe=1"
-        )
+        call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
+        if "!_ART_EXISTS!"=="1" set "_can_reuse_fe=1"
     )
     if "!_can_reuse_fe!"=="1" (
-        echo [REUSE] Frontend build in '!src_dir!\!_check_out_win!' is up-to-date.
+        echo [REUSE] Frontend build for '!svc_id!' in '!src_dir!' is up-to-date.
     ) else (
+        echo [BUILD] Building frontend '!svc_id!' ^(!framework!^) in '!src_dir!'...
         pushd "!src_dir!"
         for /f "delims=" %%v in ('echo !svc! ^| jq -r ".env // {} | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do set "%%v"
         if not "!build_cmd!"=="" (
             call !build_cmd!
+        ) else if /i "!framework!"=="angular" (
+            call npx ng build
+        ) else if /i "!framework!"=="vite" (
+            findstr /C:"\"build\"" "package.json" >nul 2>&1
+            if not errorlevel 1 (
+                call npm run build
+            ) else (
+                call npx vite build
+            )
         ) else (
             findstr /C:"\"build\"" "package.json" >nul 2>&1
             if not errorlevel 1 call npm run build
@@ -208,6 +256,34 @@ if exist "!src_dir!\package.json" (
         popd
     )
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
+) else (
+    call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
+)
+exit /b 0
+
+:: ## check_fe_artifact
+:: Checks whether the compiled frontend artifact or index.html exists on disk.
+:check_fe_artifact
+set "_cfa_src=%~1"
+set "_cfa_app=%~2"
+set "_cfa_out=%~3"
+set "_cfa_art=%~4"
+set "_ART_EXISTS=0"
+if not "!_cfa_art!"=="" (
+    set "_cfa_art_win=!_cfa_art:/=\!"
+    if exist "!_cfa_src!\!_cfa_art_win!" set "_ART_EXISTS=1"
+    if exist "!_cfa_app!\!_cfa_art_win!" set "_ART_EXISTS=1"
+    exit /b 0
+)
+if not "!_cfa_out!"=="" (
+    set "_cfa_out_win=!_cfa_out:/=\!"
+    if exist "!_cfa_src!\!_cfa_out_win!\index.html" set "_ART_EXISTS=1"
+    if exist "!_cfa_app!\!_cfa_out_win!\index.html" set "_ART_EXISTS=1"
+)
+if exist "!_cfa_src!\dist\index.html" set "_ART_EXISTS=1"
+for /d %%D in ("!_cfa_src!\dist\*") do (
+    if exist "%%~fD\browser\index.html" set "_ART_EXISTS=1"
+    if exist "%%~fD\index.html" set "_ART_EXISTS=1"
 )
 exit /b 0
 
@@ -252,6 +328,10 @@ if not "!st_out!"=="" (
     set "st_out_win=!st_out:/=\!"
     if exist "!st_src!\!st_out_win!" (
         xcopy /E /I /Y "!st_src!\!st_out_win!\*" "!st_dst!" >nul 2>&1
+        exit /b 0
+    )
+    if exist "!APP_DIR!\!st_out_win!" (
+        xcopy /E /I /Y "!APP_DIR!\!st_out_win!\*" "!st_dst!" >nul 2>&1
         exit /b 0
     )
 )

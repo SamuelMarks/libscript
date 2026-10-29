@@ -169,11 +169,22 @@ theme_build() {
     (if cd "${_dest}"; then npm install 2>/dev/null && npm run build 2>/dev/null; fi) || true
   fi
 
-  # Run collectstatic with theme settings if Django is present
+  # Run compile-sass, webpack, compilejsi18n, and collectstatic with production settings
   _py="$(resolve_python)"
-  if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
-    "${_py}" "${MANAGE_PY}" lms compilejsi18n 2>/dev/null || true
-    "${_py}" "${MANAGE_PY}" lms collectstatic --noinput 2>/dev/null || true
+  _codebase="${OPENEDX_INSTALL_DIR}/codebase"
+  [ ! -f "${_codebase}/manage.py" ] && _codebase="${OPENEDX_INSTALL_DIR}"
+  export LMS_CFG="${OPENEDX_INSTALL_DIR}/config/lms.yml"
+  export CMS_CFG="${OPENEDX_INSTALL_DIR}/config/cms.yml"
+  export REVISION_CFG="${OPENEDX_INSTALL_DIR}/config/revisions.yml"
+  export STATIC_ROOT_LMS="${OPENEDX_INSTALL_DIR}/staticfiles"
+  export STATIC_ROOT_CMS="${OPENEDX_INSTALL_DIR}/staticfiles/studio"
+  if [ -f "${_codebase}/package.json" ]; then
+    (cd "${_codebase}" && npm run compile-sass 2>/dev/null && npm run webpack 2>/dev/null) || true
+  fi
+  if [ -f "${_codebase}/manage.py" ] && [ -n "${_py}" ]; then
+    "${_py}" "${_codebase}/manage.py" lms --settings=production compilejsi18n 2>/dev/null || true
+    "${_py}" "${_codebase}/manage.py" lms --settings=production collectstatic --noinput 2>/dev/null || true
+    "${_py}" "${_codebase}/manage.py" cms --settings=production collectstatic --noinput 2>/dev/null || true
   fi
 
   log_success "Theme '${_name}' assets compiled successfully."

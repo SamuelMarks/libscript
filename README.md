@@ -824,6 +824,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `gcc`                                 | `languages`        | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `gcsfuse`                             | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `gem`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `gettext`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `ghcup`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `gitea`                               | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `gitlab`                              | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
@@ -852,6 +853,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `lfs-toolchain`                       | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `lighttpd`                            | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `luarocks`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `lynx`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `macports`                            | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
 | `magento`                             | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `mamba`                               | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
@@ -996,6 +998,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `netctl`             | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `networkmanager`     | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `nftables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `nssm`               | `init-systems`     | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `nvidia`             | `graphics`         | -           | ✅          | ✅          | -       | -     | -       | -     |
 | `openbox`            | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `openrc`             | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | -       | -     |

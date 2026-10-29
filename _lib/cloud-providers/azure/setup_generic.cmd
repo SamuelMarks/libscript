@@ -332,7 +332,14 @@ set "_RG=%~3"
 set "_PORTS=%~4"
 if /i "!_SUB!"=="create" (
     call :run_az network nsg create --name "!_NAME!" --resource-group "!_RG!" --tags "ManagedBy=LibScript"
-    exit /b !errorlevel!
+    if not "!_PORTS!"=="" (
+        set "_PRIO=1000"
+        for %%P in (!_PORTS!) do (
+            call :run_az network nsg rule create --resource-group "!_RG!" --nsg-name "!_NAME!" --name "AllowPort_%%P" --priority !_PRIO! --destination-port-ranges "%%P" --access Allow --protocol Tcp --direction Inbound >nul 2>&1
+            set /a _PRIO+=10
+        )
+    )
+    exit /b 0
 )
 if /i "!_SUB!"=="open-port" (
     call :run_az network nsg rule create --resource-group "!_RG!" --nsg-name "!_NAME!" --name "AllowPort_!_PORTS!" --priority 1000 --destination-port-ranges "!_PORTS!" --access Allow --protocol Tcp
@@ -450,6 +457,28 @@ if /i "!_SUB!"=="record" (
     call :run_az network dns record-set list -g "!_RG!" -z "!_ZONE!" -o table
     exit /b 0
 )
+if /i "!_SUB!"=="map-node" (
+    set "_MN_NODE=%~2"
+    set "_MN_RG=%~3"
+    set "_MN_DNS_RG=%~4"
+    set "_MN_FQDN=%~5"
+    set "_MN_IP="
+    for /f "delims=" %%I in ('call :action_node ip "!_MN_NODE!" "!_MN_RG!" 2^>nul') do set "_MN_IP=%%I"
+    if not "!_MN_IP!"=="" (
+        for /f "tokens=1* delims=." %%A in ("!_MN_FQDN!") do (
+            call :run_az network dns record-set a add-record -g "!_MN_DNS_RG!" -z "%%B" -n "%%A" -a "!_MN_IP!"
+        )
+    )
+    exit /b 0
+)
+if /i "!_SUB!"=="unmap-node" (
+    set "_UMN_DNS_RG=%~2"
+    set "_UMN_FQDN=%~3"
+    for /f "tokens=1* delims=." %%A in ("!_UMN_FQDN!") do (
+        call :run_az network dns record-set a delete -g "!_UMN_DNS_RG!" -z "%%B" -n "%%A" --yes
+    )
+    exit /b 0
+)
 exit /b 0
 
 :: ## action_node
@@ -459,11 +488,10 @@ if /i "%~1"=="node" shift
 set "_SUB=%~1"
 set "_NODE=%~2"
 if /i "!_SUB!"=="create" (
-    set "_IMG=%~3"
-    set "_RG=%~4"
-    if "!_IMG!"=="" set "_IMG=Ubuntu2204"
-    call :run_az vm create --name "!_NODE!" --resource-group "!_RG!" --image "!_IMG!" --generate-ssh-keys --tags "ManagedBy=LibScript"
-    exit /b !errorlevel!
+    goto :node_create_cmd
+)
+if /i "!_SUB!"=="attach-disk" (
+    goto :action_storage
 )
 if /i "!_SUB!"=="delete" (
     set "_RG=%~3"
@@ -601,3 +629,52 @@ for %%P in ("!_DST!") do if not exist "%%~dpP" mkdir "%%~dpP" >nul 2>nul
 scp -o StrictHostKeyChecking=no -r "!ADMIN_USER!@!_VM_IP!:!_SRC!" "!_DST!"
 exit /b !errorlevel!
 
+
+:: ## node_create_cmd
+:: Parses VM creation options and idempotently creates an Azure VM if it does not already exist.
+:node_create_cmd
+set "_IMG=%~3"
+set "_RG=%~4"
+if "!_IMG!"=="" set "_IMG=Ubuntu2204"
+set "_VM_SZ=%VM_SIZE%"
+if "!_VM_SZ!"=="" set "_VM_SZ=Standard_D4s_v5"
+set "_VNET="
+set "_NSG="
+set "_OS_DISK=128"
+set "_ADM=%ADMIN_USER%"
+if "!_ADM!"=="" set "_ADM=azureuser"
+shift
+shift
+shift
+shift
+:: ## node_create_args
+:: Iterates through optional flags passed to node create.
+:node_create_args
+if "%~1"=="" goto :node_create_exec
+if /i "%~1"=="--size" ( set "_VM_SZ=%~2" & shift & shift & goto :node_create_args )
+if /i "%~1"=="--vnet-name" ( set "_VNET=%~2" & shift & shift & goto :node_create_args )
+if /i "%~1"=="--nsg" ( set "_NSG=%~2" & shift & shift & goto :node_create_args )
+if /i "%~1"=="--os-disk-size-gb" ( set "_OS_DISK=%~2" & shift & shift & goto :node_create_args )
+if /i "%~1"=="--admin-username" ( set "_ADM=%~2" & shift & shift & goto :node_create_args )
+shift
+goto :node_create_args
+:: ## node_create_exec
+:: Checks for existing VM or invokes az vm create.
+:node_create_exec
+if /i not "%DRY_RUN%"=="true" (
+    if not "%DRY_RUN%"=="1" (
+        where az >nul 2>nul
+        if not errorlevel 1 (
+            az vm show -g "!_RG!" -n "!_NODE!" >nul 2>&1
+            if not errorlevel 1 (
+                echo [REUSE] VM '!_NODE!' already exists in '!_RG!'.
+                exit /b 0
+            )
+        )
+    )
+)
+set "_EXTRA_VM="
+if not "!_VNET!"=="" set "_EXTRA_VM=!_EXTRA_VM! --vnet-name !_VNET! --subnet default"
+if not "!_NSG!"=="" set "_EXTRA_VM=!_EXTRA_VM! --nsg !_NSG!"
+call :run_az vm create --name "!_NODE!" --resource-group "!_RG!" --image "!_IMG!" --size "!_VM_SZ!" --os-disk-size-gb "!_OS_DISK!" --admin-username "!_ADM!" --public-ip-sku Standard !_EXTRA_VM! --generate-ssh-keys --tags "ManagedBy=LibScript"
+exit /b !errorlevel!

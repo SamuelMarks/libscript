@@ -257,5 +257,13 @@ if [ "$CMD" = "install-deps" ]; then
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
+  _has_fe=$(jq -r '([ (.services | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) | select(.type == "static" or .type == "spa" or .type == "frontend" or .type == "kmp" or .framework != null or .target != null) ] + [ (.frontends | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) ]) | length' "$json_file" 2>/dev/null || printf '0')
+  if [ "${_has_fe:-0}" -gt 0 ] && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/provision_frontend.sh" ]; then
+    _fe_flags=""
+    [ "$force_rebuild" -eq 1 ] && _fe_flags="--force-rebuild"
+    [ "$force_reinstall" -eq 1 ] && _fe_flags="${_fe_flags:+$_fe_flags }--force-reinstall"
+    # shellcheck disable=SC2086
+    STACK="" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/provision_frontend.sh" --app-dir "$_manifest_dir" --manifest "$json_file" $_fe_flags
+  fi
   exit 0
 fi

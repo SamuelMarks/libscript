@@ -293,25 +293,25 @@ if "!is_json!"=="1" (
     )
 
     exit /b 0
-) else (
-    :: ## loop_services
-    :: Iterates through specified services and triggers execution.
-    :loop_services
-    set "pkg=%~2"
-    if not "!pkg!"=="" (
-        set "LIBSCRIPT_INTERNAL_START=1"
-        set "STACK="
-        if /i "!action!"=="health" (
-            call :perform_health_check "!pkg!" "%~3"
-            if errorlevel 1 exit /b 1
-        ) else (
-            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
-        )
-        shift
-        goto loop_services
-    )
-    exit /b 0
 )
+
+:: ## loop_services
+:: Iterates through specified services and triggers execution.
+:loop_services
+set "pkg=%~2"
+if not "!pkg!"=="" (
+    set "LIBSCRIPT_INTERNAL_START=1"
+    set "STACK="
+    if /i "!action!"=="health" (
+        call :perform_health_check "!pkg!" "%~3"
+        if errorlevel 1 exit /b 1
+    ) else (
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" "!action!" "!pkg!" latest
+    )
+    shift
+    goto loop_services
+)
+exit /b 0
 
 :: ## perform_health_check
 :: Executes a health check for a single component on Windows by hydrating its env and delegating to test.cmd or daemon readiness tools.

@@ -83,15 +83,20 @@ do_start() {
     fi
 
     if [ -x "${_py_bin}" ] && "${_py_bin}" -c "import celery" >/dev/null 2>&1; then
+      export PYTHONPATH="${_codebase}"
+      export LMS_CFG="${_install_dir}/config/lms.yml"
+      export CMS_CFG="${_install_dir}/config/cms.yml"
+      export STUDIO_CFG="${_install_dir}/config/cms.yml"
+      export REVISION_CFG="${_install_dir}/config/revisions.yml"
       case "${_svc}" in
         lms-worker)
-          (cd "${_codebase}" 2>/dev/null || true; nohup "${_py_bin}" -m celery -A lms.celery worker --loglevel=INFO -c 2 >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
+          (cd "${_codebase}" 2>/dev/null || true; SERVICE_VARIANT="lms" DJANGO_SETTINGS_MODULE="lms.envs.production" nohup "${_py_bin}" -m celery --app=lms.celery worker --loglevel=info --concurrency=4 --hostname=edx.lms.core.default.%h --queues=edx.lms.core.default,edx.lms.core.high,edx.lms.core.high_mem --prefetch-multiplier=1 --without-gossip --without-mingle >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
           ;;
         cms-worker)
-          (cd "${_codebase}" 2>/dev/null || true; nohup "${_py_bin}" -m celery -A cms.celery worker --loglevel=INFO -c 2 >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
+          (cd "${_codebase}" 2>/dev/null || true; SERVICE_VARIANT="cms" DJANGO_SETTINGS_MODULE="cms.envs.production" nohup "${_py_bin}" -m celery --app=cms.celery worker --loglevel=info --concurrency=2 --hostname=edx.cms.core.default.%h --queues=edx.cms.core.default,edx.cms.core.high,edx.cms.core.low --prefetch-multiplier=1 --without-gossip --without-mingle >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
           ;;
         celery-beat)
-          (cd "${_codebase}" 2>/dev/null || true; nohup "${_py_bin}" -m celery -A lms.celery beat --loglevel=INFO >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
+          (cd "${_codebase}" 2>/dev/null || true; SERVICE_VARIANT="lms" DJANGO_SETTINGS_MODULE="lms.envs.production" nohup "${_py_bin}" -m celery --app=lms.celery beat --loglevel=info --pidfile="${_pid_file}" --schedule="${_run_dir}/celerybeat-schedule" >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
           ;;
       esac
       _new_pid=$(head -n 1 "${_pid_file}" 2>/dev/null || true)

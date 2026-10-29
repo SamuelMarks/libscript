@@ -53,17 +53,6 @@ goto :find_root
 :: Source logging (must be after SCRIPT_DIR)
 set "LOG_CMD=!SCRIPT_DIR!\_lib\_common\log.cmd"
 
-:: Pre-scan arguments for global offline and cache flags
-for %%A in (%*) do (
-    if /i "%%~A"=="--offline" set "LIBSCRIPT_OFFLINE=1"
-    if /i "%%~A"=="-o" set "LIBSCRIPT_OFFLINE=1"
-    if /i "%%~A"=="--force-offline" (
-        set "LIBSCRIPT_FORCE_OFFLINE=1"
-        set "LIBSCRIPT_OFFLINE=1"
-    )
-    if /i "%%~A"=="--online" set "LIBSCRIPT_OFFLINE=0"
-)
-
 :: Global Option Parsing
 :: ## opt_loop
 :: Performs the opt_loop operation and updates component state.

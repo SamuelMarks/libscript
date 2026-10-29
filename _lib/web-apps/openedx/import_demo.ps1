@@ -1,6 +1,6 @@
 # ## Overview
 # Demo course and library content ingestion utility for Open edX on Windows (PowerShell).
-# Provides automated, idempotent import of demonstration courses and libraries.
+# Provides automated, idempotent import of demonstration courses and content libraries.
 #
 # ## Usage
 #   .\import_demo.ps1 course [-CourseId <id>] [-Repo <url>]
@@ -31,6 +31,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$RepoRoot = (Resolve-Path (Join-Path $ScriptDir "..\..\..")).Path
 
 $InstallDir = if ($env:OPENEDX_INSTALL_DIR) {
     $env:OPENEDX_INSTALL_DIR
@@ -66,11 +67,11 @@ function Show-Help {
 }
 
 # ## Import-DemoCourse
-# Imports a demo course idempotently from git repository.
+# Imports a demo course idempotently from offline cache archive or git repository.
 function Import-DemoCourse {
     param([string]$TargetId, [string]$RepoUrl)
     Write-Host "[INFO] Checking if course '$TargetId' is already registered..."
-    $dataDir = Join-Path $InstallDir "data"
+    $dataDir = if ($env:OPENEDX_DATA_DIR) { $env:OPENEDX_DATA_DIR } else { Join-Path $InstallDir "data" }
     if (-not (Test-Path $dataDir)) {
         New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
     }
@@ -88,15 +89,42 @@ function Import-DemoCourse {
         }
     }
 
-    Write-Host "[INFO] Ingesting demo course '$TargetId' from '$RepoUrl'..."
+    Write-Host "[INFO] Ingesting demo course '$TargetId'..."
     $stagingDir = Join-Path $InstallDir "demo_staging"
     if (Test-Path $stagingDir) {
         Remove-Item -Path $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
     }
+    New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
 
-    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
-    if ($gitCmd) {
-        & git clone --depth 1 $RepoUrl $stagingDir 2>$null
+    $cacheDir = if ($env:LIBSCRIPT_CACHE_DIR) { $env:LIBSCRIPT_CACHE_DIR } else { Join-Path $RepoRoot "cache" }
+    $cachedDemo1 = Join-Path $cacheDir "codebase\openedx-demo-course.tar.gz"
+    $cachedDemo2 = Join-Path $cacheDir "codebase\demo-course.tar.gz"
+    $extracted = $false
+
+    foreach ($cand in @($cachedDemo1, $cachedDemo2)) {
+        if (Test-Path $cand) {
+            Write-Host "[INFO] Extracting offline cached demo course from $cand..."
+            & tar.exe -xf $cand -C $stagingDir --strip-components=1 2>$null
+            if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $stagingDir "course.xml"))) {
+                $extracted = $true
+                break
+            }
+            & tar.exe -xf $cand -C $stagingDir 2>$null
+            $subDir = Get-ChildItem -Path $stagingDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($subDir -and (Test-Path (Join-Path $subDir.FullName "course.xml"))) {
+                $stagingDir = $subDir.FullName
+                $extracted = $true
+                break
+            }
+        }
+    }
+
+    if (-not $extracted) {
+        $gitCmd = Get-Command git -ErrorAction SilentlyContinue
+        if ($gitCmd -and $env:LIBSCRIPT_OFFLINE -ne "1") {
+            Remove-Item -Path $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
+            & git clone --depth 1 $RepoUrl $stagingDir 2>$null
+        }
     }
 
     $python = Find-Python
@@ -105,8 +133,11 @@ function Import-DemoCourse {
     if (Test-Path $managePy) {
         Push-Location $codebaseDir
         try {
-            & $python $managePy cms import $dataDir $stagingDir 2>$null
-            & $python $managePy lms reindex_course --course-id $TargetId 2>$null
+            $env:LMS_CFG = Join-Path $InstallDir 'config\lms.yml'
+            $env:CMS_CFG = Join-Path $InstallDir 'config\cms.yml'
+            $env:REVISION_CFG = Join-Path $InstallDir 'config\revisions.yml'
+            & $python $managePy cms import $dataDir $stagingDir --settings=production 2>$null
+            & $python $managePy lms reindex_course --course-id $TargetId --settings=production 2>$null
         } finally {
             Pop-Location
         }
@@ -121,18 +152,19 @@ function Import-DemoCourse {
     }
     Set-Content -Path $coursesJson -Value (ConvertTo-Json $list -Depth 5) -Encoding Ascii
 
-    if (Test-Path $stagingDir) {
-        Remove-Item -Path $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
+    $stagingRoot = Join-Path $InstallDir "demo_staging"
+    if (Test-Path $stagingRoot) {
+        Remove-Item -Path $stagingRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
     Write-Host "[INFO] Demo course '$TargetId' successfully imported."
 }
 
 # ## Import-DemoLibraries
-# Ingests demo libraries idempotently.
+# Ingests demo content libraries idempotently into Open edX Modulestore and catalog metadata.
 function Import-DemoLibraries {
     param([string]$LibOwner)
     $libId = "library-v1:edX+DemoLib"
-    $dataDir = Join-Path $InstallDir "data"
+    $dataDir = if ($env:OPENEDX_DATA_DIR) { $env:OPENEDX_DATA_DIR } else { Join-Path $InstallDir "data" }
     if (-not (Test-Path $dataDir)) {
         New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
     }
@@ -150,7 +182,38 @@ function Import-DemoLibraries {
         }
     }
 
-    Write-Host "[INFO] Creating demo library for owner '$LibOwner'..."
+    Write-Host "[INFO] Creating demo content library '$libId' for owner '$LibOwner'..."
+    $python = Find-Python
+    $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $managePy = Join-Path $codebaseDir "manage.py"
+    if (Test-Path $managePy) {
+        Push-Location $codebaseDir
+        try {
+            $env:LMS_CFG = Join-Path $InstallDir 'config\lms.yml'
+            $env:CMS_CFG = Join-Path $InstallDir 'config\cms.yml'
+            $env:REVISION_CFG = Join-Path $InstallDir 'config\revisions.yml'
+            $pyScript = @"
+import os
+try:
+    from xmodule.modulestore.django import modulestore
+    from opaque_keys.edx.locator import LibraryLocator
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user = User.objects.filter(username='$LibOwner').first() or User.objects.filter(is_superuser=True).first()
+    uid = user.id if user else 1
+    store = modulestore()
+    loc = LibraryLocator(org='edX', library='DemoLib')
+    if not store.has_item(loc):
+        store.create_library('edX', 'DemoLib', uid, runtime_options={'display_name': 'edX Demonstration Content Library'})
+except Exception:
+    pass
+"@
+            & $python $managePy cms shell --settings=production -c $pyScript 2>$null
+        } finally {
+            Pop-Location
+        }
+    }
+
     $list = @()
     if (Test-Path $libsJson) {
         try { $list = @(Get-Content -Path $libsJson -Raw | ConvertFrom-Json) } catch { $list = @() }

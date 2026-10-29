@@ -127,6 +127,17 @@ if "!NODE!"=="" (
     exit /b 1
 )
 
+if "!APP_SPECS!"=="" (
+    if exist "libscript.json" (
+        jq -e ".applications != null and (.applications | length > 0)" "libscript.json" >nul 2>&1
+        if not errorlevel 1 (
+            for /f "delims=" %%M in ('jq -r ".applications[] | \"\(.path // .name):\(.remote_dest // .name)@\(.domain // \"\")\"" "libscript.json" 2^>nul') do (
+                set "APP_SPECS=!APP_SPECS!%%M|"
+            )
+        )
+    )
+)
+
 if "!IMPORT_MODE!"=="1" goto :run_import_state
 
 echo [RESTORE] Starting restoration ^& reprovisioning for node: !NODE!

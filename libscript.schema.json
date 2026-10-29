@@ -219,6 +219,14 @@
           "healthcheck": {
             "type": ["string", "object"],
             "description": "Alias for health_check supporting identical command, URL, and expect_json properties"
+          },
+          "production_command": {
+            "type": "string",
+            "description": "Production command executed to start the service daemon when LIBSCRIPT_ENV is not development"
+          },
+          "dev_command": {
+            "type": "string",
+            "description": "Development command executed to start the service daemon when LIBSCRIPT_ENV is development"
           }
         }
       }
@@ -347,6 +355,78 @@
           "domain": {
             "type": "string",
             "description": "Public domain name routed to this application."
+          }
+        }
+      }
+    },
+    "frontends": {
+      "type": ["object", "array"],
+      "description": "Declarative frontend, SPA, MFE, and Kotlin Multiplatform (KMP) build and webroot staging specifications.",
+      "items": {
+        "type": "object",
+        "description": "Single frontend or SPA compilation and staging configuration.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique frontend identifier used for staging webroot subdirectories."
+          },
+          "name": {
+            "type": "string",
+            "description": "Logical frontend application name."
+          },
+          "framework": {
+            "type": "string",
+            "description": "Frontend build framework identifier (e.g., angular, vite, react, vue, kmp)."
+          },
+          "working_dir": {
+            "type": "string",
+            "description": "Working directory of the frontend project relative to the manifest directory."
+          },
+          "source_dir": {
+            "type": "string",
+            "description": "Alias for working_dir specifying the frontend source directory."
+          },
+          "package_manager": {
+            "type": "string",
+            "description": "Node.js package manager used for dependency installation (npm, pnpm, yarn, bun)."
+          },
+          "install_command": {
+            "type": "string",
+            "description": "Custom command executed to install frontend dependencies inside working_dir."
+          },
+          "build_command": {
+            "type": "string",
+            "description": "Custom command executed to compile production frontend assets (e.g., npx ng build, npm run build, npx vite build)."
+          },
+          "output_dir": {
+            "type": "string",
+            "description": "Compiled asset output directory relative to working_dir or the manifest directory."
+          },
+          "artifact_check": {
+            "type": "string",
+            "description": "Path to a compiled output artifact (such as index.html) verified for idempotent build reuse."
+          },
+          "stage_dir": {
+            "type": "string",
+            "description": "Target directory where compiled frontend assets are staged for static serving."
+          },
+          "clean_dirs": {
+            "type": "array",
+            "description": "Directories cleaned inside working_dir when --force-rebuild is requested.",
+            "items": {
+              "type": "string",
+              "description": "Relative directory path to remove before rebuilding."
+            }
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables exported during frontend dependency installation and compilation.",
+            "patternProperties": {
+              "^[A-Z0-9_]+$": {
+                "type": "string",
+                "description": "Environment variable string value."
+              }
+            }
           }
         }
       }

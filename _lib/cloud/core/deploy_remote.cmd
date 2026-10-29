@@ -74,6 +74,9 @@ shift
 set "APPS_PATHS="
 set "APPS_DOMAINS="
 set "SHARED_DB="
+if "%FORCE_REINSTALL%"=="" set "FORCE_REINSTALL=0"
+if "%FORCE_REBUILD%"=="" set "FORCE_REBUILD=0"
+if "%DRY_RUN_MODE%"=="" set "DRY_RUN_MODE=0"
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -105,9 +108,10 @@ if "%~1"=="--shared-db" (
 if /i "%~1"=="--skip-infra" (shift & goto parse_args)
 if /i "%~1"=="--skip-prepare" (shift & goto parse_args)
 if /i "%~1"=="--skip-verify" (shift & goto parse_args)
-if /i "%~1"=="--force-reinstall" (shift & goto parse_args)
-if /i "%~1"=="--force-rebuild" (shift & goto parse_args)
-if /i "%~1"=="--dry-run" (shift & goto parse_args)
+if /i "%~1"=="--force-reinstall" (set "FORCE_REINSTALL=1" & shift & goto parse_args)
+if /i "%~1"=="--force-rebuild" (set "FORCE_REBUILD=1" & shift & goto parse_args)
+if /i "%~1"=="--dry-run" (set "DRY_RUN_MODE=1" & shift & goto parse_args)
+if /i "%~1"=="-n" (set "DRY_RUN_MODE=1" & shift & goto parse_args)
 echo [ERROR] Unknown argument: %~1
 exit /b 1
 
@@ -149,7 +153,13 @@ for /f "delims=" %%R in ('ssh "!TARGET_HOST!" "cat $HOME/.libscript/deploy_state
 )
 
 set "_SYNC_STATE=SYNCED"
-if "!LOCAL_SUM!"=="!REMOTE_SUM!" (
+set "_DO_SKIP_SYNC=0"
+if "!FORCE_REINSTALL!"=="0" (
+    if "!FORCE_REBUILD!"=="0" (
+        if "!LOCAL_SUM!"=="!REMOTE_SUM!" set "_DO_SKIP_SYNC=1"
+    )
+)
+if "!_DO_SKIP_SYNC!"=="1" (
     echo [INFO] [SKIPPED] !APP_NAME! -^> https://!APP_DOMAIN! is live and up-to-date.
     set "_SYNC_STATE=UP-TO-DATE"
 ) else (
@@ -280,8 +290,11 @@ exit /b 0
 :execute_lifecycle_hooks
 set "rdir=%~1"
 set "aname=%~2"
+set "_DR_FLAGS="
+if "!FORCE_REINSTALL!"=="1" set "_DR_FLAGS=!_DR_FLAGS! --force-reinstall"
+if "!FORCE_REBUILD!"=="1" set "_DR_FLAGS=!_DR_FLAGS! --force-rebuild"
 echo [INFO] Executing lifecycle hooks for !aname!...
-ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json && REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh start libscript.json; fi"
+ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_DR_FLAGS! && REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh start libscript.json; fi"
 exit /b 0
 
 :: ## configure_routing

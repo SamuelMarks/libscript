@@ -63,11 +63,19 @@ if "!LIBSCRIPT_ROOT_DIR!"=="" (
 )
 
 if "%OPENEDX_INSTALL_DIR%"=="" (
-    if defined LIBSCRIPT_HOME (
+    if exist "%ProgramData%\OpenEdX\install_dir.txt" (
+        set /p OPENEDX_INSTALL_DIR=<"%ProgramData%\OpenEdX\install_dir.txt"
+    ) else if defined LIBSCRIPT_HOME (
         set "OPENEDX_INSTALL_DIR=%LIBSCRIPT_HOME%\openedx"
     ) else (
         set "OPENEDX_INSTALL_DIR=%USERPROFILE%\.libscript\openedx"
     )
+)
+if "%OPENEDX_INSTALL_DIR:~-1%"==" " set "OPENEDX_INSTALL_DIR=%OPENEDX_INSTALL_DIR:~0,-1%"
+if "%OPENEDX_INSTALL_DIR:~-1%"=="\" set "OPENEDX_INSTALL_DIR=%OPENEDX_INSTALL_DIR:~0,-1%"
+if not "%OPENEDX_DATA_DIR%"=="" (
+    if "%OPENEDX_DATA_DIR:~-1%"==" " set "OPENEDX_DATA_DIR=%OPENEDX_DATA_DIR:~0,-1%"
+    if "%OPENEDX_DATA_DIR:~-1%"=="\" set "OPENEDX_DATA_DIR=%OPENEDX_DATA_DIR:~0,-1%"
 )
 
 set "PYTHON_BIN=%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe"
@@ -86,6 +94,8 @@ if "%CMD%"=="" goto show_help
 if "%CMD%"=="help" goto show_help
 if "%CMD%"=="--help" goto show_help
 if "%CMD%"=="-h" goto show_help
+if "%CMD%"=="/?" goto show_help
+if "%CMD%"=="-?" goto show_help
 
 if "%CMD%"=="course" goto do_course
 if "%CMD%"=="libraries" goto do_libraries
@@ -121,45 +131,18 @@ echo [ERROR] Unknown option: %~1 >&2
 exit /b 1
 
 :: ## run_import_course
-:: Executes demo course ingestion and reindexing pipeline.
+:: Executes demo course ingestion and reindexing pipeline via import_demo.ps1.
 :run_import_course
-echo [INFO] Checking if course '%COURSE_ID%' is already registered...
-set "DATA_DIR=%OPENEDX_INSTALL_DIR%\data"
-if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
-
 where powershell >nul 2>&1
 if not errorlevel 1 (
-    powershell -NoProfile -Command "$p = Join-Path '%DATA_DIR%' 'courses.json'; if ((Test-Path $p) -and ((Get-Content $p -Raw | ConvertFrom-Json) -contains '%COURSE_ID%')) { exit 0 } else { exit 1 }"
-    if not errorlevel 1 (
-        echo [INFO] Demo course '%COURSE_ID%' is already installed. Skipping.
-        exit /b 0
-    )
+    powershell -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\import_demo.ps1" course -CourseId "%COURSE_ID%" -Repo "%REPO_URL%"
+    exit /b !ERRORLEVEL!
 )
-
-echo [INFO] Ingesting demo course '%COURSE_ID%' from '%REPO_URL%'...
-set "STAGING_DIR=%OPENEDX_INSTALL_DIR%\demo_staging"
-if exist "%STAGING_DIR%" rmdir /s /q "%STAGING_DIR%"
-where git >nul 2>nul
-if not errorlevel 1 (
-    git clone --depth 1 "%REPO_URL%" "%STAGING_DIR%" 2>nul
-)
-
-if exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
-    cd /D "%OPENEDX_INSTALL_DIR%\codebase"
-    call "%PYTHON_BIN%" manage.py cms import "%DATA_DIR%" "%STAGING_DIR%" || exit /b 1
-    call "%PYTHON_BIN%" manage.py lms reindex_course --course-id "%COURSE_ID%" || exit /b 1
-)
-
-where powershell >nul 2>&1
-if not errorlevel 1 (
-    powershell -NoProfile -Command "$p = Join-Path '%DATA_DIR%' 'courses.json'; $d = @(); if (Test-Path $p) { try { $d = @(Get-Content $p -Raw | ConvertFrom-Json) } catch { $d = @() } }; if ($d -notcontains '%COURSE_ID%') { $d += '%COURSE_ID%'; Set-Content -Path $p -Value (ConvertTo-Json $d) -Encoding Ascii }"
-)
-if exist "%STAGING_DIR%" rmdir /s /q "%STAGING_DIR%"
-echo [INFO] Demo course '%COURSE_ID%' successfully imported.
-exit /b 0
+echo [ERROR] PowerShell interpreter not found to execute import_demo.ps1. >&2
+exit /b 1
 
 :: ## do_libraries
-:: Imports sample content libraries into Open edX.
+:: Imports sample content libraries into Open edX via import_demo.ps1.
 :do_libraries
 shift
 set "OWNER=admin"
@@ -168,27 +151,13 @@ if "%~1"=="--owner" (
     shift
     shift
 )
-set "LIB_ID=library-v1:edX+DemoLib"
-set "DATA_DIR=%OPENEDX_INSTALL_DIR%\data"
-if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
-
-echo [INFO] Checking if demo library '%LIB_ID%' is already registered...
 where powershell >nul 2>&1
 if not errorlevel 1 (
-    powershell -NoProfile -Command "$p = Join-Path '%DATA_DIR%' 'libraries.json'; if ((Test-Path $p) -and ((Get-Content $p -Raw | ConvertFrom-Json) -contains '%LIB_ID%')) { exit 0 } else { exit 1 }"
-    if not errorlevel 1 (
-        echo [INFO] Demo library '%LIB_ID%' is already installed. Skipping.
-        exit /b 0
-    )
+    powershell -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\import_demo.ps1" libraries -Owner "%OWNER%"
+    exit /b !ERRORLEVEL!
 )
-
-echo [INFO] Creating demo library for owner '%OWNER%'...
-where powershell >nul 2>&1
-if not errorlevel 1 (
-    powershell -NoProfile -Command "$p = Join-Path '%DATA_DIR%' 'libraries.json'; $d = @(); if (Test-Path $p) { try { $d = @(Get-Content $p -Raw | ConvertFrom-Json) } catch { $d = @() } }; if ($d -notcontains '%LIB_ID%') { $d += '%LIB_ID%'; Set-Content -Path $p -Value (ConvertTo-Json $d) -Encoding Ascii }"
-)
-echo [INFO] Demo library '%LIB_ID%' successfully created.
-exit /b 0
+echo [ERROR] PowerShell interpreter not found to execute import_demo.ps1. >&2
+exit /b 1
 
 :: ## show_help
 :: Displays demo content ingestion usage.

@@ -19,13 +19,16 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -45,13 +48,15 @@ done
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
 PYTHON_BIN="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
 MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
-DATA_DIR="${OPENEDX_INSTALL_DIR}/data"
+DATA_DIR="${OPENEDX_DATA_DIR:-${OPENEDX_INSTALL_DIR}/data}"
+CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
 
 # ## resolve_python
 # Resolves python interpreter.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
-    printf '%s\n' "${PYTHON_BIN}"
+    printf '%s
+' "${PYTHON_BIN}"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -81,7 +86,6 @@ course_exists() {
     fi
   fi
 
-  # Check mock/metadata catalog file
   _meta="${DATA_DIR}/courses.json"
   if [ -f "${_meta}" ]; then
     if grep -F "${_cid}" "${_meta}" >/dev/null 2>&1; then
@@ -114,13 +118,14 @@ if "${_cid}" not in data:
 EOF
   else
     if [ ! -f "${DATA_DIR}/courses.txt" ] || ! grep -qxF "${_cid}" "${DATA_DIR}/courses.txt" 2>/dev/null; then
-      printf '%s\n' "${_cid}" >> "${DATA_DIR}/courses.txt"
+      printf '%s
+' "${_cid}" >> "${DATA_DIR}/courses.txt"
     fi
   fi
 }
 
 # ## import_course
-# Imports a demo course into Open edX.
+# Imports a demo course into Open edX from offline cache archive or git repository.
 #
 # Inputs:
 #   Optional arguments:
@@ -155,21 +160,36 @@ import_course() {
     return 0
   fi
 
-  log_info "Ingesting demo course from '${_repo_url}'..."
+  log_info "Ingesting demo course '${_course_id}'..."
   _staging_dir="${OPENEDX_INSTALL_DIR}/demo_course_staging"
+  rm -rf "${_staging_dir}"
   mkdir -p "${_staging_dir}"
 
-  if command -v git >/dev/null 2>&1; then
+  _extracted=0
+  for _cand in "${CACHE_DIR}/codebase/openedx-demo-course.tar.gz" "${CACHE_DIR}/codebase/demo-course.tar.gz"; do
+    if [ -f "${_cand}" ]; then
+      log_info "Extracting offline cached demo course from ${_cand}..."
+      if tar -xzf "${_cand}" -C "${_staging_dir}" --strip-components=1 2>/dev/null && [ -f "${_staging_dir}/course.xml" ]; then
+        _extracted=1
+        break
+      fi
+    fi
+  done
+
+  if [ "${_extracted}" -eq 0 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v git >/dev/null 2>&1; then
     rm -rf "${_staging_dir}"
-    git clone --depth 1 "${_repo_url}" "${_staging_dir}" 2>/dev/null || true
+    git clone --depth 1 "${_repo_url}" "${_staging_dir}" 2>/dev/null || mkdir -p "${_staging_dir}"
   fi
 
   _py="$(resolve_python)"
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
+    export LMS_CFG="${OPENEDX_INSTALL_DIR}/config/lms.yml"
+    export CMS_CFG="${OPENEDX_INSTALL_DIR}/config/cms.yml"
+    export REVISION_CFG="${OPENEDX_INSTALL_DIR}/config/revisions.yml"
     log_info 'Importing course XML/tarball via Studio cms import...'
-    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py cms import "${OPENEDX_INSTALL_DIR}/data" "${_staging_dir}") || exit 1
+    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py cms import "${DATA_DIR}" "${_staging_dir}" --settings=production) || exit 1
     log_info "Reindexing search index for course '${_course_id}'..."
-    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py lms reindex_course --course-id "${_course_id}") || exit 1
+    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py lms reindex_course --course-id "${_course_id}" --settings=production) || exit 1
   else
     log_warn 'manage.py not found in codebase, skipping demo import.'
   fi
@@ -180,7 +200,7 @@ import_course() {
 }
 
 # ## import_libraries
-# Imports demonstration content libraries for Studio catalog.
+# Imports demonstration content libraries into Studio modulestore and catalog metadata.
 #
 # Inputs:
 #   Optional arguments:
@@ -213,16 +233,24 @@ import_libraries() {
   mkdir -p "${DATA_DIR}"
   _py="$(resolve_python)"
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import os, sys
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cms.envs.production")
+    export LMS_CFG="${OPENEDX_INSTALL_DIR}/config/lms.yml"
+    export CMS_CFG="${OPENEDX_INSTALL_DIR}/config/cms.yml"
+    export REVISION_CFG="${OPENEDX_INSTALL_DIR}/config/revisions.yml"
+    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py cms shell --settings=production -c "
 try:
-    import django
-    django.setup()
-    print("Content library initialized.")
-except Exception as e:
-    print(f"Notice: Django DB access not available ({e}).")
-EOF
+    from xmodule.modulestore.django import modulestore
+    from opaque_keys.edx.locator import LibraryLocator
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user = User.objects.filter(username='${_owner}').first() or User.objects.filter(is_superuser=True).first()
+    uid = user.id if user else 1
+    store = modulestore()
+    loc = LibraryLocator(org='edX', library='DemoLib')
+    if not store.has_item(loc):
+        store.create_library('edX', 'DemoLib', uid, runtime_options={'display_name': 'edX Demonstration Content Library'})
+except Exception:
+    pass
+" 2>/dev/null) || true
   fi
 
   if [ -n "${_py}" ]; then
@@ -272,7 +300,7 @@ case "${COMMAND}" in
   libraries|library)
     import_libraries "$@"
     ;;
-  help|--help|-h)
+  help|--help|-h|/\?|-\?)
     show_help
     exit 0
     ;;

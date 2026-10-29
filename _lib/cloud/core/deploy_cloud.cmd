@@ -530,9 +530,15 @@ if "!FORCE_REINSTALL!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-reinstall"
 if "!FORCE_REBUILD!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-rebuild"
 
 call :compute_app_checksum "!_SP_REPO!"
+set "_ART_CMD=true"
+if exist "!_SP_REPO!\libscript.json" (
+    for /f "delims=" %%K in ('jq -r "([ (.frontends | if type == \"array\" then .[].artifact_check? elif type == \"object\" then .[].artifact_check? else empty end), (.hooks.build[]?.artifact_check?) ] | map(select(. != null and . != \"\")) | unique)[]?" "!_SP_REPO!\libscript.json" 2^>nul') do (
+        set "_ART_CMD=!_ART_CMD! && [ -e ~/!_SP_DEST!/%%K ]"
+    )
+)
 set "_SKIP_UNCHANGED=0"
 if "!DRY_RUN_MODE!"=="0" if "!FORCE_REINSTALL!"=="0" if "!FORCE_REBUILD!"=="0" (
-    call "!CLI!" node exec "!NODE!" "!CTX!" "[ -f ~/.libscript_deployments/!_SP_DEST!.sha256 ] && grep -qx '!_APP_HASH!' ~/.libscript_deployments/!_SP_DEST!.sha256 2>/dev/null && cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >nul 2>&1
+    call "!CLI!" node exec "!NODE!" "!CTX!" "[ -f ~/.libscript_deployments/!_SP_DEST!.sha256 ] && grep -qx '!_APP_HASH!' ~/.libscript_deployments/!_SP_DEST!.sha256 2>/dev/null && !_ART_CMD! && cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >nul 2>&1
     if not errorlevel 1 set "_SKIP_UNCHANGED=1"
 )
 if "!_SKIP_UNCHANGED!"=="1" (

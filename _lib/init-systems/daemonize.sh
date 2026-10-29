@@ -344,7 +344,11 @@ HEALTH_FAILED=0
 while IFS= read -r svc <&3; do
   [ -n "$svc" ] || continue
   NAME=$(printf '%s\n' "$svc" | jq -r '.name // empty')
-  CMD=$(printf '%s\n' "$svc" | jq -r '.command // empty')
+  if [ "${LIBSCRIPT_ENV:-production}" = "development" ] || [ "${NODE_ENV:-production}" = "development" ]; then
+    CMD=$(printf '%s\n' "$svc" | jq -r '.dev_command // .command // empty')
+  else
+    CMD=$(printf '%s\n' "$svc" | jq -r '.production_command // .command // empty')
+  fi
   case "$CMD" in
     *\$\{*) CMD=$(expand_manifest_vars "$CMD") ;;
   esac

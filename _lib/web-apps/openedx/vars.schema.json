@@ -471,6 +471,22 @@
       "type": "string",
       "description": "Filesystem directory or path configuration for openedx (OPENEDX_INSTALL_DIR)."
     },
+    "OPENEDX_DATA_DIR": {
+      "type": "string",
+      "description": "Filesystem directory where Open edX databases, courseware, and mutable state are stored."
+    },
+    "OPENEDX_LOG_DIR": {
+      "type": "string",
+      "description": "Filesystem directory where Open edX service and installation logs are written."
+    },
+    "OPENEDX_LMS_DOMAIN": {
+      "type": "string",
+      "description": "Public domain and optional port for the Open edX LMS."
+    },
+    "OPENEDX_CMS_DOMAIN": {
+      "type": "string",
+      "description": "Public domain and optional port for Open edX Studio CMS."
+    },
     "OPENEDX_LMS_PORT": {
       "type": "string",
       "description": "TCP port on which openedx listens."

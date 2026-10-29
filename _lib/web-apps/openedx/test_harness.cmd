@@ -70,7 +70,19 @@ echo Open edX Real Service Coordination and Authentication Test (Windows)
 echo ======================================================================
 
 :: 1. Backing Services Check via Reusable status_databases.cmd
-echo [CHECK 1/6] Verifying backing services on Windows...
+echo [CHECK 1/6] Verifying backing services, production YAML configs, and runtime directories on Windows...
+if exist "!SCRIPT_DIR!\config.cmd" (
+    call "!SCRIPT_DIR!\config.cmd" generate >nul 2>&1
+)
+if exist "!SCRIPT_DIR!\windows_runtime_setup.cmd" (
+    call "!SCRIPT_DIR!\windows_runtime_setup.cmd" -InstallDir "%OPENEDX_INSTALL_DIR%" >nul 2>&1
+)
+for %%C in (lms.yml cms.yml revisions.yml Caddyfile) do (
+    if not exist "%OPENEDX_INSTALL_DIR%\config\%%C" (
+        echo   -^> FAILED: Missing generated configuration file %OPENEDX_INSTALL_DIR%\config\%%C
+        exit /b 1
+    )
+)
 if exist "!SCRIPT_DIR!\status_databases.cmd" (
     call "!SCRIPT_DIR!\status_databases.cmd" "databases/mysql" >nul 2>&1
     if not errorlevel 1 echo   -^> MySQL Service: REGISTERED

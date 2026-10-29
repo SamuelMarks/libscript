@@ -46,8 +46,12 @@ handle_tutor_do() {
       SCRIPT_NAME="${SCRIPT_DIR}/config.sh"
       export SCRIPT_NAME
       "${SCRIPT_NAME}" generate
-      printf '[PASS] Open edX initialization job (mysql, lms, cms, meilisearch) completed.
-'
+      if [ -f "${SCRIPT_DIR}/init_platform.sh" ]; then
+        SCRIPT_NAME="${SCRIPT_DIR}/init_platform.sh"
+        export SCRIPT_NAME
+        "${SCRIPT_NAME}" "$@"
+      fi
+      printf '[PASS] Open edX initialization job (mysql, lms, cms, meilisearch) completed.\n'
       exit 0
       ;;
     createuser)

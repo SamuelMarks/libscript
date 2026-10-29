@@ -137,6 +137,13 @@ if errorlevel 1 exit /b 0
 set "PGPASSWORD=!_pass!"
 echo [INFO] Exporting PostgreSQL database '!_name!' to '!APP_STAGE!\postgres\!_name!.sql'...
 pg_dump -h "!_host!" -p "!_port!" -U "!_user!" --clean --if-exists --no-owner --no-privileges -f "!APP_STAGE!\postgres\!_name!.sql" "!_name!" 2>nul
+if errorlevel 1 (
+    for /f "delims=" %%L in ('echo !db_entry! ^| jq -r ".legacy_names[]? // empty" 2^>nul') do (
+        if not exist "!APP_STAGE!\postgres\!_name!.sql" (
+            pg_dump -h "!_host!" -p "!_port!" -U "!_user!" --clean --if-exists --no-owner --no-privileges -f "!APP_STAGE!\postgres\!_name!.sql" "%%L" 2>nul
+        )
+    )
+)
 exit /b 0
 
 :: ## exp_file
@@ -148,6 +155,16 @@ if "!_path!"=="" (
     for /f "delims=" %%x in ('jq -rn --arg s "!_path!" "reduce range(3) as $_ ($s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\"))" 2^>nul') do set "_path=%%x"
     set "_path_win=!_path:/=\!"
     if not "!_path_win:~1,1!"==":" set "_path=!MANIFEST_DIR!\!_path_win!"
+)
+if not exist "!_path!" (
+    for /f "delims=" %%F in ('echo !db_entry! ^| jq -r ".fallback_paths[]? // empty" 2^>nul') do (
+        if not exist "!_path!" (
+            set "_fb=%%F"
+            set "_fb_w=!_fb:/=\!"
+            if not "!_fb_w:~1,1!"==":" set "_fb_w=!MANIFEST_DIR!\!_fb_w!"
+            if exist "!_fb_w!" set "_path=!_fb_w!"
+        )
+    )
 )
 if exist "!_path!" (
     for %%B in ("!_path!") do set "_base_fn=%%~nxB"

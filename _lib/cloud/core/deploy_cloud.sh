@@ -575,9 +575,18 @@ for _app_entry in "$@"; do
   [ "$FORCE_REBUILD" -eq 1 ] && _deps_flags="${_deps_flags} --force-rebuild"
 
   _app_hash=$(compute_app_checksum "$_ae_repo")
+  _art_cmd='true'
+  if [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+    _art_list=$(jq -r '([ (.frontends | if type == "array" then .[].artifact_check? elif type == "object" then .[].artifact_check? else empty end), (.hooks.build[]?.artifact_check?) ] | map(select(. != null and . != "")) | unique)[]?' "${_ae_repo}/libscript.json" 2>/dev/null || true)
+    if [ -n "$_art_list" ]; then
+      for _art_item in $_art_list; do
+        _art_cmd="${_art_cmd} && [ -e ~/${_ae_dest}/${_art_item} ]"
+      done
+    fi
+  fi
   _skip_unchanged=0
   if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
-    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && cd ~/${_ae_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ~/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >/dev/null 2>&1; then
+    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && ${_art_cmd} && cd ~/${_ae_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ~/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >/dev/null 2>&1; then
       _skip_unchanged=1
     fi
   fi

@@ -58,6 +58,9 @@ shift
 APPS_PATHS=""
 APPS_DOMAINS=""
 SHARED_DB=""
+FORCE_REINSTALL="${FORCE_REINSTALL:-0}"
+FORCE_REBUILD="${FORCE_REBUILD:-0}"
+DRY_RUN_MODE="${DRY_RUN_MODE:-0}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -81,7 +84,19 @@ while [ $# -gt 0 ]; do
       SHARED_DB="$2"
       shift 2
       ;;
-    --skip-infra|--skip-prepare|--skip-verify|--force-reinstall|--force-rebuild|--dry-run)
+    --force-reinstall)
+      FORCE_REINSTALL=1
+      shift
+      ;;
+    --force-rebuild)
+      FORCE_REBUILD=1
+      shift
+      ;;
+    --dry-run|-n)
+      DRY_RUN_MODE=1
+      shift
+      ;;
+    --skip-infra|--skip-prepare|--skip-verify)
       shift
       ;;
     *)
@@ -139,9 +154,12 @@ setup_app_db() {
 execute_lifecycle_hooks() {
   remote_dir="$1"
   app_name="$2"
+  _dr_flags=""
+  [ "$FORCE_REINSTALL" -eq 1 ] && _dr_flags="${_dr_flags} --force-reinstall"
+  [ "$FORCE_REBUILD" -eq 1 ] && _dr_flags="${_dr_flags} --force-rebuild"
   log_info "Executing lifecycle hooks for $app_name..."
   # shellcheck disable=SC2029
-  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh install-deps libscript.json && REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh start libscript.json; fi"
+  ssh "$TARGET_HOST" "cd \"$remote_dir\" && if [ -f libscript.json ]; then REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh install-deps libscript.json${_dr_flags} && REMOTE_HOME=\$HOME LIBSCRIPT_HOME=\$HOME/.libscript LIBSCRIPT_ROOT_DIR=\$HOME/libscript \$HOME/libscript/libscript.sh start libscript.json; fi"
 }
 
 # ## configure_routing
@@ -234,7 +252,7 @@ for app_path in "$@"; do
   remote_sum=$(ssh "$TARGET_HOST" "cat $remote_state_file 2>/dev/null" || true)
 
   _sync_state='SYNCED'
-  if [ "$local_sum" = "$remote_sum" ]; then
+  if [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ] && [ "$local_sum" = "$remote_sum" ]; then
     log_info "[SKIPPED] $app_name -> https://$app_domain is live and up-to-date."
     _sync_state='UP-TO-DATE'
   else

@@ -196,8 +196,20 @@ if not errorlevel 1 (
     echo [INFO] [DAEMON] [UPDATE] Updated Windows service unit for '!_SERVICE_NAME!' ^(!_RUNNER_FILE!^).
     sc.exe config "!_SERVICE_NAME!" binPath= "cmd.exe /c \"!_RUNNER_FILE!\"" start= auto obj= LocalSystem >nul 2>&1
 ) else (
-    echo [INFO] [DAEMON] [CREATE] Installed Windows service unit for '!_SERVICE_NAME!' ^(!_RUNNER_FILE!^).
-    sc.exe create "!_SERVICE_NAME!" binPath= "cmd.exe /c \"!_RUNNER_FILE!\"" start= auto obj= LocalSystem >nul 2>&1
+    set "_NSSM_BIN="
+    where nssm >nul 2>&1
+    if not errorlevel 1 set "_NSSM_BIN=nssm"
+    if "!_NSSM_BIN!"=="" if exist "%USERPROFILE%\.libscript\nssm\latest\bin\nssm.exe" set "_NSSM_BIN=%USERPROFILE%\.libscript\nssm\latest\bin\nssm.exe"
+    if not "!_NSSM_BIN!"=="" (
+        echo [INFO] [DAEMON] [CREATE] Installed Windows service unit via NSSM for '!_SERVICE_NAME!' ^(!_RUNNER_FILE!^).
+        "!_NSSM_BIN!" install "!_SERVICE_NAME!" "%ComSpec%" "/c \"!_RUNNER_FILE!\"" >nul 2>&1
+        "!_NSSM_BIN!" set "!_SERVICE_NAME!" AppDirectory "!_WORKING_DIR!" >nul 2>&1
+        "!_NSSM_BIN!" set "!_SERVICE_NAME!" AppStdout "!_LOG_FILE!" >nul 2>&1
+        "!_NSSM_BIN!" set "!_SERVICE_NAME!" AppStderr "!_LOG_FILE!" >nul 2>&1
+    ) else (
+        echo [INFO] [DAEMON] [CREATE] Installed Windows service unit for '!_SERVICE_NAME!' ^(!_RUNNER_FILE!^).
+        sc.exe create "!_SERVICE_NAME!" binPath= "cmd.exe /c \"!_RUNNER_FILE!\"" start= auto obj= LocalSystem >nul 2>&1
+    )
 )
 sc.exe description "!_SERVICE_NAME!" "!_DESCRIPTION!" >nul 2>&1
 set "_SVC_REG_ENV=PATH=!PATH!\0SERVICE_PATH=!PATH!"

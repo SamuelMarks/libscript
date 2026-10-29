@@ -69,6 +69,7 @@ if "%SUBCMD%"=="do" (
     set "DO_JOB=%~1"
     if "!DO_JOB!"=="init" (
         call "!SCRIPT_DIR!\config.cmd" generate
+        if exist "!SCRIPT_DIR!\init_platform.cmd" call "!SCRIPT_DIR!\init_platform.cmd"
         echo [PASS] Open edX initialization job completed.
         exit /b 0
     )

@@ -305,7 +305,11 @@ if command -v jq >/dev/null 2>&1; then
   done
 
   # 3. Pre-declared Wheels
-  if [ -z "$TARGET_COMPONENT" ] || [ "$TARGET_COMPONENT" = "all" ] || [ "$TARGET_COMPONENT" = "wheels" ] || [ "$TARGET_COMPONENT" = "openedx-core" ] || [ "$TARGET_COMPONENT" = "openedx" ] || [ "$TARGET_COMPONENT" = "gunicorn" ] || [ "$TARGET_COMPONENT" = "nodeenv" ] || [ "$TARGET_COMPONENT" = "exim" ] || [ "$HYDRATE_WHEELS" -eq 1 ]; then
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/build-constraints.txt" ]; then
+    export PIP_CONSTRAINT="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/build-constraints.txt"
+    export UV_BUILD_CONSTRAINT="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/build-constraints.txt"
+  fi
+  if [ -z "$TARGET_COMPONENT" ] || [ "$TARGET_COMPONENT" = "all" ] || [ "$TARGET_COMPONENT" = "wheels" ] || [ "$TARGET_COMPONENT" = "openedx-core" ] || [ "$TARGET_COMPONENT" = "openedx" ] || [ "$TARGET_COMPONENT" = "gunicorn" ] || [ "$TARGET_COMPONENT" = "waitress" ] || [ "$TARGET_COMPONENT" = "nodeenv" ] || [ "$TARGET_COMPONENT" = "exim" ] || [ "$HYDRATE_WHEELS" -eq 1 ]; then
     _wheel_count=$(jq -r '.wheels.packages | length' "$MANIFEST_PATH" 2>/dev/null || printf '0')
     _idx=0
     while [ "$_idx" -lt "$_wheel_count" ]; do

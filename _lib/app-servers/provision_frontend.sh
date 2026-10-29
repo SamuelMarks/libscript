@@ -5,7 +5,7 @@
 # (jsBrowserDistribution, wasmJsBrowserDistribution, Compose Desktop, iOS) targets, and stages to webroots.
 #
 # ## Usage
-#   ./provision_frontend.sh --app-dir <dir> --manifest <path> --packaging <path>
+#   ./provision_frontend.sh --app-dir <dir> --manifest <path> [--packaging <path>] [--force-rebuild] [--force-reinstall]
 
 set -feu
 
@@ -39,12 +39,14 @@ while [ $# -gt 0 ]; do
     --app-dir) app_dir="$2"; shift 2 ;;
     --manifest) manifest_path="$2"; shift 2 ;;
     --packaging) packaging_path="$2"; shift 2 ;;
+    --force-rebuild) export FORCE_REBUILD=1; shift ;;
+    --force-reinstall) export FORCE_REINSTALL=1; shift ;;
     *) shift ;;
   esac
 done
 
 if [ -z "$app_dir" ]; then
-  printf 'Error: --app-dir is required.\n' >&2
+  printf '%s\n' 'Error: --app-dir is required.' >&2
   exit 1
 fi
 
@@ -55,7 +57,7 @@ if [ -z "$manifest_path" ] && [ -n "$packaging_path" ]; then
   manifest_path="$packaging_path"
 fi
 if [ -z "$packaging_path" ]; then
-  printf 'Error: --manifest or --packaging is required.\n' >&2
+  printf '%s\n' 'Error: --manifest or --packaging is required.' >&2
   exit 1
 fi
 
@@ -69,7 +71,7 @@ compute_frontend_fingerprint() {
   _cff_dir="$1"
   (
     cd "$_cff_dir" 2>/dev/null || exit 0
-    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock; do
+    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js tsconfig.json; do
       if [ -f "$_cff_f" ]; then
         cksum "$_cff_f" 2>/dev/null || true
       fi
@@ -84,30 +86,70 @@ compute_frontend_fingerprint() {
 # Installs npm/pnpm/yarn/bun dependencies in a target directory if package.json exists, reusing node_modules if lockfile hash matches.
 install_node_deps() {
   _dir="$1"
+  _custom_inst="${2:-}"
   if [ -f "$_dir/package.json" ]; then
     (
       cd "$_dir"
+      if [ "${FORCE_REINSTALL:-0}" = "1" ]; then
+        rm -rf "node_modules"
+      fi
       _pkg_fp=$(cksum package.json package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
       if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ -d "node_modules" ] && [ -f "node_modules/.libscript_pkg_hash" ] && [ "$(cat node_modules/.libscript_pkg_hash 2>/dev/null || true)" = "$_pkg_fp" ]; then
         printf '[REUSE] Frontend dependencies in %s are up-to-date.\n' "$_dir"
         exit 0
       fi
-      if [ -f "pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
+      if [ -n "$_custom_inst" ] && [ "$_custom_inst" != "null" ]; then
+        sh -c "$_custom_inst"
+      elif [ -f "pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
         pnpm install --frozen-lockfile || pnpm install
       elif [ -f "yarn.lock" ] && command -v yarn >/dev/null 2>&1; then
         yarn install --frozen-lockfile || yarn install
       elif [ -f "bun.lockb" ] && command -v bun >/dev/null 2>&1; then
         bun install
       elif [ -f "package-lock.json" ] || [ -f "npm-shrinkwrap.json" ]; then
-        npm ci --prefer-offline --no-audit || npm install --legacy-peer-deps --no-audit
+        npm ci --prefer-offline --no-audit --no-fund || npm install --legacy-peer-deps --no-audit --no-fund
       else
-        npm install --no-audit
+        npm install --no-audit --no-fund
       fi
       if [ -d "node_modules" ]; then
         printf '%s\n' "$_pkg_fp" > "node_modules/.libscript_pkg_hash" 2>/dev/null || true
       fi
     )
   fi
+}
+
+# ## resolve_artifact_exists
+# Checks whether the compiled frontend artifact or index.html exists on disk.
+resolve_artifact_exists() {
+  _rae_src="$1"
+  _rae_app="$2"
+  _rae_out="${3:-}"
+  _rae_art="${4:-}"
+
+  if [ -n "$_rae_art" ] && [ "$_rae_art" != "null" ]; then
+    if [ -f "$_rae_src/$_rae_art" ] || [ -f "$_rae_app/$_rae_art" ] || [ -f "$_rae_art" ]; then
+      return 0
+    fi
+    return 1
+  fi
+
+  if [ -n "$_rae_out" ] && [ "$_rae_out" != "null" ]; then
+    if [ -f "$_rae_src/$_rae_out/index.html" ] || [ -f "$_rae_app/$_rae_out/index.html" ]; then
+      return 0
+    fi
+  fi
+
+  if [ -d "$_rae_src/dist" ]; then
+    if [ -f "$_rae_src/dist/index.html" ]; then
+      return 0
+    fi
+    for _ng_p in $(ls -1 "$_rae_src/dist" 2>/dev/null || true); do
+      if [ -f "$_rae_src/dist/$_ng_p/browser/index.html" ] || [ -f "$_rae_src/dist/$_ng_p/index.html" ]; then
+        return 0
+      fi
+    done
+  fi
+  return 1
 }
 
 # ## stage_compiled_assets
@@ -118,9 +160,14 @@ stage_compiled_assets() {
   _custom_out="${3:-}"
   mkdir -p "$_target_webroot"
 
-  if [ -n "$_custom_out" ] && [ "$_custom_out" != "null" ] && [ -d "$_src_dir/$_custom_out" ]; then
-    cp -R "$_src_dir/$_custom_out/." "$_target_webroot/" 2>/dev/null || true
-    return 0
+  if [ -n "$_custom_out" ] && [ "$_custom_out" != "null" ]; then
+    if [ -d "$_src_dir/$_custom_out" ]; then
+      cp -R "$_src_dir/$_custom_out/." "$_target_webroot/" 2>/dev/null || true
+      return 0
+    elif [ -d "$app_dir/$_custom_out" ]; then
+      cp -R "$app_dir/$_custom_out/." "$_target_webroot/" 2>/dev/null || true
+      return 0
+    fi
   fi
 
   # Check Angular 17+ dist/<project>/browser/index.html layout and classic dist/<project>/index.html
@@ -216,8 +263,12 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
       [ -n "$svc" ] || continue
       svc_id=$(printf '%s\n' "$svc" | jq -r '.id // .name // "default"')
       src_rel=$(printf '%s\n' "$svc" | jq -r '.source_dir // .working_dir // .cwd // "."')
+      inst_cmd=$(printf '%s\n' "$svc" | jq -r '.install_command // empty')
       build_cmd=$(printf '%s\n' "$svc" | jq -r '.build_command // empty')
       out_dir=$(printf '%s\n' "$svc" | jq -r '.output_dir // .dist_dir // empty')
+      art_chk=$(printf '%s\n' "$svc" | jq -r '.artifact_check // empty')
+      stage_override=$(printf '%s\n' "$svc" | jq -r '.stage_dir // empty')
+      framework=$(printf '%s\n' "$svc" | jq -r '(.framework // "") | ascii_downcase')
       kmp_target=$(printf '%s\n' "$svc" | jq -r '.target // empty')
 
       if [ -z "$src_rel" ] || [ "$src_rel" = "." ]; then
@@ -228,8 +279,26 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         src_dir="$app_dir/$src_rel"
       fi
 
-      target_webroot="$webroot_base/$svc_id"
+      if [ -n "$stage_override" ] && [ "$stage_override" != "null" ]; then
+        if [ "${stage_override#/}" != "$stage_override" ]; then
+          target_webroot="$stage_override"
+        else
+          target_webroot="$app_dir/$stage_override"
+        fi
+      else
+        target_webroot="$webroot_base/$svc_id"
+      fi
       mkdir -p "$target_webroot"
+
+      if [ "${FORCE_REBUILD:-0}" = "1" ]; then
+        rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular" "$src_dir/.vite" "$src_dir/.libscript_build.sha256"
+        _extra_cleans=$(printf '%s\n' "$svc" | jq -r '.clean_dirs[]? // empty' 2>/dev/null || true)
+        if [ -n "$_extra_cleans" ]; then
+          printf '%s\n' "$_extra_cleans" | while IFS= read -r _cd; do
+            [ -n "$_cd" ] && rm -rf "${src_dir:?}/${_cd:?}"
+          done
+        fi
+      fi
 
       # Export per-frontend build environment variables in subshell via temporary file
       _fe_env_file=$(mktemp "${TMPDIR:-/tmp}/libscript_fe_env.XXXXXX")
@@ -250,14 +319,15 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       elif [ -f "$src_dir/package.json" ]; then
-        if [ "$src_dir" != "$app_dir" ]; then
-          install_node_deps "$src_dir"
+        if [ "$src_dir" != "$app_dir" ] || [ -n "$inst_cmd" ]; then
+          install_node_deps "$src_dir" "$inst_cmd"
         fi
         _fe_fp=$(compute_frontend_fingerprint "$src_dir")
-        _fe_check_out="${src_dir}/${out_dir:-dist}"
-        if [ "${FORCE_REBUILD:-0}" != "1" ] && [ -f "${_fe_check_out}/index.html" ] && [ -f "${src_dir}/.libscript_build.sha256" ] && [ "$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)" = "$_fe_fp" ]; then
-          printf '[REUSE] Frontend build in '\''%s'\'' is up-to-date.\n' "$_fe_check_out"
+        if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && { [ ! -f "${src_dir}/.libscript_build.sha256" ] || [ "$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)" = "$_fe_fp" ]; }; then
+          printf '[REUSE] Frontend build for '\''%s'\'' in '\''%s'\'' is up-to-date.\n' "$svc_id" "$src_dir"
+          [ -f "${src_dir}/.libscript_build.sha256" ] || printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
         else
+          printf '[BUILD] Building frontend '\''%s'\'' (%s) in '\''%s'\''...\n' "$svc_id" "${framework:-spa}" "$src_dir"
           (
             cd "$src_dir"
             if [ -s "$_fe_env_file" ]; then
@@ -266,12 +336,22 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
             fi
             if [ -n "$build_cmd" ]; then
               sh -c "$build_cmd"
+            elif [ "$framework" = "angular" ] && [ -f "angular.json" ]; then
+              npx ng build
+            elif [ "$framework" = "vite" ]; then
+              if grep -q '"build"' "package.json"; then
+                npm run build
+              else
+                npx vite build
+              fi
             elif grep -q '"build"' "package.json"; then
               npm run build
             fi
           )
           printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
         fi
+        stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
+      else
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       fi
       rm -f "$_fe_env_file"

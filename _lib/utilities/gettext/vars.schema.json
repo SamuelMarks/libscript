@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/gettext/vars.schema.json",
+  "title": "gettext variables",
+  "description": "Configuration variables for GNU gettext utilities (msgfmt, xgettext).",
+  "type": "object",
+  "properties": {
+    "GETTEXT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install gettext. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, or 'from-source' compiles from source.",
+      "default": "libscript_native"
+    },
+    "GETTEXT_VERSION": {
+      "description": "Specific version of gettext to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "GETTEXT_INSTALL_DIR": {
+      "type": "string",
+      "description": "Target directory for isolated gettext installation."
+    },
+    "GETTEXT_OFFLINE": {
+      "type": "string",
+      "description": "Flag (true/false or 1/0) indicating air-gapped offline installation mode for gettext.",
+      "default": "false"
+    },
+    "GETTEXT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading gettext binary or archive artifacts."
+    },
+    "GETTEXT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying gettext available remote releases."
+    }
+  }
+}

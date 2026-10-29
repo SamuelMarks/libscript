@@ -256,6 +256,18 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_m
 if errorlevel 1 exit /b 1
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
 if errorlevel 1 exit /b 1
+set "_HAS_FE=0"
+for /f "delims=" %%F in ('jq -r "([ (.services | if type == \"array\" then .[] elif type == \"object\" then to_entries[].value else empty end) | select(.type == \"static\" or .type == \"spa\" or .type == \"frontend\" or .type == \"kmp\" or .framework != null or .target != null) ] + [ (.frontends | if type == \"array\" then .[] elif type == \"object\" then to_entries[].value else empty end) ]) | length" "!json_file!" 2^>nul') do set "_HAS_FE=%%F"
+if not "!_HAS_FE!"=="0" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" (
+        set "_FE_FLAGS="
+        if "!force_rebuild!"=="1" set "_FE_FLAGS=--force-rebuild"
+        if "!force_reinstall!"=="1" set "_FE_FLAGS=!_FE_FLAGS! --force-reinstall"
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" --app-dir "!_MANIFEST_DIR!" --manifest "!json_file!" !_FE_FLAGS!
+        if errorlevel 1 exit /b 1
+    )
+)
 endlocal & (
     set "PATH=%PATH%"
     set "SERVICE_PATH=%PATH%"

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/lynx/vars.schema.json",
+  "title": "lynx variables",
+  "description": "Configuration variables for lynx text-mode web browser and HTML-to-text converter.",
+  "type": "object",
+  "properties": {
+    "LYNX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install lynx. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, or 'from-source' compiles from source.",
+      "default": "libscript_native"
+    },
+    "LYNX_VERSION": {
+      "description": "Specific version of lynx to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LYNX_INSTALL_DIR": {
+      "type": "string",
+      "description": "Target directory for isolated lynx installation."
+    },
+    "LYNX_OFFLINE": {
+      "type": "string",
+      "description": "Flag (true/false or 1/0) indicating air-gapped offline installation mode for lynx.",
+      "default": "false"
+    },
+    "LYNX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading lynx binary or archive artifacts."
+    },
+    "LYNX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying lynx available remote releases."
+    }
+  }
+}

@@ -138,6 +138,23 @@ done
 export AZURE_LOCATION="$LOCATION"
 export LOCATION ADMIN_USER
 
+if [ -z "$APP_SPECS" ] && [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -e '.applications != null and (.applications | length > 0)' "libscript.json" >/dev/null 2>&1; then
+  _base_dir=$(pwd)
+  _manifest_apps=$(jq -r '.applications[] | "\(.path // .name):\(.remote_dest // .name)@\(.domain // "")"' "libscript.json" 2>/dev/null || true)
+  while IFS= read -r _ma_line; do
+    [ -n "$_ma_line" ] || continue
+    _ma_p="${_ma_line%%:*}"
+    _ma_rest="${_ma_line#*:}"
+    case "$_ma_p" in
+      /*) ;;
+      *) _ma_p="${_base_dir}/${_ma_p}" ;;
+    esac
+    APP_SPECS="${APP_SPECS}${_ma_p}:${_ma_rest}|"
+  done << EOF_BACKUP_APPS
+$_manifest_apps
+EOF_BACKUP_APPS
+fi
+
 if [ "$EXPORT_MODE" -eq 1 ]; then
   if [ -z "$LOCAL_DST" ]; then
     log_error "'--export-state' requires a local destination directory."

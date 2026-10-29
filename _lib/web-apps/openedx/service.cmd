@@ -67,21 +67,25 @@ if "!LIBSCRIPT_ROOT_DIR!"=="" (
     for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
-if "%OPENEDX_INSTALL_DIR%"=="" (
-    if defined LIBSCRIPT_HOME (
+if "!OPENEDX_INSTALL_DIR!"=="" (
+    if exist "%ProgramData%\OpenEdX\install_dir.txt" (
+        set /p OPENEDX_INSTALL_DIR=<"%ProgramData%\OpenEdX\install_dir.txt"
+    ) else if defined LIBSCRIPT_HOME (
         set "OPENEDX_INSTALL_DIR=%LIBSCRIPT_HOME%\openedx"
     ) else (
         set "OPENEDX_INSTALL_DIR=%USERPROFILE%\.libscript\openedx"
     )
 )
+if "!OPENEDX_INSTALL_DIR:~-1!"==" " set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DIR:~0,-1!"
+if "!OPENEDX_INSTALL_DIR:~-1!"=="\" set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DIR:~0,-1!"
 
-set "RUN_DIR=%OPENEDX_INSTALL_DIR%\run"
-set "LOG_DIR=%OPENEDX_INSTALL_DIR%\logs"
-if not exist "%RUN_DIR%" mkdir "%RUN_DIR%" 2>nul
-if not exist "%LOG_DIR%" mkdir "%LOG_DIR%" 2>nul
+set "RUN_DIR=!OPENEDX_INSTALL_DIR!\run"
+set "LOG_DIR=!OPENEDX_INSTALL_DIR!\logs"
+if not exist "!RUN_DIR!" mkdir "!RUN_DIR!" 2>nul
+if not exist "!LOG_DIR!" mkdir "!LOG_DIR!" 2>nul
 
-set "LMS_PID_FILE=%RUN_DIR%\lms.pid"
-set "CMS_PID_FILE=%RUN_DIR%\cms.pid"
+set "LMS_PID_FILE=!RUN_DIR!\lms.pid"
+set "CMS_PID_FILE=!RUN_DIR!\cms.pid"
 if "%OPENEDX_LMS_PORT%"=="" set "OPENEDX_LMS_PORT=8000"
 if "%OPENEDX_CMS_PORT%"=="" set "OPENEDX_CMS_PORT=8001"
 
@@ -135,18 +139,32 @@ if %ERRORLEVEL%==0 (
     echo [INFO] Launching Open edX LMS and Studio CMS on ports %OPENEDX_LMS_PORT% and %OPENEDX_CMS_PORT%...
     set "LMS_LAUNCHED=0"
     if exist "!SVC_SCRIPT_DIR!\service_worker.ps1" (
-        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SVC_SCRIPT_DIR!\service_worker.ps1" start %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SVC_SCRIPT_DIR!\service_worker.ps1" start !OPENEDX_LMS_PORT! !OPENEDX_CMS_PORT!
         set "LMS_LAUNCHED=1"
-    ) else if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" (
-        if exist "%OPENEDX_INSTALL_DIR%\codebase" (
-            cd /D "%OPENEDX_INSTALL_DIR%\codebase"
-            powershell -WindowStyle Hidden -Command "Start-Process '%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application' -RedirectStandardOutput '%LOG_DIR%\lms.log' -RedirectStandardError '%LOG_DIR%\lms_err.log' -WindowStyle Hidden"
+    ) else if exist "!OPENEDX_INSTALL_DIR!\.venv\Scripts\waitress-serve.exe" (
+        if exist "!OPENEDX_INSTALL_DIR!\codebase" (
+            cd /D "!OPENEDX_INSTALL_DIR!\codebase"
+            set "PYTHONPATH=!OPENEDX_INSTALL_DIR!\codebase"
+            set "LMS_CFG=!OPENEDX_INSTALL_DIR!\config\lms.yml"
+            set "CMS_CFG=!OPENEDX_INSTALL_DIR!\config\cms.yml"
+            set "REVISION_CFG=!OPENEDX_INSTALL_DIR!\config\revisions.yml"
+            set "STATIC_ROOT_LMS=!OPENEDX_INSTALL_DIR!\staticfiles"
+            set "STATIC_ROOT_CMS=!OPENEDX_INSTALL_DIR!\staticfiles\studio"
+            powershell -WindowStyle Hidden -Command "Start-Process '!OPENEDX_INSTALL_DIR!\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:!OPENEDX_LMS_PORT! --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 lms.wsgi:application' -RedirectStandardOutput '!LOG_DIR!\lms.log' -RedirectStandardError '!LOG_DIR!\lms_err.log' -WindowStyle Hidden"
             set "LMS_LAUNCHED=1"
         )
     )
     if "!LMS_LAUNCHED!"=="0" (
         echo [ERROR] Genuine Open edX codebase or waitress not found for LMS. >&2
         exit /b 1
+    )
+)
+
+:: Start Caddy Reverse Proxy if enabled and Caddyfile exists
+if /I "%RUN_CADDY%"=="true" if exist "!OPENEDX_INSTALL_DIR!\config\Caddyfile" (
+    where caddy >nul 2>&1
+    if not errorlevel 1 (
+        powershell -WindowStyle Hidden -Command "Start-Process 'caddy' -ArgumentList 'run --config \"!OPENEDX_INSTALL_DIR!\config\Caddyfile\"' -WindowStyle Hidden" 2>nul
     )
 )
 
@@ -218,12 +236,20 @@ exit /b 0
 :do_install_service
 echo [INFO] Installing Open edX native services...
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Service" ""
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Studio CMS Service" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_LMS_PORT% --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 lms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Service" "%LOG_DIR%\lms-stdout.log"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --override "openedx-lms" "PYTHONPATH=%OPENEDX_INSTALL_DIR%\codebase" "SERVICE_VARIANT=lms" "DJANGO_SETTINGS_MODULE=lms.envs.production" "LMS_CFG=%OPENEDX_INSTALL_DIR%\config\lms.yml" "REVISION_CFG=%OPENEDX_INSTALL_DIR%\config\revisions.yml" "STATIC_ROOT_LMS=%OPENEDX_INSTALL_DIR%\staticfiles"
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms.celery worker --pool=solo --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Celery Worker" ""
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A cms.celery worker --pool=solo --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX CMS Celery Worker" ""
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-celery-beat" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms.celery beat --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Celery Beat Scheduler" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_CMS_PORT% --threads=8 --channel-timeout=300 --max-request-header-size=32768 --max-request-body-size=2147483648 cms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Studio CMS Service" "%LOG_DIR%\cms-stdout.log"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --override "openedx-cms" "PYTHONPATH=%OPENEDX_INSTALL_DIR%\codebase" "SERVICE_VARIANT=cms" "DJANGO_SETTINGS_MODULE=cms.envs.production" "CMS_CFG=%OPENEDX_INSTALL_DIR%\config\cms.yml" "REVISION_CFG=%OPENEDX_INSTALL_DIR%\config\revisions.yml" "STATIC_ROOT_CMS=%OPENEDX_INSTALL_DIR%\staticfiles\studio"
+
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery --app=lms.celery worker --pool=threads --concurrency=8 --loglevel=info --hostname=edx.lms.core.default.%%h --queues=edx.lms.core.default,edx.lms.core.high,edx.lms.core.high_mem --prefetch-multiplier=1 --without-gossip --without-mingle" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Celery Worker" "%LOG_DIR%\lms-worker.log"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --override "openedx-lms-worker" "PYTHONPATH=%OPENEDX_INSTALL_DIR%\codebase" "SERVICE_VARIANT=lms" "DJANGO_SETTINGS_MODULE=lms.envs.production" "LMS_CFG=%OPENEDX_INSTALL_DIR%\config\lms.yml" "REVISION_CFG=%OPENEDX_INSTALL_DIR%\config\revisions.yml"
+
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery --app=cms.celery worker --pool=threads --concurrency=4 --loglevel=info --hostname=edx.cms.core.default.%%h --queues=edx.cms.core.default,edx.cms.core.high,edx.cms.core.low --prefetch-multiplier=1 --without-gossip --without-mingle" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX CMS Celery Worker" "%LOG_DIR%\cms-worker.log"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --override "openedx-cms-worker" "PYTHONPATH=%OPENEDX_INSTALL_DIR%\codebase" "SERVICE_VARIANT=cms" "DJANGO_SETTINGS_MODULE=cms.envs.production" "CMS_CFG=%OPENEDX_INSTALL_DIR%\config\cms.yml" "REVISION_CFG=%OPENEDX_INSTALL_DIR%\config\revisions.yml"
+
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-celery-beat" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery --app=lms.celery beat --loglevel=info" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Celery Beat Scheduler" "%LOG_DIR%\celery-beat.log"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --override "openedx-celery-beat" "PYTHONPATH=%OPENEDX_INSTALL_DIR%\codebase" "SERVICE_VARIANT=lms" "DJANGO_SETTINGS_MODULE=lms.envs.production" "LMS_CFG=%OPENEDX_INSTALL_DIR%\config\lms.yml" "REVISION_CFG=%OPENEDX_INSTALL_DIR%\config\revisions.yml"
 
 echo [PASS] Successfully installed Open edX services.
 exit /b 0

@@ -84,10 +84,7 @@ if "!_req:~0,8!"=="pkg_mgr:" (
 if /i not "!_req!"=="libscript_native" if /i not "!_req!"=="system" if /i not "!_req!"=="from-source" (
     set "_req=system"
 )
-endlocal & (
-    set "LIBSCRIPT_PKG_MGR=%LIBSCRIPT_PKG_MGR%"
-    set "RESOLVED_INSTALL_METHOD=%_req%"
-)
+endlocal & set "LIBSCRIPT_PKG_MGR=%LIBSCRIPT_PKG_MGR%" & set "RESOLVED_INSTALL_METHOD=%_req%"
 exit /b 0
 
 :: ## detect_pkg_mgr

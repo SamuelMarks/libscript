@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/nssm/vars.schema.json",
+  "title": "nssm variables",
+  "description": "Configuration variables for NSSM (Non-Sucking Service Manager).",
+  "type": "object",
+  "properties": {
+    "NSSM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install nssm ('libscript_native' or 'system').",
+      "default": "libscript_native"
+    },
+    "NSSM_VERSION": {
+      "description": "Specific version of nssm to install.",
+      "type": "string",
+      "default": "2.24"
+    },
+    "NSSM_INSTALL_DIR": {
+      "type": "string",
+      "description": "Target directory for isolated nssm installation."
+    },
+    "NSSM_OFFLINE": {
+      "type": "string",
+      "description": "Flag (true/false or 1/0) indicating air-gapped offline installation mode for nssm.",
+      "default": "false"
+    },
+    "NSSM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nssm release zip archive."
+    }
+  }
+}

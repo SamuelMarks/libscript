@@ -1,6 +1,6 @@
-# cspell:words GETFD SETFD CLOEXEC TCSANOW tcgetattr tcsetattr geteuid getuid getegid getgid sitecustomize HTTPONLY httponly mimetypes urlsafe rstrip edxloggedin getattr endswith csrftoken unenroll Prereqs Flearner
+# cspell:words GETFD SETFD CLOEXEC TCSANOW tcgetattr tcsetattr geteuid getuid getegid getgid sitecustomize HTTPONLY httponly mimetypes urlsafe rstrip edxloggedin getattr endswith csrftoken unenroll Prereqs Flearner MEMLOCK codejail subproc popen UGLIFYJS uglifyjs
 # ## Overview
-# Configures the Open edX Django LMS and Studio CMS settings, URLs, Micro-Frontend (MFE)
+# Configures the Open edX Django LMS and Studio CMS runtime, Micro-Frontend (MFE)
 # static serving, REST APIs, and POSIX compatibility shims for native Windows 11 execution
 # under Waitress / Django WSGI.
 #
@@ -15,7 +15,11 @@ param(
     [string]$AdminPassword = ""
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
+$InstallDir = $InstallDir.Trim().Trim('"').Trim().TrimEnd('\')
+if (-not $InstallDir) {
+    $InstallDir = "$env:USERPROFILE\.libscript\openedx"
+}
 
 if (-not $PythonExe -or -not (Test-Path $PythonExe)) {
     $venvPy = Join-Path $InstallDir ".venv\Scripts\python.exe"
@@ -23,6 +27,8 @@ if (-not $PythonExe -or -not (Test-Path $PythonExe)) {
         $PythonExe = $venvPy
     } else {
         $pyCandidates = @(
+            "$env:USERPROFILE\.libscript\python\3.12\bin\python.exe",
+            "$env:USERPROFILE\.libscript\python\latest\bin\python.exe",
             "$env:LOCALAPPDATA\Programs\Python\Python312-arm64\python.exe",
             "$env:LOCALAPPDATA\Programs\Python\Python311-arm64\python.exe",
             "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
@@ -43,7 +49,39 @@ if (-not (Test-Path (Join-Path $codebaseDir "manage.py"))) {
     }
 }
 
+$dataDir = if ($env:OPENEDX_DATA_DIR) { $env:OPENEDX_DATA_DIR.Trim().Trim('"').Trim().TrimEnd('\') } else { Join-Path $InstallDir "data" }
+$dataDirFwd = $dataDir.Replace('\', '/')
+$requiredDirs = @(
+    (Join-Path $InstallDir "config"),
+    $dataDir,
+    (Join-Path $dataDir "mako_lms"),
+    (Join-Path $dataDir "mako_cms"),
+    (Join-Path $dataDir "grades"),
+    (Join-Path $dataDir "financial-reports"),
+    (Join-Path $dataDir "django-pyfs\static\django-pyfs"),
+    (Join-Path $InstallDir "logs"),
+    (Join-Path $InstallDir "media"),
+    (Join-Path $InstallDir "media\profile-images"),
+    (Join-Path $InstallDir "media-private"),
+    (Join-Path $InstallDir "staticfiles"),
+    (Join-Path $InstallDir "staticfiles\studio"),
+    (Join-Path $InstallDir "staticfiles\images"),
+    (Join-Path $InstallDir "course_repos"),
+    (Join-Path $InstallDir "export_course_repos"),
+    (Join-Path $InstallDir "mfe_dist")
+)
+foreach ($reqDir in $requiredDirs) {
+    if (-not (Test-Path $reqDir)) {
+        New-Item -ItemType Directory -Path $reqDir -Force | Out-Null
+    }
+}
+& icacls.exe $dataDir /grant "*S-1-1-0:(OI)(CI)F" /T /C /Q >$null 2>&1
+
 $sitePackages = Join-Path $InstallDir ".venv\Lib\site-packages"
+if (-not (Test-Path $sitePackages)) {
+    New-Item -ItemType Directory -Path $sitePackages -Force | Out-Null
+}
+
 $venvScripts = Join-Path $InstallDir ".venv\Scripts"
 if (Test-Path $venvScripts) {
     Get-ChildItem -Path $venvScripts -Filter "*._pth" -ErrorAction SilentlyContinue | ForEach-Object {
@@ -53,9 +91,11 @@ if (Test-Path $venvScripts) {
         }
     }
 }
-if (Test-Path $sitePackages) {
-    Set-Content -Path (Join-Path $sitePackages "openedx_codebase.pth") -Value $codebaseDir -Encoding Ascii
-    $fcntlPy = @"
+
+Set-Content -Path (Join-Path $sitePackages "openedx_codebase.pth") -Value $codebaseDir -Encoding Ascii
+
+# 1. Defensive POSIX stdlib compatibility stubs in <venv>/Lib/site-packages
+$fcntlPy = @"
 LOCK_SH = 1
 LOCK_EX = 2
 LOCK_NB = 4
@@ -68,9 +108,9 @@ def ioctl(fd, op, arg=0, mutate_flag=True): return 0
 def flock(fd, op): pass
 def lockf(fd, op, length=0, start=0, whence=0): pass
 "@
-    Set-Content -Path (Join-Path $sitePackages "fcntl.py") -Value $fcntlPy -Encoding Ascii
+Set-Content -Path (Join-Path $sitePackages "fcntl.py") -Value $fcntlPy -Encoding Ascii
 
-    $pwdPy = @"
+$pwdPy = @"
 class struct_passwd:
     def __init__(self, pw_name='edxapp', pw_passwd='x', pw_uid=1000, pw_gid=1000, pw_gecos='', pw_dir='', pw_shell=''):
         self.pw_name = pw_name
@@ -84,9 +124,9 @@ def getpwuid(uid): return struct_passwd(pw_uid=uid)
 def getpwnam(name): return struct_passwd(pw_name=name)
 def getpwall(): return [struct_passwd()]
 "@
-    Set-Content -Path (Join-Path $sitePackages "pwd.py") -Value $pwdPy -Encoding Ascii
+Set-Content -Path (Join-Path $sitePackages "pwd.py") -Value $pwdPy -Encoding Ascii
 
-    $grpPy = @"
+$grpPy = @"
 class struct_group:
     def __init__(self, gr_name='edxapp', gr_passwd='x', gr_gid=1000, gr_mem=None):
         self.gr_name = gr_name
@@ -97,24 +137,50 @@ def getgrgid(gid): return struct_group(gr_gid=gid)
 def getgrnam(name): return struct_group(gr_name=name)
 def getgrall(): return [struct_group()]
 "@
-    Set-Content -Path (Join-Path $sitePackages "grp.py") -Value $grpPy -Encoding Ascii
+Set-Content -Path (Join-Path $sitePackages "grp.py") -Value $grpPy -Encoding Ascii
 
-    $resourcePy = @"
+$resourcePy = @"
+"""
+Windows compatibility stub for the Unix-only stdlib ``resource`` module.
+Allows ``edx-codejail`` (``codejail.subproc``) to import cleanly on Windows.
+"""
+
+RLIMIT_CPU = 0
+RLIMIT_FSIZE = 1
+RLIMIT_DATA = 2
+RLIMIT_STACK = 3
+RLIMIT_CORE = 4
+RLIMIT_RSS = 5
+RLIMIT_NPROC = 6
 RLIMIT_NOFILE = 7
+RLIMIT_MEMLOCK = 8
 RLIMIT_AS = 9
-def getrlimit(res): return (4096, 4096)
-def setrlimit(res, limits): pass
+RUSAGE_SELF = 0
+RUSAGE_CHILDREN = -1
+
+
+class error(Exception):
+    pass
+
+
+def getrlimit(resource_type):
+    return (-1, -1)
+
+
+def setrlimit(resource_type, limits):
+    pass
+
+
 def getrusage(who):
     class _RUsage:
         ru_utime = 0.0
         ru_stime = 0.0
         ru_maxrss = 0
     return _RUsage()
-RUSAGE_SELF = 0
 "@
-    Set-Content -Path (Join-Path $sitePackages "resource.py") -Value $resourcePy -Encoding Ascii
+Set-Content -Path (Join-Path $sitePackages "resource.py") -Value $resourcePy -Encoding Ascii
 
-    $syslogPy = @"
+$syslogPy = @"
 LOG_INFO = 6
 LOG_ERR = 3
 LOG_WARNING = 4
@@ -125,48 +191,312 @@ def openlog(*args, **kwargs): pass
 def syslog(*args, **kwargs): pass
 def closelog(): pass
 "@
-    Set-Content -Path (Join-Path $sitePackages "syslog.py") -Value $syslogPy -Encoding Ascii
+Set-Content -Path (Join-Path $sitePackages "syslog.py") -Value $syslogPy -Encoding Ascii
 
-    $termiosPy = @"
+$termiosPy = @"
 TCSANOW = 0
 def tcgetattr(fd): return [0, 0, 0, 0, 0, 0, []]
 def tcsetattr(fd, when, attributes): pass
 "@
-    Set-Content -Path (Join-Path $sitePackages "termios.py") -Value $termiosPy -Encoding Ascii
+Set-Content -Path (Join-Path $sitePackages "termios.py") -Value $termiosPy -Encoding Ascii
 
-    $siteCustomizePy = @"
-import os, socket
-if not hasattr(os, 'geteuid'):
-    os.geteuid = lambda: 1000
-if not hasattr(os, 'getuid'):
-    os.getuid = lambda: 1000
-if not hasattr(os, 'getegid'):
-    os.getegid = lambda: 1000
-if not hasattr(os, 'getgid'):
-    os.getgid = lambda: 1000
-if not hasattr(os, 'chown'):
-    os.chown = lambda path, uid, gid, *a, **kw: None
-if not hasattr(socket, 'AF_UNIX'):
-    socket.AF_UNIX = 1
+$installDirFwd = $InstallDir.Replace('\', '/')
+$siteCustomizePy = @"
+"""
+Zero-source-edit Windows compatibility layer for openedx-platform.
+"""
+import atexit
+import mimetypes
+import os
+import shutil
+import socket
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+OPENEDX_INSTALL_DIR = Path(os.environ.get("OPENEDX_INSTALL_DIR", r"$installDirFwd"))
+
+if sys.platform == "win32":
+    if not hasattr(os, "geteuid"):
+        os.geteuid = lambda: 1000
+    if not hasattr(os, "getuid"):
+        os.getuid = lambda: 1000
+    if not hasattr(os, "getegid"):
+        os.getegid = lambda: 1000
+    if not hasattr(os, "getgid"):
+        os.getgid = lambda: 1000
+    if not hasattr(os, "chown"):
+        os.chown = lambda path, uid, gid, *a, **kw: None
+    if not hasattr(socket, "AF_UNIX"):
+        socket.AF_UNIX = 1
+
+    os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+
+    _cfg_dir = OPENEDX_INSTALL_DIR / "config"
+    if (_cfg_dir / "lms.yml").exists():
+        os.environ.setdefault("LMS_CFG", str(_cfg_dir / "lms.yml"))
+    elif (_cfg_dir / "lms.env.json").exists():
+        os.environ.setdefault("LMS_CFG", str(_cfg_dir / "lms.env.json"))
+    if (_cfg_dir / "cms.yml").exists():
+        os.environ.setdefault("CMS_CFG", str(_cfg_dir / "cms.yml"))
+        os.environ.setdefault("STUDIO_CFG", str(_cfg_dir / "cms.yml"))
+    elif (_cfg_dir / "cms.env.json").exists():
+        os.environ.setdefault("CMS_CFG", str(_cfg_dir / "cms.env.json"))
+    if (_cfg_dir / "revisions.yml").exists():
+        os.environ.setdefault("REVISION_CFG", str(_cfg_dir / "revisions.yml"))
+    os.environ.setdefault("STATIC_ROOT_LMS", str(OPENEDX_INSTALL_DIR / "staticfiles"))
+    os.environ.setdefault("STATIC_ROOT_CMS", str(OPENEDX_INSTALL_DIR / "staticfiles" / "studio"))
+
+    try:
+        import glob2
+        _orig_glob = glob2.glob
+
+        def _posix_glob(pathname, *args, **kwargs):
+            return [p.replace(os.path.sep, "/") for p in _orig_glob(pathname, *args, **kwargs)]
+
+        glob2.glob = _posix_glob
+    except ImportError:
+        pass
+
+    _orig_ntf = tempfile.NamedTemporaryFile
+
+    def _win_compat_named_temporary_file(
+        mode="w+b", buffering=-1, encoding=None, newline=None,
+        suffix=None, prefix=None, dir=None, delete=True, **kwargs
+    ):
+        if not delete:
+            return _orig_ntf(
+                mode=mode, buffering=buffering, encoding=encoding,
+                newline=newline, suffix=suffix, prefix=prefix, dir=dir,
+                delete=False, **kwargs
+            )
+        f = _orig_ntf(
+            mode=mode, buffering=buffering, encoding=encoding,
+            newline=newline, suffix=suffix, prefix=prefix, dir=dir,
+            delete=False, **kwargs
+        )
+        _orig_close = f.close
+
+        def _close_and_unlink():
+            try:
+                _orig_close()
+            finally:
+                try:
+                    if os.path.exists(f.name):
+                        os.unlink(f.name)
+                except OSError:
+                    pass
+
+        f.close = _close_and_unlink
+        atexit.register(_close_and_unlink)
+        return f
+
+    tempfile.NamedTemporaryFile = _win_compat_named_temporary_file
+
+    _orig_popen_init = subprocess.Popen.__init__
+
+    def _win_popen_init(self, args, *popen_args, **popen_kwargs):
+        if isinstance(args, (list, tuple)) and args:
+            exe = str(args[0])
+            resolved = shutil.which(exe)
+            if not resolved and "/" in exe:
+                resolved = shutil.which(exe.replace("/", os.path.sep))
+            if resolved:
+                args = [resolved] + list(args[1:])
+        return _orig_popen_init(self, args, *popen_args, **popen_kwargs)
+
+    subprocess.Popen.__init__ = _win_popen_init
+
+    try:
+        import codejail.safe_exec
+        codejail.safe_exec.ALWAYS_BE_UNSAFE = True
+    except ImportError:
+        pass
+
+    try:
+        import openedx.core.lib.derived as _derived_mod
+        _orig_derive_settings = _derived_mod.derive_settings
+
+        def _win_derive_settings(module_name: str) -> None:
+            _orig_derive_settings(module_name)
+            mod = sys.modules.get(module_name)
+            if mod is not None:
+                broker_url = getattr(mod, "BROKER_URL", "")
+                if isinstance(broker_url, str) and broker_url.startswith("redis://:@"):
+                    mod.BROKER_URL = broker_url.replace("redis://:@", "redis://@", 1)
+                static_root = getattr(mod, "STATIC_ROOT", None)
+                webpack_loader = getattr(mod, "WEBPACK_LOADER", None)
+                if static_root and isinstance(webpack_loader, dict) and "DEFAULT" in webpack_loader:
+                    stats_file = os.path.join(str(static_root), "webpack-stats.json")
+                    if os.path.exists(stats_file):
+                        webpack_loader["DEFAULT"]["STATS_FILE"] = stats_file
+
+        _derived_mod.derive_settings = _win_derive_settings
+    except ImportError:
+        pass
+
+    try:
+        import django.core.wsgi as _dj_wsgi
+        _orig_get_wsgi_app = _dj_wsgi.get_wsgi_application
+
+        def _win_get_wsgi_application():
+            app = _orig_get_wsgi_app()
+            static_dir = OPENEDX_INSTALL_DIR / "staticfiles"
+            media_dir = OPENEDX_INSTALL_DIR / "media"
+            mfe_dir = OPENEDX_INSTALL_DIR / "mfe_dist"
+            mfe_apps = ("authn", "authoring", "course-authoring", "learner-dashboard", "learning", "account", "profile", "discussions", "ora-grading")
+
+            def _static_and_mfe_wsgi_wrapper(environ, start_response):
+                path_info = environ.get("PATH_INFO", "") or "/"
+                if path_info.startswith("/static/"):
+                    rel = path_info[len("/static/"):].lstrip("/")
+                    candidate = (static_dir / rel).resolve()
+                    if candidate.is_file() and str(candidate).startswith(str(static_dir.resolve())):
+                        ctype, _ = mimetypes.guess_type(str(candidate))
+                        data = candidate.read_bytes()
+                        start_response("200 OK", [
+                            ("Content-Type", ctype or "application/octet-stream"),
+                            ("Content-Length", str(len(data))),
+                            ("Access-Control-Allow-Origin", "*"),
+                        ])
+                        return [data]
+                elif path_info.startswith("/media/"):
+                    rel = path_info[len("/media/"):].lstrip("/")
+                    candidate = (media_dir / rel).resolve()
+                    if candidate.is_file() and str(candidate).startswith(str(media_dir.resolve())):
+                        ctype, _ = mimetypes.guess_type(str(candidate))
+                        data = candidate.read_bytes()
+                        start_response("200 OK", [
+                            ("Content-Type", ctype or "application/octet-stream"),
+                            ("Content-Length", str(len(data))),
+                            ("Access-Control-Allow-Origin", "*"),
+                        ])
+                        return [data]
+                else:
+                    if not os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith("libscript_win"):
+                        parts = [p for p in path_info.strip("/").split("/") if p]
+                        if parts and parts[0] in mfe_apps and mfe_dir.is_dir():
+                            mfe_name = "authoring" if parts[0] == "course-authoring" else parts[0]
+                            app_root = (mfe_dir / mfe_name).resolve()
+                            if app_root.is_dir():
+                                rel = "/".join(parts[1:])
+                                target = (app_root / rel).resolve() if rel else (app_root / "index.html").resolve()
+                                if not target.is_file() or not str(target).startswith(str(app_root)):
+                                    target = (app_root / "index.html").resolve()
+                                if target.is_file():
+                                    ctype, _ = mimetypes.guess_type(str(target))
+                                    data = target.read_bytes()
+                                    start_response("200 OK", [
+                                        ("Content-Type", ctype or "text/html; charset=utf-8"),
+                                        ("Content-Length", str(len(data))),
+                                    ])
+                                    return [data]
+                return app(environ, start_response)
+
+            return _static_and_mfe_wsgi_wrapper
+
+        _dj_wsgi.get_wsgi_application = _win_get_wsgi_application
+    except ImportError:
+        pass
 "@
-    Set-Content -Path (Join-Path $sitePackages "sitecustomize.py") -Value $siteCustomizePy -Encoding Ascii
-}
+Set-Content -Path (Join-Path $sitePackages "sitecustomize.py") -Value $siteCustomizePy -Encoding Ascii
 
 # Deploy pre-built MFE bundle if present in cache or codebase
-$mfeDistDir = Join-Path $InstallDir "mfe_dist"
-if (-not (Test-Path $mfeDistDir)) {
-    New-Item -ItemType Directory -Path $mfeDistDir -Force | Out-Null
-}
+$mfeDistDir = Join-Path $InstallDir 'mfe_dist'
 $mfeArchiveCandidates = @(
-    (Join-Path $InstallDir "cache\codebase\mfe-bundle-verawood.1.tar.gz"),
-    "C:\libscript\cache\codebase\mfe-bundle-verawood.1.tar.gz",
-    "C:\libscript\mfe-bundle-verawood.1.tar.gz"
+    (Join-Path $InstallDir 'cache\codebase\mfe-bundle-verawood.1.tar.gz'),
+    (Join-Path $InstallDir 'cache\npm\mfe-bundle-verawood.1.tar.gz'),
+    (Join-Path $InstallDir 'libscript\cache\codebase\mfe-bundle-verawood.1.tar.gz'),
+    (Join-Path $InstallDir 'libscript\cache\npm\mfe-bundle-verawood.1.tar.gz'),
+    'C:\libscript\cache\codebase\mfe-bundle-verawood.1.tar.gz',
+    'C:\libscript\cache\npm\mfe-bundle-verawood.1.tar.gz',
+    'C:\libscript\mfe-bundle-verawood.1.tar.gz'
 )
 foreach ($cand in $mfeArchiveCandidates) {
-    if ((Test-Path $cand) -and (-not (Test-Path (Join-Path $mfeDistDir "authn\index.html")))) {
+    if ((Test-Path $cand) -and (-not (Test-Path (Join-Path $mfeDistDir 'authn\index.html')))) {
         Write-Host "[INFO] Extracting Open edX Verawood.1 MFE bundle from $cand..."
         & tar.exe -xzf $cand -C $mfeDistDir 2>$null
         break
+    }
+}
+
+# Extract official Open edX logos and DemoX course card from demo-course.tar.gz into staticfiles/images
+$demoArchiveCandidates = @(
+    (Join-Path $InstallDir 'cache\codebase\demo-course.tar.gz'),
+    (Join-Path $InstallDir 'cache\codebase\openedx-demo-course.tar.gz'),
+    (Join-Path $InstallDir 'libscript\cache\codebase\demo-course.tar.gz'),
+    'C:\libscript\cache\codebase\demo-course.tar.gz'
+)
+$staticImagesDir = Join-Path $InstallDir 'staticfiles\images'
+if (-not (Test-Path $staticImagesDir)) {
+    New-Item -ItemType Directory -Path $staticImagesDir -Force | Out-Null
+}
+foreach ($demoCand in $demoArchiveCandidates) {
+    if (Test-Path $demoCand) {
+        $tmpDemoImg = Join-Path $env:TEMP "openedx_demo_assets_$PID"
+        New-Item -ItemType Directory -Path $tmpDemoImg -Force | Out-Null
+        & tar.exe -xzf $demoCand -C $tmpDemoImg 'openedx-demo-course-master/demo-course/course/static/DemoX-Course-Card.png' 'openedx-demo-course-master/demo-course/course/static/openedx_logo.png' 'openedx-demo-course-master/demo-course/course/static/rgb-white-stacked-logo-open-edx-2026.svg' 2>$null
+        $cardFile = Join-Path $tmpDemoImg 'openedx-demo-course-master\demo-course\course\static\DemoX-Course-Card.png'
+        $logoFile = Join-Path $tmpDemoImg 'openedx-demo-course-master\demo-course\course\static\openedx_logo.png'
+        $whiteSvg = Join-Path $tmpDemoImg 'openedx-demo-course-master\demo-course\course\static\rgb-white-stacked-logo-open-edx-2026.svg'
+        if (Test-Path $cardFile) {
+            Copy-Item -Path $cardFile -Destination (Join-Path $staticImagesDir 'DemoX-Course-Card.png') -Force
+        }
+        if (Test-Path $logoFile) {
+            Copy-Item -Path $logoFile -Destination (Join-Path $staticImagesDir 'openedx-logo.png') -Force
+            Copy-Item -Path $logoFile -Destination (Join-Path $staticImagesDir 'logo.png') -Force
+            Copy-Item -Path $logoFile -Destination (Join-Path $staticImagesDir 'studio-logo.png') -Force
+        }
+        if (Test-Path $whiteSvg) {
+            Copy-Item -Path $whiteSvg -Destination (Join-Path $staticImagesDir 'logo-white.svg') -Force
+        }
+        Remove-Item -Path $tmpDemoImg -Recurse -Force -ErrorAction SilentlyContinue
+        break
+    }
+}
+
+# Patch MFE static bundles with local HTTP URLs, official Open edX logos, and SECURE_COOKIES=false
+$lmsPortVal = if ($env:OPENEDX_LMS_PORT) { $env:OPENEDX_LMS_PORT } else { "8000" }
+$cmsPortVal = if ($env:OPENEDX_CMS_PORT) { $env:OPENEDX_CMS_PORT } else { "8001" }
+if (Test-Path $mfeDistDir) {
+    Get-ChildItem -Path $mfeDistDir -Filter "*.js" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike "*.LICENSE.txt" } | ForEach-Object {
+        try {
+            $jsText = [System.IO.File]::ReadAllText($_.FullName)
+            if ($jsText.Contains("MFE_CONFIG_API_URL")) {
+                $jsText = $jsText.Replace("MFE_CONFIG_API_URL:`"http://localhost:$lmsPortVal/api/mfe_config/v1`"", 'MFE_CONFIG_API_URL:"/api/mfe_config/v1"')
+                $jsText = $jsText.Replace('SECURE_COOKIES:!0', 'SECURE_COOKIES:!1')
+                $jsText = $jsText.Replace('ACCESS_TOKEN_COOKIE_NAME:"null"', 'ACCESS_TOKEN_COOKIE_NAME:"edx-jwt-cookie-header-payload"')
+                $jsText = $jsText.Replace('ACCESS_TOKEN_COOKIE_NAME:""', 'ACCESS_TOKEN_COOKIE_NAME:"edx-jwt-cookie-header-payload"')
+                $jsText = $jsText.Replace('USER_INFO_COOKIE_NAME:"MISSING_ENV_VAR".USER_INFO_COOKIE_NAME', 'USER_INFO_COOKIE_NAME:"edx-user-info"')
+                $jsText = $jsText.Replace('USER_INFO_COOKIE_NAME:""', 'USER_INFO_COOKIE_NAME:"edx-user-info"')
+                $jsText = $jsText.Replace('CSRF_TOKEN_API_PATH:"null"', 'CSRF_TOKEN_API_PATH:"/csrf/api/v1/token"')
+                $jsText = $jsText.Replace('CSRF_TOKEN_API_PATH:""', 'CSRF_TOKEN_API_PATH:"/csrf/api/v1/token"')
+                $jsText = $jsText.Replace('REFRESH_ACCESS_TOKEN_ENDPOINT:"null"', "REFRESH_ACCESS_TOKEN_ENDPOINT:`"http://localhost:$lmsPortVal/login_refresh`"")
+                $jsText = $jsText.Replace('REFRESH_ACCESS_TOKEN_ENDPOINT:""', "REFRESH_ACCESS_TOKEN_ENDPOINT:`"http://localhost:$lmsPortVal/login_refresh`"")
+                $jsText = $jsText.Replace('LMS_BASE_URL:"null"', "LMS_BASE_URL:`"http://localhost:$lmsPortVal`"")
+                $jsText = $jsText.Replace('LMS_BASE_URL:""', "LMS_BASE_URL:`"http://localhost:$lmsPortVal`"")
+                $jsText = $jsText.Replace('BASE_URL:"null"', "BASE_URL:`"http://localhost:$lmsPortVal`"")
+                $jsText = $jsText.Replace('BASE_URL:""', "BASE_URL:`"http://localhost:$lmsPortVal`"")
+                $jsText = $jsText.Replace('LOGIN_URL:"null"', "LOGIN_URL:`"http://localhost:$lmsPortVal/authn/login`"")
+                $jsText = $jsText.Replace('LOGIN_URL:""', "LOGIN_URL:`"http://localhost:$lmsPortVal/authn/login`"")
+                $jsText = $jsText.Replace('LOGOUT_URL:"null"', "LOGOUT_URL:`"http://localhost:$lmsPortVal/logout`"")
+                $jsText = $jsText.Replace('LOGOUT_URL:""', "LOGOUT_URL:`"http://localhost:$lmsPortVal/logout`"")
+                $jsText = $jsText.Replace('STUDIO_BASE_URL:"MISSING_ENV_VAR".STUDIO_BASE_URL', "STUDIO_BASE_URL:`"http://localhost:$cmsPortVal`"")
+                $jsText = $jsText.Replace('STUDIO_BASE_URL:""', "STUDIO_BASE_URL:`"http://localhost:$cmsPortVal`"")
+                $jsText = $jsText.Replace('LEARNING_BASE_URL:"MISSING_ENV_VAR".LEARNING_BASE_URL', "LEARNING_BASE_URL:`"http://localhost:$lmsPortVal/learning`"")
+                $jsText = $jsText.Replace('LEARNING_BASE_URL:""', "LEARNING_BASE_URL:`"http://localhost:$lmsPortVal/learning`"")
+                $jsText = $jsText.Replace('LOGO_URL:"MISSING_ENV_VAR".LOGO_URL', "LOGO_URL:`"http://localhost:$lmsPortVal/static/images/openedx-logo.png`"")
+                $jsText = $jsText.Replace('LOGO_URL:""', "LOGO_URL:`"http://localhost:$lmsPortVal/static/images/openedx-logo.png`"")
+                $jsText = $jsText.Replace('LOGO_TRADEMARK_URL:"MISSING_ENV_VAR".LOGO_TRADEMARK_URL', "LOGO_TRADEMARK_URL:`"http://localhost:$lmsPortVal/static/images/openedx-logo.png`"")
+                $jsText = $jsText.Replace('LOGO_TRADEMARK_URL:""', "LOGO_TRADEMARK_URL:`"http://localhost:$lmsPortVal/static/images/openedx-logo.png`"")
+                $jsText = $jsText.Replace('LOGO_WHITE_URL:"MISSING_ENV_VAR".LOGO_WHITE_URL', "LOGO_WHITE_URL:`"http://localhost:$lmsPortVal/static/images/logo-white.svg`"")
+                $jsText = $jsText.Replace('LOGO_WHITE_URL:""', "LOGO_WHITE_URL:`"http://localhost:$lmsPortVal/static/images/logo-white.svg`"")
+                $jsText = $jsText.Replace('SITE_NAME:"null"', 'SITE_NAME:"Open edX"')
+                $jsText = $jsText.Replace('SITE_NAME:""', 'SITE_NAME:"Open edX"')
+                [System.IO.File]::WriteAllText($_.FullName, $jsText, [System.Text.UTF8Encoding]::new($false))
+            }
+        } catch {}
     }
 }
 
@@ -182,9 +512,7 @@ foreach ($pkgDir in @(
     $cmsEnvsDir
 )) {
     $initFile = Join-Path $pkgDir "__init__.py"
-    if (-not (Test-Path $initFile)) {
-        Set-Content -Path $initFile -Value "# Open edX package marker`r`n" -Encoding Ascii
-    }
+    Set-Content -Path $initFile -Value "# Open edX package marker`r`n" -Encoding Ascii
 }
 
 $lmsWsgiPath = Join-Path $codebaseDir "lms\wsgi.py"
@@ -213,8 +541,6 @@ application = get_wsgi_application()
 "@
 Set-Content -Path $cmsWsgiPath -Value $cmsWsgiContent -Encoding Ascii
 
-$installDirFwd = $InstallDir -replace '\\', '/'
-
 $commonSettingsPy = @"
 import os, sys, json
 from pathlib import Path
@@ -222,7 +548,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 INSTALL_DIR = Path(r'$installDirFwd')
 MFE_DIST_DIR = INSTALL_DIR / 'mfe_dist'
-DATA_DIR = INSTALL_DIR / 'data'
+DATA_DIR = Path(os.environ.get('OPENEDX_DATA_DIR', r'$dataDirFwd'))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_DIR = INSTALL_DIR / 'config'
 
 SECRET_KEY = os.environ.get('OPENEDX_SECRET_KEY', 'libscript-openedx-verawood-win-secret-key-2026')
@@ -269,7 +596,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(INSTALL_DIR / 'openedx.sqlite3'),
+        'NAME': str(DATA_DIR / 'openedx.sqlite3'),
     }
 }
 
@@ -315,7 +642,6 @@ Set-Content -Path (Join-Path $cmsEnvsDir "libscript_win.py") -Value $cmsSettings
 Set-Content -Path (Join-Path $lmsEnvsDir "libscript.py") -Value $lmsSettingsPy -Encoding Ascii
 Set-Content -Path (Join-Path $cmsEnvsDir "libscript.py") -Value $cmsSettingsPy -Encoding Ascii
 
-# Write real Open edX Verawood MFE & REST API URL routers (serving real @edx/frontend-app-* bundles)
 $openedxMfeBackendPy = @'
 import base64
 import json
@@ -333,7 +659,8 @@ from django.shortcuts import redirect
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 
-JWT_COOKIE_NAME = "edx-jwt-cookie-payload-LMS"
+JWT_COOKIE_NAME = "edx-jwt-cookie-header-payload"
+LEGACY_JWT_COOKIE_NAME = "edx-jwt-cookie-payload-LMS"
 USER_INFO_COOKIE_NAME = "edx-user-info"
 
 
@@ -356,7 +683,7 @@ def _build_jwt_for_user(user):
         "name": user.get_full_name() or user.username,
         "administrator": bool(user.is_superuser or user.is_staff),
         "roles": ["staff", "instructor"] if (user.is_superuser or user.is_staff) else ["learner"],
-        " verified_name": None,
+        "verified_name": None,
     }
     return f"{_b64url(json.dumps(header).encode('utf-8'))}.{_b64url(json.dumps(payload).encode('utf-8'))}.sig"
 
@@ -364,6 +691,7 @@ def _build_jwt_for_user(user):
 def _set_openedx_auth_cookies(response, user):
     jwt_val = _build_jwt_for_user(user)
     response.set_cookie(JWT_COOKIE_NAME, jwt_val, path="/", samesite="Lax", httponly=False)
+    response.set_cookie(LEGACY_JWT_COOKIE_NAME, jwt_val, path="/", samesite="Lax", httponly=False)
     response.set_cookie("edxloggedin", "true", path="/", samesite="Lax", httponly=False)
     user_info = {
         "version": 1,
@@ -381,6 +709,7 @@ def _set_openedx_auth_cookies(response, user):
 
 def _clear_openedx_auth_cookies(response):
     response.delete_cookie(JWT_COOKIE_NAME, path="/")
+    response.delete_cookie(LEGACY_JWT_COOKIE_NAME, path="/")
     response.delete_cookie("edxloggedin", path="/")
     response.delete_cookie(USER_INFO_COOKIE_NAME, path="/")
     return response
@@ -390,7 +719,7 @@ def _resolve_user_from_request(request):
     if getattr(request, "user", None) and request.user.is_authenticated:
         return request.user
     User = get_user_model()
-    jwt_cookie = request.COOKIES.get(JWT_COOKIE_NAME, "")
+    jwt_cookie = request.COOKIES.get(JWT_COOKIE_NAME, "") or request.COOKIES.get(LEGACY_JWT_COOKIE_NAME, "")
     if jwt_cookie and "." in jwt_cookie:
         try:
             parts = jwt_cookie.split(".")
@@ -481,10 +810,11 @@ def _load_courses_catalog():
 
 
 def _serve_mfe_app(request, mfe_name):
-    mfe_dir = settings.MFE_DIST_DIR / mfe_name
+    actual_mfe = "authoring" if mfe_name == "course-authoring" else mfe_name
+    mfe_dir = settings.MFE_DIST_DIR / actual_mfe
     index_path = mfe_dir / "index.html"
     if not index_path.is_file():
-        raise Http404(f"MFE bundle '{mfe_name}' not found at {index_path}")
+        raise Http404(f"MFE bundle '{actual_mfe}' not found at {index_path}")
     html = index_path.read_text(encoding="utf-8")
     user = _resolve_user_from_request(request)
     resp = HttpResponse(html, content_type="text/html; charset=utf-8")
@@ -496,7 +826,8 @@ def _serve_mfe_app(request, mfe_name):
 def serve_mfe_asset(request, mfe_name, asset_path=""):
     if request.method == "OPTIONS":
         return _cors(request, HttpResponse(status=204))
-    mfe_dir = settings.MFE_DIST_DIR / mfe_name
+    actual_mfe = "authoring" if mfe_name == "course-authoring" else mfe_name
+    mfe_dir = settings.MFE_DIST_DIR / actual_mfe
     clean_rel = asset_path.strip("/")
     if clean_rel:
         candidate = (mfe_dir / clean_rel).resolve()
@@ -512,21 +843,26 @@ def serve_mfe_asset(request, mfe_name, asset_path=""):
                 ctype = "font/woff2"
             resp = FileResponse(open(candidate, "rb"), content_type=ctype or "application/octet-stream")
             return _cors(request, resp)
-    return _serve_mfe_app(request, mfe_name)
+    return _serve_mfe_app(request, actual_mfe)
 
 
 def serve_static_asset(request, rel_path):
     if request.method == "OPTIONS":
         return _cors(request, HttpResponse(status=204))
-    for root in getattr(settings, "STATICFILES_DIRS", []):
+    search_roots = [getattr(settings, "STATIC_ROOT", "")] + list(getattr(settings, "STATICFILES_DIRS", []))
+    for root in search_roots:
+        if not root:
+            continue
         candidate = (Path(root) / rel_path).resolve()
         if str(candidate).startswith(str(Path(root).resolve())) and candidate.is_file():
             ctype, _ = mimetypes.guess_type(str(candidate))
             if str(candidate).endswith(".svg"):
                 ctype = "image/svg+xml"
             return _cors(request, FileResponse(open(candidate, "rb"), content_type=ctype or "application/octet-stream"))
-    if rel_path.endswith("logo.png") or rel_path.endswith("studio-logo.png") or rel_path.endswith("favicon.ico"):
+    if rel_path.endswith("logo.png") or rel_path.endswith("openedx-logo.png") or rel_path.endswith("studio-logo.png") or rel_path.endswith("favicon.ico"):
         for fallback in [
+            settings.INSTALL_DIR / "staticfiles" / "images" / "openedx-logo.png",
+            settings.BASE_DIR / "lms" / "static" / "images" / "openedx-logo-tag.png",
             settings.BASE_DIR / "lms" / "static" / "images" / "logo.png",
             settings.BASE_DIR / "cms" / "static" / "images" / "studio-logo.png",
             settings.BASE_DIR / "lms" / "static" / "images" / "favicon.ico",
@@ -584,9 +920,9 @@ def mfe_config_api_v1(request):
         "STUDIO_SHORT_NAME": "Studio",
         "ENVIRONMENT": "production",
         "NODE_ENV": "production",
-        "LOGO_URL": f"{settings.LMS_ROOT_URL}/static/images/logo.png",
-        "LOGO_TRADEMARK_URL": f"{settings.LMS_ROOT_URL}/static/images/logo.png",
-        "LOGO_WHITE_URL": f"{settings.LMS_ROOT_URL}/static/images/logo.png",
+        "LOGO_URL": f"{settings.LMS_ROOT_URL}/static/images/openedx-logo.png",
+        "LOGO_TRADEMARK_URL": f"{settings.LMS_ROOT_URL}/static/images/openedx-logo.png",
+        "LOGO_WHITE_URL": f"{settings.LMS_ROOT_URL}/static/images/logo-white.svg",
         "FAVICON_URL": f"{settings.LMS_ROOT_URL}/static/images/favicon.ico",
         "ACCOUNT_PROFILE_URL": f"{settings.LMS_ROOT_URL}/profile",
         "ACCOUNT_SETTINGS_URL": f"{settings.LMS_ROOT_URL}/account",
@@ -771,7 +1107,7 @@ def learner_home_init_api(request):
         courses_data.append(
             {
                 "course": {
-                    "bannerImgSrc": f"{settings.LMS_ROOT_URL}/static/images/logo.png",
+                    "bannerImgSrc": f"{settings.LMS_ROOT_URL}/static/images/DemoX-Course-Card.png",
                     "courseName": c.get("display_name", "edX Demonstration Course"),
                     "courseNumber": c.get("number", "DemoX"),
                     "socialShareUrl": f"{settings.LMS_ROOT_URL}/learning/course/{cid}/home",
@@ -1047,7 +1383,7 @@ common_api_patterns = [
     path("logout", logout_view),
     path("logout/", logout_view),
     re_path(r"^static/(?P<rel_path>.+)$", serve_static_asset),
-    re_path(r"^(?P<mfe_name>authn|authoring|learner-dashboard|learning|account|profile)(?:/(?P<asset_path>.*))?$", serve_mfe_asset),
+    re_path(r"^(?P<mfe_name>authn|authoring|course-authoring|learner-dashboard|learning|account|profile)(?:/(?P<asset_path>.*))?$", serve_mfe_asset),
 ]
 '@
 
@@ -1086,6 +1422,7 @@ $adminEmail = if ($AdminEmail) { $AdminEmail } elseif ($env:OPENEDX_ADMIN_EMAIL)
 $adminPass = if ($AdminPassword) { $AdminPassword } elseif ($env:OPENEDX_ADMIN_PASSWORD) { $env:OPENEDX_ADMIN_PASSWORD } else { "admin" }
 
 if ($PythonExe -and (Test-Path $PythonExe)) {
+    $ErrorActionPreference = "Continue"
     Push-Location $codebaseDir
     try {
         $env:PYTHONPATH = $codebaseDir
@@ -1093,7 +1430,7 @@ if ($PythonExe -and (Test-Path $PythonExe)) {
         $env:OPENEDX_ADMIN_USERNAME = $adminUser
         $env:OPENEDX_ADMIN_EMAIL = $adminEmail
         $env:OPENEDX_ADMIN_PASSWORD = $adminPass
-        & $PythonExe -m django migrate --noinput
+        & $PythonExe -m django migrate --noinput *>$null
         $seedScript = @'
 import os, django
 django.setup()
@@ -1118,7 +1455,8 @@ for uname, email, pwd in [
     u.save()
 print('[OK] Seeded Open edX superuser accounts in SQLite database.')
 '@
-        & $PythonExe -c $seedScript
+        & $PythonExe -c $seedScript *>$null
+        & icacls.exe $dataDir /grant "*S-1-1-0:(OI)(CI)F" /T /C /Q >$null 2>&1
     } finally {
         Pop-Location
     }
@@ -1141,14 +1479,14 @@ try {
             if (Test-Path (Join-Path $assetsDir "openedx_lms.ico")) {
                 $lnk = $wsh.CreateShortcut((Join-Path $d "Open edX LMS.lnk"))
                 $lnk.TargetPath = $browserExe
-                $lnk.Arguments = "http://localhost:8000/authn/login"
+                $lnk.Arguments = "http://localhost:$lmsPortVal/authn/login"
                 $lnk.IconLocation = (Join-Path $assetsDir "openedx_lms.ico") + ",0"
                 $lnk.Save()
             }
             if (Test-Path (Join-Path $assetsDir "openedx_studio.ico")) {
                 $lnk = $wsh.CreateShortcut((Join-Path $d "Open edX Studio.lnk"))
                 $lnk.TargetPath = $browserExe
-                $lnk.Arguments = "http://localhost:8001/authoring/home"
+                $lnk.Arguments = "http://localhost:$cmsPortVal/authoring/home"
                 $lnk.IconLocation = (Join-Path $assetsDir "openedx_studio.ico") + ",0"
                 $lnk.Save()
             }

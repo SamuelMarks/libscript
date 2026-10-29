@@ -52,22 +52,24 @@ goto :find_root
 if "%ACTION%"=="" set "ACTION=install"
 
 if "%ACTION%"=="install" (
-    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" (
-        echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
-        exit /b 0
-    )
     where waitress-serve >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] waitress is already installed on Windows.
         exit /b 0
     )
+    if exist "%USERPROFILE%\.libscript\python\latest\Scripts\waitress-serve.exe" (
+        echo [INFO] waitress is already installed in %USERPROFILE%\.libscript\python\latest\Scripts.
+        exit /b 0
+    )
     where uv >nul 2>&1
     if not errorlevel 1 (
-        echo [INFO] Installing waitress via uv...
-        uv tool install waitress >nul 2>&1 || uv pip install waitress
+        echo [INFO] Installing waitress==3.0.2 via uv...
+        uv tool install "waitress==3.0.2" >nul 2>&1 || uv pip install "waitress==3.0.2"
         exit /b 0
     )
     for %%P in (
+        "%USERPROFILE%\.libscript\python\3.12\bin\python.exe"
+        "%USERPROFILE%\.libscript\python\latest\bin\python.exe"
         "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
         "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
         "C:\Program Files\Python312\python.exe"
@@ -75,8 +77,8 @@ if "%ACTION%"=="install" (
         "C:\Program Files\Python310\python.exe"
     ) do (
         if exist "%%~fP" (
-            echo [INFO] Installing waitress via %%~fP -m pip...
-            "%%~fP" -m pip install --user waitress >nul 2>&1
+            echo [INFO] Installing waitress==3.0.2 via %%~fP -m pip...
+            "%%~fP" -m pip install "waitress==3.0.2" >nul 2>&1 || "%%~fP" -m pip install --user "waitress==3.0.2" >nul 2>&1
             exit /b 0
         )
     )

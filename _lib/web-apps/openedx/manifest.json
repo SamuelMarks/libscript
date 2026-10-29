@@ -16,7 +16,11 @@
     "caddy",
     "meilisearch",
     "gunicorn",
+    "waitress",
     "exim",
+    "hmailserver",
+    "lynx",
+    "gettext",
     "nodeenv"
   ],
   "os_blacklist": [],

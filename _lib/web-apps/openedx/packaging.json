@@ -110,6 +110,12 @@
         "mandatory": true
       },
       {
+        "component": "waitress",
+        "title": "Waitress Production WSGI Server",
+        "spdx_id": "ZPL-2.1",
+        "mandatory": true
+      },
+      {
         "component": "gunicorn",
         "title": "Gunicorn WSGI Application Server",
         "spdx_id": "MIT",
@@ -138,7 +144,7 @@
   "runtime_searches": [
     {
       "name": "python",
-      "title": "Python 3.11+ Execution Runtime",
+      "title": "Python 3.12+ Execution Runtime",
       "required": true,
       "registry_searches": [
         {
@@ -157,7 +163,7 @@
     },
     {
       "name": "nodejs",
-      "title": "Node.js 18/20+ Asset Pipeline Runtime",
+      "title": "Node.js 20/24+ Asset Pipeline Runtime",
       "required": true,
       "registry_searches": [
         {

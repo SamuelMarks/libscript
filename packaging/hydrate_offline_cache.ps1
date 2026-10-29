@@ -261,8 +261,13 @@ if ($manifestContent.applications) {
 }
 
 # 3. Wheels
+$buildConstraints = Join-Path $RootDir "_lib\web-apps\openedx\build-constraints.txt"
+if (Test-Path $buildConstraints) {
+    $env:PIP_CONSTRAINT = $buildConstraints
+    $env:UV_BUILD_CONSTRAINT = $buildConstraints
+}
 if ($manifestContent.wheels -and $manifestContent.wheels.packages) {
-    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Component -eq "gunicorn" -or $Component -eq "nodeenv" -or $Component -eq "exim" -or $Wheels) {
+    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Component -eq "gunicorn" -or $Component -eq "waitress" -or $Component -eq "nodeenv" -or $Component -eq "exim" -or $Wheels) {
         foreach ($whl in $manifestContent.wheels.packages) {
             $dest = Join-Path $wheelsDir $whl.filename
             if (-not (Process-Artifact -Url $whl.url -Destination $dest -ExpectedHash $whl.sha256 -Category "Wheel")) {

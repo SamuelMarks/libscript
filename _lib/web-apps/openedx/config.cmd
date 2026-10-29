@@ -61,17 +61,21 @@ if "!LIBSCRIPT_ROOT_DIR!"=="" (
     for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
-if "%OPENEDX_INSTALL_DIR%"=="" (
-    if defined LIBSCRIPT_HOME (
+if "!OPENEDX_INSTALL_DIR!"=="" (
+    if exist "%ProgramData%\OpenEdX\install_dir.txt" (
+        set /p OPENEDX_INSTALL_DIR=<"%ProgramData%\OpenEdX\install_dir.txt"
+    ) else if defined LIBSCRIPT_HOME (
         set "OPENEDX_INSTALL_DIR=%LIBSCRIPT_HOME%\openedx"
     ) else (
         set "OPENEDX_INSTALL_DIR=%USERPROFILE%\.libscript\openedx"
     )
 )
+if "!OPENEDX_INSTALL_DIR:~-1!"==" " set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DIR:~0,-1!"
+if "!OPENEDX_INSTALL_DIR:~-1!"=="\" set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DIR:~0,-1!"
 
-set "CONF_DIR=%OPENEDX_INSTALL_DIR%\config"
-set "LMS_CONF=%CONF_DIR%\lms.env.json"
-set "CMS_CONF=%CONF_DIR%\cms.env.json"
+set "CONF_DIR=!OPENEDX_INSTALL_DIR!\config"
+set "LMS_CONF=!CONF_DIR!\lms.env.json"
+set "CMS_CONF=!CONF_DIR!\cms.env.json"
 set "SCHEMA_FILE=%~dp0vars.schema.json"
 
 set "CMD=%~1"

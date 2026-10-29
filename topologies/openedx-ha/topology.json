@@ -23,7 +23,16 @@
       "size": "m6i.xlarge",
       "count": 2,
       "role": "worker",
-      "components": ["languages/python", "languages/nodejs", "app-servers/gunicorn", "web-servers/caddy", "web-apps/openedx"],
+      "components": [
+        "languages/python",
+        "languages/nodejs",
+        "app-servers/gunicorn",
+        "app-servers/waitress",
+        "utilities/lynx",
+        "utilities/gettext",
+        "web-servers/caddy",
+        "web-apps/openedx"
+      ],
       "traits": ["secrets", "mesh", "firewall", "discovery", "tls", "telemetry"]
     }
   ],

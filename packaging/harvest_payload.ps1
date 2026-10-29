@@ -112,6 +112,7 @@ try {
         if (-not $SourceDir) {
             if ($norm -match $excludeRegex) { continue }
             if ($norm -like 'packaging/screenshots/release_test/*') { continue }
+            if ($norm -eq 'TODO_PLAN.md') { continue }
         } else {
             if ($norm -match '(^|/)(\.git|\.vagrant)(/|$)') { continue }
         }

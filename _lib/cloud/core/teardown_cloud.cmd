@@ -146,6 +146,26 @@ set "CTX=!RG!"
 if /i "!PROVIDER!"=="aws" set "CTX=!LOC!"
 if /i "!PROVIDER!"=="gcp" set "CTX=!LOC!"
 
+if "!APP_SPECS!"=="" (
+    if exist "!REPO_PATH!\libscript.json" (
+        jq -e ".applications != null and (.applications | length > 0)" "!REPO_PATH!\libscript.json" >nul 2>&1
+        if not errorlevel 1 (
+            for /f "delims=" %%M in ('jq -r ".applications[] | \"\(.path // .name):\(.remote_dest // .name)@\(.domain // \"\")\"" "!REPO_PATH!\libscript.json" 2^>nul') do (
+                set "_MA_LINE=%%M"
+                for /f "tokens=1* delims=:" %%P in ("!_MA_LINE!") do (
+                    set "_MA_P=%%P"
+                    set "_MA_REST=%%Q"
+                    if "!_MA_P:~1,1!"==":" (
+                        set "APP_SPECS=!APP_SPECS!!_MA_P!:!_MA_REST!|"
+                    ) else (
+                        set "APP_SPECS=!APP_SPECS!!REPO_PATH!\!_MA_P!:!_MA_REST!|"
+                    )
+                )
+            )
+        )
+    )
+)
+
 if "!KEEP_INFRA!"=="1" if not "!APP_SPECS!"=="" goto :remove_apps_mode
 
 if /i "%DRY_RUN%"=="true" (

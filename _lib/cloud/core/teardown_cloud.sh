@@ -144,6 +144,23 @@ matches_only_target() {
   esac
 }
 
+if [ -z "$APP_SPECS" ] && [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -e '.applications != null and (.applications | length > 0)' "${REPO_PATH}/libscript.json" >/dev/null 2>&1; then
+  _base_dir=$(cd -- "$REPO_PATH" && pwd)
+  _manifest_apps=$(jq -r '.applications[] | "\(.path // .name):\(.remote_dest // .name)@\(.domain // "")"' "${REPO_PATH}/libscript.json" 2>/dev/null || true)
+  while IFS= read -r _ma_line; do
+    [ -n "$_ma_line" ] || continue
+    _ma_p="${_ma_line%%:*}"
+    _ma_rest="${_ma_line#*:}"
+    case "$_ma_p" in
+      /*) ;;
+      *) _ma_p="${_base_dir}/${_ma_p}" ;;
+    esac
+    APP_SPECS="${APP_SPECS}${_ma_p}:${_ma_rest}|"
+  done << EOF_TEARDOWN_APPS
+$_manifest_apps
+EOF_TEARDOWN_APPS
+fi
+
 if [ "$KEEP_INFRA" -eq 1 ] && [ -n "$APP_SPECS" ]; then
   log_info "Removing target '${ONLY_TARGET}' from '${NODE}' (purge_data=${PURGE_DATA})..."
   "$CLI" node sync "$NODE" "$CTX"

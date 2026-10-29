@@ -1,6 +1,6 @@
 # ## Overview
 # Frontend Micro-Frontend (MFE) build and deployment helper for Open edX on Windows.
-# Manages frontend applications, asset compilation, and static distribution.
+# Manages frontend applications, offline bundle extraction, asset compilation, and static distribution.
 #
 # ## Usage
 # powershell _lib/web-apps/openedx/mfe_helper.ps1 build <root_dir> <mfe_name> [version]
@@ -30,13 +30,24 @@ function Show-Help {
     exit 0
 }
 
+# ## Resolve-CacheDir
+# Resolves the LibScript offline artifact cache directory.
+function Resolve-CacheDir {
+    if ($env:LIBSCRIPT_CACHE_DIR -and (Test-Path $env:LIBSCRIPT_CACHE_DIR)) {
+        return $env:LIBSCRIPT_CACHE_DIR
+    }
+    $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+    $repoRoot = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+    return (Join-Path $repoRoot "cache")
+}
+
 # ## Do-Build
-# Clones repository and builds static frontend artifacts.
+# Extracts pre-cached MFE archives or clones repository and builds static frontend artifacts.
 function Do-Build {
     param(
         [string]$RootDir,
         [string]$MfeName,
-        [string]$Version = "master"
+        [string]$Version = "release/verawood.1"
     )
 
     if (-not (Test-Path $RootDir)) {
@@ -44,31 +55,53 @@ function Do-Build {
     }
 
     $targetDir = Join-Path $RootDir $MfeName
-    $repoUrl = "https://github.com/openedx/frontend-app-$MfeName.git"
+    $distDir = Join-Path $targetDir "dist"
+    $cacheDir = Resolve-CacheDir
+    $mfeArchive = Join-Path $cacheDir "npm\frontend-app-$MfeName.tar.gz"
+    $bundleArchive = Join-Path $cacheDir "npm\mfe-bundle-verawood.1.tar.gz"
 
-    if (-not (Test-Path (Join-Path $targetDir ".git"))) {
-        try {
-            git clone --depth 1 --branch $Version $repoUrl $targetDir 2>$null
-        } catch {
+    if (Test-Path $mfeArchive) {
+        if (-not (Test-Path $targetDir)) {
             New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+        }
+        & tar.exe -xf $mfeArchive -C $targetDir 2>$null
+    } elseif (Test-Path $bundleArchive) {
+        if (-not (Test-Path $RootDir)) {
+            New-Item -ItemType Directory -Path $RootDir -Force | Out-Null
+        }
+        & tar.exe -xf $bundleArchive -C $RootDir 2>$null
+    } elseif ($env:LIBSCRIPT_OFFLINE -ne "1") {
+        $repoUrl = "https://github.com/openedx/frontend-app-$MfeName.git"
+        if (-not (Test-Path (Join-Path $targetDir ".git"))) {
+            $gitCmd = Get-Command git -ErrorAction SilentlyContinue
+            if ($gitCmd) {
+                & git clone --depth 1 --branch $Version $repoUrl $targetDir 2>$null
+                if ($LASTEXITCODE -ne 0) {
+                    & git clone --depth 1 $repoUrl $targetDir 2>$null
+                }
+            }
         }
     }
 
     $pkgJson = Join-Path $targetDir "package.json"
-    if (Test-Path $pkgJson) {
-        Push-Location $targetDir
-        try {
-            npm install 2>$null | Out-Null
-            npm run build 2>$null | Out-Null
-        } finally {
-            Pop-Location
+    if ((Test-Path $pkgJson) -and (-not (Test-Path (Join-Path $distDir "index.html")))) {
+        $npmCmd = Get-Command npm -ErrorAction SilentlyContinue
+        if ($npmCmd) {
+            Push-Location $targetDir
+            try {
+                & npm install --prefer-offline --no-audit 2>$null | Out-Null
+                & npm run build 2>$null | Out-Null
+            } finally {
+                Pop-Location
+            }
         }
     }
 
-    $distDir = Join-Path $targetDir "dist"
     if (-not (Test-Path $distDir)) {
         New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     }
+
+    $builtStatus = (Test-Path (Join-Path $distDir "index.html")) -or ((Get-ChildItem -Path $distDir -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0)
 
     $regFile = Join-Path $RootDir "registry.json"
     $dict = @{}
@@ -91,6 +124,7 @@ function Do-Build {
     $dict[$MfeName] = @{
         "version" = $Version
         "built" = $true
+        "has_bundle" = $builtStatus
         "deployed" = $false
     }
 
@@ -99,7 +133,7 @@ function Do-Build {
 }
 
 # ## Do-Deploy
-# Deploys compiled assets into destination directory.
+# Deploys compiled assets into destination directory and writes runtime MFE configuration.
 function Do-Deploy {
     param(
         [string]$RootDir,
@@ -110,7 +144,7 @@ function Do-Deploy {
 
     $srcDist = Join-Path (Join-Path $RootDir $MfeName) "dist"
     if (-not (Test-Path $srcDist)) {
-        Do-Build -RootDir $RootDir -MfeName $MfeName -Version "master"
+        Do-Build -RootDir $RootDir -MfeName $MfeName -Version "release/verawood.1"
     }
 
     if ([string]::IsNullOrEmpty($DestPath)) {
@@ -123,10 +157,18 @@ function Do-Deploy {
         New-Item -ItemType Directory -Path $outDest -Force | Out-Null
     }
 
-    Copy-Item -Path "$srcDist\*" -Destination $outDest -Recurse -Force
+    if (Test-Path "$srcDist\*") {
+        Copy-Item -Path "$srcDist\*" -Destination $outDest -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    $lmsPort = if ($env:OPENEDX_LMS_PORT) { $env:OPENEDX_LMS_PORT } else { "8000" }
+    $cmsPort = if ($env:OPENEDX_CMS_PORT) { $env:OPENEDX_CMS_PORT } else { "8001" }
+    $lmsDomain = if ($env:OPENEDX_LMS_DOMAIN) { $env:OPENEDX_LMS_DOMAIN } else { "localhost:$lmsPort" }
+    $cmsDomain = if ($env:OPENEDX_CMS_DOMAIN) { $env:OPENEDX_CMS_DOMAIN } else { "localhost:$cmsPort" }
 
     $envConfig = Join-Path $outDest "env.config.js"
-    Set-Content -Path $envConfig -Value "window.MFE_CONFIG = { LMS_BASE_URL: `"http://openedx.local:8000`", MFE_NAME: `"$MfeName`" };`r`n" -Encoding Ascii
+    $cfgJs = "window.MFE_CONFIG = { LMS_BASE_URL: `"http://$lmsDomain`", STUDIO_BASE_URL: `"http://$cmsDomain`", MFE_NAME: `"$MfeName`" };`r`n"
+    Set-Content -Path $envConfig -Value $cfgJs -Encoding Ascii
 
     $regFile = Join-Path $RootDir "registry.json"
     $dict = @{}
@@ -149,7 +191,7 @@ function Do-Deploy {
 
     if (-not $dict.ContainsKey($MfeName)) {
         $dict[$MfeName] = @{
-            "version" = "master"
+            "version" = "release/verawood.1"
             "built" = $true
         }
     }
@@ -176,7 +218,7 @@ function Do-List {
             foreach ($prop in $json.PSObject.Properties) {
                 $built = if ($prop.Value.built) { "True" } else { "False" }
                 $deployed = if ($prop.Value.deployed) { "True" } else { "False" }
-                $version = if ($prop.Value.version) { $prop.Value.version } else { "master" }
+                $version = if ($prop.Value.version) { $prop.Value.version } else { "release/verawood.1" }
                 Write-Host ("{0,-24} {1,-8} {2,-10} {3,-12}" -f $prop.Name, $built, $deployed, $version)
             }
         } catch {}
@@ -189,7 +231,7 @@ if ([string]::IsNullOrEmpty($Action) -or $Action -in @("help", "--help", "-h")) 
 
 switch ($Action.ToLower()) {
     "build" {
-        $ver = if ([string]::IsNullOrEmpty($Arg3)) { "master" } else { $Arg3 }
+        $ver = if ([string]::IsNullOrEmpty($Arg3)) { "release/verawood.1" } else { $Arg3 }
         Do-Build -RootDir $Arg1 -MfeName $Arg2 -Version $ver
     }
     "deploy" {

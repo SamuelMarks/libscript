@@ -69,6 +69,10 @@ do_create() {
   fi
 
   if [ -f "${_codebase}/manage.py" ] && [ -n "${_py}" ]; then
+    export LMS_CFG="${_install_dir}/config/lms.yml"
+    export CMS_CFG="${_install_dir}/config/cms.yml"
+    export REVISION_CFG="${_install_dir}/config/revisions.yml"
+    export PYTHONPATH="${_codebase}"
     _staff_flags=""
     if [ "${_is_staff}" = "true" ] || [ "${_is_staff}" = "True" ]; then
       _staff_flags="${_staff_flags} --staff"
@@ -77,8 +81,8 @@ do_create() {
       _staff_flags="${_staff_flags} --superuser"
     fi
     # shellcheck disable=SC2086
-    (cd "${_codebase}" && "${_py}" manage.py lms --settings=libscript manage_user "${_username}" "${_email}" ${_staff_flags} >/dev/null 2>&1) || true
-    (cd "${_codebase}" && "${_py}" -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u, _ = User.objects.get_or_create(username='${_username}', defaults={'email': '${_email}'}); u.email = '${_email}'; u.is_staff = ('${_is_staff}'.lower() == 'true' or '${_is_super}'.lower() == 'true'); u.is_superuser = ('${_is_super}'.lower() == 'true'); u.set_password('${_password}'); u.save()" >/dev/null 2>&1) || true
+    (cd "${_codebase}" && "${_py}" manage.py lms --settings=production manage_user "${_username}" "${_email}" ${_staff_flags} >/dev/null 2>&1) || true
+    (cd "${_codebase}" && "${_py}" -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.production'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u, _ = User.objects.get_or_create(username='${_username}', defaults={'email': '${_email}'}); u.email = '${_email}'; u.is_staff = ('${_is_staff}'.lower() == 'true' or '${_is_super}'.lower() == 'true'); u.is_superuser = ('${_is_super}'.lower() == 'true'); u.is_active = True; u.set_password('${_password}'); u.save()" >/dev/null 2>&1) || true
   fi
 
   _p="${_install_dir}/users.json"
@@ -120,7 +124,11 @@ do_set_password() {
     _codebase="${_install_dir}"
   fi
   if [ -f "${_codebase}/manage.py" ] && [ -n "${_py}" ]; then
-    (cd "${_codebase}" && "${_py}" -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='${_username}').first() or User.objects.filter(email='${_username}').first(); (u.set_password('${_password}'), u.save()) if u else None" >/dev/null 2>&1) || true
+    export LMS_CFG="${_install_dir}/config/lms.yml"
+    export CMS_CFG="${_install_dir}/config/cms.yml"
+    export REVISION_CFG="${_install_dir}/config/revisions.yml"
+    export PYTHONPATH="${_codebase}"
+    (cd "${_codebase}" && "${_py}" -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.production'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.filter(username='${_username}').first() or User.objects.filter(email='${_username}').first(); (u.set_password('${_password}'), u.save()) if u else None" >/dev/null 2>&1) || true
   fi
 
   _p="${_install_dir}/users.json"

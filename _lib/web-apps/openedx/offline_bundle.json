@@ -80,7 +80,11 @@
   },
   "wheels": {
     "target_dir": "cache/wheels",
-    "requirements_files": ["requirements/edx/base.txt", "requirements/edx/development.txt"],
+    "requirements_files": [
+      "build-constraints.txt",
+      "requirements-windows.txt",
+      "requirements/edx/base.txt"
+    ],
     "packages": [
       {
         "name": "waitress",

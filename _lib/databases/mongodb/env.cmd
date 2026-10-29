@@ -66,9 +66,5 @@ if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "mongodb" "%MONGODB_VERSION%"
 
-endlocal & (
-    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-    set "MONGODB_VERSION=%MONGODB_VERSION%"
-    set "PATH=%PATH%"
-)
+endlocal & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "MONGODB_VERSION=%MONGODB_VERSION%" & set "PATH=%PATH%"
 exit /b 0

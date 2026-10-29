@@ -77,10 +77,5 @@ if "!_NODE_ADDED!"=="0" (
     if errorlevel 1 set "_NEW_PATH=!_NODE_BIN!;!_NEW_PATH!"
 )
 
-endlocal & (
-    set "NODEJS_VERSION=%NODEJS_VERSION%"
-    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%"
-    set "PATH=%_NEW_PATH%"
-)
+endlocal & set "NODEJS_VERSION=%NODEJS_VERSION%" & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%" & set "PATH=%_NEW_PATH%"
 exit /b 0
