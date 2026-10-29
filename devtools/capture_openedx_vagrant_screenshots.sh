@@ -47,7 +47,7 @@ elif [ -d "${REPO_ROOT}/../bento" ]; then
 else
   VAGRANT_DIR="${REPO_ROOT}/vagrant/windows-11"
 fi
-RELEASE_MSI_URL="${OPENEDX_RELEASE_MSI_URL:-https://github.com/SamuelMarks/libscript/releases/download/v0.0.1/openedx-verawood.1-x64-offline.msi}"
+export RELEASE_MSI_URL="${OPENEDX_RELEASE_MSI_URL:-https://github.com/SamuelMarks/libscript/releases/download/v0.0.1/openedx-verawood.1-x64-offline.msi}"
 mkdir -p "${TEMP_DIR}"
 if [ -d "${REPO_ROOT}/../cc0-assets" ]; then
   mkdir -p "${CC0_SCREENSHOTS_DIR}" "${CC0_WINDOWS_SCREENSHOTS_DIR}"
@@ -270,6 +270,7 @@ launch_browser_url() {
 # ## register_gui_task
 # Registers the ClickGui scheduled task on the guest and suppresses Windows toast popups.
 register_gui_task() {
+  # shellcheck disable=SC2016
   vm_run 'New-Item -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Name "DisableNotificationCenter" -Value 1 -Type DWord -ErrorAction SilentlyContinue; New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -Value 0 -Type DWord -ErrorAction SilentlyContinue; $principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive -RunLevel Highest; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force | Out-Null'
 }
 
@@ -290,6 +291,7 @@ verify_openedx_endpoints() {
   _label="$1"
   printf '[INFO] Confirming Open edX LMS (:8000) and Studio CMS (:8001) work (%s)...\n' "$_label"
   vm_run 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:/libscript/devtools/wait_ports.ps1'
+  # shellcheck disable=SC2016
   vm_run '$r1 = Invoke-WebRequest -Uri "http://127.0.0.1:8000/heartbeat" -UseBasicParsing -TimeoutSec 10; $r2 = Invoke-WebRequest -Uri "http://127.0.0.1:8001/heartbeat" -UseBasicParsing -TimeoutSec 10; if ($r1.StatusCode -ne 200 -or $r2.StatusCode -ne 200) { Write-Error "Heartbeat check failed"; exit 1 }; Write-Host "[PASS] LMS (:8000) and Studio CMS (:8001) verified healthy."'
 }
 
@@ -423,6 +425,13 @@ run_msi_mode_flows() {
     fi
   done
   verify_openedx_endpoints "${_var} - Advanced Mode"
+
+  printf '\n[INFO] Custom Install Verification: Logging in to Studio CMS (:8001/signin) and LMS (:8000/login) with edx_admin...\n'
+  launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/learner-dashboard/" "edx_admin" "edx_password_2026!" "1"
+  capture_screen "12c_browser_studio_custom_loggedin" "BROWSER"
+  launch_browser_url "http://localhost:8000/login" "http://localhost:8001/authoring/home" "edx_admin" "edx_password_2026!" "1"
+  capture_screen "11c_browser_lms_custom_loggedin" "BROWSER"
+  vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
 }
 
 # ## restore_vanilla_snapshot
@@ -490,9 +499,13 @@ fi
 if [ -d "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release" ]; then
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/candle.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/light.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msiinfo.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msi-cli.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/wix.exe" vagrant@127.0.0.1:C:/Users/vagrant/.libscript/msi-rs/v0.0.1/bin/
 fi
-vm_run '$env:PATH += ";" + $env:USERPROFILE + "\.libscript\msi-rs\default\bin;" + $env:USERPROFILE + "\.libscript\msi-rs\v0.0.1\bin"; cd C:\libscript; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --online --out C:\libscript\packaging\OpenEdX-Setup"; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --offline --out C:\libscript\packaging\OpenEdX-Setup-Offline"'
+# shellcheck disable=SC2016
+vm_run '$env:PATH += ";" + $env:USERPROFILE + "\.libscript\msi-rs\default\bin;" + $env:USERPROFILE + "\.libscript\msi-rs\v0.0.1\bin"; cd C:\libscript; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --online --out C:\libscript\packaging\OpenEdX-Setup"; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --offline --out C:\libscript\packaging\openedx-verawood.1-x64-offline"; Copy-Item -Path "C:\libscript\packaging\openedx-verawood.1-x64-offline.msi" -Destination "C:\libscript\packaging\OpenEdX-Setup-Offline.msi" -Force'
+mkdir -p "${REPO_ROOT}/build/packages/msi"
 scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup.msi "${REPO_ROOT}/packaging/OpenEdX-Setup.msi"
-scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup-Offline.msi "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi"
+scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/openedx-verawood.1-x64-offline.msi "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi"
+cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi"
+cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/build/packages/msi/openedx-verawood.1-x64-offline.msi"
 
 # --- Step 1: Install Open edX Offline Mode (Simple & Advanced) and Confirm It Works ---
 printf '\n=======================================================\n'

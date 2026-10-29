@@ -188,6 +188,20 @@ except ImportError:
     pass
 
 try:
+    import openedx.core.lib.safe_lxml as _safe_lxml_mod
+    _orig_defuse_xml = _safe_lxml_mod.defuse_xml_libs
+
+    def _win_safe_defuse_xml_libs():
+        try:
+            return _orig_defuse_xml()
+        except ImportError:
+            return None
+
+    _safe_lxml_mod.defuse_xml_libs = _win_safe_defuse_xml_libs
+except ImportError:
+    pass
+
+try:
     import openedx.core.lib.derived as _derived_mod
     _orig_derive_settings = _derived_mod.derive_settings
 

@@ -269,14 +269,25 @@ if "!ACTION!"=="install" (
         exit /b 0
     )
 
+    if not "!INSTALLFOLDER!"=="" (
+        if "!INSTALLFOLDER:~-1!"==" " set "INSTALLFOLDER=!INSTALLFOLDER:~0,-1!"
+        if "!INSTALLFOLDER:~-1!"=="\" set "INSTALLFOLDER=!INSTALLFOLDER:~0,-1!"
+    )
+    if defined LIBSCRIPT_FOLDER (
+        if "!LIBSCRIPT_FOLDER:~-1!"==" " set "LIBSCRIPT_FOLDER=!LIBSCRIPT_FOLDER:~0,-1!"
+        if "!LIBSCRIPT_FOLDER:~-1!"=="\" set "LIBSCRIPT_FOLDER=!LIBSCRIPT_FOLDER:~0,-1!"
+    )
     :: Resolve Cache Directory if offline mode active
     if "!IS_OFFLINE!"=="1" (
         if "!OFFLINE_CACHE_DIR!"=="" (
             if defined LIBSCRIPT_CACHE_DIR if exist "!LIBSCRIPT_CACHE_DIR!" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_CACHE_DIR!"
             if not defined OFFLINE_CACHE_DIR if exist "!LIBSCRIPT_ROOT_DIR!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
+            if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_FOLDER if exist "!LIBSCRIPT_FOLDER!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_FOLDER!\cache"
             if not defined OFFLINE_CACHE_DIR if defined INSTALLFOLDER if exist "!INSTALLFOLDER!\libscript\cache" set "OFFLINE_CACHE_DIR=!INSTALLFOLDER!\libscript\cache"
             if not defined OFFLINE_CACHE_DIR if exist "!OPENEDX_INSTALL_DIR!\libscript\cache" set "OFFLINE_CACHE_DIR=!OPENEDX_INSTALL_DIR!\libscript\cache"
             if not defined OFFLINE_CACHE_DIR if exist "!OPENEDX_INSTALL_DIR!\cache" set "OFFLINE_CACHE_DIR=!OPENEDX_INSTALL_DIR!\cache"
+            if not defined OFFLINE_CACHE_DIR if exist "C:\Program Files (x86)\OpenEdX\libscript\cache" set "OFFLINE_CACHE_DIR=C:\Program Files (x86)\OpenEdX\libscript\cache"
+            if not defined OFFLINE_CACHE_DIR if exist "C:\Program Files\OpenEdX\libscript\cache" set "OFFLINE_CACHE_DIR=C:\Program Files\OpenEdX\libscript\cache"
             if not defined OFFLINE_CACHE_DIR if exist "C:\libscript\cache" set "OFFLINE_CACHE_DIR=C:\libscript\cache"
         )
         if defined OFFLINE_CACHE_DIR (

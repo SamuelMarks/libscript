@@ -498,6 +498,10 @@
     "OPENEDX_VERSION": {
       "type": "string",
       "description": "Specific version of openedx to install (e.g., latest, lts, or exact version)."
+    },
+    "LIBSCRIPT_FOLDER": {
+      "type": "string",
+      "description": "Filesystem directory where the bundled LibScript engine and offline cache are installed by the Windows MSI."
     }
   }
 }

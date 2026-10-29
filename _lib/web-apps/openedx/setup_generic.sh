@@ -391,6 +391,8 @@ case "$ACTION" in
       if [ -z "$offline_cache_dir" ]; then
         if [ -n "${LIBSCRIPT_CACHE_DIR:-}" ] && [ -d "${LIBSCRIPT_CACHE_DIR}" ]; then
           offline_cache_dir="${LIBSCRIPT_CACHE_DIR}"
+        elif [ -n "${LIBSCRIPT_FOLDER:-}" ] && [ -d "${LIBSCRIPT_FOLDER}/cache" ]; then
+          offline_cache_dir="${LIBSCRIPT_FOLDER}/cache"
         elif [ -d "${INSTALLFOLDER:-}/libscript/cache" ]; then
           offline_cache_dir="${INSTALLFOLDER}/libscript/cache"
         elif [ -d "${OPENEDX_INSTALL_DIR}/libscript/cache" ]; then

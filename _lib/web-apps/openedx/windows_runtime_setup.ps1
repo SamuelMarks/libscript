@@ -315,6 +315,20 @@ if sys.platform == "win32":
         pass
 
     try:
+        import openedx.core.lib.safe_lxml as _safe_lxml_mod
+        _orig_defuse_xml = _safe_lxml_mod.defuse_xml_libs
+
+        def _win_safe_defuse_xml_libs():
+            try:
+                return _orig_defuse_xml()
+            except ImportError:
+                return None
+
+        _safe_lxml_mod.defuse_xml_libs = _win_safe_defuse_xml_libs
+    except ImportError:
+        pass
+
+    try:
         import openedx.core.lib.derived as _derived_mod
         _orig_derive_settings = _derived_mod.derive_settings
 
@@ -530,9 +544,7 @@ except ImportError:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript_win')
 application = get_wsgi_application()
 "@
-if (-not (Test-Path $lmsWsgiPath)) {
-    Set-Content -Path $lmsWsgiPath -Value $lmsWsgiContent -Encoding Ascii
-}
+Set-Content -Path $lmsWsgiPath -Value $lmsWsgiContent -Encoding Ascii
 
 $cmsWsgiPath = Join-Path $codebaseDir "cms\wsgi.py"
 $cmsWsgiContent = @"
@@ -549,9 +561,7 @@ except ImportError:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cms.envs.libscript_win')
 application = get_wsgi_application()
 "@
-if (-not (Test-Path $cmsWsgiPath)) {
-    Set-Content -Path $cmsWsgiPath -Value $cmsWsgiContent -Encoding Ascii
-}
+Set-Content -Path $cmsWsgiPath -Value $cmsWsgiContent -Encoding Ascii
 
 $commonSettingsPy = @"
 import os, sys, json
