@@ -36,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"duckdb.duckdb\")
+    libscript_depends @("duckdb.duckdb")
     } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"duckdb\")
+    libscript_depends @("duckdb")
     }
 } else {
     $Prefix = $env:PREFIX

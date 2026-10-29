@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"openbao.openbao\")
+    libscript_depends @("openbao.openbao")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"openbao\")
+    libscript_depends @("openbao")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for openbao."
-    libscript_depends @(\"openbao.openbao\")
+    libscript_depends @("openbao.openbao")
 }
 
 if ($Action -eq "ls") {

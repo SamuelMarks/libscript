@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Apache.HTTPD\")
+    libscript_depends @("Apache.HTTPD")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"apache-httpd\")
+    libscript_depends @("apache-httpd")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for httpd."
-    libscript_depends @(\"Apache.HTTPD\")
+    libscript_depends @("Apache.HTTPD")
 }
 
 if ($Action -eq "ls") {

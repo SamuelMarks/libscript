@@ -36,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"Kubernetes.kubectl\")
+    libscript_depends @("Kubernetes.kubectl")
     } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"kubernetes-cli\")
+    libscript_depends @("kubernetes-cli")
     } else {
         Write-Error "Unsupported Windows package manager: $PkgMgr"
     }

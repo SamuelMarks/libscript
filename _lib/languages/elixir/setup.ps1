@@ -150,9 +150,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Elixir.Elixir\")
+    libscript_depends @("Elixir.Elixir")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"elixir\")
+    libscript_depends @("elixir")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -167,7 +167,7 @@ switch ($Action) {
             $ZipName = "elixir-otp-25.zip" # Fallback to OTP 25 zip if needed, or better, use winget for Windows
             Write-Host "For Windows, Elixir binaries are tightly coupled with Erlang."
             Write-Host "Falling back to system installation for Windows..."
-    libscript_depends @(\"Elixir.Elixir\")
+    libscript_depends @("Elixir.Elixir")
             
             Set-LibscriptAlias -Component "elixir" -AliasName $ElixirVersion -ExactVersion $ExactVersion
         }

@@ -152,9 +152,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Scala.sbt\")
+    libscript_depends @("Scala.sbt")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"sbt\")
+    libscript_depends @("sbt")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -178,7 +178,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $SbtDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() "sbt-${ExactVersion}.zip"
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) "sbt-${ExactVersion}.zip"
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

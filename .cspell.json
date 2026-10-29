@@ -2426,7 +2426,8 @@
     "Recognise",
     "recognise",
     "sequentials",
-    "sitecustomize"
+    "sitecustomize",
+    "subexpression"
   ],
   "ignorePaths": [
     "node_modules",

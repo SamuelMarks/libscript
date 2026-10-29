@@ -98,9 +98,9 @@ if "%KEY%"=="" (
 )
 findstr /i "'%KEY%'" "%WP_CONFIG%" >nul 2>&1
 if not errorlevel 1 (
-    powershell -NoProfile -Command "(Get-Content '%WP_CONFIG%') -replace 'define\(\s*''%KEY%''.*', "define( '%KEY%', '%VAL%' );" | Set-Content '%WP_CONFIG%'"
+    powershell -NoProfile -Command "(Get-Content '%WP_CONFIG%') -replace 'define\(\s*''%KEY%''.*', 'define( ''%KEY%'', ''%VAL%'' );' | Set-Content '%WP_CONFIG%'"
 ) else (
-    powershell -NoProfile -Command "$c = Get-Content '%WP_CONFIG%'; $idx = [array]::FindIndex($c, [Predicate[string]]{ param($l) $l -match 'wp-settings.php' }); if ($idx -ge 0) { $c = $c[0..($idx-1)] + "define( '%KEY%', '%VAL%' );" + $c[$idx..($c.Length-1)] } else { $c += "define( '%KEY%', '%VAL%' );" }; $c | Set-Content '%WP_CONFIG%'"
+    powershell -NoProfile -Command "$c = Get-Content '%WP_CONFIG%'; $idx = [array]::FindIndex($c, [Predicate[string]]{ param($l) $l -match 'wp-settings.php' }); if ($idx -ge 0) { $c = $c[0..($idx-1)] + 'define( ''%KEY%'', ''%VAL%'' );' + $c[$idx..($c.Length-1)] } else { $c += 'define( ''%KEY%'', ''%VAL%'' );' }; $c | Set-Content '%WP_CONFIG%'"
 )
 echo [OK] Config key %KEY% updated.
 exit /b 0

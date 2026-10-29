@@ -20,7 +20,7 @@ $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Res
 if (-Not (Get-Command perl -ErrorAction SilentlyContinue)) {
     if (Get-Command choco -ErrorAction SilentlyContinue) {
         Write-Host "Installing Strawberry Perl via Chocolatey..."
-    libscript_depends @(\"strawberryperl\")
+    libscript_depends @("strawberryperl")
         $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
         $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
         $env:PATH = "$userPath;$machinePath"

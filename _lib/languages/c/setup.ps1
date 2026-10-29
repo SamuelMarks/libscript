@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"LLVM.LLVM\")
+    libscript_depends @("LLVM.LLVM")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"LLVM.LLVM\")
+    libscript_depends @("LLVM.LLVM")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for c."
-    libscript_depends @(\"LLVM.LLVM\")
+    libscript_depends @("LLVM.LLVM")
 }
 
 if ($Action -eq "ls") {

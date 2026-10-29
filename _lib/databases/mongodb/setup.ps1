@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"mongodb.mongodb\")
+    libscript_depends @("mongodb.mongodb")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"mongodb\")
+    libscript_depends @("mongodb")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for mongodb."
-    libscript_depends @(\"mongodb.mongodb\")
+    libscript_depends @("mongodb.mongodb")
 }
 
 if ($Action -eq "ls") {

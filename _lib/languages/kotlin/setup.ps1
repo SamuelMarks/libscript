@@ -150,9 +150,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"JetBrains.Kotlin\")
+    libscript_depends @("JetBrains.Kotlin")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"kotlin\")
+    libscript_depends @("kotlin")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -171,7 +171,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $KotlinDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

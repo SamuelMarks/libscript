@@ -150,9 +150,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"zig.zig\")
+    libscript_depends @("zig.zig")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"zig\")
+    libscript_depends @("zig")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -176,7 +176,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $ZigDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

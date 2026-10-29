@@ -215,13 +215,14 @@ switch ($Action) {
                     if ($LASTEXITCODE -ne 0) { exit 1 }
                 }
                 az vm resize -g $ResourceGroup -n $ResourceName --size $Size
+            }
             if ($Tags) { az vm update -g $ResourceGroup -n $ResourceName --set tags=`"$Tags`" }
         } elseif ($SubAction -eq "exec") {
             $ResourceGroup = $env:ARG3
             $CmdToRun = $env:ARG4
             if ($env:ARG5) { $CmdToRun += " $env:ARG5" }
             if ($env:ARG6) { $CmdToRun += " $env:ARG6" }
-            Write-Host "Executing command on $ResourceName: $CmdToRun"
+            Write-Host "Executing command on ${ResourceName}: $CmdToRun"
             $Ip = (az vm show -d -g $ResourceGroup -n $ResourceName --query publicIps -o tsv).Trim()
             ssh -o StrictHostKeyChecking=no "azureuser@$Ip" $CmdToRun
         } elseif ($SubAction -eq "deploy") {
@@ -255,9 +256,9 @@ switch ($Action) {
             Write-Host "Syncing LibScript to remote node $ResourceName"
             ssh -o StrictHostKeyChecking=no "azureuser@$Ip" "mkdir -p ~/libscript"
             if (Get-Command rsync -ErrorAction SilentlyContinue) {
-                rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$env:LIBSCRIPT_ROOT_DIR/" "azureuser@$Ip`:~/libscript/"
+                rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${env:LIBSCRIPT_ROOT_DIR}/" "azureuser@$Ip`:~/libscript/"
             } else {
-                scp -o StrictHostKeyChecking=no -r "$env:LIBSCRIPT_ROOT_DIR/*" "azureuser@$Ip`:~/libscript/"
+                scp -o StrictHostKeyChecking=no -r "${env:LIBSCRIPT_ROOT_DIR}/*" "azureuser@$Ip`:~/libscript/"
             }
         }
     }

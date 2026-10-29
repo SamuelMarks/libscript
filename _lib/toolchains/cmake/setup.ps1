@@ -150,9 +150,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Kitware.CMake\")
+    libscript_depends @("Kitware.CMake")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"cmake\")
+    libscript_depends @("cmake")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -176,7 +176,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $CmakeDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

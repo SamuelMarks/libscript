@@ -175,6 +175,30 @@ function Audit-File {
         if (-not (Test-Path $cmdFile)) {
             Log-Violation -File $FilePath -Rule "WINDOWS_PARITY" -Details "Missing Windows batch equivalent file ('$cmdFile')."
         }
+        $psTokens = $null
+        $psErrors = $null
+        $psAst = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $FilePath).Path, [ref]$psTokens, [ref]$psErrors)
+        if ($psErrors -and $psErrors.Count -gt 0) {
+            foreach ($pe in $psErrors) {
+                Log-Violation -File $FilePath -Rule "PS1_SYNTAX" -Details "Line $($pe.Extent.StartLineNumber): $($pe.Message)"
+            }
+        }
+        if ($psAst) {
+            $cmdNodes = $psAst.FindAll({ param($node) $node -is [System.Management.Automation.Language.CommandAst] }, $true)
+            foreach ($cn in $cmdNodes) {
+                $cName = $cn.GetCommandName()
+                if ($cName -in @("if", "else", "elseif", "switch", "foreach", "for", "while", "do", "try", "catch", "finally", "return", "throw", "trap", "function", "filter", "workflow", "class", "enum")) {
+                    Log-Violation -File $FilePath -Rule "PS1_SYNTAX" -Details "Line $($cn.Extent.StartLineNumber): Keyword '$cName' invoked as command (use `$($cName ...) subexpression)."
+                }
+            }
+        }
+        if ($FilePath -notmatch '(audit_standards|doc_coverage|update_results|generate_html_docs)\.ps1$') {
+            for ($li = 0; $li -lt $lines.Count; $li++) {
+                if ($lines[$li] -notmatch '^\s*#' -and $lines[$li] -match '\\"') {
+                    Log-Violation -File $FilePath -Rule "PS1_SYNTAX" -Details "Line $($li + 1): C-style backslash quote escape found in PowerShell script."
+                }
+            }
+        }
     }
 
     # Batch script header verification and reverse POSIX parity

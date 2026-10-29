@@ -116,7 +116,7 @@ if ($Action -eq "download") {
 if ($Action -eq "install") {
     if ($InstallMethod -eq "system") {
         Write-Output "System package manager installation via winget/choco..."
-    libscript_depends @(\"memcached\")
+    libscript_depends @("memcached")
         exit $LASTEXITCODE
     }
 

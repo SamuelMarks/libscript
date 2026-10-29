@@ -334,6 +334,9 @@ exit /b 0
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
+:: ## action_uninstall
+:: Uninstalls the component version from LIBSCRIPT_HOME.
+:action_uninstall
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "msi-rs" "%ACTION%" "%MSI_RS_VERSION%" "%MSI_RS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%\\bin\\msi-rs.exe\"" "%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%"
 exit /b !errorlevel!

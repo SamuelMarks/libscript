@@ -145,9 +145,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"MSYS2.MSYS2\")
+    libscript_depends @("MSYS2.MSYS2")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"MSYS2.MSYS2\")
+    libscript_depends @("MSYS2.MSYS2")
             }
         } else {
             Write-Host "Custom sh install method not supported on Windows."

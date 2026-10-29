@@ -151,9 +151,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"PHP.PHP\")
+    libscript_depends @("PHP.PHP")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"php\")
+    libscript_depends @("php")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -181,7 +181,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $PhpDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             try {
                 libscript_download $DownloadUrl $TempZip

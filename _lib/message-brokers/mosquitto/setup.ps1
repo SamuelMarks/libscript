@@ -27,9 +27,9 @@ if ([string]::IsNullOrEmpty($PkgMgr)) {
     $PkgMgr = "winget"
 }
 if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"EclipseFoundation.Mosquitto\")
+    libscript_depends @("EclipseFoundation.Mosquitto")
 } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"mosquitto\")
+    libscript_depends @("mosquitto")
 } else {
     Write-Error "Unsupported Windows package manager: $PkgMgr"
 }

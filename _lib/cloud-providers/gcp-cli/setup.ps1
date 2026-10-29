@@ -36,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"Google.CloudSDK\")
+    libscript_depends @("Google.CloudSDK")
     } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"gcloudsdk\")
+    libscript_depends @("gcloudsdk")
     } else {
         Write-Error "Unsupported Windows package manager: $PkgMgr"
     }

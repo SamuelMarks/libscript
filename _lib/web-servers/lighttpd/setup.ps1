@@ -29,9 +29,9 @@ if ([string]::IsNullOrEmpty($PkgMgr)) {
 if ($PkgMgr -eq "winget") {
     # Lighttpd natively doesn't have an official winget, sometimes found via third party
     Write-Host "[WARN] Lighttpd may not exist on winget natively, falling back to basic attempt."
-    libscript_depends @(\"lighttpd\")
+    libscript_depends @("lighttpd")
 } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"lighttpd\")
+    libscript_depends @("lighttpd")
 } else {
     Write-Error "Unsupported Windows package manager: $PkgMgr"
 }

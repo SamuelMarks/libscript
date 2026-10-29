@@ -161,9 +161,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"RubyInstallerTeam.Ruby\")
+    libscript_depends @("RubyInstallerTeam.Ruby")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"ruby\")
+    libscript_depends @("ruby")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -189,7 +189,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $RubyDir | Out-Null
             }
 
-            $TempExe = Join-Path [System.IO.Path]::GetTempPath() $ExeName
+            $TempExe = Join-Path ([System.IO.Path]::GetTempPath()) $ExeName
             Write-Host "Downloading $DownloadUrl"
             try {
                 libscript_download $DownloadUrl $TempExe

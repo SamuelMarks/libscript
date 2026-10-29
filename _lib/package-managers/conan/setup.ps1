@@ -27,7 +27,7 @@ if (-Not (Get-Command conan -ErrorAction SilentlyContinue)) {
     } else {
         Write-Host "Pip or pipx not found, trying to install via choco..."
         if (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"conan\")
+    libscript_depends @("conan")
         } else {
             Write-Host "Error: Could not find pip, pipx, or choco to install conan."
             exit 1

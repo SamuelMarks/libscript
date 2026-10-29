@@ -152,9 +152,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Gradle.Gradle\")
+    libscript_depends @("Gradle.Gradle")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"gradle\")
+    libscript_depends @("gradle")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -178,7 +178,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $GradleDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() "gradle-${ExactVersion}.zip"
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) "gradle-${ExactVersion}.zip"
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

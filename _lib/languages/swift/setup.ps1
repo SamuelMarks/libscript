@@ -152,9 +152,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Apple.Swift\")
+    libscript_depends @("Apple.Swift")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"swift\")
+    libscript_depends @("swift")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -168,7 +168,7 @@ switch ($Action) {
 
             Write-Host "Downloading Swift for Windows natively is currently better handled by Winget."
             Write-Host "Falling back to system winget installation..."
-    libscript_depends @(\"Apple.Swift\")
+    libscript_depends @("Apple.Swift")
             
             Set-LibscriptAlias -Component "swift" -AliasName $SwiftVersion -ExactVersion $ExactVersion
         }

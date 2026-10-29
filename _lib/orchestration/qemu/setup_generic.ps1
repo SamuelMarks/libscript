@@ -18,9 +18,9 @@ if ($Action -eq "install") {
         exit 0
     }
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"SoftwareFreedomConservancy.QEMU\")
+    libscript_depends @("SoftwareFreedomConservancy.QEMU")
     } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"qemu\")
+    libscript_depends @("qemu")
     } else {
         Write-Error "Neither winget nor choco found to install QEMU."
         exit 1

@@ -17,9 +17,9 @@ if ($Action -eq "install") {
         Write-Output "VirtualBox is already installed."
     } else {
         if (Get-Command winget -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"Oracle.VirtualBox\")
+    libscript_depends @("Oracle.VirtualBox")
         } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"virtualbox\")
+    libscript_depends @("virtualbox")
         } else {
             Write-Error "Neither winget nor choco found to install VirtualBox."
             exit 1
@@ -27,8 +27,8 @@ if ($Action -eq "install") {
     }
 
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"Oracle.VirtualBoxExtensionPack\")
+    libscript_depends @("Oracle.VirtualBoxExtensionPack")
     } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"virtualbox-extensionpack\")
+    libscript_depends @("virtualbox-extensionpack")
     }
 }

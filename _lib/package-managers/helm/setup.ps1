@@ -20,7 +20,7 @@ $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Res
 if (-Not (Get-Command helm -ErrorAction SilentlyContinue)) {
   Write-Host "Installing helm via choco (if available)..."
   if (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"kubernetes-helm\")
+    libscript_depends @("kubernetes-helm")
   } else {
     Write-Host "Please install helm manually or via Winget/Chocolatey."
   }

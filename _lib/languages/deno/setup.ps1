@@ -152,9 +152,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"DenoLand.Deno\")
+    libscript_depends @("DenoLand.Deno")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"deno\")
+    libscript_depends @("deno")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -180,7 +180,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() "deno-${Target}.zip"
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) "deno-${Target}.zip"
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

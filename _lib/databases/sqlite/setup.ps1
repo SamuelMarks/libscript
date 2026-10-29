@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"sqlite.sqlite\")
+    libscript_depends @("sqlite.sqlite")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"sqlite\")
+    libscript_depends @("sqlite")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for sqlite."
-    libscript_depends @(\"sqlite.sqlite\")
+    libscript_depends @("sqlite.sqlite")
 }
 
 if ($Action -eq "ls") {

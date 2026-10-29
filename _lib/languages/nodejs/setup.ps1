@@ -189,7 +189,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $NodeDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             & (Join-Path $LibscriptRootDir "_lib\_common\pkg_mgr.cmd") :libscript_download $DownloadUrl $TempZip
 

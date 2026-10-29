@@ -36,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"MinIO.MinIO\")
+    libscript_depends @("MinIO.MinIO")
     } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"minio\")
+    libscript_depends @("minio")
     } else {
         Write-Error "Unsupported Windows package manager: $PkgMgr"
     }

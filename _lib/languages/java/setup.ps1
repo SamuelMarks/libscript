@@ -136,9 +136,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Microsoft.OpenJDK.17\")
+    libscript_depends @("Microsoft.OpenJDK.17")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"openjdk17\")
+    libscript_depends @("openjdk17")
             }
         } else {
             $JavaDir = Get-LibscriptVersionDir -Component "java" -Version $JavaVersion
@@ -166,7 +166,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $JavaDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() "java-$JavaVersion.zip"
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) "java-$JavaVersion.zip"
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

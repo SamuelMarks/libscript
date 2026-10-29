@@ -152,9 +152,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Microsoft.DotNet.SDK.8\")
+    libscript_depends @("Microsoft.DotNet.SDK.8")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"Microsoft.DotNet.SDK.8\")
+    libscript_depends @("Microsoft.DotNet.SDK.8")
             }
         } else {
             $Channel = Resolve-CsharpChannel
@@ -170,7 +170,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $CsharpDir | Out-Null
             }
 
-            $InstallPs1 = Join-Path [System.IO.Path]::GetTempPath() "dotnet-install.ps1"
+            $InstallPs1 = Join-Path ([System.IO.Path]::GetTempPath()) "dotnet-install.ps1"
             libscript_download "https://dot.net/v1/dotnet-install.ps1" $InstallPs1
 
             & pwsh -NoProfile -ExecutionPolicy unrestricted -Command $InstallPs1 -Channel $Channel -InstallDir $CsharpDir

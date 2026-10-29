@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"docker.docker\")
+    libscript_depends @("docker.docker")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"docker\")
+    libscript_depends @("docker")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for docker."
-    libscript_depends @(\"docker.docker\")
+    libscript_depends @("docker.docker")
 }
 
 if ($Action -eq "ls") {

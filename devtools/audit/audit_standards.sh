@@ -295,7 +295,7 @@ audit_single_file() {
       log_failure "$file" "WINDOWS_PARITY" "Missing Windows batch equivalent file ('$cmd_equiv') for PowerShell script."
     fi
     ps1_violations=$(awk '
-      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; allow_fetch_next = 0 }
+      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; allow_fetch_next = 0 }
       { sub(/\r$/, "", $0) }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
@@ -319,6 +319,17 @@ audit_single_file() {
             raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
           }
         }
+        if ($0 !~ /^[[:space:]]*#/) {
+          if ($0 ~ /\\"/ && FILENAME !~ /(audit_standards|doc_coverage|update_results|generate_html_docs)\.ps1$/) {
+            bs_quote_hits = (bs_quote_hits ? bs_quote_hits "; " : "") NR ":" $0
+          }
+          if ($0 ~ /(Join-Path|Test-Path|Copy-Item|Move-Item|Remove-Item|New-Item|Set-Content|Add-Content|Get-Content)[[:space:]]+[^(\r\n]*\[[A-Za-z0-9_.]+\]::[A-Za-z0-9_]+\(/) {
+            static_arg_hits = (static_arg_hits ? static_arg_hits "; " : "") NR ":" $0
+          }
+          if ($0 ~ /[A-Za-z0-9_-]+[[:space:]]+[^#;\r\n]*[^$]\([[:space:]]*(if|switch|foreach|for|while|try)[[:space:]]*\(/) {
+            paren_kw_hits = (paren_kw_hits ? paren_kw_hits "; " : "") NR ":" $0
+          }
+        }
         allow_fetch_next = 0
       }
       END {
@@ -328,6 +339,9 @@ audit_single_file() {
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop invocation found (delegate to pkg_mgr.ps1): " raw_pkg_hits
+        if (bs_quote_hits != "") print "PS1_SYNTAX|C-style backslash quote escape found in PowerShell script (use backtick or double quotes): " bs_quote_hits
+        if (static_arg_hits != "") print "PS1_SYNTAX|Unparenthesized static method call passed as command argument: " static_arg_hits
+        if (paren_kw_hits != "") print "PS1_SYNTAX|Statement keyword inside (...) instead of $(...) subexpression: " paren_kw_hits
       }
     ' "$file" 2>/dev/null || true)
     if [ -n "$ps1_violations" ]; then
@@ -437,8 +451,47 @@ audit_single_file() {
         if (tolower($0) ~ /^[[:space:]]*([)][[:space:]]*else[[:space:]]+)?if[[:space:]].*[[:space:]]if[[:space:]].*[(][[:space:]]*$/ && tolower($0) !~ /powershell|python|jq|sqlite3/) {
           chained_if[ind] = NR
         }
+        if ($0 ~ /^[[:space:]]*:[A-Za-z0-9_.-]+/) {
+          lbl = $0
+          sub(/^[[:space:]]*:/, "", lbl)
+          sub(/[^A-Za-z0-9_.-].*$/, "", lbl)
+          if (lbl != "") defined_labels[tolower(lbl)] = 1
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/ && tolower($0) !~ /echo[[:space:]]/) {
+          line_lc = tolower($0)
+          if (match(line_lc, /(^|[[:space:](&])goto[[:space:]]+:?[a-z0-9_.-]+([[:space:])&]|$)/)) {
+            g_tok = substr(line_lc, RSTART, RLENGTH)
+            sub(/^.*goto[[:space:]]+:?/, "", g_tok)
+            sub(/[^a-z0-9_.-].*$/, "", g_tok)
+            if (g_tok != "" && g_tok != "eof" && index($0, "%") == 0 && index($0, "!") == 0) {
+              goto_targets[NR] = g_tok
+            }
+          }
+          if (match(line_lc, /(^|[[:space:](&])call[[:space:]]+:[a-z0-9_.-]+([[:space:])&]|$)/)) {
+            c_tok = substr(line_lc, RSTART, RLENGTH)
+            sub(/^.*call[[:space:]]+:/, "", c_tok)
+            sub(/[^a-z0-9_.-].*$/, "", c_tok)
+            if (c_tok != "" && c_tok != "eof") {
+              call_targets[NR] = c_tok
+            }
+          }
+        }
       }
       END {
+        defined_labels["eof"] = 1
+        missing_lbl_hits = ""
+        for (ln_no in goto_targets) {
+          t = goto_targets[ln_no]
+          if (!(t in defined_labels)) {
+            missing_lbl_hits = (missing_lbl_hits ? missing_lbl_hits "; " : "") "line " ln_no " (goto :" t ")"
+          }
+        }
+        for (ln_no in call_targets) {
+          t = call_targets[ln_no]
+          if (!(t in defined_labels)) {
+            missing_lbl_hits = (missing_lbl_hits ? missing_lbl_hits "; " : "") "line " ln_no " (call :" t ")"
+          }
+        }
         if (!has_echo_off) print "BATCH_ECHO_OFF|Missing @echo off on line 1."
         if (!has_delayed) print "BATCH_DELAYED_EXPANSION|Missing setlocal EnableDelayedExpansion in first 25 lines (before :find_root)."
         if (!has_this_file) print "BATCH_THIS_FILE|Missing set \"THIS_FILE=%~f0\" in first 25 lines."
@@ -455,6 +508,7 @@ audit_single_file() {
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
+        if (missing_lbl_hits != "") print "BATCH_MISSING_LABEL|Undefined batch label target: " missing_lbl_hits
       }
     ' "$file" 2>/dev/null || true)
     if [ -n "$cmd_violations" ]; then

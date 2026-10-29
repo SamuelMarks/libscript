@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"caddy.caddy\")
+    libscript_depends @("caddy.caddy")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"caddy\")
+    libscript_depends @("caddy")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for caddy."
-    libscript_depends @(\"caddy.caddy\")
+    libscript_depends @("caddy.caddy")
 }
 
 if ($Action -eq "ls") {

@@ -36,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"Apache.Kafka\")
+    libscript_depends @("Apache.Kafka")
     } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"kafka\")
+    libscript_depends @("kafka")
     } else {
         Write-Error "Unsupported Windows package manager: $PkgMgr"
     }

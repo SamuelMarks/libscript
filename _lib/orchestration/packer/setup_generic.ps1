@@ -18,9 +18,9 @@ if ($Action -eq "install") {
         exit 0
     }
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"Hashicorp.Packer\")
+    libscript_depends @("Hashicorp.Packer")
     } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"packer\")
+    libscript_depends @("packer")
     } else {
         Write-Error "Neither winget nor choco found to install Packer."
         exit 1

@@ -18,9 +18,9 @@ if ($Action -eq "install") {
         exit 0
     }
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"Hashicorp.Vagrant\")
+    libscript_depends @("Hashicorp.Vagrant")
     } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    libscript_depends @(\"vagrant\")
+    libscript_depends @("vagrant")
     } else {
         Write-Error "Neither winget nor choco found to install Vagrant."
         exit 1

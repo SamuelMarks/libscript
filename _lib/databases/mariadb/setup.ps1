@@ -33,12 +33,12 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    libscript_depends @(\"MariaDB.Server\")
+    libscript_depends @("MariaDB.Server")
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"mariadb\")
+    libscript_depends @("mariadb")
 } else {
     Write-Host "From-source or alternative Windows package manager requested for mariadb."
-    libscript_depends @(\"MariaDB.Server\")
+    libscript_depends @("MariaDB.Server")
 }
 
 if ($Action -eq "ls") {

@@ -36,9 +36,9 @@ if ($InstallMethod -eq "system") {
         $PkgMgr = "winget"
     }
     if ($PkgMgr -eq "winget") {
-    libscript_depends @(\"nats\")
+    libscript_depends @("nats")
     } elseif ($PkgMgr -eq "choco") {
-    libscript_depends @(\"nats-server\")
+    libscript_depends @("nats-server")
     } else {
         Write-Error "Unsupported Windows package manager: $PkgMgr"
     }
@@ -61,7 +61,7 @@ if ($InstallMethod -eq "system") {
     Write-Host "Downloading NATS from $Url ..."
     libscript_download $Url $ZipPath
     
-    Expand-Archive -Path $ZipPath -DestinationPath "$env:TEMP\" -Force
+    Expand-Archive -Path $ZipPath -DestinationPath "$env:TEMP" -Force
     Move-Item -Path "$env:TEMP\${ZipName}\nats-server.exe" -Destination "$BinDir\nats-server.exe" -Force
     
     Remove-Item -Path $ZipPath -Force

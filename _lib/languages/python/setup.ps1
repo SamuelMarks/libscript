@@ -154,9 +154,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Python.Python.3.11\")
+    libscript_depends @("Python.Python.3.11")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"python311\")
+    libscript_depends @("python311")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -183,7 +183,7 @@ switch ($Action) {
                     New-Item -ItemType Directory -Force -Path $PyDir | Out-Null
                 }
 
-                $TempExe = Join-Path [System.IO.Path]::GetTempPath() $ExeName
+                $TempExe = Join-Path ([System.IO.Path]::GetTempPath()) $ExeName
                 Write-Host "Downloading $DownloadUrl"
                 libscript_download $DownloadUrl $TempExe
 

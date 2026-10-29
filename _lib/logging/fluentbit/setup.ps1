@@ -33,7 +33,7 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
-    libscript_depends @(\"fluent-bit\")
+    libscript_depends @("fluent-bit")
 } else {
     Write-Host "[INFO] Fluent Bit is not officially on winget. Falling back to native zip installation..."
     $Prefix = "$env:LIBSCRIPT_ROOT_DIR\installed\fluent-bit"

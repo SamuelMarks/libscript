@@ -21,7 +21,7 @@ $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Res
     }
     if (Get-Command "choco" -ErrorAction SilentlyContinue) {
         Write-Host "Installing hMailServer via chocolatey..."
-    libscript_depends @(\"hmailserver\")
+    libscript_depends @("hmailserver")
         exit 0
     }
     Write-Host "hMailServer requires chocolatey or manual installation."

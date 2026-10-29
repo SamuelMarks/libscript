@@ -80,5 +80,5 @@ if %errorlevel% equ 0 (
     exit /b 0
 )
 
-powershell -NoProfile -Command "$json = Get-Content '%state_file%' | ConvertFrom-Json; foreach ($l in $json.listen) { if (!$l.StartsWith('unix:')) { $port = $l.Split(':')[-1]; Write-Output "  config.vm.network `"forwarded_port`", guest: $port, host: $port, auto_correct: true" } }"
+powershell -NoProfile -Command "$json = Get-Content '%state_file%' | ConvertFrom-Json; foreach ($l in $json.listen) { if (!$l.StartsWith('unix:')) { $port = $l.Split(':')[-1]; Write-Output ('  config.vm.network \"forwarded_port\", guest: ' + $port + ', host: ' + $port + ', auto_correct: true') } }"
 exit /b %errorlevel%

@@ -24,7 +24,7 @@ $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Res
     }
     if (Get-Command "choco" -ErrorAction SilentlyContinue) {
         Write-Host "Installing MySQL via chocolatey..."
-    libscript_depends @(\"mysql\")
+    libscript_depends @("mysql")
         exit 0
     }
     Write-Error "winget or choco is required to install MySQL on Windows."

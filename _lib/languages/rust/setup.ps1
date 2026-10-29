@@ -165,13 +165,13 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Rustlang.Rustup\")
+    libscript_depends @("Rustlang.Rustup")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"rust\")
+    libscript_depends @("rust")
             }
         } elseif ($InstallMethod -eq "rustup") {
             if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
-                $RustupInit = Join-Path [System.IO.Path]::GetTempPath() "rustup-init.exe"
+                $RustupInit = Join-Path ([System.IO.Path]::GetTempPath()) "rustup-init.exe"
                 libscript_download "https://win.rustup.rs" $RustupInit
                 Start-Process -FilePath $RustupInit -ArgumentList "-y --default-toolchain $RustVersion" -Wait -NoNewWindow
                 Remove-Item -Force $RustupInit
@@ -200,7 +200,7 @@ switch ($Action) {
             $env:CARGO_HOME = $RustDir
             $env:RUSTUP_HOME = $RustDir
             
-            $RustupInit = Join-Path [System.IO.Path]::GetTempPath() "rustup-init.exe"
+            $RustupInit = Join-Path ([System.IO.Path]::GetTempPath()) "rustup-init.exe"
             libscript_download "https://win.rustup.rs" $RustupInit
             Write-Host "Installing Rust natively to $RustDir using rustup-init..."
             Start-Process -FilePath $RustupInit -ArgumentList "-y --no-modify-path --default-toolchain $RustVersion" -Wait -NoNewWindow

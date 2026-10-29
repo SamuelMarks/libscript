@@ -219,6 +219,9 @@ exit /b 0
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
+:: ## action_uninstall
+:: Uninstalls the component version from LIBSCRIPT_HOME.
+:action_uninstall
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "memcached" "%ACTION%" "%MEMCACHED_VERSION%" "%MEMCACHED_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%\\bin\\memcached.exe\"" "%LIBSCRIPT_HOME%\memcached\%MEMCACHED_VERSION%"
 exit /b !errorlevel!

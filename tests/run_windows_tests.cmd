@@ -152,7 +152,7 @@ if exist "!success_file!" del "!success_file!" >nul 2>&1
 if exist "!failure_file!" del "!failure_file!" >nul 2>&1
 if exist "!idempotent_file!" del "!idempotent_file!" >nul 2>&1
 
-set "test_cmd=Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install !target!" ; $iExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test !target!" ; $tExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd install !target!" ; $iExit2 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test !target!" ; $tExit2 = $LASTEXITCODE; if ($iExit1 -ne 0) { exit $iExit1 } elseif ($tExit1 -ne 0) { exit $tExit1 } elseif ($iExit2 -ne 0) { exit $iExit2 } elseif ($tExit2 -ne 0) { exit $tExit2 }"
+set "test_cmd=Set-Location C:\libscript; cmd.exe /c \"C:\libscript\libscript.cmd install !target!\" ; $iExit1 = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !target!\" ; $tExit1 = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd install !target!\" ; $iExit2 = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !target!\" ; $tExit2 = $LASTEXITCODE; if ($iExit1 -ne 0) { exit $iExit1 } elseif ($tExit1 -ne 0) { exit $tExit1 } elseif ($iExit2 -ne 0) { exit $iExit2 } elseif ($tExit2 -ne 0) { exit $tExit2 }"
 
 pushd "%VAGRANT_DIR%"
 vagrant ssh -c "!test_cmd!" > "!stdout_file!" 2> "!stderr_file!"

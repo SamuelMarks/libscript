@@ -45,7 +45,7 @@ $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 # Resolves the requested version identifier to an exact release version string.
 function Resolve-ExactVersion {
     if ($GoVersion -eq "latest" -or $GoVersion -eq "stable") {
-        $GoVerFile = Join-Path [System.IO.Path]::GetTempPath() "go_version.txt"
+        $GoVerFile = Join-Path ([System.IO.Path]::GetTempPath()) "go_version.txt"
         libscript_download "https://go.dev/VERSION?m=text" $GoVerFile
         $ExactVersion = (Get-Content $GoVerFile | Select-Object -First 1).Replace("go", "")
         Remove-Item -Force $GoVerFile
@@ -157,9 +157,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"GoLang.Go\")
+    libscript_depends @("GoLang.Go")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"golang\")
+    libscript_depends @("golang")
             }
         } else {
             $Info = Resolve-ExactVersion
@@ -185,7 +185,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $GoDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

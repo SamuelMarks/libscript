@@ -19,7 +19,7 @@ $_ls_root = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Res
 
 if (-not (Get-Command vfox -ErrorAction SilentlyContinue)) {
     Write-Host "Installing vfox using winget..."
-    libscript_depends @(\"version-fox.vfox\")
+    libscript_depends @("version-fox.vfox")
 } else {
     Write-Host "vfox is already installed."
 }

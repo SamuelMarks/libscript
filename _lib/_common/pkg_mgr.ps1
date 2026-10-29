@@ -78,7 +78,7 @@ function libscript_download {
 
     $dlDir = $env:DOWNLOAD_DIR
     if ([string]::IsNullOrEmpty($dlDir)) {
-        $dlDir = Join-Path $cacheDir (if ($env:PACKAGE_NAME) { $env:PACKAGE_NAME } else { "unknown" })
+        $dlDir = Join-Path $cacheDir $(if ($env:PACKAGE_NAME) { $env:PACKAGE_NAME } else { "unknown" })
     }
 
     if (-not (Test-Path $dlDir)) {

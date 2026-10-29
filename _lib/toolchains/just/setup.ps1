@@ -150,9 +150,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"casey.just\")
+    libscript_depends @("casey.just")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"just\")
+    libscript_depends @("just")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -178,7 +178,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() "just.zip"
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) "just.zip"
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 

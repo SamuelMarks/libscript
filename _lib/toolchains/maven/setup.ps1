@@ -150,9 +150,9 @@ switch ($Action) {
                 $WinPkgMgr = "winget"
             }
             if ($WinPkgMgr -eq "winget") {
-    libscript_depends @(\"Apache.Maven\")
+    libscript_depends @("Apache.Maven")
             } elseif ($WinPkgMgr -eq "choco") {
-    libscript_depends @(\"maven\")
+    libscript_depends @("maven")
             }
         } else {
             $ExactVersion = Resolve-ExactVersion
@@ -172,7 +172,7 @@ switch ($Action) {
                 New-Item -ItemType Directory -Force -Path $MavenDir | Out-Null
             }
 
-            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            $TempZip = Join-Path ([System.IO.Path]::GetTempPath()) $ZipName
             Write-Host "Downloading $DownloadUrl"
             libscript_download $DownloadUrl $TempZip
 
