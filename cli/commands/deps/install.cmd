@@ -107,11 +107,13 @@ if "!force_reinstall!"=="1" (
     )
 )
 if "!force_rebuild!"=="1" (
-    echo [INFO] [FORCE-REBUILD] Cleaning frontend build caches ^(dist, build, .angular^) in !_manifest_dir!...
+    echo [INFO] [FORCE-REBUILD] Cleaning frontend build caches ^(dist, build, .angular, .vite^) in !_manifest_dir!...
     for /d %%D in ("!_manifest_dir!" "!_manifest_dir!\*") do (
         if exist "%%~fD\dist" rmdir /s /q "%%~fD\dist" 2>nul
         if exist "%%~fD\build" rmdir /s /q "%%~fD\build" 2>nul
         if exist "%%~fD\.angular" rmdir /s /q "%%~fD\.angular" 2>nul
+        if exist "%%~fD\.vite" rmdir /s /q "%%~fD\.vite" 2>nul
+        if exist "%%~fD\.libscript_build.sha256" del /f /q "%%~fD\.libscript_build.sha256" 2>nul
     )
 )
 
@@ -258,6 +260,14 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "buil
 if errorlevel 1 exit /b 1
 set "_HAS_FE=0"
 for /f "delims=" %%F in ('jq -r "([ (.services | if type == \"array\" then .[] elif type == \"object\" then to_entries[].value else empty end) | select(.type == \"static\" or .type == \"spa\" or .type == \"frontend\" or .type == \"kmp\" or .framework != null or .target != null) ] + [ (.frontends | if type == \"array\" then .[] elif type == \"object\" then to_entries[].value else empty end) ]) | length" "!json_file!" 2^>nul') do set "_HAS_FE=%%F"
+if "!_HAS_FE!"=="0" (
+    for /d %%D in ("!_MANIFEST_DIR!" "!_MANIFEST_DIR!\*") do (
+        if exist "%%~fD\angular.json" set "_HAS_FE=1"
+        if exist "%%~fD\vite.config.ts" set "_HAS_FE=1"
+        if exist "%%~fD\vite.config.js" set "_HAS_FE=1"
+        if exist "%%~fD\vite.config.mts" set "_HAS_FE=1"
+    )
+)
 if not "!_HAS_FE!"=="0" (
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" (
         set "_FE_FLAGS="

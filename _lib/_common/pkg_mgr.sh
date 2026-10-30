@@ -394,6 +394,7 @@ libscript_download() {
   export url="${1:-}"
   dest="${2:-}"
   provided_checksum="${3:-}"
+  auth_header="${4:-${LIBSCRIPT_DOWNLOAD_AUTH_HEADER:-}}"
 
   if [ -z "$url" ]; then
     printf 'Error: URL required for libscript_download\n' >&2
@@ -455,6 +456,15 @@ libscript_download() {
 
   mkdir -p -- "$dl_dir"
   filename="$(basename "$url")"
+  case "$filename" in
+    *:*|*\?*|*\&*)
+      if [ -n "$dest" ]; then
+        filename="$(basename "$dest")"
+      else
+        filename="$(printf '%s\n' "$filename" | tr ':?&' '___')"
+      fi
+      ;;
+  esac
   cache_file="$dl_dir/$filename"
 
   # 4. Cache Check & Download
@@ -503,17 +513,29 @@ libscript_download() {
 
     # Strategy A: aria2c
     if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
-      if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
+      if [ -n "$auth_header" ]; then
+        if aria2c --header="$auth_header" -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
+      else
+        if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
+      fi
     fi
 
     # Strategy B: curl
     if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
-      if curl -#fL -o "$cache_file" "$url"; then download_success=1; fi
+      if [ -n "$auth_header" ]; then
+        if curl -#fL -H "$auth_header" -o "$cache_file" "$url"; then download_success=1; fi
+      else
+        if curl -#fL -o "$cache_file" "$url"; then download_success=1; fi
+      fi
     fi
 
     # Strategy C: wget
     if [ "$download_success" -eq 0 ] && command -v wget >/dev/null 2>&1; then
-      if wget -q --show-progress -O "$cache_file" "$url"; then download_success=1; fi
+      if [ -n "$auth_header" ]; then
+        if wget -q --show-progress --header="$auth_header" -O "$cache_file" "$url"; then download_success=1; fi
+      else
+        if wget -q --show-progress -O "$cache_file" "$url"; then download_success=1; fi
+      fi
     fi
 
     # Strategy D: nc/tcp fallbacks (HTTP only)

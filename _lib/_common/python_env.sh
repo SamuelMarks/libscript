@@ -232,12 +232,22 @@ libscript_python_ensure_venv_owner() {
     esac
   fi
 
-  if [ ! -x "${_venv_dir}/.venv/bin/python" ]; then
+  _py_lock_fp=$(cd "$_venv_dir" 2>/dev/null && cksum uv.lock pyproject.toml requirements.txt 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
+  _py_cached_fp=""
+  if [ -f "${_venv_dir}/.venv/.libscript_lock_hash" ]; then
+    _py_cached_fp=$(cat "${_venv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true)
+  fi
+  if [ "${FORCE_REINSTALL:-0}" = "1" ] || [ ! -x "${_venv_dir}/.venv/bin/python" ] || [ -z "$_py_cached_fp" ] || [ "$_py_cached_fp" != "$_py_lock_fp" ]; then
     if command -v uv >/dev/null 2>&1; then
-      HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
+      if [ ! -x "${_venv_dir}/.venv/bin/python" ]; then
+        HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
+      fi
       (cd "$_venv_dir" && HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" PATH="${PATH}:${_venv_home}/.local/bin:/root/.local/bin" uv sync --python "$_venv_ver" 2>/dev/null || HOME="$_venv_home" uv sync 2>/dev/null || true)
     else
       libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
+    fi
+    if [ -d "${_venv_dir}/.venv" ]; then
+      printf '%s\n' "$_py_lock_fp" > "${_venv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true
     fi
   fi
 

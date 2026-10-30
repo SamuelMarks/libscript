@@ -277,12 +277,24 @@ validate_shared_node_manifests() {
 }
 
 # ## compute_app_checksum
-# Computes a deterministic digest of an application repository manifest, env files, and git revision.
+# Computes a deterministic digest of an application repository manifest, env files, git revision, diff content, and untracked files.
 compute_app_checksum() {
   _cac_dir="$1"
   [ -d "$_cac_dir" ] || { printf 'none\n'; return 0; }
   _cac_git=$(git -C "$_cac_dir" rev-parse HEAD 2>/dev/null || printf 'nogit')
-  _cac_dirty=$(git -C "$_cac_dir" status --porcelain 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  if [ "$_cac_git" != "nogit" ]; then
+    _cac_dirty=$(
+      {
+        git -C "$_cac_dir" status --porcelain 2>/dev/null || true
+        git -C "$_cac_dir" diff HEAD 2>/dev/null || true
+        git -C "$_cac_dir" ls-files --others --exclude-standard 2>/dev/null | while IFS= read -r _uf; do
+          [ -n "$_uf" ] && [ -f "${_cac_dir}/${_uf}" ] && cksum "${_cac_dir}/${_uf}" 2>/dev/null || true
+        done
+      } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
+    )
+  else
+    _cac_dirty=$(find "$_cac_dir" \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name __pycache__ -o -name '*.duckdb*' \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  fi
   _cac_env=$(cat "${_cac_dir}/libscript.json" "${_cac_dir}/.env" "${_cac_dir}/.env.secrets" 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
   printf '%s_%s_%s\n' "$_cac_git" "$_cac_dirty" "$_cac_env"
 }
@@ -598,7 +610,7 @@ for _app_entry in "$@"; do
     run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
 
     log "DAEMON" "Registering and starting/restarting application daemons for '$_ae_name'..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='${_app_hash}' LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
     if [ "$DRY_RUN_MODE" -eq 0 ]; then
       "$CLI" node exec "$NODE" "$CTX" "mkdir -p ~/.libscript_deployments && printf '%s\n' '${_app_hash}' > ~/.libscript_deployments/${_ae_dest}.sha256" >/dev/null 2>&1 || true
     fi

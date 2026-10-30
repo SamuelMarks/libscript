@@ -14,6 +14,11 @@
       "type": "string",
       "description": "How to install HETZNER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
       "default": "system"
+    },
+    "HETZNER_IP": {
+      "type": "string",
+      "description": "Override target IPv4/IPv6 address for Hetzner node SSH and rsync operations.",
+      "default": ""
     }
   }
 }

@@ -5,8 +5,17 @@
 # .\install_openedx.ps1
 
 $ErrorActionPreference = "Continue"
+$LibscriptRoot = if ($env:LIBSCRIPT_ROOT_DIR -and (Test-Path (Join-Path $env:LIBSCRIPT_ROOT_DIR "libscript.cmd"))) {
+    $env:LIBSCRIPT_ROOT_DIR
+} elseif (Test-Path "C:\libscript\libscript.cmd") {
+    "C:\libscript"
+} else {
+    (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+}
+$LibscriptCmd = Join-Path $LibscriptRoot "libscript.cmd"
+
 Write-Host "Installing openedx..."
-& "C:\libscript\libscript.cmd" install openedx
+& $LibscriptCmd install openedx
 $installExit = $LASTEXITCODE
 
 if ($installExit -ne 0) {
@@ -15,7 +24,7 @@ if ($installExit -ne 0) {
   Write-Host "SUCCESS: openedx installed" -ForegroundColor Green
   
   Write-Host "Running openedx test..."
-  & "C:\libscript\libscript.cmd" test openedx
+  & $LibscriptCmd test openedx
   $testExit = $LASTEXITCODE
   if ($testExit -ne 0) {
     Write-Host "FAILED to test openedx (Exit Code: $testExit)" -ForegroundColor Red

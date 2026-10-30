@@ -70,6 +70,13 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
                 )
             )
             set "COMP_NAME=%%~nxD"
+            if exist "%%D\setup.cmd" (
+                findstr /I /R /C:"setup_base\.cmd" /C:"setup_generic\.cmd" "%%D\setup.cmd" >nul 2>&1
+                if errorlevel 1 (
+                    echo [VM CONTRACT VIOLATION] [SETUP_DELEGATION_WIN] %%D\setup.cmd: Must call or delegate to setup_base.cmd or setup_generic.cmd >&2
+                    set /a ERRORS+=1
+                )
+            )
             if exist "%%D\env.cmd" (
                 findstr /I /R /C:"^[ ]*set [^\"]*PATH=.*;%%PATH%%" "%%D\env.cmd" >nul 2>&1
                 if not errorlevel 1 (

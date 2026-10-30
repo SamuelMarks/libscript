@@ -52,9 +52,6 @@ goto :find_root
 :root_found
 
 
-SET "SCRIPT_DIR=%~dp0"
-SET "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
-FOR %%i IN ("!LIBSCRIPT_ROOT_DIR!") DO SET "LIBSCRIPT_ROOT_DIR=%%~fi"
 
 :: Option A Win32 Hard-Fail Boundary Proforma
 echo [ERROR] Native Linux kernel disk assembly (loop/mount/mkfs) is unavailable on Win32. >&2

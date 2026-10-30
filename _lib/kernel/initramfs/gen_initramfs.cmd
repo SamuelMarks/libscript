@@ -67,8 +67,7 @@ if "%~1"=="-h" (
 set "TARGET_DIR=%~1"
 if "%TARGET_DIR%"=="" set "TARGET_DIR=%LIBSCRIPT_TARGET_SYSROOT%"
 if "%TARGET_DIR%"=="" (
-    set "SCRIPT_DIR=%~dp0"
-    for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+    set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
     set "TARGET_DIR=!REPO_ROOT!\build\target-sysroot"
 )
 

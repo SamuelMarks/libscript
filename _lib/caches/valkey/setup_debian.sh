@@ -34,7 +34,7 @@ LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
 PREVIOUS_WD="$(pwd)"
-_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
 
 for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/git-servers/utils/git.sh"; do

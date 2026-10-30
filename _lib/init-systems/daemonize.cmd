@@ -218,11 +218,15 @@ exit /b 0
 :: ## do_start
 :: Generates an isolated runner script, delegates registration to service_install.cmd, and starts the service.
 :do_start
+set "_DM_RT_FP=!cmd!_!LIBSCRIPT_APP_HASH!"
 if exist "!pid_file!" (
     echo [INFO] [DAEMON] [RESTART] Restarting service '!name!' ^(workdir: !svc_workdir!^)...
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop "!name!" >nul 2>&1
+    taskkill /fi "WINDOWTITLE eq !name!" /f >nul 2>&1
 ) else (
     echo [INFO] [DAEMON] [START] Starting service '!name!' ^(workdir: !svc_workdir!^)...
 )
+> "!svc_data!\runtime.sha256" echo !_DM_RT_FP!
 set "LIBSCRIPT_SERVICE_MANIFEST_DIR=!MANIFEST_DIR!"
 set "LIBSCRIPT_SERVICE_ENV_FILES="
 for /f "delims=" %%f in ('echo !svc! ^| jq -r ".env_files[]?" 2^>nul') do (

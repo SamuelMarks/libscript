@@ -187,14 +187,27 @@ build_mfe_bundle_from_oci() {
   rm -rf "$_mfe_tmp"
   mkdir -p "$_mfe_tmp"
 
+  if ! type libscript_download >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+  fi
+
   _token=""
   if command -v jq >/dev/null 2>&1; then
-    _token=$(curl -fsSL 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:overhangio/openedx-mfe:pull' 2>/dev/null | jq -r '.token // empty' || true) # libscript-allow-raw-fetch
+    _token=$(libscript_fetch_stdout 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:overhangio/openedx-mfe:pull' | jq -r '.token // empty' || true)
   fi
   if [ -z "$_token" ]; then
     rm -rf "$_mfe_tmp"
     return 1
   fi
+
+  _prev_dl_dir="${DOWNLOAD_DIR:-}"
+  _prev_dis_chk="${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-}"
+  DOWNLOAD_DIR="$_mfe_tmp"
+  LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE=1
+  export DOWNLOAD_DIR LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE
 
   for _digest in \
     2e4aa03b614b7c8f62b75afbc7fa0587f573ccf3768e9b2260b6e742853aa075 \
@@ -208,19 +221,29 @@ build_mfe_bundle_from_oci() {
     00667c1f99367e7e3b33ac84233895feb945b7fb7bd24817c24fc3869db0bef9 \
     59561b40d8ad8c203854417851db6afa51a2fbbc84960242ac58f3f44e4184ef; do
     _blob="${_mfe_tmp}/${_digest}.tar.gz"
-    if ! curl -fsSL -L -H "Authorization: Bearer ${_token}" "https://registry-1.docker.io/v2/overhangio/openedx-mfe/blobs/sha256:${_digest}" -o "$_blob" 2>/dev/null; then # libscript-allow-raw-fetch
+    if ! libscript_download "https://registry-1.docker.io/v2/overhangio/openedx-mfe/blobs/sha256:${_digest}" "$_blob" "$_digest" "Authorization: Bearer ${_token}"; then
+      DOWNLOAD_DIR="$_prev_dl_dir"
+      LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE="$_prev_dis_chk"
+      export DOWNLOAD_DIR LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE
       rm -rf "$_mfe_tmp"
       return 1
     fi
     _blob_hash=$(compute_sha256 "$_blob")
     if [ "$_blob_hash" != "$_digest" ]; then
       log_error "OCI layer SHA-256 mismatch for $_digest"
+      DOWNLOAD_DIR="$_prev_dl_dir"
+      LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE="$_prev_dis_chk"
+      export DOWNLOAD_DIR LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE
       rm -rf "$_mfe_tmp"
       return 1
     fi
     tar -xzf "$_blob" -C "$_mfe_tmp" --strip-components=2 --exclude='*.map' --exclude='*report.html' 2>/dev/null || true
     rm -f "$_blob"
   done
+
+  DOWNLOAD_DIR="$_prev_dl_dir"
+  LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE="$_prev_dis_chk"
+  export DOWNLOAD_DIR LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE
 
   if [ ! -d "${_mfe_tmp}/authn" ] || [ ! -d "${_mfe_tmp}/authoring" ]; then
     rm -rf "$_mfe_tmp"

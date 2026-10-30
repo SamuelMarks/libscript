@@ -168,11 +168,11 @@ if "!_DO_SKIP_SYNC!"=="1" (
     
     where rsync >nul 2>nul
     if not errorlevel 1 (
-        rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "!APP_PATH!/" "!TARGET_HOST!:apps/!APP_NAME!/"
+        rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude=".vite" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "!APP_PATH!/" "!TARGET_HOST!:apps/!APP_NAME!/"
     ) else (
         where tar >nul 2>nul
         if not errorlevel 1 (
-            tar -czf - -C "!APP_PATH!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME! && tar -xzf - -C $HOME/apps/!APP_NAME!"
+            tar -czf - -C "!APP_PATH!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME! && find $HOME/apps/!APP_NAME! -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C $HOME/apps/!APP_NAME! && find $HOME/apps/!APP_NAME! -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
         ) else (
             scp -r "!APP_PATH!\*" "!TARGET_HOST!:apps/!APP_NAME!/"
         )
@@ -247,12 +247,30 @@ if not "!SHARED_DB!"=="" (
 exit /b 0
 
 :: ## calculate_checksum
-:: Performs the calculate_checksum operation and updates component state.
+:: Computes a deterministic digest of an application repository including git HEAD, dirty diff, untracked files, and env files.
 :calculate_checksum
 set "tgt_dir=%~1"
 set "_calc_hash="
 if exist "!tgt_dir!\.git" (
-    for /f %%H in ('git -C "!tgt_dir!" rev-parse HEAD 2^>nul') do set "_calc_hash=%%H"
+    set "_dr_git=nogit"
+    for /f %%H in ('git -C "!tgt_dir!" rev-parse HEAD 2^>nul') do set "_dr_git=%%H"
+    set "_dr_tmp=%TEMP%\libscript_dr_chk_%RANDOM%.txt"
+    git -C "!tgt_dir!" status --porcelain > "!_dr_tmp!" 2>nul
+    git -C "!tgt_dir!" diff HEAD >> "!_dr_tmp!" 2>nul
+    for /f "delims=" %%u in ('git -C "!tgt_dir!" ls-files --others --exclude-standard 2^>nul') do (
+        if exist "!tgt_dir!\%%u" (
+            for %%z in ("!tgt_dir!\%%u") do echo %%u:%%~zz:%%~tz>> "!_dr_tmp!"
+        )
+    )
+    if exist "!tgt_dir!\libscript.json" type "!tgt_dir!\libscript.json" >> "!_dr_tmp!" 2>nul
+    if exist "!tgt_dir!\.env" type "!tgt_dir!\.env" >> "!_dr_tmp!" 2>nul
+    if exist "!tgt_dir!\.env.secrets" type "!tgt_dir!\.env.secrets" >> "!_dr_tmp!" 2>nul
+    set "_dr_dirty=0"
+    for /f "skip=1 tokens=1" %%D in ('certutil -hashfile "!_dr_tmp!" SHA256 2^>nul') do (
+        if "!_dr_dirty!"=="0" set "_dr_dirty=%%D"
+    )
+    del /f /q "!_dr_tmp!" >nul 2>&1
+    set "_calc_hash=!_dr_git!_!_dr_dirty!"
 )
 if "!_calc_hash!"=="" (
     if exist "!tgt_dir!\libscript.json" (

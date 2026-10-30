@@ -318,6 +318,30 @@ while IFS= read -r ps1_file; do
 ' "${ps1_file#"${TARGET_ROOT}"/}"
     MISSING_PS1_DOCS=$((MISSING_PS1_DOCS + 1))
   fi
+  missing_ps1_functions=$(awk -v file="${ps1_file#"${TARGET_ROOT}"/}" '
+    BEGIN { has_doc = 0; in_here_str = 0 }
+    { sub(/\r$/, "", $0) }
+    in_here_str {
+      if ($0 ~ /^"@/ || $0 ~ /^'\''@/) in_here_str = 0
+      next
+    }
+    /@"$/ || /@'\''$/ { in_here_str = 1; next }
+    /^[[:space:]]*#[[:space:]]*##[[:space:]]+/ { has_doc = 1; next }
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*function[[:space:]]+[A-Za-z0-9_-]+/ {
+      if (!has_doc) print file ":" NR ":" $0
+      has_doc = 0
+      next
+    }
+    /^[[:space:]]*$/ { next }
+    { has_doc = 0 }
+  ' "$ps1_file")
+  if [ -n "$missing_ps1_functions" ]; then
+    printf '[WARN] Missing PowerShell function docstring(s) in %s:
+%s
+' "${ps1_file#"${TARGET_ROOT}"/}" "$missing_ps1_functions"
+    MISSING_PS1_DOCS=$((MISSING_PS1_DOCS + 1))
+  fi
 done < "$tmp_ps1"
 rm -f "$tmp_ps1"
 

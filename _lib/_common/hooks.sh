@@ -99,7 +99,7 @@ libscript_exec_hook() {
   comp_name="${comp_dir##*/}"
   export LIBSCRIPT_HOOK_ACTION="$hook_name"
   export LIBSCRIPT_COMPONENT_NAME="$comp_name"
-  export LIBSCRIPT_INSTANCE_ROOT="${LIBSCRIPT_INSTANCE_ROOT:-${LIBSCRIPT_HOME:-${HOME}/.libscript}/${comp_name}}"
+  export LIBSCRIPT_INSTANCE_ROOT="${LIBSCRIPT_INSTANCE_ROOT:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${comp_name}}"
   export LIBSCRIPT_TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-/}"
   export LIBSCRIPT_TENANT_ID="${LIBSCRIPT_TENANT_ID:-default}"
   export LIBSCRIPT_REMOTE_STRATEGY="${LIBSCRIPT_REMOTE_STRATEGY:-${USER_DB_STRATEGY:-local}}"

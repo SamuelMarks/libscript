@@ -41,8 +41,6 @@ esac
 JSON_FILE="${1:-}"
 HOOK_TYPE="${2:-}"
 
-SCRIPT_DIR=$(cd "${SCRIPT_DIR}" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 # shellcheck disable=SC1090,SC1091
 _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
 SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"

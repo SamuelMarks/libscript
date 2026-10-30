@@ -204,9 +204,9 @@ try {
             return ('{0:x8}{1:x8}{2:x8}{3:x8}' -f [int]$h1, [int]$h2, [int]$h3, [int]$h4)
         }
 
+        $usedIdentifiers = @{}
         # ## Get-WixIdentifier
         # Sanitizes and truncates identifiers to <= 72 characters adhering to WiX and Windows Installer MSI limits.
-        $usedIdentifiers = @{}
         function Get-WixIdentifier([string]$prefix, [string]$rawPath) {
             $san = $rawPath -replace '[^a-zA-Z0-9_]', '_'
             $candidate = $prefix + $san

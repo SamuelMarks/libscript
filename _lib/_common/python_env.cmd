@@ -203,15 +203,31 @@ if not exist "!_venv_dir!\pyproject.toml" (
 )
 if "!_venv_ver!"=="" set "_venv_ver=%PYTHON_VERSION%"
 if "!_venv_ver!"=="" set "_venv_ver=3.12"
-if exist "!_venv_dir!\.venv\Scripts\python.exe" exit /b 0
+set "_PY_LOCK_FP=none"
+set "_PY_LOCK_ACC="
+for %%L in ("!_venv_dir!\uv.lock" "!_venv_dir!\pyproject.toml" "!_venv_dir!\requirements.txt") do (
+    if exist "%%~fL" (
+        for %%Z in ("%%~fL") do set "_PY_LOCK_ACC=!_PY_LOCK_ACC!_%%~nxZ_%%~zZ_%%~tZ"
+    )
+)
+if not "!_PY_LOCK_ACC!"=="" set "_PY_LOCK_FP=!_PY_LOCK_ACC: =_!"
+set "_PY_CACHED_FP="
+if exist "!_venv_dir!\.venv\.libscript_lock_hash" (
+    set /p _PY_CACHED_FP=<"!_venv_dir!\.venv\.libscript_lock_hash"
+)
+if not "%FORCE_REINSTALL%"=="1" if exist "!_venv_dir!\.venv\Scripts\python.exe" if not "!_PY_CACHED_FP!"=="" if "!_PY_CACHED_FP!"=="!_PY_LOCK_FP!" exit /b 0
 where uv >nul 2>&1
 if not errorlevel 1 (
     set "LIBSCRIPT_PYTHON_VENV_BACKEND=uv"
-    call :libscript_python_venv "" "!_venv_dir!\.venv" "!_venv_ver!" >nul 2>&1
+    if not exist "!_venv_dir!\.venv\Scripts\python.exe" (
+        call :libscript_python_venv "" "!_venv_dir!\.venv" "!_venv_ver!" >nul 2>&1
+    )
     pushd "!_venv_dir!"
     uv sync --python "!_venv_ver!" >nul 2>&1
     popd
+    if exist "!_venv_dir!\.venv" > "!_venv_dir!\.venv\.libscript_lock_hash" echo !_PY_LOCK_FP!
     exit /b 0
 )
 call :libscript_python_venv "" "!_venv_dir!\.venv" "!_venv_ver!" >nul 2>&1
+if exist "!_venv_dir!\.venv" > "!_venv_dir!\.venv\.libscript_lock_hash" echo !_PY_LOCK_FP!
 exit /b 0

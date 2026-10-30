@@ -52,10 +52,8 @@ if (-not $GIT_REPO) {
 $env:GIT_REPO = $GIT_REPO
 $env:LIBSCRIPT_EXTENDED_SCHEMAS = "topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
 
-<#
-## Invoke-EnvSubst
-Replaces environment variables in the provided template string.
-#>
+# ## Invoke-EnvSubst
+# Replaces environment variables in the provided template string.
 function Invoke-EnvSubst {
     param([string]$TemplateContent)
     if ([string]::IsNullOrEmpty($TemplateContent)) { return $TemplateContent }

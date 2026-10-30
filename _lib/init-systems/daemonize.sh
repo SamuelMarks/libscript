@@ -389,21 +389,34 @@ while IFS= read -r svc <&3; do
       libscript_install_service "$NAME" "$CMD" "$SVC_WORKDIR" "$NAME service managed by libscript" "$SVC_ENV_VARS" "$SVC_USER" "$SVC_ENV_FILES"
     _dm_hc_url=$(printf '%s\n' "$svc" | jq -r '(.health_check // .healthcheck) as $hc | if ($hc | type) == "object" then ($hc.url // empty) else empty end' 2>/dev/null || true)
     _dm_hc_url=$(expand_manifest_vars "$_dm_hc_url")
-    if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_SERVICE_UNIT_UNCHANGED:-0}" = "1" ] && [ "$_dm_init" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null && { [ -z "$_dm_hc_url" ] || curl -sf -m 3 "$_dm_hc_url" >/dev/null 2>&1; }; then
+    _dm_runtime_fp=$(
+      {
+        printf '%s\n' "${CMD}|${SVC_WORKDIR}|${LIBSCRIPT_APP_HASH:-}"
+        cat "${MANIFEST_DIR}/.env" "${MANIFEST_DIR}/.env.secrets" "${MANIFEST_DIR}/.env.libscript" "${SVC_WORKDIR}/.venv/.libscript_lock_hash" 2>/dev/null || true
+      } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
+    )
+    _dm_cached_fp=""
+    if [ -f "${SVC_DATA}/runtime.sha256" ]; then
+      _dm_cached_fp=$(cat "${SVC_DATA}/runtime.sha256" 2>/dev/null || true)
+    fi
+    if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_FORCE_RESTART:-0}" != "1" ] && [ "${LIBSCRIPT_SERVICE_UNIT_UNCHANGED:-0}" = "1" ] && [ -n "$_dm_cached_fp" ] && [ "$_dm_cached_fp" = "$_dm_runtime_fp" ] && [ "$_dm_init" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null && { [ -z "$_dm_hc_url" ] || curl -sf -m 3 "$_dm_hc_url" >/dev/null 2>&1; }; then
       log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
     elif [ "$_dm_init" = "systemd" ] && systemctl is-active --quiet "$NAME" 2>/dev/null; then
       log_info "[DAEMON] [RESTART] Restarting service '$NAME' via ${_dm_init}..."
       libscript_service restart "$NAME" 2>/dev/null || libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
+      printf '%s\n' "$_dm_runtime_fp" > "${SVC_DATA}/runtime.sha256" 2>/dev/null || true
       log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
     elif libscript_service status "$NAME" >/dev/null 2>&1; then
       log_info "[DAEMON] [RESTART] Restarting service '$NAME' via ${_dm_init}..."
       libscript_service restart "$NAME" 2>/dev/null || libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
+      printf '%s\n' "$_dm_runtime_fp" > "${SVC_DATA}/runtime.sha256" 2>/dev/null || true
       log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
     else
       log_info "[DAEMON] [START] Starting service '$NAME' via ${_dm_init}..."
       if ! libscript_service restart "$NAME" 2>/dev/null; then
         libscript_service start "$NAME" 2>/dev/null || libscript_service_fallback start "$NAME"
       fi
+      printf '%s\n' "$_dm_runtime_fp" > "${SVC_DATA}/runtime.sha256" 2>/dev/null || true
       log_info "[DAEMON] [ACTIVE] Service '$NAME' is running (${_dm_init} active${_port_info})."
     fi
   elif [ "$ACTION" = "stop" ] || [ "$ACTION" = "down" ]; then

@@ -52,9 +52,6 @@ goto :find_root
 :root_found
 
 
-SET "SCRIPT_DIR=%~dp0"
-SET "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%\.."
-FOR %%i IN ("%LIBSCRIPT_ROOT_DIR%") DO SET "LIBSCRIPT_ROOT_DIR=%%~fi"
 
 IF "%~1"=="--dry-run" (
     echo === LibScript Vagrant Box Lifecycle Verification ^(Win32 Simulated^) ===

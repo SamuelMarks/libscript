@@ -107,13 +107,24 @@ while [ $# -gt 0 ]; do
 done
 
 # ## calculate_checksum
-# Performs the calculate_checksum operation and updates component state.
+# Computes a deterministic digest of an application repository including git HEAD, dirty diff, untracked files, and env files.
 calculate_checksum() {
   local_path="$1"
   if [ -d "$local_path/.git" ] && command -v git >/dev/null 2>&1; then
-    cd "$local_path" && git rev-parse HEAD
+    _dr_git=$(git -C "$local_path" rev-parse HEAD 2>/dev/null || printf 'nogit')
+    _dr_dirty=$(
+      {
+        git -C "$local_path" status --porcelain 2>/dev/null || true
+        git -C "$local_path" diff HEAD 2>/dev/null || true
+        git -C "$local_path" ls-files --others --exclude-standard 2>/dev/null | while IFS= read -r _uf; do
+          [ -n "$_uf" ] && [ -f "${local_path}/${_uf}" ] && cksum "${local_path}/${_uf}" 2>/dev/null || true
+        done
+        cat "${local_path}/libscript.json" "${local_path}/.env" "${local_path}/.env.secrets" 2>/dev/null || true
+      } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
+    )
+    printf '%s_%s\n' "$_dr_git" "$_dr_dirty"
   else
-    find "$local_path" -type f -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/target/*" -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.angular/*" -not -path "*/__pycache__/*" -exec sha256sum {} + | sha256sum | awk '{print $1}'
+    find "$local_path" -type f -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/target/*" -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.angular/*" -not -path "*/.vite/*" -not -path "*/__pycache__/*" -exec cksum {} + 2>/dev/null | sort | cksum | awk '{print $1"_"$2}'
   fi
 }
 
@@ -261,10 +272,10 @@ for app_path in "$@"; do
     ssh "$TARGET_HOST" "mkdir -p \$HOME/apps/$app_name"
 
     if command -v rsync >/dev/null 2>&1; then
-      rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "$app_path/" "$TARGET_HOST:apps/$app_name/"
+      rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "$app_path/" "$TARGET_HOST:apps/$app_name/"
     elif command -v tar >/dev/null 2>&1 && [ -d "$app_path" ]; then
       # shellcheck disable=SC2029
-      tar -czf - -C "$app_path" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "$TARGET_HOST" "mkdir -p \$HOME/apps/$app_name && tar -xzf - -C \$HOME/apps/$app_name"
+      tar -czf - -C "$app_path" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "$TARGET_HOST" "mkdir -p \$HOME/apps/$app_name && find \$HOME/apps/$app_name -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \$HOME/apps/$app_name && find \$HOME/apps/$app_name -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
     else
       scp -r "$app_path/"* "$TARGET_HOST:apps/$app_name/"
     fi

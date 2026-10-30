@@ -109,16 +109,16 @@ libscript_resolve_build_toolchain() {
     export HOSTCC="${HOSTCC:-${CC}}"
     resolve_compiler_flags "default"
     if [ "${LIBSCRIPT_NAMESPACE_DEFAULT_TOOLCHAIN:-0}" = "1" ]; then
-      LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/${_sb_comp}/${_sb_exact_ver}-default}"
+      LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_sb_comp}/${_sb_exact_ver}-default}"
     else
-      LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/${_sb_comp}/${_sb_exact_ver}}"
+      LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_sb_comp}/${_sb_exact_ver}}"
     fi
   else
     LIBSCRIPT_RESOLVED_CC_ID="${_tc_spec}"
     if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_tc_spec}" ]; then
       _cc_recipe_dir="${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_tc_spec}"
       _need_install=1
-      if [ "${_tc_spec}" = "gcc" ] && command -v gcc >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/default/bin/gcc" ]; then
+      if [ "${_tc_spec}" = "gcc" ] && command -v gcc >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
         _need_install=1
       fi
       if [ "${_need_install}" = "1" ]; then
@@ -135,8 +135,8 @@ libscript_resolve_build_toolchain() {
 
     case "${_tc_spec}" in
       gcc)
-        if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/default/bin/gcc" ]; then
-          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/gcc/default/bin/gcc"
+        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc"
         elif command -v gcc >/dev/null 2>&1; then
           LIBSCRIPT_RESOLVED_CC_BIN="$(command -v gcc)"
         else
@@ -144,8 +144,8 @@ libscript_resolve_build_toolchain() {
         fi
         ;;
       clang)
-        if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/default/bin/clang" ]; then
-          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/default/bin/clang"
+        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang"
         elif command -v clang >/dev/null 2>&1; then
           LIBSCRIPT_RESOLVED_CC_BIN="$(command -v clang)"
         else
@@ -153,8 +153,8 @@ libscript_resolve_build_toolchain() {
         fi
         ;;
       tcc)
-        if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/default/bin/tcc" ]; then
-          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/tcc/default/bin/tcc"
+        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/default/bin/tcc" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/tcc/default/bin/tcc"
         elif command -v tcc >/dev/null 2>&1; then
           LIBSCRIPT_RESOLVED_CC_BIN="$(command -v tcc)"
         else
@@ -162,21 +162,21 @@ libscript_resolve_build_toolchain() {
         fi
         ;;
       edgcpp)
-        if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default/bin/edgcpp" ]; then
-          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default/bin/edgcpp"
+        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edgcpp" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edgcpp"
         elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh"
         else
           LIBSCRIPT_RESOLVED_CC_BIN="${CC:-cc}"
         fi
-        if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default/bin/edg-c++" ]; then
-          LIBSCRIPT_RESOLVED_CXX_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/default/bin/edg-c++"
+        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edg-c++" ]; then
+          LIBSCRIPT_RESOLVED_CXX_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edg-c++"
           export CXX="${LIBSCRIPT_RESOLVED_CXX_BIN}"
         fi
         ;;
       custom-cc)
-        if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/default/bin/custom-cc" ]; then
-          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/custom-cc/default/bin/custom-cc"
+        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/default/bin/custom-cc" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/custom-cc/default/bin/custom-cc"
         elif [ -n "${CUSTOM_CC_BIN:-}" ] && [ -x "${CUSTOM_CC_BIN}" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${CUSTOM_CC_BIN}"
         elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/languages/custom-cc/cc_wrapper.sh" ]; then
@@ -197,7 +197,7 @@ libscript_resolve_build_toolchain() {
     export CC="${LIBSCRIPT_RESOLVED_CC_BIN}"
     export HOSTCC="${HOSTCC:-${CC}}"
     resolve_compiler_flags "${LIBSCRIPT_RESOLVED_CC_ID}"
-    LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/${_sb_comp}/${_sb_exact_ver}-${LIBSCRIPT_RESOLVED_CC_ID}}"
+    LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_sb_comp}/${_sb_exact_ver}-${LIBSCRIPT_RESOLVED_CC_ID}}"
   fi
 
   LIBSCRIPT_RESOLVED_CC_VERSION="$("${LIBSCRIPT_RESOLVED_CC_BIN}" --version 2>&1 | head -n 1 | tr -d '

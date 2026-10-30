@@ -36,7 +36,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Usage: ./find_replace_exec.sh "search_string" "replacement_string" filename
 
-DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${DIR}"'/find_replace.sh'
 # shellcheck disable=SC1090,SC1091

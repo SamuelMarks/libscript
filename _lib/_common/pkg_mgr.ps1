@@ -34,7 +34,8 @@ function libscript_download {
     param (
         [string]$Url,
         [string]$Dest,
-        [string]$ProvidedChecksum
+        [string]$ProvidedChecksum,
+        [hashtable]$Headers = $null
     )
 
     if ([string]::IsNullOrEmpty($Dest)) {
@@ -86,6 +87,10 @@ function libscript_download {
     }
 
     $filename = Split-Path $Url -Leaf
+    if ($filename -match '[:?&]' -and $Dest) {
+        $filename = Split-Path $Dest -Leaf
+    }
+    $filename = $filename -replace '[:?&]', '_'
     $cacheFile = Join-Path $dlDir $filename
 
     # 4. Cache Check & Download
@@ -98,12 +103,21 @@ function libscript_download {
         # Strategy: Invoke-WebRequest (modern PS) or Net.WebClient (legacy)
         try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-WebRequest -Uri $Url -OutFile $cacheFile -ErrorAction Stop
+            if ($null -ne $Headers -and $Headers.Count -gt 0) {
+                Invoke-WebRequest -Uri $Url -Headers $Headers -OutFile $cacheFile -ErrorAction Stop
+            } else {
+                Invoke-WebRequest -Uri $Url -OutFile $cacheFile -ErrorAction Stop
+            }
             $downloadSuccess = $true
         } catch {
             log_warn "Invoke-WebRequest failed, trying WebClient: $($_.Exception.Message)"
             try {
                 $client = New-Object System.Net.WebClient
+                if ($null -ne $Headers) {
+                    foreach ($hk in $Headers.Keys) {
+                        $client.Headers[$hk] = [string]$Headers[$hk]
+                    }
+                }
                 $client.DownloadFile($Url, $cacheFile)
                 $downloadSuccess = $true
             } catch {
@@ -208,9 +222,10 @@ function Invoke-LibscriptDownload {
     param (
         [string]$Uri,
         [string]$OutFile,
-        [string]$Checksum
+        [string]$Checksum,
+        [hashtable]$Headers = $null
     )
-    libscript_download -Url $Uri -Dest $OutFile -ProvidedChecksum $Checksum
+    libscript_download -Url $Uri -Dest $OutFile -ProvidedChecksum $Checksum -Headers $Headers
 }
 
 # ## Invoke-LibscriptFetchContent

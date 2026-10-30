@@ -81,17 +81,17 @@ if [ "$CMD" = "install-deps" ]; then
 
   _manifest_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
   if [ "$force_reinstall" -eq 1 ]; then
-    printf '[INFO] --force-reinstall: cleaning .venv and node_modules in %s...\n' "$_manifest_dir"
+    printf '[INFO] --force-reinstall: cleaning .venv, venv, and node_modules in %s...\n' "$_manifest_dir"
     for _clean_dir in "$_manifest_dir" "$_manifest_dir"/*; do
       [ -d "$_clean_dir" ] || continue
-      rm -rf "${_clean_dir}/.venv" "${_clean_dir}/node_modules"
+      rm -rf "${_clean_dir}/.venv" "${_clean_dir}/venv" "${_clean_dir}/node_modules"
     done
   fi
   if [ "$force_rebuild" -eq 1 ]; then
-    printf '[INFO] --force-rebuild: cleaning dist, build, and .angular caches in %s...\n' "$_manifest_dir"
+    printf '[INFO] --force-rebuild: cleaning dist, build, .angular, and .vite caches in %s...\n' "$_manifest_dir"
     for _clean_dir in "$_manifest_dir" "$_manifest_dir"/*; do
       [ -d "$_clean_dir" ] || continue
-      rm -rf "${_clean_dir}/dist" "${_clean_dir}/build" "${_clean_dir}/.angular"
+      rm -rf "${_clean_dir}/dist" "${_clean_dir}/build" "${_clean_dir}/.angular" "${_clean_dir}/.vite" "${_clean_dir}/.libscript_build.sha256"
     done
   fi
 
@@ -258,6 +258,15 @@ if [ "$CMD" = "install-deps" ]; then
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
   _has_fe=$(jq -r '([ (.services | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) | select(.type == "static" or .type == "spa" or .type == "frontend" or .type == "kmp" or .framework != null or .target != null) ] + [ (.frontends | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) ]) | length' "$json_file" 2>/dev/null || printf '0')
+  if [ "${_has_fe:-0}" -eq 0 ]; then
+    for _fe_cand in "$_manifest_dir" "$_manifest_dir"/*; do
+      [ -d "$_fe_cand" ] || continue
+      if [ -f "${_fe_cand}/angular.json" ] || [ -f "${_fe_cand}/vite.config.ts" ] || [ -f "${_fe_cand}/vite.config.js" ] || [ -f "${_fe_cand}/vite.config.mts" ]; then
+        _has_fe=1
+        break
+      fi
+    done
+  fi
   if [ "${_has_fe:-0}" -gt 0 ] && [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/provision_frontend.sh" ]; then
     _fe_flags=""
     [ "$force_rebuild" -eq 1 ] && _fe_flags="--force-rebuild"

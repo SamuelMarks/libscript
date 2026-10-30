@@ -56,7 +56,7 @@ function Log-Violation {
 function Test-ExcludedPath {
     param([string]$Path)
     $normalized = $Path.Replace([char]92, [char]47)
-    if ($normalized -match '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/') {
+    if ($normalized -match '^(\.git|gen|cache|tmp|tests_tmp|node_modules)/' -or $normalized -match '(/|^)\.vagrant/') {
         return $true
     }
     return $false
@@ -102,6 +102,8 @@ function Audit-File {
         $rawFetchLines = @()
         $rawPkgLines = @()
         $unnecessaryDqLines = @()
+        $allowFetchNext = $false
+        $allowPkgNext = $false
         $lineNum = 1
         foreach ($ln in (Get-Content -Path $FilePath -ErrorAction SilentlyContinue)) {
             $trimmed = $ln.Trim()
@@ -120,16 +122,21 @@ function Audit-File {
             if ($trimmed.StartsWith("#!")) {
                 $shebangLines += $lineNum
             }
-            if ($ln -notmatch '^\s*#') {
-                if ($ln -notmatch 'libscript-allow-raw-(fetch|curl)' -and $ln -match '(^|[\s;|&(])(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])(\s|$)' -and $ln -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w\s+"%\{http_code\}")') {
+            if ($ln -match '^\s*#') {
+                $allowFetchNext = ($ln -match 'libscript-allow-raw-(fetch|curl)')
+                $allowPkgNext = ($ln -match 'libscript-allow-raw-pkg')
+            } else {
+                if (-not $allowFetchNext -and $ln -notmatch 'libscript-allow-raw-(fetch|curl)' -and $ln -match '(^|[\s;|&(])(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])(\s|$)' -and $ln -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w\s+"%\{http_code\}")') {
                     $rawFetchLines += $lineNum
                 }
-                if ($ln -notmatch 'libscript-allow-raw-pkg' -and $ln -match '(^|[\s;|&])(priv\s+|sudo\s+)?(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)(\s|$)' -and $ln -notmatch '--root') {
+                if (-not $allowPkgNext -and $ln -notmatch 'libscript-allow-raw-pkg' -and $ln -match '(^|[\s;|&])(priv\s+|sudo\s+)?(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)(\s|$)' -and $ln -notmatch '--root') {
                     $rawPkgLines += $lineNum
                 }
                 if ($ln -match '^\s*(export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"\s*$' -or $ln -match '^\s*(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?\s*$' -or $ln -match '^\s*libscript_depends(\s+"[A-Za-z0-9_.-]+")+(\s*\|\|\s*true)?\s*$') {
                     $unnecessaryDqLines += $lineNum
                 }
+                $allowFetchNext = $false
+                $allowPkgNext = $false
             }
             $lineNum++
         }
@@ -379,26 +386,26 @@ function Audit-File {
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
             if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|cli/commands/packaging/formats/pkg_docker_compose)\.cmd$') {
-                $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-fetch)' }
+                $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
                 if ($rawFetchCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
             if ($normPath -notmatch '_lib/(_common/pkg_mgr\.cmd|package-managers/)') {
-                $rawPkgCmd = Select-String -Path $FilePath -Pattern '\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-pkg' }
+                $rawPkgCmd = Select-String -Path $FilePath -Pattern '\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-pkg' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-pkg') }
                 if ($rawPkgCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
         } elseif ($ext -eq "ps1") {
             if ($normPath -notmatch '_lib/_common/pkg_mgr\.ps1$') {
-                $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|libscript-allow-raw-fetch)' }
+                $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' -Context 1,0 | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
                 if ($rawFetchPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1)."
                 }
             }
             if ($normPath -notmatch '_lib/(_common/pkg_mgr\.ps1|package-managers/)') {
-                $rawPkgPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' }
+                $rawPkgPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' -Context 1,0 | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-pkg') }
                 if ($rawPkgPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in PowerShell script (delegate to pkg_mgr.ps1)."
                 }

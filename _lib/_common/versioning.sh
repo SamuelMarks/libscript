@@ -42,7 +42,7 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 libscript_get_version_dir() {
   component="$1"
   version="$2"
-  printf '%s\n' "${LIBSCRIPT_HOME:-$HOME/.libscript}/${component}/${version}"
+  printf '%s\n' "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${component}/${version}"
 }
 
 # ## libscript_symlink_alias
@@ -52,7 +52,7 @@ libscript_symlink_alias() {
   alias_name="$2"
   exact_version="$3"
   
-  base_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/${component}"
+  base_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${component}"
   mkdir -p "${base_dir}"
   
   if [ "${alias_name}" != "${exact_version}" ]; then
@@ -268,7 +268,7 @@ libscript_handle_generic_action() {
       if [ "$_hga_method" = "system" ]; then
         printf '%s\n' 'System packages do not support ls here.'
       else
-        ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/${_hga_comp}/" 2>/dev/null || true
+        ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_hga_comp}/" 2>/dev/null || true
       fi
       exit 0
       ;;
@@ -298,7 +298,7 @@ libscript_handle_generic_action() {
         fi
         libscript_symlink_alias "$_hga_comp" "$_hga_ver" "$EXACT_VERSION"
         libscript_symlink_alias "$_hga_comp" "default" "$EXACT_VERSION"
-        _hga_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/${_hga_comp}/${EXACT_VERSION}"
+        _hga_target="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_hga_comp}/${EXACT_VERSION}"
         if [ ! -d "$_hga_target" ]; then
           log_info "${_hga_comp} ${EXACT_VERSION} is not installed. Installing it now..."
           unset SCRIPT_NAME || true
@@ -375,8 +375,8 @@ libscript_handle_generic_action() {
       if [ "$_hga_method" = "libscript_native" ]; then
         if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${_hga_ver}"; fi
         log_info "Uninstalling ${_hga_comp} ${_hga_ver}..."
-        rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/${_hga_comp}/${EXACT_VERSION}"
-        rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/${_hga_comp}/${_hga_ver}"
+        rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_hga_comp}/${EXACT_VERSION}"
+        rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_hga_comp}/${_hga_ver}"
       else
         log_info "Uninstall not implemented or supported for $_hga_method."
       fi

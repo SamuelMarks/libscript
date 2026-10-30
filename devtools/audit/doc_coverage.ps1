@@ -122,6 +122,34 @@ Get-ChildItem -Path $repoRoot -Filter "*.schema.json" -Recurse -File -ErrorActio
     }
 }
 
+Write-Host "==> Auditing PowerShell Function Docstring Coverage..."
+$missingPs1Functions = 0
+foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".ps1" })) {
+    $lines = [System.IO.File]::ReadAllLines($sf.FullName)
+    $hasDoc = $false
+    $inHereStr = $false
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $ln = $lines[$i]
+        if ($inHereStr) {
+            if ($ln -match '^"@' -or $ln -match "^'@") { $inHereStr = $false }
+            continue
+        }
+        if ($ln -match '@"\s*$' -or $ln -match "@'\s*$") { $inHereStr = $true; continue }
+        if ($ln -match '^\s*#\s*##\s+') { $hasDoc = $true; continue }
+        if ($ln -match '^\s*#') { continue }
+        if ($ln -match '^\s*function\s+[A-Za-z0-9_-]+') {
+            if (-not $hasDoc) {
+                Write-Warning "Missing PowerShell function docstring in $($sf.FullName):$($i + 1)"
+                $missingPs1Functions++
+            }
+            $hasDoc = $false
+            continue
+        }
+        if ($ln -match '^\s*$') { continue }
+        $hasDoc = $false
+    }
+}
+
 $totalItems = $totalComps + $totalScripts
 $missingItems = $missingCompReadmes + $missingScriptHeaders
 $documentedItems = $totalItems - $missingItems
@@ -157,11 +185,11 @@ if ($updateReadme -and (Test-Path -LiteralPath $readmeFile -PathType Leaf)) {
     }
 }
 
-$totalErrors = $missingCompReadmes + $missingScriptHeaders + $missingSchema
+$totalErrors = $missingCompReadmes + $missingScriptHeaders + $missingSchema + $missingPs1Functions
 if ($totalErrors -eq 0) {
     Write-Host "[PASS] 100% Documentation Coverage Audit Passed!"
     exit 0
 } else {
-    [Console]::Error.WriteLine("[ERROR] Found $missingCompReadmes missing component READMEs, $missingScriptHeaders scripts missing header docs, and $missingSchema schema files with missing descriptions.")
+    [Console]::Error.WriteLine("[ERROR] Found $missingCompReadmes missing component READMEs, $missingScriptHeaders scripts missing header docs, $missingSchema schema files with missing descriptions, and $missingPs1Functions PowerShell functions missing docstrings.")
     exit 1
 }

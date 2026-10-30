@@ -80,6 +80,8 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and ((Test-Path "$localAss
         "C:\OpenEdX\app\libscript\packaging\assets",
         "C:\libscript\packaging\assets"
     )
+    # ## Find-AssetIcon
+    # Resolves the first existing icon file from the candidate asset directories.
     function Find-AssetIcon([string[]]$FileNames) {
         foreach ($dir in $assetSearchDirs) {
             if (-not $dir) { continue }

@@ -68,8 +68,7 @@ set "BOX=%~1"
 if "%BOX%"=="" set "BOX=libscript.box"
 set "OUT_FILE=%~2"
 if "%OUT_FILE%"=="" (
-    set "SCRIPT_DIR=%~dp0"
-    for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"
+    set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
     set "OUT_FILE=!REPO_ROOT!\build\Vagrantfile"
 )
 set "MEM=%~3"

@@ -7,6 +7,7 @@
 # Typically called internally by uninstall.sh.
 
 set -feu
+_ug_caller_this="${THIS_FILE:-}"; _ug_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -21,6 +22,8 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "$_ug_caller_this" ] && THIS_FILE="$_ug_caller_this"
+    [ -n "$_ug_caller_dir" ] && SCRIPT_DIR="$_ug_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -28,7 +31,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
+export DIR="${_ug_caller_dir:-${SCRIPT_DIR}}"
 export LIBSCRIPT_ROOT_DIR
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
@@ -42,10 +45,9 @@ INSTALL_METHOD="$(printenv "${COMPONENT_UPPER}_INSTALL_METHOD" 2>/dev/null || tr
 
 if [ "$INSTALL_METHOD" = "system" ]; then
     log_info "Uninstalling ${COMPONENT_NAME} via system package manager is not implemented."
-    exit 0
 else
     if [ -n "${VERSION:-}" ]; then
-        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/${COMPONENT_NAME}/${VERSION}"
+        TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${COMPONENT_NAME}/${VERSION}"
         if [ -L "$TARGET_DIR" ]; then
             EXACT_DIR=$(readlink "$TARGET_DIR")
             log_info "Removing alias ${VERSION} and its target ${EXACT_DIR}..."
@@ -63,9 +65,13 @@ else
             log_info "${COMPONENT_NAME} version ${VERSION} is not installed natively at ${TARGET_DIR}."
         fi
     else
-        if [ -z "${VERSION:-}" ]; then
-             log_info "Removing all native installations of ${COMPONENT_NAME}..."
-             rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/${COMPONENT_NAME}"
-        fi
+        log_info "Removing all native installations of ${COMPONENT_NAME}..."
+        rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${COMPONENT_NAME}"
     fi
 fi
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_ug_caller_dir:-}" ] && SCRIPT_DIR="$_ug_caller_dir"
+[ -n "${_ug_caller_this:-}" ] && THIS_FILE="$_ug_caller_this"
+unset _ug_caller_this _ug_caller_dir || true

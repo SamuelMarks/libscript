@@ -38,7 +38,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${ROOT_DIR:=$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 
 if [ -f "${ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then

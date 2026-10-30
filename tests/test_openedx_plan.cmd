@@ -24,6 +24,8 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
     call :find_root
@@ -52,30 +54,6 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-:: Strip trailing backslash
-set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
-:: Resolve repository root
-set "LIBSCRIPT_ROOT_DIR="
-set "d=%SCRIPT_DIR%"
-:: ## find_root
-:: Ascends the directory tree looking for ROOT or libscript.cmd.
-:find_root
-if exist "%d%\libscript.cmd" (
-    set "LIBSCRIPT_ROOT_DIR=%d%"
-    goto :found_root
-)
-for %%a in ("%d%") do set "parent=%%~dpa"
-set "parent=%parent:~0,-1%"
-if "%d%"=="%parent%" (
-    echo [ERROR] libscript.cmd not found in any parent directory. 1>&2
-    exit /b 1
-)
-set "d=%parent%"
-goto :find_root
-:: ## found_root
-:: Performs the found_root operation and updates component state.
-:found_root
 
 set "TARGET_OS=debian-13"
 set "STEP=0"

@@ -140,7 +140,8 @@ if /i "!_SUB!"=="create" (
     exit /b !ERRORLEVEL!
 )
 if "!DRY_RUN!"=="true" (
-    if /i "!_SUB!"=="ip" (
+    if /i "!_SUB!"=="wait-ssh" exit /b 0
+if /i "!_SUB!"=="ip" (
         echo 203.0.113.10
         exit /b 0
     )

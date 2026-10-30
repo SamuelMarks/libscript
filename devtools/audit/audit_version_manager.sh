@@ -90,6 +90,11 @@ audit_component_dir() {
       log_vm_violation "${_rel_dir}/setup.sh" "SETUP_DELEGATION" "Must source or delegate to _lib/_common/setup_base.sh (or setup_generic.sh)."
     fi
   fi
+  if [ -f "${_comp_dir}/setup.cmd" ]; then
+    if ! grep -Eiq "setup_base\.cmd|setup_generic\.cmd" "${_comp_dir}/setup.cmd"; then
+      log_vm_violation "${_rel_dir}/setup.cmd" "SETUP_DELEGATION_WIN" "Must call or delegate to _lib\\_common\\setup_base.cmd (or setup_generic.cmd)."
+    fi
+  fi
 
   # 3b. Verify env.cmd exports across endlocal boundary if setlocal is used
   if [ -f "${_comp_dir}/env.cmd" ]; then

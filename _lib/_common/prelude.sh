@@ -44,7 +44,12 @@ export LIBSCRIPT_BUILD_DIR
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
-PATH="${HOME}"'/.cargo/bin:'"${LIBSCRIPT_DATA_DIR}"'/bin:'"${PATH}"
+for _p in "${LIBSCRIPT_DATA_DIR}/bin" "${HOME:-/root}/.cargo/bin"; do
+  case ":${PATH}:" in
+    *":${_p}:"*) ;;
+    *) PATH="${_p}:${PATH}" ;;
+  esac
+done
 export PATH
 
 [ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"

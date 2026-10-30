@@ -410,10 +410,12 @@ if "!_RWAC_RC!"=="0" (
     if exist "!_AUTH_TMP!" del /f /q "!_AUTH_TMP!" >nul 2>&1
     exit /b 0
 )
-findstr /I /C:"not logged in" /C:"az login" /C:"AuthenticationError" "!_AUTH_TMP!" >nul 2>&1
+findstr /I /C:"not logged in" /C:"az login" /C:"AuthenticationError" /C:"ExpiredToken" /C:"InvalidClientTokenId" /C:"Unable to locate credentials" /C:"gcloud auth login" /C:"Reauthentication required" "!_AUTH_TMP!" >nul 2>&1
 if not errorlevel 1 (
-    call :log "AUTH" "Authentication error detected for azure."
-    call az login
+    call :log "AUTH" "Authentication error detected for !PROVIDER!."
+    if /i "!PROVIDER!"=="azure" call az login
+    if /i "!PROVIDER!"=="aws" call aws configure
+    if /i "!PROVIDER!"=="gcp" call gcloud auth login
     call %*
     set "_RWAC_RC=!ERRORLEVEL!"
 )
@@ -549,7 +551,7 @@ if "!_SKIP_UNCHANGED!"=="1" (
     if errorlevel 1 exit /b 1
 
     call :log "DAEMON" "Registering and starting/restarting application daemons for '!_SP_DEST!'..."
-    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
+    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='!_APP_HASH!' LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
     if errorlevel 1 exit /b 1
     if "!DRY_RUN_MODE!"=="0" (
         call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_APP_HASH!' > ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
@@ -604,12 +606,50 @@ if "!MANIFEST_FILES!"=="" exit /b 0
 set "_MF_CNT=0"
 for %%F in (!MANIFEST_FILES!) do set /a _MF_CNT+=1
 if !_MF_CNT! lss 2 exit /b 0
+set "_DUP_PORTS="
+for /f "delims=" %%P in ('jq -s -r "[ .[] | (.services | if type == \"object\" then [to_entries[].value.port? // empty] elif type == \"array\" then [.[].port? // empty] else [] end) | map(tostring) | unique | .[] ] | group_by(.) | map(select(length > 1) | .[0]) | join(\" \")" !MANIFEST_FILES! 2^>nul') do set "_DUP_PORTS=%%P"
+if not "!_DUP_PORTS!"=="" (
+    call :log "ERROR" "Shared-node service port collision detected across manifests on port^(s^): !_DUP_PORTS!"
+    exit /b 1
+)
+set "_DUP_SVCS="
+for /f "delims=" %%S in ('jq -s -r "[ .[] | (.services | if type == \"object\" then [to_entries[].key] elif type == \"array\" then [.[].name? // empty] else [] end) | unique | .[] ] | group_by(.) | map(select(length > 1) | .[0]) | join(\" \")" !MANIFEST_FILES! 2^>nul') do set "_DUP_SVCS=%%S"
+if not "!_DUP_SVCS!"=="" (
+    call :log "ERROR" "Shared-node service name collision detected across manifests: !_DUP_SVCS!"
+    exit /b 1
+)
 exit /b 0
 
 :: ## compute_app_checksum
-:: Computes a deterministic digest of an application repository manifest and git revision.
+:: Computes a deterministic digest of an application repository manifest, env files, git revision, diff content, and untracked files.
 :compute_app_checksum
 set "_CAC_DIR=%~1"
-set "_APP_HASH=nogit"
-for /f "delims=" %%H in ('git -C "!_CAC_DIR!" rev-parse HEAD 2^>nul') do set "_APP_HASH=%%H"
+set "_CAC_GIT=nogit"
+for /f "delims=" %%H in ('git -C "!_CAC_DIR!" rev-parse HEAD 2^>nul') do set "_CAC_GIT=%%H"
+set "_CAC_TMP=%TEMP%\libscript_cac_%RANDOM%.txt"
+if exist "!_CAC_TMP!" del /f /q "!_CAC_TMP!" >nul 2>&1
+if not "!_CAC_GIT!"=="nogit" (
+    git -C "!_CAC_DIR!" status --porcelain >> "!_CAC_TMP!" 2>nul
+    git -C "!_CAC_DIR!" diff HEAD >> "!_CAC_TMP!" 2>nul
+    for /f "delims=" %%U in ('git -C "!_CAC_DIR!" ls-files --others --exclude-standard 2^>nul') do (
+        if exist "!_CAC_DIR!\%%U" (
+            for %%Z in ("!_CAC_DIR!\%%U") do echo %%U:%%~zZ:%%~tZ>> "!_CAC_TMP!"
+        )
+    )
+) else (
+    for /r "!_CAC_DIR!" %%F in (*) do (
+        echo %%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
+    )
+)
+for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets") do (
+    if exist "%%~fE" type "%%~fE" >> "!_CAC_TMP!" 2>nul
+)
+set "_CAC_DIRTY=0"
+if exist "!_CAC_TMP!" (
+    for /f "skip=1 tokens=1" %%D in ('certutil -hashfile "!_CAC_TMP!" SHA256 2^>nul') do (
+        if "!_CAC_DIRTY!"=="0" set "_CAC_DIRTY=%%D"
+    )
+    del /f /q "!_CAC_TMP!" >nul 2>&1
+)
+set "_APP_HASH=!_CAC_GIT!_!_CAC_DIRTY!"
 exit /b 0

@@ -27,7 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-_RAW_DIR="$(cd "$(dirname -- "${THIS_FILE}")" && pwd)"
+_RAW_DIR="$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)"
 
 # If THIS_FILE resolves to netctl.sh, its dirname is the root. If it resolves to lib/prelude.sh, its dirname is lib.
 case "$_RAW_DIR" in

@@ -30,8 +30,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 # Identify directories
-COMP_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
-SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
+COMP_DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"
+SCRIPT_DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
@@ -460,11 +460,11 @@ elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then
     exit 1
   fi
 elif [ "$ACTION" = "env" ]; then
-  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   libscript_print_env "${FORMAT:-${format:-sh}}" "$INSTALLED_DIR"
   exit 0
 elif [ "$ACTION" = "run" ]; then
-  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
   if [ ! -x "$BIN_PATH" ]; then
     log_error "$PACKAGE_NAME version $VERSION not installed at $BIN_PATH"
@@ -472,7 +472,7 @@ elif [ "$ACTION" = "run" ]; then
   fi
   exec "$BIN_PATH" "$@"
 elif [ "$ACTION" = "which" ]; then
-  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
   if [ -x "$BIN_PATH" ]; then
     log_info "$BIN_PATH"
@@ -482,7 +482,7 @@ elif [ "$ACTION" = "which" ]; then
     exit 1
   fi
 elif [ "$ACTION" = "info" ]; then
-  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   printf '%s\n' "Component: $PACKAGE_NAME"
   printf '%s\n' "Version: $VERSION"
   printf '%s\n' "Install Path: $INSTALLED_DIR"
@@ -497,7 +497,7 @@ elif [ "$ACTION" = "info" ]; then
   fi
   exit 0
 elif [ "$ACTION" = "exec" ]; then
-  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   if [ ! -d "$INSTALLED_DIR/bin" ]; then
     log_error "$PACKAGE_NAME version $VERSION bin directory not found at $INSTALLED_DIR/bin"
     exit 1

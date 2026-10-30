@@ -30,6 +30,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # @description Automatically handles semver for the semver.sh (utilities) component.
 # @file semver.sh
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   log_info "Usage: ${THIS_FILE} [OPTIONS]"
@@ -37,12 +41,10 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-if [ -z "$1" ] || [ -z "$2" ]; then
+if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
     log_info "Usage: ${THIS_FILE} <version> <constraint>"
     exit 2
 fi
-
-SCRIPT_DIR=$(dirname -- "${THIS_FILE}")
 
 jq -e -L "$SCRIPT_DIR" -n --arg v "$1" --arg c "$2" "include \"semver\"; semver_satisfies(\$v; \$c)" >/dev/null 2>&1
 exit $?

@@ -83,7 +83,7 @@ log_failure() {
 is_excluded_path() {
   check_path="$1"
   case "$check_path" in
-    .git/*|gen/*|cache/*|tmp/*|tests_tmp/*|node_modules/*|vagrant/*)
+    .git/*|gen/*|cache/*|tmp/*|tests_tmp/*|node_modules/*|*/.vagrant/*|.vagrant/*)
       return 0
       ;;
     *)
@@ -169,19 +169,25 @@ audit_single_file() {
         if ($0 ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
         }
-        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-pkg/) {
+        if ($0 ~ /^[[:space:]]*#/) {
+          allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
+          allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_pkg_next && $0 !~ /libscript-allow-raw-pkg/) {
           if ($0 ~ /(^|[[:space:];|&])(priv[[:space:]]+|sudo[[:space:]]+)?(apt-get[[:space:]]+(install|remove|purge|update)|apt[[:space:]]+(install|remove|purge)|apk[[:space:]]+(add|del|update)|dnf[[:space:]]+(install|remove|groupinstall)|yum[[:space:]]+(install|remove|groupinstall)|pacman[[:space:]]+(-S|-R|-Rns|-Syu)|zypper[[:space:]]+(install|in|remove|rm)|brew[[:space:]]+(install|uninstall|tap|services)|port[[:space:]]+(install|uninstall)|pkg[[:space:]]+(install|delete|add)|xbps-install|xbps-remove|emerge[[:space:]]|swupd[[:space:]]+bundle-add|winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update)|vcpkg[[:space:]]+(install|remove)|conan[[:space:]]+install|nix[[:space:]]+profile[[:space:]]+install|nix-env[[:space:]]+-i|guix[[:space:]]+(install|package)|spack[[:space:]]+(install|uninstall)|npm[[:space:]]+install[[:space:]]+-g|composer[[:space:]]+global[[:space:]]+require)([[:space:]]|$)/) {
             if ($0 !~ /--root/) {
               adhoc_pkg_hits = (adhoc_pkg_hits ? adhoc_pkg_hits "; " : "") NR ":" $0
             }
           }
         }
-        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
+        if ($0 !~ /^[[:space:]]*#/ && !allow_fetch_next && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
           if ($0 ~ /(^|[[:space:];|&(])(curl[[:space:]]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[[:space:]]+-[a-zA-Z0-9-]*[qO]|aria2c[[:space:]]+-[dox])([[:space:]]|$)/ && $0 !~ /(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w[[:space:]]+"%\{http_code\}")/) {
             raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
           }
         }
         if ($0 !~ /^[[:space:]]*#/) {
+          allow_pkg_next = 0
+          allow_fetch_next = 0
           if ($0 ~ /SCRIPT_NAME=/) {
             last_script_name_nr = NR
           }
@@ -295,26 +301,30 @@ audit_single_file() {
       log_failure "$file" "WINDOWS_PARITY" "Missing Windows batch equivalent file ('$cmd_equiv') for PowerShell script."
     fi
     ps1_violations=$(awk '
-      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; bare_cmd_hits = ""; allow_fetch_next = 0 }
+      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; bare_cmd_hits = ""; allow_fetch_next = 0; allow_pkg_next = 0 }
       { sub(/\r$/, "", $0) }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
         if ($0 ~ /## Usage/) has_usage = 1
       }
       {
-        if ($0 ~ /libscript-allow-raw-fetch/) { allow_fetch_next = 1; next }
+        if ($0 ~ /^[[:space:]]*#/) {
+          allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
+          allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
+          next
+        }
         if (tolower($0) ~ /^[[:space:]]*(invoke-expression|iex)([[:space:]]|$)/) {
           eval_hits = (eval_hits ? eval_hits "; " : "") NR ":" $0
         }
         if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
         }
-        if ($0 !~ /^[[:space:]]*#/ && !allow_fetch_next) {
+        if ($0 !~ /^[[:space:]]*#/ && !allow_fetch_next && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
           if (tolower($0) ~ /(^|[[:space:];|&(])(invoke-webrequest|invoke-restmethod|iwr|irm|start-bitstransfer|net\.webclient)([[:space:]]|$)/ && tolower($0) !~ /(127\.0\.0\.1|localhost)/) {
             raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
           }
         }
-        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-pkg/) {
+        if ($0 !~ /^[[:space:]]*#/ && !allow_pkg_next && $0 !~ /libscript-allow-raw-pkg/) {
           if (tolower($0) ~ /(^|[[:space:];|&&])(winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update))([[:space:]]|$)/) {
             raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
           }
@@ -334,6 +344,7 @@ audit_single_file() {
           }
         }
         allow_fetch_next = 0
+        allow_pkg_next = 0
       }
       END {
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
@@ -415,15 +426,23 @@ audit_single_file() {
         if (tolower($0) ~ /^[[:space:]]*exit[[:space:]]+[0-9]+[[:space:]]*$/) {
           bare_exit_hits = (bare_exit_hits ? bare_exit_hits "; " : "") NR ":" $0
         }
-        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && $0 !~ /libscript-allow-raw-fetch/) {
+        if (tolower($0) ~ /^[[:space:]]*(::|rem[[:space:]])/) {
+          allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
+          allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && !allow_fetch_next && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
           if (tolower($0) ~ /(invoke-webrequest|invoke-restmethod|[[:space:]"]iwr[[:space:]]|[[:space:]"]irm[[:space:]]|certutil[[:space:]]+-urlcache|curl[[:space:]]+-[a-z0-9]*[sflo])/ && tolower($0) !~ /(127\.0\.0\.1|localhost|--cacert)/) {
             raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
           }
         }
-        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/ && $0 !~ /libscript-allow-raw-pkg/) {
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/ && !allow_pkg_next && $0 !~ /libscript-allow-raw-pkg/) {
           if (tolower($0) ~ /(^|[[:space:]&(])(call[[:space:]]+)?(winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update))([[:space:]]|$)/) {
             raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
           }
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/) {
+          allow_fetch_next = 0
+          allow_pkg_next = 0
         }
         if ($0 ~ /SCRIPT_DIR[%!][^\\\/"[:space:])]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
@@ -459,7 +478,13 @@ audit_single_file() {
           lbl = $0
           sub(/^[[:space:]]*:/, "", lbl)
           sub(/[^A-Za-z0-9_.-].*$/, "", lbl)
-          if (lbl != "") defined_labels[tolower(lbl)] = 1
+          if (lbl != "") {
+            lbl_l = tolower(lbl)
+            if (lbl_l in defined_labels) {
+              dup_label_hits = (dup_label_hits ? dup_label_hits "; " : "") NR ":" lbl
+            }
+            defined_labels[lbl_l] = 1
+          }
         }
         if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/ && tolower($0) !~ /echo[[:space:]]/) {
           line_lc = tolower($0)
@@ -512,6 +537,7 @@ audit_single_file() {
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
+        if (dup_label_hits != "") print "BATCH_DUPLICATE_LABEL|Duplicate label definition(s) in batch script: " dup_label_hits
         if (missing_lbl_hits != "") print "BATCH_MISSING_LABEL|Undefined batch label target: " missing_lbl_hits
       }
     ' "$file" 2>/dev/null || true)

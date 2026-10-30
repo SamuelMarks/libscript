@@ -69,7 +69,6 @@ goto :find_root
 
 
 :: Prevent accidental direct execution
-set "THIS_FILE=%~f0"
 if "%~1"=="" (
     echo This is a LibScript library module and should be called via 'call'.
     exit /b 1

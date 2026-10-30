@@ -201,6 +201,8 @@ goto :depends_loop
 set "url=%~1"
 set "dest=%~2"
 set "provided_checksum=%~3"
+set "auth_header=%~4"
+if "!auth_header!"=="" if defined LIBSCRIPT_DOWNLOAD_AUTH_HEADER set "auth_header=%LIBSCRIPT_DOWNLOAD_AUTH_HEADER%"
 
 if "!dest!"=="" for %%F in ("!url!") do set "dest=%%~nxF"
 
@@ -313,7 +315,11 @@ if "!download_needed!"=="1" (
         REM Strategy A: curl
         where curl >nul 2>&1
         if !errorlevel! equ 0 (
-                curl -L "!url!" -o "!cache_file!"
+                if not "!auth_header!"=="" (
+                        curl -L -H "!auth_header!" "!url!" -o "!cache_file!"
+                ) else (
+                        curl -L "!url!" -o "!cache_file!"
+                )
                 if !errorlevel! equ 0 set "download_success=1"
         )
     

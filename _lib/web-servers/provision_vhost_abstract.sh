@@ -29,9 +29,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-THIS_FILE="$(readlink -f "$0" 2>/dev/null || printf "%s/%s" "$(cd "$(dirname "$0")" && pwd -P)" "$(basename "$0")")"
-THIS_DIR="$(dirname "$THIS_FILE")"
-
+THIS_DIR="${SCRIPT_DIR}"
+REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 APP_ID=""
 SERVER_NAME=""
 PROXY_ENGINE='nginx'

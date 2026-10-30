@@ -140,9 +140,12 @@ if exist "devtools\audit\audit_schema_vars.cmd" (
 where shellcheck >nul 2>&1
 if not errorlevel 1 (
     echo Running shellcheck...
+    set "SHELLCHECK_OPT_ARGS="
+    shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
+    if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
     for /f "tokens=*" %%F in ('!GIT_FILE_CMD! 2^>nul ^| findstr /R "\.sh$" ^| findstr /V /R "node_modules \.git top\.sh bottom\.sh template_ patch_ fix_ update_ _gen\.sh gen/"') do (
         if exist "%%F" (
-            shellcheck -s sh -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054 "%%F"
+            shellcheck -s sh !SHELLCHECK_OPT_ARGS! -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054 "%%F"
             if errorlevel 1 (
                 echo [ERROR] ShellCheck failed on %%F.
                 exit /b 1

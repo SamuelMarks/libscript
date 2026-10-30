@@ -128,6 +128,52 @@ for /f "delims=" %%h in ('jq -c "((.lifecycle_hooks.pre_install // []) + (.hooks
 
 exit /b 0
 
+:: ## compute_pkg_lock_hash
+:: Computes a deterministic hash of package.json and lockfiles in the current directory.
+:compute_pkg_lock_hash
+set "_PKG_FP=none"
+set "_PKG_ACC="
+for %%F in (package.json package-lock.json pnpm-lock.yaml yarn.lock) do (
+    if exist "%%F" (
+        for %%Z in ("%%F") do set "_PKG_ACC=!_PKG_ACC!_%%~nxZ_%%~zZ_%%~tZ"
+    )
+)
+if not "!_PKG_ACC!"=="" set "_PKG_FP=!_PKG_ACC: =_!"
+exit /b 0
+
+:: ## compute_frontend_fingerprint
+:: Computes a deterministic fingerprint over frontend config files, src\, and public\ on Windows.
+:compute_frontend_fingerprint
+set "_CFF_DIR=%~1"
+set "_FE_FP=none"
+pushd "!_CFF_DIR!" 2>nul
+if errorlevel 1 exit /b 0
+set "_CFF_TMP=%TEMP%\libscript_fe_fp_%RANDOM%.txt"
+if exist "!_CFF_TMP!" del /f /q "!_CFF_TMP!" >nul 2>&1
+for %%F in (package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js vite.config.mts tsconfig.json tsconfig.app.json tsconfig.spec.json index.html) do (
+    if exist "%%F" (
+        for %%Z in ("%%F") do echo %%~nxZ:%%~zZ:%%~tZ>> "!_CFF_TMP!"
+    )
+)
+if exist "src" (
+    for /r "src" %%S in (*) do (
+        echo %%~nxS:%%~zS:%%~tS>> "!_CFF_TMP!"
+    )
+)
+if exist "public" (
+    for /r "public" %%P in (*) do (
+        echo %%~nxP:%%~zP:%%~tP>> "!_CFF_TMP!"
+    )
+)
+if exist "!_CFF_TMP!" (
+    for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_CFF_TMP!" SHA256 2^>nul') do (
+        if "!_FE_FP!"=="none" set "_FE_FP=%%H"
+    )
+    del /f /q "!_CFF_TMP!" >nul 2>&1
+)
+popd
+exit /b 0
+
 :: ## install_node_deps
 :: Installs npm/pnpm/yarn dependencies in a target directory if package.json exists.
 :install_node_deps
@@ -138,7 +184,12 @@ if exist "!nd_dir!\package.json" (
     if "%FORCE_REINSTALL%"=="1" (
         if exist "node_modules" rmdir /s /q "node_modules" 2>nul
     )
-    if not "%FORCE_REINSTALL%"=="1" if exist "node_modules\.libscript_pkg_hash" (
+    call :compute_pkg_lock_hash
+    set "_CACHED_PKG_FP="
+    if exist "node_modules\.libscript_pkg_hash" (
+        set /p _CACHED_PKG_FP=<"node_modules\.libscript_pkg_hash"
+    )
+    if not "%FORCE_REINSTALL%"=="1" if exist "node_modules\.libscript_pkg_hash" if "!_CACHED_PKG_FP!"=="!_PKG_FP!" (
         echo [REUSE] Frontend dependencies in !nd_dir! are up-to-date.
         popd
         exit /b 0
@@ -146,13 +197,15 @@ if exist "!nd_dir!\package.json" (
     if not "!nd_cmd!"=="" (
         call !nd_cmd!
     ) else if exist "package-lock.json" (
-        call npm ci --prefer-offline --no-audit --no-fund
+        call npm ci --prefer-offline --no-audit --no-fund || call npm install --legacy-peer-deps --no-audit --no-fund
     ) else if exist "npm-shrinkwrap.json" (
-        call npm ci --prefer-offline --no-audit --no-fund
+        call npm ci --prefer-offline --no-audit --no-fund || call npm install --legacy-peer-deps --no-audit --no-fund
     ) else (
         call npm install --no-audit --no-fund
     )
-    if exist "node_modules" echo installed> "node_modules\.libscript_pkg_hash"
+    if exist "node_modules" (
+        > "node_modules\.libscript_pkg_hash" echo !_PKG_FP!
+    )
     popd
 )
 exit /b 0
@@ -221,26 +274,53 @@ if "!is_kmp!"=="1" (
 )
 
 if exist "!src_dir!\package.json" (
+    if "!framework!"=="" (
+        if exist "!src_dir!\angular.json" set "framework=angular"
+        if exist "!src_dir!\vite.config.ts" set "framework=vite"
+        if exist "!src_dir!\vite.config.js" set "framework=vite"
+        if exist "!src_dir!\vite.config.mts" set "framework=vite"
+    )
     if /i not "!src_dir!"=="!APP_DIR!" (
         call :install_node_deps "!src_dir!" "!inst_cmd!"
     ) else if not "!inst_cmd!"=="" (
         call :install_node_deps "!src_dir!" "!inst_cmd!"
     )
+    call :compute_frontend_fingerprint "!src_dir!"
+    set "_CACHED_FE_FP="
+    if exist "!src_dir!\.libscript_build.sha256" (
+        set /p _CACHED_FE_FP=<"!src_dir!\.libscript_build.sha256"
+    ) else if exist "!src_dir!\dist\.libscript_src_hash" (
+        set /p _CACHED_FE_FP=<"!src_dir!\dist\.libscript_src_hash"
+    )
     set "_can_reuse_fe=0"
     if not "%FORCE_REBUILD%"=="1" (
         call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
-        if "!_ART_EXISTS!"=="1" set "_can_reuse_fe=1"
+        if "!_ART_EXISTS!"=="1" (
+            if not "!_CACHED_FE_FP!"=="" if "!_CACHED_FE_FP!"=="!_FE_FP!" set "_can_reuse_fe=1"
+        )
     )
     if "!_can_reuse_fe!"=="1" (
-        echo [REUSE] Frontend build for '!svc_id!' in '!src_dir!' is up-to-date.
+        echo [REUSE] Frontend build for '!svc_id!' ^(!framework!^) in '!src_dir!' is up-to-date ^(hash !_FE_FP!^).
+        > "!src_dir!\.libscript_build.sha256" echo !_FE_FP!
+        if exist "!src_dir!\dist" > "!src_dir!\dist\.libscript_src_hash" echo !_FE_FP!
     ) else (
         echo [BUILD] Building frontend '!svc_id!' ^(!framework!^) in '!src_dir!'...
+        if exist "!src_dir!\dist" rmdir /s /q "!src_dir!\dist" 2>nul
+        if exist "!src_dir!\build" rmdir /s /q "!src_dir!\build" 2>nul
+        if exist "!src_dir!\.angular\cache" rmdir /s /q "!src_dir!\.angular\cache" 2>nul
+        if exist "!src_dir!\.vite" rmdir /s /q "!src_dir!\.vite" 2>nul
+        if exist "!src_dir!\.libscript_build.sha256" del /f /q "!src_dir!\.libscript_build.sha256" 2>nul
         pushd "!src_dir!"
         for /f "delims=" %%v in ('echo !svc! ^| jq -r ".env // {} | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do set "%%v"
         if not "!build_cmd!"=="" (
             call !build_cmd!
         ) else if /i "!framework!"=="angular" (
-            call npx ng build
+            findstr /C:"\"build\"" "package.json" >nul 2>&1
+            if not errorlevel 1 (
+                call npm run build
+            ) else (
+                call npx ng build
+            )
         ) else if /i "!framework!"=="vite" (
             findstr /C:"\"build\"" "package.json" >nul 2>&1
             if not errorlevel 1 (
@@ -252,7 +332,8 @@ if exist "!src_dir!\package.json" (
             findstr /C:"\"build\"" "package.json" >nul 2>&1
             if not errorlevel 1 call npm run build
         )
-        echo built> ".libscript_build.sha256"
+        > ".libscript_build.sha256" echo !_FE_FP!
+        if exist "dist" > "dist\.libscript_src_hash" echo !_FE_FP!
         popd
     )
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"

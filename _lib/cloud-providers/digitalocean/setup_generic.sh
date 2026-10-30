@@ -125,6 +125,9 @@ case "$ACTION" in
 ' "$RESOURCE_NAME"
         doctl vpcs delete "$RESOURCE_NAME" --force || true
         ;;
+      wait-ssh)
+        exit 0
+        ;;
       list)
         doctl vpcs list
         ;;
@@ -240,7 +243,7 @@ case "$ACTION" in
         IP=$(doctl compute droplet get "$RESOURCE_NAME" --format PublicIPv4 --no-header | head -n 1)
         ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-root}@$IP" "mkdir -p ~/libscript"
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="vagrant" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-root}@$IP:~/libscript/"
+          rsync -avz --delete --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="logs" --exclude="tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-root}@$IP:~/libscript/"
         else
           scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-root}@$IP:~/libscript/"
         fi
@@ -254,7 +257,7 @@ case "$ACTION" in
         fi
         IP=$(doctl compute droplet get "$RESOURCE_NAME" --format PublicIPv4 --no-header | head -n 1)
         if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-root}@$IP:$DST"
+          rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-root}@$IP:$DST"
         else
           scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-root}@$IP:$DST"
         fi

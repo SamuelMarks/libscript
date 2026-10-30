@@ -158,18 +158,20 @@ function Build-MfeBundleFromOci {
     if (Test-Path $tmpDir) { Remove-Item -Path $tmpDir -Recurse -Force }
     New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
 
+    $prevDlDir = $env:DOWNLOAD_DIR
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        # libscript-allow-raw-fetch
-        $tokResp = Invoke-RestMethod -Uri "https://auth.docker.io/token?service=registry.docker.io&scope=repository:overhangio/openedx-mfe:pull" -ErrorAction Stop
-        $token = $tokResp.token
+        $env:DOWNLOAD_DIR = $tmpDir
+        $tokResp = Invoke-LibscriptFetchJson -Uri "https://auth.docker.io/token?service=registry.docker.io&scope=repository:overhangio/openedx-mfe:pull"
+        $token = if ($null -ne $tokResp) { $tokResp.token } else { $null }
         if (-not $token) { throw "Empty registry token" }
 
         foreach ($digest in $layers) {
             $blobFile = Join-Path $tmpDir "$digest.tar.gz"
             $blobUrl = "https://registry-1.docker.io/v2/overhangio/openedx-mfe/blobs/sha256:$digest"
-            # libscript-allow-raw-fetch
-            Invoke-WebRequest -Uri $blobUrl -Headers @{ Authorization = "Bearer $token" } -OutFile $blobFile -ErrorAction Stop
+            libscript_download -Url $blobUrl -Dest $blobFile -ProvidedChecksum $digest -Headers @{ Authorization = "Bearer $token" }
+            if (-not (Test-Path $blobFile)) {
+                throw "Failed to download OCI layer $digest"
+            }
             $actualBlobHash = Get-Sha256Hex -FilePath $blobFile
             if ($actualBlobHash -ne $digest) {
                 throw "OCI layer SHA-256 mismatch for $digest (got $actualBlobHash)"
@@ -192,6 +194,8 @@ function Build-MfeBundleFromOci {
     } catch {
         Write-Warning "[WARN] OCI MFE fallback failed: $_"
         if (Test-Path $tmpDir) { Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue }
+    } finally {
+        $env:DOWNLOAD_DIR = $prevDlDir
     }
     return $false
 }

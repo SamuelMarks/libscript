@@ -45,7 +45,7 @@ case "${1:-}" in
     TAR_GZ="${LIBSCRIPT_ROOT_DIR}/build/disk.raw.tar.gz"
     printf '[CLOUD] Compressing %s -> %s for Google Compute Engine...\n' "$IMG_PATH" "$TAR_GZ"
     (
-      cd "$(dirname "$IMG_PATH")"
+      cd -- "$(dirname "$IMG_PATH")"
       tar -Sczf "$TAR_GZ" "$(basename "$IMG_PATH")" 2>/dev/null || cp -f "$IMG_PATH" "$TAR_GZ"
     )
 

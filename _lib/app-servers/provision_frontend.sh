@@ -65,20 +65,61 @@ app_dir=$(cd -- "$app_dir" && pwd)
 webroot_base="$app_dir/webroot"
 mkdir -p "$webroot_base"
 
+# ## hydrate_frontend_node_env
+# Hydrates PATH and environment files (.env, .env.secrets, .env.libscript, and LibScript nodejs env.sh).
+hydrate_frontend_node_env() {
+  _hfn_app="$1"
+  for _hfn_ef in "$_hfn_app/.env" "$_hfn_app/.env.secrets" "$_hfn_app/.env.libscript"; do
+    if [ -f "$_hfn_ef" ]; then
+      set -a
+      # shellcheck disable=SC1090
+      . "$_hfn_ef" 2>/dev/null || true
+      set +a
+    fi
+  done
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
+    STACK="" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" >/dev/null 2>&1 || true
+  fi
+  PATH="${SERVICE_EXTRA_PATH:-$HOME/.local/bin}:${PATH}"
+  export PATH
+}
+
+# ## stamp_bundle_utc
+# Replaces placeholder UTC timestamps (YYYY-MM-DD HH:MM:SS UTC) in compiled JS bundles with the current UTC build timestamp.
+stamp_bundle_utc() {
+  _sbu_dir="$1"
+  [ -d "$_sbu_dir" ] || return 0
+  _sbu_utc=$(date -u '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || true)
+  [ -n "$_sbu_utc" ] || return 0
+  find "$_sbu_dir" -type f -name '*.js' 2>/dev/null | while IFS= read -r _sbu_f; do
+    [ -f "$_sbu_f" ] || continue
+    if grep -q '20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] UTC' "$_sbu_f" 2>/dev/null; then
+      _sbu_tmp="${_sbu_f}.tmp.$$"
+      if sed -E "s/20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} UTC/${_sbu_utc}/g" "$_sbu_f" > "$_sbu_tmp" 2>/dev/null; then
+        mv "$_sbu_tmp" "$_sbu_f"
+      else
+        rm -f "$_sbu_tmp"
+      fi
+    fi
+  done
+}
+
 # ## compute_frontend_fingerprint
-# Computes a deterministic checksum over package.json, lockfiles, and src/ for build cache validation.
+# Computes a deterministic checksum over package.json, lockfiles, configs, index.html, src/, and public/ for build cache validation.
 compute_frontend_fingerprint() {
   _cff_dir="$1"
   (
     cd "$_cff_dir" 2>/dev/null || exit 0
-    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js tsconfig.json; do
+    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js vite.config.mts tsconfig.json tsconfig.app.json tsconfig.spec.json index.html postcss.config.js postcss.config.cjs tailwind.config.js tailwind.config.ts .env .env.production; do
       if [ -f "$_cff_f" ]; then
         cksum "$_cff_f" 2>/dev/null || true
       fi
     done
-    if [ -d "src" ]; then
-      find src -type f -exec cksum {} + 2>/dev/null | sort || true
-    fi
+    for _cff_sub in src public; do
+      if [ -d "$_cff_sub" ]; then
+        find "$_cff_sub" -type f -exec cksum {} + 2>/dev/null | sort || true
+      fi
+    done
   ) | cksum | awk '{print $1"_"$2}'
 }
 
@@ -247,6 +288,7 @@ run_kmp_gradle_build() {
 }
 
 # 1. Root-level dependency resolution if package.json is in app_dir
+hydrate_frontend_node_env "$app_dir"
 install_node_deps "$app_dir"
 
 # 2. Frontend / MFE / KMP Compilation
@@ -319,15 +361,31 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       elif [ -f "$src_dir/package.json" ]; then
+        hydrate_frontend_node_env "$app_dir"
+        if [ -z "$framework" ]; then
+          if [ -f "$src_dir/angular.json" ]; then
+            framework='angular'
+          elif [ -f "$src_dir/vite.config.ts" ] || [ -f "$src_dir/vite.config.js" ] || [ -f "$src_dir/vite.config.mts" ]; then
+            framework='vite'
+          fi
+        fi
         if [ "$src_dir" != "$app_dir" ] || [ -n "$inst_cmd" ]; then
           install_node_deps "$src_dir" "$inst_cmd"
         fi
         _fe_fp=$(compute_frontend_fingerprint "$src_dir")
-        if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && { [ ! -f "${src_dir}/.libscript_build.sha256" ] || [ "$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)" = "$_fe_fp" ]; }; then
-          printf '[REUSE] Frontend build for '\''%s'\'' in '\''%s'\'' is up-to-date.\n' "$svc_id" "$src_dir"
-          [ -f "${src_dir}/.libscript_build.sha256" ] || printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
+        _cached_fp=""
+        if [ -f "${src_dir}/.libscript_build.sha256" ]; then
+          _cached_fp=$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)
+        elif [ -f "${src_dir}/dist/.libscript_src_hash" ]; then
+          _cached_fp=$(cat "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true)
+        fi
+        if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; then
+          printf '[REUSE] Frontend build for '\''%s'\'' (%s) in '\''%s'\'' is up-to-date (hash %s).\n' "$svc_id" "${framework:-spa}" "$src_dir" "$_fe_fp"
+          printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
+          [ -d "${src_dir}/dist" ] && printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
         else
           printf '[BUILD] Building frontend '\''%s'\'' (%s) in '\''%s'\''...\n' "$svc_id" "${framework:-spa}" "$src_dir"
+          rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular/cache" "$src_dir/.vite" "$src_dir/.libscript_build.sha256"
           (
             cd "$src_dir"
             if [ -s "$_fe_env_file" ]; then
@@ -336,9 +394,13 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
             fi
             if [ -n "$build_cmd" ]; then
               sh -c "$build_cmd"
-            elif [ "$framework" = "angular" ] && [ -f "angular.json" ]; then
-              npx ng build
-            elif [ "$framework" = "vite" ]; then
+            elif [ "$framework" = "angular" ] || [ -f "angular.json" ]; then
+              if grep -q '"build"' "package.json"; then
+                npm run build
+              else
+                npx ng build
+              fi
+            elif [ "$framework" = "vite" ] || [ -f "vite.config.ts" ] || [ -f "vite.config.js" ] || [ -f "vite.config.mts" ]; then
               if grep -q '"build"' "package.json"; then
                 npm run build
               else
@@ -348,7 +410,9 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
               npm run build
             fi
           )
+          stamp_bundle_utc "$src_dir/dist"
           printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
+          [ -d "${src_dir}/dist" ] && printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
         fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       else

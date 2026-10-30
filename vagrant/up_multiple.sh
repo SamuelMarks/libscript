@@ -33,7 +33,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   exit 0
 fi
 
-DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 VAGRANT_IMAGE_DIR="${VAGRANT_IMAGE_DIR:-k8s-thw-debian}"
 VAGRANT_N="${VAGRANT_N:-3}"
