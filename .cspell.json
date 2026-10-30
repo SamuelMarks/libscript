@@ -2430,7 +2430,9 @@
     "subexpression",
     "MICROFRONTEND",
     "Workstream",
-    "workstream"
+    "workstream",
+    "overhangio",
+    "gradebook"
   ],
   "ignorePaths": [
     "node_modules",

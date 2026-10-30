@@ -178,6 +178,65 @@ prune_archive() {
   esac
 }
 
+# ## build_mfe_bundle_from_oci
+# Synthesizes mfe-bundle-verawood.1.tar.gz from verified overhangio/openedx-mfe:19.0.0 OCI layer blobs when the GitHub release asset is not yet published.
+build_mfe_bundle_from_oci() {
+  _mfe_dest="$1"
+  log_info '[FALLBACK] [DemoContent] Synthesizing mfe-bundle from verified overhangio/openedx-mfe:19.0.0 OCI layers...'
+  _mfe_tmp="$(dirname "$_mfe_dest")/_tmp_mfe_oci_$$"
+  rm -rf "$_mfe_tmp"
+  mkdir -p "$_mfe_tmp"
+
+  _token=""
+  if command -v jq >/dev/null 2>&1; then
+    _token=$(curl -fsSL 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:overhangio/openedx-mfe:pull' 2>/dev/null | jq -r '.token // empty' || true) # libscript-allow-raw-fetch
+  fi
+  if [ -z "$_token" ]; then
+    rm -rf "$_mfe_tmp"
+    return 1
+  fi
+
+  for _digest in \
+    2e4aa03b614b7c8f62b75afbc7fa0587f573ccf3768e9b2260b6e742853aa075 \
+    32c65588b8a1f1f90a8c5984f31e04d499b191704456722c00e53eaaa55c73da \
+    6c7edb2ee24e18314f00a8229f18dd23b59ae0c521cd6557f4358eacf5a89e29 \
+    fca2b76a71dc5bbeeb59c1639d116f82b287904c6684691cf04b6bdd86c07cf9 \
+    5d5124879ddd05a1469cbf1162d5c8511736b9472e77757e76eb0d7956f8d34e \
+    95232e6c3f4956551f226ef7dff70abe10950f50061755bf74f9a2f6b90cde47 \
+    566e6123c7b9e5616599c5f09da3d7f288ed283f1e96714cead02ad8c3d855a6 \
+    d2e9858ca1ac6d4979357be2d21a869ae8d2f053655b7c171d79c0e46788ce4b \
+    00667c1f99367e7e3b33ac84233895feb945b7fb7bd24817c24fc3869db0bef9 \
+    59561b40d8ad8c203854417851db6afa51a2fbbc84960242ac58f3f44e4184ef; do
+    _blob="${_mfe_tmp}/${_digest}.tar.gz"
+    if ! curl -fsSL -L -H "Authorization: Bearer ${_token}" "https://registry-1.docker.io/v2/overhangio/openedx-mfe/blobs/sha256:${_digest}" -o "$_blob" 2>/dev/null; then # libscript-allow-raw-fetch
+      rm -rf "$_mfe_tmp"
+      return 1
+    fi
+    _blob_hash=$(compute_sha256 "$_blob")
+    if [ "$_blob_hash" != "$_digest" ]; then
+      log_error "OCI layer SHA-256 mismatch for $_digest"
+      rm -rf "$_mfe_tmp"
+      return 1
+    fi
+    tar -xzf "$_blob" -C "$_mfe_tmp" --strip-components=2 --exclude='*.map' --exclude='*report.html' 2>/dev/null || true
+    rm -f "$_blob"
+  done
+
+  if [ ! -d "${_mfe_tmp}/authn" ] || [ ! -d "${_mfe_tmp}/authoring" ]; then
+    rm -rf "$_mfe_tmp"
+    return 1
+  fi
+
+  (cd "$_mfe_tmp" && tar -czf "$_mfe_dest" account authn authoring communications discussions gradebook learner-dashboard learning ora-grading profile)
+  rm -rf "$_mfe_tmp"
+  if [ -s "$_mfe_dest" ]; then
+    printf 'pruned\n' > "${_mfe_dest}.pruned"
+    log_info "[STORED] [DemoContent] Synthesized and verified $(basename "$_mfe_dest") from OCI layers."
+    return 0
+  fi
+  return 1
+}
+
 # ## process_artifact
 # Idempotently checks or downloads an artifact and validates its SHA-256 digest.
 process_artifact() {
@@ -222,6 +281,13 @@ process_artifact() {
     . "${SCRIPT_NAME}"
   fi
   if ! libscript_download "$_url" "$_dest" "SKIP"; then
+    case "$(basename "$_dest")" in
+      mfe-bundle*.tar.gz)
+        if build_mfe_bundle_from_oci "$_dest"; then
+          return 0
+        fi
+        ;;
+    esac
     log_error "Failed to download $_url"
     return 1
   fi

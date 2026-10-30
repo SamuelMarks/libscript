@@ -295,7 +295,7 @@ audit_single_file() {
       log_failure "$file" "WINDOWS_PARITY" "Missing Windows batch equivalent file ('$cmd_equiv') for PowerShell script."
     fi
     ps1_violations=$(awk '
-      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; allow_fetch_next = 0 }
+      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; bare_cmd_hits = ""; allow_fetch_next = 0 }
       { sub(/\r$/, "", $0) }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
@@ -329,6 +329,9 @@ audit_single_file() {
           if ($0 ~ /[A-Za-z0-9_-]+[[:space:]]+[^#;\r\n]*[^$]\([[:space:]]*(if|switch|foreach|for|while|try)[[:space:]]*\(/) {
             paren_kw_hits = (paren_kw_hits ? paren_kw_hits "; " : "") NR ":" $0
           }
+          if ($0 ~ /(^|[[:space:]}])(if|elseif|while)[[:space:]]*\([[:space:]]*[A-Za-z]+-[A-Za-z]+[^()\r\n]*[[:space:]]-(and|or|xor|eq|ne|gt|ge|lt|le|match|notmatch|like|notlike)([[:space:]]|$)/) {
+            bare_cmd_hits = (bare_cmd_hits ? bare_cmd_hits "; " : "") NR ":" $0
+          }
         }
         allow_fetch_next = 0
       }
@@ -342,6 +345,7 @@ audit_single_file() {
         if (bs_quote_hits != "") print "PS1_SYNTAX|C-style backslash quote escape found in PowerShell script (use backtick or double quotes): " bs_quote_hits
         if (static_arg_hits != "") print "PS1_SYNTAX|Unparenthesized static method call passed as command argument: " static_arg_hits
         if (paren_kw_hits != "") print "PS1_SYNTAX|Statement keyword inside (...) instead of $(...) subexpression: " paren_kw_hits
+        if (bare_cmd_hits != "") print "PS1_SYNTAX|Unparenthesized cmdlet call followed by operator in condition (wrap cmdlet call in parentheses): " bare_cmd_hits
       }
     ' "$file" 2>/dev/null || true)
     if [ -n "$ps1_violations" ]; then

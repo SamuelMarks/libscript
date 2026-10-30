@@ -190,6 +190,13 @@ function Audit-File {
                 if ($cName -in @("if", "else", "elseif", "switch", "foreach", "for", "while", "do", "try", "catch", "finally", "return", "throw", "trap", "function", "filter", "workflow", "class", "enum")) {
                     Log-Violation -File $FilePath -Rule "PS1_SYNTAX" -Details "Line $($cn.Extent.StartLineNumber): Keyword '$cName' invoked as command (use `$($cName ...) subexpression)."
                 }
+                foreach ($ce in $cn.CommandElements) {
+                    if ($ce -is [System.Management.Automation.Language.CommandParameterAst]) {
+                        if ($ce.ParameterName -in @("and", "or", "xor", "eq", "ne", "gt", "ge", "lt", "le", "match", "notmatch", "like", "notlike")) {
+                            Log-Violation -File $FilePath -Rule "PS1_SYNTAX" -Details "Line $($ce.Extent.StartLineNumber): Operator '-$($ce.ParameterName)' parsed as command parameter on '$cName' (wrap '$cName ...' in parentheses)."
+                        }
+                    }
+                }
             }
         }
         if ($FilePath -notmatch '(audit_standards|doc_coverage|update_results|generate_html_docs)\.ps1$') {

@@ -81,7 +81,7 @@ EOF
 
   _active_id=""
   if [ -f "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" ]; then
-    _active_id=$(cat "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" 2>/dev/null | tr -d '\r\n' || true)
+    _active_id=$(tr -d '\r\n' < "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" 2>/dev/null || true)
   fi
   DISK_IMG=""
   if [ -n "$_active_id" ] && [ -f "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/${_active_id}/linked-box.img" ]; then

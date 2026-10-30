@@ -144,3 +144,13 @@ https://files.pythonhosted.org/packages/6b/03/2cb0e5326e19b7d877bc9c3a7ef436a30a
 https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl 81921eb96de3191c8258c199618104dd27ac608d9366f5e35d011eae1867ede2
 https://github.com/openedx/openedx-platform/archive/refs/tags/release/verawood.1.zip 830914c1dba85c24f67934d27f0b03bf2ec75afa8b6ddf7d9fd9b57bb46d7c3f
 https://github.com/openedx/edx-demo-course/archive/refs/heads/master.tar.gz b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435
+https://github.com/SamuelMarks/libscript/releases/download/v0.0.1/mfe-bundle-verawood.1.tar.gz 185a3ed211b64f88013b837bf9f4554f5587dc9452544973db31c964311b11a1
+https://archive.mariadb.org/mariadb-11.4.2/winx64-packages/mariadb-11.4.2-winx64.zip 27dac2ce34b12b812b2b672cb12c23ccbb4139d410c5b557e5f0958f0a693488
+https://download.nextcloud.com/server/releases/nextcloud-28.0.6.zip aab2825ea4c23ee0fdb6adb6bccaa909ca5cf4a2f0f79fe253e11a0d00149247
+https://ftp.drupal.org/files/projects/drupal-10.2.0.tar.gz 4a9900ba59f4187ed7a095269cb108d8667bc7cc44de57a831482ee382eaf976
+https://github.com/go-gitea/gitea/releases/download/v1.21.11/gitea-1.21.11-windows-4.0-amd64.exe 498e2e6d00ccd9c94dc1c6ce204df897722b4b6113524853829c6dcb48532e5c
+https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php 2fd7e6d8f987b243ab1839249551f62adce19704c47d3d0c8dd9e57ea5b9c6b3
+https://github.com/wp-cli/wp-cli/releases/download/v2.10.0/wp-cli-2.10.0.phar 4c6a93cecae7f499ca481fa7a6d6d4299c8b93214e5e5308e26770dbfd3631df
+https://nginx.org/download/nginx-1.26.1.zip ef5c17da86578ad5f26cb93271603a1ea8a88d6e9120092a52cb286449f49493
+https://windows.php.net/downloads/releases/archives/php-8.2.20-nts-Win32-vs16-x64.zip 6cb748f1e867d85e7de9ff0338a9c05e1ed9b4b4aeea76afd79aa208d44c2e9f
+https://wordpress.org/wordpress-6.6.2.tar.gz 2697a68cb3dcf483f4fce8804925698c7466401b369fc32de2707a59c4c207d6

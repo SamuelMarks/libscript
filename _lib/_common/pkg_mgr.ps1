@@ -132,7 +132,7 @@ function libscript_download {
             Remove-Item $cacheFile -Force
             return
         }
-    } elseif (Test-Path $cacheFile -and $env:LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB -ne "1") {
+    } elseif ((Test-Path $cacheFile) -and ($env:LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB -ne "1")) {
         $actualChecksum = (Get-FileHash -Path $cacheFile -Algorithm SHA256).Hash.ToLower()
         $checksumEntry = "$Url $actualChecksum"
         $shouldAppend = $true
