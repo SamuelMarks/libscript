@@ -26,16 +26,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TARGET='all'
 OS_LIST='all'
@@ -619,8 +616,12 @@ def render_stage(dlg_name, overrides, out_paths, os_tag):
     draw.rectangle([0, 0, W - 1, H - 1], outline=(110, 110, 110), width=1)
 
     for p in out_paths:
-        if os_tag == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and os.path.exists(p) and os.path.getsize(p) > 5000:
-            continue
+        if os_tag == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1":
+            if os.path.exists(p) and os.path.getsize(p) > 5000:
+                continue
+            if target == "openedx":
+                sys.stderr.write(f"[ERROR] Live Windows wizard screenshot missing at '{p}'. Run devtools/capture_openedx_vagrant_screenshots.sh first.\n")
+                sys.exit(1)
         im.save(p, "PNG")
 
 wcopy = pkg_meta.get("wizard_copy", {})

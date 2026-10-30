@@ -330,6 +330,33 @@ public class Win32Helper {
         string cleanTitle = NormalizeText(titlePart);
         EnumWindows((hWnd, lParam) => {
             if (!IsInstallerWindow(hWnd)) return true;
+            bool isSuspendedPopup = false;
+            IntPtr yesBtn = IntPtr.Zero;
+            EnumChildWindows(hWnd, (hChild, lChildParam) => {
+                if (!IsWindowVisible(hChild)) return true;
+                StringBuilder csb = new StringBuilder(256);
+                GetWindowText(hChild, csb, 256);
+                string cleanCs = NormalizeText(csb.ToString());
+                if (cleanCs.IndexOf("currently suspended", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    cleanCs.IndexOf("undo those changes", StringComparison.OrdinalIgnoreCase) >= 0) {
+                    isSuspendedPopup = true;
+                }
+                StringBuilder clsb = new StringBuilder(256);
+                GetClassName(hChild, clsb, 256);
+                if (clsb.ToString().IndexOf("Button", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                    cleanCs.Equals("Yes", StringComparison.OrdinalIgnoreCase)) {
+                    yesBtn = hChild;
+                }
+                return true;
+            }, IntPtr.Zero);
+            if (isSuspendedPopup && yesBtn != IntPtr.Zero) {
+                SetForegroundWindow(hWnd);
+                SendMessage(yesBtn, BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+                int ctrlId = GetDlgCtrlID(yesBtn);
+                SendMessage(hWnd, WM_COMMAND, (IntPtr)((BN_CLICKED << 16) | (ctrlId & 0xFFFF)), yesBtn);
+                SafeLog("Auto-dismissed suspended installation popup with Yes");
+                return true;
+            }
             StringBuilder sb = new StringBuilder(256);
             GetWindowText(hWnd, sb, 256);
             string cleanWin = NormalizeText(sb.ToString());

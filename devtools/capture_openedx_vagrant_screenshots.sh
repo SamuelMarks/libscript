@@ -79,7 +79,17 @@ EOF
       printf '[ERROR] QEMU Monitor socket not found in ~/.vagrant.d/tmp. VM might not be running.\n' >&2
   fi
 
-  DISK_IMG=$(find -L "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
+  _active_id=""
+  if [ -f "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" ]; then
+    _active_id=$(cat "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" 2>/dev/null | tr -d '\r\n' || true)
+  fi
+  DISK_IMG=""
+  if [ -n "$_active_id" ] && [ -f "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/${_active_id}/linked-box.img" ]; then
+    DISK_IMG="${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/${_active_id}/linked-box.img"
+  fi
+  if [ -z "$DISK_IMG" ]; then
+    DISK_IMG=$(find -L "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
+  fi
   if [ -z "$DISK_IMG" ]; then
     DISK_IMG=$(find -L "${VAGRANT_DIR}/.vagrant" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
   fi
@@ -241,6 +251,7 @@ vm_wait_dialog() {
 vm_launch_msi() {
   _msi_fwd="$1"
   _msi_path="$(echo "$1" | sed 's|/|\\|g')"
+  vm_run 'Remove-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\InProgress", "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Rollback" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -Path "C:\Config.Msi" -Recurse -Force -ErrorAction SilentlyContinue'
   vm_run "if (-not (Test-Path '${_msi_fwd}')) { Write-Error 'MSI missing'; exit 1 }; if ((Get-Item '${_msi_fwd}').Length -lt 10240) { Write-Error 'MSI invalid/empty'; exit 1 }; Unblock-File -Path '${_msi_fwd}' -ErrorAction SilentlyContinue"
   vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument \"/i \`\"${_msi_path}\`\" /l*v \`\"C:\libscript\msi_debug.log\`\"\"; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
 }
@@ -278,10 +289,18 @@ register_gui_task() {
 # Rsyncs the libscript repository and MSIs to C:\libscript on the Windows guest.
 sync_guest_environment() {
   printf '=== Syncing assets and MSIs to Windows guest ===\n'
+  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/cache" -Force -ErrorAction SilentlyContinue | Out-Null'
   if [ -d "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets" ]; then
     scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets/"* vagrant@127.0.0.1:C:/libscript/packaging/assets/
   fi
-  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" vagrant@127.0.0.1:C:/libscript/packaging/
+  if [ -d "${REPO_ROOT}/cache" ]; then
+    scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/cache/"* vagrant@127.0.0.1:C:/libscript/cache/
+  fi
+  scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/_lib/web-apps/openedx/"* vagrant@127.0.0.1:C:/libscript/_lib/web-apps/openedx/
+  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/build_msi.cmd" "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" "${REPO_ROOT}/packaging/create_desktop_shortcuts.cmd" "${REPO_ROOT}/packaging/open_browser.ps1" "${REPO_ROOT}/packaging/click_button.ps1" vagrant@127.0.0.1:C:/libscript/packaging/
+  if [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" ] && [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" vagrant@127.0.0.1:C:/libscript/packaging/
+  fi
   register_gui_task
 }
 
@@ -432,6 +451,19 @@ run_msi_mode_flows() {
   launch_browser_url "http://localhost:8000/login" "http://localhost:8001/authoring/home" "edx_admin" "edx_password_2026!" "1"
   capture_screen "11c_browser_lms_custom_loggedin" "BROWSER"
   vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
+
+  for _browser_step in 11_browser_lms_focused 12_browser_studio_focused 13_browser_lms_authenticated 14_browser_studio_authenticated; do
+    if [ -f "${CC0_SCREENSHOTS_DIR}/${_browser_step}.png" ]; then
+      cp -f "${CC0_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_SCREENSHOTS_DIR}/${_var}_${_browser_step}.png"
+    fi
+    if [ -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_browser_step}.png" ]; then
+      cp -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_var}_${_browser_step}.png"
+    fi
+  done
+
+  printf '\n[INFO] Verifying Strict Idempotency (Re-running Open edX setup.cmd install on live Custom Install)...\n'
+  vm_run 'cmd.exe /c "call C:\libscript\_lib\web-apps\openedx\setup.cmd install --offline=1 --install-dir=C:\OpenEdX\app"'
+  verify_openedx_endpoints "${_var} - Idempotent Re-Run"
 }
 
 # ## restore_vanilla_snapshot
@@ -471,6 +503,7 @@ discover_environment
 wait_for_ssh
 
 # --- Step 0: Snapshot / Rollback to Vanilla Windows 11 ---
+if [ "${ONLY_BROWSER_STEPS:-0}" != "1" ]; then
 printf '\n=======================================================\n'
 printf '=== Step 0: Snapshot / Rollback to Vanilla Windows 11 ===\n'
 printf '=======================================================\n'
@@ -488,44 +521,63 @@ if [ -n "$DISK_IMG" ] && [ -f "$DISK_IMG" ]; then
     restore_vanilla_snapshot
   fi
 fi
+fi
 
 # --- Build Offline & Online MSIs on Vagrant with msi-rs (without --use-wix) ---
-printf '\n=======================================================\n'
-printf '=== Building Open edX MSIs (Offline & Online) via msi-rs on Vagrant ===\n'
-printf '=======================================================\n'
-if [ -d "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets" ]; then
-  scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets/"* vagrant@127.0.0.1:C:/libscript/packaging/assets/
+if [ "${SKIP_MSI_BUILD:-0}" = "1" ] && [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" ] && [ -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" ]; then
+  printf '\n[INFO] Reusing existing built MSIs in packaging/...\n'
+  sync_guest_environment
+else
+  printf '\n=======================================================\n'
+  printf '=== Building Open edX MSIs (Offline & Online) via msi-rs on Vagrant ===\n'
+  printf '=======================================================\n'
+  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/cache/codebase", "C:/Users/vagrant/.libscript/msi-rs/v0.0.1/bin" -Force -ErrorAction SilentlyContinue | Out-Null'
+  if [ -d "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets" ]; then
+    scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets/"* vagrant@127.0.0.1:C:/libscript/packaging/assets/
+  fi
+  scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/_lib/web-apps/openedx/"* vagrant@127.0.0.1:C:/libscript/_lib/web-apps/openedx/
+  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/build_msi.cmd" "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" "${REPO_ROOT}/packaging/create_desktop_shortcuts.cmd" "${REPO_ROOT}/packaging/open_browser.ps1" "${REPO_ROOT}/packaging/click_button.ps1" vagrant@127.0.0.1:C:/libscript/packaging/
+  if [ -d "${REPO_ROOT}/cache" ]; then
+    scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/cache/"* vagrant@127.0.0.1:C:/libscript/cache/
+  elif [ -f "/Users/samuel/.gemini/tmp/libscript/mfe_test/mfe-bundle-verawood.1.tar.gz" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "/Users/samuel/.gemini/tmp/libscript/mfe_test/mfe-bundle-verawood.1.tar.gz" vagrant@127.0.0.1:C:/libscript/cache/codebase/mfe-bundle-verawood.1.tar.gz
+  fi
+  if [ -d "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/candle.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/light.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msiinfo.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msi-cli.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/wix.exe" vagrant@127.0.0.1:C:/Users/vagrant/.libscript/msi-rs/v0.0.1/bin/
+  fi
+  # shellcheck disable=SC2016
+  vm_run '$env:PATH += ";" + $env:USERPROFILE + "\.libscript\msi-rs\default\bin;" + $env:USERPROFILE + "\.libscript\msi-rs\v0.0.1\bin"; cd C:\libscript; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --online --out C:\libscript\packaging\OpenEdX-Setup"; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --offline --out C:\libscript\packaging\openedx-verawood.1-x64-offline"; Copy-Item -Path "C:\libscript\packaging\openedx-verawood.1-x64-offline.msi" -Destination "C:\libscript\packaging\OpenEdX-Setup-Offline.msi" -Force'
+  mkdir -p "${REPO_ROOT}/build/packages/msi"
+  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup.msi "${REPO_ROOT}/packaging/OpenEdX-Setup.msi"
+  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/openedx-verawood.1-x64-offline.msi "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi"
+  cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi"
+  cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/build/packages/msi/openedx-verawood.1-x64-offline.msi"
 fi
-if [ -d "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release" ]; then
-  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/candle.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/light.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msiinfo.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msi-cli.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/wix.exe" vagrant@127.0.0.1:C:/Users/vagrant/.libscript/msi-rs/v0.0.1/bin/
+
+if [ "${ONLY_BROWSER_STEPS:-0}" != "1" ]; then
+if [ "${START_AT_ONLINE:-0}" != "1" ]; then
+  # --- Step 1: Install Open edX Offline Mode (Simple & Advanced) and Confirm It Works ---
+  printf '\n=======================================================\n'
+  printf '=== Step 1: Install Open edX Offline Mode (Simple & Advanced) ===\n'
+  printf '=======================================================\n'
+  register_gui_task
+  run_msi_mode_flows "offline" "C:/libscript/packaging/OpenEdX-Setup-Offline.msi"
+
+  # --- Step 2: Restore Snapshot ---
+  printf '\n=======================================================\n'
+  printf '=== Step 2: Restore Vanilla Snapshot ===\n'
+  printf '=======================================================\n'
+  restore_vanilla_snapshot
+  sync_guest_environment
 fi
-# shellcheck disable=SC2016
-vm_run '$env:PATH += ";" + $env:USERPROFILE + "\.libscript\msi-rs\default\bin;" + $env:USERPROFILE + "\.libscript\msi-rs\v0.0.1\bin"; cd C:\libscript; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --online --out C:\libscript\packaging\OpenEdX-Setup"; cmd.exe /c "packaging\build_msi.cmd _lib\web-apps\openedx --offline --out C:\libscript\packaging\openedx-verawood.1-x64-offline"; Copy-Item -Path "C:\libscript\packaging\openedx-verawood.1-x64-offline.msi" -Destination "C:\libscript\packaging\OpenEdX-Setup-Offline.msi" -Force'
-mkdir -p "${REPO_ROOT}/build/packages/msi"
-scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup.msi "${REPO_ROOT}/packaging/OpenEdX-Setup.msi"
-scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" vagrant@127.0.0.1:C:/libscript/packaging/openedx-verawood.1-x64-offline.msi "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi"
-cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi"
-cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/build/packages/msi/openedx-verawood.1-x64-offline.msi"
-
-# --- Step 1: Install Open edX Offline Mode (Simple & Advanced) and Confirm It Works ---
-printf '\n=======================================================\n'
-printf '=== Step 1: Install Open edX Offline Mode (Simple & Advanced) ===\n'
-printf '=======================================================\n'
-register_gui_task
-run_msi_mode_flows "offline" "C:/libscript/packaging/OpenEdX-Setup-Offline.msi"
-
-# --- Step 2: Restore Snapshot ---
-printf '\n=======================================================\n'
-printf '=== Step 2: Restore Vanilla Snapshot ===\n'
-printf '=======================================================\n'
-restore_vanilla_snapshot
-sync_guest_environment
 
 # --- Step 3: Install Open edX Online Mode (Simple & Advanced) and Confirm It Works ---
 printf '\n=======================================================\n'
 printf '=== Step 3: Install Open edX Online Mode (Simple & Advanced) ===\n'
 printf '=======================================================\n'
+register_gui_task
 run_msi_mode_flows "online" "C:/libscript/packaging/OpenEdX-Setup.msi"
+fi
 
 # --- Steps 4 - 7: Browser Verification Tabs (Cropped to Browser Window) ---
 printf '\n=======================================================\n'
@@ -534,23 +586,25 @@ printf '=======================================================\n'
 
 # Step 4: browser tab (CMS)
 printf '\n[INFO] Step 4: Opening Studio CMS (:8001/signin) in Browser...\n'
-launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/login" "admin@openedx.local" "edx_password_2026!" "0"
+launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/login" "edx_admin" "edx_password_2026!" "0"
 capture_screen "12_browser_studio_focused" "BROWSER"
 
 # Step 5: browser tab (LMS)
 printf '\n[INFO] Step 5: Opening LMS Portal (:8000/login) in Browser...\n'
-launch_browser_url "http://localhost:8000/login" "http://localhost:8001/signin" "admin@openedx.local" "edx_password_2026!" "0"
+launch_browser_url "http://localhost:8000/login" "http://localhost:8001/signin" "edx_admin" "edx_password_2026!" "0"
 capture_screen "11_browser_lms_focused" "BROWSER"
 
 # Step 6: logged in browser tab (CMS)
 printf '\n[INFO] Step 6: Logging in to Studio CMS Dashboard (:8001/signin -> /home/) in Browser...\n'
-launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/dashboard" "admin@openedx.local" "edx_password_2026!" "1"
+launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/dashboard" "edx_admin" "edx_password_2026!" "1"
 capture_screen "14_browser_studio_authenticated" "BROWSER"
+capture_screen "12c_browser_studio_custom_loggedin" "BROWSER"
 
 # Step 7: logged in browser tab (LMS)
 printf '\n[INFO] Step 7: Logging in to LMS Dashboard (:8000/login -> /dashboard) in Browser...\n'
-launch_browser_url "http://localhost:8000/login" "http://localhost:8001/home/" "admin@openedx.local" "edx_password_2026!" "1"
+launch_browser_url "http://localhost:8000/login" "http://localhost:8001/home/" "edx_admin" "edx_password_2026!" "1"
 capture_screen "13_browser_lms_authenticated" "BROWSER"
+capture_screen "11c_browser_lms_custom_loggedin" "BROWSER"
 
 if [ -d "${CC0_SCREENSHOTS_DIR}" ]; then
   for _browser_step in 11_browser_lms_focused 12_browser_studio_focused 13_browser_lms_authenticated 14_browser_studio_authenticated; do

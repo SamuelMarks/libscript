@@ -178,7 +178,7 @@
     }
   ],
   "source_repository": {
-    "default_url": "https://github.com/openedx/openedx-platform.git",
+    "default_url": "https://github.com/openedx/edx-platform.git",
     "default_branch": "release/verawood.1",
     "presets": [
       {

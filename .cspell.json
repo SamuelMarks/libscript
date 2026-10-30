@@ -2427,7 +2427,10 @@
     "recognise",
     "sequentials",
     "sitecustomize",
-    "subexpression"
+    "subexpression",
+    "MICROFRONTEND",
+    "Workstream",
+    "workstream"
   ],
   "ignorePaths": [
     "node_modules",

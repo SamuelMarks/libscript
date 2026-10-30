@@ -1042,20 +1042,19 @@ def login_session_api(request):
     User = get_user_model()
     user = authenticate(request, username=ident, password=pwd)
     if not user and ident:
-        by_email = User.objects.filter(email__iexact=ident).first()
-        if by_email:
-            user = authenticate(request, username=by_email.username, password=pwd)
-            if not user and by_email.check_password(pwd):
-                user = by_email
+        for cand in User.objects.filter(email__iexact=ident):
+            u_auth = authenticate(request, username=cand.username, password=pwd)
+            if u_auth:
+                user = u_auth
+                break
+            if cand.check_password(pwd) or (pwd.endswith("!") and cand.check_password(pwd.rstrip("!"))):
+                user = cand
+                break
     if not user and ident:
-        by_name = User.objects.filter(username__iexact=ident).first()
-        if by_name:
-            if by_name.check_password(pwd) or (pwd.endswith("!") and by_name.check_password(pwd.rstrip("!"))):
-                user = by_name
-    if not user and ident and pwd.endswith("!"):
-        by_email = User.objects.filter(email__iexact=ident).first()
-        if by_email and by_email.check_password(pwd.rstrip("!")):
-            user = by_email
+        for cand in User.objects.filter(username__iexact=ident):
+            if cand.check_password(pwd) or (pwd.endswith("!") and cand.check_password(pwd.rstrip("!"))):
+                user = cand
+                break
     if not user:
         return _cors(
             request,
@@ -1498,7 +1497,27 @@ print('[OK] Seeded Open edX superuser accounts in SQLite database.')
 
 try {
     $desktopDirs = @("C:\Users\Public\Desktop", "$env:USERPROFILE\Desktop")
+    Get-ChildItem -Path "C:\Users" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+        $uDesk = Join-Path $_.FullName "Desktop"
+        if ((Test-Path $uDesk) -and ($desktopDirs -notcontains $uDesk)) {
+            $desktopDirs += $uDesk
+        }
+    }
+    $assetCandidates = @(
+        (Join-Path $InstallDir "libscript\packaging\assets"),
+        (Join-Path $InstallDir "packaging\assets"),
+        "C:\Program Files (x86)\OpenEdX\libscript\packaging\assets",
+        "C:\Program Files\OpenEdX\libscript\packaging\assets",
+        "C:\OpenEdX\app\libscript\packaging\assets",
+        "C:\libscript\packaging\assets"
+    )
     $assetsDir = "C:\libscript\packaging\assets"
+    foreach ($ac in $assetCandidates) {
+        if (Test-Path (Join-Path $ac "openedx_lms.ico")) {
+            $assetsDir = $ac
+            break
+        }
+    }
     $browserExe = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     if (-not (Test-Path $browserExe)) {
         $browserExe = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
@@ -1522,6 +1541,13 @@ try {
                 $lnk.TargetPath = $browserExe
                 $lnk.Arguments = "http://localhost:$cmsPortVal/authoring/home"
                 $lnk.IconLocation = (Join-Path $assetsDir "openedx_studio.ico") + ",0"
+                $lnk.Save()
+            }
+            if (Test-Path (Join-Path $assetsDir "openedx.ico")) {
+                $lnk = $wsh.CreateShortcut((Join-Path $d "Open edX Management Console.lnk"))
+                $lnk.TargetPath = "cmd.exe"
+                $lnk.Arguments = "/c call `"$InstallDir\libscript\_lib\web-apps\openedx\cli.cmd`""
+                $lnk.IconLocation = (Join-Path $assetsDir "openedx.ico") + ",0"
                 $lnk.Save()
             }
         }

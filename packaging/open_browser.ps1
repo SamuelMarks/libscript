@@ -13,7 +13,7 @@ param(
 )
 
 # 1. Kill any existing browser or terminal window and dismiss any system error dialogs
-Get-Process chrome, msedge, WindowsTerminal, OpenConsole, WerFault, mysqld -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Get-Process chrome, msedge, WindowsTerminal, OpenConsole, WerFault -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 if (Test-Path "C:\libscript\packaging\click_button.ps1") {
     Set-Content -Path "C:\libscript\target_btn.txt" -Value "CLICK:OK" -ErrorAction SilentlyContinue
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\libscript\packaging\click_button.ps1" 2>$null | Out-Null
@@ -84,7 +84,8 @@ if ($Username -or $SubmitLogin) {
                 $pEsc = $Password.Replace("'", "\'")
                 $doSubmit = if ($SubmitLogin) { "true" } else { "false" }
                 $js = @"
-(function() {
+new Promise(function(resolve) {
+    var attempts = 0;
     function setReactVal(el, val) {
         if (!el) return;
         el.focus();
@@ -98,30 +99,41 @@ if ($Username -or $SubmitLogin) {
         el.dispatchEvent(new Event('change', { bubbles: true }));
         el.blur();
     }
-    var u = document.querySelector('input[name="emailOrUsername"], #login-email, input[name="email"], input[name="email_or_username"], #user_login, input[type="email"], input[type="text"]');
-    var p = document.querySelector('input[name="password"], #login-password, #user_pass, input[type="password"]');
-    if (u && '$uEsc') {
-        setReactVal(u, '$uEsc');
+    function tryFill() {
+        var u = document.querySelector('input[name="emailOrUsername"], #login-email, input[name="email"], input[name="email_or_username"], #user_login, input[type="email"], input[type="text"]');
+        var p = document.querySelector('input[name="password"], #login-password, #user_pass, input[type="password"]');
+        if ((!u || !p) && attempts < 20) {
+            attempts++;
+            setTimeout(tryFill, 300);
+            return;
+        }
+        if (u && '$uEsc') {
+            setReactVal(u, '$uEsc');
+        }
+        if (p && '$pEsc') {
+            setReactVal(p, '$pEsc');
+        }
+        if ($doSubmit) {
+            setTimeout(function() {
+                var btn = document.querySelector('#sign-in, button[name="sign-in"], button[type="submit"], input[type="submit"], .login-button, .action-primary');
+                if (btn) { btn.click(); }
+                else if (u && u.form) { u.form.submit(); }
+                resolve(true);
+            }, 250);
+        } else {
+            resolve(true);
+        }
     }
-    if (p && '$pEsc') {
-        setReactVal(p, '$pEsc');
-    }
-    if ($doSubmit) {
-        setTimeout(function() {
-            var btn = document.querySelector('#sign-in, button[name="sign-in"], button[type="submit"], input[type="submit"], .login-button, .action-primary');
-            if (btn) { btn.click(); }
-            else if (u && u.form) { u.form.submit(); }
-        }, 150);
-    }
-})();
+    tryFill();
+});
 "@
                 Invoke-CdpEval -WsUrl $t.webSocketDebuggerUrl -JsExpr $js
             }
         }
         if ($SubmitLogin) {
-            Start-Sleep -Seconds 6
+            Start-Sleep -Seconds 8
         } else {
-            Start-Sleep -Seconds 2
+            Start-Sleep -Seconds 3
         }
     } catch {
     }

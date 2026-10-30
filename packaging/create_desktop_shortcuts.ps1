@@ -58,17 +58,41 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and ((Test-Path "$localAss
     $s4.Description = "WordPress Backup and Disaster Recovery Utility"
     $s4.Save()
 } else {
-    $iconPath = if (Test-Path "$cc0EdxAssets\openedx.ico") { "$cc0EdxAssets\openedx.ico" } else { "$localAssets\openedx.ico" }
-    $lmsIconPath = if (Test-Path "$cc0EdxAssets\openedx_lms.ico") { "$cc0EdxAssets\openedx_lms.ico" } else { "$localAssets\openedx_lms.ico" }
-    $cmsIconPath = if (Test-Path "$cc0EdxAssets\openedx_studio.ico") { "$cc0EdxAssets\openedx_studio.ico" } else { "$localAssets\openedx_studio.ico" }
-    if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = "$localAssets\openedx_cms.ico" }
-    if (-not (Test-Path $lmsIconPath)) { $lmsIconPath = $iconPath }
-    if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = $iconPath }
-
     $edxDir = "C:\Program Files\OpenEdX"
     if (-not (Test-Path $edxDir) -and (Test-Path "C:\Program Files (x86)\OpenEdX")) {
         $edxDir = "C:\Program Files (x86)\OpenEdX"
     }
+    if ((Test-Path "C:\ProgramData\OpenEdX\install_dir.txt")) {
+        $cfgInstallDir = (Get-Content -Path "C:\ProgramData\OpenEdX\install_dir.txt" -TotalCount 1 -ErrorAction SilentlyContinue).Trim()
+        if ($cfgInstallDir -and (Test-Path $cfgInstallDir)) {
+            $edxDir = $cfgInstallDir
+        }
+    }
+
+    $assetSearchDirs = @(
+        $cc0EdxAssets,
+        $localAssets,
+        (Join-Path $edxDir "libscript\packaging\assets"),
+        (Join-Path $edxDir "packaging\assets"),
+        (Join-Path $edxDir "assets"),
+        "C:\Program Files (x86)\OpenEdX\libscript\packaging\assets",
+        "C:\Program Files\OpenEdX\libscript\packaging\assets",
+        "C:\OpenEdX\app\libscript\packaging\assets",
+        "C:\libscript\packaging\assets"
+    )
+    function Find-AssetIcon([string[]]$FileNames) {
+        foreach ($dir in $assetSearchDirs) {
+            if (-not $dir) { continue }
+            foreach ($fn in $FileNames) {
+                $cand = Join-Path $dir $fn
+                if (Test-Path $cand) { return $cand }
+            }
+        }
+        return "shell32.dll"
+    }
+    $iconPath = Find-AssetIcon @("openedx.ico", "AppIcon.ico")
+    $lmsIconPath = Find-AssetIcon @("openedx_lms.ico", "LmsIcon.ico", "openedx.ico")
+    $cmsIconPath = Find-AssetIcon @("openedx_studio.ico", "openedx_cms.ico", "StudioIcon.ico", "openedx.ico")
 
     $s1 = $wsh.CreateShortcut((Join-Path $desktop "Open edX LMS.lnk"))
     $s1.TargetPath = "cmd.exe"

@@ -133,7 +133,7 @@ if "%THEME_NAME%"=="" set "THEME_NAME=none"
 if "%IMPORT_DEMO%"=="" set "IMPORT_DEMO=0"
 if "%ENABLE_WORKERS%"=="" set "ENABLE_WORKERS=1"
 if "%ENABLE_MFES%"=="" set "ENABLE_MFES=0"
-if "%REPO_URL%"=="" set "REPO_URL=https://github.com/openedx/openedx-platform.git"
+if "%REPO_URL%"=="" set "REPO_URL=https://github.com/openedx/edx-platform.git"
 if "%BRANCH%"=="" set "BRANCH=release/verawood.1"
 if "%MYSQL_HOST%"=="" set "MYSQL_HOST=127.0.0.1"
 if "%MYSQL_PORT%"=="" set "MYSQL_PORT=3306"
@@ -277,19 +277,19 @@ if "!ACTION!"=="install" (
         if "!LIBSCRIPT_FOLDER:~-1!"==" " set "LIBSCRIPT_FOLDER=!LIBSCRIPT_FOLDER:~0,-1!"
         if "!LIBSCRIPT_FOLDER:~-1!"=="\" set "LIBSCRIPT_FOLDER=!LIBSCRIPT_FOLDER:~0,-1!"
     )
-    :: Resolve Cache Directory if offline mode active
+    :: Resolve Cache Directory if offline mode active or local cache present
+    if "!OFFLINE_CACHE_DIR!"=="" (
+        if defined LIBSCRIPT_CACHE_DIR if exist "!LIBSCRIPT_CACHE_DIR!" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_CACHE_DIR!"
+        if not defined OFFLINE_CACHE_DIR if exist "!LIBSCRIPT_ROOT_DIR!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
+        if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_FOLDER if exist "!LIBSCRIPT_FOLDER!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_FOLDER!\cache"
+        if not defined OFFLINE_CACHE_DIR if defined INSTALLFOLDER if exist "!INSTALLFOLDER!\libscript\cache" set "OFFLINE_CACHE_DIR=!INSTALLFOLDER!\libscript\cache"
+        if not defined OFFLINE_CACHE_DIR if exist "!OPENEDX_INSTALL_DIR!\libscript\cache" set "OFFLINE_CACHE_DIR=!OPENEDX_INSTALL_DIR!\libscript\cache"
+        if not defined OFFLINE_CACHE_DIR if exist "!OPENEDX_INSTALL_DIR!\cache" set "OFFLINE_CACHE_DIR=!OPENEDX_INSTALL_DIR!\cache"
+        if not defined OFFLINE_CACHE_DIR if exist "C:\Program Files (x86)\OpenEdX\libscript\cache" set "OFFLINE_CACHE_DIR=C:\Program Files (x86)\OpenEdX\libscript\cache"
+        if not defined OFFLINE_CACHE_DIR if exist "C:\Program Files\OpenEdX\libscript\cache" set "OFFLINE_CACHE_DIR=C:\Program Files\OpenEdX\libscript\cache"
+        if not defined OFFLINE_CACHE_DIR if exist "C:\libscript\cache" set "OFFLINE_CACHE_DIR=C:\libscript\cache"
+    )
     if "!IS_OFFLINE!"=="1" (
-        if "!OFFLINE_CACHE_DIR!"=="" (
-            if defined LIBSCRIPT_CACHE_DIR if exist "!LIBSCRIPT_CACHE_DIR!" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_CACHE_DIR!"
-            if not defined OFFLINE_CACHE_DIR if exist "!LIBSCRIPT_ROOT_DIR!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
-            if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_FOLDER if exist "!LIBSCRIPT_FOLDER!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_FOLDER!\cache"
-            if not defined OFFLINE_CACHE_DIR if defined INSTALLFOLDER if exist "!INSTALLFOLDER!\libscript\cache" set "OFFLINE_CACHE_DIR=!INSTALLFOLDER!\libscript\cache"
-            if not defined OFFLINE_CACHE_DIR if exist "!OPENEDX_INSTALL_DIR!\libscript\cache" set "OFFLINE_CACHE_DIR=!OPENEDX_INSTALL_DIR!\libscript\cache"
-            if not defined OFFLINE_CACHE_DIR if exist "!OPENEDX_INSTALL_DIR!\cache" set "OFFLINE_CACHE_DIR=!OPENEDX_INSTALL_DIR!\cache"
-            if not defined OFFLINE_CACHE_DIR if exist "C:\Program Files (x86)\OpenEdX\libscript\cache" set "OFFLINE_CACHE_DIR=C:\Program Files (x86)\OpenEdX\libscript\cache"
-            if not defined OFFLINE_CACHE_DIR if exist "C:\Program Files\OpenEdX\libscript\cache" set "OFFLINE_CACHE_DIR=C:\Program Files\OpenEdX\libscript\cache"
-            if not defined OFFLINE_CACHE_DIR if exist "C:\libscript\cache" set "OFFLINE_CACHE_DIR=C:\libscript\cache"
-        )
         if defined OFFLINE_CACHE_DIR (
             echo [INFO] Detected Air-Gapped Offline Cache at: !OFFLINE_CACHE_DIR!
         ) else (
@@ -305,7 +305,7 @@ if "!ACTION!"=="install" (
 
     set "USE_OFFLINE=0"
     if "!IS_OFFLINE!"=="1" if defined OFFLINE_CACHE_DIR set "USE_OFFLINE=1"
-    if "!USE_OFFLINE!"=="1" (
+    if defined OFFLINE_CACHE_DIR (
         set "LIBSCRIPT_CACHE_DIR=!OFFLINE_CACHE_DIR!"
     )
 
@@ -377,6 +377,23 @@ if "!ACTION!"=="install" (
             tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "!OPENEDX_INSTALL_DIR!" 2>nul
         )
     ) else (
+        if defined OFFLINE_CACHE_DIR if exist "!OFFLINE_CACHE_DIR!\codebase" (
+            if not exist "!OPENEDX_INSTALL_DIR!\codebase\manage.py" (
+                if not exist "!OPENEDX_INSTALL_DIR!\codebase" mkdir "!OPENEDX_INSTALL_DIR!\codebase" 2>nul
+                for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip" "!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip") do (
+                    if exist "%%~fF" (
+                        tar -xf "%%~fF" -C "!OPENEDX_INSTALL_DIR!\codebase" --strip-components=1 2>nul || tar -xf "%%~fF" -C "!OPENEDX_INSTALL_DIR!\codebase" 2>nul
+                    )
+                )
+            )
+            if exist "!OFFLINE_CACHE_DIR!\codebase\mfe-bundle-verawood.1.tar.gz" (
+                if not exist "!OPENEDX_INSTALL_DIR!\mfe_dist" mkdir "!OPENEDX_INSTALL_DIR!\mfe_dist" 2>nul
+                tar -xzf "!OFFLINE_CACHE_DIR!\codebase\mfe-bundle-verawood.1.tar.gz" -C "!OPENEDX_INSTALL_DIR!\mfe_dist" 2>nul
+            )
+            if "!IMPORT_DEMO!"=="1" if exist "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" (
+                tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "!OPENEDX_INSTALL_DIR!" 2>nul
+            )
+        )
         echo [INFO] Cloning openedx-platform ^(!BRANCH!^) codebase...
         if not exist "!OPENEDX_INSTALL_DIR!\codebase\manage.py" (
             where git >nul 2>&1

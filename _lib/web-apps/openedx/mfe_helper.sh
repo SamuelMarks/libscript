@@ -54,21 +54,38 @@ do_build() {
 
   mkdir -p "${_root_dir}"
   _target_dir="${_root_dir}/${_mfe_name}"
+  _dist_dir="${_target_dir}/dist"
+  mkdir -p "${_dist_dir}"
+
+  for _bundle_cand in \
+    "${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}/codebase/mfe-bundle-verawood.1.tar.gz" \
+    "${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}/npm/mfe-bundle-verawood.1.tar.gz" \
+    "${LIBSCRIPT_ROOT_DIR}/cache/codebase/mfe-bundle-verawood.1.tar.gz" \
+    "${LIBSCRIPT_ROOT_DIR}/cache/npm/mfe-bundle-verawood.1.tar.gz"
+  do
+    if [ -f "${_bundle_cand}" ] && [ ! -f "${_dist_dir}/index.html" ]; then
+      tar -xzf "${_bundle_cand}" -C "${_root_dir}" 2>/dev/null || true
+      _sub_name="${_mfe_name}"
+      [ "${_mfe_name}" = "course-authoring" ] && _sub_name="authoring"
+      if [ -f "${_root_dir}/${_sub_name}/index.html" ]; then
+        cp -f "${_root_dir}/${_sub_name}/"* "${_dist_dir}/" 2>/dev/null || true
+      fi
+      break
+    fi
+  done
+
   _repo_url="https://github.com/openedx/frontend-app-${_mfe_name}.git"
 
-  if [ ! -d "${_target_dir}/.git" ]; then
+  if [ ! -f "${_dist_dir}/index.html" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ ! -d "${_target_dir}/.git" ]; then
     git clone --depth 1 --branch "${_version}" "${_repo_url}" "${_target_dir}" 2>/dev/null || mkdir -p "${_target_dir}"
   fi
 
-  if [ -f "${_target_dir}/package.json" ]; then
+  if [ ! -f "${_dist_dir}/index.html" ] && [ -f "${_target_dir}/package.json" ]; then
     if ! command -v npm >/dev/null 2>&1; then
       "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install nodejs latest >/dev/null 2>&1 || true
     fi
     (cd "${_target_dir}" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1) || true
   fi
-
-  _dist_dir="${_target_dir}/dist"
-  mkdir -p "${_dist_dir}"
 
   _reg_file="${_root_dir}/registry.json"
   if [ ! -f "${_reg_file}" ]; then

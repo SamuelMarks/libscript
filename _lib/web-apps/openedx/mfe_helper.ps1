@@ -58,7 +58,10 @@ function Do-Build {
     $distDir = Join-Path $targetDir "dist"
     $cacheDir = Resolve-CacheDir
     $mfeArchive = Join-Path $cacheDir "npm\frontend-app-$MfeName.tar.gz"
-    $bundleArchive = Join-Path $cacheDir "npm\mfe-bundle-verawood.1.tar.gz"
+    $bundleArchive = Join-Path $cacheDir "codebase\mfe-bundle-verawood.1.tar.gz"
+    if (-not (Test-Path $bundleArchive)) {
+        $bundleArchive = Join-Path $cacheDir "npm\mfe-bundle-verawood.1.tar.gz"
+    }
 
     if (Test-Path $mfeArchive) {
         if (-not (Test-Path $targetDir)) {
@@ -69,7 +72,17 @@ function Do-Build {
         if (-not (Test-Path $RootDir)) {
             New-Item -ItemType Directory -Path $RootDir -Force | Out-Null
         }
-        & tar.exe -xf $bundleArchive -C $RootDir 2>$null
+        & tar.exe -xzf $bundleArchive -C $RootDir 2>$null
+        $bundleSubName = if ($MfeName -eq "course-authoring") { "authoring" } else { $MfeName }
+        $extractedMfe = Join-Path $RootDir $bundleSubName
+        if ((Test-Path (Join-Path $extractedMfe "index.html")) -and (-not (Test-Path (Join-Path $distDir "index.html")))) {
+            if (-not (Test-Path $distDir)) {
+                New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+            }
+            Get-ChildItem -Path $extractedMfe -File -ErrorAction SilentlyContinue | ForEach-Object {
+                Copy-Item -Path $_.FullName -Destination $distDir -Force
+            }
+        }
     } elseif ($env:LIBSCRIPT_OFFLINE -ne "1") {
         $repoUrl = "https://github.com/openedx/frontend-app-$MfeName.git"
         if (-not (Test-Path (Join-Path $targetDir ".git"))) {
