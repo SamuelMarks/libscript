@@ -77,18 +77,19 @@ if (Test-Path -LiteralPath $libDir) {
     }
 }
 
-Write-Host "==> Auditing Script Header Markdown Docstring Coverage (.sh, .cmd, .ps1)..."
+Write-Host "==> Auditing Script Header Markdown Docstring Coverage (.sh, .cmd, .bat, .ps1)..."
 $totalScripts = 0
 $missingScriptHeaders = 0
+$scriptFiles = @()
 
 Push-Location $repoRoot
 try {
     $trackedScripts = $null
     if (Test-Path -LiteralPath (Join-Path $repoRoot ".git")) {
-        $trackedScripts = git ls-files "*.sh" "*.cmd" "*.ps1" 2>$null
+        $trackedScripts = git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" 2>$null
     }
     if (-not $trackedScripts) {
-        $trackedScripts = Get-ChildItem -Path $repoRoot -Include "*.sh", "*.cmd", "*.ps1" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        $trackedScripts = Get-ChildItem -Path $repoRoot -Include "*.sh", "*.cmd", "*.bat", "*.ps1" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
             $_.FullName.Substring($repoRoot.Length).TrimStart([char]92, [char]47)
         }
     }
@@ -101,6 +102,7 @@ try {
         if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
             continue
         }
+        $scriptFiles += Get-Item -LiteralPath $fullPath
         $totalScripts++
         $headLines = (Get-Content -LiteralPath $fullPath -TotalCount 30 -ErrorAction SilentlyContinue) -join "`n"
         if ($headLines -notmatch '## Overview' -or $headLines -notmatch '## Usage') {

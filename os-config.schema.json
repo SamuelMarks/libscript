@@ -96,6 +96,10 @@
             "none"
           ]
         },
+        "version": {
+          "type": "string",
+          "description": "Target kernel version or series alias (e.g. '4.19.322', '5.15.167', '6.1.112', '6.6.52', '6.12.1')"
+        },
         "config_method": {
           "type": "string",
           "description": "Kernel configuration assembly methodology",

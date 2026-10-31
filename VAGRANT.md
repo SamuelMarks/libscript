@@ -254,3 +254,19 @@ execution, and `495x392` window-cropped screenshots across all 5 OS families (`b
 # Or on Windows Command Prompt:
 .\tests\test_msi_vagrant_matrix.cmd
 ```
+
+## 7. Multi-Distro Linux Kernel & `edgcpp-compiler` Vagrant Verification Matrix
+
+To compare Linux kernel compilation across `4.19.322`, `5.4.284`, `5.10.226`, `5.15.167`, `6.1.112`,
+`6.6.52`, `6.11.2`, and `6.12.1` using `gcc`, `clang` (expected raw Kbuild failure), and all
+`SamuelMarks/edgcpp-compiler` release variants (`edgcpp+gcc`, `edgcpp+llvm`, `edgcpp+llvm+gcc:gcc`,
+`edgcpp+llvm+gcc:llvm`) across Debian 13 (`bento/debian-13`), Rocky Linux 10.2
+(`bento/rockylinux-10.2`), and Alpine Linux 3.24 (`bento/alpine-3.24`):
+
+```sh
+# Execute the multi-distro Linux kernel & edgcpp-compiler Vagrant matrix
+./tests/test_kernel_edgcpp_vagrant_matrix.sh
+
+# Or on Windows Command Prompt:
+.\tests\test_kernel_edgcpp_vagrant_matrix.cmd
+```

@@ -73,11 +73,16 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+set "REPO_ROOT=!LIBSCRIPT_ROOT_DIR!"
 
 set "TARGET_DIR=%~1"
 if "%TARGET_DIR%"=="" set "TARGET_DIR=C:\libscript_target"
+
+set "STAMP_FILE=%TARGET_DIR%\.libscript_openedx_preloaded.stamp"
+if exist "%STAMP_FILE%" (
+    echo [IDEMPOTENT] Open edX workload already preloaded in %TARGET_DIR% ^(stamp exists^). Skipping.
+    exit /b 0
+)
 
 echo [WORKLOAD-OPENEDX] Preloading Open edX stack on Windows...
 
@@ -94,6 +99,10 @@ if !errorlevel! EQU 0 (
 )
 
 if not exist "%TARGET_DIR%\edx\bin" mkdir "%TARGET_DIR%\edx\bin"
+if exist "!REPO_ROOT!\_lib\web-apps\openedx\config.cmd" (
+    set "OPENEDX_INSTALL_DIR=%TARGET_DIR%\edx\app\edxapp\edx-platform"
+    call "!REPO_ROOT!\_lib\web-apps\openedx\config.cmd" generate >nul 2>&1
+)
 (
     echo @echo off
     echo call "!REPO_ROOT!\_lib\web-apps\openedx\service.cmd" start

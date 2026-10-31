@@ -35,6 +35,6 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 
-if (return 0 2>/dev/null); then return 0; else exit 0; fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
+if (return 0 2>/dev/null); then return 0; else exit 0; fi

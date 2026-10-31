@@ -112,15 +112,51 @@ if /i "!_tc_spec!"=="default" (
         set "LIBSCRIPT_BUILD_TARGET_DIR=!_sb_home!\!_sb_comp!\!_sb_exact_ver!"
     )
 ) else (
-    set "LIBSCRIPT_RESOLVED_CC_ID=!_tc_spec!"
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\setup.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "!_tc_spec!" latest
-        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\env.cmd" (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\env.cmd"
+    set "LIBSCRIPT_RESOLVED_CC_ID=!_tc_spec::=-!"
+    set "_base_cc_pkg=!_tc_spec!"
+    if /i "!_tc_spec!"=="edgcpp+gcc" (
+        set "_base_cc_pkg=edgcpp"
+        set "EDGCPP_FLAVOR=edgcpp+gcc"
+        set "EDGCPP_BACKEND_MODE=gcc_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp+llvm" (
+        set "_base_cc_pkg=edgcpp"
+        set "EDGCPP_FLAVOR=edgcpp+llvm"
+        set "EDGCPP_BACKEND_MODE=llvm_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp+llvm+gcc:gcc" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=edgcpp+llvm+gcc-gcc_be"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=gcc_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp-gcc-be" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=edgcpp+llvm+gcc-gcc_be"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=gcc_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp+llvm+gcc:llvm" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=edgcpp+llvm+gcc-llvm_be"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=llvm_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp-llvm-be" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=edgcpp+llvm+gcc-llvm_be"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=llvm_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp+llvm+gcc" (
+        set "_base_cc_pkg=edgcpp"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        if "!EDGCPP_BACKEND_MODE!"=="" set "EDGCPP_BACKEND_MODE=llvm_backend"
+    )
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_base_cc_pkg!\setup.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "!_base_cc_pkg!" latest
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_base_cc_pkg!\env.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_base_cc_pkg!\env.cmd"
         )
     )
-    if /i "!_tc_spec!"=="edgcpp" (
-        if exist "!_sb_home!\edgcpp\default\bin\edgcpp.cmd" (
+    if /i "!_base_cc_pkg!"=="edgcpp" (
+        if exist "!_sb_home!\edgcpp\!EDGCPP_FLAVOR!\bin\edgcpp.cmd" (
+            set "LIBSCRIPT_RESOLVED_CC_BIN=!_sb_home!\edgcpp\!EDGCPP_FLAVOR!\bin\edgcpp.cmd"
+        ) else if exist "!_sb_home!\edgcpp\default\bin\edgcpp.cmd" (
             set "LIBSCRIPT_RESOLVED_CC_BIN=!_sb_home!\edgcpp\default\bin\edgcpp.cmd"
         ) else (
             set "LIBSCRIPT_RESOLVED_CC_BIN=!LIBSCRIPT_ROOT_DIR!\_lib\languages\edgcpp\edgcpp_wrapper.cmd"
@@ -147,6 +183,8 @@ endlocal & (
     set "LIBSCRIPT_RESOLVED_CC_ID=%LIBSCRIPT_RESOLVED_CC_ID%"
     set "LIBSCRIPT_RESOLVED_CC_BIN=%LIBSCRIPT_RESOLVED_CC_BIN%"
     set "CC=%LIBSCRIPT_RESOLVED_CC_BIN%"
+    set "EDGCPP_FLAVOR=%EDGCPP_FLAVOR%"
+    set "EDGCPP_BACKEND_MODE=%EDGCPP_BACKEND_MODE%"
     set "LIBSCRIPT_BUILD_TARGET_DIR=%LIBSCRIPT_BUILD_TARGET_DIR%"
 )
 exit /b 0

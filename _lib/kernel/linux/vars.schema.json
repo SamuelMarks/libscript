@@ -66,6 +66,30 @@
     "LINUX_SOURCE_DIR": {
       "type": "string",
       "description": "Filesystem directory or path configuration for linux (LINUX_SOURCE_DIR)."
+    },
+    "LINUX_COMPARE_VERSIONS": {
+      "type": "string",
+      "description": "Space-separated list of Linux kernel versions to evaluate in compare_compilers.sh (e.g., '4.19.322 5.4.284 5.10.226 5.15.167 6.1.112 6.6.52 6.11.2 6.12.1')."
+    },
+    "LINUX_COMPARE_EDGCPP_BACKENDS": {
+      "type": "string",
+      "description": "Space-separated list of edgcpp codegen backends ('llvm_backend gcc_backend') to evaluate when comparing Linux kernel builds."
+    },
+    "LINUX_DEFAULT_SHA256": {
+      "type": "string",
+      "description": "Default SHA-256 checksum for the resolved Linux kernel source tarball."
+    },
+    "LINUX_EXPECT_CLANG_FAIL": {
+      "type": "string",
+      "description": "Whether raw CC=clang Kbuild invocations without LLVM=1 compatibility overrides are expected to fail on GNU C kernel flags and constructs (default '1')."
+    },
+    "LINUX_ALLOW_CLANG_KBUILD": {
+      "type": "string",
+      "description": "Override flag ('1') to allow Clang Kbuild compilation by omitting GCC-only Kbuild flags."
+    },
+    "LINUX_COMPARE_DISTROS": {
+      "type": "string",
+      "description": "Space-separated list of Vagrant Linux distributions ('debian-13 rockylinux-10.2 alpine-3.24') to evaluate in the Vagrant kernel compiler matrix."
     }
   }
 }

@@ -43,22 +43,22 @@ for HOST in $NODES; do
   SUBNET=$(grep "${HOST}" "${MACHINES_TXT}" | cut -d " " -f 4)
   sed "s|SUBNET|$SUBNET|g" "${DIR}/kubernetes-the-hard-way/"configs/10-bridge.conf > "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf"
   sed "s|SUBNET|$SUBNET|g" "${DIR}/kubernetes-the-hard-way/"configs/kubelet-config.yaml > "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml"
-  scp "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf" "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml" root@${HOST}:~/
+  scp "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf" "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml" "root@${HOST}:~/"
   # shellcheck disable=SC2029
 
-  ssh root@${HOST} "cp -f 10-bridge-${HOST}.conf 10-bridge.conf && cp -f kubelet-config-${HOST}.yaml kubelet-config.yaml"
+  ssh "root@${HOST}" "cp -f 10-bridge-${HOST}.conf 10-bridge.conf && cp -f kubelet-config-${HOST}.yaml kubelet-config.yaml"
 done
 
 for HOST in $NODES; do
-  ssh root@${HOST} 'mkdir -p ~/cni-plugins'
+  ssh "root@${HOST}" 'mkdir -p ~/cni-plugins'
   set +f
-  scp "${DIR}/kubernetes-the-hard-way/"downloads/worker/* "${DIR}/kubernetes-the-hard-way/"downloads/client/kubectl "${DIR}/kubernetes-the-hard-way/"configs/99-loopback.conf "${DIR}/kubernetes-the-hard-way/"configs/containerd-config.toml "${DIR}/kubernetes-the-hard-way/"configs/kube-proxy-config.yaml "${DIR}/kubernetes-the-hard-way/"units/containerd.service "${DIR}/kubernetes-the-hard-way/"units/kubelet.service "${DIR}/kubernetes-the-hard-way/"units/kube-proxy.service root@${HOST}:~/
-  scp "${DIR}/kubernetes-the-hard-way/"downloads/cni-plugins/* root@${HOST}:~/cni-plugins/
+  scp "${DIR}/kubernetes-the-hard-way/"downloads/worker/* "${DIR}/kubernetes-the-hard-way/"downloads/client/kubectl "${DIR}/kubernetes-the-hard-way/"configs/99-loopback.conf "${DIR}/kubernetes-the-hard-way/"configs/containerd-config.toml "${DIR}/kubernetes-the-hard-way/"configs/kube-proxy-config.yaml "${DIR}/kubernetes-the-hard-way/"units/containerd.service "${DIR}/kubernetes-the-hard-way/"units/kubelet.service "${DIR}/kubernetes-the-hard-way/"units/kube-proxy.service "root@${HOST}:~/"
+  scp "${DIR}/kubernetes-the-hard-way/"downloads/cni-plugins/* "root@${HOST}:~/cni-plugins/"
   set -f
 done
 
 for HOST in $NODES; do
-ssh root@${HOST} << 'EOF'
+ssh "root@${HOST}" << 'EOF'
   set -eu
   if [ -f "$HOME/libscript/_lib/_common/pkg_mgr.sh" ]; then
     SCRIPT_NAME="$HOME/libscript/_lib/_common/pkg_mgr.sh"

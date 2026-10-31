@@ -50,5 +50,9 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
+call "!SCRIPT_DIR!\setup.cmd" compile
+if errorlevel 1 exit /b 1
+call "!SCRIPT_DIR!\compare_compilers.cmd"
+if errorlevel 1 exit /b 1
+if not exist "!LIBSCRIPT_ROOT_DIR!\build\kernel-compiler-comparison.json" exit /b 1
 exit /b 0

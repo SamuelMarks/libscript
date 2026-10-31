@@ -37,7 +37,7 @@ verify_kernel_profiles_resolution() {
   if ! command -v jq >/dev/null 2>&1; then
     return 0
   fi
-  for _prof in linux-kernel-gcc-tiny.json linux-kernel-clang-tiny.json linux-kernel-tcc-tiny.json linux-kernel-edgcpp-tiny.json linux-kernel-custom-cc-tiny.json linux-kernel-gcc-defconfig.json linux-kernel-edgcpp-defconfig.json linux-kernel-custom-cc-defconfig.json; do
+  for _prof in linux-kernel-gcc-tiny.json linux-kernel-clang-tiny.json linux-kernel-tcc-tiny.json linux-kernel-edgcpp-tiny.json linux-kernel-edgcpp-4.19-tiny.json linux-kernel-edgcpp-5.15-tiny.json linux-kernel-edgcpp-6.1-tiny.json linux-kernel-edgcpp-6.12-tiny.json linux-kernel-custom-cc-tiny.json linux-kernel-gcc-defconfig.json linux-kernel-edgcpp-defconfig.json linux-kernel-custom-cc-defconfig.json; do
     _prof_path="${LIBSCRIPT_ROOT_DIR}/profiles/${_prof}"
     [ -f "${_prof_path}" ]
     _plan="$(jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration" --arg target_os linux -f "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.jq" "${_prof_path}")"

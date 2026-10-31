@@ -248,24 +248,12 @@ libscript_print_env() {
                 esac
                 [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ] && [ "$_p" = "$PREFIX/bin" ] && continue
                 case "$FORMAT" in
-                  docker)         printf 'ENV PATH="%s:$PATH"
-' "$_p" ;;
-                  docker_compose) printf 'PATH=%s:$PATH
-' "$_p" ;;
-                  powershell)     printf 'if ($env:PATH -notlike \047*%s*\047) {
-  $env:PATH = "%s;" + $env:PATH
-}
-' "$_p" "$_p" ;;
-                  cmd)            printf 'echo %%PATH%% | findstr /i /c:"%s" >nul || SET "PATH=%s;%%PATH%%"
-' "$_p" "$_p" ;;
-                  fish)           printf 'if not contains "%s" $PATH
-  set -gx PATH "%s" $PATH
-end
-' "$_p" "$_p" ;;
-                  *)              printf 'if case ":${PATH:-}:" in *":%s:"*) false;; *) true;; esac; then
-  export PATH="%s:$PATH"
-fi
-' "$_p" "$_p" ;;
+                  docker)         printf 'ENV PATH="%s:$PATH"\n' "$_p" ;;
+                  docker_compose) printf 'PATH=%s:$PATH\n' "$_p" ;;
+                  powershell)     printf 'if ($env:PATH -notlike \047*%s*\047) {\n  $env:PATH = "%s;" + $env:PATH\n}\n' "$_p" "$_p" ;;
+                  cmd)            printf 'echo %%PATH%% | findstr /i /c:"%s" >nul || SET "PATH=%s;%%PATH%%"\n' "$_p" "$_p" ;;
+                  fish)           printf 'if not contains "%s" $PATH\n  set -gx PATH "%s" $PATH\nend\n' "$_p" "$_p" ;;
+                  *)              printf 'if case ":${PATH:-}:" in *":%s:"*) false;; *) true;; esac; then\n  export PATH="%s:$PATH"\nfi\n' "$_p" "$_p" ;;
                 esac
               done
               IFS="$_old_ifs"
@@ -277,8 +265,7 @@ fi
               docker)
                 env | grep -vE "$_filter" | while read -r line; do
                   [ -z "$line" ] && continue
-                  printf 'ENV %s="%s"
-' "${line%%=*}" "${line#*=}"
+                  printf 'ENV %s="%s"\n' "${line%%=*}" "${line#*=}"
                 done
                 ;;
               docker_compose)
@@ -287,15 +274,13 @@ fi
               powershell)
                 env | grep -vE "$_filter" | while read -r line; do
                   [ -z "$line" ] && continue
-                  printf '$env:%s="%s"
-' "${line%%=*}" "${line#*=}"
+                  printf '$env:%s="%s"\n' "${line%%=*}" "${line#*=}"
                 done
                 ;;
               cmd)
                 env | grep -vE "$_filter" | while read -r line; do
                   [ -z "$line" ] && continue
-                  printf 'SET "%s=%s"
-' "${line%%=*}" "${line#*=}"
+                  printf 'SET "%s=%s"\n' "${line%%=*}" "${line#*=}"
                 done
                 ;;
               json)
@@ -311,15 +296,13 @@ fi
               *)
                 env | grep -vE "$_filter" | while read -r line; do
                   [ -z "$line" ] && continue
-                  printf 'export %s="%s"
-' "${line%%=*}" "${line#*=}"
+                  printf 'export %s="%s"\n' "${line%%=*}" "${line#*=}"
                 done
                 ;;
             esac
 EOF_SH
   elif [ "$_format" = "json" ] && [ -n "$_prefix_path" ]; then
-    printf '{"PATH":"%s/bin"}
-' "$_prefix_path"
+    printf '{"PATH":"%s/bin"}\n' "$_prefix_path"
   fi
 }
 

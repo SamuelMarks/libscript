@@ -52,7 +52,7 @@ for NODE in $NODES; do
       OTHER_SUBNET=$(awk -v n="$OTHER_NODE" '$3==n {print $4}' "${MACHINES_TXT}")
         # shellcheck disable=SC2029
 
-      ssh root@$NODE "ip route add ${OTHER_SUBNET} via ${OTHER_IP} || true"
+      ssh "root@${NODE}" "ip route add ${OTHER_SUBNET} via ${OTHER_IP} || true"
     fi
   done
 done

@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 export DIR="${SCRIPT_DIR}"
 
@@ -52,11 +49,27 @@ EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-edgcpp+llvm+gcc}"
 ACTION="${ACTION:-install}"
 VERSION="${EDGCPP_VERSION:-${VERSION:-7.0.1}}"
 
+# ## resolve_latest_edgcpp_release
+# Queries the GitHub Releases API for the latest SamuelMarks/edgcpp-compiler tag when EDGCPP_CHECK_LATEST=1 and LIBSCRIPT_OFFLINE!=1, falling back to 7.0.1.
+resolve_latest_edgcpp_release() {
+  if [ "${EDGCPP_CHECK_LATEST:-0}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v curl >/dev/null 2>&1; then
+    _api_tag="$(curl -fsSL --connect-timeout 5 "https://api.github.com/repos/SamuelMarks/edgcpp-compiler/releases/latest" 2>/dev/null | grep '"tag_name"' | head -n 1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/' || true)"
+    if [ -n "${_api_tag}" ]; then
+      printf '%s\n' "${_api_tag}"
+      return 0
+    fi
+  fi
+  printf '%s\n' '7.0.1'
+}
+
 # ## resolve_exact_version
-# Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.1') to '7.0.1'.
+# Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.1') to '7.0.1' or the dynamically queried latest release.
 resolve_exact_version() {
   case "${VERSION:-latest}" in
-    latest|stable|7.0|v7.0.1|7.0.1|"")
+    latest|stable|"")
+      EXACT_VERSION="$(resolve_latest_edgcpp_release)"
+      ;;
+    7.0|v7.0.1|7.0.1)
       EXACT_VERSION='7.0.1'
       ;;
     v*)
@@ -103,6 +116,11 @@ resolve_edgcpp_release_asset() {
 
   EDGCPP_ASSET_NAME="${EDGCPP_FLAVOR}-v${EXACT_VERSION}-${_os_tag}-${_arch_tag}.${_ext}"
   EDGCPP_ASSET_URL="${EDGCPP_DOWNLOAD_URL:-https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v${EXACT_VERSION}/${EDGCPP_ASSET_NAME}}"
+  EDGCPP_SHA256SUMS_URL="https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v${EXACT_VERSION}/SHA256SUMS.txt"
+  EDGCPP_SHA256SUMS_DIGEST=""
+  if [ "${EXACT_VERSION}" = "7.0.1" ]; then
+    EDGCPP_SHA256SUMS_DIGEST='ca39696f727ba7a7e3926f711f61537a0e33017dc61b0540338aa9af47cc5357'
+  fi
   EDGCPP_ASSET_SHA256=""
 
   case "${EDGCPP_ASSET_NAME}" in
@@ -122,6 +140,18 @@ resolve_edgcpp_release_asset() {
     "edgcpp+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a" ;;
     "edgcpp+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c" ;;
   esac
+
+  if [ -z "${EDGCPP_ASSET_SHA256}" ] && [ -z "${EDGCPP_DOWNLOAD_URL:-}" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+    _cache_dir="${EDGCPP_DOWNLOAD_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/edgcpp}"
+    mkdir -p "${_cache_dir}"
+    _sums_file="${_cache_dir}/SHA256SUMS-v${EXACT_VERSION}.txt"
+    if [ ! -f "${_sums_file}" ]; then
+      PACKAGE_NAME="edgcpp" libscript_download "${EDGCPP_SHA256SUMS_URL}" "${_sums_file}" "${EDGCPP_SHA256SUMS_DIGEST}" 2>/dev/null || true
+    fi
+    if [ -f "${_sums_file}" ]; then
+      EDGCPP_ASSET_SHA256="$(grep "${EDGCPP_ASSET_NAME}" "${_sums_file}" 2>/dev/null | head -n 1 | awk '{print $1}' || true)"
+    fi
+  fi
   if [ -n "${EDGCPP_DOWNLOAD_URL:-}" ]; then
     EDGCPP_ASSET_SHA256=""
   fi
@@ -213,6 +243,15 @@ EOF
           libscript_depends libgccjit0 libzstd1 zlib1g libtinfo6 gcc g++ libc6-dev >/dev/null 2>&1 || true
         fi
       fi
+    elif [ -f "/etc/redhat-release" ] || [ -f "/etc/rocky-release" ]; then
+      if command -v ldd >/dev/null 2>&1 && [ -x "${_target_dir}/bin/cpfe" ]; then
+        if ldd "${_target_dir}/bin/cpfe" 2>/dev/null | grep -q "not found"; then
+          libscript_depends libgccjit zstd zlib ncurses-libs gcc gcc-c++ glibc-devel >/dev/null 2>&1 || true
+        fi
+      fi
+      if [ -e "/usr/lib64/libncursesw.so.6" ] && [ ! -e "/usr/lib64/libtinfo.so.6" ]; then
+        ln -sf "/usr/lib64/libncursesw.so.6" "${_target_dir}/lib/libtinfo.so.6" 2>/dev/null || true
+      fi
     fi
   fi
 
@@ -230,6 +269,7 @@ EOF
 
   cat <<EOF > "${_target_dir}/bin/edgcpp.env"
 EDGCPP_HOME="${_target_dir}"
+EDGCPP_INSTALLED_FLAVOR="${EDGCPP_FLAVOR}"
 CPFE_BIN="${_target_dir}/bin/cpfe"
 CPFE_CP_BIN="${_target_dir}/bin/cpfe-cp"
 EDGCPP_WRAPPER_SCRIPT="${DIR}/edgcpp_wrapper.sh"
@@ -242,7 +282,8 @@ if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
 fi
-export EDGCPP_HOME CPFE_BIN CPFE_CP_BIN
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+llvm+gcc}}"
 export EDGCPP_DRIVER_LANG="${EDGCPP_DRIVER_LANG:-c}"
 exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
 EOF
@@ -252,6 +293,40 @@ EOF
   ln -sf "${_target_dir}/bin/edgcpp" "${_target_dir}/bin/edg-cc"
   ln -sf "${_target_dir}/bin/edgcpp" "${_target_dir}/bin/cc"
 
+  cat <<'EOF' > "${_target_dir}/bin/edgcpp-gcc-be.tmp"
+#!/bin/sh
+_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "${_self_dir}/edgcpp.env" ]; then
+  # shellcheck disable=SC1091
+  . "${_self_dir}/edgcpp.env"
+fi
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+gcc}}"
+export EDGCPP_BACKEND_MODE="gcc_backend"
+export EDGCPP_DRIVER_LANG="${EDGCPP_DRIVER_LANG:-c}"
+exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
+EOF
+  chmod +x "${_target_dir}/bin/edgcpp-gcc-be.tmp"
+  mv -f "${_target_dir}/bin/edgcpp-gcc-be.tmp" "${_target_dir}/bin/edgcpp-gcc-be"
+  ln -sf "${_target_dir}/bin/edgcpp-gcc-be" "${_target_dir}/bin/edgcpp-gcc"
+
+  cat <<'EOF' > "${_target_dir}/bin/edgcpp-llvm-be.tmp"
+#!/bin/sh
+_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "${_self_dir}/edgcpp.env" ]; then
+  # shellcheck disable=SC1091
+  . "${_self_dir}/edgcpp.env"
+fi
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+llvm}}"
+export EDGCPP_BACKEND_MODE="llvm_backend"
+export EDGCPP_DRIVER_LANG="${EDGCPP_DRIVER_LANG:-c}"
+exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
+EOF
+  chmod +x "${_target_dir}/bin/edgcpp-llvm-be.tmp"
+  mv -f "${_target_dir}/bin/edgcpp-llvm-be.tmp" "${_target_dir}/bin/edgcpp-llvm-be"
+  ln -sf "${_target_dir}/bin/edgcpp-llvm-be" "${_target_dir}/bin/edgcpp-llvm"
+
   cat <<'EOF' > "${_target_dir}/bin/edg-c++.tmp"
 #!/bin/sh
 _self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
@@ -259,13 +334,26 @@ if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
 fi
-export EDGCPP_HOME CPFE_BIN CPFE_CP_BIN
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+llvm+gcc}}"
 export EDGCPP_DRIVER_LANG="c++"
 exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
 EOF
   chmod +x "${_target_dir}/bin/edg-c++.tmp"
   mv -f "${_target_dir}/bin/edg-c++.tmp" "${_target_dir}/bin/edg-c++"
   ln -sf "${_target_dir}/bin/edg-c++" "${_target_dir}/bin/c++"
+
+  cat <<EOF > "${_target_dir}/edgcpp-release-metadata.json.tmp"
+{
+  "component": "edgcpp",
+  "version": "${EXACT_VERSION}",
+  "flavor": "${EDGCPP_FLAVOR}",
+  "asset_name": "${EDGCPP_ASSET_NAME:-unknown}",
+  "asset_sha256": "${EDGCPP_ASSET_SHA256:-unknown}",
+  "repository": "https://github.com/SamuelMarks/edgcpp-compiler"
+}
+EOF
+  mv -f "${_target_dir}/edgcpp-release-metadata.json.tmp" "${_target_dir}/edgcpp-release-metadata.json"
 }
 
 # ## extract_edgcpp_archive
@@ -307,11 +395,16 @@ extract_edgcpp_archive() {
 # Installs or builds edgcpp according to EDGCPP_INSTALL_METHOD and stages its binaries and wrappers under LIBSCRIPT_HOME.
 install_edgcpp_component() {
   resolve_edgcpp_release_asset
-  TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}"
+  TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}-${EDGCPP_FLAVOR}"
 
   if [ -x "${TARGET_DIR}/bin/edgcpp" ] && [ -x "${TARGET_DIR}/bin/cpfe" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ]; then
-    libscript_symlink_alias "edgcpp" "${VERSION}" "${EXACT_VERSION}"
-    libscript_symlink_alias "edgcpp" "default" "${EXACT_VERSION}"
+    if [ ! -f "${TARGET_DIR}/edgcpp-release-metadata.json" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-gcc-be" ]; then
+      stage_edgcpp_wrappers "${TARGET_DIR}"
+    fi
+    libscript_symlink_alias "edgcpp" "${EXACT_VERSION}" "$(basename "${TARGET_DIR}")"
+    libscript_symlink_alias "edgcpp" "${EDGCPP_FLAVOR}" "$(basename "${TARGET_DIR}")"
+    libscript_symlink_alias "edgcpp" "${VERSION}" "$(basename "${TARGET_DIR}")"
+    libscript_symlink_alias "edgcpp" "default" "$(basename "${TARGET_DIR}")"
     log_info "edgcpp ${EXACT_VERSION} (${EDGCPP_FLAVOR}) is already installed at ${TARGET_DIR}."
     return 0
   fi
@@ -366,6 +459,8 @@ install_edgcpp_component() {
       ;;
   esac
 
+  libscript_symlink_alias "edgcpp" "${EXACT_VERSION}" "$(basename "${TARGET_DIR}")"
+  libscript_symlink_alias "edgcpp" "${EDGCPP_FLAVOR}" "$(basename "${TARGET_DIR}")"
   libscript_symlink_alias "edgcpp" "${VERSION}" "$(basename "${TARGET_DIR}")"
   libscript_symlink_alias "edgcpp" "default" "$(basename "${TARGET_DIR}")"
 }

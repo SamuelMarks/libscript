@@ -47,12 +47,10 @@ assert_contains() {
   _label="$3"
   case "$_haystack" in
     *"$_needle"*)
-      printf '[PASS] %s
-' "$_label"
+      printf '[PASS] %s\n' "$_label"
       ;;
     *)
-      printf '[FAIL] %s (expected "%s" in output)
-' "$_label" "$_needle" >&2
+      printf '[FAIL] %s (expected "%s" in output)\n' "$_label" "$_needle" >&2
       FAILURES=$((FAILURES + 1))
       ;;
   esac
@@ -61,25 +59,19 @@ assert_contains() {
 # ## test_non_invasive_isolation
 # Verifies that version manager operations never mutate user shell profiles.
 test_non_invasive_isolation() {
-  printf '==> 1. Testing Non-Invasive Environment Isolation...
-'
-  printf '# sentinel-bashrc
-' > "${HOME}/.bashrc"
-  printf '# sentinel-profile
-' > "${HOME}/.profile"
-  printf '# sentinel-zshrc
-' > "${HOME}/.zshrc"
+  printf '==> 1. Testing Non-Invasive Environment Isolation...\n'
+  printf '# sentinel-bashrc\n' > "${HOME}/.bashrc"
+  printf '# sentinel-profile\n' > "${HOME}/.profile"
+  printf '# sentinel-zshrc\n' > "${HOME}/.zshrc"
 
   sh "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/cli.sh" --help >/dev/null
 
   if [ "$(cat "${HOME}/.bashrc")" = "# sentinel-bashrc" ] && 
      [ "$(cat "${HOME}/.profile")" = "# sentinel-profile" ] && 
      [ "$(cat "${HOME}/.zshrc")" = "# sentinel-zshrc" ]; then
-    printf '[PASS] Shell profiles (~/.bashrc, ~/.profile, ~/.zshrc) untouched.
-'
+    printf '[PASS] Shell profiles (~/.bashrc, ~/.profile, ~/.zshrc) untouched.\n'
   else
-    printf '[FAIL] Shell profiles were mutated!
-' >&2
+    printf '[FAIL] Shell profiles were mutated!\n' >&2
     FAILURES=$((FAILURES + 1))
   fi
 }
@@ -87,19 +79,16 @@ test_non_invasive_isolation() {
 # ## test_side_by_side_multi_version
 # Verifies side-by-side coexistence of two versions (1.6 and 1.7.1) and switching via which/exec/run/info.
 test_side_by_side_multi_version() {
-  printf '==> 2. Testing Side-by-Side Multi-Version Coexistence...
-'
+  printf '==> 2. Testing Side-by-Side Multi-Version Coexistence...\n'
   mkdir -p "${LIBSCRIPT_HOME}/jq/1.6/bin" "${LIBSCRIPT_HOME}/jq/1.7.1/bin" "${LIBSCRIPT_HOME}/jq/1.7.1/lib" "${LIBSCRIPT_HOME}/jq/1.7.1/include"
 
   cat <<'EOF' > "${LIBSCRIPT_HOME}/jq/1.6/bin/jq"
 #!/bin/sh
-printf 'jq-1.6-isolated %s
-' "$*"
+printf 'jq-1.6-isolated %s\n' "$*"
 EOF
   cat <<'EOF' > "${LIBSCRIPT_HOME}/jq/1.7.1/bin/jq"
 #!/bin/sh
-printf 'jq-1.7.1-isolated %s
-' "$*"
+printf 'jq-1.7.1-isolated %s\n' "$*"
 EOF
   chmod +x "${LIBSCRIPT_HOME}/jq/1.6/bin/jq" "${LIBSCRIPT_HOME}/jq/1.7.1/bin/jq"
 
@@ -125,8 +114,7 @@ EOF
 # ## test_scoped_env_formats
 # Verifies env output across sh, cmd, ps1, fish, and json formats.
 test_scoped_env_formats() {
-  printf '==> 3. Testing Scoped env Output Format Matrix...
-'
+  printf '==> 3. Testing Scoped env Output Format Matrix...\n'
   _env_sh=$(sh "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/cli.sh" env jq 1.7.1 --format=sh)
   _env_cmd=$(sh "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/cli.sh" env jq 1.7.1 --format=cmd)
   _env_ps1=$(sh "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/cli.sh" env jq 1.7.1 --format=ps1)
@@ -154,19 +142,16 @@ test_offline_and_dependency_flags() {
   assert_contains "$_env_offline" "${LIBSCRIPT_HOME}/jq/1.7.1/bin" "CLI router parses --force-offline, --cache-dir, --service-name, and --*_STRATEGY cleanly"
 }
 
-printf '=== LibScript Behavioral Version Manager Contract Suite ===
-'
+printf '=== LibScript Behavioral Version Manager Contract Suite ===\n'
 test_non_invasive_isolation
 test_side_by_side_multi_version
 test_scoped_env_formats
 test_offline_and_dependency_flags
 
 if [ "$FAILURES" -gt 0 ]; then
-  printf '[FAIL] Behavioral Version Manager Contract Suite failed with %d failure(s)!
-' "$FAILURES" >&2
+  printf '[FAIL] Behavioral Version Manager Contract Suite failed with %d failure(s)!\n' "$FAILURES" >&2
   exit 1
 fi
 
-printf '=== All Behavioral Version Manager Contract Checks Passed! ===
-'
+printf '=== All Behavioral Version Manager Contract Checks Passed! ===\n'
 exit 0

@@ -24,16 +24,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 _EDGCPP_DIR="${SCRIPT_DIR}"
 
@@ -184,8 +181,23 @@ EOF
 
   "${CXX:-${SCRIPT_DIR}/edgcpp_wrapper.sh}" -std=c++17 -O2 "${_tmp_dir}/conformance.cpp" -o "${_tmp_dir}/conformance_cxx"
   _out_cxx="$("${_tmp_dir}/conformance_cxx")"
-  rm -rf "${_tmp_dir}"
   [ "${_out_cxx}" = "EDGCPP_CXX_CONFORMANCE_OK" ]
+
+  # Verify failure forensics & preprocessed (.i) reproducer generation on invalid C input
+  cat <<'EOF' > "${_tmp_dir}/broken_tu.c"
+int broken_kernel_fn(void) {
+    undeclared_identifier_xyz = 42;
+    return ;
+}
+EOF
+  _fail_log="${_tmp_dir}/edgcpp-failures.log"
+  _repro_dir="${_tmp_dir}/reproducers"
+  _err_rc=0
+  EDGCPP_STRICT_BACKEND=1 EDGCPP_FAILURE_LOG="${_fail_log}" EDGCPP_REPRO_DIR="${_repro_dir}" "${SCRIPT_DIR}/edgcpp_wrapper.sh" -std=gnu11 -D__KERNEL__ -c "${_tmp_dir}/broken_tu.c" -o "${_tmp_dir}/broken_tu.o" 2>/dev/null || _err_rc=$?
+  [ "${_err_rc}" -ne 0 ]
+  [ -s "${_fail_log}" ]
+  grep -q "EDGCPP FAILURE FORENSIC REPORT" "${_fail_log}"
+  rm -rf "${_tmp_dir}"
 }
 
 verify_edgcpp_binaries_and_headers

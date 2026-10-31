@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TMP_TEST_DIR=$(mktemp -d)
@@ -47,17 +44,14 @@ assert_contains() {
   _pattern="$2"
   _desc="$3"
   if grep -q "$_pattern" "$_file"; then
-    printf '[PASS] %s
-' "$_desc"
+    printf '[PASS] %s\n' "$_desc"
   else
-    printf '[FAIL] %s (pattern "%s" not found in %s)
-' "$_desc" "$_pattern" "$_file" >&2
+    printf '[FAIL] %s (pattern "%s" not found in %s)\n' "$_desc" "$_pattern" "$_file" >&2
     FAILURES=$((FAILURES + 1))
   fi
 }
 
-printf '=== LibScript Doc Coverage Shield & Hook Test Suite ===
-'
+printf '=== LibScript Doc Coverage Shield & Hook Test Suite ===\n'
 
 # 1. Test shield injection and 100% coverage on repository
 cp "${LIBSCRIPT_ROOT_DIR}/README.md" "${TMP_TEST_DIR}/README.md"
@@ -70,11 +64,9 @@ cp "${TMP_TEST_DIR}/README.md" "${TMP_TEST_DIR}/README.pass1.md"
 sh "${LIBSCRIPT_ROOT_DIR}/devtools/audit/doc_coverage.sh" --update-readme "${TMP_TEST_DIR}/README.md"
 
 if cmp -s "${TMP_TEST_DIR}/README.pass1.md" "${TMP_TEST_DIR}/README.md"; then
-  printf '[PASS] 2x consecutive runs of doc_coverage.sh --update-readme are 100%% idempotent.
-'
+  printf '[PASS] 2x consecutive runs of doc_coverage.sh --update-readme are 100%% idempotent.\n'
 else
-  printf '[FAIL] 2x consecutive runs of doc_coverage.sh --update-readme mutated README.md!
-' >&2
+  printf '[FAIL] 2x consecutive runs of doc_coverage.sh --update-readme mutated README.md!\n' >&2
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -105,22 +97,18 @@ echo "missing header"
 EOF
 
 if sh "${LIBSCRIPT_ROOT_DIR}/devtools/audit/doc_coverage.sh" --repo-root "${SANDBOX}" --update-readme "${SANDBOX}/README.md" >/dev/null 2>&1; then
-  printf '[FAIL] Expected non-zero exit code when docs are missing in sandbox
-' >&2
+  printf '[FAIL] Expected non-zero exit code when docs are missing in sandbox\n' >&2
   FAILURES=$((FAILURES + 1))
 else
-  printf '[PASS] Correctly exits non-zero when component README.md or script headers are missing
-'
+  printf '[PASS] Correctly exits non-zero when component README.md or script headers are missing\n'
 fi
 
 assert_contains "${SANDBOX}/README.md" '\[!\[Doc Coverage\](https://img\.shields\.io/badge/doc%20coverage-50%25-red\.svg)\](DOCS_ROADMAP\.md)' "Calculates 50% coverage (2/4 items) and updates shield color to red"
 
 if [ "$FAILURES" -gt 0 ]; then
-  printf '[FAIL] test_doc_coverage failed with %d error(s).
-' "$FAILURES" >&2
+  printf '[FAIL] test_doc_coverage failed with %d error(s).\n' "$FAILURES" >&2
   exit 1
 fi
 
-printf '=== All Doc Coverage Shield & Hook Checks Passed! ===
-'
+printf '=== All Doc Coverage Shield & Hook Checks Passed! ===\n'
 exit 0

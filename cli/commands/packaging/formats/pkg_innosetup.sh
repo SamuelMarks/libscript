@@ -48,7 +48,7 @@ EOF2
       fi
       cat << EOF2
 DefaultDirName={autopf}\\$APP_NAME
-PrivilegesRequired=$inno_priv
+PrivilegesRequired=${inno_priv:-admin}
 OutputDir=.
 OutputBaseFilename=$OUT_FILE
 EOF2

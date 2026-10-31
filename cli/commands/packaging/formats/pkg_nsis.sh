@@ -42,7 +42,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 Name "$APP_NAME \$APP_VERSION"
 OutFile "${OUT_FILE}.exe"
 InstallDir "\$PROGRAMFILES\\$APP_NAME"
-RequestExecutionLevel $nsis_admin
+RequestExecutionLevel ${nsis_admin:-admin}
 
 VIProductVersion "$APP_VERSION"
 VIAddVersionKey "ProductName" "$APP_NAME"

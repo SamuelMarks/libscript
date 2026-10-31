@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP=$(mktemp -d 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_multi_env_test.$$")
 mkdir -p "$TEST_TMP"
@@ -41,30 +38,12 @@ export LIBSCRIPT_HOME="${TEST_TMP}/home"
 export LIBSCRIPT_DATA_DIR="${TEST_TMP}/data"
 mkdir -p "${LIBSCRIPT_HOME}/nodejs/22/bin" "${LIBSCRIPT_HOME}/postgres/17/bin" "${LIBSCRIPT_HOME}/python/3.12/bin" "${LIBSCRIPT_HOME}/rust/stable/bin" "${LIBSCRIPT_HOME}/go/1.22/bin" "${LIBSCRIPT_HOME}/java/21/bin"
 
-printf '#!/bin/sh
-printf "v22.0.0
-"
-' > "${LIBSCRIPT_HOME}/nodejs/22/bin/node"
-printf '#!/bin/sh
-printf "psql (PostgreSQL) 17.0
-"
-' > "${LIBSCRIPT_HOME}/postgres/17/bin/psql"
-printf '#!/bin/sh
-printf "Python 3.12.0
-"
-' > "${LIBSCRIPT_HOME}/python/3.12/bin/python"
-printf '#!/bin/sh
-printf "rustc 1.80.0
-"
-' > "${LIBSCRIPT_HOME}/rust/stable/bin/rustc"
-printf '#!/bin/sh
-printf "go version go1.22.0
-"
-' > "${LIBSCRIPT_HOME}/go/1.22/bin/go"
-printf '#!/bin/sh
-printf "openjdk 21.0.0
-"
-' > "${LIBSCRIPT_HOME}/java/21/bin/java"
+printf '#!/bin/sh\nprintf "v22.0.0\\n"\n' > "${LIBSCRIPT_HOME}/nodejs/22/bin/node"
+printf '#!/bin/sh\nprintf "psql (PostgreSQL) 17.0\\n"\n' > "${LIBSCRIPT_HOME}/postgres/17/bin/psql"
+printf '#!/bin/sh\nprintf "Python 3.12.0\\n"\n' > "${LIBSCRIPT_HOME}/python/3.12/bin/python"
+printf '#!/bin/sh\nprintf "rustc 1.80.0\\n"\n' > "${LIBSCRIPT_HOME}/rust/stable/bin/rustc"
+printf '#!/bin/sh\nprintf "go version go1.22.0\\n"\n' > "${LIBSCRIPT_HOME}/go/1.22/bin/go"
+printf '#!/bin/sh\nprintf "openjdk 21.0.0\\n"\n' > "${LIBSCRIPT_HOME}/java/21/bin/java"
 chmod +x "${LIBSCRIPT_HOME}/nodejs/22/bin/node" "${LIBSCRIPT_HOME}/postgres/17/bin/psql" "${LIBSCRIPT_HOME}/python/3.12/bin/python" "${LIBSCRIPT_HOME}/rust/stable/bin/rustc" "${LIBSCRIPT_HOME}/go/1.22/bin/go" "${LIBSCRIPT_HOME}/java/21/bin/java"
 
 MANIFEST="${TEST_TMP}/libscript.json"
@@ -90,21 +69,14 @@ cat << 'EOF' > "$MANIFEST"
 }
 EOF
 
-printf '==> Testing libscript env --manifest...
-'
+printf '==> Testing libscript env --manifest...\n'
 ENV_OUT=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" env --manifest "$MANIFEST")
-printf '%s
-' "$ENV_OUT" | grep -q "nodejs/22/bin"
-printf '%s
-' "$ENV_OUT" | grep -q "postgres/17/bin"
-printf '%s
-' "$ENV_OUT" | grep -q "python/3.12/bin"
-printf '%s
-' "$ENV_OUT" | grep -q "rust/stable/bin"
-printf '%s
-' "$ENV_OUT" | grep -q "go/1.22/bin"
-printf '%s
-' "$ENV_OUT" | grep -q "java/21/bin"
+printf '%s\n' "$ENV_OUT" | grep -q "nodejs/22/bin"
+printf '%s\n' "$ENV_OUT" | grep -q "postgres/17/bin"
+printf '%s\n' "$ENV_OUT" | grep -q "python/3.12/bin"
+printf '%s\n' "$ENV_OUT" | grep -q "rust/stable/bin"
+printf '%s\n' "$ENV_OUT" | grep -q "go/1.22/bin"
+printf '%s\n' "$ENV_OUT" | grep -q "java/21/bin"
 if printf '%s\n' "$ENV_OUT" | grep -q "_common"; then
   printf '[FAIL] _common path pollution detected in env --manifest output!\n' >&2
   exit 1
@@ -121,8 +93,7 @@ printf '%s\n' "$DOTENV_OUT" | grep '^PATH=' | grep -q "postgres/17/bin"
 printf '%s\n' "$DOTENV_OUT" | grep '^PATH=' | grep -q "python/3.12/bin"
 printf '%s\n' "$DOTENV_OUT" | grep '^SERVICE_PATH=' | grep -q "nodejs/22/bin"
 
-printf '==> Testing run_hooks.sh multi-component PATH inheritance...
-'
+printf '==> Testing run_hooks.sh multi-component PATH inheritance...\n'
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/run_hooks.sh" "$MANIFEST" "post_install"
 
 grep -q "v22.0.0" "${TEST_TMP}/hook_out.txt"
@@ -132,5 +103,4 @@ grep -q "rustc 1.80.0" "${TEST_TMP}/hook_out.txt"
 grep -q "go1.22.0" "${TEST_TMP}/hook_out.txt"
 grep -q "openjdk 21.0.0" "${TEST_TMP}/hook_out.txt"
 
-printf '[PASS] Multi-component PATH inheritance verified for nodejs + postgres + python + rust + go + java!
-'
+printf '[PASS] Multi-component PATH inheritance verified for nodejs + postgres + python + rust + go + java!\n'

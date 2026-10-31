@@ -114,16 +114,46 @@ libscript_resolve_build_toolchain() {
       LIBSCRIPT_BUILD_TARGET_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_sb_comp}/${_sb_exact_ver}}"
     fi
   else
-    LIBSCRIPT_RESOLVED_CC_ID="${_tc_spec}"
-    if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_tc_spec}" ]; then
-      _cc_recipe_dir="${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_tc_spec}"
+    LIBSCRIPT_RESOLVED_CC_ID="$(printf '%s' "${_tc_spec}" | tr ':' '-')"
+    _base_cc_pkg="${_tc_spec}"
+    case "${_tc_spec}" in
+      edgcpp+gcc)
+        _base_cc_pkg='edgcpp'
+        export EDGCPP_FLAVOR='edgcpp+gcc'
+        export EDGCPP_BACKEND_MODE='gcc_backend'
+        ;;
+      edgcpp+llvm)
+        _base_cc_pkg='edgcpp'
+        export EDGCPP_FLAVOR='edgcpp+llvm'
+        export EDGCPP_BACKEND_MODE='llvm_backend'
+        ;;
+      edgcpp+llvm+gcc:gcc|edgcpp+llvm+gcc-gcc_be|edgcpp-gcc-be)
+        _base_cc_pkg='edgcpp'
+        LIBSCRIPT_RESOLVED_CC_ID='edgcpp+llvm+gcc-gcc_be'
+        export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
+        export EDGCPP_BACKEND_MODE='gcc_backend'
+        ;;
+      edgcpp+llvm+gcc:llvm|edgcpp+llvm+gcc-llvm_be|edgcpp-llvm-be)
+        _base_cc_pkg='edgcpp'
+        LIBSCRIPT_RESOLVED_CC_ID='edgcpp+llvm+gcc-llvm_be'
+        export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
+        export EDGCPP_BACKEND_MODE='llvm_backend'
+        ;;
+      edgcpp+llvm+gcc)
+        _base_cc_pkg='edgcpp'
+        export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
+        export EDGCPP_BACKEND_MODE="${EDGCPP_BACKEND_MODE:-llvm_backend}"
+        ;;
+    esac
+    if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_base_cc_pkg}" ]; then
+      _cc_recipe_dir="${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_base_cc_pkg}"
       _need_install=1
-      if [ "${_tc_spec}" = "gcc" ] && command -v gcc >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
+      if [ "${_base_cc_pkg}" = "gcc" ] && command -v gcc >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
         _need_install=1
       fi
       if [ "${_need_install}" = "1" ]; then
         unset SCRIPT_NAME || true
-        LIBSCRIPT_DEFAULT_INSTALL_METHOD="" LIBSCRIPT_BUILD_TOOLCHAIN="default" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_tc_spec}" latest || true
+        LIBSCRIPT_DEFAULT_INSTALL_METHOD="" LIBSCRIPT_BUILD_TOOLCHAIN="default" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_base_cc_pkg}" latest || true
       fi
       if [ -f "${_cc_recipe_dir}/env.sh" ]; then
         SCRIPT_NAME="${_cc_recipe_dir}/env.sh"
@@ -137,10 +167,19 @@ libscript_resolve_build_toolchain() {
       gcc)
         if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc"
-        elif command -v gcc >/dev/null 2>&1; then
-          LIBSCRIPT_RESOLVED_CC_BIN="$(command -v gcc)"
         else
-          LIBSCRIPT_RESOLVED_CC_BIN="${CC:-gcc}"
+          _cand_gcc="$(command -v gcc 2>/dev/null || true)"
+          if [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] && [ -n "${_cand_gcc}" ]; then
+            if "${_cand_gcc}" --version 2>&1 | grep -qi "clang"; then
+              for _brew_gcc in /opt/homebrew/bin/gcc-16 /opt/homebrew/bin/gcc-15 /opt/homebrew/bin/gcc-14 /opt/homebrew/bin/gcc-13 /usr/local/bin/gcc-16 /usr/local/bin/gcc-15 /usr/local/bin/gcc-14 /usr/local/bin/gcc-13; do
+                if [ -x "${_brew_gcc}" ]; then
+                  _cand_gcc="${_brew_gcc}"
+                  break
+                fi
+              done
+            fi
+          fi
+          LIBSCRIPT_RESOLVED_CC_BIN="${_cand_gcc:-${CC:-gcc}}"
         fi
         ;;
       clang)
@@ -161,16 +200,26 @@ libscript_resolve_build_toolchain() {
           LIBSCRIPT_RESOLVED_CC_BIN="${CC:-tcc}"
         fi
         ;;
-      edgcpp)
-        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edgcpp" ]; then
-          LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edgcpp"
+      edgcpp|edgcpp*)
+        _edg_pref="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EDGCPP_FLAVOR:-default}"
+        [ ! -d "${_edg_pref}" ] && _edg_pref="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default"
+        _edg_bin_name='edgcpp'
+        if [ "${EDGCPP_BACKEND_MODE:-}" = "gcc_backend" ] && [ -x "${_edg_pref}/bin/edgcpp-gcc-be" ]; then
+          _edg_bin_name='edgcpp-gcc-be'
+        elif [ "${EDGCPP_BACKEND_MODE:-}" = "llvm_backend" ] && [ -x "${_edg_pref}/bin/edgcpp-llvm-be" ]; then
+          _edg_bin_name='edgcpp-llvm-be'
+        fi
+        if [ -x "${_edg_pref}/bin/${_edg_bin_name}" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${_edg_pref}/bin/${_edg_bin_name}"
+        elif [ -x "${_edg_pref}/bin/edgcpp" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${_edg_pref}/bin/edgcpp"
         elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_ROOT_DIR}/_lib/languages/edgcpp/edgcpp_wrapper.sh"
         else
           LIBSCRIPT_RESOLVED_CC_BIN="${CC:-cc}"
         fi
-        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edg-c++" ]; then
-          LIBSCRIPT_RESOLVED_CXX_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default/bin/edg-c++"
+        if [ -x "${_edg_pref}/bin/edg-c++" ]; then
+          LIBSCRIPT_RESOLVED_CXX_BIN="${_edg_pref}/bin/edg-c++"
           export CXX="${LIBSCRIPT_RESOLVED_CXX_BIN}"
         fi
         ;;

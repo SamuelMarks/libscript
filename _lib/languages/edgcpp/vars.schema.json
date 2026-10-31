@@ -119,6 +119,46 @@
     "EDGCPP_USE_NATIVE_CODEGEN": {
       "type": "string",
       "description": "Configuration variable EDGCPP_USE_NATIVE_CODEGEN for edgcpp."
+    },
+    "EDGCPP_CHECK_LATEST": {
+      "type": "string",
+      "description": "Whether to query the GitHub Releases API dynamically for the latest SamuelMarks/edgcpp-compiler release tag when EDGCPP_VERSION is 'latest'."
+    },
+    "EDGCPP_ASSET_NAME": {
+      "type": "string",
+      "description": "Resolved GitHub release archive filename for edgcpp."
+    },
+    "EDGCPP_ASSET_SHA256": {
+      "type": "string",
+      "description": "Resolved SHA-256 digest for the edgcpp release archive."
+    },
+    "EDGCPP_INSTALLED_FLAVOR": {
+      "type": "string",
+      "description": "Flavor recorded in edgcpp.env for the installed edgcpp prefix ('edgcpp+gcc', 'edgcpp+llvm', or 'edgcpp+llvm+gcc')."
+    },
+    "EDGCPP_ACTIVE_FLAVOR": {
+      "type": "string",
+      "description": "Active release flavor resolved by edgcpp_wrapper at runtime."
+    },
+    "EDGCPP_FAILURE_LOG": {
+      "type": "string",
+      "description": "Path to the detailed diagnostic failure log written by edgcpp_wrapper when cpfe front-end or native backend compilation fails."
+    },
+    "EDGCPP_REPRO_DIR": {
+      "type": "string",
+      "description": "Directory where edgcpp_wrapper writes self-contained preprocessed (.i) translation units and standalone repro.sh / repro.cmd scripts on compilation failure."
+    },
+    "EDGCPP_VERBOSE_DIAGNOSTICS": {
+      "type": "string",
+      "description": "Whether to print full cpfe failure forensic blocks to stderr even when EDGCPP_STRICT_BACKEND is not enabled."
+    },
+    "EDGCPP_RESOLVED_BACKEND": {
+      "type": "string",
+      "description": "Resolved host C/C++ compiler/linker executable used by edgcpp_wrapper."
+    },
+    "EDGCPP_RESOLVED_CPFE_CP": {
+      "type": "string",
+      "description": "Resolved path to the cpfe-cp C++-generating backend executable."
     }
   }
 }

@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-kernel-edgcpp-4.19-tiny",
+  "description": "Minimal Linux 4.19.322 LTS kernel (tinyconfig, -std=gnu89) built from source with the EDG C/C++ Compiler Frontend (edgcpp v7.0.1).",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "version": "4.19.322",
+    "config_method": "tinyconfig",
+    "compiler": "edgcpp",
+    "kcflags": "-std=gnu89 -O2",
+    "cmdline": "console=ttyS0 panic=-1 quiet"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user"
+  },
+  "storage": {
+    "disk_size_gib": 2,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "limine",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "packages": ["edgcpp", "sqlite"]
+}

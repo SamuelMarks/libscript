@@ -188,6 +188,15 @@ audit_single_file() {
         if ($0 !~ /^[[:space:]]*#/) {
           allow_pkg_next = 0
           allow_fetch_next = 0
+          if ($0 ~ /\*\x27:"\$\{THIS_FILE\}":\x27\*/) {
+            bad_stack_quote_hits = (bad_stack_quote_hits ? bad_stack_quote_hits "; " : "") NR ":" $0
+          }
+          if ($0 ~ /^if \(return 0 2>\/dev\/null\); then return 0; else exit 0; fi$/) {
+            saw_top_ret_nr = NR
+          }
+          if (saw_top_ret_nr > 0 && NR == saw_top_ret_nr + 1 && $0 ~ /^STACK=/) {
+            unreachable_stack_hits = (unreachable_stack_hits ? unreachable_stack_hits "; " : "") NR ":" $0
+          }
           if ($0 ~ /SCRIPT_NAME=/) {
             last_script_name_nr = NR
           }
@@ -197,7 +206,7 @@ audit_single_file() {
             }
           }
           if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
-              $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+'\''%s\\n'\''|echo)[[:space:]]+"[^$`\\'\''"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
+              $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+\x27%s\\n\x27|echo)[[:space:]]+"[^$`\x5c\x27"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
               $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
             unnecessary_dq_hits = (unnecessary_dq_hits ? unnecessary_dq_hits "; " : "") NR ":" $0
           }
@@ -227,6 +236,8 @@ audit_single_file() {
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout): " raw_fetch_hits
         if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
+        if (bad_stack_quote_hits != "") print "RECURSION_GUARD|Single-quoted literal ${THIS_FILE} in STACK guard (SC2016 bug): " bad_stack_quote_hits
+        if (unreachable_stack_hits != "") print "RECURSION_GUARD|Unreachable STACK pop after return/exit (SC2317 bug): " unreachable_stack_hits
       }
     ' "$file" 2>/dev/null || true)
 

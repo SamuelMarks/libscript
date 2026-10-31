@@ -29,4 +29,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 PORT=$(cd vagrant/windows-11 && vagrant ssh-config | awk '/Port / {print $2}')
-ssh -p $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.vagrant.d/insecure_private_key vagrant@127.0.0.1 "powershell -Command \"if (Test-Path C:\libscript\msi_error.txt) { Get-Content C:\libscript\msi_error.txt } else { Write-Host 'No error file' }\""
+ssh -p "$PORT" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.vagrant.d/insecure_private_key vagrant@127.0.0.1 "powershell -Command \"if (Test-Path C:\libscript\msi_error.txt) { Get-Content C:\libscript\msi_error.txt } else { Write-Host 'No error file' }\""

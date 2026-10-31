@@ -121,6 +121,15 @@ https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2
 https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2Bgcc-v7.0.1-macos-aarch64.tar.gz 8d5571d014e18e3b1d28e0a5a7cd9b5eb2973a58af0e4920381509250f3f9d52
 https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2Bgcc-v7.0.1-windows-x86_64.zip e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a
 https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/edgcpp%2Bgcc-v7.0.1-windows-arm64.zip d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c
+https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v7.0.1/SHA256SUMS.txt ca39696f727ba7a7e3926f711f61537a0e33017dc61b0540338aa9af47cc5357
+https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.19.322.tar.xz a9f4c4c34f56b4e933b2e353f43c32a1d1f266e8061a676177f62c02a6922c60
+https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.284.tar.xz e84fa92ebcb98e96e3c6b9b4a0415be1f536fa310d9a3423225777078d1c2e79
+https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.226.tar.xz 4a25e862835f8c30d70dc03344ff07b1f71e1650b6aa9bc9553e41a46a7d3877
+https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz 063b0681f3802f07827d03f6ef4c58709222937f54463cb61161075126f41a2b
+https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.112.tar.xz 7e1be1fc7c44bc42fb50a691e6fa471c5c63523bc4817946c60e71fd1a862597
+https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.52.tar.xz b4b761bbeb5fdcf2cf7d8dcab5e662b12fa3027591ce4b64470709da00ffde94
+https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.11.2.tar.xz c87f2fbdf1891672b6f6a322cd3205fb08b55d6941b4e1df2bd516b51bf1a230
+https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.12.1.tar.xz 02fc74986d6aa6bc22179b0da1aa7ecbd289695aa13fb1c5d6df52f83cf368eb
 
 https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip 009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b
 https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-windows-amd64.exe ea6151b9add98253015e4e724e82ab176e78b576cc5715855181ec2bbc558663

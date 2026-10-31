@@ -42,7 +42,7 @@ for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 PYTHON_BIN="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
 MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
 DATA_DIR="${OPENEDX_DATA_DIR:-${OPENEDX_INSTALL_DIR}/data}"
@@ -52,8 +52,7 @@ CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
 # Resolves python interpreter.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
-    printf '%s
-' "${PYTHON_BIN}"
+    printf '%s\n' "${PYTHON_BIN}"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -115,8 +114,7 @@ if "${_cid}" not in data:
 EOF
   else
     if [ ! -f "${DATA_DIR}/courses.txt" ] || ! grep -qxF "${_cid}" "${DATA_DIR}/courses.txt" 2>/dev/null; then
-      printf '%s
-' "${_cid}" >> "${DATA_DIR}/courses.txt"
+      printf '%s\n' "${_cid}" >> "${DATA_DIR}/courses.txt"
     fi
   fi
 }
@@ -187,6 +185,16 @@ import_course() {
     (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py cms import "${DATA_DIR}" "${_staging_dir}" --settings=production) || exit 1
     log_info "Reindexing search index for course '${_course_id}'..."
     (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py lms reindex_course --course-id "${_course_id}" --settings=production) || exit 1
+    (cd "${OPENEDX_INSTALL_DIR}/codebase" && PYTHONPATH="${OPENEDX_INSTALL_DIR}/codebase" DJANGO_SETTINGS_MODULE="lms.envs.production" "${_py}" -c "
+import django
+django.setup()
+from django.contrib.auth import get_user_model
+from common.djangoapps.student.models import CourseEnrollment
+from opaque_keys.edx.keys import CourseKey
+ck = CourseKey.from_string('${_course_id}')
+for u in get_user_model().objects.filter(is_superuser=True):
+    CourseEnrollment.enroll(u, ck, check_access=False)
+" 2>/dev/null) || true
   else
     log_warn 'manage.py not found in codebase, skipping demo import.'
   fi

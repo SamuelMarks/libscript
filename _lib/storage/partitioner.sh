@@ -112,7 +112,7 @@ partition_linux_gpt() {
       # 1: ESP (512MB), 2: Swap, 3: Root
       sgdisk -n 1:2048:+512M -t 1:ef00 -c 1:"EFI System Partition" "$_dev"
       if [ "$_swap" -gt 0 ]; then
-        sgdisk -n 2:0:+${_swap}M -t 2:8200 -c 2:"Linux Swap" "$_dev"
+        sgdisk -n "2:0:+${_swap}M" -t 2:8200 -c 2:"Linux Swap" "$_dev"
         sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux Root" "$_dev"
       else
         sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux Root" "$_dev"
@@ -121,7 +121,7 @@ partition_linux_gpt() {
       # BIOS on GPT: 1: BIOS Boot (1MB), 2: Swap, 3: Root
       sgdisk -n 1:2048:+1M -t 1:ef02 -c 1:"BIOS Boot Partition" "$_dev"
       if [ "$_swap" -gt 0 ]; then
-        sgdisk -n 2:0:+${_swap}M -t 2:8200 -c 2:"Linux Swap" "$_dev"
+        sgdisk -n "2:0:+${_swap}M" -t 2:8200 -c 2:"Linux Swap" "$_dev"
         sgdisk -n 3:0:0 -t 3:8300 -c 3:"Linux Root" "$_dev"
       else
         sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux Root" "$_dev"
@@ -195,7 +195,7 @@ partition_dual_os_gpt() {
     sgdisk --zap-all "$_dev" >/dev/null 2>&1 || true
     sgdisk -n 1:2048:+512M -t 1:ef00 -c 1:"Shared EFI ESP" "$_dev"
     if [ "$_swap" -gt 0 ]; then
-      sgdisk -n 2:0:+${_swap}M -t 2:8200 -c 2:"Shared Swap" "$_dev"
+      sgdisk -n "2:0:+${_swap}M" -t 2:8200 -c 2:"Shared Swap" "$_dev"
       sgdisk -n 3:0:+20G -t 3:8300 -c 3:"Linux Root" "$_dev"
       sgdisk -n 4:0:0 -t 4:51687CBA-600F-11D6-A2E4-005054508801 -c 4:"FreeBSD Root" "$_dev"
     else

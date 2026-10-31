@@ -69,7 +69,7 @@ EOF
     [ -f "$pkg" ] || continue
     bname="${pkg##*/}"
     pname="${bname%%-[0-9]*}"
-    pver_rest="${bname#${pname}-}"
+    pver_rest="${bname#"${pname}"-}"
     pver="${pver_rest%%-*}"
     fsize=$(wc -c < "$pkg" | tr -d ' ' 2>/dev/null || echo 4096)
 

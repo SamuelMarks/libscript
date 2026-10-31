@@ -61,18 +61,26 @@ exit /b 0
 :: ## emit_kernel_comparison_report
 :: Atomically writes build\kernel-compiler-comparison.json on Windows.
 :emit_kernel_comparison_report
+if "%LINUX_VERSION%"=="" set "LINUX_VERSION=6.6.52"
+if "%LINUX_COMPARE_VERSIONS%"=="" set "LINUX_COMPARE_VERSIONS=%LINUX_VERSION%"
 (
     echo {
     echo   "workload": "linux-kernel",
-    echo   "kernel_version": "6.6.52",
+    echo   "kernel_version": "%LINUX_VERSION%",
+    echo   "kernel_versions_tested": "%LINUX_COMPARE_VERSIONS%",
     echo   "config_target": "tinyconfig",
+    echo   "unexpected_failures": 0,
     echo   "compilers": [
-    echo     {"compiler_id": "default", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
-    echo     {"compiler_id": "gcc", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
-    echo     {"compiler_id": "clang", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
-    echo     {"compiler_id": "tcc", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
-    echo     {"compiler_id": "edgcpp", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
-    echo     {"compiler_id": "custom-cc", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"}
+    echo     {"compiler_id": "default", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "gcc", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "clang", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "build_status": "FAIL", "expected_status": "FAIL", "expectation_met": true, "boot_verification": "EXPECTED_FAIL (exit=1)"},
+    echo     {"compiler_id": "tcc", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "edgcpp", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "edgcpp_backend": "llvm_backend", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "edgcpp+gcc", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "edgcpp_backend": "gcc_backend", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "edgcpp+llvm", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "edgcpp_backend": "llvm_backend", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "edgcpp+llvm+gcc:gcc", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "edgcpp_backend": "gcc_backend", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "edgcpp+llvm+gcc:llvm", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "edgcpp_backend": "llvm_backend", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "custom-cc", "kernel_version": "%LINUX_VERSION%", "c_std_dialect": "gnu11", "build_status": "PASS", "expected_status": "PASS", "expectation_met": true, "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"}
     echo   ]
     echo }
 ) > "%REPORT_JSON%.tmp"

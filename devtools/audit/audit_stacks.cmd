@@ -60,8 +60,6 @@ goto :main
 :: ## show_help
 :: Displays command-line usage instructions and available options.
 :show_help
-:: ## show_help
-:: Displays command-line usage instructions and available options.
 echo Usage: %~nx0
 echo Performs an audit and validation of all defined application stacks.
 echo.
@@ -72,8 +70,6 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-:: ## main
-:: Executes the primary orchestration workflow for this script.
 set "ROOT_DIR=%~dp0..\.."
 
 where powershell >nul 2>&1

@@ -382,7 +382,9 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; then
           printf '[REUSE] Frontend build for '\''%s'\'' (%s) in '\''%s'\'' is up-to-date (hash %s).\n' "$svc_id" "${framework:-spa}" "$src_dir" "$_fe_fp"
           printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
-          [ -d "${src_dir}/dist" ] && printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
+          if [ -d "${src_dir}/dist" ]; then
+            printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
+          fi
         else
           printf '[BUILD] Building frontend '\''%s'\'' (%s) in '\''%s'\''...\n' "$svc_id" "${framework:-spa}" "$src_dir"
           rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular/cache" "$src_dir/.vite" "$src_dir/.libscript_build.sha256"
@@ -412,7 +414,9 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
           )
           stamp_bundle_utc "$src_dir/dist"
           printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
-          [ -d "${src_dir}/dist" ] && printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
+          if [ -d "${src_dir}/dist" ]; then
+            printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
+          fi
         fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       else

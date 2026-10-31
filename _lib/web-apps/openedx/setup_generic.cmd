@@ -97,7 +97,7 @@ if /I "!backup_dir!"=="true" set "backup_dir="
 if "!BACKUP_DIR!"=="" if not "!backup_dir!"=="" set "BACKUP_DIR=!backup_dir!"
 if not "!BACKUP_DIR!"=="" (
     if "!BACKUP_DIR:~-1!"==" " set "BACKUP_DIR=!BACKUP_DIR:~0,-1!"
-    if "!BACKUP_DIR:~-1!"=="\" set "BACKUP_DIR=!BACKUP_DIR:~0,-1%"
+    if "!BACKUP_DIR:~-1!"=="\" set "BACKUP_DIR=!BACKUP_DIR:~0,-1!"
 )
 if /I "!mysql_port!"=="true" set "mysql_port="
 if "!MYSQL_PORT!"=="" if not "!mysql_port!"=="" set "MYSQL_PORT=!mysql_port!"
@@ -436,6 +436,11 @@ if "!ACTION!"=="install" (
         "!OPENEDX_INSTALL_DIR!\mfe_dist"
     ) do (
         if not exist "%%~fD" mkdir "%%~fD" 2>nul
+    )
+    if not exist "!OPENEDX_INSTALL_DIR!\codebase\manage.py" if not exist "!OPENEDX_INSTALL_DIR!\manage.py" (
+        echo [ERROR] Real openedx-platform codebase ^(manage.py, lms/wsgi.py, cms/wsgi.py^) is missing at !OPENEDX_INSTALL_DIR!\codebase. >&2
+        echo [ERROR] Real openedx-platform codebase ^(manage.py, lms/wsgi.py, cms/wsgi.py^) is missing at !OPENEDX_INSTALL_DIR!\codebase. >> "!OPENEDX_INSTALL_DIR!\logs\install.log"
+        exit /b 1
     )
     if exist "!OPENEDX_SCRIPT_DIR!\requirements-windows.txt" if exist "!OPENEDX_INSTALL_DIR!\codebase" (
         copy /y "!OPENEDX_SCRIPT_DIR!\requirements-windows.txt" "!OPENEDX_INSTALL_DIR!\codebase\requirements-windows.txt" >nul 2>&1

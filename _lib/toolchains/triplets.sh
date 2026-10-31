@@ -69,7 +69,7 @@ LIBSCRIPT_SECURITY_LDFLAGS="-Wl,-z,relro -Wl,-z,now"
 resolve_compiler_flags() {
   _cc_id="${1:-${CC_BACKEND:-default}}"
   case "${_cc_id}" in
-    tcc|custom-cc|edgcpp)
+    tcc|custom-cc|edgcpp|edgcpp*)
       LIBSCRIPT_COMPILER_CFLAGS='-O2'
       LIBSCRIPT_COMPILER_LDFLAGS=""
       ;;

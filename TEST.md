@@ -326,6 +326,9 @@ kernel C (Linux kernel), and the 13-target C11/C++17 component corpus:
 
 # 5. Verify 13-target C11 & C++17 component corpus compilation with edgcpp v7.0.1
 ./tests/test_edgcpp_corpus_matrix.sh
+
+# 6. Verify 8 Linux kernel versions (4.19.322 through 6.12.1) across gnu89/gnu11 & llvm/gcc backends with edgcpp v7.0.1
+./tests/test_edgcpp_kernel_versions.sh
 ```
 
 ---

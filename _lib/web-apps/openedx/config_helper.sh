@@ -645,7 +645,7 @@ do_generate() {
   _cf_dir=$(dirname "${_cf1}")
   mkdir -p "${_cf_dir}"
   _inst_dir=$(dirname "${_cf_dir}")
-  _inst_dir_fwd=$(printf '%s' "${_inst_dir}" | tr '\\' '/')
+  _inst_dir_fwd=$(printf '%s' "${_inst_dir}" | tr "\\" "/")
 
   _jwk_json=$(generate_jwk_pair)
   _pub_jwk='"{}"'

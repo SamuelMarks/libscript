@@ -59,7 +59,7 @@ for deb in "$POOL_DIR"/*.deb; do
   [ -f "$deb" ] || continue
   bname="${deb##*/}"
   pname="${bname%%_*}"
-  pver_rest="${bname#${pname}_}"
+  pver_rest="${bname#"${pname}"_}"
   pver="${pver_rest%_*}"
   parch="${pver_rest##*_}"
   parch="${parch%.deb}"

@@ -563,20 +563,24 @@ if [ "${START_AT_ONLINE:-0}" != "1" ]; then
   register_gui_task
   run_msi_mode_flows "offline" "C:/libscript/packaging/OpenEdX-Setup-Offline.msi"
 
-  # --- Step 2: Restore Snapshot ---
-  printf '\n=======================================================\n'
-  printf '=== Step 2: Restore Vanilla Snapshot ===\n'
-  printf '=======================================================\n'
-  restore_vanilla_snapshot
-  sync_guest_environment
+  if [ "${OFFLINE_ONLY:-0}" != "1" ]; then
+    # --- Step 2: Restore Snapshot ---
+    printf '\n=======================================================\n'
+    printf '=== Step 2: Restore Vanilla Snapshot ===\n'
+    printf '=======================================================\n'
+    restore_vanilla_snapshot
+    sync_guest_environment
+  fi
 fi
 
+if [ "${OFFLINE_ONLY:-0}" != "1" ]; then
 # --- Step 3: Install Open edX Online Mode (Simple & Advanced) and Confirm It Works ---
 printf '\n=======================================================\n'
 printf '=== Step 3: Install Open edX Online Mode (Simple & Advanced) ===\n'
 printf '=======================================================\n'
 register_gui_task
 run_msi_mode_flows "online" "C:/libscript/packaging/OpenEdX-Setup.msi"
+fi
 fi
 
 # --- Steps 4 - 7: Browser Verification Tabs (Cropped to Browser Window) ---

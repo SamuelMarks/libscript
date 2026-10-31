@@ -38,4 +38,11 @@ TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-s
 [ -f "${TARGET_SYSROOT}/boot/vmlinuz" ]
 [ -f "${TARGET_SYSROOT}/boot/System.map" ]
 [ -f "${TARGET_SYSROOT}/boot/config" ]
+
+"${SCRIPT_DIR}/compare_compilers.sh" --compilers="gcc clang edgcpp+gcc edgcpp+llvm" --versions="5.15.167 6.6.52"
+"${SCRIPT_DIR}/compare_compilers.sh" --compilers="gcc clang edgcpp+gcc edgcpp+llvm" --versions="5.15.167 6.6.52"
+[ -f "${LIBSCRIPT_ROOT_DIR}/build/kernel-compiler-comparison.json" ]
+grep -q '"compiler_id": "edgcpp+gcc"' "${LIBSCRIPT_ROOT_DIR}/build/kernel-compiler-comparison.json"
+grep -q '"compiler_id": "edgcpp+llvm"' "${LIBSCRIPT_ROOT_DIR}/build/kernel-compiler-comparison.json"
+grep -q '"expected_status": "FAIL"' "${LIBSCRIPT_ROOT_DIR}/build/kernel-compiler-comparison.json"
 exit 0

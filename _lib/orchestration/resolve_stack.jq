@@ -95,6 +95,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   (if ($os_fam | startswith("freebsd")) then "freebsd" elif ($os_fam | startswith("unikraft")) then "unikraft" else "linux" end) as $target_os |
   ($cfg.profile_name // "custom") as $profile |
   ($cfg.kernel.compiler // "default") as $kcompiler |
+  ($cfg.kernel.version // "6.6.52") as $kversion |
   ($cfg.kernel.config_method // "defconfig") as $kconfig |
   ($cfg.kernel.kcflags // "-O2") as $kkcflags |
   ($cfg.kernel.custom_cc_bin // "") as $kcustom_bin |
@@ -254,6 +255,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
             "variants": [],
             "env": {
               "LIBSCRIPT_STAGE": "stage3",
+              "LINUX_VERSION": $kversion,
               "LINUX_BUILD_TOOLCHAIN": $kcompiler,
               "LINUX_COMPILER": $kcompiler,
               "LINUX_CONFIG_TARGET": $kconfig,

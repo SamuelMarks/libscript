@@ -138,6 +138,20 @@ function Import-DemoCourse {
             $env:REVISION_CFG = Join-Path $InstallDir 'config\revisions.yml'
             & $python $managePy cms import $dataDir $stagingDir --settings=production 2>$null
             & $python $managePy lms reindex_course --course-id $TargetId --settings=production 2>$null
+            $enrollPy = @"
+import os, django
+django.setup()
+from django.contrib.auth import get_user_model
+from common.djangoapps.student.models import CourseEnrollment
+from opaque_keys.edx.keys import CourseKey
+User = get_user_model()
+ck = CourseKey.from_string('$TargetId')
+for u in User.objects.filter(is_superuser=True):
+    CourseEnrollment.enroll(u, ck, check_access=False)
+"@
+            $env:DJANGO_SETTINGS_MODULE = 'lms.envs.production'
+            $env:PYTHONPATH = $codebaseDir
+            & $python -c $enrollPy 2>$null
         } finally {
             Pop-Location
         }

@@ -62,6 +62,14 @@ audit_file() {
     printf '[FAIL] [%s] Missing canonical THIS_FILE= resolution dance in first 65 lines\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
+  if grep -q "\*':\"\${THIS_FILE}\"':\*" "$file" 2>/dev/null; then
+    printf '[FAIL] [%s] Single-quoted literal ${THIS_FILE} in STACK recursion guard\n' "$file" >&2
+    ERRORS=$((ERRORS + 1))
+  fi
+  if grep -B 1 '^STACK="\${STACK%"\${THIS_FILE}":}"' "$file" 2>/dev/null | grep -q 'return 0; else exit 0'; then
+    printf '[FAIL] [%s] Unreachable STACK pop placed after return/exit\n' "$file" >&2
+    ERRORS=$((ERRORS + 1))
+  fi
 
   # 4. Banned Bashisms checks
   if grep -E '(if[[:space:]]+\[\[|[[:space:]]\[\[[[:space:]]|&&[[:space:]]*\[\[|\|\|[[:space:]]*\[\[)' "$file" >/dev/null 2>&1; then
@@ -116,7 +124,7 @@ audit_file() {
       }
       if ($0 ~ /^[[:space:]]*#/) next
       if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
-          $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+'\''%s\\n'\''|echo)[[:space:]]+"[^$`\\'\''"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
+          $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+\x27%s\\n\x27|echo)[[:space:]]+"[^$`\x5c\x27"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
           $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
         print NR ":" $0
       }

@@ -55,17 +55,7 @@ goto :find_root
 
 if "%ACTION%"=="" set "ACTION=install"
 if "%EDGCPP_VERSION%"=="" set "EDGCPP_VERSION=7.0.1"
-if /i "%EDGCPP_VERSION%"=="latest" (
-    set "EXACT_VERSION=7.0.1"
-) else if /i "%EDGCPP_VERSION%"=="stable" (
-    set "EXACT_VERSION=7.0.1"
-) else if /i "%EDGCPP_VERSION%"=="7.0" (
-    set "EXACT_VERSION=7.0.1"
-) else if /i "%EDGCPP_VERSION%"=="v7.0.1" (
-    set "EXACT_VERSION=7.0.1"
-) else (
-    set "EXACT_VERSION=%EDGCPP_VERSION%"
-)
+call :resolve_latest_edgcpp_release
 if "%EDGCPP_FLAVOR%"=="" set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
@@ -91,6 +81,22 @@ if /i "%ACTION%"=="use" goto :action_use
 if /i "%ACTION%"=="download" goto :action_download
 if /i "%ACTION%"=="uninstall" goto :action_uninstall
 goto :action_install
+
+:: ## resolve_latest_edgcpp_release
+:: Resolves semantic version aliases ('latest', 'stable', '7.0', 'v7.0.1') to '7.0.1' on Windows.
+:resolve_latest_edgcpp_release
+if /i "%EDGCPP_VERSION%"=="latest" (
+    set "EXACT_VERSION=7.0.1"
+) else if /i "%EDGCPP_VERSION%"=="stable" (
+    set "EXACT_VERSION=7.0.1"
+) else if /i "%EDGCPP_VERSION%"=="7.0" (
+    set "EXACT_VERSION=7.0.1"
+) else if /i "%EDGCPP_VERSION%"=="v7.0.1" (
+    set "EXACT_VERSION=7.0.1"
+) else (
+    set "EXACT_VERSION=%EDGCPP_VERSION%"
+)
+exit /b 0
 
 :: ## action_ls
 :: Lists installed edgcpp versions under LIBSCRIPT_HOME.
@@ -122,13 +128,17 @@ exit /b 0
 :: ## action_install
 :: Downloads/extracts the edgcpp v7.0.1 release archive, stages driver wrappers, and updates the default junction.
 :action_install
-set "TARGET_DIR=%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%"
+set "TARGET_DIR=%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 if exist "%TARGET_DIR%\bin\edgcpp.cmd" (
     if exist "%TARGET_DIR%\bin\cpfe.exe" (
-        if not "%FORCE_REBUILD%"=="1" (
-            echo [INFO] edgcpp %EXACT_VERSION% is already installed at %TARGET_DIR%.
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
-            exit /b 0
+        if exist "%TARGET_DIR%\edgcpp-release-metadata.json" (
+            if not "%FORCE_REBUILD%"=="1" (
+                echo [INFO] edgcpp %EXACT_VERSION% ^(%EDGCPP_FLAVOR%^) is already installed at %TARGET_DIR%.
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                exit /b 0
+            )
         )
     )
 )
@@ -149,6 +159,8 @@ if exist "!_dl_zip!" (
 )
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-cc.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-gcc-be.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-llvm-be.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-c++.cmd" >nul
 if not exist "%TARGET_DIR%\include_c99\stdint.h" (
     (
@@ -181,13 +193,28 @@ if not exist "%TARGET_DIR%\include_c99\stddef.h" (
         echo #endif
     ) > "%TARGET_DIR%\include_c99\stddef.h"
 )
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_VERSION%" "%EXACT_VERSION%"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
+(
+    echo {
+    echo   "component": "edgcpp",
+    echo   "version": "%EXACT_VERSION%",
+    echo   "flavor": "%EDGCPP_FLAVOR%",
+    echo   "asset_name": "%EDGCPP_ASSET_NAME%",
+    echo   "asset_sha256": "%EDGCPP_ASSET_SHA256%",
+    echo   "repository": "https://github.com/SamuelMarks/edgcpp-compiler"
+    echo }
+) > "%TARGET_DIR%\edgcpp-release-metadata.json.tmp"
+move /y "%TARGET_DIR%\edgcpp-release-metadata.json.tmp" "%TARGET_DIR%\edgcpp-release-metadata.json" >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 exit /b 0
 
 :: ## action_uninstall
 :: Removes the installed edgcpp version directory.
 :action_uninstall
+if exist "%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%-%EDGCPP_FLAVOR%" rmdir /s /q "%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 if exist "%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%" rmdir /s /q "%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%"
+if exist "%LIBSCRIPT_HOME%\edgcpp\%EDGCPP_FLAVOR%" rmdir /s /q "%LIBSCRIPT_HOME%\edgcpp\%EDGCPP_FLAVOR%"
 if exist "%LIBSCRIPT_HOME%\edgcpp\default" rmdir /s /q "%LIBSCRIPT_HOME%\edgcpp\default"
 exit /b 0

@@ -76,10 +76,13 @@ mkdir -p "$TARGET_DIR/edx/app/edxapp/venvs/edxapp/bin" "$TARGET_DIR/edx/app/edxa
 mkdir -p "$TARGET_DIR/edx/var/log/lms" "$TARGET_DIR/edx/var/log/cms" "$TARGET_DIR/edx/bin"
 mkdir -p "$TARGET_DIR/etc/edx" "$TARGET_DIR/etc/systemd/system"
 
-# 2. Configure Open edX environment properties
+# 2. Configure Open edX environment properties via canonical config.sh recipe
+if [ -x "${REPO_ROOT}/_lib/web-apps/openedx/config.sh" ]; then
+  OPENEDX_INSTALL_DIR="$TARGET_DIR/edx/app/edxapp/edx-platform" "${REPO_ROOT}/_lib/web-apps/openedx/config.sh" generate >/dev/null 2>&1 || true
+fi
 cat << 'EOF' > "$TARGET_DIR/etc/edx/config.json"
 {
-  "PLATFORM_NAME": "LibScript Open edX Live Instance",
+  "PLATFORM_NAME": "Open edX",
   "LMS_BASE": "localhost:18000",
   "CMS_BASE": "localhost:18010",
   "MYSQL_DB_NAME": "openedx",

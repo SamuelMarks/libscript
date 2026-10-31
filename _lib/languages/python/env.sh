@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _EB_CALLER_THIS="${THIS_FILE}"
 _EB_CALLER_DIR="${SCRIPT_DIR}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
@@ -82,10 +79,7 @@ if [ "${PYTHON_VERSION:-}" ]; then
   set -f
   for _py_cand in "${_py_base}/default/bin" "${_py_dir}/bin"; do
     if [ -d "$_py_cand" ] || [ "$_py_cand" = "${_py_dir}/bin" ]; then
-      case ":${PATH:-}:" in
-        *":${_py_cand}:"*) ;;
-        *) PATH="${_py_cand}${PATH:+:${PATH}}" ;;
-      esac
+      libscript_path_prepend "$_py_cand"
     fi
   done
   export PATH

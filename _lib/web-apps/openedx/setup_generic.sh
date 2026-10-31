@@ -69,7 +69,7 @@ DIR="${OPENEDX_DIR}"
 export DIR
 
 ACTION="${ACTION:-install}"
-OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 LMS_PORT="${LMS_PORT:-8000}"
 CMS_PORT="${CMS_PORT:-8001}"
 REPO_URL="${OPENEDX_EDX_PLATFORM_REPOSITORY:-https://github.com/openedx/edx-platform.git}"
@@ -381,7 +381,7 @@ case "$ACTION" in
       fi
       exit 0
     fi
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx/${VERSION:-latest}/bin/openedx" ]; then
+    if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx/${VERSION:-latest}/bin/openedx" ]; then
       log_info "openedx ${VERSION:-latest} is already installed."
       exit 0
     fi
@@ -557,6 +557,10 @@ case "$ACTION" in
     _codebase="${OPENEDX_INSTALL_DIR}/codebase"
     if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       _codebase="${OPENEDX_INSTALL_DIR}"
+    fi
+    if [ ! -f "${_codebase}/manage.py" ]; then
+      log_error "Real openedx-platform codebase (manage.py, lms/wsgi.py, cms/wsgi.py) is missing at ${_codebase}."
+      exit 1
     fi
     if [ -f "${DIR}/requirements-windows.txt" ] && [ -d "${_codebase}" ]; then
       cp -f "${DIR}/requirements-windows.txt" "${_codebase}/requirements-windows.txt" 2>/dev/null || true

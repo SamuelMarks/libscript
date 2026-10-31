@@ -103,10 +103,18 @@ extract_marker_section() {
 # Signal handler to abort documentation generation immediately on interruption.
 handle_interrupt() {
   trap - INT TERM HUP EXIT
-  [ -n "${base_vars_tmp-}" ] && [ -f "${base_vars_tmp-}" ] && rm -f "$base_vars_tmp" 2>/dev/null || true
-  [ -n "${vars_tmp-}" ] && [ -f "${vars_tmp-}" ] && rm -f "$vars_tmp" 2>/dev/null || true
-  [ -n "${plat_tmp-}" ] && [ -f "${plat_tmp-}" ] && rm -f "$plat_tmp" 2>/dev/null || true
-  [ -n "${modified_tmp-}" ] && [ -f "${modified_tmp-}" ] && rm -f "$modified_tmp" 2>/dev/null || true
+  if [ -n "${base_vars_tmp-}" ] && [ -f "${base_vars_tmp-}" ]; then
+    rm -f "$base_vars_tmp" 2>/dev/null || true
+  fi
+  if [ -n "${vars_tmp-}" ] && [ -f "${vars_tmp-}" ]; then
+    rm -f "$vars_tmp" 2>/dev/null || true
+  fi
+  if [ -n "${plat_tmp-}" ] && [ -f "${plat_tmp-}" ]; then
+    rm -f "$plat_tmp" 2>/dev/null || true
+  fi
+  if [ -n "${modified_tmp-}" ] && [ -f "${modified_tmp-}" ]; then
+    rm -f "$modified_tmp" 2>/dev/null || true
+  fi
   exit 130
 }
 

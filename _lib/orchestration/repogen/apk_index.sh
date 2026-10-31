@@ -56,7 +56,7 @@ for pkg in "$TARGET_DIR"/*.apk; do
   [ -f "$pkg" ] || continue
   bname="${pkg##*/}"
   pname="${bname%%-[0-9]*}"
-  pver_full="${bname#${pname}-}"
+  pver_full="${bname#"${pname}"-}"
   pver="${pver_full%.apk}"
   psize=$(wc -c < "$pkg" | tr -d ' ' 2>/dev/null || echo 1024)
 
