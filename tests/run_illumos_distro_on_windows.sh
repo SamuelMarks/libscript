@@ -2,7 +2,6 @@
 # ## Overview
 # Executes illumos distribution batch scripts directly on Windows 11 Vagrant VM.
 # Validates delayed expansion, errorlevel handling, and backslash path normalization.
-#
 # ## Usage
 # Run Windows host verification:
 #   tests/run_illumos_distro_on_windows.sh

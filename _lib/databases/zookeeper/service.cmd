@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages the Apache ZooKeeper daemon (`2181`) lifecycle on Windows.
-::
 :: ## Usage
 :: _lib\databases\zookeeper\service.cmd <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for mosquitto on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for mosquitto.
+:: Executes initialization, logic, or testing for mosquitto. Windows environment configuration and PATH probes for mosquitto
 
-:: Windows environment configuration and PATH probes for mosquitto
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

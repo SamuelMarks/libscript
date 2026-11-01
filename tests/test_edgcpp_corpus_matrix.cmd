@@ -1,9 +1,7 @@
 @echo off
 :: # test_edgcpp_corpus_matrix.cmd
-::
 :: ## Overview
 :: Unified multi-target C/C++ corpus build and conformance verification harness for edgcpp v7.0.1 on Windows.
-::
 :: ## Usage
 :: test_edgcpp_corpus_matrix.cmd
 

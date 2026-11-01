@@ -1,10 +1,7 @@
 @echo off
 :: # compare_msirs_wix.cmd
-::
 :: ## Overview
-:: Builds an installer target with SamuelMarks/msi-rs (default) and compares its
-:: MSI tables and structure against the Windows-only WiX Toolset using msiinfo and msidiff.
-::
+:: Builds an installer target with SamuelMarks/msi-rs (default) and compares its MSI tables and structure against the Windows-only WiX Toolset using msiinfo and msidiff.
 :: ## Usage
 :: packaging\compare_msirs_wix.cmd [--target <dir>] [--variant <online|offline>] [--out-dir <dir>]
 

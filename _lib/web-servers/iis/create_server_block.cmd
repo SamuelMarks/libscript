@@ -1,13 +1,9 @@
 @echo off
 :: # create_server_block.cmd
-::
 :: ## Overview
 :: Creates and configures an IIS site and FastCGI handler.
-::
 :: ## Usage
-:: create_server_block.cmd create_server_block.cmd [options]
-:: When running on Windows environments (or under Cygwin/MSYS2), delegates
-:: execution to create_server_block.ps1 via PowerShell.
+:: create_server_block.cmd create_server_block.cmd [options] When running on Windows environments (or under Cygwin/MSYS2), delegates execution to create_server_block.ps1 via PowerShell.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

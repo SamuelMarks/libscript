@@ -1,9 +1,7 @@
 @echo off
 :: # provision_tenant.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'provision_tenant' for the valkey component on Windows.
-::
 :: ## Usage
 :: hooks\provision_tenant.cmd [args...]
 

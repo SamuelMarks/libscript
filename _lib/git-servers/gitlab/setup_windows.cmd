@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for gitlab on Windows.
-:: Prepares and configures gitlab on native Windows environments.
-::
+:: Setup script for gitlab on Windows. Prepares and configures gitlab on native Windows environments.
 :: ## Usage
 :: Automatically invoked during libscript gitlab installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

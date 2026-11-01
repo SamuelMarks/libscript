@@ -1,14 +1,11 @@
 #!/bin/sh
 # ## Overview
 # CLI interface for GCP Filestore instances.
-#
 # ## Usage
 # ./libscript.sh gcp-filestore [create|delete] <name>
-#
 # ## Operations
 # - `create <name>`: Create a Filestore instance.
 # - `delete <name>`: Delete a Filestore instance.
-
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # aws_ami.cmd
-::
 :: ## Overview
-:: Synthesizes Amazon Web Services (AWS) EC2 AMI raw EBS volume images and
-:: deployment scripts on Windows.
-::
+:: Synthesizes Amazon Web Services (AWS) EC2 AMI raw EBS volume images and deployment scripts on Windows.
 :: ## Usage
 :: call cli\commands\package_as\aws_ami.cmd [input_raw_or_sysroot] [output_raw] [size_gib]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

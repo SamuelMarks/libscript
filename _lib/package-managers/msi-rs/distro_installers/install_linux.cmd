@@ -1,14 +1,9 @@
 @echo off
 :: # install_linux.cmd
-::
 :: ## Overview
-:: Target operating system installation pipeline for Linux distributions (Debian, Alpine, Rocky, LFS).
-:: Handles base userland extraction, kernel installation, network configuration,
-:: /etc/fstab generation, and GRUB EFI/BIOS bootloader setup under /mnt/target.
-::
+:: Target operating system installation pipeline for Linux distributions (Debian, Alpine, Rocky, LFS). Handles base userland extraction, kernel installation, network configuration, /etc/fstab generation, and GRUB EFI/BIOS bootloader setup under /mnt/target.
 :: ## Usage
-:: Execute this script to install Linux to a target device:
-::   ./_lib/package-managers/msi-rs/distro_installers/install_linux.cmd <target_dev> [flavor] [target_dir]
+:: Execute this script to install Linux to a target device: ./_lib/package-managers/msi-rs/distro_installers/install_linux.cmd <target_dev> [flavor] [target_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

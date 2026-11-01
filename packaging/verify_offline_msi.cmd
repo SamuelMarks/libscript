@@ -1,15 +1,7 @@
 @echo off
 :: # verify_offline_msi.cmd
-::
 :: ## Overview
-:: Automated verification suite for the Air-Gapped Enterprise MSI Deployment Checklist (`WINDOWS_MSI.md`) on Windows.
-:: Validates:
-:: 1. Cache Hydration & Integrity (`hydrate_offline_cache.cmd --verify-only`)
-:: 2. Zero Network Dependency (`PROP_OPENEDX_OFFLINE=1` & `LIBSCRIPT_FORCE_OFFLINE=1`)
-:: 3. Silent Installation (`msiexec /i OpenEdX-Offline-Setup.msi /qn /l*v`)
-:: 4. Port Availability (8000, 8001, 3306, 6379, 27017, 7700)
-:: 5. Clean Removal (`msiexec /x OpenEdX-Offline-Setup.msi /qn`)
-::
+:: Automated verification suite for the Air-Gapped Enterprise MSI Deployment Checklist (`WINDOWS_MSI.md`) on Windows. Validates: 1. Cache Hydration & Integrity (`hydrate_offline_cache.cmd --verify-only`) 2. Zero Network Dependency (`PROP_OPENEDX_OFFLINE=1` & `LIBSCRIPT_FORCE_OFFLINE=1`) 3. Silent Installation (`msiexec /i OpenEdX-Offline-Setup.msi /qn /l*v`) 4. Port Availability (8000, 8001, 3306, 6379, 27017, 7700) 5. Clean Removal (`msiexec /x OpenEdX-Offline-Setup.msi /qn`)
 :: ## Usage
 :: call packaging\verify_offline_msi.cmd [--dry-run] [--msi <path>]
 

@@ -1,9 +1,7 @@
 @echo off
 :: # config.cmd
-::
 :: ## Overview
 :: Declarative OS configuration driver supporting profiles, schema validation, and JSON export on Windows.
-::
 :: ## Usage
 :: config.cmd os [--profile=<name>] [--export=<out.json>] [--validate=<file.json>]
 

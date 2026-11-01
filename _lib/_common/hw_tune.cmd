@@ -1,15 +1,9 @@
 @echo off
 :: # hw_tune.cmd
-::
 :: ## Overview
-:: Hardware-aware optimization module (`hw_tune.cmd`) on Windows.
-:: Detects host CPU cores (`LIBSCRIPT_HW_CORES`) and total RAM in MiB (`LIBSCRIPT_HW_MEM_MB`),
-:: and computes optimal tuning settings for PostgreSQL (`shared_buffers`), Nginx (`worker_processes`),
-:: and Redis/Valkey (`maxmemory`).
-::
+:: Hardware-aware optimization module (`hw_tune.cmd`) on Windows. Detects host CPU cores (`LIBSCRIPT_HW_CORES`) and total RAM in MiB (`LIBSCRIPT_HW_MEM_MB`), and computes optimal tuning settings for PostgreSQL (`shared_buffers`), Nginx (`worker_processes`), and Redis/Valkey (`maxmemory`).
 :: ## Usage
-:: call _lib\_common\hw_tune.cmd :libscript_detect_hardware
-:: call _lib\_common\hw_tune.cmd :libscript_apply_hardware_tuning <component>
+:: call _lib\_common\hw_tune.cmd :libscript_detect_hardware call _lib\_common\hw_tune.cmd :libscript_apply_hardware_tuning <component>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

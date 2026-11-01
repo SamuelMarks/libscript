@@ -1,10 +1,7 @@
 @echo off
 :: # test_proxy_idempotency.cmd
-::
 :: ## Overview
-:: Validates reverse proxy interpolation idempotency, failure rollback, and
-:: side-by-side vhost coexistence on Windows.
-::
+:: Validates reverse proxy interpolation idempotency, failure rollback, and side-by-side vhost coexistence on Windows.
 :: ## Usage
 :: call tests\test_proxy_idempotency.cmd
 

@@ -3,7 +3,6 @@
 # Cloud-Hypervisor provider and virtualization engine.
 # Boots synthesized guest kernels and disk images using modern VirtIO-fs shared
 # directory filesystems and persistent memory (VirtIO-pmem) block layers.
-#
 # ## Usage
 # Run `setup.sh [action] [kernel_vmlinux] [disk_image] [virtiofs_dir]`
 

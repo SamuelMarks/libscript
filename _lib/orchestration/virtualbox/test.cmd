@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Test suite script for VirtualBox on Windows.
-::
 :: ## Usage
 :: Call this script to verify VirtualBox functionality on Windows.
 

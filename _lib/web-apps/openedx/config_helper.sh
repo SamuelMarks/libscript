@@ -1,18 +1,10 @@
 #!/bin/sh
 # cspell:words edxmako DJFS osfs pyfs localfs openassessment Cryptodome jwkest csrftoken MICROFRONTEND
 # ## Overview
-# Configuration helper utility for Open edX configuration management.
-# Provides key inspection, mutation, full production lms.yml / cms.yml / revisions.yml / Caddyfile
-# generation (including 2048-bit RSA JWK keys), and syntax validation.
-#
+# Configuration helper utility for Open edX configuration management. Provides key inspection, mutation, full production lms.yml / cms.yml / revisions.yml / Caddyfile generation (including 2048-bit RSA JWK keys), and syntax validation.
 # ## Usage
-# ./_lib/web-apps/openedx/config_helper.sh get <conf_file> <key>
-# ./_lib/web-apps/openedx/config_helper.sh set <conf_file1> <conf_file2> <key> <val>
-# ./_lib/web-apps/openedx/config_helper.sh generate <conf_file1> <conf_file2>
-# ./_lib/web-apps/openedx/config_helper.sh validate <conf_file> <schema_file>
-
+# ./_lib/web-apps/openedx/config_helper.sh get <conf_file> <key> ./_lib/web-apps/openedx/config_helper.sh set <conf_file1> <conf_file2> <key> <val> ./_lib/web-apps/openedx/config_helper.sh generate <conf_file1> <conf_file2> ./_lib/web-apps/openedx/config_helper.sh validate <conf_file> <schema_file>
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

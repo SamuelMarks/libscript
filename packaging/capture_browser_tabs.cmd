@@ -1,9 +1,7 @@
 @echo off
 :: # capture_browser_tabs.cmd
-::
 :: ## Overview
 :: Automates launching Microsoft Edge with LMS and Studio tabs, toggling tab focus, and signaling screenshot capture.
-::
 :: ## Usage
 :: call "%~dp0capture_browser_tabs.cmd" [-LmsUrl <url>] [-StudioUrl <url>]
 

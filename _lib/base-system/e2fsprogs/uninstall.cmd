@@ -1,10 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
-:: Uninstallation script for the e2fsprogs component on Windows.
-:: Safely removes the component and its associated files.
-::
+:: Uninstallation script for the e2fsprogs component on Windows. Safely removes the component and its associated files.
 :: ## Usage
 :: e2fsprogs\uninstall.cmd [args]
 

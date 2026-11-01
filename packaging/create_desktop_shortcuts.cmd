@@ -1,11 +1,7 @@
 @echo off
 :: # create_desktop_shortcuts.cmd
-::
 :: ## Overview
-:: Desktop shortcut creation utility for Open edX.
-:: On Windows, delegates to PowerShell create_desktop_shortcuts.ps1.
-:: On Linux/Unix, writes standard Freedesktop .desktop launchers into Desktop.
-::
+:: Desktop shortcut creation utility for Open edX. On Windows, delegates to PowerShell create_desktop_shortcuts.ps1. On Linux/Unix, writes standard Freedesktop .desktop launchers into Desktop.
 :: ## Usage
 :: create_desktop_shortcuts.cmd packaging/create_desktop_shortcuts.cmd
 

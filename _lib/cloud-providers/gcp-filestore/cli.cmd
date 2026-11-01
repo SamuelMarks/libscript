@@ -2,13 +2,8 @@
 :: # cli.cmd
 :: ## Overview
 :: CLI interface for GCP Filestore instances on Windows.
-::
 :: ## Usage
-:: libscript gcp-filestore [create|delete] <name>
-::
-:: ## Operations
-:: - `create <name>`: Create a Filestore instance.
-:: - `delete <name>`: Delete a Filestore instance.
+:: libscript gcp-filestore [create|delete] <name> ## Operations - `create <name>`: Create a Filestore instance. - `delete <name>`: Delete a Filestore instance.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

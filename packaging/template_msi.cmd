@@ -1,11 +1,9 @@
 @echo off
-::
+:: # template_msi.cmd
 :: ## Overview
-:: Universal WiX XML (.wxs) manifest generator on Windows.
-:: Synthesizes WiX manifests driven purely by packaging.json.
-::
+:: Universal WiX XML (.wxs) manifest generator on Windows. Synthesizes WiX manifests driven purely by packaging.json.
 :: ## Usage
-::   call packaging\template_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
+:: call packaging\template_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

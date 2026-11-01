@@ -3,7 +3,6 @@
 # Defines environment variables for the vLLM Server component on Unix systems.
 # It aligns the standard `LIBSCRIPT_LISTEN_PORT` with `BAZEL_LISTEN`
 # if provided, similar to Jetstream, to ensure consistent serving ports.
-# 
 # ## Usage
 # Source this file to apply vLLM's environment variables.
 

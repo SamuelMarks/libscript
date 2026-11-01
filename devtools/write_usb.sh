@@ -3,11 +3,9 @@
 # USB drive flasher and write verification utility.
 # Writes hybrid ISO or raw disk images to USB thumb drives with safety interlocks,
 # block device validation, and post-write SHA256 checksum verification.
-#
 # ## Usage
 # Execute this script with image and target device:
 #   ./devtools/write_usb.sh <image_path> <target_usb_device>
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

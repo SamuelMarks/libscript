@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # API implementation for Block Storage (Volumes) operations. Wraps native cloud CLIs.
-#
 # ## Usage
 # Source this file and call libscript_volume_create, libscript_volume_delete, etc.
 

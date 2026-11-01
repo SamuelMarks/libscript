@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages background service lifecycle operations (start, stop, status) for the kde-plasma-6 component.
-::
 :: ## Usage
 :: service.cmd
 

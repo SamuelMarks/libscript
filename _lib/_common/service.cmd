@@ -1,16 +1,11 @@
 @echo off
-:: # service.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript Service Management Module (Windows Batch)
-::
 :: ## Overview
-:: This module provides operations to start, stop, and manage Windows services
-:: (sc.exe) as well as fallback background runner daemons.
-::
+:: This module provides operations to start, stop, and manage Windows services (sc.exe) as well as fallback background runner daemons.
 :: ## Usage
-:: ```batch
-:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start <service_name>
-:: ```
+:: ```batch call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start <service_name> ```
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

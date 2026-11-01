@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # hyperv_img.cmd
-::
 :: ## Overview
-:: Synthesizes Microsoft Hyper-V Generation 1 (VHD) and Generation 2 (VHDX)
-:: virtual machine appliances on Windows.
-::
+:: Synthesizes Microsoft Hyper-V Generation 1 (VHD) and Generation 2 (VHDX) virtual machine appliances on Windows.
 :: ## Usage
 :: call cli\commands\package_as\hyperv_img.cmd [input_raw] [output_vhd_or_vhdx] [gen1|gen2]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

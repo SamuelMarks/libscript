@@ -1,10 +1,7 @@
 @echo off
 :: # config.cmd
-::
 :: ## Overview
-:: Configures core illumos system files: /etc/nodename, /etc/hosts,
-:: /etc/default/login, and /boot/loader.conf on Windows host environments.
-::
+:: Configures core illumos system files: /etc/nodename, /etc/hosts, /etc/default/login, and /boot/loader.conf on Windows host environments.
 :: ## Usage
 :: config.cmd [sysroot_path] [hostname] [dhcp]
 

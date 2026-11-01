@@ -1,10 +1,7 @@
 @echo off
 :: # deprovision.cmd
-::
 :: ## Overview
-:: Tears down and deprovisions cloud infrastructure resources on Windows.
-:: Performs idempotent infrastructure destruction and resource reclamation.
-:: 
+:: Tears down and deprovisions cloud infrastructure resources on Windows. Performs idempotent infrastructure destruction and resource reclamation.
 :: ## Usage
 :: Execute `deprovision.cmd [provider] [node_name] [resource_group] [region]`
 

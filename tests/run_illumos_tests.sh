@@ -3,14 +3,11 @@
 # Runs tests sequentially for libscript components on a local SunOS/OmniOS Vagrant VM
 # (`bento/omnios`). Results, execution logs, and statuses are written into tests_tmp/
 # and the Supported Components table in README.md is automatically updated after each test.
-#
 # ## Usage
 # ./tests/run_illumos_tests.sh [TARGETS...|all]
 # Example: ./tests/run_illumos_tests.sh curl sqlite tmux
 # Example: ./tests/run_illumos_tests.sh all
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

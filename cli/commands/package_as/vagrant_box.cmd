@@ -1,9 +1,7 @@
 @echo off
 :: # vagrant_box.cmd
 :: ## Overview
-:: Windows Batch companion for Vagrant Box exporter.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Vagrant Box exporter. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: cli\commands\package_as\vagrant_box.cmd [input_image] [output_box] [provider]
 

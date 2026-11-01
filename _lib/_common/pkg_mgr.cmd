@@ -1,15 +1,11 @@
 @echo off
-:: # pkg_mgr.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript Package Manager Module (Windows Batch)
-::
 :: ## Overview
 :: This module abstracts package management and downloading operations.
-::
 :: ## Usage
-:: ```batch
-:: call "!LIBSCRIPT_ROOT_DIR!\\_lib\\_common\\pkg_mgr.cmd" :libscript_download <url> <dest>
-:: ```
+:: ```batch call "!LIBSCRIPT_ROOT_DIR!\\_lib\\_common\\pkg_mgr.cmd" :libscript_download <url> <dest> ```
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 

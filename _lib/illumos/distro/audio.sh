@@ -2,7 +2,6 @@
 # ## Overview
 # Configures audio subsystem (Solaris Boomer kernel audio, OSS, or PulseAudio)
 # and audio device configuration inside the illumos target sysroot.
-#
 # ## Usage
 # Configure audio subsystem:
 #   _lib/illumos/distro/audio.sh [sysroot_path] [subsystem]

@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for conan on Windows.
-:: Prepares and configures conan on native Windows environments.
-::
+:: Setup script for conan on Windows. Prepares and configures conan on native Windows environments.
 :: ## Usage
 :: Automatically invoked during libscript conan installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

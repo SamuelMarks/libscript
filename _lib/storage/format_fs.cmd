@@ -1,9 +1,7 @@
 @echo off
 :: # format_fs.cmd
-::
 :: ## Overview
 :: Formats target partitions and creates persistent fstab configuration.
-::
 :: ## Usage
 :: format_fs.cmd [OPTIONS]
 

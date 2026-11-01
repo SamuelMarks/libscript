@@ -1,10 +1,7 @@
 @echo off
 :: # dm.cmd
-::
 :: ## Overview
-:: Configures display managers (LightDM, Slim, XDM, or none) inside illumos sysroot
-:: on Windows host environments.
-::
+:: Configures display managers (LightDM, Slim, XDM, or none) inside illumos sysroot on Windows host environments.
 :: ## Usage
 :: dm.cmd [sysroot_path] [display_manager] [autologin_user]
 

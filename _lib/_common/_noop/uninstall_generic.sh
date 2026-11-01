@@ -3,7 +3,6 @@
 # Provides the generic, fallback uninstallation logic for the `_noop` component.
 # It delegates to the common `uninstall_generic.sh` script to perform
 # standard cleanup for this stub.
-# 
 # ## Usage
 # Typically called internally by `uninstall.sh` when a platform-specific uninstaller is not found.
 

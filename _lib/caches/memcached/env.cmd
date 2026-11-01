@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for memcached on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for memcached.
+:: Executes initialization, logic, or testing for memcached. Windows environment configuration and PATH probes for memcached
 
-:: Windows environment configuration and PATH probes for memcached
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

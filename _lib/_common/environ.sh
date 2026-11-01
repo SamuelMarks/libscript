@@ -1,13 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides utility functions to safely save and clear environment variables
-# to/from a file (`save_environment`, `clear_environment`), and to parse JSON
-# objects into shell variable assignments (`libscript_object2key_val`).
-# 
+# Provides utility functions to safely save and clear environment variables to/from a file (`save_environment`, `clear_environment`), and to parse JSON objects into shell variable assignments (`libscript_object2key_val`).
 # ## Usage
-# Source this file to make its environment management utilities available
-# in the current shell context.
-
+# Source this file to make its environment management utilities available in the current shell context.
 set -feu
 _environ_caller_this="${THIS_FILE:-}"; _environ_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -20,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

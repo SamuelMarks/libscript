@@ -1,10 +1,7 @@
 @echo off
 :: # health_db.cmd
-::
 :: ## Overview
-:: Declarative database content and connectivity health verifier for LibScript manifests on Windows.
-:: Validates PostgreSQL, DuckDB, SQLite, and Valkey/Redis connectivity, table counts, required tables, row counts, and custom health commands.
-::
+:: Declarative database content and connectivity health verifier for LibScript manifests on Windows. Validates PostgreSQL, DuckDB, SQLite, and Valkey/Redis connectivity, table counts, required tables, row counts, and custom health commands.
 :: ## Usage
 :: Run `health_db.cmd <libscript.json>` to verify declared databases are reachable and populated.
 
@@ -12,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

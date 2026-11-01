@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration script for Marathon on Windows.
-::
 :: ## Usage
 :: call _lib\orchestration\marathon\env.cmd
 

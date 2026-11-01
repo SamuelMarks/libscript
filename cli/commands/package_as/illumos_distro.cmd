@@ -1,10 +1,7 @@
 @echo off
 :: # illumos_distro.cmd
-::
 :: ## Overview
-:: Unified CLI entrypoint to package an illumos distribution profile into
-:: raw, qcow2, vagrant box, vhd, vmdk, or iso target formats on Windows.
-::
+:: Unified CLI entrypoint to package an illumos distribution profile into raw, qcow2, vagrant box, vhd, vmdk, or iso target formats on Windows.
 :: ## Usage
 :: illumos_distro.cmd --format <qcow2|box|raw|vhd|vmdk|iso> --profile <profile_json> [--output <path>]
 

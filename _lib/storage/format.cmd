@@ -1,14 +1,9 @@
 @echo off
 :: # format.cmd
-::
 :: ## Overview
-:: Unified filesystem formatter and OpenZFS root pool initialization engine.
-:: Prepares EFI System Partitions (FAT32), Linux root filesystems (ext4/xfs/btrfs),
-:: FreeBSD UFS2 partitions, and canonical OpenZFS root pools with structured datasets.
-::
+:: Unified filesystem formatter and OpenZFS root pool initialization engine. Prepares EFI System Partitions (FAT32), Linux root filesystems (ext4/xfs/btrfs), FreeBSD UFS2 partitions, and canonical OpenZFS root pools with structured datasets.
 :: ## Usage
-:: Execute this script to format a block partition or initialize a ZFS pool:
-::   ./_lib/storage/format.cmd <device_or_slice> [fs_type] [pool_name]
+:: Execute this script to format a block partition or initialize a ZFS pool: ./_lib/storage/format.cmd <device_or_slice> [fs_type] [pool_name]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

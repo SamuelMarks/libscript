@@ -2,7 +2,6 @@
 # ## Overview
 # Automates finding and clicking UI controls by text in GUI sessions.
 # Invokes click_button.ps1 via PowerShell on Windows or provides CLI parity.
-#
 # ## Usage
 # ./packaging/click_button.sh [button_text]
 

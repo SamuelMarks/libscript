@@ -3,7 +3,6 @@
 # Defines environment variables for the `_noop` component.
 # As a stub component, it intentionally exports no variables, serving
 # as a structural placeholder.
-# 
 # ## Usage
 # Source this file to apply (no-op) environment variables for `_noop` into the current shell session.
 

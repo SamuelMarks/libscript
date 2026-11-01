@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Musl C Library: Lightweight, standards-conformant C standard library.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Musl C Library: Lightweight, standards-conformant C standard library. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

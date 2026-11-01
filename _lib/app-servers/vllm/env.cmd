@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for vllm on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for vllm.
+:: Executes initialization, logic, or testing for vllm. Windows environment configuration and PATH probes for vllm
 
-:: Windows environment configuration and PATH probes for vllm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

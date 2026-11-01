@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration for GCC on Windows.
-::
 :: ## Usage
 :: call _lib\languages\gcc\env.cmd
 

@@ -1,12 +1,10 @@
 @echo off
 :: # env.cmd
 :: ## Overview
-:: Environment variable initialization script for the google-cloud-sdk component.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-:: 
+:: Environment variable initialization script for the google-cloud-sdk component. It sets up necessary paths and environment variables required for the component to function correctly within the libscript context.
 :: ## Usage
 :: Call this script to load the environment variables.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Primary setup router for the Tiny C Compiler (TCC) component on Windows.
-::
 :: ## Usage
 :: setup.cmd [args]
 

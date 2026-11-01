@@ -1,10 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
-:: Command-line interface entry point for TPU VM vLLM AI serving stack.
-:: Routes deploy and teardown subcommands directly and delegates standard verbs to component_core.cmd.
-::
+:: Command-line interface entry point for TPU VM vLLM AI serving stack. Routes deploy and teardown subcommands directly and delegates standard verbs to component_core.cmd.
 :: ## Usage
 :: cli.cmd [action]
 

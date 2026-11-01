@@ -1,9 +1,7 @@
 @echo off
 :: # backup_tenant.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'backup_tenant' for the valkey component on Windows.
-::
 :: ## Usage
 :: hooks\backup_tenant.cmd [args...]
 

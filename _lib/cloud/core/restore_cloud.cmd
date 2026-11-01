@@ -1,9 +1,7 @@
 @echo off
 :: # restore_cloud.cmd
-::
 :: ## Overview
 :: Restores cloud node data from a backup or imports multi-app state (`--import-state`) on Windows.
-::
 :: ## Usage
 :: Run `restore_cloud.cmd <node_name> [options]` to reprovision or import application state.
 

@@ -3,11 +3,9 @@
 # Unified Live Media Generator CLI for LibScript msi-rs live-CD and live-USB distributions.
 # Orchestrates building bootable ISO and raw disk images for Linux, FreeBSD, and illumos
 # with support for headless, TUI, and GUI kiosk interaction modes.
-#
 # ## Usage
 # Execute this script to generate target live media:
 #   ./devtools/build_live_installer.sh [--target <linux|freebsd|illumos|all>] [--mode <all|headless|tui|gui>] [--output <path>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

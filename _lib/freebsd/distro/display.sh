@@ -2,7 +2,6 @@
 # ## Overview
 # Configures display server subsystems (Wayland, X11, or none/headless) and
 # kernel graphics drivers (drm-kmod, scfb) inside FreeBSD target sysroot.
-#
 # ## Usage
 # Configure display subsystem:
 #   _lib/freebsd/distro/display.sh [sysroot_path] [protocol] [driver]

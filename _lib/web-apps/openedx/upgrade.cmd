@@ -1,17 +1,9 @@
 @echo off
 :: # upgrade.cmd
-::
 :: ## Overview
-:: Upgrade and release migration engine for Open edX on Windows.
-:: Performs pre-upgrade backups, repository updates, database migrations, and cache clearing.
-::
+:: Upgrade and release migration engine for Open edX on Windows. Performs pre-upgrade backups, repository updates, database migrations, and cache clearing.
 :: ## Usage
-::   call upgrade.cmd run [--from <release>] [--to <release>]
-::   call upgrade.cmd help
-::
-:: ## Exit Codes
-::   0 - Upgrade completed successfully
-::   1 - Error during upgrade
+:: call upgrade.cmd run [--from <release>] [--to <release>] call upgrade.cmd help ## Exit Codes 0 - Upgrade completed successfully 1 - Error during upgrade
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

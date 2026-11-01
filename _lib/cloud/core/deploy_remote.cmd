@@ -1,9 +1,7 @@
 @echo off
 :: # deploy_remote.cmd
-::
 :: ## Overview
 :: Backend orchestrator for the deploy-remote command on Windows.
-:: 
 :: ## Usage
 :: Internally invoked via cli\commands\cloud\deploy-remote.cmd.
 

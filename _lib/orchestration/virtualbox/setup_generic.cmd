@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic setup and installation script for VirtualBox on Windows.
-::
 :: ## Usage
 :: Call this script to install VirtualBox on Windows.
 

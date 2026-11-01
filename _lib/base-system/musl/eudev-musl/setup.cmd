@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Eudev (Musl): Eudev compiled against musl libc.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Eudev (Musl): Eudev compiled against musl libc. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

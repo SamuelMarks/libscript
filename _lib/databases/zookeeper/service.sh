@@ -3,7 +3,6 @@
 # Manages the Apache ZooKeeper daemon (`2181`) lifecycle (`start`, `stop`, `restart`, `status`,
 # `health`, `logs`, `install-service`, `uninstall-service`), `ruok`/`imok` health checks, and
 # Mesos (`zk://127.0.0.1:2181/mesos`) + Marathon (`zk://127.0.0.1:2181/marathon`) leader election znodes.
-#
 # ## Usage
 # ./_lib/databases/zookeeper/service.sh <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for Apache HTTP Server (httpd) on Windows.
-:: Installs Apache HTTP Server via Chocolatey and provisions executable shims.
-::
+:: Setup script for Apache HTTP Server (httpd) on Windows. Installs Apache HTTP Server via Chocolatey and provisions executable shims.
 :: ## Usage
 :: Automatically invoked during libscript httpd installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

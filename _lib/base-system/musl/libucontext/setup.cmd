@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for libucontext: ucontext library replacement for musl libc.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for libucontext: ucontext library replacement for musl libc. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

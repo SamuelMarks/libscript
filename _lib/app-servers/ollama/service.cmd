@@ -1,10 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
-:: Manages background service lifecycle operations (start, stop, status, configure)
-:: and OLLAMA_MODELS directory configuration for the ollama component on Windows.
-::
+:: Manages background service lifecycle operations (start, stop, status, configure) and OLLAMA_MODELS directory configuration for the ollama component on Windows.
 :: ## Usage
 :: service.cmd [action]
 

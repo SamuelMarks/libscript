@@ -1,10 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
-:: Executes a Tier 4 AI training or inference workload on a provisioned GCP Cloud TPU VM on Windows.
-:: Supports --detached, --forward-port, APP_DIR syncing, and HF_TOKEN forwarding.
-::
+:: Executes a Tier 4 AI training or inference workload on a provisioned GCP Cloud TPU VM on Windows. Supports --detached, --forward-port, APP_DIR syncing, and HF_TOKEN forwarding.
 :: ## Usage
 :: payloads\ai\gcp-tpu-vm\deploy.cmd [--detached] [--forward-port <spec>] [--help]
 

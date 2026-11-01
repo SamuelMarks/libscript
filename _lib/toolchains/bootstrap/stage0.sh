@@ -3,7 +3,6 @@
 # Stage 0: Host-Driven Cross-Toolchain bootstrap coordinator.
 # Orchestrates Cross-Binutils Pass 1, GCC Pass 1, Kernel Headers, Target LibC,
 # and Cross-GCC Pass 2 into LIBSCRIPT_HOST_ROOT (/tools).
-#
 # ## Usage
 # Run `stage0.sh [target_arch] [target_libc] [target_os]` to build the initial cross toolchain.
 

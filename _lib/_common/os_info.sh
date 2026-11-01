@@ -1,15 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Detects and exports essential operating system information.
-# It reliably determines architecture (`ARCH`), OS variant (`TARGET_OS`),
-# package manager (`PKG_MGR`), and init system (`INIT_SYS`) across diverse
-# environments (Linux, macOS, Windows/Cygwin/MSYS, FreeBSD).
-# 
+# Detects and exports essential operating system information. It reliably determines architecture (`ARCH`), OS variant (`TARGET_OS`), package manager (`PKG_MGR`), and init system (`INIT_SYS`) across diverse environments (Linux, macOS, Windows/Cygwin/MSYS, FreeBSD).
 # ## Usage
-# Source this file to populate standard OS-detection environment variables
-# for cross-platform conditional logic.
-
-
+# Source this file to populate standard OS-detection environment variables for cross-platform conditional logic.
 set -feu
 _oi_caller_this="${THIS_FILE:-}"; _oi_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -22,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

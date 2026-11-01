@@ -3,7 +3,6 @@
 # Synthesizes Debian-compatible binary packages (.deb) directly from
 # component staging directories or manifests, generating control records,
 # checksums, and ar container archives.
-#
 # ## Usage
 # ./_lib/orchestration/packagers/build_deb.sh <pkg_name> <pkg_version> <staging_dir> [out_dir]
 

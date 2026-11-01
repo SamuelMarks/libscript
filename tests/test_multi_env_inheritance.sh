@@ -3,7 +3,6 @@
 # Integration test verifying that a multi-component backend manifest
 # (nodejs + postgres + python) properly propagates and inherits PATH
 # across env_printer, run_hooks, and daemonize.
-#
 # ## Usage
 # ./tests/test_multi_env_inheritance.sh
 

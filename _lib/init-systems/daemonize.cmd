@@ -1,13 +1,9 @@
 @echo off
 :: # daemonize.cmd
-::
 :: ## Overview
-:: Cross-platform daemonization wrapper for Windows supporting object-map and array service schemas,
-:: per-service working directories, isolated environment variables, PID files, uninstallation, and log inspection.
-::
+:: Cross-platform daemonization wrapper for Windows supporting object-map and array service schemas, per-service working directories, isolated environment variables, PID files, uninstallation, and log inspection.
 :: ## Usage
-:: Run `daemonize.cmd <action> <json_file> [--remove] [--verify-ingress] [--public-url=<url>]`
-:: where action is `start`, `stop`, `up`, `down`, `status`, `health`, `logs`, or `uninstall`.
+:: Run `daemonize.cmd <action> <json_file> [--remove] [--verify-ingress] [--public-url=<url>]` where action is `start`, `stop`, `up`, `down`, `status`, `health`, `logs`, or `uninstall`.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

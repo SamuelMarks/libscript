@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for PulseAudio on Windows.
-:: Prepares and provisions PulseAudio daemon configuration and CLI tools.
-::
+:: Setup script for PulseAudio on Windows. Prepares and provisions PulseAudio daemon configuration and CLI tools.
 :: ## Usage
 :: Automatically invoked during libscript pulseaudio installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

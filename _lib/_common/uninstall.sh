@@ -3,7 +3,6 @@
 # Serves as the primary Unix default uninstall script for components.
 # It provides a simple fallback mechanism to remove the `INSTALLED_DIR`
 # if present. Components needing complex teardown replace this script.
-# 
 # ## Usage
 # Execute this script to perform a basic file-level uninstallation on Unix systems.
 

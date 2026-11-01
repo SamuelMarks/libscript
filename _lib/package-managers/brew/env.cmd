@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for brew on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for brew.
+:: Executes initialization, logic, or testing for brew. Windows environment configuration and PATH probes for brew
 
-:: Windows environment configuration and PATH probes for brew
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

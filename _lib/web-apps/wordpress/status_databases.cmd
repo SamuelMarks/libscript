@@ -1,10 +1,7 @@
 @echo off
 :: # status_databases.cmd
-::
 :: ## Overview
-:: Wrapper script to detect existing databases and set MSI installer properties via standard exit codes.
-:: This script wraps libscript status calls to interface with CustomActions and healthchecks cleanly.
-::
+:: Wrapper script to detect existing databases and set MSI installer properties via standard exit codes. This script wraps libscript status calls to interface with CustomActions and healthchecks cleanly.
 :: ## Usage
 :: status_databases.cmd <component>
 

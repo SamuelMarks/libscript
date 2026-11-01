@@ -1,30 +1,26 @@
 @echo off
 :: # audit_windows.cmd
-::
 :: ## Overview
-:: Audits all LibScript components on the Windows 11 Vagrant VM to determine
-:: exact failures, missing download URLs, broken test commands, and unsupported tools.
-:: Outputs JSON and Markdown summaries.
-::
+:: Audits all LibScript components on the Windows 11 Vagrant VM to determine exact failures, missing download URLs, broken test commands, and unsupported tools. Outputs JSON and Markdown summaries.
 :: ## Usage
 :: audit_windows.cmd devtools/audit/audit_windows.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

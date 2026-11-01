@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for the Unified C Compiler Router (cc) on Windows.
-::
 :: ## Usage
 :: call _lib\languages\cc\env.cmd
 

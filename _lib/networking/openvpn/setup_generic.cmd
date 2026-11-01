@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Orchestrates the setup and installation process for the OpenVPN networking stack on Windows.
-:: Installs the official OpenVPN package via winget and provisions executable shims.
-:: 
+:: Orchestrates the setup and installation process for the OpenVPN networking stack on Windows. Installs the official OpenVPN package via winget and provisions executable shims.
 :: ## Usage
 :: Execute this script to install and configure openvpn on the local system.
 

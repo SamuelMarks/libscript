@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for bundler on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for bundler.
+:: Executes initialization, logic, or testing for bundler. Windows environment configuration and PATH probes for bundler
 
-:: Windows environment configuration and PATH probes for bundler
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

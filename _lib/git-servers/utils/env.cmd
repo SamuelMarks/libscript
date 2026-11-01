@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for utils on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for utils.
+:: Executes initialization, logic, or testing for utils. Windows environment configuration and PATH probes for utils
 
-:: Windows environment configuration and PATH probes for utils
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

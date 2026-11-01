@@ -1,34 +1,26 @@
 @echo off
 :: # run_rockylinux_tests.cmd
-::
 :: ## Overview
-:: Runs tests sequentially for libscript components on a local Rocky Linux Vagrant VM
-:: (`bento/rockylinux-10.2`). Restores the vanilla snapshot before each test, verifies
-:: installation and test idempotency (2x run), writes logs to tests_tmp/, and automatically
-:: updates the Supported Components table in README.md and task completion in TODO_PLAN.md.
-::
+:: Runs tests sequentially for libscript components on a local Rocky Linux Vagrant VM (`bento/rockylinux-10.2`). Restores the vanilla snapshot before each test, verifies installation and test idempotency (2x run), writes logs to tests_tmp/, and automatically updates the Supported Components table in README.md and task completion in TODO_PLAN.md.
 :: ## Usage
-:: run_rockylinux_tests.cmd tests/run_rockylinux_tests.cmd [TARGETS...|all]
-:: Example: ./tests/run_rockylinux_tests.cmd curl sqlite jq
-:: Example: ./tests/run_rockylinux_tests.cmd all
-:: Example: ./tests/run_rockylinux_tests.cmd all --loop --stop-after 10
+:: run_rockylinux_tests.cmd tests/run_rockylinux_tests.cmd [TARGETS...|all] Example: ./tests/run_rockylinux_tests.cmd curl sqlite jq Example: ./tests/run_rockylinux_tests.cmd all Example: ./tests/run_rockylinux_tests.cmd all --loop --stop-after 10
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

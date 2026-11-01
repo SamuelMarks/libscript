@@ -3,11 +3,9 @@
 # Preloads and configures the WordPress publishing platform workload on the target system.
 # Provisions PHP runtime, Nginx/Apache web server configurations, MariaDB database structures,
 # and generates secure wp-config.php settings with unique cryptographic salts.
-#
 # ## Usage
 # Execute this script to stage WordPress in target sysroot:
 #   ./_lib/package-managers/msi-rs/workloads/wordpress.sh [target_dir]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

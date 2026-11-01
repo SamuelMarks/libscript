@@ -1,12 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic Windows setup and lifecycle implementation for the EDG C/C++ Compiler Frontend (edgcpp).
-:: Supports downloading official v7.0.1 Windows x86_64/arm64 release archives across
-:: edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors, building from source, and staging
-:: edgcpp/edg-cc/edg-c++ compiler driver wrappers.
-::
+:: Generic Windows setup and lifecycle implementation for the EDG C/C++ Compiler Frontend (edgcpp). Supports downloading official v7.0.1 Windows x86_64/arm64 release archives across edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors, building from source, and staging edgcpp/edg-cc/edg-c++ compiler driver wrappers.
 :: ## Usage
 :: setup_generic.cmd [ACTION]
 

@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Shared command-line dispatch and routing logic for LibScript components.
-#
 # ## Usage
 # Sourced by component cli.sh scripts to handle standard verbs.
 

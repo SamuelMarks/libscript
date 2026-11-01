@@ -4,10 +4,8 @@
 # (_lib/databases/sqlite/compare_compilers.sh). Verifies that SQLite compiles
 # across default, gcc, clang, tcc, and custom-cc and produces identical 6-stage
 # SQL torture digests.
-#
 # ## Usage
 # ./tests/test_sqlite_compiler_matrix.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

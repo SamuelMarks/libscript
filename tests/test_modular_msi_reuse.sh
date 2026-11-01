@@ -3,15 +3,11 @@
 # Validates the modular zero-.EXE Windows Installer packaging and component reuse architecture.
 # Verifies standalone dependency MSIs, master orchestrator packages, deterministic GUID integrity,
 # and side-by-side database sharing between Open edX and WordPress.
-#
 # ## Usage
 #   ./tests/test_modular_msi_reuse.sh
-#
 # ## Parameters
 #   None. Environment variables respected if provided.
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

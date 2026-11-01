@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for Google Cloud SDK on Windows.
-:: Installs official Google Cloud SDK via winget using silent unattended parameters.
-::
+:: Setup script for Google Cloud SDK on Windows. Installs official Google Cloud SDK via winget using silent unattended parameters.
 :: ## Usage
 :: Automatically invoked during libscript google-cloud-sdk installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

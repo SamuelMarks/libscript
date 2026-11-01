@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for core on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for core.
+:: Executes initialization, logic, or testing for core. Windows environment configuration and PATH probes for core
 
-:: Windows environment configuration and PATH probes for core
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

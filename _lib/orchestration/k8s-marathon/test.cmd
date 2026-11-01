@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the k8s-marathon component on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\k8s-marathon\test.cmd
 

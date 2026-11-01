@@ -1,9 +1,7 @@
 @echo off
 :: # probe.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'probe' for the httpd component on Windows.
-::
 :: ## Usage
 :: hooks\probe.cmd [args...]
 

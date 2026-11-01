@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Generates markdown documentation for the libscript codebase.
-# 
 # ## Usage
 # Execute this script to rebuild the markdown documentation.
 

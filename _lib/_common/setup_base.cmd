@@ -1,21 +1,11 @@
 @echo off
-:: # setup_base.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript Common Setup Entrypoint (Windows Batch)
-::
 :: ## Overview
-:: Standardized entrypoint for component installation on Windows.
-:: Resolves root, checks privileges, and delegates to setup scripts.
-::
+:: Standardized entrypoint for component installation on Windows. Resolves root, checks privileges, and delegates to setup scripts.
 :: ## Usage
-:: Your component's `setup.cmd` should call this.
-::
-:: ```batch
-:: @echo off
-:: call "%~dp0\..\..\..\_lib\_common\setup_base.cmd"
-:: ```
+:: Your component's `setup.cmd` should call this. ```batch @echo off call "%~dp0\..\..\..\_lib\_common\setup_base.cmd" ``` set "CALLER_FILE=!THIS_FILE!"
 
-set "CALLER_FILE=!THIS_FILE!"
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

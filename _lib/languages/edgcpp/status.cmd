@@ -1,9 +1,7 @@
 @echo off
 :: # status.cmd
-::
 :: ## Overview
 :: Status check for the edgcpp component on Windows.
-::
 :: ## Usage
 :: status.cmd
 

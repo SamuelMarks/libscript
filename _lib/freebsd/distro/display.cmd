@@ -1,10 +1,7 @@
 @echo off
 :: # display.cmd
-::
 :: ## Overview
-:: Configures display server subsystems (Wayland, X11, none) and DRM
-:: kernel drivers inside FreeBSD target sysroot on Windows.
-::
+:: Configures display server subsystems (Wayland, X11, none) and DRM kernel drivers inside FreeBSD target sysroot on Windows.
 :: ## Usage
 :: display.cmd [sysroot_path] [protocol] [driver]
 

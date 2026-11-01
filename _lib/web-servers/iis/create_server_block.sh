@@ -1,12 +1,10 @@
 #!/bin/sh
 # ## Overview
 # Creates and configures an IIS site and FastCGI handler.
-#
 # ## Usage
 # ./create_server_block.sh [options]
 # When running on Windows environments (or under Cygwin/MSYS2), delegates
 # execution to create_server_block.ps1 via PowerShell.
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

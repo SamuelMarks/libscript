@@ -1,11 +1,7 @@
 @echo off
 :: # rootfs.cmd
-::
 :: ## Overview
-:: Orchestrates rootfs staging for target operating system builds on Windows.
-:: Initializes the FHS directory layout, default configuration skeletons,
-:: and stamp tracking directories within the target sysroot.
-::
+:: Orchestrates rootfs staging for target operating system builds on Windows. Initializes the FHS directory layout, default configuration skeletons, and stamp tracking directories within the target sysroot.
 :: ## Usage
 :: Run `rootfs.cmd <target_sysroot> [--force]` to stage the target rootfs.
 

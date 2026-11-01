@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Generic uninstall script for Slurm Workload Manager on Windows.
-::
 :: ## Usage
 :: Routes to generic uninstallation via `_common\uninstall_generic.cmd`.
 

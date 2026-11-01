@@ -1,10 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
-:: Uninstallation script for the xfce4 component on Windows.
-:: Safely removes the component and its associated files.
-::
+:: Uninstallation script for the xfce4 component on Windows. Safely removes the component and its associated files.
 :: ## Usage
 :: xfce4\uninstall.cmd [args]
 

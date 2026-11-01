@@ -2,10 +2,8 @@
 # ## Overview
 # Validates run_native_tests.sh execution, verifying CLI options, OS detection,
 # dry-run mode, manifest filtering, and output artifact creation.
-#
 # ## Usage
 # ./tests/test_run_native_tests.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

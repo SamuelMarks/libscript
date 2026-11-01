@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for stack on Windows.
-:: Downloads and installs the official Haskell Stack distribution.
-::
+:: Setup script for stack on Windows. Downloads and installs the official Haskell Stack distribution.
 :: ## Usage
 :: Automatically invoked during libscript stack installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

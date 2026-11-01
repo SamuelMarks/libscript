@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages the Slurm Workload Manager (`slurmctld` / `slurmd`) lifecycle on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\slurm\service.cmd <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

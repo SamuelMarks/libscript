@@ -3,7 +3,6 @@
 # Generates GRUB2 configuration blocks for chainloading multiple operating systems.
 # Synthesizes multiboot entries for Linux (direct initrd), FreeBSD (loader.efi chainload),
 # and illumos (bootx64.efi multiboot2).
-#
 # ## Usage
 #   ./_lib/bootloaders/grub_multiboot.sh [output_cfg]
 

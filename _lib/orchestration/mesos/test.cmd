@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the Apache Mesos component on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\mesos\test.cmd
 

@@ -3,7 +3,6 @@
 # C89/C99 language conformance smoke test suite for the Custom C Compiler (custom-cc).
 # Verifies struct/bitfield/union layout, function pointer tables, <stdarg.h> varargs,
 # 64-bit integer shifts, IEEE-754 double arithmetic, and preprocessor token pasting.
-#
 # ## Usage
 # ./_lib/languages/custom-cc/test.sh
 

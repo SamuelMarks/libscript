@@ -1,10 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
-:: Environment configuration script for the android-sdk component on Windows.
-:: Exports ANDROID_HOME, ANDROID_SDK_ROOT, and adds cmdline-tools and platform-tools to PATH.
-::
+:: Environment configuration script for the android-sdk component on Windows. Exports ANDROID_HOME, ANDROID_SDK_ROOT, and adds cmdline-tools and platform-tools to PATH.
 :: ## Usage
 :: Call this script to configure the Android SDK environment variables.
 

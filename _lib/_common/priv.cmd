@@ -1,11 +1,7 @@
 @echo off
 :: # priv.cmd
-::
 :: ## Overview
-:: Detects and configures privilege escalation tools (sudo, doas, su).
-:: It exports the `priv` function to transparently execute commands with
-:: root privileges depending on the available system utility and user identity.
-:: 
+:: Detects and configures privilege escalation tools (sudo, doas, su). It exports the `priv` function to transparently execute commands with root privileges depending on the available system utility and user identity.
 :: ## Usage
 :: Source this file and prefix commands requiring elevated rights with `priv`.
 

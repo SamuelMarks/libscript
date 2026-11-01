@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Service lifecycle manager for the Open edX stack (LMS, Studio CMS, and supporting infrastructure).
-#
 # ## Usage
 # ./service.sh <start|stop|restart|status|lms|studio|help>
 

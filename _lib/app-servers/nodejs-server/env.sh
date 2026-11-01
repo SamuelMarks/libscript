@@ -3,7 +3,6 @@
 # Defines environment variables for the Node.js Server component on Unix.
 # It acts as a structural placeholder, allowing for future injection of custom
 # Node.js runtime environment variables.
-# 
 # ## Usage
 # Source this file to load default Node.js server configurations into the session.
 

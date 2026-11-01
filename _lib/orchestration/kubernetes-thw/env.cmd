@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for kubernetes-thw on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for kubernetes-thw.
+:: Executes initialization, logic, or testing for kubernetes-thw. Windows environment configuration and PATH probes for kubernetes-thw
 
-:: Windows environment configuration and PATH probes for kubernetes-thw
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,11 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Checks if a given service is actively running via the native init system.
-#
 # ## Usage
 # . "$LIBSCRIPT_ROOT_DIR/_lib/_common/status_service.sh"
 # check_service_status "postgresql"
-
 set -feu
 _status_service_caller_this="${THIS_FILE:-}"; _status_service_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then

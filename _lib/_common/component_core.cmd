@@ -1,16 +1,10 @@
 @echo off
 :: # component_core.cmd
-::
 :: ## Overview
-:: Unified CLI routing and lifecycle management for Windows components.
-:: Mirrors component_core.sh with full argument parsing, automated dependency
-:: resolution, and Version Manager Contract verb support.
-::
+:: Unified CLI routing and lifecycle management for Windows components. Mirrors component_core.sh with full argument parsing, automated dependency resolution, and Version Manager Contract verb support.
 :: ## Usage
-:: call "%~dp0\..\..\_common\component_core.cmd" %*
+:: call "%~dp0\..\..\_common\component_core.cmd" %* setlocal EnableDelayedExpansion set "CALLER_FILE=!THIS_FILE!"
 
-setlocal EnableDelayedExpansion
-set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (

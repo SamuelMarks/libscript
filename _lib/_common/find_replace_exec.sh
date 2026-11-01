@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Executable wrapper for the `find_replace` utility function.
-# This script exposes the `awk`-based literal string replacement logic so it can be called
-# directly as a shell command rather than sourced as a library function.
-# 
+# Executable wrapper for the `find_replace` utility function. This script exposes the `awk`-based literal string replacement logic so it can be called directly as a shell command rather than sourced as a library function.
 # ## Usage
-# `./find_replace_exec.sh "search_string" "replacement_string" "filename"`
-# It prints the replaced file content to stdout.
-
-
+# `./find_replace_exec.sh "search_string" "replacement_string" "filename"` It prints the replaced file content to stdout.
 set -feu
 _find_replace_exec_caller_this="${THIS_FILE:-}"; _find_replace_exec_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

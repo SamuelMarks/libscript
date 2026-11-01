@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: No-op service lifecycle script for TCC on Windows.
-::
 :: ## Usage
 :: service.cmd
 

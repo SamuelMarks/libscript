@@ -1,34 +1,26 @@
 @echo off
 :: # audit_standards.cmd
-::
 :: ## Overview
-:: Audits codebase and staged files for adherence to LibScript engineering standards:
-:: - POSIX /bin/sh usage and canonical THIS_FILE preamble
-:: - Windows batch script parity (.cmd / .bat)
-:: - No evil eval usage
-:: - Idempotency patterns
-:: - 100% doc block coverage (:::: Overview and :::: Usage)
-::
+:: Audits codebase and staged files for adherence to LibScript engineering standards: - POSIX /bin/sh usage and canonical THIS_FILE preamble - Windows batch script parity (.cmd / .bat) - No evil eval usage - Idempotency patterns - 100% doc block coverage (:::: Overview and :::: Usage)
 :: ## Usage
-:: Execute this script to audit files:
-::   ./devtools/audit/audit_standards.cmd [--all | --staged | <file>...]
+:: Execute this script to audit files: ./devtools/audit/audit_standards.cmd [--all | --staged | <file>...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

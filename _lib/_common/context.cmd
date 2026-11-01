@@ -1,13 +1,9 @@
 @echo off
 :: # context.cmd
-::
 :: ## Overview
-:: Codifies the standard context contract variables and idempotency stamp
-:: protocols passed between Tier 2 synthesizers and Tier 1 leaf recipes.
-::
+:: Codifies the standard context contract variables and idempotency stamp protocols passed between Tier 2 synthesizers and Tier 1 leaf recipes.
 :: ## Usage
-:: Call this script to initialize and validate standard context variables:
-::   call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\context.cmd"
+:: Call this script to initialize and validate standard context variables: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\context.cmd"
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

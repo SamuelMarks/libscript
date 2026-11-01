@@ -3,7 +3,6 @@
 # End-to-end test suite for the LibScript component-package-manager scaffolder
 # (`cli/commands/scaffold/scaffold.sh`), testing both non-interactive JSON generation
 # and interactive prompter mode, idempotency, and full audit compliance.
-#
 # ## Usage
 # ./tests/test_scaffold.sh
 

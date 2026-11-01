@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration script for HashiCorp Nomad on Windows.
-::
 :: ## Usage
 :: call _lib\orchestration\nomad\env.cmd
 

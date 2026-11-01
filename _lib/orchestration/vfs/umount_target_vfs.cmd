@@ -1,9 +1,7 @@
 @echo off
 :: # umount_target_vfs.cmd
-::
 :: ## Overview
 :: Safely unmounts virtual kernel filesystems from a target sysroot.
-::
 :: ## Usage
 :: umount_target_vfs.cmd [OPTIONS]
 

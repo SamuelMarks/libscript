@@ -1,10 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Provides fallback setup logic for components on Windows.
-:: Resolves package dependencies via pkg_mgr or winget.
-:: 
+:: Provides fallback setup logic for components on Windows. Resolves package dependencies via pkg_mgr or winget.
 :: ## Usage
 :: Typically called internally when attempting setup on Windows without a specific installer.
 

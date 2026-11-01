@@ -1,13 +1,9 @@
 @echo off
 :: # settings_updater.cmd
-::
 :: ## Overview
-:: Provides utilities for emitting configuration or environment settings (`:lang_export`)
-:: and updating JSON configuration files (`:update_json`) across `cmd`, `sh`, and `sqlite`.
-::
+:: Provides utilities for emitting configuration or environment settings (`:lang_export`) and updating JSON configuration files (`:update_json`) across `cmd`, `sh`, and `sqlite`.
 :: ## Usage
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\settings_updater.cmd" :lang_export <lang> <key> <val>
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\settings_updater.cmd" :update_json <file> <key> <val>
+:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\settings_updater.cmd" :lang_export <lang> <key> <val> call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\settings_updater.cmd" :update_json <file> <key> <val>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

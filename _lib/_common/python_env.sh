@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Utilities for managing Python virtual environments, resolving Python versions, and ensuring ownership/symlink integrity.
-#
 # ## Usage
 # Source this file (`. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"`) to use `libscript_python_venv`, `libscript_python_resolve`, and `libscript_python_ensure_venv_owner`.
 

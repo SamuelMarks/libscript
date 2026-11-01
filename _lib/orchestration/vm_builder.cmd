@@ -1,11 +1,7 @@
 @echo off
 :: # vm_builder.cmd
-::
 :: ## Overview
-:: Cross-platform kernel virtualization bridge on Windows.
-:: Delegates Linux kernel-dependent operations (loopback partitioning, mkfs, VFS mount)
-:: to a lightweight Alpine Linux worker running in Docker or WSL2.
-::
+:: Cross-platform kernel virtualization bridge on Windows. Delegates Linux kernel-dependent operations (loopback partitioning, mkfs, VFS mount) to a lightweight Alpine Linux worker running in Docker or WSL2.
 :: ## Usage
 :: Run `vm_builder.cmd [--worker=docker|wsl2] <command...>` to execute inside worker.
 

@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Mdevd: Compatible daemonized mdev device manager.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Mdevd: Compatible daemonized mdev device manager. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

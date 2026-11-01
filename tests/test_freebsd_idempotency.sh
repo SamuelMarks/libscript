@@ -3,11 +3,9 @@
 # Idempotency matrix test for FreeBSD distribution synthesis and packaging.
 # Runs 2 consecutive build/export passes and asserts Pass 2 produces exit code 0,
 # emits [SKIP] on all staged steps, and introduces zero diffs.
-#
 # ## Usage
 # Run idempotency test:
 #   tests/test_freebsd_idempotency.sh [profile_path]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

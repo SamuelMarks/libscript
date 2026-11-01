@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Filesystem path resolution and canonicalization utilities for LibScript.
-#
 # ## Usage
 # Sourced to locate libscript root, cache, and prefix directories.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Test suite script for HashiCorp Packer on Windows.
-::
 :: ## Usage
 :: Call this script to verify Packer functionality on Windows.
 

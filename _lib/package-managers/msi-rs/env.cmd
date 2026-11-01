@@ -1,13 +1,9 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
-:: Environment variable initialization script for the msi-rs component on Windows.
-:: Prepends the isolated msi-rs binary directory to the PATH variable.
-::
+:: Environment variable initialization script for the msi-rs component on Windows. Prepends the isolated msi-rs binary directory to the PATH variable.
 :: ## Usage
-:: Call this script to load environment variables into the current Command Prompt session:
-::   call env.cmd
+:: Call this script to load environment variables into the current Command Prompt session: call env.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

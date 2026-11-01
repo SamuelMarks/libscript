@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for tmux on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for tmux.
+:: Executes initialization, logic, or testing for tmux. Windows environment configuration and PATH probes for tmux
 
-:: Windows environment configuration and PATH probes for tmux
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

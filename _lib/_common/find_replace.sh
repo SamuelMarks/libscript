@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# A robust, cross-platform string replacement utility powered by `awk`.
-# Unlike `sed`, this function performs literal string replacements (including multi-line)
-# without requiring regular expressions or complex escaping of special characters.
-# 
+# A robust, cross-platform string replacement utility powered by `awk`. Unlike `sed`, this function performs literal string replacements (including multi-line) without requiring regular expressions or complex escaping of special characters.
 # ## Usage
-# Source this file and call `find_replace "search_string" "replacement_string" "filename"`.
-# It outputs the modified content to stdout without altering the original file in place.
-
-
+# Source this file and call `find_replace "search_string" "replacement_string" "filename"`. It outputs the modified content to stdout without altering the original file in place.
 set -feu
 _find_replace_caller_this="${THIS_FILE:-}"; _find_replace_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

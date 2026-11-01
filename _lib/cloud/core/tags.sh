@@ -2,10 +2,8 @@
 # ## Overview
 # Provides global configuration for tag-based resource management, and utilities 
 # for formatting tags according to provider requirements (AWS, GCP, Azure).
-# 
 # ## Usage
 # Source this file to expose tagging variables and functions.
-
 set -feu
 _tags_caller_this="${THIS_FILE:-}"; _tags_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then

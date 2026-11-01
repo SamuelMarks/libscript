@@ -1,9 +1,7 @@
 @echo off
 :: # teardown_cloud.cmd
-::
 :: ## Overview
 :: Teardown orchestrator for cloud environments and remote applications on Windows.
-::
 :: ## Usage
 :: Run `teardown_cloud.cmd <provider> <node> <rg> <loc> [options]` to cleanly remove apps or destroy infrastructure.
 

@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for cabal on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for cabal.
+:: Executes initialization, logic, or testing for cabal. Windows environment configuration and PATH probes for cabal
 
-:: Windows environment configuration and PATH probes for cabal
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

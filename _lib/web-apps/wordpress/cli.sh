@@ -3,11 +3,9 @@
 # Command-line interface router for the WordPress 7.1.2 platform stack.
 # Dispatches subcommands to core lifecycle daemons and management feature modules:
 # user, config, dbshell, healthcheck, backup, restore, service, cron, upgrade, and wp.
-#
 # ## Usage
 #   ./cli.sh <subcommand> [args...]
 #   ./cli.sh help
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

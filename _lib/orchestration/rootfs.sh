@@ -3,11 +3,9 @@
 # Orchestrates rootfs staging for target operating system builds.
 # Initializes the FHS directory layout, default configuration skeletons,
 # stamp tracking directories, and file permissions within the target sysroot.
-#
 # ## Usage
 # Execute with target sysroot directory:
 #   ./_lib/orchestration/rootfs.sh <target_sysroot> [--force]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,13 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides common utilities for managing component versions and aliases on Unix systems.
-# It defines functions (`libscript_get_version_dir`, `libscript_symlink_alias`,
-# `libscript_check_installed_version`) to resolve installation paths, create symlinks for
-# version aliasing, and inspect existing installations with reuse-else-create semantics.
-# 
+# Provides common utilities for managing component versions and aliases on Unix systems. It defines functions (`libscript_get_version_dir`, `libscript_symlink_alias`, `libscript_check_installed_version`) to resolve installation paths, create symlinks for version aliasing, and inspect existing installations with reuse-else-create semantics.
 # ## Usage
 # Source this file to utilize its version path resolution, aliasing, and inspection utilities.
-
 set -feu
 _ver_caller_this="${THIS_FILE:-}"; _ver_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -20,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

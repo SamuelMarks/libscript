@@ -3,7 +3,6 @@
 # Validates declarative Linux From Scratch (LFS) profile specifications against
 # os-config.schema.json, checking modular init, display, desktop, and bootloader
 # combinations and resolving subsystem dependencies.
-#
 # ## Usage
 # ./cli/commands/config/validate_lfs_profile.sh <path_to_profile.json>
 

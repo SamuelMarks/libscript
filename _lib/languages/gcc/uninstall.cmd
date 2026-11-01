@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
 :: Uninstallation entry point for GCC on Windows.
-::
 :: ## Usage
 :: uninstall.cmd
 

@@ -5,12 +5,9 @@
 # executing offline and online installation workflows, restoring vanilla VM snapshots,
 # and capturing pixel-perfect screenshots of wizard steps, desktop icons, and browser views
 # directly from the live QEMU display framebuffer.
-#
 # ## Usage
 # ./devtools/capture_wordpress_vagrant_screenshots.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

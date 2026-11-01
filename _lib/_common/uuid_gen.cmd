@@ -1,11 +1,7 @@
 @echo off
 :: # uuid_gen.cmd
-::
 :: ## Overview
-:: Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging.
-:: Generates reproducible GUIDs based on namespace and component name/version using
-:: built-in Windows PowerShell or certutil without external interpreter dependencies.
-::
+:: Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging. Generates reproducible GUIDs based on namespace and component name/version using built-in Windows PowerShell or certutil without external interpreter dependencies.
 :: ## Usage
 :: uuid_gen.cmd [NAMESPACE_UUID] <NAME>
 

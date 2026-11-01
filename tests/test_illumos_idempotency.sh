@@ -3,11 +3,9 @@
 # Idempotency matrix test for illumos distribution synthesis and packaging.
 # Runs 2 consecutive build/export passes and asserts Pass 2 produces exit code 0,
 # emits [SKIP] on all staged steps, and introduces zero filesystem churn.
-#
 # ## Usage
 # Run idempotency test:
 #   tests/test_illumos_idempotency.sh [profile_path]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # API implementation for SSL Certificate operations. Wraps native cloud CLIs.
-#
 # ## Usage
 # Source this file and call libscript_cert_create, libscript_cert_delete, etc.
 

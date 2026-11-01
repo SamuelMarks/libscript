@@ -1,11 +1,7 @@
 @echo off
 :: # harvest_payload.cmd
-::
 :: ## Overview
-:: Harvests the LibScript repository or staged directories into a deployment staging directory
-:: or WiX manifest fragment while respecting exclusion rules.
-:: Delegates to harvest_payload.ps1 with complete argument passthrough.
-::
+:: Harvests the LibScript repository or staged directories into a deployment staging directory or WiX manifest fragment while respecting exclusion rules. Delegates to harvest_payload.ps1 with complete argument passthrough.
 :: ## Usage
 :: call packaging\harvest_payload.cmd [OPTIONS]
 

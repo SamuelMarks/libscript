@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the Tiny C Compiler (TCC) component on Windows.
-::
 :: ## Usage
 :: test.cmd
 

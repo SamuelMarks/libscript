@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for Linux kernel configuration and initramfs synthesis.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Linux kernel configuration and initramfs synthesis. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\kernel\setup.cmd [install|clean|status]
 

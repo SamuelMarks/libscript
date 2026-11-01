@@ -4,7 +4,6 @@
 # Handles full lifecycle provisioning, configuration generation, user creation,
 # demo course ingestion, worker orchestration, Micro-Frontend deployment,
 # and health probe verification.
-#
 # ## Usage
 #   ./_lib/web-apps/openedx/setup_generic.sh [OPTIONS]
 

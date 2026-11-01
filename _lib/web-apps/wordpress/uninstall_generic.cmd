@@ -1,13 +1,9 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
-:: Clean uninstallation mechanism for WordPress 7.1.2 on Windows.
-:: Unregisters Task Scheduler cron jobs, clears web document root, and removes isolated
-:: database tables while preserving any shared Open edX MySQL server.
-::
+:: Clean uninstallation mechanism for WordPress 7.1.2 on Windows. Unregisters Task Scheduler cron jobs, clears web document root, and removes isolated database tables while preserving any shared Open edX MySQL server.
 :: ## Usage
-::   call uninstall_generic.cmd [--purge-db]
+:: call uninstall_generic.cmd [--purge-db]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

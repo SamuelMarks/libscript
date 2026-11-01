@@ -1,14 +1,9 @@
 @echo off
 :: # mfe_helper.cmd
-::
 :: ## Overview
-:: Frontend Micro-Frontend (MFE) build and deployment helper for Open edX.
-:: Manages frontend applications, asset compilation, and static distribution.
-::
+:: Frontend Micro-Frontend (MFE) build and deployment helper for Open edX. Manages frontend applications, asset compilation, and static distribution.
 :: ## Usage
-:: mfe_helper.cmd _lib/web-apps/openedx/mfe_helper.cmd build <root_dir> <mfe_name> [version]
-:: mfe_helper.cmd _lib/web-apps/openedx/mfe_helper.cmd deploy <root_dir> <dist_root> <mfe_name> [dest_path]
-:: mfe_helper.cmd _lib/web-apps/openedx/mfe_helper.cmd list <root_dir>
+:: mfe_helper.cmd _lib/web-apps/openedx/mfe_helper.cmd build <root_dir> <mfe_name> [version] mfe_helper.cmd _lib/web-apps/openedx/mfe_helper.cmd deploy <root_dir> <dist_root> <mfe_name> [dest_path] mfe_helper.cmd _lib/web-apps/openedx/mfe_helper.cmd list <root_dir>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

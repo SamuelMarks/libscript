@@ -1,17 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Tutor-compatible plugin catalog and lifecycle manager for Open edX.
-# Supports listing, enabling, disabling, and installing official Open edX plugins
-# (mfe, indigo, discovery, ecommerce, forum, notes, xqueue, jupyter, minio, cairn, credentials, android, webui, deck, livedeps).
-#
+# Tutor-compatible plugin catalog and lifecycle manager for Open edX. Supports listing, enabling, disabling, and installing official Open edX plugins (mfe, indigo, discovery, ecommerce, forum, notes, xqueue, jupyter, minio, cairn, credentials, android, webui, deck, livedeps).
 # ## Usage
-#   ./plugins.sh list
-#   ./plugins.sh enable <plugin...>
-#   ./plugins.sh disable <plugin...>
-#   ./plugins.sh install <plugin...>
-#   ./plugins.sh printroot
-#   ./plugins.sh help
-
+# ./plugins.sh list ./plugins.sh enable <plugin...> ./plugins.sh disable <plugin...> ./plugins.sh install <plugin...> ./plugins.sh printroot ./plugins.sh help
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -23,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

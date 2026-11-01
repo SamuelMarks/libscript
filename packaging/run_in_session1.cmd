@@ -1,9 +1,7 @@
 @echo off
 :: # run_in_session1.cmd
-::
 :: ## Overview
 :: Windows batch companion script for run_in_session1.ps1.
-::
 :: ## Usage
 :: run_in_session1.cmd [args...]
 

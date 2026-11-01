@@ -1,12 +1,7 @@
 @echo off
 :: # versioning.cmd
-::
 :: ## Overview
-:: Provides common utilities for managing component versions on Windows.
-:: It includes subroutines to resolve component version directories,
-:: create NTFS directory junctions (`mklink /J`) for version aliases,
-:: and inspect existing installations (`:libscript_check_installed_version`).
-:: 
+:: Provides common utilities for managing component versions on Windows. It includes subroutines to resolve component version directories, create NTFS directory junctions (`mklink /J`) for version aliases, and inspect existing installations (`:libscript_check_installed_version`).
 :: ## Usage
 :: Call subroutines like `:libscript_symlink_alias` or `:libscript_check_installed_version` from other batch scripts.
 

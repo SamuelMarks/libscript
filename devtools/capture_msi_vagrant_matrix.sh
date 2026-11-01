@@ -4,10 +4,8 @@
 # and capturing post-install desktop and browser verification views across Windows, Linux,
 # macOS, FreeBSD, and illumos (OmniOS) by delegating to the schema-driven
 # devtools/capture_running_system.sh engine.
-#
 # ## Usage
 # ./devtools/capture_msi_vagrant_matrix.sh [--target <name|dir|all>] [--os <windows|linux|macos|freebsd|illumos|all>] [--variant <online|offline|both>] [--flow <quick|custom|both>] [--out-dir <path>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

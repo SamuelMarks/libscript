@@ -1,10 +1,7 @@
 @echo off
 :: # run_msi.cmd
-::
 :: ## Overview
-:: Launches Windows Installer (.msi) packages via msiexec.exe.
-:: Defaults to OpenEdX-Setup.msi if no package path is specified.
-::
+:: Launches Windows Installer (.msi) packages via msiexec.exe. Defaults to OpenEdX-Setup.msi if no package path is specified.
 :: ## Usage
 :: run_msi.cmd [path_to_msi]
 

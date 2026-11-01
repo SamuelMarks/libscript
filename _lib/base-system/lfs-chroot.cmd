@@ -1,9 +1,7 @@
 @echo off
 :: # lfs-chroot.cmd
 :: ## Overview
-:: Windows Batch companion for LFS Chroot execution wrapper.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for LFS Chroot execution wrapper. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\base-system\lfs-chroot.cmd [rootfs] [command...]
 

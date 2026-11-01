@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Generic uninstallation implementation for custom-cc on Windows.
-::
 :: ## Usage
 :: uninstall_generic.cmd
 

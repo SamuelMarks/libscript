@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Logs reader for _common.
-#
 # ## Usage
 # ./logs.sh [tail|-f]
 

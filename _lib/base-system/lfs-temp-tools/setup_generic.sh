@@ -3,7 +3,6 @@
 # Compiles and stages the Stage 2 temporary tools (m4, ncurses, bash/dash,
 # coreutils/busybox, diffutils, file, findutils, gawk, grep, gzip, make, patch, sed,
 # tar, xz) inside the LFS rootfs prior to entering the isolated chroot jail.
-#
 # ## Usage
 # ./_lib/base-system/lfs-temp-tools/setup.sh [install|clean|status]
 

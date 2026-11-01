@@ -3,7 +3,6 @@
 # Generic setup and lifecycle module for Apache Mesos.
 # Installs isolated Mesos binaries (`mesos`, `mesos-master`, `mesos-agent`, `mesos-local`,
 # `mesos-execute`, `mesos-resolve`) and manages master/agent state directories.
-#
 # ## Usage
 # Invoked by `setup.sh` or `cli.sh` for Apache Mesos lifecycle actions.
 

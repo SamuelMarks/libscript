@@ -1,9 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
 :: Backward-compatible forwarding shim for GKE XPK training deployment on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\gke-xpk-training\deploy.cmd [args]
 

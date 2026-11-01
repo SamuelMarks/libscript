@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Primary setup router for the LLVM Clang compiler component on Windows.
-::
 :: ## Usage
 :: setup.cmd [args]
 

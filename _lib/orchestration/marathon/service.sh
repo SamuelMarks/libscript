@@ -3,7 +3,6 @@
 # Manages the Marathon framework daemon (`8080`) lifecycle (`start`, `stop`, `restart`, `status`,
 # `health`, `logs`, `install-service`, `uninstall-service`) and exposes live `/ping`, `/v2/info`,
 # `/v2/apps`, `/v2/pods`, `/v2/tasks`, `/v2/deployments`, and `/v2/Queue` endpoints.
-#
 # ## Usage
 # ./_lib/orchestration/marathon/service.sh <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

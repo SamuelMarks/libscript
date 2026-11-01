@@ -3,7 +3,6 @@
 # Serves as the primary setup entry point for the `_noop` component.
 # It delegates execution to the common `setup_base.sh` to provide
 # consistent lifecycle management for this stub component.
-# 
 # ## Usage
 # Execute this script to trigger the standard setup process for `_noop`.
 

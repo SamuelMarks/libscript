@@ -1,9 +1,7 @@
 @echo off
 :: # configure.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'configure' for the redis component on Windows.
-::
 :: ## Usage
 :: hooks\configure.cmd [args...]
 

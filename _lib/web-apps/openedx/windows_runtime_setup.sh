@@ -3,10 +3,8 @@
 # POSIX companion entrypoint for Open edX zero-source-edit runtime configuration.
 # Creates all required Open edX LMS and Studio CMS runtime directories and installs
 # sitecustomize.py into <venv>/lib/python*/site-packages/.
-#
 # ## Usage
 # ./_lib/web-apps/openedx/windows_runtime_setup.sh [-InstallDir <path>] [-PythonExe <path>]
-
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -18,7 +16,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

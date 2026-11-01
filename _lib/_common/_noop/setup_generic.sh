@@ -3,7 +3,6 @@
 # Provides the generic, fallback installation logic for the `_noop` component.
 # Since `_noop` is a stub, this script serves as a structural placeholder
 # for generic setup implementations.
-# 
 # ## Usage
 # Typically called internally by `setup.sh` when a platform-specific setup script is not found.
 

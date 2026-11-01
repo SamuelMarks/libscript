@@ -1,10 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
-:: Idempotently deploys a parameterized TPU inference workload onto a GKE XPK cluster on Windows.
-:: Supports custom WORKLOAD_CMD/SERVE_CMD, DOCKER_IMAGE, NUM_SLICES, TPU_SCHEDULING_TYPE, and HF_TOKEN.
-::
+:: Idempotently deploys a parameterized TPU inference workload onto a GKE XPK cluster on Windows. Supports custom WORKLOAD_CMD/SERVE_CMD, DOCKER_IMAGE, NUM_SLICES, TPU_SCHEDULING_TYPE, and HF_TOKEN.
 :: ## Usage
 :: payloads\ai\gke-xpk-inference\deploy.cmd [--command <cmd>] [--docker-image <img>] [--num-slices <n>] [--spot] [--env <K=V>] [--help]
 

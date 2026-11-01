@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for maven on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for maven.
+:: Executes initialization, logic, or testing for maven. Windows environment configuration and PATH probes for maven
 
-:: Windows environment configuration and PATH probes for maven
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

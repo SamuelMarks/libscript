@@ -2,7 +2,6 @@
 # ## Overview
 # Synthesizes live-CD and live-USB bootable Linux environments (Alpine/Debian)
 # with overlayfs, live initramfs, and embedded msi-rs installer suite.
-#
 # ## Usage
 # Execute this script to generate a live Linux image:
 #   ./_lib/orchestration/distro/live_linux.sh [distro_flavor] [output_path] [build_dir]

@@ -6,12 +6,9 @@
 # (llvm_backend via --llvm-be or gcc_backend via --gcc-be / libgccjit), lowering or
 # linking via the configured host backend toolchain when required while recording
 # per-translation-unit JSONL compilation, memory (RSS), and backend telemetry.
-#
 # ## Usage
 # ./_lib/languages/edgcpp/edgcpp_wrapper.sh [compiler_args...]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -22,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -2,7 +2,6 @@
 # ## Overview
 # Orchestrates the Open edX packaged install test plan across target platforms.
 # Ensures packages install correctly on a pristine Vagrant environment.
-#
 # ## Usage
 # ./tests/test_openedx_packages.sh [-o os_target]
 # Example: ./tests/test_openedx_packages.sh -o debian-13

@@ -3,11 +3,9 @@
 # Target operating system installation pipeline for FreeBSD.
 # Unpacks base.txz and kernel.txz archives, configures /etc/rc.conf and /boot/loader.conf,
 # provisions ZFS datasets or UFS filesystems, and sets up EFI/BIOS bootloader code.
-#
 # ## Usage
 # Execute this script to install FreeBSD to a target device:
 #   ./_lib/package-managers/msi-rs/distro_installers/install_freebsd.sh <target_dev> [target_dir]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

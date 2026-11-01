@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Status check for _common.
-#
 # ## Usage
 # ./status.sh
 

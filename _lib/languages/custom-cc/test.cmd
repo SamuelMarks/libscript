@@ -1,11 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: C89/C99 language conformance smoke test suite for the Custom C Compiler (custom-cc) on Windows.
-:: Verifies struct/bitfield/union layout, function pointer tables, varargs, 64-bit integer shifts,
-:: IEEE-754 double arithmetic, and preprocessor token pasting.
-::
+:: C89/C99 language conformance smoke test suite for the Custom C Compiler (custom-cc) on Windows. Verifies struct/bitfield/union layout, function pointer tables, varargs, 64-bit integer shifts, IEEE-754 double arithmetic, and preprocessor token pasting.
 :: ## Usage
 :: _lib\languages\custom-cc\test.cmd
 

@@ -1,5 +1,4 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # docker_archive.cmd
 ::
 :: ## Overview
@@ -8,6 +7,7 @@ setlocal EnableDelayedExpansion
 :: ## Usage
 :: call cli\commands\package_as\docker_archive.cmd [sysroot_dir] [out_archive] [image_tag]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

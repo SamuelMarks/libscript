@@ -3,7 +3,6 @@
 # Defines environment variables for the Jetstream component on Unix systems.
 # It specifically aligns the standard `LIBSCRIPT_LISTEN_PORT` with `BAZEL_LISTEN`
 # if provided, ensuring correct port configuration for the serving infrastructure.
-# 
 # ## Usage
 # Source this file to apply Jetstream's environment variables.
 

@@ -3,7 +3,6 @@
 # Lifecycle and conformance test suite for the 5 C/C++ compiler Tier 1 recipes
 # (_lib/languages/gcc, _lib/languages/clang, _lib/languages/tcc, _lib/languages/edgcpp,
 # _lib/languages/custom-cc) and the unified cc/c routers.
-#
 # ## Usage
 # ./tests/test_c_compilers_lifecycle.sh
 

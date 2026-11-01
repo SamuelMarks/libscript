@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Test suite for the digitalocean component on Windows.
-::
 :: ## Usage
 :: test.cmd
 

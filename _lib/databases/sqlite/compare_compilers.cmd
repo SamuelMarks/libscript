@@ -1,11 +1,7 @@
 @echo off
 :: # compare_compilers.cmd
-::
 :: ## Overview
-:: 4-way differential C compiler benchmark and verification harness for SQLite on Windows.
-:: Compiles the SQLite C amalgamation across compilers, verifies identical SQL torture
-:: output digests, and emits build\sqlite-compiler-comparison.json.
-::
+:: 4-way differential C compiler benchmark and verification harness for SQLite on Windows. Compiles the SQLite C amalgamation across compilers, verifies identical SQL torture output digests, and emits build\sqlite-compiler-comparison.json.
 :: ## Usage
 :: compare_compilers.cmd [--compilers="default gcc clang tcc custom-cc"]
 

@@ -5,12 +5,9 @@
 # ../cc0-assets/libscript, and ../bento Vagrant box verification across Windows, Linux,
 # macOS, FreeBSD, and illumos (OmniOS). Uses SamuelMarks/msi-rs across all 5 platforms
 # and restricts optional WiX comparison (--use-wix / --compare-wix) strictly to Windows.
-#
 # ## Usage
 # ./tests/test_msi_vagrant_matrix.sh [--os <windows|linux|macos|freebsd|illumos|all>] [--target <openedx|wordpress|sqlite|all>] [--use-wix] [--compare-wix] [--live-vagrant]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

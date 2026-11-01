@@ -1,9 +1,7 @@
 @echo off
 :: # test_proxy_multiplexing.cmd
-::
 :: ## Overview
 :: Vagrant validation script for reverse proxy abstraction and side-by-side multiplexing on Windows.
-::
 :: ## Usage
 :: call tests\test_proxy_multiplexing.cmd [--all | --platform <name>]
 

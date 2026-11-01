@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for apt on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for apt.
+:: Executes initialization, logic, or testing for apt. Windows environment configuration and PATH probes for apt
 
-:: Windows environment configuration and PATH probes for apt
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

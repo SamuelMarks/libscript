@@ -3,7 +3,6 @@
 # ## Overview
 # Generic setup and installation script for the lynx component.
 # Provides HTML-to-plaintext conversion required by Open edX bulk email and annotations.
-#
 # ## Usage
 # Called internally by setup.sh / cli.sh.
 

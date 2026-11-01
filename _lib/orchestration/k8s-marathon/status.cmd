@@ -1,9 +1,7 @@
 @echo off
 :: # status.cmd
-::
 :: ## Overview
 :: Status check for orchestration/k8s-marathon on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\k8s-marathon\status.cmd
 

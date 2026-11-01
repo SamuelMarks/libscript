@@ -4,7 +4,6 @@
 # Supports cloning or pulling a Git repository at a specified branch/tag/commit,
 # deploying applications locally via `libscript.json` or remotely via SSH (`--host`)
 # or cloud providers (`--provider`), and generating `post-receive` Git push-to-deploy hooks.
-#
 # ## Usage
 # libscript.sh deploy [<git_repo_or_path>] [--branch <ref>] [--host <user@host>] [--provider <cloud>] [--domain <domain>] [--install-hook <bare_repo_dir>]
 

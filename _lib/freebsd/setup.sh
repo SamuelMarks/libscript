@@ -3,7 +3,6 @@
 # FreeBSD system and kernel compilation and installation engine.
 # Orchestrates buildworld and buildkernel with MAKEOBJDIRPREFIX isolation,
 # stages kernel and userland, and populates /boot/loader.conf and /etc/rc.conf.
-#
 # ## Usage
 # Run `setup.sh [action]` (default: compile).
 

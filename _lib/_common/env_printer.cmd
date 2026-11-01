@@ -1,14 +1,9 @@
 @echo off
 :: # env_printer.cmd
-::
 :: ## Overview
-:: Environment variable exporter and formatting utility for LibScript on Windows.
-:: Supports emitting single-component or manifest-wide environment configurations
-:: in cmd, powershell, json, docker, and posix formats.
-::
+:: Environment variable exporter and formatting utility for LibScript on Windows. Supports emitting single-component or manifest-wide environment configurations in cmd, powershell, json, docker, and posix formats.
 :: ## Usage
-:: env_printer.cmd [FORMAT] [PREFIX_PATH] [COMP_DIR]
-:: env_printer.cmd --manifest [MANIFEST_FILE] [FORMAT]
+:: env_printer.cmd [FORMAT] [PREFIX_PATH] [COMP_DIR] env_printer.cmd --manifest [MANIFEST_FILE] [FORMAT]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

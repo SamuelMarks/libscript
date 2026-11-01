@@ -1,9 +1,7 @@
 @echo off
 :: # hooks.cmd
-::
 :: ## Overview
 :: Unified Dual-Layer Lifecycle Hook Dispatcher for Tier 1 physical and logical multi-tenant hooks on Windows.
-::
 :: ## Usage
 :: call _lib\_common\hooks.cmd :libscript_exec_hook <component_dir> <hook_name> [args...]
 

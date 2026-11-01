@@ -3,7 +3,6 @@
 # Defines environment variables for the Memcached Cache component on Unix systems.
 # It aligns the standard `LIBSCRIPT_LISTEN_PORT` with `MEMCACHED_LISTEN`
 # if provided, ensuring correct port configuration.
-# 
 # ## Usage
 # Source this file to apply Memcached's environment variables.
 

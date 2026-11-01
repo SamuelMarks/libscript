@@ -1,15 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides an abstraction layer over native system package managers.
-# It defines `libscript_depends` for resolving and installing system dependencies,
-# and `libscript_download` for robust file fetching with caching, checksum validation,
-# and signature verification.
-# 
+# Provides an abstraction layer over native system package managers. It defines `libscript_depends` for resolving and installing system dependencies, and `libscript_download` for robust file fetching with caching, checksum validation, and signature verification.
 # ## Usage
-# Source this file to interact consistently with system-level package management
-# and to safely fetch remote artifacts.
-
-
+# Source this file to interact consistently with system-level package management and to safely fetch remote artifacts.
 set -feu
 _pmgr_caller_this="${THIS_FILE:-}"; _pmgr_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -22,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

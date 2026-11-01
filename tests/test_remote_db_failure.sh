@@ -3,7 +3,6 @@
 # Validates the remote DB connection failure recovery mechanism.
 # Ensures the provision_logical_db script properly catches a bad remote DB IP
 # without attempting to blindly proceed with creation routines that would hang.
-#
 # ## Usage
 #   ./tests/test_remote_db_failure.sh
 

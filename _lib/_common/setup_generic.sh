@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Shared generic setup fallbacks for LibScript components.
-#
 # ## Usage
 # Sourced during component installation workflows.
 

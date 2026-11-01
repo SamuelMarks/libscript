@@ -1,9 +1,7 @@
 @echo off
 :: # restore_tenant.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'restore_tenant' for the etcd component on Windows.
-::
 :: ## Usage
 :: hooks\restore_tenant.cmd [args...]
 

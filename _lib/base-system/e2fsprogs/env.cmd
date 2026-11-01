@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Exports isolated environment paths and runtime variables for the e2fsprogs component.
-::
 :: ## Usage
 :: env.cmd
 

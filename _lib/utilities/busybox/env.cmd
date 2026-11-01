@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for busybox on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for busybox.
+:: Executes initialization, logic, or testing for busybox. Windows environment configuration and PATH probes for busybox
 
-:: Windows environment configuration and PATH probes for busybox
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

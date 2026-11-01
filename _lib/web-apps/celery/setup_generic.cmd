@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Orchestrates the setup and installation process for the Celery task queue stack on Windows.
-:: Ensures Python with pip is present, installs Celery, and exposes the celery CLI executable.
-:: 
+:: Orchestrates the setup and installation process for the Celery task queue stack on Windows. Ensures Python with pip is present, installs Celery, and exposes the celery CLI executable.
 :: ## Usage
 :: Execute this script to install and configure celery on the local system.
 

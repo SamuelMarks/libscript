@@ -2,7 +2,6 @@
 # ## Overview
 # Wrapper script to detect existing runtimes and set MSI installer properties via standard exit codes.
 # This script wraps libscript status calls to interface with CustomActions cleanly.
-#
 # ## Usage
 # ./status_runtimes.sh <component>
 #

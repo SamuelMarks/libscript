@@ -1,34 +1,26 @@
 @echo off
 :: # run_native_tests.cmd
-::
 :: ## Overview
-:: Runs native tests on the current host system across specified targets or categories
-:: without requiring Vagrant or virtual machines. Results and execution logs are captured
-:: into the tests_tmp directory.
-::
+:: Runs native tests on the current host system across specified targets or categories without requiring Vagrant or virtual machines. Results and execution logs are captured into the tests_tmp directory.
 :: ## Usage
-:: run_native_tests.cmd tests/run_native_tests.cmd [TARGETS...|all] [--category <category>] [--os <os_name>] [--dry-run] [--help]
-:: Examples:
-::   ./tests/run_native_tests.cmd sqlite curl
-::   ./tests/run_native_tests.cmd --category databases
-::   ./tests/run_native_tests.cmd all
+:: run_native_tests.cmd tests/run_native_tests.cmd [TARGETS...|all] [--category <category>] [--os <os_name>] [--dry-run] [--help] Examples: ./tests/run_native_tests.cmd sqlite curl ./tests/run_native_tests.cmd --category databases ./tests/run_native_tests.cmd all
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

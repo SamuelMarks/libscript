@@ -1,10 +1,7 @@
 @echo off
 :: # validate_lfs_profile.cmd
 :: ## Overview
-:: Windows Batch companion validating declarative Linux From Scratch (LFS)
-:: profile specifications against os-config.schema.json, checking modular
-:: init, display, desktop, and bootloader combinations.
-::
+:: Windows Batch companion validating declarative Linux From Scratch (LFS) profile specifications against os-config.schema.json, checking modular init, display, desktop, and bootloader combinations.
 :: ## Usage
 :: cli\commands\config\validate_lfs_profile.cmd <profile.json>
 

@@ -1,11 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Abstracts reading logs for a given service across OSes.
-#
 # ## Usage
 # . "$LIBSCRIPT_ROOT_DIR/_lib/_common/logs_service.sh"
 # read_logs "$*" "postgresql" "/var/log/postgresql/postgresql.log"
-
 set -feu
 _logs_service_caller_this="${THIS_FILE:-}"; _logs_service_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then

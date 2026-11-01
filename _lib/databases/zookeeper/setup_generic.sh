@@ -3,7 +3,6 @@
 # Generic setup and lifecycle module for Apache ZooKeeper (`zookeeper`, `zkServer.sh`, `zkCli.sh`).
 # Installs isolated ZooKeeper binaries and supports `ruok`/`imok` four-letter health checks and
 # Mesos + Marathon leader election znodes (`/mesos` and `/marathon`).
-#
 # ## Usage
 # Invoked by `setup.sh` or `cli.sh` for Apache ZooKeeper lifecycle actions.
 

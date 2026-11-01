@@ -1,18 +1,10 @@
 #!/bin/sh
 # cspell:words isdir rstrip bbox textbbox titlebar roundrectangle pointsize wcopy colortbl vspec shutil urlopen DEVNULL edxloggedin LANCZOS websockets asyncio getpid Popen nonlocal rmtree
 # ## Overview
-# Generic schema-driven "screenshot-to-running-system" engine.
-# Reads declarative metadata strictly from <target_dir>/packaging.json (or synthesizes
-# defaults from <target_dir>/manifest.json), steps through .msi GUI wizard stages (01..10)
-# via SamuelMarks/msi-rs msi-gui (cropped to 495x392), and captures post-install desktop and
-# browser verification views (10b..14, both unauthenticated login screens and authenticated
-# administrative dashboards) across Windows, Linux, macOS, FreeBSD, and illumos (OmniOS).
-#
+# Generic schema-driven "screenshot-to-running-system" engine. Reads declarative metadata strictly from <target_dir>/packaging.json (or synthesizes defaults from <target_dir>/manifest.json), steps through .msi GUI wizard stages (01..10) via SamuelMarks/msi-rs msi-gui (cropped to 495x392), and captures post-install desktop and browser verification views (10b..14, both unauthenticated login screens and authenticated administrative dashboards) across Windows, Linux, macOS, FreeBSD, and illumos (OmniOS).
 # ## Usage
 # ./devtools/capture_running_system.sh [--target <dir_or_name|all>] [--os <windows|linux|macos|freebsd|illumos|all>] [--variant <online|offline|both>] [--flow <quick|custom|both>] [--mode <all|wizard|post-install>] [--live-vagrant] [--out-dir <path>]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -1,5 +1,4 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # virtualbox_img.cmd
 ::
 :: ## Overview
@@ -8,6 +7,7 @@ setlocal EnableDelayedExpansion
 :: ## Usage
 :: call cli\commands\package_as\virtualbox_img.cmd [input_raw] [output_vdi]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

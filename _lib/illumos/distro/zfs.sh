@@ -2,7 +2,6 @@
 # ## Overview
 # Configures canonical illumos ZFS root pool (rpool) layout, dataset hierarchies,
 # /etc/vfstab entries, boot environment definitions (beadm), and loader configuration.
-#
 # ## Usage
 # Configure ZFS root pool and datasets:
 #   _lib/illumos/distro/zfs.sh [sysroot_path] [pool_name] [compression]

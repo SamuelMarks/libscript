@@ -1,18 +1,9 @@
 @echo off
 :: # import_demo.cmd
-::
 :: ## Overview
-:: Demo course and library content ingestion utility for Open edX on Windows.
-:: Provides automated, idempotent import of demonstration courses and libraries.
-::
+:: Demo course and library content ingestion utility for Open edX on Windows. Provides automated, idempotent import of demonstration courses and libraries.
 :: ## Usage
-::   call import_demo.cmd course [--course-id <id>] [--repo <url>]
-::   call import_demo.cmd libraries [--owner <username>]
-::   call import_demo.cmd help
-::
-:: ## Exit Codes
-::   0 - Success (or already imported)
-::   1 - Import failure
+:: call import_demo.cmd course [--course-id <id>] [--repo <url>] call import_demo.cmd libraries [--owner <username>] call import_demo.cmd help ## Exit Codes 0 - Success (or already imported) 1 - Import failure
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

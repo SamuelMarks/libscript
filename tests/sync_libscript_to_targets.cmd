@@ -1,32 +1,26 @@
 @echo off
 :: # sync_libscript_to_targets.cmd
-::
 :: ## Overview
-:: Syncs the libscript repository to a Vagrant environment or a generic SSH target.
-:: It automatically detects if a Vagrant environment is specified and uses its SSH config.
-::
+:: Syncs the libscript repository to a Vagrant environment or a generic SSH target. It automatically detects if a Vagrant environment is specified and uses its SSH config.
 :: ## Usage
-::   ./sync_libscript_to_targets.cmd [vagrant_dir | target_user@target_host target_path]
-::
-::   Example 1 (Vagrant auto-detect): ./sync_libscript_to_targets.cmd vagrant/windows-11
-::   Example 2 (Manual target):       ./sync_libscript_to_targets.cmd vagrant@127.0.0.1 C:/libscript
+:: ./sync_libscript_to_targets.cmd [vagrant_dir | target_user@target_host target_path] Example 1 (Vagrant auto-detect): ./sync_libscript_to_targets.cmd vagrant/windows-11 Example 2 (Manual target):       ./sync_libscript_to_targets.cmd vagrant@127.0.0.1 C:/libscript
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

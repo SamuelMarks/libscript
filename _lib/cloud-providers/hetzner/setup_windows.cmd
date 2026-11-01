@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # setup_windows.cmd
-::
 :: ## Overview
-:: Setup script for Hetzner CLI on Windows.
-:: Installs official Hetzner Cloud CLI (hcloud) via winget.
-::
+:: Setup script for Hetzner CLI on Windows. Installs official Hetzner Cloud CLI (hcloud) via winget.
 :: ## Usage
 :: Automatically invoked during libscript hetzner installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

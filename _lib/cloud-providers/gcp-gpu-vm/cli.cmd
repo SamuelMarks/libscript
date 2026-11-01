@@ -1,12 +1,9 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface for managing GCP GPU virtual machines on Windows.
-::
 :: ## Usage
-:: Wraps `gcloud compute instances` to provision, start, stop, and SSH into GPU VMs.
-:: Run `libscript gcp-gpu-vm <action> [args...]`.
+:: Wraps `gcloud compute instances` to provision, start, stop, and SSH into GPU VMs. Run `libscript gcp-gpu-vm <action> [args...]`.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

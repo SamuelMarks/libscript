@@ -1,9 +1,7 @@
 @echo off
 :: # tui_engine.cmd
-::
 :: ## Overview
 :: Modular TUI engine providing Windows console prompts and PowerShell fallback dialogs.
-::
 :: ## Usage
 :: call cli/commands/config/tui_engine.cmd
 
@@ -50,4 +48,63 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+
+set "_TUI_SUB=%~1"
+if not "!_TUI_SUB!"=="" (
+    if "!_TUI_SUB:~0,1!"==":" (
+        shift
+        goto !_TUI_SUB!
+    )
+)
+exit /b 0
+
+:: ## tui_msgbox
+:: Displays an informational message box on the Windows console.
+:tui_msgbox
+set "_TUI_TITLE=%~1"
+set "_TUI_TEXT=%~2"
+echo. >&2
+echo === !_TUI_TITLE! === >&2
+echo !_TUI_TEXT! >&2
+echo. >&2
+set /p "_TUI_DUMMY=Press ENTER to continue..." <con >con 2>&1
+exit /b 0
+
+:: ## tui_menu
+:: Displays a single-choice menu on the Windows console and writes the selected tag to stdout.
+:tui_menu
+set "_TUI_TITLE=%~1"
+set "_TUI_TEXT=%~2"
+shift
+shift
+echo. >&2
+echo === !_TUI_TITLE! === >&2
+echo !_TUI_TEXT! >&2
+:: ## tui_menu_loop
+:: Iterates through menu tag/description pairs and prints each choice.
+:tui_menu_loop
+if "%~1"=="" goto :tui_menu_prompt
+echo   [%~1] %~2 >&2
+shift
+shift
+goto :tui_menu_loop
+:: ## tui_menu_prompt
+:: Prompts the user to select an option tag from the displayed menu.
+:tui_menu_prompt
+set "_TUI_CHOICE="
+set /p "_TUI_CHOICE=Select option: "
+echo !_TUI_CHOICE!
+exit /b 0
+
+:: ## tui_input
+:: Prompts for text input on the Windows console and writes the result or default to stdout.
+:tui_input
+set "_TUI_TITLE=%~1"
+set "_TUI_PROMPT=%~2"
+set "_TUI_DEFAULT=%~3"
+set "_TUI_VAL="
+set /p "_TUI_VAL=!_TUI_PROMPT! [!_TUI_DEFAULT!]: "
+if "!_TUI_VAL!"=="" set "_TUI_VAL=!_TUI_DEFAULT!"
+echo !_TUI_VAL!
+exit /b 0
 

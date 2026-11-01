@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entrypoint for the xfce4 component on Windows.
-::
 :: ## Usage
 :: cli.cmd [action]
 

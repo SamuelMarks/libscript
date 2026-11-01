@@ -3,11 +3,9 @@
 # Configures modular desktop environment and window manager staging
 # inside FreeBSD target sysroot. Supports sway, hyprland, xfce4, kde-plasma-6,
 # openbox, labwc, lxqt, gnome, weston, or none.
-#
 # ## Usage
 # Configure desktop environment:
 #   _lib/freebsd/distro/desktop.sh [sysroot_path] [environment] [username]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

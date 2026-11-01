@@ -1,9 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
 :: Backward-compatible forwarding shim for GKE XPK inference deployment on Windows.
-::
 :: ## Usage
 :: _lib\ai-serving\gke-xpk-inference\deploy.cmd [args]
 

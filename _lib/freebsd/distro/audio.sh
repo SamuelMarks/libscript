@@ -2,7 +2,6 @@
 # ## Overview
 # Configures audio subsystems (native FreeBSD OSS, PipeWire/WirePlumber, or none)
 # inside FreeBSD target sysroot.
-#
 # ## Usage
 # Configure audio subsystem:
 #   _lib/freebsd/distro/audio.sh [sysroot_path] [subsystem]

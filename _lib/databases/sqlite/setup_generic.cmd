@@ -1,11 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic Windows setup and multi-mode build module for SQLite.
-:: Supports Mode 1 (specific package manager), Mode 2 (amalgamation source build
-:: with default toolchain), and Mode 3 (amalgamation source build with custom toolchain).
-::
+:: Generic Windows setup and multi-mode build module for SQLite. Supports Mode 1 (specific package manager), Mode 2 (amalgamation source build with default toolchain), and Mode 3 (amalgamation source build with custom toolchain).
 :: ## Usage
 :: setup_generic.cmd [ACTION]
 

@@ -2,7 +2,6 @@
 # ## Overview
 # Automates launching Microsoft Edge with LMS and Studio tabs, toggling tab focus, and signaling screenshot capture.
 # Invokes capture_browser_tabs.ps1 via PowerShell on Windows.
-#
 # ## Usage
 # ./packaging/capture_browser_tabs.sh [-LmsUrl <url>] [-StudioUrl <url>]
 

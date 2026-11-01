@@ -1,11 +1,7 @@
 @echo off
 :: # test_multi_env_inheritance.cmd
-::
 :: ## Overview
-:: Integration test verifying that a multi-component backend manifest
-:: (nodejs + postgres + python) properly propagates and inherits PATH
-:: across env.cmd, env_printer.cmd, and run_hooks.cmd on Windows.
-::
+:: Integration test verifying that a multi-component backend manifest (nodejs + postgres + python) properly propagates and inherits PATH across env.cmd, env_printer.cmd, and run_hooks.cmd on Windows.
 :: ## Usage
 :: tests\test_multi_env_inheritance.cmd
 

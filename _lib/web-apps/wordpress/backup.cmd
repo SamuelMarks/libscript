@@ -1,12 +1,9 @@
 @echo off
 :: # backup.cmd
-::
 :: ## Overview
-:: Snapshot backup module for WordPress 7.1.2 on Windows.
-:: Dumps the database and packages wp-content and wp-config.php into a zip archive.
-::
+:: Snapshot backup module for WordPress 7.1.2 on Windows. Dumps the database and packages wp-content and wp-config.php into a zip archive.
 :: ## Usage
-::   call backup.cmd [create] [--out <output_path>]
+:: call backup.cmd [create] [--out <output_path>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

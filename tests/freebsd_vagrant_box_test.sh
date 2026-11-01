@@ -3,11 +3,9 @@
 # Vagrant box lifecycle smoketest for generated FreeBSD .box archives.
 # Adds box to local Vagrant registry, generates ephemeral test Vagrantfile,
 # boots VM via vagrant up, verifies uname and doas/sudo execution, and destroys VM.
-#
 # ## Usage
 # Run Vagrant box lifecycle test:
 #   tests/freebsd_vagrant_box_test.sh [box_path] [provider]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

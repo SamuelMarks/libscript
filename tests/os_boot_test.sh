@@ -3,7 +3,6 @@
 # Headless QEMU boot verification test harness.
 # Launches synthesized OS disk images in headless QEMU, monitors serial output
 # for boot milestones (kernel banner, init start, login prompt), and asserts boot health.
-#
 # ## Usage
 # ./tests/os_boot_test.sh [disk_image_or_type] [timeout_seconds] [--dry-run]
 
@@ -71,15 +70,17 @@ fi
 
 if [ "$DRY_RUN" -eq 1 ] || ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
   # Emulated assertion mode
-  printf 'Linux version 6.6.0 (libscript@builder) (gcc)\n' > "$SERIAL_LOG"
-  printf 'Run /init as init process\n' >> "$SERIAL_LOG"
-  printf '* Starting local ... [ ok ]\n' >> "$SERIAL_LOG"
-  printf 'Reached target Multi-User System\n' >> "$SERIAL_LOG"
-  printf 'INIT: Entering runlevel: 3\n' >> "$SERIAL_LOG"
-  printf 'runsvdir: starting\n' >> "$SERIAL_LOG"
-  printf 's6-rc: info: startup successful\n' >> "$SERIAL_LOG"
-  printf '[dinit] Service boot started\n' >> "$SERIAL_LOG"
-  printf 'LibScript Linux login:\n' >> "$SERIAL_LOG"
+  {
+    printf 'Linux version 6.6.0 (libscript@builder) (gcc)\n'
+    printf 'Run /init as init process\n'
+    printf '* Starting local ... [ ok ]\n'
+    printf 'Reached target Multi-User System\n'
+    printf 'INIT: Entering runlevel: 3\n'
+    printf 'runsvdir: starting\n'
+    printf 's6-rc: info: startup successful\n'
+    printf '[dinit] Service boot started\n'
+    printf 'LibScript Linux login:\n'
+  } > "$SERIAL_LOG"
   printf '[SIMULATED] Verified boot milestone: Kernel banner\n'
   printf '[SIMULATED] Verified boot milestone: Init system milestones (systemd/openrc/sysvinit/runit/s6/dinit)\n'
   printf '[SIMULATED] Verified boot milestone: Multi-user login prompt reached\n'

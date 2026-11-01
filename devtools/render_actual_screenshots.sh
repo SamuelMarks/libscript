@@ -4,13 +4,10 @@
 # Executes installer command captures and renders terminal sessions (680x360),
 # Windows Installer dialogs (540x420), and system boot screens sequentially prefixed
 # with their step numbers directly into ../cc0-assets.
-#
 # ## Usage
 # Execute this script to generate screenshots:
 #   ./devtools/render_actual_screenshots.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

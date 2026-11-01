@@ -1,18 +1,9 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
-:: Command-line interface dispatcher for the Open edX stack on Windows.
-:: Routes commands to submodules or standard LibScript component core,
-:: including full Tutor parity subcommands (do, local, dev, mounts, plugins).
-::
+:: Command-line interface dispatcher for the Open edX stack on Windows. Routes commands to submodules or standard LibScript component core, including full Tutor parity subcommands (do, local, dev, mounts, plugins).
 :: ## Usage
-::   call cli.cmd <subcommand> [args...]
-::   call cli.cmd do <job> [args...]
-::   call cli.cmd local <subcommand> [args...]
-::   call cli.cmd mounts <subcommand> [args...]
-::   call cli.cmd plugins <subcommand> [args...]
-::   call cli.cmd help
+:: call cli.cmd <subcommand> [args...] call cli.cmd do <job> [args...] call cli.cmd local <subcommand> [args...] call cli.cmd mounts <subcommand> [args...] call cli.cmd plugins <subcommand> [args...] call cli.cmd help
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

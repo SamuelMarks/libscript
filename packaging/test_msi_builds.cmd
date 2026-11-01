@@ -1,11 +1,9 @@
 @echo off
 :: # test_msi_builds.cmd
-::
 :: ## Overview
 :: Tests MSI building across multiple platforms via Vagrant.
-::
 :: ## Usage
-::   call packaging\test_msi_builds.cmd
+:: call packaging\test_msi_builds.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

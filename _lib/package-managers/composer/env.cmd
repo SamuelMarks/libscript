@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for composer on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for composer.
+:: Executes initialization, logic, or testing for composer. Windows environment configuration and PATH probes for composer
 
-:: Windows environment configuration and PATH probes for composer
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

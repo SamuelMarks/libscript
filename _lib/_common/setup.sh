@@ -4,11 +4,8 @@
 # It dynamically sources common utilities, component-specific environment variables,
 # and delegates to OS-specific setup scripts (or `setup_generic.sh`), concluding
 # with automatic `netctl` port/socket registration if applicable.
-# 
 # ## Usage
 # Execute this script to orchestrate a component's complete setup lifecycle.
-
-
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

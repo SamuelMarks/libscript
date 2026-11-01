@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration script for Apache Mesos on Windows.
-::
 :: ## Usage
 :: call _lib\orchestration\mesos\env.cmd
 

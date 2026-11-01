@@ -3,7 +3,6 @@
 # Serves as the primary Unix uninstall entry point for the Redis component.
 # It delegates the core uninstallation logic to the common `uninstall_base.sh` script,
 # ensuring standardized cleanup.
-# 
 # ## Usage
 # Execute this script to uninstall the Redis component on Unix systems.
 

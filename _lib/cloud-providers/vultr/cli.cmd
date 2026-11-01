@@ -1,10 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
-:: Command-line interface entry point for the Vultr Cloud Provider component on Windows.
-:: Delegates execution to the common `component_core.cmd`.
-::
+:: Command-line interface entry point for the Vultr Cloud Provider component on Windows. Delegates execution to the common `component_core.cmd`.
 :: ## Usage
 :: cli.cmd [action]
 

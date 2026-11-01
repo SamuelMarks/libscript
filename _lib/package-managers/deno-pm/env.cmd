@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for deno-pm on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for deno-pm.
+:: Executes initialization, logic, or testing for deno-pm. Windows environment configuration and PATH probes for deno-pm
 
-:: Windows environment configuration and PATH probes for deno-pm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for iis on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for iis.
+:: Executes initialization, logic, or testing for iis. Windows environment configuration and PATH probes for iis
 
-:: Windows environment configuration and PATH probes for iis
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

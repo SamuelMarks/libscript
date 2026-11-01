@@ -135,6 +135,10 @@ if [ -x "devtools/audit/audit_standards.sh" ]; then
     ./devtools/audit/audit_standards.sh "$AUDIT_MODE"
 fi
 
+if [ -x "devtools/audit/audit_posix.sh" ]; then
+    ./devtools/audit/audit_posix.sh "$AUDIT_MODE"
+fi
+
 if [ -x "devtools/audit/audit_version_manager.sh" ]; then
     if [ "$AUDIT_MODE" = "--all" ] || printf '%s\n' "$CHECK_FILES" | grep -q '^_lib/'; then
         ./devtools/audit/audit_version_manager.sh
@@ -154,9 +158,9 @@ if command -v shellcheck >/dev/null 2>&1; then
   if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
     SHELLCHECK_OPT_ARGS="-o useless-use-of-cat"
   fi
-  if printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*" >/dev/null 2>&1; then
+  if printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" >/dev/null 2>&1; then
     # shellcheck disable=SC2086
-    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054
+    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054
   fi
 fi
 

@@ -1,13 +1,9 @@
 @echo off
 :: # backup_helper.cmd
-::
 :: ## Overview
-:: Backup and disaster recovery helper utility for Open edX.
-:: Creates consolidated compressed archives and applies restoration snapshots.
-::
+:: Backup and disaster recovery helper utility for Open edX. Creates consolidated compressed archives and applies restoration snapshots.
 :: ## Usage
-:: backup_helper.cmd _lib/web-apps/openedx/backup_helper.cmd backup <backup_dir> <install_dir> [out_path]
-:: backup_helper.cmd _lib/web-apps/openedx/backup_helper.cmd restore <archive> <install_dir> [force]
+:: backup_helper.cmd _lib/web-apps/openedx/backup_helper.cmd backup <backup_dir> <install_dir> [out_path] backup_helper.cmd _lib/web-apps/openedx/backup_helper.cmd restore <archive> <install_dir> [force]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

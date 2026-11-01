@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for gpu-vm on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for gpu-vm.
+:: Executes initialization, logic, or testing for gpu-vm. Windows environment configuration and PATH probes for gcp-gpu-vm
 
-:: Windows environment configuration and PATH probes for gcp-gpu-vm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (

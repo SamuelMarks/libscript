@@ -1,9 +1,7 @@
 @echo off
 :: # paths.cmd
-::
 :: ## Overview
 :: Filesystem path resolution and canonicalization utilities for LibScript.
-::
 :: ## Usage
 :: Call this script to resolve DOWNLOAD_DIR, DATA_DIR, BIN_DIR, and LOGS_DIR for a component.
 

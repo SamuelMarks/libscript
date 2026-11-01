@@ -2,13 +2,10 @@
 # ## Overview
 # Syncs the libscript repository to a Vagrant environment or a generic SSH target.
 # It automatically detects if a Vagrant environment is specified and uses its SSH config.
-#
 # ## Usage
 #   ./sync_libscript_to_targets.sh [vagrant_dir | target_user@target_host target_path]
-#
 #   Example 1 (Vagrant auto-detect): ./sync_libscript_to_targets.sh vagrant/windows-11
 #   Example 2 (Manual target):       ./sync_libscript_to_targets.sh vagrant@127.0.0.1 C:/libscript
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

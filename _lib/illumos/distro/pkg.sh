@@ -2,7 +2,6 @@
 # ## Overview
 # Configures illumos package managers (IPS pkg(1), Joyent pkgin/pkgsrc, or Tribblix zap)
 # and stages publisher authorities and repositories inside the target sysroot.
-#
 # ## Usage
 # Configure package manager:
 #   _lib/illumos/distro/pkg.sh [sysroot_path] [provider] [publisher_url]

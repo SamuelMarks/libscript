@@ -5,10 +5,8 @@
 # (`LIBSCRIPT_HW_MEM_MB`), and calculates optimal tuning parameters for databases
 # (PostgreSQL `shared_buffers`, `effective_cache_size`, `maintenance_work_mem`, `work_mem`),
 # caches (Redis/Valkey `maxmemory`), and web servers (Nginx `worker_processes`, `worker_connections`).
-#
 # ## Usage
 # Source this file and call `libscript_detect_hardware` or `libscript_apply_hardware_tuning <component>`.
-
 set -feu
 _hw_tune_caller_this="${THIS_FILE:-}"; _hw_tune_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

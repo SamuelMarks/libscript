@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the Marathon component on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\marathon\test.cmd
 

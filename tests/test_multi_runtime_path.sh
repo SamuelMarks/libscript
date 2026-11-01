@@ -3,7 +3,6 @@
 # Verifies multi-component PATH inheritance and SERVICE_PATH emission when hydrating
 # a backend manifest combining nodejs, postgres, python, and uv, ensuring no
 # cross-component LIBSCRIPT_VERSION bleed occurs.
-#
 # ## Usage
 # ./tests/test_multi_runtime_path.sh
 

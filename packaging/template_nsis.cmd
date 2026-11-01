@@ -1,10 +1,7 @@
 @echo off
 :: # template_nsis.cmd
-::
 :: ## Overview
-:: Template file for NSIS installer generation on Windows.
-:: Supports component sections, shortcuts, and uninstallation logic.
-:: 
+:: Template file for NSIS installer generation on Windows. Supports component sections, shortcuts, and uninstallation logic.
 :: ## Usage
 :: This file is processed during the build phase and not executed directly.
 

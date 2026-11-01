@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for Master LFS Display Server dispatcher.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Master LFS Display Server dispatcher. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\display-servers\setup.cmd [server] [action] [target_rootfs]
 

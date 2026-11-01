@@ -1,10 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic installation and sysroot staging recipe for the hyprland component on Windows.
-:: Checks idempotency against target sysroot stamps and early-exits if already installed.
-::
+:: Generic installation and sysroot staging recipe for the hyprland component on Windows. Checks idempotency against target sysroot stamps and early-exits if already installed.
 :: ## Usage
 :: setup_generic.cmd [action]
 

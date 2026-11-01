@@ -3,11 +3,9 @@
 # Initializes a standard Filesystem Hierarchy Standard (FHS) directory layout
 # within a target sysroot, populating default configuration skeletons
 # (/etc/passwd, /etc/group, /etc/hosts, /etc/profile) and setting permissions.
-#
 # ## Usage
 # Execute with target sysroot directory:
 #   ./_lib/orchestration/create_fhs_layout.sh <target_sysroot>
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

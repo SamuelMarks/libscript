@@ -1,9 +1,7 @@
 @echo off
 :: # click_button.cmd
-::
 :: ## Overview
 :: Automates finding and clicking UI controls (buttons, checkboxes, radio buttons) by text in Windows GUI sessions.
-::
 :: ## Usage
 :: call "%~dp0click_button.cmd" [button_text]
 

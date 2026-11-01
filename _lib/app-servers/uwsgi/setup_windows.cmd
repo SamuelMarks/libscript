@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # setup_windows.cmd
-::
 :: ## Overview
-:: Windows setup script for uWSGI.
-:: Prepares and provisions a native uwsgi.cmd CLI wrapper on Windows.
-::
+:: Windows setup script for uWSGI. Prepares and provisions a native uwsgi.cmd CLI wrapper on Windows.
 :: ## Usage
 :: Automatically invoked during libscript uwsgi installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

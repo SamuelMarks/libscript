@@ -3,11 +3,9 @@
 # Preloads and configures the Open edX platform workload on the target system.
 # Provisions MySQL/MariaDB, MongoDB, Redis, and OpenSearch services, performs database
 # migrations, registers init system service units, and prepares first-boot verification.
-#
 # ## Usage
 # Execute this script to stage Open edX in target sysroot:
 #   ./_lib/package-managers/msi-rs/workloads/openedx.sh [target_dir]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

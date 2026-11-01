@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic setup and provisioning module for the Open edX platform stack on Windows.
-::
 :: ## Usage
 :: setup_generic.cmd [ACTION] [OPTIONS]
 

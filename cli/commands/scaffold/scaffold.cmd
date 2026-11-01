@@ -1,10 +1,7 @@
 @echo off
 :: # scaffold.cmd
-::
 :: ## Overview
-:: Interactive prompter and non-interactive JSON generator for creating new
-:: Tier 1 LibScript component-package-managers under `_lib\<category>\<component>\` on Windows.
-::
+:: Interactive prompter and non-interactive JSON generator for creating new Tier 1 LibScript component-package-managers under `_lib\<category>\<component>\` on Windows.
 :: ## Usage
 :: .\libscript.cmd scaffold [--interactive | --from-json=<file>] [--export-json=<file>] [--force] [--dry-run]
 
@@ -293,9 +290,10 @@ echo [OK] Exported component scaffold JSON spec to !_OUT_JSON!
 exit /b 0
 
 :: ## synthesize_component_batch
-:: Generates manifest.json and vars.schema.json when sh is unavailable on Windows.
+:: Generates the full Version Manager Contract component files when sh is unavailable on Windows.
 :synthesize_component_batch
 set "_CDIR=%~1"
+for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "('!SCAF_NAME!'.ToUpper() -replace '[^A-Z0-9]', '_')"`) do set "COMP_PREFIX=%%P"
 if not exist "!_CDIR!\manifest.json" (
     (
         echo {
@@ -309,6 +307,101 @@ if not exist "!_CDIR!\manifest.json" (
         echo }
     ) > "!_CDIR!\manifest.json"
 )
+if not exist "!_CDIR!\vars.schema.json" (
+    (
+        echo {
+        echo   "$schema": "https://json-schema.org/draft/2020-12/schema",
+        echo   "$id": "/_lib/!SCAF_CATEGORY!/!SCAF_NAME!/vars.schema.json",
+        echo   "title": "!SCAF_TITLE! variables",
+        echo   "description": "Configuration variables for !SCAF_NAME!",
+        echo   "type": "object",
+        echo   "properties": {
+        echo     "!COMP_PREFIX!_INSTALL_METHOD": {
+        echo       "description": "How to install !SCAF_NAME!.",
+        echo       "type": "string",
+        echo       "enum": ["system", "libscript_native", "from-source"],
+        echo       "default": "!SCAF_INSTALL_METHOD!"
+        echo     },
+        echo     "!COMP_PREFIX!_VERSION": {
+        echo       "description": "Specific version of !SCAF_NAME! to install.",
+        echo       "type": "string",
+        echo       "default": "!SCAF_DEFAULT_VERSION!"
+        echo     },
+        echo     "!COMP_PREFIX!_DOWNLOAD_URL": {
+        echo       "description": "Override URL for downloading !SCAF_NAME! binary or archive artifacts.",
+        echo       "type": "string"
+        echo     },
+        echo     "!COMP_PREFIX!_RELEASES_URL": {
+        echo       "description": "Override URL for querying !SCAF_NAME! available remote releases.",
+        echo       "type": "string"
+        echo     }
+        echo   }
+        echo }
+    ) > "!_CDIR!\vars.schema.json"
+)
+if not exist "!_CDIR!\README.md" (
+    (
+        echo # !SCAF_NAME!
+        echo.
+        echo ## Purpose ^& Current State
+        echo.
+        echo **Purpose**: !SCAF_DESCRIPTION!
+        echo.
+        echo ## Usage
+        echo.
+        echo ```sh
+        echo libscript install !SCAF_NAME!
+        echo ```
+        echo.
+        echo ## Configuration Options
+        echo.
+        echo ^<!-- BEGIN_VARS --^>
+        echo ^| Variable ^| Description ^| Default ^|
+        echo ^|---^|---^|---^|
+        echo ^| `!COMP_PREFIX!_INSTALL_METHOD` ^| How to install !SCAF_NAME!. ^| `!SCAF_INSTALL_METHOD!` ^|
+        echo ^| `!COMP_PREFIX!_VERSION` ^| Specific version of !SCAF_NAME! to install. ^| `!SCAF_DEFAULT_VERSION!` ^|
+        echo ^<!-- END_VARS --^>
+        echo.
+        echo ## Platform Support
+        echo.
+        echo ^<!-- BEGIN_PLATFORMS --^>
+        echo - Linux
+        echo - macOS
+        echo - Windows
+        echo ^<!-- END_PLATFORMS --^>
+    ) > "!_CDIR!\README.md"
+)
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$shFile = '!SCRIPT_DIR!\scaffold.sh'; $cdir = '!_CDIR!'; " ^
+    "$content = Get-Content -LiteralPath $shFile -Raw; " ^
+    "$map = @{ " ^
+    "  '__SCAF_NAME__' = '!SCAF_NAME!'; " ^
+    "  '__SCAF_TITLE__' = '!SCAF_TITLE!'; " ^
+    "  '__SCAF_CATEGORY__' = '!SCAF_CATEGORY!'; " ^
+    "  '__SCAF_DESCRIPTION__' = '!SCAF_DESCRIPTION!'; " ^
+    "  '__SCAF_BINARY_NAME__' = '!SCAF_BINARY_NAME!'; " ^
+    "  '__SCAF_INSTALL_METHOD__' = '!SCAF_INSTALL_METHOD!'; " ^
+    "  '__SCAF_DEFAULT_VERSION__' = if ('!SCAF_DEFAULT_VERSION!') { '!SCAF_DEFAULT_VERSION!' } else { 'latest' }; " ^
+    "  '__SCAF_VERSION_SCHEME__' = '!SCAF_VERSION_SCHEME!'; " ^
+    "  '__SCAF_GITHUB_REPO__' = '!SCAF_GITHUB_REPO!'; " ^
+    "  '__SCAF_TAG_PREFIX__' = '!SCAF_TAG_PREFIX!'; " ^
+    "  '__SCAF_URL_UNIX__' = '!SCAF_URL_UNIX!'; " ^
+    "  '__SCAF_URL_WINDOWS__' = '!SCAF_URL_WINDOWS!'; " ^
+    "  '__SCAF_RELEASES_URL__' = '!SCAF_RELEASES_URL!'; " ^
+    "  '__SCAF_TEST_CMD__' = '!SCAF_TEST_CMD!'; " ^
+    "  '__COMP_PREFIX__' = '!COMP_PREFIX!' " ^
+    "}; " ^
+    "$matches = [regex]::Matches($content, 'write_component_file\s+\"\$\{_comp_dir\}/([^\"]+)\"\s+(\d+)\s+(\d+)\s+<<\s+''EOF''\r?\n([\s\S]*?)\r?\nEOF'); " ^
+    "foreach ($m in $matches) { " ^
+    "  $fname = $m.Groups[1].Value; $isCrlf = ($m.Groups[3].Value -eq '1'); $body = $m.Groups[4].Value; " ^
+    "  foreach ($k in $map.Keys) { $body = $body.Replace($k, $map[$k]) }; " ^
+    "  $outPath = Join-Path $cdir $fname; " ^
+    "  if (-not (Test-Path $outPath) -or '!SCAF_FORCE!' -eq '1') { " ^
+    "    $lines = $body -split '\r?\n'; " ^
+    "    $sep = if ($isCrlf) { \"`r`n\" } else { \"`n\" }; " ^
+    "    [System.IO.File]::WriteAllText($outPath, ($lines -join $sep) + $sep, (New-Object System.Text.UTF8Encoding $false)) " ^
+    "  } " ^
+    "}"
 exit /b 0
 
 :: ## show_scaffold_help

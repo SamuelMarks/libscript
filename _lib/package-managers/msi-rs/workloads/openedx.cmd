@@ -1,14 +1,9 @@
 @echo off
 :: # openedx.cmd
-::
 :: ## Overview
-:: Preloads and configures the Open edX platform workload on the target system.
-:: Provisions MySQL/MariaDB, MongoDB, Redis, and OpenSearch services, performs database
-:: migrations, registers init system service units, and prepares first-boot verification.
-::
+:: Preloads and configures the Open edX platform workload on the target system. Provisions MySQL/MariaDB, MongoDB, Redis, and OpenSearch services, performs database migrations, registers init system service units, and prepares first-boot verification.
 :: ## Usage
-:: Execute this script to stage Open edX in target sysroot:
-::   ./_lib/package-managers/msi-rs/workloads/openedx.cmd [target_dir]
+:: Execute this script to stage Open edX in target sysroot: ./_lib/package-managers/msi-rs/workloads/openedx.cmd [target_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

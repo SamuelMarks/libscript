@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Debian-specific setup script for PostgreSQL.
-#
 # ## Usage
 # Installs PostgreSQL from the official `apt.postgresql.org` repository or reuses an active cluster.
 

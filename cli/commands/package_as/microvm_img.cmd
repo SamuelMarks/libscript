@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # microvm_img.cmd
-::
 :: ## Overview
-:: Synthesizes stripped microVM guest appliances for Firecracker and Cloud-Hypervisor
-:: on Windows.
-::
+:: Synthesizes stripped microVM guest appliances for Firecracker and Cloud-Hypervisor on Windows.
 :: ## Usage
 :: call cli\commands\package_as\microvm_img.cmd [sysroot_dir] [out_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

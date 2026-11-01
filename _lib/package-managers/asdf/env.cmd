@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for asdf on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for asdf.
+:: Executes initialization, logic, or testing for asdf. Windows environment configuration and PATH probes for asdf
 
-:: Windows environment configuration and PATH probes for asdf
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

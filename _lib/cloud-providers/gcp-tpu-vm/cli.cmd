@@ -1,12 +1,9 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface for managing GCP Cloud TPU VMs on Windows.
-::
 :: ## Usage
-:: Wraps `gcloud compute tpus tpu-vm` to provision, start, stop, and SSH into TPU VMs.
-:: Run `libscript gcp-tpu-vm <action> [args...]`.
+:: Wraps `gcloud compute tpus tpu-vm` to provision, start, stop, and SSH into TPU VMs. Run `libscript gcp-tpu-vm <action> [args...]`.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

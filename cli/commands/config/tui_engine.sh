@@ -1,13 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Modular Text User Interface (TUI) engine supporting whiptail, dialog,
-# and portable ANSI VT100 POSIX terminal fallbacks for interactive configuration.
-#
+# Modular Text User Interface (TUI) engine supporting whiptail, dialog, and portable ANSI VT100 POSIX terminal fallbacks for interactive configuration.
 # ## Usage
-# Source this engine in config scripts:
-#   . "${LIBSCRIPT_ROOT_DIR}/cli/commands/config/tui_engine.sh"
-#   choice=$(tui_menu "Title" "Select an option" "1" "Option One" "2" "Option Two")
-
+# Source this engine in config scripts: . "${LIBSCRIPT_ROOT_DIR}/cli/commands/config/tui_engine.sh" choice=$(tui_menu "Title" "Select an option" "1" "Option One" "2" "Option Two")
 set -feu
 _tui_engine_caller_this="${THIS_FILE:-}"; _tui_engine_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -20,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -2,7 +2,6 @@
 # ## Overview
 # Synthesizes live-CD and live-USB bootable FreeBSD environments with memory-backed
 # root filesystem (mdroot), ZFS/UFS live loaders, and embedded msi-rs installer suite.
-#
 # ## Usage
 # Execute this script to generate a live FreeBSD image:
 #   ./_lib/freebsd/distro/live_freebsd.sh [output_path] [build_dir]

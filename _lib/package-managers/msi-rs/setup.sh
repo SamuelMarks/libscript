@@ -3,7 +3,6 @@
 # Installation and configuration script for the msi-rs component.
 # It uses the shared setup_base.sh logic to handle downloading, verifying,
 # and installing the component on the host system.
-#
 # ## Usage
 # Execute this script to install or configure the component:
 #   ./setup.sh [install|download|use]

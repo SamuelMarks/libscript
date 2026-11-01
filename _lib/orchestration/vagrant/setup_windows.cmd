@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for vagrant on Windows.
-:: Installs official Vagrant distribution on Windows.
-::
+:: Setup script for vagrant on Windows. Installs official Vagrant distribution on Windows.
 :: ## Usage
 :: Automatically invoked during libscript vagrant installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

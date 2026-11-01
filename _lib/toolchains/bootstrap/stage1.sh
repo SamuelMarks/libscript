@@ -3,7 +3,6 @@
 # Stage 1: Cross-Compiled Minimal Userland coordinator.
 # Cross-compiles foundational POSIX utilities (sh, m4, coreutils, diffutils,
 # gawk, grep, gzip, make, patch, sed, tar, xz) linked to target /tools/lib/libc.so.
-#
 # ## Usage
 # Run `stage1.sh [target_arch] [target_libc] [target_os]` to build the minimal userland.
 

@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # build_deb.cmd
-::
 :: ## Overview
-:: Synthesizes Debian-compatible binary packages (.deb) directly from
-:: component staging directories or manifests on Windows.
-::
+:: Synthesizes Debian-compatible binary packages (.deb) directly from component staging directories or manifests on Windows.
 :: ## Usage
 :: call _lib\orchestration\packagers\build_deb.cmd <pkg_name> <pkg_version> <staging_dir> [out_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

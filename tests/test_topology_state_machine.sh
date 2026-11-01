@@ -3,7 +3,6 @@
 # Verifies .topology_state.json checkpoint resume, lease locking, and split-brain fencing in topologies/engine.sh
 # across `valkey-cluster`, `postgres-ha`, `redis-cluster`, `k0s-ha`, `minio-distributed`, `gke-tpu-cluster`,
 # `mesos-marathon-ha`, and `k8s-marathon-paas`.
-#
 # ## Usage
 # ./tests/test_topology_state_machine.sh
 
@@ -26,7 +25,7 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR

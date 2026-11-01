@@ -3,7 +3,6 @@
 # Database console and query execution tool for WordPress 7.1.2.
 # Extracts connection credentials from wp-config.php and launches an interactive shell
 # or executes non-interactive SQL queries, exports, and imports.
-#
 # ## Usage
 #   ./dbshell.sh [query <sql>|export <file.sql>|import <file.sql>|help]
 

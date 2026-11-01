@@ -1,9 +1,7 @@
 @echo off
 :: # restore.cmd
-::
 :: ## Overview
 :: Restores cloud node backups or imports application state (`--import-state`) onto a remote node on Windows.
-::
 :: ## Usage
 :: Run `restore.cmd <node_name> [options]`
 

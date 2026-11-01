@@ -1,12 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
-:: Git-driven deployment workflow engine (`libscript deploy`) on Windows.
-:: Supports cloning or updating a Git repository, deploying applications locally
-:: via `libscript.json` or remotely via SSH (`--host`) or cloud providers (`--provider`),
-:: and installing Git `post-receive` hooks (`--install-hook`).
-::
+:: Git-driven deployment workflow engine (`libscript deploy`) on Windows. Supports cloning or updating a Git repository, deploying applications locally via `libscript.json` or remotely via SSH (`--host`) or cloud providers (`--provider`), and installing Git `post-receive` hooks (`--install-hook`).
 :: ## Usage
 :: libscript.cmd deploy [<git_repo_or_path>] [--branch <ref>] [--host <user@host>] [--provider <cloud>] [--domain <domain>] [--install-hook <bare_repo_dir>]
 

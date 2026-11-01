@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for orchestration/slurm on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\slurm\logs.cmd [tail|-f]
 

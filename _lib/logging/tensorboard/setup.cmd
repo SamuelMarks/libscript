@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Installation and configuration entrypoint for the tensorboard component on Windows.
-::
 :: ## Usage
 :: setup.cmd [action]
 

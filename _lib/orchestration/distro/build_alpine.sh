@@ -3,7 +3,6 @@
 # Executes the end-to-end Alpine Linux-style distribution synthesis pipeline:
 # bootstrapping Musl/BusyBox runtime, apk-tools package manager, APK binary
 # package synthesis, signed APKINDEX repository generation, and clean rootfs deployment.
-#
 # ## Usage
 # ./_lib/orchestration/distro/build_alpine.sh [--target-rootfs=<path>] [--profile=<profile.json>]
 

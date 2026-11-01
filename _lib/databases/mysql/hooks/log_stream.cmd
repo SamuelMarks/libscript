@@ -1,9 +1,7 @@
 @echo off
 :: # log_stream.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'log_stream' for the mysql component on Windows.
-::
 :: ## Usage
 :: hooks\log_stream.cmd [args...]
 

@@ -2,7 +2,6 @@
 # ## Overview
 # Validates reverse proxy interpolation idempotency, failure rollback, and 
 # side-by-side vhost coexistence.
-#
 # ## Usage
 #   ./tests/test_proxy_idempotency.sh
 
@@ -78,6 +77,8 @@ server { server_name wp.example.com; }
 # END libscript-managed: ${_app_id}
 EOF
 
+  # ## _interpolate
+  # Replaces or appends the libscript-managed block in the target configuration file.
   _interpolate() {
     awk -v app_id="${_app_id}" -v block_file="$_block_file" '
       BEGIN { begin_marker="# BEGIN libscript-managed: " app_id; end_marker="# END libscript-managed: " app_id; in_block=0; replaced=0 }

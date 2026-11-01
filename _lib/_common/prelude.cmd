@@ -1,15 +1,10 @@
 @echo off
 :: # prelude.cmd
-::
 :: ## Overview
 :: Common preamble and initialization logic shared across scripts.
-:: 
 :: ## Usage
-:: This script is intended to be sourced by other scripts, not executed directly.
+:: This script is intended to be sourced by other scripts, not executed directly. setlocal EnableDelayedExpansion Initialize STACK variable
 
-setlocal EnableDelayedExpansion
-
-:: Initialize STACK variable
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

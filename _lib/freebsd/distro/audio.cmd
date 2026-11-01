@@ -1,10 +1,7 @@
 @echo off
 :: # audio.cmd
-::
 :: ## Overview
-:: Configures audio subsystems (native FreeBSD OSS, PipeWire, or none)
-:: inside FreeBSD target sysroot on Windows environments.
-::
+:: Configures audio subsystems (native FreeBSD OSS, PipeWire, or none) inside FreeBSD target sysroot on Windows environments.
 :: ## Usage
 :: audio.cmd [sysroot_path] [subsystem]
 

@@ -1,17 +1,9 @@
 @echo off
 :: # healthcheck.cmd
-::
 :: ## Overview
-:: Full-stack diagnostic and health probe module for Open edX on Windows.
-:: Validates MySQL, MongoDB, Redis, Meilisearch, Celery, LMS HTTP, CMS HTTP, and SMTP listeners.
-::
+:: Full-stack diagnostic and health probe module for Open edX on Windows. Validates MySQL, MongoDB, Redis, Meilisearch, Celery, LMS HTTP, CMS HTTP, and SMTP listeners.
 :: ## Usage
-::   call healthcheck.cmd [--json]
-::   call healthcheck.cmd help
-::
-:: ## Exit Codes
-::   0 - All probes healthy
-::   1 - One or more health checks failed
+:: call healthcheck.cmd [--json] call healthcheck.cmd help ## Exit Codes 0 - All probes healthy 1 - One or more health checks failed
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

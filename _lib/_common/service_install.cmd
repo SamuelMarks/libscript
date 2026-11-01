@@ -1,10 +1,7 @@
 @echo off
 :: # service_install.cmd
-::
 :: ## Overview
-:: Internal script for service_install on Windows. Registers, overrides environment variables for,
-:: or removes a Windows service or fallback runner, respecting LIBSCRIPT_INIT_SYSTEM.
-::
+:: Internal script for service_install on Windows. Registers, overrides environment variables for, or removes a Windows service or fallback runner, respecting LIBSCRIPT_INIT_SYSTEM.
 :: ## Usage
 :: service_install.cmd <install|uninstall|override-env> <service_name> [args...]
 

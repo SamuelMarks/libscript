@@ -2,15 +2,12 @@
 # ## Overview
 # Orchestrates the Open edX Test Plan as defined in TEST_OPENEDX_PLAN.md.
 # This script is idempotent and resolves paths using the standard `THIS_FILE=` dance.
-#
 # ## Usage
 # ./tests/test_openedx_plan.sh [-o target_os] [step]
 # Examples:
 #   ./tests/test_openedx_plan.sh 0            # Run Step 0 on debian-13
 #   ./tests/test_openedx_plan.sh -o macos-14-arm64 1  # Run Step 1 on macos
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

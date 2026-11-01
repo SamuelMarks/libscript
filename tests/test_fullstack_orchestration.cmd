@@ -1,10 +1,7 @@
 @echo off
 :: # test_fullstack_orchestration.cmd
-::
 :: ## Overview
-:: End-to-end integration test suite on Windows verifying full-stack orchestration, dependency resolution,
-:: lifecycle hooks, daemon management, SPA/WebSocket ingress, frontend/KMP builds, and ML CLI verbs.
-::
+:: End-to-end integration test suite on Windows verifying full-stack orchestration, dependency resolution, lifecycle hooks, daemon management, SPA/WebSocket ingress, frontend/KMP builds, and ML CLI verbs.
 :: ## Usage
 :: tests\test_fullstack_orchestration.cmd
 

@@ -6,12 +6,9 @@
 # (Kbuild compilation from source with custom compiler toolchain: gcc, clang,
 # tcc, or custom-cc), including compiler-namespaced build directories, stamps,
 # System.map/ELF section telemetry, and freestanding kernel ELF synthesis.
-#
 # ## Usage
 # ./_lib/kernel/linux/setup_generic.sh [action]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -22,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -1,14 +1,9 @@
 @echo off
 :: # user_helper.cmd
-::
 :: ## Overview
-:: User management helper utility for Open edX.
-:: Manages user account creation, credentials, staff roles, and catalog enumeration.
-::
+:: User management helper utility for Open edX. Manages user account creation, credentials, staff roles, and catalog enumeration.
 :: ## Usage
-:: user_helper.cmd _lib/web-apps/openedx/user_helper.cmd create <install_dir> <username> <email> <password> <is_staff> <is_superuser>
-:: user_helper.cmd _lib/web-apps/openedx/user_helper.cmd set_password <install_dir> <username> <password>
-:: user_helper.cmd _lib/web-apps/openedx/user_helper.cmd list <install_dir>
+:: user_helper.cmd _lib/web-apps/openedx/user_helper.cmd create <install_dir> <username> <email> <password> <is_staff> <is_superuser> user_helper.cmd _lib/web-apps/openedx/user_helper.cmd set_password <install_dir> <username> <password> user_helper.cmd _lib/web-apps/openedx/user_helper.cmd list <install_dir>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

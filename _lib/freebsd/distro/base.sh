@@ -1,19 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Bootstraps the FreeBSD base system into a target sysroot directory.
-# Downloads or verifies cached base.txz and kernel.txz archives, verifies
-# SHA-256 integrity, extracts archives into sysroot, or prepares local sysroot.
-#
+# Bootstraps the FreeBSD base system into a target sysroot directory. Downloads or verifies cached base.txz and kernel.txz archives, verifies SHA-256 integrity, extracts archives into sysroot, or prepares local sysroot.
 # ## Usage
-# Run base bootstrap:
-#   _lib/freebsd/distro/base.sh [sysroot_path] [freebsd_version] [arch]
-#
-# Environment variables:
-#   LIBSCRIPT_CACHE_DIR  Directory for cached download archives (default: ${REPO_ROOT}/cache)
-#   LIBSCRIPT_OFFLINE    Set to 1 to forbid remote fetching
-
+# Run base bootstrap: _lib/freebsd/distro/base.sh [sysroot_path] [freebsd_version] [arch] Environment variables: LIBSCRIPT_CACHE_DIR  Directory for cached download archives (default: ${REPO_ROOT}/cache) LIBSCRIPT_OFFLINE    Set to 1 to forbid remote fetching
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -24,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

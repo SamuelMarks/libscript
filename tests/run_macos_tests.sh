@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Runs tests sequentially for libscript components on macOS (Darwin).
-# Supports testing via a local macOS Vagrant VM (`bento/macos-14-arm64`) using
-# UTM snapshot restoration (snapshot vanilla; run process; check result; restore snapshot; repeat)
-# or direct native execution on macOS hosts. Results, execution logs, and statuses are written
-# into tests_tmp/ and the Supported Components table in README.md is updated after each test.
-#
+# Runs tests sequentially for libscript components on macOS (Darwin). Supports testing via a local macOS Vagrant VM (`bento/macos-14-arm64`) using UTM snapshot restoration (snapshot vanilla; run process; check result; restore snapshot; repeat) or direct native execution on macOS hosts. Results, execution logs, and statuses are written into tests_tmp/ and the Supported Components table in README.md is updated after each test.
 # ## Usage
-# ./tests/run_macos_tests.sh [TARGETS...|all] [--loop] [--stop-after N] [--skip-uninstall] [--no-snapshot] [--native]
-# Example: ./tests/run_macos_tests.sh curl sqlite tmux
-# Example: ./tests/run_macos_tests.sh all
-
+# ./tests/run_macos_tests.sh [TARGETS...|all] [--loop] [--stop-after N] [--skip-uninstall] [--no-snapshot] [--native] Example: ./tests/run_macos_tests.sh curl sqlite tmux Example: ./tests/run_macos_tests.sh all
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

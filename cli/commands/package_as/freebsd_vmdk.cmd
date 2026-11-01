@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_vmdk.cmd
-::
 :: ## Overview
 :: Exports a FreeBSD disk image to VMware VMDK format on Windows.
-::
 :: ## Usage
 :: freebsd_vmdk.cmd [input_raw_or_sysroot] [output_vmdk] [size_gib]
 

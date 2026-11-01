@@ -1,13 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # find_replace_exec.cmd
-::
 :: ## Overview
 :: Windows Batch executable literal string replacer.
-::
 :: ## Usage
 :: find_replace_exec "find" "replace" filename
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

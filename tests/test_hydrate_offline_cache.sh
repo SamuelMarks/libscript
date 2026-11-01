@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Unit tests for the LibScript offline cache hydration and integrity verification engine.
-# Validates:
-# 1. Missing artifact detection under --verify-only.
-# 2. Checksum validation for intact files.
-# 3. Corrupted / truncated file detection and error handling.
-# 4. Idempotent hydration and verification.
-# 5. Manifest and checksums.sha256 generation.
-#
+# Unit tests for the LibScript offline cache hydration and integrity verification engine. Validates: 1. Missing artifact detection under --verify-only. 2. Checksum validation for intact files. 3. Corrupted / truncated file detection and error handling. 4. Idempotent hydration and verification. 5. Manifest and checksums.sha256 generation.
 # ## Usage
 # ./tests/test_hydrate_offline_cache.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entry point for the LLVM Clang compiler component on Windows.
-::
 :: ## Usage
 :: cli.cmd [command] [version] [options]
 

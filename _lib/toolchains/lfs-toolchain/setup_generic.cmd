@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for LFS cross-toolchain bootstrap.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for LFS cross-toolchain bootstrap. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\toolchains\lfs-toolchain\setup.cmd [install|clean|status]
 

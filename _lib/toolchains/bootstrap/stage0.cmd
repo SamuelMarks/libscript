@@ -1,11 +1,7 @@
 @echo off
 :: # stage0.cmd
-::
 :: ## Overview
-:: Stage 0: Host-Driven Cross-Toolchain bootstrap coordinator for Windows.
-:: Orchestrates Cross-Binutils Pass 1, GCC Pass 1, Kernel Headers, Target LibC,
-:: and Cross-GCC Pass 2 into LIBSCRIPT_HOST_ROOT (/tools).
-::
+:: Stage 0: Host-Driven Cross-Toolchain bootstrap coordinator for Windows. Orchestrates Cross-Binutils Pass 1, GCC Pass 1, Kernel Headers, Target LibC, and Cross-GCC Pass 2 into LIBSCRIPT_HOST_ROOT (/tools).
 :: ## Usage
 :: stage0.cmd [target_arch] [target_libc] [target_os]
 

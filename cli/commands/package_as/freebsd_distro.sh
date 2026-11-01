@@ -2,7 +2,6 @@
 # ## Overview
 # Unified CLI entrypoint to package a FreeBSD distribution profile into
 # raw, qcow2, vagrant box, vhd, vmdk, or iso target formats.
-#
 # ## Usage
 # Package FreeBSD distribution:
 #   cli/commands/package_as/freebsd_distro.sh --format <qcow2|box|raw|vhd|vmdk|iso> --profile <profile_json> [--output <path>]

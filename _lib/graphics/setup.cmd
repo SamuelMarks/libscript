@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for Graphics and hardware acceleration setup.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Graphics and hardware acceleration setup. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\graphics\setup.cmd [install|clean|status]
 

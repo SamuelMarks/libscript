@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Windows generic uninstallation script for hMailServer.
-::
 :: ## Usage
 :: Execute this script to uninstall hMailServer.
 

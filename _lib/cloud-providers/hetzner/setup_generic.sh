@@ -3,7 +3,6 @@
 # Hetzner Cloud and Bare-Metal server provider engine.
 # Orchestrates booting into the Hetzner Linux Rescue System, directly streaming
 # synthesized OS disk images onto physical block devices (dd), and configuring hcloud servers.
-#
 # ## Usage
 # Run `setup.sh [action] [server_ip_or_id] [disk_image] [target_device]`
 

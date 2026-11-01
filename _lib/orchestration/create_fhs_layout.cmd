@@ -1,10 +1,7 @@
 @echo off
 :: # create_fhs_layout.cmd
-::
 :: ## Overview
-:: Initializes a standard Filesystem Hierarchy Standard (FHS) directory layout
-:: within a target sysroot directory on Windows, populating default configuration skeletons.
-::
+:: Initializes a standard Filesystem Hierarchy Standard (FHS) directory layout within a target sysroot directory on Windows, populating default configuration skeletons.
 :: ## Usage
 :: Run `create_fhs_layout.cmd <target_sysroot>` to initialize the FHS directory tree.
 

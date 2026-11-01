@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration script for Apache ZooKeeper on Windows.
-::
 :: ## Usage
 :: call _lib\databases\zookeeper\env.cmd
 

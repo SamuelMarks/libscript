@@ -76,11 +76,11 @@ if [ "$(uname -s)" = "Darwin" ]; then
   JUPYTERHUB_SERVICE_USER="${USER}"
 elif ! id "${JUPYTERHUB_SERVICE_USER}" >/dev/null 2>&1; then
   if command -v pw >/dev/null 2>&1; then
-    priv pw useradd "${JUPYTERHUB_SERVICE_USER}" -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -s /bin/sh
+    priv pw useradd "${JUPYTERHUB_SERVICE_USER}" -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -s /bin/sh || true
   elif command -v useradd >/dev/null 2>&1; then
-    priv useradd -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -c '' "${JUPYTERHUB_SERVICE_USER}"
+    priv useradd -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -c '' "${JUPYTERHUB_SERVICE_USER}" || true
   else
-    priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}"
+    priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}" || true
   fi
 else
   if command -v usermod >/dev/null 2>&1; then

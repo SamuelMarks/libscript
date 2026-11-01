@@ -1,10 +1,7 @@
 @echo off
 :: # provision.cmd
-::
 :: ## Overview
-:: Provisions cloud infrastructure and registers synthesized system images on Windows.
-:: Validates profiles, ensures required artifacts exist, and delegates orchestration.
-:: 
+:: Provisions cloud infrastructure and registers synthesized system images on Windows. Validates profiles, ensures required artifacts exist, and delegates orchestration.
 :: ## Usage
 :: Call `provision.cmd [--profile=<file>] [--image=<path>] [--provider=aws|gcp|azure|proxmox|hetzner]`
 

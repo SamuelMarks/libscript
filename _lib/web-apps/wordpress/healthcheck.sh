@@ -2,17 +2,13 @@
 # ## Overview
 # Full-stack diagnostic and health probe module for WordPress 7.1.2.
 # Validates PHP runtime, extensions, Web Server listener, PHP-FPM, MySQL database, and core files.
-#
 # ## Usage
 #   ./healthcheck.sh [--json]
 #   ./healthcheck.sh help
-#
 # ## Options
 #   --json    Output machine-readable JSON status report
 #   help      Display usage instructions
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

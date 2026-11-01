@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for kubernetes-k0s on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for kubernetes-k0s.
+:: Executes initialization, logic, or testing for kubernetes-k0s. Windows environment configuration and PATH probes for kubernetes-k0s
 
-:: Windows environment configuration and PATH probes for kubernetes-k0s
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

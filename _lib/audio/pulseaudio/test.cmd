@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Verifies PulseAudio on Windows.
-::
 :: ## Usage
 :: Execute this script to test PulseAudio functionality.
 

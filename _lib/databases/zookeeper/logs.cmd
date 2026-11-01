@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for databases/zookeeper on Windows.
-::
 :: ## Usage
 :: _lib\databases\zookeeper\logs.cmd [tail|-f]
 

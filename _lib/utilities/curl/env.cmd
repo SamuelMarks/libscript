@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for curl on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for curl.
+:: Executes initialization, logic, or testing for curl. Windows environment configuration and PATH probes for curl
 
-:: Windows environment configuration and PATH probes for curl
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

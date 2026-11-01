@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for jetstream on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for jetstream.
+:: Executes initialization, logic, or testing for jetstream. Windows environment configuration and PATH probes for jetstream
 
-:: Windows environment configuration and PATH probes for jetstream
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

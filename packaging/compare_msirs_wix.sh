@@ -4,10 +4,8 @@
 # MSI tables and structure against the Windows-only WiX Toolset using msiinfo and msidiff.
 # Never invokes WiX on Linux, macOS, FreeBSD, or illumos unless explicitly delegating to
 # the Windows 11 Vagrant VM (--with-windows-vagrant).
-#
 # ## Usage
 # ./packaging/compare_msirs_wix.sh [--target <dir>] [--variant <online|offline>] [--out-dir <dir>] [--with-windows-vagrant]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

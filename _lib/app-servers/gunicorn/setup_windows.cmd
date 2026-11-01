@@ -1,15 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # setup_windows.cmd
-::
 :: ## Overview
-:: Windows setup script for Gunicorn.
-:: Gunicorn utilizes POSIX fork(); on Windows, installs Waitress/Uvicorn and provisions
-:: a proxy gunicorn.cmd CLI wrapper for seamless cross-platform execution.
-::
+:: Windows setup script for Gunicorn. Gunicorn utilizes POSIX fork(); on Windows, installs Waitress/Uvicorn and provisions a proxy gunicorn.cmd CLI wrapper for seamless cross-platform execution.
 :: ## Usage
 :: Automatically invoked during libscript gunicorn installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

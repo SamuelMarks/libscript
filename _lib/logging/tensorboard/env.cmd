@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for tensorboard on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for tensorboard.
+:: Executes initialization, logic, or testing for tensorboard. Windows environment configuration and PATH probes for tensorboard
 
-:: Windows environment configuration and PATH probes for tensorboard
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

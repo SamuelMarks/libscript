@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for cli on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for cli.
+:: Executes initialization, logic, or testing for cli. Windows environment configuration and PATH probes for gcp-cli
 
-:: Windows environment configuration and PATH probes for gcp-cli
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (

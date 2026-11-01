@@ -1,11 +1,7 @@
 @echo off
 :: # test_multi_runtime_path.cmd
-::
 :: ## Overview
-:: Verifies multi-component PATH inheritance and SERVICE_PATH emission on Windows when
-:: hydrating a backend manifest combining nodejs, postgres, python, and uv, ensuring no
-:: cross-component LIBSCRIPT_VERSION bleed occurs.
-::
+:: Verifies multi-component PATH inheritance and SERVICE_PATH emission on Windows when hydrating a backend manifest combining nodejs, postgres, python, and uv, ensuring no cross-component LIBSCRIPT_VERSION bleed occurs.
 :: ## Usage
 :: tests\test_multi_runtime_path.cmd
 

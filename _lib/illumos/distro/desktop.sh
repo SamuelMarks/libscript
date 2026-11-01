@@ -2,7 +2,6 @@
 # ## Overview
 # Configures desktop environments (MATE, XFCE4, CDE, Openbox, or none) and user
 # session startup scripts (.xsession, .xinitrc) inside the illumos target sysroot.
-#
 # ## Usage
 # Configure desktop environment:
 #   _lib/illumos/distro/desktop.sh [sysroot_path] [environment] [primary_user]

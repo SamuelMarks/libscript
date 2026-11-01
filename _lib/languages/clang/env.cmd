@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration for LLVM Clang on Windows.
-::
 :: ## Usage
 :: call _lib\languages\clang\env.cmd
 

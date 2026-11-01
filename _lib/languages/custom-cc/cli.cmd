@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entry point for the Custom C Compiler (custom-cc) component on Windows.
-::
 :: ## Usage
 :: cli.cmd [command] [version] [options]
 

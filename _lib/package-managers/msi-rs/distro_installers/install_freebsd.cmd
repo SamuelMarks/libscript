@@ -1,14 +1,9 @@
 @echo off
 :: # install_freebsd.cmd
-::
 :: ## Overview
-:: Target operating system installation pipeline for FreeBSD.
-:: Unpacks base.txz and kernel.txz archives, configures /etc/rc.conf and /boot/loader.conf,
-:: provisions ZFS datasets or UFS filesystems, and sets up EFI/BIOS bootloader code.
-::
+:: Target operating system installation pipeline for FreeBSD. Unpacks base.txz and kernel.txz archives, configures /etc/rc.conf and /boot/loader.conf, provisions ZFS datasets or UFS filesystems, and sets up EFI/BIOS bootloader code.
 :: ## Usage
-:: Execute this script to install FreeBSD to a target device:
-::   ./_lib/package-managers/msi-rs/distro_installers/install_freebsd.cmd <target_dev> [target_dir]
+:: Execute this script to install FreeBSD to a target device: ./_lib/package-managers/msi-rs/distro_installers/install_freebsd.cmd <target_dev> [target_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

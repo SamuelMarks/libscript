@@ -1,10 +1,8 @@
 #!/bin/sh
 # ## Overview
 # Transactional Stateful Upgrade Engine combining hooks/backup, ZFS/Btrfs CoW snapshots, hooks/upgrade, probe gating, and automatic rollback.
-#
 # ## Usage
 # ./_lib/_common/upgrade_engine.sh <component> <old_version> <new_version> [--simulate-failure]
-
 set -feu
 _upgrade_engine_caller_this="${THIS_FILE:-}"; _upgrade_engine_caller_dir="${SCRIPT_DIR:-}"
 
@@ -27,7 +25,7 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR

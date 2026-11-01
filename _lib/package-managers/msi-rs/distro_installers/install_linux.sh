@@ -3,11 +3,9 @@
 # Target operating system installation pipeline for Linux distributions (Debian, Alpine, Rocky, LFS).
 # Handles base userland extraction, kernel installation, network configuration,
 # /etc/fstab generation, and GRUB EFI/BIOS bootloader setup under /mnt/target.
-#
 # ## Usage
 # Execute this script to install Linux to a target device:
 #   ./_lib/package-managers/msi-rs/distro_installers/install_linux.sh <target_dev> [flavor] [target_dir]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

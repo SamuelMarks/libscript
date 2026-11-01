@@ -3,11 +3,8 @@
 # Provides robust URL parsing capabilities in pure POSIX shell.
 # The `libscript_url_parser` function breaks down a URL into its constituent
 # parts (`protocol`, `host`, `port`, `path`, `user`), exporting them to the environment.
-# 
 # ## Usage
 # Source this file and call `libscript_url_parser <url>` to extract URL components.
-
-
 set -feu
 _url_parser_caller_this="${THIS_FILE:-}"; _url_parser_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -20,7 +17,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

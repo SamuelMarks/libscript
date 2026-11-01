@@ -3,7 +3,6 @@
 # Command-line interface entrypoint for the pkg component.
 # It initializes the lifecycle, resolves the package name, and delegates execution
 # to the shared component_core.sh script.
-#
 # ## Usage
 # Execute this script directly to run the CLI functionality for the component.
 

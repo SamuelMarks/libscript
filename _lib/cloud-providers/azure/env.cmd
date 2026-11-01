@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for azure on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for azure.
+:: Executes initialization, logic, or testing for azure. Windows environment configuration and PATH probes for azure
 
-:: Windows environment configuration and PATH probes for azure
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

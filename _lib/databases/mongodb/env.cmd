@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for mongodb on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for mongodb.
+:: Executes initialization, logic, or testing for mongodb. Windows environment configuration and PATH probes for mongodb
 
-:: Windows environment configuration and PATH probes for mongodb
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -4,10 +4,8 @@
 # validates Packer templates in ../bento/os_pkrvars/, and registers all 7 target OS boxes
 # (bento/omnios, bento/alpine-3.24, bento/debian-13, bento/rockylinux-10.2,
 # bento/freebsd-15.1, bento/macos-14-arm64, bento/windows-11) in the host's Vagrant installation.
-#
 # ## Usage
 # ./tests/register_bento_boxes.sh [--bento-dir <path>] [--force] [--validate-only]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

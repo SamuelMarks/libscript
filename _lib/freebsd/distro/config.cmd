@@ -1,10 +1,7 @@
 @echo off
 :: # config.cmd
-::
 :: ## Overview
-:: Configures core FreeBSD configuration files inside target sysroot
-:: (/boot/loader.conf, /etc/rc.conf, /etc/fstab, /etc/ttys) on Windows.
-::
+:: Configures core FreeBSD configuration files inside target sysroot (/boot/loader.conf, /etc/rc.conf, /etc/fstab, /etc/ttys) on Windows.
 :: ## Usage
 :: config.cmd [sysroot_path] [hostname] [filesystem]
 

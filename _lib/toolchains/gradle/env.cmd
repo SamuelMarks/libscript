@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for gradle on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for gradle.
+:: Executes initialization, logic, or testing for gradle. Windows environment configuration and PATH probes for gradle
 
-:: Windows environment configuration and PATH probes for gradle
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

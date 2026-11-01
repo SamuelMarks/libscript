@@ -1,19 +1,9 @@
 @echo off
 :: # build_component_msi.cmd
 :: ## Overview
-:: Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
-:: Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
-::
+:: Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency. Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
 :: ## Usage
-::   call packaging\build_component_msi.cmd [OPTIONS]
-::
-:: ## Parameters
-::   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
-::   --version <ver>          Component release version (default: auto-detected from offline bundle)
-::   --variant <var>          Installer variant: online, offline, or all (default: all)
-::   --help, -h               Show this help text
-
-setlocal EnableDelayedExpansion
+:: call packaging\build_component_msi.cmd [OPTIONS] ## Parameters --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch) --version <ver>          Component release version (default: auto-detected from offline bundle) --variant <var>          Installer variant: online, offline, or all (default: all) --help, -h               Show this help text setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (

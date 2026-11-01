@@ -1,20 +1,9 @@
 @echo off
 :: # dbshell.cmd
-::
 :: ## Overview
-:: Database console and query execution wrapper for Open edX on Windows.
-:: Provides unified CLI access to MySQL, MongoDB, and Redis datastores.
-::
+:: Database console and query execution wrapper for Open edX on Windows. Provides unified CLI access to MySQL, MongoDB, and Redis datastores.
 :: ## Usage
-::   call dbshell.cmd mysql [optional_mysql_args...]
-::   call dbshell.cmd mongo [optional_mongo_args...]
-::   call dbshell.cmd redis [optional_redis_args...]
-::   call dbshell.cmd query <sql_statement>
-::   call dbshell.cmd help
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Client invocation failure or missing database client binary
+:: call dbshell.cmd mysql [optional_mysql_args...] call dbshell.cmd mongo [optional_mongo_args...] call dbshell.cmd redis [optional_redis_args...] call dbshell.cmd query <sql_statement> call dbshell.cmd help ## Exit Codes 0 - Success 1 - Client invocation failure or missing database client binary
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

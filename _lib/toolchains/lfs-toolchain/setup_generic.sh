@@ -3,7 +3,6 @@
 # Orchestrates the Stage 1 LFS cross-toolchain bootstrap (cross-binutils,
 # stage 1 gcc, sanitized kernel headers, target libc, and stage 2 gcc/libstdc++)
 # establishing a clean cross-compilation sysroot for Linux From Scratch.
-#
 # ## Usage
 # ./_lib/toolchains/lfs-toolchain/setup.sh [install|clean|status] [--libc=glibc|musl] [--arch=x86_64|aarch64]
 

@@ -1,10 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
-:: Uninstallation script for the initramfs component on Windows.
-:: Safely removes the component and its associated files.
-::
+:: Uninstallation script for the initramfs component on Windows. Safely removes the component and its associated files.
 :: ## Usage
 :: initramfs\uninstall.cmd [args]
 

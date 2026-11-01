@@ -3,7 +3,6 @@
 # Provides validation and testing logic for the `_noop` component.
 # It ensures the environment paths are constructed and verifies if the mock
 # executable is found (or reports it skipped).
-# 
 # ## Usage
 # Execute this script to run the tests for the `_noop` component.
 

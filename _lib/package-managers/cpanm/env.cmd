@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for cpanm on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for cpanm.
+:: Executes initialization, logic, or testing for cpanm. Windows environment configuration and PATH probes for cpanm
 
-:: Windows environment configuration and PATH probes for cpanm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

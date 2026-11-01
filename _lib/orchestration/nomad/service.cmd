@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages the HashiCorp Nomad agent (`4646`) lifecycle on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\nomad\service.cmd <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

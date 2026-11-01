@@ -1,16 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Host directory bind-mount manager for Open edX (Tutor `mounts` parity).
-# Allows linking local host directories (e.g., openedx-platform, XBlocks, MFEs, themes)
-# into the Docker-free Open edX installation environment.
-#
+# Host directory bind-mount manager for Open edX (Tutor `mounts` parity). Allows linking local host directories (e.g., openedx-platform, XBlocks, MFEs, themes) into the Docker-free Open edX installation environment.
 # ## Usage
-#   ./mounts.sh add <mount_spec>
-#   ./mounts.sh remove <mount_spec>
-#   ./mounts.sh list
-#   ./mounts.sh clear
-#   ./mounts.sh help
-
+# ./mounts.sh add <mount_spec> ./mounts.sh remove <mount_spec> ./mounts.sh list ./mounts.sh clear ./mounts.sh help
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -22,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

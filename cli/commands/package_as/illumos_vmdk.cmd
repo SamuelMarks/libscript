@@ -1,9 +1,7 @@
 @echo off
 :: # illumos_vmdk.cmd
-::
 :: ## Overview
 :: Exports an illumos disk image to VMDK format on Windows.
-::
 :: ## Usage
 :: illumos_vmdk.cmd [input_raw_or_sysroot] [output_vmdk] [size_gib]
 

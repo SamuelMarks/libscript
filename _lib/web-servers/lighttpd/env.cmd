@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for lighttpd on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for lighttpd.
+:: Executes initialization, logic, or testing for lighttpd. Windows environment configuration and PATH probes for lighttpd
 
-:: Windows environment configuration and PATH probes for lighttpd
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

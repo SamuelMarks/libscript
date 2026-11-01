@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for apk on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for apk.
+:: Executes initialization, logic, or testing for apk. Windows environment configuration and PATH probes for apk
 
-:: Windows environment configuration and PATH probes for apk
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

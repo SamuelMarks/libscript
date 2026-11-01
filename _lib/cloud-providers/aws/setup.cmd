@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Serves as the primary Windows setup entry point for the AWS Cloud Provider component.
-:: Supports both tool installation and Tier 3 AMI image upload/registration.
-::
+:: Serves as the primary Windows setup entry point for the AWS Cloud Provider component. Supports both tool installation and Tier 3 AMI image upload/registration.
 :: ## Usage
 :: Call `setup.cmd [register-image <image_path> [bucket] [ami_name]]` to manage AWS infrastructure.
 

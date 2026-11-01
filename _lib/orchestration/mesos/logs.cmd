@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for orchestration/mesos on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\mesos\logs.cmd [tail|-f]
 

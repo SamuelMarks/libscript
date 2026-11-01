@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for psmux on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for psmux.
+:: Executes initialization, logic, or testing for psmux. Windows environment configuration and PATH probes for psmux
 
-:: Windows environment configuration and PATH probes for psmux
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

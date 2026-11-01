@@ -1,9 +1,7 @@
 @echo off
 :: # illumos_iso.cmd
-::
 :: ## Overview
 :: Packages an illumos target sysroot into an ISO image on Windows.
-::
 :: ## Usage
 :: illumos_iso.cmd [target_sysroot] [output_iso]
 

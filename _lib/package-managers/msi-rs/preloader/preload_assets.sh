@@ -3,11 +3,9 @@
 # Offline preload asset manager for the msi-rs live installer.
 # Packages and stages LibScript components, offline MSI payloads, and dependency caches
 # directly into target sysroots, and executes post-install chroot activation hooks.
-#
 # ## Usage
 # Execute this script to preload components into a target system root:
 #   ./_lib/package-managers/msi-rs/preloader/preload_assets.sh [target_dir] [component_list...]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

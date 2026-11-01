@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Runs tests sequentially for libscript components on a local Rocky Linux Vagrant VM
-# (`bento/rockylinux-10.2`). Restores the vanilla snapshot before each test, verifies
-# installation and test idempotency (2x run), writes logs to tests_tmp/, and automatically
-# updates the Supported Components table in README.md and task completion in TODO_PLAN.md.
-#
+# Runs tests sequentially for libscript components on a local Rocky Linux Vagrant VM (`bento/rockylinux-10.2`). Restores the vanilla snapshot before each test, verifies installation and test idempotency (2x run), writes logs to tests_tmp/, and automatically updates the Supported Components table in README.md and task completion in TODO_PLAN.md.
 # ## Usage
-# ./tests/run_rockylinux_tests.sh [TARGETS...|all]
-# Example: ./tests/run_rockylinux_tests.sh curl sqlite jq
-# Example: ./tests/run_rockylinux_tests.sh all
-# Example: ./tests/run_rockylinux_tests.sh all --loop --stop-after 10
-
+# ./tests/run_rockylinux_tests.sh [TARGETS...|all] Example: ./tests/run_rockylinux_tests.sh curl sqlite jq Example: ./tests/run_rockylinux_tests.sh all Example: ./tests/run_rockylinux_tests.sh all --loop --stop-after 10
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

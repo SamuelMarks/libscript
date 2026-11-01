@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Backward-compatible forwarding shim for GKE XPK training setup on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\gke-xpk-training\setup.cmd [args]
 

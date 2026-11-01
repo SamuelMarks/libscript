@@ -1,9 +1,7 @@
 @echo off
 :: # build_official_wix.cmd
-::
 :: ## Overview
 :: Orchestrates building the nodejs .msi via the official WiX Toolset on the guest.
-::
 :: ## Usage
 :: build_official_wix.cmd
 

@@ -2,7 +2,6 @@
 # ## Overview
 # Generates a bootable hybrid ISO image containing FreeBSD sysroot
 # with UEFI and BIOS el-torito boot support.
-#
 # ## Usage
 # Generate bootable ISO:
 #   cli/commands/package_as/freebsd_iso.sh [sysroot_path] [output_iso]

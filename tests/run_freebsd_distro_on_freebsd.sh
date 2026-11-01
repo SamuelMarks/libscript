@@ -2,7 +2,6 @@
 # ## Overview
 # Executes FreeBSD distribution assembly and verification inside a native FreeBSD Vagrant VM.
 # Validates ZFS root pool creation and UFS2 filesystem formatting natively.
-#
 # ## Usage
 # Run native FreeBSD verification:
 #   tests/run_freebsd_distro_on_freebsd.sh

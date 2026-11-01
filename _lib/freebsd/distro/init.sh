@@ -3,11 +3,9 @@
 # Configures modular init system supervision inside FreeBSD target sysroot.
 # Supports bsd-rc, openrc, runit, s6, and dinit supervisors, staging service
 # definitions and PID 1 loader configuration.
-#
 # ## Usage
 # Configure init system:
 #   _lib/freebsd/distro/init.sh [sysroot_path] [provider] [services_list]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

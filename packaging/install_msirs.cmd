@@ -1,9 +1,7 @@
 @echo off
 :: # install_msirs.cmd
-::
 :: ## Overview
 :: Installs msi-rs natively on the Vagrant guest using LibScript.
-::
 :: ## Usage
 :: install_msirs.cmd
 

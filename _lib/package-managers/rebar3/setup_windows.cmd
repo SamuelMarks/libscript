@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for rebar3 on Windows.
-:: Ensures Erlang/OTP is available and installs the official rebar3 distribution.
-::
+:: Setup script for rebar3 on Windows. Ensures Erlang/OTP is available and installs the official rebar3 distribution.
 :: ## Usage
 :: Automatically invoked during libscript rebar3 installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

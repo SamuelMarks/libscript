@@ -1,10 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
-:: Environment initialization for SQLite on Windows.
-:: Resolves the active SQLite prefix and prepends its bin directory to PATH.
-::
+:: Environment initialization for SQLite on Windows. Resolves the active SQLite prefix and prepends its bin directory to PATH.
 :: ## Usage
 :: call _lib\databases\sqlite\env.cmd
 

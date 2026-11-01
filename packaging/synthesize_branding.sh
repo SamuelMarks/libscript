@@ -3,16 +3,12 @@
 # Universal branding synthesizer generating 24-bit BMP banners, multi-resolution ICO,
 # and aggregated RTF EULA for Windows Installer (MSI) packages based on packaging.json
 # branding_palette declarations.
-#
 # ## Usage
 #   ./packaging/synthesize_branding.sh <path_to_packaging.json_or_dir> [--output-dir DIR]
-#
 # ## Exit Codes
 #   0 - Branding synthesized successfully
 #   1 - Synthesis failed or invalid packaging specification
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

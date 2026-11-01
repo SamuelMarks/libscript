@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for wait4x on Windows.
-:: Prepares and configures wait4x on native Windows environments.
-::
+:: Setup script for wait4x on Windows. Prepares and configures wait4x on native Windows environments.
 :: ## Usage
 :: Automatically invoked during libscript wait4x installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

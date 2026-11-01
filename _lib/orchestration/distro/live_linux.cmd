@@ -1,13 +1,9 @@
 @echo off
 :: # live_linux.cmd
-::
 :: ## Overview
-:: Synthesizes live-CD and live-USB bootable Linux environments (Alpine/Debian)
-:: with overlayfs, live initramfs, and embedded msi-rs installer suite.
-::
+:: Synthesizes live-CD and live-USB bootable Linux environments (Alpine/Debian) with overlayfs, live initramfs, and embedded msi-rs installer suite.
 :: ## Usage
-:: Execute this script to generate a live Linux image:
-::   ./_lib/orchestration/distro/live_linux.cmd [distro_flavor] [output_path] [build_dir]
+:: Execute this script to generate a live Linux image: ./_lib/orchestration/distro/live_linux.cmd [distro_flavor] [output_path] [build_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

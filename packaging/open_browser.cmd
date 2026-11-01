@@ -1,10 +1,7 @@
 @echo off
 :: # open_browser.cmd
-::
 :: ## Overview
-:: Cross-platform browser launcher utility wrapper for Windows.
-:: Launches browser natively in interactive Session 1 with dedicated profile.
-::
+:: Cross-platform browser launcher utility wrapper for Windows. Launches browser natively in interactive Session 1 with dedicated profile.
 :: ## Usage
 :: call "%~dp0open_browser.cmd" [url]
 

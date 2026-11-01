@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for LFS Stage 3 Base System and FHS Layout.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for LFS Stage 3 Base System and FHS Layout. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\base-system\lfs-base\setup.cmd [install|clean|status]
 

@@ -2,7 +2,6 @@
 # ## Overview
 # Publishes built release packages, installer artifacts, and cryptographic
 # checksums to GitHub Releases via the GitHub CLI in an idempotent manner.
-#
 # ## Usage
 # ./devtools/ci/publish_release.sh --tag <tag> [--dist-dir <dir>] [--title <title>] [--draft] [--prerelease]
 

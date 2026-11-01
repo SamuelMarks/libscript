@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the GCC component on Windows.
-::
 :: ## Usage
 :: test.cmd
 

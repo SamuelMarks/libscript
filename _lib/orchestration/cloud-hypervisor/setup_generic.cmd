@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Cloud-Hypervisor provider on Windows.
-:: Configures VirtIO-fs and VirtIO-pmem specifications and delegates to vm_builder worker.
-::
+:: Cloud-Hypervisor provider on Windows. Configures VirtIO-fs and VirtIO-pmem specifications and delegates to vm_builder worker.
 :: ## Usage
 :: setup.cmd [action] [kernel_vmlinux] [disk_image] [virtiofs_dir]
 

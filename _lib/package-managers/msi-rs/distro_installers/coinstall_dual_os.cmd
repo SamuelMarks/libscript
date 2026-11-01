@@ -1,15 +1,9 @@
 @echo off
 :: # coinstall_dual_os.cmd
-::
 :: ## Overview
-:: Concurrent Multi-OS Co-Installation Orchestrator for Linux and FreeBSD.
-:: Deploys Linux base and FreeBSD base concurrently onto two separate target partitions
-:: of the same storage device, configures a shared EFI System Partition (ESP), and synthesizes
-:: a unified dual-boot GRUB bootloader menu with automatic FreeBSD chainloading.
-::
+:: Concurrent Multi-OS Co-Installation Orchestrator for Linux and FreeBSD. Deploys Linux base and FreeBSD base concurrently onto two separate target partitions of the same storage device, configures a shared EFI System Partition (ESP), and synthesizes a unified dual-boot GRUB bootloader menu with automatic FreeBSD chainloading.
 :: ## Usage
-:: Execute this script with target device and partition paths:
-::   ./_lib/package-managers/msi-rs/distro_installers/coinstall_dual_os.cmd <disk_dev> <linux_part> <freebsd_part> [esp_part]
+:: Execute this script with target device and partition paths: ./_lib/package-managers/msi-rs/distro_installers/coinstall_dual_os.cmd <disk_dev> <linux_part> <freebsd_part> [esp_part]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for conan on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for conan.
+:: Executes initialization, logic, or testing for conan. Windows environment configuration and PATH probes for conan
 
-:: Windows environment configuration and PATH probes for conan
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

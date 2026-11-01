@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # cloud_img.cmd
-::
 :: ## Overview
-:: Unified public cloud image packaging driver on Windows, dispatching to
-:: AWS AMI, Azure VHD, and GCP image builders.
-::
+:: Unified public cloud image packaging driver on Windows, dispatching to AWS AMI, Azure VHD, and GCP image builders.
 :: ## Usage
 :: call cli\commands\package_as\cloud_img.cmd [--provider=aws|azure|gcp|all] [input_raw] [out_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

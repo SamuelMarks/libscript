@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for gcp on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for gcp.
+:: Executes initialization, logic, or testing for gcp. Windows environment configuration and PATH probes for gcp
 
-:: Windows environment configuration and PATH probes for gcp
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

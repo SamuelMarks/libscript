@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # qemu_img.cmd
-::
 :: ## Overview
-:: Synthesizes QEMU QCOW2 virtual machine disk images with optimized cluster sizes
-:: on Windows.
-::
+:: Synthesizes QEMU QCOW2 virtual machine disk images with optimized cluster sizes on Windows.
 :: ## Usage
 :: call cli\commands\package_as\qemu_img.cmd [input_raw_or_sysroot] [output_qcow2] [size_gib]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

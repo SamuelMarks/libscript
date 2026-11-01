@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the Slurm Workload Manager component on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\slurm\test.cmd
 

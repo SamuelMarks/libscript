@@ -3,7 +3,6 @@
 # Generic setup and lifecycle module for the Marathon framework on Apache Mesos.
 # Installs isolated `marathon` binaries and configures the `/v2/apps`, `/v2/pods`, `/v2/tasks`,
 # `/v2/deployments`, `/v2/Queue`, `/v2/info`, and `/ping` controller state store.
-#
 # ## Usage
 # Invoked by `setup.sh` or `cli.sh` for Marathon lifecycle actions.
 

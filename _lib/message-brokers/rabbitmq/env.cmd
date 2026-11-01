@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for rabbitmq on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for rabbitmq.
+:: Executes initialization, logic, or testing for rabbitmq. Windows environment configuration and PATH probes for rabbitmq
 
-:: Windows environment configuration and PATH probes for rabbitmq
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

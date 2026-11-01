@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the LLVM Clang component on Windows.
-::
 :: ## Usage
 :: test.cmd
 

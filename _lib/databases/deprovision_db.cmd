@@ -1,11 +1,7 @@
 @echo off
 :: # deprovision_db.cmd
-::
 :: ## Overview
-:: Manifest-driven database deprovisioning engine for LibScript on Windows.
-:: Parses `.databases` and `.infrastructure.databases` from `libscript.json` and delegates
-:: schema/file removal to `_lib\databases\deprovision_schema.cmd`.
-::
+:: Manifest-driven database deprovisioning engine for LibScript on Windows. Parses `.databases` and `.infrastructure.databases` from `libscript.json` and delegates schema/file removal to `_lib\databases\deprovision_schema.cmd`.
 :: ## Usage
 :: call _lib\databases\deprovision_db.cmd [libscript.json]
 

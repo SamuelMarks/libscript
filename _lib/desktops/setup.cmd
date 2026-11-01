@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for Master LFS Desktop Environment dispatcher.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Master LFS Desktop Environment dispatcher. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\desktops\setup.cmd [desktop_suite] [action] [target_rootfs]
 

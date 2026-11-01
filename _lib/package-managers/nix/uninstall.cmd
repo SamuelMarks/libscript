@@ -1,10 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
-:: Uninstallation script for the nix component on Windows.
-:: It safely removes the component and its associated files from the host system.
-::
+:: Uninstallation script for the nix component on Windows. It safely removes the component and its associated files from the host system.
 :: ## Usage
 :: Execute this script to remove the component.
 

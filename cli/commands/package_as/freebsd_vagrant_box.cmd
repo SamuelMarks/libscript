@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_vagrant_box.cmd
-::
 :: ## Overview
 :: Packages a FreeBSD disk image into a Vagrant .box archive on Windows.
-::
 :: ## Usage
 :: freebsd_vagrant_box.cmd [disk_image] [output_box] [provider]
 

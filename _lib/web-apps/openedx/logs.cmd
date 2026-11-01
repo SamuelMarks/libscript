@@ -1,12 +1,9 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
-:: Command-line interface to tail log files for the Open edX stack on Windows.
-:: Supports tailing install logs, web server logs, or worker logs.
-::
+:: Command-line interface to tail log files for the Open edX stack on Windows. Supports tailing install logs, web server logs, or worker logs.
 :: ## Usage
-::   call logs.cmd [target] [-n NUM]
+:: call logs.cmd [target] [-n NUM]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

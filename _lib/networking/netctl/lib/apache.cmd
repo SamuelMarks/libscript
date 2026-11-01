@@ -1,10 +1,7 @@
 @echo off
 :: # apache.cmd
-::
 :: ## Overview
-:: Network control library module for apache on Windows.
-:: Supports SPA FallbackResource and WebSocket RewriteEngine rules.
-:: 
+:: Network control library module for apache on Windows. Supports SPA FallbackResource and WebSocket RewriteEngine rules.
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
 

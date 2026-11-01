@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Provides an enterprise-grade, turnkey setup mechanism for WordPress 7.1.2 on Windows.
-::
 :: ## Usage
 :: setup_generic.cmd [OPTIONS]
 

@@ -4,7 +4,6 @@
 # It handles reusing an existing Valkey/Redis server, installing via apt or compiling
 # from source with TLS and Systemd support, ensuring the daemon is running, and
 # setting connection string environment exports.
-# 
 # ## Usage
 # Typically called automatically by `setup.sh` when running on a Debian-like operating system.
 

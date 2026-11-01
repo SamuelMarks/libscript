@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for orchestration/k8s-marathon on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\k8s-marathon\logs.cmd [tail|-f]
 

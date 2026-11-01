@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Windows generic uninstallation script for Uvicorn.
-::
 :: ## Usage
 :: Execute this script to uninstall Uvicorn.
 

@@ -1,18 +1,9 @@
 @echo off
 :: # user.cmd
-::
 :: ## Overview
-:: User management utility for Open edX on native Windows.
-:: Provides interactive and scriptable administration for Django users (create, set_password, list).
-::
+:: User management utility for Open edX on native Windows. Provides interactive and scriptable administration for Django users (create, set_password, list).
 :: ## Usage
-::   call user.cmd create <username> <email> [--password <password>] [--staff] [--superuser]
-::   call user.cmd set_password <username> <password>
-::   call user.cmd list
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Error or invalid arguments
+:: call user.cmd create <username> <email> [--password <password>] [--staff] [--superuser] call user.cmd set_password <username> <password> call user.cmd list ## Exit Codes 0 - Success 1 - Error or invalid arguments
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

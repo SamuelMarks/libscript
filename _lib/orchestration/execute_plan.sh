@@ -3,7 +3,6 @@
 # Linear execution plan runner for LibScript builds.
 # Reads a deterministic execution-plan.json, iterates over stages and tasks,
 # checks and updates idempotency stage stamp files, and orchestrates task executions.
-#
 # ## Usage
 # Run `execute_plan.sh <path_to_execution_plan.json> [--dry-run]` to process tasks sequentially.
 

@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Windows setup script for Vulkan Loader.
-:: Verifies presence of vulkan-1.dll or installs the Vulkan Runtime.
-::
+:: Windows setup script for Vulkan Loader. Verifies presence of vulkan-1.dll or installs the Vulkan Runtime.
 :: ## Usage
 :: Automatically invoked during libscript vulkan-loader installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

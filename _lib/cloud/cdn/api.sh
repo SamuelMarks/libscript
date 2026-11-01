@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # API implementation for CDN operations. Wraps native cloud CLIs.
-#
 # ## Usage
 # Source this file and call libscript_cdn_create, libscript_cdn_delete, etc.
 

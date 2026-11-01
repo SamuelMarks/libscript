@@ -2,7 +2,6 @@
 :: # test.cmd
 :: ## Overview
 :: Test suite for the fnm component.
-::
 :: ## Usage
 :: Execute this script to perform a component-specific test.
 

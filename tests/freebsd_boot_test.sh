@@ -3,11 +3,9 @@
 # Headless serial boot milestone smoketest for FreeBSD virtual disk images.
 # Launches QEMU headlessly and asserts kernel bootstrap banner, root mount,
 # configured init system PID 1, and multi-user login prompt milestones.
-#
 # ## Usage
 # Run boot milestone smoketest:
 #   tests/freebsd_boot_test.sh [disk_image] [expected_init] [timeout_secs]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -4,10 +4,8 @@
 # Iterates over Ubuntu, Debian, Windows 11, FreeBSD, and OmniOS (if available)
 # to run all unit and integration test scripts, ensuring zero privilege escalation
 # on the host machine.
-#
 # ## Usage
 # ./tests/run_vagrant_matrix.sh [--target-dir=<dir>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

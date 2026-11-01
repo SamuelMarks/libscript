@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for wget on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for wget.
+:: Executes initialization, logic, or testing for wget. Windows environment configuration and PATH probes for wget
 
-:: Windows environment configuration and PATH probes for wget
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

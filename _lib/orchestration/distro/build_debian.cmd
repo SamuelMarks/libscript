@@ -1,15 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # build_debian.cmd
-::
 :: ## Overview
-:: Executes the end-to-end Debian-style distribution synthesis pipeline on Windows:
-:: creating FHS layout, bootstrapping dpkg/apt structure, synthesizing base .deb
-:: packages, generating APT repository, and registering installed status.
-::
+:: Executes the end-to-end Debian-style distribution synthesis pipeline on Windows: creating FHS layout, bootstrapping dpkg/apt structure, synthesizing base .deb packages, generating APT repository, and registering installed status.
 :: ## Usage
 :: call _lib\orchestration\distro\build_debian.cmd [--target-rootfs=<path>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

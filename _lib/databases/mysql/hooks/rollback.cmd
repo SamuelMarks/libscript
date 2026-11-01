@@ -1,9 +1,7 @@
 @echo off
 :: # rollback.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'rollback' for the mysql component on Windows.
-::
 :: ## Usage
 :: hooks\rollback.cmd [args...]
 

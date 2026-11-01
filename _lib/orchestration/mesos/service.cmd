@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages Apache Mesos master (`5050`) and agent (`5051`) daemon lifecycle operations on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\mesos\service.cmd <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

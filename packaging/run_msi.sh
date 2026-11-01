@@ -2,7 +2,6 @@
 # ## Overview
 # Launches Windows Installer (.msi) packages via msiexec.
 # Defaults to OpenEdX-Setup.msi if no package path is specified.
-#
 # ## Usage
 # ./packaging/run_msi.sh [path_to_msi]
 

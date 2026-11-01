@@ -3,11 +3,9 @@
 # Multi-platform Vagrant verification harness for the msi-rs live installer.
 # Executes end-to-end testing strictly inside isolated Vagrant virtual machines
 # across Linux, FreeBSD, SunOS (illumos), Windows, and macOS with 2-pass idempotency checks.
-#
 # ## Usage
 # Execute this script to perform multi-platform Vagrant verification:
 #   ./tests/test_live_installer_matrix.sh [--all | --platform <linux|freebsd|sunos|windows|macos>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

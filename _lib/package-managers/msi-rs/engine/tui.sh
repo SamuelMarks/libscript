@@ -3,11 +3,9 @@
 # Terminal User Interface (TUI) interactive installer wizard for msi-rs.
 # Provides multi-screen keyboard navigation, target disk selector, distribution picker,
 # workload checkboxes, and real-time progress indicators using whiptail or dialog.
-#
 # ## Usage
 # Execute this script to launch the interactive TUI installer:
 #   ./_lib/package-managers/msi-rs/engine/tui.sh [--test | --help]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

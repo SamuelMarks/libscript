@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic setup and installation script for HashiCorp Packer on Windows.
-::
 :: ## Usage
 :: Call this script to install Packer on Windows.
 

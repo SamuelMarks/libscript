@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # deb_index.cmd
-::
 :: ## Overview
-:: Generates Debian APT repository index archives (Packages, Packages.gz, Release,
-:: and InRelease) on Windows from pools of .deb binary packages.
-::
+:: Generates Debian APT repository index archives (Packages, Packages.gz, Release, and InRelease) on Windows from pools of .deb binary packages.
 :: ## Usage
 :: call _lib\orchestration\repogen\deb_index.cmd <repo_dir> [suite] [arch] [component]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

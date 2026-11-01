@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # container_base.cmd
-::
 :: ## Overview
-:: Synthesizes zero-daemon OCI container images and Docker v2 loadable archives
-:: on Windows directly from sysroot filesystems.
-::
+:: Synthesizes zero-daemon OCI container images and Docker v2 loadable archives on Windows directly from sysroot filesystems.
 :: ## Usage
 :: call cli\commands\package_as\container_base.cmd [sysroot_dir] [out_archive] [image_tag]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

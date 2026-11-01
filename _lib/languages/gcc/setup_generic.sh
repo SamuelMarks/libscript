@@ -3,7 +3,6 @@
 # Generic setup and lifecycle implementation for the GNU Compiler Collection (GCC).
 # Supports Mode 1 (specific package manager), Mode 2 (from-source with default toolchain),
 # Mode 3 (from-source with custom toolchain), and native binary archive installation.
-#
 # ## Usage
 # Invoked via `setup.sh` or `cli.sh`.
 

@@ -1,11 +1,7 @@
 @echo off
 :: # resolve_stack.cmd
-::
 :: ## Overview
-:: A portable dependency resolver and execution plan generator using jq on Windows.
-:: Supports both traditional install.json application stacks and declarative os-config.json profiles.
-:: Emits flat, topologically sorted execution-plan.json.
-::
+:: A portable dependency resolver and execution plan generator using jq on Windows. Supports both traditional install.json application stacks and declarative os-config.json profiles. Emits flat, topologically sorted execution-plan.json.
 :: ## Usage
 :: Run `resolve_stack.cmd <path_to_config.json> [output_plan.json]` to compute an execution sequence.
 

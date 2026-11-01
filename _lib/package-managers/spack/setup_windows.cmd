@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for spack on Windows.
-:: Downloads and installs Spack with Python runtime integration.
-::
+:: Setup script for spack on Windows. Downloads and installs Spack with Python runtime integration.
 :: ## Usage
 :: Automatically invoked during libscript spack installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

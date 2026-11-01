@@ -3,11 +3,9 @@
 # Orchestrates illumos modular distribution synthesis from a JSON profile specification.
 # Invokes base, zfs, config, pkg, users, init, display, desktop, dm, and audio modules
 # deterministically with full idempotency guarantees.
-#
 # ## Usage
 # Assemble illumos distribution:
 #   _lib/illumos/distro/assemble.sh [profile_json_path] [target_sysroot]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,12 +1,9 @@
 @echo off
 :: # config.cmd
-::
 :: ## Overview
-:: Configuration tool for WordPress 7.1.2 on Windows.
-:: Inspects and mutates wp-config.php settings.
-::
+:: Configuration tool for WordPress 7.1.2 on Windows. Inspects and mutates wp-config.php settings.
 :: ## Usage
-::   call config.cmd <get|set|dump> [key] [value]
+:: call config.cmd <get|set|dump> [key] [value]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

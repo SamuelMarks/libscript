@@ -1,14 +1,9 @@
 @echo off
 :: # environ.cmd
-::
 :: ## Overview
-:: Provides utility subroutines to safely save and clear environment variables
-:: to/from a file (`:save_environment`, `:clear_environment`), and to parse JSON
-:: objects into batch/shell variable assignments (`:libscript_object2key_val`).
-::
+:: Provides utility subroutines to safely save and clear environment variables to/from a file (`:save_environment`, `:clear_environment`), and to parse JSON objects into batch/shell variable assignments (`:libscript_object2key_val`).
 :: ## Usage
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\environ.cmd" :save_environment [out_file]
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\environ.cmd" :libscript_object2key_val "<json>" "SET " """"
+:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\environ.cmd" :save_environment [out_file] call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\environ.cmd" :libscript_object2key_val "<json>" "SET " """"
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

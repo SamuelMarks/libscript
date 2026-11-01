@@ -1,10 +1,7 @@
 @echo off
 :: # pkg.cmd
-::
 :: ## Overview
-:: Configures illumos package managers (IPS pkg(1), pkgin, or zap)
-:: on Windows host environments.
-::
+:: Configures illumos package managers (IPS pkg(1), pkgin, or zap) on Windows host environments.
 :: ## Usage
 :: pkg.cmd [sysroot_path] [provider] [publisher_url]
 

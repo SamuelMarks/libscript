@@ -3,7 +3,6 @@
 # Provisions cloud infrastructure and registers synthesized system images.
 # Validates target profiles, builds missing image artifacts via Tier 2,
 # and deploys resources across AWS, GCP, Azure, Proxmox, Hetzner, and Firecracker.
-#
 # ## Usage
 # Run `provision.sh [--profile=<file>] [--image=<path>] [--provider=aws|gcp|azure|proxmox|hetzner|firecracker] [args...]`
 

@@ -3,7 +3,6 @@
 # Generic setup module for msi-rs.
 # It resolves dependencies (C and Rust toolchains), handles repository compilation or binary fetching,
 # and configures isolated version installations for msi-rs across POSIX operating systems.
-#
 # ## Usage
 # Execute this script to perform generic initialization steps for msi-rs:
 #   ./setup_generic.sh [install|use|download|uninstall|ls|ls-remote]

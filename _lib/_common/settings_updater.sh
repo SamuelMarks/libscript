@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides utilities for emitting configuration or environment settings.
-# The `lang_export` function formats key-value assignments for diverse
-# targets including shell scripts, Windows batch (`cmd`), and SQLite databases.
-# 
+# Provides utilities for emitting configuration or environment settings. The `lang_export` function formats key-value assignments for diverse targets including shell scripts, Windows batch (`cmd`), and SQLite databases.
 # ## Usage
-# Source this file and call `lang_export <lang> <key> <val>` to generate
-# syntax-appropriate variable assignments.
-
-
+# Source this file and call `lang_export <lang> <key> <val>` to generate syntax-appropriate variable assignments.
 set -feu
 _settings_updater_caller_this="${THIS_FILE:-}"; _settings_updater_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

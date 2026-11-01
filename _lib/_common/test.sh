@@ -3,7 +3,6 @@
 # Serves as the primary Unix test entry point for components.
 # It acts as a template or stub that loads the common testing framework,
 # indicating successful loading. Specific component tests typically replace this.
-# 
 # ## Usage
 # Execute this script to trigger component testing on Unix systems.
 

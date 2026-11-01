@@ -629,7 +629,8 @@ generate_wxs() {
     fi
   fi
 
-  # Prevent absolute host paths from leaking into the generated WiX source files
+  # ## strip_root
+  # Prevents absolute host paths from leaking into the generated WiX source files.
   strip_root() {
     _path="$1"
     _root="$2"

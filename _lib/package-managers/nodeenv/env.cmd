@@ -1,12 +1,9 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Sets up environment variables for the nodeenv package manager on Windows.
-::
 :: ## Usage
-:: Call or execute in the current command shell:
-::   call env.cmd
+:: Call or execute in the current command shell: call env.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

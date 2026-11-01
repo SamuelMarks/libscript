@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides the foundational uninstall logic for components.
-# It aggregates essential common libraries (logging, paths, package managers)
-# and delegates the actual teardown process to OS-specific uninstall scripts
-# (or a generic fallback), followed by unregistering associated `netctl` ports.
-# 
+# Provides the foundational uninstall logic for components. It aggregates essential common libraries (logging, paths, package managers) and delegates the actual teardown process to OS-specific uninstall scripts (or a generic fallback), followed by unregistering associated `netctl` ports.
 # ## Usage
 # Source or execute this file internally as the core implementation of `uninstall.sh`.
-
-
 set -feu
 _uninstall_base_caller_this="${THIS_FILE:-}"; _uninstall_base_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

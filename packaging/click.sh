@@ -2,7 +2,6 @@
 # ## Overview
 # Automated GUI control clicker for installer automation on Windows.
 # Invokes click_button.ps1 via PowerShell to send click messages to controls.
-#
 # ## Usage
 # ./packaging/click.sh [button_text]
 

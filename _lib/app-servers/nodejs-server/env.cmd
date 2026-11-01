@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for nodejs-server on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for nodejs-server.
+:: Executes initialization, logic, or testing for nodejs-server. Windows environment configuration and PATH probes for nodejs-server
 
-:: Windows environment configuration and PATH probes for nodejs-server
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entrypoint for the wayland-protocols component on Windows.
-::
 :: ## Usage
 :: cli.cmd [action]
 

@@ -1,12 +1,7 @@
 @echo off
 :: # test_matrix_driver.cmd
-::
 :: ## Overview
-:: Unified 6-OS test matrix driver and per-component 4-stage lifecycle contract probe for Windows.
-:: Provides shared subroutines for VM snapshot restoration (`vanilla`), manifest OS/architecture
-:: filtering, 4-stage component verification (`install` -> `test` -> `which/env/ls` ->
-:: `2x idempotent install+test` -> `uninstall`), and live `tests\update_results.cmd` updates.
-::
+:: Unified 6-OS test matrix driver and per-component 4-stage lifecycle contract probe for Windows. Provides shared subroutines for VM snapshot restoration (`vanilla`), manifest OS/architecture filtering, 4-stage component verification (`install` -> `test` -> `which/env/ls` -> `2x idempotent install+test` -> `uninstall`), and live `tests\update_results.cmd` updates.
 :: ## Usage
 :: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\test_matrix_driver.cmd" [subroutine] [args...]
 

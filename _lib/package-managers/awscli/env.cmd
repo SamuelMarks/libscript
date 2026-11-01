@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for awscli on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for awscli.
+:: Executes initialization, logic, or testing for awscli. Windows environment configuration and PATH probes for awscli
 
-:: Windows environment configuration and PATH probes for awscli
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

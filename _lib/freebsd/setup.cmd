@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: FreeBSD system and kernel compilation and installation engine for Windows.
-:: Stages kernel and bootloader configuration skeletons for FreeBSD targets.
-::
+:: FreeBSD system and kernel compilation and installation engine for Windows. Stages kernel and bootloader configuration skeletons for FreeBSD targets.
 :: ## Usage
 :: setup.cmd [action]
 

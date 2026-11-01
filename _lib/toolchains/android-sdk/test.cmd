@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Test suite for the android-sdk component on Windows.
-::
 :: ## Usage
 :: Execute this script to perform a component-specific test.
 

@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Argp Standalone: Hierarchical argument parsing library for musl.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Argp Standalone: Hierarchical argument parsing library for musl. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

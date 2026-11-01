@@ -1,15 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # build_alpine.cmd
-::
 :: ## Overview
-:: Executes the end-to-end Alpine Linux-style distribution synthesis pipeline on Windows:
-:: creating FHS layout, initializing apk-tools configuration, packaging base APKs,
-:: indexing repository metadata, and registering installed status.
-::
+:: Executes the end-to-end Alpine Linux-style distribution synthesis pipeline on Windows: creating FHS layout, initializing apk-tools configuration, packaging base APKs, indexing repository metadata, and registering installed status.
 :: ## Usage
 :: call _lib\orchestration\distro\build_alpine.cmd [--target-rootfs=<path>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

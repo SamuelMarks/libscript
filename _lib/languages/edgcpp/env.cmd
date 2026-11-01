@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration for the EDG C/C++ Compiler Frontend (edgcpp) on Windows.
-::
 :: ## Usage
 :: call _lib\languages\edgcpp\env.cmd
 

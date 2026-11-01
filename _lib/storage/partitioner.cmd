@@ -1,14 +1,9 @@
 @echo off
 :: # partitioner.cmd
-::
 :: ## Overview
-:: Unified cross-platform partition manipulator supporting GPT, MBR, and illumos VTOC layouts.
-:: Automatically synthesizes standard EFI System Partitions, BIOS boot partitions, swap slices,
-:: and primary root partitions with full idempotency across Linux, FreeBSD, and illumos.
-::
+:: Unified cross-platform partition manipulator supporting GPT, MBR, and illumos VTOC layouts. Automatically synthesizes standard EFI System Partitions, BIOS boot partitions, swap slices, and primary root partitions with full idempotency across Linux, FreeBSD, and illumos.
 :: ## Usage
-:: Execute this script to partition a target disk or raw image:
-::   ./_lib/storage/partitioner.cmd <device_or_image> [scheme] [boot_mode] [swap_mib]
+:: Execute this script to partition a target disk or raw image: ./_lib/storage/partitioner.cmd <device_or_image> [scheme] [boot_mode] [swap_mib]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

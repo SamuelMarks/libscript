@@ -3,7 +3,6 @@
 # Provides specialized installation logic for Valkey on macOS systems.
 # It relies on Homebrew (`brew install valkey`) and registers the service via `brew services`,
 # followed by standard `netctl` port/socket registrations.
-# 
 # ## Usage
 # Typically called automatically by `setup.sh` when running on macOS.
 

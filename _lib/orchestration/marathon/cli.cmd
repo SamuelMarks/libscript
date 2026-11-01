@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entry point for Marathon on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\marathon\cli.cmd <install|ls|ls-remote|use|env|start|stop|restart|status|health|logs|install-service|uninstall-service|uninstall|test> [args...]
 

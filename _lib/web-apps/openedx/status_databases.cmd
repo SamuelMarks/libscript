@@ -1,15 +1,9 @@
 @echo off
 :: # status_databases.cmd
-::
 :: ## Overview
-:: Wrapper script to detect existing databases and set MSI installer properties via standard exit codes.
-:: This script wraps libscript status calls to interface with CustomActions cleanly.
-::
+:: Wrapper script to detect existing databases and set MSI installer properties via standard exit codes. This script wraps libscript status calls to interface with CustomActions cleanly.
 :: ## Usage
-:: call status_databases.cmd <component>
-::
-:: ## Parameters
-:: %1 - Component name (e.g., databases/mysql)
+:: call status_databases.cmd <component> ## Parameters %1 - Component name (e.g., databases/mysql)
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

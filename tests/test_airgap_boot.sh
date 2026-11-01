@@ -3,7 +3,6 @@
 # Offline air-gapped build and boot verification test harness.
 # Isolates the network namespace (unshare -n) and asserts that the OS synthesis
 # completes successfully relying strictly on the local offline cache without network calls.
-#
 # ## Usage
 # ./tests/test_airgap_boot.sh [--cache-dir=<dir>] [--profile=<profile.json>]
 

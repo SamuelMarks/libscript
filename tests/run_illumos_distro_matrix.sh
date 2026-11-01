@@ -3,11 +3,9 @@
 # Unified multi-platform verification orchestrator for the illumos distribution matrix.
 # Executes tests sequentially across all 5 target environments: {macOS, Windows, FreeBSD, SunOS, Linux}.
 # Aggregates pass/fail status into tests_tmp/illumos_matrix_summary.json.
-#
 # ## Usage
 # Run multi-platform test matrix:
 #   tests/run_illumos_distro_matrix.sh [--all | --platforms <list>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

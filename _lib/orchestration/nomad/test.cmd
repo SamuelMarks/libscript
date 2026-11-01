@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the HashiCorp Nomad component on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\nomad\test.cmd
 

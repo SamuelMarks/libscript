@@ -1,29 +1,26 @@
 @echo off
 :: # publish_release.cmd
-::
 :: ## Overview
-:: Publishes built release packages, installer artifacts, and cryptographic
-:: checksums to GitHub Releases via the GitHub CLI in an idempotent manner.
-::
+:: Publishes built release packages, installer artifacts, and cryptographic checksums to GitHub Releases via the GitHub CLI in an idempotent manner.
 :: ## Usage
 :: publish_release.cmd devtools/ci/publish_release.cmd --tag <tag> [--dist-dir <dir>] [--title <title>] [--draft] [--prerelease]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -179,6 +176,8 @@ for %%F in ("%_SUMS_DIR%\*") do (
                     )
                 )
             )
+            :: ## skip_hash_item
+            :: Continues once certutil header/footer lines are skipped.
             :skip_hash_item
             if defined FILE_HASH (
                 >> "%TMP_SUMS%" echo !FILE_HASH!  !FNAME!

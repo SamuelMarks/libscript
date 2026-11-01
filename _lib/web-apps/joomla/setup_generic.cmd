@@ -1,15 +1,10 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Orchestrates the setup and installation process for the Joomla CMS stack.
-:: 
 :: ## Usage
-:: Execute this script to install and configure joomla on the local system.
+:: Execute this script to install and configure joomla on the local system. setlocal EnableDelayedExpansion Fallback to running PowerShell for Windows provisioning
 
-setlocal EnableDelayedExpansion
-
-:: Fallback to running PowerShell for Windows provisioning
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

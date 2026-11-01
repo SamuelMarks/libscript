@@ -3,7 +3,6 @@
 # Multi-distribution cross-packaging and federation engine that takes a staged
 # component and packages it simultaneously into .apk, .deb, and .rpm formats,
 # asserting parity across binary closures.
-#
 # ## Usage
 # ./_lib/orchestration/packagers/polyglot_package.sh <pkg_name> <pkg_version> <staging_dir> [out_base_dir]
 

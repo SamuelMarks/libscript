@@ -3,7 +3,6 @@
 # End-to-end integration test suite for LibScript's 3 generic installation/build modes:
 # Mode 1 (install/build via a specific package manager), Mode 2 (build from source with
 # the default host C toolchain), and Mode 3 (build from source with a custom C toolchain).
-#
 # ## Usage
 # ./tests/test_generic_build_modes.sh
 

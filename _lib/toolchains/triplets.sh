@@ -2,14 +2,11 @@
 # ## Overview
 # Standard cross-toolchain triplet and compiler security flags definitions.
 # Exports canonical target triplets, security hardening flags, and SOURCE_DATE_EPOCH.
-#
 # ## Usage
 # Sourced or executed to export triplet variables:
 #   . ./_lib/toolchains/triplets.sh [target_arch] [target_libc] [target_os]
-
 set -feu
 _triplets_caller_this="${THIS_FILE:-}"; _triplets_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,7 +17,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

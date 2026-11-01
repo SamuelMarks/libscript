@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# End-to-end live integration test for Apache ZooKeeper (`_lib/databases/zookeeper`) +
-# Apache Mesos (`_lib/orchestration/mesos`) + Marathon (`_lib/orchestration/marathon`) +
-# `topologies/mesos-marathon-ha` + `payloads/schedulers/mesos.sh`.
-# Verifies live daemon provisioning, `ruok`=`imok`, Mesos leader election, Marathon `/v2/apps`
-# deployment across `DOCKER`, `MESOS`, and native `libscript-component` containerizers, task
-# state transitions (`TASK_STAGING` -> `TASK_RUNNING` -> `TASK_KILLED`), sandbox stdout logs,
-# and all 9 workload payloads with 2x idempotency.
-#
+# End-to-end live integration test for Apache ZooKeeper (`_lib/databases/zookeeper`) + Apache Mesos (`_lib/orchestration/mesos`) + Marathon (`_lib/orchestration/marathon`) + `topologies/mesos-marathon-ha` + `payloads/schedulers/mesos.sh`. Verifies live daemon provisioning, `ruok`=`imok`, Mesos leader election, Marathon `/v2/apps` deployment across `DOCKER`, `MESOS`, and native `libscript-component` containerizers, task state transitions (`TASK_STAGING` -> `TASK_RUNNING` -> `TASK_KILLED`), sandbox stdout logs, and all 9 workload payloads with 2x idempotency.
 # ## Usage
 # ./tests/test_mesos_marathon_e2e.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,14 +14,13 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR

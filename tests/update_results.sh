@@ -1,16 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Updates the Supported Components tables in README.md (or custom output file)
-# split into Architectural Tiers (Tier 1, Tier 1.5, Tier 2, Tier 3, Tier 3.5/4/Traits)
-# with test results from tests_tmp/, updates task completion in TODO_PLAN.md and
-# TESTING_TODO_PLAN.md, and optionally exports an aggregated JSON test results matrix.
-#
+# Updates the Supported Components tables in README.md (or custom output file) split into Architectural Tiers (Tier 1, Tier 1.5, Tier 2, Tier 3, Tier 3.5/4/Traits) with test results from tests_tmp/, updates task completion in TODO_PLAN.md and TESTING_TODO_PLAN.md, and optionally exports an aggregated JSON test results matrix.
 # ## Usage
 # ./tests/update_results.sh [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
-
 set -feu
 set +f
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -482,7 +475,8 @@ JSON_ROW
 
   rm -f "${_entries_file}"
 
-  cat <<'HDR_MAIN' >"${_tmp_table}"
+  {
+    cat <<'HDR_MAIN'
 ## Supported Components
 
 Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
@@ -492,43 +486,44 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_MAIN
-  cat "${_tmp_t1}" >>"${_tmp_table}"
+    cat "${_tmp_t1}"
 
-  cat <<'HDR_T15' >>"${_tmp_table}"
+    cat <<'HDR_T15'
 
 ### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_T15
-  cat "${_tmp_t15}" >>"${_tmp_table}"
+    cat "${_tmp_t15}"
 
-  cat <<'HDR_T2' >>"${_tmp_table}"
+    cat <<'HDR_T2'
 
 ### Tier 2: OS Synthesizers, Kernels, Bootloaders, Storage & Image Builders
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_T2
-  cat "${_tmp_t2}" >>"${_tmp_table}"
+    cat "${_tmp_t2}"
 
-  cat <<'HDR_T3' >>"${_tmp_table}"
+    cat <<'HDR_T3'
 
 ### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_T3
-  cat "${_tmp_t3}" >>"${_tmp_table}"
+    cat "${_tmp_t3}"
 
-  cat <<'HDR_T4' >>"${_tmp_table}"
+    cat <<'HDR_T4'
 
 ### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
 
 | Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 |---|---|---|---|---|---|---|---|---|
 HDR_T4
-  cat "${_tmp_t4}" >>"${_tmp_table}"
+    cat "${_tmp_t4}"
+  } >"${_tmp_table}"
 
   rm -f "${_tmp_t1}" "${_tmp_t15}" "${_tmp_t2}" "${_tmp_t3}" "${_tmp_t4}"
 

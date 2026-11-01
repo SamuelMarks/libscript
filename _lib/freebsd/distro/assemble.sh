@@ -3,11 +3,9 @@
 # Orchestrates FreeBSD distribution synthesis from a JSON profile specification.
 # Invokes base, config, pkg, users, init, display, desktop, and audio modules
 # deterministically with full idempotency guarantees.
-#
 # ## Usage
 # Assemble FreeBSD distribution:
 #   _lib/freebsd/distro/assemble.sh [profile_json_path] [target_sysroot]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

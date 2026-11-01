@@ -1,9 +1,7 @@
 @echo off
 :: # runner.cmd
-::
 :: ## Overview
 :: Executes commands within a target rootfs using Linux namespaces and chroot.
-::
 :: ## Usage
 :: runner.cmd [OPTIONS]
 

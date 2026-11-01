@@ -2,12 +2,10 @@
 # ## Overview
 # User management helper utility for Open edX.
 # Manages user account creation, credentials, staff roles, and catalog enumeration.
-#
 # ## Usage
 # ./_lib/web-apps/openedx/user_helper.sh create <install_dir> <username> <email> <password> <is_staff> <is_superuser>
 # ./_lib/web-apps/openedx/user_helper.sh set_password <install_dir> <username> <password>
 # ./_lib/web-apps/openedx/user_helper.sh list <install_dir>
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

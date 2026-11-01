@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Primary setup script for k8s-marathon on Windows.
-::
 :: ## Usage
 :: Routes to generic setup via `setup_base.cmd`.
 

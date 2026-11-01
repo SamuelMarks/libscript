@@ -5,12 +5,9 @@
 # Verifies cpfe (including direct --llvm-be native object emission), cpfe-cp
 # (C++-generating backend), cdisp, mk_errinfo, edg_decode, include_c99/,
 # include_c++/, edgcpp (C driver), and edg-c++ (C++ driver).
-#
 # ## Usage
 # ./_lib/languages/edgcpp/test.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

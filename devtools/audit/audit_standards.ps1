@@ -231,6 +231,9 @@ function Audit-File {
         if ($top25 -notmatch 'THIS_FILE=%~f0') {
             Log-Violation -File $FilePath -Rule "BATCH_THIS_FILE" -Details "Missing 'set `"THIS_FILE=%~f0`"' in first 25 lines."
         }
+        if ($top25 -notmatch 'echo "!STACK!" \| findstr /I /C:":') {
+            Log-Violation -File $FilePath -Rule "BATCH_STACK_GUARD" -Details "Missing quoted case-insensitive STACK guard in first 25 lines."
+        }
     }
 
     # 3. Idempotency checks
@@ -349,7 +352,7 @@ function Audit-File {
 
     # 8d. Ban hardcoded user/project paths in core substrate (_lib/ and cli/)
     if ($normPath -match '^(_lib|cli)/') {
-        $leakMatch = Select-String -Path $FilePath -Pattern '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' -Quiet
+        $leakMatch = Select-String -Path $FilePath -Pattern '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|e4s2024|E4S2024|/opt/conda/envs|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' -Quiet
         if ($leakMatch) {
             Log-Violation -File $FilePath -Rule "NO_HARDCODED_USER_PATHS" -Details "Hardcoded user/project path or .volta reference in substrate."
         }
@@ -420,7 +423,7 @@ function Audit-File {
 # Determine target files
 $targetFiles = @()
 if ($args -contains "--all") {
-    $targetFiles = git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1"
+    $targetFiles = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1"
 } elseif ($args -contains "--staged" -or $args.Count -eq 0) {
     $targetFiles = git diff --no-ext-diff --cached --name-only --diff-filter=ACM
 } else {

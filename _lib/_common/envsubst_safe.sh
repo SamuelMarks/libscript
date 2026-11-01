@@ -1,16 +1,8 @@
 #!/bin/sh
 # ## Overview
-# A safe, POSIX-compliant alternative to GNU `envsubst` powered by `awk`.
-# Unlike standard `envsubst`, if an environment variable is not found,
-# it safely leaves the original variable reference intact (e.g. `${VAR}`) 
-# rather than replacing it with an empty string.
-# 
+# A safe, POSIX-compliant alternative to GNU `envsubst` powered by `awk`. Unlike standard `envsubst`, if an environment variable is not found, it safely leaves the original variable reference intact (e.g. `${VAR}`) rather than replacing it with an empty string.
 # ## Usage
-# Source this file and call `envsubst_safe` passing either a string, a file path,
-# or piping content via stdin. It is recommended to use within a cleared environment
-# (see `environ.sh`) to prevent accidental substitution of ambient variables.
-
-
+# Source this file and call `envsubst_safe` passing either a string, a file path, or piping content via stdin. It is recommended to use within a cleared environment (see `environ.sh`) to prevent accidental substitution of ambient variables.
 set -feu
 _envsubst_safe_caller_this="${THIS_FILE:-}"; _envsubst_safe_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -23,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

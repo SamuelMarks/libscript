@@ -1,19 +1,10 @@
 @echo off
 :: # provision_vhost_abstract.cmd
-::
 :: ## Overview
-:: Provisions a reverse proxy virtual host (Nginx or Apache httpd).
-:: Windows Batch equivalent of provision_vhost_abstract.sh
-:: Includes idempotent interpolation using block markers and tests.
-::
+:: Provisions a reverse proxy virtual host (Nginx or Apache httpd). Windows Batch equivalent of provision_vhost_abstract.sh Includes idempotent interpolation using block markers and tests.
 :: ## Usage
-:: provision_vhost_abstract.cmd --app-id <id> --server-name <domain>
-::        [--proxy-engine <nginx|apache2>] [--listen-port <port>]
-::        [--target <url>] [--doc-root <path>] --conf-file <path>
+:: provision_vhost_abstract.cmd --app-id <id> --server-name <domain> [--proxy-engine <nginx|apache2>] [--listen-port <port>] [--target <url>] [--doc-root <path>] --conf-file <path> setlocal EnableDelayedExpansion set "THIS_DIR=%~dp0"
 
-setlocal EnableDelayedExpansion
-
-set "THIS_DIR=%~dp0"
 set "THIS_FILE=%~f0"
 
 if defined STACK (

@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Smoke test suite for the Apache ZooKeeper component on Windows.
-::
 :: ## Usage
 :: _lib\databases\zookeeper\test.cmd
 

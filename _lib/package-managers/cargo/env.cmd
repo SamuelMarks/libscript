@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for cargo on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for cargo.
+:: Executes initialization, logic, or testing for cargo. Windows environment configuration and PATH probes for cargo
 
-:: Windows environment configuration and PATH probes for cargo
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -4,10 +4,8 @@
 # AWS cloud infrastructure. It implements custom sub-commands (`network`, `firewall`,
 # `node`, `node-group`, `cron`, `jumpbox`, `storage`, `cleanup`) to simplify common
 # declarative provisioning tasks using imperative logic. Features dry-run testing support.
-# 
 # ## Usage
 # Execute this script with a sub-command, e.g., `./cli.sh jumpbox create <name> <ami>`.
-
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

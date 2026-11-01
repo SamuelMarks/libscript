@@ -1,17 +1,10 @@
 @echo off
 :: # setup_debian.cmd
-::
 :: ## Overview
-:: Provides structural alignment for Debian-specific setup logic on Windows environments.
-:: It explicitly declares that a native Windows installation is not supported via this path.
-:: 
+:: Provides structural alignment for Debian-specific setup logic on Windows environments. It explicitly declares that a native Windows installation is not supported via this path.
 :: ## Usage
-:: Typically skipped; present for cross-platform repository consistency.
+:: Typically skipped; present for cross-platform repository consistency. setlocal EnableDelayedExpansion This is a placeholder for the native Windows component setup. By default, many tools rely on winget, choco, or scoop for installation on Windows.
 
-setlocal EnableDelayedExpansion
-
-:: This is a placeholder for the native Windows component setup.
-:: By default, many tools rely on winget, choco, or scoop for installation on Windows.
 set "THIS_FILE=%~f0"
 
 if defined STACK (

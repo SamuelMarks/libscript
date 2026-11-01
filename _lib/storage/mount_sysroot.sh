@@ -3,11 +3,9 @@
 # Hierarchical target mount manager and chroot sysroot preparation engine.
 # Mounts root filesystems, ESP partitions, and virtual filesystems (/dev, /proc, /sys)
 # under /mnt/target, and generates persistent /etc/fstab or /etc/vfstab tables.
-#
 # ## Usage
 # Execute this script to mount or unmount target sysroot:
 #   ./_lib/storage/mount_sysroot.sh [--mount <root_dev> [esp_dev] | --unmount | --fstab <target_dir>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

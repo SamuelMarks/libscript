@@ -2,7 +2,6 @@
 # ## Overview
 # Configures display subsystem (X11 Xorg server, Wayland compositor, or headless serial mode)
 # and graphics drivers inside the illumos target sysroot.
-#
 # ## Usage
 # Configure display protocol:
 #   _lib/illumos/distro/display.sh [sysroot_path] [protocol] [driver]

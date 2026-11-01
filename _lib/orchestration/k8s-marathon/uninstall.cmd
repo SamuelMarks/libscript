@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
 :: Uninstallation entry point for k8s-marathon on Windows.
-::
 :: ## Usage
 :: Invokes `uninstall_base.cmd` and `uninstall_generic.cmd` to clean up k8s-marathon.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # illumos_raw.cmd
-::
 :: ## Overview
 :: Synthesizes a raw illumos disk image from a target sysroot on Windows.
-::
 :: ## Usage
 :: illumos_raw.cmd [target_sysroot] [output_image] [size_gib]
 

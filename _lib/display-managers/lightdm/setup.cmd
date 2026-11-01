@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Installation and configuration entrypoint for the lightdm component on Windows.
-:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
-::
+:: Installation and configuration entrypoint for the lightdm component on Windows. Delegates execution to the shared _lib\_common\setup_base.cmd module.
 :: ## Usage
 :: setup.cmd [action]
 

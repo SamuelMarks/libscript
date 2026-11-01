@@ -1,9 +1,7 @@
 @echo off
 :: # backup.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'backup' for the redis component on Windows.
-::
 :: ## Usage
 :: hooks\backup.cmd [args...]
 

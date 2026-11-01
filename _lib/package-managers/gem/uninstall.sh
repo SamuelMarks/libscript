@@ -3,7 +3,6 @@
 # Uninstallation script for the gem component.
 # It uses the shared uninstall_base.sh logic to safely remove the component
 # and its associated files from the host system.
-#
 # ## Usage
 # Execute this script to remove the component.
 

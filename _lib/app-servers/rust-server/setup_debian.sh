@@ -4,10 +4,8 @@
 # It initializes a Cargo binary project if needed, compiles it in release mode, generates
 # environment variable injections, builds a Systemd service file targeting the compiled binary,
 # installs it, and registers listening ports via `netctl`.
-# 
 # ## Usage
 # Typically called automatically by `setup.sh` when running on a Debian-like operating system.
-
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,23 +1,11 @@
 @echo off
-:: # hydrate_offline_cache.cmd
-setlocal EnableDelayedExpansion
 :: # packaging/hydrate_offline_cache.cmd
-::
 :: ## Overview
-:: Windows Batch driver for hydrating and verifying the offline air-gapped
-:: artifact cache for LibScript installers.
-::
+:: Windows Batch driver for hydrating and verifying the offline air-gapped artifact cache for LibScript installers.
 :: ## Usage
-:: call packaging\hydrate_offline_cache.cmd [OPTIONS]
-::
-:: Options:
-::   --manifest <path>     Path to offline_bundle.json manifest
-::   --cache-dir <dir>     Target cache staging directory
-::   --verify-only         Verify SHA-256 integrity without downloading
-::   --wheels              Trigger Python wheels downloading
-::   --codebase            Fetch core codebase archive
-::   --help, -h            Show this help text
+:: call packaging\hydrate_offline_cache.cmd [OPTIONS] Options: --manifest <path>     Path to offline_bundle.json manifest --cache-dir <dir>     Target cache staging directory --verify-only         Verify SHA-256 integrity without downloading --wheels              Trigger Python wheels downloading --codebase            Fetch core codebase archive --help, -h            Show this help text
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

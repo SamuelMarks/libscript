@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Primary setup router for the EDG C/C++ Compiler Frontend (edgcpp) component on Windows.
-::
 :: ## Usage
 :: setup.cmd [args]
 

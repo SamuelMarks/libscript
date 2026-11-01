@@ -1,12 +1,9 @@
 @echo off
 :: # cron.cmd
-::
 :: ## Overview
-:: WordPress background cron management tool on Windows.
-:: Runs pending cron events or registers a scheduled task in Windows Task Scheduler.
-::
+:: WordPress background cron management tool on Windows. Runs pending cron events or registers a scheduled task in Windows Task Scheduler.
 :: ## Usage
-::   call cron.cmd <run|install|uninstall|status>
+:: call cron.cmd <run|install|uninstall|status>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

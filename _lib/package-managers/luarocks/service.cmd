@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages background service lifecycle operations (start, stop, status) for the luarocks component.
-::
 :: ## Usage
 :: service.cmd
 

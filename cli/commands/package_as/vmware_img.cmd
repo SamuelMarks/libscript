@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # vmware_img.cmd
-::
 :: ## Overview
-:: Synthesizes VMware ESXi and Workstation virtual machine appliances (.vmdk, .ova)
-:: on Windows.
-::
+:: Synthesizes VMware ESXi and Workstation virtual machine appliances (.vmdk, .ova) on Windows.
 :: ## Usage
 :: call cli\commands\package_as\vmware_img.cmd [input_raw] [output_vmdk_or_ova] [subformat]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

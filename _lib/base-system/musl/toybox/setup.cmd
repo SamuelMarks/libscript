@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Toybox: BSD-licensed POSIX all-in-one command suite.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Toybox: BSD-licensed POSIX all-in-one command suite. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

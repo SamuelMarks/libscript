@@ -1,9 +1,7 @@
 @echo off
 :: # status.cmd
-::
 :: ## Overview
 :: Status check for databases/zookeeper on Windows.
-::
 :: ## Usage
 :: _lib\databases\zookeeper\status.cmd
 

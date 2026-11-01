@@ -3,7 +3,6 @@
 # Firecracker MicroVM provider and orchestration engine.
 # Configures the microVM socket API, sets up TAP network devices,
 # and boots uncompressed vmlinux kernels with minimal rootfs disk images in milliseconds.
-#
 # ## Usage
 # Run `setup.sh [action] [kernel_vmlinux] [rootfs_img] [socket_path] [tap_device]`
 

@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_qcow2.cmd
-::
 :: ## Overview
 :: Converts a raw FreeBSD disk image or sysroot to QCOW2 format on Windows.
-::
 :: ## Usage
 :: freebsd_qcow2.cmd [input_raw_or_sysroot] [output_qcow2] [size_gib]
 

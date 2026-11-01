@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Lifecycle script for merge_location_into_server.sh.
-#
 # ## Usage
 # Refer to the internal functions of merge_location_into_server.sh for implementation details.
 

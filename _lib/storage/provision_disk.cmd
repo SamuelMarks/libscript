@@ -1,9 +1,7 @@
 @echo off
 :: # provision_disk.cmd
-::
 :: ## Overview
 :: Provisions sparse disk images and configures partition tables on Linux.
-::
 :: ## Usage
 :: provision_disk.cmd [OPTIONS]
 

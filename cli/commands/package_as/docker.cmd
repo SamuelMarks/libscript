@@ -1,10 +1,7 @@
 @echo off
 :: # docker.cmd
-::
 :: ## Overview
-:: Dual-modality container export driver for Docker and Docker Compose on Windows.
-:: Generates online layer-cached or air-gapped offline Dockerfile and docker-compose.yml.
-::
+:: Dual-modality container export driver for Docker and Docker Compose on Windows. Generates online layer-cached or air-gapped offline Dockerfile and docker-compose.yml.
 :: ## Usage
 :: docker.cmd [--compose] [--offline|--online] [args...]
 

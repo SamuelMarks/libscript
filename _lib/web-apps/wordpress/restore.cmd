@@ -1,12 +1,9 @@
 @echo off
 :: # restore.cmd
-::
 :: ## Overview
-:: Disaster recovery and snapshot restoration tool for WordPress 7.1.2 on Windows.
-:: Unpacks backup archive, restores the database dump, and updates files.
-::
+:: Disaster recovery and snapshot restoration tool for WordPress 7.1.2 on Windows. Unpacks backup archive, restores the database dump, and updates files.
 :: ## Usage
-::   call restore.cmd <backup_archive.zip>
+:: call restore.cmd <backup_archive.zip>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

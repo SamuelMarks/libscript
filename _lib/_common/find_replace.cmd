@@ -1,16 +1,11 @@
 @echo off
-:: # find_replace.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript Find and Replace Module (Windows Batch)
-::
 :: ## Overview
 :: This module safely replaces strings in files without regex corruption.
-::
 :: ## Usage
-:: ```batch
-:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\find_replace.cmd" :find_replace "search" "replace" "file.txt"
-:: ```
+:: ```batch call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\find_replace.cmd" :find_replace "search" "replace" "file.txt" ```
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

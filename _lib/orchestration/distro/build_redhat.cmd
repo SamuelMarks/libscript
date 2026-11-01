@@ -1,15 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # build_redhat.cmd
-::
 :: ## Overview
-:: Executes the end-to-end Red Hat-inspired distribution synthesis pipeline on Windows:
-:: creating FHS layout, initializing RPM/DNF structure, packaging base RPMs,
-:: generating repository repodata, and configuring target system identity.
-::
+:: Executes the end-to-end Red Hat-inspired distribution synthesis pipeline on Windows: creating FHS layout, initializing RPM/DNF structure, packaging base RPMs, generating repository repodata, and configuring target system identity.
 :: ## Usage
 :: call _lib\orchestration\distro\build_redhat.cmd [--target-rootfs=<path>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

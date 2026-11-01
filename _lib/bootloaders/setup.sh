@@ -3,7 +3,6 @@
 # Bootloader installation and Unified Kernel Image (UKI) synthesis engine.
 # Installs and configures GRUB2 (EFI and BIOS), systemd-boot, Limine,
 # and generates unified .efi kernel binaries.
-#
 # ## Usage
 # Run `setup.sh [action] [target_sysroot] [bootloader] [boot_mode]`
 

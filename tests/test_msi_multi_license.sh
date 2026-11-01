@@ -3,7 +3,6 @@
 # Validates WiX Windows Installer (.msi) multi-license dialog sequence generation.
 # Asserts that each bundled component receives a dedicated license agreement dialog,
 # individual acceptance checkbox property, sequential UI routing, and unattended guard.
-#
 # ## Usage
 # ./tests/test_msi_multi_license.sh
 
@@ -89,10 +88,10 @@ assert_wxs_contains 'Dialog Id="Dlg_License"' "Top-level EULA Dialog exists"
 assert_wxs_contains 'Property="LICENSE_ACCEPTED"' "License acceptance property configured"
 assert_wxs_contains 'Text="I Agree"' "Button text is I Agree instead of Next>"
 
-# 2. Verify InstallUISequence Routing (Single License step)
+# 2. Verify InstallUISequence and Dialog Transition Routing (Single License step)
 assert_wxs_contains '<Show Dialog="Dlg_Welcome" After="CostFinalize">NOT Installed</Show>' "Welcome dialog shown after CostFinalize"
-assert_wxs_contains '<Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>' "License shown after Welcome"
-assert_wxs_contains '<Show Dialog="Dlg_SetupType" After="Dlg_License">NOT Installed</Show>' "SetupType directly after License"
+assert_wxs_contains '<Publish Event="NewDialog" Value="Dlg_License">1</Publish>' "License dialog routed from Welcome Next button"
+assert_wxs_contains '<Publish Event="NewDialog" Value="Dlg_SetupType">1</Publish>' "SetupType dialog routed directly from License I Agree button"
 
 # 3. Verify Unattended Silent Installation Guard
 assert_wxs_contains 'CustomAction Id="CA_AbortNoLicense"' "Unattended install license validation custom action"

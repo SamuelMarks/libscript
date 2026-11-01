@@ -5,12 +5,9 @@
 # stepping through every enumeration (Simple Mode and Advanced Mode flows),
 # capturing pixel-perfect screenshots of every wizard step, desktop icons,
 # and browser validation tabs directly from the live QEMU display framebuffer.
-#
 # ## Usage
 # ./devtools/capture_openedx_vagrant_screenshots.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

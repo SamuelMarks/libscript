@@ -1,10 +1,8 @@
 #!/bin/sh
 # ## Overview
 # Unified CLI routing and lifecycle management logic for LibScript components.
-#
 # ## Usage
 # Source this file from your component's `cli.sh`: `. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"`
-
 set -feu
 _component_core_caller_this="${THIS_FILE:-}"; _component_core_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -17,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -27,8 +24,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
-
 # Identify directories
 COMP_DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"

@@ -3,11 +3,9 @@
 # Master dispatcher for LFS display server and window compositing subsystems.
 # Configures Wayland (wlroots/libseat), X11 (xorg-server), hybrid XWayland,
 # or headless console modes inside the target rootfs.
-#
 # ## Usage
 # ./_lib/display-servers/setup.sh [server] [action] [target_rootfs]
 # Example: ./_lib/display-servers/setup.sh wayland install
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

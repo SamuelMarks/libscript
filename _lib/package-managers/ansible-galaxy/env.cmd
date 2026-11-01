@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for ansible-galaxy on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for ansible-galaxy.
+:: Executes initialization, logic, or testing for ansible-galaxy. Windows environment configuration and PATH probes for ansible-galaxy
 
-:: Windows environment configuration and PATH probes for ansible-galaxy
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

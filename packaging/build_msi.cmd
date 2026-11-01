@@ -1,12 +1,7 @@
 @echo off
 :: # build_msi.cmd
-::
 :: ## Overview
-:: Generic library engine for generating WiX Windows Installer (.msi) packages on Windows.
-:: Synthesizes WiX manifests from packaging.json and vars.schema.json, supporting
-:: Simple and Advanced setup modes, DBaaS offloading, custom directories,
-:: runtime auto-detection, and repository fork selection.
-::
+:: Generic library engine for generating WiX Windows Installer (.msi) packages on Windows. Synthesizes WiX manifests from packaging.json and vars.schema.json, supporting Simple and Advanced setup modes, DBaaS offloading, custom directories, runtime auto-detection, and repository fork selection.
 :: ## Usage
 :: call packaging\build_msi.cmd [TARGET_DIR] [OPTIONS]
 

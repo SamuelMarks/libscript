@@ -1,10 +1,7 @@
 @echo off
 :: # audio.cmd
-::
 :: ## Overview
-:: Configures audio subsystem (Boomer, OSS, or none) inside illumos sysroot
-:: on Windows host environments.
-::
+:: Configures audio subsystem (Boomer, OSS, or none) inside illumos sysroot on Windows host environments.
 :: ## Usage
 :: audio.cmd [sysroot_path] [subsystem]
 

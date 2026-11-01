@@ -1,9 +1,7 @@
 @echo off
 :: # upgrade.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'upgrade' for the mysql component on Windows.
-::
 :: ## Usage
 :: hooks\upgrade.cmd [args...]
 

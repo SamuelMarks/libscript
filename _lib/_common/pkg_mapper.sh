@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Cross-platform package name translation dictionary across native OS package managers.
-#
 # ## Usage
 # Maps generic dependency names to platform-specific package identifiers.
 

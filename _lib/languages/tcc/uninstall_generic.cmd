@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Generic uninstallation implementation for TCC on Windows.
-::
 :: ## Usage
 :: uninstall_generic.cmd
 

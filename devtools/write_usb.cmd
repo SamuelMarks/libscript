@@ -1,31 +1,26 @@
 @echo off
 :: # write_usb.cmd
-::
 :: ## Overview
-:: USB drive flasher and write verification utility.
-:: Writes hybrid ISO or raw disk images to USB thumb drives with safety interlocks,
-:: block device validation, and post-write SHA256 checksum verification.
-::
+:: USB drive flasher and write verification utility. Writes hybrid ISO or raw disk images to USB thumb drives with safety interlocks, block device validation, and post-write SHA256 checksum verification.
 :: ## Usage
-:: Execute this script with image and target device:
-::   ./devtools/write_usb.cmd <image_path> <target_usb_device>
+:: Execute this script with image and target device: ./devtools/write_usb.cmd <image_path> <target_usb_device>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

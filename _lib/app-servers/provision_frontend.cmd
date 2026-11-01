@@ -1,13 +1,9 @@
 @echo off
 :: # provision_frontend.cmd
-::
 :: ## Overview
-:: Declarative Frontend & Kotlin Multiplatform (KMP) Build Orchestrator on Windows with reuse-else-create caching.
-:: Resolves NPM/Gradle dependencies, builds Angular 17+, Vite/React/JS SPAs, MFEs, and KMP
-:: (jsBrowserDistribution, wasmJsBrowserDistribution, Compose Desktop) targets, and stages to webroots.
-::
+:: Declarative Frontend & Kotlin Multiplatform (KMP) Build Orchestrator on Windows with reuse-else-create caching. Resolves NPM/Gradle dependencies, builds Angular 17+, Vite/React/JS SPAs, MFEs, and KMP (jsBrowserDistribution, wasmJsBrowserDistribution, Compose Desktop) targets, and stages to webroots.
 :: ## Usage
-::   call provision_frontend.cmd --app-dir <dir> --manifest <path> [--packaging <path>] [--force-rebuild] [--force-reinstall]
+:: call provision_frontend.cmd --app-dir <dir> --manifest <path> [--packaging <path>] [--force-rebuild] [--force-reinstall]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

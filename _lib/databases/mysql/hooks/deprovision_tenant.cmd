@@ -1,9 +1,7 @@
 @echo off
 :: # deprovision_tenant.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'deprovision_tenant' for the mysql component on Windows.
-::
 :: ## Usage
 :: hooks\deprovision_tenant.cmd [args...]
 

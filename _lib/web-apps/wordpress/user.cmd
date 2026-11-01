@@ -1,15 +1,9 @@
 @echo off
 :: # user.cmd
-::
 :: ## Overview
-:: WordPress user administration tool on Windows.
-:: Supports creating, listing, setting passwords, and deleting users.
-::
+:: WordPress user administration tool on Windows. Supports creating, listing, setting passwords, and deleting users.
 :: ## Usage
-::   call user.cmd create <username> <email> [--password <pwd>] [--role <role>]
-::   call user.cmd set-password <username> [--password <pwd>]
-::   call user.cmd list
-::   call user.cmd delete <username>
+:: call user.cmd create <username> <email> [--password <pwd>] [--role <role>] call user.cmd set-password <username> [--password <pwd>] call user.cmd list call user.cmd delete <username>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

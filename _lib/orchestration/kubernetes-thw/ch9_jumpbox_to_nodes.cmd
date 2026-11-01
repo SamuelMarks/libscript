@@ -1,13 +1,9 @@
 @echo off
 :: # ch9_jumpbox_to_nodes.cmd
-::
 :: ## Overview
 :: Automates Ch9 of Kubernetes the Hard Way.
-::
 :: ## Usage
-:: Executes the steps for Ch9.
-
-setlocal EnableDelayedExpansion
+:: Executes the steps for Ch9. setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 
@@ -24,7 +20,7 @@ set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

@@ -1,19 +1,11 @@
 @echo off
-:: # cli.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript CLI Utility Module (Windows Batch)
-::
 :: ## Overview
-:: This module provides reusable CLI utilities for LibScript components,
-:: primarily focused on consistent argument parsing and standardized output.
-::
+:: This module provides reusable CLI utilities for LibScript components, primarily focused on consistent argument parsing and standardized output.
 :: ## Usage
-:: Call this script in your component's `cli.cmd`.
-::
-:: ```batch
-:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\cli.cmd" :parse_args %*
-:: ```
+:: Call this script in your component's `cli.cmd`. ```batch call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\cli.cmd" :parse_args %* ```
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

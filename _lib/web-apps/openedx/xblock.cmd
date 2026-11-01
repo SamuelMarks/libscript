@@ -1,19 +1,9 @@
 @echo off
 :: # xblock.cmd
-::
 :: ## Overview
-:: XBlock and stack plugin management utility for Open edX on Windows.
-:: Installs, uninstalls, and enumerates XBlocks and Python extension plugins.
-::
+:: XBlock and stack plugin management utility for Open edX on Windows. Installs, uninstalls, and enumerates XBlocks and Python extension plugins.
 :: ## Usage
-::   call xblock.cmd install <package_spec_or_git_url>
-::   call xblock.cmd uninstall <package_name>
-::   call xblock.cmd list
-::   call xblock.cmd help
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Error
+:: call xblock.cmd install <package_spec_or_git_url> call xblock.cmd uninstall <package_name> call xblock.cmd list call xblock.cmd help ## Exit Codes 0 - Success 1 - Error
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

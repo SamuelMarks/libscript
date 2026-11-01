@@ -4,10 +4,8 @@
 # Supports Mode 1 (pkg_mgr/system), Mode 2/3 (from-source with selectable bootstrap
 # toolchain), local_binary registration, and native GitHub release archive installation
 # across edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors (v7.0.1).
-#
 # ## Usage
 # ./_lib/languages/edgcpp/setup_generic.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

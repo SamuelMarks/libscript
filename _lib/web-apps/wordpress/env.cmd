@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Defines environment variables and configurations for the WordPress CMS stack.
-:: 
 :: ## Usage
-:: Source or call this script to configure the environment for wordpress.
+:: Source or call this script to configure the environment for wordpress. Environment variables for Windows
 
-:: Environment variables for Windows
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (

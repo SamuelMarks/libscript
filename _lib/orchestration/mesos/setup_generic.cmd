@@ -1,11 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic Windows setup and lifecycle module for Apache Mesos.
-:: Installs isolated Mesos binaries (`mesos`, `mesos-master`, `mesos-agent`, `mesos-local`,
-:: `mesos-execute`, `mesos-resolve`) and manages master/agent state directories.
-::
+:: Generic Windows setup and lifecycle module for Apache Mesos. Installs isolated Mesos binaries (`mesos`, `mesos-master`, `mesos-agent`, `mesos-local`, `mesos-execute`, `mesos-resolve`) and manages master/agent state directories.
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use, and service capabilities.
 

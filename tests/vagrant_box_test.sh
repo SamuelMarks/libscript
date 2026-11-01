@@ -3,7 +3,6 @@
 # Validates the end-to-end lifecycle of exported Vagrant .box archives:
 # performs box import, VM instantiation, SSH authentication, passwordless sudo,
 # init system status verification, and clean teardown.
-#
 # ## Usage
 # ./tests/vagrant_box_test.sh [box_path] [--provider=qemu] [--dry-run]
 

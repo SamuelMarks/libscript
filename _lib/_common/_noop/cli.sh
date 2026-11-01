@@ -3,7 +3,6 @@
 # Provides the command-line interface logic for the `_noop` component.
 # This component acts as a stub or template, meaning this script intentionally
 # executes a no-operation and exits successfully.
-# 
 # ## Usage
 # Execute this script to trigger the no-op CLI behavior.
 

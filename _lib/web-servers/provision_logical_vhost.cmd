@@ -1,14 +1,11 @@
 @echo off
 :: # provision_logical_vhost.cmd
-setlocal EnableDelayedExpansion
-
 :: ## Overview
 :: Provisions a logical virtual host for a web server (e.g., Nginx, Apache).
-::
 :: ## Usage
-::   call provision_logical_vhost.cmd --server-name <domain> --upstream-port <port>
+:: call provision_logical_vhost.cmd --server-name <domain> --upstream-port <port> set "THIS_DIR=%~dp0"
 
-set "THIS_DIR=%~dp0"
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

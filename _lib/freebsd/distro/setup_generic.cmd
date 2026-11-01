@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Provides setup_generic.cmd lifecycle integration for the distro component.
-::
 :: ## Usage
 :: setup.cmd
 

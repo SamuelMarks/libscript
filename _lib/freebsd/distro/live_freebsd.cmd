@@ -1,13 +1,9 @@
 @echo off
 :: # live_freebsd.cmd
-::
 :: ## Overview
-:: Synthesizes live-CD and live-USB bootable FreeBSD environments with memory-backed
-:: root filesystem (mdroot), ZFS/UFS live loaders, and embedded msi-rs installer suite.
-::
+:: Synthesizes live-CD and live-USB bootable FreeBSD environments with memory-backed root filesystem (mdroot), ZFS/UFS live loaders, and embedded msi-rs installer suite.
 :: ## Usage
-:: Execute this script to generate a live FreeBSD image:
-::   ./_lib/freebsd/distro/live_freebsd.cmd [output_path] [build_dir]
+:: Execute this script to generate a live FreeBSD image: ./_lib/freebsd/distro/live_freebsd.cmd [output_path] [build_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

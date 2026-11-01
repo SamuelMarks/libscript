@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Generic uninstall script for Apache Mesos on Windows.
-::
 :: ## Usage
 :: Routes to generic uninstallation via `_common\uninstall_generic.cmd`.
 

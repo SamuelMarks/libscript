@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for nats on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for nats.
+:: Executes initialization, logic, or testing for nats. Windows environment configuration and PATH probes for nats
 
-:: Windows environment configuration and PATH probes for nats
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

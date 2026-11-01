@@ -1,10 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Multi-toolchain Linux kernel staging and synthesis engine for Windows.
-:: Supports compiler-namespaced build directories, stamps, and metrics generation.
-::
+:: Multi-toolchain Linux kernel staging and synthesis engine for Windows. Supports compiler-namespaced build directories, stamps, and metrics generation.
 :: ## Usage
 :: setup_generic.cmd [action]
 

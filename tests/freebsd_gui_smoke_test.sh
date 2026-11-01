@@ -2,7 +2,6 @@
 # ## Overview
 # Graphical desktop smoketest verifying Wayland compositor / X11 server
 # socket initialization and display manager daemons on FreeBSD images.
-#
 # ## Usage
 # Run GUI smoketest:
 #   tests/freebsd_gui_smoke_test.sh [sysroot_path] [protocol] [desktop] [dm]

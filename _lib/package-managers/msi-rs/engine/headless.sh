@@ -3,11 +3,9 @@
 # Headless non-interactive installer orchestrator with full msiexec CLI parity.
 # Executes unattended, preseeded OS installations driven by MSI properties,
 # JSON response files, and silent (/qn) execution flags across Linux, FreeBSD, and illumos.
-#
 # ## Usage
 # Execute this script to run headless installation:
 #   ./_lib/package-managers/msi-rs/engine/headless.sh [/i <package.msi>] [/qn|/passive] [KEY=VALUE...] [--config <autoinstall.json>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

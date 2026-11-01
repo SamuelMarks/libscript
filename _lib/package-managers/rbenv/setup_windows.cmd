@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for rbenv on Windows.
-:: Configures the rbenv CLI wrapper on Windows.
-::
+:: Setup script for rbenv on Windows. Configures the rbenv CLI wrapper on Windows.
 :: ## Usage
 :: Automatically invoked during libscript rbenv installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

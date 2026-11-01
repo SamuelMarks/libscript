@@ -1,9 +1,7 @@
 @echo off
 :: # metrics.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'metrics' for the valkey component on Windows.
-::
 :: ## Usage
 :: hooks\metrics.cmd [args...]
 

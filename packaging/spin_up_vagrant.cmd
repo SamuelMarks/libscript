@@ -1,9 +1,7 @@
 @echo off
 :: # spin_up_vagrant.cmd
-::
 :: ## Overview
 :: Idempotently provisions and boots the Vagrant Windows 11 environment.
-::
 :: ## Usage
 :: spin_up_vagrant.cmd
 

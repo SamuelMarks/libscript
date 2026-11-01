@@ -3,7 +3,6 @@
 # Verification test for WordPress 7.1.2 database coexistence with Open edX.
 # Validates that WordPress correctly detects Open edX, reuses its MySQL instance,
 # provisions an isolated database schema, and protects Open edX tables from mutation.
-#
 # ## Usage
 #   ./tests/test_wordpress_openedx_mysql_reuse.sh
 

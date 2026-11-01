@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # API implementation for Object Storage operations. Wraps native cloud CLIs.
-#
 # ## Usage
 # Source this file and call libscript_storage_create, libscript_storage_delete, etc.
 

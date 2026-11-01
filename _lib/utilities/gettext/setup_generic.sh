@@ -3,7 +3,6 @@
 # ## Overview
 # Generic setup and installation script for the gettext component.
 # Provides msgfmt, xgettext, msginit, and msgmerge for Open edX i18n compilation.
-#
 # ## Usage
 # Called internally by setup.sh / cli.sh.
 

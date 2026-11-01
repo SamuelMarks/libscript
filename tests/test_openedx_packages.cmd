@@ -1,13 +1,9 @@
 @echo off
 :: # test_openedx_packages.cmd
-::
 :: ## Overview
-:: Orchestrates the Open edX packaged install test plan across target platforms.
-:: Ensures packages install correctly on a pristine Vagrant environment.
-::
+:: Orchestrates the Open edX packaged install test plan across target platforms. Ensures packages install correctly on a pristine Vagrant environment.
 :: ## Usage
-:: tests\test_openedx_packages.cmd [-o os_target]
-:: Example: tests\test_openedx_packages.cmd -o windows-11
+:: tests\test_openedx_packages.cmd [-o os_target] Example: tests\test_openedx_packages.cmd -o windows-11
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

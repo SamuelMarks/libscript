@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entrypoint for the xorg-server component on Windows.
-::
 :: ## Usage
 :: cli.cmd [action]
 

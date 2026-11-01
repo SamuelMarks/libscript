@@ -2,7 +2,6 @@
 # ## Overview
 # Configures core FreeBSD system files inside target sysroot:
 # /boot/loader.conf, /etc/rc.conf, /etc/fstab, /etc/ttys, and /etc/resolv.conf.
-#
 # ## Usage
 # Configure core system:
 #   _lib/freebsd/distro/config.sh [sysroot_path] [hostname] [filesystem]

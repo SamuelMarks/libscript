@@ -1,17 +1,9 @@
 @echo off
 :: # restore.cmd
-::
 :: ## Overview
-:: Disaster recovery and restore utility for Open edX on Windows.
-:: Unpacks backup zip archives and restores configurations, users, and datastores.
-::
+:: Disaster recovery and restore utility for Open edX on Windows. Unpacks backup zip archives and restores configurations, users, and datastores.
 :: ## Usage
-::   call restore.cmd apply <archive_path> [--yes]
-::   call restore.cmd help
-::
-:: ## Exit Codes
-::   0 - Restore completed successfully
-::   1 - Error during restoration
+:: call restore.cmd apply <archive_path> [--yes] call restore.cmd help ## Exit Codes 0 - Restore completed successfully 1 - Error during restoration
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

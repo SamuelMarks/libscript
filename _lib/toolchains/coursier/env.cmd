@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for coursier on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for coursier.
+:: Executes initialization, logic, or testing for coursier. Windows environment configuration and PATH probes for coursier
 
-:: Windows environment configuration and PATH probes for coursier
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

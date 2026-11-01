@@ -1,10 +1,7 @@
 @echo off
 :: # bsd_img.cmd
-::
 :: ## Overview
-:: Packages FreeBSD target sysroot into a bootable UFS/ZFS disk image on Windows
-:: by delegating to the vm_builder worker.
-::
+:: Packages FreeBSD target sysroot into a bootable UFS/ZFS disk image on Windows by delegating to the vm_builder worker.
 :: ## Usage
 :: bsd_img.cmd [target_sysroot] [output_image] [size_gib]
 

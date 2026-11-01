@@ -4,10 +4,8 @@
 # Installs isolated `k8s-marathon` binaries that expose a Marathon v2-compatible PaaS REST/CLI interface
 # (`/v2/apps`, `/v2/tasks`, `/v2/deployments`, `/ping`) and reconcile Application specs into Kubernetes
 # `Deployment`, `StatefulSet`, `Job`, `Service`, and `Ingress` resources.
-#
 # ## Usage
 # Invoked by `setup.sh` or `cli.sh` for `k8s-marathon` lifecycle actions.
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

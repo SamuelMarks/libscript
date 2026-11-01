@@ -1,11 +1,7 @@
 @echo off
 :: # dashboard.cmd
-::
 :: ## Overview
-:: Lightweight, decentralized Web Dashboard / Control Plane & Log/Cost Aggregator (`dashboard.cmd`) on Windows.
-:: Generates a real-time monitoring dashboard (HTML + JSON state), integrated log aggregation,
-:: and multicloud resource cost/usage reports.
-::
+:: Lightweight, decentralized Web Dashboard / Control Plane & Log/Cost Aggregator (`dashboard.cmd`) on Windows. Generates a real-time monitoring dashboard (HTML + JSON state), integrated log aggregation, and multicloud resource cost/usage reports.
 :: ## Usage
 :: call _lib\cloud\core\dashboard.cmd [dashboard|cost|usage|logs-aggregate] [--out <dir>] [--json]
 

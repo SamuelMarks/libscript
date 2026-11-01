@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for python-server on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for python-server.
+:: Executes initialization, logic, or testing for python-server. Windows environment configuration and PATH probes for python-server
 
-:: Windows environment configuration and PATH probes for python-server
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,11 +1,7 @@
 @echo off
 :: # stage1.cmd
-::
 :: ## Overview
-:: Stage 1: Cross-Compiled Minimal Userland coordinator for Windows.
-:: Cross-compiles foundational POSIX utilities (sh, m4, coreutils, diffutils,
-:: gawk, grep, gzip, make, patch, sed, tar, xz) linked to target /tools/lib/libc.so.
-::
+:: Stage 1: Cross-Compiled Minimal Userland coordinator for Windows. Cross-compiles foundational POSIX utilities (sh, m4, coreutils, diffutils, gawk, grep, gzip, make, patch, sed, tar, xz) linked to target /tools/lib/libc.so.
 :: ## Usage
 :: stage1.cmd [target_arch] [target_libc] [target_os]
 

@@ -1,18 +1,10 @@
 @echo off
 :: # env_base.cmd
-::
 :: ## Overview
-:: Foundational environment initialization module for LibScript components on Windows.
-:: Resolves the component package name, active version, and idempotently prepends
-:: the component's binary directory to PATH across endlocal scope.
-::
+:: Foundational environment initialization module for LibScript components on Windows. Resolves the component package name, active version, and idempotently prepends the component's binary directory to PATH across endlocal scope.
 :: ## Usage
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" [dir]
+:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" [dir] setlocal EnableDelayedExpansion set "CALLER_FILE=!THIS_FILE!" set "_EB_CALLER_DIR=!CALLER_SCRIPT_DIR!" if "!_EB_CALLER_DIR!"=="" set "_EB_CALLER_DIR=!SCRIPT_DIR!"
 
-setlocal EnableDelayedExpansion
-set "CALLER_FILE=!THIS_FILE!"
-set "_EB_CALLER_DIR=!CALLER_SCRIPT_DIR!"
-if "!_EB_CALLER_DIR!"=="" set "_EB_CALLER_DIR=!SCRIPT_DIR!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (

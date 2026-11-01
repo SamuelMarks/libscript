@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for nginx on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for nginx.
+:: Executes initialization, logic, or testing for nginx. Windows environment configuration and PATH probes for nginx
 
-:: Windows environment configuration and PATH probes for nginx
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,13 +1,7 @@
 @echo off
 :: # test_msi_vagrant_matrix.cmd
-::
 :: ## Overview
-:: Unified cross-platform test runner for .msi building, GUI wizard stage verification
-:: (quick-install and custom-install flows), window-cropped screenshot validation in
-:: ..\cc0-assets\libscript, and ..\bento Vagrant box verification across Windows, Linux,
-:: macOS, FreeBSD, and illumos (OmniOS). Uses SamuelMarks/msi-rs across all 5 platforms
-:: and restricts optional WiX comparison (--use-wix / --compare-wix) strictly to Windows.
-::
+:: Unified cross-platform test runner for .msi building, GUI wizard stage verification (quick-install and custom-install flows), window-cropped screenshot validation in ..\cc0-assets\libscript, and ..\bento Vagrant box verification across Windows, Linux, macOS, FreeBSD, and illumos (OmniOS). Uses SamuelMarks/msi-rs across all 5 platforms and restricts optional WiX comparison (--use-wix / --compare-wix) strictly to Windows.
 :: ## Usage
 :: tests/test_msi_vagrant_matrix.cmd [--os <windows|linux|macos|freebsd|illumos|all>] [--target <openedx|wordpress|sqlite|all>] [--use-wix] [--compare-wix] [--live-vagrant]
 

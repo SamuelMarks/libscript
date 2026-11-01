@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Audits codebase and staged files for adherence to LibScript engineering standards:
-# - POSIX /bin/sh usage and canonical THIS_FILE preamble
-# - Windows batch script parity (.cmd / .bat)
-# - No evil eval usage
-# - Idempotency patterns
-# - 100% doc block coverage (## Overview and ## Usage)
-#
+# Audits codebase and staged files for adherence to LibScript engineering standards: - POSIX /bin/sh usage and canonical THIS_FILE preamble - Windows batch script parity (.cmd / .bat) - No evil eval usage - Idempotency patterns - 100% doc block coverage (## Overview and ## Usage)
 # ## Usage
-# Execute this script to audit files:
-#   ./devtools/audit/audit_standards.sh [--all | --staged | <file>...]
-
+# Execute this script to audit files: ./devtools/audit/audit_standards.sh [--all | --staged | <file>...]
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -122,8 +112,6 @@ audit_single_file() {
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
         if ($0 ~ /## Usage/) has_usage = 1
-      }
-      NR <= 38 {
         if ($0 ~ /set -feu/) has_set_feu = 1
         if ($0 ~ /THIS_FILE=/) has_this_file = 1
         if ($0 ~ /STACK/) has_stack = 1
@@ -255,13 +243,13 @@ audit_single_file() {
         case "$v_rule" in
           MISSING_SHEBANG)
             case "$file" in
-              *.tpl|*.template|*docker*|*test*|*docs-web-template*) ;;
+              *.tpl|*.template) ;;
               *) log_failure "$file" "POSIX_SHEBANG" "$v_msg" ;;
             esac
             ;;
           THIS_FILE_DANCE|RECURSION_GUARD|ROOT_DIR_RESOLUTION|ZSH_SHELLCHECK_TAG)
             case "$file" in
-              *Dockerfile*|*.tpl|*dockerfiles-ssh*|*docker/*) ;;
+              *Dockerfile*|*.tpl) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -411,7 +399,7 @@ audit_single_file() {
     fi
     cmd_violations=$(awk '
       BEGIN {
-        has_echo_off = 0; has_delayed = 0; has_this_file = 0;
+        has_echo_off = 0; has_delayed = 0; has_this_file = 0; has_stack_guard = 0;
         has_overview = 0; has_usage = 0; has_dup_stack = 0;
         mkdir_hits = ""; git_push_hits = ""; script_dir_hits = ""; chained_if_else_hits = "";
         bad_script_dir_strip = ""; tab_path_hits = ""; endlocal_delayed_hits = "";
@@ -425,6 +413,7 @@ audit_single_file() {
       NR <= 25 {
         if (tolower($0) ~ /enabledelayedexpansion/) has_delayed = 1
         if (tolower($0) ~ /this_file=%~f0/) has_this_file = 1
+        if (tolower($0) ~ /echo "!stack!" \| findstr \/i \/c:":/) has_stack_guard = 1
       }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
@@ -542,6 +531,7 @@ audit_single_file() {
         if (!has_echo_off) print "BATCH_ECHO_OFF|Missing @echo off on line 1."
         if (!has_delayed) print "BATCH_DELAYED_EXPANSION|Missing setlocal EnableDelayedExpansion in first 25 lines (before :find_root)."
         if (!has_this_file) print "BATCH_THIS_FILE|Missing set \"THIS_FILE=%~f0\" in first 25 lines."
+        if (!has_stack_guard) print "BATCH_STACK_GUARD|Missing quoted case-insensitive STACK guard (echo \"!STACK!\" | findstr /I /C:\":!THIS_FILE!:\") in first 25 lines."
         if (has_dup_stack) print "BATCH_DUPLICATE_STACK|Duplicate legacy searchVal=;%THIS_FILE%; STACK block found."
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
         if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
@@ -647,7 +637,7 @@ audit_single_file() {
   # 8d. Ban hardcoded user/project paths and .volta in core substrate (_lib/ and cli/)
   case "$file" in
     _lib/*|cli/*)
-      leak_hits=$(grep -nE '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' "$file" 2>/dev/null || true)
+      leak_hits=$(grep -nE '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|e4s2024|E4S2024|/opt/conda/envs|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' "$file" 2>/dev/null || true)
       if [ -n "$leak_hits" ]; then
         log_failure "$file" "NO_HARDCODED_USER_PATHS" "Hardcoded user/project path or .volta reference in substrate: $leak_hits"
       fi
@@ -756,7 +746,7 @@ if [ "${1:-}" = "--all" ]; then
   OIFS="$IFS"
   IFS='
 '
-  for candidate in $(git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt"); do
+  for candidate in $(git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt"); do
     [ -f "$candidate" ] && audit_single_file "$candidate"
   done
   IFS="$OIFS"

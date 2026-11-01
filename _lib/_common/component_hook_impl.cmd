@@ -1,9 +1,7 @@
 @echo off
 :: # component_hook_impl.cmd
-::
 :: ## Overview
 :: Shared implementation engine for Tier 1 Physical Instance Hooks and Logical Multi-Tenant Hooks on Windows.
-::
 :: ## Usage
 :: call _lib\_common\component_hook_impl.cmd <component> <hook_action> [args...]
 

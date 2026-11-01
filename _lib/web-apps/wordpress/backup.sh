@@ -3,7 +3,6 @@
 # Snapshot backup module for WordPress 7.1.2.
 # Archives the MySQL database dump, wp-content uploads, themes, plugins, and wp-config.php
 # into a compressed timestamped archive.
-#
 # ## Usage
 #   ./backup.sh [create] [--out <output_path>]
 

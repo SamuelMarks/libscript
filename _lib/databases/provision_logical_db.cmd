@@ -1,14 +1,11 @@
 @echo off
 :: # provision_logical_db.cmd
-setlocal EnableDelayedExpansion
-
 :: ## Overview
 :: Provisions a logical database (e.g., WordPress db) side-by-side or remotely.
-::
 :: ## Usage
-::   call provision_logical_db.cmd --host <host> --port <port> --db-name <name> [--db-url <url>]
+:: call provision_logical_db.cmd --host <host> --port <port> --db-name <name> [--db-url <url>] set "THIS_DIR=%~dp0"
 
-set "THIS_DIR=%~dp0"
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

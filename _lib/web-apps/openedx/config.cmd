@@ -1,17 +1,9 @@
 @echo off
 :: # config.cmd
-::
 :: ## Overview
-:: Configuration management engine for Open edX on Windows.
-:: Provides get, set, list, generate, save, printvalue, printroot, patches, and validate
-:: operations for environment configurations with full Tutor `config` CLI parity.
-::
+:: Configuration management engine for Open edX on Windows. Provides get, set, list, generate, save, printvalue, printroot, patches, and validate operations for environment configurations with full Tutor `config` CLI parity.
 :: ## Usage
-::   call config.cmd [get|set|list|generate|save|printvalue|printroot|patches|validate|help] [options]
-::
-:: ## Exit Codes
-::   0 - Operation succeeded
-::   1 - Validation or execution error
+:: call config.cmd [get|set|list|generate|save|printvalue|printroot|patches|validate|help] [options] ## Exit Codes 0 - Operation succeeded 1 - Validation or execution error
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

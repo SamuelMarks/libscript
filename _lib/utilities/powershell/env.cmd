@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for powershell on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for powershell.
+:: Executes initialization, logic, or testing for powershell. Windows environment configuration and PATH probes for powershell
 
-:: Windows environment configuration and PATH probes for powershell
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

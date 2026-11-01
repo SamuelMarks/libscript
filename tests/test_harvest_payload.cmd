@@ -1,25 +1,20 @@
 @echo off
 :: # test_harvest_payload.cmd
-::
 :: ## Overview
-:: Validates LibScript repository harvesting and WiX fragment generation on Windows.
-:: Verifies that required core engine and stack components are harvested,
-:: excluded artifacts (.git, tests_tmp, temporary files) are filtered,
-:: and valid WiX fragment XML is synthesized.
-::
+:: Validates LibScript repository harvesting and WiX fragment generation on Windows. Verifies that required core engine and stack components are harvested, excluded artifacts (.git, tests_tmp, temporary files) are filtered, and valid WiX fragment XML is synthesized.
 :: ## Usage
 :: call tests\test_harvest_payload.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -27,7 +22,7 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: ## find_root
 :: Ascends the directory tree looking for ROOT or libscript.cmd.
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

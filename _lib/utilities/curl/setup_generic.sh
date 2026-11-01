@@ -3,7 +3,6 @@
 # Generic setup script for the curl component.
 # It provides fallback installation logic and cross-platform installation steps
 # when a more specific OS/distribution setup script is not available.
-#
 # ## Usage
 # This script is typically called internally by the component lifecycle.
 

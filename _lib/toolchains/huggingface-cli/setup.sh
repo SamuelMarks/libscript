@@ -3,10 +3,8 @@
 # Installation and configuration script for the huggingface-cli component.
 # It uses the shared setup_base.sh logic to handle downloading, verifying,
 # and installing the component on the host system.
-#
 # ## Usage
 # Execute this script to install or configure the component.
-
 
 set -feu
 

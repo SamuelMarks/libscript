@@ -1,9 +1,7 @@
 @echo off
 :: # status.cmd
-::
 :: ## Overview
 :: Status check for the custom-cc component on Windows.
-::
 :: ## Usage
 :: status.cmd
 

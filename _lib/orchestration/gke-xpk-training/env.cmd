@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Exports isolated environment paths and runtime variables for the gke-xpk-training component.
-::
 :: ## Usage
 :: env.cmd
 

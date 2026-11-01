@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Primary setup script for Slurm Workload Manager on Windows.
-::
 :: ## Usage
 :: Routes to generic setup via `setup_base.cmd`.
 

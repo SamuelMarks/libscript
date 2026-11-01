@@ -1,9 +1,7 @@
 @echo off
 :: # git.cmd
-::
 :: ## Overview
 :: Common Git manipulation utilities for Windows batch.
-::
 :: ## Usage
 :: Provides :git_get <repo> <target> [branch] for idempotent repo cloning/pulling.
 

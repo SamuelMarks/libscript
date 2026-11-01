@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for tpu-vm on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for tpu-vm.
+:: Executes initialization, logic, or testing for tpu-vm. Windows environment configuration and PATH probes for gcp-tpu-vm
 
-:: Windows environment configuration and PATH probes for gcp-tpu-vm
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (

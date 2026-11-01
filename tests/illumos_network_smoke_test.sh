@@ -2,7 +2,6 @@
 # ## Overview
 # Network and OpenSSH daemon smoketest for illumos target instances.
 # Validates ipadm DHCP configuration, nodename, DNS resolver, and SSH service definition.
-#
 # ## Usage
 # Run network and SSH smoketest:
 #   tests/illumos_network_smoke_test.sh [sysroot_or_ip]

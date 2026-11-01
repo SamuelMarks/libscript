@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Primary Windows setup entry point for nodeenv.
-:: Delegates to the shared `setup_base.cmd`.
-::
+:: Primary Windows setup entry point for nodeenv. Delegates to the shared `setup_base.cmd`.
 :: ## Usage
 :: Call this script to trigger setup for nodeenv on Windows.
 

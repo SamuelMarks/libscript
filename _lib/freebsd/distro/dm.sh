@@ -2,7 +2,6 @@
 # ## Overview
 # Configures modular display managers (lightdm, sddm, greetd, gdm, or none)
 # and autologin/pam security policies inside FreeBSD target sysroot.
-#
 # ## Usage
 # Configure display manager:
 #   _lib/freebsd/distro/dm.sh [sysroot_path] [dm] [autologin_user]

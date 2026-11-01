@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for Ollama on Windows.
-::
 :: ## Usage
 :: Sets up default environment variables for Ollama.
 

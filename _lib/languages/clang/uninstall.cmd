@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
 :: Uninstallation entry point for Clang on Windows.
-::
 :: ## Usage
 :: uninstall.cmd
 

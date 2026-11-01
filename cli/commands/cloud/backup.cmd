@@ -1,9 +1,7 @@
 @echo off
 :: # backup.cmd
-::
 :: ## Overview
 :: Exports remote application state or takes backups/snapshots of a cloud node on Windows.
-::
 :: ## Usage
 :: Run `backup.cmd <node_name> [options]`
 

@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for BusyBox: Swiss Army Knife of embedded Linux utilities.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for BusyBox: Swiss Army Knife of embedded Linux utilities. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

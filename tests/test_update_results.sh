@@ -4,10 +4,8 @@
 # Verifies that update_results.sh splits the Supported Components table into all 5
 # architectural tiers, preserves existing statuses, applies tests_tmp/*.{success,failure}
 # and *.idempotent.success markers, exports valid JSON, and is strictly idempotent (2x run).
-#
 # ## Usage
 # ./tests/test_update_results.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

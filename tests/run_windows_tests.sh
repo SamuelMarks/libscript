@@ -3,14 +3,11 @@
 # Runs tests sequentially for libscript components on a local Windows 11 Vagrant VM
 # (`bento/windows-11`). Results, execution logs, and statuses are written into tests_tmp/
 # and the Supported Components table is automatically updated after each test.
-#
 # ## Usage
 # ./tests/run_windows_tests.sh [TARGETS...|all]
 # Example: ./tests/run_windows_tests.sh curl powershell sqlite
 # Example: ./tests/run_windows_tests.sh all
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

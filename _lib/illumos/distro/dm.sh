@@ -2,7 +2,6 @@
 # ## Overview
 # Configures display managers (LightDM, Slim, XDM, or console ttymon) and SMF graphical-login
 # services inside the illumos target sysroot.
-#
 # ## Usage
 # Configure display manager:
 #   _lib/illumos/distro/dm.sh [sysroot_path] [display_manager] [autologin_user]

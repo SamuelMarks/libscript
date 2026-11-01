@@ -1,10 +1,7 @@
 @echo off
 :: # base.cmd
-::
 :: ## Overview
-:: Bootstraps the FreeBSD base system directory layout and configuration
-:: markers on Windows host environments.
-::
+:: Bootstraps the FreeBSD base system directory layout and configuration markers on Windows host environments.
 :: ## Usage
 :: base.cmd [sysroot_path] [freebsd_version] [arch]
 

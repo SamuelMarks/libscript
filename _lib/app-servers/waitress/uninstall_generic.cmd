@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Windows generic uninstallation script for Waitress.
-::
 :: ## Usage
 :: Execute this script to uninstall Waitress.
 

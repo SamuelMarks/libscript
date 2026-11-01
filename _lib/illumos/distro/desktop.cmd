@@ -1,10 +1,7 @@
 @echo off
 :: # desktop.cmd
-::
 :: ## Overview
-:: Configures desktop environments (MATE, XFCE4, CDE, or none) inside illumos sysroot
-:: on Windows host environments.
-::
+:: Configures desktop environments (MATE, XFCE4, CDE, or none) inside illumos sysroot on Windows host environments.
 :: ## Usage
 :: desktop.cmd [sysroot_path] [environment] [primary_user]
 

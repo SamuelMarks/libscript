@@ -3,7 +3,6 @@
 # Generic uninstallation script for the nuget component.
 # It provides fallback uninstallation logic and cross-platform removal steps
 # when a more specific OS/distribution uninstall script is not available.
-#
 # ## Usage
 # This script is typically called internally by the component lifecycle.
 

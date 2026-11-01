@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for gettext-tiny: Lightweight internationalization shim.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for gettext-tiny: Lightweight internationalization shim. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

@@ -3,7 +3,6 @@
 # Tier 4 Kubernetes Scheduler with Marathon-Equivalent PaaS Application Controller semantics,
 # translating payload.json into Deployment, StatefulSet, Job, Service, Ingress, and Marathon-compatible
 # application descriptors, and reconciling them into the live `k8s-marathon` state store.
-#
 # ## Usage
 # ./payloads/schedulers/kubernetes.sh <compile|submit|status|logs|stop|destroy> <payload.json_or_id>
 
@@ -26,7 +25,7 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR

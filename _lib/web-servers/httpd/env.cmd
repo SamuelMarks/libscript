@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for httpd on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for httpd.
+:: Executes initialization, logic, or testing for httpd. Windows environment configuration and PATH probes for httpd
 
-:: Windows environment configuration and PATH probes for httpd
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Musl Obstack: GNU obstack library standalone port for musl.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Musl Obstack: GNU obstack library standalone port for musl. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

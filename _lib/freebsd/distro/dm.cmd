@@ -1,10 +1,7 @@
 @echo off
 :: # dm.cmd
-::
 :: ## Overview
-:: Configures modular display managers (lightdm, sddm, greetd, none)
-:: inside FreeBSD target sysroot on Windows environments.
-::
+:: Configures modular display managers (lightdm, sddm, greetd, none) inside FreeBSD target sysroot on Windows environments.
 :: ## Usage
 :: dm.cmd [sysroot_path] [dm] [autologin_user]
 

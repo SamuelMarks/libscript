@@ -1,21 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # pkg_docker.cmd
-::
 :: ## Overview
-:: Implements packaging logic for the 'docker' format on Windows.
-:: Generates Dockerfile with ADD layer caching in online mode or air-gapped COPY cache/ mode.
-::
+:: Implements packaging logic for the 'docker' format on Windows. Generates Dockerfile with ADD layer caching in online mode or air-gapped COPY cache/ mode.
 :: ## Usage
-:: call cli\commands\packaging\formats\pkg_docker.cmd [OPTIONS] [PKG] [VERSION] [URL]
-::
-:: ## Parameters
-:: --offline, -o       : Enable 100%% air-gapped Dockerfile generation using COPY cache/
-:: --online            : Enable online Dockerfile generation with ADD layer caching
-:: --base, --base-image: Specify container base image (default: debian:bookworm-slim)
-:: --artifact, -a      : Target packaging artifact type (deb, rpm, apk, txz, msi, exe)
-:: --layer, -l         : Filter components by architectural layer
+:: call cli\commands\packaging\formats\pkg_docker.cmd [OPTIONS] [PKG] [VERSION] [URL] ## Parameters --offline, -o       : Enable 100%% air-gapped Dockerfile generation using COPY cache/ --online            : Enable online Dockerfile generation with ADD layer caching --base, --base-image: Specify container base image (default: debian:bookworm-slim) --artifact, -a      : Target packaging artifact type (deb, rpm, apk, txz, msi, exe) --layer, -l         : Filter components by architectural layer
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

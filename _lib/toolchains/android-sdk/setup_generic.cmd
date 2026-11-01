@@ -1,10 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Windows setup for the android-sdk component.
-:: Downloads and unpacks Google's commandlinetools, accepts licenses, and installs Android SDK platforms.
-::
+:: Windows setup for the android-sdk component. Downloads and unpacks Google's commandlinetools, accepts licenses, and installs Android SDK platforms.
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use, and uninstall capabilities.
 

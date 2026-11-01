@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# A utility to automatically discover and fetch SHA256 checksums for a given download URL.
-# It uses pattern matching to query known vendor checksum APIs and manifest files 
-# (e.g. Node.js, Go, GitHub Releases `.sha256` or `checksums.txt` files).
-# 
+# A utility to automatically discover and fetch SHA256 checksums for a given download URL. It uses pattern matching to query known vendor checksum APIs and manifest files (e.g. Node.js, Go, GitHub Releases `.sha256` or `checksums.txt` files).
 # ## Usage
-# Source this file and call `libscript_fetch_checksum <url>` or run it directly 
-# `./fetch_checksum.sh <url>`. It will print the matched checksum to stdout or 
-# return a non-zero exit code if a checksum could not be found.
-
+# Source this file and call `libscript_fetch_checksum <url>` or run it directly `./fetch_checksum.sh <url>`. It will print the matched checksum to stdout or return a non-zero exit code if a checksum could not be found.
 set -feu
 _fc_caller_this="${THIS_FILE:-}"
 _fc_caller_dir="${SCRIPT_DIR:-}"
@@ -22,7 +16,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

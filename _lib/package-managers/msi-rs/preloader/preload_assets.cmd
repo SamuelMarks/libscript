@@ -1,14 +1,9 @@
 @echo off
 :: # preload_assets.cmd
-::
 :: ## Overview
-:: Offline preload asset manager for the msi-rs live installer.
-:: Packages and stages LibScript components, offline MSI payloads, and dependency caches
-:: directly into target sysroots, and executes post-install chroot activation hooks.
-::
+:: Offline preload asset manager for the msi-rs live installer. Packages and stages LibScript components, offline MSI payloads, and dependency caches directly into target sysroots, and executes post-install chroot activation hooks.
 :: ## Usage
-:: Execute this script to preload components into a target system root:
-::   ./_lib/package-managers/msi-rs/preloader/preload_assets.cmd [target_dir] [component_list...]
+:: Execute this script to preload components into a target system root: ./_lib/package-managers/msi-rs/preloader/preload_assets.cmd [target_dir] [component_list...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_vhd.cmd
-::
 :: ## Overview
 :: Exports a FreeBSD disk image to Microsoft Hyper-V VHD format on Windows.
-::
 :: ## Usage
 :: freebsd_vhd.cmd [input_raw_or_sysroot] [output_vhd] [size_gib]
 

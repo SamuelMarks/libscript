@@ -2,7 +2,6 @@
 # ## Overview
 # Provisions user accounts, passwords, wheel/operator groups, doas/sudo rules,
 # and SSH public keys (including standard Vagrant insecure key) in FreeBSD target sysroot.
-#
 # ## Usage
 # Provision users in sysroot:
 #   _lib/freebsd/distro/users.sh [sysroot_path] [primary_user]

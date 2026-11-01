@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for aria2 on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for aria2.
+:: Executes initialization, logic, or testing for aria2. Windows environment configuration and PATH probes for aria2
 
-:: Windows environment configuration and PATH probes for aria2
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -3,11 +3,9 @@
 # Orchestrates isolated Vagrant-only testing for msi-rs across all 5 target platform environments:
 # {macOS, Windows, FreeBSD, SunOS, Linux}.
 # Validates installation, functionality, and idempotency exclusively within Vagrant guest VMs.
-#
 # ## Usage
 # Execute this script to perform multi-platform Vagrant tests for msi-rs:
 #   ./tests/test_msi_rs_vagrant.sh [--all | --platform <macos|windows|freebsd|sunos|linux>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

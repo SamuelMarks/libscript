@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic Windows setup and lifecycle implementation for the LLVM Clang compiler component.
-::
 :: ## Usage
 :: setup_generic.cmd [ACTION]
 

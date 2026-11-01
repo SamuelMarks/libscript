@@ -3,7 +3,6 @@
 # Serves as the primary Unix uninstall entry point for the Valkey component.
 # It delegates the core uninstallation logic to the common `uninstall_base.sh` script,
 # ensuring standardized cleanup.
-# 
 # ## Usage
 # Execute this script to uninstall the Valkey component on Unix systems.
 

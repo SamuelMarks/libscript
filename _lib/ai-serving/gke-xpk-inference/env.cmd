@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for gke-xpk-inference on Windows.
-::
 :: ## Usage
 :: call _lib\ai-serving\gke-xpk-inference\env.cmd
 

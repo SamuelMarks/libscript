@@ -1,11 +1,7 @@
 @echo off
 :: # envsubst_safe.cmd
-::
 :: ## Overview
-:: Safe Windows Batch alternative to `envsubst`. Interpolates `${VAR}` and `$VAR`
-:: tokens from the current environment while leaving undefined variable references
-:: intact instead of replacing them with empty strings.
-::
+:: Safe Windows Batch alternative to `envsubst`. Interpolates `${VAR}` and `$VAR` tokens from the current environment while leaving undefined variable references intact instead of replacing them with empty strings.
 :: ## Usage
 :: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\envsubst_safe.cmd" "<template_or_file>" [output_file]
 

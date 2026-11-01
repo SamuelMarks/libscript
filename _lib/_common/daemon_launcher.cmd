@@ -1,10 +1,7 @@
 @echo off
 :: # daemon_launcher.cmd
-::
 :: ## Overview
-:: Launches a persistent background TCP/HTTP daemon on Windows by delegating to
-:: daemon_launcher.ps1 so the process survives custom action or SSH session termination.
-::
+:: Launches a persistent background TCP/HTTP daemon on Windows by delegating to daemon_launcher.ps1 so the process survives custom action or SSH session termination.
 :: ## Usage
 :: daemon_launcher.cmd -Port <port> [-Executable <path>] [-DataDir <dir>] [-HttpJson <json>]
 

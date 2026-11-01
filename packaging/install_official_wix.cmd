@@ -1,9 +1,7 @@
 @echo off
 :: # install_official_wix.cmd
-::
 :: ## Overview
 :: Installs the official WiX Toolset on the Vagrant guest via SSH.
-::
 :: ## Usage
 :: install_official_wix.cmd
 

@@ -3,11 +3,9 @@
 # Headless serial boot milestone smoketest for illumos virtual disk images.
 # Launches QEMU headlessly and asserts kernel bootstrap banner, ZFS root pool import,
 # configured init system PID 1 / milestone, and multi-user login prompt milestones.
-#
 # ## Usage
 # Run boot milestone smoketest:
 #   tests/illumos_boot_test.sh [disk_image] [expected_init] [timeout_secs]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

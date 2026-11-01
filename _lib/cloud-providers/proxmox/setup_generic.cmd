@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Proxmox VE hypervisor provider on Windows.
-:: Configures Proxmox VM specifications and delegates orchestration to vm_builder worker.
-::
+:: Proxmox VE hypervisor provider on Windows. Configures Proxmox VM specifications and delegates orchestration to vm_builder worker.
 :: ## Usage
 :: setup.cmd [action] [vmid] [qcow2_image] [storage_pool]
 

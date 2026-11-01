@@ -1,12 +1,9 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Sets environment variables for Open edX on Windows.
-::
 :: ## Usage
-:: Call or execute in the current command shell:
-::   call env.cmd
+:: Call or execute in the current command shell: call env.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

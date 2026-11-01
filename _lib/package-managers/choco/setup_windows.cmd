@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for choco on Windows.
-:: Prepares and configures choco on native Windows environments.
-::
+:: Setup script for choco on Windows. Prepares and configures choco on native Windows environments.
 :: ## Usage
 :: Automatically invoked during libscript choco installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

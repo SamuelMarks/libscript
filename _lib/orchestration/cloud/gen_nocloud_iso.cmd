@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # gen_nocloud_iso.cmd
-::
 :: ## Overview
-:: Generates a Cloud-Init NoCloud configuration ISO image (labeled cidata)
-:: containing user-data, meta-data, and network-config on Windows.
-::
+:: Generates a Cloud-Init NoCloud configuration ISO image (labeled cidata) containing user-data, meta-data, and network-config on Windows.
 :: ## Usage
 :: call _lib\orchestration\cloud\gen_nocloud_iso.cmd [hostname] [user_data_file] [out_iso]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

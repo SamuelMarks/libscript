@@ -1,11 +1,7 @@
 @echo off
 :: # edgcpp_wrapper.cmd
-::
 :: ## Overview
-:: Compiler driver wrapper and telemetry shim for the EDG C/C++ Compiler Frontend (edgcpp) on Windows.
-:: Invokes cpfe.exe for front-end validation and native codegen (--llvm-be or --gcc-be) and lowers/links
-:: via the configured Windows backend compiler while recording JSONL telemetry.
-::
+:: Compiler driver wrapper and telemetry shim for the EDG C/C++ Compiler Frontend (edgcpp) on Windows. Invokes cpfe.exe for front-end validation and native codegen (--llvm-be or --gcc-be) and lowers/links via the configured Windows backend compiler while recording JSONL telemetry.
 :: ## Usage
 :: edgcpp_wrapper.cmd [compiler_args...]
 

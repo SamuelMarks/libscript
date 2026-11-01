@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for LFS Stage 2 Temporary Tools setup.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for LFS Stage 2 Temporary Tools setup. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\base-system\lfs-temp-tools\setup.cmd [install|clean|status]
 

@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Serves as the primary Windows setup entry point for the GCP Cloud Provider component.
-:: Supports both tool installation and Tier 3 GCE custom image upload/registration.
-::
+:: Serves as the primary Windows setup entry point for the GCP Cloud Provider component. Supports both tool installation and Tier 3 GCE custom image upload/registration.
 :: ## Usage
 :: Call `setup.cmd [register-image <image_path> [bucket] [image_name] [accelerator]]` to manage GCP infrastructure.
 

@@ -1,13 +1,9 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Test suite for the msi-rs component on Windows.
-:: Validates that msi-rs CLI and WiX/msitools replacement binaries are installed and operational.
-::
+:: Test suite for the msi-rs component on Windows. Validates that msi-rs CLI and WiX/msitools replacement binaries are installed and operational.
 :: ## Usage
-:: Execute this script to perform a component-specific test on Windows:
-::   test.cmd
+:: Execute this script to perform a component-specific test on Windows: test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -3,7 +3,6 @@
 # Headless smoke test harness for graphical desktop environments.
 # Launches desktop OS images in QEMU with virtio-gpu-pci and asserts
 # Wayland socket creation (/run/user/1000/wayland-0) and PipeWire daemon health.
-#
 # ## Usage
 # ./tests/os_gui_smoke_test.sh [disk_image] [--dry-run]
 

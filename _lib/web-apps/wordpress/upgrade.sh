@@ -3,7 +3,6 @@
 # Safe release upgrade pipeline for WordPress 7.1.2.
 # Automatically creates a pre-upgrade snapshot backup, replaces WordPress core files,
 # executes database migrations, and validates stack health.
-#
 # ## Usage
 #   ./upgrade.sh [--version <target_version>]
 

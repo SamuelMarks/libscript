@@ -3,11 +3,9 @@
 # Master dispatcher for LFS init system supervisors.
 # Dispatches installation to systemd, openrc, sysvinit, runit, s6, dinit,
 # or configures direct container/microVM PID 1 stub.
-#
 # ## Usage
 # ./_lib/init-systems/setup.sh [provider] [action] [target_rootfs]
 # Example: ./_lib/init-systems/setup.sh openrc install
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

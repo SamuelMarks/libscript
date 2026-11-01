@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for caddy on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for caddy.
+:: Executes initialization, logic, or testing for caddy. Windows environment configuration and PATH probes for caddy
 
-:: Windows environment configuration and PATH probes for caddy
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

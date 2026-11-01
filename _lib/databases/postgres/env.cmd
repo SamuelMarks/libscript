@@ -1,10 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
-:: Environment initialization for PostgreSQL on Windows.
-:: Defines defaults such as `POSTGRES_VERSION`, `POSTGRES_URL`, and prepends bin to PATH.
-::
+:: Environment initialization for PostgreSQL on Windows. Defines defaults such as `POSTGRES_VERSION`, `POSTGRES_URL`, and prepends bin to PATH.
 :: ## Usage
 :: call _lib\databases\postgres\env.cmd
 

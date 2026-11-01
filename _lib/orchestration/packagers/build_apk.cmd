@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # build_apk.cmd
-::
 :: ## Overview
-:: Synthesizes Alpine-compatible APK binary packages (.apk) directly from
-:: component staging directories or manifests on Windows.
-::
+:: Synthesizes Alpine-compatible APK binary packages (.apk) directly from component staging directories or manifests on Windows.
 :: ## Usage
 :: call _lib\orchestration\packagers\build_apk.cmd <pkg_name> <pkg_version> <staging_dir> [out_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

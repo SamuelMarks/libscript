@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Test suite script for Vagrant on Windows.
-::
 :: ## Usage
 :: Call this script to verify Vagrant functionality on Windows.
 

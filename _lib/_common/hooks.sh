@@ -1,14 +1,11 @@
 #!/bin/sh
 # ## Overview
 # Unified Dual-Layer Lifecycle Hook Dispatcher for Tier 1 physical and logical multi-tenant hooks.
-#
 # ## Usage
 # . ./_lib/_common/hooks.sh
 # libscript_exec_hook <component_dir> <hook_name> [args...]
-
 set -feu
 _hooks_caller_this="${THIS_FILE:-}"; _hooks_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -28,7 +25,7 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR

@@ -1,12 +1,9 @@
 @echo off
 :: # upgrade.cmd
-::
 :: ## Overview
-:: Safe release upgrade pipeline for WordPress 7.1.2 on Windows.
-:: Performs pre-upgrade backup, database migration, and health verification.
-::
+:: Safe release upgrade pipeline for WordPress 7.1.2 on Windows. Performs pre-upgrade backup, database migration, and health verification.
 :: ## Usage
-::   call upgrade.cmd [--version <target_version>]
+:: call upgrade.cmd [--version <target_version>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Executes smoke tests and binary verification checks for the runit component.
-::
 :: ## Usage
 :: test.cmd
 

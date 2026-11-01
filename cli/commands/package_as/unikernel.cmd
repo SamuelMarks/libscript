@@ -1,10 +1,7 @@
 @echo off
 :: # unikernel.cmd
-::
 :: ## Overview
-:: Packages user application and runtime payload into a standalone ELF unikernel
-:: microkernel binary on Windows for Firecracker and Cloud-Hypervisor.
-::
+:: Packages user application and runtime payload into a standalone ELF unikernel microkernel binary on Windows for Firecracker and Cloud-Hypervisor.
 :: ## Usage
 :: unikernel.cmd [app_dir_or_sysroot] [output_elf]
 

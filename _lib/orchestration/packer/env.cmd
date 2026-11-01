@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment export script for HashiCorp Packer on Windows.
-::
 :: ## Usage
 :: Call this script to set Packer environment variables.
 

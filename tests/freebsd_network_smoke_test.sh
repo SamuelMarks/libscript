@@ -2,7 +2,6 @@
 # ## Overview
 # Network and OpenSSH daemon smoketest for FreeBSD target instances.
 # Validates DHCP configuration, SSH port 22 listener, and host keys.
-#
 # ## Usage
 # Run network and SSH smoketest:
 #   tests/freebsd_network_smoke_test.sh [sysroot_or_ip]

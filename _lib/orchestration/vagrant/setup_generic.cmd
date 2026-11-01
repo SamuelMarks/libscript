@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic setup and installation script for Vagrant on Windows.
-::
 :: ## Usage
 :: Call this script to install Vagrant on Windows.
 

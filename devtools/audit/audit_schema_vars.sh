@@ -5,12 +5,9 @@
 # variable referenced in `.sh`, `.cmd`, `.bat`, and `.ps1` scripts is declared and
 # documented in either the component's local `vars.schema.json` or the global
 # `_lib/_common/base_vars.schema.json`.
-#
 # ## Usage
 # ./devtools/audit/audit_schema_vars.sh [--all | --staged | <component_dir>...]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

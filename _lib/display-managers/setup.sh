@@ -2,7 +2,6 @@
 # ## Overview
 # Master dispatcher for LFS display managers and login greeters.
 # Configures Greetd, SDDM, LightDM, GDM, or direct console auto-login.
-#
 # ## Usage
 # ./_lib/display-managers/setup.sh [greeter] [action] [target_rootfs]
 # Example: ./_lib/display-managers/setup.sh greetd install

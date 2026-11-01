@@ -1,10 +1,7 @@
 @echo off
 :: # display.cmd
-::
 :: ## Overview
-:: Configures display subsystem (X11 Xorg server or headless) inside illumos sysroot
-:: on Windows host environments.
-::
+:: Configures display subsystem (X11 Xorg server or headless) inside illumos sysroot on Windows host environments.
 :: ## Usage
 :: display.cmd [sysroot_path] [protocol] [driver]
 

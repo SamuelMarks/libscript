@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for dnf on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for dnf.
+:: Executes initialization, logic, or testing for dnf. Windows environment configuration and PATH probes for dnf
 
-:: Windows environment configuration and PATH probes for dnf
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

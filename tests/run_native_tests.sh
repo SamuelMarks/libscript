@@ -1,18 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Runs native tests on the current host system across specified targets or categories
-# without requiring Vagrant or virtual machines. Results and execution logs are captured
-# into the tests_tmp directory.
-#
+# Runs native tests on the current host system across specified targets or categories without requiring Vagrant or virtual machines. Results and execution logs are captured into the tests_tmp directory.
 # ## Usage
-# ./tests/run_native_tests.sh [TARGETS...|all] [--category <category>] [--os <os_name>] [--dry-run] [--help]
-# Examples:
-#   ./tests/run_native_tests.sh sqlite curl
-#   ./tests/run_native_tests.sh --category databases
-#   ./tests/run_native_tests.sh all
-
+# ./tests/run_native_tests.sh [TARGETS...|all] [--category <category>] [--os <os_name>] [--dry-run] [--help] Examples: ./tests/run_native_tests.sh sqlite curl ./tests/run_native_tests.sh --category databases ./tests/run_native_tests.sh all
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

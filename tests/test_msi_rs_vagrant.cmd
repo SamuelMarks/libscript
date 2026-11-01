@@ -1,31 +1,27 @@
 @echo off
 :: # test_msi_rs_vagrant.cmd
-::
 :: ## Overview
-:: Orchestrates isolated Vagrant-only testing for msi-rs on Windows Command Prompt.
-:: Validates installation, functionality, and idempotency across all 5 target platform environments.
-::
+:: Orchestrates isolated Vagrant-only testing for msi-rs on Windows Command Prompt. Validates installation, functionality, and idempotency across all 5 target platform environments.
 :: ## Usage
-:: Execute this script to perform multi-platform Vagrant tests for msi-rs:
-::   test_msi_rs_vagrant.cmd [--all]
+:: Execute this script to perform multi-platform Vagrant tests for msi-rs: test_msi_rs_vagrant.cmd [--all]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

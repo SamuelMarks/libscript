@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for bazel on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for bazel.
+:: Executes initialization, logic, or testing for bazel. Windows environment configuration and PATH probes for bazel
 
-:: Windows environment configuration and PATH probes for bazel
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

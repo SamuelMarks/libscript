@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for pub on Windows.
-:: Downloads and installs the official Dart SDK distribution containing pub.
-::
+:: Setup script for pub on Windows. Downloads and installs the official Dart SDK distribution containing pub.
 :: ## Usage
 :: Automatically invoked during libscript pub installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

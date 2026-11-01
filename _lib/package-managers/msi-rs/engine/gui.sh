@@ -3,11 +3,9 @@
 # Kiosk display manager and msi-gui session launcher for the live installer.
 # Probes hardware GPU acceleration (DRM/KMS), configures Mesa software rasterization fallbacks,
 # and starts a dedicated fullscreen kiosk session via Wayland (cage) or X11 (openbox/xinit).
-#
 # ## Usage
 # Execute this script to start the GUI installer session:
 #   ./_lib/package-managers/msi-rs/engine/gui.sh [--test | --help]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

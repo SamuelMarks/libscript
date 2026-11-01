@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Action dispatcher for cloud core on Windows.
-::
 :: ## Usage
 :: Handles sub-actions (`list-managed`, `status`, `diff`, `backup`, `restore`) by delegating to dedicated scripts.
 

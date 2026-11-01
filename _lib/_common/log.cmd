@@ -1,19 +1,11 @@
 @echo off
-:: # log.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript Logging Module (Windows Batch)
-::
 :: ## Overview
 :: This module provides standardized logging functions for Windows.
-::
 :: ## Usage
-:: ```batch
-:: call "!LIBSCRIPT_ROOT_DIR!\\_lib\\_common\\log.cmd" :log_info "Message"
-:: ```
+:: ```batch call "!LIBSCRIPT_ROOT_DIR!\\_lib\\_common\\log.cmd" :log_info "Message" ``` LibScript Unified Logging Utility (Windows) Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR
 
-:: LibScript Unified Logging Utility (Windows)
-
-:: Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

@@ -1,10 +1,7 @@
 @echo off
 :: # windows_runtime_setup.cmd
-::
 :: ## Overview
-:: Configures the Open edX Django LMS and Studio CMS settings, URLs, and POSIX compatibility
-:: shims for native Windows 11 execution under Waitress / Django WSGI.
-::
+:: Configures the Open edX Django LMS and Studio CMS settings, URLs, and POSIX compatibility shims for native Windows 11 execution under Waitress / Django WSGI.
 :: ## Usage
 :: windows_runtime_setup.cmd [-InstallDir <dir>]
 

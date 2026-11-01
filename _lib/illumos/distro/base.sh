@@ -2,7 +2,6 @@
 # ## Overview
 # Bootstraps the illumos base system directory layout, device nodes,
 # release metadata, and proto-area root structure into target sysroot.
-#
 # ## Usage
 # Bootstrap illumos base system:
 #   _lib/illumos/distro/base.sh [sysroot_path] [illumos_version] [arch]

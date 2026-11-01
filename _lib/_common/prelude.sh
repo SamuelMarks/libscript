@@ -1,10 +1,8 @@
 #!/bin/sh
 # ## Overview
 # Common preamble and initialization logic shared across scripts.
-# 
 # ## Usage
 # This script is intended to be sourced by other scripts, not executed directly.
-
 
 set -feu
 _prelude_caller_this="${THIS_FILE:-}"; _prelude_caller_dir="${SCRIPT_DIR:-}"

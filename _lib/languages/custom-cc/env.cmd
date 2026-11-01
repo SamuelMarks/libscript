@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration for the Custom C Compiler (custom-cc) on Windows.
-::
 :: ## Usage
 :: call _lib\languages\custom-cc\env.cmd
 

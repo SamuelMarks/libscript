@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # package-as.cmd
-::
 :: ## Overview
-:: Packages the libscript environment into distributable formats on Windows.
-:: Delegates to format-specific packaging modules under cli\commands\packaging\formats.
-:: 
+:: Packages the libscript environment into distributable formats on Windows. Delegates to format-specific packaging modules under cli\commands\packaging\formats.
 :: ## Usage
 :: call cli\commands\packaging\package-as.cmd <format> [args...]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

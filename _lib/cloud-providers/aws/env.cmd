@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for aws on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for aws.
+:: Executes initialization, logic, or testing for aws. Windows environment configuration and PATH probes for aws
 
-:: Windows environment configuration and PATH probes for aws
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

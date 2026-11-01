@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Serves as the primary Windows setup entry point for the Azure Cloud Provider component.
-:: Supports tool installation, cloud orchestration verbs, and Tier 3 Azure Managed Image upload/registration.
-::
+:: Serves as the primary Windows setup entry point for the Azure Cloud Provider component. Supports tool installation, cloud orchestration verbs, and Tier 3 Azure Managed Image upload/registration.
 :: ## Usage
 :: Call `setup.cmd [action] [args...]` to manage Azure infrastructure.
 

@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # proxmox_img.cmd
-::
 :: ## Overview
-:: Synthesizes Proxmox VE KVM virtual machine templates (.qcow2) and qm import
-:: scripts on Windows.
-::
+:: Synthesizes Proxmox VE KVM virtual machine templates (.qcow2) and qm import scripts on Windows.
 :: ## Usage
 :: call cli\commands\package_as\proxmox_img.cmd [input_raw] [output_qcow2] [vmid]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

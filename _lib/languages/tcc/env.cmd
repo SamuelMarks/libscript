@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration for the Tiny C Compiler (TCC) on Windows.
-::
 :: ## Usage
 :: call _lib\languages\tcc\env.cmd
 

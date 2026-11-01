@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # rpm_index.cmd
-::
 :: ## Overview
-:: Generates YUM/DNF repository metadata (repomd.xml, primary.xml.gz, filelists.xml.gz)
-:: from RPM package repositories on Windows.
-::
+:: Generates YUM/DNF repository metadata (repomd.xml, primary.xml.gz, filelists.xml.gz) from RPM package repositories on Windows.
 :: ## Usage
 :: call _lib\orchestration\repogen\rpm_index.cmd <repo_dir>
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

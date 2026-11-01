@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for aqua on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for aqua.
+:: Executes initialization, logic, or testing for aqua. Windows environment configuration and PATH probes for aqua
 
-:: Windows environment configuration and PATH probes for aqua
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

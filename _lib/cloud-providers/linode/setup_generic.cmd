@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Windows setup and orchestration module for Linode (`linode-cli`).
-::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use, and cloud node actions.
 

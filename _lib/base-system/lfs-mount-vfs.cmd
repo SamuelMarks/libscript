@@ -1,9 +1,7 @@
 @echo off
 :: # lfs-mount-vfs.cmd
 :: ## Overview
-:: Windows Batch companion for LFS Virtual Filesystem mount manager.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for LFS Virtual Filesystem mount manager. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\base-system\lfs-mount-vfs.cmd [mount|umount|status]
 

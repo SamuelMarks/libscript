@@ -3,7 +3,6 @@
 # Dual-modality container export driver for Docker and Docker Compose.
 # Generates online layer-cached or completely air-gapped offline Dockerfile
 # and multi-service docker-compose.yml configurations.
-#
 # ## Usage
 # Run `docker.sh [--compose] [--offline|--online] [args...]`
 

@@ -1,10 +1,7 @@
 @echo off
 :: # pkg.cmd
-::
 :: ## Overview
-:: Configures pkg(8) package manager configuration and repository mirrors
-:: for the target FreeBSD sysroot on Windows environments.
-::
+:: Configures pkg(8) package manager configuration and repository mirrors for the target FreeBSD sysroot on Windows environments.
 :: ## Usage
 :: pkg.cmd [sysroot_path] [branch]
 

@@ -1,14 +1,9 @@
 @echo off
 :: # mount_sysroot.cmd
-::
 :: ## Overview
-:: Hierarchical target mount manager and chroot sysroot preparation engine.
-:: Mounts root filesystems, ESP partitions, and virtual filesystems (/dev, /proc, /sys)
-:: under /mnt/target, and generates persistent /etc/fstab or /etc/vfstab tables.
-::
+:: Hierarchical target mount manager and chroot sysroot preparation engine. Mounts root filesystems, ESP partitions, and virtual filesystems (/dev, /proc, /sys) under /mnt/target, and generates persistent /etc/fstab or /etc/vfstab tables.
 :: ## Usage
-:: Execute this script to mount or unmount target sysroot:
-::   ./_lib/storage/mount_sysroot.cmd [--mount <root_dev> [esp_dev] | --unmount | --fstab <target_dir>]
+:: Execute this script to mount or unmount target sysroot: ./_lib/storage/mount_sysroot.cmd [--mount <root_dev> [esp_dev] | --unmount | --fstab <target_dir>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

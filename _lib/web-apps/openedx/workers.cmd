@@ -1,20 +1,9 @@
 @echo off
 :: # workers.cmd
-::
 :: ## Overview
-:: Background worker and Celery beat scheduler management utility for Open edX on Windows.
-:: Manages lms-worker, cms-worker, and celery-beat lifecycle (start, stop, restart, status).
-::
+:: Background worker and Celery beat scheduler management utility for Open edX on Windows. Manages lms-worker, cms-worker, and celery-beat lifecycle (start, stop, restart, status).
 :: ## Usage
-::   call workers.cmd start
-::   call workers.cmd stop
-::   call workers.cmd restart
-::   call workers.cmd status
-::   call workers.cmd help
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Error
+:: call workers.cmd start call workers.cmd stop call workers.cmd restart call workers.cmd status call workers.cmd help ## Exit Codes 0 - Success 1 - Error
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

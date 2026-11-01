@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Verifies Hetzner CLI on Windows.
-::
 :: ## Usage
 :: Execute this script to test Hetzner functionality.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for Networking and SSH daemon setup.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Networking and SSH daemon setup. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\networking\setup.cmd [install|clean|status]
 

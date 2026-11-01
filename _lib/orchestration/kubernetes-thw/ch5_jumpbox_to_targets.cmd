@@ -1,13 +1,9 @@
 @echo off
 :: # ch5_jumpbox_to_targets.cmd
-::
 :: ## Overview
 :: Automates Ch5 of Kubernetes the Hard Way.
-::
 :: ## Usage
-:: Executes the steps for Ch5.
-
-setlocal EnableDelayedExpansion
+:: Executes the steps for Ch5. setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 
@@ -24,7 +20,7 @@ set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

@@ -4,10 +4,8 @@
 # Verifies that required core engine and stack components are harvested,
 # excluded artifacts (.git, tests_tmp, temporary files) are filtered,
 # and valid WiX fragment XML is synthesized.
-#
 # ## Usage
 # ./tests/test_harvest_payload.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

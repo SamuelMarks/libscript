@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Generic uninstallation implementation for Clang on Windows.
-::
 :: ## Usage
 :: uninstall_generic.cmd
 

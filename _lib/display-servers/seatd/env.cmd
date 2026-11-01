@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Exports isolated environment paths and runtime variables for the seatd component.
-::
 :: ## Usage
 :: env.cmd
 

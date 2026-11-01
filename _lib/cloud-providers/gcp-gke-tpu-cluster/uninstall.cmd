@@ -1,10 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
-:: Uninstallation script for the gcp-gke-tpu-cluster component on Windows.
-:: Safely removes the component and its associated files.
-::
+:: Uninstallation script for the gcp-gke-tpu-cluster component on Windows. Safely removes the component and its associated files.
 :: ## Usage
 :: gcp-gke-tpu-cluster\uninstall.cmd [args]
 

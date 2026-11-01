@@ -1,17 +1,9 @@
 @echo off
 :: # plugins.cmd
-::
 :: ## Overview
-:: Tutor-compatible plugin catalog and lifecycle manager for Open edX on Windows.
-:: Supports listing, enabling, disabling, and installing official Open edX plugins.
-::
+:: Tutor-compatible plugin catalog and lifecycle manager for Open edX on Windows. Supports listing, enabling, disabling, and installing official Open edX plugins.
 :: ## Usage
-::   call plugins.cmd list
-::   call plugins.cmd enable <plugin>
-::   call plugins.cmd disable <plugin>
-::   call plugins.cmd install <plugin>
-::   call plugins.cmd printroot
-::   call plugins.cmd help
+:: call plugins.cmd list call plugins.cmd enable <plugin> call plugins.cmd disable <plugin> call plugins.cmd install <plugin> call plugins.cmd printroot call plugins.cmd help
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

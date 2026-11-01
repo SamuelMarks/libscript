@@ -3,7 +3,6 @@
 # Serves as the primary uninstall entry point for the `_noop` component.
 # It delegates execution to the common `uninstall_base.sh` to provide
 # consistent teardown management for this stub component.
-# 
 # ## Usage
 # Execute this script to trigger the standard uninstallation process for `_noop`.
 

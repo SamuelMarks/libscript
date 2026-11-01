@@ -2,7 +2,6 @@
 # ## Overview
 # Configures core illumos system files: /etc/nodename, /etc/hosts, /etc/default/login,
 # /etc/nsswitch.conf, /etc/resolv.conf, and /boot/loader.conf serial console parameters.
-#
 # ## Usage
 # Configure core system:
 #   _lib/illumos/distro/config.sh [sysroot_path] [hostname] [dhcp]

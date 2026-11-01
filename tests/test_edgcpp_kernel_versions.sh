@@ -3,12 +3,9 @@
 # Multi-version Linux kernel build, C dialect (gnu89 vs gnu11), dual-backend
 # (llvm_backend vs gcc_backend), idempotency, and boot verification test suite
 # using the latest SamuelMarks/edgcpp-compiler (v7.0.1) release.
-#
 # ## Usage
 # ./tests/test_edgcpp_kernel_versions.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

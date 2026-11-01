@@ -3,7 +3,6 @@
 # End-to-end regression test verifying multi-component PATH inheritance,
 # transitive stack resolution (nodejs + postgres + python + uv + duckdb),
 # environment variable persistence, and strict PATH idempotency on repeated hydration.
-#
 # ## Usage
 # ./tests/test_path_inheritance.sh
 

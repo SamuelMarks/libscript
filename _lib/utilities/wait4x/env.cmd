@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for wait4x on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for wait4x.
+:: Executes initialization, logic, or testing for wait4x. Windows environment configuration and PATH probes for wait4x
 
-:: Windows environment configuration and PATH probes for wait4x
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

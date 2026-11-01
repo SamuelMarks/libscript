@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for gitea on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for gitea.
+:: Executes initialization, logic, or testing for gitea. Windows environment configuration and PATH probes for gitea
 
-:: Windows environment configuration and PATH probes for gitea
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

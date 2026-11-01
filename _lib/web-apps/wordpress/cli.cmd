@@ -1,14 +1,9 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
-:: Command-line interface router for the WordPress 7.1.2 platform on Windows.
-:: Dispatches subcommands to core lifecycle handlers or dedicated feature modules:
-:: user, config, dbshell, healthcheck, backup, restore, service, cron, upgrade, and wp.
-::
+:: Command-line interface router for the WordPress 7.1.2 platform on Windows. Dispatches subcommands to core lifecycle handlers or dedicated feature modules: user, config, dbshell, healthcheck, backup, restore, service, cron, upgrade, and wp.
 :: ## Usage
-::   call cli.cmd <subcommand> [args...]
-::   call cli.cmd help
+:: call cli.cmd <subcommand> [args...] call cli.cmd help
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entry point for k8s-marathon on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\k8s-marathon\cli.cmd <install|ls|ls-remote|use|env|start|stop|restart|status|health|logs|install-service|uninstall-service|uninstall|test> [args...]
 

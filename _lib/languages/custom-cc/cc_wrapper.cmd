@@ -1,10 +1,7 @@
 @echo off
 :: # cc_wrapper.cmd
-::
 :: ## Overview
-:: Compiler driver wrapper and telemetry shim for custom-cc on Windows.
-:: Normalizes compiler flags and logs compilation events to JSONL.
-::
+:: Compiler driver wrapper and telemetry shim for custom-cc on Windows. Normalizes compiler flags and logs compilation events to JSONL.
 :: ## Usage
 :: cc_wrapper.cmd [compiler_args...]
 

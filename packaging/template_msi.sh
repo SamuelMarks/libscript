@@ -1,20 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Universal WiX XML (.wxs) manifest generator for arbitrary software stacks and components.
-# Synthesizes 100% of WiX 3.11 metadata, features, dialogs, shortcuts, database ingress,
-# and MsiEmbeddedChainer declarations purely from packaging.json and schema contracts.
-#
+# Universal WiX XML (.wxs) manifest generator for arbitrary software stacks and components. Synthesizes 100% of WiX 3.11 metadata, features, dialogs, shortcuts, database ingress, and MsiEmbeddedChainer declarations purely from packaging.json and schema contracts.
 # ## Usage
-#   ./packaging/template_msi.sh <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
-#
-# ## Options
-#   --out <file.wxs>      Target WiX XML output path (required)
-#   --variant <var>       Installer variant: online or offline (default: online)
-#   --version <ver>       Installer version override
-#   --msi-dir <dir>       Directory containing child component MSIs (for orchestrators)
-
+# ./packaging/template_msi.sh <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS] ## Options --out <file.wxs>      Target WiX XML output path (required) --variant <var>       Installer variant: online or offline (default: online) --version <ver>       Installer version override --msi-dir <dir>       Directory containing child component MSIs (for orchestrators)
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -25,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

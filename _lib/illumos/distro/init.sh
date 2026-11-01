@@ -3,11 +3,9 @@
 # Configures modular init system supervision inside illumos target sysroot.
 # Supports native SMF (Service Management Facility), runit, s6, dinit, and inittab-sysv,
 # staging service definitions, SMF site profiles, and loader init paths.
-#
 # ## Usage
 # Configure init system:
 #   _lib/illumos/distro/init.sh [sysroot_path] [provider] [services_list] [milestone]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

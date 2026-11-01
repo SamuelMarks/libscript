@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for orchestration/nomad on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\nomad\logs.cmd [tail|-f]
 

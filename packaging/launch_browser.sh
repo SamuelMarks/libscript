@@ -3,16 +3,12 @@
 # Cross-platform browser launcher utility.
 # Launches the default or available browser (xdg-open, open, chrome, firefox)
 # targeting the specified URL. If no browser is present, prints the URL and exits cleanly.
-#
 # ## Usage
 # ./packaging/launch_browser.sh <url> [name]
-#
 # ## Arguments
 # url   The web address to open (e.g. http://localhost:8000)
 # name  Optional display label for the URL
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

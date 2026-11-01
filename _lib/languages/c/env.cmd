@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for the Unified C Toolchain Router (c) on Windows.
-::
 :: ## Usage
 :: call _lib\languages\c\env.cmd
 

@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Verifies OpenSSH functionality on Windows.
-::
 :: ## Usage
 :: Execute this script to test OpenSSH.
 

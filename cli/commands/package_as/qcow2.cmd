@@ -1,10 +1,7 @@
 @echo off
 :: # qcow2.cmd
-::
 :: ## Overview
-:: Packages raw disk images or sysroots into compressed virtual machine disk
-:: images (qcow2, vmdk, vdi) on Windows via vm_builder worker or qemu-img.
-::
+:: Packages raw disk images or sysroots into compressed virtual machine disk images (qcow2, vmdk, vdi) on Windows via vm_builder worker or qemu-img.
 :: ## Usage
 :: qcow2.cmd [input_image_or_sysroot] [output_image] [target_format]
 

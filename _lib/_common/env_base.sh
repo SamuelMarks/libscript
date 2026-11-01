@@ -1,20 +1,14 @@
 #!/bin/sh
 # ## Overview
-# Foundational environment initialization module for LibScript components.
-# Resolves the component package name, active version, and idempotently prepends
-# the component's binary directory to PATH.
-#
+# Foundational environment initialization module for LibScript components. Resolves the component package name, active version, and idempotently prepends the component's binary directory to PATH.
 # ## Usage
 # . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
-
 set -feu
-
 _eb_caller_this="${_EB_CALLER_THIS:-}"
 _eb_caller_dir="${_EB_CALLER_DIR:-}"
 if [ -z "$_eb_caller_dir" ] && [ -n "${SCRIPT_DIR:-}" ]; then
   _eb_caller_dir="$SCRIPT_DIR"
 fi
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -25,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

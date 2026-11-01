@@ -1,15 +1,8 @@
 #!/bin/sh
 # ## Overview
-# This module provides a cross-platform abstraction for managing services
-# (daemons) across different init systems (systemd, openrc, sysvinit, bsd_rc,
-# launchd, smf, runit, s6, fallback PID daemon, and Windows sc.exe).
-#
+# This module provides a cross-platform abstraction for managing services (daemons) across different init systems (systemd, openrc, sysvinit, bsd_rc, launchd, smf, runit, s6, fallback PID daemon, and Windows sc.exe).
 # ## Usage
-# . "$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh"
-# libscript_service [ACTION] [SERVICE_NAME] [OPTIONS]
-#
-# Actions: start, stop, restart, reload, status, health, logs, enable, disable, uninstall
-
+# . "$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh" libscript_service [ACTION] [SERVICE_NAME] [OPTIONS] Actions: start, stop, restart, reload, status, health, logs, enable, disable, uninstall
 set -feu
 _svc_caller_this="${THIS_FILE:-}"; _svc_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -22,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -32,7 +24,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 

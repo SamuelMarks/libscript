@@ -3,7 +3,6 @@
 # Defines environment variables for the Python Server component on Unix.
 # It acts as a structural placeholder, allowing for future injection of custom
 # Python Server runtime environment variables.
-# 
 # ## Usage
 # Source this file to load default Python Server configurations into the session.
 

@@ -3,11 +3,8 @@
 # Detects and configures privilege escalation tools (sudo, doas, su).
 # It exports the `priv` function to transparently execute commands with
 # root privileges depending on the available system utility and user identity.
-# 
 # ## Usage
 # Source this file and prefix commands requiring elevated rights with `priv`.
-
-
 set -feu
 _priv_caller_this="${THIS_FILE:-}"; _priv_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -20,7 +17,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -3,10 +3,8 @@
 # Serves as the primary Unix setup entry point for the vLLM Server component.
 # It handles basic help flags and delegates the core initialization logic
 # to the common `setup_base.sh`.
-# 
 # ## Usage
 # Execute this script to orchestrate the complete setup lifecycle for vLLM.
-
 
 set -feu
 

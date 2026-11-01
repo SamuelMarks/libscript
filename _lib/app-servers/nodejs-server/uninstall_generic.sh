@@ -3,7 +3,6 @@
 # Provides fallback uninstallation logic for the Node.js Server component on Unix.
 # It explicitly delegates to the common `uninstall_generic.sh` to indicate that
 # specific uninstall logic is unavailable via this path.
-# 
 # ## Usage
 # Called internally when an OS-specific uninstaller is missing.
 

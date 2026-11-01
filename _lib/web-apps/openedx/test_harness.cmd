@@ -1,11 +1,7 @@
 @echo off
 :: # test_harness.cmd
-::
 :: ## Overview
-:: End-to-end Windows Batch integration test harness for real Open edX services.
-:: Verifies coordination of backing datastores, validates LMS registration and login screens,
-:: authenticates sessions, and confirms Studio/CMS operation without server error.
-::
+:: End-to-end Windows Batch integration test harness for real Open edX services. Verifies coordination of backing datastores, validates LMS registration and login screens, authenticates sessions, and confirms Studio/CMS operation without server error.
 :: ## Usage
 :: call "%~dp0test_harness.cmd"
 

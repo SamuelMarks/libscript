@@ -2,16 +2,12 @@
 # ## Overview
 # Configures pkg(8) package manager configuration, repository mirrors,
 # and offline package cache integration in FreeBSD target sysroot.
-#
 # ## Usage
 # Configure package repository:
 #   _lib/freebsd/distro/pkg.sh [sysroot_path] [branch]
-#
 # Environment variables:
 #   LIBSCRIPT_OFFLINE  Set to 1 for offline operation
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

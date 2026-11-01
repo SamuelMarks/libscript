@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entrypoint for the shadow component on Windows.
-::
 :: ## Usage
 :: cli.cmd [action]
 

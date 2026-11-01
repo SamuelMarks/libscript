@@ -1,9 +1,7 @@
 @echo off
 :: # illumos_vhd.cmd
-::
 :: ## Overview
 :: Exports an illumos disk image to VHD format on Windows.
-::
 :: ## Usage
 :: illumos_vhd.cmd [input_raw_or_sysroot] [output_vhd] [size_gib]
 

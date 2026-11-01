@@ -3,11 +3,9 @@
 # Dynamic LibScript Component Catalog Engine for the live installer.
 # Scans all 260+ components across the LibScript ecosystem, generates indexed JSON catalogs,
 # and outputs interactive searchable tables for TUI and GUI selection menus.
-#
 # ## Usage
 # Execute this script to list, search, or export the component catalog:
 #   ./_lib/package-managers/msi-rs/preloader/catalog.sh [--json | --search <term> | --category <name> | --clean-base]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

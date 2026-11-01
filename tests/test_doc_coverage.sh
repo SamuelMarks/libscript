@@ -4,10 +4,8 @@
 # Verifies 100% doc coverage calculation across component README.md files and .sh/.cmd/.ps1
 # script headers, shield injection and idempotency in README.md, and failure detection
 # when a component README.md or script markdown header is missing.
-#
 # ## Usage
 # ./tests/test_doc_coverage.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

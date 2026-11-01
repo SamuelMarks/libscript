@@ -1,12 +1,9 @@
 @echo off
 :: # healthcheck.cmd
-::
 :: ## Overview
-:: Full-stack diagnostic and health probe module for WordPress 7.1.2 on Windows.
-:: Validates PHP runtime, database connectivity, and core file integrity.
-::
+:: Full-stack diagnostic and health probe module for WordPress 7.1.2 on Windows. Validates PHP runtime, database connectivity, and core file integrity.
 :: ## Usage
-::   call healthcheck.cmd [--json]
+:: call healthcheck.cmd [--json]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

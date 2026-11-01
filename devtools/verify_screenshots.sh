@@ -4,10 +4,8 @@
 # screenshots in ../cc0-assets/libscript exist, are non-empty, have valid PNG headers,
 # match every .verification_screenshots[] item declared in <target_dir>/packaging.json,
 # and are tightly cropped across all target OS directories.
-#
 # ## Usage
 # ./devtools/verify_screenshots.sh [--target <name|dir|all>] [--dir <path>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for cargo-binstall on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for cargo-binstall.
+:: Executes initialization, logic, or testing for cargo-binstall. Windows environment configuration and PATH probes for cargo-binstall
 
-:: Windows environment configuration and PATH probes for cargo-binstall
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

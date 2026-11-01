@@ -1,10 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: C89/C99/C11 and C++17 language conformance and binary verification smoke test suite
-:: for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1) on Windows.
-::
+:: C89/C99/C11 and C++17 language conformance and binary verification smoke test suite for the EDG C/C++ Compiler Frontend (edgcpp v7.0.1) on Windows.
 :: ## Usage
 :: _lib\languages\edgcpp\test.cmd
 

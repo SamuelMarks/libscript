@@ -3,7 +3,6 @@
 # Orchestrates Stage 3 LFS base system installation: constructs standard FHS 3.0
 # filesystem hierarchy, configures essential system files (passwd, group, fstab,
 # os-release, locale, networking defaults), and deploys essential base packages.
-#
 # ## Usage
 # ./_lib/base-system/lfs-base/setup.sh [install|clean|status] [--hostname=lfs-node]
 

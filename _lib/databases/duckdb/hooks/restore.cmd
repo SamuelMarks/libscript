@@ -1,9 +1,7 @@
 @echo off
 :: # restore.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'restore' for the duckdb component on Windows.
-::
 :: ## Usage
 :: hooks\restore.cmd [args...]
 

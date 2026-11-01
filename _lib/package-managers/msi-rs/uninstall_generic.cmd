@@ -1,12 +1,9 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Generic uninstall script for msi-rs on Windows.
-::
 :: ## Usage
-:: Routes to generic uninstallation via `_common\uninstall_generic.cmd`:
-::   uninstall_generic.cmd
+:: Routes to generic uninstallation via `_common\uninstall_generic.cmd`: uninstall_generic.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

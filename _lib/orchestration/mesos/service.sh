@@ -3,7 +3,6 @@
 # Manages Apache Mesos master (`5050`) and agent (`5051`) daemon lifecycle operations
 # (`start`, `stop`, `restart`, `status`, `health`, `logs`, `install-service`, `uninstall-service`)
 # and maintains live `/master/health`, `/master/state.json`, `/slave(1)/health`, and sandbox state.
-#
 # ## Usage
 # ./_lib/orchestration/mesos/service.sh <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

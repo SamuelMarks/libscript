@@ -3,7 +3,6 @@
 # Daemon lifecycle manager for WordPress 7.1.2 platform services.
 # Coordinates startup, shutdown, and health status for Web Server (Nginx/Apache/Caddy)
 # and PHP-FPM processes across systemd, rc.d, and launchd.
-#
 # ## Usage
 #   ./service.sh <start|stop|restart|status>
 

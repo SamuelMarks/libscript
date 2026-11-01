@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides the foundational setup logic for a component.
-# It aggregates essential common libraries (logging, OS detection, package
-# manager utilities, paths), loads the component's environment, delegates
-# to OS-specific installers, and handles network port registrations.
-# 
+# Provides the foundational setup logic for a component. It aggregates essential common libraries (logging, OS detection, package manager utilities, paths), loads the component's environment, delegates to OS-specific installers, and handles network port registrations.
 # ## Usage
 # Source or execute this file internally as the core implementation of `setup.sh`.
-
-
 set -feu
 _setup_base_caller_this="${THIS_FILE:-}"; _setup_base_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

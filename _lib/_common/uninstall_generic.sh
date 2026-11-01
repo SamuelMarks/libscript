@@ -2,10 +2,8 @@
 # ## Overview
 # Provides fallback uninstallation logic for components on Unix systems.
 # Safely removes the isolated native installation directories and symlinks.
-#
 # ## Usage
 # Typically called internally by uninstall.sh.
-
 set -feu
 _ug_caller_this="${THIS_FILE:-}"; _ug_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -18,7 +16,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

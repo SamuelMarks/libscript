@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # build_rpm.cmd
-::
 :: ## Overview
-:: Synthesizes Red Hat-compatible binary packages (.rpm) directly from
-:: component staging directories or manifests on Windows.
-::
+:: Synthesizes Red Hat-compatible binary packages (.rpm) directly from component staging directories or manifests on Windows.
 :: ## Usage
 :: call _lib\orchestration\packagers\build_rpm.cmd <pkg_name> <pkg_version> <staging_dir> [out_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

@@ -2,7 +2,6 @@
 # ## Overview
 # Converts a raw FreeBSD disk image or sysroot to an optimized, compressed
 # QCOW2 image format suitable for QEMU, KVM, and Proxmox hypervisors.
-#
 # ## Usage
 # Convert to QCOW2 format:
 #   cli/commands/package_as/freebsd_qcow2.sh [input_raw_or_sysroot] [output_qcow2] [size_gib]

@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides the foundational testing framework for components.
-# It sets up necessary paths and defines robust assertion functions (`assert_version`,
-# `assert_service_up`, `assert_exists`) to facilitate uniform validation of
-# component installations and behavior.
-# 
+# Provides the foundational testing framework for components. It sets up necessary paths and defines robust assertion functions (`assert_version`, `assert_service_up`, `assert_exists`) to facilitate uniform validation of component installations and behavior.
 # ## Usage
 # Source this file in component-specific test scripts to utilize the assertion library.
-
-
 set -feu
 _test_base_caller_this="${THIS_FILE:-}"; _test_base_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

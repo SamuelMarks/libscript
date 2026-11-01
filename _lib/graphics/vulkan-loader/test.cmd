@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Verifies Vulkan Loader on Windows.
-::
 :: ## Usage
 :: Execute this script to test Vulkan Loader.
 

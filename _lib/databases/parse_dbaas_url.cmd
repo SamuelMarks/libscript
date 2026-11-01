@@ -1,15 +1,9 @@
 @echo off
 :: # parse_dbaas_url.cmd
 :: ## Overview
-:: Parses a MySQL/MariaDB DBaaS connection URI string into variables on Windows.
-:: Supports authentication, ports, database names, and SSL parameters.
-::
+:: Parses a MySQL/MariaDB DBaaS connection URI string into variables on Windows. Supports authentication, ports, database names, and SSL parameters.
 :: ## Usage
-::   call _lib\databases\parse_dbaas_url.cmd <connection_url> [--eval|--json]
-::
-:: ## Parameters
-::   %1 - Database connection URI
-::   %2 - Output mode (--eval, --json; default: --eval)
+:: call _lib\databases\parse_dbaas_url.cmd <connection_url> [--eval|--json] ## Parameters %1 - Database connection URI %2 - Output mode (--eval, --json; default: --eval)
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

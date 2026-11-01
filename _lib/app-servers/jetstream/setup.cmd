@@ -1,11 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Serves as the primary Windows setup entry point for the Jetstream component.
-:: It handles basic help flags and delegates the core initialization logic
-:: to the common `setup_base.cmd`.
-:: 
+:: Serves as the primary Windows setup entry point for the Jetstream component. It handles basic help flags and delegates the core initialization logic to the common `setup_base.cmd`.
 :: ## Usage
 :: Call this script to trigger the standard setup process for Jetstream on Windows.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entry point for the EDG C/C++ Compiler Frontend (edgcpp) component on Windows.
-::
 :: ## Usage
 :: cli.cmd [command] [version] [options]
 

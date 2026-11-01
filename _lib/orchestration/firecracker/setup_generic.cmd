@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Firecracker MicroVM provider on Windows.
-:: Configures microVM specifications and delegates hardware virtualization to vm_builder worker.
-::
+:: Firecracker MicroVM provider on Windows. Configures microVM specifications and delegates hardware virtualization to vm_builder worker.
 :: ## Usage
 :: setup.cmd [action] [kernel_vmlinux] [rootfs_img] [socket_path] [tap_device]
 

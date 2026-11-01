@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for the GCC component on Windows.
-::
 :: ## Usage
 :: logs.cmd
 

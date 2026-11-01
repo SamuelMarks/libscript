@@ -1,9 +1,7 @@
 @echo off
 :: # upgrade_engine.cmd
-::
 :: ## Overview
 :: Transactional Stateful Upgrade Engine with pre-upgrade backup, probe gating, and automatic rollback on Windows.
-::
 :: ## Usage
 :: _lib\_common\upgrade_engine.cmd <component> <old_version> <new_version> [--simulate-failure]
 

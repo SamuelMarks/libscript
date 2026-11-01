@@ -3,15 +3,12 @@
 # User account administration module for WordPress 7.1.2.
 # Supports creating, listing, updating passwords, and removing user accounts
 # via WP-CLI or database operations.
-#
 # ## Usage
 #   ./user.sh create <username> <email> [--password <pwd>] [--role <role>]
 #   ./user.sh set-password <username> [--password <pwd>]
 #   ./user.sh list
 #   ./user.sh delete <username>
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -22,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

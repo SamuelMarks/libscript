@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic Windows setup and lifecycle module for k8s-marathon.
-::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use, and service capabilities.
 

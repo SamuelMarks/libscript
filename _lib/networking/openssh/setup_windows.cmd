@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Windows setup script for OpenSSH.
-:: Ensures OpenSSH Client capability or executable is active.
-::
+:: Windows setup script for OpenSSH. Ensures OpenSSH Client capability or executable is active.
 :: ## Usage
 :: Automatically invoked during libscript openssh installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

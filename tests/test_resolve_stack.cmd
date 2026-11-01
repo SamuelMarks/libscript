@@ -1,10 +1,7 @@
 @echo off
 :: # test_resolve_stack.cmd
-::
 :: ## Overview
-:: Verifies that _lib\orchestration\resolve_stack.cmd resolves multi-component stacks
-:: across all 300+ component manifests without exceeding cmd.exe's 8,191-character limit.
-::
+:: Verifies that _lib\orchestration\resolve_stack.cmd resolves multi-component stacks across all 300+ component manifests without exceeding cmd.exe's 8,191-character limit.
 :: ## Usage
 :: tests\test_resolve_stack.cmd
 

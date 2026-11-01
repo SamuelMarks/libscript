@@ -2,7 +2,6 @@
 # ## Overview
 # Executes illumos cross-synthesis and verification on Linux Vagrant VMs.
 # Tests cross-synthesis tools, target-sysroot staging, and QEMU headless boot.
-#
 # ## Usage
 # Run Linux host verification:
 #   tests/run_illumos_distro_on_linux.sh

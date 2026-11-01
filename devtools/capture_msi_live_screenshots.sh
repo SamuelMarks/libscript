@@ -3,11 +3,9 @@
 # Automates capturing and archiving high-resolution screenshots and terminal recordings
 # of the live-CD/live-USB installer process (headless, TUI, and GUI kiosk modes)
 # directly into the ../cc0-assets repository.
-#
 # ## Usage
 # Execute this script to capture and synchronize installer screenshots:
 #   ./devtools/capture_msi_live_screenshots.sh [--all | --mode <headless|tui|gui>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

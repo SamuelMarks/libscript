@@ -1,10 +1,7 @@
 @echo off
 :: # caddy.cmd
-::
 :: ## Overview
-:: Network control library module for caddy on Windows.
-:: Supports SPA try_files, WebSockets, and static/proxy routes.
-:: 
+:: Network control library module for caddy on Windows. Supports SPA try_files, WebSockets, and static/proxy routes.
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entrypoint for the dinit component on Windows.
-::
 :: ## Usage
 :: cli.cmd [action]
 

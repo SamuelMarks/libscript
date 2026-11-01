@@ -1,16 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Unified 6-OS test matrix driver and per-component 4-stage lifecycle contract probe.
-# Provides shared functions for VM snapshot management (`vanilla`), manifest OS/architecture
-# filtering, 4-stage component verification (`install` -> `test` -> `which/env/ls` ->
-# `2x idempotent install+test` -> `uninstall`), and live `tests/update_results.sh` updates.
-#
+# Unified 6-OS test matrix driver and per-component 4-stage lifecycle contract probe. Provides shared functions for VM snapshot management (`vanilla`), manifest OS/architecture filtering, 4-stage component verification (`install` -> `test` -> `which/env/ls` -> `2x idempotent install+test` -> `uninstall`), and live `tests/update_results.sh` updates.
 # ## Usage
 # . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/test_matrix_driver.sh"
-
 set -feu
 _tmd_caller_this="${THIS_FILE:-}"; _tmd_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages the `k8s-marathon` PaaS controller daemon (`8081`) lifecycle on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\k8s-marathon\service.cmd <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

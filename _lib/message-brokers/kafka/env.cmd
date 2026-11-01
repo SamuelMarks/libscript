@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for kafka on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for kafka.
+:: Executes initialization, logic, or testing for kafka. Windows environment configuration and PATH probes for kafka
 
-:: Windows environment configuration and PATH probes for kafka
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

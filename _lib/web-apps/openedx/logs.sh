@@ -2,14 +2,11 @@
 # ## Overview
 # Command-line interface to tail log files for the Open edX stack.
 # Supports tailing install logs, web server logs, or worker logs.
-#
 # ## Usage
 #   ./logs.sh [target] [-n NUM]
-#
 # ## Parameters
 # - `target`: Target to tail: 'install' (default), 'lms', 'cms', 'worker'.
 # - `-n NUM`: Output the last NUM lines, instead of the default 50.
-
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

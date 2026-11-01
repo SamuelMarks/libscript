@@ -5,10 +5,8 @@
 # the SQLite C amalgamation from source with the default host toolchain), and
 # Mode 3 (building the SQLite C amalgamation from source with a custom compiler
 # toolchain such as gcc, clang, tcc, or custom-cc).
-#
 # ## Usage
 # Invoked via `./libscript.sh install sqlite [version] [options]`.
-
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

@@ -3,7 +3,6 @@
 # Two-pass idempotency verification test for WordPress 7.1.2 setup.
 # Executes the setup pipeline twice and verifies zero duplicate lines, zero crashes,
 # and identical configuration stability.
-#
 # ## Usage
 #   ./tests/test_wordpress_idempotency.sh
 

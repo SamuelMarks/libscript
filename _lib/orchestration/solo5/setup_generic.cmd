@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Solo5 and MirageOS tender execution engine on Windows.
-:: Configures unikernel execution parameters and delegates virtualization to vm_builder worker.
-::
+:: Solo5 and MirageOS tender execution engine on Windows. Configures unikernel execution parameters and delegates virtualization to vm_builder worker.
 :: ## Usage
 :: setup.cmd [action] [unikernel_bin] [tender_type]
 

@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # repogen.cmd
-::
 :: ## Overview
-:: Universal package repository generation and hosting engine on Windows for
-:: Debian (APT), Alpine (APK), and Red Hat (RPM/YUM) distribution archives.
-::
+:: Universal package repository generation and hosting engine on Windows for Debian (APT), Alpine (APK), and Red Hat (RPM/YUM) distribution archives.
 :: ## Usage
 :: call _lib\orchestration\repogen\repogen.cmd [--all | --apk | --deb | --rpm]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

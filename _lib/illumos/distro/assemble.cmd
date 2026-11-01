@@ -1,10 +1,7 @@
 @echo off
 :: # assemble.cmd
-::
 :: ## Overview
-:: Orchestrates illumos distribution synthesis from a JSON profile specification
-:: on Windows host environments.
-::
+:: Orchestrates illumos distribution synthesis from a JSON profile specification on Windows host environments.
 :: ## Usage
 :: assemble.cmd [profile_json_path] [target_sysroot]
 

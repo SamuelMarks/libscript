@@ -1,19 +1,9 @@
 @echo off
 :: # mfe.cmd
-::
 :: ## Overview
-:: Micro-Frontend (MFE) build, configuration, and delivery pipeline for Open edX on Windows.
-:: Manages learning, authn, account, and course-authoring MFEs.
-::
+:: Micro-Frontend (MFE) build, configuration, and delivery pipeline for Open edX on Windows. Manages learning, authn, account, and course-authoring MFEs.
 :: ## Usage
-::   call mfe.cmd build <mfe_name> [--version <version>]
-::   call mfe.cmd deploy <mfe_name> [--dest <path>]
-::   call mfe.cmd list
-::   call mfe.cmd help
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Error
+:: call mfe.cmd build <mfe_name> [--version <version>] call mfe.cmd deploy <mfe_name> [--dest <path>] call mfe.cmd list call mfe.cmd help ## Exit Codes 0 - Success 1 - Error
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -3,7 +3,6 @@
 # Synthesizes Alpine-compatible APK binary packages (.apk) directly from
 # component staging directories or manifests, generating .PKGINFO metadata
 # and POSIX tar archive streams.
-#
 # ## Usage
 # ./_lib/orchestration/packagers/build_apk.sh <pkg_name> <pkg_version> <staging_dir> [out_dir]
 

@@ -1,10 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Provides the generic, fallback installation logic for the `_noop` component on Windows.
-:: It acts as a structural placeholder that succeeds as a no-op.
-:: 
+:: Provides the generic, fallback installation logic for the `_noop` component on Windows. It acts as a structural placeholder that succeeds as a no-op.
 :: ## Usage
 :: Typically called internally by `setup.cmd` when attempting generic setup on Windows.
 

@@ -1,10 +1,7 @@
 @echo off
 :: # zfs.cmd
-::
 :: ## Overview
-:: Configures canonical illumos ZFS root pool (rpool) layout and vfstab
-:: on Windows host environments.
-::
+:: Configures canonical illumos ZFS root pool (rpool) layout and vfstab on Windows host environments.
 :: ## Usage
 :: zfs.cmd [sysroot_path] [pool_name] [compression]
 

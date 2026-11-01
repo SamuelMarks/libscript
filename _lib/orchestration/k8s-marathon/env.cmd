@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration script for k8s-marathon on Windows.
-::
 :: ## Usage
 :: call _lib\orchestration\k8s-marathon\env.cmd
 

@@ -1,9 +1,7 @@
 @echo off
 :: # inspect_window.cmd
-::
 :: ## Overview
 :: Diagnostic utility to inspect UI automation element hierarchy and button properties on Windows.
-::
 :: ## Usage
 :: call "%~dp0inspect_window.cmd"
 

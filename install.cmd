@@ -1,9 +1,7 @@
 @echo off
 :: # install.cmd
-::
 :: ## Overview
 :: Global installer for the libscript framework.
-:: 
 :: ## Usage
 :: Execute this script to install libscript on the local system.
 

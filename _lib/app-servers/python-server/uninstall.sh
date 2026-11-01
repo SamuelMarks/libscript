@@ -3,7 +3,6 @@
 # Serves as the primary Unix uninstall entry point for the Python Server component.
 # It delegates the core uninstallation logic to the common `uninstall_base.sh` script,
 # ensuring standardized cleanup.
-# 
 # ## Usage
 # Execute this script to uninstall the Python Server component on Unix systems.
 

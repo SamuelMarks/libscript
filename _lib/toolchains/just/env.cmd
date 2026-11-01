@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for just on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for just.
+:: Executes initialization, logic, or testing for just. Windows environment configuration and PATH probes for just
 
-:: Windows environment configuration and PATH probes for just
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

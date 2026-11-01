@@ -1,23 +1,9 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
-:: Service lifecycle manager for the Open edX stack on Windows.
-:: Controls starting, stopping, restarting, and status monitoring of LMS, Studio CMS,
-:: and supporting stack infrastructure.
-::
+:: Service lifecycle manager for the Open edX stack on Windows. Controls starting, stopping, restarting, and status monitoring of LMS, Studio CMS, and supporting stack infrastructure.
 :: ## Usage
-:: call service.cmd start
-:: call service.cmd stop
-:: call service.cmd restart
-:: call service.cmd status
-:: call service.cmd lms
-:: call service.cmd studio
-:: call service.cmd help
-::
-:: ## Exit Codes
-:: 0 - Success
-:: 1 - Error
+:: call service.cmd start call service.cmd stop call service.cmd restart call service.cmd status call service.cmd lms call service.cmd studio call service.cmd help ## Exit Codes 0 - Success 1 - Error
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

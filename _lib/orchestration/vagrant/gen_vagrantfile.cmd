@@ -1,10 +1,7 @@
 @echo off
 :: # gen_vagrantfile.cmd
-::
 :: ## Overview
-:: Generates a customized Vagrantfile pointing to synthesized LibScript .box packages on Windows.
-:: Supports VirtualBox, Hyper-V, and QEMU providers.
-::
+:: Generates a customized Vagrantfile pointing to synthesized LibScript .box packages on Windows. Supports VirtualBox, Hyper-V, and QEMU providers.
 :: ## Usage
 :: gen_vagrantfile.cmd [box_package_or_name] [output_path] [memory_mb] [cpus]
 

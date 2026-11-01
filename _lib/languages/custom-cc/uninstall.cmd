@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
 :: Uninstallation entry point for custom-cc on Windows.
-::
 :: ## Usage
 :: uninstall.cmd
 

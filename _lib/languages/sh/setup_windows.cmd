@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for sh on Windows.
-:: Prepares and configures sh on native Windows environments.
-::
+:: Setup script for sh on Windows. Prepares and configures sh on native Windows environments.
 :: ## Usage
 :: Automatically invoked during libscript sh installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for openbao on Windows.
-:: Prepares and configures openbao on native Windows environments.
-::
+:: Setup script for openbao on Windows. Prepares and configures openbao on native Windows environments.
 :: ## Usage
 :: Automatically invoked during libscript openbao installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # polyglot_package.cmd
-::
 :: ## Overview
-:: Multi-distribution cross-packaging engine on Windows that generates
-:: .apk, .deb, and .rpm package formats simultaneously.
-::
+:: Multi-distribution cross-packaging engine on Windows that generates .apk, .deb, and .rpm package formats simultaneously.
 :: ## Usage
 :: call _lib\orchestration\packagers\polyglot_package.cmd <pkg_name> <pkg_version> <staging_dir> [out_base_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

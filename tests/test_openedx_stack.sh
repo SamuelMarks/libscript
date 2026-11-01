@@ -3,7 +3,6 @@
 # End-to-end functional test suite for the Open edX stack and management CLI tools.
 # Validates CLI routing, Tutor-parity commands, mounts, plugins, hooks, topologies,
 # payloads, port readiness helpers (`wait_ports.sh`), configuration synthesis, and 2x idempotency.
-#
 # ## Usage
 # ./tests/test_openedx_stack.sh
 

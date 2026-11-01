@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
 :: ## Overview
-:: Windows Batch companion for Master LFS Init System dispatcher.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for Master LFS Init System dispatcher. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: _lib\init-systems\setup.cmd [provider] [action] [target_rootfs]
 

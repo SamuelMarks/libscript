@@ -1,13 +1,10 @@
 @echo off
 :: # tags.cmd
-::
 :: ## Overview
-:: Provides global configuration for tag-based resource management, and utilities 
-:: for formatting tags according to provider requirements (AWS, GCP, Azure) on Windows.
-::
+:: Provides global configuration for tag-based resource management, and utilities for formatting tags according to provider requirements (AWS, GCP, Azure) on Windows.
 :: ## Usage
-:: call "%~dp0tags.cmd" :init
-:: call "%~dp0tags.cmd" :libscript_format_tags aws
+:: call "%~dp0tags.cmd" :init call "%~dp0tags.cmd" :libscript_format_tags aws
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

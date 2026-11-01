@@ -1,9 +1,7 @@
 @echo off
 :: # status.cmd
-::
 :: ## Overview
 :: Status check for orchestration/marathon on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\marathon\status.cmd
 

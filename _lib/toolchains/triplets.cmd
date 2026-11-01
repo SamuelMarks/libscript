@@ -1,10 +1,7 @@
 @echo off
 :: # triplets.cmd
-::
 :: ## Overview
-:: Standard cross-toolchain triplet and compiler security flags definitions for Windows.
-:: Exports canonical target triplets, security hardening flags, and SOURCE_DATE_EPOCH.
-::
+:: Standard cross-toolchain triplet and compiler security flags definitions for Windows. Exports canonical target triplets, security hardening flags, and SOURCE_DATE_EPOCH.
 :: ## Usage
 :: triplets.cmd [target_arch] [target_libc] [target_os]
 

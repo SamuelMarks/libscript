@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Executes smoke tests and binary verification checks for the dinit component.
-::
 :: ## Usage
 :: test.cmd
 

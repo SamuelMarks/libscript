@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for etcd on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for etcd.
+:: Executes initialization, logic, or testing for etcd. Windows environment configuration and PATH probes for etcd
 
-:: Windows environment configuration and PATH probes for etcd
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

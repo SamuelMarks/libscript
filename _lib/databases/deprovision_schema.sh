@@ -2,7 +2,6 @@
 # ## Overview
 # Safely deprovisions a multi-tenant database schema and user account.
 # Supports MySQL/MariaDB, PostgreSQL, MongoDB.
-#
 # ## Usage
 #   ./deprovision_schema.sh --engine <engine> --host <host> --port <port> \
 #     --admin-user <user> --admin-pass <pass> \

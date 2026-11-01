@@ -74,11 +74,11 @@ if [ -d '/etc/systemd/system' ]; then
   CELERY_SERVICE_USER="${CELERY_SERVICE_USER:-celery}"
   if ! id "${CELERY_SERVICE_USER}" >/dev/null 2>&1; then
     if command -v pw >/dev/null 2>&1; then
-      priv pw useradd "${CELERY_SERVICE_USER}" -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -s /bin/sh
+      priv pw useradd "${CELERY_SERVICE_USER}" -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -s /bin/sh || true
     elif command -v useradd >/dev/null 2>&1; then
-      priv useradd -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -c '' "${CELERY_SERVICE_USER}"
+      priv useradd -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -c '' "${CELERY_SERVICE_USER}" || true
     else
-      priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}"
+      priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}" || true
     fi
   else
     if command -v usermod >/dev/null 2>&1; then

@@ -3,7 +3,6 @@
 # Thin declarative caller that regenerates all .msi wizard stages and post-install
 # desktop and browser verification screenshots across all components and OS platforms
 # via devtools/capture_running_system.sh.
-#
 # ## Usage
 # ./devtools/regen_all_screenshots.sh [OPTIONS]
 

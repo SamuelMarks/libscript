@@ -2,7 +2,6 @@
 # ## Overview
 # Diagnostic utility to inspect UI automation element hierarchy and button properties.
 # Invokes inspect_window.ps1 via PowerShell on Windows.
-#
 # ## Usage
 # ./packaging/inspect_window.sh
 

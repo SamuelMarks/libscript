@@ -3,11 +3,9 @@
 # Cross-platform kernel virtualization bridge for Windows and macOS.
 # Detects available virtualization backends (Docker, WSL2, headless QEMU)
 # and delegates Tier 2 kernel/loopback/VFS synthesis commands to an Alpine Linux worker.
-#
 # ## Usage
 # Execute with command to run inside worker:
 #   ./_lib/orchestration/vm_builder.sh [--worker=docker|wsl2|qemu] <command...>
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

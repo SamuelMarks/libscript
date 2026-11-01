@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for conda on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for conda.
+:: Executes initialization, logic, or testing for conda. Windows environment configuration and PATH probes for conda
 
-:: Windows environment configuration and PATH probes for conda
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

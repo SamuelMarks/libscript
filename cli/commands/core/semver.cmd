@@ -1,12 +1,9 @@
 @echo off
 :: # semver.cmd
-::
 :: ## Overview
 :: Handles Semantic Versioning (SemVer) parsing and comparison operations natively in Windows Batch.
-:: 
 :: ## Usage
-:: Execute this script to compare version strings:
-:: semver.cmd semver <v1> <operator> <v2>
+:: Execute this script to compare version strings: semver.cmd semver <v1> <operator> <v2>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -1,11 +1,7 @@
 @echo off
 :: # test_merge.cmd
-::
 :: ## Overview
-:: Unit test script for Nginx location block merging (`merge_location_into_server`) on Windows.
-:: Verifies overwriting existing regex location blocks, removing stale blocks, and injecting
-:: new location blocks into a server block.
-::
+:: Unit test script for Nginx location block merging (`merge_location_into_server`) on Windows. Verifies overwriting existing regex location blocks, removing stale blocks, and injecting new location blocks into a server block.
 :: ## Usage
 :: _lib\web-servers\nginx\test_merge.cmd
 

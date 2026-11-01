@@ -1,15 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Internal script for service_install. Registers, overrides environment for, or removes a
-# service using the OS-native init system (systemd, openrc, sysvinit, bsd_rc, launchd, smf,
-# runit, s6, Windows sc.exe) or fallback runner.
-#
+# Internal script for service_install. Registers, overrides environment for, or removes a service using the OS-native init system (systemd, openrc, sysvinit, bsd_rc, launchd, smf, runit, s6, Windows sc.exe) or fallback runner.
 # ## Usage
-# . "$LIBSCRIPT_ROOT_DIR/_lib/_common/service_install.sh"
-# libscript_install_service <service_name> <exec_start> [working_dir] [description] [env] [user] [env_files]
-# libscript_uninstall_service <service_name>
-# libscript_service_override_env <service_name> <KEY=VALUE...>
-
+# . "$LIBSCRIPT_ROOT_DIR/_lib/_common/service_install.sh" libscript_install_service <service_name> <exec_start> [working_dir] [description] [env] [user] [env_files] libscript_uninstall_service <service_name> libscript_service_override_env <service_name> <KEY=VALUE...>
 set -feu
 _si_outer_this="${THIS_FILE:-}"; _si_outer_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -22,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -32,7 +24,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _si_caller_this="${THIS_FILE}"

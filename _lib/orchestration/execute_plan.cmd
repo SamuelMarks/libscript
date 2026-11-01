@@ -1,11 +1,7 @@
 @echo off
 :: # execute_plan.cmd
-::
 :: ## Overview
-:: Linear execution plan runner for LibScript builds on Windows.
-:: Reads a deterministic execution-plan.json, iterates over stages and tasks,
-:: checks and updates idempotency stage stamp files, and orchestrates task executions.
-::
+:: Linear execution plan runner for LibScript builds on Windows. Reads a deterministic execution-plan.json, iterates over stages and tasks, checks and updates idempotency stage stamp files, and orchestrates task executions.
 :: ## Usage
 :: Run `execute_plan.cmd <path_to_execution_plan.json> [--dry-run]` to process tasks sequentially.
 

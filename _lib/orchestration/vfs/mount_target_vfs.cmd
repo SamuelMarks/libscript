@@ -1,9 +1,7 @@
 @echo off
 :: # mount_target_vfs.cmd
-::
 :: ## Overview
 :: Mounts essential Linux virtual kernel filesystems into a target rootfs directory.
-::
 :: ## Usage
 :: mount_target_vfs.cmd [OPTIONS]
 

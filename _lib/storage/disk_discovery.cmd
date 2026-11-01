@@ -1,14 +1,9 @@
 @echo off
 :: # disk_discovery.cmd
-::
 :: ## Overview
-:: Cross-platform disk device discovery and hardware geometry inspection engine.
-:: Detects available physical and virtual storage devices across Linux, FreeBSD, and illumos,
-:: analyzes sector sizes, verifies active mount interlocks, and outputs disk metadata.
-::
+:: Cross-platform disk device discovery and hardware geometry inspection engine. Detects available physical and virtual storage devices across Linux, FreeBSD, and illumos, analyzes sector sizes, verifies active mount interlocks, and outputs disk metadata.
 :: ## Usage
-:: Execute this script to list or inspect disks:
-::   ./_lib/storage/disk_discovery.cmd [--json | --help | --wipe <device>]
+:: Execute this script to list or inspect disks: ./_lib/storage/disk_discovery.cmd [--json | --help | --wipe <device>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

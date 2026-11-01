@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Bootloader installation and Unified Kernel Image (UKI) engine on Windows.
-:: Stages boot configuration files (GRUB2, systemd-boot, Limine, UKI) into target sysroot.
-::
+:: Bootloader installation and Unified Kernel Image (UKI) engine on Windows. Stages boot configuration files (GRUB2, systemd-boot, Limine, UKI) into target sysroot.
 :: ## Usage
 :: setup.cmd [action] [target_sysroot] [bootloader] [boot_mode]
 

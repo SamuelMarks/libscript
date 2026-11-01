@@ -1,10 +1,7 @@
 @echo off
 :: # raw_img.cmd
-::
 :: ## Overview
-:: Packages a target sysroot into a partitioned, bootable raw disk image (.img)
-:: on Windows by delegating to the vm_builder worker.
-::
+:: Packages a target sysroot into a partitioned, bootable raw disk image (.img) on Windows by delegating to the vm_builder worker.
 :: ## Usage
 :: raw_img.cmd [target_sysroot] [output_image] [size_gib] [boot_mode]
 

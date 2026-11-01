@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Verifies Elasticsearch on Windows.
-::
 :: ## Usage
 :: Execute this script to test Elasticsearch functionality.
 

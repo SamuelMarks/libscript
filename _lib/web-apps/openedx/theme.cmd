@@ -1,21 +1,9 @@
 @echo off
 :: # theme.cmd
-::
 :: ## Overview
-:: Theming and branding engine for Open edX on Windows.
-:: Manages installation, compilation, site binding, listing, and removal of themes.
-::
+:: Theming and branding engine for Open edX on Windows. Manages installation, compilation, site binding, listing, and removal of themes.
 :: ## Usage
-::   call theme.cmd install <name> <git_url> [--branch <branch>]
-::   call theme.cmd build <name>
-::   call theme.cmd apply <name> [--site <domain>]
-::   call theme.cmd list
-::   call theme.cmd remove <name>
-::   call theme.cmd help
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Error
+:: call theme.cmd install <name> <git_url> [--branch <branch>] call theme.cmd build <name> call theme.cmd apply <name> [--site <domain>] call theme.cmd list call theme.cmd remove <name> call theme.cmd help ## Exit Codes 0 - Success 1 - Error
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

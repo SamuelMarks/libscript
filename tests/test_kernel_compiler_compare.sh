@@ -3,7 +3,6 @@
 # Integration test suite for the Linux kernel multi-compiler Kbuild engine,
 # declarative OS profile resolution (`resolve_stack.jq`), ELF/System.map diff,
 # and boot verification (`_lib/kernel/linux/compare_compilers.sh`).
-#
 # ## Usage
 # ./tests/test_kernel_compiler_compare.sh
 

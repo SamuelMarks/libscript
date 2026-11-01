@@ -1,14 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Executable wrapper for the `envsubst_safe` utility function.
-# This script exposes the `envsubst_safe` POSIX/awk logic so it can be called
-# directly as a shell command (e.g. within pipes or as a standalone script) 
-# rather than sourced as a library function.
-# 
+# Executable wrapper for the `envsubst_safe` utility function. This script exposes the `envsubst_safe` POSIX/awk logic so it can be called directly as a shell command (e.g. within pipes or as a standalone script) rather than sourced as a library function.
 # ## Usage
 # `./envsubst_safe_exec.sh [file_path]` or `echo "..." | ./envsubst_safe_exec.sh`
-
-
 set -feu
 _envsubst_safe_exec_caller_this="${THIS_FILE:-}"; _envsubst_safe_exec_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

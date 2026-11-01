@@ -1,9 +1,7 @@
 @echo off
 :: # illumos_vagrant_box.cmd
-::
 :: ## Overview
 :: Packages an illumos disk image into a Vagrant .box archive on Windows.
-::
 :: ## Usage
 :: illumos_vagrant_box.cmd [disk_image] [output_box] [provider]
 

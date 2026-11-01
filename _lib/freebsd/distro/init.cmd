@@ -1,10 +1,7 @@
 @echo off
 :: # init.cmd
-::
 :: ## Overview
-:: Configures modular init system supervision inside FreeBSD target sysroot
-:: on Windows host environments.
-::
+:: Configures modular init system supervision inside FreeBSD target sysroot on Windows host environments.
 :: ## Usage
 :: init.cmd [sysroot_path] [provider] [services_list]
 

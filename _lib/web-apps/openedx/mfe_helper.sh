@@ -2,12 +2,10 @@
 # ## Overview
 # Frontend Micro-Frontend (MFE) build and deployment helper for Open edX.
 # Manages frontend applications, asset compilation, and static distribution.
-#
 # ## Usage
 # ./_lib/web-apps/openedx/mfe_helper.sh build <root_dir> <mfe_name> [version]
 # ./_lib/web-apps/openedx/mfe_helper.sh deploy <root_dir> <dist_root> <mfe_name> [dest_path]
 # ./_lib/web-apps/openedx/mfe_helper.sh list <root_dir>
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

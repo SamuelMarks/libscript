@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # apk_index.cmd
-::
 :: ## Overview
-:: Generates repository index metadata (APKINDEX.tar.gz) for Alpine APK
-:: package repositories on Windows.
-::
+:: Generates repository index metadata (APKINDEX.tar.gz) for Alpine APK package repositories on Windows.
 :: ## Usage
 :: call _lib\orchestration\repogen\apk_index.cmd <repo_dir> [arch] [branch]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

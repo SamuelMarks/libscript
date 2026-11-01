@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Exports isolated environment paths and runtime variables for the solo5 component.
-::
 :: ## Usage
 :: env.cmd
 

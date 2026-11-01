@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Performs an audit and validation of all defined application stacks.
-# 
 # ## Usage
 # Execute this script to check the integrity of stack definitions.
 

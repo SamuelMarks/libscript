@@ -4,10 +4,8 @@
 # Removes web server virtual host configs, unlinks crontab schedules, removes WordPress
 # web document root, and drops the isolated wordpress database schema while strictly
 # preserving any shared Open edX MySQL server and databases.
-#
 # ## Usage
 #   ./uninstall_generic.sh [--purge-db]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

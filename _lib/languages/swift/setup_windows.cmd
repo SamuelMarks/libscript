@@ -1,14 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for Swift on Windows.
-:: Installs the official Swift Toolchain for Windows via winget package with selective components
-:: to conserve disk space and ensure non-interactive headless success.
-::
+:: Setup script for Swift on Windows. Installs the official Swift Toolchain for Windows via winget package with selective components to conserve disk space and ensure non-interactive headless success.
 :: ## Usage
 :: Automatically invoked during libscript swift installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

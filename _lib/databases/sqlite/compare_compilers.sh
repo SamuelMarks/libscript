@@ -5,12 +5,9 @@
 # verifies byte-for-byte identical 6-stage SQL torture suite output digests across
 # all compilers, benchmarks OLTP/OLAP query throughput, and writes
 # build/sqlite-compiler-comparison.json.
-#
 # ## Usage
 # ./_lib/databases/sqlite/compare_compilers.sh [--compilers="gcc clang tcc custom-cc"] [--custom-cc-bin=/path/to/cc]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

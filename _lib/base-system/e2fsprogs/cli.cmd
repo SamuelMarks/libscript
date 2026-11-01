@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entrypoint for the e2fsprogs component on Windows.
-::
 :: ## Usage
 :: cli.cmd [action]
 

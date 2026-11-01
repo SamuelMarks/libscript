@@ -1,11 +1,7 @@
 @echo off
 :: # actions.cmd
-::
 :: ## Overview
-:: Unified declarative Machine Learning CLI orchestrator (`train`, `infer`, `serve-ml`, `eval-ml`) on Windows.
-:: Executes `.ml` / `.models` / `.training` / `.inference` workflows from `libscript.json` across
-:: local hardware (CPU, CUDA, Ollama, vLLM) and cloud accelerators (GCP TPU VM, GCP GPU VM, GKE XPK).
-::
+:: Unified declarative Machine Learning CLI orchestrator (`train`, `infer`, `serve-ml`, `eval-ml`) on Windows. Executes `.ml` / `.models` / `.training` / `.inference` workflows from `libscript.json` across local hardware (CPU, CUDA, Ollama, vLLM) and cloud accelerators (GCP TPU VM, GCP GPU VM, GKE XPK).
 :: ## Usage
 :: Run via `libscript.cmd train [libscript.json] [--dry-run]` or `libscript.cmd infer [libscript.json] [--dry-run]`.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # traefik.cmd
-::
 :: ## Overview
 :: Network control library module for emitting Traefik dynamic YAML configurations on Windows.
-::
 :: ## Usage
 :: Invoked by _lib\networking\netctl\cli.cmd emit traefik.
 

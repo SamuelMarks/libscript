@@ -1,13 +1,9 @@
 @echo off
 :: # dbshell.cmd
-::
 :: ## Overview
-:: Database console and query execution tool for WordPress 7.1.2 on Windows.
-:: Reads connection parameters from wp-config.php and launches interactive MySQL
-:: shell or executes queries, exports, and imports.
-::
+:: Database console and query execution tool for WordPress 7.1.2 on Windows. Reads connection parameters from wp-config.php and launches interactive MySQL shell or executes queries, exports, and imports.
 :: ## Usage
-::   call dbshell.cmd [query <sql>|export <file.sql>|import <file.sql>|help]
+:: call dbshell.cmd [query <sql>|export <file.sql>|import <file.sql>|help]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

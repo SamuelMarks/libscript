@@ -1,16 +1,10 @@
 @echo off
 :: # verify_signature.cmd
-::
 :: ## Overview
-:: Serves as a placeholder for cryptographic signature verification on Windows.
-:: It explicitly declares that signature verification is not yet natively
-:: implemented for the Windows platform in this framework.
-:: 
+:: Serves as a placeholder for cryptographic signature verification on Windows. It explicitly declares that signature verification is not yet natively implemented for the Windows platform in this framework.
 :: ## Usage
-:: Called internally during artifact fetching on Windows.
+:: Called internally during artifact fetching on Windows. setlocal EnableDelayedExpansion Windows placeholder script
 
-setlocal EnableDelayedExpansion
-:: Windows placeholder script
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

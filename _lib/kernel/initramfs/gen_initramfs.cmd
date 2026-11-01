@@ -1,10 +1,7 @@
 @echo off
 :: # gen_initramfs.cmd
-::
 :: ## Overview
-:: Generates minimal initramfs archive for target operating system builds on Windows.
-:: Stages initramfs artifacts and boot configuration into target sysroot.
-::
+:: Generates minimal initramfs archive for target operating system builds on Windows. Stages initramfs artifacts and boot configuration into target sysroot.
 :: ## Usage
 :: gen_initramfs.cmd [target_sysroot]
 

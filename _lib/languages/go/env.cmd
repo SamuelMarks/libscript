@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for Go on Windows.
-::
 :: ## Usage
-:: Sets `GO_VERSION` and prepends Go to PATH.
+:: Sets `GO_VERSION` and prepends Go to PATH. Environment variables for Windows
 
-:: Environment variables for Windows
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

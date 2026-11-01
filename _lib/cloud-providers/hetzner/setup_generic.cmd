@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Hetzner Cloud and Bare-Metal server provider on Windows.
-:: Configures server deployment actions and streams disk images.
-::
+:: Hetzner Cloud and Bare-Metal server provider on Windows. Configures server deployment actions and streams disk images.
 :: ## Usage
 :: setup.cmd [action] [server_ip_or_id] [disk_image] [target_device]
 

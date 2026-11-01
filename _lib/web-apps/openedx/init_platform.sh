@@ -5,12 +5,9 @@
 # Executes LMS and CMS database migrations, Casbin authorization policies, Studio OAuth2 SSO
 # service users and DOT applications, SiteConfigurations, 12 Studio MFE waffle switches,
 # and System Taxonomies.
-#
 # ## Usage
 # ./_lib/web-apps/openedx/init_platform.sh [--install-dir <path>]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

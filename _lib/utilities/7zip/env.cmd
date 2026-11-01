@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for 7zip on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for 7zip.
+:: Executes initialization, logic, or testing for 7zip. Windows environment configuration and PATH probes for 7zip
 
-:: Windows environment configuration and PATH probes for 7zip
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

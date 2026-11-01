@@ -1,10 +1,7 @@
 @echo off
 :: # actions.cmd
-::
 :: ## Overview
-:: Provides a unified interface for managing service states (start, stop, restart,
-:: status, health, logs, down, uninstall-service, deprovision-db, export-state, import-state).
-::
+:: Provides a unified interface for managing service states (start, stop, restart, status, health, logs, down, uninstall-service, deprovision-db, export-state, import-state).
 :: ## Usage
 :: Execute this script to perform lifecycle actions on background services.
 

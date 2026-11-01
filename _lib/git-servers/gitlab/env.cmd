@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for gitlab on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for gitlab.
+:: Executes initialization, logic, or testing for gitlab. Windows environment configuration and PATH probes for gitlab
 
-:: Windows environment configuration and PATH probes for gitlab
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

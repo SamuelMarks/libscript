@@ -1,10 +1,7 @@
 @echo off
 :: # iso.cmd
-::
 :: ## Overview
-:: Packages target sysroot into a live bootable ISO 9660 hybrid media image
-:: on Windows by delegating to the vm_builder worker.
-::
+:: Packages target sysroot into a live bootable ISO 9660 hybrid media image on Windows by delegating to the vm_builder worker.
 :: ## Usage
 :: iso.cmd [target_sysroot] [output_iso] [volume_id]
 

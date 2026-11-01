@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Recipe for Mdev: BusyBox dynamic device node manager.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
-::
+:: Recipe for Mdev: BusyBox dynamic device node manager. Complies with standard LibScript Context Contract and stamp idempotency.
 :: ## Usage
 :: setup.cmd [action]
 

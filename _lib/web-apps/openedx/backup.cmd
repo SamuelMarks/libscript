@@ -1,18 +1,9 @@
 @echo off
 :: # backup.cmd
-::
 :: ## Overview
-:: Automated backup utility for Open edX on Windows.
-:: Creates consolidated zip archives containing database dumps, media, and configurations.
-::
+:: Automated backup utility for Open edX on Windows. Creates consolidated zip archives containing database dumps, media, and configurations.
 :: ## Usage
-::   call backup.cmd create [--out <archive_path>]
-::   call backup.cmd list
-::   call backup.cmd help
-::
-:: ## Exit Codes
-::   0 - Success
-::   1 - Error during backup
+:: call backup.cmd create [--out <archive_path>] call backup.cmd list call backup.cmd help ## Exit Codes 0 - Success 1 - Error during backup
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

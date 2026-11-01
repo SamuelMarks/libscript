@@ -1,11 +1,7 @@
 @echo off
 :: # import_db.cmd
-::
 :: ## Overview
-:: Manifest-driven application state importer for LibScript on Windows.
-:: Stops declared services, restores PostgreSQL dumps, DuckDB/SQLite files, and `.env`
-:: files from a staging directory, and restarts services.
-::
+:: Manifest-driven application state importer for LibScript on Windows. Stops declared services, restores PostgreSQL dumps, DuckDB/SQLite files, and `.env` files from a staging directory, and restarts services.
 :: ## Usage
 :: call _lib\databases\import_db.cmd <libscript.json> <stage_dir>
 

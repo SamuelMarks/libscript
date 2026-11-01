@@ -4,10 +4,8 @@
 # Supports registering a local binary (CUSTOM_CC_BIN), building custom-cc from source
 # with a selectable bootstrap toolchain (CUSTOM_CC_BUILD_TOOLCHAIN), downloading an
 # archive, or generating a telemetry wrapper shim.
-#
 # ## Usage
 # ./_lib/languages/custom-cc/setup_generic.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

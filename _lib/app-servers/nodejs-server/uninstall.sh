@@ -3,7 +3,6 @@
 # Serves as the primary Unix uninstall entry point for the Node.js Server component.
 # It delegates the core uninstallation logic to the common `uninstall_base.sh` script,
 # ensuring standardized cleanup.
-# 
 # ## Usage
 # Execute this script to uninstall the Node.js Server component on Unix systems.
 

@@ -4,7 +4,6 @@
 # Verifies that real LMS and Studio/CMS services are correctly coordinated,
 # render registration and login screens, authenticate sessions, and allow access
 # past the login gate to the user dashboard without error.
-#
 # ## Usage
 # ./_lib/web-apps/openedx/test_harness.sh
 

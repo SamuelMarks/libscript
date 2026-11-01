@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Backward-compatible forwarding shim for GKE TPU cluster CLI on Windows.
-::
 :: ## Usage
 :: _lib\cloud-providers\gcp-gke-tpu-cluster\cli.cmd <action> [args...]
 

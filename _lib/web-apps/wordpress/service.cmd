@@ -1,12 +1,9 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
-:: Daemon lifecycle manager for WordPress 7.1.2 on Windows.
-:: Coordinates Windows service and process management for Nginx, IIS, and MariaDB.
-::
+:: Daemon lifecycle manager for WordPress 7.1.2 on Windows. Coordinates Windows service and process management for Nginx, IIS, and MariaDB.
 :: ## Usage
-::   call service.cmd <start|stop|restart|status>
+:: call service.cmd <start|stop|restart|status>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

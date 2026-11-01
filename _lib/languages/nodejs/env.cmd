@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for Node.js on Windows.
-::
 :: ## Usage
-:: Sets `NODEJS_VERSION` and prepends Node.js to PATH.
+:: Sets `NODEJS_VERSION` and prepends Node.js to PATH. Environment variables for Windows
 
-:: Environment variables for Windows
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

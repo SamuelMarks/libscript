@@ -1,9 +1,7 @@
 @echo off
 :: # announce.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'announce' for the mariadb component on Windows.
-::
 :: ## Usage
 :: hooks\announce.cmd [args...]
 

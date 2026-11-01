@@ -1,10 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
-:: Orchestrates the setup and installation process for the JupyterHub data science platform stack on Windows.
-:: Installs jupyterhub via Python and configurable-http-proxy via npm if available.
-:: 
+:: Orchestrates the setup and installation process for the JupyterHub data science platform stack on Windows. Installs jupyterhub via Python and configurable-http-proxy via npm if available.
 :: ## Usage
 :: Execute this script to install and configure jupyterhub on the local system.
 

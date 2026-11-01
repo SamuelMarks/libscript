@@ -1,9 +1,7 @@
 @echo off
 :: # build_msirs.cmd
-::
 :: ## Overview
 :: Orchestrates building the nodejs .msi via msi-rs on the guest.
-::
 :: ## Usage
 :: build_msirs.cmd
 

@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment configuration script for Slurm Workload Manager on Windows.
-::
 :: ## Usage
 :: call _lib\orchestration\slurm\env.cmd
 

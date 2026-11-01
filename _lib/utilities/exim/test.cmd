@@ -1,9 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
 :: Verifies Exim on Windows.
-::
 :: ## Usage
 :: Execute this script to test Exim functionality.
 

@@ -2,13 +2,10 @@
 # ## Overview
 # Translates Windows MSI location variables (e.g., [ProgramFiles64Folder]) into
 # robust cross-platform absolute paths for the current target operating system.
-#
 # ## Usage
 #   resolved_path=$(./resolve_location.sh "[ProgramFiles64Folder]LibScript/MySQL")
-
 set -feu
 _resolve_location_caller_this="${THIS_FILE:-}"; _resolve_location_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

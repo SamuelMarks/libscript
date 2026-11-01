@@ -1,9 +1,7 @@
 @echo off
 :: # deprovision_tenant.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'deprovision_tenant' for the postgres component on Windows.
-::
 :: ## Usage
 :: hooks\deprovision_tenant.cmd [args...]
 

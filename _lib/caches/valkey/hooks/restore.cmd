@@ -1,9 +1,7 @@
 @echo off
 :: # restore.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'restore' for the valkey component on Windows.
-::
 :: ## Usage
 :: hooks\restore.cmd [args...]
 

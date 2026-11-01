@@ -1,16 +1,10 @@
 @echo off
 :: # setup_debian.cmd
-::
 :: ## Overview
 :: Mock Debian setup script for kubernetes-thw on Windows.
-::
 :: ## Usage
-:: Skipped on Windows.
+:: Skipped on Windows. setlocal EnableDelayedExpansion This is a placeholder for the native Windows component setup. By default, many tools rely on winget, choco, or scoop for installation on Windows.
 
-setlocal EnableDelayedExpansion
-
-:: This is a placeholder for the native Windows component setup.
-:: By default, many tools rely on winget, choco, or scoop for installation on Windows.
 set "THIS_FILE=%~f0"
 
 if defined STACK (

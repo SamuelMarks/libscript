@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Windows generic uninstallation script for Elasticsearch.
-::
 :: ## Usage
 :: Execute this script to uninstall Elasticsearch.
 

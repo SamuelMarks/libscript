@@ -1,11 +1,7 @@
 @echo off
 :: # url_parser.cmd
-::
 :: ## Overview
-:: Provides URL parsing capabilities in Windows Batch (`:libscript_url_parser`,
-:: `:parse_url`, `:git_args_from_url`), decomposing a URL into `protocol`, `user`,
-:: `pass`, `host`, `port`, and `path`.
-::
+:: Provides URL parsing capabilities in Windows Batch (`:libscript_url_parser`, `:parse_url`, `:git_args_from_url`), decomposing a URL into `protocol`, `user`, `pass`, `host`, `port`, and `path`.
 :: ## Usage
 :: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\url_parser.cmd" :parse_url "<url>"
 

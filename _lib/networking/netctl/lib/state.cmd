@@ -1,9 +1,7 @@
 @echo off
 :: # state.cmd
-::
 :: ## Overview
 :: Network control library module for state.
-:: 
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
 

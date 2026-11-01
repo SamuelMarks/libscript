@@ -1,9 +1,7 @@
 @echo off
 :: # maintenance.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'maintenance' for the caddy component on Windows.
-::
 :: ## Usage
 :: hooks\maintenance.cmd [args...]
 

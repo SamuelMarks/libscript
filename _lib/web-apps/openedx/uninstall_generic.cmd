@@ -1,9 +1,7 @@
 @echo off
 :: # uninstall_generic.cmd
-::
 :: ## Overview
 :: Windows generic uninstallation script for Open edX.
-::
 :: ## Usage
 :: Execute this script to uninstall Open edX.
 

@@ -1,10 +1,7 @@
 @echo off
 :: # nginx.cmd
-::
 :: ## Overview
-:: Network control library module for nginx on Windows.
-:: Supports SPA try_files, WebSocket Upgrade headers, domain server_name, and WASM MIME types.
-:: 
+:: Network control library module for nginx on Windows. Supports SPA try_files, WebSocket Upgrade headers, domain server_name, and WASM MIME types.
 :: ## Usage
 :: This script provides internal functions and should not be executed directly.
 

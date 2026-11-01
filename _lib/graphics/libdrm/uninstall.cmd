@@ -1,10 +1,7 @@
 @echo off
 :: # uninstall.cmd
-::
 :: ## Overview
-:: Uninstallation script for the libdrm component on Windows.
-:: Safely removes the component and its associated files.
-::
+:: Uninstallation script for the libdrm component on Windows. Safely removes the component and its associated files.
 :: ## Usage
 :: libdrm\uninstall.cmd [args]
 

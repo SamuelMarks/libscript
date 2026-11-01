@@ -1,10 +1,7 @@
 @echo off
 :: # setup_windows.cmd
-::
 :: ## Overview
-:: Setup script for memcached on Windows.
-:: Prepares and delegates to generic Windows setup.
-::
+:: Setup script for memcached on Windows. Prepares and delegates to generic Windows setup.
 :: ## Usage
 :: Automatically invoked during libscript memcached installation on Windows.
 

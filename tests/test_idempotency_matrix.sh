@@ -4,10 +4,8 @@
 # Executes the entire synthesis pipeline twice consecutively on an identical workspace,
 # asserting that the second pass terminates immediately as a zero-op with return code 0
 # and zero mutation of target output files.
-#
 # ## Usage
 # ./tests/test_idempotency_matrix.sh [--target-dir=<dir>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

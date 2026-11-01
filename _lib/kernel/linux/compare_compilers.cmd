@@ -1,10 +1,7 @@
 @echo off
 :: # compare_compilers.cmd
-::
 :: ## Overview
-:: Multi-compiler Linux kernel ELF/System.map diff and boot report generator for Windows.
-:: Stages kernel artifacts across compilers and writes build\kernel-compiler-comparison.json.
-::
+:: Multi-compiler Linux kernel ELF/System.map diff and boot report generator for Windows. Stages kernel artifacts across compilers and writes build\kernel-compiler-comparison.json.
 :: ## Usage
 :: compare_compilers.cmd [--compilers="default gcc clang tcc custom-cc"]
 

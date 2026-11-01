@@ -4,10 +4,8 @@
 # and devtools/docs-gen/inject_markers.{sh,ps1,cmd}.
 # Verifies batching across >50 README files (preventing Windows cmd.exe 8191-char overflow),
 # UTF-8 preservation, normalized idempotency (zero rewrites when unchanged), and Unix/PowerShell parity.
-#
 # ## Usage
 # ./tests/test_generate_markdown_docs.sh
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,9 +1,7 @@
 @echo off
 :: # status.cmd
-::
 :: ## Overview
 :: Status check for orchestration/nomad on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\nomad\status.cmd
 

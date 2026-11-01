@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # RHEL-specific setup script for PostgreSQL.
-#
 # ## Usage
 # Installs PostgreSQL from the official PGDG repository and sets up systemd services.
 

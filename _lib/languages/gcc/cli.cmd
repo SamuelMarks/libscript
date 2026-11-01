@@ -1,9 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
 :: Command-line interface entry point for GCC on Windows.
-::
 :: ## Usage
 :: cli.cmd [COMMAND] [VERSION] [OPTIONS]
 

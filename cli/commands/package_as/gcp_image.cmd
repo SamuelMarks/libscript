@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # gcp_image.cmd
-::
 :: ## Overview
-:: Synthesizes Google Cloud Platform (GCP) Compute Engine images in the required
-:: disk.raw.tar.gz format on Windows.
-::
+:: Synthesizes Google Cloud Platform (GCP) Compute Engine images in the required disk.raw.tar.gz format on Windows.
 :: ## Usage
 :: call cli\commands\package_as\gcp_image.cmd [input_raw] [output_tar_gz] [size_gib]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

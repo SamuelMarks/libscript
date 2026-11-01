@@ -1,10 +1,7 @@
 @echo off
 :: # run_hooks.cmd
-::
 :: ## Overview
-:: Executes defined lifecycle hooks from an install manifest on Windows.
-:: Supports both .hooks and .lifecycle_hooks (including under .infrastructure), working_dir, OS filtering, cmd_windows, and conditions.
-::
+:: Executes defined lifecycle hooks from an install manifest on Windows. Supports both .hooks and .lifecycle_hooks (including under .infrastructure), working_dir, OS filtering, cmd_windows, and conditions.
 :: ## Usage
 :: Run `run_hooks.cmd <json_file> <hook_type>` (e.g. pre_install, post_install, build, db_migrate, seed, pre_start, post_start, pre_stop, post_stop, health).
 

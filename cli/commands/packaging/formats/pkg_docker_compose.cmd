@@ -1,15 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # pkg_docker_compose.cmd
-::
 :: ## Overview
-:: Implements packaging logic for the 'docker_compose' format on Windows.
-:: Generates multi-container docker-compose.yml including Open edX topologies.
-:: Supports online and air-gapped offline modes with isolated networks.
-::
+:: Implements packaging logic for the 'docker_compose' format on Windows. Generates multi-container docker-compose.yml including Open edX topologies. Supports online and air-gapped offline modes with isolated networks.
 :: ## Usage
 :: call cli\commands\packaging\formats\pkg_docker_compose.cmd [OPTIONS] [PKG]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

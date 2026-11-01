@@ -4,10 +4,8 @@
 # It attempts to locate the appropriate Python interpreter (including virtual environments),
 # discovers the main application script (e.g., `main.py`, `app.py`), and dynamically builds
 # and installs a Systemd service file. It also registers listening ports via `netctl`.
-# 
 # ## Usage
 # Typically called automatically by `setup.sh` when running on a Debian-like operating system.
-
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

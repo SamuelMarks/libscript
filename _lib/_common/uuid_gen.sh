@@ -3,13 +3,10 @@
 # Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging.
 # Generates reproducible GUIDs based on namespace and component name/version using
 # pure POSIX /bin/sh primitives (awk, printf, sha1sum/shasum/openssl).
-#
 # ## Usage
 #   _lib/_common/uuid_gen.sh <NAMESPACE_UUID> <NAME>
-
 set -feu
 _uuid_gen_caller_this="${THIS_FILE:-}"; _uuid_gen_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,7 +17,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

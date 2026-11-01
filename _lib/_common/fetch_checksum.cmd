@@ -1,11 +1,7 @@
 @echo off
 :: # fetch_checksum.cmd
-::
 :: ## Overview
-:: Automatically discovers and fetches SHA256 checksums for a given download URL on Windows.
-:: Checks `_lib\checksums.txt`, Node.js `SHASUMS256.txt`, Go JSON API, GitHub Releases
-:: checksum manifests, and `.sha256` companion URLs.
-::
+:: Automatically discovers and fetches SHA256 checksums for a given download URL on Windows. Checks `_lib\checksums.txt`, Node.js `SHASUMS256.txt`, Go JSON API, GitHub Releases checksum manifests, and `.sha256` companion URLs.
 :: ## Usage
 :: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\fetch_checksum.cmd" "<url>"
 

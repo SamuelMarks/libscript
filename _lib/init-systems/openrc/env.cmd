@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for openrc on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for openrc.
+:: Executes initialization, logic, or testing for openrc. Windows environment configuration and PATH probes for openrc
 
-:: Windows environment configuration and PATH probes for openrc
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

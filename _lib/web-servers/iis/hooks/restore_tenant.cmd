@@ -1,9 +1,7 @@
 @echo off
 :: # restore_tenant.cmd
-::
 :: ## Overview
 :: Lifecycle hook 'restore_tenant' for the iis component on Windows.
-::
 :: ## Usage
 :: hooks\restore_tenant.cmd [args...]
 

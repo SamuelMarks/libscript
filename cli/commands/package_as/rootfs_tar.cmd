@@ -1,10 +1,7 @@
 @echo off
 :: # rootfs_tar.cmd
-::
 :: ## Overview
-:: Packages target sysroot into a compressed rootfs tarball on Windows.
-:: Generates container and jail import archives.
-::
+:: Packages target sysroot into a compressed rootfs tarball on Windows. Generates container and jail import archives.
 :: ## Usage
 :: rootfs_tar.cmd [target_sysroot] [output_tarball] [compression]
 

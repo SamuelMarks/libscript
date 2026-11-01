@@ -3,7 +3,6 @@
 # Compiler driver wrapper and telemetry shim for custom-cc. Normalizes/strips
 # GCC/Clang-specific flags when CUSTOM_CC_STRIP_GNU_FLAGS is enabled and logs
 # per-translation-unit compilation events to JSONL.
-#
 # ## Usage
 # ./_lib/languages/custom-cc/cc_wrapper.sh [compiler_args...]
 

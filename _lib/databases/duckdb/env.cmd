@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for duckdb on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for duckdb.
+:: Executes initialization, logic, or testing for duckdb. Windows environment configuration and PATH probes for duckdb
 
-:: Windows environment configuration and PATH probes for duckdb
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

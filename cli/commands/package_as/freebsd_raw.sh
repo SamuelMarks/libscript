@@ -2,7 +2,6 @@
 # ## Overview
 # Packages a FreeBSD target sysroot into a raw GPT disk image (.raw / .img).
 # Configures EFI system partition (ESP) or BIOS bootcode and root slice.
-#
 # ## Usage
 # Package raw disk image:
 #   cli/commands/package_as/freebsd_raw.sh [target_sysroot] [output_image] [size_gib]

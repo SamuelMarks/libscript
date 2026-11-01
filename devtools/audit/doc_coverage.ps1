@@ -124,6 +124,50 @@ Get-ChildItem -Path $repoRoot -Filter "*.schema.json" -Recurse -File -ErrorActio
     }
 }
 
+Write-Host "==> Auditing Shell Function Docstring Coverage..."
+$missingShFunctions = 0
+foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".sh" })) {
+    $lines = [System.IO.File]::ReadAllLines($sf.FullName)
+    $hasDoc = $false
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $ln = $lines[$i]
+        if ($ln -match '^\s*#\s*##\s+') { $hasDoc = $true; continue }
+        if ($ln -match '^\s*#') { continue }
+        if ($ln -match '^\s*[a-zA-Z_][a-zA-Z0-9_]*\(\)\s*\{') {
+            if (-not $hasDoc) {
+                Write-Warning "Missing Shell function docstring in $($sf.FullName):$($i + 1)"
+                $missingShFunctions++
+            }
+            $hasDoc = $false
+            continue
+        }
+        if ($ln -match '^\s*$') { continue }
+        $hasDoc = $false
+    }
+}
+
+Write-Host "==> Auditing Batch Label Docstring Coverage..."
+$missingCmdLabels = 0
+foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".cmd" -or $_.Extension -eq ".bat" })) {
+    $lines = [System.IO.File]::ReadAllLines($sf.FullName)
+    $hasDoc = $false
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $ln = $lines[$i]
+        if ($ln -match '^\s*::\s*##\s+') { $hasDoc = $true; continue }
+        if ($ln -match '^\s*::') { continue }
+        if ($ln -match '^\s*:[a-zA-Z0-9_]+' -and $ln -notmatch '^\s*:(EOF|eof|root_found|find_root)\b') {
+            if (-not $hasDoc) {
+                Write-Warning "Missing Batch label docstring in $($sf.FullName):$($i + 1)"
+                $missingCmdLabels++
+            }
+            $hasDoc = $false
+            continue
+        }
+        if ($ln -match '^\s*$') { continue }
+        $hasDoc = $false
+    }
+}
+
 Write-Host "==> Auditing PowerShell Function Docstring Coverage..."
 $missingPs1Functions = 0
 foreach ($sf in ($scriptFiles | Where-Object { $_.Extension -eq ".ps1" })) {
@@ -187,11 +231,11 @@ if ($updateReadme -and (Test-Path -LiteralPath $readmeFile -PathType Leaf)) {
     }
 }
 
-$totalErrors = $missingCompReadmes + $missingScriptHeaders + $missingSchema + $missingPs1Functions
+$totalErrors = $missingCompReadmes + $missingScriptHeaders + $missingSchema + $missingShFunctions + $missingCmdLabels + $missingPs1Functions
 if ($totalErrors -eq 0) {
     Write-Host "[PASS] 100% Documentation Coverage Audit Passed!"
     exit 0
 } else {
-    [Console]::Error.WriteLine("[ERROR] Found $missingCompReadmes missing component READMEs, $missingScriptHeaders scripts missing header docs, $missingSchema schema files with missing descriptions, and $missingPs1Functions PowerShell functions missing docstrings.")
+    [Console]::Error.WriteLine("[ERROR] Found $missingCompReadmes missing component READMEs, $missingScriptHeaders scripts missing header docs, $missingSchema schema files with missing descriptions, $missingShFunctions shell functions, $missingCmdLabels batch labels, and $missingPs1Functions PowerShell functions missing docstrings.")
     exit 1
 }

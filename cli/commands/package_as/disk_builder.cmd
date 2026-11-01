@@ -1,9 +1,7 @@
 @echo off
 :: # disk_builder.cmd
 :: ## Overview
-:: Windows Batch companion for LFS disk layout and assembly.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
-::
+:: Windows Batch companion for LFS disk layout and assembly. Implements Option A Win32 Hard-Fail boundary proforma.
 :: ## Usage
 :: cli\commands\package_as\disk_builder.cmd [rootfs_dir] [output_raw_img] [size_gib] [bootloader]
 

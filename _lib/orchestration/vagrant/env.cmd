@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment export script for Vagrant on Windows.
-::
 :: ## Usage
 :: Call this script to set Vagrant environment variables.
 

@@ -5,12 +5,9 @@
 # memcached, redis, valkey, nginx, postgres, duckdb) from source with --toolchain=edgcpp,
 # verifies 2x idempotency, asserts zero front-end errors in compile_events.jsonl,
 # and writes build/edgcpp-corpus-report.json.
-#
 # ## Usage
 # ./tests/test_edgcpp_corpus_matrix.sh
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

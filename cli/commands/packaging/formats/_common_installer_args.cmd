@@ -1,9 +1,7 @@
 @echo off
 :: # _common_installer_args.cmd
-::
 :: ## Overview
 :: Shared argument parser and utility functions for Windows package installers.
-:: 
 :: ## Usage
 :: Call this script to parse installer arguments and generate GUIDs.
 

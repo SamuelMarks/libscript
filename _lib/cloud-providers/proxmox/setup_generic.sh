@@ -3,7 +3,6 @@
 # Proxmox VE hypervisor provider and orchestration engine.
 # Imports synthesized QCOW2 disk images into Proxmox storage pools via qm importdisk,
 # provisions KVM virtual machines, and configures VirtIO hardware.
-#
 # ## Usage
 # Run `setup.sh [action] [vmid] [qcow2_image] [storage_pool]`
 

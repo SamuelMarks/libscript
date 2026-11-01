@@ -1,10 +1,7 @@
 @echo off
 :: # click.cmd
-::
 :: ## Overview
-:: Automated GUI control clicker for installer automation on Windows.
-:: Locates target controls and sends BM_CLICK messages via click_button.ps1.
-::
+:: Automated GUI control clicker for installer automation on Windows. Locates target controls and sends BM_CLICK messages via click_button.ps1.
 :: ## Usage
 :: click.cmd [button_text]
 

@@ -3,7 +3,6 @@
 # Manages the `k8s-marathon` PaaS controller daemon (`8081`) lifecycle (`start`, `stop`, `restart`,
 # `status`, `health`, `logs`, `install-service`, `uninstall-service`) and exposes live `/ping`,
 # `/v2/info`, `/v2/apps`, `/v2/tasks`, and `/v2/deployments` endpoints reconciled into Kubernetes.
-#
 # ## Usage
 # ./_lib/orchestration/k8s-marathon/service.sh <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for docker on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for docker.
+:: Executes initialization, logic, or testing for docker. Windows environment configuration and PATH probes for docker
 
-:: Windows environment configuration and PATH probes for docker
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

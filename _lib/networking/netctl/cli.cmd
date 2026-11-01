@@ -1,10 +1,7 @@
 @echo off
-:: # cli.cmd
 :: # netctl.cmd
-::
 :: ## Overview
 :: Network control utility for managing local services, reverse proxies, SPAs, WebSockets, and declarative ingress.
-::
 :: ## Usage
 :: Execute this script to manage networking configurations or apply a libscript.json ingress definition.
 

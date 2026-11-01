@@ -1,10 +1,7 @@
 @echo off
 :: # users.cmd
-::
 :: ## Overview
-:: Provisions user accounts, sudoers rules, and SSH authorized keys inside
-:: the FreeBSD target sysroot from Windows.
-::
+:: Provisions user accounts, sudoers rules, and SSH authorized keys inside the FreeBSD target sysroot from Windows.
 :: ## Usage
 :: users.cmd [sysroot_path] [primary_user]
 

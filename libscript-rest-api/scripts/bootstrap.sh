@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # Dependency resolution script for bootstrapping the libscript REST API development environment.
-#
 # ## Usage
 # Executes natively to detect the OS and install required dependencies (C compiler, git, cmake).
 # Run via: `./scripts/bootstrap.sh`

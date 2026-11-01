@@ -1,13 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Codifies the standard context contract variables and idempotency stamp
-# protocols passed between Tier 2 synthesizers and Tier 1 leaf recipes.
-#
+# Codifies the standard context contract variables and idempotency stamp protocols passed between Tier 2 synthesizers and Tier 1 leaf recipes.
 # ## Usage
-# Source this file to initialize and validate standard context variables:
-#   . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/context.sh"
-#   libscript_context_validate
-
+# Source this file to initialize and validate standard context variables: . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/context.sh" libscript_context_validate
 set -feu
 _context_caller_this="${THIS_FILE:-}"; _context_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -20,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

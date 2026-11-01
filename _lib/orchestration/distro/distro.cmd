@@ -1,14 +1,11 @@
 @echo off
-setlocal EnableDelayedExpansion
 :: # distro.cmd
-::
 :: ## Overview
-:: Unified distribution synthesis entrypoint on Windows, dispatching to
-:: Debian, Alpine, and Red Hat style OS synthesis pipelines.
-::
+:: Unified distribution synthesis entrypoint on Windows, dispatching to Debian, Alpine, and Red Hat style OS synthesis pipelines.
 :: ## Usage
 :: call _lib\orchestration\distro\distro.cmd <build-debian | build-alpine | build-redhat>
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Primary setup router for the Custom C Compiler (custom-cc) component on Windows.
-::
 :: ## Usage
 :: setup.cmd [args]
 

@@ -2,7 +2,6 @@
 # ## Overview
 # Synthesizes live-CD and live-USB bootable illumos/Solaris environments with
 # boot archives (boot_archive), live ZFS RAM-disk pools, and embedded msi-rs installer suite.
-#
 # ## Usage
 # Execute this script to generate a live illumos image:
 #   ./_lib/illumos/distro/live_illumos.sh [output_path] [build_dir]

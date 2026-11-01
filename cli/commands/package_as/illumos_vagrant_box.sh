@@ -2,7 +2,6 @@
 # ## Overview
 # Packages an illumos disk image into a redistributable Vagrant .box archive
 # containing metadata.json, Vagrantfile, and box image for QEMU/VirtualBox.
-#
 # ## Usage
 # Package Vagrant box:
 #   cli/commands/package_as/illumos_vagrant_box.sh [disk_image] [output_box] [provider]

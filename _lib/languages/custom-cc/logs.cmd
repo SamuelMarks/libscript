@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Telemetry log reader for the custom-cc component on Windows.
-::
 :: ## Usage
 :: logs.cmd
 

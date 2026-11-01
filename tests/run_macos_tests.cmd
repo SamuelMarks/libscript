@@ -1,34 +1,26 @@
 @echo off
 :: # run_macos_tests.cmd
-::
 :: ## Overview
-:: Runs tests sequentially for libscript components on macOS (Darwin).
-:: Supports testing via a local macOS Vagrant VM (`bento/macos-14-arm64`) using
-:: UTM snapshot restoration (snapshot vanilla; run process; check result; restore snapshot; repeat)
-:: or direct native execution on macOS hosts. Results, execution logs, and statuses are written
-:: into tests_tmp/ and the Supported Components table in README.md is updated after each test.
-::
+:: Runs tests sequentially for libscript components on macOS (Darwin). Supports testing via a local macOS Vagrant VM (`bento/macos-14-arm64`) using UTM snapshot restoration (snapshot vanilla; run process; check result; restore snapshot; repeat) or direct native execution on macOS hosts. Results, execution logs, and statuses are written into tests_tmp/ and the Supported Components table in README.md is updated after each test.
 :: ## Usage
-:: run_macos_tests.cmd tests/run_macos_tests.cmd [TARGETS...|all] [--loop] [--stop-after N] [--skip-uninstall] [--no-snapshot] [--native]
-:: Example: ./tests/run_macos_tests.cmd curl sqlite tmux
-:: Example: ./tests/run_macos_tests.cmd all
+:: run_macos_tests.cmd tests/run_macos_tests.cmd [TARGETS...|all] [--loop] [--stop-after N] [--skip-uninstall] [--no-snapshot] [--native] Example: ./tests/run_macos_tests.cmd curl sqlite tmux Example: ./tests/run_macos_tests.cmd all
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

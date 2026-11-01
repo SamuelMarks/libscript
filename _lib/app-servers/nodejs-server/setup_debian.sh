@@ -4,10 +4,8 @@
 # It ensures Node.js dependencies (via `npm`, `yarn`, or `pnpm`) are resolved, discovers the main
 # application script (`main.js`, `app.js`, etc.), dynamically builds a Systemd service file
 # representing the server, installs it, and registers listening ports via `netctl`.
-# 
 # ## Usage
 # Typically called automatically by `setup.sh` when running on a Debian-like operating system.
-
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

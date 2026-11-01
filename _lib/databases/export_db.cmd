@@ -1,11 +1,7 @@
 @echo off
 :: # export_db.cmd
-::
 :: ## Overview
-:: Manifest-driven application state exporter for LibScript on Windows.
-:: Exports PostgreSQL dumps, DuckDB/SQLite files, and environment configuration files
-:: declared in `libscript.json` into a staging directory.
-::
+:: Manifest-driven application state exporter for LibScript on Windows. Exports PostgreSQL dumps, DuckDB/SQLite files, and environment configuration files declared in `libscript.json` into a staging directory.
 :: ## Usage
 :: call _lib\databases\export_db.cmd <libscript.json> <stage_dir>
 

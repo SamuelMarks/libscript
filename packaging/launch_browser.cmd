@@ -1,18 +1,9 @@
 @echo off
 :: # launch_browser.cmd
-::
 :: ## Overview
-:: Resilient browser launcher utility for Windows.
-:: Launches default or installed browsers (Edge, Chrome, Firefox) targeting the specified URL.
-:: If no browser is present, creates an Internet Shortcut on the Desktop to avoid
-:: Windows modal "Application not found" dialog errors.
-::
+:: Resilient browser launcher utility for Windows. Launches default or installed browsers (Edge, Chrome, Firefox) targeting the specified URL. If no browser is present, creates an Internet Shortcut on the Desktop to avoid Windows modal "Application not found" dialog errors.
 :: ## Usage
-:: call packaging\launch_browser.cmd <url> [shortcut_name]
-::
-:: ## Arguments
-::   url            The web address to open (e.g. http://localhost:8000)
-::   shortcut_name  Optional name for the desktop shortcut fallback
+:: call packaging\launch_browser.cmd <url> [shortcut_name] ## Arguments url            The web address to open (e.g. http://localhost:8000) shortcut_name  Optional name for the desktop shortcut fallback
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -3,7 +3,6 @@
 # Executes the end-to-end Debian-style distribution synthesis pipeline:
 # bootstrapping Stage 0 toolchain, dpkg/apt subsystem, package synthesis (.deb),
 # signed APT repository generation, and clean target rootfs deployment.
-#
 # ## Usage
 # ./_lib/orchestration/distro/build_debian.sh [--target-rootfs=<path>] [--profile=<profile.json>]
 

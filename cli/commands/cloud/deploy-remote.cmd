@@ -1,10 +1,7 @@
 @echo off
 :: # deploy-remote.cmd
-::
 :: ## Overview
-:: Orchestrates idempotent deployment of multiple apps to a remote host.
-:: Safe over-the-network payload deployment and live service reloading.
-:: 
+:: Orchestrates idempotent deployment of multiple apps to a remote host. Safe over-the-network payload deployment and live service reloading.
 :: ## Usage
 :: Syntax: deploy-remote.cmd <user@host> [--app <path>@<domain>]... [--shared-db <engine>]
 

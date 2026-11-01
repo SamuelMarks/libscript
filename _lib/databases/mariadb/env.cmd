@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for mariadb on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for mariadb.
+:: Executes initialization, logic, or testing for mariadb. Windows environment configuration and PATH probes for mariadb
 
-:: Windows environment configuration and PATH probes for mariadb
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

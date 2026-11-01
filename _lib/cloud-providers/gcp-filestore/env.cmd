@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for filestore on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for filestore.
+:: Executes initialization, logic, or testing for filestore. Windows environment configuration and PATH probes for gcp-filestore
 
-:: Windows environment configuration and PATH probes for gcp-filestore
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (

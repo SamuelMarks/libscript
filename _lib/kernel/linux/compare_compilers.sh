@@ -5,12 +5,9 @@
 # Compiles the kernel across default, gcc, clang, tcc, and custom-cc, compares
 # .text/.data/.bss sizes and System.map symbol sets, verifies LIBSCRIPT_KERNEL_BOOT_OK,
 # and writes build/kernel-compiler-comparison.json.
-#
 # ## Usage
 # ./_lib/kernel/linux/compare_compilers.sh [--compilers="default gcc clang tcc custom-cc"] [--config=tinyconfig]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

@@ -2,7 +2,6 @@
 # ## Overview
 # Executes illumos distribution assembly and verification natively on SunOS / OmniOS Vagrant VM.
 # Validates IPS packaging, native ZFS commands, SMF milestones, and POSIX /bin/sh syntax.
-#
 # ## Usage
 # Run native SunOS/illumos verification:
 #   tests/run_illumos_distro_on_sunos.sh

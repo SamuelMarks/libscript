@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_distro.cmd
-::
 :: ## Overview
 :: Unified CLI entrypoint to package a FreeBSD distribution profile on Windows.
-::
 :: ## Usage
 :: freebsd_distro.cmd --format <qcow2|box|raw|vhd|vmdk|iso> --profile <profile_json>
 

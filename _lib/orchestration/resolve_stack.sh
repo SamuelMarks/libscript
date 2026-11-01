@@ -3,7 +3,6 @@
 # A portable dependency resolver and execution plan generator using jq on Unix-like systems.
 # Supports both traditional install.json application stacks and declarative os-config.json profiles.
 # Emits flat, topologically sorted execution-plan.json.
-#
 # ## Usage
 # Run `resolve_stack.sh <path_to_config.json> [output_plan.json]` to compute an execution sequence.
 

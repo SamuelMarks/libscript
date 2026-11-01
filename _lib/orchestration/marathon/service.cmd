@@ -1,9 +1,7 @@
 @echo off
 :: # service.cmd
-::
 :: ## Overview
 :: Manages the Marathon framework daemon (`8080`) lifecycle on Windows.
-::
 :: ## Usage
 :: _lib\orchestration\marathon\service.cmd <start|stop|restart|status|health|logs|install-service|uninstall-service>
 

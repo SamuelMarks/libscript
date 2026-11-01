@@ -1,18 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Generic source build engine for LibScript components. Supports Mode 2 (building
-# from source with the platform default C toolchain) and Mode 3 (building from
-# source with an explicit custom C toolchain such as gcc, clang, tcc, or custom-cc).
-#
+# Generic source build engine for LibScript components. Supports Mode 2 (building from source with the platform default C toolchain) and Mode 3 (building from source with an explicit custom C toolchain such as gcc, clang, tcc, or custom-cc).
 # ## Usage
-# Source this library via SCRIPT_NAME from any component's setup_generic.sh:
-#   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
-#   export SCRIPT_NAME
-#   . "${SCRIPT_NAME}"
-
+# Source this library via SCRIPT_NAME from any component's setup_generic.sh: SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh" export SCRIPT_NAME . "${SCRIPT_NAME}"
 set -feu
 _source_builder_caller_this="${THIS_FILE:-}"; _source_builder_caller_dir="${SCRIPT_DIR:-}"
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -23,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

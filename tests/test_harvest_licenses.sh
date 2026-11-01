@@ -3,7 +3,6 @@
 # Automated unit and integration tests for universal dependency license harvesting.
 # Verifies license extraction from leaf packages and composite application stacks,
 # RTF and plain-text output validation, metadata manifest generation, and idempotency.
-#
 # ## Usage
 # ./tests/test_harvest_licenses.sh
 

@@ -1,9 +1,7 @@
 @echo off
 :: # backup_cloud.cmd
-::
 :: ## Overview
 :: Takes backups, snapshots, or multi-app state exports (`--export-state`) of a cloud node on Windows.
-::
 :: ## Usage
 :: Run `backup_cloud.cmd <node_name> [options]` to take snapshots or export application state.
 

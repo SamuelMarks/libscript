@@ -3,12 +3,9 @@
 # Audits shell scripts across the repository for strict POSIX compliance:
 # ensures #!/bin/sh shebang, set -feu, absence of bashisms, canonical THIS_FILE=
 # resolution dance, and matching Windows batch (.cmd) companion scripts.
-#
 # ## Usage
 # ./devtools/audit/audit_posix.sh [--all | file1.sh file2.sh ...]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -203,23 +200,25 @@ audit_companions() {
   rm -f "$_comp_err"
 
   _cmd_hdr_err=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.cmd" "*.bat") | (
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.cmd" "*.bat") | (
     # shellcheck disable=SC2016
     cd "$LIBSCRIPT_ROOT_DIR" && xargs awk '
       function check_cmd() {
         if (prev_c == "") return
         if (!has_del) print "[FAIL] [" prev_c "] Windows companion missing EnableDelayedExpansion"
         if (!has_this) print "[FAIL] [" prev_c "] Windows companion missing THIS_FILE= definition"
+        if (!has_stack_guard) print "[FAIL] [" prev_c "] Windows companion missing quoted case-insensitive STACK guard (echo \"!STACK!\" | findstr /I)"
       }
       FNR == 1 {
         check_cmd()
         prev_c = FILENAME
-        has_del = 0; has_this = 0
+        has_del = 0; has_this = 0; has_stack_guard = 0
       }
       FNR <= 25 {
         line_l = tolower($0)
         if (line_l ~ /enabledelayedexpansion/) has_del = 1
         if (line_l ~ /this_file=/) has_this = 1
+        if (line_l ~ /echo "!stack!" \| findstr \/i \/c:":/) has_stack_guard = 1
       }
       END { check_cmd() }
     '
@@ -233,7 +232,14 @@ audit_companions() {
   rm -f "$_cmd_hdr_err"
 }
 
-if [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
+if [ "${1:-}" = "--staged" ]; then
+  _staged_list=$(mktemp)
+  (cd "$LIBSCRIPT_ROOT_DIR" && git diff --no-ext-diff --cached --name-only --diff-filter=ACM -- "*.sh" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_staged_list"
+  if [ -s "$_staged_list" ]; then
+    audit_batch < "$_staged_list"
+  fi
+  rm -f "$_staged_list"
+elif [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
   _target_list=$(mktemp)
   for _t in "$@"; do
     if [ -f "$_t" ]; then
@@ -262,8 +268,8 @@ if [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
 else
   _all_sh=$(mktemp)
   _all_scripts=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_all_sh"
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh" "*.cmd" "*.bat") > "$_all_scripts"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_all_sh"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat") > "$_all_scripts"
   audit_batch < "$_all_sh"
   audit_companions < "$_all_scripts"
   rm -f "$_all_sh" "$_all_scripts"

@@ -2,7 +2,6 @@
 # ## Overview
 # Executes illumos distribution cross-synthesis and verification inside FreeBSD 15.1 Vagrant VM.
 # Validates BSD userland tools compatibility and ZFS dataset layout definition interoperability.
-#
 # ## Usage
 # Run FreeBSD host verification:
 #   tests/run_illumos_distro_on_freebsd.sh

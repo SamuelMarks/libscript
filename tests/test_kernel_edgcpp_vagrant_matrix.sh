@@ -4,12 +4,9 @@
 # across gcc, clang (expected failure), and edgcpp-compiler variants
 # (edgcpp+gcc, edgcpp+llvm, edgcpp+llvm+gcc) on Debian 13, RockyLinux 10.2,
 # and Alpine Linux 3.24 boxes sourced from ../bento (without Docker).
-#
 # ## Usage
 # ./tests/test_kernel_edgcpp_vagrant_matrix.sh [--distro=debian-13|rockylinux-10.2|alpine-3.24|all] [--versions="5.15.167 6.6.52"] [--keep-vm]
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -20,7 +17,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"

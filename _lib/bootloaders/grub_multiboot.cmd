@@ -1,13 +1,9 @@
 @echo off
 :: # grub_multiboot.cmd
-::
 :: ## Overview
-:: Generates GRUB2 configuration blocks for chainloading multiple operating systems.
-:: Synthesizes multiboot entries for Linux (direct initrd), FreeBSD (loader.efi chainload),
-:: and illumos (bootx64.efi multiboot2).
-::
+:: Generates GRUB2 configuration blocks for chainloading multiple operating systems. Synthesizes multiboot entries for Linux (direct initrd), FreeBSD (loader.efi chainload), and illumos (bootx64.efi multiboot2).
 :: ## Usage
-::   ./_lib/bootloaders/grub_multiboot.cmd [output_cfg]
+:: ./_lib/bootloaders/grub_multiboot.cmd [output_cfg]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

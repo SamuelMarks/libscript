@@ -1,11 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: 6-stage relational SQL torture test suite for the SQLite component on Windows.
-:: Verifies smoke metadata, DDL/DML transactions, joins/aggregates, recursive CTEs
-:: and window functions, string expressions, and B-Tree index integrity.
-::
+:: 6-stage relational SQL torture test suite for the SQLite component on Windows. Verifies smoke metadata, DDL/DML transactions, joins/aggregates, recursive CTEs and window functions, string expressions, and B-Tree index integrity.
 :: ## Usage
 :: test.cmd [--digest-only]
 

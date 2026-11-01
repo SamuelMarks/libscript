@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for rust-server on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for rust-server.
+:: Executes initialization, logic, or testing for rust-server. Windows environment configuration and PATH probes for rust-server
 
-:: Windows environment configuration and PATH probes for rust-server
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

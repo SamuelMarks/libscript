@@ -1,11 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
-:: Manages the deployment workflow for the TPU VM evaluation node for ML stack on Windows.
-:: Supports APP_DIR/REPO_DIR syncing, libscript.json/pyproject.toml dependency installation,
-:: optional BUCKET_NAME FUSE mounting, and safe environment secret forwarding.
-:: 
+:: Manages the deployment workflow for the TPU VM evaluation node for ML stack on Windows. Supports APP_DIR/REPO_DIR syncing, libscript.json/pyproject.toml dependency installation, optional BUCKET_NAME FUSE mounting, and safe environment secret forwarding.
 :: ## Usage
 :: Execute this script to deploy tpu-vm-eval-node to the target environment.
 

@@ -1,10 +1,7 @@
 @echo off
 :: # provision_db.cmd
-::
 :: ## Overview
-:: Declarative database and cache provisioning engine for LibScript manifests on Windows.
-:: Initializes Postgres, MySQL/MariaDB, SQLite, DuckDB, and Valkey/Redis users/databases and exports connection URLs.
-::
+:: Declarative database and cache provisioning engine for LibScript manifests on Windows. Initializes Postgres, MySQL/MariaDB, SQLite, DuckDB, and Valkey/Redis users/databases and exports connection URLs.
 :: ## Usage
 :: Run `provision_db.cmd <libscript.json>` to provision declared databases and emit `.env.libscript`.
 

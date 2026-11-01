@@ -1,11 +1,9 @@
 @echo off
 :: # pkg_tui.cmd
-::
 :: ## Overview
 :: Interactive text user interface dispatcher for packaging and management on Windows.
-:: 
 :: ## Usage
-::   call pkg_tui.cmd [OPTIONS]
+:: call pkg_tui.cmd [OPTIONS]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

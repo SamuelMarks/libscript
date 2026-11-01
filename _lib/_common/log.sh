@@ -1,15 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Provides a unified logging utility for LibScript (POSIX compliant).
-# It defines standardized logging functions (debug, info, success, warn, error,
-# step, create, reuse, upsert, daemon, route, build, db) that output structured
-# messages in text or JSON format to standard error and optionally to a file.
-#
+# Provides a unified logging utility for LibScript (POSIX compliant). It defines standardized logging functions (debug, info, success, warn, error, step, create, reuse, upsert, daemon, route, build, db) that output structured messages in text or JSON format to standard error and optionally to a file.
 # ## Usage
-# Source this file to make `log_info`, `log_error`, etc. available.
-# Configure behavior via `LIBSCRIPT_LOG_LEVEL`, `LIBSCRIPT_LOG_FORMAT`, and `LIBSCRIPT_LOG_FILE`.
-
-
+# Source this file to make `log_info`, `log_error`, etc. available. Configure behavior via `LIBSCRIPT_LOG_LEVEL`, `LIBSCRIPT_LOG_FORMAT`, and `LIBSCRIPT_LOG_FILE`.
 set -feu
 _log_caller_this="${THIS_FILE:-}"; _log_caller_dir="${SCRIPT_DIR:-}"
 if [ "${SCRIPT_NAME-}" ]; then
@@ -22,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

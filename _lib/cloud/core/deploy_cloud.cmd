@@ -1,13 +1,9 @@
 @echo off
 :: # deploy_cloud.cmd
-::
 :: ## Overview
-:: Primary deployment orchestrator for Windows, provisioning infrastructure across AWS, Azure, or GCP,
-:: and deploying one or more applications onto a single or shared compute node.
-::
+:: Primary deployment orchestrator for Windows, provisioning infrastructure across AWS, Azure, or GCP, and deploying one or more applications onto a single or shared compute node.
 :: ## Usage
-:: Run `deploy_cloud.cmd [options] <provider> <node> <rg> <loc> [repo] [dest]` or
-:: `deploy_cloud.cmd --provider <p> --node <n> --rg <rg> --location <loc> [--app <repo>[:<dest>][@<domain>]]...`
+:: Run `deploy_cloud.cmd [options] <provider> <node> <rg> <loc> [repo] [dest]` or `deploy_cloud.cmd --provider <p> --node <n> --rg <rg> --location <loc> [--app <repo>[:<dest>][@<domain>]]...`
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

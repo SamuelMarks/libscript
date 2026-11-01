@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for dash on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for dash.
+:: Executes initialization, logic, or testing for dash. Windows environment configuration and PATH probes for dash
 
-:: Windows environment configuration and PATH probes for dash
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

@@ -1,7 +1,6 @@
 #!/bin/sh
 # ## Overview
 # API implementation for generating cloud-init YAML blocks for OS integration.
-#
 # ## Usage
 # Source this file and call libscript_cloudinit_generate_mount.
 

@@ -1,12 +1,7 @@
 @echo off
 :: # cli.cmd
-::
 :: ## Overview
-:: Provides a high-level orchestration wrapper around the native `aws` CLI for managing
-:: AWS cloud infrastructure on Windows (`auth`, `dns`, `group`, `location`, `network`,
-:: `firewall`, `node`, `node-group`, `cron`, `jumpbox`, `storage`, `list-managed`,
-:: `cleanup`, `install`, `test`), supporting dry-run mode.
-::
+:: Provides a high-level orchestration wrapper around the native `aws` CLI for managing AWS cloud infrastructure on Windows (`auth`, `dns`, `group`, `location`, `network`, `firewall`, `node`, `node-group`, `cron`, `jumpbox`, `storage`, `list-managed`, `cleanup`, `install`, `test`), supporting dry-run mode.
 :: ## Usage
 :: _lib\cloud-providers\aws\cli.cmd {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]
 

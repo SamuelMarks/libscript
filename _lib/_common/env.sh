@@ -1,10 +1,8 @@
 #!/bin/sh
 # ## Overview
 # Defines environment variables and configurations for the environment variables stack.
-# 
 # ## Usage
 # Source or call this script to configure the environment for ..
-
 
 set -feu
 _env_caller_this="${THIS_FILE:-}"; _env_caller_dir="${SCRIPT_DIR:-}"

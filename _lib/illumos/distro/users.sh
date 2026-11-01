@@ -2,7 +2,6 @@
 # ## Overview
 # Configures user accounts, RBAC execution profiles, passwordless sudoers,
 # doas.conf, and SSH authorized keys inside the illumos target sysroot.
-#
 # ## Usage
 # Provision users and RBAC:
 #   _lib/illumos/distro/users.sh [sysroot_path] [primary_user]

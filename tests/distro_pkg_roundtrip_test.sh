@@ -3,7 +3,6 @@
 # Package manager round-trip test harness verifying packaging, unpacking,
 # manifest querying, and repository index consistency across Debian (.deb),
 # Alpine (.apk), and Red Hat (.rpm) ecosystems.
-#
 # ## Usage
 # ./tests/distro_pkg_roundtrip_test.sh
 

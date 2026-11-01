@@ -3,7 +3,6 @@
 # Synthesizes Red Hat-compatible binary packages (.rpm) directly from
 # component staging directories or manifests, formulating spec files and
 # executing rpmbuild or payload archive assembly.
-#
 # ## Usage
 # ./_lib/orchestration/packagers/build_rpm.sh <pkg_name> <pkg_version> <staging_dir> [out_dir]
 

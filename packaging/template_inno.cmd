@@ -1,10 +1,7 @@
 @echo off
 :: # template_inno.cmd
-::
 :: ## Overview
-:: Template file for Inno Setup installer generation on Windows.
-:: Supports tasks, icons, post-install service setup, and uninstallation hooks.
-:: 
+:: Template file for Inno Setup installer generation on Windows. Supports tasks, icons, post-install service setup, and uninstallation hooks.
 :: ## Usage
 :: This file is processed during the build phase and not executed directly.
 

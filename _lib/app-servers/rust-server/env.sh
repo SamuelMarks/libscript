@@ -3,7 +3,6 @@
 # Defines environment variables for the Rust Server component on Unix.
 # It acts as a structural placeholder, allowing for future injection of custom
 # Rust Server runtime environment variables.
-# 
 # ## Usage
 # Source this file to load default Rust Server configurations into the session.
 

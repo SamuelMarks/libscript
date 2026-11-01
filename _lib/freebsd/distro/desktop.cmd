@@ -1,10 +1,7 @@
 @echo off
 :: # desktop.cmd
-::
 :: ## Overview
-:: Configures modular desktop environment and window manager staging
-:: inside FreeBSD target sysroot on Windows.
-::
+:: Configures modular desktop environment and window manager staging inside FreeBSD target sysroot on Windows.
 :: ## Usage
 :: desktop.cmd [sysroot_path] [environment] [username]
 

@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment initialization for CPP on Windows.
-::
 :: ## Usage
 :: Sets up default environment variables for CPP.
 

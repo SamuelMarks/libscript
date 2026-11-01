@@ -3,7 +3,6 @@
 # Provides an enterprise-grade, turnkey setup mechanism for WordPress 7.1.2.
 # Provisions PHP runtime, optimizes php.ini WAMP parameters, configures web servers,
 # and generates a hardened wp-config.php with unique salts and reverse-proxy awareness.
-#
 # ## Usage
 #   ./_lib/web-apps/wordpress/setup_generic.sh [OPTIONS]
 

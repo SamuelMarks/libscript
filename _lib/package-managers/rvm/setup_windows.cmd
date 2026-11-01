@@ -1,13 +1,11 @@
 @echo off
 :: # setup_windows.cmd
-setlocal EnableDelayedExpansion
 :: ## Overview
-:: Setup script for rvm on Windows.
-:: Configures the rvm CLI wrapper on Windows.
-::
+:: Setup script for rvm on Windows. Configures the rvm CLI wrapper on Windows.
 :: ## Usage
 :: Automatically invoked during libscript rvm installation on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

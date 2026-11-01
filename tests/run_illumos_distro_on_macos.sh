@@ -2,7 +2,6 @@
 # ## Overview
 # Executes illumos distribution assembly and path verification on macOS Vagrant VM.
 # Validates POSIX script execution, path resolution, and QEMU headless invocation on macOS.
-#
 # ## Usage
 # Run macOS host verification:
 #   tests/run_illumos_distro_on_macos.sh

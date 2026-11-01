@@ -3,11 +3,9 @@
 # Master dispatcher for LFS desktop environments and window managers.
 # Configures Sway, Hyprland, Weston, Labwc, Openbox, XFCE4, LXQt,
 # GNOME, KDE Plasma 6, or headless CLI terminal modes.
-#
 # ## Usage
 # ./_lib/desktops/setup.sh [desktop_suite] [action] [target_rootfs]
 # Example: ./_lib/desktops/setup.sh sway install
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

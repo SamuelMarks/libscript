@@ -1,10 +1,7 @@
 @echo off
 :: # base.cmd
-::
 :: ## Overview
-:: Bootstraps the illumos base system directory layout and configuration
-:: markers on Windows host environments.
-::
+:: Bootstraps the illumos base system directory layout and configuration markers on Windows host environments.
 :: ## Usage
 :: base.cmd [sysroot_path] [illumos_version] [arch]
 

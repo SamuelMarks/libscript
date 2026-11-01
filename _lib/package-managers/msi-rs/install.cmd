@@ -1,15 +1,9 @@
 @echo off
-:: # install.cmd
 :: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic setup module for msi-rs on Windows.
-:: Resolves C and Rust toolchain requirements, builds msi-rs from source or extracts cached binaries,
-:: and sets up version-isolated binaries with alias junctions.
-::
+:: Generic setup module for msi-rs on Windows. Resolves C and Rust toolchain requirements, builds msi-rs from source or extracts cached binaries, and sets up version-isolated binaries with alias junctions.
 :: ## Usage
-:: Execute this script to perform generic setup operations for msi-rs:
-::   setup_generic.cmd [install|use|download|uninstall|ls|ls-remote]
+:: Execute this script to perform generic setup operations for msi-rs: setup_generic.cmd [install|use|download|uninstall|ls|ls-remote]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

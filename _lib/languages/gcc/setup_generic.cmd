@@ -1,9 +1,7 @@
 @echo off
 :: # setup_generic.cmd
-::
 :: ## Overview
 :: Generic Windows setup and lifecycle implementation for the GNU Compiler Collection (GCC).
-::
 :: ## Usage
 :: setup_generic.cmd [ACTION]
 

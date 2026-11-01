@@ -1,9 +1,7 @@
 @echo off
 :: # detect_runtimes.cmd
-::
 :: ## Overview
 :: Detects pre-existing system installations of Python 3.11+ and Node.js 18/20+ via PATH scanning.
-::
 :: ## Usage
 :: call "%~dp0detect_runtimes.cmd"
 

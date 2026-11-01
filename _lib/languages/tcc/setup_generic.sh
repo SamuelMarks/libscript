@@ -3,7 +3,6 @@
 # Generic setup and lifecycle implementation for the Tiny C Compiler (TCC).
 # Supports Mode 1 (specific package manager), Mode 2 (building TCC from source with default
 # host toolchain), and Mode 3 (bootstrapping TCC from source with a custom toolchain).
-#
 # ## Usage
 # ./_lib/languages/tcc/setup_generic.sh
 

@@ -1,9 +1,7 @@
 @echo off
 :: # logs.cmd
-::
 :: ## Overview
 :: Logs reader for the TCC component on Windows.
-::
 :: ## Usage
 :: logs.cmd
 

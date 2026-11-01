@@ -2,13 +2,11 @@
 # ## Overview
 # Idempotently provisions a multi-tenant database schema and least-privilege user account.
 # Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite with reuse-else-create semantics.
-#
 # ## Usage
 #   ./provision_schema.sh --engine <engine> --host <host> --port <port> \
 #     --admin-user <user> --admin-pass <pass> \
 #     --schema <name> --user <tenant> --password <tenant_pass> \
 #     [--legacy-names <csv>] [--charset <charset>] [--collation <collation>]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

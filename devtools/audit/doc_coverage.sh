@@ -3,7 +3,6 @@
 # Audits documentation coverage of component README.md files, schema keys, CLI flags,
 # shell functions, and script header comments (.sh, .cmd, .ps1), and optionally updates
 # the % doc coverage shield in README.md.
-#
 # ## Usage
 #   ./devtools/audit/doc_coverage.sh [--strict] [--update-readme [README_PATH]] [--repo-root REPO_ROOT]
 
@@ -236,7 +235,7 @@ if [ -s "$tmp_sh" ]; then
   # shellcheck disable=SC2016
   xargs awk -v root="${TARGET_ROOT}/" '
     FNR == 1 { has_doc = 0; prev_hdr = ""; rel = FILENAME; sub("^" root, "", rel) }
-    /^# ## / {
+    /^[[:space:]]*# ## / {
         if ($0 == prev_hdr) {
             print rel "\t" rel ":" FNR " (duplicate docstring header)"
         }
@@ -244,17 +243,19 @@ if [ -s "$tmp_sh" ]; then
         has_doc = 1
         next
     }
-    /^# (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
+    /^[[:space:]]*# (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
         print rel "\t" rel ":" FNR " (placeholder docstring)"
     }
-    /^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ {
+    /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ {
         if (!has_doc) {
             print rel "\t" rel ":" FNR
         }
         has_doc = 0
         prev_hdr = ""
+        next
     }
-    /^[^#]/ && NF > 0 && !/^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ { has_doc = 0; prev_hdr = "" }
+    /^[[:space:]]*#/ || NF == 0 { next }
+    { has_doc = 0; prev_hdr = "" }
   ' < "$tmp_sh" > "$tmp_sh_err"
   if [ -s "$tmp_sh_err" ]; then
     awk -F'\t' '{ print "[WARN] Missing or invalid function docstring(s) in " $1 ":\n" $2 }' "$tmp_sh_err"
@@ -275,7 +276,7 @@ if [ -s "$tmp_cmd" ]; then
   xargs awk -v root="${TARGET_ROOT}/" '
     FNR == 1 { has_doc = 0; prev_hdr = ""; rel = FILENAME; sub("^" root, "", rel) }
     { sub(/\r$/, "", $0) }
-    /^:: ## / {
+    /^[[:space:]]*:: ## / {
         if ($0 == prev_hdr) {
             print rel "\t" rel ":" FNR " (duplicate docstring header)"
         }
@@ -283,17 +284,19 @@ if [ -s "$tmp_cmd" ]; then
         has_doc = 1
         next
     }
-    /^:: (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
+    /^[[:space:]]*:: (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
         print rel "\t" rel ":" FNR " (placeholder docstring)"
     }
-    /^:[a-zA-Z0-9_]+/ && !/^:EOF/ && !/^:eof/ && !/^:root_found/ && !/^:find_root/ { 
+    /^[[:space:]]*:[a-zA-Z0-9_]+/ && !/^[[:space:]]*:EOF/ && !/^[[:space:]]*:eof/ && !/^[[:space:]]*:root_found/ && !/^[[:space:]]*:find_root/ { 
         if (!has_doc) {
             print rel "\t" rel ":" FNR
         }
         has_doc = 0
         prev_hdr = ""
+        next
     }
-    /^[^:]/ && NF > 0 { has_doc = 0; prev_hdr = "" }
+    /^[[:space:]]*::/ || NF == 0 { next }
+    { has_doc = 0; prev_hdr = "" }
   ' < "$tmp_cmd" > "$tmp_cmd_err"
   if [ -s "$tmp_cmd_err" ]; then
     awk -F'\t' '{ print "[WARN] Missing or invalid label docstring(s) in " $1 ":\n" $2 }' "$tmp_cmd_err"

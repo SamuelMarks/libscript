@@ -3,7 +3,6 @@
 # Executes the end-to-end Red Hat-inspired distribution synthesis pipeline:
 # bootstrapping Glibc/coreutils, RPM database and DNF toolchain, synthesizing
 # RPM binary packages, generating repodata, and configuring target rootfs.
-#
 # ## Usage
 # ./_lib/orchestration/distro/build_redhat.sh [--target-rootfs=<path>] [--profile=<profile.json>]
 

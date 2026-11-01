@@ -2,16 +2,12 @@
 # ## Overview
 # Parses a MySQL/MariaDB DBaaS connection URI string into distinct connection parameters.
 # Supports authentication, custom ports, database schema names, and TLS/SSL query parameters.
-#
 # ## Usage
 #   ./_lib/databases/parse_dbaas_url.sh <connection_url> [--eval|--json|--export]
-#
 # ## Parameters
 #   $1 - Database connection URI (e.g. mysql://user:pass@host:3306/dbname?ssl-ca=ca.pem)
 #   $2 - Output mode (--eval, --json, --export; default: --eval)
-
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

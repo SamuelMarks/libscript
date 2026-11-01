@@ -3,7 +3,6 @@
 # Command-line interface entrypoint for the gettext component.
 # Initializes the lifecycle, resolves the package name, and delegates execution
 # to the shared component_core.sh script.
-#
 # ## Usage
 # ./_lib/utilities/gettext/cli.sh <action> [args...]
 

@@ -1,10 +1,7 @@
 @echo off
 :: # users.cmd
-::
 :: ## Overview
-:: Configures illumos user accounts, RBAC execution profiles, and sudoers
-:: on Windows host environments.
-::
+:: Configures illumos user accounts, RBAC execution profiles, and sudoers on Windows host environments.
 :: ## Usage
 :: users.cmd [sysroot_path] [primary_user]
 

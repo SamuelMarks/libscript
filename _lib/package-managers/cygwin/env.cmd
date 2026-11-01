@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for cygwin on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for cygwin.
+:: Executes initialization, logic, or testing for cygwin. Windows environment configuration and PATH probes for cygwin
 
-:: Windows environment configuration and PATH probes for cygwin
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

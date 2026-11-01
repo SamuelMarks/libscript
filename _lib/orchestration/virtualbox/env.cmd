@@ -1,9 +1,7 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Environment export script for VirtualBox on Windows.
-::
 :: ## Usage
 :: Call this script to set VirtualBox environment variables.
 

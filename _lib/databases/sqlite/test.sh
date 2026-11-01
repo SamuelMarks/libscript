@@ -4,7 +4,6 @@
 # Verifies smoke metadata, DDL/DML transactions, joins/aggregates, recursive CTEs
 # and window functions, JSON/string expressions, and B-Tree index integrity,
 # emitting a deterministic SHA-256 output digest.
-#
 # ## Usage
 # ./_lib/databases/sqlite/test.sh [--digest-only]
 

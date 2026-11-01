@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_iso.cmd
-::
 :: ## Overview
 :: Generates a FreeBSD bootable ISO image on Windows host environments.
-::
 :: ## Usage
 :: freebsd_iso.cmd [sysroot_path] [output_iso]
 

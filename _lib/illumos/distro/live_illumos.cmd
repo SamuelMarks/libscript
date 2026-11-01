@@ -1,13 +1,9 @@
 @echo off
 :: # live_illumos.cmd
-::
 :: ## Overview
-:: Synthesizes live-CD and live-USB bootable illumos/Solaris environments with
-:: boot archives (boot_archive), live ZFS RAM-disk pools, and embedded msi-rs installer suite.
-::
+:: Synthesizes live-CD and live-USB bootable illumos/Solaris environments with boot archives (boot_archive), live ZFS RAM-disk pools, and embedded msi-rs installer suite.
 :: ## Usage
-:: Execute this script to generate a live illumos image:
-::   ./_lib/illumos/distro/live_illumos.cmd [output_path] [build_dir]
+:: Execute this script to generate a live illumos image: ./_lib/illumos/distro/live_illumos.cmd [output_path] [build_dir]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

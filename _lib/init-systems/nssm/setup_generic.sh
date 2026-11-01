@@ -3,7 +3,6 @@
 # ## Overview
 # Generic setup and installation script for the nssm component.
 # Provides a cross-platform shim on POSIX and manages NSSM on Windows.
-#
 # ## Usage
 # Called internally by setup.sh / cli.sh.
 

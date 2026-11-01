@@ -1,9 +1,7 @@
 @echo off
 :: # setup.cmd
-::
 :: ## Overview
 :: Prepares the local environment and idempotently provisions a GCP GPU VM instance on Windows.
-::
 :: ## Usage
 :: payloads\ai\gcp-gpu-vm\setup.cmd [--help]
 

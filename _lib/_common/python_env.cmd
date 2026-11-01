@@ -1,20 +1,11 @@
 @echo off
-:: # python_env.cmd
-setlocal EnableDelayedExpansion
 :: # LibScript Python Virtual Environment Module (Windows Batch)
-::
 :: ## Overview
-:: This module provides utilities for managing Python virtual environments,
-:: resolving Python executable versions, and ensuring virtual environment readiness.
-::
+:: This module provides utilities for managing Python virtual environments, resolving Python executable versions, and ensuring virtual environment readiness.
 :: ## Usage
-:: ```batch
-:: @echo off
-:: call "%~dp0\python_env.cmd" libscript_python_resolve "3.11"
-:: call "%~dp0\python_env.cmd" libscript_python_venv "C:\path\to\venv" "3.11"
-:: call "%~dp0\python_env.cmd" libscript_python_ensure_venv_owner "C:\path\to\project" "3.12"
-:: ```
+:: ```batch @echo off call "%~dp0\python_env.cmd" libscript_python_resolve "3.11" call "%~dp0\python_env.cmd" libscript_python_venv "C:\path\to\venv" "3.11" call "%~dp0\python_env.cmd" libscript_python_ensure_venv_owner "C:\path\to\project" "3.12" ```
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

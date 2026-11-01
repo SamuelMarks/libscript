@@ -2,7 +2,6 @@
 # ## Overview
 # Graphical desktop smoketest verifying X11 server socket/configuration,
 # display manager daemon, and desktop session initialization on illumos images.
-#
 # ## Usage
 # Run GUI smoketest:
 #   tests/illumos_gui_smoke_test.sh [sysroot_or_image] [expected_env] [expected_dm]
@@ -70,8 +69,10 @@ if [ -d "${TARGET}" ]; then
   fi
 fi
 
-printf '[PASS]     Simulated X11 socket /tmp/.X11-unix/X0 active\n' >> "${LOG_FILE}"
-printf '[PASS]     Display Manager %s active\n' "${EXPECTED_DM}" >> "${LOG_FILE}"
-printf '[PASS]     Desktop session %s initialized\n' "${EXPECTED_ENV}" >> "${LOG_FILE}"
+{
+  printf '[PASS]     Simulated X11 socket /tmp/.X11-unix/X0 active\n'
+  printf '[PASS]     Display Manager %s active\n' "${EXPECTED_DM}"
+  printf '[PASS]     Desktop session %s initialized\n' "${EXPECTED_ENV}"
+} >> "${LOG_FILE}"
 
 printf '[OK]       illumos GUI smoketest PASSED.\n'

@@ -1,31 +1,26 @@
 @echo off
 :: # test_live_installer_matrix.cmd
-::
 :: ## Overview
-:: Multi-platform Vagrant verification harness for the msi-rs live installer.
-:: Executes end-to-end testing strictly inside isolated Vagrant virtual machines
-:: across Linux, FreeBSD, SunOS (illumos), Windows, and macOS with 2-pass idempotency checks.
-::
+:: Multi-platform Vagrant verification harness for the msi-rs live installer. Executes end-to-end testing strictly inside isolated Vagrant virtual machines across Linux, FreeBSD, SunOS (illumos), Windows, and macOS with 2-pass idempotency checks.
 :: ## Usage
-:: Execute this script to perform multi-platform Vagrant verification:
-::   ./tests/test_live_installer_matrix.cmd [--all | --platform <linux|freebsd|sunos|windows|macos>]
+:: Execute this script to perform multi-platform Vagrant verification: ./tests/test_live_installer_matrix.cmd [--all | --platform <linux|freebsd|sunos|windows|macos>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found

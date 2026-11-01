@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for choco on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for choco.
+:: Executes initialization, logic, or testing for choco. Windows environment configuration and PATH probes for choco
 
-:: Windows environment configuration and PATH probes for choco
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

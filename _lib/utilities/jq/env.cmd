@@ -1,13 +1,10 @@
 @echo off
 :: # env.cmd
-::
 :: ## Overview
 :: Internal script for jq on Windows.
-::
 :: ## Usage
-:: Executes initialization, logic, or testing for jq.
+:: Executes initialization, logic, or testing for jq. Windows environment configuration and PATH probes for jq
 
-:: Windows environment configuration and PATH probes for jq
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

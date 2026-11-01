@@ -1,9 +1,7 @@
 @echo off
 :: # build.cmd
-::
 :: ## Overview
 :: Windows batch companion script for build.ps1.
-::
 :: ## Usage
 :: build.cmd [args...]
 

@@ -3,11 +3,9 @@
 # Vagrant box lifecycle smoketest for generated illumos .box archives.
 # Validates archive integrity, metadata.json provider definition, embedded Vagrantfile
 # solaris/omnios guest configuration, and SHA256 checksums.
-#
 # ## Usage
 # Run Vagrant box lifecycle test:
 #   tests/illumos_vagrant_box_test.sh [box_path] [provider]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -1,10 +1,7 @@
 @echo off
 :: # test.cmd
-::
 :: ## Overview
-:: Runs the test suite and validation scripts for the 'netctl' stack on Windows,
-:: verifying SPA fallback, WebSocket Upgrade headers, WASM MIME types, and domain configuration.
-:: 
+:: Runs the test suite and validation scripts for the 'netctl' stack on Windows, verifying SPA fallback, WebSocket Upgrade headers, WASM MIME types, and domain configuration.
 :: ## Usage
 :: Execute this script to test netctl functionality.
 

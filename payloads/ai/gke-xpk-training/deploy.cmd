@@ -1,10 +1,7 @@
 @echo off
 :: # deploy.cmd
-::
 :: ## Overview
-:: Idempotently submits the GKE XPK distributed training workload to the target TPU cluster on Windows.
-:: Supports --docker-image, --command, --tpu-type, --num-slices, --spot, and HF_TOKEN injection.
-::
+:: Idempotently submits the GKE XPK distributed training workload to the target TPU cluster on Windows. Supports --docker-image, --command, --tpu-type, --num-slices, --spot, and HF_TOKEN injection.
 :: ## Usage
 :: payloads\ai\gke-xpk-training\deploy.cmd [--command <cmd>] [--docker-image <img>] [--tpu-type <type>] [--num-slices <n>] [--spot] [--help]
 

@@ -1,9 +1,7 @@
 @echo off
 :: # freebsd_raw.cmd
-::
 :: ## Overview
 :: Packages a FreeBSD target sysroot into a raw disk image on Windows.
-::
 :: ## Usage
 :: freebsd_raw.cmd [target_sysroot] [output_image] [size_gib]
 

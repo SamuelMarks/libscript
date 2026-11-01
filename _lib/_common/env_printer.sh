@@ -3,10 +3,8 @@
 # Environment variable exporter and formatting utility for LibScript.
 # Supports single-component evaluation (`libscript_print_env <format> <prefix>`)
 # and manifest-wide multi-component evaluation (`libscript_print_manifest_env <format> <manifest>`).
-#
 # ## Usage
 # Outputs environment configurations for evaluated components.
-
 set -feu
 _ep_caller_this="${_EP_CALLER_THIS:-${THIS_FILE:-}}"
 _ep_caller_dir="${_EP_CALLER_DIR:-${SCRIPT_DIR:-}}"
@@ -21,7 +19,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2

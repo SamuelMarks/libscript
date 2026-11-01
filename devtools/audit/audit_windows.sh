@@ -3,7 +3,6 @@
 # Audits all LibScript components on the Windows 11 Vagrant VM to determine
 # exact failures, missing download URLs, broken test commands, and unsupported tools.
 # Outputs JSON and Markdown summaries.
-#
 # ## Usage
 # ./devtools/audit/audit_windows.sh
 

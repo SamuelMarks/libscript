@@ -1,16 +1,9 @@
 @echo off
 :: # mounts.cmd
-::
 :: ## Overview
-:: Host directory bind-mount manager for Open edX on Windows (Tutor `mounts` parity).
-:: Allows linking local host directories into the Docker-free Open edX environment.
-::
+:: Host directory bind-mount manager for Open edX on Windows (Tutor `mounts` parity). Allows linking local host directories into the Docker-free Open edX environment.
 :: ## Usage
-::   call mounts.cmd add <mount_spec>
-::   call mounts.cmd remove <mount_spec>
-::   call mounts.cmd list
-::   call mounts.cmd clear
-::   call mounts.cmd help
+:: call mounts.cmd add <mount_spec> call mounts.cmd remove <mount_spec> call mounts.cmd list call mounts.cmd clear call mounts.cmd help
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

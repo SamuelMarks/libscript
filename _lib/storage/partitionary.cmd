@@ -1,22 +1,9 @@
 @echo off
 :: # partitionary.cmd
-::
 :: ## Overview
-:: Universal cross-platform storage partitioning and disk geometry abstraction engine.
-:: Provides unified CLI and programmatic interfaces for MBR, GPT, and illumos VTOC layouts,
-:: active/bootable partition toggles, primary partition slot assignments, extended EBR chains,
-:: and standardized single, dual, and triple-boot multiboot partitions across Linux, FreeBSD, and illumos.
-::
+:: Universal cross-platform storage partitioning and disk geometry abstraction engine. Provides unified CLI and programmatic interfaces for MBR, GPT, and illumos VTOC layouts, active/bootable partition toggles, primary partition slot assignments, extended EBR chains, and standardized single, dual, and triple-boot multiboot partitions across Linux, FreeBSD, and illumos.
 :: ## Usage
-:: Execute partitionary directly from the shell:
-::   ./_lib/storage/partitionary.cmd <subcommand> [options...]
-::
-:: Subcommands:
-::   inspect   - Probe device geometry, sector size, and partition table status
-::   layout    - Synthesize single, dual, or triple-boot partition layouts (GPT or MBR)
-::   activate  - Mark target MBR primary partition as active/bootable (0x80 byte)
-::   slice     - Create FreeBSD bsdlabel or illumos VTOC sub-slices inside partition
-::   wipe      - Sanitize and erase partition table headers safely
+:: Execute partitionary directly from the shell: ./_lib/storage/partitionary.cmd <subcommand> [options...] Subcommands: inspect   - Probe device geometry, sector size, and partition table status layout    - Synthesize single, dual, or triple-boot partition layouts (GPT or MBR) activate  - Mark target MBR primary partition as active/bootable (0x80 byte) slice     - Create FreeBSD bsdlabel or illumos VTOC sub-slices inside partition wipe      - Sanitize and erase partition table headers safely
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

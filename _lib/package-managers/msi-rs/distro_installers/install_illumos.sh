@@ -3,11 +3,9 @@
 # Target operating system installation pipeline for illumos/Solaris distributions.
 # Provisions rpool/ROOT/illumos datasets, configures /etc/nodename, /etc/defaultrouter,
 # and /etc/vfstab, sets bootfs properties, and installs illumos boot blocks via bootadm.
-#
 # ## Usage
 # Execute this script to install illumos to a target device:
 #   ./_lib/package-managers/msi-rs/distro_installers/install_illumos.sh <target_dev> [target_dir]
-
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then

@@ -3,7 +3,6 @@
 # Smoke test suite for the Linux Kernel (_lib/kernel/linux) component.
 # Verifies that the kernel build/staging pipeline produces vmlinuz, System.map,
 # .config, and build-metrics.json, and executes the freestanding kernel proof.
-#
 # ## Usage
 # ./_lib/kernel/linux/test.sh
 
@@ -26,7 +25,7 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR

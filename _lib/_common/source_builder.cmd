@@ -1,11 +1,7 @@
 @echo off
 :: # source_builder.cmd
-::
 :: ## Overview
-:: Generic source build engine for LibScript components on Windows. Supports Mode 2
-:: (building from source with the platform default C toolchain) and Mode 3 (building
-:: from source with an explicit custom C toolchain such as gcc, clang, tcc, or custom-cc).
-::
+:: Generic source build engine for LibScript components on Windows. Supports Mode 2 (building from source with the platform default C toolchain) and Mode 3 (building from source with an explicit custom C toolchain such as gcc, clang, tcc, or custom-cc).
 :: ## Usage
 :: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_resolve_build_toolchain <comp> <ver>
 

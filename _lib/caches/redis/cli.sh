@@ -3,7 +3,6 @@
 # Serves as the command-line interface entry point for the Redis Cache component on Unix.
 # It explicitly sets the target package to `redis` and delegates execution
 # to the common `component_core.sh`.
-# 
 # ## Usage
 # Execute this script to interact with the component's CLI.
 

@@ -1,9 +1,7 @@
 @echo off
 :: # os_info.cmd
-::
 :: ## Overview
 :: Detects and exports environment variables describing the Windows operating system and architecture.
-::
 :: ## Usage
 :: Call this script to initialize OS, TARGET_OS, ARCH, and PKG_MGR variables on Windows.
 

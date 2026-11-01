@@ -1,20 +1,9 @@
 @echo off
 :: # harvest_licenses.cmd
-::
 :: ## Overview
-:: Universal dependency license harvester and bundler for LibScript installers on Windows.
-:: Discovers all packaged dependencies, extracts and validates their legal terms,
-:: and generates formatted plain-text and Rich Text Format (.rtf) license agreements
-:: alongside an indexed licenses_manifest.json for WiX, Inno Setup, and NSIS installers.
-::
+:: Universal dependency license harvester and bundler for LibScript installers on Windows. Discovers all packaged dependencies, extracts and validates their legal terms, and generates formatted plain-text and Rich Text Format (.rtf) license agreements alongside an indexed licenses_manifest.json for WiX, Inno Setup, and NSIS installers.
 :: ## Usage
-:: call packaging\harvest_licenses.cmd <TARGET_DIR_OR_PLAN> [OPTIONS]
-::
-:: Options:
-::   --out-dir <dir>       Output directory for harvested license assets
-::   --format <type>       Format to generate: rtf, txt, or all (default: all)
-::   --force               Regenerate licenses even if stamp file exists
-::   --help, -h            Show this help text
+:: call packaging\harvest_licenses.cmd <TARGET_DIR_OR_PLAN> [OPTIONS] Options: --out-dir <dir>       Output directory for harvested license assets --format <type>       Format to generate: rtf, txt, or all (default: all) --force               Regenerate licenses even if stamp file exists --help, -h            Show this help text
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
