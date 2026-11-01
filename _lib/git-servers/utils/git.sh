@@ -28,7 +28,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # ## git_get
-# Performs the git_get operation and updates component state.
+# Clones a Git repository or fetches and updates an existing checkout idempotently.
 git_get() {
     repo="${1}"
     target="${2}"

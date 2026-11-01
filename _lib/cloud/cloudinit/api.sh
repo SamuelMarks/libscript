@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## libscript_cloudinit_generate_mount
-# Performs the libscript_cloudinit_generate_mount operation and updates component state.
+# Generates cloud-init user-data directives for formatting and mounting block volumes.
 libscript_cloudinit_generate_mount() {
   device="$1"
   mount_point="$2"

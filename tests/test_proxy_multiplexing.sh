@@ -51,7 +51,7 @@ parse_args() {
 ## run_vagrant_suite
 ## Orchestrates validation for a specific OS within Vagrant
 # ## run_vagrant_suite
-# Performs the run_vagrant_suite operation and updates component state.
+# Executes the proxy multiplexing test suite inside a Vagrant guest VM.
 run_vagrant_suite() {
   _os="$1"
   _proxy_engine="${2:-nginx}"

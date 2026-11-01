@@ -38,7 +38,7 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Common utilities for managing native libscript installations and version aliases.
 
 # ## libscript_get_version_dir
-# Performs the libscript_get_version_dir operation and updates component state.
+# Resolves and prints the installation directory path for a specific component version.
 libscript_get_version_dir() {
   component="$1"
   version="$2"
@@ -46,7 +46,7 @@ libscript_get_version_dir() {
 }
 
 # ## libscript_symlink_alias
-# Performs the libscript_symlink_alias operation and updates component state.
+# Updates the default or named version symlink/junction to point to the target version.
 libscript_symlink_alias() {
   component="$1"
   alias_name="$2"

@@ -1,5 +1,12 @@
 @echo off
 :: # logs_service.cmd
+::
+:: ## Overview
+:: Abstracts reading logs for a given service on Windows.
+::
+:: ## Usage
+:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\logs_service.cmd" "%*" "postgresql" "C:\path\to\log.txt"
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,14 +17,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Abstracts reading logs for a given service on Windows.
-rem
-:: ## Usage
-:: Performs the Usage operation and updates component state.
-rem call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\logs_service.cmd" "%*" "postgresql" "C:\path\to\log.txt"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

@@ -159,14 +159,14 @@ vm_action() {
 }
 
 # ## vm_click
-# Performs the vm_click operation and updates component state.
+# Sends a synthetic mouse click to a named UI control inside the guest VM.
 vm_click() {
   vm_action "CLICK:$1"
   sleep 1.5
 }
 
 # ## vm_radio
-# Performs the vm_radio operation and updates component state.
+# Selects a radio button control in the active MSI installer dialog inside the guest VM.
 vm_radio() {
   vm_action "RADIO:$1"
   sleep 1.5
@@ -187,7 +187,7 @@ vm_uncheck() {
 }
 
 # ## vm_set_edit
-# Performs the vm_set_edit operation and updates component state.
+# Populates a text input control in the active MSI dialog inside the guest VM.
 vm_set_edit() {
   _idx="$1"
   _val="$2"
@@ -196,7 +196,7 @@ vm_set_edit() {
 }
 
 # ## vm_wait_dialog
-# Performs the vm_wait_dialog operation and updates component state.
+# Polls the guest VM window tree until the expected MSI dialog appears.
 vm_wait_dialog() {
   _title="$1"
   vm_action "WAIT_DIALOG:$_title"
@@ -212,14 +212,14 @@ vm_wait() {
 }
 
 # ## vm_launch_msi
-# Performs the vm_launch_msi operation and updates component state.
+# Launches the MSI installer UI inside the guest VM session.
 vm_launch_msi() {
   _msi_path="$1"
   vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument '/i ${_msi_path}'; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force | Out-Null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
 }
 
 # ## launch_browser_url
-# Performs the launch_browser_url operation and updates component state.
+# Opens the target URL in a headless or guest browser and captures verification screenshots.
 launch_browser_url() {
   _url="$1"
   vm_run "cmd.exe /c call C:\libscript\packaging\open_browser.cmd $_url"
@@ -227,7 +227,7 @@ launch_browser_url() {
 }
 
 # ## clean_guest_installations
-# Performs the clean_guest_installations operation and updates component state.
+# Removes previous MSI installations and state inside the Vagrant guest VM.
 clean_guest_installations() {
   printf '[INFO] Cleaning prior installations and browser sessions on guest...\n'
   # shellcheck disable=SC2016

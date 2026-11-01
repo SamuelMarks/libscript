@@ -1,5 +1,13 @@
 @echo off
 :: # discover_databases.cmd
+::
+:: ## Overview
+:: Discovers active database instances on Windows.
+:: Uses sc.exe and netstat for probing.
+::
+:: ## Usage
+::   call discover_databases.cmd [--json | --eval | --check --engine <type>]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,13 +18,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Discovers active database instances on Windows.
-:: Uses sc.exe and netstat for probing.
-::
-:: ## Usage
-::   call discover_databases.cmd [--json | --eval | --check --engine <type>]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -64,7 +65,7 @@ shift
 goto parse_args
 
 :: ## run_discovery
-:: Performs the run_discovery operation and updates component state.
+:: Scans local ports and service registries for running database instances.
 :run_discovery
 set "FOUND_MYSQL=0"
 set "FOUND_PG=0"

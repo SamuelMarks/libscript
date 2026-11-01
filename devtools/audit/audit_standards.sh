@@ -172,6 +172,9 @@ audit_single_file() {
         if ($0 ~ /^[[:space:]]*#/) {
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
+          if ($0 ~ /^#[[:space:]]*Performs the .* operation and updates component state\.$/) {
+            placeholder_doc_hits = (placeholder_doc_hits ? placeholder_doc_hits "; " : "") NR ":" $0
+          }
         }
         if ($0 !~ /^[[:space:]]*#/ && !allow_pkg_next && $0 !~ /libscript-allow-raw-pkg/) {
           if ($0 ~ /(^|[[:space:];|&])(priv[[:space:]]+|sudo[[:space:]]+)?(apt-get[[:space:]]+(install|remove|purge|update)|apt[[:space:]]+(install|remove|purge)|apk[[:space:]]+(add|del|update)|dnf[[:space:]]+(install|remove|groupinstall)|yum[[:space:]]+(install|remove|groupinstall)|pacman[[:space:]]+(-S|-R|-Rns|-Syu)|zypper[[:space:]]+(install|in|remove|rm)|brew[[:space:]]+(install|uninstall|tap|services)|port[[:space:]]+(install|uninstall)|pkg[[:space:]]+(install|delete|add)|xbps-install|xbps-remove|emerge[[:space:]]|swupd[[:space:]]+bundle-add|winget[[:space:]]+(install|uninstall|upgrade)|choco[[:space:]]+(install|uninstall|upgrade)|scoop[[:space:]]+(install|uninstall|update)|vcpkg[[:space:]]+(install|remove)|conan[[:space:]]+install|nix[[:space:]]+profile[[:space:]]+install|nix-env[[:space:]]+-i|guix[[:space:]]+(install|package)|spack[[:space:]]+(install|uninstall)|npm[[:space:]]+install[[:space:]]+-g|composer[[:space:]]+global[[:space:]]+require)([[:space:]]|$)/) {
@@ -228,6 +231,7 @@ audit_single_file() {
         if (!has_zsh_sc) print "ZSH_SHELLCHECK_TAG|Missing # shellcheck disable=SC2296 in ZSH_VERSION header block."
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
         if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
+        if (placeholder_doc_hits != "") print "DOC_PLACEHOLDER|Auto-generated placeholder docstring found: " placeholder_doc_hits
         if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir found without -p: " mkdir_hits
         if (ln_hits != "") print "IDEMPOTENCY|Unguarded ln -s found without -f: " ln_hits
         if (eval_hits != "") print "BAN_EVAL|Disallowed use of eval found: " eval_hits
@@ -440,6 +444,9 @@ audit_single_file() {
         if (tolower($0) ~ /^[[:space:]]*(::|rem[[:space:]])/) {
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
+          if ($0 ~ /^::[[:space:]]*Performs the .* operation and updates component state\.$/) {
+            placeholder_doc_hits = (placeholder_doc_hits ? placeholder_doc_hits "; " : "") NR ":" $0
+          }
         }
         if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && !allow_fetch_next && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
           if (tolower($0) ~ /(invoke-webrequest|invoke-restmethod|[[:space:]"]iwr[[:space:]]|[[:space:]"]irm[[:space:]]|certutil[[:space:]]+-urlcache|curl[[:space:]]+-[a-z0-9]*[sflo])/ && tolower($0) !~ /(127\.0\.0\.1|localhost|--cacert)/) {
@@ -538,6 +545,7 @@ audit_single_file() {
         if (has_dup_stack) print "BATCH_DUPLICATE_STACK|Duplicate legacy searchVal=;%THIS_FILE%; STACK block found."
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
         if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
+        if (placeholder_doc_hits != "") print "DOC_PLACEHOLDER|Auto-generated placeholder docstring found: " placeholder_doc_hits
         if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir in batch script: " mkdir_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (script_dir_hits != "") print "BATCH_SCRIPT_DIR_SEPARATOR|Missing backslash after SCRIPT_DIR: " script_dir_hits

@@ -41,7 +41,7 @@ unset SCRIPT_NAME || true
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 # ## libscript_cdn_create
-# Performs the libscript_cdn_create operation and updates component state.
+# Creates a CDN distribution pointing to the specified origin endpoint.
 libscript_cdn_create() {
   provider="$1"
   bucket="$2"
@@ -182,7 +182,7 @@ POLICY_EOF
 }
 
 # ## libscript_cdn_delete
-# Performs the libscript_cdn_delete operation and updates component state.
+# Disables and deletes an existing CDN distribution.
 libscript_cdn_delete() {
   provider="$1"
   dist_id="$2"
@@ -221,7 +221,7 @@ libscript_cdn_delete() {
 }
 
 # ## libscript_cdn_list
-# Performs the libscript_cdn_list operation and updates component state.
+# Lists active CDN distributions managed by the current cloud provider.
 libscript_cdn_list() {
   provider="$1"
   
@@ -240,7 +240,7 @@ libscript_cdn_list() {
 }
 
 # ## libscript_cdn_invalidate
-# Performs the libscript_cdn_invalidate operation and updates component state.
+# Submits a cache invalidation request for the specified paths on a CDN distribution.
 libscript_cdn_invalidate() {
   provider="$1"
   dist_id="$2"

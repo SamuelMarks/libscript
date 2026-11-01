@@ -3,7 +3,7 @@
 # Test script for uWSGI server.
 #
 # ## Usage
-# Performs the Usage operation and updates component state.
+# ./_lib/app-servers/uwsgi/test.sh
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

@@ -36,9 +36,6 @@ unset SCRIPT_NAME || true
 NVM_VERSION="${NVM_VERSION:-latest}"
 export NVM_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nvm/${NVM_VERSION}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
-  if ! type local >/dev/null 2>&1; then
-    alias local=typeset 2>/dev/null || true
-  fi
   # shellcheck disable=SC1091
   . "$NVM_DIR/nvm.sh"
 fi

@@ -127,7 +127,7 @@ echo   help, -h  Show this help text
 exit /b 0
 
 :: ## do_start
-:: Performs the do_start operation and updates component state.
+:: Starts the managed application services.
 :do_start
 echo [INFO] Starting Open edX platform services...
 
@@ -181,7 +181,7 @@ if %ERRORLEVEL% neq 0 (
 exit /b 0
 
 :: ## do_stop
-:: Performs the do_stop operation and updates component state.
+:: Stops the managed application services.
 :do_stop
 echo [INFO] Stopping Open edX platform services...
 
@@ -200,14 +200,14 @@ echo [PASS] Open edX platform services stopped.
 exit /b 0
 
 :: ## do_restart
-:: Performs the do_restart operation and updates component state.
+:: Restarts the managed application services.
 :do_restart
 call :do_stop
 call :do_start
 exit /b 0
 
 :: ## do_status
-:: Performs the do_status operation and updates component state.
+:: Queries and displays the operational status of the managed services.
 :do_status
 echo ======================================================
 echo              Open edX Platform Status (Windows)
@@ -218,21 +218,21 @@ echo ======================================================
 exit /b 0
 
 :: ## do_lms
-:: Performs the do_lms operation and updates component state.
+:: Starts or manages the Open edX LMS (Learning Management System) service.
 :do_lms
 call :do_status
 start http://localhost:%OPENEDX_LMS_PORT%
 exit /b 0
 
 :: ## do_studio
-:: Performs the do_studio operation and updates component state.
+:: Starts or manages the Open edX Studio (CMS) service.
 :do_studio
 call :do_status
 start http://localhost:%OPENEDX_CMS_PORT%
 exit /b 0
 
 :: ## do_install_service
-:: Performs the do_install_service operation and updates component state.
+:: Registers and enables the Open edX Windows background services.
 :do_install_service
 echo [INFO] Installing Open edX native services...
 
@@ -255,7 +255,7 @@ echo [PASS] Successfully installed Open edX services.
 exit /b 0
 
 :: ## do_uninstall_service
-:: Performs the do_uninstall_service operation and updates component state.
+:: Stops and removes the registered Open edX Windows services.
 :do_uninstall_service
 echo [INFO] Uninstalling Open edX native services...
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --uninstall "openedx-lms"

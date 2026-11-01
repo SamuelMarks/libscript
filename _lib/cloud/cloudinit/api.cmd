@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_cloudinit_generate_mount
-:: Performs the libscript_cloudinit_generate_mount operation and updates component state.
+:: Generates cloud-init user-data directives for formatting and mounting block volumes.
 :libscript_cloudinit_generate_mount
 set "device=%~2"
 set "mount_point=%~3"

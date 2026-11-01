@@ -125,7 +125,7 @@ if "%CONF_FILE%"=="" (
 goto interpolate_block
 
 :: ## generate_nginx_block
-:: Performs the generate_nginx_block operation and updates component state.
+:: Generates an Nginx server configuration block from an abstract vhost descriptor.
 :generate_nginx_block
 (
     echo # BEGIN libscript-managed: %APP_ID%
@@ -149,7 +149,7 @@ goto interpolate_block
 exit /b 0
 
 :: ## generate_apache2_block
-:: Performs the generate_apache2_block operation and updates component state.
+:: Generates an Apache httpd VirtualHost configuration block from an abstract vhost descriptor.
 :generate_apache2_block
 (
     echo # BEGIN libscript-managed: %APP_ID%
@@ -169,7 +169,7 @@ exit /b 0
 exit /b 0
 
 :: ## interpolate_block
-:: Performs the interpolate_block operation and updates component state.
+:: Substitutes template placeholders in a virtual host block with concrete runtime values.
 :interpolate_block
 set "NEW_BLOCK_FILE=%THIS_DIR%.tmp_block_%APP_ID%"
 set "BACKUP_FILE=%CONF_FILE%.bak"
@@ -233,7 +233,7 @@ del /f /q "%NEW_BLOCK_FILE%"
 goto test_and_reload
 
 :: ## test_and_reload
-:: Performs the test_and_reload operation and updates component state.
+:: Validates the web server configuration syntax and reloads the daemon or rolls back on error.
 :test_and_reload
 set "TEST_CMD="
 set "RELOAD_CMD="

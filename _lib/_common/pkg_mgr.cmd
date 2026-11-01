@@ -196,7 +196,7 @@ goto :depends_loop
 
 :: Unified Caching Downloader (Windows)
 :: ## libscript_download
-:: Performs the libscript_download operation and updates component state.
+:: Downloads a remote artifact with offline cache resolution and SHA-256 checksum verification.
 :libscript_download
 set "url=%~1"
 set "dest=%~2"
@@ -218,7 +218,7 @@ if "!expected_checksum!"=="" (
         )
 )
 :: ## found_checksum
-:: Performs the found_checksum operation and updates component state.
+:: Verifies the downloaded file SHA-256 digest against the expected checksum.
 :found_checksum
 
 :: 2. Aria2 Export Mode
@@ -389,7 +389,7 @@ if not "!dest!"=="" (
 exit /b 0
 
 :: ## libscript_fetch
-:: Performs the libscript_fetch operation and updates component state.
+:: Delegates artifact retrieval to libscript_download.
 :libscript_fetch
 call :libscript_download %*
 exit /b %errorlevel%

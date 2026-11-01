@@ -57,6 +57,7 @@ verify_kernel_compiler_matrix() {
   grep -q '"LIBSCRIPT_KERNEL_BOOT_OK"' "${_kreport}"
   grep -q '"compiler_id": "edgcpp"' "${_kreport}"
   grep -q '"compiler_id": "custom-cc"' "${_kreport}"
+  rm -rf "${LIBSCRIPT_ROOT_DIR}/build" 2>/dev/null || true
 }
 
 verify_kernel_profiles_resolution

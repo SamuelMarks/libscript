@@ -1,5 +1,13 @@
 @echo off
 :: # provision_proxy.cmd
+::
+:: ## Overview
+:: Declarative Reverse Proxy Synthesizer. Generates Nginx, Caddy, Httpd, or IIS configurations
+:: to map multi-vHost architectures to underlying WSGI ports, static webroots, MFEs, and WebSockets.
+::
+:: ## Usage
+::   call provision_proxy.cmd --proxy <nginx|caddy|httpd|iis> --app-dir <dir> --packaging <path>
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,13 +18,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Declarative Reverse Proxy Synthesizer. Generates Nginx, Caddy, Httpd, or IIS configurations
-:: to map multi-vHost architectures to underlying WSGI ports, static webroots, MFEs, and WebSockets.
-::
-:: ## Usage
-::   call provision_proxy.cmd --proxy <nginx|caddy|httpd|iis> --app-dir <dir> --packaging <path>
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -64,7 +65,7 @@ shift
 goto parse_args
 
 :: ## run_provision
-:: Performs the run_provision operation and updates component state.
+:: Validates arguments and executes the provisioning workflow.
 :run_provision
 if "%PROXY_TYPE%"=="" ( echo Error: Missing proxy >&2 & exit /b 1 )
 if "%APP_DIR%"=="" ( echo Error: Missing app-dir >&2 & exit /b 1 )

@@ -70,7 +70,7 @@ set "REST_ARGS=%REST_ARGS% %3"
 shift
 goto :parse_args
 :: ## done_parse
-:: Performs the done_parse operation and updates component state.
+:: Finishes command-line option parsing and dispatches the selected subcommand.
 :done_parse
 
 if "%ACTION%"=="--help" (
@@ -128,7 +128,7 @@ call "!LOG_CMD!" :log_error "Unknown or missing action: %ACTION%. Supported: cre
 exit /b 1
 
 :: ## create
-:: Performs the create operation and updates component state.
+:: Creates and provisions the requested cloud or storage resource.
 :create
 if "%GPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: gpu-vm create <name>"
@@ -176,7 +176,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## delete
-:: Performs the delete operation and updates component state.
+:: Deletes the specified cloud or storage resource.
 :delete
 if "%GPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: gpu-vm delete <name>"
@@ -206,7 +206,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## start
-:: Performs the start operation and updates component state.
+:: Starts the stopped cloud virtual machine instance.
 :start
 if "%GPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: gpu-vm start <name>"
@@ -217,7 +217,7 @@ gcloud compute instances start "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
 :: ## stop
-:: Performs the stop operation and updates component state.
+:: Stops the running cloud virtual machine instance.
 :stop
 if "%GPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: gpu-vm stop <name>"
@@ -228,7 +228,7 @@ gcloud compute instances stop "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
 :: ## ssh
-:: Performs the ssh operation and updates component state.
+:: Opens an interactive SSH session or runs a remote command on the target cloud VM.
 :ssh
 if "%GPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: gpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [command]"
@@ -261,14 +261,14 @@ if not "%FORWARD_PORT%"=="" (
 
 set "REST_ARGS="
 :: ## gather_ssh_args
-:: Performs the gather_ssh_args operation and updates component state.
+:: Collects remaining command-line arguments to forward to the remote SSH invocation.
 :gather_ssh_args
 if "%~1"=="" goto :done_ssh_args
 set "REST_ARGS=%REST_ARGS% %1"
 shift
 goto :gather_ssh_args
 :: ## done_ssh_args
-:: Performs the done_ssh_args operation and updates component state.
+:: Executes the SSH command once all passthrough arguments have been collected.
 :done_ssh_args
 
 if "%REST_ARGS%"=="" (

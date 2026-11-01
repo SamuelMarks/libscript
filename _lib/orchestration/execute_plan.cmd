@@ -103,7 +103,7 @@ for /f %%S in ('jq ".stages | length" "%PLAN_FILE%"') do set "TOTAL_STAGES=%%S"
 set "STAGE_IDX=0"
 
 :: ## stage_loop
-:: Performs the stage_loop operation and updates component state.
+:: Iterates through ordered execution stages in the deployment plan.
 :stage_loop
 if !STAGE_IDX! geq !TOTAL_STAGES! goto all_done
 
@@ -118,7 +118,7 @@ for /f %%T in ('jq ".stages[!STAGE_IDX!].tasks | length" "%PLAN_FILE%"') do set 
 set "TASK_IDX=0"
 
 :: ## task_loop
-:: Performs the task_loop operation and updates component state.
+:: Executes individual component tasks within the current execution plan stage.
 :task_loop
 if !TASK_IDX! geq !TOTAL_TASKS! (
     set /a STAGE_IDX+=1
@@ -154,7 +154,7 @@ set /a TASK_IDX+=1
 goto task_loop
 
 :: ## all_done
-:: Performs the all_done operation and updates component state.
+:: Finalizes execution plan processing and exits cleanly.
 :all_done
 echo.
 echo [SUCCESS] All execution plan stages processed successfully.

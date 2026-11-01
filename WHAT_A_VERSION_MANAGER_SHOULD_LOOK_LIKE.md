@@ -208,3 +208,34 @@ Redis, Valkey, Meilisearch, Nginx, Caddy, HTTPD, IIS) expose tenant-scoped hooks
    host block while leaving the shared physical engine running for co-tenant stacks.
 3. **`backup_tenant --tenant <id> <dest_dir>` & `restore_tenant --tenant <id> <src_dir>`**: Exports
    and restores tenant-isolated logical dumps without affecting neighboring tenants.
+
+---
+
+## 8. Scaffolding a New Version Manager Component (`scaffold` / `new-component`)
+
+To eliminate boilerplate when creating a new component-package-manager that satisfies every contract
+in this specification (canonical `THIS_FILE` header, `STACK` recursion guard, `.sh`/`.cmd` parity,
+`manifest.json`, `vars.schema.json`, `README.md` markers, and optional `hooks/`), use the built-in
+scaffolder:
+
+- **Interactive Wizard (for human maintainers):**
+  ```sh
+  ./libscript.sh scaffold
+  # or on Windows:
+  .\libscript.cmd scaffold
+  ```
+- **Non-Interactive JSON Specification (validated by `component-scaffold.schema.json`):**
+  ```sh
+  ./libscript.sh scaffold --from-json=my-component.scaffold.json
+  ```
+- **Non-Interactive CLI Flag Invocation:**
+  ```sh
+  ./libscript.sh scaffold \
+    --non-interactive \
+    --name=zoxide \
+    --category=utilities \
+    --description="A smarter cd command inspired by z and autojump." \
+    --github-repo=ajeetdsouza/zoxide \
+    --version-scheme=github-release \
+    --os=all
+  ```

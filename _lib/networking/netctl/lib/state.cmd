@@ -84,7 +84,7 @@ move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 
 :: ## listen
-:: Performs the listen operation and updates component state.
+:: Records a port listen directive in the netctl state file.
 :listen
 call :init
 jq --arg p "%~2" ".listen += [$p] | .listen |= unique" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
@@ -92,7 +92,7 @@ move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 
 :: ## static
-:: Performs the static operation and updates component state.
+:: Records a static file serving route in the netctl state file.
 :static
 call :init
 jq --arg p "%~2" --arg t "%~3" ".routes[$p] = {\"type\": \"static\", \"target\": $t}" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
@@ -108,7 +108,7 @@ move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 
 :: ## proxy
-:: Performs the proxy operation and updates component state.
+:: Records a reverse-proxy route mapping in the netctl state file.
 :proxy
 call :init
 jq --arg p "%~2" --arg t "%~3" ".routes[$p] = {\"type\": \"proxy\", \"target\": $t}" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
@@ -127,7 +127,7 @@ move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 
 :: ## rewrite
-:: Performs the rewrite operation and updates component state.
+:: Records a URL rewrite rule in the netctl state file.
 :rewrite
 call :init
 jq --arg p "%~2" --arg pt "%~3" ".routes[$p] = {\"type\": \"rewrite\", \"pattern\": $pt}" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"

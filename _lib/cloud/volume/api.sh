@@ -41,7 +41,7 @@ unset SCRIPT_NAME || true
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 # ## libscript_volume_create
-# Performs the libscript_volume_create operation and updates component state.
+# Creates a persistent cloud block storage volume.
 libscript_volume_create() {
   provider="$1"
   size="${2:-10}"
@@ -118,7 +118,7 @@ libscript_volume_create() {
 }
 
 # ## libscript_volume_delete
-# Performs the libscript_volume_delete operation and updates component state.
+# Deletes an unattached cloud block storage volume.
 libscript_volume_delete() {
   provider="$1"
   vid="$2"
@@ -171,7 +171,7 @@ libscript_volume_delete() {
 }
 
 # ## libscript_volume_list
-# Performs the libscript_volume_list operation and updates component state.
+# Lists persistent block storage volumes in the target cloud region.
 libscript_volume_list() {
   provider="$1"
   
@@ -215,7 +215,7 @@ libscript_volume_list() {
 }
 
 # ## libscript_volume_attach
-# Performs the libscript_volume_attach operation and updates component state.
+# Attaches a cloud block storage volume to a compute instance.
 libscript_volume_attach() {
   provider="$1"
   vid="$2"
@@ -260,7 +260,7 @@ libscript_volume_attach() {
 }
 
 # ## libscript_volume_detach
-# Performs the libscript_volume_detach operation and updates component state.
+# Detaches a cloud block storage volume from its compute instance.
 libscript_volume_detach() {
   provider="$1"
   vid="$2"

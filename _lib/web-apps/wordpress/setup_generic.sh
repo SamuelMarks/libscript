@@ -63,7 +63,7 @@ done
 # ## Parameters
 #   $@ - Arguments to pass to mkdir
 # ## safe_mkdir
-# Performs the safe_mkdir operation and updates component state.
+# Creates directories with mkdir -p, falling back to priv when elevated permissions are needed.
 safe_mkdir() {
   mkdir -p "$@" 2>/dev/null || sudo -n mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
 }
@@ -74,7 +74,7 @@ safe_mkdir() {
 # ## Parameters
 #   $@ - Arguments to pass to tee
 # ## safe_tee
-# Performs the safe_tee operation and updates component state.
+# Writes standard input to a target file, using priv tee when elevated permissions are needed.
 safe_tee() {
   tee "$@" 2>/dev/null || sudo -n tee "$@" 2>/dev/null || tee "$@"
 }
@@ -85,7 +85,7 @@ safe_tee() {
 # ## Parameters
 #   $@ - Arguments to pass to cp
 # ## safe_cp
-# Performs the safe_cp operation and updates component state.
+# Copies files using elevated privileges when the destination directory is not writable.
 safe_cp() {
   cp "$@" 2>/dev/null || sudo -n cp "$@" 2>/dev/null || cp "$@"
 }
@@ -96,7 +96,7 @@ safe_cp() {
 # ## Parameters
 #   $@ - Arguments to pass to tar
 # ## safe_tar
-# Performs the safe_tar operation and updates component state.
+# Extracts a tar archive into the destination directory, using priv if needed.
 safe_tar() {
   tar "$@" 2>/dev/null || sudo -n tar "$@" 2>/dev/null || tar "$@"
 }

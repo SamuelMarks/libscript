@@ -114,7 +114,7 @@ if /I "%~1"=="-o" (
 shift
 goto parse_loop
 :: ## parse_done
-:: Performs the parse_done operation and updates component state.
+:: Completes command-line flag parsing and validates required parameters.
 :parse_done
 
 set "SYSROOT=%REPO_ROOT%\build\illumos-sysroot"

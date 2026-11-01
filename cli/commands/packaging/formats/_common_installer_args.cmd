@@ -87,7 +87,7 @@ set "FINISH_TEXT="
 set "OFFLINE=0"
 
 :: ## args_loop
-:: Performs the args_loop operation and updates component state.
+:: Iterates through command-line arguments and populates installer configuration options.
 :args_loop
 if "%~1"=="" goto args_done
 if /i "%~1"=="--user-mode" (

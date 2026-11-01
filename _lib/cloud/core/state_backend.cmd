@@ -63,7 +63,7 @@ if "%~1"=="push_state" goto push_state
 goto :eof
 
 :: ## lock_state
-:: Performs the lock_state operation and updates component state.
+:: Acquires an exclusive lock on the remote or local deployment state backend.
 :lock_state
 if "%REMOTE_STATE_URI%"=="" (
     if exist "%STATE_FILE%.lock" (
@@ -78,7 +78,7 @@ echo   -^> Mock: Lock acquired for %REMOTE_STATE_URI%
 exit /b 0
 
 :: ## unlock_state
-:: Performs the unlock_state operation and updates component state.
+:: Releases the lock on the deployment state backend.
 :unlock_state
 if "%REMOTE_STATE_URI%"=="" (
     if exist "%STATE_FILE%.lock" del "%STATE_FILE%.lock"
@@ -89,7 +89,7 @@ echo   -^> Mock: Lock released for %REMOTE_STATE_URI%
 exit /b 0
 
 :: ## pull_state
-:: Performs the pull_state operation and updates component state.
+:: Downloads the latest deployment state file from the configured state backend.
 :pull_state
 if not "%REMOTE_STATE_URI%"=="" (
     echo [STATE] Pulling state from %REMOTE_STATE_URI%...
@@ -97,7 +97,7 @@ if not "%REMOTE_STATE_URI%"=="" (
 exit /b 0
 
 :: ## push_state
-:: Performs the push_state operation and updates component state.
+:: Uploads the updated deployment state file to the configured state backend.
 :push_state
 if not "%REMOTE_STATE_URI%"=="" (
     echo [STATE] Pushing state to %REMOTE_STATE_URI%...

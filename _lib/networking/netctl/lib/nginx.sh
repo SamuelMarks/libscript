@@ -33,7 +33,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_nginx
-# Performs the netctl_emit_nginx operation and updates component state.
+# Renders the accumulated netctl routing state as an Nginx server configuration.
 netctl_emit_nginx() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

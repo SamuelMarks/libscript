@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_volume_create
-:: Performs the libscript_volume_create operation and updates component state.
+:: Creates a persistent cloud block storage volume.
 :libscript_volume_create
 set "provider=%~2"
 set "size=%~3"
@@ -129,7 +129,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_delete
-:: Performs the libscript_volume_delete operation and updates component state.
+:: Deletes an unattached cloud block storage volume.
 :libscript_volume_delete
 set "provider=%~2"
 set "vid=%~3"
@@ -170,7 +170,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_list
-:: Performs the libscript_volume_list operation and updates component state.
+:: Lists persistent block storage volumes in the target cloud region.
 :libscript_volume_list
 set "provider=%~2"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
@@ -207,7 +207,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_attach
-:: Performs the libscript_volume_attach operation and updates component state.
+:: Attaches a cloud block storage volume to a compute instance.
 :libscript_volume_attach
 set "provider=%~2"
 set "vid=%~3"
@@ -247,7 +247,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_detach
-:: Performs the libscript_volume_detach operation and updates component state.
+:: Detaches a cloud block storage volume from its compute instance.
 :libscript_volume_detach
 set "provider=%~2"
 set "vid=%~3"

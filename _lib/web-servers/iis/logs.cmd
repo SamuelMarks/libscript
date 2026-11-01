@@ -1,5 +1,12 @@
 @echo off
 :: # logs.cmd
+::
+:: ## Overview
+:: Logs reader for web-servers/iis on Windows.
+::
+:: ## Usage
+:: logs.cmd [tail|-f]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,14 +17,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Logs reader for web-servers/iis on Windows.
-rem
-:: ## Usage
-:: Performs the Usage operation and updates component state.
-rem logs.cmd [tail|-f]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

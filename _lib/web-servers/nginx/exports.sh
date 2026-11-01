@@ -38,7 +38,7 @@ for LIB in "_lib/_common/environ.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
 done
 
 # ## infer_locations
-# Performs the infer_locations operation and updates component state.
+# Infers Nginx location routing blocks from environment variables and upstream service definitions.
 infer_locations() {
   cwd="$(pwd)"
   locations_conf="${cwd}"'/.config/nginx/locations.conf'

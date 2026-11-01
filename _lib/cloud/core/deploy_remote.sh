@@ -129,7 +129,7 @@ calculate_checksum() {
 }
 
 # ## provision_shared_db
-# Performs the provision_shared_db operation and updates component state.
+# Provisions shared database clusters required by the deployment topology.
 provision_shared_db() {
   if [ -n "$SHARED_DB" ]; then
     log_info "Provisioning shared DB ($SHARED_DB) on $TARGET_HOST (if missing)..."
@@ -144,7 +144,7 @@ provision_shared_db() {
 }
 
 # ## setup_app_db
-# Performs the setup_app_db operation and updates component state.
+# Provisions logical databases and schemas for an individual application.
 setup_app_db() {
   app_name="$1"
   needs_db="$2"
@@ -161,7 +161,7 @@ setup_app_db() {
 }
 
 # ## execute_lifecycle_hooks
-# Performs the execute_lifecycle_hooks operation and updates component state.
+# Runs pre-start and post-deploy migration and lifecycle hooks for the application.
 execute_lifecycle_hooks() {
   remote_dir="$1"
   app_name="$2"
@@ -174,7 +174,7 @@ execute_lifecycle_hooks() {
 }
 
 # ## configure_routing
-# Performs the configure_routing operation and updates component state.
+# Configures reverse-proxy virtual hosts and upstream routing for deployed applications.
 configure_routing() {
   app_name="$1"
   domain="$2"

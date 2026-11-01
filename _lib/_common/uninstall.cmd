@@ -63,7 +63,7 @@ if /i "%~1"=="--purge-data" set "PURGE_DATA=1"
 shift
 goto parse_args
 :: ## after_parse
-:: Performs the after_parse operation and updates component state.
+:: Validates parsed command-line options and dispatches execution.
 :after_parse
 
 if "!PURGE_DATA!"=="1" (

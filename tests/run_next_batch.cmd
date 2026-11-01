@@ -79,7 +79,7 @@ for /f "usebackq tokens=*" %%A in ("%TODO_FILE%") do (
 )
 
 :: ## done
-:: Performs the done operation and updates component state.
+:: Completes loop iteration and continues post-processing.
 :done
 if not "!BATCH!"=="" (
     REM Trim leading space

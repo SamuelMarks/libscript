@@ -58,7 +58,7 @@ if not "%~1"=="" goto %~1
 exit /b 0
 
 :: ## find_replace
-:: Performs the find_replace operation and updates component state.
+:: Replaces all literal occurrences of a search string with a replacement string in a target file.
 :find_replace
 set "SEARCH=%~1"
 set "REPLACE=%~2"

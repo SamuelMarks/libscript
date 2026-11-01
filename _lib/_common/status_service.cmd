@@ -1,5 +1,12 @@
 @echo off
 :: # status_service.cmd
+::
+:: ## Overview
+:: Checks if a given service is actively running on Windows.
+::
+:: ## Usage
+:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" service_name
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,14 +17,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Checks if a given service is actively running on Windows.
-rem
-:: ## Usage
-:: Performs the Usage operation and updates component state.
-rem call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" service_name
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

@@ -28,7 +28,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## libscript_check_preflight
-# Performs the libscript_check_preflight operation and updates component state.
+# Verifies required cloud CLI tools, credentials, and network reachability before deployment.
 libscript_check_preflight() {
   provider="${1:-}"
   

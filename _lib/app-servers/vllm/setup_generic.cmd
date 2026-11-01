@@ -198,7 +198,7 @@ if errorlevel 1 (
 popd
 
 :: ## create_alias
-:: Performs the create_alias operation and updates component state.
+:: Creates the version alias directory or junction for the installed component.
 :create_alias
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (

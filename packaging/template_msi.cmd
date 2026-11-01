@@ -1,4 +1,12 @@
 @echo off
+::
+:: ## Overview
+:: Universal WiX XML (.wxs) manifest generator on Windows.
+:: Synthesizes WiX manifests driven purely by packaging.json.
+::
+:: ## Usage
+::   call packaging\template_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -12,12 +20,6 @@ set "STACK=%STACK%:!THIS_FILE!:"
 
 :: # template_msi.cmd
 ::
-:: ## Overview
-:: Universal WiX XML (.wxs) manifest generator on Windows.
-:: Synthesizes WiX manifests driven purely by packaging.json.
-::
-:: ## Usage
-::   call packaging\template_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

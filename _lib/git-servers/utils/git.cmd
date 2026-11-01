@@ -58,7 +58,7 @@ if not "%~1"=="" (
 exit /b 0
 
 :: ## git_get
-:: Performs the git_get operation and updates component state.
+:: Clones a Git repository or fetches and updates an existing checkout idempotently.
 :git_get
 set "repo=%~1"
 set "target=%~2"

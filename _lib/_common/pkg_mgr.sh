@@ -47,7 +47,7 @@ PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
 export PKG_MGR_UPDATE_REGISTRY
 
 # ## libscript_resolve_install_method
-# Performs the libscript_resolve_install_method operation and updates component state.
+# Determines the effective installation method (system, source, prebuilt) for a component.
 libscript_resolve_install_method() {
   comp_method_var="${1}_INSTALL_METHOD"
   requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
@@ -76,7 +76,7 @@ libscript_resolve_install_method() {
 }
 
 # ## libscript_cmd_avail
-# Performs the libscript_cmd_avail operation and updates component state.
+# Checks whether a command binary is available on the current PATH.
 libscript_cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }
@@ -133,7 +133,7 @@ resolve_requested_pkg_mgr() {
 }
 
 # ## detect_pkg_mgr
-# Performs the detect_pkg_mgr operation and updates component state.
+# Detects the host operating system native package manager and sets PKG_MGR.
 detect_pkg_mgr() {
   if resolve_requested_pkg_mgr "${1:-}"; then
     return 0
@@ -200,7 +200,7 @@ detect_pkg_mgr() {
 }
 
 # ## is_installed
-# Performs the is_installed operation and updates component state.
+# Checks whether a given package or command is already installed on the host system.
 is_installed() {
   pkg="${1}"
   case "${PKG_MGR}" in
@@ -251,7 +251,7 @@ libscript_depends_via() {
 }
 
 # ## libscript_depends
-# Performs the libscript_depends operation and updates component state.
+# Ensures all specified LibScript component or system package dependencies are installed.
 libscript_depends() {
   if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then
     log_info 'Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1'
@@ -627,7 +627,7 @@ libscript_download() {
 }
 
 # ## libscript_fetch
-# Performs the libscript_fetch operation and updates component state.
+# Delegates artifact retrieval to libscript_download.
 libscript_fetch() {
   libscript_download "$@"
 }
@@ -678,7 +678,7 @@ libscript_uninstall_pkg() {
 
 
 # ## libscript_process_aria2_file
-# Performs the libscript_process_aria2_file operation and updates component state.
+# Processes an aria2 input file and downloads listed artifacts with caching.
 libscript_process_aria2_file() {
   list_file="${1:-}"
   if [ -z "$list_file" ] || [ ! -f "$list_file" ]; then

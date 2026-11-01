@@ -1,5 +1,12 @@
 @echo off
 :: # status.cmd
+::
+:: ## Overview
+:: Status check for utilities/exim on Windows.
+::
+:: ## Usage
+:: status.cmd
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,14 +17,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Status check for utilities/exim on Windows.
-rem
-:: ## Usage
-:: Performs the Usage operation and updates component state.
-rem status.cmd
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

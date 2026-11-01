@@ -114,7 +114,7 @@ echo Usage: logs.cmd [install^|lms^|cms^|worker] [-n NUM^|--tail NUM] [-f^|--fol
 exit /b 0
 
 :: ## run_logs
-:: Performs the run_logs operation and updates component state.
+:: Streams or displays log output for the selected Open edX service.
 :run_logs
 if "%OPENEDX_INSTALL_DIR%"=="" (
     if defined LIBSCRIPT_HOME (

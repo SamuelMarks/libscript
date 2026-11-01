@@ -41,7 +41,7 @@ for arg in "$@"; do
 done
 
 # ## handle_list_managed
-# Performs the handle_list_managed operation and updates component state.
+# Queries the active cloud provider and lists all resources tagged as LibScript-managed.
 handle_list_managed() {
   printf '%s\n' '--- AWS Resources'
   if command -v aws >/dev/null 2>&1; then
@@ -71,7 +71,7 @@ handle_list_managed() {
 }
 
 # ## handle_diff
-# Performs the handle_diff operation and updates component state.
+# Computes and displays differences between desired topology configuration and live cloud state.
 handle_diff() {
   printf '%s\n' 'Comparing local .libscript_state.json with cloud provider reality...'
   if [ ! -f ".libscript_state.json" ]; then

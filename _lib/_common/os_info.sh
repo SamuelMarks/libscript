@@ -127,7 +127,7 @@ if [ -z "${UNAME+x}" ]; then
 fi
 
 # ## _fallback
-# Performs the _fallback operation and updates component state.
+# Determines the init system by inspecting /proc/1/comm when standard service probes do not match.
 _fallback() {
   possible="$(cat -- '/proc/1/comm')"
   if [ "${possible}" = 'systemd' ]; then

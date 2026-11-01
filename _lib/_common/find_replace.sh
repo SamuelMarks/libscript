@@ -34,7 +34,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # ## find_replace
-# Performs the find_replace operation and updates component state.
+# Replaces all literal occurrences of a search string with a replacement string in a target file.
 find_replace() {
   if [ "$#" -ne 3 ]; then
     >&2 printf 'Usage: find_replace '"'"'find'"'"' '"'"'replace'"'"' filename'

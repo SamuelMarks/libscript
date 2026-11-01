@@ -171,41 +171,48 @@ if [ -d "${TARGET_ROOT}/_lib" ]; then
 fi
 set -f
 
-printf '==> Auditing Script Header Markdown Docstring Coverage (.sh, .cmd, .ps1)...
-'
+printf '==> Auditing Script Header Markdown Docstring Coverage (.sh, .cmd, .bat, .ps1)...\n'
 TOTAL_SCRIPTS=0
 MISSING_SCRIPT_HEADERS=0
 tmp_scripts=$(mktemp)
 if [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git -C "${TARGET_ROOT}" ls-files "*.sh" "*.cmd" "*.ps1" | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' > "$tmp_scripts" || true
+  git -C "${TARGET_ROOT}" ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' > "$tmp_scripts" || true
 else
-  (cd "${TARGET_ROOT}" && find . -maxdepth 2 \( -name "*.sh" -o -name "*.cmd" -o -name "*.ps1" \) -type f | grep -vE '^\./(\.git|creds|node_modules|\.venv|logs|test)/' | sed 's|^\./||') > "$tmp_scripts" || true
+  (cd "${TARGET_ROOT}" && find . -maxdepth 2 \( -name "*.sh" -o -name "*.cmd" -o -name "*.bat" -o -name "*.ps1" \) -type f | grep -vE '^\./(\.git|creds|node_modules|\.venv|logs|test)/' | sed 's|^\./||') > "$tmp_scripts" || true
 fi
 
-while IFS= read -r rel_script; do
-  [ -n "$rel_script" ] || continue
-  script_path="${TARGET_ROOT}/${rel_script}"
-  [ -f "$script_path" ] || continue
-  TOTAL_SCRIPTS=$((TOTAL_SCRIPTS + 1))
-  has_hdr=$(awk '
-    BEGIN { ov = 0; us = 0 }
-    NR <= 30 {
+if [ -s "$tmp_scripts" ]; then
+  TOTAL_SCRIPTS=$(wc -l < "$tmp_scripts" | tr -d ' ')
+  tmp_hdr_err=$(mktemp)
+  # shellcheck disable=SC2016
+  (cd "${TARGET_ROOT}" && xargs awk '
+    FNR == 1 {
+      if (prev_f != "" && (!ov || !us || bad)) {
+        print "[WARN] Missing or placeholder markdown header comments (## Overview / ## Usage) in " prev_f
+      }
+      prev_f = FILENAME
+      ov = 0; us = 0; bad = 0
+    }
+    FNR <= 30 {
       if ($0 ~ /## Overview/) ov = 1
       if ($0 ~ /## Usage/) us = 1
+      if ($0 ~ /Performs the .* operation and updates component state\./) bad = 1
     }
-    NR > 30 { exit }
-    END { if (ov && us) print "1"; else print "0" }
-  ' "$script_path")
-  if [ "$has_hdr" != "1" ]; then
-    printf '[WARN] Missing markdown header comments (## Overview / ## Usage) in %s
-' "$rel_script"
-    MISSING_SCRIPT_HEADERS=$((MISSING_SCRIPT_HEADERS + 1))
+    END {
+      if (prev_f != "" && (!ov || !us || bad)) {
+        print "[WARN] Missing or placeholder markdown header comments (## Overview / ## Usage) in " prev_f
+      }
+    }
+  ' < "$tmp_scripts") > "$tmp_hdr_err"
+  if [ -s "$tmp_hdr_err" ]; then
+    cat "$tmp_hdr_err"
+    MISSING_SCRIPT_HEADERS=$(wc -l < "$tmp_hdr_err" | tr -d ' ')
   fi
-done < "$tmp_scripts"
+  rm -f "$tmp_hdr_err"
+fi
 rm -f "$tmp_scripts"
 
-printf '==> Auditing Schema Description Coverage...
-'
+printf '==> Auditing Schema Description Coverage...\n'
 
 MISSING_SCHEMA_DOCS=0
 tmp_schemas=$(mktemp)
@@ -213,90 +220,87 @@ if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.schema.json
 
 while IFS= read -r schema_file; do
   if grep -q '"type":' "$schema_file" && ! grep -q '"description":' "$schema_file"; then
-    printf '[WARN] Schema file %s might be missing descriptions.
-' "${schema_file#"${TARGET_ROOT}"/}"
+    printf '[WARN] Schema file %s might be missing descriptions.\n' "${schema_file#"${TARGET_ROOT}"/}"
     MISSING_SCHEMA_DOCS=$((MISSING_SCHEMA_DOCS + 1))
   fi
 done < "$tmp_schemas"
 rm -f "$tmp_schemas"
 
-printf '==> Auditing Shell Function Docstring Coverage...
-'
+printf '==> Auditing Shell Function Docstring Coverage...\n'
 MISSING_FUNC_DOCS=0
 tmp_sh=$(mktemp)
 if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.sh" -type f | grep -v "node_modules" > "$tmp_sh" || true; else find "${TARGET_ROOT}" -maxdepth 2 -name "*.sh" -type f | grep -vE "/(\.git|creds|node_modules|\.venv|logs|test)/" > "$tmp_sh" || true; fi
 
-while IFS= read -r sh_file; do
-  missing_in_file=$(awk -v file="${sh_file#"${TARGET_ROOT}"/}" '
-    BEGIN { has_doc = 0; prev_hdr = "" }
+if [ -s "$tmp_sh" ]; then
+  tmp_sh_err=$(mktemp)
+  # shellcheck disable=SC2016
+  xargs awk -v root="${TARGET_ROOT}/" '
+    FNR == 1 { has_doc = 0; prev_hdr = ""; rel = FILENAME; sub("^" root, "", rel) }
     /^# ## / {
         if ($0 == prev_hdr) {
-            print file ":" NR " (duplicate docstring header)";
+            print rel "\t" rel ":" FNR " (duplicate docstring header)"
         }
         prev_hdr = $0
         has_doc = 1
         next
     }
-    /^# Executes .* (functionality|logic)\.$/ {
-        print file ":" NR " (placeholder docstring)";
+    /^# (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
+        print rel "\t" rel ":" FNR " (placeholder docstring)"
     }
     /^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ {
         if (!has_doc) {
-            print file ":" NR;
+            print rel "\t" rel ":" FNR
         }
         has_doc = 0
         prev_hdr = ""
     }
     /^[^#]/ && NF > 0 && !/^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ { has_doc = 0; prev_hdr = "" }
-  ' "$sh_file")
-  
-  if [ -n "$missing_in_file" ]; then
-    printf '[WARN] Missing or invalid function docstring(s) in %s:
-%s
-' "${sh_file#"${TARGET_ROOT}"/}" "$missing_in_file"
-    MISSING_FUNC_DOCS=$((MISSING_FUNC_DOCS + 1))
+  ' < "$tmp_sh" > "$tmp_sh_err"
+  if [ -s "$tmp_sh_err" ]; then
+    awk -F'\t' '{ print "[WARN] Missing or invalid function docstring(s) in " $1 ":\n" $2 }' "$tmp_sh_err"
+    MISSING_FUNC_DOCS=$(cut -f1 "$tmp_sh_err" | sort -u | wc -l | tr -d ' ')
   fi
-done < "$tmp_sh"
+  rm -f "$tmp_sh_err"
+fi
 rm -f "$tmp_sh"
 
-printf '==> Auditing Batch Label Docstring Coverage...
-'
+printf '==> Auditing Batch Label Docstring Coverage...\n'
 MISSING_CMD_DOCS=0
 tmp_cmd=$(mktemp)
-if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.cmd" -type f | grep -v "node_modules" > "$tmp_cmd" || true; else find "${TARGET_ROOT}" -maxdepth 2 -name "*.cmd" -type f | grep -vE "/(\.git|creds|node_modules|\.venv|logs|test)/" > "$tmp_cmd" || true; fi
+if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" \( -name "*.cmd" -o -name "*.bat" \) -type f | grep -v "node_modules" > "$tmp_cmd" || true; else find "${TARGET_ROOT}" -maxdepth 2 \( -name "*.cmd" -o -name "*.bat" \) -type f | grep -vE "/(\.git|creds|node_modules|\.venv|logs|test)/" > "$tmp_cmd" || true; fi
 
-while IFS= read -r cmd_file; do
-  missing_in_file=$(awk -v file="${cmd_file#"${TARGET_ROOT}"/}" '
-    BEGIN { has_doc = 0; prev_hdr = "" }
+if [ -s "$tmp_cmd" ]; then
+  tmp_cmd_err=$(mktemp)
+  # shellcheck disable=SC2016
+  xargs awk -v root="${TARGET_ROOT}/" '
+    FNR == 1 { has_doc = 0; prev_hdr = ""; rel = FILENAME; sub("^" root, "", rel) }
     { sub(/\r$/, "", $0) }
     /^:: ## / {
         if ($0 == prev_hdr) {
-            print file ":" NR " (duplicate docstring header)";
+            print rel "\t" rel ":" FNR " (duplicate docstring header)"
         }
         prev_hdr = $0
         has_doc = 1
         next
     }
-    /^:: Executes .* (functionality|logic)\.$/ {
-        print file ":" NR " (placeholder docstring)";
+    /^:: (Executes .* (functionality|logic)|Performs the .* operation and updates component state)\.$/ {
+        print rel "\t" rel ":" FNR " (placeholder docstring)"
     }
     /^:[a-zA-Z0-9_]+/ && !/^:EOF/ && !/^:eof/ && !/^:root_found/ && !/^:find_root/ { 
         if (!has_doc) {
-            print file ":" NR;
+            print rel "\t" rel ":" FNR
         }
         has_doc = 0
         prev_hdr = ""
     }
     /^[^:]/ && NF > 0 { has_doc = 0; prev_hdr = "" }
-  ' "$cmd_file")
-  
-  if [ -n "$missing_in_file" ]; then
-    printf '[WARN] Missing or invalid label docstring(s) in %s:
-%s
-' "${cmd_file#"${TARGET_ROOT}"/}" "$missing_in_file"
-    MISSING_CMD_DOCS=$((MISSING_CMD_DOCS + 1))
+  ' < "$tmp_cmd" > "$tmp_cmd_err"
+  if [ -s "$tmp_cmd_err" ]; then
+    awk -F'\t' '{ print "[WARN] Missing or invalid label docstring(s) in " $1 ":\n" $2 }' "$tmp_cmd_err"
+    MISSING_CMD_DOCS=$(cut -f1 "$tmp_cmd_err" | sort -u | wc -l | tr -d ' ')
   fi
-done < "$tmp_cmd"
+  rm -f "$tmp_cmd_err"
+fi
 rm -f "$tmp_cmd"
 
 printf '==> Auditing PowerShell Header Coverage...

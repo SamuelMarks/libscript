@@ -357,7 +357,7 @@ export ADMIN_USER DOMAIN DNS_RG STATE_BUCKET STATE_ENDPOINT STATE_PATHS
 
 STATE_FILE="$REPO_PATH/.deploy_state"
 # ## record_state
-# Performs the record_state operation and updates component state.
+# Appends a provisioned resource entry to the deployment state file.
 record_state() {
   key=$1
   val=$2

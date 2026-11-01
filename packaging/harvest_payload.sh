@@ -218,7 +218,7 @@ if [ -n "${_cache_real}" ] && [ -d "${_cache_real}" ]; then
 fi
 
 # ## write_manifest
-# Performs the write_manifest operation and updates component state.
+# Writes the JSON manifest of harvested payload files and SHA-256 digests.
 if [ -n "${MANIFEST_FILE}" ]; then
   _manifest_dir="$(dirname "${MANIFEST_FILE}")"
   [ -d "$_manifest_dir" ] || mkdir -p "$_manifest_dir"
@@ -227,7 +227,7 @@ if [ -n "${MANIFEST_FILE}" ]; then
 fi
 
 # ## copy_payload
-# Performs the copy_payload operation and updates component state.
+# Copies core LibScript engine scripts and offline cache artifacts into the staging directory.
 if [ -n "${OUTPUT_DIR}" ]; then
   [ -d "${OUTPUT_DIR}" ] || mkdir -p "${OUTPUT_DIR}"
   while IFS= read -r _rel || [ -n "$_rel" ]; do
@@ -247,7 +247,7 @@ if [ -n "${OUTPUT_DIR}" ]; then
 fi
 
 # ## generate_wix_fragment
-# Performs the generate_wix_fragment operation and updates component state.
+# Synthesizes a WiX XML Fragment enumerating all harvested payload files and directories.
 if [ -n "${WIX_FRAGMENT}" ]; then
   _frag_dir="$(dirname "${WIX_FRAGMENT}")"
   [ -d "$_frag_dir" ] || mkdir -p "$_frag_dir"

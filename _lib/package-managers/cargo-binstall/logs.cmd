@@ -1,23 +1,22 @@
 @echo off
 :: # logs.cmd
+::
+:: ## Overview
+:: Logs reader for package-managers/cargo-binstall.
+::
+:: ## Usage
+:: logs.cmd [tail|-f]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2^>^&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" ^>^&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Logs reader for package-managers/cargo-binstall.
-rem
-:: ## Usage
-:: Performs the Usage operation and updates component state.
-rem logs.cmd [tail|-f]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

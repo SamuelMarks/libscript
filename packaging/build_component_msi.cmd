@@ -1,20 +1,17 @@
 @echo off
 :: # build_component_msi.cmd
 :: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
-rem Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
-rem
+:: Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
+:: Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
+::
 :: ## Usage
-:: Performs the Usage operation and updates component state.
-rem   call packaging\build_component_msi.cmd [OPTIONS]
-rem
+::   call packaging\build_component_msi.cmd [OPTIONS]
+::
 :: ## Parameters
-:: Performs the Parameters operation and updates component state.
-rem   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
-rem   --version <ver>          Component release version (default: auto-detected from offline bundle)
-rem   --variant <var>          Installer variant: online, offline, or all (default: all)
-rem   --help, -h               Show this help text
+::   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
+::   --version <ver>          Component release version (default: auto-detected from offline bundle)
+::   --variant <var>          Installer variant: online, offline, or all (default: all)
+::   --help, -h               Show this help text
 
 setlocal EnableDelayedExpansion
 
@@ -175,8 +172,6 @@ echo   --branch ^<name^>          Branch or tag ref (optional)
 echo   --help, -h               Show this help text
 exit /b 0
 
-:: ## parse_done
-:: Performs the parse_done operation and updates component state.
 :: ## Overview
 :: Prepares configuration and triggers variant compilation.
 :: ## Usage
@@ -228,8 +223,6 @@ if /i "%VARIANT%"=="all" (
 echo [ERROR] Unknown variant: %VARIANT%. Use online, offline, or all. >&2
 exit /b 1
 
-:: ## build_single_variant
-:: Performs the build_single_variant operation and updates component state.
 :: ## Overview
 :: Compiles an individual variant (online or offline) for the specified component.
 ::
@@ -641,8 +634,6 @@ if !ERRORLEVEL! neq 0 (
 )
 goto compile_done
 
-:: ## compile_done
-:: Performs the compile_done operation and updates component state.
 :: ## Overview
 :: Validates the built MSI output package and syncs to output directory.
 :: ## Usage
@@ -681,7 +672,7 @@ echo [PASS] Successfully processed standalone component MSI (%CURR_VAR%): %TARGE
 goto cleanup
 
 :: ## compile_err
-:: Performs the compile_err operation and updates component state.
+:: Handles MSI compilation failure, sets the error status, and triggers cleanup.
 :compile_err
 set "ERR=1"
 goto cleanup

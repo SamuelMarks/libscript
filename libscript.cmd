@@ -55,7 +55,7 @@ set "LOG_CMD=!SCRIPT_DIR!\_lib\_common\log.cmd"
 
 :: Global Option Parsing
 :: ## opt_loop
-:: Performs the opt_loop operation and updates component state.
+:: Parses leading global CLI flags before dispatching the subcommand.
 :opt_loop
 set "arg=%~1"
 if "!arg!"=="" goto :run_cmd
@@ -124,7 +124,7 @@ if "!is_opt!"=="1" (
 )
 
 :: ## run_cmd
-:: Performs the run_cmd operation and updates component state.
+:: Dispatches the requested CLI verb to the resolved component script.
 :run_cmd
 set "cmd=%~1"
 if "%cmd%"=="" goto show_help
@@ -171,6 +171,8 @@ if /i "%cmd%"=="install-deps" ( call "!SCRIPT_DIR!\cli\commands\deps\install.cmd
 if /i "%cmd%"=="db-search" ( call "!SCRIPT_DIR!\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="update-db" ( call "!SCRIPT_DIR!\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="semver" ( call "!SCRIPT_DIR!\cli\commands\core\semver.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="scaffold" ( call "!SCRIPT_DIR!\cli\commands\scaffold\scaffold.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="new-component" ( call "!SCRIPT_DIR!\cli\commands\scaffold\scaffold.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="config" ( call "!SCRIPT_DIR!\cli\commands\config\config.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="repogen" ( call "!SCRIPT_DIR!\_lib\orchestration\repogen\repogen.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="distro" ( call "!SCRIPT_DIR!\_lib\orchestration\distro\distro.cmd" %* & exit /b !errorlevel! )
@@ -272,7 +274,7 @@ if "%is_action%"=="1" (
 )
 
 :: ## match_component
-:: Performs the match_component operation and updates component state.
+:: Resolves a short component name to its relative category/component path under _lib/.
 :match_component
 set "target="
 set "action_pkg_norm=!action_pkg:\=/!"
@@ -412,7 +414,7 @@ for /d %%C in ("!SCRIPT_DIR!\_lib\*") do (
 exit /b 1
 
 :: ## run_target
-:: Performs the run_target operation and updates component state.
+:: Executes the lifecycle action on the matched component directory.
 :run_target
 if exist "!target!\cli.cmd" (
     if "%is_action%"=="0" (
@@ -441,6 +443,7 @@ echo   list                                      List all available components
 echo   search ^<query^>                            Search available components by name or description
 echo   install-deps [file]                       Install all dependencies defined in a JSON file (default: libscript.json)
 echo   package-as ^<format^> [args...]             Package libscript usage (e.g., docker, docker_compose)
+echo   scaffold [options]                        Generate a new component-package-manager interactively or from JSON
 echo   install ^<package_name^> ^<version^>
 echo   use ^<package_name^> ^<version^>
 echo   download ^<package_name^> ^<version^>

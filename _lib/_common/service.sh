@@ -432,7 +432,7 @@ libscript_service() {
 }
 
 # ## libscript_check_health
-# Performs the libscript_check_health operation and updates component state.
+# Executes health probes (HTTP, TCP, or command) against a running service.
 libscript_check_health() {
   _service="${1:-}"
   shift || true

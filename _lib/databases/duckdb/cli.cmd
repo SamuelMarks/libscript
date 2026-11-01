@@ -75,7 +75,7 @@ duckdb "%DB_PATH%" -c "%QUERY%"
 exit /b 0
 
 :: ## repl
-:: Performs the repl operation and updates component state.
+:: Launches an interactive DuckDB SQL shell.
 :repl
 set "DB_PATH=%~2"
 if "%DB_PATH%"=="" set "DB_PATH=:memory:"

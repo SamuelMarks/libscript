@@ -1,4 +1,11 @@
 @echo off
+::
+:: ## Overview
+:: Windows verification test suite for declarative MSI synthesis.
+::
+:: ## Usage
+::   call tests\test_generic_msi_generation.cmd
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -12,11 +19,6 @@ set "STACK=%STACK%:%THIS_FILE%:"
 
 :: # test_generic_msi_generation.cmd
 ::
-:: ## Overview
-:: Windows verification test suite for declarative MSI synthesis.
-::
-:: ## Usage
-::   call tests\test_generic_msi_generation.cmd
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

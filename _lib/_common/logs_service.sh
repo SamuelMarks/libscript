@@ -33,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # ## read_logs
-# Performs the read_logs operation and updates component state.
+# Displays or tails service log files from systemd journal or log directories.
 read_logs() {
     ACTION="$1"
     SVC_NAME="$2"

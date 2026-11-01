@@ -89,7 +89,7 @@ if "!ISOLATION_PATH!"=="" (
 goto ProvisionRuntime
 
 :: ## ProvisionRuntime
-:: Performs the ProvisionRuntime operation and updates component state.
+:: Provisions an isolated language runtime environment and virtual environment for the application.
 :ProvisionRuntime
 :: Provisions the isolated runtime
 echo [INFO] Provisioning isolated !RUNTIME_TYPE! runtime at !ISOLATION_PATH!

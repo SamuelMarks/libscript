@@ -116,7 +116,7 @@ echo [ERROR] Unknown argument: %~1
 exit /b 1
 
 :: ## parse_done
-:: Performs the parse_done operation and updates component state.
+:: Completes command-line flag parsing and validates required parameters.
 :parse_done
 
 call :provision_shared_db
@@ -128,7 +128,7 @@ set "HEALTH_APPS="
 set "REPORT_COUNT=0"
 
 :: ## loop_apps
-:: Performs the loop_apps operation and updates component state.
+:: Iterates over all application definitions in the deployment topology.
 :loop_apps
 if "!REMAINING_PATHS!"=="" goto done
 
@@ -213,7 +213,7 @@ set "REPORT_ROW_!REPORT_COUNT!=| !APP_NAME! | https://!APP_DOMAIN! | !_SYNC_STAT
 goto loop_apps
 
 :: ## done
-:: Performs the done operation and updates component state.
+:: Completes loop iteration and continues post-processing.
 :done
 call :print_remote_deployment_report
 echo [INFO] Deployment remote complete.
@@ -234,7 +234,7 @@ echo +----------------------------+--------------------------------+------------
 exit /b 0
 
 :: ## provision_shared_db
-:: Performs the provision_shared_db operation and updates component state.
+:: Provisions shared database clusters required by the deployment topology.
 :provision_shared_db
 if not "!SHARED_DB!"=="" (
     echo [INFO] Provisioning shared DB ^(!SHARED_DB!^) on !TARGET_HOST! ^(if missing^)...
@@ -288,7 +288,7 @@ set "%~2=!_calc_hash!"
 exit /b 0
 
 :: ## setup_app_db
-:: Performs the setup_app_db operation and updates component state.
+:: Provisions logical databases and schemas for an individual application.
 :setup_app_db
 set "aname=%~1"
 set "needs_db=%~2"
@@ -304,7 +304,7 @@ if "!needs_db!"=="1" (
 exit /b 0
 
 :: ## execute_lifecycle_hooks
-:: Performs the execute_lifecycle_hooks operation and updates component state.
+:: Runs pre-start and post-deploy migration and lifecycle hooks for the application.
 :execute_lifecycle_hooks
 set "rdir=%~1"
 set "aname=%~2"
@@ -316,7 +316,7 @@ ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then REMOTE_HOME
 exit /b 0
 
 :: ## configure_routing
-:: Performs the configure_routing operation and updates component state.
+:: Configures reverse-proxy virtual hosts and upstream routing for deployed applications.
 :configure_routing
 set "aname=%~1"
 set "adomain=%~2"

@@ -37,7 +37,7 @@ TEST_CONF="${THIS_DIR}/.tmp_test_proxy.conf"
 ## setup_env
 ## Prepares a mocked test environment for testing the awk engine locally
 # ## setup_env
-# Performs the setup_env operation and updates component state.
+# Creates an isolated temporary workspace and mock web server directories for testing.
 setup_env() {
   printf '[INFO] Initializing test configuration...\n'
   cat <<EOF > "$TEST_CONF"
@@ -52,7 +52,7 @@ EOF
 ## teardown_env
 ## Cleans up test artifacts
 # ## teardown_env
-# Performs the teardown_env operation and updates component state.
+# Removes the temporary test workspace and mock directories.
 teardown_env() {
   rm -f "${TEST_CONF}" "${TEST_CONF}.bak"
 }
@@ -60,7 +60,7 @@ teardown_env() {
 ## run_idempotency_scenario
 ## Executes the provision script twice to assert no duplication occurs
 # ## run_idempotency_scenario
-# Performs the run_idempotency_scenario operation and updates component state.
+# Verifies that re-applying identical proxy routes produces zero config drift.
 run_idempotency_scenario() {
   printf '[TEST] Scenario: Run Twice (Idempotency)...\n'
   
@@ -103,7 +103,7 @@ EOF
 ## run_rollback_scenario
 ## Simulates a bad config rollback (verifies backup restoration)
 # ## run_rollback_scenario
-# Performs the run_rollback_scenario operation and updates component state.
+# Verifies automatic rollback of broken proxy configurations when validation fails.
 run_rollback_scenario() {
   printf '[TEST] Scenario: Bad Config Rollback...\n'
   
@@ -128,7 +128,7 @@ run_rollback_scenario() {
 ## run_side_by_side_scenario
 ## Asserts two distinct application vhosts can coexist
 # ## run_side_by_side_scenario
-# Performs the run_side_by_side_scenario operation and updates component state.
+# Verifies that multiple applications can share a single web server via path/host multiplexing.
 run_side_by_side_scenario() {
   printf '[TEST] Scenario: Side-by-Side Coexistence...\n'
   

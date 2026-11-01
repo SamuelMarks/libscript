@@ -114,7 +114,7 @@ shift
 goto parse_loop
 
 :: ## after_parse
-:: Performs the after_parse operation and updates component state.
+:: Validates parsed command-line options and dispatches execution.
 :after_parse
 set "SYSROOT=%REPO_ROOT%\build\freebsd-sysroot"
 

@@ -91,7 +91,7 @@ set "IS_DRAFT=false"
 set "IS_PRERELEASE=false"
 
 :: ## args_loop
-:: Performs the args_loop operation and updates component state.
+:: Iterates through command-line arguments and populates installer configuration options.
 :args_loop
 if "%~1"=="" goto :validate_args
 if /I "%~1"=="--tag" (

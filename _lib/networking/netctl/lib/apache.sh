@@ -33,7 +33,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_apache
-# Performs the netctl_emit_apache operation and updates component state.
+# Renders the accumulated netctl routing state as an Apache httpd configuration file.
 netctl_emit_apache() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

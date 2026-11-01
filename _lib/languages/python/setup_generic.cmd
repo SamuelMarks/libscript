@@ -124,7 +124,7 @@ for /f "delims=" %%P in ('where python 2^>nul') do (
     echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
     if errorlevel 1 (
         if /i "%PYTHON_VERSION%"=="latest" exit /b 0
-        for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
+        for /f "tokens=2" %%V in ('"%%~fP" --version 2>&1') do (
             echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
             if not errorlevel 1 exit /b 0
             if "%%V"=="%PYTHON_VERSION%" exit /b 0

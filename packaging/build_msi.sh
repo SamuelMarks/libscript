@@ -415,29 +415,25 @@ fi
 TMP_WORK_DIR="${LIBSCRIPT_ROOT_DIR}/tmp/msi_build_$$"
 mkdir -p "$TMP_WORK_DIR"
 
-# ## cleanup_tmp
-# Performs the cleanup_tmp operation and updates component state.
 # ## Overview
 # Removes temporary build directory.
 # shellcheck disable=SC2317,SC2329
 # ## Usage
 #   Internal function.
 # ## cleanup_tmp
-# Performs the cleanup_tmp operation and updates component state.
+# Removes temporary MSI build directories and intermediate WiX artifacts on exit.
 cleanup_tmp() {
   rm -rf "$TMP_WORK_DIR"
   rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs"
 }
 trap cleanup_tmp EXIT INT TERM
 
-# ## ensure_branding_assets
-# Performs the ensure_branding_assets operation and updates component state.
 # ## Overview
 # Validates or synthesizes placeholder branding assets via synthesize_branding.sh.
 # ## Usage
 #   Internal function.
 # ## ensure_branding_assets
-# Performs the ensure_branding_assets operation and updates component state.
+# Validates or synthesizes fallback branding icons and banners via synthesize_branding.sh.
 ensure_branding_assets() {
   synth_script="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
   cc0_assets_dir="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/${APP_IDENTIFIER}/assets"
@@ -553,14 +549,12 @@ fi
 
 WXS_FILE="${OUT_FILE}.wxs"
 
-# ## generate_wxs
-# Performs the generate_wxs operation and updates component state.
 # ## Overview
 # Generates the WiX XML (.wxs) manifest synthesizing properties from schema and packaging config.
 # ## Usage
 #   Internal function.
 # ## generate_wxs
-# Performs the generate_wxs operation and updates component state.
+# Generates the primary WiX XML (.wxs) installer manifest from component metadata and schemas.
 generate_wxs() {
   _esc_pub=$(printf '%s\n' "$APP_PUBLISHER" | sed 's/&/\&amp;/g')
   _esc_name=$(printf '%s\n' "$APP_NAME" | sed 's/&/\&amp;/g')
@@ -1248,10 +1242,8 @@ EOF_PROPS
 generate_wxs
 printf '[PASS] Successfully created WiX manifest: %s\n' "$WXS_FILE"
 
-# ## harvest_engine_payload
-# Performs the harvest_engine_payload operation and updates component state.
 # ## Overview
-# Performs the Overview operation and updates component state.
+# Executes the primary workflow steps for this section.
 PAYLOAD_WXS="${OUT_FILE}_payload.wxs"
 if [ "$VARIANT" = "offline" ]; then
   _bundle_manifest="${RESOLVED_TARGET_DIR}/offline_bundle.json"
@@ -1277,14 +1269,12 @@ else
     --component-group "LibscriptHarvestedComponents"
 fi
 
-# ## compile_msi
-# Performs the compile_msi operation and updates component state.
 # ## Overview
 # Builds the .msi binary using cross-platform msi-rs, 
 # ## Usage
 #   Internal function.
 # ## compile_msi
-# Performs the compile_msi operation and updates component state.
+# Compiles and links WiX XML manifests into an MSI installer package using WiX or msi-rs.
 compile_msi() {
   if [ "$USE_WIX" = "1" ]; then
     printf '[INFO] Using traditional WiX Toolset...\n'

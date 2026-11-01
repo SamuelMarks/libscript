@@ -82,7 +82,7 @@ set "CMD_ARGS=%*"
 goto after_parse
 
 :: ## after_parse
-:: Performs the after_parse operation and updates component state.
+:: Validates parsed command-line options and dispatches execution.
 :after_parse
 if "%CMD_ARGS%"=="" (
     echo [ERROR] No command specified for vm_builder.

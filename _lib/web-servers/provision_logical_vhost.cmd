@@ -89,7 +89,7 @@ if "!UPSTREAM_PORT!"=="" (
 goto ProvisionVHost
 
 :: ## ProvisionVHost
-:: Performs the ProvisionVHost operation and updates component state.
+:: Provisions a logical virtual host and reverse-proxy configuration on the active web server.
 :ProvisionVHost
 :: Provisions the virtual host
 :: Generates configuration and conditionally restarts the web server.

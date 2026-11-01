@@ -128,13 +128,13 @@ call "%LIBSCRIPT_ROOT_DIR%\tests\run_vagrant_matrix.cmd"
 exit /b %ERRORLEVEL%
 
 :: ## local_tests_all
-:: Performs the local_tests_all operation and updates component state.
+:: Executes all local component tests via run_local_tests.cmd.
 :local_tests_all
 call tests\run_local_tests.cmd all
 exit /b
 
 :: ## test_component
-:: Performs the test_component operation and updates component state.
+:: Executes installation and smoke tests for a single specified component.
 :test_component
 if "%~2"=="" (
     echo Usage: make.cmd test_component ^<component_name^> >&2
@@ -144,19 +144,19 @@ call tests\run_local_tests.cmd %2
 exit /b
 
 :: ## local_tests_toolchain
-:: Performs the local_tests_toolchain operation and updates component state.
+:: Executes local tests for all toolchain components.
 :local_tests_toolchain
 call tests\run_local_tests.cmd toolchains
 exit /b
 
 :: ## local_tests_languages
-:: Performs the local_tests_languages operation and updates component state.
+:: Executes local tests for all programming language components.
 :local_tests_languages
 call tests\run_local_tests.cmd languages
 exit /b
 
 :: ## local_tests_databases
-:: Performs the local_tests_databases operation and updates component state.
+:: Executes local tests for all database components.
 :local_tests_databases
 call tests\run_local_tests.cmd databases
 exit /b

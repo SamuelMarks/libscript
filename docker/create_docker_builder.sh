@@ -96,7 +96,7 @@ awk 'NR==1,/^fi$/' "${DIR}"'/../_lib/_common/prelude.sh' | tee -a "${DOCKER_BUIL
 chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 # ## collect_when_pattern
-# Performs the collect_when_pattern operation and updates component state.
+# Extracts conditional matching patterns for Dockerfile generation.
 collect_when_pattern() {
   pattern="$1"
     result=''
@@ -144,7 +144,7 @@ fi
 NL='
 '
 # ## process_one_dockerfile
-# Performs the process_one_dockerfile operation and updates component state.
+# Renders a single Dockerfile from template definitions and component layers.
 process_one_dockerfile() {
   dockerfile="${1}";
   end="${2:-${NL}}"
@@ -169,7 +169,7 @@ EOF
 }
 
 # ## section2name
-# Performs the section2name operation and updates component state.
+# Converts a markdown or template section heading into a normalized identifier.
 section2name() {
   case "${1}" in
     "${SERVER_DFS}") res='Servers' ;;

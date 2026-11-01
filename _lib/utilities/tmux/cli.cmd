@@ -101,7 +101,7 @@ call "!LOG_CMD!" :log_error "Unknown action: %ACTION%. Supported: new-session, a
 exit /b 1
 
 :: ## new_session
-:: Performs the new_session operation and updates component state.
+:: Creates a new detached tmux session with the specified name.
 :new_session
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -117,7 +117,7 @@ shift
 goto loop
 
 :: ## run
-:: Performs the run operation and updates component state.
+:: Executes a command inside the specified tmux session.
 :run
 !TMUX_CMD! has-session -t "%SESSION_NAME%" >nul 2>&1
 if %errorlevel% equ 0 (
@@ -135,7 +135,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## attach
-:: Performs the attach operation and updates component state.
+:: Attaches the terminal to an existing tmux session.
 :attach
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -144,7 +144,7 @@ call "!LOG_CMD!" :log_info "Attaching to session: %SESSION_NAME%"
 exit /b 0
 
 :: ## kill
-:: Performs the kill operation and updates component state.
+:: Terminates the specified tmux session.
 :kill
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -153,7 +153,7 @@ call "!LOG_CMD!" :log_info "Killing session: %SESSION_NAME%"
 exit /b 0
 
 :: ## list
-:: Performs the list operation and updates component state.
+:: Lists all active tmux sessions.
 :list
 !TMUX_CMD! list-sessions
 exit /b 0

@@ -1,5 +1,13 @@
 @echo off
 :: # provision_wsgi.cmd
+::
+:: ## Overview
+:: Declarative Backend Orchestrator. Provisions Python venvs, templates configs,
+:: runs migrations, and registers N-tier services (Waitress/Celery) via Windows Services.
+::
+:: ## Usage
+::   call provision_wsgi.cmd --app-dir <dir> --manifest <path> --packaging <path>
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,13 +18,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Declarative Backend Orchestrator. Provisions Python venvs, templates configs,
-:: runs migrations, and registers N-tier services (Waitress/Celery) via Windows Services.
-::
-:: ## Usage
-::   call provision_wsgi.cmd --app-dir <dir> --manifest <path> --packaging <path>
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -64,7 +65,7 @@ shift
 goto parse_args
 
 :: ## run_provision
-:: Performs the run_provision operation and updates component state.
+:: Validates arguments and executes the provisioning workflow.
 :run_provision
 if "%APP_DIR%"=="" ( echo Error: Missing app-dir >&2 & exit /b 1 )
 if "%MANIFEST_PATH%"=="" ( echo Error: Missing manifest >&2 & exit /b 1 )

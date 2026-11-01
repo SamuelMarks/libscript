@@ -1,4 +1,12 @@
 @echo off
+::
+:: ## Overview
+:: Universal branding synthesizer generating 24-bit BMP banners, multi-resolution ICO,
+:: and aggregated RTF EULA for Windows Installer (MSI) packages on Windows.
+::
+:: ## Usage
+::   call packaging\synthesize_branding.cmd <path_to_packaging.json_or_dir> [--output-dir DIR]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -12,12 +20,6 @@ set "STACK=%STACK%:!THIS_FILE!:"
 
 :: # synthesize_branding.cmd
 ::
-:: ## Overview
-:: Universal branding synthesizer generating 24-bit BMP banners, multi-resolution ICO,
-:: and aggregated RTF EULA for Windows Installer (MSI) packages on Windows.
-::
-:: ## Usage
-::   call packaging\synthesize_branding.cmd <path_to_packaging.json_or_dir> [--output-dir DIR]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_storage_create
-:: Performs the libscript_storage_create operation and updates component state.
+:: Creates an object storage bucket or container in the target cloud provider.
 :libscript_storage_create
 set "provider=%~2"
 set "bucket=%~3"
@@ -112,7 +112,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_storage_delete
-:: Performs the libscript_storage_delete operation and updates component state.
+:: Deletes an object storage bucket or container from the target cloud provider.
 :libscript_storage_delete
 set "provider=%~2"
 set "bucket=%~3"
@@ -138,7 +138,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_storage_list
-:: Performs the libscript_storage_list operation and updates component state.
+:: Lists object storage buckets or containers in the target cloud account.
 :libscript_storage_list
 set "provider=%~2"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
@@ -169,7 +169,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_storage_sync
-:: Performs the libscript_storage_sync operation and updates component state.
+:: Synchronizes local directory contents with a remote cloud object storage bucket.
 :libscript_storage_sync
 set "provider=%~2"
 set "bucket=%~3"

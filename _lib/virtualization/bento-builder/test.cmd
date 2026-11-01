@@ -1,12 +1,10 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Test suite for Bento Builder stack on Windows.
-rem
+:: Test suite for Bento Builder stack on Windows.
+::
 :: ## Usage
-:: Performs the Usage operation and updates component state.
-rem Call this script to run tests for Bento Builder on Windows.
+:: Call this script to run tests for Bento Builder on Windows.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

@@ -64,7 +64,7 @@ if "%CMD%"=="delete" goto do_delete
 if "%CMD%"=="help" goto show_help
 
 :: ## do_create
-:: Performs the do_create operation and updates component state.
+:: Creates a new WordPress user account via WP-CLI.
 :do_create
 shift
 set "U_NAME=%~1"
@@ -75,7 +75,7 @@ set "U_PASS=WpPass_%U_NAME%_%RANDOM%"
 set "U_ROLE=administrator"
 
 :: ## parse_create_opt
-:: Performs the parse_create_opt operation and updates component state.
+:: Parses optional flags (--role, --password, --display-name) for user creation.
 :parse_create_opt
 if "%~1"=="" goto run_create
 if /I "%~1"=="--password" ( set "U_PASS=%~2" & shift & shift & goto parse_create_opt )
@@ -84,7 +84,7 @@ shift
 goto parse_create_opt
 
 :: ## run_create
-:: Performs the run_create operation and updates component state.
+:: Executes the WP-CLI user create command with validated parameters.
 :run_create
 if "%U_NAME%"=="" (
     echo [ERROR] Usage: user.cmd create ^<username^> ^<email^> [--password ^<pwd^>] >&2
@@ -95,7 +95,7 @@ echo [OK] WordPress user %U_NAME% (%U_EMAIL%) provisioned with role %U_ROLE%
 exit /b 0
 
 :: ## do_setpass
-:: Performs the do_setpass operation and updates component state.
+:: Updates the password for an existing WordPress user account.
 :do_setpass
 shift
 set "U_NAME=%~1"
@@ -107,13 +107,13 @@ echo [OK] Password updated for user %U_NAME%
 exit /b 0
 
 :: ## do_list
-:: Performs the do_list operation and updates component state.
+:: Lists registered user accounts for the application.
 :do_list
 call "!SCRIPT_DIR!\dbshell.cmd" query "SELECT ID, user_login, user_email, user_registered FROM wp_users;"
 exit /b 0
 
 :: ## do_delete
-:: Performs the do_delete operation and updates component state.
+:: Deletes an existing WordPress user account via WP-CLI.
 :do_delete
 shift
 set "U_NAME=%~1"

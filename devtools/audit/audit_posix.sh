@@ -5,7 +5,7 @@
 # resolution dance, and matching Windows batch (.cmd) companion scripts.
 #
 # ## Usage
-# ./devtools/audit/audit_posix.sh [file1.sh file2.sh ...]
+# ./devtools/audit/audit_posix.sh [--all | file1.sh file2.sh ...]
 
 set -feu
 
@@ -22,167 +22,251 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-printf '=== LibScript POSIX Compliance & Bashism Prohibition Audit ===\n'
+printf '%s\n' '=== LibScript POSIX Compliance & Bashism Prohibition Audit ==='
 
 ERRORS=0
 
-# ## audit_file
-# Validates individual file against strict POSIX /bin/sh invariants and Windows batch pairing.
-audit_file() {
-  file="$1"
-  [ -f "$file" ] || return 0
-  case "$file" in
-    *audit_posix.sh) return 0 ;;
-  esac
-
-  # 1. Shebang check
-  first_line=$(head -n 1 "$file")
-  if [ "$first_line" != "#!/bin/sh" ]; then
-    printf '[FAIL] [%s] Line 1 must be #!/bin/sh (found: %s)\n' "$file" "$first_line" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  # 2. set -feu check
-  if ! head -n 35 "$file" | grep -q "set -feu"; then
-    printf '[FAIL] [%s] Missing `set -feu` declaration in header\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  # 3. Canonical THIS_FILE= dance check
-  if ! head -n 65 "$file" | grep -q 'THIS_FILE='; then
-    printf '[FAIL] [%s] Missing canonical THIS_FILE= resolution dance in first 65 lines\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-  if grep -q "\*':\"\${THIS_FILE}\"':\*" "$file" 2>/dev/null; then
-    printf '[FAIL] [%s] Single-quoted literal ${THIS_FILE} in STACK recursion guard\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-  if grep -B 1 '^STACK="\${STACK%"\${THIS_FILE}":}"' "$file" 2>/dev/null | grep -q 'return 0; else exit 0'; then
-    printf '[FAIL] [%s] Unreachable STACK pop placed after return/exit\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  # 4. Banned Bashisms checks
-  if grep -E '(if[[:space:]]+\[\[|[[:space:]]\[\[[[:space:]]|&&[[:space:]]*\[\[|\|\|[[:space:]]*\[\[)' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `[[ ... ]]` condition syntax detected\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  if grep -nE '^[[:space:]]*function[[:space:]]+[a-zA-Z0-9_]+([[:space:]]*\([[:space:]]*\))?[[:space:]]*\{?[[:space:]]*$' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `function foo()` syntax detected\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  if grep -nE '^[[:space:]]*source[[:space:]]+|[;&|][[:space:]]*source[[:space:]]+' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `source` used instead of POSIX `.`\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  if grep -nE '^[[:space:]]*echo[[:space:]]+-e[[:space:]]+|[;&|][[:space:]]*echo[[:space:]]+-e[[:space:]]+' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `echo -e` used instead of `printf`\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  if grep -v '^[[:space:]]*#' "$file" | grep -E '\bsort[[:space:]]+-V\b' >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Non-POSIX `sort -V` detected; use `libscript_sort_versions`\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  if grep -v '^[[:space:]]*#' "$file" | grep -E '\bsed[[:space:]]+-i' >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Non-portable `sed -i` detected; use temp file or `libscript_sed_in_place`\n' "$file" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
-
-  # 4b. Unnecessary double quotes check (outside comments and heredocs)
-  _dq_hits=$(awk '
-    {
+# ## audit_batch
+# Validates a stream of .sh files (and their .cmd companions) using a single fast awk engine.
+audit_batch() {
+  _err_file=$(mktemp)
+  # shellcheck disable=SC2016
+  xargs awk '
+    function check_prev() {
+      if (prev_f == "" || prev_f ~ /audit_posix\.sh$/) return
+      if (first_line != "#!/bin/sh") {
+        print "[FAIL] [" prev_f "] Line 1 must be #!/bin/sh (found: " first_line ")"
+        errs++
+      }
+      if (!has_feu) {
+        print "[FAIL] [" prev_f "] Missing `set -feu` declaration in header"
+        errs++
+      }
+      if (!has_this) {
+        print "[FAIL] [" prev_f "] Missing canonical THIS_FILE= resolution dance in first 65 lines"
+        errs++
+      }
+      if (bad_stack_quote) {
+        print "[FAIL] [" prev_f "] Single-quoted literal ${THIS_FILE} in STACK recursion guard"
+        errs++
+      }
+      if (unreachable_stack) {
+        print "[FAIL] [" prev_f "] Unreachable STACK pop placed after return/exit"
+        errs++
+      }
+      if (has_dbl_bracket) {
+        print "[FAIL] [" prev_f "] Banned bashism: `[[ ... ]]` condition syntax detected"
+        errs++
+      }
+      if (has_func_kw) {
+        print "[FAIL] [" prev_f "] Banned bashism: `function foo()` syntax detected"
+        errs++
+      }
+      if (has_source_kw) {
+        print "[FAIL] [" prev_f "] Banned bashism: `source` used instead of POSIX `.`"
+        errs++
+      }
+      if (has_echo_e) {
+        print "[FAIL] [" prev_f "] Banned bashism: `echo -e` used instead of `printf`"
+        errs++
+      }
+      if (has_sort_v) {
+        print "[FAIL] [" prev_f "] Non-POSIX `sort -V` detected; use `libscript_sort_versions`"
+        errs++
+      }
+      if (has_sed_i) {
+        print "[FAIL] [" prev_f "] Non-portable `sed -i` detected; use temp file or `libscript_sed_in_place`"
+        errs++
+      }
+      if (dq_hit != "" && prev_f !~ /(audit_posix\.sh|audit_standards\.sh|\.tpl)$/) {
+        print "[FAIL] [" prev_f "] Unnecessary double quotes where single quotes suffice: " dq_hit
+        errs++
+      }
+      if (has_unguarded_home) {
+        print "[FAIL] [" prev_f "] Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety"
+        errs++
+      }
+    }
+    FNR == 1 {
+      check_prev()
+      prev_f = FILENAME
       sub(/\r$/, "", $0)
+      first_line = $0
+      has_feu = 0; has_this = 0; bad_stack_quote = 0; unreachable_stack = 0;
+      has_dbl_bracket = 0; has_func_kw = 0; has_source_kw = 0; has_echo_e = 0;
+      has_sort_v = 0; has_sed_i = 0; dq_hit = ""; has_unguarded_home = 0;
+      in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
+      is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
+    }
+    { sub(/\r$/, "", $0) }
+    FNR <= 35 {
+      if ($0 ~ /set -feu/) has_feu = 1
+    }
+    FNR <= 65 {
+      if ($0 ~ /THIS_FILE=/) has_this = 1
+    }
+    {
       if (in_hd) {
         if ($0 == hd_delim || (hd_tab && $0 ~ "^[[:space:]]*" hd_delim "$")) {
-          in_hd = 0
-          hd_delim = ""
-          hd_tab = 0
+          in_hd = 0; hd_delim = ""; hd_tab = 0
         }
         next
       }
-      if ($0 ~ /<<-?[[:space:]]*["'\'']?[A-Za-z0-9_]+["'\'']?[[:space:]]*(>|2>|$)/ && $0 !~ /^[[:space:]]*#/) {
+      if ($0 ~ /<<-?[[:space:]]*["\x27]?[A-Za-z0-9_]+["\x27]?[[:space:]]*(>|2>|$)/ && $0 !~ /^[[:space:]]*#/) {
         in_hd = 1
         hd_tab = ($0 ~ /<<-/)
         hd_delim = $0
-        sub(/^.*<<-?[[:space:]]*["'\'']?/, "", hd_delim)
-        sub(/["'\'']?[[:space:]]*(>|2>|$).*$/, "", hd_delim)
+        sub(/^.*<<-?[[:space:]]*["\x27]?/, "", hd_delim)
+        sub(/["\x27]?[[:space:]]*(>|2>|$).*$/, "", hd_delim)
         next
       }
-      if ($0 ~ /^[[:space:]]*#/) next
-      if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
-          $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+\x27%s\\n\x27|echo)[[:space:]]+"[^$`\x5c\x27"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
-          $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
-        print NR ":" $0
+      if ($0 ~ /\*\x27:"\$\{THIS_FILE\}":\x27\*/) bad_stack_quote = 1
+      if ($0 ~ /return 0; else exit 0/) saw_ret_line = FNR
+      if (FNR == saw_ret_line + 1 && $0 ~ /^STACK="\$\{STACK%"\$\{THIS_FILE\}":\}"/) unreachable_stack = 1
+      if ($0 ~ /(if[[:space:]]+\[\[|[[:space:]]\[\[[[:space:]]|&&[[:space:]]*\[\[|\|\|[[:space:]]*\[\[)/) has_dbl_bracket = 1
+      if ($0 ~ /^[[:space:]]*function[[:space:]]+[a-zA-Z0-9_]+([[:space:]]*\([[:space:]]*\))?[[:space:]]*\{?[[:space:]]*$/) has_func_kw = 1
+      if ($0 ~ /^[[:space:]]*source[[:space:]]+|[;&|][[:space:]]*source[[:space:]]+/) has_source_kw = 1
+      if ($0 ~ /^[[:space:]]*echo[[:space:]]+-e[[:space:]]+|[;&|][[:space:]]*echo[[:space:]]+-e[[:space:]]+/) has_echo_e = 1
+      if ($0 !~ /^[[:space:]]*#/) {
+        if ($0 ~ /(^|[^A-Za-z0-9_])sort[[:space:]]+-V([^A-Za-z0-9_]|$)/) has_sort_v = 1
+        if ($0 ~ /(^|[^A-Za-z0-9_])sed[[:space:]]+-i/) has_sed_i = 1
+        if (dq_hit == "") {
+          if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
+              $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+\x27%s\\n\x27|echo)[[:space:]]+"[^$`\x5c\x27"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
+              $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
+            dq_hit = FNR ":" $0
+          }
+        }
+        if (is_env_sh && $0 ~ /\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})/) has_unguarded_home = 1
       }
     }
-  ' "$file" 2>/dev/null || true)
-  if [ -n "$_dq_hits" ]; then
-    printf '[FAIL] [%s] Unnecessary double quotes where single quotes suffice: %s\n' "$file" "$(printf '%s' "$_dq_hits" | head -n 1)" >&2
-    ERRORS=$((ERRORS + 1))
-  fi
+    END {
+      check_prev()
+    }
+  ' >> "$_err_file"
 
-  case "$file" in
-    */_lib/*/*/env.sh)
-      if grep -v '^[[:space:]]*#' "$file" | grep -E '\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})' >/dev/null 2>&1; then
-        printf '[FAIL] [%s] Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety\n' "$file" >&2
-        ERRORS=$((ERRORS + 1))
-      fi
-      ;;
-  esac
-
-  # 5. Matching .cmd companion check
-  cmd_companion="${file%.sh}.cmd"
-  if [ ! -f "$cmd_companion" ]; then
-    printf '[FAIL] [%s] Missing paired Windows batch companion: %s\n' "$file" "$cmd_companion" >&2
-    ERRORS=$((ERRORS + 1))
-  else
-    if ! head -n 25 "$cmd_companion" | grep -qi "EnableDelayedExpansion"; then
-      printf '[FAIL] [%s] Windows companion missing EnableDelayedExpansion\n' "$cmd_companion" >&2
-      ERRORS=$((ERRORS + 1))
-    fi
-    if ! head -n 25 "$cmd_companion" | grep -qi "THIS_FILE="; then
-      printf '[FAIL] [%s] Windows companion missing THIS_FILE= definition\n' "$cmd_companion" >&2
-      ERRORS=$((ERRORS + 1))
-    fi
+  if [ -s "$_err_file" ]; then
+    cat "$_err_file" >&2
+    _cnt=$(wc -l < "$_err_file" | tr -d ' ')
+    ERRORS=$((ERRORS + _cnt))
   fi
+  rm -f "$_err_file"
 }
 
-if [ $# -gt 0 ]; then
-  if [ "${1:-}" = "--all" ]; then
-    shift
-    for script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh"); do
-      audit_file "${LIBSCRIPT_ROOT_DIR}/${script}"
-    done
-    for cmd_script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.cmd" "*.bat"); do
-      sh_companion="${LIBSCRIPT_ROOT_DIR}/${cmd_script%.*}.sh"
-      if [ ! -f "$sh_companion" ]; then
-        printf '[FAIL] [%s] Missing paired POSIX shell companion: %s\n' "$cmd_script" "$sh_companion" >&2
-        ERRORS=$((ERRORS + 1))
-      fi
-    done
-  else
-    for target in "$@"; do
-      audit_file "$target"
-    done
+# ## audit_companions
+# Verifies bidirectional .sh and .cmd/.bat pairing and Windows batch header invariants.
+audit_companions() {
+  _comp_err=$(mktemp)
+  awk '
+    {
+      sub(/\r$/, "", $0)
+      files[$0] = 1
+    }
+    END {
+      for (f in files) {
+        if (f ~ /\.sh$/ && f !~ /(^|\/)audit_posix\.sh$/) {
+          base = substr(f, 1, length(f) - 3)
+          cmd = base ".cmd"
+          bat = base ".bat"
+          if (!(cmd in files) && !(bat in files)) {
+            print "[FAIL] [" f "] Missing paired Windows batch companion: " cmd
+          }
+        }
+        if (f ~ /\.(cmd|bat)$/) {
+          base = substr(f, 1, length(f) - 4)
+          sh = base ".sh"
+          if (!(sh in files)) {
+            print "[FAIL] [" f "] Missing paired POSIX shell companion: " sh
+          }
+        }
+      }
+    }
+  ' >> "$_comp_err"
+
+  if [ -s "$_comp_err" ]; then
+    cat "$_comp_err" >&2
+    _cnt=$(wc -l < "$_comp_err" | tr -d ' ')
+    ERRORS=$((ERRORS + _cnt))
   fi
-else
-  for script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh"); do
-    audit_file "${LIBSCRIPT_ROOT_DIR}/${script}"
+  rm -f "$_comp_err"
+
+  _cmd_hdr_err=$(mktemp)
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.cmd" "*.bat") | (
+    # shellcheck disable=SC2016
+    cd "$LIBSCRIPT_ROOT_DIR" && xargs awk '
+      function check_cmd() {
+        if (prev_c == "") return
+        if (!has_del) print "[FAIL] [" prev_c "] Windows companion missing EnableDelayedExpansion"
+        if (!has_this) print "[FAIL] [" prev_c "] Windows companion missing THIS_FILE= definition"
+      }
+      FNR == 1 {
+        check_cmd()
+        prev_c = FILENAME
+        has_del = 0; has_this = 0
+      }
+      FNR <= 25 {
+        line_l = tolower($0)
+        if (line_l ~ /enabledelayedexpansion/) has_del = 1
+        if (line_l ~ /this_file=/) has_this = 1
+      }
+      END { check_cmd() }
+    '
+  ) >> "$_cmd_hdr_err"
+
+  if [ -s "$_cmd_hdr_err" ]; then
+    cat "$_cmd_hdr_err" >&2
+    _cnt=$(wc -l < "$_cmd_hdr_err" | tr -d ' ')
+    ERRORS=$((ERRORS + _cnt))
+  fi
+  rm -f "$_cmd_hdr_err"
+}
+
+if [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
+  _target_list=$(mktemp)
+  for _t in "$@"; do
+    if [ -f "$_t" ]; then
+      printf '%s\n' "$_t" >> "$_target_list"
+      _cmd="${_t%.sh}.cmd"
+      _bat="${_t%.sh}.bat"
+      if [ ! -f "$_cmd" ] && [ ! -f "$_bat" ]; then
+        printf '[FAIL] [%s] Missing paired Windows batch companion: %s\n' "$_t" "$_cmd" >&2
+        ERRORS=$((ERRORS + 1))
+      elif [ -f "$_cmd" ]; then
+        if ! head -n 25 "$_cmd" | grep -qi 'EnableDelayedExpansion'; then
+          printf '[FAIL] [%s] Windows companion missing EnableDelayedExpansion\n' "$_cmd" >&2
+          ERRORS=$((ERRORS + 1))
+        fi
+        if ! head -n 25 "$_cmd" | grep -qi 'THIS_FILE='; then
+          printf '[FAIL] [%s] Windows companion missing THIS_FILE= definition\n' "$_cmd" >&2
+          ERRORS=$((ERRORS + 1))
+        fi
+      fi
+    fi
   done
+  if [ -s "$_target_list" ]; then
+    audit_batch < "$_target_list"
+  fi
+  rm -f "$_target_list"
+else
+  _all_sh=$(mktemp)
+  _all_scripts=$(mktemp)
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_all_sh"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh" "*.cmd" "*.bat") > "$_all_scripts"
+  audit_batch < "$_all_sh"
+  audit_companions < "$_all_scripts"
+  rm -f "$_all_sh" "$_all_scripts"
 fi
 
 if [ "$ERRORS" -gt 0 ]; then
@@ -190,5 +274,5 @@ if [ "$ERRORS" -gt 0 ]; then
   exit 1
 fi
 
-printf '[PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.\n'
+printf '%s\n' '[PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.'
 exit 0

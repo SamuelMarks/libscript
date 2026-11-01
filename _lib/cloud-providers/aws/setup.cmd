@@ -80,7 +80,7 @@ call "%~dp0\..\..\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_register_image
-:: Performs the do_register_image operation and updates component state.
+:: Registers the uploaded machine image artifact with the cloud provider compute service.
 :do_register_image
 set "IMG_PATH=%~2"
 if "%IMG_PATH%"=="" set "IMG_PATH=!LIBSCRIPT_ROOT_DIR!\build\disk.img"

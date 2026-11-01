@@ -33,7 +33,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_vagrantfile
-# Performs the netctl_emit_vagrantfile operation and updates component state.
+# Renders port forwarding directives for a Vagrantfile from the accumulated netctl state.
 netctl_emit_vagrantfile() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

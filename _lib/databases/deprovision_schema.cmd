@@ -1,5 +1,13 @@
 @echo off
 :: # deprovision_schema.cmd
+::
+:: ## Overview
+:: Safely deprovisions a multi-tenant database schema and user account on Windows.
+:: Supports MySQL/MariaDB, PostgreSQL, MongoDB.
+::
+:: ## Usage
+::   call deprovision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant>
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,13 +18,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Safely deprovisions a multi-tenant database schema and user account on Windows.
-:: Supports MySQL/MariaDB, PostgreSQL, MongoDB.
-::
-:: ## Usage
-::   call deprovision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant>
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -72,7 +73,7 @@ shift
 goto parse_args
 
 :: ## run_deprovision
-:: Performs the run_deprovision operation and updates component state.
+:: Dispatches database schema and user deprovisioning to the selected engine handler.
 :run_deprovision
 if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
 if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
@@ -89,7 +90,7 @@ echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
 :: ## do_mysql
-:: Performs the do_mysql operation and updates component state.
+:: Executes schema and user provisioning or deprovisioning against a MySQL/MariaDB server.
 :do_mysql
 if "%PORT%"=="" set "PORT=3306"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
@@ -108,7 +109,7 @@ del "%TMP_SQL%"
 exit /b 0
 
 :: ## do_postgres
-:: Performs the do_postgres operation and updates component state.
+:: Executes database and role deprovisioning against a PostgreSQL server.
 :do_postgres
 if "%PORT%"=="" set "PORT=5432"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
@@ -119,7 +120,7 @@ set "PGPASSWORD="
 exit /b 0
 
 :: ## do_mongodb
-:: Performs the do_mongodb operation and updates component state.
+:: Executes schema provisioning or deprovisioning against a MongoDB instance.
 :do_mongodb
 if "%PORT%"=="" set "PORT=27017"
 set "MONGO_ARGS=--host %HOST% --port %PORT%"
@@ -129,7 +130,7 @@ mongosh %MONGO_ARGS% --eval "%JS_CMD%" --quiet
 exit /b 0
 
 :: ## do_sqlite
-:: Performs the do_sqlite operation and updates component state.
+:: Creates or removes the SQLite database file for the target schema.
 :do_sqlite
 if exist "%SCHEMA_NAME%" del /Q "%SCHEMA_NAME%" "%SCHEMA_NAME%-wal" "%SCHEMA_NAME%-shm" "%SCHEMA_NAME%.wal" "%SCHEMA_NAME%.shm" 2>nul
 exit /b 0

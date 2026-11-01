@@ -102,6 +102,31 @@ Override globally or per component via CLI flags or environment variables:
 FORMAT=json ./libscript.sh env postgres 16
 ```
 
+### Scaffolding New Component-Package-Managers (`scaffold` / `new-component`)
+
+Create a new Tier 1 component-package-manager directory under `_lib/<category>/<component>/` with
+all 23+ required POSIX `.sh`, Windows `.cmd`, schema, and documentation files:
+
+```sh
+# 1. Interactive prompter wizard (optionally exporting answers to a reusable JSON spec)
+./libscript.sh scaffold --interactive --export-json=my-tool.scaffold.json
+libscript.cmd scaffold --interactive --export-json=my-tool.scaffold.json
+
+# 2. Non-interactive generation from a JSON spec (conforming to component-scaffold.schema.json)
+./libscript.sh scaffold --from-json=my-tool.scaffold.json
+libscript.cmd scaffold --from-json=my-tool.scaffold.json
+
+# 3. Non-interactive one-liner via CLI flags
+./libscript.sh scaffold \
+  --non-interactive \
+  --name=zoxide \
+  --category=utilities \
+  --description="A smarter cd command inspired by z and autojump." \
+  --github-repo=ajeetdsouza/zoxide \
+  --version-scheme=github-release \
+  --os=all
+```
+
 ---
 
 ## 2. Declarative OS Configuration & TUI Engine (Tier 2)

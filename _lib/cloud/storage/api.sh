@@ -41,7 +41,7 @@ unset SCRIPT_NAME || true
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 # ## libscript_storage_create
-# Performs the libscript_storage_create operation and updates component state.
+# Creates an object storage bucket or container in the target cloud provider.
 libscript_storage_create() {
   provider="$1"
   bucket="$2"
@@ -102,7 +102,7 @@ libscript_storage_create() {
 }
 
 # ## libscript_storage_delete
-# Performs the libscript_storage_delete operation and updates component state.
+# Deletes an object storage bucket or container from the target cloud provider.
 libscript_storage_delete() {
   provider="$1"
   bucket="$2"
@@ -143,7 +143,7 @@ libscript_storage_delete() {
 }
 
 # ## libscript_storage_list
-# Performs the libscript_storage_list operation and updates component state.
+# Lists object storage buckets or containers in the target cloud account.
 libscript_storage_list() {
   provider="$1"
   
@@ -178,7 +178,7 @@ libscript_storage_list() {
 }
 
 # ## libscript_storage_sync
-# Performs the libscript_storage_sync operation and updates component state.
+# Synchronizes local directory contents with a remote cloud object storage bucket.
 libscript_storage_sync() {
   provider="$1"
   bucket="$2"

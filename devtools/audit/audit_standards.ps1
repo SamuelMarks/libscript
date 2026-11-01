@@ -306,6 +306,9 @@ function Audit-File {
         if ($headerText -notmatch '## Usage') {
             Log-Violation -File $FilePath -Rule "DOC_USAGE" -Details "Missing doc block '## Usage' in first 30 lines."
         }
+        if ($allContent -match '(?m)^(#|::)\s*Performs the .* operation and updates component state\.') {
+            Log-Violation -File $FilePath -Rule "DOC_PLACEHOLDER" -Details "Auto-generated placeholder docstring found."
+        }
     }
 
     # 6. Option A Hard Fail Proforma check (Exit code 86)

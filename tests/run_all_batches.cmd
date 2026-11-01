@@ -78,7 +78,7 @@ if /i "%~1"=="--os" (
 echo Unknown option: %~1
 exit /b 1
 :: ## end_parse_args
-:: Performs the end_parse_args operation and updates component state.
+:: Completes flag parsing and validates batch runner parameters.
 :end_parse_args
 
 cd /d "%SCRIPT_DIR%\.." || exit /b 1
@@ -123,5 +123,5 @@ if not "!NEW_BATCH!"=="" (
 
 goto loop
 :: ## end_loop
-:: Performs the end_loop operation and updates component state.
+:: Completes batch execution loop and reports summary status.
 :end_loop

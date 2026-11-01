@@ -39,7 +39,7 @@ if [ -z "${_PKG_MGR_NAME}" ]; then
   _PKG_MGR_NAME=$(basename "$(pwd)")
 
 # ## validate_tpu_config
-# Performs the validate_tpu_config operation and updates component state.
+# Validates required GCP TPU VM configuration variables and accelerator parameters.
 validate_tpu_config() {
   if [ -n "${TPU_ACCELERATOR_TYPE:-}" ] && [ -n "${TPU_VERSION:-}" ]; then
     case "${TPU_ACCELERATOR_TYPE}" in

@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/component-scaffold.schema.json",
+  "title": "LibScript Component Scaffold Specification",
+  "description": "Declarative specification for non-interactively generating a new LibScript Tier 1 component-package-manager directory under _lib/<category>/<component>/.",
+  "type": "object",
+  "required": ["name", "category", "description"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "Unique lowercase identifier for the component directory and CLI command (e.g., ripgrep, fd, zoxide)."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable display title for the component (defaults to name if omitted)."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "ai-serving",
+        "app-servers",
+        "audio",
+        "base-system",
+        "bootloaders",
+        "caches",
+        "cloud",
+        "cloud-providers",
+        "databases",
+        "desktops",
+        "display-managers",
+        "display-servers",
+        "freebsd",
+        "git-servers",
+        "graphics",
+        "illumos",
+        "init-systems",
+        "kernel",
+        "languages",
+        "logging",
+        "message-brokers",
+        "ml-training",
+        "networking",
+        "orchestration",
+        "package-managers",
+        "runtimes",
+        "search",
+        "security",
+        "storage",
+        "storage-layers",
+        "toolchains",
+        "utilities",
+        "virtualization",
+        "web-apps",
+        "web-servers"
+      ],
+      "description": "Target category directory under _lib/ where the component will be created."
+    },
+    "description": {
+      "type": "string",
+      "description": "Concise 1-2 sentence description of the component and its purpose."
+    },
+    "provides": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Capability or command alias identifier provided by this component."
+      },
+      "description": "List of capabilities or command aliases provided by this component (defaults to [name])."
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Conflicting component identifier."
+      },
+      "default": [],
+      "description": "Other LibScript components that conflict with this component."
+    },
+    "binary_name": {
+      "type": "string",
+      "description": "Primary executable binary filename located inside the installed bin/ directory (defaults to name)."
+    },
+    "default_install_method": {
+      "type": "string",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native",
+      "description": "Default installation strategy ('libscript_native' for isolated version directories, 'system' for OS package manager, or 'from-source')."
+    },
+    "version_scheme": {
+      "type": "string",
+      "enum": ["github-release", "semver", "git-tags", "custom-url", "system-only"],
+      "default": "github-release",
+      "description": "Upstream version discovery and resolution scheme used for 'latest'/'lts' aliases and 'ls-remote'."
+    },
+    "default_version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Default version or alias to install when no explicit version is specified."
+    },
+    "version_aliases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Supported semantic version alias (e.g., latest, lts, stable)."
+      },
+      "default": ["latest", "lts"],
+      "description": "List of dynamic version aliases supported by the component version manager."
+    },
+    "repository": {
+      "type": "string",
+      "description": "Canonical upstream source repository URL (e.g., https://github.com/BurntSushi/ripgrep)."
+    },
+    "github_repo": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+      "description": "GitHub owner/repo identifier used for automatic GitHub Releases API tag resolution."
+    },
+    "tag_prefix": {
+      "type": "string",
+      "default": "v",
+      "description": "Prefix stripped from upstream release tags when normalizing version numbers (e.g., 'v' or 'jq-')."
+    },
+    "download_url_template_unix": {
+      "type": "string",
+      "description": "Default artifact download URL or template for POSIX platforms (Linux, macOS, BSD)."
+    },
+    "download_url_template_windows": {
+      "type": "string",
+      "description": "Default artifact download URL or template for Windows platforms."
+    },
+    "releases_url": {
+      "type": "string",
+      "description": "Upstream API or index URL queried by the 'ls-remote' lifecycle action."
+    },
+    "archive_format_unix": {
+      "type": "string",
+      "enum": ["tar.gz", "tgz", "tar.xz", "zip", "binary", "auto"],
+      "default": "auto",
+      "description": "Expected archive or binary format for Unix downloads ('auto' inspects URL/filename extension)."
+    },
+    "archive_format_windows": {
+      "type": "string",
+      "enum": ["zip", "tar.gz", "exe", "msi", "auto"],
+      "default": "auto",
+      "description": "Expected archive or installer format for Windows downloads ('auto' inspects URL/filename extension)."
+    },
+    "strip_components": {
+      "type": "integer",
+      "default": 1,
+      "description": "Number of leading path components to strip when extracting tarballs."
+    },
+    "source_build": {
+      "type": "object",
+      "description": "Configuration for compiling the component from source when INSTALL_METHOD='from-source'.",
+      "properties": {
+        "language": {
+          "type": "string",
+          "default": "c",
+          "description": "Primary language toolchain required to build from source (e.g., c, rust, go)."
+        },
+        "build_system": {
+          "type": "string",
+          "default": "autotools",
+          "description": "Build system driver passed to libscript_build_component_from_source (e.g., autotools, cmake, cargo, make)."
+        },
+        "fallback_version": {
+          "type": "string",
+          "default": "1.0.0",
+          "description": "Concrete fallback version string used when building 'latest' from source without network tag resolution."
+        },
+        "source_url_template": {
+          "type": "string",
+          "description": "Optional explicit source tarball URL template overriding the binary download URL."
+        }
+      }
+    },
+    "os_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "all",
+          "linux",
+          "macos",
+          "darwin",
+          "mac",
+          "windows",
+          "freebsd",
+          "openbsd",
+          "netbsd",
+          "dragonfly",
+          "bsd",
+          "sunos",
+          "illumos",
+          "solaris",
+          "alpine",
+          "debian",
+          "ubuntu",
+          "rhel",
+          "fedora",
+          "centos",
+          "rocky",
+          "almalinux",
+          "arch",
+          "artix",
+          "manjaro",
+          "gentoo",
+          "void",
+          "suse",
+          "opensuse",
+          "solus",
+          "clearlinux",
+          "nixos"
+        ],
+        "description": "Canonical operating system identifier supported by this component."
+      },
+      "default": ["all"],
+      "description": "List of operating systems supported by this component."
+    },
+    "os_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "all",
+          "linux",
+          "macos",
+          "darwin",
+          "mac",
+          "windows",
+          "freebsd",
+          "openbsd",
+          "netbsd",
+          "dragonfly",
+          "bsd",
+          "sunos",
+          "illumos",
+          "solaris",
+          "alpine",
+          "debian",
+          "ubuntu",
+          "rhel",
+          "fedora",
+          "centos",
+          "rocky",
+          "almalinux",
+          "arch",
+          "artix",
+          "manjaro",
+          "gentoo",
+          "void",
+          "suse",
+          "opensuse",
+          "solus",
+          "clearlinux",
+          "nixos"
+        ],
+        "description": "Canonical operating system identifier explicitly unsupported by this component."
+      },
+      "default": [],
+      "description": "List of operating systems explicitly unsupported by this component."
+    },
+    "arch_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Supported CPU architecture identifier (e.g., all, x86_64, aarch64, arm64, riscv64)."
+      },
+      "default": ["all"],
+      "description": "List of CPU architectures supported by this component."
+    },
+    "arch_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Unsupported CPU architecture identifier."
+      },
+      "default": [],
+      "description": "List of CPU architectures explicitly unsupported by this component."
+    },
+    "os_specific_scripts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["alpine", "debian", "rhel", "macos", "freebsd", "windows"],
+        "description": "Target OS family for generating dedicated setup_<os>.sh and setup_<os>.cmd scripts."
+      },
+      "default": [],
+      "description": "Optional list of OS families for which dedicated setup_<os>.{sh,cmd} scripts should be generated."
+    },
+    "is_service": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this component operates as a background daemon or persistent service."
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "description": "Default TCP/UDP listening port number."
+      },
+      "default": [],
+      "description": "Default network listening ports exposed by the service."
+    },
+    "enable_hooks": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to generate Dual-Layer physical instance lifecycle hooks in hooks/*.{sh,cmd}."
+    },
+    "multitenant": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the component supports logical multi-tenant provisioning hooks (provision_tenant, deprovision_tenant, backup_tenant, restore_tenant)."
+    },
+    "custom_vars": {
+      "type": "array",
+      "description": "Additional component-specific configuration variables to include in vars.schema.json.",
+      "items": {
+        "type": "object",
+        "description": "Definition of a custom component configuration variable.",
+        "required": ["name", "description"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Environment variable name (e.g., MYTOOL_CONFIG_PATH)."
+          },
+          "type": {
+            "type": "string",
+            "default": "string",
+            "description": "JSON Schema data type for the variable (string, integer, boolean)."
+          },
+          "default": {
+            "type": ["string", "integer", "boolean", "null"],
+            "description": "Default value for the configuration variable."
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the configuration variable."
+          }
+        }
+      },
+      "default": []
+    },
+    "pkg_mappings": {
+      "type": "object",
+      "description": "Optional mapping of OS package manager identifiers (apt-get, apk, dnf, pacman, brew, winget, choco, scoop, pkg) to native package names.",
+      "properties": {
+        "apt-get": {
+          "type": "string",
+          "description": "Package name on Debian/Ubuntu apt-get repositories."
+        },
+        "apk": {
+          "type": "string",
+          "description": "Package name on Alpine Linux apk repositories."
+        },
+        "dnf": {
+          "type": "string",
+          "description": "Package name on RHEL/Fedora dnf/yum repositories."
+        },
+        "pacman": {
+          "type": "string",
+          "description": "Package name on Arch Linux pacman repositories."
+        },
+        "zypper": {
+          "type": "string",
+          "description": "Package name on openSUSE/SLES zypper repositories."
+        },
+        "brew": {
+          "type": "string",
+          "description": "Formula or tap name on Homebrew."
+        },
+        "winget": {
+          "type": "string",
+          "description": "Package identifier on Windows Package Manager (winget)."
+        },
+        "choco": {
+          "type": "string",
+          "description": "Package identifier on Chocolatey."
+        },
+        "scoop": {
+          "type": "string",
+          "description": "Package identifier on Scoop."
+        },
+        "pkg": {
+          "type": "string",
+          "description": "Package identifier on FreeBSD/Illumos pkg."
+        }
+      }
+    },
+    "test_command": {
+      "type": "string",
+      "description": "Smoke test command executed in test.sh and test.cmd (defaults to '<binary_name> --version')."
+    }
+  }
+}

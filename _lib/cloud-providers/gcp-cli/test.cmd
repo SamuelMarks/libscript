@@ -1,12 +1,10 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Test suite for the cli component.
-rem
+:: Test suite for the cli component.
+::
 :: ## Usage
-:: Performs the Usage operation and updates component state.
-rem Execute this script to perform a component-specific test.
+:: Execute this script to perform a component-specific test.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

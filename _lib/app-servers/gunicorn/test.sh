@@ -3,7 +3,7 @@
 # Test script for Gunicorn WSGI server.
 #
 # ## Usage
-# Performs the Usage operation and updates component state.
+# ./_lib/app-servers/gunicorn/test.sh
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

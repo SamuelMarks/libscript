@@ -1,18 +1,15 @@
 @echo off
 :: # test_modular_msi_reuse.cmd
 :: ## Overview
-:: Performs the Overview operation and updates component state.
-rem Validates the modular zero-.EXE Windows Installer packaging and component reuse architecture.
-rem Verifies standalone dependency MSIs, master orchestrator packages, deterministic GUID integrity,
-rem and side-by-side database sharing between Open edX and WordPress.
-rem
+:: Validates the modular zero-.EXE Windows Installer packaging and component reuse architecture.
+:: Verifies standalone dependency MSIs, master orchestrator packages, deterministic GUID integrity,
+:: and side-by-side database sharing between Open edX and WordPress.
+::
 :: ## Usage
-:: Performs the Usage operation and updates component state.
-rem   call tests\test_modular_msi_reuse.cmd
-rem
+::   call tests\test_modular_msi_reuse.cmd
+::
 :: ## Parameters
-:: Performs the Parameters operation and updates component state.
-rem   None.
+::   None.
 
 setlocal EnableDelayedExpansion
 

@@ -1,4 +1,11 @@
 @echo off
+::
+:: ## Overview
+:: Windows verification test suite for universal schema provisioning.
+::
+:: ## Usage
+::   call tests\test_database_provision_schema.cmd
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -12,11 +19,6 @@ set "STACK=%STACK%:%THIS_FILE%:"
 
 :: # test_database_provision_schema.cmd
 ::
-:: ## Overview
-:: Windows verification test suite for universal schema provisioning.
-::
-:: ## Usage
-::   call tests\test_database_provision_schema.cmd
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

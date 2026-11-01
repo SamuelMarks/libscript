@@ -715,6 +715,10 @@ cd libscript
   principles.
 - [WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md](WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md):
   Specification for native toolchain version isolation.
+- [cli/commands/scaffold/README.md](cli/commands/scaffold/README.md) &
+  [component-scaffold.schema.json](component-scaffold.schema.json): Interactive prompter and
+  non-interactive JSON specification generator (`./libscript.sh scaffold`) for creating new
+  component-package-managers.
 - [USAGE.md](USAGE.md): Full CLI command reference, flags, and execution modes.
 - [topologies/README.md](topologies/README.md): Tier 3.5 multi-node HA consensus topologies, lease
   locking, and split-brain fencing.

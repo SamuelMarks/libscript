@@ -73,6 +73,13 @@ entry points, adhering completely to the lifecycle capabilities defined in
 - `service.sh` / `service.cmd`: Service daemon management (systemd, launchd, Windows Service).
 - `test.sh` / `test.cmd`: Component-specific smoke tests and binary verification.
 
+To rapidly scaffold a new Tier 1 component directory that satisfies all Version Manager Contract,
+`THIS_FILE`, `.cmd` parity, and schema invariants out-of-the-box, use:
+
+- **Interactive Prompter**: `./libscript.sh scaffold` (or `.\libscript.cmd scaffold`)
+- **Non-Interactive JSON Spec** (`component-scaffold.schema.json`):
+  `./libscript.sh scaffold --from-json=<spec.json>`
+
 ### 🔍 Pre-Implementation Verification
 
 Before creating a new component or script, agents **MUST** use search tools (`grep_search`, `glob`)

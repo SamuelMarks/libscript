@@ -65,7 +65,7 @@ if not "%~1"=="" (
 goto :eof
 
 :: ## libscript_get_version_dir
-:: Performs the libscript_get_version_dir operation and updates component state.
+:: Resolves and prints the installation directory path for a specific component version.
 :libscript_get_version_dir
 set "component=%~1"
 set "version=%~2"
@@ -78,7 +78,7 @@ set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_BASE_DIR%\%component%\%version%"
 goto :eof
 
 :: ## libscript_symlink_alias
-:: Performs the libscript_symlink_alias operation and updates component state.
+:: Updates the default or named version symlink/junction to point to the target version.
 :libscript_symlink_alias
 set "component=%~1"
 set "alias_name=%~2"
@@ -158,7 +158,7 @@ if /i "!_civ_comp!"=="python" (
         echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
         if errorlevel 1 (
             if /i "!_civ_req!"=="latest" exit /b 0
-            for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
+            for /f "tokens=2" %%V in ('"%%~fP" --version 2>&1') do (
                 echo %%V | findstr /b /c:"!_civ_prefix!." >nul 2>&1
                 if not errorlevel 1 exit /b 0
                 if "%%V"=="!_civ_prefix!" exit /b 0

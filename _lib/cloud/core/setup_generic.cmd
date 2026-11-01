@@ -116,7 +116,7 @@ call "%CLI_PATH%" %*
 exit /b %errorlevel%
 
 :: ## handle_diff
-:: Performs the handle_diff operation and updates component state.
+:: Computes and displays differences between desired topology configuration and live cloud state.
 :handle_diff
 echo Comparing local .libscript_state.json with cloud provider reality...
 if not exist ".libscript_state.json" (
@@ -131,7 +131,7 @@ echo GCP Diff Placeholder
 exit /b 0
 
 :: ## handle_list_managed
-:: Performs the handle_list_managed operation and updates component state.
+:: Queries the active cloud provider and lists all resources tagged as LibScript-managed.
 :handle_list_managed
 echo --- AWS Resources
 where aws >nul 2>&1

@@ -129,7 +129,7 @@ call "!LOG_CMD!" :log_error "Unknown action: %ACTION%"
 exit /b 1
 
 :: ## create
-:: Performs the create operation and updates component state.
+:: Creates and provisions the requested cloud or storage resource.
 :create
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm create <name>"
@@ -137,7 +137,7 @@ if "%TPU_NAME%"=="" (
 )
 set "i=1"
 :: ## create_loop
-:: Performs the create_loop operation and updates component state.
+:: Parses flags for the create subcommand.
 :create_loop
 if !i! gtr %TPU_COUNT% exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -222,7 +222,7 @@ set /a i+=1
 goto :create_loop
 
 :: ## delete
-:: Performs the delete operation and updates component state.
+:: Deletes the specified cloud or storage resource.
 :delete
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm delete <name> [--all]"
@@ -232,7 +232,7 @@ shift
 shift
 set "ALL_FLAG="
 :: ## del_arg_loop
-:: Performs the del_arg_loop operation and updates component state.
+:: Parses command-line flags for the delete subcommand.
 :del_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -243,7 +243,7 @@ set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
 :: ## del_loop
-:: Performs the del_loop operation and updates component state.
+:: Iterates over target node names and deletes each instance.
 :del_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -289,7 +289,7 @@ set /a i+=1
 goto :del_loop
 
 :: ## start
-:: Performs the start operation and updates component state.
+:: Starts the stopped cloud virtual machine instance.
 :start
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm start <name> [--all]"
@@ -299,7 +299,7 @@ shift
 shift
 set "ALL_FLAG="
 :: ## start_arg_loop
-:: Performs the start_arg_loop operation and updates component state.
+:: Parses command-line flags for the TPU start subcommand.
 :start_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -310,7 +310,7 @@ set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
 :: ## start_loop
-:: Performs the start_loop operation and updates component state.
+:: Iterates over target TPU nodes to start each instance.
 :start_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -325,7 +325,7 @@ set /a i+=1
 goto :start_loop
 
 :: ## stop
-:: Performs the stop operation and updates component state.
+:: Stops the running cloud virtual machine instance.
 :stop
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm stop <name> [--all]"
@@ -335,7 +335,7 @@ shift
 shift
 set "ALL_FLAG="
 :: ## stop_arg_loop
-:: Performs the stop_arg_loop operation and updates component state.
+:: Parses command-line flags for the TPU stop subcommand.
 :stop_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -346,7 +346,7 @@ set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
 :: ## stop_loop
-:: Performs the stop_loop operation and updates component state.
+:: Iterates over target TPU nodes to stop each instance.
 :stop_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -361,7 +361,7 @@ set /a i+=1
 goto :stop_loop
 
 :: ## ssh
-:: Performs the ssh operation and updates component state.
+:: Opens an interactive SSH session or runs a remote command on the target cloud VM.
 :ssh
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [--all-workers] [command]"
@@ -373,7 +373,7 @@ set "DETACHED="
 set "FORWARD_PORT="
 set "ALL_WORKERS="
 :: ## ssh_arg_loop
-:: Performs the ssh_arg_loop operation and updates component state.
+:: Parses command-line flags for the TPU ssh subcommand.
 :ssh_arg_loop
 if "%~1"=="--detached" (
     set "DETACHED=true"
@@ -402,14 +402,14 @@ if "%ALL_WORKERS%"=="true" (
 
 set "REST_ARGS="
 :: ## ssh_loop
-:: Performs the ssh_loop operation and updates component state.
+:: Iterates over target TPU workers to execute the remote SSH command.
 :ssh_loop
 if "%~1"=="" goto :ssh_run
 set "REST_ARGS=%REST_ARGS% %~1"
 shift
 goto :ssh_loop
 :: ## ssh_run
-:: Performs the ssh_run operation and updates component state.
+:: Invokes gcloud compute tpus tpu-vm ssh with the assembled arguments.
 :ssh_run
 call "!LOG_CMD!" :log_info "Connecting to TPU VM %TPU_NAME%..."
 if "%REST_ARGS%"=="" (
@@ -425,7 +425,7 @@ if "%REST_ARGS%"=="" (
 exit /b 0
 
 :: ## profile
-:: Performs the profile operation and updates component state.
+:: Captures a performance profile from the target GCP TPU VM.
 :profile
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm profile <name> [--port 9012] [--duration 1000]"
@@ -436,7 +436,7 @@ shift
 set "PORT=9012"
 set "DURATION=1000"
 :: ## profile_arg_loop
-:: Performs the profile_arg_loop operation and updates component state.
+:: Parses command-line arguments for the TPU profile subcommand.
 :profile_arg_loop
 if "%~1"=="--port" (
     set "PORT=%~2"
@@ -456,7 +456,7 @@ gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% -
 exit /b 0
 
 :: ## scp
-:: Performs the scp operation and updates component state.
+:: Copies files between the local host and GCP TPU VM nodes via gcloud compute tpus tpu-vm scp.
 :scp
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
@@ -468,7 +468,7 @@ set "ALL_WORKERS="
 set "SRC="
 set "DEST="
 :: ## scp_arg_loop
-:: Performs the scp_arg_loop operation and updates component state.
+:: Parses command-line flags and file paths for the TPU scp subcommand.
 :scp_arg_loop
 if "%~1"=="" goto :scp_run
 if "%~1"=="--all-workers" (
@@ -488,7 +488,7 @@ shift
 goto :scp_arg_loop
 
 :: ## scp_run
-:: Performs the scp_run operation and updates component state.
+:: Executes the gcloud TPU VM scp transfer across target workers.
 :scp_run
 if "%SRC%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
@@ -518,7 +518,7 @@ gcloud compute tpus tpu-vm scp %SCP_FLAGS% "%SRC%" "%TPU_NAME%:%DEST%" --zone="%
 exit /b 0
 
 :: ## status
-:: Performs the status operation and updates component state.
+:: Queries and displays the current state of the target TPU VM nodes.
 :status
 if "%TPU_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: tpu-vm status <name> [--all]"
@@ -528,7 +528,7 @@ shift
 shift
 set "ALL_FLAG="
 :: ## status_arg_loop
-:: Performs the status_arg_loop operation and updates component state.
+:: Parses command-line flags for the TPU status subcommand.
 :status_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -540,7 +540,7 @@ set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
 
 :: ## status_loop
-:: Performs the status_loop operation and updates component state.
+:: Iterates over target TPU nodes to query each instance status.
 :status_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"

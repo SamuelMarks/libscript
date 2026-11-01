@@ -99,7 +99,7 @@ call "!LOG_CMD!" :log_error "Unknown action: %ACTION%"
 exit /b 1
 
 :: ## create
-:: Performs the create operation and updates component state.
+:: Creates and provisions the requested cloud or storage resource.
 :create
 if "%INSTANCE_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: filestore create <name>"
@@ -124,7 +124,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## delete
-:: Performs the delete operation and updates component state.
+:: Deletes the specified cloud or storage resource.
 :delete
 if "%INSTANCE_NAME%"=="" (
     call "!LOG_CMD!" :log_error "Usage: filestore delete <name>"

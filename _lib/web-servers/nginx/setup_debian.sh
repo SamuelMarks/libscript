@@ -61,7 +61,7 @@ if [ "${run_before}" -eq 0 ]; then
 fi
 
 # ## rtrim
-# Performs the rtrim operation and updates component state.
+# Trims trailing whitespace characters from input lines.
 rtrim() {
   trimmed="${1}"
   while :
@@ -79,7 +79,7 @@ rtrim() {
 }
 
 # ## remove_last
-# Performs the remove_last operation and updates component state.
+# Removes the closing brace from an Nginx server block prior to inserting a location block.
 remove_last() {
   c="${1}"
   s="${2}"
@@ -105,7 +105,7 @@ remove_last() {
 }
 
 # ## merge_location_into_nginx_server
-# Performs the merge_location_into_nginx_server operation and updates component state.
+# Injects a location routing block into an existing Nginx server configuration file.
 merge_location_into_nginx_server() {
   conf_existing="${1}"
   location_conf="${2}"

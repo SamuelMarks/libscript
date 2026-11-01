@@ -36,7 +36,7 @@ export NL='
 '
 
 # ## save_environment
-# Performs the save_environment operation and updates component state.
+# Serializes current environment variables to a stream or file in export format.
 save_environment() {
   env | while IFS='' read -r line || [ -n "${line}" ]; do
     case "${line}" in
@@ -54,7 +54,7 @@ save_environment() {
 }
 
 # ## clear_environment
-# Performs the clear_environment operation and updates component state.
+# Clears non-essential environment variables and resets PATH to a minimal safe baseline.
 clear_environment() {
   PATH="${PATH}"':/usr/bin:/bin'
   export PATH
@@ -86,7 +86,7 @@ clear_environment() {
 # unset ENV_SAVED_FILE
 
 # ## libscript_object2key_val
-# Performs the libscript_object2key_val operation and updates component state.
+# Flattens a JSON object into shell-compatible KEY=VALUE lines using jq.
 libscript_object2key_val() {
   obj="${1:-}"
   prefix="${2:-}"

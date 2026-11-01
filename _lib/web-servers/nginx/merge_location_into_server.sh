@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## merge_location_into_server
-# Performs the merge_location_into_server operation and updates component state.
+# Merges an Nginx location snippet into the target server block idempotently.
 merge_location_into_server() {
   EXISTING_CONFIG="$1"
   NEW_LOCATION_BLOCK="$2"

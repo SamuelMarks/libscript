@@ -1,5 +1,12 @@
 @echo off
 :: # parse_connection_uri.cmd
+::
+:: ## Overview
+:: Parses a database connection URI into shell variables or JSON.
+::
+:: ## Usage
+::   call parse_connection_uri.cmd <URI> [--eval | --json | --export]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,12 +17,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Parses a database connection URI into shell variables or JSON.
-::
-:: ## Usage
-::   call parse_connection_uri.cmd <URI> [--eval | --json | --export]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

@@ -65,7 +65,7 @@ echo Bootstraps the LibScript environment.
 exit /b 0
 
 :: ## start_install
-:: Performs the start_install operation and updates component state.
+:: Bootstraps the LibScript installation after command-line options are parsed.
 :start_install
 
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"

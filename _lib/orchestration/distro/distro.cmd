@@ -77,19 +77,19 @@ echo   build-redhat   Synthesizes Red Hat-style distribution (.rpm, dnf, rpmbuil
 exit /b 1
 
 :: ## do_debian
-:: Performs the do_debian operation and updates component state.
+:: Bootstraps a Debian or Ubuntu root filesystem using debootstrap.
 :do_debian
 call "!SCRIPT_DIR!\build_debian.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_alpine
-:: Performs the do_alpine operation and updates component state.
+:: Bootstraps an Alpine Linux root filesystem using apk.
 :do_alpine
 call "!SCRIPT_DIR!\build_alpine.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_redhat
-:: Performs the do_redhat operation and updates component state.
+:: Bootstraps a RedHat/Rocky/Fedora root filesystem using dnf.
 :do_redhat
 call "!SCRIPT_DIR!\build_redhat.cmd" %*
 exit /b %ERRORLEVEL%

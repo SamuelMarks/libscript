@@ -103,20 +103,20 @@ if "%CMD%"=="import" goto do_import
 exit /b %ERRORLEVEL%
 
 :: ## do_interactive
-:: Performs the do_interactive operation and updates component state.
+:: Launches an interactive database client shell connected to the WordPress database.
 :do_interactive
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% %DB_NAME%
 exit /b %ERRORLEVEL%
 
 :: ## do_query
-:: Performs the do_query operation and updates component state.
+:: Executes a non-interactive SQL query against the configured database.
 :do_query
 shift
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -e "%~1" %DB_NAME%
 exit /b %ERRORLEVEL%
 
 :: ## do_export
-:: Performs the do_export operation and updates component state.
+:: Exports the WordPress database schema and contents to a SQL dump file.
 :do_export
 shift
 set "OUT_FILE=%~1"
@@ -126,7 +126,7 @@ echo [OK] WordPress database exported to %OUT_FILE%
 exit /b %ERRORLEVEL%
 
 :: ## do_import
-:: Performs the do_import operation and updates component state.
+:: Imports a SQL dump file into the WordPress database.
 :do_import
 shift
 set "IN_FILE=%~1"

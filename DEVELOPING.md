@@ -57,6 +57,31 @@ flowchart TD
     Manifest -.->|Metadata & Dependencies| CLI
 ```
 
+### Automated Component-Package-Manager Scaffolder (`scaffold` / `new-component`)
+
+Rather than creating all 23+ POSIX `.sh`, Windows `.cmd`, JSON schema, and documentation files by
+hand, maintainers and automated workflows can use the built-in component scaffolder
+(`cli/commands/scaffold/scaffold.{sh,cmd}`):
+
+1. **Interactive Prompter Mode (`--interactive` / default)**: Walks a human maintainer step-by-step
+   through component name, category, description, installation method, upstream version discovery
+   (`github-release`, `semver`, `git-tags`, `custom-url`), download URL templates, archive formats,
+   OS/architecture whitelists, and daemon/multitenant lifecycle hooks, optionally exporting the
+   collected answers to a JSON file via `--export-json=<file>`:
+   ```sh
+   ./libscript.sh scaffold --interactive --export-json=ripgrep.scaffold.json
+   # Windows:
+   .\libscript.cmd scaffold --interactive --export-json=ripgrep.scaffold.json
+   ```
+2. **Non-Interactive JSON Mode (`--from-json=<file>`)**: Deterministically and idempotently
+   generates the entire `_lib/<category>/<component>/` directory from a JSON specification validated
+   against [`component-scaffold.schema.json`](component-scaffold.schema.json):
+   ```sh
+   ./libscript.sh scaffold --from-json=ripgrep.scaffold.json
+   # Windows:
+   .\libscript.cmd scaffold --from-json=ripgrep.scaffold.json
+   ```
+
 ---
 
 ## ⚡ The Native Version Manager Standard

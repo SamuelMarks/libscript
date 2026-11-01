@@ -33,7 +33,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_caddy
-# Performs the netctl_emit_caddy operation and updates component state.
+# Renders the accumulated netctl routing state as a Caddyfile configuration.
 netctl_emit_caddy() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_cdn_create
-:: Performs the libscript_cdn_create operation and updates component state.
+:: Creates a CDN distribution pointing to the specified origin endpoint.
 :libscript_cdn_create
 set "provider=%~2"
 set "bucket=%~3"
@@ -157,7 +157,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_cdn_delete
-:: Performs the libscript_cdn_delete operation and updates component state.
+:: Disables and deletes an existing CDN distribution.
 :libscript_cdn_delete
 set "provider=%~2"
 set "dist_id=%~3"
@@ -182,7 +182,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_cdn_list
-:: Performs the libscript_cdn_list operation and updates component state.
+:: Lists active CDN distributions managed by the current cloud provider.
 :libscript_cdn_list
 set "provider=%~2"
 
@@ -197,7 +197,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_cdn_invalidate
-:: Performs the libscript_cdn_invalidate operation and updates component state.
+:: Submits a cache invalidation request for the specified paths on a CDN distribution.
 :libscript_cdn_invalidate
 set "provider=%~2"
 set "dist_id=%~3"

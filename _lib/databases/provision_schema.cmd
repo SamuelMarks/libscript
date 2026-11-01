@@ -1,5 +1,13 @@
 @echo off
 :: # provision_schema.cmd
+::
+:: ## Overview
+:: Idempotently provisions a multi-tenant database schema and least-privilege user account on Windows.
+:: Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite with reuse-else-create semantics.
+::
+:: ## Usage
+::   call provision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant> --password <tenant_pass> [--legacy-names <csv>]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,13 +18,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Idempotently provisions a multi-tenant database schema and least-privilege user account on Windows.
-:: Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite with reuse-else-create semantics.
-::
-:: ## Usage
-::   call provision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant> --password <tenant_pass> [--legacy-names <csv>]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -80,7 +81,7 @@ shift
 goto parse_args
 
 :: ## run_provision
-:: Performs the run_provision operation and updates component state.
+:: Validates arguments and executes the provisioning workflow.
 :run_provision
 if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
 if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
@@ -97,7 +98,7 @@ echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
 :: ## do_mysql
-:: Performs the do_mysql operation and updates component state.
+:: Executes schema and user provisioning or deprovisioning against a MySQL/MariaDB server.
 :do_mysql
 if "%PORT%"=="" set "PORT=3306"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
@@ -188,7 +189,7 @@ set "PGPASSWORD="
 exit /b 0
 
 :: ## do_mongodb
-:: Performs the do_mongodb operation and updates component state.
+:: Executes schema provisioning or deprovisioning against a MongoDB instance.
 :do_mongodb
 if "%PORT%"=="" set "PORT=27017"
 echo [INFO] [DB:MONGODB] Ensuring database '%SCHEMA_NAME%' and user '%TENANT_USER%' on %HOST%:%PORT%...
@@ -200,7 +201,7 @@ echo [INFO] [DB:MONGODB] [CONFIRM] Database '%SCHEMA_NAME%' and user '%TENANT_US
 exit /b 0
 
 :: ## do_sqlite
-:: Performs the do_sqlite operation and updates component state.
+:: Creates or removes the SQLite database file for the target schema.
 :do_sqlite
 for %%I in ("%SCHEMA_NAME%") do set "DB_DIR=%%~dpI"
 if not exist "%DB_DIR%" mkdir "%DB_DIR%"

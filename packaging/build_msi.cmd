@@ -21,15 +21,13 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 set "BUILD_MSI_SCRIPT_DIR=%SCRIPT_DIR%"
 
-:: ## find_root
-:: Ascends the directory tree looking for ROOT or libscript.cmd.
-:: ## Overview
-:: Finds the root directory of the libscript repository.
-set "d=!SCRIPT_DIR!"
-call :find_root
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
 goto :root_found
 
 :: ## find_root
@@ -432,8 +430,6 @@ if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:/=\!"
 if defined LICENSE_PATH set "LICENSE_PATH=!LICENSE_PATH:/=\!"
 set "REL_CC0_ASSETS=..\cc0-assets\libscript\%STACK_NAME%\assets"
 
-:: ## write_wxs
-:: Performs the write_wxs operation and updates component state.
 :: ## Overview
 :: Emits the complete WiX XML manifest.
 setlocal DisableDelayedExpansion
@@ -1022,10 +1018,8 @@ endlocal
 
 echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 
-:: ## harvest_payload
-:: Performs the harvest_payload operation and updates component state.
 :: ## Overview
-:: Performs the Overview operation and updates component state.
+:: Executes the primary workflow steps for this section.
 set "SCRIPT_DIR=%BUILD_MSI_SCRIPT_DIR%"
 set "LIBSCRIPT_ROOT_DIR=%BUILD_MSI_ROOT_DIR%"
 set "PAYLOAD_WXS=%OUT_FILE%_payload.wxs"
@@ -1055,8 +1049,6 @@ if errorlevel 1 (
 set "SCRIPT_DIR=%BUILD_MSI_SCRIPT_DIR%"
 set "LIBSCRIPT_ROOT_DIR=%BUILD_MSI_ROOT_DIR%"
 
-:: ## compile_msi
-:: Performs the compile_msi operation and updates component state.
 :: ## Overview
 :: Compiles the WiX manifest into an MSI binary using cross-platform msi-rs.
 if "%USE_WIX%"=="1" (
@@ -1163,17 +1155,17 @@ if errorlevel 1 (
 )
 
 :: ## skip_msiinfo
-:: Performs the skip_msiinfo operation and updates component state.
+:: Continues post-build validation when msiinfo is not required or already completed.
 :skip_msiinfo
 echo [PASS] Successfully built %OUT_FILE%.msi
 :: ## compile_done
-:: Performs the compile_done operation and updates component state.
+:: Validates the compiled MSI binary size and copies it to the output destination.
 :compile_done
 set "ERR=0"
 goto cleanup
 
 :: ## compile_err
-:: Performs the compile_err operation and updates component state.
+:: Handles MSI compilation failure, sets the error status, and triggers cleanup.
 :compile_err
 set "ERR=1"
 goto cleanup

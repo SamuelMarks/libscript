@@ -78,7 +78,7 @@ shift
 goto parse_loop
 
 :: ## generate
-:: Performs the generate operation and updates component state.
+:: Synthesizes the output configuration or manifest file.
 :generate
 echo version: '3.8'
 echo services:

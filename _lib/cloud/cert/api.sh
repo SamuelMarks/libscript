@@ -41,7 +41,7 @@ unset SCRIPT_NAME || true
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 
 # ## libscript_cert_create
-# Performs the libscript_cert_create operation and updates component state.
+# Requests or imports a TLS/SSL certificate in the cloud certificate manager.
 libscript_cert_create() {
   provider="$1"
   domain="$2"
@@ -67,7 +67,7 @@ libscript_cert_create() {
 }
 
 # ## libscript_cert_delete
-# Performs the libscript_cert_delete operation and updates component state.
+# Deletes a TLS/SSL certificate from the cloud certificate manager.
 libscript_cert_delete() {
   provider="$1"
   domain="$2"
@@ -113,7 +113,7 @@ libscript_cert_delete() {
 }
 
 # ## libscript_cert_list
-# Performs the libscript_cert_list operation and updates component state.
+# Lists TLS/SSL certificates registered in the cloud certificate manager.
 libscript_cert_list() {
   provider="$1"
   

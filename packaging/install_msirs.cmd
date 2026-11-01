@@ -2,8 +2,7 @@
 :: # install_msirs.cmd
 ::
 :: ## Overview
-:: Performs the Overview operation and updates component state.
-# Installs msi-rs natively on the Vagrant guest using LibScript.
+:: Installs msi-rs natively on the Vagrant guest using LibScript.
 ::
 :: ## Usage
 :: install_msirs.cmd

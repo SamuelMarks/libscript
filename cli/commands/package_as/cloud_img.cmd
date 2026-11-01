@@ -75,7 +75,7 @@ shift
 goto parse_loop
 
 :: ## run_pkg
-:: Performs the run_pkg operation and updates component state.
+:: Validates arguments and dispatches cloud image packaging.
 :run_pkg
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
@@ -87,7 +87,7 @@ if /i "%PROVIDER%"=="azure" goto do_azure
 if /i "%PROVIDER%"=="gcp" goto do_gcp
 
 :: ## do_all
-:: Performs the do_all operation and updates component state.
+:: Executes packaging or repository generation across all supported formats.
 :do_all
 call "!SCRIPT_DIR!\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 call "!SCRIPT_DIR!\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
@@ -95,25 +95,25 @@ call "!SCRIPT_DIR!\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
 :: ## do_aws
-:: Performs the do_aws operation and updates component state.
+:: Builds and uploads a machine image for Amazon Web Services (AMI).
 :do_aws
 call "!SCRIPT_DIR!\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 goto finish
 
 :: ## do_azure
-:: Performs the do_azure operation and updates component state.
+:: Builds and uploads a VHD image for Microsoft Azure.
 :do_azure
 call "!SCRIPT_DIR!\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
 goto finish
 
 :: ## do_gcp
-:: Performs the do_gcp operation and updates component state.
+:: Builds and uploads a compute image for Google Cloud Platform (GCP).
 :do_gcp
 call "!SCRIPT_DIR!\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
 :: ## finish
-:: Performs the finish operation and updates component state.
+:: Completes operation and exits with success status.
 :finish
 echo [OK] Cloud packaging completed under: %OUT_DIR%
 exit /b 0

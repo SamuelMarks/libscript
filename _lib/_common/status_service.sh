@@ -33,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # ## check_service_status
-# Performs the check_service_status operation and updates component state.
+# Queries the active init system or daemon manager to verify whether a service is running.
 check_service_status() {
     OS_NAME=$(uname -s)
     for svc in "$@"; do

@@ -38,12 +38,10 @@ OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
 HYDRATE=0
 
-# ## cleanup_artifacts
-# Performs the cleanup_artifacts operation and updates component state.
 # ## Overview
 # Removes transient MSI compilation artifacts.
 # ## cleanup_artifacts
-# Performs the cleanup_artifacts operation and updates component state.
+# Removes transient WiX object files and generated XML manifests upon exit.
 cleanup_artifacts() {
   rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_main.wixobj" \
         "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_payload.wixobj" \
@@ -168,8 +166,6 @@ if [ -z "$VERSION" ] && [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; 
 fi
 : "${VERSION:=1.0.0}"
 
-# ## find_first_file
-# Performs the find_first_file operation and updates component state.
 # ## Overview
 # Returns the path of the first existing file matching any of the passed glob arguments.
 # Temporarily enables filename expansion since the script operates under set -f.
@@ -179,7 +175,7 @@ fi
 # ## Usage
 #   Internal function.
 # ## find_first_file
-# Performs the find_first_file operation and updates component state.
+# Returns the first existing file matching any of the provided glob patterns.
 find_first_file() {
   set +f
   for _pat in "$@"; do
@@ -196,8 +192,6 @@ find_first_file() {
   return 0
 }
 
-# ## build_single_variant
-# Performs the build_single_variant operation and updates component state.
 # ## Overview
 # Builds a specific component installer variant (online or offline).
 #
@@ -206,7 +200,7 @@ find_first_file() {
 # ## Usage
 #   Internal function.
 # ## build_single_variant
-# Performs the build_single_variant operation and updates component state.
+# Compiles a single MSI installer variant (online or offline) for the target component.
 build_single_variant() {
   _v="$1"
   STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}_${_v}"

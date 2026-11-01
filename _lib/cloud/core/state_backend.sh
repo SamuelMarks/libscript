@@ -34,7 +34,7 @@ STATE_FILE="${STATE_FILE:-.libscript_state.json}"
 REMOTE_STATE_URI="${REMOTE_STATE_URI:-}"
 
 # ## lock_state
-# Performs the lock_state operation and updates component state.
+# Acquires an exclusive lock on the remote or local deployment state backend.
 lock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     if [ -f "${STATE_FILE}.lock" ]; then
@@ -65,7 +65,7 @@ lock_state() {
 }
 
 # ## unlock_state
-# Performs the unlock_state operation and updates component state.
+# Releases the lock on the deployment state backend.
 unlock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     rm -f "${STATE_FILE}.lock"
@@ -87,7 +87,7 @@ unlock_state() {
 }
 
 # ## pull_state
-# Performs the pull_state operation and updates component state.
+# Downloads the latest deployment state file from the configured state backend.
 pull_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pulling state from $REMOTE_STATE_URI..."
@@ -96,7 +96,7 @@ pull_state() {
 }
 
 # ## push_state
-# Performs the push_state operation and updates component state.
+# Uploads the updated deployment state file to the configured state backend.
 push_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pushing state to $REMOTE_STATE_URI..."

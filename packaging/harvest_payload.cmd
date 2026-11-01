@@ -76,7 +76,7 @@ echo   --help, -h               Show this help text
 exit /b 0
 
 :: ## run_script
-:: Performs the run_script operation and updates component state.
+:: Invokes the PowerShell payload harvesting implementation with parsed arguments.
 :run_script
 set "PS1_FILE=!SCRIPT_DIR!\harvest_payload.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1_FILE%" %*

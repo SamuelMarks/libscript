@@ -71,7 +71,7 @@ done
 export ODOO_WEBSERVER ODOO_DB_TYPE ODOO_VERSION ODOO_WWWROOT ODOO_SERVER_NAME LISTEN_PORT ODOO_PORT
 
 # ## safe_tee
-# Performs the safe_tee operation and updates component state.
+# Writes standard input to a target file, using priv tee when elevated permissions are needed.
 safe_tee() {
   if [ "${PRIV:-}" != "" ] && command -v sudo >/dev/null 2>&1; then
     sudo tee "$@"

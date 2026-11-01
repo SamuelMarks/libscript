@@ -105,8 +105,8 @@ try {
         $scriptFiles += Get-Item -LiteralPath $fullPath
         $totalScripts++
         $headLines = (Get-Content -LiteralPath $fullPath -TotalCount 30 -ErrorAction SilentlyContinue) -join "`n"
-        if ($headLines -notmatch '## Overview' -or $headLines -notmatch '## Usage') {
-            Write-Warning "Script $norm is missing markdown header comments (## Overview / ## Usage)"
+        if ($headLines -notmatch '## Overview' -or $headLines -notmatch '## Usage' -or $headLines -match 'Performs the .* operation and updates component state\.') {
+            Write-Warning "Script $norm is missing or has placeholder markdown header comments (## Overview / ## Usage)"
             $missingScriptHeaders++
         }
     }

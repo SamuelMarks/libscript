@@ -81,7 +81,7 @@ exit /b 1
 :main
 set "ERRORS=0"
 :: ## process_loop
-:: Performs the process_loop operation and updates component state.
+:: Iterates through build artifacts to compute checksums and stage release files.
 :process_loop
 if "%~1"=="" goto :finish
 call :process_single "%~1"
@@ -142,7 +142,7 @@ if not defined SHA256_HASH (
     )
 )
 :: ## skip_hash
-:: Performs the skip_hash operation and updates component state.
+:: Skips checksum generation for hash metadata files.
 :skip_hash
 
 if not defined SHA256_HASH (

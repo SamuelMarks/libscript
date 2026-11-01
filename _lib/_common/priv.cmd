@@ -82,7 +82,7 @@ goto %1
 :: -----------------------------------------------------------------------------
 :: Returns: errorlevel 0 (Admin) or 1 (Non-Admin)
 :: ## check_admin
-:: Performs the check_admin operation and updates component state.
+:: Checks whether the current process is running with Windows Administrator privileges.
 :check_admin
 net session >nul 2>&1
 if %errorlevel% == 0 (
@@ -97,7 +97,7 @@ if %errorlevel% == 0 (
 :: Param: %~2 - The command to run
 :: Param: %~3-9 - Arguments for the command
 :: ## priv
-:: Performs the priv operation and updates component state.
+:: Executes a command with elevated privileges if required.
 :priv
 set "CMD_TO_RUN=%~2"
 if "!CMD_TO_RUN!"=="" (
@@ -134,7 +134,7 @@ if %errorlevel% == 0 (
 :: Param: %~2 - The user to run as (currently ignored, defaults to Admin)
 :: Param: %~3 - The command to run
 :: ## priv_as
-:: Performs the priv_as operation and updates component state.
+:: Executes a command under the specified target user account.
 :priv_as
 :: On Windows, 'priv_as' usually implies 'run as admin' for most LibScript tasks.
 :: Proper 'runas /user:...' requires a password, which is interactive.

@@ -34,7 +34,7 @@ export SCRIPT_NAME
 NETCTL_STATE_FILE="${NETCTL_STATE_FILE:-.netctl.json}"
 
 # ## netctl_init
-# Performs the netctl_init operation and updates component state.
+# Initializes a fresh netctl state structure in the temporary workspace.
 netctl_init() {
   if [ ! -s "$NETCTL_STATE_FILE" ]; then
     printf '%s
@@ -43,7 +43,7 @@ netctl_init() {
 }
 
 # ## netctl_state_write
-# Performs the netctl_state_write operation and updates component state.
+# Persists a key-value record into the active netctl state file.
 netctl_state_write() {
   # Write stdin to state file safely
   cat > "${NETCTL_STATE_FILE}.tmp"
@@ -59,7 +59,7 @@ netctl_set_domain() {
 }
 
 # ## netctl_add_listen
-# Performs the netctl_add_listen operation and updates component state.
+# Appends a listen port/protocol entry to the current netctl state.
 netctl_add_listen() {
   port="$1"
   netctl_init
@@ -67,7 +67,7 @@ netctl_add_listen() {
 }
 
 # ## netctl_add_static
-# Performs the netctl_add_static operation and updates component state.
+# Appends a static file serving route to the current netctl state.
 netctl_add_static() {
   path="$1"
   target="$2"
@@ -85,7 +85,7 @@ netctl_add_spa() {
 }
 
 # ## netctl_add_proxy
-# Performs the netctl_add_proxy operation and updates component state.
+# Appends a reverse-proxy upstream routing rule to the current netctl state.
 netctl_add_proxy() {
   path="$1"
   target="$2"
@@ -105,7 +105,7 @@ netctl_add_ws() {
 }
 
 # ## netctl_add_rewrite
-# Performs the netctl_add_rewrite operation and updates component state.
+# Appends a URL rewrite rule to the current netctl state.
 netctl_add_rewrite() {
   path="$1"
   pattern="$2"

@@ -102,6 +102,6 @@ echo [PASS] Top-level schema validation passed for %PROFILE_FILE%
 echo [PASS] All modular axes and compatibility rules satisfied.
 
 :: ## end
-:: Performs the end operation and updates component state.
+:: Exits the batch script cleanly and returns control to the caller.
 :end
 exit /b 0

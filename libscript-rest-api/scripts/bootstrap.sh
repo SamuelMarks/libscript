@@ -84,7 +84,7 @@ check_deps() {
 }
 
 # ## install_deps_linux
-# Performs the install_deps_linux operation and updates component state.
+# Installs required C++ build toolchain and libraries on Linux via LibScript components.
 install_deps_linux() {
   log_info 'Detected Linux. Checking dependencies...'
   if check_deps; then
@@ -107,7 +107,7 @@ install_deps_linux() {
 }
 
 # ## install_deps_macos
-# Performs the install_deps_macos operation and updates component state.
+# Installs required C++ build toolchain and libraries on macOS via LibScript components.
 install_deps_macos() {
   log_info 'Detected macOS. Checking dependencies...'
   if check_deps; then
@@ -130,7 +130,7 @@ install_deps_macos() {
 }
 
 # ## install_deps_windows
-# Performs the install_deps_windows operation and updates component state.
+# Installs required C++ build toolchain and libraries on Windows via LibScript components.
 install_deps_windows() {
   log_info 'Detected Windows environment in shell. Suggesting use of bootstrap.cmd.'
   log_error "Please run scripts\bootstrap.cmd from a Command Prompt or PowerShell."

@@ -21,7 +21,8 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"

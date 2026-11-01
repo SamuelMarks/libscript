@@ -1,7 +1,6 @@
 @echo off
 :: # test_openedx_packages.cmd
-setlocal EnableDelayedExpansion
-
+::
 :: ## Overview
 :: Orchestrates the Open edX packaged install test plan across target platforms.
 :: Ensures packages install correctly on a pristine Vagrant environment.
@@ -10,30 +9,45 @@ setlocal EnableDelayedExpansion
 :: tests\test_openedx_packages.cmd [-o os_target]
 :: Example: tests\test_openedx_packages.cmd -o windows-11
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /i /c:":!THIS_FILE!:" >nul
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
         echo [STOP]     processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-set "SCRIPT_DIR=%~dp0"
 
-:: Resolve LIBSCRIPT_ROOT_DIR
-set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
 :: ## find_root
 :: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
-if exist "!LIBSCRIPT_ROOT_DIR!libscript.cmd" goto root_found
-set "PARENT_DIR=!LIBSCRIPT_ROOT_DIR!..\"
-for %%A in ("!PARENT_DIR!") do set "LIBSCRIPT_ROOT_DIR=%%~fA"
-if "!LIBSCRIPT_ROOT_DIR!"=="!PARENT_DIR!" (
-    echo [ERROR] Could not find libscript.cmd >&2
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
     exit /b 1
 )
-goto find_root
+goto :find_root
+
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
@@ -121,7 +135,7 @@ if not errorlevel 1 (
 )
 
 :: ## step1
-:: Performs the step1 operation and updates component state.
+:: Initializes the Vagrant guest VM and purges any pre-existing package installation.
 :step1
 echo === Step 1: Initialization (!TARGET_OS!) ===
 echo [INFO] Ensuring clean machine state...
@@ -157,7 +171,7 @@ if not errorlevel 1 (
 )
 
 :: ## sync_pkg
-:: Performs the sync_pkg operation and updates component state.
+:: Synchronizes compiled installer packages into the Vagrant guest VM.
 :sync_pkg
 echo [INFO] Syncing packages to target machine...
 vagrant rsync || ( echo [ERROR] Failed to rsync to Vagrant. >&2 & exit /b 1 )
@@ -192,7 +206,7 @@ echo [ERROR] Unsupported OS: !TARGET_OS! >&2
 exit /b 1
 
 :: ## verify
-:: Performs the verify operation and updates component state.
+:: Verifies that the packaged Open edX services are installed and active on the guest OS.
 :verify
 echo === Step 3: Verification (!TARGET_OS!) ===
 echo !TARGET_OS! | findstr /b /i "windows" >nul
@@ -236,7 +250,7 @@ if not errorlevel 1 (
 )
 
 :: ## end_uninstall
-:: Performs the end_uninstall operation and updates component state.
+:: Finalizes uninstallation verification and exits cleanly.
 :end_uninstall
 echo [PASS] Uninstallation complete.
 exit /b 0

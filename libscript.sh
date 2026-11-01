@@ -53,6 +53,7 @@ show_help() {
   printf '%s\n' '  env <component> <version>   Print environment variables for a component'
   printf '%s\n' '  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)'
   printf '%s\n' '  package-as <format> [args]  Package libscript usage (e.g., docker, docker_compose)'
+  printf '%s\n' '  scaffold [options]          Generate a new component-package-manager interactively or from JSON'
   printf '%s\n' '  install <package_name> <version> Install a specific version of a component'
   printf '%s\n' '  use <package_name> <version> Set the default version of a component'
   printf '%s\n' '  download <package_name> <version> Download artifacts for a component to the local cache without installing'
@@ -100,7 +101,7 @@ show_help() {
 }
 
 # ## find_components
-# Performs the find_components operation and updates component state.
+# Discovers all component directories containing manifest.json under _lib/.
 find_components() {
   find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" ! -path "*/tmp/*" ! -path "*/.*" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
@@ -114,7 +115,7 @@ find_components() {
 }
 
 # ## get_desc
-# Performs the get_desc operation and updates component state.
+# Extracts the human-readable component description from manifest.json or README.md.
 get_desc() {
   schema="$LIBSCRIPT_CLI_DIR/$1/vars.schema.json"
   if [ ! -f "$schema" ]; then
@@ -281,6 +282,7 @@ fi
 
 shift || true
 
+# shellcheck disable=SC1091
 case "$CMD" in
   list) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/list.sh" ;;
   process-downloads) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" ;;
@@ -310,6 +312,7 @@ case "$CMD" in
   update-db) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" ;;
   semver) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" ;;
   package-as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" ;;
+  scaffold|new-component) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/scaffold/scaffold.sh" "$@" ;;
   config) . "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" ;;
   repogen) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" ;;
   distro) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/distro/distro.sh" ;;

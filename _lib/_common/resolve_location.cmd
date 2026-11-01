@@ -1,5 +1,12 @@
 @echo off
 :: # resolve_location.cmd
+::
+:: ## Overview
+:: Translates Windows MSI location variables into absolute paths on Windows.
+::
+:: ## Usage
+::   call resolve_location.cmd "[ProgramFiles64Folder]LibScript\MySQL"
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,12 +17,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Translates Windows MSI location variables into absolute paths on Windows.
-::
-:: ## Usage
-::   call resolve_location.cmd "[ProgramFiles64Folder]LibScript\MySQL"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"

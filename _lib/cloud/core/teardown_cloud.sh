@@ -208,7 +208,7 @@ log "INIT" "Starting $PROVIDER teardown for $NODE..."
 
 STATE_FILE="$REPO_PATH/.deploy_state"
 # ## get_state
-# Performs the get_state operation and updates component state.
+# Reads the persisted cloud deployment state JSON file.
 get_state() {
   key=$1
   if [ -f "$STATE_FILE" ]; then
@@ -255,7 +255,7 @@ elif [ "$PROVIDER" = "gcp" ]; then
 fi
 
 # ## run_with_auth_check
-# Performs the run_with_auth_check operation and updates component state.
+# Executes a cloud CLI teardown command after verifying active provider credentials.
 run_with_auth_check() {
   cmd="$1"
   shift

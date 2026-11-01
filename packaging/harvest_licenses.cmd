@@ -26,34 +26,37 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
 set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
 
 :: ## find_root
-:: Traverses parent directories to identify LIBSCRIPT_ROOT_DIR.
-set "LIBSCRIPT_ROOT_DIR="
-set "CURR_DIR=!SCRIPT_DIR!"
-:: ## find_root_loop
-:: Performs the find_root_loop operation and updates component state.
-:find_root_loop
-if exist "%CURR_DIR%\libscript.cmd" (
-    set "LIBSCRIPT_ROOT_DIR=%CURR_DIR%"
-    goto root_found
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
 )
-if exist "%CURR_DIR%\libscript.sh" (
-    set "LIBSCRIPT_ROOT_DIR=%CURR_DIR%"
-    goto root_found
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
 )
-for %%I in ("%CURR_DIR%\..") do set "PARENT_DIR=%%~fI"
-if "%PARENT_DIR%"=="%CURR_DIR%" goto root_found
-set "CURR_DIR=%PARENT_DIR%"
-goto find_root_loop
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-
-if "%~1"=="" goto show_help
 if "%~1"=="--help" goto show_help
 if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help

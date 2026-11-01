@@ -65,6 +65,6 @@ echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
 exit /b 86
 
 :: ## end
-:: Performs the end operation and updates component state.
+:: Exits the batch script cleanly and returns control to the caller.
 :end
 exit /b 0

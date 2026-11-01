@@ -104,7 +104,7 @@ EOF
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
 # ## hex_to_r
-# Performs the hex_to_r operation and updates component state.
+# Extracts the red channel integer (0-255) from a 6-digit hexadecimal RGB color string.
 hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
 
 # ## hex_to_g
@@ -113,7 +113,7 @@ hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
 # ## hex_to_g
-# Performs the hex_to_g operation and updates component state.
+# Extracts the green channel integer (0-255) from a 6-digit hexadecimal RGB color string.
 hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
 
 # ## hex_to_b
@@ -122,7 +122,7 @@ hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
 # ## hex_to_b
-# Performs the hex_to_b operation and updates component state.
+# Extracts the blue channel integer (0-255) from a 6-digit hexadecimal RGB color string.
 hex_to_b() { printf '%d' "0x$(printf '%s' "$1" | cut -c5-6)"; }
 
 PR_R=$(hex_to_r "$PRIMARY_HEX"); PR_G=$(hex_to_g "$PRIMARY_HEX"); PR_B=$(hex_to_b "$PRIMARY_HEX")

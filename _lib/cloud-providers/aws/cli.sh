@@ -113,7 +113,7 @@ check_deps() {
 }
 
 # ## aws_auth
-# Performs the aws_auth operation and updates component state.
+# Authenticates with AWS CLI and validates IAM caller identity.
 aws_auth() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -156,7 +156,7 @@ aws_group() {
 }
 
 # ## aws_location
-# Performs the aws_location operation and updates component state.
+# Resolves and validates the target AWS region and availability zone.
 aws_location() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -174,7 +174,7 @@ aws_location() {
 }
 
 # ## aws_dns
-# Performs the aws_dns operation and updates component state.
+# Provisions and manages Route53 DNS zones and resource record sets.
 aws_dns() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -238,7 +238,7 @@ aws_dns() {
 }
 
 # ## aws_network
-# Performs the aws_network operation and updates component state.
+# Provisions VPCs, subnets, internet gateways, and route tables on AWS.
 aws_network() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -308,7 +308,7 @@ aws_network() {
 }
 
 # ## aws_firewall
-# Performs the aws_firewall operation and updates component state.
+# Creates and configures EC2 security groups and ingress/egress firewall rules.
 aws_firewall() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -375,7 +375,7 @@ aws_firewall() {
 }
 
 # ## aws_node
-# Performs the aws_node operation and updates component state.
+# Launches, terminates, or inspects individual EC2 compute instances.
 aws_node() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -553,7 +553,7 @@ aws_node() {
 }
 
 # ## aws_node_group
-# Performs the aws_node_group operation and updates component state.
+# Creates and manages Auto Scaling groups or multi-node EC2 clusters.
 aws_node_group() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -573,7 +573,7 @@ aws_node_group() {
 }
 
 # ## aws_cron
-# Performs the aws_cron operation and updates component state.
+# Configures scheduled EventBridge/cron rules for AWS cloud tasks.
 aws_cron() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -588,7 +588,7 @@ aws_cron() {
 }
 
 # ## aws_jumpbox
-# Performs the aws_jumpbox operation and updates component state.
+# Provisions and manages an EC2 bastion/jumpbox instance.
 aws_jumpbox() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -606,7 +606,7 @@ aws_jumpbox() {
 }
 
 # ## aws_storage
-# Performs the aws_storage operation and updates component state.
+# Provisions and manages S3 buckets and EBS storage volumes.
 aws_storage() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -653,7 +653,7 @@ aws_storage() {
 }
 
 # ## aws_list_managed
-# Performs the aws_list_managed operation and updates component state.
+# Lists all AWS resources tagged as managed by LibScript.
 aws_list_managed() {
   FILTER_KEY=${1:-$TAG_KEY}
   FILTER_VAL=${2:-$TAG_VAL}
@@ -663,7 +663,7 @@ aws_list_managed() {
 }
 
 # ## aws_cleanup
-# Performs the aws_cleanup operation and updates component state.
+# Tears down and deletes all LibScript-managed AWS cloud resources.
 aws_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_KEY=${2:-$TAG_KEY}

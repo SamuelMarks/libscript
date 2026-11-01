@@ -72,7 +72,7 @@ shift
 goto parse_loop
 
 :: ## run_gen
-:: Performs the run_gen operation and updates component state.
+:: Dispatches repository metadata generation for the selected package format.
 :run_gen
 if not exist "%REPO_BASE%\apk" mkdir "%REPO_BASE%\apk"
 if not exist "%REPO_BASE%\deb" mkdir "%REPO_BASE%\deb"
@@ -86,7 +86,7 @@ if /i "%ACTION%"=="deb" goto do_deb
 if /i "%ACTION%"=="rpm" goto do_rpm
 
 :: ## do_all
-:: Performs the do_all operation and updates component state.
+:: Executes packaging or repository generation across all supported formats.
 :do_all
 call "!SCRIPT_DIR!\apk_index.cmd" "%REPO_BASE%\apk"
 call "!SCRIPT_DIR!\deb_index.cmd" "%REPO_BASE%\deb"
@@ -94,25 +94,25 @@ call "!SCRIPT_DIR!\rpm_index.cmd" "%REPO_BASE%\rpm"
 goto finish
 
 :: ## do_apk
-:: Performs the do_apk operation and updates component state.
+:: Generates an Alpine Linux (.apk) package or repository index.
 :do_apk
 call "!SCRIPT_DIR!\apk_index.cmd" "%REPO_BASE%\apk"
 goto finish
 
 :: ## do_deb
-:: Performs the do_deb operation and updates component state.
+:: Generates a Debian (.deb) package or apt repository index.
 :do_deb
 call "!SCRIPT_DIR!\deb_index.cmd" "%REPO_BASE%\deb"
 goto finish
 
 :: ## do_rpm
-:: Performs the do_rpm operation and updates component state.
+:: Generates an RPM (.rpm) package or yum/dnf repository metadata.
 :do_rpm
 call "!SCRIPT_DIR!\rpm_index.cmd" "%REPO_BASE%\rpm"
 goto finish
 
 :: ## finish
-:: Performs the finish operation and updates component state.
+:: Completes operation and exits with success status.
 :finish
 set "KEY_DIR=%REPO_BASE%\keys"
 if not exist "%KEY_DIR%" mkdir "%KEY_DIR%"

@@ -1,5 +1,13 @@
 @echo off
 :: # discover_runtimes.cmd
+::
+:: ## Overview
+:: Scans the host system to discover installed toolchains and runtimes (e.g., Python).
+:: Checks standard system locations, PATH, and previous libscript installation paths.
+::
+:: ## Usage
+::   call discover_runtimes.cmd [--json | --eval]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,13 +18,6 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
-:: ## Overview
-:: Scans the host system to discover installed toolchains and runtimes (e.g., Python).
-:: Checks standard system locations, PATH, and previous libscript installation paths.
-::
-:: ## Usage
-::   call discover_runtimes.cmd [--json | --eval]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -83,7 +84,7 @@ echo Usage: %0 [--json ^| --eval] >&2
 exit /b 1
 
 :: ## discover_python
-:: Performs the discover_python operation and updates component state.
+:: Searches standard system paths for installed Python runtimes and reports their versions.
 :discover_python
 :: Try PATH
 for %%P in (python.exe) do set "PY_PATH=%%~$PATH:P"

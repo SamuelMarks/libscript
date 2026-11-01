@@ -19,9 +19,9 @@ set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2^>^&1
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" ^>^&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -125,7 +125,7 @@ exit /b !SETUP_ERR!
 goto :eof
 
 :: ## libscript_install_binary
-:: Performs the libscript_install_binary operation and updates component state.
+:: Installs a downloaded binary into the component version directory and updates aliases.
 :libscript_install_binary
 set "src_path=%~1"
 set "bin_name=%~2"

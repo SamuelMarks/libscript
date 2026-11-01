@@ -15,9 +15,9 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2^>^&1
+    echo !STACK! | findstr /I /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" ^>^&2
+        echo [STOP] processing "%THIS_FILE%" >&2
         exit /b 0
     )
 )
@@ -84,7 +84,7 @@ if not errorlevel 1 (
 echo [ERROR] Unknown option %~1 1>&2
 exit /b 1
 :: ## end_args
-:: Performs the end_args operation and updates component state.
+:: Completes argument parsing and begins test execution.
 :end_args
 
 set "VAGRANT_DIR=%LIBSCRIPT_ROOT_DIR%\vagrant\%TARGET_OS%"

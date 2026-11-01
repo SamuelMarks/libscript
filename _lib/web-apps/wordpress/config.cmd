@@ -71,7 +71,7 @@ if "%CMD%"=="set" goto do_set
 if "%CMD%"=="help" goto show_help
 
 :: ## do_get
-:: Performs the do_get operation and updates component state.
+:: Retrieves a specific WordPress configuration option value.
 :do_get
 shift
 set "KEY=%~1"
@@ -86,7 +86,7 @@ for /f "tokens=2 delims='" %%a in ('findstr /i "'%KEY%'" "%WP_CONFIG%"') do (
 exit /b 1
 
 :: ## do_set
-:: Performs the do_set operation and updates component state.
+:: Updates a WordPress configuration option to the specified value.
 :do_set
 shift
 set "KEY=%~1"
@@ -106,7 +106,7 @@ echo [OK] Config key %KEY% updated.
 exit /b 0
 
 :: ## do_dump
-:: Performs the do_dump operation and updates component state.
+:: Dumps all configured WordPress options and settings.
 :do_dump
 echo === WordPress 7.1.2 Configuration Constants ===
 findstr /i "define" "%WP_CONFIG%" | findstr /v "KEY SALT"

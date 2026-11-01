@@ -66,7 +66,7 @@ if "%CMD%"=="status" goto do_status
 if "%CMD%"=="help" goto show_help
 
 :: ## do_run
-:: Performs the do_run operation and updates component state.
+:: Executes due scheduled tasks immediately.
 :do_run
 if exist "%WORDPRESS_WWWROOT%\wp-cron.php" (
     where php >nul 2>&1
@@ -78,21 +78,21 @@ echo [OK] WordPress cron execution completed.
 exit /b 0
 
 :: ## do_install
-:: Performs the do_install operation and updates component state.
+:: Installs the scheduled cron task or system service for the component.
 :do_install
 schtasks /create /tn "WordPressCronTask" /tr "php "%WORDPRESS_WWWROOT%\wp-cron.php"" /sc minute /mo 5 /f >nul 2>&1
 echo [OK] Registered WordPressCronTask in Windows Task Scheduler.
 exit /b 0
 
 :: ## do_uninstall
-:: Performs the do_uninstall operation and updates component state.
+:: Removes the scheduled cron task or registered service.
 :do_uninstall
 schtasks /delete /tn "WordPressCronTask" /f >nul 2>&1
 echo [OK] Removed WordPressCronTask from Windows Task Scheduler.
 exit /b 0
 
 :: ## do_status
-:: Performs the do_status operation and updates component state.
+:: Queries and displays the operational status of the managed services.
 :do_status
 schtasks /query /tn "WordPressCronTask" 2>nul
 exit /b 0

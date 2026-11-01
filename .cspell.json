@@ -2455,7 +2455,22 @@
     "dentry",
     "Alignas",
     "Alignof",
-    "ffreestanding"
+    "ffreestanding",
+    "SCAF",
+    "scaffolder",
+    "Scaffolder",
+    "scaftest",
+    "jdef",
+    "ssys",
+    "sfver",
+    "surl",
+    "defver",
+    "fver",
+    "vscheme",
+    "etok",
+    "autojump",
+    "ajeetdsouza",
+    "sharkdp"
   ],
   "ignorePaths": [
     "node_modules",

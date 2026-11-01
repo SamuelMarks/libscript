@@ -72,7 +72,7 @@ shift
 goto parse_args
 
 :: ## run_backup
-:: Performs the run_backup operation and updates component state.
+:: Creates or restores an archive backup of WordPress files and database state.
 :run_backup
 if "%OUT_FILE%"=="" (
     for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value 2^>nul') do set "DT=%%I"

@@ -175,7 +175,7 @@ endlocal
 exit /b 1
 
 :: ## libscript_format_tags
-:: Performs the libscript_format_tags operation and updates component state.
+:: Formats resource tag key-value pairs into provider-specific CLI tagging arguments.
 :libscript_format_tags
 set "provider=%~2"
 if not "%LIBSCRIPT_TAG_ENABLE%"=="true" exit /b 0
@@ -199,7 +199,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_format_tag_filter
-:: Performs the libscript_format_tag_filter operation and updates component state.
+:: Formats resource tag key-value pairs into a provider-specific CLI filter expression.
 :libscript_format_tag_filter
 set "provider=%~2"
 if not "%LIBSCRIPT_TAG_ENABLE%"=="true" exit /b 0

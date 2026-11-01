@@ -77,7 +77,7 @@ validate_args() {
 
 ## Generates the Nginx block configuration
 # ## generate_nginx_block
-# Performs the generate_nginx_block operation and updates component state.
+# Generates an Nginx server configuration block from an abstract vhost descriptor.
 generate_nginx_block() {
   cat <<EOF
 # BEGIN libscript-managed: ${APP_ID}
@@ -108,7 +108,7 @@ EOF
 
 ## Generates the Apache httpd block configuration
 # ## generate_apache2_block
-# Performs the generate_apache2_block operation and updates component state.
+# Generates an Apache httpd VirtualHost configuration block from an abstract vhost descriptor.
 generate_apache2_block() {
   cat <<EOF
 # BEGIN libscript-managed: ${APP_ID}
@@ -135,7 +135,7 @@ EOF
 
 ## Safely interpolates the generated block into the target configuration file
 # ## interpolate_block
-# Performs the interpolate_block operation and updates component state.
+# Substitutes template placeholders in a virtual host block with concrete runtime values.
 interpolate_block() {
   new_block_file="${THIS_DIR}/.tmp_block_${APP_ID}"
   backup_file="${CONF_FILE}.bak"
@@ -194,7 +194,7 @@ interpolate_block() {
 
 ## Validates syntax and rolls back if necessary
 # ## test_and_reload
-# Performs the test_and_reload operation and updates component state.
+# Validates the web server configuration syntax and reloads the daemon or rolls back on error.
 test_and_reload() {
   backup_file="${CONF_FILE}.bak"
   test_cmd=""

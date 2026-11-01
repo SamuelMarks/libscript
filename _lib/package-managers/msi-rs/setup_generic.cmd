@@ -292,7 +292,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
 )
 
 :: ## link_aliases
-:: Performs the link_aliases operation and updates component state.
+:: Creates default and latest directory junctions pointing to the installed msi-rs version.
 :link_aliases
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" (

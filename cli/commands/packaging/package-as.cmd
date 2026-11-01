@@ -117,151 +117,151 @@ echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
 
 :: ## do_vagrant_box
-:: Performs the do_vagrant_box operation and updates component state.
+:: Packages the provisioned image into a Vagrant (.box) archive.
 :do_vagrant_box
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\vagrant_box.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_disk_builder
-:: Performs the do_disk_builder operation and updates component state.
+:: Builds a partitioned bootable disk image from the target execution plan.
 :do_disk_builder
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\disk_builder.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_container_base
-:: Performs the do_container_base operation and updates component state.
+:: Builds an OCI/Docker container base rootfs tarball.
 :do_container_base
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\container_base.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_qemu_img
-:: Performs the do_qemu_img operation and updates component state.
+:: Builds a QEMU virtual machine disk image.
 :do_qemu_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\qemu_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_vmware_img
-:: Performs the do_vmware_img operation and updates component state.
+:: Builds a VMware VMDK virtual machine disk image.
 :do_vmware_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\vmware_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_hyperv_img
-:: Performs the do_hyperv_img operation and updates component state.
+:: Builds a Microsoft Hyper-V VHDX virtual machine image.
 :do_hyperv_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\hyperv_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_proxmox_img
-:: Performs the do_proxmox_img operation and updates component state.
+:: Builds a Proxmox VE compatible VM template or VMA/QCOW2 disk image.
 :do_proxmox_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\proxmox_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_virtualbox_img
-:: Performs the do_virtualbox_img operation and updates component state.
+:: Builds an Oracle VirtualBox VDI/OVA virtual machine image.
 :do_virtualbox_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\virtualbox_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_xen_img
-:: Performs the do_xen_img operation and updates component state.
+:: Builds a Xen guest disk image.
 :do_xen_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\xen_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_microvm_img
-:: Performs the do_microvm_img operation and updates component state.
+:: Builds a minimal Firecracker/Cloud-Hypervisor microVM kernel and rootfs image.
 :do_microvm_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\microvm_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_aws_ami
-:: Performs the do_aws_ami operation and updates component state.
+:: Synthesizes an AWS AMI cloud disk image from the target execution plan.
 :do_aws_ami
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\aws_ami.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_azure_vhd
-:: Performs the do_azure_vhd operation and updates component state.
+:: Synthesizes an Azure-compatible VHD disk image from the target execution plan.
 :do_azure_vhd
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\azure_vhd.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_gcp_image
-:: Performs the do_gcp_image operation and updates component state.
+:: Synthesizes a GCP-compatible disk image archive from the target execution plan.
 :do_gcp_image
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\gcp_image.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_cloud_img
-:: Performs the do_cloud_img operation and updates component state.
+:: Dispatches cloud machine image generation for the requested cloud provider.
 :do_cloud_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\cloud_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_raw_img
-:: Performs the do_raw_img operation and updates component state.
+:: Builds a raw disk image file from the target execution plan.
 :do_raw_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\raw_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_qcow2
-:: Performs the do_qcow2 operation and updates component state.
+:: Builds a QEMU QCOW2 copy-on-write virtual disk image.
 :do_qcow2
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\qcow2.cmd" %* %PKG_TYPE%
 exit /b %ERRORLEVEL%
 
 :: ## do_iso
-:: Performs the do_iso operation and updates component state.
+:: Builds a bootable live ISO hybrid image.
 :do_iso
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\iso.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_rootfs_tar
-:: Performs the do_rootfs_tar operation and updates component state.
+:: Packages the provisioned root filesystem into a compressed tar archive.
 :do_rootfs_tar
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\rootfs_tar.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_bsd_img
-:: Performs the do_bsd_img operation and updates component state.
+:: Builds a BSD raw disk image from the target execution plan.
 :do_bsd_img
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\bsd_img.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_illumos_distro
-:: Performs the do_illumos_distro operation and updates component state.
+:: Synthesizes an illumos/OmniOS distribution sysroot or boot environment.
 :do_illumos_distro
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\illumos_distro.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_freebsd_distro
-:: Performs the do_freebsd_distro operation and updates component state.
+:: Synthesizes a FreeBSD distribution sysroot or installer image.
 :do_freebsd_distro
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\freebsd_distro.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_unikernel
-:: Performs the do_unikernel operation and updates component state.
+:: Builds a unikernel image for the target application stack.
 :do_unikernel
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\unikernel.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_docker
-:: Performs the do_docker operation and updates component state.
+:: Generates a Dockerfile or container image for the target component or stack.
 :do_docker
 call "!SCRIPT_DIR!\formats\pkg_docker.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_docker_compose
-:: Performs the do_docker_compose operation and updates component state.
+:: Generates a docker-compose.yml manifest for the target stack.
 :do_docker_compose
 call "!SCRIPT_DIR!\formats\pkg_docker_compose.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_msi
-:: Performs the do_msi operation and updates component state.
+:: Generates a Windows Installer (.msi) package for the target component or stack.
 :do_msi
 set "FIRST_ARG=%~1"
 if "!FIRST_ARG:~0,6!"=="stacks" (
@@ -288,55 +288,55 @@ call "!SCRIPT_DIR!\formats\pkg_msi.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_innosetup
-:: Performs the do_innosetup operation and updates component state.
+:: Generates an Inno Setup (.iss / .exe) Windows installer.
 :do_innosetup
 call "!SCRIPT_DIR!\formats\pkg_innosetup.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_nsis
-:: Performs the do_nsis operation and updates component state.
+:: Generates an NSIS (.nsi / .exe) Windows installer package.
 :do_nsis
 call "!SCRIPT_DIR!\formats\pkg_nsis.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_deb
-:: Performs the do_deb operation and updates component state.
+:: Generates a Debian (.deb) package or apt repository index.
 :do_deb
 call "!SCRIPT_DIR!\formats\pkg_deb.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_rpm
-:: Performs the do_rpm operation and updates component state.
+:: Generates an RPM (.rpm) package or yum/dnf repository metadata.
 :do_rpm
 call "!SCRIPT_DIR!\formats\pkg_rpm.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_apk
-:: Performs the do_apk operation and updates component state.
+:: Generates an Alpine Linux (.apk) package or repository index.
 :do_apk
 call "!SCRIPT_DIR!\formats\pkg_apk.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_txz
-:: Performs the do_txz operation and updates component state.
+:: Generates a Slackware/FreeBSD (.txz) compressed package archive.
 :do_txz
 call "!SCRIPT_DIR!\formats\pkg_txz.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_pkg
-:: Performs the do_pkg operation and updates component state.
+:: Generates a FreeBSD/macOS (.pkg) installer package.
 :do_pkg
 call "!SCRIPT_DIR!\formats\pkg_pkg.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_dmg
-:: Performs the do_dmg operation and updates component state.
+:: Generates a macOS disk image (.dmg) installer package.
 :do_dmg
 call "!SCRIPT_DIR!\formats\pkg_dmg.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_tui
-:: Performs the do_tui operation and updates component state.
+:: Launches the interactive terminal user interface (TUI) installer.
 :do_tui
 call "!SCRIPT_DIR!\formats\pkg_tui.cmd" %*
 exit /b %ERRORLEVEL%

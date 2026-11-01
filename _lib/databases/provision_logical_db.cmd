@@ -99,7 +99,7 @@ if "!DB_NAME!"=="" (
 goto ProvisionDB
 
 :: ## ProvisionDB
-:: Performs the ProvisionDB operation and updates component state.
+:: Provisions a logical database, user credentials, and schema grants on the target database engine.
 :ProvisionDB
 :: Provisions the database
 :: Connects to the host (local or remote) and conditionally executes CREATE DATABASE.

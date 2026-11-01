@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_check_preflight
-:: Performs the libscript_check_preflight operation and updates component state.
+:: Verifies required cloud CLI tools, credentials, and network reachability before deployment.
 :libscript_check_preflight
 set "provider=%~2"
 if "%provider%"=="" (
