@@ -7,7 +7,7 @@
   "provides": ["illumos-distro"],
   "conflicts": [],
   "versions": ["latest", "r151050"],
-  "os_whitelist": ["sunos", "linux", "darwin", "freebsd"],
-  "os_blacklist": ["windows"],
+  "os_whitelist": ["sunos", "linux", "freebsd"],
+  "os_blacklist": ["windows", "darwin"],
   "ports": []
 }

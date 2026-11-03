@@ -49,7 +49,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
+set "LOG_CMD=%~dp0..\..\_common\log.cmd"
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 ^<action^> [args...]

@@ -3,8 +3,10 @@
 :: ## Overview
 :: Unified CLI routing and lifecycle management for Windows components. Mirrors component_core.sh with full argument parsing, automated dependency resolution, and Version Manager Contract verb support.
 :: ## Usage
-:: call "%~dp0\..\..\_common\component_core.cmd" %* setlocal EnableDelayedExpansion set "CALLER_FILE=!THIS_FILE!"
+:: call "%~dp0\..\..\_common\component_core.cmd" %*
 
+setlocal EnableDelayedExpansion
+set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -441,11 +443,49 @@ if /i "!ACTION!"=="env" (
 
 if /i "!ACTION!"=="test" (
     if exist "!INSTALLED_DIR!\bin" set "PATH=!INSTALLED_DIR!\bin;!PATH!"
+    if exist "!INSTALLED_DIR!" set "PATH=!INSTALLED_DIR!;!PATH!"
+    if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
     if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;!PATH!"
+    if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+    if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+    if exist "%ProgramFiles%\7-Zip" set "PATH=%ProgramFiles%\7-Zip;!PATH!"
+    if exist "%ProgramFiles%\qemu" set "PATH=%ProgramFiles%\qemu;!PATH!"
+    if exist "%ProgramFiles%\Oracle\VirtualBox" set "PATH=%ProgramFiles%\Oracle\VirtualBox;!PATH!"
+    if exist "%ProgramFiles%\Vagrant\bin" set "PATH=%ProgramFiles%\Vagrant\bin;!PATH!"
+    if exist "C:\HashiCorp\Vagrant\bin" set "PATH=C:\HashiCorp\Vagrant\bin;!PATH!"
+    if exist "%ProgramFiles%\Git\cmd" set "PATH=%ProgramFiles%\Git\cmd;!PATH!"
+    if exist "%ProgramFiles%\LLVM\bin" set "PATH=%ProgramFiles%\LLVM\bin;!PATH!"
+    if exist "%ProgramFiles%\Go\bin" set "PATH=%ProgramFiles%\Go\bin;!PATH!"
+    if exist "%ProgramFiles%\dotnet" set "PATH=%ProgramFiles%\dotnet;!PATH!"
+    if exist "%ProgramFiles%\Amazon\AWSCLIV2" set "PATH=%ProgramFiles%\Amazon\AWSCLIV2;!PATH!"
+    if exist "%ProgramFiles%\Microsoft SDKs\Azure\CLI2\wbin" set "PATH=%ProgramFiles%\Microsoft SDKs\Azure\CLI2\wbin;!PATH!"
+    if exist "%ProgramFiles(x86)%\Microsoft SDKs\Azure\CLI2\wbin" set "PATH=%ProgramFiles(x86)%\Microsoft SDKs\Azure\CLI2\wbin;!PATH!"
+    if exist "%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin" set "PATH=%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin;!PATH!"
+    if exist "%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin" set "PATH=%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin;!PATH!"
+    if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin" set "PATH=%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin;!PATH!"
+    if exist "%USERPROFILE%\.libscript\nodejs\latest" set "PATH=%USERPROFILE%\.libscript\nodejs\latest;!PATH!"
+    if exist "%USERPROFILE%\.libscript\nodejs\default" set "PATH=%USERPROFILE%\.libscript\nodejs\default;!PATH!"
+    if exist "C:\msys64\clangarm64\bin" set "PATH=C:\msys64\clangarm64\bin;!PATH!"
+    if exist "C:\msys64\ucrt64\bin" set "PATH=C:\msys64\ucrt64\bin;!PATH!"
+    if exist "C:\msys64\mingw64\bin" set "PATH=C:\msys64\mingw64\bin;!PATH!"
+    if exist "C:\msys64\usr\bin" set "PATH=C:\msys64\usr\bin;!PATH!"
+    if exist "C:\ProgramData\chocolatey\lib\elixir\tools\bin" set "PATH=C:\ProgramData\chocolatey\lib\elixir\tools\bin;!PATH!"
+    for /d %%E in ("%ProgramFiles%\erl*") do (
+        if exist "%%~fE\bin" set "PATH=%%~fE\bin;!PATH!"
+    )
+    for /d %%T in ("C:\tools\*") do (
+        if exist "%%~fT\bin" (
+            set "PATH=%%~fT\bin;!PATH!"
+        ) else if exist "%%~fT" (
+            set "PATH=%%~fT;!PATH!"
+        )
+    )
     if exist "%ProgramFiles%\CMake\bin" set "PATH=%ProgramFiles%\CMake\bin;!PATH!"
     if exist "%ProgramFiles%\nodejs" set "PATH=%ProgramFiles%\nodejs;!PATH!"
-    if exist "%LOCALAPPDATA%\Programs\Python\Python312" set "PATH=%LOCALAPPDATA%\Programs\Python\Python312;%LOCALAPPDATA%\Programs\Python\Python312\Scripts;!PATH!"
-    if exist "%ProgramFiles%\Python312" set "PATH=%ProgramFiles%\Python312;%ProgramFiles%\Python312\Scripts;!PATH!"
+    for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+        if exist "%%~fP\Scripts" set "PATH=%%~fP\Scripts;!PATH!"
+        if exist "%%~fP\python.exe" set "PATH=%%~fP;!PATH!"
+    )
     if exist "%USERPROFILE%\.cargo\bin" set "PATH=%USERPROFILE%\.cargo\bin;!PATH!"
     for /d %%P in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\MartinStorsjo.LLVM-MinGW*\llvm-mingw*\bin") do (
         if exist "%%~fP" set "PATH=%%~fP;!PATH!"

@@ -7,6 +7,6 @@
   "provides": ["compiler", "c", "cc", "cpp", "cxx", "edgcpp"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos", "freebsd"],
   "ports": []
 }

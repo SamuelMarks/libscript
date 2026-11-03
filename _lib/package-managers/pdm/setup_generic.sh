@@ -113,7 +113,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/pdm" ]; then
         log_info "Installing pdm ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'python' || true
         libscript_depends 'curl'
@@ -133,8 +133,14 @@ case "$ACTION" in
             PY_BIN='python3.11'
           fi
         fi
-        if [ ! -d "${TARGET_DIR}" ]; then
+        if [ ! -d "${TARGET_DIR}" ] || [ ! -x "${TARGET_DIR}/bin/pdm" ]; then
            mkdir -p "${TARGET_DIR}"
+           if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ]; then
+             if ! command -v gcc >/dev/null 2>&1; then
+               libscript_depends 'gcc' || true
+             fi
+             export CC="${CC:-gcc}" CXX="${CXX:-g++}" LDSHARED="${LDSHARED:-gcc -shared}" CFLAGS="${CFLAGS:--O2 -fPIC}"
+           fi
            _pdm_inst=$(mktemp)
            libscript_download "https://pdm-project.org/install-pdm.py" "${_pdm_inst}"
            PDM_HOME="$TARGET_DIR" "$PY_BIN" "${_pdm_inst}" --version "$EXACT_VERSION"

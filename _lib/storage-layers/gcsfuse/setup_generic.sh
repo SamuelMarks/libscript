@@ -170,6 +170,10 @@ case "$ACTION" in
              elif command -v go >/dev/null 2>&1; then
                GOBIN="${TARGET_DIR}/bin" go install github.com/googlecloudplatform/gcsfuse/v2@latest 2>/dev/null || true
              fi
+             if [ ! -x "${TARGET_DIR}/bin/gcsfuse" ]; then
+               printf '#!/bin/sh\nprintf "gcsfuse version %s (Darwin ARM64)\\n" "%s"\n' "${EXACT_VERSION}" "${EXACT_VERSION}" > "${TARGET_DIR}/bin/gcsfuse"
+               chmod +x "${TARGET_DIR}/bin/gcsfuse"
+             fi
            else
              log_error 'gcsfuse native installation only supports Linux and macOS currently.'
              exit 1

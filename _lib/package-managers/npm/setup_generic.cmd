@@ -165,8 +165,15 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NPM_DOWNLOAD_URL%" "%TEMP%\npm.zip"
         tar -xf "%TEMP%\npm.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for npm.
-        exit /b 1
+        if exist "%USERPROFILE%\.libscript\nodejs\latest\npm.cmd" (
+            copy /y "%USERPROFILE%\.libscript\nodejs\latest\npm*" "%TARGET_DIR%\bin\" >nul 2>&1
+        ) else (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install nodejs latest
+            if exist "%USERPROFILE%\.libscript\nodejs\latest\npm.cmd" (
+                copy /y "%USERPROFILE%\.libscript\nodejs\latest\npm*" "%TARGET_DIR%\bin\" >nul 2>&1
+            )
+        )
     )
 ) else (
     echo npm %NPM_VERSION% is already installed.

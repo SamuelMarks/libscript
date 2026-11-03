@@ -63,7 +63,13 @@ call :register_box "bento/alpine-3.24" "%BUILD_COMPLETE%\alpine-3.24-aarch64.qem
 call :register_box "bento/debian-13" "%BUILD_COMPLETE%\debian-13.6-aarch64.qemu.box" "qemu"
 call :register_box "bento/rockylinux-10.2" "%BUILD_COMPLETE%\almalinux-9.8-aarch64.qemu.box" "qemu"
 call :register_box "bento/freebsd-15.1" "%BUILD_COMPLETE%\freebsd-15.1-aarch64.qemu.box" "qemu"
-call :register_box "bento/macos-14-arm64" "%BUILD_COMPLETE%\macos-14-aarch64.utm.box" "utm"
+if exist "%BUILD_COMPLETE%\macos-27.2-aarch64.utm.box" (
+    call :register_box "bento/macos-27.2-arm64" "%BUILD_COMPLETE%\macos-27.2-aarch64.utm.box" "utm"
+    call :register_box "bento/macos-14-arm64" "%BUILD_COMPLETE%\macos-27.2-aarch64.utm.box" "utm"
+) else (
+    call :register_box "bento/macos-14-arm64" "%BUILD_COMPLETE%\macos-14-aarch64.utm.box" "utm"
+)
+call :register_box "bento/windows-11" "%BUILD_COMPLETE%\windows-11-aarch64.qemu.box" "qemu"
 
 echo === Host Vagrant Box Inventory ===
 vagrant box list

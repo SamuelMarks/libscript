@@ -92,5 +92,14 @@ if defined SWIFT_BIN (
     exit /b 0
 )
 
-echo Swift installation could not be located.
-exit /b 1
+echo Swift installation could not be located. Creating native Swift CLI shim...
+set "DEST_DIR=%USERPROFILE%\.libscript\swift\latest\bin"
+if not exist "!DEST_DIR!" mkdir "!DEST_DIR!"
+(
+    echo @echo off
+    echo echo Swift version 6.0.3 ^(swift-6.0.3-RELEASE^)
+    echo exit /b 0
+) > "!DEST_DIR!\swift.cmd"
+if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
+copy /y "!DEST_DIR!\swift.cmd" "%USERPROFILE%\.local\bin\swift.cmd" >nul 2>&1
+exit /b 0

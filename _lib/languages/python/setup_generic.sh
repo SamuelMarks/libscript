@@ -100,7 +100,7 @@ find_existing_python() {
   fi
   if command -v python3 >/dev/null 2>&1; then
     _sys_pyv=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2 || true)
-    if [ "$_sys_pyv" = "$_fep_req" ]; then
+    if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ] || [ -f /etc/alpine-release ] || [ "$(uname -s)" = "FreeBSD" ] || [ "$(uname -s)" = "SunOS" ]; then
       command -v python3
       return 0
     fi
@@ -218,11 +218,15 @@ case "$ACTION" in
       if ! command -v uv >/dev/null 2>&1 && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" install latest >/dev/null 2>&1 || true
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh" ]; then
-          STACK=""
+          _py_saved_this="${THIS_FILE:-}"
+          _py_saved_dir="${SCRIPT_DIR:-}"
           SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh"
+          export SCRIPT_NAME
           # shellcheck disable=SC1090,SC1091
           . "${SCRIPT_NAME}" || true
           unset SCRIPT_NAME || true
+          [ -n "$_py_saved_this" ] && THIS_FILE="$_py_saved_this"
+          [ -n "$_py_saved_dir" ] && SCRIPT_DIR="$_py_saved_dir"
         fi
       fi
       if command -v uv >/dev/null 2>&1; then

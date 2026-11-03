@@ -51,26 +51,39 @@ goto :find_root
 :root_found
 
 if "%ACTION%"=="" set ACTION=install
+if "%VERSION%"=="" set "VERSION=latest"
+if not defined LIBSCRIPT_HOME set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if "%ACTION%"=="install" (
+    if exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%\.installed" (
+        echo [INFO] bento-builder %VERSION% is already installed.
+        exit /b 0
+    )
     echo Provisioning Bento Builder environment on Windows...
+    set "STACK="
     call "%~dp0\..\..\..\_lib\orchestration\qemu\setup.cmd" install
-    call "%~dp0\..\..\..\_lib\orchestration\virtualbox\setup.cmd" install
+    set "STACK="
+    if /i not "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+        call "%~dp0\..\..\..\_lib\orchestration\virtualbox\setup.cmd" install
+        set "STACK="
+    )
     call "%~dp0\..\..\..\_lib\orchestration\packer\setup.cmd" install
+    set "STACK="
     call "%~dp0\..\..\..\_lib\orchestration\vagrant\setup.cmd" install
-if exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%" (
-    echo [INFO] bento-builder %VERSION% is already installed.
-    exit /b 0
-)
+    set "STACK="
 
     where 7z >nul 2>&1
     if !errorlevel! neq 0 (
+        set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install 7zip latest
     )
     where git >nul 2>&1
     if !errorlevel! neq 0 (
-        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install git latest
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install git-servers/utils latest
     )
+    if not exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%" mkdir "%LIBSCRIPT_HOME%\bento-builder\%VERSION%"
+    echo installed > "%LIBSCRIPT_HOME%\bento-builder\%VERSION%\.installed"
     echo Bento Builder environment provisioned on Windows.
 )
 exit /b 0

@@ -55,7 +55,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION='2.1.1'
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -91,7 +91,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$POETRY_INSTALL_METHOD" = "system" ]; then
-      if ! libscript_depends "poetry" 2>/dev/null; then
+      if libscript_depends "poetry" 2>/dev/null && command -v poetry >/dev/null 2>&1; then
+        mkdir -p "${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${VERSION}/bin"
+        ln -sf "$(command -v poetry)" "${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${VERSION}/bin/poetry"
+        libscript_symlink_alias "poetry" "latest" "${VERSION}"
+        libscript_symlink_alias "poetry" "default" "${VERSION}"
+      else
         log_info 'System package manager does not have poetry, falling back to standalone install...'
         POETRY_INSTALL_METHOD='libscript_native'
       fi
@@ -101,7 +106,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/poetry" ] && [ ! -x "${TARGET_DIR}/venv/bin/poetry" ]; then
         log_info "Installing poetry ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/poetry/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -124,6 +129,12 @@ case "$ACTION" in
           else
             libscript_depends 'python' || true
             libscript_depends 'curl' || true
+            if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ]; then
+              if ! command -v gcc >/dev/null 2>&1; then
+                libscript_depends 'gcc' || true
+              fi
+              export CC="${CC:-gcc}" CXX="${CXX:-g++}" LDSHARED="${LDSHARED:-gcc -shared}" CFLAGS="${CFLAGS:--O2 -fPIC}"
+            fi
             PY_BIN='python3'
             if command -v python3.12 >/dev/null 2>&1; then
               PY_BIN='python3.12'

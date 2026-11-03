@@ -49,6 +49,19 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if exist "%USERPROFILE%\.libscript\jq\latest\bin" set "PATH=%USERPROFILE%\.libscript\jq\latest\bin;!PATH!"
+if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
+if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;!PATH!"
+if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+where jq >nul 2>&1
+if !errorlevel! neq 0 (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install jq latest >nul 2>&1
+    if exist "%USERPROFILE%\.libscript\jq\latest\bin" set "PATH=%USERPROFILE%\.libscript\jq\latest\bin;!PATH!"
+    if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
+)
+
 set NETCTL_DIR=%~dp0
 set NETCTL_STATE_FILE=.netctl.json
 
@@ -137,6 +150,7 @@ if /I "%~1"=="init" (
 
 if "!SINGULAR_MODE!"=="1" (
     set NETCTL_STATE_FILE=%TEMP%\netctl_state_%RANDOM%.json
+    set "STACK="
     call "%NETCTL_DIR%lib\state.cmd" init
     
 :: ## loop
@@ -144,18 +158,21 @@ if "!SINGULAR_MODE!"=="1" (
     :loop
     if "%~1"=="" goto done_loop
     if /I "%~1"=="--domain" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" domain "%~2"
         shift
         shift
         goto loop
     )
     if /I "%~1"=="--listen" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" listen "%~2"
         shift
         shift
         goto loop
     )
     if /I "%~1"=="--static" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" static "%~2" "%~3"
         shift
         shift
@@ -163,6 +180,7 @@ if "!SINGULAR_MODE!"=="1" (
         goto loop
     )
     if /I "%~1"=="--spa" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" spa "%~2" "%~3"
         shift
         shift
@@ -170,6 +188,7 @@ if "!SINGULAR_MODE!"=="1" (
         goto loop
     )
     if /I "%~1"=="--proxy" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" proxy "%~2" "%~3"
         shift
         shift
@@ -177,6 +196,7 @@ if "!SINGULAR_MODE!"=="1" (
         goto loop
     )
     if /I "%~1"=="--ws" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" ws "%~2" "%~3"
         shift
         shift
@@ -184,6 +204,7 @@ if "!SINGULAR_MODE!"=="1" (
         goto loop
     )
     if /I "%~1"=="--rewrite" (
+        set "STACK="
         call "%NETCTL_DIR%lib\state.cmd" rewrite "%~2" "%~3"
         shift
         shift
@@ -203,6 +224,7 @@ if "!SINGULAR_MODE!"=="1" (
 :: Emits the requested reverse-proxy configuration and removes temporary state files.
     :done_loop
     if not "!EMIT_FORMAT!"=="" (
+        set "STACK="
         call "%NETCTL_DIR%lib\!EMIT_FORMAT!.cmd"
     )
     if exist "!NETCTL_STATE_FILE!" del "!NETCTL_STATE_FILE!"

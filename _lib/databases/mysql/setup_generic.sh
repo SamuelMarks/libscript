@@ -93,7 +93,14 @@ case "$ACTION" in
           svcadm enable svc:/database/mysql:default 2>/dev/null || true
         fi
       else
-        libscript_depends 'mysql'
+        if ! command -v mysql >/dev/null 2>&1; then
+          libscript_depends 'mysql' || {
+            if [ "${UNAME_LOWER}" = "darwin" ] && command -v brew >/dev/null 2>&1; then
+              brew unlink mariadb 2>/dev/null || true
+              libscript_depends 'mysql' || true
+            fi
+          }
+        fi
         if [ -f "/etc/my.cnf.d/mariadb-server.cnf" ]; then
           libscript_sed_in_place 's/^skip-networking/#skip-networking/' /etc/my.cnf.d/mariadb-server.cnf 2>/dev/null || true
         fi
@@ -101,7 +108,14 @@ case "$ACTION" in
     else
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}/bin"
-      libscript_depends 'mysql'
+      if ! command -v mysql >/dev/null 2>&1; then
+        libscript_depends 'mysql' || {
+          if [ "${UNAME_LOWER}" = "darwin" ] && command -v brew >/dev/null 2>&1; then
+            brew unlink mariadb 2>/dev/null || true
+            libscript_depends 'mysql' || true
+          fi
+        }
+      fi
       if command -v mysqld >/dev/null 2>&1; then
         ln -sf "$(command -v mysqld)" "${TARGET_DIR}/bin/mysqld" 2>/dev/null || true
       fi

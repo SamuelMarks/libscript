@@ -50,6 +50,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
 call "%~dp0env.cmd"
-waitress-serve --help >nul 2>&1
+set "STACK="
+call waitress-serve --help >nul 2>&1
 exit /b %ERRORLEVEL%

@@ -56,7 +56,7 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "dosfstools" >/dev/null 2>&1; then
+if ! command -v "dosfstools" >/dev/null 2>&1 && ! command -v "mkfs.fat" >/dev/null 2>&1 && ! command -v "mkfs.vfat" >/dev/null 2>&1 && ! command -v "newfs_msdos" >/dev/null 2>&1 && [ ! -x "/sbin/newfs_msdos" ]; then
   libscript_depends 'dosfstools'
 fi
 

@@ -3,9 +3,10 @@
 :: ## Overview
 :: Standardized entrypoint for component installation on Windows. Resolves root, checks privileges, and delegates to setup scripts.
 :: ## Usage
-:: Your component's `setup.cmd` should call this. ```batch @echo off call "%~dp0\..\..\..\_lib\_common\setup_base.cmd" ``` set "CALLER_FILE=!THIS_FILE!"
+:: Your component's `setup.cmd` should call this.
 
 setlocal EnableDelayedExpansion
+set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -81,6 +82,7 @@ if errorlevel 1 (
 
 :: Delegate to specific setup script
 set "SETUP_ERR=1"
+set "STACK="
 if exist "%TARGET_DIR%\setup_windows.cmd" (
     call "%TARGET_DIR%\setup_windows.cmd" %*
     set "SETUP_ERR=!errorlevel!"

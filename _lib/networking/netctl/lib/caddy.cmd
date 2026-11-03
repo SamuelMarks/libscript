@@ -56,12 +56,12 @@ if not exist "%NETCTL_STATE_FILE%" (
 )
 
 set PORTS=
-for /f "delims=" %%p in ('jq -r "if (.listen | length) > 0 then .listen | map(\":\" + .) | join(\", \") else \"localhost\" end" "%NETCTL_STATE_FILE%"') do (
+for /f "usebackq delims=" %%p in (`jq -r "if (.listen ^| length) > 0 then .listen ^| map(\":\" + .) ^| join(\", \") else \"localhost\" end" "%NETCTL_STATE_FILE%"`) do (
     set PORTS=%%p
 )
 echo %PORTS% {
 
-for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"') do (
+for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r ".routes ^| to_entries[] ^| \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"`) do (
     echo.
     if "%%b"=="static" (
         echo     handle %%a* {

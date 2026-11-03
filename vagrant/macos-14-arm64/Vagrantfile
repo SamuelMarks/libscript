@@ -42,10 +42,11 @@ repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
 
 # VM name for persistent snapshotting across component test runs
 vm_name = ENV['LIBSCRIPT_VM_NAME'] || "macos-14-arm64"
+macos_box = ENV['LIBSCRIPT_MACOS_BOX'] || "bento/macos-27.2-arm64"
 
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
-    t.vm.box = "bento/macos-14-arm64"
+    t.vm.box = macos_box
     t.vm.box_version = "0"
 
     t.vm.guest = :darwin

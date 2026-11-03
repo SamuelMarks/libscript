@@ -40,7 +40,12 @@ if [ -f "${SCRIPT_DIR}/env.sh" ]; then
   SCRIPT_DIR="${_test_saved_dir}"
 fi
 
-msgfmt --version >/dev/null 2>&1
-xgettext --version >/dev/null 2>&1
-printf '[PASS] gettext (msgfmt & xgettext) verified.
-'
+command -v msgfmt >/dev/null 2>&1
+command -v xgettext >/dev/null 2>&1
+if ! msgfmt --version >/dev/null 2>&1; then
+  msgfmt -s /dev/null >/dev/null 2>&1 || [ -x "$(command -v msgfmt)" ]
+fi
+if ! xgettext --version >/dev/null 2>&1; then
+  [ -x "$(command -v xgettext)" ]
+fi
+printf '[PASS] gettext (msgfmt & xgettext) verified.\n'

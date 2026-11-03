@@ -56,27 +56,38 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/uvicorn/${VERSION:-latest}/bin/uvicorn" ]; then
+    _uv_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/uvicorn/${VERSION:-latest}"
+    if [ -x "${_uv_target}/bin/uvicorn" ]; then
       log_info "uvicorn ${VERSION:-latest} is already installed."
       exit 0
     fi
     log_info "Installing Uvicorn ASGI server via ${UVICORN_INSTALL_METHOD}..."
     if command -v uvicorn >/dev/null 2>&1; then
       log_info 'uvicorn is already available on the system.'
+      mkdir -p "${_uv_target}/bin"
+      ln -sf "$(command -v uvicorn)" "${_uv_target}/bin/uvicorn"
     elif [ "$(uname -s)" = "FreeBSD" ]; then
       libscript_depends 'uvicorn'
-    elif command -v uv >/dev/null 2>&1; then
-      uv tool install uvicorn 2>/dev/null || uv pip install uvicorn
-    elif command -v pipx >/dev/null 2>&1; then
-      pipx install uvicorn
-    elif command -v pip3 >/dev/null 2>&1; then
-      pip3 install --user uvicorn
-    elif command -v pip >/dev/null 2>&1; then
-      pip install --user uvicorn
     else
-      libscript_depends 'python'
-      pip3 install --user uvicorn || true
+      if ! command -v uv >/dev/null 2>&1; then
+        if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
+          libscript_depends 'python'
+        fi
+      fi
+      mkdir -p "${_uv_target}"
+      if command -v uv >/dev/null 2>&1; then
+        uv venv "${_uv_target}" --seed 2>/dev/null || python3 -m venv "${_uv_target}"
+        uv pip install --python "${_uv_target}/bin/python" uvicorn 2>/dev/null || "${_uv_target}/bin/pip" install uvicorn
+      else
+        python3 -m venv "${_uv_target}"
+        "${_uv_target}/bin/pip" install uvicorn
+      fi
+      if [ -x "${_uv_target}/bin/uvicorn" ]; then
+        priv ln -sf "${_uv_target}/bin/uvicorn" /usr/local/bin/uvicorn 2>/dev/null || true
+      fi
     fi
+    libscript_symlink_alias "uvicorn" "default" "${VERSION:-latest}" 2>/dev/null || true
+    libscript_symlink_alias "uvicorn" "latest" "${VERSION:-latest}" 2>/dev/null || true
     ;;
   uninstall)
     log_info 'Uninstalling Uvicorn...'

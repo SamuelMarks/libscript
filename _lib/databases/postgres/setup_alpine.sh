@@ -45,7 +45,7 @@ done
 detect_pkg_mgr
 if ! is_installed 'postgresql'"${POSTGRES_VERSION}"; then
   for v in 18 17 16 15; do
-    if pkg_mgr 'openrc' "postgresql$v" "postgresql$v-client" "postgresql$v-contrib" "postgresql$v-openrc" 2>/dev/null; then
+    if libscript_depends 'openrc' "postgresql$v" "postgresql$v-client" "postgresql$v-contrib" "postgresql$v-openrc" 2>/dev/null; then
       POSTGRES_VERSION="$v"
       export POSTGRES_VERSION
       break
@@ -54,7 +54,7 @@ if ! is_installed 'postgresql'"${POSTGRES_VERSION}"; then
 fi
 
 if ! is_installed 'postgresql'"${POSTGRES_VERSION}"; then
-  pkg_mgr 'openrc' 'postgresql'"${POSTGRES_VERSION}" 'postgresql'"${POSTGRES_VERSION}"'-client' 'postgresql'"${POSTGRES_VERSION}"'-contrib' 'postgresql'"${POSTGRES_VERSION}"'-openrc'
+  libscript_depends 'openrc' 'postgresql'"${POSTGRES_VERSION}" 'postgresql'"${POSTGRES_VERSION}"'-client' 'postgresql'"${POSTGRES_VERSION}"'-contrib' 'postgresql'"${POSTGRES_VERSION}"'-openrc'
 fi
 EXISTED=0
 if [ -f "/etc/init.d/${LIBSCRIPT_SERVICE_NAME:-postgresql}" ]; then

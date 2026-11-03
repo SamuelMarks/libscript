@@ -56,7 +56,7 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "gdm" >/dev/null 2>&1; then
+if ! command -v "gdm" >/dev/null 2>&1 && ! command -v "gdm3" >/dev/null 2>&1; then
   libscript_depends 'gdm'
 fi
 

@@ -73,6 +73,9 @@ resolve_edgcpp_binaries() {
 
   if [ -d "${_edg_home}/lib" ]; then
     export LD_LIBRARY_PATH="${_edg_home}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+    if [ -f "${_edg_home}/lib/libedg_el9_compat.so" ]; then
+      export LD_PRELOAD="${_edg_home}/lib/libedg_el9_compat.so${LD_PRELOAD:+:${LD_PRELOAD}}"
+    fi
   fi
 
   if [ -n "${CPFE_BIN:-}" ] && [ -x "${CPFE_BIN}" ]; then

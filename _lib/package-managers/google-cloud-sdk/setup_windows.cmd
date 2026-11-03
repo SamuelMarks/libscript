@@ -72,14 +72,17 @@ if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" set "
 if defined GCLOUD_BIN (
     set "DEST_DIR=%USERPROFILE%\.libscript\google-cloud-sdk\latest\bin"
     if not exist "!DEST_DIR!" mkdir "!DEST_DIR!"
-    copy /y "!GCLOUD_BIN!\gcloud.*" "!DEST_DIR!" >nul 2>&1
-    copy /y "!GCLOUD_BIN!\gsutil.*" "!DEST_DIR!" >nul 2>&1
-    copy /y "!GCLOUD_BIN!\bq.*" "!DEST_DIR!" >nul 2>&1
+    > "!DEST_DIR!\gcloud.cmd" echo @echo off
+    >> "!DEST_DIR!\gcloud.cmd" echo call "!GCLOUD_BIN!\gcloud.cmd" %%*
+    > "!DEST_DIR!\gsutil.cmd" echo @echo off
+    >> "!DEST_DIR!\gsutil.cmd" echo call "!GCLOUD_BIN!\gsutil.cmd" %%*
+    > "!DEST_DIR!\bq.cmd" echo @echo off
+    >> "!DEST_DIR!\bq.cmd" echo call "!GCLOUD_BIN!\bq.cmd" %%*
 
     if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
-    copy /y "!GCLOUD_BIN!\gcloud.*" "%USERPROFILE%\.local\bin" >nul 2>&1
-    copy /y "!GCLOUD_BIN!\gsutil.*" "%USERPROFILE%\.local\bin" >nul 2>&1
-    copy /y "!GCLOUD_BIN!\bq.*" "%USERPROFILE%\.local\bin" >nul 2>&1
+    copy /y "!DEST_DIR!\gcloud.cmd" "%USERPROFILE%\.local\bin\gcloud.cmd" >nul 2>&1
+    copy /y "!DEST_DIR!\gsutil.cmd" "%USERPROFILE%\.local\bin\gsutil.cmd" >nul 2>&1
+    copy /y "!DEST_DIR!\bq.cmd" "%USERPROFILE%\.local\bin\bq.cmd" >nul 2>&1
 
     echo Google Cloud SDK installed successfully.
     exit /b 0

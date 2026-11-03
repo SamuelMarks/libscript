@@ -42,6 +42,8 @@ map_package() {
       npm) printf "npm\n"; return 0 ;;
       nuget) printf "dotnet9-sdk\n"; return 0 ;;
       nimble) printf "nimble\n"; return 0 ;;
+      glibc) printf "gcompat\n"; return 0 ;;
+      kde-plasma-6) printf "plasma-desktop\n"; return 0 ;;
     esac
   fi
   
@@ -196,6 +198,14 @@ map_package() {
     'bc')
       case "${PKG_MGR}" in
         *) printf 'bc\n' ;;
+      esac
+      ;;
+    'openssh')
+      case "${PKG_MGR}" in
+        'apk') printf 'openssh\n' ;;
+        'apt-get') printf 'openssh-client openssh-server\n' ;;
+        'dnf'|'yum') printf 'openssh-clients openssh-server\n' ;;
+        *) printf 'openssh\n' ;;
       esac
       ;;
     'flex')
@@ -856,7 +866,7 @@ map_package() {
     'python'|'python3')
       case "${PKG_MGR}" in
         'apk') printf 'python3 py3-pip\n' ;;
-        'apt-get') printf 'python3 python3-pip python3-venv python-is-python3\n' ;;
+        'apt-get') printf 'python3 python3-pip python3-venv python3-dev python-is-python3\n' ;;
         'dnf') printf 'python3 python3-pip\n' ;;
         'yum') printf 'python3 python3-pip\n' ;;
         'zypper') printf 'python3 python3-pip\n' ;;
@@ -920,6 +930,7 @@ map_package() {
       ;;
     'poetry')
       case "${PKG_MGR}" in
+        'apt-get') printf 'python3-poetry\n' ;;
         'pkg') printf 'py312-poetry\n' ;;
         *) printf 'poetry\n' ;;
       esac
@@ -1233,6 +1244,14 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'glibc')
+      case "${PKG_MGR}" in
+        'apk') printf 'gcompat\n' ;;
+        'apt-get') printf 'libc6 libc-bin\n' ;;
+        'dnf'|'yum') printf 'glibc\n' ;;
+        *) printf 'glibc\n' ;;
+      esac
+      ;;
     'gnome')
       case "${PKG_MGR}" in
         'apk') printf 'gnome-shell\n' ;;
@@ -1240,6 +1259,15 @@ map_package() {
         'dnf'|'yum') printf 'gnome-shell\n' ;;
         'pkg') printf 'gnome-shell\n' ;;
         *) return 1 ;;
+      esac
+      ;;
+    'kde-plasma-6')
+      case "${PKG_MGR}" in
+        'apk') printf 'plasma-desktop\n' ;;
+        'apt-get') printf 'plasma-desktop-data\n' ;;
+        'dnf'|'yum') printf 'plasma-desktop\n' ;;
+        'pkg') printf 'plasma6-plasma-desktop\n' ;;
+        *) printf 'plasma-desktop\n' ;;
       esac
       ;;
     'porg')
@@ -1469,7 +1497,8 @@ map_package() {
       ;;
     'xfce4')
       case "${PKG_MGR}" in
-        'apk'|'pkg') printf 'xfce4\n' ;;
+        'apk') printf 'xfce4\n' ;;
+        'pkg') printf 'xfce4-wm xfce4-panel xfce4-session\n' ;;
         *) printf 'xfce4-session xfwm4 xfce4-panel\n' ;;
       esac
       ;;
@@ -1510,7 +1539,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'wlroots\n' ;;
         'apt-get') printf 'libwlroots-0.18\n' ;;
-        'pkg') printf 'wlroots\n' ;;
+        'pkg') printf 'wlroots020\n' ;;
         *) printf 'wlroots\n' ;;
       esac
       ;;

@@ -50,6 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "%~dp0\..\..\..\_common\uninstall_generic.cmd" (
-    call "%~dp0\..\..\..\_common\uninstall_generic.cmd" %*
+if exist "%~dp0\..\..\_common\uninstall_generic.cmd" (
+    call "%~dp0\..\..\_common\uninstall_generic.cmd" %*
 )

@@ -92,9 +92,20 @@ case "$ACTION" in
           log_info 'Python runtime required for uwsgi. Installing python...'
           libscript_depends 'python' || true
         fi
-        if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
-          libscript_depends 'c' || true
+      fi
+      if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
+        libscript_depends 'c' || true
+      fi
+      if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ]; then
+        if ! command -v gcc >/dev/null 2>&1; then
+          libscript_depends 'gcc' || true
         fi
+        export CC="${CC:-gcc}" CXX="${CXX:-g++}" LDSHARED="${LDSHARED:-gcc -shared}" CFLAGS="${CFLAGS:--O2 -fPIC -Wno-error -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-int-conversion -Usun}"
+      fi
+      if [ -f /etc/debian_version ]; then
+        libscript_depends 'python3-dev' || true
+      elif [ -f /etc/redhat-release ] || [ -f /etc/rocky-release ]; then
+        libscript_depends 'python3-devel' || true
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"

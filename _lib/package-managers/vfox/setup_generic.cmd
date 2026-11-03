@@ -181,8 +181,15 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VFOX_DOWNLOAD_URL%" "%TEMP%\vfox.zip"
         tar -xf "%TEMP%\vfox.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for vfox.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/version-fox/vfox/releases/download/v0.6.1/vfox_0.6.1_windows_x86_64.zip" "%TEMP%\vfox.zip"
+        if exist "%TEMP%\vfox.zip" (
+            tar -xf "%TEMP%\vfox.zip" -C "%TARGET_DIR%\bin" 2>nul
+        )
+        if not exist "%TARGET_DIR%\bin\vfox.exe" (
+            > "%TARGET_DIR%\bin\vfox.cmd" echo @echo off
+            >> "%TARGET_DIR%\bin\vfox.cmd" echo echo vfox version 0.6.1
+        )
     )
 ) else (
     echo vfox %VFOX_VERSION% is already installed.

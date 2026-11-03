@@ -116,25 +116,41 @@ if exist "%TARGET_DIR%\bin\nssm.exe" (
     exit /b 0
 )
 
-if "%NSSM_INSTALL_METHOD%"=="system" (
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nssm
-    where nssm >nul 2>&1
-    if not errorlevel 1 exit /b 0
+if exist "C:\ProgramData\chocolatey\bin\nssm.exe" (
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+    copy /y "C:\ProgramData\chocolatey\bin\nssm.exe" "%TARGET_DIR%\bin\nssm.exe" >nul 2>&1
+    exit /b 0
+)
+
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends nssm
+if exist "C:\ProgramData\chocolatey\bin\nssm.exe" (
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+    copy /y "C:\ProgramData\chocolatey\bin\nssm.exe" "%TARGET_DIR%\bin\nssm.exe" >nul 2>&1
+    exit /b 0
+)
+for /f "delims=" %%N in ('where nssm 2^>nul') do (
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+    copy /y "%%~fN" "%TARGET_DIR%\bin\nssm.exe" >nul 2>&1
+    exit /b 0
 )
 
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 set "DL_URL=%NSSM_DOWNLOAD_URL%"
-if "%DL_URL%"=="" set "DL_URL=https://nssm.cc/release/nssm-2.24.zip"
+if "%DL_URL%"=="" set "DL_URL=https://github.com/dkxce/NSSM/releases/download/v2.24/nssm-2.24.zip"
 
 if exist "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip" (
-    tar -xf "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip" -C "%TARGET_DIR%"
+    tar -xf "%DOWNLOAD_DIR%\nssm\nssm-%NSSM_VERSION%.zip" -C "%TARGET_DIR%" 2>nul
 ) else (
+    set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DL_URL%" "%TEMP%\nssm.zip"
-    if exist "%TEMP%\nssm.zip" tar -xf "%TEMP%\nssm.zip" -C "%TARGET_DIR%"
+    if exist "%TEMP%\nssm.zip" tar -xf "%TEMP%\nssm.zip" -C "%TARGET_DIR%" 2>nul
 )
 
 if exist "%TARGET_DIR%\nssm-2.24\win64\nssm.exe" (
     copy /y "%TARGET_DIR%\nssm-2.24\win64\nssm.exe" "%TARGET_DIR%\bin\nssm.exe" >nul 2>&1
+) else if exist "%TARGET_DIR%\win64\nssm.exe" (
+    copy /y "%TARGET_DIR%\win64\nssm.exe" "%TARGET_DIR%\bin\nssm.exe" >nul 2>&1
 )
 
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\nssm\latest"

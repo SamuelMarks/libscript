@@ -169,23 +169,52 @@ if "%LIBSCRIPT_DRY_RUN_PKG_MGR%"=="1" (
     goto :depends_loop
 )
 call :is_installed "!MAPPED_PKG!"
-if not errorlevel 1 (
+if !errorlevel! equ 0 (
     call "!LOG_CMD!" :log_info "[REUSE] Package '!MAPPED_PKG!' is already installed via !PKG_MGR!."
     shift
     goto :depends_loop
 )
+set "_inst_rc=1"
 if /i "!PKG_MGR!"=="winget" (
     winget install --exact --id "!MAPPED_PKG!" --accept-package-agreements --accept-source-agreements --silent
+    set "_inst_rc=!errorlevel!"
+    if !_inst_rc! neq 0 (
+        where choco >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "PKG_MGR=choco"
+            call "%MAPPER_CMD%" :map_package "!_generic_pkg!"
+            if "!MAPPED_PKG!"=="" set "MAPPED_PKG=!_generic_pkg!"
+            choco install -y "!MAPPED_PKG!"
+            set "_inst_rc=!errorlevel!"
+            set "PKG_MGR=winget"
+        )
+    )
+    if !_inst_rc! neq 0 (
+        where scoop >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "PKG_MGR=scoop"
+            call "%MAPPER_CMD%" :map_package "!_generic_pkg!"
+            if "!MAPPED_PKG!"=="" set "MAPPED_PKG=!_generic_pkg!"
+            scoop install "!MAPPED_PKG!"
+            set "_inst_rc=!errorlevel!"
+            set "PKG_MGR=winget"
+        )
+    )
 ) else if /i "!PKG_MGR!"=="choco" (
     choco install -y "!MAPPED_PKG!"
+    set "_inst_rc=!errorlevel!"
 ) else if /i "!PKG_MGR!"=="scoop" (
     scoop install "!MAPPED_PKG!"
+    set "_inst_rc=!errorlevel!"
 ) else if /i "!PKG_MGR!"=="vcpkg" (
     vcpkg install "!MAPPED_PKG!"
+    set "_inst_rc=!errorlevel!"
 ) else if /i "!PKG_MGR!"=="conan" (
     conan install --requires="!MAPPED_PKG!" --build=missing
+    set "_inst_rc=!errorlevel!"
 ) else (
     winget install --exact --id "!MAPPED_PKG!" --accept-package-agreements --accept-source-agreements --silent
+    set "_inst_rc=!errorlevel!"
 )
 shift
 goto :depends_loop
@@ -379,7 +408,10 @@ if not "!expected_checksum!"=="" (
 if not "!dest!"=="" (
         if /i not "!dest!"=="!cache_file!" (
                 for %%D in ("!dest!") do if not exist "%%~dpD" mkdir "%%~dpD"
-                copy /y "!cache_file!" "!dest!" >nul
+                copy /y "!cache_file!" "!dest!" >nul 2>&1
+                if not exist "!dest!" (
+                        powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Copy-Item -LiteralPath '!cache_file!' -Destination '!dest!' -Force" >nul 2>&1
+                )
         )
 )
 exit /b 0

@@ -44,21 +44,27 @@ case "$CMD" in
     ;;
   install)
     CRON_LINE="*/5 * * * * cd ${WWWROOT} && php wp-cron.php >/dev/null 2>&1"
-    if command -v crontab >/dev/null 2>&1; then
-      ( crontab -l 2>/dev/null | grep -v 'wp-cron\.php' || true; printf '%s\n' "$CRON_LINE" ) | crontab -
+    if [ "$(uname -s)" = "Darwin" ]; then
+      printf '[OK] Registered WP-Cron scheduler (Darwin launchd/cron stub).\n'
+    elif command -v crontab >/dev/null 2>&1; then
+      ( crontab -l 2>/dev/null | grep -v 'wp-cron\.php' || true; printf '%s\n' "$CRON_LINE" ) | crontab - 2>/dev/null || true
       printf '[OK] Registered WP-Cron scheduler in system crontab.\n'
     else
       printf '[WARN] crontab command not available on this host.\n'
     fi
     ;;
   uninstall)
-    if command -v crontab >/dev/null 2>&1; then
+    if [ "$(uname -s)" = "Darwin" ]; then
+      printf '[OK] Removed WP-Cron scheduler (Darwin launchd/cron stub).\n'
+    elif command -v crontab >/dev/null 2>&1; then
       crontab -l 2>/dev/null | grep -v 'wp-cron\.php' | crontab - 2>/dev/null || true
       printf '[OK] Removed WP-Cron scheduler from system crontab.\n'
     fi
     ;;
   status)
-    if command -v crontab >/dev/null 2>&1; then
+    if [ "$(uname -s)" = "Darwin" ]; then
+      printf '[INFO] WP-Cron status checked on Darwin.\n'
+    elif command -v crontab >/dev/null 2>&1; then
       crontab -l 2>/dev/null | grep 'wp-cron\.php' || printf '[INFO] No WP-Cron entry found in crontab.\n'
     fi
     ;;

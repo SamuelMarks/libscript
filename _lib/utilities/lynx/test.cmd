@@ -49,11 +49,20 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
 if exist "%SCRIPT_DIR%\env.cmd" call "%SCRIPT_DIR%\env.cmd"
+set "STACK="
 call lynx -version >nul 2>&1
 if errorlevel 1 exit /b 1
-echo ^<p^>Hello Open edX^</p^> | call lynx -assume_charset=UTF-8 -display_charset=UTF-8 -nomargins -stdin -dump -nolist | findstr /C:"Hello Open edX" >nul 2>&1
-if errorlevel 1 (
+set "_LYNX_IN=%TEMP%\lynx_in_%RANDOM%.html"
+set "_LYNX_OUT=%TEMP%\lynx_out_%RANDOM%.txt"
+> "!_LYNX_IN!" echo ^<p^>Hello Open edX^</p^>
+set "STACK="
+call lynx -nomargins -stdin -dump -nolist "!_LYNX_IN!" > "!_LYNX_OUT!" 2>nul
+findstr /C:"Hello Open edX" "!_LYNX_OUT!" >nul 2>&1
+set "_LYNX_RC=!errorlevel!"
+del /f /q "!_LYNX_IN!" "!_LYNX_OUT!" >nul 2>&1
+if !_LYNX_RC! neq 0 (
     echo [FAIL] lynx HTML-to-text conversion failed. >&2
     exit /b 1
 )

@@ -51,4 +51,4 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=gcp-cli"
-call "%~dp0\..\..\..\_common\component_core.cmd" %*
+call "%~dp0\..\..\_common\component_core.cmd" %*

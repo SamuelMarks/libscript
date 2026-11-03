@@ -4,7 +4,7 @@
 # (`bento/freebsd-15.1`). Results, execution logs, and statuses are written into tests_tmp/
 # and the Supported Components table in README.md is automatically updated after each test.
 # ## Usage
-# ./tests/run_freebsd_tests.sh [TARGETS...|all]
+# ./tests/run_freebsd_tests.sh [TARGETS...|all] [--stop-after N] [--skip-passed] [--skip-uninstall] [--loop] [--no-snapshot]
 # Example: ./tests/run_freebsd_tests.sh curl sqlite tmux
 # Example: ./tests/run_freebsd_tests.sh all
 set -feu
@@ -33,6 +33,7 @@ SCRIPT_NAME="${REPO_ROOT}/_lib/_common/test_matrix_driver.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
+unset SCRIPT_NAME
 set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/freebsd-15.1"
 TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
@@ -43,6 +44,7 @@ TARGETS=""
 TIER_FILTER='all'
 STOP_AFTER=""
 SKIP_UNINSTALL=""
+SKIP_PASSED=""
 LOOP_MODE=""
 USE_SNAPSHOT='1'
 
@@ -80,12 +82,20 @@ find_qemu_socket() {
 }
 
 # ## restore_vanilla_snapshot
-# Restores the vanilla snapshot on the FreeBSD VM via qemu-img.
+# Restores the vanilla snapshot on the FreeBSD VM via QEMU monitor socket or qemu-img.
 restore_vanilla_snapshot() {
+    _sock=$(find_qemu_socket || true)
+    if [ -n "$_sock" ] && command -v nc >/dev/null 2>&1; then
+        echo 'Restoring vanilla snapshot via QEMU monitor socket...'
+        echo "loadvm vanilla" | nc -U "$_sock" >/dev/null 2>&1 || true
+        sleep 2
+        return 0
+    fi
+
     _img=$(find_disk_image || true)
     if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
         if qemu-img snapshot -U -l "$_img" 2>/dev/null | grep -q "vanilla"; then
-            echo 'Halting VM to restore vanilla snapshot...'
+            echo 'Halting FreeBSD VM to restore vanilla snapshot...'
             (cd "$VAGRANT_DIR" && vagrant halt) || true
             echo 'Restoring vanilla snapshot...'
             qemu-img snapshot -a vanilla "$_img"
@@ -98,10 +108,27 @@ restore_vanilla_snapshot() {
 }
 
 # ## sync_repo_to_guest
-# Synchronizes the libscript codebase to the guest VM using vagrant rsync.
+# Synchronizes the libscript codebase to the guest FreeBSD VM using rsync over SSH.
 sync_repo_to_guest() {
     echo '=== Syncing LibScript repository to FreeBSD ==='
-    (cd "$VAGRANT_DIR" && vagrant rsync)
+    _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
+    _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+    _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+    : "${_port:=2250}"
+    : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
+
+    if ! ssh -n -p "$_port" -o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "sudo mkdir -p /opt/repos/libscript && sudo chown -R vagrant /opt/repos/libscript" >/dev/null 2>&1; then
+        echo 'Warning: SSH to FreeBSD VM timed out during sync; restoring vanilla snapshot...'
+        restore_vanilla_snapshot || true
+        _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
+        _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+        _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+        : "${_port:=2250}"
+        : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
+        ssh -n -p "$_port" -o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "sudo mkdir -p /opt/repos/libscript && sudo chown -R vagrant /opt/repos/libscript" >/dev/null 2>&1 || true
+    fi
+
+    rsync -aq --copy-links --no-owner --no-group -e "ssh -p $_port -o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" --exclude "/.vagrant" --exclude "/.git" --exclude "/tests_tmp" --exclude "/tmp" --exclude "*.msi" --exclude "/cache" --exclude "/vagrant" --exclude "/build" --exclude "/dist" "$REPO_ROOT/" "vagrant@127.0.0.1:/opt/repos/libscript/"
 }
 
 # ## update_component_in_readme
@@ -124,21 +151,22 @@ update_component_in_readme() {
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop] [--no-snapshot]"
+            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-passed] [--skip-uninstall] [--loop] [--no-snapshot]"
             echo ""
             echo 'Runs local tests sequentially on FreeBSD (bento/freebsd-15.1) Vagrant VM.'
             echo ""
             echo 'Arguments:'
             echo '  TARGETS...          A list of categories or components to test.'
             echo "                      Defaults to 'all' if omitted."
-            echo '  all                 Test all components in the _lib directory.'
+            echo '  all                 Test all components across all 5 architectural tiers.'
             echo '  --loop, -l          Continuously repeat testing in an automated loop.'
             echo '  --stop-after N      Stop after running N component tests.'
+            echo '  --skip-passed       Skip components that already have a .freebsd.success/.skipped file.'
             echo '  --skip-uninstall    Skip uninstallation step after testing each component.'
             echo '  --no-snapshot       Do not restore the vanilla snapshot before each test.'
             echo '  --help, -h, /?      Show this help message.'
             echo ""
-            echo 'Results are written to tests_tmp/ (*.freebsd.stdout, *.freebsd.stderr, *.freebsd.success/failure).'
+            echo 'Results are written to tests_tmp/ (*.freebsd.stdout, *.freebsd.stderr, *.freebsd.success/failure/skipped).'
             exit 0
             ;;
         --loop|-l)
@@ -147,6 +175,7 @@ while [ $# -gt 0 ]; do
             ;;
         --tier)
             TIER_FILTER="$2"
+            export TIER_FILTER
             shift 2
             ;;
         --stop-after)
@@ -155,6 +184,10 @@ while [ $# -gt 0 ]; do
             ;;
         --skip-uninstall)
             SKIP_UNINSTALL='1'
+            shift
+            ;;
+        --skip-passed)
+            SKIP_PASSED='1'
             shift
             ;;
         --no-snapshot)
@@ -181,22 +214,55 @@ EXPANDED_TARGETS=""
 for arg in $TARGETS; do
     _base_arg=$(basename "$arg")
     if [ "$arg" = "all" ]; then
-        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies/* "$REPO_ROOT"/payloads/*; do
-            if [ -d "$cat_dir" ] && [ "$(basename "$cat_dir")" != "_common" ]; then
+        for cat_dir in "$REPO_ROOT"/_lib/*; do
+            if [ -d "$cat_dir" ]; then
+                _cat_name=$(basename "$cat_dir")
+                case "$_cat_name" in
+                    _*|bootloaders|storage|runtimes|ml-training) continue ;;
+                esac
                 for dir in "$cat_dir"/*; do
-                    [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
+                    if [ -d "$dir" ]; then
+                        _c_name=$(basename "$dir")
+                        case "$_c_name" in _*) continue ;; esac
+                        if [ "$_cat_name" = "freebsd" ] && [ "$_c_name" = "distro" ]; then
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS freebsd/distro"
+                        elif [ "$_cat_name" = "illumos" ] && [ "$_c_name" = "distro" ]; then
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS illumos/distro"
+                        else
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS $_c_name"
+                        fi
+                    fi
                 done
             fi
         done
-    elif [ -f "$REPO_ROOT/_lib/$arg/manifest.json" ] || [ -f "$REPO_ROOT/_lib/$arg/cli.sh" ]; then
-        EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
-    elif [ -f "$REPO_ROOT/topologies/$arg/topology.json" ] || [ -f "$REPO_ROOT/topologies/$arg/cli.sh" ]; then
-        EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
-    elif [ -d "$REPO_ROOT/_lib/$arg" ] && [ ! -f "$REPO_ROOT/_lib/$arg/manifest.json" ]; then
+        for _bl in grub limine refind systemd-boot; do
+            EXPANDED_TARGETS="$EXPANDED_TARGETS bootloaders/$_bl"
+        done
+        EXPANDED_TARGETS="$EXPANDED_TARGETS storage/provision_disk runtimes/provision_isolated_runtime ml-training"
+        for dir in "$REPO_ROOT"/topologies/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$(basename "$dir")"
+        done
+        for sfile in "$REPO_ROOT"/payloads/schedulers/*.sh; do
+            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS payloads/schedulers/$(basename "$sfile" .sh)"
+        done
+        for dir in "$REPO_ROOT"/traits/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
+        done
+    elif [ "$arg" = "freebsd/distro" ] || [ "$arg" = "illumos/distro" ] || [ "$arg" = "storage/provision_disk" ] || [ "$arg" = "runtimes/provision_isolated_runtime" ] || [ "$arg" = "ml-training" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+    elif [ "$arg" = "orchestration/cloud" ] || [ "$arg" = "cloud" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS cloud"
+    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#payloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+    elif [ -d "$REPO_ROOT/_lib/$arg" ]; then
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
-    elif [ -d "$REPO_ROOT/payloads/$arg" ] && [ ! -f "$REPO_ROOT/payloads/$arg/payload.json" ]; then
+    elif [ -d "$REPO_ROOT/topologies/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$_base_arg"
+    elif [ -d "$REPO_ROOT/traits/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$_base_arg"
+    elif [ -d "$REPO_ROOT/payloads/$arg" ]; then
         for dir in "$REPO_ROOT/payloads/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
@@ -205,7 +271,7 @@ for arg in $TARGETS; do
     else
         found=0
         for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies "$REPO_ROOT"/payloads/*; do
-            if [ -d "$cat_dir/$_base_arg" ] && { [ -f "$cat_dir/$_base_arg/manifest.json" ] || [ -f "$cat_dir/$_base_arg/cli.sh" ] || [ -f "$cat_dir/$_base_arg/topology.json" ] || [ -f "$cat_dir/$_base_arg/payload.json" ]; }; then
+            if [ -d "$cat_dir/$_base_arg" ]; then
                 EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
                 found=1
                 break
@@ -217,9 +283,7 @@ for arg in $TARGETS; do
     fi
 done
 
-UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '
-' | grep -v '^$' | sort -u | tr '
-' ' ')
+UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
 
 iteration=1
 
@@ -231,57 +295,34 @@ while true; do
     fi
 
     DISK_IMG=""
+    QEMU_SOCK=""
     if [ "$USE_SNAPSHOT" = "1" ]; then
+        QEMU_SOCK=$(find_qemu_socket || true)
         DISK_IMG=$(find_disk_image || true)
         _has_vanilla=0
-        if [ -n "$DISK_IMG" ] && command -v qemu-img >/dev/null 2>&1; then
+        if [ -n "$QEMU_SOCK" ] && command -v nc >/dev/null 2>&1; then
+            if echo "info snapshots" | nc -U "$QEMU_SOCK" 2>/dev/null | grep -q "vanilla"; then
+                _has_vanilla=1
+            fi
+        elif [ -n "$DISK_IMG" ] && command -v qemu-img >/dev/null 2>&1; then
             if qemu-img snapshot -U -l "$DISK_IMG" 2>/dev/null | grep -q "vanilla"; then
                 _has_vanilla=1
             fi
         fi
 
         if [ "$_has_vanilla" = "0" ]; then
-            if [ -z "$DISK_IMG" ]; then
-                echo '=== Initializing FreeBSD Vagrant VM to create vanilla snapshot ==='
-                (cd "$VAGRANT_DIR" && vagrant up --no-provision)
-                DISK_IMG=$(find_disk_image || true)
-            fi
-            if [ -n "$DISK_IMG" ]; then
-                echo "Notice: No 'vanilla' snapshot found on $DISK_IMG. Creating it now..."
-                (cd "$VAGRANT_DIR" && vagrant halt) || true
-                qemu-img snapshot -c vanilla "$DISK_IMG"
-                _has_vanilla=1
-            else
-                echo "Notice: No 'vanilla' snapshot found. Disabling snapshot restoration."
-                USE_SNAPSHOT='0'
-            fi
+            echo "Notice: No 'vanilla' snapshot found. Disabling snapshot restoration."
+            USE_SNAPSHOT='0'
         fi
     fi
-
-    echo '=== Ensuring FreeBSD Vagrant VM is running ==='
-    cd "$VAGRANT_DIR"
-    vm_status=$(vagrant status 2>&1 || true)
-    if ! echo "$vm_status" | grep -q "running"; then
-        if [ -n "$DISK_IMG" ] && [ "$USE_SNAPSHOT" = "1" ]; then
-            restore_vanilla_snapshot || vagrant up --no-provision
-        else
-            echo 'Starting FreeBSD Vagrant VM...'
-            vagrant up --no-provision
-        fi
-    fi
-
-    sync_repo_to_guest
-
-    _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
-    _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
-    _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
-    : "${_port:=50022}"
-    : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
 
     test_count=0
     success_count=0
     failure_count=0
     skipped_count=0
+    vm_started=0
+    _port=""
+    _key=""
 
     for target in $UNIQUE_TARGETS; do
         if [ -n "$STOP_AFTER" ] && [ "$test_count" -ge "$STOP_AFTER" ]; then
@@ -289,18 +330,44 @@ while true; do
             break
         fi
 
+        _short_target="${target##*/}"
+        _marker_base="$_short_target"
+        case "$target" in
+            freebsd/distro) _marker_base="freebsd-distro" ;;
+            illumos/distro) _marker_base="illumos-distro" ;;
+            bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
+            payloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
+            traits/*) _marker_base="trait-${_short_target}" ;;
+        esac
+
+        if [ "$SKIP_PASSED" = "1" ]; then
+            if [ -f "$TESTS_TMP_DIR/$_marker_base.freebsd.success" ] || [ -f "$TESTS_TMP_DIR/$_marker_base.freebsd.skipped" ]; then
+                continue
+            fi
+        fi
+
         # Check manifest for OS support
         MANIFEST_PATH=""
-        for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$target/topology.json" "$REPO_ROOT/payloads"/*/"$target/payload.json"; do
-            if [ -f "$_m" ]; then
-                MANIFEST_PATH="$_m"
-                break
-            fi
-        done
+        if [ "$target" = "freebsd/distro" ] && [ -f "$REPO_ROOT/_lib/freebsd/distro/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/freebsd/distro/manifest.json"
+        elif [ "$target" = "illumos/distro" ] && [ -f "$REPO_ROOT/_lib/illumos/distro/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/illumos/distro/manifest.json"
+        elif [ "$target" = "distro" ] && [ -f "$REPO_ROOT/_lib/orchestration/distro/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/orchestration/distro/manifest.json"
+        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/manifest.json"
+        else
+            for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
+                if [ -f "$_m" ]; then
+                    MANIFEST_PATH="$_m"
+                    break
+                fi
+            done
+        fi
 
         if [ -n "$MANIFEST_PATH" ]; then
             SUPPORTED=$(awk '
-            BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
+            BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; in_abl=0; in_awl=0; has_awl=0; awl_match=0; result="yes" }
             /"os_blacklist"\s*:/ {
                 in_bl=1; in_wl=0
                 if ($0 ~ /"freebsd"/ || $0 ~ /"bsd"/) { result="no"; exit }
@@ -313,6 +380,18 @@ while true; do
                 if ($0 ~ /\]/) { in_wl=0 }
                 next
             }
+            /"arch_whitelist"\s*:/ {
+                in_awl=1; in_bl=0; in_wl=0; in_abl=0; has_awl=1
+                if ($0 ~ /"aarch64"/ || $0 ~ /"arm64"/ || $0 ~ /"all"/) { awl_match=1 }
+                if ($0 ~ /\]/) { in_awl=0 }
+                next
+            }
+            /"arch_blacklist"\s*:/ {
+                in_abl=1; in_bl=0; in_wl=0; in_awl=0
+                if ($0 ~ /"aarch64"/ || $0 ~ /"arm64"/) { result="no"; exit }
+                if ($0 ~ /\]/) { in_abl=0 }
+                next
+            }
             in_bl {
                 if ($0 ~ /"freebsd"/ || $0 ~ /"bsd"/) { result="no"; exit }
                 if ($0 ~ /\]/) { in_bl=0 }
@@ -321,15 +400,57 @@ while true; do
                 if ($0 ~ /"freebsd"/ || $0 ~ /"bsd"/ || $0 ~ /"all"/) { wl_match=1 }
                 if ($0 ~ /\]/) { in_wl=0 }
             }
-            END { if (result == "yes" && has_wl && !wl_match) { result="no" }; print result }
+            in_abl {
+                if ($0 ~ /"aarch64"/ || $0 ~ /"arm64"/) { result="no"; exit }
+                if ($0 ~ /\]/) { in_abl=0 }
+            }
+            in_awl {
+                if ($0 ~ /"aarch64"/ || $0 ~ /"arm64"/ || $0 ~ /"all"/) { awl_match=1 }
+                if ($0 ~ /\]/) { in_awl=0 }
+            }
+            END {
+                if (result == "yes" && has_wl && !wl_match) { result="no" }
+                if (result == "yes" && has_awl && !awl_match) { result="no" }
+                print result
+            }
             ' "$MANIFEST_PATH")
             if [ "$SUPPORTED" = "no" ]; then
-                echo "Skipping $target (not supported on FreeBSD)"
+                echo "Skipping $target (not supported on freebsd / aarch64)"
                 skipped_count=$((skipped_count + 1))
+                echo "Skipped: not supported on freebsd / aarch64" > "$TESTS_TMP_DIR/$_marker_base.freebsd.skipped"
+                echo "Skipped" > "$TESTS_TMP_DIR/$_marker_base.idempotent.success"
                 update_component_in_readme "$target" "-"
-                echo "Unsupported" > "$TESTS_TMP_DIR/$target.freebsd.unsupported"
                 continue
             fi
+        fi
+
+        if [ "$vm_started" -eq 0 ]; then
+            echo '=== Ensuring FreeBSD Vagrant VM is running ==='
+            cd "$VAGRANT_DIR"
+            vm_status=$(vagrant status 2>&1 || true)
+            if ! echo "$vm_status" | grep -q "running"; then
+                if [ -n "$DISK_IMG" ] && [ "$USE_SNAPSHOT" = "1" ]; then
+                    restore_vanilla_snapshot || vagrant up --no-provision
+                else
+                    echo 'Starting FreeBSD Vagrant VM...'
+                    vagrant up --no-provision
+                fi
+            fi
+            sync_repo_to_guest
+            _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
+            _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+            _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+            : "${_port:=2250}"
+            : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
+            vm_started=1
+        elif [ "$USE_SNAPSHOT" = "1" ]; then
+            restore_vanilla_snapshot || true
+            sync_repo_to_guest
+            _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
+            _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+            _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+            : "${_port:=2250}"
+            : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
         fi
 
         echo '============================================================'
@@ -337,30 +458,58 @@ while true; do
         echo '============================================================'
         test_count=$((test_count + 1))
 
-        # Restore vanilla snapshot before running if enabled
-        if [ "$USE_SNAPSHOT" = "1" ]; then
-            restore_vanilla_snapshot || true
-            sync_repo_to_guest
-            # Refresh SSH info after reboot
-            _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
-            _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
-            _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
-            : "${_port:=50022}"
-            : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
-        fi
-
-        stdout_file="$TESTS_TMP_DIR/$target.freebsd.stdout"
-        stderr_file="$TESTS_TMP_DIR/$target.freebsd.stderr"
-        success_file="$TESTS_TMP_DIR/$target.freebsd.success"
-        failure_file="$TESTS_TMP_DIR/$target.freebsd.failure"
-        idempotent_file="$TESTS_TMP_DIR/$target.idempotent.success"
+        stdout_file="$TESTS_TMP_DIR/$_marker_base.freebsd.stdout"
+        stderr_file="$TESTS_TMP_DIR/$_marker_base.freebsd.stderr"
+        success_file="$TESTS_TMP_DIR/$_marker_base.freebsd.success"
+        failure_file="$TESTS_TMP_DIR/$_marker_base.freebsd.failure"
+        idempotent_file="$TESTS_TMP_DIR/$_marker_base.idempotent.success"
 
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute 4-stage contract test via ssh: install -> test -> env/which -> install (idempotency) -> test (verification)
-        test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH; export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && (/opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true) && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+        case "$target" in
+            bootloaders/*)
+                _bl_name="${target#bootloaders/}"
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -rf /tmp/test-bl-$_bl_name && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile /tmp/test-bl-$_bl_name $_bl_name uefi && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile /tmp/test-bl-$_bl_name $_bl_name uefi && rm -rf /tmp/test-bl-$_bl_name"
+                ;;
+            storage/provision_disk)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -f /tmp/test-disk.img && sh /opt/repos/libscript/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && sh /opt/repos/libscript/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && rm -f /tmp/test-disk.img"
+                ;;
+            runtimes/provision_isolated_runtime)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt && sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt"
+                ;;
+            ml-training)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/ml-training/cli.sh install latest && sh /opt/repos/libscript/_lib/ml-training/cli.sh test && sh /opt/repos/libscript/_lib/ml-training/cli.sh install latest && sh /opt/repos/libscript/_lib/ml-training/cli.sh test"
+                ;;
+            freebsd/distro)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh test && sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh test"
+                ;;
+            illumos/distro)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/illumos/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/illumos/distro/cli.sh test && sh /opt/repos/libscript/_lib/illumos/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/illumos/distro/cli.sh test"
+                ;;
+            distro)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh test && sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh test"
+                ;;
+            topologies/gke-tpu-cluster)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/topologies/gke-tpu-cluster/cli.sh --help && sh /opt/repos/libscript/topologies/gke-tpu-cluster/cli.sh --help"
+                ;;
+            topologies/*)
+                _topo_name="${target#topologies/}"
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TOPOLOGY_STATE_FILE=/tmp/topo-$_topo_name.json; rm -f /tmp/topo-$_topo_name.json*; sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh status && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh destroy && rm -f /tmp/topo-$_topo_name.json*"
+                ;;
+            payloads/schedulers/*)
+                _sched_name="${target#payloads/schedulers/}"
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/payloads/engine.sh compile /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh submit /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh status /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh submit /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh destroy /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name"
+                ;;
+            traits/*)
+                _trait_name="${target#traits/}"
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TARGET_SYSROOT=/tmp/trait-sysroot-$_trait_name LIBSCRIPT_OFFLINE=1; rm -rf /tmp/trait-sysroot-$_trait_name && mkdir -p /tmp/trait-sysroot-$_trait_name && sh /opt/repos/libscript/traits/engine.sh enable $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh verify $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh teardown $_trait_name && rm -rf /tmp/trait-sysroot-$_trait_name"
+                ;;
+            *)
+                test_cmd="export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && (/opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true) && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+                ;;
+        esac
 
-        if ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+        if ssh -n -p "$_port" -o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"
             echo "Idempotent" > "$idempotent_file"
             echo "[OK] $target (2x install + test verified)"
@@ -371,12 +520,22 @@ while true; do
             echo "[FAILED] $target"
             failure_count=$((failure_count + 1))
             update_component_in_readme "$target" "❌"
+            if ! ssh -n -p "$_port" -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "true" >/dev/null 2>&1; then
+                echo "Notice: FreeBSD VM unreachable after $target; restoring vanilla snapshot..."
+                restore_vanilla_snapshot || (cd "$VAGRANT_DIR" && vagrant up --no-provision)
+                sync_repo_to_guest
+                _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
+                _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+                _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+                : "${_port:=2250}"
+                : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
+            fi
         fi
 
         # Clean up installed files if snapshot restoration is disabled
         if [ "$USE_SNAPSHOT" != "1" ] && [ -z "$SKIP_UNINSTALL" ]; then
-            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf /home/vagrant/.libscript/$target 2>/dev/null || true"
-            ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
+            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf /home/vagrant/.libscript/$_short_target /tmp/libscript_pkg_mgr_lock 2>/dev/null || true"
+            ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     done
 

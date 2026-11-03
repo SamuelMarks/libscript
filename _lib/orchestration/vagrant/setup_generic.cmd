@@ -52,11 +52,16 @@ goto :find_root
 if "%ACTION%"=="" set ACTION=install
 
 if "%ACTION%"=="install" (
+    if exist "C:\Program Files\Vagrant\bin" set "PATH=C:\Program Files\Vagrant\bin;!PATH!"
+    if exist "C:\HashiCorp\Vagrant\bin" set "PATH=C:\HashiCorp\Vagrant\bin;!PATH!"
+    if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+    if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
     where vagrant >nul 2>&1
     if !errorlevel! equ 0 (
         echo Vagrant is already installed.
         exit /b 0
     )
+    set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vagrant
     exit /b !errorlevel!
 )

@@ -50,7 +50,7 @@ VERSION="${KUBERNETES_THW_VERSION:-latest}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
-    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote kubernetes-thw 2>/dev/null | tail -n 1)
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote kubernetes-thw 2>/dev/null | tail -n 1 || true)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
@@ -58,6 +58,9 @@ resolve_exact_version() {
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
+  fi
+  if [ -z "${EXACT_VERSION:-}" ]; then
+    EXACT_VERSION='latest'
   fi
 }
 
@@ -94,6 +97,11 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
+      if [ "${EXACT_VERSION}" = "latest" ]; then
+        EXACT_VERSION='v1.32.3'
+      elif ! echo "${EXACT_VERSION}" | grep -q "^v"; then
+        EXACT_VERSION="v${EXACT_VERSION}"
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kubernetes-thw/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing kubernetes-thw ${VERSION} natively to ${TARGET_DIR}..."
@@ -116,22 +124,22 @@ case "$ACTION" in
           ARCH=$(uname -m)
           if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-          if [ "$OS" != "linux" ]; then
+          if [ "$OS" = "darwin" ]; then
+             URL="https://dl.k8s.io/${EXACT_VERSION}/bin/darwin/${ARCH}/kubectl"
+             libscript_download "$URL" "${TARGET_DIR}/bin/kubectl" || true
+             chmod +x "${TARGET_DIR}/bin/kubectl" 2>/dev/null || true
+             libscript_symlink_alias "kubernetes-thw" "$VERSION" "${EXACT_VERSION}"
+             exit 0
+          elif [ "$OS" != "linux" ]; then
              log_error 'kubernetes-thw components are currently only compiled for linux in this script.'
              exit 1
-          fi
-
-          if [ "${EXACT_VERSION}" = "latest" ]; then
-             EXACT_VERSION='v1.32.3'
-          elif ! echo "${EXACT_VERSION}" | grep -q "^v"; then
-             EXACT_VERSION="v${EXACT_VERSION}"
           fi
           
           # Following KTHW component versions roughly matching K8s 1.32.3
           CRICTL_VERSION='v1.32.0'
           RUNC_VERSION='v1.3.0-rc.1'
           CNI_VERSION='v1.6.2'
-          CONTAINERD_VERSION='v2.1.0-beta.0'
+          CONTAINERD_VERSION='2.1.0-beta.0'
           ETCD_VERSION='v3.6.0-rc.3'
 
           log_info 'Downloading Kubernetes The Hard Way binaries...'
@@ -163,7 +171,7 @@ case "$ACTION" in
           tar -xzf "${TEMP_DIR}/cni.tgz" -C "${TARGET_DIR}/bin/cni" || true
           
           # containerd
-          URL="https://github.com/containerd/containerd/releases/download/${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-${ARCH}.tar.gz"
+          URL="https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-${ARCH}.tar.gz"
           libscript_download "$URL" "${TEMP_DIR}/containerd.tar.gz" || log_error "Failed to download containerd"
           tar -xzf "${TEMP_DIR}/containerd.tar.gz" -C "${TARGET_DIR}" bin/ || true
           

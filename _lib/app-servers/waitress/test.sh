@@ -27,7 +27,18 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+export PATH="${HOME:-/root}/.local/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+if [ -f "${SCRIPT_DIR}/env.sh" ]; then
+  _wt_saved_this="${THIS_FILE}"
+  _wt_saved_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_wt_saved_this}"
+  SCRIPT_DIR="${_wt_saved_dir}"
+fi
 
 if command -v waitress-serve >/dev/null 2>&1; then
   waitress-serve --help >/dev/null 2>&1

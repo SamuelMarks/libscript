@@ -50,7 +50,7 @@ goto :find_root
 
 
 set "THIS_DIR=%~dp0"
-if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
+if "%THIS_DIR:~-1%"=="\" set "THIS_DIR=%THIS_DIR:~0,-1%"
 set "REPO_ROOT=%THIS_DIR%\.."
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 set "LIBSCRIPT_ROOT_DIR=%REPO_ROOT%"
@@ -106,13 +106,31 @@ if "%TARGETS%"=="all" (
     for /d %%C in ("%REPO_ROOT%\_lib\*") do (
         set "cat_name=%%~nxC"
         if not "!cat_name:~0,1!"=="_" (
-            for /d %%D in ("%%C\*") do (
-                set "comp_name=%%~nxD"
-                if not "!comp_name:~0,1!"=="_" (
-                    set "COMPONENTS=!COMPONENTS! !comp_name!"
+            if not "!cat_name!"=="bootloaders" if not "!cat_name!"=="storage" if not "!cat_name!"=="runtimes" if not "!cat_name!"=="ml-training" (
+                for /d %%D in ("%%C\*") do (
+                    set "comp_name=%%~nxD"
+                    if not "!comp_name:~0,1!"=="_" (
+                        if "!cat_name!/!comp_name!"=="freebsd/distro" (
+                            set "COMPONENTS=!COMPONENTS! freebsd/distro"
+                        ) else if "!cat_name!/!comp_name!"=="illumos/distro" (
+                            set "COMPONENTS=!COMPONENTS! illumos/distro"
+                        ) else (
+                            set "COMPONENTS=!COMPONENTS! !comp_name!"
+                        )
+                    )
                 )
             )
         )
+    )
+    set "COMPONENTS=!COMPONENTS! bootloaders/grub bootloaders/limine bootloaders/refind bootloaders/systemd-boot storage/provision_disk runtimes/provision_isolated_runtime ml-training"
+    for /d %%T in ("%REPO_ROOT%\topologies\*") do (
+        set "COMPONENTS=!COMPONENTS! topologies/%%~nxT"
+    )
+    for %%S in ("%REPO_ROOT%\payloads\schedulers\*.sh") do (
+        set "COMPONENTS=!COMPONENTS! payloads/schedulers/%%~nS"
+    )
+    for /d %%R in ("%REPO_ROOT%\traits\*") do (
+        set "COMPONENTS=!COMPONENTS! traits/%%~nxR"
     )
 ) else (
     set "COMPONENTS=%TARGETS%"
@@ -132,22 +150,23 @@ exit /b 0
 :: Runs the install, test, and idempotency cycle for a single component target.
 :run_single_test
 set "target=%~1"
+for %%A in ("!target:/=\!") do set "short_target=%%~nxA"
 echo ============================================================
 echo Running test for !target! on FreeBSD...
 echo ============================================================
 
-set "stdout_file=%TESTS_TMP_DIR%\!target!.freebsd.stdout"
-set "stderr_file=%TESTS_TMP_DIR%\!target!.freebsd.stderr"
-set "success_file=%TESTS_TMP_DIR%\!target!.freebsd.success"
-set "failure_file=%TESTS_TMP_DIR%\!target!.freebsd.failure"
-set "idempotent_file=%TESTS_TMP_DIR%\!target!.idempotent.success"
+set "stdout_file=%TESTS_TMP_DIR%\!short_target!.freebsd.stdout"
+set "stderr_file=%TESTS_TMP_DIR%\!short_target!.freebsd.stderr"
+set "success_file=%TESTS_TMP_DIR%\!short_target!.freebsd.success"
+set "failure_file=%TESTS_TMP_DIR%\!short_target!.freebsd.failure"
+set "idempotent_file=%TESTS_TMP_DIR%\!short_target!.idempotent.success"
 
 if exist "!success_file!" del /f /q "!success_file!"
 if exist "!failure_file!" del /f /q "!failure_file!"
 if exist "!idempotent_file!" del /f /q "!idempotent_file!"
 
 pushd "%VAGRANT_DIR%"
-set "test_cmd=export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:$PATH; export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install !target! && timeout 120 /opt/repos/libscript/libscript.sh test !target! && timeout 600 /opt/repos/libscript/libscript.sh install !target! && timeout 120 /opt/repos/libscript/libscript.sh test !target!"
+set "test_cmd=export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install !target! && timeout 120 /opt/repos/libscript/libscript.sh test !target! && timeout 600 /opt/repos/libscript/libscript.sh install !target! && timeout 120 /opt/repos/libscript/libscript.sh test !target!"
 
 vagrant ssh --no-tty -c "!test_cmd!" > "!stdout_file!" 2> "!stderr_file!"
 if errorlevel 1 (

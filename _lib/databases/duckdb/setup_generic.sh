@@ -192,18 +192,41 @@ case "$ACTION" in
                 esac
               fi
               _musl_suffix=""
-              if [ -f "/etc/alpine-release" ]; then _musl_suffix="-musl"; fi
+              if [ -f "/etc/alpine-release" ] && [ "$OS_ARCH" = "x86_64" ]; then _musl_suffix="-musl"; fi
               if [ "$UNAME_LOWER" = "darwin" ]; then
                 DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-osx-universal.zip"
               elif [ "$OS_ARCH" = "aarch64" ] || [ "$OS_ARCH" = "arm64" ]; then
-                DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-arm64${_musl_suffix}.zip"
+                if [ -f "/etc/alpine-release" ]; then
+                  libscript_depends 'gcompat' 'libstdc++' || true
+                fi
+                DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-arm64.zip"
               else
                 DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-amd64${_musl_suffix}.zip"
               fi
-              libscript_download "$DL_URL" "${TEMP_FILE}"
+              if ! libscript_download "$DL_URL" "${TEMP_FILE}" 2>/dev/null && [ -n "$_musl_suffix" ]; then
+                libscript_depends 'gcompat' 'libstdc++' || true
+                DL_URL="https://github.com/duckdb/duckdb/releases/download/${_actual_version}/duckdb_cli-linux-amd64.zip"
+                libscript_download "$DL_URL" "${TEMP_FILE}"
+              fi
               unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
               chmod +x "${TARGET_DIR}/bin/duckdb" || true
               rm -f "${TEMP_FILE}"
+              if [ -f "/etc/alpine-release" ] && [ -x "${TARGET_DIR}/bin/duckdb" ] && ! "${TARGET_DIR}/bin/duckdb" --version >/dev/null 2>&1; then
+                libscript_depends 'gcompat' 'gcc' 'musl-dev' 'libstdc++' >/dev/null 2>&1 || true
+                mkdir -p /usr/local/lib
+                if [ ! -f "/usr/local/lib/libglibc_shim.so" ]; then
+                  printf 'int __res_init(void){return 0;}\nint res_init(void){return 0;}\nint __register_atfork(void (*p)(void), void (*pa)(void), void (*c)(void), void *d){return 0;}\nconst char *gnu_get_libc_version(void){return "2.38";}\n' | gcc -shared -fPIC -x c - -o /usr/local/lib/libglibc_shim.so 2>/dev/null || true
+                fi
+                if [ -f "/usr/local/lib/libglibc_shim.so" ]; then
+                  mv "${TARGET_DIR}/bin/duckdb" "${TARGET_DIR}/bin/duckdb.bin"
+                  cat << 'SHIM' > "${TARGET_DIR}/bin/duckdb"
+#!/bin/sh
+export LD_PRELOAD="/usr/local/lib/libglibc_shim.so:/lib/libgcompat.so.0:${LD_PRELOAD:-}"
+exec "$(dirname "$0")/duckdb.bin" "$@"
+SHIM
+                  chmod +x "${TARGET_DIR}/bin/duckdb"
+                fi
+              fi
             fi
           fi
         fi

@@ -56,8 +56,8 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "nvidia" >/dev/null 2>&1; then
-  libscript_depends 'nvidia'
+if ! command -v "nvidia-smi" >/dev/null 2>&1; then
+  libscript_depends 'nvidia' || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "nvidia" "$TARGET_SYSROOT" "$ACTION"

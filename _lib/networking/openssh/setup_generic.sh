@@ -56,7 +56,7 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "openssh" >/dev/null 2>&1; then
+if ! command -v "ssh" >/dev/null 2>&1 || ! command -v "sshd" >/dev/null 2>&1; then
   libscript_depends 'openssh'
 fi
 

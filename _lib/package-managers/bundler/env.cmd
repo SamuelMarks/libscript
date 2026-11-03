@@ -64,7 +64,7 @@ set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "bundler" "%BUNDLER_VERSION%"
 
 endlocal & (
-    set "BUNDLER_VERSION=%BUNDLER_VERSION%"
+    if not "%BUNDLER_VERSION%"=="latest" set "BUNDLER_VERSION=%BUNDLER_VERSION%"
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "PATH=%PATH%"
 )

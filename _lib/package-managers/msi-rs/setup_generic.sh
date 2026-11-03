@@ -238,7 +238,9 @@ case "$ACTION" in
           target_tuple='x86_64-unknown-freebsd'
         fi
       elif [ "$os_name" = "sunos" ]; then
-        target_tuple='x86_64-unknown-illumos'
+        if [ "$arch_name" = "x86_64" ] || [ "$arch_name" = "amd64" ] || [ "$arch_name" = "i86pc" ]; then
+          target_tuple='x86_64-unknown-illumos'
+        fi
       fi
 
       if [ -n "$target_tuple" ]; then

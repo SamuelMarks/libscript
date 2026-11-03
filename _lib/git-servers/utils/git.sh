@@ -37,18 +37,18 @@ git_get() {
     GIT_DIR_="${target}"'/.git'
     if [ -d "${GIT_DIR_}" ]; then
         if [ -n "${branch}" ]; then
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch origin "${branch}" 2>/dev/null || true
+            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" fetch origin "${branch}" 2>/dev/null || true
             GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git reset --hard "origin/${branch}" 2>/dev/null || true
         else
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch --depth=1 origin HEAD 2>/dev/null || true
+            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" fetch --depth=1 origin HEAD 2>/dev/null || true
             GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git reset --hard FETCH_HEAD 2>/dev/null || true
         fi
     else
         mkdir -p -- "${target}"
         if [ -n "${branch}" ]; then
-            git clone --depth=1 --single-branch --branch "${branch}" -- "${repo}" "${target}"
+            git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" clone --depth=1 --single-branch --branch "${branch}" -- "${repo}" "${target}"
         else
-            git clone --depth=1 --single-branch -- "${repo}" "${target}"
+            git -c core.sshCommand=ssh -c "url.https://github.com/.insteadOf=ssh://git@github.com/" clone --depth=1 --single-branch -- "${repo}" "${target}"
         fi
     fi
 }

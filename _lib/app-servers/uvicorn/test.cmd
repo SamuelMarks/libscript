@@ -50,6 +50,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
 call "%~dp0env.cmd"
-uvicorn --version
+set "STACK="
+call uvicorn --version
 exit /b %ERRORLEVEL%

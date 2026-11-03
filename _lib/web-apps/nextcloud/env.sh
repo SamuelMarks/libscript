@@ -35,5 +35,10 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${NEXTCLOUD_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
+if [ "$(uname -s)" = "Darwin" ]; then
+  export NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT:-${HOME:-/root}/.libscript/www/nextcloud}"
+else
+  export NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT:-/var/www/nextcloud}"
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

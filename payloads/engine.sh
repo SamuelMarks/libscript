@@ -34,6 +34,34 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
+if ! command -v jq >/dev/null 2>&1; then
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+    _pe_saved_this="${THIS_FILE}"
+    _pe_saved_dir="${SCRIPT_DIR}"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    THIS_FILE="${_pe_saved_this}"
+    SCRIPT_DIR="${_pe_saved_dir}"
+  fi
+  if ! command -v jq >/dev/null 2>&1 && [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq >/dev/null 2>&1 || true
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+      _pe_saved_this="${THIS_FILE}"
+      _pe_saved_dir="${SCRIPT_DIR}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      THIS_FILE="${_pe_saved_this}"
+      SCRIPT_DIR="${_pe_saved_dir}"
+    fi
+  fi
+fi
+
 ACTION="${1:-compile}"
 TARGET="${2:-}"
 SCHEDULER="${LIBSCRIPT_SCHEDULER:-kubernetes}"

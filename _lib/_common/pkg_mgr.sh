@@ -299,14 +299,27 @@ libscript_depends() {
         'apt-get')
           export DEBIAN_FRONTEND='noninteractive'
           if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
-            priv  apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
+            priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
           fi
+          _created_policy_rc=0
+          case " ${pkgs_to_install} " in
+            *gdm3*|*lightdm*|*sddm*|*greetd*|*network-manager*|*dhcpcd*|*wpasupplicant*|*iwd*|*openvpn*|*chrony*|*avahi*|*plasma*|*gnome*|*lxqt*|*xfce4*|*openbox*|*sway*|*weston*|*labwc*|*seatd*|*dinit*|*openrc*|*runit*|*s6*|*sysvinit*)
+              if [ ! -f /usr/sbin/policy-rc.d ]; then
+                printf '#!/bin/sh\nexit 101\n' | priv tee /usr/sbin/policy-rc.d >/dev/null 2>&1 || true
+                priv chmod +x /usr/sbin/policy-rc.d 2>/dev/null || true
+                _created_policy_rc=1
+              fi
+              ;;
+          esac
           _apt_cache="${LIBSCRIPT_APT_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apt}"
           if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apt_cache" ]; then
             log_info "Offline mode: installing deb packages from $_apt_cache..."
-            priv dpkg -i "$_apt_cache"/*.deb || priv apt-get -o Dpkg::Lock::Timeout=120 install -y ${pkgs_to_install} || _install_failed=1
+            priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a dpkg -i "$_apt_cache"/*.deb || priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
           else
-            priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} || _install_failed=1
+            priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+          fi
+          if [ "${_created_policy_rc}" -eq 1 ]; then
+            priv rm -f /usr/sbin/policy-rc.d 2>/dev/null || true
           fi ;;
         'apk')
           _apk_cache="${LIBSCRIPT_APK_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apk}"
@@ -324,9 +337,9 @@ libscript_depends() {
           _dnf_cache="${LIBSCRIPT_DNF_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/dnf}"
           if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_dnf_cache" ]; then
             log_info "Offline mode: installing rpm packages from $_dnf_cache..."
-            priv dnf install -y "$_dnf_cache"/*.rpm || priv dnf install -y ${pkgs_to_install} || _install_failed=1
+            priv dnf install -y --allowerasing "$_dnf_cache"/*.rpm || priv dnf install -y --allowerasing ${pkgs_to_install} || _install_failed=1
           else
-            priv  dnf install -y        ${pkgs_to_install} || _install_failed=1
+            priv dnf install -y --allowerasing ${pkgs_to_install} || _install_failed=1
           fi ;;
         'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
         'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;

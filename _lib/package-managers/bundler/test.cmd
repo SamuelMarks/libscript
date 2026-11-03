@@ -50,4 +50,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "BUNDLER_VERSION="
 bundle --version

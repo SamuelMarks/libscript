@@ -151,7 +151,10 @@ if "%SEVENZIP_INSTALL_METHOD%"=="system" (
 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+set "_SEVENZIP_INSTALLED=0"
+if exist "%TARGET_DIR%\bin\7z.exe" set "_SEVENZIP_INSTALLED=1"
+if exist "C:\Program Files\7-Zip\7z.exe" set "_SEVENZIP_INSTALLED=1"
+if "!_SEVENZIP_INSTALLED!"=="0" (
     echo Installing 7zip %SEVENZIP_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\7zip\7zip-%SEVENZIP_VERSION%.zip" (
@@ -165,8 +168,9 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SEVENZIP_DOWNLOAD_URL%" "%TEMP%\7zip.zip"
         tar -xf "%TEMP%\7zip.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for 7zip.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends 7zip
+        if exist "C:\Program Files\7-Zip\7z.exe" copy /y "C:\Program Files\7-Zip\7z*" "%TARGET_DIR%\bin\" >nul 2>&1
     )
 ) else (
     echo 7zip %SEVENZIP_VERSION% is already installed.

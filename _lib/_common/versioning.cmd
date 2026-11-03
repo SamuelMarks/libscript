@@ -153,7 +153,7 @@ if /i "!_civ_comp!"=="python" (
         echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
         if errorlevel 1 (
             if /i "!_civ_req!"=="latest" exit /b 0
-            for /f "tokens=2" %%V in ('"%%~fP" --version 2>&1') do (
+            for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
                 echo %%V | findstr /b /c:"!_civ_prefix!." >nul 2>&1
                 if not errorlevel 1 exit /b 0
                 if "%%V"=="!_civ_prefix!" exit /b 0

@@ -215,8 +215,10 @@ if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
     priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf"
     priv ln -sf "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${ODOO_SERVER_NAME}.conf"
   fi
-  if ! priv systemctl reload nginx ; then
-    true
+  if command -v systemctl >/dev/null 2>&1; then
+    if ! priv systemctl reload nginx ; then
+      true
+    fi
   fi
   rm -f "${LOC_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"
 elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
@@ -229,8 +231,10 @@ elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
   else
     grep -q "${ODOO_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || safe_tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
-  if ! priv systemctl reload caddy ; then
-    true
+  if command -v systemctl >/dev/null 2>&1; then
+    if ! priv systemctl reload caddy ; then
+      true
+    fi
   fi
   rm -f "${CADDY_BLOCK_TMP}"
 elif [ "${ODOO_WEBSERVER}" = "httpd" ]; then

@@ -165,8 +165,13 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%YARN_DOWNLOAD_URL%" "%TEMP%\yarn.zip"
         tar -xf "%TEMP%\yarn.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for yarn.
-        exit /b 1
+        if not exist "%USERPROFILE%\.libscript\nodejs\latest\node_modules\corepack\shims\yarn.cmd" (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install nodejs latest
+        )
+        > "%TARGET_DIR%\bin\yarn.cmd" echo @echo off
+        >> "%TARGET_DIR%\bin\yarn.cmd" echo set "PATH=%%USERPROFILE%%\.libscript\nodejs\latest;%%PATH%%"
+        >> "%TARGET_DIR%\bin\yarn.cmd" echo call "%%USERPROFILE%%\.libscript\nodejs\latest\node_modules\corepack\shims\yarn.cmd" %%*
     )
 ) else (
     echo yarn %YARN_VERSION% is already installed.

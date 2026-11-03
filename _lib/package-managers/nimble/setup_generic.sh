@@ -118,32 +118,35 @@ case "$ACTION" in
 
         if [ "$installed" = "0" ]; then
           ARCH=$(uname -m)
-          NIM_ARCH=""
+          NIMBLE_ARCH=""
           case "$ARCH" in
-            x86_64|amd64) NIM_ARCH="linux_x64" ;;
-            aarch64|arm64) NIM_ARCH="linux_arm64" ;;
-            armv7l) NIM_ARCH="linux_armv7l" ;;
-            i*86) NIM_ARCH="linux_x32" ;;
-            *) NIM_ARCH="" ;;
+            x86_64|amd64) NIMBLE_ARCH="linux_x64" ;;
+            aarch64|arm64) NIMBLE_ARCH="linux_aarch64" ;;
+            armv7l) NIMBLE_ARCH="linux_armv7l" ;;
+            i*86) NIMBLE_ARCH="linux_x32" ;;
+            *) NIMBLE_ARCH="" ;;
           esac
 
-          if [ -n "$NIM_ARCH" ] && [ "$UNAME_LOWER" = "linux" ]; then
-            log_info 'Downloading standalone Nim bundle containing nimble...'
-            NIM_VER=$(libscript_fetch_stdout "https://nim-lang.org/install_unix.html" 2>/dev/null | grep -oE 'nim-[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | sed 's/^nim-//')
-            : "${NIM_VER:=2.2.12}"
-            NIM_URL="https://nim-lang.org/download/nim-${NIM_VER}-${NIM_ARCH}.tar.xz"
-            TEMP_XZ=$(mktemp)
+          if [ -n "$NIMBLE_ARCH" ] && [ "$UNAME_LOWER" = "linux" ]; then
+            log_info 'Downloading standalone Nimble release archive...'
+            _nimble_ver="${EXACT_VERSION#v}"
+            if [ -z "$_nimble_ver" ] || [ "$_nimble_ver" = "latest" ]; then
+              _nimble_ver='0.26.2'
+            fi
+            NIMBLE_URL="https://github.com/nim-lang/nimble/releases/download/v${_nimble_ver}/nimble-${NIMBLE_ARCH}.tar.gz"
+            TEMP_TGZ=$(mktemp)
             TEMP_DIR=$(mktemp -d)
-            libscript_depends 'curl' 'tar' 'xz-utils' || true
-            if libscript_download "$NIM_URL" "$TEMP_XZ"; then
-              tar -xJf "$TEMP_XZ" -C "$TEMP_DIR" --strip-components=1 || true
-              if [ -f "$TEMP_DIR/bin/nimble" ]; then
-                cp -a "$TEMP_DIR/bin/"* "${TARGET_DIR}/bin/" 2>/dev/null || cp "$TEMP_DIR/bin/nimble" "${TARGET_DIR}/bin/nimble"
+            libscript_depends 'curl' 'tar' || true
+            if libscript_download "$NIMBLE_URL" "$TEMP_TGZ" 2>/dev/null || libscript_download "https://github.com/nim-lang/nimble/releases/download/v0.26.2/nimble-${NIMBLE_ARCH}.tar.gz" "$TEMP_TGZ"; then
+              tar -xzf "$TEMP_TGZ" -C "$TEMP_DIR" || true
+              _found_bin=$(find "$TEMP_DIR" -type f -name "nimble" 2>/dev/null | head -n 1 || true)
+              if [ -n "$_found_bin" ] && [ -f "$_found_bin" ]; then
+                cp "$_found_bin" "${TARGET_DIR}/bin/nimble"
                 chmod +x "${TARGET_DIR}/bin/nimble" || true
                 installed=1
               fi
             fi
-            rm -rf "$TEMP_XZ" "$TEMP_DIR"
+            rm -rf "$TEMP_TGZ" "$TEMP_DIR"
           fi
         fi
 

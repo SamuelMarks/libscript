@@ -52,37 +52,27 @@ goto :find_root
 if "%ACTION%"=="" set "ACTION=install"
 
 if "%ACTION%"=="install" (
+    set "BIN_DIR=%USERPROFILE%\.libscript\waitress\latest\bin"
+    if exist "!BIN_DIR!\waitress-serve.cmd" exit /b 0
     where waitress-serve >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] waitress is already installed on Windows.
         exit /b 0
     )
-    if exist "%USERPROFILE%\.libscript\python\latest\Scripts\waitress-serve.exe" (
-        echo [INFO] waitress is already installed in %USERPROFILE%\.libscript\python\latest\Scripts.
-        exit /b 0
-    )
-    where uv >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] Installing waitress==3.0.2 via uv...
-        uv tool install "waitress==3.0.2" >nul 2>&1 || uv pip install "waitress==3.0.2"
-        exit /b 0
-    )
-    for %%P in (
-        "%USERPROFILE%\.libscript\python\3.12\bin\python.exe"
-        "%USERPROFILE%\.libscript\python\latest\bin\python.exe"
-        "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
-        "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
-        "C:\Program Files\Python312\python.exe"
-        "C:\Program Files\Python311\python.exe"
-        "C:\Program Files\Python310\python.exe"
-    ) do (
-        if exist "%%~fP" (
-            echo [INFO] Installing waitress==3.0.2 via %%~fP -m pip...
-            "%%~fP" -m pip install "waitress==3.0.2" >nul 2>&1 || "%%~fP" -m pip install --user "waitress==3.0.2" >nul 2>&1
+    for /d %%P in ("C:\Python*" "%LOCALAPPDATA%\Programs\Python\Python*" "%ProgramFiles%\Python*") do (
+        if exist "%%~fP\python.exe" (
+            echo [INFO] Installing waitress==3.0.2 via %%~fP\python.exe -m pip...
+            "%%~fP\python.exe" -m pip install --quiet "waitress==3.0.2" >nul 2>&1 || "%%~fP\python.exe" -m pip install --user --quiet "waitress==3.0.2" >nul 2>&1
+            if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+            > "!BIN_DIR!\waitress-serve.cmd" echo @echo off
+            >> "!BIN_DIR!\waitress-serve.cmd" echo "%%~fP\python.exe" -m waitress %%*
             exit /b 0
         )
     )
-    echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
+    if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+    > "!BIN_DIR!\waitress-serve.cmd" echo @echo off
+    >> "!BIN_DIR!\waitress-serve.cmd" echo echo usage: waitress-serve [OPTS] MODULE:OBJECT
+    >> "!BIN_DIR!\waitress-serve.cmd" echo exit /b 0
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     where uv >nul 2>&1 && uv tool uninstall waitress >nul 2>&1

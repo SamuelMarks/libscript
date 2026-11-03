@@ -57,7 +57,7 @@ find_existing_uv() {
     "${HOME}/.local/bin/uv" \
     "/root/.local/bin/uv" \
     "$(command -v uv 2>/dev/null || true)"; do
-    if [ -n "$_feu_cand" ] && [ -x "$_feu_cand" ]; then
+    if [ -n "$_feu_cand" ] && [ -x "$_feu_cand" ] && "$_feu_cand" --version >/dev/null 2>&1; then
       printf '%s\n' "$_feu_cand"
       return 0
     fi
@@ -76,13 +76,15 @@ resolve_exact_version() {
     fi
   fi
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
-    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote uv 2>/dev/null | tail -n 1)
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote uv 2>/dev/null | tail -n 1 || true)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/astral-sh/uv/releases/latest" | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
+      EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/astral-sh/uv/releases/latest" 2>/dev/null | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1 || true)
     fi
-    [ -z "${EXACT_VERSION:-}" ] && EXACT_VERSION="latest"
+    if [ -z "${EXACT_VERSION:-}" ]; then
+      EXACT_VERSION='latest'
+    fi
   else
     EXACT_VERSION="${VERSION:-latest}"
   fi

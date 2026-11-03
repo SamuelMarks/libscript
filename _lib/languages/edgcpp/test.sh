@@ -53,9 +53,13 @@ verify_edgcpp_binaries_and_headers() {
   [ -x "${_edg_dir}/bin/edgcpp" ]
   [ -x "${_edg_dir}/bin/edg-cc" ]
   [ -x "${_edg_dir}/bin/edg-c++" ]
+  if [ -f "${_edg_dir}/lib/libedg_el9_compat.so" ]; then
+    export LD_LIBRARY_PATH="${_edg_dir}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+    export LD_PRELOAD="${_edg_dir}/lib/libedg_el9_compat.so${LD_PRELOAD:+:${LD_PRELOAD}}"
+  fi
   if [ -f "${_edg_dir}/bin/cpfe" ]; then
     [ -x "${_edg_dir}/bin/cpfe" ]
-    _cpfe_v="$("${_edg_dir}/bin/cpfe" --version < /dev/null 2>&1 | head -n 1 || true)"
+    _cpfe_v="$("${_edg_dir}/bin/cpfe" --version < /dev/null 2>&1 || true)"
     case "${_cpfe_v}" in
       *"Edison Design Group"*) ;;
       *) return 1 ;;
@@ -146,7 +150,14 @@ int edg_llvm_compute(int x, int y) {
     return (x * y) + 19;
 }
 EOF
-    (cd "${_edg_dir}" && ./bin/cpfe --c11 --llvm-be "--gen_obj_file_name=${_tmp_dir}/pure_llvm_be.o" "${_tmp_dir}/pure_llvm_be.c" < /dev/null)
+    (
+      cd "${_edg_dir}"
+      export LD_LIBRARY_PATH="${_edg_dir}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+      if [ -f "${_edg_dir}/lib/libedg_el9_compat.so" ]; then
+        export LD_PRELOAD="${_edg_dir}/lib/libedg_el9_compat.so${LD_PRELOAD:+:${LD_PRELOAD}}"
+      fi
+      ./bin/cpfe --c11 --llvm-be "--gen_obj_file_name=${_tmp_dir}/pure_llvm_be.o" "${_tmp_dir}/pure_llvm_be.c" < /dev/null
+    )
     [ -s "${_tmp_dir}/pure_llvm_be.o" ]
   fi
 

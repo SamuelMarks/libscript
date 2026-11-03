@@ -43,12 +43,14 @@ $candidates = @(
     (Join-Path $openEdxDir ".venv\Scripts\python.exe"),
     "$env:USERPROFILE\.libscript\openedx\.venv\Scripts\python.exe",
     "C:\OpenEdX\app\.venv\Scripts\python.exe",
-    "$env:USERPROFILE\.libscript\python\latest\bin\python.exe",
+    "C:\Python315\python.exe",
+    "C:\Python312\python.exe",
     "$env:LOCALAPPDATA\Programs\Python\Python312-arm64\python.exe",
     "$env:LOCALAPPDATA\Programs\Python\Python311-arm64\python.exe",
     "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
     "C:\Program Files\Python312\python.exe",
-    "C:\Program Files\Python311\python.exe"
+    "C:\Program Files\Python311\python.exe",
+    "$env:USERPROFILE\.libscript\python\latest\bin\python.exe"
 )
 foreach ($c in $candidates) {
     if (Test-Path $c) {

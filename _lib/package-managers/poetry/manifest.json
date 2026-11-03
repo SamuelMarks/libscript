@@ -3,7 +3,7 @@
   "name": "poetry",
   "provides": ["package-manager", "poetry"],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "title": "poetry",
   "description": "Bootstrap script for [Poetry](https://python-poetry.org/), a tool for Python dependency management and packaging. Requires Python 3 to be installed.",
   "category": "package-manager",

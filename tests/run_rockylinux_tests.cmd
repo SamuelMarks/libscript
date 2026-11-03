@@ -51,44 +51,43 @@ goto :find_root
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
-
 set "REPO_ROOT=%THIS_DIR%\.."
+for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
+set "LIBSCRIPT_ROOT_DIR=%REPO_ROOT%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\test_matrix_driver.cmd"
 set "VAGRANT_DIR=%REPO_ROOT%\vagrant\rockylinux-10.2"
 set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
 
 if not exist "%TESTS_TMP_DIR%" mkdir "%TESTS_TMP_DIR%"
 
-if /I "%~1"=="" goto :usage_all
-if /I "%~1"=="--help" goto :show_help
-if /I "%~1"=="-h" goto :show_help
-if /I "%~1"=="/?" goto :show_help
-if /I "%~1"=="-?" goto :show_help
+if "%~1"=="" goto :usage_check
+if "%~1"=="--help" goto :show_help
+if "%~1"=="-h" goto :show_help
+if "%~1"=="/?" goto :show_help
+goto :start_tests
 
-set "TARGETS=%*"
-goto :run_tests
-
-:: ## usage_all
-:: Displays command-line usage instructions and available options.
-:usage_all
+:: ## usage_check
+:: Executes usage_check functionality by defaulting targets to all.
+:usage_check
 set "TARGETS=all"
 goto :run_tests
 
 :: ## show_help
-:: Displays usage instructions and supported CLI parameters.
+:: Displays command-line help and usage parameters.
 :show_help
-echo Usage: %~nx0 [TARGETS...^|all]
+echo Usage: run_rockylinux_tests.cmd [TARGETS...^|all]
 echo.
-echo Runs local tests sequentially on Rocky Linux (bento/rockylinux-10.2) Vagrant VM.
-echo.
-echo Arguments:
-echo   TARGETS...          A list of categories or components to test.
-echo   all                 Test all components in the _lib directory.
-echo   --help, -h, /?      Show this help message.
+echo Runs local tests sequentially on Rocky Linux Vagrant VM.
+echo Results are written to tests_tmp\ directory.
 exit /b 0
 
+:: ## start_tests
+:: Parses command-line targets into the test execution variable.
+:start_tests
+set "TARGETS=%*"
+
 :: ## run_tests
-:: Connects to Vagrant, syncs code, and runs tests.
+:: Orchestrates VM verification, repository rsync, and component testing loop.
 :run_tests
 echo === Ensuring Rocky Linux Vagrant VM is running ===
 pushd "%VAGRANT_DIR%"
@@ -104,16 +103,34 @@ popd
 
 if "%TARGETS%"=="all" (
     set "COMPONENTS="
-    for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\topologies\*" "%REPO_ROOT%\payloads\*") do (
+    for /d %%C in ("%REPO_ROOT%\_lib\*") do (
         set "cat_name=%%~nxC"
         if not "!cat_name:~0,1!"=="_" (
-            for /d %%D in ("%%C\*") do (
-                set "comp_name=%%~nxD"
-                if not "!comp_name:~0,1!"=="_" (
-                    set "COMPONENTS=!COMPONENTS! !comp_name!"
+            if not "!cat_name!"=="bootloaders" if not "!cat_name!"=="storage" if not "!cat_name!"=="runtimes" if not "!cat_name!"=="ml-training" (
+                for /d %%D in ("%%C\*") do (
+                    set "comp_name=%%~nxD"
+                    if not "!comp_name:~0,1!"=="_" (
+                        if "!cat_name!/!comp_name!"=="freebsd/distro" (
+                            set "COMPONENTS=!COMPONENTS! freebsd/distro"
+                        ) else if "!cat_name!/!comp_name!"=="illumos/distro" (
+                            set "COMPONENTS=!COMPONENTS! illumos/distro"
+                        ) else (
+                            set "COMPONENTS=!COMPONENTS! !comp_name!"
+                        )
+                    )
                 )
             )
         )
+    )
+    set "COMPONENTS=!COMPONENTS! bootloaders/grub bootloaders/limine bootloaders/refind bootloaders/systemd-boot storage/provision_disk runtimes/provision_isolated_runtime ml-training"
+    for /d %%T in ("%REPO_ROOT%\topologies\*") do (
+        set "COMPONENTS=!COMPONENTS! topologies/%%~nxT"
+    )
+    for %%S in ("%REPO_ROOT%\payloads\schedulers\*.sh") do (
+        set "COMPONENTS=!COMPONENTS! payloads/schedulers/%%~nS"
+    )
+    for /d %%R in ("%REPO_ROOT%\traits\*") do (
+        set "COMPONENTS=!COMPONENTS! traits/%%~nxR"
     )
 ) else (
     set "COMPONENTS=%TARGETS%"
@@ -133,21 +150,22 @@ exit /b 0
 :: Runs the install, test, and idempotency cycle for a single component target.
 :run_single_test
 set "target=%~1"
+for %%A in ("!target:/=\!") do set "short_target=%%~nxA"
 echo ============================================================
 echo Running test for !target! on Rocky Linux...
 echo ============================================================
 
-set "stdout_file=%TESTS_TMP_DIR%\!target!.linux.rocky.stdout"
-set "stderr_file=%TESTS_TMP_DIR%\!target!.linux.rocky.stderr"
-set "success_file=%TESTS_TMP_DIR%\!target!.linux.rocky.success"
-set "failure_file=%TESTS_TMP_DIR%\!target!.linux.rocky.failure"
-set "idempotent_file=%TESTS_TMP_DIR%\!target!.idempotent.success"
+set "stdout_file=%TESTS_TMP_DIR%\!short_target!.linux.rocky.stdout"
+set "stderr_file=%TESTS_TMP_DIR%\!short_target!.linux.rocky.stderr"
+set "success_file=%TESTS_TMP_DIR%\!short_target!.linux.rocky.success"
+set "failure_file=%TESTS_TMP_DIR%\!short_target!.linux.rocky.failure"
+set "idempotent_file=%TESTS_TMP_DIR%\!short_target!.idempotent.success"
 
 if exist "!success_file!" del "!success_file!" >nul 2>&1
 if exist "!failure_file!" del "!failure_file!" >nul 2>&1
 if exist "!idempotent_file!" del "!idempotent_file!" >nul 2>&1
 
-set "test_cmd=export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install !target! && timeout 120 /opt/repos/libscript/libscript.sh test !target! && timeout 600 /opt/repos/libscript/libscript.sh install !target! && timeout 120 /opt/repos/libscript/libscript.sh test !target!"
+set "test_cmd=export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh install !target! && /opt/repos/libscript/libscript.sh test !target! && /opt/repos/libscript/libscript.sh install !target! && /opt/repos/libscript/libscript.sh test !target!"
 
 pushd "%VAGRANT_DIR%"
 vagrant ssh --no-tty -c "!test_cmd!" > "!stdout_file!" 2> "!stderr_file!"

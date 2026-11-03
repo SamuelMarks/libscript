@@ -27,6 +27,8 @@ if (-not $PythonExe -or -not (Test-Path $PythonExe)) {
         $PythonExe = $venvPy
     } else {
         $pyCandidates = @(
+            "C:\Python315\python.exe",
+            "C:\Python312\python.exe",
             "$env:USERPROFILE\.libscript\python\3.12\bin\python.exe",
             "$env:USERPROFILE\.libscript\python\latest\bin\python.exe",
             "$env:LOCALAPPDATA\Programs\Python\Python312-arm64\python.exe",
@@ -46,6 +48,17 @@ $codebaseDir = Join-Path $InstallDir "codebase"
 if (-not (Test-Path (Join-Path $codebaseDir "manage.py"))) {
     if (Test-Path (Join-Path $InstallDir "manage.py")) {
         $codebaseDir = $InstallDir
+    } else {
+        if (-not (Test-Path $codebaseDir)) { New-Item -ItemType Directory -Path $codebaseDir -Force | Out-Null }
+        $managePyContent = @"
+#!/usr/bin/env python
+import os, sys
+if __name__ == '__main__':
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript_win')
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(sys.argv)
+"@
+        Set-Content -Path (Join-Path $codebaseDir "manage.py") -Value $managePyContent -Encoding Ascii
     }
 }
 

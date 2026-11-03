@@ -129,7 +129,7 @@ case "$ACTION" in
         fi
         if [ "${_hos:-}" = "freebsd" ]; then
           log_info 'FreeBSD detected, installing helm via system package manager...'
-          libscript_depends 'helm'
+          libscript_depends 'helm' || true
           if command -v helm >/dev/null 2>&1; then
             ln -sf "$(command -v helm)" "${TARGET_DIR}/bin/helm"
           fi

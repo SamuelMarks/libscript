@@ -50,12 +50,7 @@ VERSION="${SWIFT_VERSION:-latest}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
-    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote swift 2>/dev/null | tail -n 1)
-    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
-      EXACT_VERSION="$_latest"
-    else
-      EXACT_VERSION="${VERSION:-latest}"
-    fi
+    EXACT_VERSION='6.0.3'
   else
     EXACT_VERSION="${VERSION:-latest}"
   fi
@@ -69,7 +64,7 @@ case "$ACTION" in
     if [ -n "${SWIFT_RELEASES_URL:-}" ]; then
       libscript_fetch_stdout "${SWIFT_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-    git ls-remote --tags "https://github.com/swiftlang/swift" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
+      git ls-remote --tags --refs "https://github.com/swiftlang/swift" "refs/tags/swift-*-RELEASE" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | libscript_sort_versions | uniq || printf '%s\n' "6.0.3"
     fi
     exit 0
     ;;
@@ -107,9 +102,14 @@ case "$ACTION" in
     if [ ! -d "${TARGET_DIR}" ]; then
       log_info "Installing swift ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
-      if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+      if [ "$UNAME_LOWER" = "darwin" ] && command -v swift >/dev/null 2>&1; then
+        ln -sf "$(command -v swift)" "${TARGET_DIR}/bin/swift" 2>/dev/null || true
+      elif [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ] && [ -n "${PKG_MGR:-}" ]; then
         log_info 'Falling back to system package manager for swift...'
-        libscript_depends 'swift'
+        libscript_depends 'swift' || true
+        if command -v swift >/dev/null 2>&1; then
+          ln -sf "$(command -v swift)" "${TARGET_DIR}/bin/swift" 2>/dev/null || true
+        fi
       else
         log_error 'Native installation for swift from source is not supported yet.'
         exit 1

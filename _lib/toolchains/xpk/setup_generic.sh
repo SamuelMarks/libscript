@@ -148,6 +148,21 @@ case "$ACTION" in
       else
         log_info "xpk ${VERSION} is already installed."
       fi
+      if [ -x "${TARGET_DIR}/bin/python" ]; then
+        "${TARGET_DIR}/bin/python" -c '
+import glob, os, re, site
+for sp in site.getsitepackages():
+    for p in glob.glob(os.path.join(sp, "xpk", "**", "*.py"), recursive=True):
+        with open(p, "r", encoding="utf-8") as f:
+            s = f.read()
+        if "BooleanOptionalAction" in s and "type=bool" in s:
+            s2 = re.sub(r"(action\s*=\s*(?:argparse\.)?BooleanOptionalAction\s*,\s*(?:default\s*=\s*(?:True|False|None)\s*,\s*)?)type\s*=\s*bool\s*,?", r"\1", s)
+            s2 = re.sub(r"type\s*=\s*bool\s*,\s*(action\s*=\s*(?:argparse\.)?BooleanOptionalAction)", r"\1", s2)
+            if s2 != s:
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write(s2)
+' 2>/dev/null || true
+      fi
       libscript_symlink_alias "xpk" "latest" "${EXACT_VERSION}"
       libscript_symlink_alias "xpk" "default" "${EXACT_VERSION}"
       if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "xpk" ]; then

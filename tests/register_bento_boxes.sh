@@ -67,7 +67,7 @@ validate_bento_pkrvars() {
     return 0
   fi
   printf '==> Validating 7-OS Packer templates in %s...\n' "$BENTO_DIR"
-  for _pkr in "os_pkrvars/omnios/omnios-braich-aarch64.pkrvars.hcl" "os_pkrvars/alpine/alpine-3.24-aarch64.pkrvars.hcl" "os_pkrvars/debian/debian-13-aarch64.pkrvars.hcl" "os_pkrvars/rockylinux/rockylinux-10-aarch64.pkrvars.hcl" "os_pkrvars/freebsd/freebsd-15-aarch64.pkrvars.hcl" "os_pkrvars/macos/macos-14-aarch64.pkrvars.hcl" "os_pkrvars/windows/windows-11-aarch64.pkrvars.hcl"; do
+  for _pkr in "os_pkrvars/omnios/omnios-braich-aarch64.pkrvars.hcl" "os_pkrvars/alpine/alpine-3.24-aarch64.pkrvars.hcl" "os_pkrvars/debian/debian-13-aarch64.pkrvars.hcl" "os_pkrvars/rockylinux/rockylinux-10-aarch64.pkrvars.hcl" "os_pkrvars/freebsd/freebsd-15-aarch64.pkrvars.hcl" "os_pkrvars/macos/macos-27-aarch64.pkrvars.hcl" "os_pkrvars/macos/macos-14-aarch64.pkrvars.hcl" "os_pkrvars/windows/windows-11-aarch64.pkrvars.hcl"; do
     if [ -f "${BENTO_DIR}/${_pkr}" ]; then
       printf '[PASS] Found %s\n' "$_pkr"
     else
@@ -127,11 +127,13 @@ elif [ -f "${BUILD_COMPLETE}/almalinux-9.8-aarch64.qemu.box" ]; then
 fi
 
 register_box_if_needed "bento/freebsd-15.1" "${BUILD_COMPLETE}/freebsd-15.1-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-14-aarch64.utm.box" "$EXISTING_BOXES" "utm"
-
-if printf '%s\n' "$EXISTING_BOXES" | grep -q "^bento/windows-11 .*qemu"; then
-  printf '[OK]   Box bento/windows-11 (qemu) is already registered in host Vagrant.\n'
+if [ -f "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" ]; then
+  register_box_if_needed "bento/macos-27.2-arm64" "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+  register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+else
+  register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-14-aarch64.utm.box" "$EXISTING_BOXES" "utm"
 fi
+register_box_if_needed "bento/windows-11" "${BUILD_COMPLETE}/windows-11-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
 
 printf '=== Host Vagrant Box Inventory ===
 '

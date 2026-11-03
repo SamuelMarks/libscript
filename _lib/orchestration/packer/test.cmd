@@ -49,6 +49,13 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;!PATH!"
+if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+for /d %%P in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\HashiCorp.Packer*") do (
+    if exist "%%~fP" set "PATH=%%~fP;!PATH!"
+)
+
 where packer >nul 2>&1
 if !errorlevel! equ 0 (
     packer --version

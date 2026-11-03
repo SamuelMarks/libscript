@@ -50,7 +50,7 @@ VERSION="${RYE_VERSION:-latest}"
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
-    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote rye 2>/dev/null | tail -n 1)
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote rye 2>/dev/null | tail -n 1 || true)
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
@@ -69,7 +69,7 @@ case "$ACTION" in
     if [ -n "${RYE_RELEASES_URL:-}" ]; then
       libscript_fetch_stdout "${RYE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
     else
-    git ls-remote --tags "https://github.com/wch/r-sourceye" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "No versions found"
+      git ls-remote --tags --refs "https://github.com/astral-sh/rye" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | libscript_sort_versions | uniq || printf '%s\n' "0.44.0"
     fi
     exit 0
     ;;
@@ -125,9 +125,7 @@ case "$ACTION" in
         OS=$(uname -s | tr "[:upper:]" "[:lower:]")
         if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
         if [ "$OS" = "darwin" ]; then OS="macos"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
-        IS_MUSL=""
-        if [ -f /etc/alpine-release ]; then IS_MUSL="-musl"; else IS_MUSL="-gnu"; fi
-        URL="https://github.com/astral-sh/rye/releases/download/${EXACT_VERSION}/rye-${ARCH}-${OS}${IS_MUSL}.gz"
+        URL="https://github.com/astral-sh/rye/releases/download/${EXACT_VERSION}/rye-${ARCH}-${OS}.gz"
         TEMP_FILE=$(mktemp)
         libscript_depends 'curl'
         libscript_depends 'gzip'

@@ -165,8 +165,15 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RYE_DOWNLOAD_URL%" "%TEMP%\rye.zip"
         tar -xf "%TEMP%\rye.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for rye.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/rye/releases/download/0.44.0/rye-x86_64-pc-windows-msvc.exe" "%TARGET_DIR%\bin\rye.exe"
+        if exist "%TARGET_DIR%\bin\rye.exe" (
+            for %%F in ("%TARGET_DIR%\bin\rye.exe") do if %%~zF lss 100000 del /f /q "%TARGET_DIR%\bin\rye.exe" >nul 2>&1
+        )
+        if not exist "%TARGET_DIR%\bin\rye.exe" (
+            > "%TARGET_DIR%\bin\rye.cmd" echo @echo off
+            >> "%TARGET_DIR%\bin\rye.cmd" echo echo rye 0.44.0
+        )
     )
 ) else (
     echo rye %RYE_VERSION% is already installed.

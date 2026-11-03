@@ -50,4 +50,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-gcc --version
+if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
+where gcc >nul 2>&1
+if !errorlevel! equ 0 (
+    gcc --version
+    exit /b 0
+)
+clang --version
+exit /b !errorlevel!

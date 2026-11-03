@@ -772,7 +772,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | Component                             | Category           | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
 | ------------------------------------- | ------------------ | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
 | `7zip`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `android-sdk`                         | `toolchains`       | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
+| `android-sdk`                         | `toolchains`       | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `ansible-galaxy`                      | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `apk`                                 | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `apt`                                 | `package-managers` | -           | ✅          | -           | -       | -     | -       | -     |
@@ -796,13 +796,13 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `cc`                                  | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `celery`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `choco`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
-| `clang`                               | `languages`        | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `clang`                               | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `cmake`                               | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `composer`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `conan`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `conda`                               | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | ✅    |
 | `coursier`                            | `toolchains`       | -           | ✅          | ✅          | -       | -     | -       | ✅    |
-| `cpanm`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | -       | ✅    |
+| `cpanm`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `cpp`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `csharp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `curl`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -814,7 +814,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `dnf`                                 | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
 | `drupal`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `duckdb`                              | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | ❌    | -       | ✅    |
 | `elasticsearch`                       | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `elixir`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `emerge`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
@@ -825,10 +825,10 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `flatpak`                             | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `fluentbit`                           | `logging`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `fnm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gcc`                                 | `languages`        | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `gcc`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `gcsfuse`                             | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `gem`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gettext`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gettext`                             | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `ghcup`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `gitea`                               | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `gitlab`                              | `git-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
@@ -842,7 +842,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `helm`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `hmailserver`                         | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
 | `httpd`                               | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `huggingface-cli`                     | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | -       | ✅    |
+| `huggingface-cli`                     | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `iis`                                 | `web-servers`      | -           | -           | -           | ✅      | -     | -       | -     |
 | `java`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `jetstream`                           | `app-servers`      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
@@ -857,7 +857,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `lfs-toolchain`                       | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `lighttpd`                            | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `luarocks`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `lynx`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lynx`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `macports`                            | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
 | `magento`                             | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `mamba`                               | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
@@ -871,7 +871,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `mix`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `mongodb`                             | `databases`        | -           | ✅          | ✅          | -       | -     | -       | ✅    |
 | `mosquitto`                           | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `msi-rs`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `msi-rs`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ❌    | ✅      | ✅    |
 | `msvc`                                | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
 | `msys2`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `mysql`                               | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -901,7 +901,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `pkg`                                 | `package-managers` | -           | -           | -           | -       | -     | ✅      | -     |
 | `pkgx`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `pnpm`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `poetry`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | -       | ✅    |
+| `poetry`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `porg`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `postgres`                            | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `powershell`                          | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -922,7 +922,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `rust-server`                         | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rustup`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rvm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `rye`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `rye`                                 | `package-managers` | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `sbt`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `scoop`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `sdkman`                              | `package-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
@@ -934,7 +934,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `stack`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `swift`                               | `languages`        | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `swupd`                               | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
-| `tcc`                                 | `languages`        | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `tcc`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `tensorboard`                         | `logging`          | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `tmux`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `utils`                               | `git-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -945,14 +945,14 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `vcpkg`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `vcredist`                            | `utilities`        | -           | -           | -           | ✅      | -     | -       | -     |
 | `vfox`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `vllm`                                | `app-servers`      | -           | ✅          | -           | -       | -     | -       | -     |
+| `vllm`                                | `app-servers`      | -           | -           | -           | -       | -     | -       | -     |
 | `wait4x`                              | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `waitress`                            | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `wget`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `winget`                              | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `wix`                                 | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
 | `woocommerce`                         | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `wordpress`                           | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `wordpress`                           | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `xbps`                                | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
 | `xpk`                                 | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `yarn`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -973,7 +973,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `coreutils`          | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
 | `dhcpcd`             | `networking`       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `dinit`              | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `doas`               | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `doas`               | `base-system`      | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `dosfstools`         | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `e2fsprogs`          | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `eudev`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -981,11 +981,11 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `glibc`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `gnome`              | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `greetd`             | `display-managers` | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `hyprland`           | `desktops`         | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `intel-media-driver` | `graphics`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `hyprland`           | `desktops`         | ✅          | -           | -           | -       | -     | ✅      | -     |
+| `intel-media-driver` | `graphics`         | -           | -           | -           | -       | -     | -       | -     |
 | `iptables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `iwd`                | `networking`       | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `kde-plasma-6`       | `desktops`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `kde-plasma-6`       | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `kmod`               | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `labwc`              | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `lfs-base`           | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -998,11 +998,11 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `lightdm`            | `display-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `lxqt`               | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `mesa`               | `graphics`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `musl`               | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `musl`               | `base-system`      | ✅          | ✅          | -           | -       | -     | -       | -     |
 | `netctl`             | `networking`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `networkmanager`     | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `nftables`           | `networking`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `nssm`               | `init-systems`     | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `nssm`               | `init-systems`     | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `nvidia`             | `graphics`         | -           | ✅          | ✅          | -       | -     | -       | -     |
 | `openbox`            | `desktops`         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `openrc`             | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -1010,7 +1010,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `openvpn`            | `networking`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
 | `pam`                | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `pf`                 | `networking`       | -           | -           | -           | -       | -     | ✅      | ✅    |
-| `pipewire`           | `audio`            | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `pipewire`           | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `pulseaudio`         | `audio`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `runit`              | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
 | `s6`                 | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -1018,13 +1018,13 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `seatd`              | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `shadow`             | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `sudo`               | `base-system`      | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `sway`               | `desktops`         | ✅          | ✅          | -           | -       | -     | -       | -     |
+| `sway`               | `desktops`         | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `systemd`            | `init-systems`     | -           | ✅          | ✅          | -       | -     | -       | -     |
 | `systemd-networkd`   | `networking`       | -           | ✅          | ✅          | -       | -     | -       | -     |
 | `sysvinit`           | `init-systems`     | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `util-linux`         | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `vulkan-loader`      | `graphics`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
-| `wayland`            | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `wayland`            | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `wayland-protocols`  | `display-servers`  | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `weston`             | `desktops`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `wireplumber`        | `audio`            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -1045,15 +1045,15 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `bootloaders/refind`       | `bootloaders`    | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `bootloaders/systemd-boot` | `bootloaders`    | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `distro`                   | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `freebsd/distro`           | `freebsd`        | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `illumos/distro`           | `illumos`        | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `freebsd/distro`           | `freebsd`        | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `illumos/distro`           | `illumos`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | -     |
 | `initramfs`                | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `linux`                    | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `packagers`                | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `repogen`                  | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `runner`                   | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `solo5`                    | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `storage/provision_disk`   | `storage`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `storage/provision_disk`   | `storage`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
 | `vfs`                      | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 
 ### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners
@@ -1068,7 +1068,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `cloud-hypervisor`    | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `cloudinit`           | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `core`                | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `digitalocean`        | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `digitalocean`        | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `docker`              | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `firecracker`         | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `gcp`                 | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1083,7 +1083,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `kubernetes`          | `orchestration`   | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `kubernetes-k0s`      | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `kubernetes-thw`      | `orchestration`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `linode`              | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `linode`              | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `marathon`            | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `mesos`               | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `nomad`               | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1095,7 +1095,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `vagrant`             | `orchestration`   | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `virtualbox`          | `orchestration`   | -           | -           | -           | ✅      | -     | -       | -     |
 | `volume`              | `cloud`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `vultr`               | `cloud-providers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `vultr`               | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 
 ### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
 
@@ -1103,14 +1103,14 @@ Components are organized into LibScript's 5 architectural tiers (see
 | -------------------------------- | --------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
 | `gke-xpk-inference`              | `ai-serving`    | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `gke-xpk-training`               | `orchestration` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `ml-training`                    | `ml-training`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `ml-training`                    | `ml-training`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `payloads/schedulers/kubernetes` | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `payloads/schedulers/mesos`      | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/microvm`    | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/microvm`    | `payloads`      | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
 | `payloads/schedulers/native`     | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `payloads/schedulers/nomad`      | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `payloads/schedulers/slurm_ray`  | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/xpk`        | `payloads`      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `payloads/schedulers/xpk`        | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `topologies/gke-tpu-cluster`     | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `topologies/k0s-ha`              | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `topologies/k8s-marathon-paas`   | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

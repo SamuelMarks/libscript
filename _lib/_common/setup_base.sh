@@ -29,6 +29,8 @@ DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
+_setup_base_this="${THIS_FILE}"
+_setup_base_dir="${DIR}"
 
 # Source logging
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/log.sh'
@@ -52,10 +54,13 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # Source path resolution
-_SCRIPT_DIR_NAME="$(dirname -- "${THIS_FILE}")"
+_SCRIPT_DIR_NAME="${_setup_base_dir}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
+THIS_FILE="${_setup_base_this}"
+DIR="${_setup_base_dir}"
+SCRIPT_DIR="${_setup_base_dir}"
 resolve_component_paths
 
 
@@ -89,6 +94,9 @@ if [ -f "${ENV_SCRIPT}" ]; then
   SCRIPT_NAME="${ENV_SCRIPT}"
   export SCRIPT_NAME
   . "${SCRIPT_NAME}"
+  THIS_FILE="${_setup_base_this}"
+  DIR="${_setup_base_dir}"
+  SCRIPT_DIR="${_setup_base_dir}"
 fi
 
 # OS-specific delegation logic
@@ -106,6 +114,9 @@ else
   export SCRIPT_NAME
   . "${SCRIPT_NAME}"
 fi
+THIS_FILE="${_setup_base_this}"
+DIR="${_setup_base_dir}"
+SCRIPT_DIR="${_setup_base_dir}"
 
 
 # Automated netctl registration for services

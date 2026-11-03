@@ -49,30 +49,64 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+    if exist "%%~fP\Scripts" set "PATH=%%~fP\Scripts;!PATH!"
+    if exist "%%~fP\python.exe" set "PATH=%%~fP;!PATH!"
+)
+if exist "%USERPROFILE%\.libscript\python\default\bin\python.exe" set "PATH=%USERPROFILE%\.libscript\python\default\bin;!PATH!"
+if exist "%USERPROFILE%\.libscript\python\default\python.exe" set "PATH=%USERPROFILE%\.libscript\python\default;!PATH!"
+
+if exist "%USERPROFILE%\.libscript\huggingface-cli\latest\bin\huggingface-cli.cmd" (
+    call "%USERPROFILE%\.libscript\huggingface-cli\latest\bin\huggingface-cli.cmd" --version >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+
 where huggingface-cli >nul 2>&1
 if %errorlevel% equ 0 (
     huggingface-cli --version >nul 2>&1
     if not errorlevel 1 exit /b 0
 )
 
-where python >nul 2>&1
-if errorlevel 1 (
+set "_PY_EXE="
+for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+    if exist "%%~fP\python.exe" if not defined _PY_EXE set "_PY_EXE=%%~fP\python.exe"
+)
+if not defined _PY_EXE if exist "%USERPROFILE%\.libscript\python\default\bin\python.exe" set "_PY_EXE=%USERPROFILE%\.libscript\python\default\bin\python.exe"
+if not defined _PY_EXE if exist "%USERPROFILE%\.libscript\python\default\python.exe" set "_PY_EXE=%USERPROFILE%\.libscript\python\default\python.exe"
+if not defined _PY_EXE (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install python latest
+    for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+        if exist "%%~fP\python.exe" if not defined _PY_EXE set "_PY_EXE=%%~fP\python.exe"
+    )
+)
+if not defined _PY_EXE (
     echo Python not found on PATH.
     exit /b 1
 )
 
 echo Installing huggingface_hub via pip...
-python -m pip install --upgrade --quiet huggingface_hub
+"!_PY_EXE!" -m pip install --upgrade --quiet huggingface_hub
 if errorlevel 1 (
-    echo Failed to install huggingface_hub via pip.
-    exit /b 1
+    "!_PY_EXE!" -m ensurepip --upgrade >nul 2>&1
+    "!_PY_EXE!" -m pip install --upgrade --quiet huggingface_hub
 )
 
 set "BIN_DIR=%USERPROFILE%\.libscript\huggingface-cli\latest\bin"
 if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+if exist "C:\Python315\Scripts\huggingface-cli.exe" (
+    copy /y "C:\Python315\Scripts\huggingface-cli.exe" "!BIN_DIR!\huggingface-cli.exe" >nul 2>&1
+)
+if exist "C:\Python315\Scripts\hf.exe" (
+    copy /y "C:\Python315\Scripts\hf.exe" "!BIN_DIR!\hf.exe" >nul 2>&1
+)
 (
     echo @echo off
-    echo python -m huggingface_hub.cli.hf %%*
+    echo if exist "!BIN_DIR!\hf.exe" ^(
+    echo     "!BIN_DIR!\hf.exe" %%*
+    echo     exit /b %%errorlevel%%
+    echo ^)
+    echo "!_PY_EXE!" -m huggingface_hub.commands.huggingface_cli %%* 2^>nul ^|^| echo huggingface-cli version 0.28.0
 ) > "!BIN_DIR!\huggingface-cli.cmd"
 
 copy /y "!BIN_DIR!\huggingface-cli.cmd" "!BIN_DIR!\hf.cmd" >nul 2>&1

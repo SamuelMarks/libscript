@@ -69,6 +69,8 @@ if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]
   fi
   _eb_home="${LIBSCRIPT_HOME}"
   _eb_pkg_up=$(printf '%s' "$_eb_pkg" | tr '[:lower:]-' '[:upper:]_')
+  if [ "$_eb_pkg_up" = "7ZIP" ]; then _eb_pkg_up="SEVENZIP"; fi
+  case "$_eb_pkg_up" in [0-9]*) _eb_pkg_up="_${_eb_pkg_up}" ;; esac
   _eb_comp_ver=$(printenv "${_eb_pkg_up}_VERSION" 2>/dev/null || true)
   if [ -n "$_eb_comp_ver" ]; then
     _eb_ver="$_eb_comp_ver"
@@ -77,7 +79,11 @@ if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]
   else
     _eb_ver='latest'
   fi
-  export "${_eb_pkg_up}_VERSION=${_eb_ver}"
+  if [ "$_eb_pkg_up" = "BUNDLER" ] && [ "$_eb_ver" = "latest" ]; then
+    unset BUNDLER_VERSION || true
+  else
+    export "${_eb_pkg_up}_VERSION=${_eb_ver}"
+  fi
   if [ -d "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin" ]; then
     libscript_path_prepend "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin"
   elif [ -d "${_eb_home}/${_eb_pkg}/v${_eb_ver}/bin" ]; then

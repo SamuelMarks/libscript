@@ -3,7 +3,7 @@
 :: ## Overview
 :: Provisions an isolated runtime environment (e.g., Python venv, Node virtual env).
 :: ## Usage
-:: call provision_isolated_runtime.cmd --runtime <type> --path <path> set "THIS_DIR=%~dp0"
+:: call provision_isolated_runtime.cmd --runtime <type> --path <path>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

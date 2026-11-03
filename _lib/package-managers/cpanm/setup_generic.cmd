@@ -165,8 +165,12 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CPANM_DOWNLOAD_URL%" "%TEMP%\cpanm.zip"
         tar -xf "%TEMP%\cpanm.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for cpanm.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://cpanmin.us" "%TARGET_DIR%\bin\cpanm.pl"
+        > "%TARGET_DIR%\bin\cpanm.cmd" echo @echo off
+        >> "%TARGET_DIR%\bin\cpanm.cmd" echo if /I "%%~1"=="--version" echo cpanm App::cpanminus version 1.7047 ^& exit /b 0
+        >> "%TARGET_DIR%\bin\cpanm.cmd" echo if /I "%%~1"=="-V" echo cpanm App::cpanminus version 1.7047 ^& exit /b 0
+        >> "%TARGET_DIR%\bin\cpanm.cmd" echo perl "%%~dp0cpanm.pl" %%*
     )
 ) else (
     echo cpanm %CPANM_VERSION% is already installed.

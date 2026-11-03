@@ -30,7 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 export LIBSCRIPT_ROOT_DIR
 _WP_SCRIPT_DIR="${SCRIPT_DIR}"
-for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/test_base.sh" "_lib/web-apps/wordpress/env.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

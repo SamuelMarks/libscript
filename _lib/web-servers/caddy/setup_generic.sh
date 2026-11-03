@@ -118,6 +118,7 @@ case "$ACTION" in
         CADDY_INSTALL_METHOD='libscript_native'
       fi
     fi
+    if [ "${CADDY_INSTALL_METHOD}" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/caddy/${EXACT_VERSION}"
@@ -144,6 +145,7 @@ case "$ACTION" in
         log_info "caddy ${VERSION} is already installed."
       fi
       libscript_symlink_alias "caddy" "$VERSION" "${EXACT_VERSION}"
+    fi
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "caddy" "$ACTION" "$VERSION" "${CADDY_INSTALL_METHOD}" "" "" "" "$@"

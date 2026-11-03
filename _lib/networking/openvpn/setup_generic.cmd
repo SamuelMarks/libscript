@@ -49,6 +49,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if exist "%USERPROFILE%\.libscript\openvpn\latest\bin\openvpn.cmd" exit /b 0
+if exist "%USERPROFILE%\.libscript\openvpn\latest\bin\openvpn.exe" exit /b 0
 where openvpn >nul 2>&1
 if %errorlevel% equ 0 exit /b 0
 
@@ -56,7 +58,27 @@ if exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" goto :create_shims
 if exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" goto :create_shims
 
 echo Installing OpenVPN via pkg_mgr...
+set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openvpn
+
+if not exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" if not exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" (
+    if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://swupdate.openvpn.org/community/releases/OpenVPN-2.6.12-I001-arm64.msi" "%TEMP%\openvpn-arm64.msi"
+        if exist "%TEMP%\openvpn-arm64.msi" (
+            msiexec.exe /i "%TEMP%\openvpn-arm64.msi" /qn /norestart ADDLOCAL="OpenVPN,OpenSSL"
+            if not exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" (
+                msiexec.exe /a "%TEMP%\openvpn-arm64.msi" /qn TARGETDIR="%TEMP%\openvpn_extract"
+            )
+        )
+    )
+    for /r "%TEMP%\openvpn_extract" %%X in (openvpn.exe) do (
+        if exist "%%~fX" (
+            if not exist "%USERPROFILE%\.libscript\openvpn\latest\bin" mkdir "%USERPROFILE%\.libscript\openvpn\latest\bin"
+            for %%D in ("%%~dpX.") do xcopy /E /I /Y "%%~fD\*" "%USERPROFILE%\.libscript\openvpn\latest\bin\" >nul 2>&1
+        )
+    )
+)
 
 :: ## create_shims
 :: Creates executable command shims in the local binary directory.
@@ -64,6 +86,7 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openvpn
 set "OPENVPN_EXE="
 if exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" set "OPENVPN_EXE=%ProgramFiles%\OpenVPN\bin\openvpn.exe"
 if exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" set "OPENVPN_EXE=%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe"
+if exist "%USERPROFILE%\.libscript\openvpn\latest\bin\openvpn.exe" set "OPENVPN_EXE=%USERPROFILE%\.libscript\openvpn\latest\bin\openvpn.exe"
 
 if defined OPENVPN_EXE (
     set "DEST_DIR=%USERPROFILE%\.libscript\openvpn\latest\bin"

@@ -47,8 +47,6 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-libscript_depends 'gcp-cli' 'python' 'kubectl' 'xpk'
-
 CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
@@ -57,6 +55,10 @@ if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
   log_info 'GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete.'
   exit 0
 fi
+
+for _dep in gcp-cli python kubectl xpk; do
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$_dep" latest
+done
 
 gcloud auth print-access-token >/dev/null 2>&1 || gcloud auth login
 

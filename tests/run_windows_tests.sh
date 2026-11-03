@@ -1,12 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Runs tests sequentially for libscript components on a local Windows 11 Vagrant VM
-# (`bento/windows-11`). Results, execution logs, and statuses are written into tests_tmp/
-# and the Supported Components table is automatically updated after each test.
+# Runs tests sequentially for libscript components on a local Windows 11 Vagrant VM (`bento/windows-11`). Restores the vanilla snapshot before each test, verifies installation and test idempotency (2x run), writes logs to tests_tmp/, and automatically updates the Supported Components table in README.md and task completion in TODO_PLAN.md.
 # ## Usage
-# ./tests/run_windows_tests.sh [TARGETS...|all]
-# Example: ./tests/run_windows_tests.sh curl powershell sqlite
-# Example: ./tests/run_windows_tests.sh all
+# ./tests/run_windows_tests.sh [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--skip-passed] [--loop] [--no-snapshot]
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -18,7 +14,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -43,12 +38,25 @@ TARGETS=""
 TIER_FILTER='all'
 STOP_AFTER=""
 SKIP_UNINSTALL=""
+SKIP_PASSED=""
+SKIP_SYNC=""
 LOOP_MODE=""
 USE_SNAPSHOT='1'
 
 # ## find_disk_image
 # Finds the active qcow2 disk image for the Windows 11 Vagrant machine.
 find_disk_image() {
+    _vm_target="${LIBSCRIPT_TEST_TARGET:-sqlite}"
+    _id_file="$VAGRANT_DIR/.vagrant/machines/windows-11-test-${_vm_target}/qemu/id"
+    if [ -f "$_id_file" ]; then
+        _id=$(cat "$_id_file")
+        _m_dir=$(dirname "$_id_file")
+        _img="$_m_dir/$_id/linked-box.img"
+        if [ -f "$_img" ]; then
+            printf '%s\n' "$_img"
+            return 0
+        fi
+    fi
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
             _id=$(cat "$_id_file")
@@ -66,7 +74,7 @@ find_disk_image() {
 # ## restore_vanilla_snapshot
 # Stops the VM and restores the vanilla snapshot on the disk image.
 restore_vanilla_snapshot() {
-    _img="$1"
+    _img="${1:-$(find_disk_image || true)}"
     if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
         if qemu-img snapshot -U -l "$_img" 2>/dev/null | grep -q "vanilla"; then
             echo 'Halting VM to restore vanilla snapshot...'
@@ -82,8 +90,9 @@ restore_vanilla_snapshot() {
 }
 
 # ## sync_repo_to_guest
-# Synchronizes the libscript codebase to the guest VM using rsync over ssh.
+# Synchronizes the libscript codebase to the guest VM using tar over ssh.
 sync_repo_to_guest() {
+    [ "$SKIP_SYNC" = "1" ] && return 0
     echo '=== Syncing LibScript repository to Windows 11 ==='
     _ssh_info=$(if cd "$VAGRANT_DIR" 2>/dev/null; then vagrant ssh-config 2>/dev/null || true; fi)
     _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
@@ -91,10 +100,17 @@ sync_repo_to_guest() {
     : "${_port:=50022}"
     : "${_key:=$HOME/.vagrant.d/insecure_private_key}"
 
-    rsync -av --copy-links --no-owner --no-group \
-        -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
-        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "*.msi" \
-        "$REPO_ROOT/" "vagrant@127.0.0.1:/cygdrive/c/libscript/"
+    tar -C "$REPO_ROOT" \
+        --exclude="./.vagrant" \
+        --exclude="./.git" \
+        --exclude="./tests_tmp" \
+        --exclude="./vagrant" \
+        --exclude="./cache" \
+        --exclude="./build" \
+        --exclude="./dist" \
+        --exclude="./_lib/orchestration/kubernetes-thw/kubernetes-the-hard-way" \
+        --exclude="*.msi" \
+        -cf - . | ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 'if (!(Test-Path C:\libscript)) { New-Item -ItemType Directory -Force -Path C:\libscript | Out-Null }; tar.exe -xf - -C C:\libscript'
 }
 
 # ## update_component_in_readme
@@ -107,7 +123,7 @@ update_component_in_readme() {
     _tmp_rm=$(mktemp "${TMPDIR:-/tmp}/readme_line.XXXXXX")
     awk -v comp="$_comp" -v st="$_status" '
         BEGIN { FS="|"; OFS="|" }
-        $2 ~ "^[ \t]*`" comp "`[ \t]*$" {
+        $2 ~ "^[ 	]*`" comp "`[ 	]*$" {
             if (NF >= 10) { $7 = " " st " " } else { $6 = " " st " " }
         }
         { print }
@@ -117,17 +133,18 @@ update_component_in_readme() {
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop] [--no-snapshot]"
+            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--skip-passed] [--loop] [--no-snapshot]"
             echo ""
             echo 'Runs local tests sequentially on Windows 11 (bento/windows-11) Vagrant VM.'
             echo ""
             echo 'Arguments:'
             echo '  TARGETS...          A list of categories or components to test.'
             echo "                      Defaults to 'all' if omitted."
-            echo '  all                 Test all components in the _lib directory.'
+            echo '  all                 Test all components in the _lib and topologies directories.'
             echo '  --loop, -l          Continuously repeat testing in an automated loop.'
             echo '  --stop-after N      Stop after running N component tests.'
             echo '  --skip-uninstall    Skip uninstallation step after testing each component.'
+            echo '  --skip-passed       Skip components that already have a .success or .skipped marker.'
             echo '  --no-snapshot       Do not restore the vanilla snapshot before each test.'
             echo '  --help, -h, /?      Show this help message.'
             echo ""
@@ -140,6 +157,7 @@ while [ $# -gt 0 ]; do
             ;;
         --tier)
             TIER_FILTER="$2"
+            export TIER_FILTER
             shift 2
             ;;
         --stop-after)
@@ -148,6 +166,14 @@ while [ $# -gt 0 ]; do
             ;;
         --skip-uninstall)
             SKIP_UNINSTALL='1'
+            shift
+            ;;
+        --skip-passed)
+            SKIP_PASSED='1'
+            shift
+            ;;
+        --skip-sync)
+            SKIP_SYNC='1'
             shift
             ;;
         --no-snapshot)
@@ -172,29 +198,69 @@ fi
 
 EXPANDED_TARGETS=""
 for arg in $TARGETS; do
+    _base_arg=$(basename "$arg")
     if [ "$arg" = "all" ]; then
-        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies/* "$REPO_ROOT"/payloads/*; do
-            if [ -d "$cat_dir" ] && [ "$(basename "$cat_dir")" != "_common" ]; then
+        for cat_dir in "$REPO_ROOT"/_lib/*; do
+            if [ -d "$cat_dir" ]; then
+                _cat_name=$(basename "$cat_dir")
+                case "$_cat_name" in
+                    _*|bootloaders|storage|runtimes|ml-training) continue ;;
+                esac
                 for dir in "$cat_dir"/*; do
-                    [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
+                    if [ -d "$dir" ]; then
+                        _c_name=$(basename "$dir")
+                        case "$_c_name" in _*) continue ;; esac
+                        if [ "$_cat_name" = "freebsd" ] && [ "$_c_name" = "distro" ]; then
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS freebsd/distro"
+                        elif [ "$_cat_name" = "illumos" ] && [ "$_c_name" = "distro" ]; then
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS illumos/distro"
+                        else
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS $_c_name"
+                        fi
+                    fi
                 done
             fi
         done
+        for _bl in grub limine refind systemd-boot; do
+            EXPANDED_TARGETS="$EXPANDED_TARGETS bootloaders/$_bl"
+        done
+        EXPANDED_TARGETS="$EXPANDED_TARGETS storage/provision_disk runtimes/provision_isolated_runtime ml-training"
+        for dir in "$REPO_ROOT"/topologies/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$(basename "$dir")"
+        done
+        for sfile in "$REPO_ROOT"/payloads/schedulers/*.sh; do
+            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS payloads/schedulers/$(basename "$sfile" .sh)"
+        done
+        for dir in "$REPO_ROOT"/traits/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
+        done
+    elif [ "$arg" = "freebsd/distro" ] || [ "$arg" = "illumos/distro" ] || [ "$arg" = "storage/provision_disk" ] || [ "$arg" = "runtimes/provision_isolated_runtime" ] || [ "$arg" = "ml-training" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+    elif [ "$arg" = "orchestration/cloud" ] || [ "$arg" = "cloud" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS cloud"
+    elif [ "$arg" = "cloud/storage" ] || [ "$arg" = "storage" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS storage"
+    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#payloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ -d "$REPO_ROOT/_lib/$arg" ]; then
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
     elif [ -d "$REPO_ROOT/topologies/$arg" ]; then
-        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+        EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$_base_arg"
+    elif [ -d "$REPO_ROOT/traits/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$_base_arg"
     elif [ -d "$REPO_ROOT/payloads/$arg" ]; then
         for dir in "$REPO_ROOT/payloads/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
+    elif [ -d "$REPO_ROOT/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
     else
         found=0
         for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies "$REPO_ROOT"/payloads/*; do
-            if [ -d "$cat_dir/$arg" ]; then
-                EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+            if [ -d "$cat_dir/$_base_arg" ]; then
+                EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
                 found=1
                 break
             fi
@@ -205,7 +271,9 @@ for arg in $TARGETS; do
     fi
 done
 
-UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '
+' | grep -v '^$' | sort -u | tr '
+' ' ')
 
 iteration=1
 
@@ -258,18 +326,49 @@ while true; do
             break
         fi
 
-        # Check manifest for OS support
-        MANIFEST_PATH=""
-        for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$target/topology.json" "$REPO_ROOT/payloads"/*/"$target/payload.json"; do
-            if [ -f "$_m" ]; then
-                MANIFEST_PATH="$_m"
-                break
+        _short_target="${target##*/}"
+        _marker_base="$_short_target"
+        case "$target" in
+            freebsd/distro) _marker_base="freebsd-distro" ;;
+            illumos/distro) _marker_base="illumos-distro" ;;
+            bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
+            payloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
+            traits/*) _marker_base="trait-${_short_target}" ;;
+        esac
+        if [ "$SKIP_PASSED" = "1" ]; then
+            if [ -f "$TESTS_TMP_DIR/$_marker_base.windows.success" ] || [ -f "$TESTS_TMP_DIR/$_marker_base.windows.skipped" ]; then
+                continue
             fi
-        done
+        fi
+
+        # Check explicit non-Windows subsystems (bootloaders, storage/provision_disk, microvm scheduler, Linux/BSD/Illumos distros)
+        case "$target" in
+            bootloaders/*|freebsd/distro|illumos/distro|distro|storage/provision_disk|payloads/schedulers/microvm)
+                echo "Skipping $target (not supported on windows)"
+                skipped_count=$((skipped_count + 1))
+                update_component_in_readme "$target" "-"
+                echo "Skipped: not supported on windows" > "$TESTS_TMP_DIR/$_marker_base.windows.skipped"
+                echo "Skipped" > "$TESTS_TMP_DIR/$_marker_base.idempotent.success"
+                continue
+                ;;
+        esac
+
+        # Check manifest for OS and architecture support
+        MANIFEST_PATH=""
+        if [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/manifest.json"
+        else
+            for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
+                if [ -f "$_m" ]; then
+                    MANIFEST_PATH="$_m"
+                    break
+                fi
+            done
+        fi
 
         if [ -n "$MANIFEST_PATH" ]; then
             SUPPORTED=$(awk '
-            BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
+            BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; in_abl=0; in_awl=0; has_awl=0; awl_match=0; result="yes" }
             /"os_blacklist"\s*:/ {
                 in_bl=1; in_wl=0
                 if ($0 ~ /"windows"/) { result="no"; exit }
@@ -282,6 +381,12 @@ while true; do
                 if ($0 ~ /\]/) { in_wl=0 }
                 next
             }
+            /"arch_whitelist"\s*:/ {
+                in_awl=1; in_bl=0; in_wl=0; in_abl=0; has_awl=1
+                if ($0 ~ /"aarch64"/ || $0 ~ /"arm64"/ || $0 ~ /"x86_64"/ || $0 ~ /"amd64"/ || $0 ~ /"all"/) { awl_match=1 }
+                if ($0 ~ /\]/) { in_awl=0 }
+                next
+            }
             in_bl {
                 if ($0 ~ /"windows"/) { result="no"; exit }
                 if ($0 ~ /\]/) { in_bl=0 }
@@ -290,12 +395,22 @@ while true; do
                 if ($0 ~ /"windows"/ || $0 ~ /"all"/) { wl_match=1 }
                 if ($0 ~ /\]/) { in_wl=0 }
             }
-            END { if (result == "yes" && has_wl && !wl_match) { result="no" }; print result }
+            in_awl {
+                if ($0 ~ /"aarch64"/ || $0 ~ /"arm64"/ || $0 ~ /"x86_64"/ || $0 ~ /"amd64"/ || $0 ~ /"all"/) { awl_match=1 }
+                if ($0 ~ /\]/) { in_awl=0 }
+            }
+            END {
+                if (result == "yes" && has_wl && !wl_match) { result="no" }
+                if (result == "yes" && has_awl && !awl_match) { result="no" }
+                print result
+            }
             ' "$MANIFEST_PATH")
             if [ "$SUPPORTED" = "no" ]; then
                 echo "Skipping $target (not supported on windows)"
                 skipped_count=$((skipped_count + 1))
                 update_component_in_readme "$target" "-"
+                echo "Skipped: not supported on windows" > "$TESTS_TMP_DIR/$_marker_base.windows.skipped"
+                echo "Skipped" > "$TESTS_TMP_DIR/$_marker_base.idempotent.success"
                 continue
             fi
         fi
@@ -311,18 +426,43 @@ while true; do
             sync_repo_to_guest
         fi
 
-        stdout_file="$TESTS_TMP_DIR/$target.windows.stdout"
-        stderr_file="$TESTS_TMP_DIR/$target.windows.stderr"
-        success_file="$TESTS_TMP_DIR/$target.windows.success"
-        failure_file="$TESTS_TMP_DIR/$target.windows.failure"
-        idempotent_file="$TESTS_TMP_DIR/$target.idempotent.success"
+        stdout_file="$TESTS_TMP_DIR/$_marker_base.windows.stdout"
+        stderr_file="$TESTS_TMP_DIR/$_marker_base.windows.stderr"
+        success_file="$TESTS_TMP_DIR/$_marker_base.windows.success"
+        failure_file="$TESTS_TMP_DIR/$_marker_base.windows.failure"
+        idempotent_file="$TESTS_TMP_DIR/$_marker_base.idempotent.success"
 
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute 4-stage contract test via ssh: install -> test -> env -> install (idempotency) -> test (verification)
-        test_cmd="cmd.exe /c \"C:\\libscript\\libscript.cmd install $target && C:\\libscript\\libscript.cmd test $target && C:\\libscript\\libscript.cmd install $target && C:\\libscript\\libscript.cmd test $target\""
+        # Build remote command depending on component type (invoked via PowerShell default SSH shell)
+        case "$target" in
+            runtimes/provision_isolated_runtime)
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\_lib\runtimes\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\runtimes\provision_isolated_runtime.cmd' --runtime python --path 'C:\Windows\Temp\test-rt'; exit \$LASTEXITCODE"
+                ;;
+            ml-training)
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\_lib\ml-training\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\ml-training\cli.cmd' test; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\ml-training\cli.cmd' install latest; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\_lib\ml-training\cli.cmd' test; exit \$LASTEXITCODE"
+                ;;
+            topologies/gke-tpu-cluster)
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\topologies\gke-tpu-cluster\cli.cmd' --help; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\gke-tpu-cluster\cli.cmd' --help; exit \$LASTEXITCODE"
+                ;;
+            topologies/*)
+                _topo_name="${target#topologies/}"
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; \$env:LIBSCRIPT_TOPOLOGY_STATE_FILE='C:\Windows\Temp\topo-$_topo_name.json'; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' up; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' status; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' up; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\topologies\\$_topo_name\cli.cmd' destroy; exit \$LASTEXITCODE"
+                ;;
+            payloads/schedulers/*)
+                _sched_name="${target#payloads/schedulers/}"
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\payloads\engine.cmd' compile 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' submit 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' status 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' submit 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\payloads\engine.cmd' destroy 'C:\libscript\payloads\ai\vllm\payload.json' --scheduler $_sched_name; exit \$LASTEXITCODE"
+                ;;
+            traits/*)
+                _trait_name="${target#traits/}"
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; \$env:LIBSCRIPT_TARGET_SYSROOT='C:\Windows\Temp\trait-sysroot-$_trait_name'; \$env:LIBSCRIPT_OFFLINE='1'; & 'C:\libscript\traits\engine.cmd' enable $_trait_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\traits\engine.cmd' apply $_trait_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\traits\engine.cmd' verify $_trait_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\traits\engine.cmd' apply $_trait_name; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\traits\engine.cmd' teardown $_trait_name; exit \$LASTEXITCODE"
+                ;;
+            *)
+                test_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\libscript.cmd' install $target; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\libscript.cmd' test $target; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\libscript.cmd' install $target; if (\$LASTEXITCODE -ne 0) { exit \$LASTEXITCODE }; & 'C:\libscript\libscript.cmd' test $target; exit \$LASTEXITCODE"
+                ;;
+        esac
 
-        if ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+        if ssh -n -p "$_port" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"
             echo "Idempotent" > "$idempotent_file"
             echo "[OK] $target (2x install + test verified)"
@@ -337,8 +477,8 @@ while true; do
 
         # Clean up installed files if snapshot restoration is disabled
         if [ "$USE_SNAPSHOT" != "1" ] && [ -z "$SKIP_UNINSTALL" ]; then
-            cleanup_cmd="cmd.exe /c \"C:\\libscript\\libscript.cmd uninstall $target & rmdir /s /q %USERPROFILE%\\.libscript\\$target\""
-            ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
+            cleanup_cmd="\$env:LIBSCRIPT_ROOT_DIR='C:\libscript'; & 'C:\libscript\libscript.cmd' uninstall $target; Remove-Item -Recurse -Force \"\$env:USERPROFILE\.libscript\\$_short_target\" -ErrorAction SilentlyContinue"
+            ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     done
 

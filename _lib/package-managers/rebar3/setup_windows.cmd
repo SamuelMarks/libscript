@@ -49,15 +49,14 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where rebar3 >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
-
-set "DEST_DIR=%USERPROFILE%\.local/rebar3"
+set "DEST_DIR=%USERPROFILE%\.local\rebar3"
 if not "%PREFIX%"=="" set "DEST_DIR=%PREFIX%"
 if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 
-set "BIN_DIR=%USERPROFILE%\.local/bin"
+set "BIN_DIR=%USERPROFILE%\.local\bin"
 if not exist "%BIN_DIR%" mkdir "%BIN_DIR%"
+
+if exist "%DEST_DIR%\rebar3.escript" if exist "%BIN_DIR%\rebar3.cmd" exit /b 0
 
 :: Ensure Erlang / escript is present
 set "ESCRIPT_BIN="
@@ -65,15 +64,16 @@ where escript >nul 2>&1
 if %errorlevel% equ 0 (
     set "ESCRIPT_BIN=escript"
 ) else (
-    for /d %%E in ("%ProgramFiles%\Erlang*") do (
+    for /d %%E in ("%ProgramFiles%\Erlang*" "%ProgramFiles%\erl*") do (
         if exist "%%E\bin\escript.exe" set "ESCRIPT_BIN=%%E\bin\escript.exe"
     )
 )
 
 if "%ESCRIPT_BIN%"=="" (
     echo Erlang OTP not detected. Installing via pkg_mgr...
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends Erlang.ErlangOTP
-    for /d %%E in ("%ProgramFiles%\Erlang*") do (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends erlang
+    for /d %%E in ("%ProgramFiles%\Erlang*" "%ProgramFiles%\erl*") do (
         if exist "%%E\bin\escript.exe" set "ESCRIPT_BIN=%%E\bin\escript.exe"
     )
 )
@@ -84,19 +84,17 @@ if "%ESCRIPT_BIN%"=="" (
 )
 
 set "URL=https://github.com/erlang/rebar3/releases/download/3.27.0/rebar3"
-set "REBAR_PATH=%DEST_DIR%/rebar3"
+set "REBAR_PATH=%DEST_DIR%\rebar3.escript"
 
 echo Downloading rebar3 from %URL%...
+set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%REBAR_PATH%"
-if errorlevel 1 (
-    echo Failed to download rebar3.
-    exit /b 1
+if not exist "%REBAR_PATH%" (
+    curl.exe -fsSL "%URL%" -o "%REBAR_PATH%"
 )
 
-(
-    echo @echo off
-    echo "%ESCRIPT_BIN%" "%REBAR_PATH%" %%*
-) > "%BIN_DIR%/rebar3.cmd"
+> "%BIN_DIR%\rebar3.cmd" echo @echo off
+>> "%BIN_DIR%\rebar3.cmd" echo "%ESCRIPT_BIN%" "%REBAR_PATH%" %%*
 
 if exist "%BIN_DIR%/rebar3.cmd" (
     echo rebar3 installed successfully to %BIN_DIR%.

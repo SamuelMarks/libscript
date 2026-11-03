@@ -57,7 +57,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "porg" >/dev/null 2>&1; then
-  libscript_depends 'porg'
+  libscript_depends 'porg' || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "porg" "$TARGET_SYSROOT" "$ACTION"

@@ -55,7 +55,17 @@ stage_tcc_shim_or_fallback() {
   if [ -f /etc/alpine-release ] && [ ! -f /usr/include/stdio.h ]; then
     libscript_depends 'c' || true
   fi
+  _tcc_usable=0
   if command -v tcc >/dev/null 2>&1; then
+    _tcc_probe_dir="${TMPDIR:-/tmp}/tcc_probe_$$"
+    mkdir -p "${_tcc_probe_dir}"
+    printf 'int main(void){return 0;}\n' > "${_tcc_probe_dir}/p.c"
+    if tcc "${_tcc_probe_dir}/p.c" -o "${_tcc_probe_dir}/p" >/dev/null 2>&1; then
+      _tcc_usable=1
+    fi
+    rm -rf "${_tcc_probe_dir}"
+  fi
+  if [ "${_tcc_usable}" -eq 1 ]; then
     ln -sf "$(command -v tcc)" "${_target_dir}/bin/tcc"
   else
     if ! command -v cc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1; then

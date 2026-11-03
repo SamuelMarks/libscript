@@ -34,15 +34,19 @@ unset SCRIPT_NAME || true
 
 export JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-system}"
 JAVA_VERSION="${JAVA_VERSION:-latest}"
-export JAVA_VERSION
+if [ "$(uname -s 2>/dev/null || true)" = "FreeBSD" ] && [ "${JAVA_VERSION}" = "latest" ]; then
+  unset JAVA_VERSION || true
+else
+  export JAVA_VERSION
+fi
 _java_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/java"
-if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ -d "${_java_home}/${JAVA_VERSION}" ] || [ -d "${_java_home}/default" ]; then
-  if [ -d "${_java_home}/${JAVA_VERSION}" ]; then
-    export JAVA_HOME="${_java_home}/${JAVA_VERSION}"
+if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ -d "${_java_home}/${JAVA_VERSION:-latest}" ] || [ -d "${_java_home}/default" ]; then
+  if [ -d "${_java_home}/${JAVA_VERSION:-latest}" ]; then
+    export JAVA_HOME="${_java_home}/${JAVA_VERSION:-latest}"
   elif [ -d "${_java_home}/default" ]; then
     export JAVA_HOME="${_java_home}/default"
   else
-    export JAVA_HOME="${_java_home}/${JAVA_VERSION}"
+    export JAVA_HOME="${_java_home}/${JAVA_VERSION:-latest}"
   fi
   libscript_path_prepend "${JAVA_HOME}/bin"
 fi

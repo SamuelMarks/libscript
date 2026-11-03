@@ -37,7 +37,10 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 
-BUNDLER_VERSION="${BUNDLER_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bundler/${BUNDLER_VERSION}/bin"
+_bundler_ver="${BUNDLER_VERSION:-latest}"
+libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bundler/${_bundler_ver}/bin"
+if [ "${BUNDLER_VERSION:-}" = "latest" ]; then
+  unset BUNDLER_VERSION || true
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

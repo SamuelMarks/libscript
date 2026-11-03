@@ -35,5 +35,12 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${WOOCOMMERCE_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
+if [ "$(uname -s)" = "Darwin" ]; then
+  export WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-${HOME:-/root}/.libscript/www/wordpress}"
+  export WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-${WORDPRESS_WWWROOT}}"
+else
+  export WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
+  export WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-/var/www/wordpress}"
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

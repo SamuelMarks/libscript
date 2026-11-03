@@ -39,6 +39,15 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
   . "${SCRIPT_NAME}"
 done
 
+SCRIPT_NAME="${DIR}/setup_generic.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+
+if [ "${VAGRANT_MULTI_NODE:-0}" != "1" ]; then
+  exit 0
+fi
+
 # Ensure 'server' hostname and localhost ssh loopback are available for single-node execution
 if ! grep -q "[[:space:]]server\([[:space:]]\|\$\)" /etc/hosts 2>/dev/null && ! getent hosts server >/dev/null 2>&1; then
   if [ -w /etc/hosts ]; then
@@ -63,9 +72,11 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server echo ok >/dev/
       fi
     elif command -v sudo >/dev/null 2>&1; then
       sudo mkdir -p /root/.ssh 2>/dev/null || true
-      if ! sudo grep -q -f ~/.ssh/id_rsa.pub /root/.ssh/authorized_keys 2>/dev/null; then
-        sudo sh -c 'cat ~/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys' 2>/dev/null || true
+      if ! sudo grep -q -f "${HOME}/.ssh/id_rsa.pub" /root/.ssh/authorized_keys 2>/dev/null; then
+        sudo sh -c "cat \"${HOME}/.ssh/id_rsa.pub\" >> /root/.ssh/authorized_keys" 2>/dev/null || true
       fi
+      sudo chmod 700 /root/.ssh 2>/dev/null || true
+      sudo chmod 600 /root/.ssh/authorized_keys 2>/dev/null || true
     fi
   fi
   if ! ssh-keygen -F server >/dev/null 2>&1 && ! ssh-keygen -F 127.0.0.1 >/dev/null 2>&1; then

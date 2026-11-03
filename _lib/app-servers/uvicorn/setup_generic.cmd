@@ -52,9 +52,23 @@ goto :find_root
 if "%ACTION%"=="" set "ACTION=install"
 
 if "%ACTION%"=="install" (
+    set "BIN_DIR=%USERPROFILE%\.libscript\uvicorn\latest\bin"
+    if exist "!BIN_DIR!\uvicorn.cmd" exit /b 0
     where uvicorn >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] uvicorn is already installed on Windows.
+        exit /b 0
+    )
+    set "_PY_EXE="
+    for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+        if exist "%%~fP\python.exe" if not defined _PY_EXE set "_PY_EXE=%%~fP\python.exe"
+    )
+    if defined _PY_EXE (
+        echo [INFO] Installing uvicorn via !_PY_EXE! -m pip...
+        "!_PY_EXE!" -m pip install --quiet uvicorn 2>nul || "!_PY_EXE!" -m pip install --user --quiet uvicorn 2>nul
+        if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+        > "!BIN_DIR!\uvicorn.cmd" echo @echo off
+        >> "!BIN_DIR!\uvicorn.cmd" echo "!_PY_EXE!" -m uvicorn %%*
         exit /b 0
     )
     where uv >nul 2>&1
@@ -67,6 +81,9 @@ if "%ACTION%"=="install" (
     if not errorlevel 1 (
         echo [INFO] Installing uvicorn via pip...
         pip install --user uvicorn
+        if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+        > "!BIN_DIR!\uvicorn.cmd" echo @echo off
+        >> "!BIN_DIR!\uvicorn.cmd" echo python -m uvicorn %%*
         exit /b 0
     )
     echo [ERROR] Python environment with pip or uv required to install uvicorn.

@@ -35,7 +35,7 @@ unset SCRIPT_NAME || true
 
 NVM_VERSION="${NVM_VERSION:-latest}"
 export NVM_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nvm/${NVM_VERSION}"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
+if [ -s "$NVM_DIR/nvm.sh" ] && [ -z "${KSH_VERSION:-}" ] && [ "$(uname -s 2>/dev/null || true)" != "SunOS" ]; then
   # shellcheck disable=SC1091
   . "$NVM_DIR/nvm.sh"
 fi

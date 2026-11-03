@@ -58,12 +58,21 @@ stage_host_clang_shim() {
     libscript_depends 'c' || true
   fi
   _host_clang=""
-  for _cand in clang-19 clang-18 clang-17 clang-16 clang cc gcc; do
+  for _cand in clang-19 clang-18 clang-17 clang-16 clang; do
     if command -v "${_cand}" >/dev/null 2>&1; then
       _host_clang="$(command -v "${_cand}")"
       break
     fi
   done
+  if [ -z "${_host_clang}" ]; then
+    libscript_depends 'clang' || true
+    for _cand in clang-19 clang-18 clang-17 clang-16 clang cc gcc; do
+      if command -v "${_cand}" >/dev/null 2>&1; then
+        _host_clang="$(command -v "${_cand}")"
+        break
+      fi
+    done
+  fi
   if [ -n "${_host_clang}" ]; then
     ln -sf "${_host_clang}" "${_target_dir}/bin/clang"
     ln -sf "${_host_clang}" "${_target_dir}/bin/cc"

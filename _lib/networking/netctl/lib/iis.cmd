@@ -64,7 +64,7 @@ echo     ^<rewrite^>
 echo       ^<rules^>
 
 set RULE_ID=1
-for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"') do (
+for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r ".routes ^| to_entries[] ^| \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"`) do (
     if "%%b"=="proxy" (
         echo         ^<rule name="ReverseProxy!RULE_ID!" stopProcessing="true"^>
         echo           ^<match url="^%%a(.*)" /^>
@@ -88,11 +88,11 @@ echo     ^</rewrite^>
 :: We will emit comments on how to complete the IIS setup.
 
 echo     ^<!-- To complete IIS Setup for Static paths and Listeners: --^>
-for /f "delims=" %%i in ('jq -r ".listen[]" "%NETCTL_STATE_FILE%"') do (
+for /f "usebackq delims=" %%i in (`jq -r ".listen[]" "%NETCTL_STATE_FILE%"`) do (
     echo     ^<!-- appcmd set site /site.name:"Default Web Site" /+bindings.[protocol='http',bindingInformation='*:%%i:'] --^>
 )
 
-for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"') do (
+for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r ".routes ^| to_entries[] ^| \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"`) do (
     if "%%b"=="static" (
         echo     ^<!-- appcmd add vdir /app.name:"Default Web Site/" /path:"%%a" /physicalPath:"%%c" --^>
     )

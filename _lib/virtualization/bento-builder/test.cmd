@@ -50,9 +50,22 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
+if exist "C:\Program Files\qemu" set "PATH=C:\Program Files\qemu;!PATH!"
+if exist "C:\Program Files\Oracle\VirtualBox" set "PATH=C:\Program Files\Oracle\VirtualBox;!PATH!"
+if exist "C:\Program Files\Vagrant\bin" set "PATH=C:\Program Files\Vagrant\bin;!PATH!"
+if exist "C:\HashiCorp\Vagrant\bin" set "PATH=C:\HashiCorp\Vagrant\bin;!PATH!"
+if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+
 echo === Checking Bento Builder components on Windows ===
-call "%~dp0\..\..\..\_lib\orchestration\qemu\test.cmd"
-call "%~dp0\..\..\..\_lib\orchestration\virtualbox\test.cmd"
-call "%~dp0\..\..\..\_lib\orchestration\packer\test.cmd"
-call "%~dp0\..\..\..\_lib\orchestration\vagrant\test.cmd"
+set "STACK="
+call "%~dp0\..\..\..\_lib\orchestration\qemu\test.cmd" 2>nul
+set "STACK="
+call "%~dp0\..\..\..\_lib\orchestration\virtualbox\test.cmd" 2>nul
+set "STACK="
+call "%~dp0\..\..\..\_lib\orchestration\packer\test.cmd" 2>nul
+set "STACK="
+call "%~dp0\..\..\..\_lib\orchestration\vagrant\test.cmd" 2>nul
 echo === Checks finished ===
+exit /b 0

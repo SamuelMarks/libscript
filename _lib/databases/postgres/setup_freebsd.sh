@@ -45,13 +45,9 @@ libscript_depends 'postgresql'"${POSTGRES_VERSION}"'-server' 'postgresql'"${POST
 
 priv sysrc postgresql_enable='YES'
 if [ ! -d '/var/db/postgres/data'"${POSTGRES_VERSION}" ]; then
-  priv /usr/local/etc/rc.d/postgresql initdb 2>/dev/null || priv service postgresql initdb || true
+  priv /usr/local/etc/rc.d/postgresql initdb </dev/null >/dev/null 2>&1 || priv service postgresql initdb </dev/null >/dev/null 2>&1 || true
 fi
-priv service postgresql status | grep -Fq ' server is running' || priv service postgresql start
-
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+priv service postgresql status >/dev/null 2>&1 || priv service postgresql start </dev/null >/dev/null 2>&1 || true
 
 if [ -n "${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then

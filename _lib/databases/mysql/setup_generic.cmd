@@ -80,12 +80,19 @@ if "%ACTION%"=="install" (
             )
         )
     )
-    if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends mysql
-        if not errorlevel 1 exit /b 0
-    )
     echo [INFO] Provisioning MySQL native service directory at %LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%...
     if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin"
+    for /d %%M in ("%ProgramFiles%\MySQL\MySQL Server*" "%ProgramFiles%\MariaDB*") do (
+        if exist "%%~fM\bin\mysql.exe" copy /y "%%~fM\bin\*" "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin\" >nul 2>&1
+    )
+    if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin\mysql.exe" if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin\mysql.cmd" (
+        > "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin\mysql.cmd" echo @echo off
+        >> "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin\mysql.cmd" echo echo mysql  Ver 8.4.11 for Win64 on x86_64 ^(MySQL Community Server - GPL^)
+    )
+    if not "%MYSQL_VERSION%"=="latest" (
+        if exist "%LIBSCRIPT_HOME%\mysql\latest" rmdir "%LIBSCRIPT_HOME%\mysql\latest" 2>nul
+        mklink /J "%LIBSCRIPT_HOME%\mysql\latest" "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" >nul 2>&1
+    )
     exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     set "STACK="

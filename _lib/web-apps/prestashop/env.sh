@@ -35,5 +35,10 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${PRESTASHOP_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
+if [ "$(uname -s)" = "Darwin" ]; then
+  export PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT:-${HOME:-/root}/.libscript/www/prestashop}"
+else
+  export PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT:-/var/www/prestashop}"
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

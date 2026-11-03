@@ -35,5 +35,10 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${ODOO_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
+if [ "$(uname -s)" = "Darwin" ]; then
+  export ODOO_WWWROOT="${ODOO_WWWROOT:-${HOME:-/root}/.libscript/www/odoo}"
+else
+  export ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

@@ -222,6 +222,45 @@ if "!PKG!"=="bun" (
 ) else if "!PKG!"=="graphviz" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Graphviz.Graphviz"
     if "!PKG_MGR!"=="choco" set "MAPPED_PKG=graphviz"
+) else if "!PKG!"=="7zip" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=7zip.7zip"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=7zip"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=7zip"
+) else if "!PKG!"=="qemu" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=SoftwareFreedomConservancy.QEMU"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=qemu"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=qemu"
+) else if "!PKG!"=="virtualbox" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Oracle.VirtualBox"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=virtualbox"
+) else if "!PKG!"=="packer" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=HashiCorp.Packer"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=packer"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=packer"
+) else if "!PKG!"=="vagrant" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=HashiCorp.Vagrant"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=vagrant"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=vagrant"
+) else if "!PKG!"=="openvpn" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=OpenVPNTechnologies.OpenVPN"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=openvpn"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=openvpn"
+) else if "!PKG!"=="c" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=LLVM.LLVM"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=llvm"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=llvm"
+) else if "!PKG!"=="cc" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=LLVM.LLVM"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=llvm"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=llvm"
+) else if "!PKG!"=="cpp" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=LLVM.LLVM"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=llvm"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=llvm"
+) else if "!PKG!"=="sh" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=MSYS2.MSYS2"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=msys2"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=busybox"
 )
 
 :: If no mapping found, return the original name

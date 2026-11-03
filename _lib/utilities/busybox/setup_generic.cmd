@@ -155,7 +155,7 @@ if "%BUSYBOX_INSTALL_METHOD%"=="system" (
 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\busybox\%BUSYBOX_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\busybox.exe" (
     echo Installing busybox %BUSYBOX_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\busybox\busybox-%BUSYBOX_VERSION%.zip" (
@@ -169,8 +169,12 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%BUSYBOX_DOWNLOAD_URL%" "%TEMP%\busybox.zip"
         tar -xf "%TEMP%\busybox.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for busybox.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://frippery.org/files/busybox/busybox64a.exe" "%TARGET_DIR%\bin\busybox.exe"
+        if not exist "%TARGET_DIR%\bin\busybox.exe" (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends busybox
+        )
     )
 ) else (
     echo busybox %BUSYBOX_VERSION% is already installed.

@@ -18,7 +18,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$LogCmd = Join-Path $PSScriptRoot "..\..\..\_common\log.ps1"
+$LogCmd = Join-Path $PSScriptRoot "..\..\_common\log.ps1"
 
 $ProjectFlag = ""
 if ($env:GCP_PROJECT_ID) {

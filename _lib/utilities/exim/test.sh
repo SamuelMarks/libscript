@@ -27,11 +27,15 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
 
 if command -v exim >/dev/null 2>&1; then
-  exim -bV
-  exit 0
+  _exim_out=$(exim -bV 2>&1 || true)
+  printf '%s\n' "$_exim_out"
+  case "$_exim_out" in
+    *"Exim version"*) exit 0 ;;
+    *) exit 1 ;;
+  esac
 elif command -v exim4 >/dev/null 2>&1; then
   exim4 -bV
   exit 0

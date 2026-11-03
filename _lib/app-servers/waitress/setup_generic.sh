@@ -56,27 +56,40 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/waitress/${VERSION:-latest}/bin/waitress" ]; then
+    _wt_target="${LIBSCRIPT_HOME:-$HOME/.libscript}/waitress/${VERSION:-latest}"
+    if [ -x "${_wt_target}/bin/waitress-serve" ]; then
       log_info "waitress ${VERSION:-latest} is already installed."
       exit 0
     fi
     log_info "Installing Waitress WSGI server via ${WAITRESS_INSTALL_METHOD}..."
     if command -v waitress-serve >/dev/null 2>&1; then
       log_info 'waitress is already available on the system.'
+      mkdir -p "${_wt_target}/bin"
+      ln -sf "$(command -v waitress-serve)" "${_wt_target}/bin/waitress-serve"
+      ln -sf "$(command -v waitress-serve)" "${_wt_target}/bin/waitress"
     elif [ "$(uname -s)" = "FreeBSD" ]; then
       libscript_depends 'waitress'
-    elif command -v uv >/dev/null 2>&1; then
-      uv tool install waitress 2>/dev/null || uv pip install waitress
-    elif command -v pipx >/dev/null 2>&1; then
-      pipx install waitress
-    elif command -v pip3 >/dev/null 2>&1; then
-      pip3 install --user waitress
-    elif command -v pip >/dev/null 2>&1; then
-      pip install --user waitress
     else
-      libscript_depends 'python'
-      pip3 install --user waitress || true
+      if ! command -v uv >/dev/null 2>&1; then
+        if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
+          libscript_depends 'python'
+        fi
+      fi
+      mkdir -p "${_wt_target}"
+      if command -v uv >/dev/null 2>&1; then
+        uv venv "${_wt_target}" --seed 2>/dev/null || python3 -m venv "${_wt_target}"
+        uv pip install --python "${_wt_target}/bin/python" waitress 2>/dev/null || "${_wt_target}/bin/pip" install waitress
+      else
+        python3 -m venv "${_wt_target}"
+        "${_wt_target}/bin/pip" install waitress
+      fi
+      if [ -x "${_wt_target}/bin/waitress-serve" ]; then
+        ln -sf "${_wt_target}/bin/waitress-serve" "${_wt_target}/bin/waitress"
+        priv ln -sf "${_wt_target}/bin/waitress-serve" /usr/local/bin/waitress-serve 2>/dev/null || true
+      fi
     fi
+    libscript_symlink_alias "waitress" "default" "${VERSION:-latest}" 2>/dev/null || true
+    libscript_symlink_alias "waitress" "latest" "${VERSION:-latest}" 2>/dev/null || true
     ;;
   uninstall)
     log_info 'Uninstalling Waitress...'

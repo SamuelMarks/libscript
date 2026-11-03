@@ -471,7 +471,7 @@ case "$ACTION" in
           fi
         done
       fi
-    elif [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+    elif [ "${OPENEDX_INSTALL_MODE:-minimal}" = "production" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       if ! command -v git >/dev/null 2>&1; then
         libscript_depends 'git' || true
       fi
@@ -538,10 +538,6 @@ case "$ACTION" in
           libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" 2>/dev/null || printf 'def what(file, h=None):\n    return None\n' > "${_sp_dir}/imghdr.py"
         fi
       fi
-      if [ -f "${DIR}/windows_runtime_setup.sh" ]; then
-        export OPENEDX_INSTALL_DIR
-        "${DIR}/windows_runtime_setup.sh" -InstallDir "${OPENEDX_INSTALL_DIR}" >/dev/null 2>&1 || true
-      fi
       if ! "${VENV_DIR}/bin/python" -c "import django" 2>/dev/null; then
         if [ -d "${offline_cache_dir:-}/wheels" ]; then
           "${VENV_DIR}/bin/python" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "Django>=4.2,<5.0" waitress >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
@@ -550,6 +546,10 @@ case "$ACTION" in
         else
           "${VENV_DIR}/bin/python" -m pip install "Django>=4.2,<5.0" waitress >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
         fi
+      fi
+      if [ -f "${DIR}/windows_runtime_setup.sh" ]; then
+        export OPENEDX_INSTALL_DIR
+        "${DIR}/windows_runtime_setup.sh" -InstallDir "${OPENEDX_INSTALL_DIR}" >/dev/null 2>&1 || true
       fi
     fi
 

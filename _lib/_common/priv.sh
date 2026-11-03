@@ -42,7 +42,11 @@ elif [ "${PRIV+x}" = 'x' ]; then
 elif [ "$(id -u)" = "0" ]; then
   PRIV='';
 elif command -v sudo >/dev/null 2>&1 ; then
-  PRIV='sudo';
+  if sudo -n true >/dev/null 2>&1; then
+    PRIV='sudo';
+  else
+    PRIV='';
+  fi
 elif command -v doas >/dev/null 2>&1 ; then
   PRIV='doas';
 else
@@ -96,10 +100,6 @@ if [ -n "${PRIV}" ]; then
   # ## priv
   # Executes command with root/superuser privileges.
   priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; "${PRIV}" "$@"; }
-elif command -v su >/dev/null 2>&1; then
-  # ## priv
-  # Executes command with root privileges via priv_as root.
-  priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; priv_as root "$@"; }
 else
   # ## priv
   # Executes command without elevated privileges fallback.

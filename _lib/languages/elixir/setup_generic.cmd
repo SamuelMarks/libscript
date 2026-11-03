@@ -165,8 +165,11 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%ELIXIR_DOWNLOAD_URL%" "%TEMP%\elixir.zip"
         tar -xf "%TEMP%\elixir.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for elixir.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends erlang
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends elixir
+        exit /b 0
     )
 ) else (
     echo elixir %ELIXIR_VERSION% is already installed.

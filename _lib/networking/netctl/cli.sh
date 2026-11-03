@@ -38,6 +38,17 @@ for LIB in "_lib/_common/log.sh" "_lib/networking/netctl/lib/prelude.sh" "_lib/n
   fi
 done
 unset SCRIPT_NAME || true
+if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+  _nc_saved_this="${THIS_FILE}"
+  _nc_saved_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_nc_saved_this}"
+  SCRIPT_DIR="${_nc_saved_dir}"
+fi
 
 # ## usage
 # Displays command-line usage instructions and exit status 1.
@@ -404,7 +415,14 @@ SINGULAR_MODE=0
 EMIT_FORMAT=""
 
 case "$1" in
-  download|install|ls|ls-remote|use|start|stop|restart|install-service|uninstall-service|env|logs|status|health)
+  install)
+    if ! command -v jq >/dev/null 2>&1; then
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq >/dev/null 2>&1 || true
+    fi
+    printf '%s\n' 'netctl is a native shell module. No installation or daemon management required.'
+    exit 0
+    ;;
+  download|ls|ls-remote|use|start|stop|restart|install-service|uninstall-service|env|logs|status|health)
     printf '%s\n' 'netctl is a native shell module. No installation or daemon management required.'
     exit 0
     ;;

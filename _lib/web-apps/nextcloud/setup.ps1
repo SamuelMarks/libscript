@@ -54,8 +54,13 @@ $dlUrl = if ($NextcloudVersion -eq "latest") { "https://download.nextcloud.com/s
 
 if (Test-Path $tmpZip) {
     $sevenZip = "C:\Program Files\7-Zip\7z.exe"
+    $libSevenZip = Join-Path $env:USERPROFILE ".libscript\7zip\latest\bin\7z.exe"
     if (Test-Path $sevenZip) {
         & $sevenZip x -y "$tmpZip" "-o$WwwRoot" | Out-Null
+    } elseif (Test-Path $libSevenZip) {
+        & $libSevenZip x -y "$tmpZip" "-o$WwwRoot" | Out-Null
+    } elseif (Get-Command tar.exe -ErrorAction SilentlyContinue) {
+        & tar.exe -xf "$tmpZip" -C "$WwwRoot" 2>$null
     } else {
         Expand-Archive -Path $tmpZip -DestinationPath $WwwRoot -Force
     }

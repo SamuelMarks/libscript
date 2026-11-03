@@ -49,6 +49,10 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if exist "C:\Program Files\qemu" set "PATH=C:\Program Files\qemu;!PATH!"
+if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+
 where qemu-system-x86_64 >nul 2>&1
 if !errorlevel! equ 0 (
     qemu-system-x86_64 --version

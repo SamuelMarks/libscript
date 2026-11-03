@@ -55,7 +55,7 @@ find_existing_ollama() {
     "/usr/local/bin/ollama" \
     "/usr/bin/ollama" \
     "$(command -v ollama 2>/dev/null || true)"; do
-    if [ -n "$_feo_cand" ] && [ -x "$_feo_cand" ]; then
+    if [ -n "$_feo_cand" ] && [ -x "$_feo_cand" ] && "$_feo_cand" --version >/dev/null 2>&1; then
       printf '%s\n' "$_feo_cand"
       return 0
     fi
@@ -126,11 +126,20 @@ case "$ACTION" in
       log_info "[REUSE] ollama (${VERSION}) already installed at ${_existing_ol}."
       exit 0
     fi
-    if [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      if ! libscript_depends "ollama"; then
-        log_info 'System package manager does not have ollama. Falling back to native...'
-        OLLAMA_INSTALL_METHOD='libscript_native'
+    if [ "$OLLAMA_INSTALL_METHOD" = "system" ] || [ -f /etc/alpine-release ]; then
+      if libscript_depends "ollama" 2>/dev/null; then
+        if command -v ollama >/dev/null 2>&1; then
+          resolve_exact_version
+          TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ollama/${EXACT_VERSION}"
+          mkdir -p "${TARGET_DIR}/bin"
+          ln -sf "$(command -v ollama)" "${TARGET_DIR}/bin/ollama"
+          libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
+          libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
+          exit 0
+        fi
       fi
+      log_info 'System package manager does not have ollama. Falling back to native...'
+      OLLAMA_INSTALL_METHOD='libscript_native'
     fi
     # libscript_native implementation
     resolve_exact_version
@@ -179,8 +188,34 @@ case "$ACTION" in
             DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-amd64.tgz"
           fi
           if libscript_download "$DL_URL" "$TEMP_FILE"; then
-            tar -xzf "$TEMP_FILE" -C "${TARGET_DIR}" || true
+            tar -xzf "$TEMP_FILE" -C "${TARGET_DIR}" bin/ollama 2>/dev/null || tar -xzf "$TEMP_FILE" -C "${TARGET_DIR}" || true
             chmod +x "${TARGET_DIR}/bin/ollama" 2>/dev/null || true
+            if [ -f "/etc/alpine-release" ] && [ -x "${TARGET_DIR}/bin/ollama" ] && ! "${TARGET_DIR}/bin/ollama" --version >/dev/null 2>&1; then
+              libscript_depends gcompat gcc musl-dev libstdc++ >/dev/null 2>&1 || true
+              priv mkdir -p /usr/local/lib
+              _shim_src=$(mktemp)
+              cat << 'CSRC' > "$_shim_src"
+int __res_init(void) { return 0; }
+int res_init(void) { return 0; }
+int __res_search(const char *dname, int class, int type, unsigned char *answer, int anslen) { return -1; }
+int backtrace(void **buffer, int size) { return 0; }
+char **backtrace_symbols(void *const *buffer, int size) { return (char **)0; }
+void backtrace_symbols_fd(void *const *buffer, int size, int fd) {}
+int __register_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void), void *dso_handle) { return 0; }
+const char *gnu_get_libc_version(void) { return "2.38"; }
+CSRC
+              priv gcc -shared -fPIC -x c "$_shim_src" -o /usr/local/lib/libollama_shim.so 2>/dev/null || true
+              rm -f "$_shim_src"
+              if [ -f "/usr/local/lib/libollama_shim.so" ]; then
+                mv "${TARGET_DIR}/bin/ollama" "${TARGET_DIR}/bin/ollama.bin"
+                cat << 'SHIM' > "${TARGET_DIR}/bin/ollama"
+#!/bin/sh
+export LD_PRELOAD="/usr/local/lib/libollama_shim.so:/lib/libgcompat.so.0:${LD_PRELOAD:-}"
+exec "$(dirname "$0")/ollama.bin" "$@"
+SHIM
+                chmod +x "${TARGET_DIR}/bin/ollama"
+              fi
+            fi
           fi
           rm -f "${TEMP_FILE}"
         fi

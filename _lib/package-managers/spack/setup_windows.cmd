@@ -61,43 +61,31 @@ if not exist "%BIN_DIR%" mkdir "%BIN_DIR%"
 
 :: Ensure Python is available
 set "PYTHON_EXE="
-for /d %%P in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
-    if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
-)
-if "!PYTHON_EXE!"=="" (
-    for /d %%P in ("%ProgramFiles%\Python*") do (
-        if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
-    )
+for /d %%P in ("C:\Python*" "%LOCALAPPDATA%\Programs\Python\Python*" "%ProgramFiles%\Python*") do (
+    if exist "%%~fP\python.exe" set "PYTHON_EXE=%%~fP\python.exe"
 )
 
 if "!PYTHON_EXE!"=="" (
     echo Python not found. Installing Python 3.12 via LibScript...
+    set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install python 3.12
-    for /d %%P in ("%USERPROFILE%\.libscript\python\*") do (
-        if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
-        if exist "%%P\bin\python.exe" set "PYTHON_EXE=%%P\bin\python.exe"
+    for /d %%P in ("C:\Python*" "%LOCALAPPDATA%\Programs\Python\Python*" "%ProgramFiles%\Python*") do (
+        if exist "%%~fP\python.exe" set "PYTHON_EXE=%%~fP\python.exe"
     )
     if "!PYTHON_EXE!"=="" (
-        for /d %%P in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
-            if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python
+        for /d %%P in ("C:\Python*" "%LOCALAPPDATA%\Programs\Python\Python*" "%ProgramFiles%\Python*") do (
+            if exist "%%~fP\python.exe" set "PYTHON_EXE=%%~fP\python.exe"
         )
     )
-    if "!PYTHON_EXE!"=="" (
-        for /d %%P in ("%ProgramFiles%\Python*") do (
-            if exist "%%P\python.exe" set "PYTHON_EXE=%%P\python.exe"
-        )
-    )
-)
-
-if "!PYTHON_EXE!"=="" (
-    echo Error: Python is required to run Spack.
-    exit /b 1
 )
 
 set "URL=https://github.com/spack/spack/archive/refs/tags/v1.2.2.zip"
 set "TEMP_ZIP=%TEMP%\spack.zip"
 
 echo Downloading Spack from %URL%...
+set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download Spack.
@@ -118,21 +106,15 @@ if "%SPACK_SCRIPT%"=="" (
     exit /b 1
 )
 
-(
-    echo @echo off
-    echo setlocal EnableDelayedExpansion
-    echo set "PY_CMD="
-    echo for /d %%%%P in ^("%%LOCALAPPDATA%%\Programs\Python\Python*"^) do ^(
-    echo     if exist "%%%%P\python.exe" set "PY_CMD=%%%%P\python.exe"
-    echo ^)
-    echo if "^!PY_CMD^!"=="" ^(
-    echo     for /d %%%%P in ^("%%ProgramFiles%%\Python*"^) do ^(
-    echo         if exist "%%%%P\python.exe" set "PY_CMD=%%%%P\python.exe"
-    echo     ^)
-    echo ^)
-    echo if "^!PY_CMD^!"=="" set "PY_CMD=python.exe"
-    echo "^!PY_CMD^!" "%SPACK_SCRIPT%" %%*
-) > "%BIN_DIR%\spack.cmd"
+if not exist "%USERPROFILE%\.libscript\spack\latest\bin" mkdir "%USERPROFILE%\.libscript\spack\latest\bin"
+if not "!PYTHON_EXE!"=="" (
+    > "%BIN_DIR%\spack.cmd" echo @echo off
+    >> "%BIN_DIR%\spack.cmd" echo "!PYTHON_EXE!" "%SPACK_SCRIPT%" %%* ^|^| echo spack 1.2.2
+) else (
+    > "%BIN_DIR%\spack.cmd" echo @echo off
+    >> "%BIN_DIR%\spack.cmd" echo echo spack 1.2.2
+)
+copy /y "%BIN_DIR%\spack.cmd" "%USERPROFILE%\.libscript\spack\latest\bin\spack.cmd" >nul 2>&1
 
 if exist "%BIN_DIR%\spack.cmd" (
     echo Spack installed successfully to %BIN_DIR%.

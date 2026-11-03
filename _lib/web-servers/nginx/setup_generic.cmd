@@ -177,7 +177,7 @@ if "%NGINX_INSTALL_METHOD%"=="system" (
 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\nginx.exe" (
     echo Installing nginx %NGINX_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip" (
@@ -191,8 +191,18 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%NGINX_DOWNLOAD_URL%" "%TEMP%\nginx.zip"
         tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for nginx.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://nginx.org/download/nginx-1.26.2.zip" "%TEMP%\nginx.zip"
+        if exist "%TEMP%\nginx.zip" (
+            tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%"
+            if exist "%TARGET_DIR%\nginx.exe" copy /y "%TARGET_DIR%\nginx.exe" "%TARGET_DIR%\bin\nginx.exe" >nul 2>&1
+            for /d %%N in ("%TARGET_DIR%\nginx-*") do (
+                if exist "%%~fN\nginx.exe" (
+                    xcopy /E /I /Y "%%~fN\*" "%TARGET_DIR%\" >nul 2>&1
+                    copy /y "%%~fN\nginx.exe" "%TARGET_DIR%\bin\nginx.exe" >nul 2>&1
+                )
+            )
+        )
     )
 ) else (
     echo nginx %NGINX_VERSION% is already installed.

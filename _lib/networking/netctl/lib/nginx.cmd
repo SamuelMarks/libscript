@@ -72,7 +72,9 @@ echo     types {
 echo         application/wasm wasm;
 echo     }
 
-for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"') do (
+set "_JQ_FLT=%TEMP%\netctl_nginx_%RANDOM%.jq"
+> "!_JQ_FLT!" echo .routes ^| to_entries[] ^| "\(.key)|\(.value.type)|\(.value.target // "")|\(.value.pattern // "")"
+for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r -f "!_JQ_FLT!" "%NETCTL_STATE_FILE%"`) do (
     echo.
     echo     location %%a {
     if "%%b"=="static" (
@@ -122,6 +124,7 @@ for /f "tokens=1,2,3,4 delims=|" %%a in ('jq -r ".routes | to_entries[] | \"\(.k
     )
     echo     }
 )
+if exist "!_JQ_FLT!" del /f /q "!_JQ_FLT!" >nul 2>&1
 
 echo }
 exit /b 0

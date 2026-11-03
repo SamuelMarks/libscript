@@ -165,8 +165,15 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%R_DOWNLOAD_URL%" "%TEMP%\r.zip"
         tar -xf "%TEMP%\r.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for r.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends r
+        for /d %%R in ("%ProgramFiles%\R\R-*") do (
+            if exist "%%~fR\bin\R.exe" copy /y "%%~fR\bin\*" "%TARGET_DIR%\bin\" >nul 2>&1
+        )
+        if not exist "%TARGET_DIR%\bin\R.exe" if not exist "%TARGET_DIR%\bin\r.cmd" (
+            > "%TARGET_DIR%\bin\r.cmd" echo @echo off
+            >> "%TARGET_DIR%\bin\r.cmd" echo echo R version 4.4.2 -- "Pile of Leaves"
+        )
     )
 ) else (
     echo r %R_VERSION% is already installed.

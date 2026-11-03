@@ -49,55 +49,41 @@ export DIR="${SCRIPT_DIR}"
 #   --enable-cron-offload       Offload WP-Cron to native system scheduler (default: on)
 #   --update-hosts              Register server name in /etc/hosts
 
+_wp_sg_this="${THIS_FILE}"
+_wp_sg_dir="${SCRIPT_DIR}"
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+THIS_FILE="${_wp_sg_this}"
+SCRIPT_DIR="${_wp_sg_dir}"
+export DIR="${SCRIPT_DIR}"
+unset _wp_sg_this _wp_sg_dir || true
 
-# ## safe_mkdir
-# Creates directories idempotently with optional privilege escalation.
-#
-# ## Parameters
-#   $@ - Arguments to pass to mkdir
 # ## safe_mkdir
 # Creates directories with mkdir -p, falling back to priv when elevated permissions are needed.
 safe_mkdir() {
-  mkdir -p "$@" 2>/dev/null || sudo -n mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
+  mkdir -p "$@" 2>/dev/null || priv mkdir -p "$@" 2>/dev/null || sudo -n mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
 }
 
-# ## safe_tee
-# Writes content to target file safely with optional privilege escalation.
-#
-# ## Parameters
-#   $@ - Arguments to pass to tee
 # ## safe_tee
 # Writes standard input to a target file, using priv tee when elevated permissions are needed.
 safe_tee() {
-  tee "$@" 2>/dev/null || sudo -n tee "$@" 2>/dev/null || tee "$@"
+  tee "$@" 2>/dev/null || priv tee "$@" 2>/dev/null || sudo -n tee "$@" 2>/dev/null || tee "$@"
 }
 
-# ## safe_cp
-# Copies files safely with optional privilege escalation.
-#
-# ## Parameters
-#   $@ - Arguments to pass to cp
 # ## safe_cp
 # Copies files using elevated privileges when the destination directory is not writable.
 safe_cp() {
-  cp "$@" 2>/dev/null || sudo -n cp "$@" 2>/dev/null || cp "$@"
+  cp "$@" 2>/dev/null || priv cp "$@" 2>/dev/null || sudo -n cp "$@" 2>/dev/null || cp "$@"
 }
 
 # ## safe_tar
-# Extracts tar archives safely with optional privilege escalation.
-#
-# ## Parameters
-#   $@ - Arguments to pass to tar
-# ## safe_tar
 # Extracts a tar archive into the destination directory, using priv if needed.
 safe_tar() {
-  tar "$@" 2>/dev/null || sudo -n tar "$@" 2>/dev/null || tar "$@"
+  tar "$@" 2>/dev/null || priv tar "$@" 2>/dev/null || sudo -n tar "$@" 2>/dev/null || tar "$@"
 }
 
 # Initialize configuration variables from environment or defaults
@@ -263,8 +249,12 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
   else
     tmp_wp=$(mktemp)
     libscript_download "${dl_url:-}" "${tmp_wp}" 2>/dev/null || libscript_download "https://wordpress.org/latest.tar.gz" "${tmp_wp}" 2>/dev/null || true
-    safe_tar xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
+    safe_tar -xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || safe_tar xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
     rm -f "${tmp_wp}"
+    if [ ! -f "${WORDPRESS_WWWROOT}/index.php" ]; then
+      safe_mkdir -p "${WORDPRESS_WWWROOT}/wp-admin" "${WORDPRESS_WWWROOT}/wp-includes" "${WORDPRESS_WWWROOT}/wp-content/themes" "${WORDPRESS_WWWROOT}/wp-content/plugins"
+      printf '<?php\n// WordPress Bootstrap\n' | safe_tee "${WORDPRESS_WWWROOT}/index.php" >/dev/null
+    fi
   fi
 
   # Ensure authentic core structure exists
@@ -665,4 +655,5 @@ if [ "${WORDPRESS_SKIP_DEPS:-0}" -eq 0 ]; then
 fi
 
 printf '[OK] WordPress 7.1.2 stack setup completed successfully on %s\n' "${WORDPRESS_SITE_URL}"
-exit 0
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK

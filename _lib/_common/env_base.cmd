@@ -3,7 +3,12 @@
 :: ## Overview
 :: Foundational environment initialization module for LibScript components on Windows. Resolves the component package name, active version, and idempotently prepends the component's binary directory to PATH across endlocal scope.
 :: ## Usage
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" [dir] setlocal EnableDelayedExpansion set "CALLER_FILE=!THIS_FILE!" set "_EB_CALLER_DIR=!CALLER_SCRIPT_DIR!" if "!_EB_CALLER_DIR!"=="" set "_EB_CALLER_DIR=!SCRIPT_DIR!"
+:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" [dir]
+
+setlocal EnableDelayedExpansion
+set "CALLER_FILE=!THIS_FILE!"
+set "_EB_CALLER_DIR=!CALLER_SCRIPT_DIR!"
+if "!_EB_CALLER_DIR!"=="" set "_EB_CALLER_DIR=!SCRIPT_DIR!"
 
 set "THIS_FILE=%~f0"
 
@@ -68,6 +73,7 @@ set "_EB_VER=%~2"
 if "!_EB_VER!"=="" if not "!_EB_PKG!"=="" (
     set "_EB_PKG_UP=!_EB_PKG:-=_!"
     for %%U in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do set "_EB_PKG_UP=!_EB_PKG_UP:%%U=%%U!"
+    if /i "!_EB_PKG_UP!"=="7ZIP" set "_EB_PKG_UP=SEVENZIP"
     for %%V in ("!_EB_PKG_UP!_VERSION") do set "_EB_VER=!%%~V!"
 )
 if "!_EB_VER!"=="" set "_EB_VER=%LIBSCRIPT_VERSION%"
@@ -104,16 +110,48 @@ if not "!_EB_PKG!"=="" if /i not "!_EB_PKG!"=="_common" if /i not "!_EB_PKG!"=="
             "%ProgramFiles(x86)%\!_EB_PKG!"
             "%LOCALAPPDATA%\Programs\!_EB_PKG!\bin"
             "%LOCALAPPDATA%\Programs\!_EB_PKG!"
-            "%LOCALAPPDATA%\Microsoft\WinGet\Packages"
+            "%ProgramFiles%\LLVM\bin"
+            "%ProgramFiles%\Go\bin"
+            "%ProgramFiles%\dotnet"
+            "%ProgramFiles%\Amazon\AWSCLIV2"
+            "%ProgramFiles%\Microsoft SDKs\Azure\CLI2\wbin"
+            "%ProgramFiles(x86)%\Microsoft SDKs\Azure\CLI2\wbin"
+            "%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin"
+            "%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin"
+            "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin"
+            "%USERPROFILE%\.libscript\nodejs\latest"
+            "%USERPROFILE%\.libscript\nodejs\default"
+            "C:\msys64\clangarm64\bin"
+            "C:\msys64\ucrt64\bin"
+            "C:\msys64\mingw64\bin"
+            "C:\msys64\usr\bin"
+            "C:\ProgramData\chocolatey\lib\elixir\tools\bin"
             "%ProgramData%\chocolatey\bin"
             "%USERPROFILE%\scoop\shims"
         ) do (
             set "_WCAND=%%~W"
             if exist "!_WCAND!" (
-                if /i not "!_WCAND!"=="%LOCALAPPDATA%\Microsoft\WinGet\Packages" (
-                    echo ";!_NEW_PATH!;" | findstr /I /C:";!_WCAND!;" >nul 2>&1
-                    if errorlevel 1 set "_NEW_PATH=!_WCAND!;!_NEW_PATH!"
-                )
+                echo ";!_NEW_PATH!;" | findstr /I /C:";!_WCAND!;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=!_WCAND!;!_NEW_PATH!"
+            )
+        )
+        for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+            if exist "%%~fP\Scripts" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fP\Scripts;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fP\Scripts;!_NEW_PATH!"
+            )
+            if exist "%%~fP\python.exe" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fP;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fP;!_NEW_PATH!"
+            )
+        )
+        for /d %%T in ("C:\tools\*") do (
+            if exist "%%~fT\bin" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fT\bin;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fT\bin;!_NEW_PATH!"
+            ) else if exist "%%~fT" (
+                echo ";!_NEW_PATH!;" | findstr /I /C:";%%~fT;" >nul 2>&1
+                if errorlevel 1 set "_NEW_PATH=%%~fT;!_NEW_PATH!"
             )
         )
     )

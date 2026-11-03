@@ -34,7 +34,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/envsubst_safe.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -42,13 +42,10 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" ${_LIBSCRIPT_DUMMY_NO_RU
 done
 
 if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
-  if ! command -v python3 >/dev/null 2>&1 && ! command -v uv >/dev/null 2>&1; then
-    _DIR="${DIR}"
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/languages/python/setup.sh'
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090,SC1091
-    . "${SCRIPT_NAME}"
-    DIR="${_DIR}"
+  if ! command -v uv >/dev/null 2>&1; then
+    if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
+      libscript_depends 'python' || true
+    fi
   fi
 
   if [ "$(uname -s)" = "Darwin" ]; then
@@ -96,7 +93,7 @@ if [ -d '/etc/systemd/system' ]; then
 
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   service='/etc/systemd/system/'"${service_name}"'.service'
-  envsubst < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
+  envsubst_safe < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
 
   priv  install -m 0644 -- '/tmp/'"${service_name}" "${service}"
   priv mkdir -p /etc/conf.d

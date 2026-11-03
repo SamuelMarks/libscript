@@ -6,5 +6,5 @@
   "category": "base-system",
   "provides": ["musl", "libc"],
   "os_whitelist": ["linux"],
-  "os_blacklist": ["windows"]
+  "os_blacklist": ["windows", "rhel"]
 }

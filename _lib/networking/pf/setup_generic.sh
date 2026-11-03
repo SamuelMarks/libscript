@@ -56,7 +56,7 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "pf" >/dev/null 2>&1; then
+if ! command -v "pf" >/dev/null 2>&1 && ! command -v "pfctl" >/dev/null 2>&1 && [ ! -x "/sbin/pfctl" ]; then
   libscript_depends 'pf'
 fi
 

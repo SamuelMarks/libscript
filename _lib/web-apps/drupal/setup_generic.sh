@@ -188,8 +188,10 @@ if [ "${DRUPAL_WEBSERVER}" = "nginx" ]; then
     priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${DRUPAL_SERVER_NAME}.conf"
     priv ln -sf "${NGINX_CONF_DIR}/sites-available/${DRUPAL_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${DRUPAL_SERVER_NAME}.conf"
   fi
-  if ! priv systemctl reload nginx ; then
-    true
+  if command -v systemctl >/dev/null 2>&1; then
+    if ! priv systemctl reload nginx ; then
+      true
+    fi
   fi
   rm -f "${LOC_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"
 elif [ "${DRUPAL_WEBSERVER}" = "caddy" ]; then
@@ -202,8 +204,10 @@ elif [ "${DRUPAL_WEBSERVER}" = "caddy" ]; then
   else
     grep -q "${DRUPAL_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
-  if ! priv systemctl reload caddy ; then
-    true
+  if command -v systemctl >/dev/null 2>&1; then
+    if ! priv systemctl reload caddy ; then
+      true
+    fi
   fi
   rm -f "${CADDY_BLOCK_TMP}"
 elif [ "${DRUPAL_WEBSERVER}" = "httpd" ]; then

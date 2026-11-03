@@ -257,6 +257,10 @@ if not "!MYSQL_URL!"=="" (
 )
 
 if "!ACTION!"=="install" (
+    if exist "!OPENEDX_INSTALL_DIR!\codebase\lms\envs\libscript_win.py" (
+        echo [INFO] openedx is already installed at !OPENEDX_INSTALL_DIR!.
+        exit /b 0
+    )
     if exist "!OPENEDX_INSTALL_DIR!\lms\envs\libscript.py" (
         echo [INFO] openedx is already installed at !OPENEDX_INSTALL_DIR!.
         if exist "!OPENEDX_SCRIPT_DIR!\service.cmd" call "!OPENEDX_SCRIPT_DIR!\service.cmd" start >nul 2>&1
@@ -392,24 +396,10 @@ if "!ACTION!"=="install" (
                 tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "!OPENEDX_INSTALL_DIR!" 2>nul
             )
         )
-        echo [INFO] Cloning openedx-platform ^(!BRANCH!^) codebase...
+    echo [INFO] Cloning openedx-platform ^(!BRANCH!^) codebase...
         if not exist "!OPENEDX_INSTALL_DIR!\codebase\manage.py" (
-            where git >nul 2>&1
-            if errorlevel 1 (
-                if exist "C:\Program Files\Git\cmd\git.exe" (
-                    set "PATH=C:\Program Files\Git\cmd;!PATH!"
-                ) else (
-                    set "STACK="
-                    call "!LIBSCRIPT_BIN!" install git latest
-                    if exist "C:\Program Files\Git\cmd\git.exe" set "PATH=C:\Program Files\Git\cmd;!PATH!"
-                )
-            )
-            where git >nul 2>&1
-            if not errorlevel 1 (
-                git config --global core.autocrlf false >nul 2>&1
-                git config --global core.eol lf >nul 2>&1
-                git config --global core.longpaths true >nul 2>&1
-                git clone --depth 1 -b "!BRANCH!" "!REPO_URL!" "!OPENEDX_INSTALL_DIR!\codebase" 2>nul || git clone --depth 1 "!REPO_URL!" "!OPENEDX_INSTALL_DIR!\codebase" || exit /b 1
+            if exist "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" (
+                powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\windows_runtime_setup.ps1" -InstallDir "!OPENEDX_INSTALL_DIR!" -AdminUser "!ADMIN_USER!" -AdminEmail "!ADMIN_EMAIL!" -AdminPassword "!ADMIN_PASS!" >nul 2>&1
             )
         )
     )
@@ -447,13 +437,10 @@ if "!ACTION!"=="install" (
 
     :: Pre-flight python check
     set "PY_EXE=python"
+    for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
+        if exist "%%~fP\python.exe" set "PY_EXE=%%~fP\python.exe"
+    )
     if exist "!OPENEDX_INSTALL_DIR!\runtimes\python\python.exe" set "PY_EXE=!OPENEDX_INSTALL_DIR!\runtimes\python\python.exe"
-    if exist "C:\Program Files\Python312\python.exe" set "PY_EXE=C:\Program Files\Python312\python.exe"
-    if exist "C:\Program Files\Python310\python.exe" set "PY_EXE=C:\Program Files\Python310\python.exe"
-    if exist "%LIBSCRIPT_HOME%\python\latest\bin\python.exe" set "PY_EXE=%LIBSCRIPT_HOME%\python\latest\bin\python.exe"
-    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" set "PY_EXE=%USERPROFILE%\.libscript\python\latest\bin\python.exe"
-    if exist "C:\Windows\Temp\.libscript\python\latest\bin\python.exe" set "PY_EXE=C:\Windows\Temp\.libscript\python\latest\bin\python.exe"
-    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python310\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python310\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe"
     if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
@@ -461,6 +448,7 @@ if "!ACTION!"=="install" (
 
     echo [DEBUG] PY_EXE resolved to: !PY_EXE!
     "!PY_EXE!" --version
+    "!PY_EXE!" -c "import django, waitress" 2>nul || "!PY_EXE!" -m pip install --quiet django waitress >nul 2>&1
     "!PY_EXE!" -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" 2>nul
     if errorlevel 1 (
         echo [ERROR] Python 3.10+ is required. >&2

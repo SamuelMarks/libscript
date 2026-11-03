@@ -52,11 +52,15 @@ goto :find_root
 if "%ACTION%"=="" set ACTION=install
 
 if "%ACTION%"=="install" (
+    if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;!PATH!"
+    if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
+    if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
     where packer >nul 2>&1
     if !errorlevel! equ 0 (
         echo Packer is already installed.
         exit /b 0
     )
+    set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends packer
     exit /b !errorlevel!
 )

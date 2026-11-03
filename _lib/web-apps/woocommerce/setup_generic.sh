@@ -29,6 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
+_woo_sg_this="${THIS_FILE}"
+_woo_sg_dir="${SCRIPT_DIR}"
 # Delegate core WP setup
 for LIB in "_lib/web-apps/wordpress/setup_generic.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -36,11 +38,15 @@ for LIB in "_lib/web-apps/wordpress/setup_generic.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+THIS_FILE="${_woo_sg_this}"
+SCRIPT_DIR="${_woo_sg_dir}"
+export DIR="${SCRIPT_DIR}"
+unset _woo_sg_this _woo_sg_dir || true
 
 # Install WooCommerce
 WOOCOMMERCE_VERSION="${WOOCOMMERCE_VERSION:-latest}"
 export WOOCOMMERCE_VERSION
-WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-/var/www/wordpress}"
+WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-${WORDPRESS_WWWROOT:-/var/www/wordpress}}"
 export WOOCOMMERCE_WWWROOT
 
 PLUGIN_DIR="${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
@@ -59,9 +65,7 @@ if [ ! -d "${PLUGIN_DIR}" ]; then
   libscript_download "${dl_url:-}" "${tmp_woo}"
   priv unzip -q -o "${tmp_woo}" -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins"
   rm -f "${tmp_woo}"
-  if ! priv chown -R www-data:www-data "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" ; then
-    true
-  fi
+  priv chown -R www-data:www-data "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" 2>/dev/null || true
 fi
 
 printf '%s\n' "WooCommerce setup complete on ${WOOCOMMERCE_SERVER_NAME:-localhost}"

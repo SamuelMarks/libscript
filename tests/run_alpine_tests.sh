@@ -38,6 +38,7 @@ TARGETS=""
 TIER_FILTER='all'
 STOP_AFTER=""
 SKIP_UNINSTALL=""
+SKIP_PASSED=""
 LOOP_MODE=""
 USE_SNAPSHOT='1'
 
@@ -85,6 +86,9 @@ sync_repo_to_guest() {
     _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
     : "${_port:=2200}"
     : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
+
+    ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 \
+        "sudo mkdir -p /opt/repos/libscript && sudo chown -R vagrant /opt/repos/libscript" >/dev/null 2>&1 || true
 
     rsync -av --copy-links --no-owner --no-group \
         -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
@@ -146,6 +150,10 @@ while [ $# -gt 0 ]; do
             SKIP_UNINSTALL='1'
             shift
             ;;
+        --skip-passed)
+            SKIP_PASSED='1'
+            shift
+            ;;
         --no-snapshot)
             USE_SNAPSHOT='0'
             shift
@@ -170,19 +178,52 @@ EXPANDED_TARGETS=""
 for arg in $TARGETS; do
     _base_arg=$(basename "$arg")
     if [ "$arg" = "all" ]; then
-        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/topologies/* "$REPO_ROOT"/payloads/*; do
-            if [ -d "$cat_dir" ] && [ "$(basename "$cat_dir")" != "_common" ]; then
+        for cat_dir in "$REPO_ROOT"/_lib/*; do
+            if [ -d "$cat_dir" ]; then
+                _cat_name=$(basename "$cat_dir")
+                case "$_cat_name" in
+                    _*|bootloaders|storage|runtimes|ml-training) continue ;;
+                esac
                 for dir in "$cat_dir"/*; do
-                    [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
+                    if [ -d "$dir" ]; then
+                        _c_name=$(basename "$dir")
+                        case "$_c_name" in _*) continue ;; esac
+                        if [ "$_cat_name" = "freebsd" ] && [ "$_c_name" = "distro" ]; then
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS freebsd/distro"
+                        elif [ "$_cat_name" = "illumos" ] && [ "$_c_name" = "distro" ]; then
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS illumos/distro"
+                        else
+                            EXPANDED_TARGETS="$EXPANDED_TARGETS $_c_name"
+                        fi
+                    fi
                 done
             fi
         done
+        for _bl in grub limine refind systemd-boot; do
+            EXPANDED_TARGETS="$EXPANDED_TARGETS bootloaders/$_bl"
+        done
+        EXPANDED_TARGETS="$EXPANDED_TARGETS storage/provision_disk runtimes/provision_isolated_runtime ml-training"
+        for dir in "$REPO_ROOT"/topologies/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$(basename "$dir")"
+        done
+        for sfile in "$REPO_ROOT"/payloads/schedulers/*.sh; do
+            [ -f "$sfile" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS payloads/schedulers/$(basename "$sfile" .sh)"
+        done
+        for dir in "$REPO_ROOT"/traits/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$(basename "$dir")"
+        done
+    elif [ "$arg" = "freebsd/distro" ] || [ "$arg" = "illumos/distro" ] || [ "$arg" = "storage/provision_disk" ] || [ "$arg" = "runtimes/provision_isolated_runtime" ] || [ "$arg" = "ml-training" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
+    elif [ "${arg#bootloaders/}" != "$arg" ] || [ "${arg#topologies/}" != "$arg" ] || [ "${arg#payloads/schedulers/}" != "$arg" ] || [ "${arg#traits/}" != "$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
     elif [ -d "$REPO_ROOT/_lib/$arg" ]; then
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
     elif [ -d "$REPO_ROOT/topologies/$arg" ]; then
-        EXPANDED_TARGETS="$EXPANDED_TARGETS $_base_arg"
+        EXPANDED_TARGETS="$EXPANDED_TARGETS topologies/$_base_arg"
+    elif [ -d "$REPO_ROOT/traits/$arg" ]; then
+        EXPANDED_TARGETS="$EXPANDED_TARGETS traits/$_base_arg"
     elif [ -d "$REPO_ROOT/payloads/$arg" ]; then
         for dir in "$REPO_ROOT/payloads/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
@@ -273,14 +314,39 @@ while true; do
             break
         fi
 
+        _short_target="${target##*/}"
+        _marker_base="$_short_target"
+        case "$target" in
+            freebsd/distro) _marker_base="freebsd-distro" ;;
+            illumos/distro) _marker_base="illumos-distro" ;;
+            bootloaders/*) _marker_base="bootloaders-${_short_target}" ;;
+            payloads/schedulers/*) _marker_base="scheduler-${_short_target}" ;;
+            traits/*) _marker_base="trait-${_short_target}" ;;
+        esac
+        if [ "$SKIP_PASSED" = "1" ]; then
+            if [ -f "$TESTS_TMP_DIR/$_marker_base.linux.alpine.success" ] || [ -f "$TESTS_TMP_DIR/$_marker_base.linux.alpine.skipped" ] || [ -f "$TESTS_TMP_DIR/$_short_target.linux.alpine.success" ] || [ -f "$TESTS_TMP_DIR/$_short_target.linux.alpine.skipped" ]; then
+                continue
+            fi
+        fi
+
         # Check manifest for OS support
         MANIFEST_PATH=""
-        for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$target/topology.json" "$REPO_ROOT/payloads"/*/"$target/payload.json"; do
-            if [ -f "$_m" ]; then
-                MANIFEST_PATH="$_m"
-                break
-            fi
-        done
+        if [ "$target" = "freebsd/distro" ] && [ -f "$REPO_ROOT/_lib/freebsd/distro/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/freebsd/distro/manifest.json"
+        elif [ "$target" = "illumos/distro" ] && [ -f "$REPO_ROOT/_lib/illumos/distro/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/illumos/distro/manifest.json"
+        elif [ "$target" = "distro" ] && [ -f "$REPO_ROOT/_lib/orchestration/distro/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/orchestration/distro/manifest.json"
+        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/manifest.json"
+        else
+            for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
+                if [ -f "$_m" ]; then
+                    MANIFEST_PATH="$_m"
+                    break
+                fi
+            done
+        fi
 
         if [ -n "$MANIFEST_PATH" ]; then
             SUPPORTED=$(awk '
@@ -335,6 +401,8 @@ while true; do
                 echo "Skipping $target (not supported on alpine / aarch64)"
                 skipped_count=$((skipped_count + 1))
                 update_component_in_readme "$target" "-"
+                echo "Skipped: not supported on alpine / aarch64" > "$TESTS_TMP_DIR/$_short_target.linux.alpine.skipped"
+                echo "Skipped" > "$TESTS_TMP_DIR/$_short_target.idempotent.success"
                 continue
             fi
         fi
@@ -350,18 +418,59 @@ while true; do
             sync_repo_to_guest
         fi
 
-        stdout_file="$TESTS_TMP_DIR/$target.linux.alpine.stdout"
-        stderr_file="$TESTS_TMP_DIR/$target.linux.alpine.stderr"
-        success_file="$TESTS_TMP_DIR/$target.linux.alpine.success"
-        failure_file="$TESTS_TMP_DIR/$target.linux.alpine.failure"
-        idempotent_file="$TESTS_TMP_DIR/$target.idempotent.success"
+        stdout_file="$TESTS_TMP_DIR/$_marker_base.linux.alpine.stdout"
+        stderr_file="$TESTS_TMP_DIR/$_marker_base.linux.alpine.stderr"
+        success_file="$TESTS_TMP_DIR/$_marker_base.linux.alpine.success"
+        failure_file="$TESTS_TMP_DIR/$_marker_base.linux.alpine.failure"
+        idempotent_file="$TESTS_TMP_DIR/$_marker_base.idempotent.success"
 
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute 4-stage contract test via ssh: install -> test -> env/which -> install (idempotency) -> test (verification)
-        test_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && /opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+        # Build remote command depending on component type
+        case "$target" in
+            bootloaders/*)
+                _bl_name="${target#bootloaders/}"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -rf /tmp/test-bl-$_bl_name && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile /tmp/test-bl-$_bl_name $_bl_name uefi && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile /tmp/test-bl-$_bl_name $_bl_name uefi && rm -rf /tmp/test-bl-$_bl_name"
+                ;;
+            storage/provision_disk)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -f /tmp/test-disk.img && sh /opt/repos/libscript/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && sh /opt/repos/libscript/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && rm -f /tmp/test-disk.img"
+                ;;
+            runtimes/provision_isolated_runtime)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt && sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt"
+                ;;
+            ml-training)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/ml-training/cli.sh install latest && sh /opt/repos/libscript/_lib/ml-training/cli.sh test && sh /opt/repos/libscript/_lib/ml-training/cli.sh install latest && sh /opt/repos/libscript/_lib/ml-training/cli.sh test"
+                ;;
+            freebsd/distro)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh test && sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/freebsd/distro/cli.sh test"
+                ;;
+            illumos/distro)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/illumos/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/illumos/distro/cli.sh test && sh /opt/repos/libscript/_lib/illumos/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/illumos/distro/cli.sh test"
+                ;;
+            distro)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh test && sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh install latest && sh /opt/repos/libscript/_lib/orchestration/distro/cli.sh test"
+                ;;
+            topologies/gke-tpu-cluster)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/topologies/gke-tpu-cluster/cli.sh --help && sh /opt/repos/libscript/topologies/gke-tpu-cluster/cli.sh --help"
+                ;;
+            topologies/*)
+                _topo_name="${target#topologies/}"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TOPOLOGY_STATE_FILE=/tmp/topo-$_topo_name.json; rm -f /tmp/topo-$_topo_name.json*; sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh status && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh destroy && rm -f /tmp/topo-$_topo_name.json*"
+                ;;
+            payloads/schedulers/*)
+                _sched_name="${target#payloads/schedulers/}"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/payloads/engine.sh compile /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh submit /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh status /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh submit /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name && sh /opt/repos/libscript/payloads/engine.sh destroy /opt/repos/libscript/payloads/ai/vllm/payload.json --scheduler $_sched_name"
+                ;;
+            traits/*)
+                _trait_name="${target#traits/}"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TARGET_SYSROOT=/tmp/trait-sysroot-$_trait_name LIBSCRIPT_OFFLINE=1; rm -rf /tmp/trait-sysroot-$_trait_name && mkdir -p /tmp/trait-sysroot-$_trait_name && sh /opt/repos/libscript/traits/engine.sh enable $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh verify $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh teardown $_trait_name && rm -rf /tmp/trait-sysroot-$_trait_name"
+                ;;
+            *)
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && (/opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true) && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+                ;;
+        esac
 
-        if ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+        if ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"
             echo "Idempotent" > "$idempotent_file"
             echo "[OK] $target (2x install + test verified)"
@@ -376,8 +485,8 @@ while true; do
 
         # Clean up installed files if snapshot restoration is disabled
         if [ "$USE_SNAPSHOT" != "1" ] && [ -z "$SKIP_UNINSTALL" ]; then
-            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf /home/vagrant/.libscript/$target 2>/dev/null || true"
-            ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
+            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf /home/vagrant/.libscript/$_short_target /tmp/libscript_pkg_mgr_lock 2>/dev/null || true"
+            ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     done
 

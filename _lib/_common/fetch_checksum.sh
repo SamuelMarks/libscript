@@ -68,7 +68,10 @@ libscript_fetch_checksum() {
      for sumfile in "SHA256SUMS.txt" "SHA256SUMS" "SHASUMS256.txt" "checksums.txt"; do
        sums="$(libscript_fetch_stdout "${base_url:-}/${sumfile}" || true)"
        if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -iqE "Not Found|NoSuchKey|<html|<xml"; then
-         match_hash="$(printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}')"
+         match_hash="$(printf '%s\n' "$sums" | awk -v fn="$filename" '$2 == fn || $2 == ("*" fn) {print $1; exit}')"
+         if [ -z "$match_hash" ]; then
+           match_hash="$(printf '%s\n' "$sums" | grep -F "$filename" | head -n 1 | awk '{print $1}')"
+         fi
          if [ -n "$match_hash" ]; then
            printf '%s\n' "$match_hash"
            return 0

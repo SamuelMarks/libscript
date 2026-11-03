@@ -194,8 +194,26 @@ case "$ACTION" in
       log_info "[REUSE] nodejs ${NODEJS_VERSION} (v${EXACT_VERSION}) is already installed."
       exit 0
     fi
-    if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'nodejs'
+    if [ "$NODEJS_INSTALL_METHOD" = "system" ] || [ -f /etc/alpine-release ] || [ "$(uname -s)" = "FreeBSD" ] || [ "$(uname -s)" = "SunOS" ]; then
+      libscript_depends 'nodejs' 'npm'
+      if command -v node >/dev/null 2>&1; then
+        _sys_node_ver=$(node -v 2>/dev/null | sed 's/^v//' || printf '%s' "${NODEJS_VERSION}")
+        _sys_node_dir=$(libscript_get_version_dir "nodejs" "v${_sys_node_ver}")
+        mkdir -p "${_sys_node_dir}/bin"
+        ln -sf "$(command -v node)" "${_sys_node_dir}/bin/node"
+        if command -v npm >/dev/null 2>&1; then
+          ln -sf "$(command -v npm)" "${_sys_node_dir}/bin/npm"
+        fi
+        if command -v npx >/dev/null 2>&1; then
+          ln -sf "$(command -v npx)" "${_sys_node_dir}/bin/npx"
+        fi
+        libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${_sys_node_ver}"
+        _node_major=$(printf '%s' "$_sys_node_ver" | cut -d. -f1)
+        [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}" "v${_sys_node_ver}"
+        [ -n "$_node_major" ] && libscript_symlink_alias "nodejs" "${_node_major}.x" "v${_sys_node_ver}"
+        libscript_symlink_alias "nodejs" "default" "v${_sys_node_ver}"
+        libscript_symlink_alias "nodejs" "latest" "v${_sys_node_ver}"
+      fi
     else
       resolve_exact_version
       libscript_depends 'curl' 'tar'

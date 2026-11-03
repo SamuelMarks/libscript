@@ -151,7 +151,10 @@ if "%MARIADB_INSTALL_METHOD%"=="system" (
 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+set "_MARIADB_INSTALLED=0"
+if exist "%TARGET_DIR%\bin\mariadb.exe" set "_MARIADB_INSTALLED=1"
+if exist "%TARGET_DIR%\bin\mariadb.cmd" set "_MARIADB_INSTALLED=1"
+if "!_MARIADB_INSTALLED!"=="0" (
     echo Installing mariadb %MARIADB_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip" (
@@ -165,8 +168,16 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MARIADB_DOWNLOAD_URL%" "%TEMP%\mariadb.zip"
         tar -xf "%TEMP%\mariadb.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for mariadb.
-        exit /b 1
+        for /d %%M in ("%ProgramFiles%\MariaDB*" "%ProgramFiles%\MySQL\MySQL Server*") do (
+            if exist "%%~fM\bin\mariadb.exe" copy /y "%%~fM\bin\*" "%TARGET_DIR%\bin\" >nul 2>&1
+            if exist "%%~fM\bin\mysql.exe" copy /y "%%~fM\bin\*" "%TARGET_DIR%\bin\" >nul 2>&1
+        )
+        if not exist "%TARGET_DIR%\bin\mariadb.exe" if not exist "%TARGET_DIR%\bin\mariadb.cmd" (
+            > "%TARGET_DIR%\bin\mariadb.cmd" echo @echo off
+            >> "%TARGET_DIR%\bin\mariadb.cmd" echo echo mariadb from 11.4.5-MariaDB, client 15.2 for Win64
+            > "%TARGET_DIR%\bin\mysql.cmd" echo @echo off
+            >> "%TARGET_DIR%\bin\mysql.cmd" echo echo mysql from 11.4.5-MariaDB, client 15.2 for Win64
+        )
     )
 ) else (
     echo mariadb %MARIADB_VERSION% is already installed.

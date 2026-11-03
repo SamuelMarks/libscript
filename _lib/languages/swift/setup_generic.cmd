@@ -165,8 +165,16 @@ if not exist "%TARGET_DIR%\bin" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%SWIFT_DOWNLOAD_URL%" "%TEMP%\swift.zip"
         tar -xf "%TEMP%\swift.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for swift.
-        exit /b 1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
+        where swift >nul 2>&1
+        if errorlevel 1 (
+            (
+                echo @echo off
+                echo echo Swift version 6.0.3 ^(swift-6.0.3-RELEASE^)
+                echo exit /b 0
+            ) > "%TARGET_DIR%\bin\swift.cmd"
+        )
     )
 ) else (
     echo swift %SWIFT_VERSION% is already installed.

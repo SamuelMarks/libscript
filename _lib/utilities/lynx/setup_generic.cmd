@@ -128,8 +128,10 @@ if exist "%TARGET_DIR%\bin\lynx.exe" (
     exit /b 0
 )
 if exist "%TARGET_DIR%\bin\lynx.cmd" (
-    echo [INFO] lynx %EXACT_VERSION% is already installed at %TARGET_DIR%.
-    exit /b 0
+    for %%F in ("%TARGET_DIR%\bin\lynx.cmd") do if %%~zF gtr 0 (
+        echo [INFO] lynx %EXACT_VERSION% is already installed at %TARGET_DIR%.
+        exit /b 0
+    )
 )
 
 if "%LYNX_INSTALL_METHOD%"=="system" (
@@ -148,21 +150,21 @@ if not "%LYNX_DOWNLOAD_URL%"=="" (
     tar -xf "%TEMP%\lynx.zip" -C "%TARGET_DIR%\bin"
     goto :lynx_done_extract
 )
-(
-    echo @echo off
-    echo setlocal
-    echo for %%%%A in ^(%%*^) do ^(
-    echo   if /I "%%%%~A"=="-version" ^(
-    echo     echo Lynx Version 2.9.2 ^(libscript Windows HTML-to-text filter^)
-    echo     exit /b 0
-    echo   ^)
-    echo   if /I "%%%%~A"=="--version" ^(
-    echo     echo Lynx Version 2.9.2 ^(libscript Windows HTML-to-text filter^)
-    echo     exit /b 0
-    echo   ^)
-    echo ^)
-    echo powershell -NoProfile -Command "$in = [Console]::In.ReadToEnd^(^); $out = $in -replace '<[^>]+>', '' -replace '&nbsp;', ' ' -replace '&amp;', '&' -replace '&lt;', '<' -replace '&gt;', '>' -replace '&quot;', '\"'; [Console]::Out.Write^($out^)"
-) > "%TARGET_DIR%\bin\lynx.cmd"
+> "%TARGET_DIR%\bin\lynx_filter.ps1" echo param([string]$FilePath)
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo $in = ''
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo if ($FilePath -and (Test-Path -LiteralPath $FilePath -ErrorAction SilentlyContinue)) { $in = Get-Content -LiteralPath $FilePath -Raw }
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo if (-not $in) { $in = @($input) -join "`r`n" }
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo $lt = [char]60; $gt = [char]62; $amp = [char]38
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo $pat = "$lt[^$gt]+$gt"
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo $out = [regex]::Replace($in, $pat, '')
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo $out = $out.Replace($amp + 'nbsp;', ' ').Replace($amp + 'amp;', [string]$amp).Replace($amp + 'lt;', [string]$lt).Replace($amp + 'gt;', [string]$gt)
+>> "%TARGET_DIR%\bin\lynx_filter.ps1" echo Write-Output $out
+
+> "%TARGET_DIR%\bin\lynx.cmd" echo @echo off
+>> "%TARGET_DIR%\bin\lynx.cmd" echo if /I "%%~1"=="-version" echo Lynx Version 2.9.2 ^& exit /b 0
+>> "%TARGET_DIR%\bin\lynx.cmd" echo if /I "%%~1"=="--version" echo Lynx Version 2.9.2 ^& exit /b 0
+>> "%TARGET_DIR%\bin\lynx.cmd" echo for %%%%A in (%%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9) do if not "%%%%~A"=="" if exist "%%%%~A" powershell -NoProfile -ExecutionPolicy Bypass -File "%%~dp0lynx_filter.ps1" "%%%%~fA" ^& exit /b 0
+>> "%TARGET_DIR%\bin\lynx.cmd" echo powershell -NoProfile -ExecutionPolicy Bypass -File "%%~dp0lynx_filter.ps1"
 
 :: ## lynx_done_extract
 :: Finalizes the lynx alias link after binary or wrapper creation.

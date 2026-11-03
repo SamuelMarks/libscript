@@ -97,12 +97,36 @@ if exist "%TARGET_DIR%\bin\tcc.exe" (
     echo [INFO] tcc %EXACT_VERSION% is already installed at %TARGET_DIR%.
     exit /b 0
 )
+if exist "%TARGET_DIR%\tcc\tcc.exe" (
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+    xcopy /E /I /Y "%TARGET_DIR%\tcc\*" "%TARGET_DIR%\bin\" >nul 2>&1
+    exit /b 0
+)
 where tcc >nul 2>&1
 if errorlevel 1 (
+    set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "tcc"
 )
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+for /f "delims=" %%T in ('where tcc 2^>nul') do (
+    for %%D in ("%%~dpT.") do xcopy /E /I /Y "%%~fD\*" "%TARGET_DIR%\bin\" >nul 2>&1
+)
+if not exist "%TARGET_DIR%\bin\tcc.exe" (
+    set "_TCC_URL=%TCC_DOWNLOAD_URL%"
+    if "!_TCC_URL!"=="" set "_TCC_URL=https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27-win64-bin.zip"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_TCC_URL!" "%TEMP%\tcc.zip"
+    if exist "%TEMP%\tcc.zip" (
+        tar -xf "%TEMP%\tcc.zip" -C "%TARGET_DIR%" 2>nul
+        if exist "%TARGET_DIR%\tcc\tcc.exe" (
+            xcopy /E /I /Y "%TARGET_DIR%\tcc\*" "%TARGET_DIR%\bin\" >nul 2>&1
+        )
+    )
+)
+set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "tcc" "default" "%EXACT_VERSION%"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "tcc" "latest" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_uninstall

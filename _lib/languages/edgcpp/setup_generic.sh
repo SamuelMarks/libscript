@@ -243,12 +243,133 @@ EOF
       fi
     elif [ -f "/etc/redhat-release" ] || [ -f "/etc/rocky-release" ]; then
       if command -v ldd >/dev/null 2>&1 && [ -x "${_target_dir}/bin/cpfe" ]; then
-        if ldd "${_target_dir}/bin/cpfe" 2>/dev/null | grep -q "not found"; then
+        if ldd "${_target_dir}/bin/cpfe" 2>&1 | grep -qE "not found|GLIBC_2\.36|GLIBCXX_3\.4\.32|LIBGCCJIT_ABI|no version information"; then
           libscript_depends libgccjit zstd zlib ncurses-libs gcc gcc-c++ glibc-devel >/dev/null 2>&1 || true
+          libscript_depends gcc-toolset-13-libgccjit >/dev/null 2>&1 || libscript_depends gcc-toolset-14-libgccjit >/dev/null 2>&1 || true
         fi
       fi
-      if [ -e "/usr/lib64/libncursesw.so.6" ] && [ ! -e "/usr/lib64/libtinfo.so.6" ]; then
-        ln -sf "/usr/lib64/libncursesw.so.6" "${_target_dir}/lib/libtinfo.so.6" 2>/dev/null || true
+      rm -f "${_target_dir}/lib/libtinfo.so.6" 2>/dev/null || true
+      for _gt_jit in /opt/rh/gcc-toolset-14/root/usr/lib64/libgccjit.so.0 /opt/rh/gcc-toolset-13/root/usr/lib64/libgccjit.so.0 /opt/rh/gcc-toolset-12/root/usr/lib64/libgccjit.so.0; do
+        if [ -e "${_gt_jit}" ]; then
+          ln -sf "${_gt_jit}" "${_target_dir}/lib/libgccjit.so.0" 2>/dev/null || true
+          break
+        fi
+      done
+      if command -v gcc >/dev/null 2>&1 && [ -x "${_target_dir}/bin/cpfe" ]; then
+        if ldd "${_target_dir}/bin/cpfe" 2>&1 | grep -qE "GLIBC_2\.36|GLIBCXX_3\.4\.32|no version information" || [ ! -f "${_target_dir}/lib/libedg_el9_compat.so" ]; then
+          _shim_c="${TMPDIR:-/tmp}/edg_el9_shim_$$.c"
+          _shim_map="${TMPDIR:-/tmp}/edg_el9_shim_$$.map"
+          cat << 'EOF' > "${_shim_c}"
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <fcntl.h>
+uint32_t __arc4random_el9(void) {
+    uint32_t v = 0;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd >= 0) {
+        if (read(fd, &v, sizeof(v)) != (ssize_t)sizeof(v)) v = (uint32_t)rand();
+        close(fd);
+    } else {
+        v = (uint32_t)rand();
+    }
+    return v;
+}
+__asm__(".symver __arc4random_el9,arc4random@@GLIBC_2.34");
+void __ios_init_el9(void) {}
+__asm__(".symver __ios_init_el9,_ZSt21ios_base_library_initv@@GLIBCXX_3.4.29");
+int __setupterm_el9(const char *t, int f, int *e) { (void)t; (void)f; if (e) *e = 0; return -1; }
+__asm__(".symver __setupterm_el9,setupterm@@NCURSES6_TINFO_5.0.19991023");
+int __tigetnum_el9(const char *c) { (void)c; return -1; }
+__asm__(".symver __tigetnum_el9,tigetnum@@NCURSES6_TINFO_5.0.19991023");
+void *__set_curterm_el9(void *t) { return t; }
+__asm__(".symver __set_curterm_el9,set_curterm@@NCURSES6_TINFO_5.0.19991023");
+int __del_curterm_el9(void *t) { (void)t; return 0; }
+__asm__(".symver __del_curterm_el9,del_curterm@@NCURSES6_TINFO_5.0.19991023");
+EOF
+          cat << 'EOF' > "${_shim_map}"
+GLIBC_2.34 {
+  global: arc4random;
+};
+GLIBCXX_3.4.29 {
+  global: _ZSt21ios_base_library_initv;
+};
+NCURSES6_TINFO_5.0.19991023 {
+  global: setupterm; tigetnum; set_curterm; del_curterm;
+};
+EOF
+          gcc -shared -fPIC -O2 "${_shim_c}" -Wl,--version-script="${_shim_map}" -o "${_target_dir}/lib/libedg_el9_compat.so" 2>/dev/null || true
+          rm -f "${_shim_c}" "${_shim_map}"
+          if command -v python3 >/dev/null 2>&1; then
+            for _eb in cpfe cpfe-cp eccp cdisp mk_errinfo edg_decode; do
+              if [ -f "${_target_dir}/bin/${_eb}" ]; then
+                python3 -c '
+import struct, sys
+path = sys.argv[1]
+replacements = {"GLIBC_2.36": "GLIBC_2.34", "GLIBCXX_3.4.32": "GLIBCXX_3.4.29"}
+with open(path, "rb") as f:
+    data = bytearray(f.read())
+if data[:4] == b"\x7fELF" and data[4] == 2:
+    e_shoff = struct.unpack_from("<Q", data, 40)[0]
+    e_shentsize = struct.unpack_from("<H", data, 58)[0]
+    e_shnum = struct.unpack_from("<H", data, 60)[0]
+    verneed_off = verneed_cnt = verneed_link = 0
+    for i in range(e_shnum):
+        sh = e_shoff + i * e_shentsize
+        if struct.unpack_from("<I", data, sh + 4)[0] == 0x6ffffffe:
+            verneed_off = struct.unpack_from("<Q", data, sh + 24)[0]
+            verneed_link = struct.unpack_from("<I", data, sh + 40)[0]
+            verneed_cnt = struct.unpack_from("<I", data, sh + 44)[0]
+    if verneed_off:
+        dynstr_off = struct.unpack_from("<Q", data, e_shoff + verneed_link * e_shentsize + 24)[0]
+        def get_str(off):
+            end = data.find(0, dynstr_off + off)
+            return bytes(data[dynstr_off + off:end]).decode("latin1")
+        def elf_hash(s):
+            h = 0
+            for ch in s.encode("latin1"):
+                h = ((h << 4) + ch) & 0xffffffff
+                g = h & 0xf0000000
+                if g: h ^= (g >> 24)
+                h &= (~g) & 0xffffffff
+            return h
+        pos = verneed_off
+        str_offsets = {}
+        for _ in range(verneed_cnt):
+            vn_version, vn_cnt, vn_file, vn_aux, vn_next = struct.unpack_from("<HHIII", data, pos)
+            apos = pos + vn_aux
+            for _ in range(vn_cnt):
+                vna_hash, vna_flags, vna_other, vna_name, vna_next = struct.unpack_from("<IHHII", data, apos)
+                str_offsets[get_str(vna_name)] = vna_name
+                if vna_next == 0: break
+                apos += vna_next
+            if vn_next == 0: break
+            pos += vn_next
+        pos = verneed_off
+        for _ in range(verneed_cnt):
+            vn_version, vn_cnt, vn_file, vn_aux, vn_next = struct.unpack_from("<HHIII", data, pos)
+            apos = pos + vn_aux
+            for _ in range(vn_cnt):
+                vna_hash, vna_flags, vna_other, vna_name, vna_next = struct.unpack_from("<IHHII", data, apos)
+                name = get_str(vna_name)
+                if name in replacements:
+                    target = replacements[name]
+                    new_name_off = str_offsets.get(target, vna_name)
+                    if target not in str_offsets:
+                        b_targ = target.encode("latin1") + b"\x00"
+                        data[dynstr_off + vna_name:dynstr_off + vna_name + len(b_targ)] = b_targ
+                    struct.pack_into("<IHHII", data, apos, elf_hash(target), vna_flags, vna_other, new_name_off, vna_next)
+                if vna_next == 0: break
+                apos += vna_next
+            if vn_next == 0: break
+            pos += vn_next
+        with open(path, "wb") as f:
+            f.write(data)
+' "${_target_dir}/bin/${_eb}" 2>/dev/null || true
+              fi
+            done
+          fi
+        fi
       fi
     fi
   fi
@@ -396,7 +517,7 @@ install_edgcpp_component() {
   TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}-${EDGCPP_FLAVOR}"
 
   if [ -x "${TARGET_DIR}/bin/edgcpp" ] && [ -x "${TARGET_DIR}/bin/cpfe" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ]; then
-    if [ ! -f "${TARGET_DIR}/edgcpp-release-metadata.json" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-gcc-be" ]; then
+    if [ ! -f "${TARGET_DIR}/edgcpp-release-metadata.json" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-gcc-be" ] || { { [ -f "/etc/redhat-release" ] || [ -f "/etc/rocky-release" ]; } && [ ! -f "${TARGET_DIR}/lib/libedg_el9_compat.so" ]; }; then
       stage_edgcpp_wrappers "${TARGET_DIR}"
     fi
     libscript_symlink_alias "edgcpp" "${EXACT_VERSION}" "$(basename "${TARGET_DIR}")"
