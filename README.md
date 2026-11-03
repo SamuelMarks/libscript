@@ -814,7 +814,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `dnf`                                 | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
 | `drupal`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `duckdb`                              | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | ❌    | -       | ✅    |
+| `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `elasticsearch`                       | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `elixir`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `emerge`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
@@ -871,7 +871,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `mix`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `mongodb`                             | `databases`        | -           | ✅          | ✅          | -       | -     | -       | ✅    |
 | `mosquitto`                           | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `msi-rs`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ❌    | ✅      | ✅    |
+| `msi-rs`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `msvc`                                | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
 | `msys2`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `mysql`                               | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |

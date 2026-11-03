@@ -195,6 +195,14 @@
       "type": "string",
       "description": "Flag (0 or 1) to simulate package manager operations without mutating the system."
     },
+    "LIBSCRIPT_DRY_RUN": {
+      "type": "string",
+      "description": "Flag (0 or 1) to simulate lifecycle and service operations without executing mutating commands."
+    },
+    "LIBSCRIPT_MOCK_SYSTEMD": {
+      "type": "string",
+      "description": "Flag (0 or 1) to mock systemd service management calls during testing."
+    },
     "LIBSCRIPT_ARIA2_EXPORT_FILE": {
       "type": "string",
       "description": "File path to export aria2-compatible download URLs instead of downloading immediately."

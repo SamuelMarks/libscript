@@ -73,7 +73,7 @@ log_failure() {
 is_excluded_path() {
   check_path="$1"
   case "$check_path" in
-    .git/*|gen/*|cache/*|tmp/*|tests_tmp/*|node_modules/*|*/.vagrant/*|.vagrant/*)
+    .git/*|*/.git/*|gen/*|*/gen/*|cache/*|*/cache/*|tmp/*|*/tmp/*|tests_tmp/*|*/tests_tmp/*|node_modules/*|*/node_modules/*|*/.vagrant/*|.vagrant/*|.venv/*|*/.venv/*|venv/*|*/venv/*|dist/*|*/dist/*|build/*|*/build/*|.angular/*|*/.angular/*|.gradle/*|*/.gradle/*)
       return 0
       ;;
     *)

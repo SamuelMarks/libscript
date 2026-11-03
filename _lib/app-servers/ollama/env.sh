@@ -34,6 +34,15 @@ unset SCRIPT_NAME || true
 
 export OLLAMA_INSTALL_METHOD="${OLLAMA_INSTALL_METHOD:-libscript_native}"
 OLLAMA_VERSION="${OLLAMA_VERSION:-latest}"
+if [ -z "${OLLAMA_MODEL_LIST:-}" ]; then
+  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${OLLAMA_MODELS:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}}"
+  export OLLAMA_MODELS
+  OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-$OLLAMA_MODELS}"
+  export OLLAMA_MODELS_DIR
+else
+  OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
+  export OLLAMA_MODELS_DIR
+fi
 libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/${OLLAMA_VERSION}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

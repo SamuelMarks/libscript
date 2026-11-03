@@ -277,7 +277,7 @@ validate_shared_node_manifests() {
 }
 
 # ## compute_app_checksum
-# Computes a deterministic digest of an application repository manifest, env files, git revision, diff content, and untracked files.
+# Computes a deterministic digest of an application repository manifest, shared root manifest, env files, git revision, diff content, and untracked files.
 compute_app_checksum() {
   _cac_dir="$1"
   [ -d "$_cac_dir" ] || { printf 'none\n'; return 0; }
@@ -295,7 +295,12 @@ compute_app_checksum() {
   else
     _cac_dirty=$(find "$_cac_dir" \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name __pycache__ -o -name '*.duckdb*' \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
   fi
-  _cac_env=$(cat "${_cac_dir}/libscript.json" "${_cac_dir}/.env" "${_cac_dir}/.env.secrets" 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  _cac_root_mf=""
+  if [ -n "${REPO_PATH:-}" ] && [ -f "${REPO_PATH}/libscript.json" ] && [ "${REPO_PATH}/libscript.json" != "${_cac_dir}/libscript.json" ]; then
+    _cac_root_mf="${REPO_PATH}/libscript.json"
+  fi
+  # shellcheck disable=SC2086
+  _cac_env=$(cat "${_cac_dir}/libscript.json" "${_cac_dir}/.env" "${_cac_dir}/.env.secrets" $_cac_root_mf 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
   printf '%s_%s_%s\n' "$_cac_git" "$_cac_dirty" "$_cac_env"
 }
 
@@ -597,8 +602,11 @@ for _app_entry in "$@"; do
     fi
   fi
   _skip_unchanged=0
+  if [ "$DRY_RUN_MODE" -eq 0 ] && { [ "$FORCE_REINSTALL" -eq 1 ] || [ "$FORCE_REBUILD" -eq 1 ]; }; then
+    "$CLI" node exec "$NODE" "$CTX" "rm -f ~/.libscript_deployments/${_ae_dest}.sha256" >/dev/null 2>&1 || true
+  fi
   if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
-    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && ${_art_cmd} && cd ~/${_ae_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ~/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >/dev/null 2>&1; then
+    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && ${_art_cmd} && cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json && \"\${_REMOTE_HOME}/libscript/_lib/orchestration/run_hooks.sh\" libscript.json health >/dev/null 2>&1" >/dev/null 2>&1; then
       _skip_unchanged=1
     fi
   fi

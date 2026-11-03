@@ -77,11 +77,30 @@ if /i "!action!"=="prepare-storage" (
         echo [STORAGE] Ensuring persistent disk mount "%%M" ^(fstype: %%N^)...
         call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
     )
+    for /f "tokens=1* delims= " %%S in ('jq -r "(.service_overrides // {}) | to_entries[]? | \"\(.key) \(.value | to_entries | map(\"\(.key)=\(.value)\") | join(\" \"))\"" "!_ps_json!" 2^>nul') do (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
+            echo [DAEMON] Applying service_overrides for "%%S" ^(%%T^)...
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "%%S" %%T
+        )
+    )
+    for %%F in ("!_ps_json!") do set "_ps_dir=%%~dpF"
+    if "!_ps_dir:~-1!"=="\" set "_ps_dir=!_ps_dir:~0,-1!"
+    if defined OLLAMA_MODEL_LIST (
+        if exist "!_ps_dir!\.env.libscript" (
+            findstr /v /b /c:"OLLAMA_MODELS=/" /c:"OLLAMA_MODELS=\" "!_ps_dir!\.env.libscript" > "!_ps_dir!\.env.libscript.tmp" 2>nul
+            move /y "!_ps_dir!\.env.libscript.tmp" "!_ps_dir!\.env.libscript" >nul 2>&1
+        )
+    )
+    set "_ol_ovr_dir="
+    for /f "delims=" %%O in ('jq -r ".service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // empty" "!_ps_json!" 2^>nul') do set "_ol_ovr_dir=%%O"
     set "_has_ol=0"
-    for /f "delims=" %%O in ('jq -r "if .deps.ollama != null or .dependencies.ollama != null then \"1\" else \"0\" end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
-    if not "!OLLAMA_MODELS!"=="" set "_has_ol=1"
+    for /f "delims=" %%O in ('jq -r "if (.deps.ollama != null) or (.dependencies.ollama != null) or ([.dependencies.runtime[]? | select(.name == \"ollama\")] | length > 0) then \"1\" else \"0\" end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
+    if not "!_ol_ovr_dir!"=="" set "_has_ol=1"
+    if not "!OLLAMA_MODELS_DIR!"=="" set "_has_ol=1"
     if "!_has_ol!"=="1" (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" (
+            if not "!_ol_ovr_dir!"=="" set "OLLAMA_MODELS_DIR=!_ol_ovr_dir!"
             echo [DAEMON] Configuring ollama model storage and restarting/reloading daemon if needed...
             set "STACK="
             call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" configure
@@ -387,5 +406,17 @@ if errorlevel 1 exit /b 1
 if "!skip_hooks!"=="0" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "health"
     if errorlevel 1 exit /b 1
+    set "_cmh_models=!OLLAMA_MODEL_LIST!"
+    if "!_cmh_models!"=="" set "_cmh_models=!OLLAMA_DEFAULT_MODEL!"
+    if not "!_cmh_models!"=="" (
+        where ollama >nul 2>&1
+        if not errorlevel 1 (
+            set "_cmh_models=!_cmh_models:,= !"
+            for %%M in (!_cmh_models!) do (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" ensure-models "%%M" >nul 2>&1
+                if errorlevel 1 exit /b 1
+            )
+        )
+    )
 )
 exit /b 0

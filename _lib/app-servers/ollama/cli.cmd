@@ -49,4 +49,20 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=ollama"
+if /i "%~1"=="ensure-models" (
+    call "%~dp0service.cmd" %*
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"=="prune-models" (
+    call "%~dp0service.cmd" %*
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"=="configure" (
+    call "%~dp0service.cmd" %*
+    exit /b !ERRORLEVEL!
+)
+if /i "%~1"=="override-env" (
+    call "%~dp0service.cmd" %*
+    exit /b !ERRORLEVEL!
+)
 call "%~dp0\..\..\_common\component_core.cmd" %*

@@ -69,8 +69,9 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes the primary orchestration workflow for this script.
+:: Executes the primary orchestration workflow for this script, excluding .venv, venv, dist, build, .angular, and .gradle paths.
 :main
+set "ORIG_PWD=%CD%"
 set "ROOT_DIR=%~dp0..\.."
 
 where powershell >nul 2>&1

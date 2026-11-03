@@ -226,7 +226,14 @@ SHIM
     libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
     libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
     ;;
-  start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
+  start|stop|restart|status|health|logs|up|down|configure|override-env|ensure-models|prune-models)
+    if [ -x "${SCRIPT_DIR}/service.sh" ]; then
+      "${SCRIPT_DIR}/service.sh" "$ACTION" "$@"
+      exit $?
+    fi
+    libscript_handle_generic_action "ollama" "$ACTION" "$VERSION" "${OLLAMA_INSTALL_METHOD}" "" "" "" "$@"
+    ;;
+  install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "ollama" "$ACTION" "$VERSION" "${OLLAMA_INSTALL_METHOD}" "" "" "" "$@"
     ;;
 esac

@@ -255,7 +255,16 @@ collect_service_env_vars() {
   if [ -n "$_env_var_raw" ]; then
     printf '%s\n' "$_env_var_raw" | while IFS= read -r _kv_item; do
       [ -n "$_kv_item" ] || continue
-      expand_manifest_vars "$_kv_item"
+      if [ "${_kv_item%%=*}" = "OLLAMA_MODELS" ] && [ -n "${OLLAMA_MODEL_LIST:-}" ]; then
+        (
+          case "${OLLAMA_MODELS:-}" in
+            /*|[A-Za-z]:\\*|[A-Za-z]:/*) unset OLLAMA_MODELS || true ;;
+          esac
+          expand_manifest_vars "$_kv_item"
+        )
+      else
+        expand_manifest_vars "$_kv_item"
+      fi
     done
   fi
 }

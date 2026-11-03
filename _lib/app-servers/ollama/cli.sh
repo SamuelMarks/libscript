@@ -31,6 +31,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 export PACKAGE_NAME='ollama'
+case "${1:-}" in
+  ensure-models|prune-models|configure|override-env)
+    exec "${SCRIPT_DIR}/service.sh" "$@"
+    ;;
+esac
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

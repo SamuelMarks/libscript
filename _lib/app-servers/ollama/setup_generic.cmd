@@ -81,6 +81,10 @@ if "%ACTION%"=="health" goto :action_service
 if "%ACTION%"=="logs" goto :action_service
 if "%ACTION%"=="up" goto :action_service
 if "%ACTION%"=="down" goto :action_service
+if "%ACTION%"=="configure" goto :action_service
+if "%ACTION%"=="override-env" goto :action_service
+if "%ACTION%"=="ensure-models" goto :action_service
+if "%ACTION%"=="prune-models" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
@@ -204,8 +208,13 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Routes service daemon control actions (start, stop, restart, status) to the common handler.
+:: Routes service daemon control actions (start, stop, restart, status, configure, ensure-models, prune-models) to service.cmd.
 :action_service
+if exist "%SCRIPT_DIR%\service.cmd" (
+    set "STACK="
+    call "%SCRIPT_DIR%\service.cmd" "%ACTION%" %*
+    exit /b !errorlevel!
+)
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service

@@ -310,9 +310,28 @@ libscript_hydrate_manifest_env() {
   [ ! -f "$_hm_json" ] && return 0
   _hm_dir=$(cd -- "$(dirname -- "$_hm_json")" && pwd)
 
+  if [ -f "${_hm_dir}/.env.libscript" ] && { [ -n "${OLLAMA_MODEL_LIST:-}" ] || grep -q '^OLLAMA_MODEL_LIST=' "${_hm_dir}/.env" "${_hm_dir}/.env.secrets" "${_hm_dir}/.env.libscript" 2>/dev/null || { command -v jq >/dev/null 2>&1 && jq -e '.. | objects | has("OLLAMA_MODEL_LIST")' "$_hm_json" >/dev/null 2>&1; }; }; then
+    if grep -qE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_hm_dir}/.env.libscript" 2>/dev/null; then
+      _hm_tmp_el=$(mktemp "${TMPDIR:-/tmp}/libscript_el.XXXXXX" 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_el.$$")
+      grep -vE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_hm_dir}/.env.libscript" > "$_hm_tmp_el" 2>/dev/null || true
+      cat "$_hm_tmp_el" > "${_hm_dir}/.env.libscript"
+      rm -f "$_hm_tmp_el"
+    fi
+  fi
+
   for _hm_ef in "$_hm_dir/.env" "$_hm_dir/.env.secrets" "$_hm_dir/.env.libscript"; do
     libscript_source_env_preserve_existing "$_hm_ef"
   done
+
+  if [ -n "${OLLAMA_MODEL_LIST:-}" ]; then
+    case "${OLLAMA_MODELS:-}" in
+      /*|[A-Za-z]:\\*|[A-Za-z]:/*)
+        OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-$OLLAMA_MODELS}"
+        export OLLAMA_MODELS_DIR
+        unset OLLAMA_MODELS || true
+        ;;
+    esac
+  fi
 
   if [ -d "${_hm_dir}/.venv" ]; then
     [ -z "${PYTHON_VENV:-}" ] && export PYTHON_VENV="${_hm_dir}/.venv"

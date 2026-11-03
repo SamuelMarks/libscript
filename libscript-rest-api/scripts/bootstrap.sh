@@ -132,7 +132,7 @@ install_deps_macos() {
 # Installs required C++ build toolchain and libraries on Windows via LibScript components.
 install_deps_windows() {
   log_info 'Detected Windows environment in shell. Suggesting use of bootstrap.cmd.'
-  log_error "Please run scripts\bootstrap.cmd from a Command Prompt or PowerShell."
+  log_error 'Please run scripts\bootstrap.cmd from a Command Prompt or PowerShell.'
   exit 1
 }
 

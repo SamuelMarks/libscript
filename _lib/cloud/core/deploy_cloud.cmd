@@ -535,8 +535,15 @@ if exist "!_SP_REPO!\libscript.json" (
     )
 )
 set "_SKIP_UNCHANGED=0"
+if "!DRY_RUN_MODE!"=="0" (
+    if "!FORCE_REINSTALL!"=="1" (
+        call "!CLI!" node exec "!NODE!" "!CTX!" "rm -f ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
+    ) else if "!FORCE_REBUILD!"=="1" (
+        call "!CLI!" node exec "!NODE!" "!CTX!" "rm -f ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
+    )
+)
 if "!DRY_RUN_MODE!"=="0" if "!FORCE_REINSTALL!"=="0" if "!FORCE_REBUILD!"=="0" (
-    call "!CLI!" node exec "!NODE!" "!CTX!" "[ -f ~/.libscript_deployments/!_SP_DEST!.sha256 ] && grep -qx '!_APP_HASH!' ~/.libscript_deployments/!_SP_DEST!.sha256 2>/dev/null && !_ART_CMD! && cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json >/dev/null 2>&1" >nul 2>&1
+    call "!CLI!" node exec "!NODE!" "!CTX!" "[ -f ~/.libscript_deployments/!_SP_DEST!.sha256 ] && grep -qx '!_APP_HASH!' ~/.libscript_deployments/!_SP_DEST!.sha256 2>/dev/null && !_ART_CMD! && cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json && $HOME/libscript/_lib/orchestration/run_hooks.sh libscript.json health >/dev/null 2>&1" >nul 2>&1
     if not errorlevel 1 set "_SKIP_UNCHANGED=1"
 )
 if "!_SKIP_UNCHANGED!"=="1" (
@@ -637,7 +644,7 @@ if not "!_CAC_GIT!"=="nogit" (
         echo %%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
     )
 )
-for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets") do (
+for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets" "!REPO_PATH!\libscript.json") do (
     if exist "%%~fE" type "%%~fE" >> "!_CAC_TMP!" 2>nul
 )
 set "_CAC_DIRTY=0"

@@ -351,43 +351,43 @@ function Update-SupportedComponents {
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.idempotent.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.idempotent.success")) { $idempotent = $true }
 
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.success")) { $apkStatus = $symCheck }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.failure")) { $apkStatus = $symCross }
             elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.alpine.skipped") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.skipped")) { $apkStatus = "-" }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.alpine.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.apk.failure")) { $apkStatus = $symCross }
 
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.success")) { $debStatus = $symCheck }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.failure")) { $debStatus = $symCross }
             elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.debian.skipped") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.skipped")) { $debStatus = "-" }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.debian.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.deb.failure")) { $debStatus = $symCross }
 
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.success")) { $rpmStatus = $symCheck }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.rocky*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.failure")) { $rpmStatus = $symCross }
             elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.rocky.skipped") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky.skipped")) { $rpmStatus = "-" }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.linux.rocky*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.linux.rocky*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rocky.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.rpm.failure")) { $rpmStatus = $symCross }
 
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.success")) { $winStatus = $symCheck }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.windows*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.failure")) { $winStatus = $symCross }
             elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.windows*.skipped") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.skipped")) { $winStatus = "-" }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.windows*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.windows*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.win*.failure")) { $winStatus = $symCross }
 
             if ((Test-AnyFilePattern $testsTmpDir "$markerComp.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.success")) { $sunosStatus = $symCheck }
-            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.sunos*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.failure")) { $sunosStatus = $symCross }
             elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.sunos*.skipped") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.skipped")) { $sunosStatus = "-" }
+            elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.sunos*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.sunos*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.illumos*.failure")) { $sunosStatus = $symCross }
 
             if ($markerComp -ne $shortComp) {
                 if (Test-AnyFilePattern $testsTmpDir "$markerComp.freebsd*.success") { $freebsdStatus = $symCheck }
-                elseif (Test-AnyFilePattern $testsTmpDir "$markerComp.freebsd*.failure") { $freebsdStatus = $symCross }
                 elseif (Test-AnyFilePattern $testsTmpDir "$markerComp.freebsd*.skipped") { $freebsdStatus = "-" }
+                elseif (Test-AnyFilePattern $testsTmpDir "$markerComp.freebsd*.failure") { $freebsdStatus = $symCross }
             } else {
                 if ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.success")) { $freebsdStatus = $symCheck }
-                elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.failure")) { $freebsdStatus = $symCross }
                 elseif (Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.skipped") { $freebsdStatus = "-" }
+                elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.freebsd*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.bsd*.failure")) { $freebsdStatus = $symCross }
             }
 
             if ($markerComp -ne $shortComp) {
                 if ((Test-AnyFilePattern $testsTmpDir "$markerComp.darwin*.success") -or (Test-AnyFilePattern $testsTmpDir "$markerComp.macos*.success")) { $macosStatus = $symCheck }
-                elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.darwin*.failure") -or (Test-AnyFilePattern $testsTmpDir "$markerComp.macos*.failure")) { $macosStatus = $symCross }
                 elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.darwin*.skipped") -or (Test-AnyFilePattern $testsTmpDir "$markerComp.darwin*.unsupported") -or (Test-AnyFilePattern $testsTmpDir "$markerComp.macos*.skipped")) { $macosStatus = "-" }
+                elseif ((Test-AnyFilePattern $testsTmpDir "$markerComp.darwin*.failure") -or (Test-AnyFilePattern $testsTmpDir "$markerComp.macos*.failure")) { $macosStatus = $symCross }
             } else {
                 if ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.success") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.success")) { $macosStatus = $symCheck }
-                elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.failure")) { $macosStatus = $symCross }
                 elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.skipped") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.unsupported") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.skipped")) { $macosStatus = "-" }
+                elseif ((Test-AnyFilePattern $testsTmpDir "$shortComp.darwin*.failure") -or (Test-AnyFilePattern $testsTmpDir "$shortComp.macos*.failure")) { $macosStatus = $symCross }
             }
         }
 

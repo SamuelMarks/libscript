@@ -83,12 +83,25 @@ elif [ "$CMD" = "prepare-storage" ]; then
         libscript_service_override_env "$_ovr_svc" $_ovr_pairs || true
       done
     fi
+    _ps_dir=$(cd -- "$(dirname -- "$json_file")" && pwd)
+    if [ -f "${_ps_dir}/.env.libscript" ] && { [ -n "${OLLAMA_MODEL_LIST:-}" ] || grep -q '^OLLAMA_MODEL_LIST=' "${_ps_dir}/.env" "${_ps_dir}/.env.secrets" "${_ps_dir}/.env.libscript" 2>/dev/null || jq -e '.. | objects | has("OLLAMA_MODEL_LIST")' "$json_file" >/dev/null 2>&1; }; then
+      if grep -qE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_ps_dir}/.env.libscript" 2>/dev/null; then
+        _tmp_ps_env=$(mktemp "${TMPDIR:-/tmp}/libscript_ps_env.XXXXXX")
+        grep -vE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_ps_dir}/.env.libscript" > "$_tmp_ps_env" 2>/dev/null || true
+        cat "$_tmp_ps_env" > "${_ps_dir}/.env.libscript"
+        rm -f "$_tmp_ps_env"
+      fi
+    fi
+    _ol_ovr_dir=$(jq -r '.service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // empty' "$json_file" 2>/dev/null || true)
+    if [ -n "$_ol_ovr_dir" ] && [ "$_ol_ovr_dir" != "null" ] && type libscript_expand_manifest_vars >/dev/null 2>&1; then
+      _ol_ovr_dir=$(libscript_expand_manifest_vars "$_ol_ovr_dir")
+    fi
     _has_ollama=$(jq -r 'if (.deps.ollama != null) or (.dependencies.ollama != null) or ([.dependencies.runtime[]? | select(.name == "ollama")] | length > 0) then "1" else "0" end' "$json_file" 2>/dev/null || printf '0')
-    if [ "$_has_ollama" = "1" ] || [ -n "${OLLAMA_MODELS:-}" ]; then
-      _ol_models="${OLLAMA_MODELS:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
+    if [ "$_has_ollama" = "1" ] || [ -n "${_ol_ovr_dir:-}" ] || [ -n "${OLLAMA_MODELS_DIR:-}" ]; then
+      _ol_models="${_ol_ovr_dir:-${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}}"
       if [ -x "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" ]; then
         printf '[DAEMON] Configuring ollama model storage at "%s" and restarting/reloading daemon if needed...\n' "$_ol_models"
-        OLLAMA_MODELS="$_ol_models" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" configure || true
+        OLLAMA_MODELS_DIR="$_ol_models" OLLAMA_MODELS="$_ol_models" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" configure || true
       fi
     fi
   fi
@@ -222,6 +235,19 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     if [ "$skip_hooks" -eq 0 ]; then
       if ! "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$_cmh_json" "health"; then
         return 1
+      fi
+      _cmh_models="${OLLAMA_MODEL_LIST:-${OLLAMA_DEFAULT_MODEL:-}}"
+      if [ -n "$_cmh_models" ] && command -v ollama >/dev/null 2>&1; then
+        _cmh_installed=$(ollama list 2>/dev/null | awk 'NR>1 {print $1}' || true)
+        for _cmh_m in $(printf '%s\n' "$_cmh_models" | tr ',' ' '); do
+          [ -n "$_cmh_m" ] || continue
+          _cmh_alt="$_cmh_m"
+          case "$_cmh_m" in *:*) ;; *) _cmh_alt="${_cmh_m}:latest" ;; esac
+          if ! printf '%s\n' "$_cmh_installed" | grep -Fxq "$_cmh_m" && ! printf '%s\n' "$_cmh_installed" | grep -Fxq "$_cmh_alt"; then
+            printf '[ERROR] Health check failed: configured Ollama model "%s" is not present in ollama list.\n' "$_cmh_m" >&2
+            return 1
+          fi
+        done
       fi
     fi
     return 0

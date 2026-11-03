@@ -2141,6 +2141,7 @@
     "uksched",
     "Ulmo",
     "ulmo",
+    "unconfigured",
     "unhydrated",
     "UNICON",
     "Unikernel",
@@ -2509,7 +2510,9 @@
     "etok",
     "autojump",
     "ajeetdsouza",
-    "sharkdp"
+    "sharkdp",
+    "ipsw",
+    "plists"
   ],
   "ignorePaths": [
     "node_modules",
@@ -2523,7 +2526,10 @@
     ".vagrant/**",
     "_lib/orchestration/kubernetes-thw/kubernetes-the-hard-way/**",
     "tmp/**",
-    ".tmp/**"
+    ".tmp/**",
+    "TODO_PLAN.md",
+    "build/**",
+    "installed/**"
   ],
   "useGitignore": true
 }

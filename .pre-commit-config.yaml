@@ -1,0 +1,31 @@
+repos:
+  - repo: local
+    hooks:
+      - id: libscript-audit-standards
+        name: LibScript Engineering Standards Audit
+        entry: |
+          /bin/sh -c 'echo \" <<'\''BATCH_SCRIPT'\'' >/dev/null \">NUL
+          call devtools\audit\audit_standards.cmd --staged
+          exit /b %ERRORLEVEL%
+          BATCH_SCRIPT
+          if [ "${OS:-}" = "Windows_NT" ]; then
+            cmd.exe /c "devtools\audit\audit_standards.cmd --staged"
+          else
+            ./devtools/audit/audit_standards.sh --staged
+          fi'
+        language: system
+        pass_filenames: false
+      - id: libscript-doc-coverage
+        name: LibScript 100% Documentation Coverage Audit
+        entry: |
+          /bin/sh -c 'echo \" <<'\''BATCH_SCRIPT'\'' >/dev/null \">NUL
+          call devtools\audit\doc_coverage.cmd
+          exit /b %ERRORLEVEL%
+          BATCH_SCRIPT
+          if [ "${OS:-}" = "Windows_NT" ]; then
+            cmd.exe /c "devtools\audit\doc_coverage.cmd"
+          else
+            ./devtools/audit/doc_coverage.sh
+          fi'
+        language: system
+        pass_filenames: false

@@ -34,6 +34,7 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
     exit 0
 }
 
+$origPwd = (Get-Location).Path
 $rootDir = if ($env:ROOT_DIR) { Resolve-Path $env:ROOT_DIR } else { Resolve-Path (Join-Path $PSScriptRoot '..\..') }
 Set-Location $rootDir
 
@@ -56,7 +57,7 @@ function Log-Violation {
 function Test-ExcludedPath {
     param([string]$Path)
     $normalized = $Path.Replace([char]92, [char]47)
-    if ($normalized -match '^(\.git|gen|cache|tmp|tests_tmp|node_modules)/' -or $normalized -match '(/|^)\.vagrant/') {
+    if ($normalized -match '(^|/)(\.git|gen|cache|tmp|tests_tmp|node_modules|\.vagrant|\.venv|venv|dist|build|\.angular|\.gradle)/') {
         return $true
     }
     return $false
@@ -436,8 +437,13 @@ if (-not $targetFiles) {
 }
 
 foreach ($target in $targetFiles) {
-    if ($target -and (Test-Path $target)) {
-        Audit-File -FilePath $target
+    if ($target) {
+        $candOrig = Join-Path $origPwd $target
+        if (Test-Path $candOrig) {
+            Audit-File -FilePath $candOrig
+        } elseif (Test-Path $target) {
+            Audit-File -FilePath $target
+        }
     }
 }
 

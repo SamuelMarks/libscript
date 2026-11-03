@@ -26,6 +26,26 @@
     "OLLAMA_VERSION": {
       "type": "string",
       "description": "Specific version of ollama to install (e.g., latest, lts, or exact version)."
+    },
+    "OLLAMA_MODELS_DIR": {
+      "type": "string",
+      "description": "Unambiguous filesystem directory path for Ollama daemon model storage, avoiding collision with application-level OLLAMA_MODELS."
+    },
+    "OLLAMA_DEFAULT_MODEL": {
+      "type": "string",
+      "description": "Default Ollama model tag to pull and verify when no explicit model list is provided."
+    },
+    "OLLAMA_HOST": {
+      "type": "string",
+      "description": "Host and port URL where the Ollama HTTP API listens (default: http://127.0.0.1:11434)."
+    },
+    "OLLAMA_MODEL_LIST": {
+      "type": "string",
+      "description": "Comma- or space-separated list of Ollama model tags to ensure are pulled and registered."
+    },
+    "OLLAMA_READY_TIMEOUT": {
+      "type": "string",
+      "description": "Maximum time in seconds to poll the Ollama HTTP API for readiness after service start or restart."
     }
   }
 }

@@ -82,7 +82,7 @@ MIT
     }
 
     # Verification 2b: topologies/compS from topologies directory has debian success mark
-    if ($updatedReadme -notmatch "\|\s*``topologies/compS``\s*\|\s*``topologies``\s*\|\s*$symCheck\s*\|\s*$symCheck\s*\|\s*$symCheck\s*\|") {
+    if ($updatedReadme -notmatch "\|\s*``topologies/compS``\s*\|\s*``topologies``\s*\|\s*$symQuest\s*\|\s*$symCheck\s*\|\s*$symQuest\s*\|") {
         throw "Error: topologies/compS component not discovered or status not updated in README.md"
     }
 

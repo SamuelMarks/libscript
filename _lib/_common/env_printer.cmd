@@ -135,6 +135,7 @@ endlocal & (
     set "VALKEY_URL=%VALKEY_URL%"
     set "DATA_MOUNT_DIR=%DATA_MOUNT_DIR%"
     set "DATA_DISK_MOUNT=%DATA_DISK_MOUNT%"
+    set "OLLAMA_MODELS_DIR=%OLLAMA_MODELS_DIR%"
     set "OLLAMA_MODELS=%OLLAMA_MODELS%"
     set "REMOTE_USER=%REMOTE_USER%"
     set "REMOTE_GROUP=%REMOTE_GROUP%"
@@ -264,7 +265,22 @@ for /f "delims=" %%m in ('jq -r "(.infrastructure.storage.disks // .storage.disk
     )
 )
 if not "!DATA_MOUNT_DIR!"=="" (
-    if "!OLLAMA_MODELS!"=="" set "OLLAMA_MODELS=!DATA_MOUNT_DIR!/ollama_models"
+    if "!OLLAMA_MODELS_DIR!"=="" set "OLLAMA_MODELS_DIR=!DATA_MOUNT_DIR!/ollama_models"
+)
+if defined OLLAMA_MODEL_LIST (
+    if exist "!_HM_DIR!\.env.libscript" (
+        findstr /v /b /c:"OLLAMA_MODELS=/" /c:"OLLAMA_MODELS=\" "!_HM_DIR!\.env.libscript" > "!_HM_DIR!\.env.libscript.tmp" 2>nul
+        move /y "!_HM_DIR!\.env.libscript.tmp" "!_HM_DIR!\.env.libscript" >nul 2>&1
+    )
+    if defined OLLAMA_MODELS (
+        if "!OLLAMA_MODELS:~0,1!"=="/" (
+            if "!OLLAMA_MODELS_DIR!"=="" set "OLLAMA_MODELS_DIR=!OLLAMA_MODELS!"
+            set "OLLAMA_MODELS="
+        ) else if "!OLLAMA_MODELS:~1,1!"==":" (
+            if "!OLLAMA_MODELS_DIR!"=="" set "OLLAMA_MODELS_DIR=!OLLAMA_MODELS!"
+            set "OLLAMA_MODELS="
+        )
+    )
 )
 exit /b 0
 

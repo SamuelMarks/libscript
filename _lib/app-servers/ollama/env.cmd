@@ -52,6 +52,23 @@ goto :find_root
 if "%OLLAMA_INSTALL_METHOD%"=="" set "OLLAMA_INSTALL_METHOD=libscript_native"
 if "%OLLAMA_VERSION%"=="" set "OLLAMA_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "_OL_DEF_MOUNT=%DATA_DISK_MOUNT%"
+if "!_OL_DEF_MOUNT!"=="" set "_OL_DEF_MOUNT=%DATA_MOUNT_DIR%"
+if "!_OL_DEF_MOUNT!"=="" set "_OL_DEF_MOUNT=/mnt/data"
+if "%OLLAMA_MODELS_DIR%"=="" (
+    if "%OLLAMA_MODEL_LIST%"=="" (
+        if not "%OLLAMA_MODELS%"=="" (
+            set "OLLAMA_MODELS_DIR=%OLLAMA_MODELS%"
+        ) else (
+            set "OLLAMA_MODELS_DIR=!_OL_DEF_MOUNT!/ollama_models"
+        )
+    ) else (
+        set "OLLAMA_MODELS_DIR=!_OL_DEF_MOUNT!/ollama_models"
+    )
+)
+if "%OLLAMA_MODEL_LIST%"=="" (
+    if "%OLLAMA_MODELS%"=="" set "OLLAMA_MODELS=%OLLAMA_MODELS_DIR%"
+)
 set "_CAND_P=%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
@@ -62,6 +79,8 @@ endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "OLLAMA_INSTALL_METHOD=%OLLAMA_INSTALL_METHOD%"
     set "OLLAMA_VERSION=%OLLAMA_VERSION%"
+    set "OLLAMA_MODELS_DIR=%OLLAMA_MODELS_DIR%"
+    set "OLLAMA_MODELS=%OLLAMA_MODELS%"
     set "PATH=%PATH%"
 )
 exit /b 0
