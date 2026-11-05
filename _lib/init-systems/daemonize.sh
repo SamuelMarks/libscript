@@ -195,7 +195,7 @@ if [ -z "$SERVICES" ]; then
   exit 0
 fi
 
-OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+OS_NAME="${UNAME_LOWER:-linux}"
 
 # ## resolve_workdir
 # Resolves a relative or absolute service working directory against the manifest directory.

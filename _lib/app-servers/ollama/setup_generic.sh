@@ -177,7 +177,7 @@ case "$ACTION" in
           log_info "No download URL provided for ollama ${VERSION}. Attempting fallback to Github..."
           libscript_depends 'curl' 'tar'
           TEMP_FILE=$(mktemp)
-          OS_ARCH=$(uname -m)
+          OS_ARCH="${ARCH:-}"
           _actual_version="${EXACT_VERSION}"
           if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
             _actual_version=$(libscript_resolve_github_latest "ollama/ollama" "v0.5.7")

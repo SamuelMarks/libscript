@@ -82,10 +82,15 @@ echo set -ex
 echo if ! command -v docker ^> /dev/null 2^>^&1; then
 echo   ~/_lib/orchestration/docker/setup.sh
 echo fi
+echo if [ -f ~/_lib/_common/priv.sh ]; then
+echo   SCRIPT_NAME=~/_lib/_common/priv.sh . ~/_lib/_common/priv.sh
+echo else
+echo   priv^(^) { "$@"; }
+echo fi
 echo MODEL_NAME="%MODEL_NAME%"
 echo IMAGE="us-docker.pkg.dev/cloud-tpu-images/inference/vllm-tpu:latest"
-echo sudo docker pull $IMAGE
-echo sudo docker run -d --rm --name vllm-server --privileged --network host -v /dev:/dev $IMAGE --model "$MODEL_NAME" --tensor-parallel-size 1
+echo priv docker pull $IMAGE
+echo priv docker run -d --rm --name vllm-server --privileged --network host -v /dev:/dev $IMAGE --model "$MODEL_NAME" --tensor-parallel-size 1
 ) > "%SCRIPT_FILE%"
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" ssh "%TPU_NAME%" "sh -s" < "%SCRIPT_FILE%"

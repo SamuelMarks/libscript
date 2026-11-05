@@ -40,6 +40,31 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
   [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
   [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh" ]; then
+  _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+fi
+
+# ## aws_resolve_vm_ip
+# Resolves the public IP address of an AWS EC2 node using local TTL cache or AWS CLI.
+aws_resolve_vm_ip() {
+  _arvi_node="$1"
+  if _arvi_cached=$(libscript_get_cached_vm_ip 'aws' "${AWS_DEFAULT_REGION:-default}" "$_arvi_node"); then
+    printf '%s\n' "$_arvi_cached"
+    return 0
+  fi
+  _arvi_ip=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$_arvi_node" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2>/dev/null || true)
+  if [ -n "$_arvi_ip" ] && [ "$_arvi_ip" != "None" ]; then
+    libscript_set_cached_vm_ip 'aws' "${AWS_DEFAULT_REGION:-default}" "$_arvi_node" "$_arvi_ip"
+  fi
+  printf '%s\n' "$_arvi_ip"
+}
 
 TAG_KEY="${LIBSCRIPT_TAG_KEY:-ManagedBy}"
 TAG_VAL="${LIBSCRIPT_TAG_VALUE:-LibScript}"
@@ -455,6 +480,7 @@ aws_node() {
       NAME=$1
       if [ -z "$NAME" ]; then printf '%s\n' "Usage: node delete <name>"; exit 1; fi
       libscript_verify_managed aws node "$NAME" || exit 1
+      libscript_invalidate_cached_vm_ip 'aws' "${AWS_DEFAULT_REGION:-default}" "$NAME"
       INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running,pending,stopped" --query "Reservations[0].Instances[0].InstanceId" --output text 2>/dev/null || true)
       if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
         printf '%s\n' "Node '$NAME' already deleted or not found." >&2; exit 0
@@ -464,7 +490,7 @@ aws_node() {
       ;;
     ip)
       NAME=$1
-      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2>/dev/null || printf '203.0.113.10')
+      IP=$(aws_resolve_vm_ip "$NAME")
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then IP="203.0.113.10"; fi
       printf '%s\n' "$IP"
       ;;
@@ -474,7 +500,7 @@ aws_node() {
         printf '%s\n' "[DRY_RUN] Waiting for SSH on $NAME"
         exit 0
       fi
-      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text 2>/dev/null || true)
+      IP=$(aws_resolve_vm_ip "$NAME")
       if [ -n "$IP" ] && [ "$IP" != "None" ]; then
         _w_el=0
         while [ "$_w_el" -lt 120 ]; do
@@ -495,9 +521,11 @@ aws_node() {
         printf '%s\n' "[DRY_RUN] Executing on $NAME: $CMD"
         exit 0
       fi
-      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      IP=$(aws_resolve_vm_ip "$NAME")
       printf '%s\n' "Executing on $NAME ($IP)..."
-      ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-ubuntu}@$IP" "$CMD"
+      _aws_ssh_opts=$(libscript_ssh_mux_opts)
+      # shellcheck disable=SC2029,SC2086
+      ssh $_aws_ssh_opts "${ADMIN_USER:-ubuntu}@$IP" "$CMD"
       ;;
     sync)
       NAME=$1
@@ -505,14 +533,8 @@ aws_node() {
         printf '%s\n' "[DRY_RUN] Syncing LibScript to $NAME"
         exit 0
       fi
-      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
-      if command -v rsync >/dev/null 2>&1; then
-        rsync -avz --delete --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no" "$LIBSCRIPT_ROOT_DIR/" "${ADMIN_USER:-ubuntu}@$IP:~/libscript/"
-      elif command -v tar >/dev/null 2>&1; then
-        tar -czf - -C "$LIBSCRIPT_ROOT_DIR" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-ubuntu}@$IP" "mkdir -p ~/libscript && find ~/libscript -mindepth 1 \( -name .git -o -name cache -o -name build -o -name target -o -name logs -o -name tmp -o -name node_modules -o -name .venv \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C ~/libscript && find ~/libscript -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
-      else
-        scp -o StrictHostKeyChecking=no -r "$LIBSCRIPT_ROOT_DIR" "${ADMIN_USER:-ubuntu}@$IP:~/libscript"
-      fi
+      IP=$(aws_resolve_vm_ip "$NAME")
+      libscript_sync_runtime_to_remote "${ADMIN_USER:-ubuntu}@$IP" "libscript"
       ;;
     deploy|upload|scp)
       NAME=$1; CTX=$2; SRC=$3; DST=$4
@@ -520,18 +542,8 @@ aws_node() {
         printf '%s\n' "[DRY_RUN] Uploading $SRC to $NAME ($CTX) -> $DST"
         exit 0
       fi
-      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
-      _src_sync="$SRC"
-      if [ -d "$SRC" ]; then
-        _src_sync="${SRC%/}/"
-      fi
-      if command -v rsync >/dev/null 2>&1; then
-        rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$_src_sync" "${ADMIN_USER:-ubuntu}@$IP:${DST%/}/"
-      elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-        tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-ubuntu}@$IP" "mkdir -p \"$DST\" && find \"$DST\" -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \"$DST\" && find \"$DST\" -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
-      else
-        scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-ubuntu}@$IP:$DST"
-      fi
+      IP=$(aws_resolve_vm_ip "$NAME")
+      libscript_scp_to_remote "$SRC" "${ADMIN_USER:-ubuntu}@$IP" "$DST"
       ;;
     download|scp-from)
       NAME=$1; CTX=$2; SRC=$3; DST=$4
@@ -539,9 +551,8 @@ aws_node() {
         printf '%s\n' "[DRY_RUN] Downloading $NAME ($CTX):$SRC -> $DST"
         exit 0
       fi
-      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
-      mkdir -p "$(dirname "$DST")"
-      rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${ADMIN_USER:-ubuntu}@$IP:$SRC" "$DST" || scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-ubuntu}@$IP:$SRC" "$DST"
+      IP=$(aws_resolve_vm_ip "$NAME")
+      libscript_scp_from_remote "${ADMIN_USER:-ubuntu}@$IP" "$SRC" "$DST"
       ;;
     list)
       aws ec2 describe-instances --query "Reservations[*].Instances[*].{ID:InstanceId, Name:Tags[?Key=='Name']|[0].Value, State:State.Name, Tags:Tags}" --output table

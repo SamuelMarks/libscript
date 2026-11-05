@@ -331,7 +331,7 @@ set "_LSR_PORTS=80"
 for /f "delims=" %%D in ('jq -r ".domain // \"_\"" "!NETCTL_STATE_FILE!" 2^>nul') do set "_LSR_DOM=%%D"
 for /f "delims=" %%P in ('jq -r "(.listen // [\"80\"]) | join(\", \")" "!NETCTL_STATE_FILE!" 2^>nul') do set "_LSR_PORTS=%%P"
 echo [INFO] [ROUTES] Configuring !APPLY_FORMAT! ingress for domain '!_LSR_DOM!' ^(listen: !_LSR_PORTS!^)... 1>&2
-for /f "delims=" %%R in ('jq -r --arg dom "!_LSR_DOM!" ".routes // {} | to_entries[]? | \"[INFO] [ROUTE] [\((.value.type // \"static\") | ascii_upcase)] \($dom)\(.key) -> \(.value.target // .value.pattern // \"\")\"" "!NETCTL_STATE_FILE!" 2^>nul') do (
+for /f "delims=" %%R in ('jq -r --arg dom "!_LSR_DOM!" --arg lb "[" --arg rb "]" --arg arr " -> " ".routes // {} | to_entries[]? | ($lb + \"INFO\" + $rb + \" \" + $lb + \"ROUTE\" + $rb + \" \" + $lb + ((.value.type // \"static\") | ascii_upcase) + $rb + \" \" + $dom + .key + $arr + (.value.target // .value.pattern // \"\"))" "!NETCTL_STATE_FILE!" 2^>nul') do (
     echo %%R 1>&2
 )
 exit /b 0

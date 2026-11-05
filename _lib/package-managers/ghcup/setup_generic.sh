@@ -99,7 +99,7 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing ghcup ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if [ "$(uname -s)" = "FreeBSD" ]; then
+        if [ "${UNAME:-}" = "FreeBSD" ]; then
           libscript_depends 'ghcup'
           if command -v ghcup >/dev/null 2>&1; then
             ln -sf "$(command -v ghcup)" "${TARGET_DIR}/bin/ghcup"
@@ -132,9 +132,9 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             log_info "No download URL provided for ghcup ${VERSION}. Downloading official binary..."
-            _arch=$(uname -m)
+            _arch="${ARCH:-x86_64}"
             if [ "$_arch" = "x86_64" ]; then _arch="x86_64"; elif [ "$_arch" = "aarch64" ] || [ "$_arch" = "arm64" ]; then _arch="aarch64"; fi
-            _os=$(uname -s | tr '[:upper:]' '[:lower:]')
+            _os="${UNAME_LOWER:-linux}"
             if [ "$_os" = "darwin" ]; then
               _ghcup_url="https://downloads.haskell.org/~ghcup/${_arch}-apple-darwin-ghcup"
             else

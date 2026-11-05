@@ -101,19 +101,38 @@ if %errorlevel% neq 0 (
     exit /b 0
 )
 
-REM Stream all manifests into a temporary file to avoid cmd.exe 8191-char limit
-set "TMP_RAW=%TEMP%\libscript_manifests_raw_%RANDOM%.jsonl"
-set "TMP_ARR=%TEMP%\libscript_manifests_%RANDOM%.json"
-if exist "!TMP_RAW!" del /f /q "!TMP_RAW!" >nul 2>&1
+REM Stream all manifests into a cached or temporary file to avoid cmd.exe 8191-char limit
+set "CACHE_DIR=!REPO_ROOT!\cache"
+if not "%LIBSCRIPT_CACHE_DIR%"=="" set "CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
+if not exist "!CACHE_DIR!" mkdir "!CACHE_DIR!" >nul 2>&1
+set "CATALOG_JSON=!CACHE_DIR!\manifests_catalog.json"
+set "CATALOG_META=!CACHE_DIR!\manifests_catalog.meta"
+set "_MF_SIG=0"
 for /R "%LIB_DIR%" %%F in (manifest.json) do (
-    type "%%F" >> "!TMP_RAW!" 2>nul
-    echo.>> "!TMP_RAW!"
+    set /a _MF_SIG+=1
 )
-if exist "!TMP_RAW!" (
-    jq -s "." "!TMP_RAW!" > "!TMP_ARR!" 2>nul
-    del /f /q "!TMP_RAW!" >nul 2>&1
+set "_USE_CACHE=0"
+if exist "!CATALOG_JSON!" if exist "!CATALOG_META!" (
+    set /p _CACHED_SIG=<"!CATALOG_META!"
+    if "!_CACHED_SIG!"=="!_MF_SIG!" set "_USE_CACHE=1"
+)
+if "!_USE_CACHE!"=="1" (
+    set "TMP_ARR=!CATALOG_JSON!"
 ) else (
-    echo []> "!TMP_ARR!"
+    set "TMP_RAW=%TEMP%\libscript_manifests_raw_%RANDOM%.jsonl"
+    set "TMP_ARR=!CATALOG_JSON!"
+    if exist "!TMP_RAW!" del /f /q "!TMP_RAW!" >nul 2>&1
+    for /R "%LIB_DIR%" %%F in (manifest.json) do (
+        type "%%F" >> "!TMP_RAW!" 2>nul
+        echo.>> "!TMP_RAW!"
+    )
+    if exist "!TMP_RAW!" (
+        jq -s "." "!TMP_RAW!" > "!TMP_ARR!" 2>nul
+        del /f /q "!TMP_RAW!" >nul 2>&1
+        echo !_MF_SIG!>"!CATALOG_META!"
+    ) else (
+        echo []> "!TMP_ARR!"
+    )
 )
 
 if "%OUTPUT_FILE%"=="" (
@@ -124,6 +143,5 @@ if "%OUTPUT_FILE%"=="" (
     jq --arg target_os "%TARGET_OS%" --slurpfile manifests "!TMP_ARR!" -n "{config: input, manifests: ($manifests[0] // [])}" "%CONFIG_FILE%" | jq -L "%REPO_ROOT%\_lib\utilities" -L "!SCRIPT_DIR!" --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!\resolve_stack.jq" > "%OUTPUT_FILE%"
     echo [INFO] Execution plan generated at %OUTPUT_FILE%
 )
-if exist "!TMP_ARR!" del /f /q "!TMP_ARR!" >nul 2>&1
 
 endlocal

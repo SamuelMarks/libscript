@@ -131,9 +131,8 @@ case "$ACTION" in
           else
             log_info "No download URL provided for mongodb ${VERSION}. Using static fallback..."
             libscript_depends 'curl' 'tar'
-            ARCH=$(uname -m)
             MONGO_ARCH='x86_64'
-            if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+            if [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then
               MONGO_ARCH='aarch64'
             fi
             TEMP_FILE=$(mktemp)

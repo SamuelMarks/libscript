@@ -137,7 +137,7 @@ case "$ACTION" in
       case "${PKG_MGR}" in
         'apt-get')
           configure_virtualbox_repo_debian
-          kver=$(uname -r)
+          kver="${KERNEL_RELEASE:-unknown}"
           libscript_depends "linux-headers-$kver" build-essential dkms 2>/dev/null || true
           libscript_depends 'virtualbox'
           ;;

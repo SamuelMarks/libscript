@@ -117,9 +117,8 @@ case "$ACTION" in
         fi
 
         if [ "$installed" = "0" ]; then
-          ARCH=$(uname -m)
           NIMBLE_ARCH=""
-          case "$ARCH" in
+          case "${ARCH:-}" in
             x86_64|amd64) NIMBLE_ARCH="linux_x64" ;;
             aarch64|arm64) NIMBLE_ARCH="linux_aarch64" ;;
             armv7l) NIMBLE_ARCH="linux_armv7l" ;;

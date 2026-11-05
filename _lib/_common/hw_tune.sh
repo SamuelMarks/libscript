@@ -29,6 +29,19 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ]; then
+  _hwt_oi_this="${THIS_FILE}"
+  _hwt_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_hwt_oi_this}"
+  SCRIPT_DIR="${_hwt_oi_dir}"
+  unset _hwt_oi_this _hwt_oi_dir || true
+fi
+
 # ## libscript_detect_hardware
 # Detects available CPU cores and total system RAM in MiB, exporting hardware tuning variables.
 libscript_detect_hardware() {
@@ -65,7 +78,7 @@ libscript_detect_hardware() {
       _simd='neon'
     fi
   elif command -v sysctl >/dev/null 2>&1; then
-    if [ "$(uname -m 2>/dev/null || true)" = "arm64" ] || [ "$(uname -m 2>/dev/null || true)" = "aarch64" ]; then
+    if [ "${ARCH:-}" = "arm64" ] || [ "${ARCH:-}" = "aarch64" ]; then
       _simd='neon'
     elif sysctl -n machdep.cpu.leaf7_features 2>/dev/null | grep -qi "AVX2"; then
       _simd='avx2'
@@ -76,7 +89,7 @@ libscript_detect_hardware() {
   _nvme=0
   if [ -d /sys/class/nvme ] || ls /dev/nvme* >/dev/null 2>&1; then
     _nvme=1
-  elif [ "$(uname -s 2>/dev/null || true)" = "Darwin" ]; then
+  elif [ "${UNAME:-}" = "Darwin" ]; then
     _nvme=1
   fi
   export LIBSCRIPT_HW_NVME="${LIBSCRIPT_HW_NVME:-$_nvme}"

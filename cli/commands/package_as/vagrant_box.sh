@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${ARCH:-}" ]; then
+  _vb_oi_this="${THIS_FILE}"
+  _vb_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_vb_oi_this}"
+  SCRIPT_DIR="${_vb_oi_dir}"
+  unset _vb_oi_this _vb_oi_dir || true
+fi
+
 INPUT_IMAGE="${1:-${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.qcow2}"
 OUT_BOX="${2:-${LIBSCRIPT_ROOT_DIR}/build/images/vagrant/lfs-custom.box}"
 PROVIDER="${3:-qemu}"
@@ -69,7 +82,7 @@ BOX_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/build/tmp/vagrant_box_$$"
 mkdir -p "$BOX_TMP_DIR"
 trap 'rm -rf "$BOX_TMP_DIR"' EXIT INT TERM
 
-TARGET_ARCH="$(uname -m)"
+TARGET_ARCH="${ARCH:-x86_64}"
 case "$TARGET_ARCH" in
   aarch64) TARGET_ARCH="arm64" ;;
   x86_64) TARGET_ARCH="x86_64" ;;

@@ -30,6 +30,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
+if [ -z "${UNAME_LOWER:-}" ]; then
+  _pf_oi_this="${THIS_FILE}"
+  _pf_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_pf_oi_this}"
+  SCRIPT_DIR="${_pf_oi_dir}"
+  export DIR="${SCRIPT_DIR}"
+  unset _pf_oi_this _pf_oi_dir || true
+fi
+
 app_dir=""
 manifest_path=""
 packaging_path=""
@@ -78,6 +92,7 @@ hydrate_frontend_node_env() {
     fi
   done
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
+    # shellcheck disable=SC1090,SC1091
     STACK="" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" >/dev/null 2>&1 || true
   fi
   PATH="${SERVICE_EXTRA_PATH:-$HOME/.local/bin}:${PATH}"
@@ -190,7 +205,27 @@ resolve_artifact_exists() {
       fi
     done
   fi
+  if [ -d "$_rae_src/composeApp/build/dist/wasmJs/productionExecutable" ] || [ -d "$_rae_src/composeApp/build/dist/js/productionExecutable" ] || [ -d "$_rae_src/build/dist/wasmJs/productionExecutable" ] || [ -d "$_rae_src/build/dist/js/productionExecutable" ]; then
+    return 0
+  fi
   return 1
+}
+
+# ## compute_kmp_fingerprint
+# Computes a deterministic source and Gradle configuration digest for a Kotlin Multiplatform project.
+compute_kmp_fingerprint() {
+  _ckf_dir="$1"
+  (
+    cd "$_ckf_dir" 2>/dev/null || exit 0
+    {
+      for _kf in build.gradle.kts build.gradle settings.gradle.kts settings.gradle gradle.properties gradle/libs.versions.toml composeApp/build.gradle.kts composeApp/build.gradle; do
+        [ -f "$_kf" ] && cksum "$_kf" 2>/dev/null || true
+      done
+      for _kd in src composeApp/src shared/src; do
+        [ -d "$_kd" ] && find "$_kd" -type f -exec cksum {} + 2>/dev/null | sort || true
+      done
+    } | cksum | awk '{print $1"_"$2}'
+  )
 }
 
 # ## stage_compiled_assets
@@ -276,7 +311,7 @@ run_kmp_gradle_build() {
         "$_gradle_cmd" :composeApp:packageDistributionForCurrentOS
         ;;
       kmp-ios|ios)
-        if [ "$(uname -s | tr '[:upper:]' '[:lower:]')" = "darwin" ]; then
+        if [ "${UNAME_LOWER:-}" = "darwin" ]; then
           "$_gradle_cmd" :composeApp:linkReleaseFrameworkIosArm64
         fi
         ;;
@@ -333,7 +368,7 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
       mkdir -p "$target_webroot"
 
       if [ "${FORCE_REBUILD:-0}" = "1" ]; then
-        rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular" "$src_dir/.vite" "$src_dir/.libscript_build.sha256"
+        rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular" "$src_dir/.vite" "$src_dir/.libscript_build.sha256" "$src_dir/.libscript_kmp_build.sha256"
         _extra_cleans=$(printf '%s\n' "$svc" | jq -r '.clean_dirs[]? // empty' 2>/dev/null || true)
         if [ -n "$_extra_cleans" ]; then
           printf '%s\n' "$_extra_cleans" | while IFS= read -r _cd; do
@@ -347,17 +382,27 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
       printf '%s\n' "$svc" | jq -r '.env // {} | to_entries[]? | "export \(.key)=\(.value | @sh)"' > "$_fe_env_file" 2>/dev/null || true
 
       if [ -f "$src_dir/build.gradle.kts" ] || [ -f "$src_dir/build.gradle" ] || [ -n "$kmp_target" ]; then
-        if [ -n "$build_cmd" ]; then
-          (
-            cd "$src_dir"
-            if [ -s "$_fe_env_file" ]; then
-              # shellcheck disable=SC1090
-              . "$_fe_env_file"
-            fi
-            sh -c "$build_cmd"
-          )
+        _kmp_fp=$(compute_kmp_fingerprint "$src_dir")
+        _cached_kmp_fp=""
+        if [ -f "${src_dir}/.libscript_kmp_build.sha256" ]; then
+          _cached_kmp_fp=$(cat "${src_dir}/.libscript_kmp_build.sha256" 2>/dev/null || true)
+        fi
+        if [ "${FORCE_REBUILD:-0}" != "1" ] && [ -n "$_cached_kmp_fp" ] && [ "$_cached_kmp_fp" = "$_kmp_fp" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk"; then
+          printf '[REUSE] KMP Gradle build for '\''%s'\'' in '\''%s'\'' is up-to-date (hash %s).\n' "$svc_id" "$src_dir" "$_kmp_fp"
         else
-          run_kmp_gradle_build "$src_dir" "${kmp_target:-kmp-js}"
+          if [ -n "$build_cmd" ]; then
+            (
+              cd "$src_dir"
+              if [ -s "$_fe_env_file" ]; then
+                # shellcheck disable=SC1090
+                . "$_fe_env_file"
+              fi
+              sh -c "$build_cmd"
+            )
+          else
+            run_kmp_gradle_build "$src_dir" "${kmp_target:-kmp-js}"
+          fi
+          printf '%s\n' "$_kmp_fp" > "${src_dir}/.libscript_kmp_build.sha256" 2>/dev/null || true
         fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"
       elif [ -f "$src_dir/package.json" ]; then

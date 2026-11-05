@@ -29,10 +29,12 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+for _pe_lib in "_lib/_common/log.sh" "_lib/_common/os_info.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_pe_lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
 unset SCRIPT_NAME || true
 
 # ## libscript_resolve_user_home
@@ -61,7 +63,7 @@ libscript_resolve_user_home() {
       return 0
     fi
   fi
-  if [ "$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]')" = "darwin" ] && [ -d "/Users/${_ruh_user}" ]; then
+  if [ "${UNAME_LOWER:-}" = "darwin" ] && [ -d "/Users/${_ruh_user}" ]; then
     printf '%s\n' "/Users/${_ruh_user}"
     return 0
   fi
@@ -198,6 +200,44 @@ libscript_python_venv() {
   esac
 }
 
+# ## libscript_python_compute_lock_fp
+# Computes a deterministic digest over Python dependency specification and lockfiles in a directory.
+libscript_python_compute_lock_fp() {
+  _pclf_dir="${1:-.}"
+  (cd "$_pclf_dir" 2>/dev/null && cksum uv.lock pyproject.toml requirements.txt setup.py 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none\n')
+}
+
+# ## libscript_python_venv_is_up_to_date
+# Returns 0 if the project directory's .venv exists and its stamped lockfile hash matches current lockfiles.
+libscript_python_venv_is_up_to_date() {
+  _pvut_dir="${1:-.}"
+  if [ "${FORCE_REINSTALL:-0}" = "1" ]; then
+    return 1
+  fi
+  if [ ! -x "${_pvut_dir}/.venv/bin/python" ] && [ ! -f "${_pvut_dir}/.venv/Scripts/python.exe" ]; then
+    return 1
+  fi
+  _pvut_cur=$(libscript_python_compute_lock_fp "$_pvut_dir")
+  [ -n "$_pvut_cur" ] && [ "$_pvut_cur" != "none" ] || return 1
+  for _pvut_stamp in "${_pvut_dir}/.venv/.libscript_py_hash" "${_pvut_dir}/.venv/.libscript_lock_hash"; do
+    if [ -f "$_pvut_stamp" ] && [ "$(cat "$_pvut_stamp" 2>/dev/null || true)" = "$_pvut_cur" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# ## libscript_python_stamp_venv
+# Stamps the current Python dependency lockfile hash into .venv/.libscript_py_hash and .venv/.libscript_lock_hash.
+libscript_python_stamp_venv() {
+  _psv_dir="${1:-.}"
+  if [ -d "${_psv_dir}/.venv" ]; then
+    _psv_cur=$(libscript_python_compute_lock_fp "$_psv_dir")
+    printf '%s\n' "$_psv_cur" > "${_psv_dir}/.venv/.libscript_py_hash" 2>/dev/null || true
+    printf '%s\n' "$_psv_cur" > "${_psv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true
+  fi
+}
+
 # ## libscript_python_ensure_venv_owner
 # Verifies that a project directory's .venv does not symlink into /root when run by a non-root user,
 # recreating and syncing the virtual environment under the target user's home directory if needed.
@@ -231,12 +271,7 @@ libscript_python_ensure_venv_owner() {
     esac
   fi
 
-  _py_lock_fp=$(cd "$_venv_dir" 2>/dev/null && cksum uv.lock pyproject.toml requirements.txt 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
-  _py_cached_fp=""
-  if [ -f "${_venv_dir}/.venv/.libscript_lock_hash" ]; then
-    _py_cached_fp=$(cat "${_venv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true)
-  fi
-  if [ "${FORCE_REINSTALL:-0}" = "1" ] || [ ! -x "${_venv_dir}/.venv/bin/python" ] || [ -z "$_py_cached_fp" ] || [ "$_py_cached_fp" != "$_py_lock_fp" ]; then
+  if ! libscript_python_venv_is_up_to_date "$_venv_dir"; then
     if command -v uv >/dev/null 2>&1; then
       if [ ! -x "${_venv_dir}/.venv/bin/python" ]; then
         HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
@@ -245,14 +280,12 @@ libscript_python_ensure_venv_owner() {
     else
       libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
     fi
-    if [ -d "${_venv_dir}/.venv" ]; then
-      printf '%s\n' "$_py_lock_fp" > "${_venv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true
-    fi
+    libscript_python_stamp_venv "$_venv_dir"
   fi
 
   if [ -n "$_venv_user" ] && id "$_venv_user" >/dev/null 2>&1 && [ -d "${_venv_dir}/.venv" ]; then
     _venv_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_venv_user}}"
-    chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || sudo -n chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || true
+    chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || priv chown -R "${_venv_user}:${_venv_grp}" "${_venv_dir}/.venv" "${_venv_home}/.local" "${_venv_home}/.cache" 2>/dev/null || true
   fi
 }
 

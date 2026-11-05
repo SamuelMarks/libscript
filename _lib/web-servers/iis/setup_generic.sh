@@ -118,7 +118,7 @@ case "$ACTION" in
       libscript_depends 'iis'
     else
         # libscript_native implementation
-        case "$(uname -s)" in
+        case "${UNAME:-}" in
           MINGW*|MSYS*|CYGWIN*|Windows_NT) ;;
           *)
             log_info 'iis is a Windows web server. Skipping.'

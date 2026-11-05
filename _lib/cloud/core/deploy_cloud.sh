@@ -276,6 +276,24 @@ validate_shared_node_manifests() {
   fi
 }
 
+# ## compute_runtime_checksum
+# Computes a deterministic digest of the local LibScript runtime tree to skip redundant node sync calls.
+compute_runtime_checksum() {
+  _crc_dir="${LIBSCRIPT_ROOT_DIR:-.}"
+  _crc_git=$(git -C "$_crc_dir" rev-parse HEAD 2>/dev/null || printf 'nogit')
+  if [ "$_crc_git" != "nogit" ]; then
+    _crc_dirty=$(
+      {
+        git -C "$_crc_dir" status --porcelain 2>/dev/null || true
+        git -C "$_crc_dir" diff HEAD 2>/dev/null || true
+      } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
+    )
+    printf '%s_%s\n' "$_crc_git" "$_crc_dirty"
+  else
+    find "$_crc_dir" \( -name .git -o -name cache -o -name build -o -name 'cmake-build-*' -o -name target -o -name node_modules -o -name .venv -o -name venv -o -name logs -o -name tmp -o -name tests_tmp \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
+  fi
+}
+
 # ## compute_app_checksum
 # Computes a deterministic digest of an application repository manifest, shared root manifest, env files, git revision, diff content, and untracked files.
 compute_app_checksum() {
@@ -285,15 +303,15 @@ compute_app_checksum() {
   if [ "$_cac_git" != "nogit" ]; then
     _cac_dirty=$(
       {
-        git -C "$_cac_dir" status --porcelain 2>/dev/null | grep -Ev '(^|[[:space:]]|/)(\.nyc_output|docs/web|docs/api|site|\.vitest)(/|$)' || true
+        git -C "$_cac_dir" status --porcelain 2>/dev/null | grep -Ev '(^|[[:space:]]|/)(\.nyc_output|docs/web|docs/api|site|\.vitest|build|cmake-build-|node_modules|target|\.venv|venv|dist|\.angular|\.vite|\.gradle|\.kotlin|out)(/|$)' || true
         git -C "$_cac_dir" diff HEAD -- . ':(exclude).nyc_output' ':(exclude)**/.nyc_output/**' ':(exclude)docs/web' ':(exclude)docs/api' ':(exclude)site' ':(exclude).vitest*' 2>/dev/null || true
-        git -C "$_cac_dir" ls-files --others --exclude-standard 2>/dev/null | grep -Ev "(^|/)(\.nyc_output|docs/web|docs/api|site|\.vitest)" | while IFS= read -r _uf; do
+        git -C "$_cac_dir" ls-files --others --exclude-standard 2>/dev/null | grep -Ev "(^|/)(\.nyc_output|docs/web|docs/api|site|\.vitest|build|cmake-build-|node_modules|target|\.venv|venv|dist|\.angular|\.vite|\.gradle|\.kotlin|out)" | while IFS= read -r _uf; do
           [ -n "$_uf" ] && [ -f "${_cac_dir}/${_uf}" ] && cksum "${_cac_dir}/${_uf}" 2>/dev/null || true
         done
       } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
     )
   else
-    _cac_dirty=$(find "$_cac_dir" \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name '.vitest*' -o -name .nyc_output -o -name site -o -path '*/docs/web' -o -path '*/docs/api' -o -name __pycache__ -o -name '*.duckdb*' \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+    _cac_dirty=$(find "$_cac_dir" \( -name .git -o -name node_modules -o -name target -o -name .venv -o -name venv -o -name dist -o -name build -o -name 'cmake-build-*' -o -name out -o -name .gradle -o -name .kotlin -o -name .angular -o -name .vite -o -name '.vitest*' -o -name .nyc_output -o -name site -o -path '*/docs/web' -o -path '*/docs/api' -o -name __pycache__ -o -name '*.duckdb*' \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
   fi
   _cac_root_mf=""
   if [ -n "${REPO_PATH:-}" ] && [ -f "${REPO_PATH}/libscript.json" ] && [ "${REPO_PATH}/libscript.json" != "${_cac_dir}/libscript.json" ]; then
@@ -510,22 +528,51 @@ if [ "$SKIP_INFRA" -eq 0 ]; then
   log "SSH" "Waiting for SSH readiness on '$NODE'..."
   run_with_auth_check "$CLI" node wait-ssh "$NODE" "$CTX" || true
 fi
-log "SYNC" "Syncing LibScript runtime to '$NODE'..."
-run_with_auth_check "$CLI" node sync "$NODE" "$CTX"
+_rt_hash=$(compute_runtime_checksum)
+_skip_rt_sync=0
+if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
+  if "$CLI" node exec "$NODE" "$CTX" "[ -x ~/libscript/libscript.sh ] && [ -f ~/.libscript_deployments/_libscript_runtime.sha256 ] && grep -qx '${_rt_hash}' ~/.libscript_deployments/_libscript_runtime.sha256" >/dev/null 2>&1; then
+    _skip_rt_sync=1
+  fi
+fi
+if [ "$_skip_rt_sync" -eq 1 ]; then
+  log "REUSE" "LibScript runtime on '$NODE' is up-to-date (${_rt_hash}); skipping node sync."
+else
+  log "SYNC" "Syncing LibScript runtime to '$NODE'..."
+  run_with_auth_check "$CLI" node sync "$NODE" "$CTX"
+  if [ "$DRY_RUN_MODE" -eq 0 ]; then
+    "$CLI" node exec "$NODE" "$CTX" "mkdir -p ~/.libscript_deployments && printf '%s\n' '${_rt_hash}' > ~/.libscript_deployments/_libscript_runtime.sha256" >/dev/null 2>&1 || true
+  fi
+fi
 
 PREPARED_STORAGE=0
 if [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -e '.applications != null and (.applications | length > 0)' "${REPO_PATH}/libscript.json" >/dev/null 2>&1; then
-  log "CONFIG" "Uploading shared-stack manifest '${REPO_PATH}/libscript.json' to '$NODE'..."
-  run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${REPO_PATH}/libscript.json" "libscript.json" || true
-  _shared_deps_flags=""
-  [ "$FORCE_REINSTALL" -eq 1 ] && _shared_deps_flags="${_shared_deps_flags} --force-reinstall"
-  if [ "$SKIP_PREPARE" -eq 0 ]; then
-    log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '$NODE' from root manifest..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
-    PREPARED_STORAGE=1
+  _root_mf_hash=$(cksum "${REPO_PATH}/libscript.json" 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  _skip_root_prep=0
+  if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
+    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/libscript.json ] && [ -f ~/.libscript_deployments/_root_manifest.sha256 ] && grep -qx '${_root_mf_hash}' ~/.libscript_deployments/_root_manifest.sha256" >/dev/null 2>&1; then
+      _skip_root_prep=1
+      PREPARED_STORAGE=1
+    fi
+  fi
+  if [ "$_skip_root_prep" -eq 1 ]; then
+    log "REUSE" "Shared-stack root manifest '${REPO_PATH}/libscript.json' (${_root_mf_hash}) unchanged; skipping root prepare-storage and install-deps."
   else
-    log "PREPARE" "Provisioning shared runtimes and databases on '$NODE' from root manifest..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+    log "CONFIG" "Uploading shared-stack manifest '${REPO_PATH}/libscript.json' to '$NODE'..."
+    run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${REPO_PATH}/libscript.json" "libscript.json" || true
+    _shared_deps_flags=""
+    [ "$FORCE_REINSTALL" -eq 1 ] && _shared_deps_flags="${_shared_deps_flags} --force-reinstall"
+    if [ "$SKIP_PREPARE" -eq 0 ]; then
+      log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '$NODE' from root manifest..."
+      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+      PREPARED_STORAGE=1
+    else
+      log "PREPARE" "Provisioning shared runtimes and databases on '$NODE' from root manifest..."
+      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+    fi
+    if [ "$DRY_RUN_MODE" -eq 0 ]; then
+      "$CLI" node exec "$NODE" "$CTX" "mkdir -p ~/.libscript_deployments && printf '%s\n' '${_root_mf_hash}' > ~/.libscript_deployments/_root_manifest.sha256" >/dev/null 2>&1 || true
+    fi
   fi
 fi
 
@@ -571,36 +618,6 @@ for _app_entry in "$@"; do
     continue
   fi
 
-  log "DEPLOY" "Deploying '$_ae_name' ('$_ae_repo' -> '$_ae_dest', domain: '${_ae_domain:-none}')..."
-  run_with_auth_check "$CLI" node deploy "$NODE" "$CTX" "$_ae_repo" "$_ae_dest"
-
-  for _ef in .env .env.secrets; do
-    if [ -f "${_ae_repo}/${_ef}" ]; then
-      log "CONFIG" "Uploading $_ef for $_ae_name..."
-      run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${_ae_repo}/${_ef}" "${_ae_dest}/${_ef}"
-      if [ "$_ef" = '.env' ] && [ "$DRY_RUN_MODE" -eq 0 ] && [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
-        _env_path_defs=$(jq -r '([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == "object" then .[] elif type == "array" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == "string" then (.value | sub("^\\$\\{[A-Za-z0-9_]+:-"; "") | sub("\\}$"; "")) else "" end)} | select(.def | test("^/[^:]+:/[^:]+")) | "\(.key)=\(.def)"' "${_ae_repo}/libscript.json" 2>/dev/null || true)
-        if [ -n "$_env_path_defs" ]; then
-          while IFS= read -r _ep_pair; do
-            [ -n "$_ep_pair" ] || continue
-            _ep_key="${_ep_pair%%=*}"
-            _ep_def="${_ep_pair#*=}"
-            _ep_first="${_ep_def%%:*}"
-            "$CLI" node exec "$NODE" "$CTX" "if [ -f ~/${_ae_dest}/.env ] && grep -q '^${_ep_key}=' ~/${_ae_dest}/.env && ! grep '^${_ep_key}=' ~/${_ae_dest}/.env | grep -F -q '${_ep_first}'; then sed 's|^${_ep_key}=.*|${_ep_key}=${_ep_def}|' ~/${_ae_dest}/.env > ~/${_ae_dest}/.env.tmp && mv ~/${_ae_dest}/.env.tmp ~/${_ae_dest}/.env; fi" >/dev/null 2>&1 || true
-          done << EOF_ENV_DEFS
-$_env_path_defs
-EOF_ENV_DEFS
-        fi
-      fi
-    fi
-  done
-
-  if [ "$SKIP_PREPARE" -eq 0 ] && [ "$PREPARED_STORAGE" -eq 0 ]; then
-    log "PREPARE" "Preparing persistent storage and daemon overrides on '$NODE' via LibScript..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" ~/libscript/libscript.sh prepare-storage libscript.json"
-    PREPARED_STORAGE=1
-  fi
-
   _deps_flags=""
   [ "$FORCE_REINSTALL" -eq 1 ] && _deps_flags="${_deps_flags} --force-reinstall"
   [ "$FORCE_REBUILD" -eq 1 ] && _deps_flags="${_deps_flags} --force-rebuild"
@@ -626,8 +643,38 @@ EOF_ENV_DEFS
   fi
 
   if [ "$_skip_unchanged" -eq 1 ]; then
-    log "REUSE" "Application '$_ae_name' checksum (${_app_hash}) unchanged and services/databases healthy; skipping install-deps and rebuild."
+    log "REUSE" "Application '$_ae_name' checksum (${_app_hash}) unchanged and services/databases healthy; skipping file upload, install-deps, and rebuild."
   else
+    log "DEPLOY" "Deploying '$_ae_name' ('$_ae_repo' -> '$_ae_dest', domain: '${_ae_domain:-none}')..."
+    run_with_auth_check "$CLI" node deploy "$NODE" "$CTX" "$_ae_repo" "$_ae_dest"
+
+    for _ef in .env .env.secrets; do
+      if [ -f "${_ae_repo}/${_ef}" ]; then
+        log "CONFIG" "Uploading $_ef for $_ae_name..."
+        run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${_ae_repo}/${_ef}" "${_ae_dest}/${_ef}"
+        if [ "$_ef" = '.env' ] && [ "$DRY_RUN_MODE" -eq 0 ] && [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+          _env_path_defs=$(jq -r '([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == "object" then .[] elif type == "array" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == "string" then (.value | sub("^\\$\\{[A-Za-z0-9_]+:-"; "") | sub("\\}$"; "")) else "" end)} | select(.def | test("^/[^:]+:/[^:]+")) | "\(.key)=\(.def)"' "${_ae_repo}/libscript.json" 2>/dev/null || true)
+          if [ -n "$_env_path_defs" ]; then
+            while IFS= read -r _ep_pair; do
+              [ -n "$_ep_pair" ] || continue
+              _ep_key="${_ep_pair%%=*}"
+              _ep_def="${_ep_pair#*=}"
+              _ep_first="${_ep_def%%:*}"
+              "$CLI" node exec "$NODE" "$CTX" "if [ -f ~/${_ae_dest}/.env ] && grep -q '^${_ep_key}=' ~/${_ae_dest}/.env && ! grep '^${_ep_key}=' ~/${_ae_dest}/.env | grep -F -q '${_ep_first}'; then sed 's|^${_ep_key}=.*|${_ep_key}=${_ep_def}|' ~/${_ae_dest}/.env > ~/${_ae_dest}/.env.tmp && mv ~/${_ae_dest}/.env.tmp ~/${_ae_dest}/.env; fi" >/dev/null 2>&1 || true
+            done << EOF_ENV_DEFS
+$_env_path_defs
+EOF_ENV_DEFS
+          fi
+        fi
+      fi
+    done
+
+    if [ "$SKIP_PREPARE" -eq 0 ] && [ "$PREPARED_STORAGE" -eq 0 ]; then
+      log "PREPARE" "Preparing persistent storage and daemon overrides on '$NODE' via LibScript..."
+      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" ~/libscript/libscript.sh prepare-storage libscript.json"
+      PREPARED_STORAGE=1
+    fi
+
     log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '$_ae_name'..."
     run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
 

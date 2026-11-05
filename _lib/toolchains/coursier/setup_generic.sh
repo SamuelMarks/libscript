@@ -128,9 +128,8 @@ case "$ACTION" in
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing coursier ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"
-          ARCH=$(uname -m)
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-          if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          OS="${UNAME_LOWER:-linux}"
+          if [ "${ARCH:-}" = "x86_64" ] || [ "${ARCH:-}" = "amd64" ]; then ARCH="x86_64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
           if [ "$OS" = "darwin" ]; then OS="apple-darwin"; elif [ "$OS" = "linux" ]; then OS="pc-linux"; fi
           URL="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-${ARCH}-${OS}.gz"
           TEMP_FILE=$(mktemp)

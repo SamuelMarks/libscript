@@ -202,8 +202,8 @@ case "$ACTION" in
       log_info "Installing msi-rs ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
 
-      os_name=$(uname -s | tr "[:upper:]" "[:lower:]")
-      arch_name=$(uname -m)
+      os_name="${UNAME_LOWER:-linux}"
+      arch_name="${ARCH:-x86_64}"
       
       # Map OS and Architecture to GitHub Release asset name
       target_tuple=""

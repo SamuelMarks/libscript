@@ -101,7 +101,7 @@ case "$ACTION" in
     if [ ! -d "${TARGET_DIR}" ]; then
       log_info "Installing kotlin ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
-      if [ "$(uname -s)" = "FreeBSD" ]; then
+      if [ "${UNAME:-}" = "FreeBSD" ]; then
         libscript_depends 'kotlin'
         if command -v kotlinc >/dev/null 2>&1; then
           ln -sf "$(command -v kotlinc)" "${TARGET_DIR}/bin/kotlinc"

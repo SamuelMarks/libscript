@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${UNAME:-}" ]; then
+  _lfs_oi_this="${THIS_FILE}"
+  _lfs_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_lfs_oi_this}"
+  SCRIPT_DIR="${_lfs_oi_dir}"
+  unset _lfs_oi_this _lfs_oi_dir || true
+fi
+
 ACTION="${1:-mount}"
 ROOTFS="${2:-${LIBSCRIPT_ROOT_DIR}/build/lfs/rootfs}"
 
@@ -67,7 +80,7 @@ mkdir -p "${ROOTFS}/proc"
 mkdir -p "${ROOTFS}/sys"
 mkdir -p "${ROOTFS}/run"
 
-if [ "$(id -u)" -eq 0 ] && [ "$(uname -s)" = "Linux" ]; then
+if [ "$(id -u)" -eq 0 ] && [ "${UNAME:-}" = "Linux" ]; then
   printf '[STAGE] Performing real Linux VFS bind mounts...\n'
   mount -v --bind /dev "${ROOTFS}/dev" || true
   mount -v --bind /dev/pts "${ROOTFS}/dev/pts" || true

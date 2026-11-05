@@ -163,11 +163,11 @@ case "$ACTION" in
         libscript_depends 'unzip'
 
         mkdir -p "${TARGET_DIR}/bin"
-        os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+        os="${UNAME_LOWER:-linux}"
         case "${os}" in
           darwin) os="macos" ;;
         esac
-        arch="$(uname -m)"
+        arch="${ARCH:-x86_64}"
         case "${arch}" in
           'x86_64') arch='x86_64' ;;
           'aarch64'|'arm64') arch='aarch64' ;;

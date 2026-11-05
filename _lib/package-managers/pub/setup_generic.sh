@@ -116,9 +116,8 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pub ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        ARCH=$(uname -m)
-        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-        if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+        OS="${UNAME_LOWER:-linux}"
+        if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
         if [ "$OS" = "darwin" ]; then OS="macos"; fi
         if [ "$UNAME_LOWER" = "freebsd" ]; then
           log_error 'pub is not officially available for FreeBSD. Consider installing via system packages if available.'

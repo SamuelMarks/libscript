@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${UNAME:-}" ]; then
+  _vmb_oi_this="${THIS_FILE}"
+  _vmb_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_vmb_oi_this}"
+  SCRIPT_DIR="${_vmb_oi_dir}"
+  unset _vmb_oi_this _vmb_oi_dir || true
+fi
+
 WORKER_TYPE='auto'
 case "${1:-}" in
   --worker=*)
@@ -49,7 +62,7 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-HOST_OS="$(uname -s 2>/dev/null || printf '%s' 'unknown')"
+HOST_OS="${UNAME:-unknown}"
 
 # If worker is auto, detect best backend
 if [ "$WORKER_TYPE" = "auto" ]; then

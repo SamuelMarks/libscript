@@ -149,10 +149,9 @@ case "$ACTION" in
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing just ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x86_64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
           OS_SUFFIX=""
-          OS_NAME=$(uname -s | tr "[:upper:]" "[:lower:]")
+          OS_NAME="${UNAME_LOWER:-linux}"
           if [ "$OS_NAME" = "linux" ]; then
             OS_SUFFIX='-unknown-linux-musl'
           elif [ "$OS_NAME" = "darwin" ]; then

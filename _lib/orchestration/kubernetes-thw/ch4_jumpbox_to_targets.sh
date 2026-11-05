@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/remote_sync.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -96,8 +96,12 @@ for i in $NODES 'admin' 'kube-proxy' 'kube-scheduler' 'kube-controller-manager' 
   fi
 done
 
-scp "${LIBSCRIPT_DATA_DIR}/ca.key" "${LIBSCRIPT_DATA_DIR}/ca.crt" "${LIBSCRIPT_DATA_DIR}/kube-api-server.key" "${LIBSCRIPT_DATA_DIR}/kube-api-server.crt" "${LIBSCRIPT_DATA_DIR}/service-accounts.key" "${LIBSCRIPT_DATA_DIR}/service-accounts.crt" root@server:~/
+for _cert_f in ca.key ca.crt kube-api-server.key kube-api-server.crt service-accounts.key service-accounts.crt; do
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/${_cert_f}" "root@server" "./"
+done
 
 for i in $NODES; do
-  scp "${LIBSCRIPT_DATA_DIR}/ca.crt" "${LIBSCRIPT_DATA_DIR}/${i}.key" "${LIBSCRIPT_DATA_DIR}/${i}.crt" "root@${i}:~/"
+  for _node_f in ca.crt "${i}.key" "${i}.crt"; do
+    libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/${_node_f}" "root@${i}" "./"
+  done
 done

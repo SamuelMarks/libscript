@@ -194,7 +194,7 @@ case "$ACTION" in
       log_info "[REUSE] nodejs ${NODEJS_VERSION} (v${EXACT_VERSION}) is already installed."
       exit 0
     fi
-    if [ "$NODEJS_INSTALL_METHOD" = "system" ] || [ -f /etc/alpine-release ] || [ "$(uname -s)" = "FreeBSD" ] || [ "$(uname -s)" = "SunOS" ]; then
+    if [ "$NODEJS_INSTALL_METHOD" = "system" ] || [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; then
       libscript_depends 'nodejs' 'npm'
       if command -v node >/dev/null 2>&1; then
         _sys_node_ver=$(node -v 2>/dev/null | sed 's/^v//' || printf '%s' "${NODEJS_VERSION}")
@@ -232,12 +232,12 @@ case "$ACTION" in
         esac
       fi
 
-      os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+      os="${UNAME_LOWER:-linux}"
       case "${os}" in
         'darwin'*) os='darwin' ;;
         *) os='linux' ;;
       esac
-      arch="$(uname -m)"
+      arch="${ARCH:-x86_64}"
       case "${arch}" in
         'x86_64') arch='x64' ;;
         'aarch64'|'arm64') arch='arm64' ;;

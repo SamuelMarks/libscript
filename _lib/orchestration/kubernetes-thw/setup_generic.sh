@@ -121,9 +121,8 @@ case "$ACTION" in
           fi
         else
           libscript_depends 'curl' 'tar'
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
+          OS="${UNAME_LOWER:-linux}"
           if [ "$OS" = "darwin" ]; then
              URL="https://dl.k8s.io/${EXACT_VERSION}/bin/darwin/${ARCH}/kubectl"
              libscript_download "$URL" "${TARGET_DIR}/bin/kubectl" || true

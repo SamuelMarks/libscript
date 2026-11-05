@@ -59,7 +59,8 @@ if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 if exist "%DEST_DIR%\vcpkg.exe" exit /b 0
 
 echo Downloading official vcpkg.exe from GitHub releases...
-curl.exe -sSL "https://github.com/microsoft/vcpkg-tool/releases/latest/download/vcpkg.exe" -o "%DEST_DIR%\vcpkg.exe"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/microsoft/vcpkg-tool/releases/latest/download/vcpkg.exe" "%DEST_DIR%\vcpkg.exe"
 if errorlevel 1 (
     echo Failed to download vcpkg.exe.
     exit /b 1

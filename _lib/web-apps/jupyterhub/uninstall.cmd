@@ -3,8 +3,9 @@
 :: ## Overview
 :: Handles the removal and uninstallation process for the JupyterHub data science platform stack.
 :: ## Usage
-:: Execute this script to remove jupyterhub and its associated configurations from the system. setlocal EnableDelayedExpansion Default uninstall hook for Windows
+:: Execute this script to remove jupyterhub and its associated configurations from the system.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

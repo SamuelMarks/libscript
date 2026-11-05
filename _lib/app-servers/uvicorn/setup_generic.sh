@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -66,7 +66,7 @@ case "$ACTION" in
       log_info 'uvicorn is already available on the system.'
       mkdir -p "${_uv_target}/bin"
       ln -sf "$(command -v uvicorn)" "${_uv_target}/bin/uvicorn"
-    elif [ "$(uname -s)" = "FreeBSD" ]; then
+    elif [ "${UNAME:-}" = "FreeBSD" ]; then
       libscript_depends 'uvicorn'
     else
       if ! command -v uv >/dev/null 2>&1; then
@@ -75,11 +75,10 @@ case "$ACTION" in
         fi
       fi
       mkdir -p "${_uv_target}"
+      libscript_python_venv "${_uv_target}"
       if command -v uv >/dev/null 2>&1; then
-        uv venv "${_uv_target}" --seed 2>/dev/null || python3 -m venv "${_uv_target}"
         uv pip install --python "${_uv_target}/bin/python" uvicorn 2>/dev/null || "${_uv_target}/bin/pip" install uvicorn
       else
-        python3 -m venv "${_uv_target}"
         "${_uv_target}/bin/pip" install uvicorn
       fi
       if [ -x "${_uv_target}/bin/uvicorn" ]; then

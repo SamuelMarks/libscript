@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -67,7 +67,7 @@ case "$ACTION" in
       mkdir -p "${_wt_target}/bin"
       ln -sf "$(command -v waitress-serve)" "${_wt_target}/bin/waitress-serve"
       ln -sf "$(command -v waitress-serve)" "${_wt_target}/bin/waitress"
-    elif [ "$(uname -s)" = "FreeBSD" ]; then
+    elif [ "${UNAME:-}" = "FreeBSD" ]; then
       libscript_depends 'waitress'
     else
       if ! command -v uv >/dev/null 2>&1; then
@@ -76,11 +76,10 @@ case "$ACTION" in
         fi
       fi
       mkdir -p "${_wt_target}"
+      libscript_python_venv "${_wt_target}"
       if command -v uv >/dev/null 2>&1; then
-        uv venv "${_wt_target}" --seed 2>/dev/null || python3 -m venv "${_wt_target}"
         uv pip install --python "${_wt_target}/bin/python" waitress 2>/dev/null || "${_wt_target}/bin/pip" install waitress
       else
-        python3 -m venv "${_wt_target}"
         "${_wt_target}/bin/pip" install waitress
       fi
       if [ -x "${_wt_target}/bin/waitress-serve" ]; then

@@ -106,6 +106,10 @@ audit_single_file() {
         has_this_file = 0; has_stack = 0; has_root_dir = 0; has_zsh_eval = 0;
         has_overview = 0; has_usage = 0; has_set_feu = 0;
         mkdir_hits = ""; ln_hits = ""; eval_hits = ""; git_push_hits = ""; raw_daemon_hits = "";
+        raw_sync_hits = ""; raw_venv_hits = ""; raw_priv_hits = ""; raw_envsubst_hits = "";
+        raw_uuid_hits = ""; raw_hw_hits = ""; ext_vm_hits = ""; raw_uname_hits = "";
+        allow_sync_next = 0; allow_venv_next = 0; allow_priv_next = 0; allow_envsubst_next = 0;
+        allow_uuid_next = 0; allow_hw_next = 0; allow_extvm_next = 0; allow_uname_next = 0;
       }
       NR == 1 {
         first_line = $0
@@ -113,10 +117,12 @@ audit_single_file() {
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
         if ($0 ~ /## Usage/) has_usage = 1
-        if ($0 ~ /set -feu/) has_set_feu = 1
-        if ($0 ~ /THIS_FILE=/) has_this_file = 1
-        if ($0 ~ /STACK/) has_stack = 1
-        if ($0 ~ /LIBSCRIPT_ROOT_DIR/) has_root_dir = 1
+        if ($0 !~ /^[[:space:]]*#/) {
+          if ($0 ~ /set -feu/) has_set_feu = 1
+          if ($0 ~ /THIS_FILE=/) has_this_file = 1
+          if ($0 ~ /STACK/) has_stack = 1
+          if ($0 ~ /LIBSCRIPT_ROOT_DIR/) has_root_dir = 1
+        }
         if ($0 ~ /# shellcheck disable=SC2296/) has_zsh_sc = 1
       }
       {
@@ -124,7 +130,7 @@ audit_single_file() {
           cur = $0
           sub(/^[[:space:]]+/, "", cur)
           sub(/[[:space:]]+$/, "", cur)
-          if (cur == delim) {
+          if (cur == delim || cur ~ ("^" delim "[\x27\"][[:space:]<>|/A-Za-z0-9_.-]*$")) {
             in_heredoc = 0
             delim = ""
           }
@@ -134,6 +140,7 @@ audit_single_file() {
         if (idx > 0) {
           rest = substr($0, idx + 2)
           sub(/^[ -]+/, "", rest)
+          sub(/^\\+/, "", rest)
           sub(/["\x27]/, "", rest)
           sub(/["\x27].*$/, "", rest)
           sub(/[[:space:]].*$/, "", rest)
@@ -162,12 +169,20 @@ audit_single_file() {
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
           allow_daemon_next = ($0 ~ /libscript-allow-raw-daemon/) ? 1 : 0
+          allow_sync_next = ($0 ~ /libscript-allow-raw-sync/) ? 1 : 0
+          allow_venv_next = ($0 ~ /libscript-allow-raw-venv/) ? 1 : 0
+          allow_priv_next = ($0 ~ /libscript-allow-raw-priv/) ? 1 : 0
+          allow_envsubst_next = ($0 ~ /libscript-allow-raw-envsubst/) ? 1 : 0
+          allow_uuid_next = ($0 ~ /libscript-allow-raw-uuid/) ? 1 : 0
+          allow_hw_next = ($0 ~ /libscript-allow-raw-hw/) ? 1 : 0
+          allow_extvm_next = ($0 ~ /libscript-allow-ext-vm/) ? 1 : 0
+          allow_uname_next = ($0 ~ /libscript-allow-raw-uname/) ? 1 : 0
           if ($0 ~ /^#[[:space:]]*Performs the .* operation and updates component state\.$/) {
             placeholder_doc_hits = (placeholder_doc_hits ? placeholder_doc_hits "; " : "") NR ":" $0
           }
         }
         if ($0 !~ /^[[:space:]]*#/ && !allow_daemon_next && $0 !~ /libscript-allow-raw-daemon/) {
-          if ($0 ~ /(^|[[:space:];|&(])(priv[[:space:]]+|sudo[[:space:]]+)?(systemctl[[:space:]]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[[:space:]]+(load|unload|start|stop|kickstart|bootstrap|bootout)|rc-service[[:space:]]+|rc-update[[:space:]]+(add|del)|svcadm[[:space:]]+(enable|disable|restart|refresh)|svccfg[[:space:]]+(import|delete)|sc\.exe[[:space:]]+(start|stop|create|delete|config|query|description)|sc[[:space:]]+(start|stop|create|delete|config|query|description)|net[[:space:]]+(start|stop)[[:space:]]+|service[[:space:]]+[A-Za-z0-9_$"\x27-]+[[:space:]]+(start|stop|restart|reload|status|onestatus)|update-rc\.d[[:space:]]+|chkconfig[[:space:]]+|s6-svc[[:space:]]+|dinitctl[[:space:]]+|sysrc[[:space:]]+[A-Za-z0-9_$"\x27-]*_enable)([[:space:];|&)]|$)/) {
+          if ($0 ~ /(^|[[:space:];|&(])(priv[[:space:]]+|sudo[[:space:]]+)?(systemctl[[:space:]]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[[:space:]]+(load|unload|start|stop|kickstart|bootstrap|bootout)|rc-service[[:space:]]+|rc-update[[:space:]]+(add|del)|svcadm[[:space:]]+(enable|disable|restart|refresh)|svccfg[[:space:]]+(import|delete)|sc\.exe[[:space:]]+(start|stop|create|delete|config|query|description)|sc[[:space:]]+(start|stop|create|delete|config|query|description)|net[[:space:]]+(start|stop)[[:space:]]+|service[[:space:]]+[A-Za-z0-9_$"\x27-]+[[:space:]]+(start|stop|restart|reload|status|onestatus)|update-rc\.d[[:space:]]+|chkconfig[[:space:]]+|s6-svc[[:space:]]+|dinitctl[[:space:]]+|sysrc[[:space:]]+[A-Za-z0-9_$"\x27-]*_enable|journalctl[[:space:]]+-u[[:space:]]+)([[:space:];|&)]|$)/) {
             raw_daemon_hits = (raw_daemon_hits ? raw_daemon_hits "; " : "") NR ":" $0
           }
         }
@@ -179,14 +194,62 @@ audit_single_file() {
           }
         }
         if ($0 !~ /^[[:space:]]*#/ && !allow_fetch_next && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
-          if ($0 ~ /(^|[[:space:];|&(])(curl[[:space:]]+-[a-zA-Z0-9#-]*[sSfLOo]|wget[[:space:]]+-[a-zA-Z0-9-]*[qO]|aria2c[[:space:]]+-[dox])([[:space:]]|$)/ && $0 !~ /(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w[[:space:]]+"%\{http_code\}")/) {
+          if ($0 ~ /(^|[[:space:];|&(])(curl(\.exe)?[[:space:]]+(--(silent|location|fail|output)|-[a-zA-Z0-9#-]*[sSfLOo])|wget(\.exe)?[[:space:]]+(--(quiet|output-document)|-[a-zA-Z0-9-]*[qO])|aria2c[[:space:]]+-[dox])([[:space:]]|$)/ && $0 !~ /(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w[[:space:]]+"%\{http_code\}")/) {
             raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_sync_next && $0 !~ /libscript-allow-raw-sync/) {
+          if ($0 ~ /(^|[[:space:];|&(])(rsync[[:space:]]+-[a-zA-Z0-9-]*.*:|scp[[:space:]]+(-[a-zA-Z0-9]+[[:space:]]+)*[^[:space:]|;&]+)[[:space:]]+/ && $0 !~ /(gcloud[[:space:]]+(compute|storage)|vagrant[[:space:]]+rsync|cli\.(sh|cmd)[[:space:]"]*scp|log_(info|warn|error)|--version|command[[:space:]]+-v)/) {
+            raw_sync_hits = (raw_sync_hits ? raw_sync_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_venv_next && $0 !~ /libscript-allow-raw-venv/) {
+          if ($0 ~ /(^|[[:space:];|&(])(priv([_a-z]*)[[:space:]]+([A-Za-z0-9_$"'\''-]+[[:space:]]+)?)?([A-Za-z0-9_$"'\''\/.-]*python[0-9.]*[[:space:]]+-m[[:space:]]+venv|uv[[:space:]]+venv|virtualenv[[:space:]]+)/) {
+            raw_venv_hits = (raw_venv_hits ? raw_venv_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_priv_next && $0 !~ /libscript-allow-raw-priv/) {
+          if ($0 ~ /(^|[[:space:];|&(])sudo[[:space:]]+(-u[[:space:]]+[A-Za-z0-9_$-]+[[:space:]]+|[A-Za-z0-9_\/.-]+)/ && $0 !~ /(command[[:space:]]+-v[[:space:]]+sudo|sudo[[:space:]]+(-V|--version|-n[[:space:]]+true)|node[[:space:]]+exec|vagrant[[:space:]]+ssh|echo[[:space:]]|printf[[:space:]])/) {
+            raw_priv_hits = (raw_priv_hits ? raw_priv_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_envsubst_next && $0 !~ /libscript-allow-raw-envsubst/) {
+          if ($0 ~ /(^|[[:space:];|&(])(\$\(command[[:space:]]+-v[[:space:]]+envsubst\)|envsubst)([[:space:]<>]|$)/ && $0 !~ /(envsubst_safe|command[[:space:]]+-v[[:space:]]+envsubst[[:space:]]+>)/) {
+            raw_envsubst_hits = (raw_envsubst_hits ? raw_envsubst_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_uuid_next && $0 !~ /libscript-allow-raw-uuid/) {
+          if ($0 ~ /(^|[[:space:];|&(])(uuidgen([[:space:]]|$)|cat[[:space:]]+\/proc\/sys\/kernel\/random\/uuid)/) {
+            raw_uuid_hits = (raw_uuid_hits ? raw_uuid_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_hw_next && $0 !~ /libscript-allow-raw-hw/) {
+          if ($0 ~ /\$\(nproc([[:space:]]|\))|\$\(sysctl[[:space:]]+-n[[:space:]]+hw\.(ncpu|memsize|physmem)/) {
+            raw_hw_hits = (raw_hw_hits ? raw_hw_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_extvm_next && $0 !~ /libscript-allow-ext-vm/) {
+          if ($0 ~ /(^|[[:space:];|&(])(rustup[[:space:]]+toolchain[[:space:]]+install|nvm[[:space:]]+install|fnm[[:space:]]+install|pyenv[[:space:]]+install|rbenv[[:space:]]+install|sdk[[:space:]]+install|volta[[:space:]]+install)([[:space:]]|$)/) {
+            ext_vm_hits = (ext_vm_hits ? ext_vm_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_uname_next && $0 !~ /libscript-allow-raw-uname/) {
+          if ($0 ~ /(\$\(uname([[:space:]\)]|$)|(^|[[:space:];|&(])uname([[:space:]]+-[a-zA-Z]+)?([[:space:];|&)]|$))/ && $0 !~ /(vagrant[[:space:]]+ssh|echo[[:space:]]|printf[[:space:]])/) {
+            raw_uname_hits = (raw_uname_hits ? raw_uname_hits "; " : "") NR ":" $0
           }
         }
         if ($0 !~ /^[[:space:]]*#/) {
           allow_pkg_next = 0
           allow_fetch_next = 0
           allow_daemon_next = 0
+          allow_sync_next = 0
+          allow_venv_next = 0
+          allow_priv_next = 0
+          allow_envsubst_next = 0
+          allow_uuid_next = 0
+          allow_hw_next = 0
+          allow_extvm_next = 0
+          allow_uname_next = 0
           if ($0 ~ /\*\x27:"\$\{THIS_FILE\}":\x27\*/) {
             bad_stack_quote_hits = (bad_stack_quote_hits ? bad_stack_quote_hits "; " : "") NR ":" $0
           }
@@ -235,6 +298,14 @@ audit_single_file() {
         if (adhoc_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends): " adhoc_pkg_hits
         if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw init/daemon manager usage found (delegate to _lib/_common/service.sh or service_install.sh): " raw_daemon_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout): " raw_fetch_hits
+        if (raw_sync_hits != "") print "RAW_REMOTE_SYNC|Raw rsync/scp call found (delegate to _lib/_common/remote_sync.sh): " raw_sync_hits
+        if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation found (delegate to _lib/_common/python_env.sh): " raw_venv_hits
+        if (raw_priv_hits != "") print "RAW_PRIV_ESCALATION|Raw sudo invocation found (delegate to priv / priv_as from _lib/_common/priv.sh): " raw_priv_hits
+        if (raw_envsubst_hits != "") print "RAW_ENVSUBST|Raw envsubst invocation found (delegate to envsubst_safe from _lib/_common/envsubst_safe.sh): " raw_envsubst_hits
+        if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic UUID generation found (delegate to _lib/_common/uuid_gen.sh): " raw_uuid_hits
+        if (raw_hw_hits != "") print "RAW_HW_DETECT|Raw hardware core/RAM query found (delegate to _lib/_common/hw_tune.sh): " raw_hw_hits
+        if (ext_vm_hits != "") print "EXTERNAL_VERSION_MANAGER|Direct third-party version manager invocation found (delegate to LibScript native components): " ext_vm_hits
+        if (raw_uname_hits != "") print "RAW_UNAME|Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh): " raw_uname_hits
         if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
         if (bad_stack_quote_hits != "") print "RECURSION_GUARD|Single-quoted literal ${THIS_FILE} in STACK guard (SC2016 bug): " bad_stack_quote_hits
@@ -277,6 +348,54 @@ audit_single_file() {
           RAW_NETWORK_FETCH)
             case "$file" in
               *_lib/_common/pkg_mgr.sh|*_lib/init-systems/daemonize.sh|*_lib/utilities/curl/test.sh|*_lib/utilities/wget/test.sh|*_lib/utilities/aria2/test.sh|*_lib/web-apps/*/test_harness.sh|*_lib/web-apps/*/health*.sh|*_lib/web-apps/*/service.sh|*tests/*|*devtools/ci/*|*devtools/capture_*|*devtools/render_*|*devtools/verify_*|*devtools/wait_*|*devtools/trigger_*|*docker*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_REMOTE_SYNC)
+            case "$file" in
+              *_lib/_common/remote_sync.sh|*_lib/utilities/rsync/*|*_lib/utilities/openssh/*|*packaging/*|*devtools/*|*tests/*|*vagrant/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_PYTHON_VENV)
+            case "$file" in
+              *_lib/_common/python_env.sh|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_PRIV_ESCALATION)
+            case "$file" in
+              *_lib/_common/priv.sh|*_lib/base-system/sudo/*|*devtools/*|*tests/*|*vagrant/*|*packaging/*|cli/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_ENVSUBST)
+            case "$file" in
+              *_lib/_common/envsubst_safe.sh|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_UUID_GEN)
+            case "$file" in
+              *_lib/_common/uuid_gen.sh|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_HW_DETECT)
+            case "$file" in
+              *_lib/_common/hw_tune.sh|*_lib/_common/source_builder.sh|*devtools/*|*tests/*|*packaging/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          EXTERNAL_VERSION_MANAGER)
+            case "$file" in
+              *_lib/_common/versioning.sh|*_lib/package-managers/*|*_lib/languages/rust/*|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_UNAME)
+            case "$file" in
+              *_lib/_common/os_info.sh|*devtools/*|*tests/*|*vagrant/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -433,6 +552,8 @@ audit_single_file() {
         mkdir_hits = ""; git_push_hits = ""; script_dir_hits = ""; chained_if_else_hits = "";
         bad_script_dir_strip = ""; tab_path_hits = ""; endlocal_delayed_hits = "";
         raw_fetch_hits = ""; raw_pkg_hits = ""; raw_daemon_hits = "";
+        raw_sync_hits = ""; raw_venv_hits = ""; raw_uuid_hits = "";
+        allow_sync_next = 0; allow_venv_next = 0; allow_uuid_next = 0;
         in_endlocal = 0;
       }
       { sub(/\r$/, "", $0) }
@@ -440,9 +561,11 @@ audit_single_file() {
         if (tolower($0) == "@echo off") has_echo_off = 1
       }
       NR <= 25 {
-        if (tolower($0) ~ /enabledelayedexpansion/) has_delayed = 1
-        if (tolower($0) ~ /this_file=%~f0/) has_this_file = 1
-        if (tolower($0) ~ /echo "!stack!" \| findstr \/i \/c:":/) has_stack_guard = 1
+        if (tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$))/) {
+          if (tolower($0) ~ /^[[:space:]]*setlocal[[:space:]]+enabledelayedexpansion/) has_delayed = 1
+          if (tolower($0) ~ /this_file=%~f0/) has_this_file = 1
+          if (tolower($0) ~ /echo "!stack!" \| findstr \/i \/c:":/) has_stack_guard = 1
+        }
       }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
@@ -463,12 +586,15 @@ audit_single_file() {
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
           allow_daemon_next = ($0 ~ /libscript-allow-raw-daemon/) ? 1 : 0
+          allow_sync_next = ($0 ~ /libscript-allow-raw-sync/) ? 1 : 0
+          allow_venv_next = ($0 ~ /libscript-allow-raw-venv/) ? 1 : 0
+          allow_uuid_next = ($0 ~ /libscript-allow-raw-uuid/) ? 1 : 0
           if ($0 ~ /^::[[:space:]]*Performs the .* operation and updates component state\.$/) {
             placeholder_doc_hits = (placeholder_doc_hits ? placeholder_doc_hits "; " : "") NR ":" $0
           }
         }
         if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && !allow_fetch_next && $0 !~ /libscript-allow-raw-(fetch|curl)/) {
-          if (tolower($0) ~ /(invoke-webrequest|invoke-restmethod|[[:space:]"]iwr[[:space:]]|[[:space:]"]irm[[:space:]]|certutil[[:space:]]+-urlcache|curl[[:space:]]+-[a-z0-9]*[sflo])/ && tolower($0) !~ /(127\.0\.0\.1|localhost|--cacert)/) {
+          if (tolower($0) ~ /(invoke-webrequest|invoke-restmethod|[[:space:]"]iwr[[:space:]]|[[:space:]"]irm[[:space:]]|certutil[[:space:]]+-urlcache|curl(\.exe)?[[:space:]]+(--(silent|location|fail|output)|-[a-z0-9]*[sflo]))/ && tolower($0) !~ /(127\.0\.0\.1|localhost|--cacert)/) {
             raw_fetch_hits = (raw_fetch_hits ? raw_fetch_hits "; " : "") NR ":" $0
           }
         }
@@ -482,10 +608,28 @@ audit_single_file() {
             raw_daemon_hits = (raw_daemon_hits ? raw_daemon_hits "; " : "") NR ":" $0
           }
         }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && !allow_sync_next && $0 !~ /libscript-allow-raw-sync/) {
+          if (tolower($0) ~ /(^|[[:space:]&(|])(rsync[[:space:]]+-[a-z0-9-]+.*:|scp[[:space:]]+(-[a-z0-9]+[[:space:]]+)*[^[:space:]|&]+)[[:space:]]+/ && tolower($0) !~ /(gcloud[[:space:]]+(compute|storage)|vagrant[[:space:]]+rsync|cli\.(sh|cmd)[[:space:]"]*scp|:log_error|--version)/) {
+            raw_sync_hits = (raw_sync_hits ? raw_sync_hits "; " : "") NR ":" $0
+          }
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && !allow_venv_next && $0 !~ /libscript-allow-raw-venv/) {
+          if (tolower($0) ~ /(^|[[:space:]&(|])([a-z0-9_$"%!\\\/.:-]*python[0-9.]*(\.exe)?["!]?[[:space:]]+-m[[:space:]]+venv|uv(\.exe)?[[:space:]]+venv|virtualenv[[:space:]]+)/) {
+            raw_venv_hits = (raw_venv_hits ? raw_venv_hits "; " : "") NR ":" $0
+          }
+        }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/ && !allow_uuid_next && $0 !~ /libscript-allow-raw-uuid/) {
+          if (tolower($0) ~ /guid\]::newguid[[:space:]]*\(/) {
+            raw_uuid_hits = (raw_uuid_hits ? raw_uuid_hits "; " : "") NR ":" $0
+          }
+        }
         if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/) {
           allow_fetch_next = 0
           allow_pkg_next = 0
           allow_daemon_next = 0
+          allow_sync_next = 0
+          allow_venv_next = 0
+          allow_uuid_next = 0
         }
         if ($0 ~ /SCRIPT_DIR[%!][^\\\/"[:space:])]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
@@ -582,6 +726,9 @@ audit_single_file() {
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits
         if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw service/daemon manager call in batch script (delegate to _lib\\_common\\service.cmd or service_install.cmd): " raw_daemon_hits
+        if (raw_sync_hits != "") print "RAW_REMOTE_SYNC|Raw rsync/scp call in batch script (delegate to _lib\\_common\\remote_sync.cmd): " raw_sync_hits
+        if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation in batch script (delegate to _lib\\_common\\python_env.cmd): " raw_venv_hits
+        if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic Guid::NewGuid() in batch script (delegate to _lib\\_common\\uuid_gen.cmd): " raw_uuid_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
         if (dup_label_hits != "") print "BATCH_DUPLICATE_LABEL|Duplicate label definition(s) in batch script: " dup_label_hits
         if (missing_lbl_hits != "") print "BATCH_MISSING_LABEL|Undefined batch label target: " missing_lbl_hits
@@ -610,6 +757,24 @@ audit_single_file() {
           RAW_DAEMON_MANAGER)
             case "$file" in
               *_lib/_common/service.cmd|*_lib/_common/service_install.cmd|*_lib/init-systems/*|*payloads/schedulers/*|*devtools/audit/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_REMOTE_SYNC)
+            case "$file" in
+              *_lib/_common/remote_sync.cmd|*_lib/utilities/rsync/*|*_lib/utilities/openssh/*|*packaging/*|*devtools/*|*tests/*|*vagrant/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_PYTHON_VENV)
+            case "$file" in
+              *_lib/_common/python_env.cmd|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_UUID_GEN)
+            case "$file" in
+              *_lib/_common/uuid_gen.cmd|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -710,6 +875,7 @@ audit_single_file() {
       fi
       ;;
     _lib/*/*/env.sh)
+      # shellcheck disable=SC2016
       if grep -v '^[[:space:]]*#' "$file" | grep -Eq '\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})'; then
         log_failure "$file" "SET_FEU_SAFETY" "Unguarded \$HOME reference in env.sh; use \${HOME:-/root} for set -u daemon safety."
       fi

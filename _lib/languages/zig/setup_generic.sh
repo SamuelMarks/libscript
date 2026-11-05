@@ -121,9 +121,8 @@ case "$ACTION" in
             fi
           fi
         else
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x86_64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
+          OS="${UNAME_LOWER:-linux}"
           if [ "$OS" = "darwin" ]; then OS="macos"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
           URL="https://ziglang.org/download/${EXACT_VERSION}/zig-${OS}-${ARCH}-${EXACT_VERSION}.tar.xz"
           TEMP_FILE=$(mktemp)

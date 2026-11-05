@@ -56,6 +56,8 @@ set "OS=Windows_NT"
 set "TARGET_OS=windows"
 set "UNAME=Windows_NT"
 set "UNAME_LOWER=windows"
+set "KERNEL_RELEASE=10.0"
+set "UNAME_A=Windows_NT 10.0 %PROCESSOR_ARCHITECTURE%"
 
 if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     set "ARCH=x86_64"

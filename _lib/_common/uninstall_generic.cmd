@@ -3,8 +3,10 @@
 :: ## Overview
 :: Provides fallback uninstallation logic for components on Windows. Safely removes the isolated native installation directories and junctions.
 :: ## Usage
-:: Typically called internally by uninstall.cmd. setlocal EnableDelayedExpansion set "CALLER_FILE=!THIS_FILE!"
+:: Typically called internally by uninstall.cmd.
 
+setlocal EnableDelayedExpansion
+set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (

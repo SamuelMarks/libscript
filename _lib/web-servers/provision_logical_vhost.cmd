@@ -3,9 +3,10 @@
 :: ## Overview
 :: Provisions a logical virtual host for a web server (e.g., Nginx, Apache).
 :: ## Usage
-:: call provision_logical_vhost.cmd --server-name <domain> --upstream-port <port> set "THIS_DIR=%~dp0"
+:: call provision_logical_vhost.cmd --server-name <domain> --upstream-port <port>
 
 setlocal EnableDelayedExpansion
+set "THIS_DIR=%~dp0"
 set "THIS_FILE=%~f0"
 
 if defined STACK (

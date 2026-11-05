@@ -126,8 +126,8 @@ case "$ACTION" in
         log_info "Installing cargo-binstall ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends 'curl' 'tar'
         mkdir -p "${TARGET_DIR}/bin"
-        _os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-        arch="$(uname -m)"
+        _os="${UNAME_LOWER:-linux}"
+        arch="${ARCH:-x86_64}"
         if [ "$UNAME_LOWER" = "freebsd" ]; then
           log_info 'No native binary for FreeBSD. Falling back to system package manager for cargo-binstall...'
           libscript_depends 'cargo-binstall'

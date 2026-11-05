@@ -120,11 +120,11 @@ case "$ACTION" in
           _hver='3.16.4'
           [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _hver="${EXACT_VERSION}"
           _harch='amd64'
-          case "$(uname -m)" in
+          case "${ARCH:-x86_64}" in
             aarch64|arm64) _harch="arm64" ;;
             *) _harch="amd64" ;;
           esac
-          _hos="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          _hos="${UNAME_LOWER:-linux}"
           HELM_DOWNLOAD_URL="https://get.helm.sh/helm-v${_hver}-${_hos}-${_harch}.tar.gz"
         fi
         if [ "${_hos:-}" = "freebsd" ]; then

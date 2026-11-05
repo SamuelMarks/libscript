@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 export DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/source_builder.sh"; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/source_builder.sh" "_lib/_common/hw_tune.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -458,7 +458,7 @@ run_kbuild_or_synthesis() {
 ' "${LINUX_VERSION}" "${LINUX_CONFIG_TARGET}" "${COMPILER_ID}" "${COMPILER_BIN}"
 
   _ksrc="${LINUX_SOURCE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/linux/linux-${LINUX_VERSION}}"
-  if [ -d "${_ksrc}" ] && [ -f "${_ksrc}/Makefile" ] && [ "$(uname -s)" = "Linux" ]; then
+  if [ -d "${_ksrc}" ] && [ -f "${_ksrc}/Makefile" ] && [ "${UNAME:-}" = "Linux" ]; then
     mkdir -p "${KERNEL_LOG_DIR}"
     case "${COMPILER_ID}" in
       edgcpp|edgcpp*)
@@ -474,7 +474,8 @@ run_kbuild_or_synthesis() {
     _krc=0
     make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" CC="${COMPILER_BIN}" "${LINUX_CONFIG_TARGET}" > "${KERNEL_BUILD_DIR}/build.log" 2>&1 || _krc=$?
     if [ "${_krc}" -eq 0 ]; then
-      make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" CC="${COMPILER_BIN}" KCFLAGS="${LINUX_KCFLAGS}" -j"$(nproc 2>/dev/null || printf '2')" >> "${KERNEL_BUILD_DIR}/build.log" 2>&1 || _krc=$?
+      libscript_detect_hardware
+      make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" CC="${COMPILER_BIN}" KCFLAGS="${LINUX_KCFLAGS}" -j"${LIBSCRIPT_HW_CORES:-2}" >> "${KERNEL_BUILD_DIR}/build.log" 2>&1 || _krc=$?
     fi
     cp "${KERNEL_BUILD_DIR}/build.log" "${KERNEL_LOG_DIR}/build.log" 2>/dev/null || true
     if [ "${_krc}" -ne 0 ]; then

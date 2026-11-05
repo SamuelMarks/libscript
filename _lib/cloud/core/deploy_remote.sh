@@ -32,6 +32,10 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 THIS_FILE="$_dr_saved_this"
 SCRIPT_DIR="$_dr_saved_dir"
@@ -124,7 +128,7 @@ calculate_checksum() {
     )
     printf '%s_%s\n' "$_dr_git" "$_dr_dirty"
   else
-    find "$local_path" -type f -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/target/*" -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.angular/*" -not -path "*/.vite/*" -not -path "*/__pycache__/*" -exec cksum {} + 2>/dev/null | sort | cksum | awk '{print $1"_"$2}'
+    find "$local_path" -type f -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/target/*" -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/cmake-build-*/*" -not -path "*/out/*" -not -path "*/.gradle/*" -not -path "*/.kotlin/*" -not -path "*/.angular/*" -not -path "*/.vite/*" -not -path "*/__pycache__/*" -exec cksum {} + 2>/dev/null | sort | cksum | awk '{print $1"_"$2}'
   fi
 }
 
@@ -236,6 +240,7 @@ print_remote_deployment_report() {
   printf '%s\n' '+----------------------------+--------------------------------+-------------------+------------------+'
 }
 
+# shellcheck disable=SC2086
 set -- $APPS_PATHS
 path_idx=1
 HEALTH_APPS=""
@@ -268,17 +273,7 @@ for app_path in "$@"; do
     _sync_state='UP-TO-DATE'
   else
     log_info "[SYNCING] $app_name -> https://$app_domain (local: $local_sum, remote: ${remote_sum:-none})"
-    # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "mkdir -p \$HOME/apps/$app_name"
-
-    if command -v rsync >/dev/null 2>&1; then
-      rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "$app_path/" "$TARGET_HOST:apps/$app_name/"
-    elif command -v tar >/dev/null 2>&1 && [ -d "$app_path" ]; then
-      # shellcheck disable=SC2029
-      tar -czf - -C "$app_path" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "$TARGET_HOST" "mkdir -p \$HOME/apps/$app_name && find \$HOME/apps/$app_name -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \$HOME/apps/$app_name && find \$HOME/apps/$app_name -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
-    else
-      scp -r "$app_path/"* "$TARGET_HOST:apps/$app_name/"
-    fi
+    libscript_sync_app_to_remote "$app_path" "$TARGET_HOST" "apps/$app_name"
 
     # Save new state
     # shellcheck disable=SC2029

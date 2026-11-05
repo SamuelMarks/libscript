@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/remote_sync.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -43,7 +43,8 @@ for HOST in $NODES; do
   SUBNET=$(grep "${HOST}" "${MACHINES_TXT}" | cut -d " " -f 4)
   sed "s|SUBNET|$SUBNET|g" "${DIR}/kubernetes-the-hard-way/"configs/10-bridge.conf > "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf"
   sed "s|SUBNET|$SUBNET|g" "${DIR}/kubernetes-the-hard-way/"configs/kubelet-config.yaml > "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml"
-  scp "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf" "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml" "root@${HOST}:~/"
+  libscript_scp_to_remote "${DIR}/kubernetes-the-hard-way/10-bridge-${HOST}.conf" "root@${HOST}" "./"
+  libscript_scp_to_remote "${DIR}/kubernetes-the-hard-way/kubelet-config-${HOST}.yaml" "root@${HOST}" "./"
   # shellcheck disable=SC2029
 
   ssh "root@${HOST}" "cp -f 10-bridge-${HOST}.conf 10-bridge.conf && cp -f kubelet-config-${HOST}.yaml kubelet-config.yaml"
@@ -52,8 +53,20 @@ done
 for HOST in $NODES; do
   ssh "root@${HOST}" 'mkdir -p ~/cni-plugins'
   set +f
-  scp "${DIR}/kubernetes-the-hard-way/"downloads/worker/* "${DIR}/kubernetes-the-hard-way/"downloads/client/kubectl "${DIR}/kubernetes-the-hard-way/"configs/99-loopback.conf "${DIR}/kubernetes-the-hard-way/"configs/containerd-config.toml "${DIR}/kubernetes-the-hard-way/"configs/kube-proxy-config.yaml "${DIR}/kubernetes-the-hard-way/"units/containerd.service "${DIR}/kubernetes-the-hard-way/"units/kubelet.service "${DIR}/kubernetes-the-hard-way/"units/kube-proxy.service "root@${HOST}:~/"
-  scp "${DIR}/kubernetes-the-hard-way/"downloads/cni-plugins/* "root@${HOST}:~/cni-plugins/"
+  for _w_f in \
+    "${DIR}/kubernetes-the-hard-way/"downloads/worker/* \
+    "${DIR}/kubernetes-the-hard-way/"downloads/client/kubectl \
+    "${DIR}/kubernetes-the-hard-way/"configs/99-loopback.conf \
+    "${DIR}/kubernetes-the-hard-way/"configs/containerd-config.toml \
+    "${DIR}/kubernetes-the-hard-way/"configs/kube-proxy-config.yaml \
+    "${DIR}/kubernetes-the-hard-way/"units/containerd.service \
+    "${DIR}/kubernetes-the-hard-way/"units/kubelet.service \
+    "${DIR}/kubernetes-the-hard-way/"units/kube-proxy.service; do
+    [ -e "${_w_f}" ] && libscript_scp_to_remote "${_w_f}" "root@${HOST}" "./"
+  done
+  for _cni_f in "${DIR}/kubernetes-the-hard-way/"downloads/cni-plugins/*; do
+    [ -e "${_cni_f}" ] && libscript_scp_to_remote "${_cni_f}" "root@${HOST}" "./cni-plugins/"
+  done
   set -f
 done
 

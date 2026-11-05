@@ -169,12 +169,12 @@ detect_pkg_mgr() {
   elif libscript_cmd_avail pkgx; then
     PKG_MGR='pkgx'
   else
-    if [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ]; then
+    if [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "darwin" ]; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
         if libscript_cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return; fi
       fi
-    elif [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
+    elif [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd"
         if libscript_cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return; fi
@@ -204,7 +204,7 @@ is_installed() {
     'eopkg')              eopkg list-installed | grep -q '^'"${pkg}"'[[:space:]]' ;;
     'pacman')             pacman -Q "${pkg}" >/dev/null 2>&1 ;;
     'pkg')
-      if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+      if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
         pkg list -q "${pkg}" >/dev/null 2>&1
       else
         pkg info -e "${pkg}"
@@ -345,7 +345,7 @@ libscript_depends() {
         'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
         'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             priv pkg install --accept ${pkgs_to_install} || _install_failed=1
           else
             priv pkg install -y ${pkgs_to_install} || _install_failed=1

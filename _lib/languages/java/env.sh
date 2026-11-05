@@ -34,7 +34,7 @@ unset SCRIPT_NAME || true
 
 export JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-system}"
 JAVA_VERSION="${JAVA_VERSION:-latest}"
-if [ "$(uname -s 2>/dev/null || true)" = "FreeBSD" ] && [ "${JAVA_VERSION}" = "latest" ]; then
+if [ "${UNAME:-}" = "FreeBSD" ] && [ "${JAVA_VERSION}" = "latest" ]; then
   unset JAVA_VERSION || true
 else
   export JAVA_VERSION

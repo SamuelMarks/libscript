@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -88,25 +88,26 @@ case "$ACTION" in
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
-      if [ "$(uname -s)" = "FreeBSD" ]; then
+      if [ "${UNAME:-}" = "FreeBSD" ]; then
         libscript_depends 'gunicorn'
         if command -v gunicorn >/dev/null 2>&1; then
           mkdir -p "${TARGET_DIR}/bin"
           ln -sf "$(command -v gunicorn)" "${TARGET_DIR}/bin/gunicorn"
         fi
-      elif command -v uv >/dev/null 2>&1; then
-        uv venv --allow-existing "${TARGET_DIR}"
-        if [ "${VERSION}" = "latest" ]; then
-          uv pip install --python "${TARGET_DIR}/bin/python" gunicorn
-        else
-          uv pip install --python "${TARGET_DIR}/bin/python" "gunicorn==${EXACT_VERSION}"
-        fi
       else
-        python3 -m venv "${TARGET_DIR}"
-        if [ "${VERSION}" = "latest" ]; then
-          "${TARGET_DIR}/bin/python" -m pip install --no-cache-dir gunicorn
+        libscript_python_venv "${TARGET_DIR}"
+        if command -v uv >/dev/null 2>&1; then
+          if [ "${VERSION}" = "latest" ]; then
+            uv pip install --python "${TARGET_DIR}/bin/python" gunicorn
+          else
+            uv pip install --python "${TARGET_DIR}/bin/python" "gunicorn==${EXACT_VERSION}"
+          fi
         else
-          "${TARGET_DIR}/bin/python" -m pip install --no-cache-dir "gunicorn==${EXACT_VERSION}"
+          if [ "${VERSION}" = "latest" ]; then
+            "${TARGET_DIR}/bin/python" -m pip install --no-cache-dir gunicorn
+          else
+            "${TARGET_DIR}/bin/python" -m pip install --no-cache-dir "gunicorn==${EXACT_VERSION}"
+          fi
         fi
       fi
       libscript_symlink_alias "gunicorn" "$VERSION" "${EXACT_VERSION}"

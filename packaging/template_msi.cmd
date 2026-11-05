@@ -95,7 +95,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$ver = if ($verOverride) { $verOverride } elseif ($spec.version) { $spec.version } else { '1.0.0.0' };" ^
     "$pub = if ($spec.publisher) { $spec.publisher } else { 'LibScript Open Source Project' };" ^
     "$upgradeCode = if ($spec.upgrade_code) { $spec.upgrade_code } else { '{A0B1C2D3-E4F5-6A7B-8C9D-0E1F2A3B4C5D}' };" ^
-    "$prodCode = [System.Guid]::NewGuid().ToString('B').ToUpper();" ^
+    "$uuidCmd = Join-Path '!LIBSCRIPT_ROOT_DIR!' '_lib\_common\uuid_gen.cmd';" ^
+    "$rawUuid = (& cmd.exe /c \"`\"$uuidCmd`\" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 `\"product.$name.$ver`\"\").Trim();" ^
+    "$prodCode = '{' + $rawUuid.ToUpper() + '}';" ^
     "$hasChainer = ($spec.orchestrator -eq $true -or $spec.embedded_chainer -eq $true -or $spec.topology -eq 'suite_orchestrator' -or ($spec.chained_packages -and $spec.chained_packages.Count -gt 0) -or ($spec.dependencies -and $spec.dependencies.Count -gt 0));" ^
     "$lines = @(" ^
     "  '<?xml version=\"1.0\" encoding=\"UTF-8\"?>'," ^

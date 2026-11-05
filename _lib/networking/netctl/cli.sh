@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 NETCTL_DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR NETCTL_DIR
 
-for LIB in "_lib/_common/log.sh" "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   if [ -f "${SCRIPT_NAME}" ]; then
@@ -101,8 +101,8 @@ netctl_reload_proxy() {
   case "$_nrp_fmt" in
     nginx)
       if command -v nginx >/dev/null 2>&1; then
-        nginx -t >/dev/null 2>&1 || sudo nginx -t >/dev/null 2>&1 || true
-        if nginx -s reload >/dev/null 2>&1 || sudo nginx -s reload >/dev/null 2>&1 || libscript_service reload nginx >/dev/null 2>&1; then
+        nginx -t >/dev/null 2>&1 || priv nginx -t >/dev/null 2>&1 || true
+        if nginx -s reload >/dev/null 2>&1 || priv nginx -s reload >/dev/null 2>&1 || libscript_service reload nginx >/dev/null 2>&1; then
           log_info "[DAEMON] [ACTIVE] ${_nrp_fmt} reverse proxy reloaded successfully."
         else
           libscript_service restart nginx >/dev/null 2>&1 || true
@@ -130,22 +130,22 @@ netctl_ensure_static_permissions() {
   _nes_mdir="$2"
   [ -f "$_nes_state" ] || return 0
   if [ -n "${REMOTE_HOME:-}" ] && [ -d "${REMOTE_HOME}" ]; then
-    chmod o+x "${REMOTE_HOME}" 2>/dev/null || sudo chmod o+x "${REMOTE_HOME}" 2>/dev/null || true
+    chmod o+x "${REMOTE_HOME}" 2>/dev/null || priv chmod o+x "${REMOTE_HOME}" 2>/dev/null || true
   fi
   if [ -d "$_nes_mdir" ]; then
-    chmod o+x "$_nes_mdir" 2>/dev/null || sudo chmod o+x "$_nes_mdir" 2>/dev/null || true
+    chmod o+x "$_nes_mdir" 2>/dev/null || priv chmod o+x "$_nes_mdir" 2>/dev/null || true
     _parent_d=$(dirname -- "$_nes_mdir")
-    [ -d "$_parent_d" ] && [ "$_parent_d" != "/" ] && { chmod o+x "$_parent_d" 2>/dev/null || sudo chmod o+x "$_parent_d" 2>/dev/null || true; }
+    [ -d "$_parent_d" ] && [ "$_parent_d" != "/" ] && { chmod o+x "$_parent_d" 2>/dev/null || priv chmod o+x "$_parent_d" 2>/dev/null || true; }
   fi
   _static_targets=$(jq -r '.routes // {} | to_entries[]? | select(.value.type == "static" or .value.type == "spa") | .value.target // empty' "$_nes_state" 2>/dev/null || true)
   if [ -n "$_static_targets" ]; then
     printf '%s\n' "$_static_targets" | while IFS= read -r _st_dir; do
       [ -n "$_st_dir" ] || continue
       if [ -d "$_st_dir" ]; then
-        chmod -R o+rX "$_st_dir" 2>/dev/null || sudo chmod -R o+rX "$_st_dir" 2>/dev/null || true
+        chmod -R o+rX "$_st_dir" 2>/dev/null || priv chmod -R o+rX "$_st_dir" 2>/dev/null || true
         _cur_p=$(dirname -- "$_st_dir")
         while [ -n "$_cur_p" ] && [ "$_cur_p" != "/" ] && [ "$_cur_p" != "." ]; do
-          chmod o+x "$_cur_p" 2>/dev/null || sudo chmod o+x "$_cur_p" 2>/dev/null || true
+          chmod o+x "$_cur_p" 2>/dev/null || priv chmod o+x "$_cur_p" 2>/dev/null || true
           _cur_p=$(dirname -- "$_cur_p")
         done
       fi
@@ -169,7 +169,7 @@ netctl_remove_manifest_ingress() {
     for _vhost in "/etc/nginx/conf.d/${_rmi_dom}.conf" "/etc/nginx/sites-enabled/${_rmi_dom}" "/etc/nginx/sites-available/${_rmi_dom}" "/etc/httpd/conf.d/${_rmi_dom}.conf" "/etc/apache2/sites-enabled/${_rmi_dom}.conf"; do
       if [ -f "$_vhost" ] || [ -L "$_vhost" ]; then
         log_info "[ROUTES] [REMOVE] Removing virtual host config ${_vhost}..."
-        rm -f "$_vhost" 2>/dev/null || sudo rm -f "$_vhost" 2>/dev/null || true
+        rm -f "$_vhost" 2>/dev/null || priv rm -f "$_vhost" 2>/dev/null || true
       fi
     done
   fi
@@ -359,9 +359,9 @@ netctl_apply_manifest() {
       elif [ -f "/etc/nginx/ssl/${_dom}.crt" ]; then
         log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at /etc/nginx/ssl/${_dom}.crt."
       elif command -v openssl >/dev/null 2>&1; then
-        mkdir -p /etc/nginx/ssl 2>/dev/null || sudo mkdir -p /etc/nginx/ssl 2>/dev/null || true
+        mkdir -p /etc/nginx/ssl 2>/dev/null || priv mkdir -p /etc/nginx/ssl 2>/dev/null || true
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || \
-          sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || true
+          priv openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || true
         log_info "[ROUTES] [TLS] Generated self-signed SSL certificate for '${_dom}' at /etc/nginx/ssl/${_dom}.crt."
       fi
     fi
@@ -384,11 +384,11 @@ netctl_apply_manifest() {
             cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
           fi
           log_info "[ROUTES] [WRITE] Installed ${_format} virtual host config -> ${_dest}"
-        elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
-          sudo rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
-          sudo cp "$_out_file" "$_dest"
+        else
+          priv rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
+          priv cp "$_out_file" "$_dest" 2>/dev/null || true
           if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
-            sudo cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
+            priv cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
           fi
           log_info "[ROUTES] [WRITE] Installed ${_format} virtual host config -> ${_dest}"
         fi

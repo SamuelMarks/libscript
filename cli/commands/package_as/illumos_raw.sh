@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
+if [ -z "${UNAME:-}" ]; then
+  _ilr_oi_this="${THIS_FILE}"
+  _ilr_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_ilr_oi_this}"
+  SCRIPT_DIR="${_ilr_oi_dir}"
+  unset _ilr_oi_this _ilr_oi_dir || true
+fi
+
 TARGET_SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
 OUT_IMG="${2:-${REPO_ROOT}/build/images/raw/illumos.raw}"
 SIZE_GIB="${3:-20}"
@@ -49,7 +62,7 @@ printf '[PACKAGE]  Synthesizing illumos raw image: %s (%sG)...\n' "${OUT_IMG}" "
 truncate -s "${SIZE_GIB}G" "${OUT_IMG}" 2>/dev/null || dd if=/dev/zero of="${OUT_IMG}" bs=1M count=1 seek=$((SIZE_GIB * 1024 - 1)) status=none
 
 # In native SunOS / illumos, initialize loopback device via lofiadm if available
-if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ] && command -v lofiadm >/dev/null 2>&1; then
+if [ "${UNAME:-}" = "SunOS" ] && command -v lofiadm >/dev/null 2>&1; then
   LOFI_DEV=$(lofiadm -a "${OUT_IMG}" 2>/dev/null || true)
   if [ -n "${LOFI_DEV}" ]; then
     printf '[INFO]     Attached lofi device: %s\n' "${LOFI_DEV}"

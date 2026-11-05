@@ -3,8 +3,9 @@
 :: ## Overview
 :: Automates Ch4 of Kubernetes the Hard Way.
 :: ## Usage
-:: Executes the steps for Ch4. setlocal EnableDelayedExpansion
+:: Executes the steps for Ch4.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -109,8 +110,14 @@ for %%i in (%CERTS%) do (
   )
 )
 
-scp "%LIBSCRIPT_DATA_DIR%\ca.key" "%LIBSCRIPT_DATA_DIR%\ca.crt" "%LIBSCRIPT_DATA_DIR%\kube-api-server.key" "%LIBSCRIPT_DATA_DIR%\kube-api-server.crt" "%LIBSCRIPT_DATA_DIR%\service-accounts.key" "%LIBSCRIPT_DATA_DIR%\service-accounts.crt" root@server:~/
+for %%f in (ca.key ca.crt kube-api-server.key kube-api-server.crt service-accounts.key service-accounts.crt) do (
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%f" "root@server" "~/"
+)
 
 for %%i in (%NODES%) do (
-  scp "%LIBSCRIPT_DATA_DIR%\ca.crt" "%LIBSCRIPT_DATA_DIR%\%%i.key" "%LIBSCRIPT_DATA_DIR%\%%i.crt" root@%%i:~/
+  for %%f in (ca.crt %%i.key %%i.crt) do (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%f" "root@%%i" "~/"
+  )
 )

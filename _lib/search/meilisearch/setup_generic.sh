@@ -89,7 +89,7 @@ v1.36.0
       fi
 
       ARCH_NAME='amd64'
-      case "${ARCH:-$(uname -m)}" in
+      case "${ARCH:-x86_64}" in
         x86_64|amd64) ARCH_NAME="amd64" ;;
         aarch64|arm64)
           if [ "$OS_NAME" = "macos" ]; then

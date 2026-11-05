@@ -3,8 +3,9 @@
 :: ## Overview
 :: Automates Ch12 of Kubernetes the Hard Way.
 :: ## Usage
-:: Executes the steps for Ch12. setlocal EnableDelayedExpansion
+:: Executes the steps for Ch12.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

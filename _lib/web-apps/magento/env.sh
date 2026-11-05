@@ -35,7 +35,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${MAGENTO_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   export MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-${HOME:-/root}/.libscript/www/magento}"
 else
   export MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"

@@ -136,8 +136,11 @@ audit_component_dir() {
         if grep -Eiq '^[ 	]*(where[ 	]+(winget|choco|scoop).*&&[ 	]*)?(call[ 	]+)?(winget|choco|scoop)[ 	]+(install|uninstall|upgrade|update)([ 	]|$)' "$_cmd_file"; then
           log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PACKAGE_MANAGER" "Direct winget/choco/scoop install/uninstall in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
         fi
-        if grep -Eiq '(Invoke-WebRequest|Invoke-RestMethod|[ 	"]iwr[ 	]|[ 	"]irm[ 	]|certutil[ 	]+-urlcache)' "$_cmd_file"; then
+        if grep -Eiq '(Invoke-WebRequest|Invoke-RestMethod|[ 	"]iwr[ 	]|[ 	"]irm[ 	]|certutil[ 	]+-urlcache|curl(\.exe)?[ 	]+-[a-zA-Z0-9]*[sSfLOo])' "$_cmd_file"; then
           log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_NETWORK_FETCH" "Raw network fetch in $(basename "$_cmd_file"); delegate to pkg_mgr.cmd."
+        fi
+        if grep -Eiq '^[ 	]*[^:]*([A-Za-z0-9_$"%!\\/.:-]*python[0-9.]*(\.exe)?["!]?[ 	]+-m[ 	]+venv|uv(\.exe)?[ 	]+venv|virtualenv[ 	]+)' "$_cmd_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_cmd_file"); delegate to _lib\\_common\\python_env.cmd."
         fi
       done
       for _ps1_file in "$_comp_dir"/setup*.ps1 "$_comp_dir"/uninstall*.ps1; do
@@ -184,6 +187,12 @@ audit_component_dir() {
         [ -f "$_sh_file" ] || continue
         if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(systemctl[ 	]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[ 	]+(load|unload|start|stop)|rc-service[ 	]+|rc-update[ 	]+(add|del)|svcadm[ 	]+(enable|disable|restart|refresh)|svccfg[ 	]+(import|delete)|sc\.exe[ 	]+(start|stop|create|delete|config|query)|net[ 	]+(start|stop)[ 	]+|service[ 	]+[A-Za-z0-9_$"'\''-]+[ 	]+(start|stop|restart|reload|status)|update-rc\.d[ 	]+|chkconfig[ 	]+|s6-svc[ 	]+|dinitctl[ 	]+|sysrc[ 	]+[A-Za-z0-9_$"'\''-]*_enable)' "$_sh_file"; then
           log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_DAEMON_MANAGER" "Direct init/daemon manager call in $(basename "$_sh_file"); delegate to _lib/_common/service.sh or service_install.sh."
+        fi
+        if grep -Eq '^[ 	]*[^#]*(priv([_a-z]*)[ 	]+([A-Za-z0-9_$"'\''-]+[ 	]+)?)?([A-Za-z0-9_$"'\''/.-]*python[0-9.]*[ 	]+-m[ 	]+venv|uv[ 	]+venv|virtualenv[ 	]+)' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_PYTHON_VENV" "Explicit Python venv setup in $(basename "$_sh_file"); delegate to _lib/_common/python_env.sh."
+        fi
+        if grep -Eq '^[ 	]*[^#]*(\$\(uname([ 	\)]|$)|(^|[ 	;|&(])uname([ 	]+-[a-zA-Z]+)?([ 	;|&)]|$))' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_UNAME" "Raw uname call in $(basename "$_sh_file"); use UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh."
         fi
       done
       for _cmd_file in "$_comp_dir"/setup*.cmd "$_comp_dir"/service*.cmd "$_comp_dir"/uninstall*.cmd "$_comp_dir"/test*.cmd; do

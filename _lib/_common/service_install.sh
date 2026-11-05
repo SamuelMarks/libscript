@@ -61,7 +61,7 @@ libscript_detect_init_system() {
       ;;
   esac
 
-  _uname_l="${UNAME_LOWER:-$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'linux')}"
+  _uname_l="${UNAME_LOWER:-linux}"
   if command -v systemctl >/dev/null 2>&1 && { [ -d /run/systemd/system ] || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; }; then
     printf '%s\n' 'systemd'
   elif command -v rc-service >/dev/null 2>&1; then
@@ -828,14 +828,14 @@ libscript_uninstall_service() {
     log_info "Uninstalling SMF service: $_service_name"
     priv svcadm disable -s "application/libscript/$_service_name" 2>/dev/null || true
     priv svccfg delete "application/libscript/$_service_name" 2>/dev/null || true
-  elif [ "${UNAME_LOWER:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; then
+  elif [ "${UNAME_LOWER:-}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; then
     log_info "Uninstalling FreeBSD rc.d service: $_service_name"
     priv service "$_rc_name" stop 2>/dev/null || true
     if command -v sysrc >/dev/null 2>&1; then
       priv sysrc "${_rc_name}_enable=NO" 2>/dev/null || true
     fi
     priv rm -f "/usr/local/etc/rc.d/$_rc_name" "/etc/rc.conf.d/$_rc_name"
-  elif [ "${UNAME_LOWER:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ] && command -v launchctl >/dev/null 2>&1; then
+  elif [ "${UNAME_LOWER:-}" = "darwin" ] && command -v launchctl >/dev/null 2>&1; then
     log_info "Uninstalling launchd service: $_service_name"
     if [ -f "${HOME:-/tmp}/Library/LaunchAgents/com.libscript.${_service_name}.plist" ]; then
       launchctl stop "com.libscript.${_service_name}" 2>/dev/null || true

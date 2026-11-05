@@ -120,8 +120,7 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing paru ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        ARCH=$(uname -m)
-        if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        if [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then
             URL="https://github.com/Morganamilo/paru/releases/download/v${EXACT_VERSION}/paru-v${EXACT_VERSION}-aarch64.tar.zst"
         else
             URL="https://github.com/Morganamilo/paru/releases/download/v${EXACT_VERSION}/paru-v${EXACT_VERSION}-x86_64.tar.zst"

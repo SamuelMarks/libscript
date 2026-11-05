@@ -3,8 +3,9 @@
 :: ## Overview
 :: Orchestrates the Open edX Test Plan as defined in TEST_OPENEDX_PLAN.md. This batch script is idempotent and corresponds to the POSIX shell script version.
 :: ## Usage
-:: tests\test_openedx_plan.cmd [-o target_os] [step] Examples: tests\test_openedx_plan.cmd 0            :: Run Step 0 on debian-13 tests\test_openedx_plan.cmd -o macos-14-arm64 1  :: Run Step 1 on macos setlocal EnableDelayedExpansion
+:: tests\test_openedx_plan.cmd [-o target_os] [step]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

@@ -28,6 +28,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ]; then
+  _ctx_oi_this="${THIS_FILE}"
+  _ctx_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_ctx_oi_this}"
+  SCRIPT_DIR="${_ctx_oi_dir}"
+  unset _ctx_oi_this _ctx_oi_dir || true
+fi
+
 # Standard Context Contract Defaults
 : "${LIBSCRIPT_BUILD_DIR:=${TMPDIR:-/tmp}/libscript_build}"
 : "${LIBSCRIPT_TARGET_SYSROOT:=${LIBSCRIPT_BUILD_DIR}/sysroot}"
@@ -38,7 +51,7 @@ export LIBSCRIPT_ROOT_DIR
 
 # Architecture auto-detection
 if [ -z "${LIBSCRIPT_TARGET_ARCH:-}" ]; then
-  _raw_arch=$(uname -m 2>/dev/null || printf '%s' "x86_64")
+  _raw_arch="${ARCH:-x86_64}"
   case "$_raw_arch" in
     x86_64|amd64) LIBSCRIPT_TARGET_ARCH="x86_64" ;;
     aarch64|arm64) LIBSCRIPT_TARGET_ARCH="aarch64" ;;
@@ -51,7 +64,7 @@ fi
 
 # Operating system auto-detection
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
-  _raw_os=$(uname -s 2>/dev/null || printf '%s' "Linux")
+  _raw_os="${UNAME:-Linux}"
   case "$_raw_os" in
     Linux) LIBSCRIPT_TARGET_OS="linux" ;;
     FreeBSD) LIBSCRIPT_TARGET_OS="freebsd" ;;

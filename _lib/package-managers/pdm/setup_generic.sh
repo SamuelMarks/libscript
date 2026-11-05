@@ -135,7 +135,7 @@ case "$ACTION" in
         fi
         if [ ! -d "${TARGET_DIR}" ] || [ ! -x "${TARGET_DIR}/bin/pdm" ]; then
            mkdir -p "${TARGET_DIR}"
-           if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ]; then
+           if [ "${UNAME:-}" = "SunOS" ]; then
              if ! command -v gcc >/dev/null 2>&1; then
                libscript_depends 'gcc' || true
              fi

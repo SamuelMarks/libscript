@@ -129,7 +129,7 @@ case "$ACTION" in
 
 
         mkdir -p "${TARGET_DIR}/bin"
-        if [ "$(uname -s)" = "FreeBSD" ]; then
+        if [ "${UNAME:-}" = "FreeBSD" ]; then
           libscript_depends 'sbt'
           if command -v sbt >/dev/null 2>&1; then
             ln -sf "$(command -v sbt)" "${TARGET_DIR}/bin/sbt"

@@ -34,7 +34,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/service.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/service.sh" "_lib/_common/python_env.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -48,21 +48,19 @@ if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
     fi
   fi
 
-  if [ "$(uname -s)" = "Darwin" ]; then
+  if [ "${UNAME:-}" = "Darwin" ]; then
     mkdir -p "${PYTHON_VENV}"
   else
     priv  mkdir -p -- "${PYTHON_VENV}"
     _grp="${GROUP:-$(id -gn 2>/dev/null || echo "${USER}")}"
     priv  chown -R -- "${USER}":"${_grp}" "${PYTHON_VENV}"
   fi
-  if [ "$(uname -s)" = "FreeBSD" ]; then
-    python3 -m venv "${PYTHON_VENV}"
+  libscript_python_venv "${PYTHON_VENV}"
+  if [ "${UNAME:-}" = "FreeBSD" ]; then
     "${PYTHON_VENV}/bin/pip" install celery
   elif command -v uv >/dev/null 2>&1; then
-    uv venv --allow-existing "${PYTHON_VENV}"
     uv pip install --python "${PYTHON_VENV}" celery
   else
-    python3 -m venv "${PYTHON_VENV}"
     "${PYTHON_VENV}/bin/python" -m pip install celery
   fi
 fi
@@ -85,7 +83,7 @@ if [ -d '/etc/systemd/system' ]; then
     priv chown "${CELERY_SERVICE_USER}" '/home/'"${CELERY_SERVICE_USER}"'/' 2>/dev/null || true
   fi
   priv mkdir -p -- '/var/run/celery' '/var/log/celery'
-  if [ "$(uname -s)" = "Darwin" ]; then
+  if [ "${UNAME:-}" = "Darwin" ]; then
     priv chown -R -- "${CELERY_SERVICE_USER}" '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
   else
     priv chown -R -- "${CELERY_SERVICE_USER}":"${CELERY_SERVICE_USER}" '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
@@ -110,12 +108,12 @@ elif [ -d '/usr/local/etc/rc.d' ]; then
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   log_info "Configuring FreeBSD rc.d service for ${service_name}..."
   libscript_service enable "${service_name}" || true
-elif [ "${TARGET_OS:-}" = "sunos" ] || [ "$(uname -s)" = "SunOS" ]; then
+elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
   # SunOS / OmniOS
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   log_info 'Celery installed successfully on SunOS.'
   exit 0
-elif [ -d '/Library/LaunchDaemons' ] || [ "$(uname -s)" = "Darwin" ]; then
+elif [ -d '/Library/LaunchDaemons' ] || [ "${UNAME:-}" = "Darwin" ]; then
   log_info 'Celery installed successfully on macOS.'
   exit 0
 else

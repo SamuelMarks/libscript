@@ -44,8 +44,7 @@ if [ ! -d "${DIR}/kubernetes-the-hard-way/.git" ]; then mv "${DIR}/kubernetes-th
 
 PREVIOUS_WD="$(pwd)"
 cd "${DIR}/kubernetes-the-hard-way"
-ARCH=$(uname -m)
-if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; fi
+if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ]; then ARCH="arm64"; fi
 mkdir -p 'downloads'
 
 while read -r URL || [ -n "$URL" ]; do

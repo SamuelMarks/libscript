@@ -26,8 +26,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-if [ -z ${ARCH+x} ]; then
-  ARCH="$(uname -m)"
+if [ -z "${ARCH+x}" ]; then
+  ARCH="${LIBSCRIPT_TARGET_ARCH:-$(uname -m 2>/dev/null || printf 'x86_64')}"
   case "${ARCH}" in
     'aarch64') export ARCH_ALT='arm64' ;;
     *) export ARCH_ALT="${ARCH}" ;;
@@ -35,8 +35,28 @@ if [ -z ${ARCH+x} ]; then
   export ARCH
 fi
 
-if [ -z ${UNAME+x} ]; then
-    UNAME="$(uname)"
+if [ -z "${KERNEL_RELEASE+x}" ]; then
+  KERNEL_RELEASE="$(uname -r 2>/dev/null || printf 'unknown')"
+  export KERNEL_RELEASE
+fi
+
+if [ -z "${UNAME_A+x}" ]; then
+  UNAME_A="$(uname -a 2>/dev/null || printf 'unknown')"
+  export UNAME_A
+fi
+
+if [ -z "${UNAME+x}" ]; then
+    if [ -n "${LIBSCRIPT_TARGET_OS:-}" ]; then
+      case "${LIBSCRIPT_TARGET_OS}" in
+        darwin|macos) UNAME='Darwin' ;;
+        freebsd) UNAME='FreeBSD' ;;
+        sunos|illumos|solaris) UNAME='SunOS' ;;
+        windows) UNAME='Windows_NT' ;;
+        *) UNAME="$(uname 2>/dev/null || printf 'Linux')" ;;
+      esac
+    else
+      UNAME="$(uname 2>/dev/null || printf 'Linux')"
+    fi
     UNAME_LOWER="$(printf '%s' "${UNAME}" | tr '[:upper:]' '[:lower:]')"
     export UNAME_LOWER
     case "${UNAME}" in
@@ -114,8 +134,9 @@ if [ -z ${UNAME+x} ]; then
     export TARGET_OS
 fi
 
-if [ -z "${UNAME+x}" ]; then
-  UNAME="$(uname)"
+if [ -z "${UNAME_LOWER+x}" ]; then
+  UNAME_LOWER="$(printf '%s' "${UNAME}" | tr '[:upper:]' '[:lower:]')"
+  export UNAME_LOWER
 fi
 
 # ## _fallback

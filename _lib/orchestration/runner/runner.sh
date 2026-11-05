@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${ARCH:-}" ]; then
+  _rnr_oi_this="${THIS_FILE}"
+  _rnr_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_rnr_oi_this}"
+  SCRIPT_DIR="${_rnr_oi_dir}"
+  unset _rnr_oi_this _rnr_oi_dir || true
+fi
+
 TARGET_DIR="${1:-}"
 if [ -z "$TARGET_DIR" ]; then
   printf '[ERROR] Target sysroot directory required.\n' >&2
@@ -50,7 +63,7 @@ if [ ! -d "$TARGET_DIR" ]; then
 fi
 
 # Foreign architecture QEMU runner support
-HOST_ARCH="$(uname -m 2>/dev/null || printf '%s' 'unknown')"
+HOST_ARCH="${ARCH:-unknown}"
 TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-$HOST_ARCH}"
 case "$TARGET_ARCH" in
   x86_64|amd64) QEMU_ARCH="x86_64" ;;

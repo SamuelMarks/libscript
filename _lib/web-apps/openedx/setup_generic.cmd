@@ -437,10 +437,15 @@ if "!ACTION!"=="install" (
 
     :: Pre-flight python check
     set "PY_EXE=python"
+    if exist "%USERPROFILE%\.libscript\python\latest\python.exe" set "PY_EXE=%USERPROFILE%\.libscript\python\latest\python.exe"
+    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" set "PY_EXE=%USERPROFILE%\.libscript\python\latest\bin\python.exe"
+    if defined LIBSCRIPT_HOME if exist "!LIBSCRIPT_HOME!\python\latest\python.exe" set "PY_EXE=!LIBSCRIPT_HOME!\python\latest\python.exe"
+    if defined LIBSCRIPT_HOME if exist "!LIBSCRIPT_HOME!\python\latest\bin\python.exe" set "PY_EXE=!LIBSCRIPT_HOME!\python\latest\bin\python.exe"
     for /d %%P in ("C:\Python*" "%ProgramFiles%\Python*" "%LOCALAPPDATA%\Programs\Python\Python*") do (
         if exist "%%~fP\python.exe" set "PY_EXE=%%~fP\python.exe"
     )
     if exist "!OPENEDX_INSTALL_DIR!\runtimes\python\python.exe" set "PY_EXE=!OPENEDX_INSTALL_DIR!\runtimes\python\python.exe"
+    if exist "!OPENEDX_INSTALL_DIR!\runtimes\python\bin\python.exe" set "PY_EXE=!OPENEDX_INSTALL_DIR!\runtimes\python\bin\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe"
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe"
     if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set "PY_EXE=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
@@ -457,7 +462,8 @@ if "!ACTION!"=="install" (
 
     echo [INFO] 3/7: Generating Open edX environment configurations and venv...
     if not exist "!OPENEDX_INSTALL_DIR!\.venv\Scripts\python.exe" (
-        "!PY_EXE!" -m venv "!OPENEDX_INSTALL_DIR!\.venv" 2>nul
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "!PY_EXE!" "!OPENEDX_INSTALL_DIR!\.venv" >nul 2>&1
         if not exist "!OPENEDX_INSTALL_DIR!\.venv\Scripts\python.exe" (
             if not exist "!OPENEDX_INSTALL_DIR!\.venv\Scripts" mkdir "!OPENEDX_INSTALL_DIR!\.venv\Scripts" 2>nul
             if not exist "!OPENEDX_INSTALL_DIR!\.venv\Lib\site-packages" mkdir "!OPENEDX_INSTALL_DIR!\.venv\Lib\site-packages" 2>nul

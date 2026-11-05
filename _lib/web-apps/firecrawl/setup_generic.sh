@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/service.sh' '_lib/languages/nodejs/setup.sh' '_lib/git-servers/utils/git.sh'; do
+for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/service.sh' '_lib/_common/envsubst_safe.sh' '_lib/languages/nodejs/setup.sh' '_lib/git-servers/utils/git.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -101,15 +101,15 @@ if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
   ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
 fi
 
-if [ -d '/etc/systemd/system' ] && command -v envsubst >/dev/null 2>&1 && command -v pnpm >/dev/null 2>&1; then
+if [ -d '/etc/systemd/system' ] && command -v pnpm >/dev/null 2>&1; then
   name_file="$(mktemp)"
   trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   service_name='firecrawl_workers'
-  env -i DESCRIPTION='Firecrawl workers' \
-          ENV="${ENV}" \
-          WORKING_DIR="${DEST}"'/apps/api' \
-          EXEC_START="$(command -v pnpm)"' run workers' \
-        "$(command -v envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
+  DESCRIPTION='Firecrawl workers' \
+  ENV="${ENV}" \
+  WORKING_DIR="${DEST}"'/apps/api' \
+  EXEC_START="$(command -v pnpm)"' run workers' \
+    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
   libscript_service daemon-reload "${service_name}" || true
   libscript_service reload-or-restart "${service_name}" || true
@@ -117,11 +117,11 @@ if [ -d '/etc/systemd/system' ] && command -v envsubst >/dev/null 2>&1 && comman
   name_file="$(mktemp)"
   trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   service_name='firecrawl_serve'
-  env -i DESCRIPTION='Firecrawl serve' \
-          ENV="${ENV}" \
-          WORKING_DIR="${DEST}"'/apps/api' \
-          EXEC_START="$(command -v pnpm)"' run start' \
-        "$(command -v envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
+  DESCRIPTION='Firecrawl serve' \
+  ENV="${ENV}" \
+  WORKING_DIR="${DEST}"'/apps/api' \
+  EXEC_START="$(command -v pnpm)"' run start' \
+    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
   libscript_service daemon-reload "${service_name}" || true
   libscript_service reload-or-restart "${service_name}" || true

@@ -57,8 +57,14 @@ chmod 700 "$data_dir" "$logs_dir"
 
 # 2. Automated Python venv scaffolding
 if [ ! -d "$venv_dir" ]; then
-  # Assume python is available in PATH or via libscript environment
-  python3 -m venv "$venv_dir"
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+    libscript_python_venv "$venv_dir"
+  fi
 fi
 
 # 3. Application Configuration Rendering (Mock generation for shell)

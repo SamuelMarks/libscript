@@ -432,5 +432,90 @@ RS_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" restore test-node --provider azure
 assert_contains "$RS_DRY" "import-state libscript.json" "restore --import-state imports selected app state"
 printf '[PASS] Multi-app shared-node provision, deprovision, backup, and restore dry-run orchestration\n'
 
+# 13. Test gitignore-aware remote_sync with remote build-directory protection and stale directory deletion
+if command -v rsync >/dev/null 2>&1; then
+  SYNC_SRC="${TEST_TMP}/sync_local"
+  SYNC_DST="${TEST_TMP}/sync_remote"
+  mkdir -p "${SYNC_SRC}/src" "${SYNC_SRC}/build" "${SYNC_SRC}/cmake-build-debug" "${SYNC_SRC}/node_modules" "${SYNC_SRC}/target" "${SYNC_SRC}/.venv"
+  mkdir -p "${SYNC_DST}/stale_old_dir/nested" "${SYNC_DST}/build" "${SYNC_DST}/cmake-build-debug" "${SYNC_DST}/cmake-build-release" "${SYNC_DST}/node_modules/pkg" "${SYNC_DST}/target/release" "${SYNC_DST}/.venv/bin"
+  cat << 'EOF_GI' > "${SYNC_SRC}/.gitignore"
+ignored_secret.txt
+ignored_dir/
+*.tmp_artifact
+EOF_GI
+  mkdir -p "${SYNC_SRC}/ignored_dir"
+  printf 'keep_src\n' > "${SYNC_SRC}/src/main.c"
+  printf 'do_not_upload_ignored\n' > "${SYNC_SRC}/ignored_secret.txt"
+  printf 'do_not_upload_dir\n' > "${SYNC_SRC}/ignored_dir/file.txt"
+  printf 'do_not_upload_glob\n' > "${SYNC_SRC}/test.tmp_artifact"
+  printf 'local_build_noise\n' > "${SYNC_SRC}/build/local_only.o"
+  printf 'remote_cached_bin\n' > "${SYNC_DST}/build/remote_cached.o"
+  printf 'remote_cmake_dbg\n' > "${SYNC_DST}/cmake-build-debug/CMakeCache.txt"
+  printf 'remote_cmake_rel\n' > "${SYNC_DST}/cmake-build-release/app_bin"
+  printf 'remote_node_mod\n' > "${SYNC_DST}/node_modules/pkg/index.js"
+  printf 'remote_rust_tgt\n' > "${SYNC_DST}/target/release/lib.rlib"
+  printf 'remote_py_venv\n' > "${SYNC_DST}/.venv/bin/python"
+  printf 'stale_file\n' > "${SYNC_DST}/stale_old_dir/nested/old.txt"
+
+  rsync -avz --delete \
+    --filter='P build' \
+    --filter='P cmake-build-debug' \
+    --filter='P cmake-build-release' \
+    --filter='P cmake-build-*' \
+    --filter='P node_modules' \
+    --filter='P target' \
+    --filter='P .venv' \
+    --filter=':- .gitignore' \
+    --exclude='.git' \
+    --exclude='build' \
+    --exclude='cmake-build-debug' \
+    --exclude='cmake-build-release' \
+    --exclude='cmake-build-*' \
+    --exclude='node_modules' \
+    --exclude='target' \
+    --exclude='.venv' \
+    "${SYNC_SRC}/" "${SYNC_DST}/" >/dev/null
+
+  if [ ! -f "${SYNC_DST}/src/main.c" ]; then
+    printf '[FAIL] remote_sync did not upload tracked src/main.c\n' >&2
+    exit 1
+  fi
+  if [ -e "${SYNC_DST}/stale_old_dir" ]; then
+    printf '[FAIL] remote_sync did not delete stale_old_dir on remote\n' >&2
+    exit 1
+  fi
+  if [ -e "${SYNC_DST}/ignored_secret.txt" ] || [ -e "${SYNC_DST}/ignored_dir" ] || [ -e "${SYNC_DST}/test.tmp_artifact" ]; then
+    printf '[FAIL] remote_sync uploaded files matching .gitignore\n' >&2
+    exit 1
+  fi
+  if [ -e "${SYNC_DST}/build/local_only.o" ]; then
+    printf '[FAIL] remote_sync uploaded local build directory artifact\n' >&2
+    exit 1
+  fi
+  for _prot in "build/remote_cached.o" "cmake-build-debug/CMakeCache.txt" "cmake-build-release/app_bin" "node_modules/pkg/index.js" "target/release/lib.rlib" ".venv/bin/python"; do
+    if [ ! -f "${SYNC_DST}/${_prot}" ]; then
+      printf '[FAIL] remote_sync deleted protected remote build artifact: %s\n' "$_prot" >&2
+      exit 1
+    fi
+  done
+  printf '[PASS] Gitignore-aware remote_sync deletes stale remote dirs and preserves remote build/cache dirs\n'
+fi
+
+# 14. Test VM IP TTL caching and Python .venv lockfile hash helpers
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME
+libscript_set_cached_vm_ip "azure" "TEST-RG" "cache-node" "198.51.100.42"
+CACHED_IP=$(libscript_get_cached_vm_ip "azure" "TEST-RG" "cache-node")
+assert_contains "$CACHED_IP" "198.51.100.42" "VM Public IP TTL cache hit"
+libscript_invalidate_cached_vm_ip "azure" "TEST-RG" "cache-node"
+if libscript_get_cached_vm_ip "azure" "TEST-RG" "cache-node" >/dev/null 2>&1; then
+  printf '[FAIL] libscript_invalidate_cached_vm_ip did not clear cached IP\n' >&2
+  exit 1
+fi
+printf '[PASS] VM Public IP TTL cache set, hit, and invalidation\n'
+
 printf '=== ALL FULLSTACK ORCHESTRATION TESTS PASSED ===\n'
 

@@ -94,7 +94,7 @@ map_package() {
         'zypper') printf 'postgresql-server\n' ;;
         'pacman') printf 'postgresql\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/database/postgresql-17 ooce/library/postgresql-17\n'
           else
             printf 'postgresql14-server postgresql14-client\n'
@@ -112,7 +112,7 @@ map_package() {
         'apk') printf 'mariadb mariadb-client\n' ;;
         'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'mariadb-server\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/database/mariadb-114 ooce/library/mariadb-114\n'
           else
             printf 'mariadb114-server mariadb114-client\n'
@@ -258,7 +258,7 @@ map_package() {
         'zypper') printf 'postgresql-devel\n' ;;
         'pacman') printf 'postgresql-libs\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'database/postgres-16/library\n'
           else
             printf 'postgresql17-client\n'
@@ -275,7 +275,7 @@ map_package() {
         'zypper') printf 'sqlite3-devel\n' ;;
         'pacman') printf 'sqlite\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'database/sqlite-3\n'
           else
             printf 'databases/sqlite3\n'
@@ -292,7 +292,7 @@ map_package() {
         'zypper') printf 'mysql-community-server\n' ;;
         'pacman') printf 'mariadb\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'database/mysql-80\n'
           else
             printf 'databases/mysql84-server\n'
@@ -312,7 +312,7 @@ map_package() {
         'zypper') printf 'libmysqlclient-devel mysql-client\n' ;;
         'pacman') printf 'mariadb-libs mariadb-clients\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'database/mysql-80/client\n'
           else
             printf 'databases/mysql84-client\n'
@@ -331,7 +331,7 @@ map_package() {
         'zypper') printf 'xmlsec1-devel xmlsec1-openssl-devel libxml2-devel\n' ;;
         'pacman') printf 'xmlsec libxml2\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'library/security/xmlsec\n'
           else
             printf 'security/xmlsec1 textproc/libxml2\n'
@@ -349,7 +349,7 @@ map_package() {
         'zypper') printf 'geos-devel\n' ;;
         'pacman') printf 'geos\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'library/geos\n'
           else
             printf 'graphics/geos\n'
@@ -368,7 +368,7 @@ map_package() {
         'zypper') printf 'gettext-tools gettext-runtime\n' ;;
         'pacman') printf 'gettext\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'text/gnu-gettext\n'
           else
             printf 'devel/gettext\n'
@@ -388,7 +388,7 @@ map_package() {
         'zypper') printf 'graphviz graphviz-devel\n' ;;
         'pacman') printf 'graphviz\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'image/graphviz\n'
           else
             printf 'graphics/graphviz\n'
@@ -407,7 +407,7 @@ map_package() {
         'zypper') printf 'rdfind\n' ;;
         'pacman') printf 'rdfind\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             return 1
           else
             printf 'sysutils/rdfind\n'
@@ -425,7 +425,7 @@ map_package() {
         'zypper') printf 'exim\n' ;;
         'pacman') printf 'exim\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'service/network/smtp/sendmail\n'
           else
             printf 'mail/exim\n'
@@ -444,7 +444,7 @@ map_package() {
         'zypper') printf 'gcc\n' ;;
         'pacman') printf 'gcc\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'developer/gcc14\n'
           else
             printf 'gcc\n'
@@ -471,7 +471,7 @@ map_package() {
         'zypper') printf 'gcc-c++\n' ;;
         'pacman') printf 'gcc\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'developer/gcc14\n'
           else
             printf 'gcc\n'
@@ -495,7 +495,7 @@ map_package() {
         'apt-get') printf 'build-essential\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'developer/gcc14\n'
           else
             printf 'gcc\n'
@@ -511,7 +511,7 @@ map_package() {
         'winget') printf 'MSYS2.MSYS2\n' ;;
         'brew') printf 'gcc\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'developer/gcc14\n'
           else
             printf 'gcc\n'
@@ -524,7 +524,7 @@ map_package() {
       case "${PKG_MGR}" in
         'winget') printf 'GnuWin32.Make\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'developer/build/gnu-make\n'
           else
             printf 'gmake\n'
@@ -552,7 +552,7 @@ map_package() {
         'winget') printf 'SQLite.SQLite\n' ;;
         'emerge') printf 'dev-db/sqlite\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'database/sqlite-3\n'
           else
             printf 'sqlite3\n'
@@ -602,7 +602,7 @@ map_package() {
         'apk') printf 'qemu-system-aarch64 qemu-system-x86_64 qemu-img\n' ;;
         'apt-get') printf 'qemu-system-x86 qemu-system-arm qemu-utils ovmf qemu-efi-aarch64 libvirt-daemon-system libvirt-clients bridge-utils virtinst swtpm swtpm-tools\n' ;;
         'dnf'|'yum')
-          if [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ]; then
+          if [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then
             printf 'qemu-kvm qemu-img edk2-aarch64 libvirt virt-install swtpm\n'
           else
             printf 'qemu-kvm qemu-img edk2-ovmf libvirt virt-install swtpm\n'
@@ -610,7 +610,7 @@ map_package() {
           ;;
         'pacman') printf 'qemu-desktop edk2-ovmf edk2-arm virt-install libvirt swtpm\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/emulator/qemu ooce/util/qemu-img\n'
           else
             printf 'qemu\n'
@@ -725,7 +725,7 @@ map_package() {
         'zypper') printf 'java-17-openjdk\n' ;;
         'pacman') printf 'jre-openjdk\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/runtime/java-17\n'
           else
             printf 'openjdk17\n'
@@ -743,7 +743,7 @@ map_package() {
       case "${PKG_MGR}" in
         'winget') printf 'jqlang.jq\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/util/jq\n'
           else
             printf 'jq\n'
@@ -786,7 +786,7 @@ map_package() {
         'apt-get') printf 'php-cli\n' ;;
         'dnf') printf 'php-cli\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/runtime/php-82\n'
           else
             printf 'php84\n'
@@ -816,7 +816,7 @@ map_package() {
         "pacman") printf "python-pip
 " ;;
         "pkg")
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf "library/python-3/pip-313\n"
           else
             printf "py312-pip\n"
@@ -854,7 +854,7 @@ map_package() {
         "dnf"|"yum"|"zypper") printf "p7zip p7zip-plugins\n" ;;
         "pacman") printf "p7zip\n" ;;
         "pkg")
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf "compress/7zip\n"
           else
             printf "7-zip\n"
@@ -872,7 +872,7 @@ map_package() {
         'zypper') printf 'python3 python3-pip\n' ;;
         'pacman') printf 'python python-pip\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'runtime/python-313\n'
           else
             printf 'python3 py312-sqlite3\n'
@@ -906,7 +906,7 @@ map_package() {
         'zypper') printf 'rust cargo\n' ;;
         'winget') printf 'Rustlang.Rustup\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/developer/rust\n'
           else
             printf 'rust\n'
@@ -1067,7 +1067,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'cargo\n' ;;
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/developer/rust\n'
           else
             printf 'rust\n'
@@ -1186,7 +1186,7 @@ map_package() {
     'elixir')
       case "${PKG_MGR}" in
         'pkg')
-          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
             printf 'ooce/runtime/elixir\n'
           else
             printf 'elixir erlang\n'

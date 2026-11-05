@@ -111,10 +111,26 @@ function Audit-File {
         $rawFetchLines = @()
         $rawPkgLines = @()
         $rawDaemonLines = @()
+        $rawSyncLines = @()
+        $rawVenvLines = @()
+        $rawPrivLines = @()
+        $rawEnvsubstLines = @()
+        $rawUuidLines = @()
+        $rawHwLines = @()
+        $extVmLines = @()
+        $rawUnameLines = @()
         $unnecessaryDqLines = @()
         $allowFetchNext = $false
         $allowPkgNext = $false
         $allowDaemonNext = $false
+        $allowSyncNext = $false
+        $allowVenvNext = $false
+        $allowPrivNext = $false
+        $allowEnvsubstNext = $false
+        $allowUuidNext = $false
+        $allowHwNext = $false
+        $allowExtVmNext = $false
+        $allowUnameNext = $false
         $lineNum = 1
         foreach ($ln in (Get-Content -Path $FilePath -ErrorAction SilentlyContinue)) {
             $trimmed = $ln.Trim()
@@ -137,15 +153,47 @@ function Audit-File {
                 $allowFetchNext = ($ln -match 'libscript-allow-raw-(fetch|curl)')
                 $allowPkgNext = ($ln -match 'libscript-allow-raw-pkg')
                 $allowDaemonNext = ($ln -match 'libscript-allow-raw-daemon')
+                $allowSyncNext = ($ln -match 'libscript-allow-raw-sync')
+                $allowVenvNext = ($ln -match 'libscript-allow-raw-venv')
+                $allowPrivNext = ($ln -match 'libscript-allow-raw-priv')
+                $allowEnvsubstNext = ($ln -match 'libscript-allow-raw-envsubst')
+                $allowUuidNext = ($ln -match 'libscript-allow-raw-uuid')
+                $allowHwNext = ($ln -match 'libscript-allow-raw-hw')
+                $allowExtVmNext = ($ln -match 'libscript-allow-ext-vm')
+                $allowUnameNext = ($ln -match 'libscript-allow-raw-uname')
             } else {
-                if (-not $allowFetchNext -and $ln -notmatch 'libscript-allow-raw-(fetch|curl)' -and $ln -match '(^|[\s;|&(])(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])(\s|$)' -and $ln -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w\s+"%\{http_code\}")') {
+                if (-not $allowFetchNext -and $ln -notmatch 'libscript-allow-raw-(fetch|curl)' -and $ln -match '(^|[\s;|&(])(curl(\.exe)?\s+(--(silent|location|fail|output)|-[a-zA-Z0-9#-]*[sSfLOo])|wget(\.exe)?\s+(--(quiet|output-document)|-[a-zA-Z0-9-]*[qO])|aria2c\s+-[dox])(\s|$)' -and $ln -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w\s+"%\{http_code\}")') {
                     $rawFetchLines += $lineNum
                 }
                 if (-not $allowPkgNext -and $ln -notmatch 'libscript-allow-raw-pkg' -and $ln -match '(^|[\s;|&])(priv\s+|sudo\s+)?(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)(\s|$)' -and $ln -notmatch '--root') {
                     $rawPkgLines += $lineNum
                 }
-                if (-not $allowDaemonNext -and $ln -notmatch 'libscript-allow-raw-daemon' -and $ln -match '(^|[\s;|&(])(priv\s+|sudo\s+)?(systemctl\s+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl\s+(load|unload|start|stop|kickstart|bootstrap|bootout)|rc-service\s+|rc-update\s+(add|del)|svcadm\s+(enable|disable|restart|refresh)|svccfg\s+(import|delete)|sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status|onestatus)|update-rc\.d\s+|chkconfig\s+|s6-svc\s+|dinitctl\s+|sysrc\s+[A-Za-z0-9_$"''-]*_enable)([\s;|&)]|$)') {
+                if (-not $allowDaemonNext -and $ln -notmatch 'libscript-allow-raw-daemon' -and $ln -match '(^|[\s;|&(])(priv\s+|sudo\s+)?(systemctl\s+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl\s+(load|unload|start|stop|kickstart|bootstrap|bootout)|rc-service\s+|rc-update\s+(add|del)|svcadm\s+(enable|disable|restart|refresh)|svccfg\s+(import|delete)|sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status|onestatus)|update-rc\.d\s+|chkconfig\s+|s6-svc\s+|dinitctl\s+|sysrc\s+[A-Za-z0-9_$"''-]*_enable|journalctl\s+-u\s+)([\s;|&)]|$)') {
                     $rawDaemonLines += $lineNum
+                }
+                if (-not $allowSyncNext -and $ln -notmatch 'libscript-allow-raw-sync' -and $ln -match '(^|[\s;|&(])(rsync\s+-[a-zA-Z0-9-]*.*:|scp\s+(-[a-zA-Z0-9]+\s+)*[^\s|;&]+)\s+' -and $ln -notmatch '(gcloud\s+(compute|storage)|vagrant\s+rsync|cli\.(sh|cmd)[\s"]*scp|log_(info|warn|error)|--version|command\s+-v)') {
+                    $rawSyncLines += $lineNum
+                }
+                if (-not $allowVenvNext -and $ln -notmatch 'libscript-allow-raw-venv' -and $ln -match '(^|[\s;|&(])(priv([_a-z]*)\s+([A-Za-z0-9_$"''-]+\s+)?)?([A-Za-z0-9_$"''/.-]*python[0-9.]*\s+-m\s+venv|uv\s+venv|virtualenv\s+)') {
+                    $rawVenvLines += $lineNum
+                }
+                if (-not $allowPrivNext -and $ln -notmatch 'libscript-allow-raw-priv' -and $ln -match '(^|[\s;|&(])sudo\s+(-u\s+[A-Za-z0-9_$-]+\s+|[A-Za-z0-9_/.-]+)' -and $ln -notmatch '(command\s+-v\s+sudo|sudo\s+(-V|--version|-n\s+true)|node\s+exec|vagrant\s+ssh|echo\s|printf\s)') {
+                    $rawPrivLines += $lineNum
+                }
+                if (-not $allowEnvsubstNext -and $ln -notmatch 'libscript-allow-raw-envsubst' -and $ln -match '(^|[\s;|&(])(\$\(command\s+-v\s+envsubst\)|envsubst)([\s<>]|$)' -and $ln -notmatch '(envsubst_safe|command\s+-v\s+envsubst\s+>)') {
+                    $rawEnvsubstLines += $lineNum
+                }
+                if (-not $allowUuidNext -and $ln -notmatch 'libscript-allow-raw-uuid' -and $ln -match '(^|[\s;|&(])(uuidgen(\s|$)|cat\s+/proc/sys/kernel/random/uuid)') {
+                    $rawUuidLines += $lineNum
+                }
+                if (-not $allowHwNext -and $ln -notmatch 'libscript-allow-raw-hw' -and $ln -match '\$\(nproc([\s\)]|$)|\$\(sysctl\s+-n\s+hw\.(ncpu|memsize|physmem)') {
+                    $rawHwLines += $lineNum
+                }
+                if (-not $allowExtVmNext -and $ln -notmatch 'libscript-allow-ext-vm' -and $ln -match '(^|[\s;|&(])(rustup\s+toolchain\s+install|nvm\s+install|fnm\s+install|pyenv\s+install|rbenv\s+install|sdk\s+install|volta\s+install)(\s|$)') {
+                    $extVmLines += $lineNum
+                }
+                if (-not $allowUnameNext -and $ln -notmatch 'libscript-allow-raw-uname' -and $ln -match '(\$\(uname([\s\)]|$)|(^|[\s;|&(])uname(\s+-[a-zA-Z]+)?([\s;|&)]|$))' -and $ln -notmatch '(vagrant\s+ssh|echo\s|printf\s)') {
+                    $rawUnameLines += $lineNum
                 }
                 if ($ln -match '^\s*(export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"\s*$' -or $ln -match '^\s*(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?\s*$' -or $ln -match '^\s*libscript_depends(\s+"[A-Za-z0-9_.-]+")+(\s*\|\|\s*true)?\s*$') {
                     $unnecessaryDqLines += $lineNum
@@ -153,6 +201,14 @@ function Audit-File {
                 $allowFetchNext = $false
                 $allowPkgNext = $false
                 $allowDaemonNext = $false
+                $allowSyncNext = $false
+                $allowVenvNext = $false
+                $allowPrivNext = $false
+                $allowEnvsubstNext = $false
+                $allowUuidNext = $false
+                $allowHwNext = $false
+                $allowExtVmNext = $false
+                $allowUnameNext = $false
             }
             $lineNum++
         }
@@ -162,16 +218,17 @@ function Audit-File {
         }
 
         if ($FilePath -notmatch "(Dockerfile|\.tpl|dockerfiles-ssh|docker/)") {
-            if ($headerText -notmatch 'set -feu') {
+            $nonCommentHeader = ($lines | Where-Object { $_ -notmatch '^\s*#' }) -join "`n"
+            if ($nonCommentHeader -notmatch 'set -feu') {
                 Log-Violation -File $FilePath -Rule "SET_FEU_SAFETY" -Details "Missing 'set -feu' in first 40 lines."
             }
-            if ($headerText -notmatch 'THIS_FILE=') {
+            if ($nonCommentHeader -notmatch 'THIS_FILE=') {
                 Log-Violation -File $FilePath -Rule "THIS_FILE_DANCE" -Details "Missing canonical 'THIS_FILE=' resolution in first 40 lines."
             }
-            if ($headerText -notmatch 'STACK') {
+            if ($nonCommentHeader -notmatch 'STACK') {
                 Log-Violation -File $FilePath -Rule "RECURSION_GUARD" -Details "Missing 'STACK' recursion guard in first 40 lines."
             }
-            if ($headerText -notmatch 'LIBSCRIPT_ROOT_DIR') {
+            if ($nonCommentHeader -notmatch 'LIBSCRIPT_ROOT_DIR') {
                 Log-Violation -File $FilePath -Rule "ROOT_DIR_RESOLUTION" -Details "Missing 'LIBSCRIPT_ROOT_DIR' resolution in header."
             }
             if ($headerText -notmatch '# shellcheck disable=SC2296') {
@@ -240,8 +297,8 @@ function Audit-File {
         if ($lines[0].Trim() -notmatch '^@echo off$') {
             Log-Violation -File $FilePath -Rule "BATCH_ECHO_OFF" -Details "Missing '@echo off' on line 1."
         }
-        $top25 = ($lines | Select-Object -First 25) -join "`n"
-        if ($top25 -notmatch 'EnableDelayedExpansion') {
+        $top25 = ($lines | Select-Object -First 25 | Where-Object { $_ -notmatch '(?i)^\s*(::|rem(\s|$))' }) -join "`n"
+        if ($top25 -notmatch '(?im)^\s*setlocal\s+EnableDelayedExpansion') {
             Log-Violation -File $FilePath -Rule "BATCH_DELAYED_EXPANSION" -Details "Missing 'setlocal EnableDelayedExpansion' in first 25 lines."
         }
         if ($top25 -notmatch 'THIS_FILE=%~f0') {
@@ -411,9 +468,49 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw init/daemon manager usage found (delegate to _lib/_common/service.sh or service_install.sh)."
                 }
             }
+            if ($normPath -notmatch '(_lib/_common/remote_sync\.sh|_lib/utilities/(rsync|openssh)/|packaging/|vagrant/)') {
+                if ($rawSyncLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_REMOTE_SYNC" -Details "Raw rsync/scp call found (delegate to _lib/_common/remote_sync.sh)."
+                }
+            }
+            if ($normPath -notmatch '_lib/_common/python_env\.sh$') {
+                if ($rawVenvLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation found (delegate to _lib/_common/python_env.sh)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/_common/priv\.sh|_lib/base-system/sudo/|vagrant/|packaging/|^cli/)') {
+                if ($rawPrivLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_PRIV_ESCALATION" -Details "Raw sudo invocation found (delegate to priv / priv_as from _lib/_common/priv.sh)."
+                }
+            }
+            if ($normPath -notmatch '_lib/_common/envsubst_safe\.sh$') {
+                if ($rawEnvsubstLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_ENVSUBST" -Details "Raw envsubst invocation found (delegate to envsubst_safe from _lib/_common/envsubst_safe.sh)."
+                }
+            }
+            if ($normPath -notmatch '_lib/_common/uuid_gen\.sh$') {
+                if ($rawUuidLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_UUID_GEN" -Details "Non-deterministic UUID generation found (delegate to _lib/_common/uuid_gen.sh)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/_common/(hw_tune|source_builder)\.sh|packaging/)') {
+                if ($rawHwLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_HW_DETECT" -Details "Raw hardware core/RAM query found (delegate to _lib/_common/hw_tune.sh)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/_common/versioning\.sh|_lib/package-managers/|_lib/languages/rust/)') {
+                if ($extVmLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "EXTERNAL_VERSION_MANAGER" -Details "Direct third-party version manager invocation found (delegate to LibScript native components)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/_common/os_info\.sh|vagrant/)') {
+                if ($rawUnameLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_UNAME" -Details "Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh)."
+                }
+            }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
             if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test)|cli/commands/packaging/formats/pkg_docker_compose)\.cmd$') {
-                $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl\s+-[a-zA-Z0-9]*[sSfLOo])' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
+                $rawFetchCmd = Select-String -Path $FilePath -Pattern '(Invoke-WebRequest|Invoke-RestMethod|[\s"]iwr\s|[\s"]irm\s|certutil\s+-urlcache|curl(\.exe)?\s+(--(silent|location|fail|output)|-[a-zA-Z0-9]*[sSfLOo]))' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(127\.0\.0\.1|localhost|--cacert|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
                 if ($rawFetchCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_NETWORK_FETCH" -Details "Raw network call in batch script (delegate to pkg_mgr.cmd)."
                 }
@@ -428,6 +525,24 @@ function Audit-File {
                 $rawDaemonCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])(sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|systemctl\s+(start|stop|restart|reload|daemon-reload|enable|disable|status|is-active)|rc-service\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status))(\s|$)' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-daemon' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-daemon') }
                 if ($rawDaemonCmd) {
                     Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw service/daemon manager call in batch script (delegate to _lib\_common\service.cmd or service_install.cmd)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/_common/remote_sync\.cmd|_lib/utilities/(rsync|openssh)/|packaging/|vagrant/)') {
+                $rawSyncCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])(rsync\s+-[A-Za-z0-9-]+.*:|scp\s+(-[A-Za-z0-9]+\s+)*[^\s|&]+)\s+' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch '(gcloud\s+(compute|storage)|vagrant\s+rsync|cli\.(sh|cmd)[\s"]*scp|:log_error|--version|libscript-allow-raw-sync)' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-sync') }
+                if ($rawSyncCmd) {
+                    Log-Violation -File $FilePath -Rule "RAW_REMOTE_SYNC" -Details "Raw rsync/scp call in batch script (delegate to _lib\_common\remote_sync.cmd)."
+                }
+            }
+            if ($normPath -notmatch '_lib/_common/python_env\.cmd$') {
+                $rawVenvCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])([A-Za-z0-9_$"%!\\/.:-]*python[0-9.]*(\.exe)?["!]?\s+-m\s+venv|uv(\.exe)?\s+venv|virtualenv\s+)' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-venv' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-venv') }
+                if ($rawVenvCmd) {
+                    Log-Violation -File $FilePath -Rule "RAW_PYTHON_VENV" -Details "Explicit Python venv creation in batch script (delegate to _lib\_common\python_env.cmd)."
+                }
+            }
+            if ($normPath -notmatch '_lib/_common/uuid_gen\.cmd$') {
+                $rawUuidCmd = Select-String -Path $FilePath -Pattern 'Guid\]::NewGuid\s*\(' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s)' -and $_.Line -notmatch 'libscript-allow-raw-uuid' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-uuid') }
+                if ($rawUuidCmd) {
+                    Log-Violation -File $FilePath -Rule "RAW_UUID_GEN" -Details "Non-deterministic Guid::NewGuid() in batch script (delegate to _lib\_common\uuid_gen.cmd)."
                 }
             }
         } elseif ($ext -eq "ps1") {

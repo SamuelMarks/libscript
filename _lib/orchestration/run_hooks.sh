@@ -43,10 +43,12 @@ HOOK_TYPE="${2:-}"
 
 # shellcheck disable=SC1090,SC1091
 _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+for _rh_lib in "_lib/_common/log.sh" "_lib/_common/os_info.sh"; do
+  SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/${_rh_lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
 unset SCRIPT_NAME || true
 [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
@@ -88,7 +90,7 @@ for _rh_std_bin in "${HOME:-/root}/.local/bin" "/usr/local/bin" "/usr/bin" "/bin
 done
 
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
-  OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+  OS_NAME="${UNAME_LOWER:-linux}"
   case "$OS_NAME" in
     linux*) CURRENT_OS="linux" ;;
     darwin*) CURRENT_OS="darwin" ;;
@@ -140,6 +142,16 @@ if [ "$HOOK_TYPE" = "db_migrate" ] || [ "$HOOK_TYPE" = "seed" ]; then
       fi
     fi
   fi
+fi
+
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh" ]; then
+  _rh_saved_this="$THIS_FILE"; _rh_saved_dir="$SCRIPT_DIR"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="$_rh_saved_this"; SCRIPT_DIR="$_rh_saved_dir"
 fi
 
 log_info "[HOOKS:${HOOK_TYPE}] Running ${HOOK_TYPE} lifecycle hooks from ${JSON_FILE}..."
@@ -215,6 +227,19 @@ while IFS= read -r hook <&3; do
     fi
 
     if [ -n "$cmd" ]; then
+      case "$cmd" in
+        "uv sync"|"uv sync --frozen"|"uv sync "*|"pip install -r requirements.txt"*|".venv/bin/pip install -r requirements.txt"*)
+          case "$cmd" in
+            *";"*|*"&&"*|*"||"*|*"|"*) ;;
+            *)
+              if command -v libscript_python_venv_is_up_to_date >/dev/null 2>&1 && libscript_python_venv_is_up_to_date "$HOOK_WD"; then
+                log_info "[HOOK:${HOOK_TYPE}] ($NAME) [REUSE] Python .venv lockfile hash unchanged in ${HOOK_WD}; skipping '${cmd}'."
+                continue
+              fi
+              ;;
+          esac
+          ;;
+      esac
       _h_start=$(date +%s 2>/dev/null || printf '0')
       log_info "[HOOK:${HOOK_TYPE}] ($NAME) working_dir=${HOOK_WD}: Executing hook..."
       _hook_path="${PATH:-/usr/bin:/bin}"
@@ -233,6 +258,11 @@ while IFS= read -r hook <&3; do
         log_error "[HOOK:${HOOK_TYPE}] ($NAME) failed with non-zero exit status: $cmd"
         exit 1
       fi
+      case "$cmd" in
+        *"uv sync"*|*"pip install -r requirements.txt"*)
+          command -v libscript_python_stamp_venv >/dev/null 2>&1 && libscript_python_stamp_venv "$HOOK_WD" || true
+          ;;
+      esac
       _h_end=$(date +%s 2>/dev/null || printf '0')
       _h_dur=$((_h_end - _h_start))
       log_info "[HOOK:${HOOK_TYPE}] ($NAME) completed in ${_h_dur}s"

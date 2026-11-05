@@ -30,6 +30,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ] || [ -z "${UNAME_LOWER:-}" ]; then
+  _tb_oi_this="${THIS_FILE}"
+  _tb_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_tb_oi_this}"
+  SCRIPT_DIR="${_tb_oi_dir}"
+  export DIR="${SCRIPT_DIR}"
+  unset _tb_oi_this _tb_oi_dir || true
+fi
+
 # Common directories
 LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"

@@ -31,10 +31,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # shellcheck disable=SC1091
 _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+for _db_lib in "_lib/_common/log.sh" "_lib/_common/priv.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_db_lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
 unset SCRIPT_NAME || true
 [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
@@ -96,7 +98,7 @@ while IFS= read -r db_entry <&3; do
           _out_sql="${APP_STAGE}/postgres/${_cand_db}.sql"
           log_info "Exporting PostgreSQL database '$_cand_db' to '$_out_sql'..."
           PGPASSWORD="$DB_PASS" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" --clean --if-exists --no-owner --no-privileges -f "$_out_sql" "$_cand_db" 2>/dev/null || \
-            sudo -u postgres pg_dump --clean --if-exists --no-owner --no-privileges -f "$_out_sql" "$_cand_db" 2>/dev/null || rm -f "$_out_sql"
+            priv_as postgres pg_dump --clean --if-exists --no-owner --no-privileges -f "$_out_sql" "$_cand_db" 2>/dev/null || rm -f "$_out_sql"
         done
       fi
       ;;
@@ -163,6 +165,6 @@ if [ -n "$_svc_efs" ]; then
   done
 fi
 
-chmod -R a+rX "$STAGE_DIR" 2>/dev/null || sudo chmod -R a+rX "$STAGE_DIR" 2>/dev/null || true
+chmod -R a+rX "$STAGE_DIR" 2>/dev/null || priv chmod -R a+rX "$STAGE_DIR" 2>/dev/null || true
 log_info "Exported state for '$APP_NAME' into '$APP_STAGE'."
 exit 0

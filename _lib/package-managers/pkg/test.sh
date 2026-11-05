@@ -40,7 +40,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
-if [ "$(uname -s)" != "FreeBSD" ]; then
+if [ "${UNAME:-}" != "FreeBSD" ]; then
   echo 'pkg is only available on FreeBSD. Skipping test.'
   exit 0
 fi

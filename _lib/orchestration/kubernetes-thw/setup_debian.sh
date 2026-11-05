@@ -52,8 +52,8 @@ fi
 if ! grep -q "[[:space:]]server\([[:space:]]\|\$\)" /etc/hosts 2>/dev/null && ! getent hosts server >/dev/null 2>&1; then
   if [ -w /etc/hosts ]; then
     printf '127.0.0.1 server node-0 node-1\n' >> /etc/hosts
-  elif command -v sudo >/dev/null 2>&1; then
-    printf '127.0.0.1 server node-0 node-1\n' | sudo tee -a /etc/hosts >/dev/null || true
+  else
+    printf '127.0.0.1 server node-0 node-1\n' | priv tee -a /etc/hosts >/dev/null || true
   fi
 fi
 
@@ -70,13 +70,13 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server echo ok >/dev/
       if ! grep -q -f ~/.ssh/id_rsa.pub /root/.ssh/authorized_keys 2>/dev/null; then
         cat ~/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys 2>/dev/null || true
       fi
-    elif command -v sudo >/dev/null 2>&1; then
-      sudo mkdir -p /root/.ssh 2>/dev/null || true
-      if ! sudo grep -q -f "${HOME}/.ssh/id_rsa.pub" /root/.ssh/authorized_keys 2>/dev/null; then
-        sudo sh -c "cat \"${HOME}/.ssh/id_rsa.pub\" >> /root/.ssh/authorized_keys" 2>/dev/null || true
+    else
+      priv mkdir -p /root/.ssh 2>/dev/null || true
+      if ! priv grep -q -f "${HOME}/.ssh/id_rsa.pub" /root/.ssh/authorized_keys 2>/dev/null; then
+        priv sh -c "cat \"${HOME}/.ssh/id_rsa.pub\" >> /root/.ssh/authorized_keys" 2>/dev/null || true
       fi
-      sudo chmod 700 /root/.ssh 2>/dev/null || true
-      sudo chmod 600 /root/.ssh/authorized_keys 2>/dev/null || true
+      priv chmod 700 /root/.ssh 2>/dev/null || true
+      priv chmod 600 /root/.ssh/authorized_keys 2>/dev/null || true
     fi
   fi
   if ! ssh-keygen -F server >/dev/null 2>&1 && ! ssh-keygen -F 127.0.0.1 >/dev/null 2>&1; then

@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/cloud/core/tags.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/remote_sync.sh" "_lib/cloud/core/tags.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -45,6 +45,22 @@ done
 AZURE_INSTALL_METHOD="$(libscript_resolve_install_method "AZURE")"
 ACTION="${ACTION:-install}"
 VERSION="${AZURE_VERSION:-latest}"
+
+# ## azure_resolve_vm_ip
+# Resolves the public IP address of an Azure VM using the local TTL cache or Azure CLI.
+azure_resolve_vm_ip() {
+  _arvi_rg="$1"
+  _arvi_node="$2"
+  if _arvi_cached=$(libscript_get_cached_vm_ip 'azure' "$_arvi_rg" "$_arvi_node"); then
+    printf '%s\n' "$_arvi_cached"
+    return 0
+  fi
+  _arvi_ip=$(az vm show -d -g "$_arvi_rg" -n "$_arvi_node" --query publicIps -o tsv 2>/dev/null | xargs || true)
+  if [ -n "$_arvi_ip" ]; then
+    libscript_set_cached_vm_ip 'azure' "$_arvi_rg" "$_arvi_node" "$_arvi_ip"
+  fi
+  printf '%s\n' "$_arvi_ip"
+}
 
 # ## az
 # Wrapper around Azure CLI supporting DRY_RUN=true or unauthenticated local environments.
@@ -157,13 +173,14 @@ case "$ACTION" in
       ip)
         RG=${3:-}
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: node ip <name> <rg>" >&2; exit 1; fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
         printf '%s\n' "$IP"
         ;;
       delete)
         RG=${3:-}
         if [ -z "$RG" ]; then printf '%s\n' "Usage: node delete <name> <rg>"; exit 1; fi
         libscript_verify_managed azure node "$RESOURCE_NAME" "$RG" || exit 1
+        libscript_invalidate_cached_vm_ip 'azure' "$RG" "$RESOURCE_NAME"
         printf '%s\n' "Deleting Azure VM: $RESOURCE_NAME from $RG"
         if az vm show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
           az vm delete --name "$RESOURCE_NAME" --resource-group "$RG" --yes
@@ -200,9 +217,10 @@ case "$ACTION" in
           printf '[DRY_RUN] Executing on %s (%s): %s\n' "$RESOURCE_NAME" "$RG" "$*"
           exit 0
         fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        # shellcheck disable=SC2029
-        ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "export PATH=\"\$HOME/.local/bin:/usr/local/bin:\$PATH\"; $*"
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
+        _az_ssh_opts=$(libscript_ssh_mux_opts)
+        # shellcheck disable=SC2029,SC2086
+        ssh $_az_ssh_opts "${ADMIN_USER:-azureuser}@$IP" "export PATH=\"\$HOME/.local/bin:/usr/local/bin:\$PATH\"; $*"
         ;;
       wait-ssh)
         RG=${3:-}; TIMEOUT=${4:-120}
@@ -210,7 +228,7 @@ case "$ACTION" in
           printf '[DRY_RUN] Waiting for SSH on %s (%s)\n' "$RESOURCE_NAME" "${RG:-default}"
           exit 0
         fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv 2>/dev/null | xargs || true)
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
         if [ -z "$IP" ]; then
           exit 0
         fi
@@ -252,18 +270,8 @@ case "$ACTION" in
           printf '[DRY_RUN] Deploying %s to %s (%s) -> %s\n' "$SRC" "$RESOURCE_NAME" "$RG" "$DST"
           exit 0
         fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        _src_sync="$SRC"
-        if [ -d "$SRC" ]; then
-          _src_sync="${SRC%/}/"
-        fi
-        if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$_src_sync" "${ADMIN_USER:-azureuser}@$IP:${DST%/}/"
-        elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && find \"$DST\" -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \"$DST\" && find \"$DST\" -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
-        else
-          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
-        fi
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
+        libscript_scp_to_remote "$SRC" "${ADMIN_USER:-azureuser}@$IP" "$DST"
         ;;
       scp|upload)
         RG=${3:-}; SRC=${4:-}; DST=${5:-}
@@ -272,14 +280,8 @@ case "$ACTION" in
           printf '[DRY_RUN] Uploading %s to %s (%s) -> %s\n' "$SRC" "$RESOURCE_NAME" "$RG" "$DST"
           exit 0
         fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
-        elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p \"$DST\" && tar -xzf - -C \"$DST\""
-        else
-          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "$SRC" "${ADMIN_USER:-azureuser}@$IP:$DST"
-        fi
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
+        libscript_scp_to_remote "$SRC" "${ADMIN_USER:-azureuser}@$IP" "$DST"
         ;;
       scp-from|download)
         RG=${3:-}; SRC=${4:-}; DST=${5:-}
@@ -288,13 +290,8 @@ case "$ACTION" in
           printf '[DRY_RUN] Downloading %s (%s):%s -> %s\n' "$RESOURCE_NAME" "$RG" "$SRC" "$DST"
           exit 0
         fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        mkdir -p "$(dirname "$DST")"
-        if command -v rsync >/dev/null 2>&1; then
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST" || scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
-        else
-          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${ADMIN_USER:-azureuser}@$IP:$SRC" "$DST"
-        fi
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
+        libscript_scp_from_remote "${ADMIN_USER:-azureuser}@$IP" "$SRC" "$DST"
         ;;
       sync)
         RG=${3:-}
@@ -303,15 +300,8 @@ case "$ACTION" in
           printf '[DRY_RUN] Syncing LibScript to %s (%s)\n' "$RESOURCE_NAME" "$RG"
           exit 0
         fi
-        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
-        ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript"
-        if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --delete --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
-        elif command -v tar >/dev/null 2>&1; then
-          tar -czf - -C "${LIBSCRIPT_ROOT_DIR}" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 "${ADMIN_USER:-azureuser}@$IP" "mkdir -p ~/libscript && find ~/libscript -mindepth 1 \( -name .git -o -name cache -o -name build -o -name target -o -name logs -o -name tmp -o -name node_modules -o -name .venv \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C ~/libscript && find ~/libscript -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
-        else
-          scp -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=30 -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-azureuser}@$IP:~/libscript/"
-        fi
+        IP=$(azure_resolve_vm_ip "$RG" "$RESOURCE_NAME")
+        libscript_sync_runtime_to_remote "${ADMIN_USER:-azureuser}@$IP" "libscript"
         ;;
       *)
         printf '%s\n' "Unknown node action: $SUBACTION"; exit 1

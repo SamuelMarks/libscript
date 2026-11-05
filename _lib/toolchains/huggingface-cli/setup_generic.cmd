@@ -176,7 +176,8 @@ if not exist "%TARGET_DIR%\bin" (
             if exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64" set "PATH=%LOCALAPPDATA%\Programs\Python\Python312-arm64;%LOCALAPPDATA%\Programs\Python\Python312-arm64\Scripts;!PATH!"
             if exist "%LOCALAPPDATA%\Programs\Python\Python312" set "PATH=%LOCALAPPDATA%\Programs\Python\Python312;%LOCALAPPDATA%\Programs\Python\Python312\Scripts;!PATH!"
         )
-        python -m venv "%TARGET_DIR%\venv" 2>nul
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "" "%TARGET_DIR%\venv" >nul 2>&1
         if exist "%TARGET_DIR%\venv\Scripts\pip.exe" (
             "%TARGET_DIR%\venv\Scripts\pip.exe" install -q -U "huggingface_hub[cli]" 2>nul || "%TARGET_DIR%\venv\Scripts\pip.exe" install -q -U "huggingface_hub"
             if exist "%TARGET_DIR%\venv\Scripts\huggingface-cli.exe" copy /y "%TARGET_DIR%\venv\Scripts\huggingface-cli.exe" "%TARGET_DIR%\bin\huggingface-cli.exe" >nul 2>&1

@@ -35,7 +35,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${PHPBB_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   export PHPBB_WWWROOT="${PHPBB_WWWROOT:-${HOME:-/root}/.libscript/www/phpbb}"
 else
   export PHPBB_WWWROOT="${PHPBB_WWWROOT:-/var/www/phpbb}"

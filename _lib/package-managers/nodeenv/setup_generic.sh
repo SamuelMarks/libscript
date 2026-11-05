@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -87,15 +87,14 @@ case "$ACTION" in
       else
         log_info "Installing nodeenv ${EXACT_VERSION} via isolated Python venv..."
         mkdir -p "${TARGET_DIR}"
+        libscript_python_venv "${TARGET_DIR}"
         if command -v uv >/dev/null 2>&1; then
-          uv venv "${TARGET_DIR}"
           if [ "${VERSION}" = "latest" ]; then
             uv pip install --python "${TARGET_DIR}/bin/python" nodeenv
           else
             uv pip install --python "${TARGET_DIR}/bin/python" "nodeenv==${EXACT_VERSION}"
           fi
         else
-          python3 -m venv "${TARGET_DIR}"
           if [ "${VERSION}" = "latest" ]; then
             "${TARGET_DIR}/bin/python" -m pip install --no-cache-dir nodeenv
           else

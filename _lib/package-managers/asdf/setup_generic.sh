@@ -171,8 +171,8 @@ case "$ACTION" in
         libscript_depends 'curl' 'tar'
         log_info "Installing asdf ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-        arch="$(uname -m)"
+        os="${UNAME_LOWER:-linux}"
+        arch="${ARCH:-x86_64}"
         case "${arch}" in
           'x86_64') arch='amd64' ;;
           'aarch64'|'arm64') arch='arm64' ;;

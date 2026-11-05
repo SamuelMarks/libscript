@@ -93,7 +93,7 @@ case "$ACTION" in
       libscript_depends 'winget'
     else
       # libscript_native implementation
-      case "$(uname -s)" in
+      case "${UNAME:-}" in
         MINGW*|MSYS*|CYGWIN*|Windows_NT) ;;
         *)
           log_info 'winget is a Windows package manager. Skipping.'

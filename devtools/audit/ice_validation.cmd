@@ -3,8 +3,10 @@
 :: ## Overview
 :: Validates Internal Configuration Engine (ICE) structural integrity.
 :: ## Usage
-:: call devtools\audit\ice_validation.cmd [msi_file] setlocal EnableDelayedExpansion set "THIS_DIR=%~dp0"
+:: call devtools\audit\ice_validation.cmd [msi_file]
 
+setlocal EnableDelayedExpansion
+set "THIS_DIR=%~dp0"
 set "THIS_FILE=%~f0"
 
 if defined STACK (

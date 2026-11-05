@@ -3,8 +3,9 @@
 :: ## Overview
 :: Automates Ch5 of Kubernetes the Hard Way.
 :: ## Usage
-:: Executes the steps for Ch5. setlocal EnableDelayedExpansion
+:: Executes the steps for Ch5.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -59,9 +60,12 @@ for /f "tokens=1,3" %%i in ('type "%MACHINES_TXT%" ^| findstr "server"' ) do if 
 if "!SERVER_IP!"=="" set SERVER_IP=192.168.56.10
 for %%H in (%NODES%) do (
   ssh root@%%H "mkdir -p /var/lib/kubelet/"
-  scp "%LIBSCRIPT_DATA_DIR%\ca.crt" root@%%H:/var/lib/kubelet/
-  scp "%LIBSCRIPT_DATA_DIR%\%%H.crt" root@%%H:/var/lib/kubelet/kubelet.crt
-  scp "%LIBSCRIPT_DATA_DIR%\%%H.key" root@%%H:/var/lib/kubelet/kubelet.key
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\ca.crt" "root@%%H" "/var/lib/kubelet/"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%H.crt" "root@%%H" "/var/lib/kubelet/kubelet.crt"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%H.key" "root@%%H" "/var/lib/kubelet/kubelet.key"
 )
 
 for %%H in (%NODES%) do (
@@ -93,8 +97,13 @@ kubectl config use-context default --kubeconfig="%LIBSCRIPT_DATA_DIR%\admin.kube
 
 for %%H in (%NODES%) do (
   ssh root@%%H "mkdir -p /var/lib/kube-proxy /var/lib/kubelet"
-  scp "%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig" root@%%H:/var/lib/kube-proxy/kubeconfig
-  scp "%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig" root@%%H:/var/lib/kubelet/kubeconfig
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\kube-proxy.kubeconfig" "root@%%H" "/var/lib/kube-proxy/kubeconfig"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%H.kubeconfig" "root@%%H" "/var/lib/kubelet/kubeconfig"
 )
 
-scp "%LIBSCRIPT_DATA_DIR%\admin.kubeconfig" "%LIBSCRIPT_DATA_DIR%\kube-controller-manager.kubeconfig" "%LIBSCRIPT_DATA_DIR%\kube-scheduler.kubeconfig" root@server:~/
+for %%f in (admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig) do (
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\%%f" "root@server" "~/"
+)

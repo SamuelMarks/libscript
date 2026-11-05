@@ -27,8 +27,18 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+for _hm_lib in "_lib/_common/log.sh" "_lib/_common/os_info.sh"; do
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/${_hm_lib}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_hm_lib}"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+  fi
+done
+
 log_info 'hMailServer is the native mail transfer agent for Microsoft Windows.'
-if [ "$(uname -s)" != "CYGWIN_NT" ] && [ "$(uname -s)" != "MINGW64_NT" ]; then
+if [ "${UNAME:-}" != "CYGWIN_NT" ] && [ "${UNAME:-}" != "MINGW64_NT" ]; then
   if command -v exim >/dev/null 2>&1 || command -v exim4 >/dev/null 2>&1; then
     log_info 'Mail transfer agent (exim) is already installed.'
     exit 0

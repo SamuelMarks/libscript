@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/service.sh" \
+for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/service.sh" "_lib/_common/python_env.sh" \
             "_lib/languages/python/setup.sh" "_lib/web-apps/jupyterhub/env.sh" \
             "_lib/languages/nodejs/setup.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -49,32 +49,26 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then
-  if [ "$(uname -s)" = "Darwin" ]; then
+  if [ "${UNAME:-}" = "Darwin" ]; then
     mkdir -p "${JUPYTERHUB_VENV}"
   else
     priv  mkdir -p -- "${JUPYTERHUB_VENV}"
     priv  chown -R -- "${USER:-$(id -un)}":"${GROUP:-${USER:-$(id -un)}}" "${JUPYTERHUB_VENV}"
   fi
-  if [ "$(uname -s)" = "FreeBSD" ]; then
-    python3 -m venv "${JUPYTERHUB_VENV}"
-  elif command -v uv >/dev/null 2>&1; then
-    uv venv --allow-existing "${JUPYTERHUB_VENV}"
-  else
-    python3 -m venv "${JUPYTERHUB_VENV}"
-  fi
+  libscript_python_venv "${JUPYTERHUB_VENV}"
   if [ -x "${JUPYTERHUB_VENV}/bin/python" ]; then
     "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip setuptools wheel "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator || true
   fi
 fi
 if ! libscript_cmd_avail configurable-http-proxy && [ ! -x "${JUPYTERHUB_VENV}/bin/configurable-http-proxy" ]; then
-  if [ "$(uname -s)" = "Darwin" ]; then
+  if [ "${UNAME:-}" = "Darwin" ]; then
     npm install --prefix "${JUPYTERHUB_VENV}" configurable-http-proxy || true
   else
     priv env "PATH=$PATH" npm install --prefix "${JUPYTERHUB_VENV}" configurable-http-proxy || true
   fi
 fi
 
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   JUPYTERHUB_SERVICE_USER="${USER}"
 elif ! id "${JUPYTERHUB_SERVICE_USER}" >/dev/null 2>&1; then
   if command -v pw >/dev/null 2>&1; then
@@ -93,7 +87,7 @@ else
 fi
 
 if [ ! -d "${JUPYTERHUB_NOTEBOOK_DIR}" ]; then
-  if [ "$(uname -s)" = "Darwin" ]; then
+  if [ "${UNAME:-}" = "Darwin" ]; then
     mkdir -p "${JUPYTERHUB_NOTEBOOK_DIR}"
   else
     priv  mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"

@@ -30,6 +30,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+fi
+
 ACTION="${ACTION:-${1:-create-vm}}"
 if [ "$ACTION" = "node" ]; then
   SUBACTION="${1:-deploy}"
@@ -50,8 +58,8 @@ if [ "$ACTION" = "node" ]; then
         printf '[DRY_RUN] Syncing LibScript to %s\n' "$SERVER"
         exit 0
       fi
-      if command -v rsync >/dev/null 2>&1 && [ "$SERVER" != "app-server-01" ]; then
-        rsync -avz --delete --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="logs" --exclude="tmp" --exclude="node_modules" --exclude=".venv" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-root}@${SERVER}:~/libscript/"
+      if [ "$SERVER" != "app-server-01" ]; then
+        libscript_sync_runtime_to_remote "${ADMIN_USER:-root}@${SERVER}" "libscript"
       fi
       exit 0
       ;;
@@ -60,8 +68,8 @@ if [ "$ACTION" = "node" ]; then
         printf '[DRY_RUN] Deploying %s to %s -> %s\n' "$SRC" "$SERVER" "$DST"
         exit 0
       fi
-      if command -v rsync >/dev/null 2>&1 && [ -n "$SRC" ] && [ "$SERVER" != "app-server-01" ]; then
-        rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude="dist" --exclude="build" --exclude=".angular" --exclude=".vite" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "${SRC%/}/" "${ADMIN_USER:-root}@${SERVER}:${DST%/}/"
+      if [ -n "$SRC" ] && [ -d "$SRC" ] && [ "$SERVER" != "app-server-01" ]; then
+        libscript_sync_app_to_remote "$SRC" "${ADMIN_USER:-root}@${SERVER}" "$DST"
       else
         printf '[CLOUD] Proxmox node %s on %s -> %s\n' "$SUBACTION" "$SERVER" "$CTX"
       fi
@@ -81,7 +89,9 @@ if [ "$ACTION" = "node" ]; then
         printf '[DRY_RUN] Executing on %s: %s\n' "$SERVER" "$*"
         exit 0
       fi
-      ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-root}@${SERVER}" "$@"
+      _px_ssh_opts=$(libscript_ssh_mux_opts)
+      # shellcheck disable=SC2029,SC2086
+      ssh $_px_ssh_opts "${ADMIN_USER:-root}@${SERVER}" "$@"
       exit $?
       ;;
     *)

@@ -78,7 +78,7 @@ case "$ACTION" in
         OS_NAME='linux'
         [ "${UNAME_LOWER}" = "darwin" ] && OS_NAME="darwin"
         ARCH_NAME='x86_64'
-        [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ] && ARCH_NAME="aarch64"
+        [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ] && ARCH_NAME="aarch64"
         TAR_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${VERSION}-${OS_NAME}-${ARCH_NAME}.tar.gz"
         TEMP_TAR=$(mktemp)
         if libscript_download "${TAR_URL}" "${TEMP_TAR}" 2>/dev/null; then

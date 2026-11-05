@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${ARCH:-}" ]; then
+  _cb_oi_this="${THIS_FILE}"
+  _cb_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_cb_oi_this}"
+  SCRIPT_DIR="${_cb_oi_dir}"
+  unset _cb_oi_this _cb_oi_dir || true
+fi
+
 SYSROOT="${1:-${LIBSCRIPT_ROOT_DIR}/build/rootfs}"
 OUT_FILE="${2:-${LIBSCRIPT_ROOT_DIR}/build/archives/container_image.tar}"
 IMAGE_TAG="${3:-libscript-app:latest}"
@@ -45,7 +58,7 @@ if [ -f "$OUT_FILE" ]; then
   exit 0
 fi
 
-HOST_ARCH="$(uname -m)"
+HOST_ARCH="${ARCH:-x86_64}"
 case "$HOST_ARCH" in
   x86_64) OCI_ARCH="amd64" ;;
   aarch64|arm64) OCI_ARCH="arm64" ;;

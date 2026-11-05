@@ -142,7 +142,7 @@ case "$ACTION" in
             log_info "No download URL provided for go ${VERSION}. Attempting fallback to golang.org..."
             libscript_depends 'curl'
             TEMP_FILE=$(mktemp)
-            OS_ARCH=$(uname -m)
+            OS_ARCH="${ARCH:-}"
             _actual_version="${EXACT_VERSION}"
             if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
               _actual_version=$(libscript_fetch_stdout "https://go.dev/VERSION?m=text" | head -n 1 | tr -d '\r\n')

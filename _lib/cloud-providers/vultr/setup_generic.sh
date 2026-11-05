@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/cloud/core/tags.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/remote_sync.sh" "_lib/cloud/core/tags.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -229,46 +229,35 @@ case "$ACTION" in
           exit 0
         fi
         IP=$(vultr_cli_exec instance get "$RESOURCE_NAME" | awk '/MAIN IP/ {print $3}' | head -n 1)
-        ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-root}@$IP" "$@"
+        _vl_ssh_opts=$(libscript_ssh_mux_opts)
+        # shellcheck disable=SC2029,SC2086
+        ssh $_vl_ssh_opts "${ADMIN_USER:-root}@$IP" "$@"
         ;;
       sync)
         if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
-          printf '[DRY_RUN] Syncing LibScript to %s
-' "$RESOURCE_NAME"
+          printf '[DRY_RUN] Syncing LibScript to %s\n' "$RESOURCE_NAME"
           exit 0
         fi
         IP=$(vultr_cli_exec instance get "$RESOURCE_NAME" | awk '/MAIN IP/ {print $3}' | head -n 1)
-        ssh -o StrictHostKeyChecking=no "${ADMIN_USER:-root}@$IP" "mkdir -p ~/libscript"
-        if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --delete --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="logs" --exclude="tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-root}@$IP:~/libscript/"
-        else
-          scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "${ADMIN_USER:-root}@$IP:~/libscript/"
-        fi
+        libscript_sync_runtime_to_remote "${ADMIN_USER:-root}@$IP" "libscript"
         ;;
       deploy|upload|scp)
         SRC=${4:-}; DST=${5:-}
         if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
-          printf '[DRY_RUN] Uploading %s to %s -> %s
-' "$SRC" "$RESOURCE_NAME" "$DST"
+          printf '[DRY_RUN] Uploading %s to %s -> %s\n' "$SRC" "$RESOURCE_NAME" "$DST"
           exit 0
         fi
         IP=$(vultr_cli_exec instance get "$RESOURCE_NAME" | awk '/MAIN IP/ {print $3}' | head -n 1)
-        if command -v rsync >/dev/null 2>&1; then
-          rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "$SRC" "${ADMIN_USER:-root}@$IP:$DST"
-        else
-          scp -o StrictHostKeyChecking=no -r "$SRC" "${ADMIN_USER:-root}@$IP:$DST"
-        fi
+        libscript_scp_to_remote "$SRC" "${ADMIN_USER:-root}@$IP" "$DST"
         ;;
       download|scp-from)
         SRC=${4:-}; DST=${5:-}
         if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ]; then
-          printf '[DRY_RUN] Downloading %s:%s -> %s
-' "$RESOURCE_NAME" "$SRC" "$DST"
+          printf '[DRY_RUN] Downloading %s:%s -> %s\n' "$RESOURCE_NAME" "$SRC" "$DST"
           exit 0
         fi
         IP=$(vultr_cli_exec instance get "$RESOURCE_NAME" | awk '/MAIN IP/ {print $3}' | head -n 1)
-        mkdir -p "$(dirname "$DST")"
-        scp -o StrictHostKeyChecking=no -r "${ADMIN_USER:-root}@$IP:$SRC" "$DST"
+        libscript_scp_from_remote "${ADMIN_USER:-root}@$IP" "$SRC" "$DST"
         ;;
       *)
         printf 'Unknown node sub-action: %s

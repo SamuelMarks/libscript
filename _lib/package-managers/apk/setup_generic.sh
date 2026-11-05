@@ -104,7 +104,7 @@ case "$ACTION" in
     if [ "$APK_INSTALL_METHOD" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         if ! command -v apk >/dev/null 2>&1; then
-          _arch="${ARCH:-$(uname -m)}"
+          _arch="${ARCH:-x86_64}"
           case "$_arch" in
             arm64|aarch64) _apk_arch="aarch64" ;;
             x86_64|amd64) _apk_arch="x86_64" ;;

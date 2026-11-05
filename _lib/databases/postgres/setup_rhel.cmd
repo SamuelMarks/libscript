@@ -3,8 +3,9 @@
 :: ## Overview
 :: Mock RHEL setup script for PostgreSQL on Windows.
 :: ## Usage
-:: Skipped on Windows. setlocal EnableDelayedExpansion This is a placeholder for the native Windows component setup. By default, many tools rely on winget, choco, or scoop for installation on Windows.
+:: Skipped on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

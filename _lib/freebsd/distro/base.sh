@@ -25,6 +25,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
+if [ -z "${UNAME:-}" ]; then
+  _fb_oi_this="${THIS_FILE}"
+  _fb_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_fb_oi_this}"
+  SCRIPT_DIR="${_fb_oi_dir}"
+  unset _fb_oi_this _fb_oi_dir || true
+fi
+
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
 VERSION="${2:-14.1-RELEASE}"
 ARCH="${3:-amd64}"
@@ -45,7 +58,7 @@ fi
 printf '[BASE]     Bootstrapping FreeBSD %s (%s) into %s...\n' "${VERSION}" "${ARCH}" "${SYSROOT}"
 
 # In native FreeBSD host environment with pre-existing world
-if [ "$(uname -s 2>/dev/null || true)" = "FreeBSD" ] && [ -d "/usr/share/zoneinfo" ] && [ -f "/bin/freebsd-version" ] && [ "${LIBSCRIPT_FORCE_FETCH:-0}" = "0" ]; then
+if [ "${UNAME:-}" = "FreeBSD" ] && [ -d "/usr/share/zoneinfo" ] && [ -f "/bin/freebsd-version" ] && [ "${LIBSCRIPT_FORCE_FETCH:-0}" = "0" ]; then
   printf '[BASE]     Detected native FreeBSD host, syncing local base system...\n'
   for dir in bin sbin lib libexec usr etc dev proc sys root var tmp boot; do
     mkdir -p "${SYSROOT}/${dir}"

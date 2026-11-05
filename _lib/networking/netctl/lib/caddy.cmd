@@ -61,7 +61,7 @@ for /f "usebackq delims=" %%p in (`jq -r "if (.listen ^| length) > 0 then .liste
 )
 echo %PORTS% {
 
-for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r ".routes ^| to_entries[] ^| \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"`) do (
+for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r --arg sep "|" ".routes | to_entries[] | (.key + $sep + (.value.type // \"\") + $sep + (.value.target // \"\") + $sep + (.value.pattern // \"\"))" "%NETCTL_STATE_FILE%"`) do (
     echo.
     if "%%b"=="static" (
         echo     handle %%a* {

@@ -55,16 +55,23 @@ set -ex
 if ! command -v docker >/dev/null 2>&1; then
   ~/_lib/orchestration/docker/setup.sh
 fi
+if [ -f ~/_lib/_common/priv.sh ]; then
+  SCRIPT_NAME=~/_lib/_common/priv.sh . ~/_lib/_common/priv.sh
+else
+  # ## priv
+  # Fallback privilege escalation wrapper when priv.sh is not present on the remote TPU host.
+  priv() { "$@"; }
+fi
 
 MODEL_NAME="$1"
 
 # Use JetStream image for vLLM/TPU serving (or vLLM tpu image)
 IMAGE="us-docker.pkg.dev/cloud-tpu-images/inference/vllm-tpu:latest"
 
-sudo docker pull $IMAGE
+priv docker pull $IMAGE
 
 # Start the container
-sudo docker run -d --rm \
+priv docker run -d --rm \
   --name vllm-server \
   --privileged \
   --network host \

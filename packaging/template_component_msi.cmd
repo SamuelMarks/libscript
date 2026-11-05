@@ -3,8 +3,9 @@
 :: ## Overview
 :: Generates a pure WiX XML (.wxs) manifest for a standalone LibScript component MSI. Utilizes deterministic GUIDs and reference-counted services from packaging\guid_registry.json. Supports 100% pure Windows Installer with zero external .exe dependencies.
 :: ## Usage
-:: call packaging\template_component_msi.cmd [OPTIONS] ## Parameters --component <name>    Component identifier (e.g. mysql, redis, mongodb, python, nodejs, meilisearch) --version <version>   Component release version (e.g. 8.0.39, 20.17.0) --out <file.wxs>      Output path for the generated WiX XML file --source-dir <dir>    Directory containing component payload binaries to package --help, -h            Show this help text setlocal EnableDelayedExpansion
+:: call packaging\template_component_msi.cmd --component <name> --version <version> --out <file.wxs> [--source-dir <dir>] [--help]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
@@ -314,6 +315,7 @@ if /i "%VARIANT%"=="online" if not "%DOWNLOAD_URL%"=="" (
     (
         echo     ^<CustomAction Id="CA_Download_%COMPONENT%"
         echo                   Directory="INSTALLFOLDER"
+        :: libscript-allow-raw-fetch
         echo                   ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;if (-not (Test-Path '[INSTALLFOLDER]bin\*.exe')) { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $tmp = [IO.Path]::GetTempFileName() + '.zip'; Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile $tmp; Expand-Archive -Path $tmp -DestinationPath '[INSTALLFOLDER]' -Force; Remove-Item $tmp -Force }&quot;"
         echo                   Execute="deferred"
         echo                   Return="ignore"

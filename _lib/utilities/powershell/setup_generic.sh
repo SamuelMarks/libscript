@@ -135,9 +135,8 @@ case "$ACTION" in
             ln -sf "$(command -v pwsh)" "${TARGET_DIR}/pwsh"
           fi
         else
-          ARCH=$(uname -m)
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+          OS="${UNAME_LOWER:-linux}"
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
           if [ "$OS" = "darwin" ]; then OS="osx"; fi
           URL="https://github.com/PowerShell/PowerShell/releases/download/v${EXACT_VERSION}/powershell-${EXACT_VERSION}-${OS}-${ARCH}.tar.gz"
           TEMP_FILE=$(mktemp)

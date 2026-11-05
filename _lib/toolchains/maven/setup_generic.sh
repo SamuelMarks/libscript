@@ -128,7 +128,7 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
 
-      if [ "$(uname -s)" = "FreeBSD" ]; then
+      if [ "${UNAME:-}" = "FreeBSD" ]; then
         libscript_depends 'maven'
         if command -v mvn >/dev/null 2>&1; then
           ln -sf "$(command -v mvn)" "${TARGET_DIR}/bin/mvn"

@@ -29,6 +29,19 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+if [ -z "${UNAME:-}" ] || [ -z "${ARCH:-}" ] || [ -z "${UNAME_LOWER:-}" ] || [ -z "${UNAME_A:-}" ]; then
+  _edgw_oi_this="${THIS_FILE}"
+  _edgw_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_edgw_oi_this}"
+  SCRIPT_DIR="${_edgw_oi_dir}"
+  unset _edgw_oi_this _edgw_oi_dir || true
+fi
+
 # ## now_ms
 # Returns the current wall-clock timestamp in milliseconds.
 now_ms() {
@@ -224,7 +237,7 @@ if [ "$#" -eq 1 ]; then
       ;;
     -dumpmachine)
       "${EDGCPP_RESOLVED_BACKEND}" -dumpmachine 2>/dev/null || printf '%s-%s
-' "$(uname -m)" "$(uname -s | tr '[:upper:]' '[:lower:]')"
+' "${ARCH:-x86_64}" "${UNAME_LOWER:-linux}"
       exit 0
       ;;
   esac
@@ -248,7 +261,7 @@ LAST_FAILURE_LOG_PATH=""
 LAST_REPRODUCER_DIR=""
 SAVED_DRIVER_ARGS="$*"
 
-case "$(uname -s 2>/dev/null || true)" in
+case "${UNAME:-}" in
   Darwin*) CPFE_COMPAT_FLAG="--clang --clang_version=170000" ;;
 esac
 
@@ -358,7 +371,7 @@ run_with_rss_probe() {
   _cmd_rc=0
   : > "${_capture_file}"
   if [ -x "/usr/bin/time" ]; then
-    case "$(uname -s 2>/dev/null || true)" in
+    case "${UNAME:-}" in
       Darwin*)
         /usr/bin/time -l "$@" >"${_capture_file}" 2>"${_rss_tmp}" || _cmd_rc=$?
         _bytes=$(awk '/maximum resident set size/ {print $1}' "${_rss_tmp}" 2>/dev/null | head -n 1 || printf '0')
@@ -443,7 +456,7 @@ ${_ff_fe_cmd}
 ${_ff_be_cmd}
 EOF
 
-  _os_desc="$(uname -a 2>/dev/null || printf 'unknown')"
+  _os_desc="${UNAME_A:-unknown}"
   if [ -f "/etc/os-release" ]; then
     _distro_name="$(grep '^PRETTY_NAME=' /etc/os-release 2>/dev/null | head -n 1 | cut -d= -f2- | tr -d '"' || true)"
     [ -n "${_distro_name}" ] && _os_desc="${_distro_name} (${_os_desc})"
@@ -519,10 +532,10 @@ run_cpfe_frontend_and_codegen() {
     *) _src_abs="$(pwd)/${_src_abs}" ;;
   esac
 
-  case "$(uname -s 2>/dev/null || true)" in
+  case "${UNAME:-}" in
     Darwin*)
       _cpfe_sys_args="-D__GNUC__=4 -D__GNUC_MINOR__=2 -D_FORTIFY_SOURCE=0 -D__LP64__=1 -D__LITTLE_ENDIAN__=1 -D__BYTE_ORDER__=1234 -D__ORDER_LITTLE_ENDIAN__=1234 -D__ORDER_BIG_ENDIAN__=4321 -D__APPLE__=1 -D__MACH__=1 -U__BLOCKS__"
-      case "$(uname -m 2>/dev/null || true)" in
+      case "${ARCH:-}" in
         arm64|aarch64) _cpfe_sys_args="${_cpfe_sys_args} -D__arm64__=1 -D__aarch64__=1" ;;
         *) _cpfe_sys_args="${_cpfe_sys_args} -D__x86_64__=1" ;;
       esac
@@ -542,7 +555,7 @@ run_cpfe_frontend_and_codegen() {
         _cpfe_sys_args="${_cpfe_sys_args} -I${_gcc_inc}"
       fi
       if [ "${IS_NOSTDINC}" != "1" ]; then
-        _multiarch_inc="/usr/include/$(uname -m 2>/dev/null || printf 'aarch64')-linux-gnu"
+        _multiarch_inc="/usr/include/${ARCH:-aarch64}-linux-gnu"
         if [ -d "${_multiarch_inc}" ]; then
           _cpfe_sys_args="${_cpfe_sys_args} -I${_multiarch_inc}"
         fi
@@ -658,7 +671,7 @@ run_cpfe_frontend_and_codegen() {
   if [ "${EDGCPP_ACTIVE_LANG}" = "c" ]; then
     if [ "${NATIVE_BACKEND_RC}" -eq 0 ] && [ -s "${_tmp_nb_obj}" ]; then
       _can_use_native_obj=1
-      if [ "${EDGCPP_FORCE_LINUX_LLVM_OBJ:-1}" = "0" ] && [ "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" = "llvm_backend" ] && [ "$(uname -s 2>/dev/null || true)" = "Linux" ]; then
+      if [ "${EDGCPP_FORCE_LINUX_LLVM_OBJ:-1}" = "0" ] && [ "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" = "llvm_backend" ] && [ "${UNAME:-}" = "Linux" ]; then
         _can_use_native_obj=0
       fi
       if [ "${_can_use_native_obj}" = "1" ] && [ "${IS_COMPILE_ONLY}" = "1" ] && [ -n "${WRAPPER_OUTPUT_FILE}" ] && [ "${EDGCPP_USE_NATIVE_CODEGEN:-1}" = "1" ]; then
@@ -708,7 +721,7 @@ else
     "${EDGCPP_RESOLVED_BACKEND}" "$@" ${EDGCPP_EXTRA_CXXFLAGS} || _be_status=$?
   else
     "${EDGCPP_RESOLVED_BACKEND}" "$@" 2>/dev/null || {
-      if [ "${IS_COMPILE_ONLY}" = "0" ] && [ "$(uname -s 2>/dev/null || true)" = "Linux" ]; then
+      if [ "${IS_COMPILE_ONLY}" = "0" ] && [ "${UNAME:-}" = "Linux" ]; then
         "${EDGCPP_RESOLVED_BACKEND}" -no-pie "$@" || _be_status=$?
       else
         "${EDGCPP_RESOLVED_BACKEND}" "$@" || _be_status=$?

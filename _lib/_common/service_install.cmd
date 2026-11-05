@@ -162,8 +162,8 @@ if defined LIBSCRIPT_SERVICE_ENV_FILES (
 )
 
 if defined LIBSCRIPT_SERVICE_ENV_JSON (
-    for /f "delims=" %%e in ('echo !LIBSCRIPT_SERVICE_ENV_JSON! ^| jq -r "(.env // {}) | to_entries[]? | \"set \\\"\(.key)=\(.value)\\\"\"" 2^>nul') do (
-        echo %%e >> "!_RUNNER_FILE!"
+    for /f "delims=" %%e in ('echo !LIBSCRIPT_SERVICE_ENV_JSON! ^| jq -r --arg eq "=" "(.env // {}) | to_entries[]? | .key + $eq + (.value | tostring)" 2^>nul') do (
+        echo set "%%e" >> "!_RUNNER_FILE!"
     )
 )
 
@@ -228,7 +228,7 @@ if not errorlevel 1 (
 if exist "!_MANIFEST_DIR!\libscript.json" (
     where jq >nul 2>&1
     if not errorlevel 1 (
-        for /f "usebackq delims=" %%O in (`jq -r --arg svc "!_SERVICE_NAME!" "(.service_overrides[$svc] // .infrastructure.service_overrides[$svc] // {}) | to_entries[]? | \"\(.key)=\(.value)\"" "!_MANIFEST_DIR!\libscript.json" 2^>nul`) do (
+        for /f "usebackq delims=" %%O in (`jq -r --arg svc "!_SERVICE_NAME!" --arg eq "=" "(.service_overrides[$svc] // .infrastructure.service_overrides[$svc] // {}) | to_entries[]? | .key + $eq + (.value | tostring)" "!_MANIFEST_DIR!\libscript.json" 2^>nul`) do (
             call :libscript_service_override_env "!_SERVICE_NAME!" "%%O"
         )
     )

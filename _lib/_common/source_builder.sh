@@ -160,7 +160,7 @@ libscript_resolve_build_toolchain() {
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc"
         else
           _cand_gcc="$(command -v gcc 2>/dev/null || true)"
-          if [ "$(uname -s 2>/dev/null || true)" = "Darwin" ] && [ -n "${_cand_gcc}" ]; then
+          if [ "${UNAME:-}" = "Darwin" ] && [ -n "${_cand_gcc}" ]; then
             if "${_cand_gcc}" --version 2>&1 | grep -qi "clang"; then
               for _brew_gcc in /opt/homebrew/bin/gcc-16 /opt/homebrew/bin/gcc-15 /opt/homebrew/bin/gcc-14 /opt/homebrew/bin/gcc-13 /usr/local/bin/gcc-16 /usr/local/bin/gcc-15 /usr/local/bin/gcc-14 /usr/local/bin/gcc-13; do
                 if [ -x "${_brew_gcc}" ]; then

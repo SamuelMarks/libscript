@@ -120,8 +120,7 @@ case "$ACTION" in
       if ! command -v curl >/dev/null 2>&1; then
         if ! libscript_depends 'curl'; then
           log_info 'Attempting static binary download for curl...'
-          ARCH=$(uname -m)
-          case "$ARCH" in
+          case "${ARCH:-}" in
             x86_64) BARCH="amd64" ;;
             aarch64|arm64) BARCH="arm64" ;;
             armv7l) BARCH="arm" ;;
@@ -149,8 +148,7 @@ case "$ACTION" in
       if ! command -v curl >/dev/null 2>&1; then
         if ! libscript_depends 'curl'; then
           log_info 'Attempting static binary download for curl...'
-          ARCH=$(uname -m)
-          case "$ARCH" in
+          case "${ARCH:-}" in
             x86_64) BARCH="amd64" ;;
             aarch64|arm64) BARCH="arm64" ;;
             armv7l) BARCH="arm" ;;

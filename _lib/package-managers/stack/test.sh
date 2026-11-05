@@ -42,7 +42,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
 fi
 
-if [ -f /etc/alpine-release ] && [ "$(uname -m)" != "x86_64" ]; then
+if [ -f /etc/alpine-release ] && [ "${ARCH:-}" != "x86_64" ]; then
   echo 'stack binary on Alpine is only available for x86_64. Skipping test.'
   exit 0
 fi

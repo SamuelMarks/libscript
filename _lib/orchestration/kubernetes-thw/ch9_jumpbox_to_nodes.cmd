@@ -3,8 +3,9 @@
 :: ## Overview
 :: Automates Ch9 of Kubernetes the Hard Way.
 :: ## Usage
-:: Executes the steps for Ch9. setlocal EnableDelayedExpansion
+:: Executes the steps for Ch9.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -65,14 +66,32 @@ for %%H in (%NODES%) do (
   set "SUBNET=!SUBNET_%%H!"
   powershell -Command "$text = Get-Content '%DIR%\\kubernetes-the-hard-way\configs\10-bridge.conf' -Raw; $text = $text -replace 'SUBNET', $env:SUBNET; Set-Content -Path '%DIR%\\kubernetes-the-hard-way\10-bridge-%%H.conf' -Value $text"
   powershell -Command "$text = Get-Content '%DIR%\\kubernetes-the-hard-way\configs\kubelet-config.yaml' -Raw; $text = $text -replace 'SUBNET', $env:SUBNET; Set-Content -Path '%DIR%\\kubernetes-the-hard-way\kubelet-config-%%H.yaml' -Value $text"
-  scp "%DIR%\\kubernetes-the-hard-way\10-bridge-%%H.conf" "%DIR%\\kubernetes-the-hard-way\kubelet-config-%%H.yaml" root@%%H:~/
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%DIR%\kubernetes-the-hard-way\10-bridge-%%H.conf" "root@%%H" "~/"
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%DIR%\kubernetes-the-hard-way\kubelet-config-%%H.yaml" "root@%%H" "~/"
   ssh root@%%H "cp -f 10-bridge-%%H.conf 10-bridge.conf && cp -f kubelet-config-%%H.yaml kubelet-config.yaml"
 )
 
 for %%H in (%NODES%) do (
   ssh root@%%H "mkdir -p ~/cni-plugins"
-  scp %DIR%\\kubernetes-the-hard-way\downloads\worker\* %DIR%\\kubernetes-the-hard-way\downloads\client\kubectl %DIR%\\kubernetes-the-hard-way\configs\99-loopback.conf %DIR%\\kubernetes-the-hard-way\configs\containerd-config.toml %DIR%\\kubernetes-the-hard-way\configs\kube-proxy-config.yaml %DIR%\\kubernetes-the-hard-way\units\containerd.service %DIR%\\kubernetes-the-hard-way\units\kubelet.service %DIR%\\kubernetes-the-hard-way\units\kube-proxy.service root@%%H:~/
-  scp %DIR%\\kubernetes-the-hard-way\downloads\cni-plugins\* root@%%H:~/cni-plugins/
+  for %%f in (
+    "%DIR%\kubernetes-the-hard-way\downloads\worker\*"
+    "%DIR%\kubernetes-the-hard-way\downloads\client\kubectl"
+    "%DIR%\kubernetes-the-hard-way\configs\99-loopback.conf"
+    "%DIR%\kubernetes-the-hard-way\configs\containerd-config.toml"
+    "%DIR%\kubernetes-the-hard-way\configs\kube-proxy-config.yaml"
+    "%DIR%\kubernetes-the-hard-way\units\containerd.service"
+    "%DIR%\kubernetes-the-hard-way\units\kubelet.service"
+    "%DIR%\kubernetes-the-hard-way\units\kube-proxy.service"
+  ) do (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%%~f" "root@%%H" "~/"
+  )
+  for %%f in ("%DIR%\kubernetes-the-hard-way\downloads\cni-plugins\*") do (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%%~f" "root@%%H" "~/cni-plugins/"
+  )
 )
 
 for %%H in (%NODES%) do (

@@ -150,9 +150,8 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pkgx ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        ARCH=$(uname -m)
-        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-        if [ "$ARCH" = "x86_64" ]; then ARCH="x86-64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+        OS="${UNAME_LOWER:-linux}"
+        if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x86-64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
         if [ "$OS" = "darwin" ]; then OS="darwin"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
         URL="https://github.com/pkgxdev/pkgx/releases/download/v${EXACT_VERSION}/pkgx-${EXACT_VERSION}+${OS}+${ARCH}.tar.xz"
         TEMP_FILE=$(mktemp)

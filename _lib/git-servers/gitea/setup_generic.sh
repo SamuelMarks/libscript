@@ -101,7 +101,7 @@ case "$ACTION" in
     if [ ! -d "${TARGET_DIR}" ]; then
       log_info "Installing gitea ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
-      if [ "$(uname -s)" = "FreeBSD" ]; then
+      if [ "${UNAME:-}" = "FreeBSD" ]; then
         libscript_depends 'gitea'
         if command -v gitea >/dev/null 2>&1; then
           ln -sf "$(command -v gitea)" "${TARGET_DIR}/bin/gitea"

@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/cloud/core/tags.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/remote_sync.sh" "_lib/cloud/core/tags.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -45,6 +45,22 @@ done
 GCP_INSTALL_METHOD="$(libscript_resolve_install_method "GCP")"
 ACTION="${ACTION:-install}"
 VERSION="${GCP_VERSION:-latest}"
+
+# ## gcp_resolve_vm_ip
+# Resolves the public IP address of a GCP instance using the local TTL cache or gcloud CLI.
+gcp_resolve_vm_ip() {
+  _grvi_zone="${1:-${GCP_ZONE:-}}"
+  _grvi_node="$2"
+  if _grvi_cached=$(libscript_get_cached_vm_ip 'gcp' "${_grvi_zone:-default}" "$_grvi_node"); then
+    printf '%s\n' "$_grvi_cached"
+    return 0
+  fi
+  _grvi_ip=$(gcloud compute instances describe "$_grvi_node" ${_grvi_zone:+--zone="$_grvi_zone"} --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2>/dev/null || true)
+  if [ -n "$_grvi_ip" ]; then
+    libscript_set_cached_vm_ip 'gcp' "${_grvi_zone:-default}" "$_grvi_node" "$_grvi_ip"
+  fi
+  printf '%s\n' "$_grvi_ip"
+}
 
 # ## gcloud
 # Wrapper around gcloud CLI supporting DRY_RUN=true or unauthenticated local environments.
@@ -161,6 +177,7 @@ case "$ACTION" in
           exit 1
         fi
         libscript_verify_managed gcp node "$RESOURCE_NAME" || exit 1
+        libscript_invalidate_cached_vm_ip 'gcp' "${GCP_ZONE:-default}" "$RESOURCE_NAME"
         printf '%s\n' "Deleting GCP VM: $RESOURCE_NAME"
         if gcloud compute instances describe "$RESOURCE_NAME" >/dev/null 2>&1; then
           gcloud compute instances delete "$RESOURCE_NAME" --quiet
@@ -194,7 +211,8 @@ case "$ACTION" in
           printf '%s\n' '203.0.113.10'
           exit 0
         fi
-        gcloud compute instances describe "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
+        IP=$(gcp_resolve_vm_ip "$ZONE" "$RESOURCE_NAME")
+        printf '%s\n' "$IP"
         ;;
       wait-ssh)
         ZONE=${3:-${GCP_ZONE:-}}
@@ -234,11 +252,9 @@ case "$ACTION" in
           printf '%s\n' "[DRY_RUN] Syncing LibScript to $RESOURCE_NAME"
           exit 0
         fi
-        IP=$(gcloud compute instances describe "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2>/dev/null || true)
-        if command -v rsync >/dev/null 2>&1 && [ -n "$IP" ]; then
-          rsync -avz --delete --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "${ADMIN_USER:-ubuntu}@$IP:~/libscript/"
-        elif command -v tar >/dev/null 2>&1; then
-          tar -czf - -C "$LIBSCRIPT_ROOT_DIR" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | gcloud compute ssh "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --command="mkdir -p ~/libscript && find ~/libscript -mindepth 1 \( -name .git -o -name cache -o -name build -o -name target -o -name logs -o -name tmp -o -name node_modules -o -name .venv \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C ~/libscript && find ~/libscript -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
+        IP=$(gcp_resolve_vm_ip "$ZONE" "$RESOURCE_NAME")
+        if [ -n "$IP" ]; then
+          libscript_sync_runtime_to_remote "${ADMIN_USER:-ubuntu}@$IP" "libscript"
         else
           gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$LIBSCRIPT_ROOT_DIR" "${RESOURCE_NAME}:~/libscript"
         fi
@@ -249,11 +265,9 @@ case "$ACTION" in
           printf '%s\n' "[DRY_RUN] Uploading $SRC to $RESOURCE_NAME -> $DST"
           exit 0
         fi
-        IP=$(gcloud compute instances describe "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2>/dev/null || true)
-        if command -v rsync >/dev/null 2>&1 && [ -n "$IP" ] && [ -d "$SRC" ]; then
-          rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" -e "ssh -o StrictHostKeyChecking=no" "${SRC%/}/" "${ADMIN_USER:-ubuntu}@$IP:${DST%/}/"
-        elif command -v tar >/dev/null 2>&1 && [ -d "$SRC" ]; then
-          tar -czf - -C "$SRC" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | gcloud compute ssh "$RESOURCE_NAME" ${ZONE:+--zone="$ZONE"} --command="mkdir -p \"$DST\" && find \"$DST\" -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \"$DST\" && find \"$DST\" -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
+        IP=$(gcp_resolve_vm_ip "$ZONE" "$RESOURCE_NAME")
+        if [ -n "$IP" ] && [ -d "$SRC" ]; then
+          libscript_sync_app_to_remote "$SRC" "${ADMIN_USER:-ubuntu}@$IP" "$DST"
         else
           gcloud compute scp --recurse ${ZONE:+--zone="$ZONE"} "$SRC" "${RESOURCE_NAME}:${DST}"
         fi

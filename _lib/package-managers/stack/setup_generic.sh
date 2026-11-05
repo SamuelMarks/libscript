@@ -93,7 +93,7 @@ case "$ACTION" in
       libscript_depends 'stack'
     else
       # libscript_native implementation
-      if [ -f /etc/alpine-release ] && [ "$(uname -m)" != "x86_64" ]; then
+      if [ -f /etc/alpine-release ] && [ "${ARCH:-}" != "x86_64" ]; then
         log_info 'stack binary on Alpine is only available for x86_64. Skipping.'
         exit 0
       fi

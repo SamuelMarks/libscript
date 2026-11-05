@@ -455,7 +455,15 @@ if /i "!_SUB!"=="sync" (
         echo [DRY_RUN] Syncing LibScript to !_NODE!
         exit /b 0
     )
-    tar -czf - -C "!LIBSCRIPT_ROOT_DIR!" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | gcloud compute ssh "!_NODE!" --zone="!_ZONE!" --command="mkdir -p ~/libscript && find ~/libscript -mindepth 1 \( -name .git -o -name cache -o -name build -o -name target -o -name logs -o -name tmp -o -name node_modules -o -name .venv \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C ~/libscript && find ~/libscript -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
+    set "_GCP_IP="
+    for /f "delims=" %%I in ('gcloud compute instances describe "!_NODE!" --zone="!_ZONE!" --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2^>nul') do set "_GCP_IP=%%I"
+    if not "!_GCP_IP!"=="" (
+        if "%ADMIN_USER%"=="" set "ADMIN_USER=ubuntu"
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_sync_runtime_to_remote "!ADMIN_USER!@!_GCP_IP!" "~/libscript"
+        exit /b !errorlevel!
+    )
+    tar -czf - -C "!LIBSCRIPT_ROOT_DIR!" --exclude=".git" --exclude="vagrant" --exclude="cache" --exclude="build" --exclude="cmake-build-*" --exclude="target" --exclude="gen" --exclude="logs" --exclude="*.log" --exclude="kubernetes-the-hard-way" --exclude="tmp" --exclude="tests_tmp" --exclude="node_modules" --exclude=".venv" --exclude=".DS_Store" . | gcloud compute ssh "!_NODE!" --zone="!_ZONE!" --command="mkdir -p ~/libscript && find ~/libscript -mindepth 1 \( -name .git -o -name cache -o -name build -o -name 'cmake-build-*' -o -name target -o -name logs -o -name tmp -o -name node_modules -o -name .venv \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C ~/libscript && find ~/libscript -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
     exit /b !errorlevel!
 )
 if /i "!_SUB!"=="deploy" goto :gcp_node_upload
@@ -484,7 +492,15 @@ if "%DRY_RUN%"=="1" (
     exit /b 0
 )
 if exist "!_SRC!\*" (
-    tar -czf - -C "!_SRC!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | gcloud compute ssh "!_NODE!" --zone="!_ZONE!" --command="mkdir -p \"!_DST!\" && find \"!_DST!\" -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \"!_DST!\" && find \"!_DST!\" -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
+    set "_GCP_IP="
+    for /f "delims=" %%I in ('gcloud compute instances describe "!_NODE!" --zone="!_ZONE!" --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2^>nul') do set "_GCP_IP=%%I"
+    if not "!_GCP_IP!"=="" (
+        if "%ADMIN_USER%"=="" set "ADMIN_USER=ubuntu"
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_sync_app_to_remote "!_SRC!" "!ADMIN_USER!@!_GCP_IP!" "!_DST!"
+        exit /b !errorlevel!
+    )
+    tar -czf - -C "!_SRC!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude="cmake-build-*" --exclude="out" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | gcloud compute ssh "!_NODE!" --zone="!_ZONE!" --command="mkdir -p \"!_DST!\" && find \"!_DST!\" -mindepth 1 \( -name .git -o -name node_modules -o -name target -o -name .venv -o -name venv -o -name dist -o -name build -o -name 'cmake-build-*' -o -name out -o -name .angular -o -name .vite -o -name .gradle -o -name .kotlin -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C \"!_DST!\" && find \"!_DST!\" -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
 ) else (
     call :run_gcloud compute scp --recurse --zone="!_ZONE!" "!_SRC!" "!_NODE!:!_DST!"
 )

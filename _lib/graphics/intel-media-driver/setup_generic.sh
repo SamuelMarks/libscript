@@ -56,7 +56,7 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-_arch=$(uname -m 2>/dev/null || printf 'unknown')
+_arch="${ARCH:-unknown}"
 case "$_arch" in
   x86_64|amd64)
     if ! command -v "intel-media-driver" >/dev/null 2>&1; then

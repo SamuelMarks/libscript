@@ -87,8 +87,8 @@ resolve_edgcpp_release_asset() {
   _arch_tag='x86_64'
   _ext='tar.gz'
 
-  _uname_s="$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'linux')"
-  _uname_m="$(uname -m 2>/dev/null | tr '[:upper:]' '[:lower:]' || printf 'x86_64')"
+  _uname_s="${UNAME_LOWER:-linux}"
+  _uname_m="$(printf '%s' "${ARCH:-x86_64}" | tr '[:upper:]' '[:lower:]')"
 
   case "${_uname_s}" in
     darwin*|macos*)
@@ -182,7 +182,7 @@ stage_edgcpp_wrappers() {
     done
   fi
 
-  if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ] && [ "$(uname -s 2>/dev/null || true)" = "Linux" ]; then
+  if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ] && [ "${UNAME:-}" = "Linux" ]; then
     if [ -f "/etc/alpine-release" ]; then
       if [ ! -e "/lib/ld-linux-aarch64.so.1" ] && [ ! -e "/lib/ld-linux-x86-64.so.2" ] || [ ! -e "/usr/lib/libgccjit.so.0" ]; then
         libscript_depends gcompat libstdc++ ncurses-libs zlib zstd-libs libgccjit gcc g++ musl-dev >/dev/null 2>&1 || true

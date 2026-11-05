@@ -123,15 +123,14 @@ case "$ACTION" in
     if [ ! -d "${TARGET_DIR}" ]; then
       log_info "Installing openbao ${VERSION} natively to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
-      if [ "$(uname -s)" = "FreeBSD" ]; then
+      if [ "${UNAME:-}" = "FreeBSD" ]; then
         libscript_depends 'openbao'
         if command -v bao >/dev/null 2>&1; then
           ln -sf "$(command -v bao)" "${TARGET_DIR}/bin/bao"
         fi
       else
-        ARCH=$(uname -m)
-        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-        if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+        OS="${UNAME_LOWER:-linux}"
+        if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
         URL="https://github.com/openbao/openbao/releases/download/v${EXACT_VERSION}/openbao_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
         TEMP_FILE=$(mktemp)
         libscript_depends 'curl'

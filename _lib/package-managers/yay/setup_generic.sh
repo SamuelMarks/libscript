@@ -117,8 +117,7 @@ case "$ACTION" in
             fi
           fi
         else
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x86_64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
           URL="https://github.com/Jguer/yay/releases/download/v${EXACT_VERSION}/yay_${EXACT_VERSION}_${ARCH}.tar.gz"
           TEMP_FILE=$(mktemp)
           libscript_depends 'curl' 'tar' || true

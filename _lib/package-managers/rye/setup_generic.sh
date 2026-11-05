@@ -121,9 +121,8 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing rye ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        ARCH=$(uname -m)
-        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-        if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+        OS="${UNAME_LOWER:-linux}"
+        if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x86_64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
         if [ "$OS" = "darwin" ]; then OS="macos"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
         URL="https://github.com/astral-sh/rye/releases/download/${EXACT_VERSION}/rye-${ARCH}-${OS}.gz"
         TEMP_FILE=$(mktemp)

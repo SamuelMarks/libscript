@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${UNAME:-}" ]; then
+  _ls_oi_this="${THIS_FILE}"
+  _ls_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_ls_oi_this}"
+  SCRIPT_DIR="${_ls_oi_dir}"
+  unset _ls_oi_this _ls_oi_dir || true
+fi
+
 # ## read_logs
 # Displays or tails service log files from systemd journal or log directories.
 read_logs() {
@@ -38,7 +51,7 @@ read_logs() {
     shift 2
     LOG_FILES="$*"
 
-    OS_NAME=$(uname -s)
+    OS_NAME="${UNAME:-Linux}"
     
     # Check physical log files first if they exist
     set +f

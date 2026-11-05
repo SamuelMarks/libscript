@@ -186,7 +186,23 @@ if not errorlevel 1 (
         set "sf_win=!seed_file:/=\!"
         if not "!sf_win:~1,1!"==":" set "sf_win=!MANIFEST_DIR!\!sf_win!"
         set "PGPASSWORD=!db_pass!"
-        if exist "!sf_win!" psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -f "!sf_win!" >nul 2>&1
+        if exist "!sf_win!" (
+            set "_DB_STATE_DIR=%USERPROFILE%\.libscript_db_state"
+            if not exist "!_DB_STATE_DIR!" mkdir "!_DB_STATE_DIR!" >nul 2>&1
+            set "_SF_SIG="
+            for %%Z in ("!sf_win!") do set "_SF_SIG=%%~nxZ_%%~zZ_%%~tZ"
+            set "_SF_SIG=!_SF_SIG: =_!"
+            set "_SF_CACHED="
+            if exist "!_DB_STATE_DIR!\pg_!db_name!_seed.sha256" set /p _SF_CACHED=<"!_DB_STATE_DIR!\pg_!db_name!_seed.sha256"
+            set "_SKIP_PG_SEED_FILE=0"
+            if not "!LIBSCRIPT_FORCE_SEED!"=="1" if not "!_SF_CACHED!"=="" if "!_SF_CACHED!"=="!_SF_SIG!" set "_SKIP_PG_SEED_FILE=1"
+            if "!_SKIP_PG_SEED_FILE!"=="1" (
+                echo [INFO] [REUSE] PostgreSQL seed_file '!sf_win!' unchanged for '!db_name!'; skipping.
+            ) else (
+                psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -f "!sf_win!" >nul 2>&1
+                > "!_DB_STATE_DIR!\pg_!db_name!_seed.sha256" echo !_SF_SIG!
+            )
+        )
     )
 )
 if not "!seed_cmd!"=="" (

@@ -109,10 +109,10 @@ audit_batch() {
     }
     { sub(/\r$/, "", $0) }
     FNR <= 35 {
-      if ($0 ~ /set -feu/) has_feu = 1
+      if ($0 !~ /^[[:space:]]*#/ && $0 ~ /set -feu/) has_feu = 1
     }
     FNR <= 65 {
-      if ($0 ~ /THIS_FILE=/) has_this = 1
+      if ($0 !~ /^[[:space:]]*#/ && $0 ~ /THIS_FILE=/) has_this = 1
     }
     {
       if (in_hd) {
@@ -215,10 +215,13 @@ audit_companions() {
         has_del = 0; has_this = 0; has_stack_guard = 0
       }
       FNR <= 25 {
+        sub(/\r$/, "", $0)
         line_l = tolower($0)
-        if (line_l ~ /enabledelayedexpansion/) has_del = 1
-        if (line_l ~ /this_file=/) has_this = 1
-        if (line_l ~ /echo "!stack!" \| findstr \/i \/c:":/) has_stack_guard = 1
+        if (line_l !~ /^[[:space:]]*(::|rem([[:space:]]|$))/) {
+          if (line_l ~ /^[[:space:]]*setlocal[[:space:]]+enabledelayedexpansion/) has_del = 1
+          if (line_l ~ /this_file=/) has_this = 1
+          if (line_l ~ /echo "!stack!" \| findstr \/i \/c:":/) has_stack_guard = 1
+        }
       }
       END { check_cmd() }
     '

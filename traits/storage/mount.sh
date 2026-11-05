@@ -30,6 +30,16 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+for _tr_lib in "_lib/_common/priv.sh" "_lib/_common/os_info.sh"; do
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/${_tr_lib}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_tr_lib}"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    unset SCRIPT_NAME || true
+  fi
+done
+
 # ## print_usage
 # Prints usage instructions for traits/storage/mount.sh.
 print_usage() {
@@ -60,7 +70,7 @@ if [ -z "$MOUNT_POINT" ] || { [ "$AUTO_DISCOVER" -eq 0 ] && [ -z "$DEVICE" ]; };
 fi
 
 SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-/}"
-OS_NAME="$(uname -s 2>/dev/null || printf 'Linux')"
+OS_NAME="${UNAME:-Linux}"
 if [ "$OS_NAME" = "SunOS" ]; then
   FSTAB_FILE="${SYSROOT%/}/etc/vfstab"
 else
@@ -71,11 +81,11 @@ fi
 # Ensures the mounted directory is owned by SERVICE_USER or REMOTE_USER when configured.
 normalize_mount_ownership() {
   _nmo_dir="${SYSROOT%/}${MOUNT_POINT}"
-  mkdir -p "$_nmo_dir" 2>/dev/null || sudo mkdir -p "$_nmo_dir" 2>/dev/null || true
+  mkdir -p "$_nmo_dir" 2>/dev/null || priv mkdir -p "$_nmo_dir" 2>/dev/null || true
   _nmo_user="${SERVICE_USER:-${REMOTE_USER:-${ADMIN_USER:-${SUDO_USER:-}}}}"
   if [ -n "$_nmo_user" ] && id "$_nmo_user" >/dev/null 2>&1; then
     _nmo_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_nmo_user}}"
-    chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || sudo chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || true
+    chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || priv chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || true
   fi
 }
 
@@ -129,9 +139,9 @@ check_existing_signature() {
 # ## reconcile_fstab_entry
 # Writes persistent fstab or vfstab entry inside libscript-trait-storage markers idempotently.
 reconcile_fstab_entry() {
-  mkdir -p "${SYSROOT%/}/etc" 2>/dev/null || sudo mkdir -p "${SYSROOT%/}/etc" 2>/dev/null || true
-  mkdir -p "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null || sudo mkdir -p "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null || true
-  touch "$FSTAB_FILE" 2>/dev/null || sudo touch "$FSTAB_FILE" 2>/dev/null || true
+  mkdir -p "${SYSROOT%/}/etc" 2>/dev/null || priv mkdir -p "${SYSROOT%/}/etc" 2>/dev/null || true
+  mkdir -p "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null || priv mkdir -p "${SYSROOT%/}${MOUNT_POINT}" 2>/dev/null || true
+  touch "$FSTAB_FILE" 2>/dev/null || priv touch "$FSTAB_FILE" 2>/dev/null || true
   marker_id="libscript-trait-storage:${MOUNT_POINT}"
   if ! grep -q "# BEGIN ${marker_id}" "$FSTAB_FILE" 2>/dev/null; then
     if [ -w "$FSTAB_FILE" ]; then
@@ -141,7 +151,7 @@ reconcile_fstab_entry() {
         printf '# END %s\n' "$marker_id"
       } >> "$FSTAB_FILE"
     else
-      sudo sh -c "printf '# BEGIN %s\n%s %s %s defaults,nofail 0 2\n# END %s\n' '$marker_id' '$DEVICE' '$MOUNT_POINT' '$FSTYPE' '$marker_id' >> '$FSTAB_FILE'" 2>/dev/null || true
+      priv sh -c "printf '# BEGIN %s\n%s %s %s defaults,nofail 0 2\n# END %s\n' '$marker_id' '$DEVICE' '$MOUNT_POINT' '$FSTYPE' '$marker_id' >> '$FSTAB_FILE'" 2>/dev/null || true
     fi
   fi
 }
@@ -158,7 +168,7 @@ reconcile_fstab_entry
 
 if [ "$SYSROOT" = "/" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ -b "$DEVICE" ]; then
   if ! is_already_mounted; then
-    mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || sudo mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || true
+    mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || priv mount -t "$FSTYPE" "$DEVICE" "$MOUNT_POINT" 2>/dev/null || true
   fi
 fi
 normalize_mount_ownership

@@ -31,10 +31,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # shellcheck disable=SC1091
 _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+for _db_lib in "_lib/_common/log.sh" "_lib/_common/priv.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_db_lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
 unset SCRIPT_NAME || true
 [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
@@ -115,9 +117,9 @@ while IFS= read -r db_entry <&3; do
             log_info "Importing PostgreSQL dump '$_dump_file' into '$_t_db'..."
             PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -tc "SELECT 1 FROM pg_database WHERE datname = '$_t_db'" 2>/dev/null | grep -q 1 || \
               PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -c "CREATE DATABASE \"$_t_db\";" 2>/dev/null || \
-              sudo -u postgres psql -c "CREATE DATABASE \"$_t_db\";" 2>/dev/null || true
+              priv_as postgres psql -c "CREATE DATABASE \"$_t_db\";" 2>/dev/null || true
             PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$_t_db" -f "$_dump_file" >/dev/null 2>&1 || \
-              sudo -u postgres psql -d "$_t_db" -f "$_dump_file" >/dev/null 2>&1 || true
+              priv_as postgres psql -d "$_t_db" -f "$_dump_file" >/dev/null 2>&1 || true
           done
         fi
       fi
@@ -140,9 +142,9 @@ while IFS= read -r db_entry <&3; do
       done
       if [ -n "$_src_db" ]; then
         log_info "Importing $ENGINE file '$_src_db' -> '$DB_PATH'..."
-        mkdir -p "$(dirname -- "$DB_PATH")" 2>/dev/null || sudo mkdir -p "$(dirname -- "$DB_PATH")" 2>/dev/null || true
-        rm -f "${DB_PATH}.wal" "${DB_PATH}.shm" 2>/dev/null || sudo rm -f "${DB_PATH}.wal" "${DB_PATH}.shm" 2>/dev/null || true
-        cp -f "$_src_db" "$DB_PATH" 2>/dev/null || sudo cp -f "$_src_db" "$DB_PATH"
+        mkdir -p "$(dirname -- "$DB_PATH")" 2>/dev/null || priv mkdir -p "$(dirname -- "$DB_PATH")" 2>/dev/null || true
+        rm -f "${DB_PATH}.wal" "${DB_PATH}.shm" 2>/dev/null || priv rm -f "${DB_PATH}.wal" "${DB_PATH}.shm" 2>/dev/null || true
+        cp -f "$_src_db" "$DB_PATH" 2>/dev/null || priv cp -f "$_src_db" "$DB_PATH"
         _extra_paths=$(printf '%s\n' "$db_entry" | jq -r '.fallback_paths[]? // .extra_paths[]? // empty' 2>/dev/null || true)
         if [ -n "$_extra_paths" ]; then
           printf '%s\n' "$_extra_paths" | while IFS= read -r _ep; do
@@ -151,7 +153,7 @@ while IFS= read -r db_entry <&3; do
             [ "${_ep#/}" = "$_ep" ] && _ep="${MANIFEST_DIR}/${_ep}"
             mkdir -p "$(dirname -- "$_ep")" 2>/dev/null || true
             rm -f "${_ep}.wal" 2>/dev/null || true
-            cp -f "$_src_db" "$_ep" 2>/dev/null || sudo cp -f "$_src_db" "$_ep" 2>/dev/null || true
+            cp -f "$_src_db" "$_ep" 2>/dev/null || priv cp -f "$_src_db" "$_ep" 2>/dev/null || true
           done
         fi
       fi
@@ -164,7 +166,7 @@ EOF_IMP_DBS
 _owner="${SERVICE_USER:-${REMOTE_USER:-${ADMIN_USER:-${SUDO_USER:-}}}}"
 if [ -n "$_owner" ] && id "$_owner" >/dev/null 2>&1; then
   for _d in "${DATA_DISK_MOUNT:-/mnt/data}" "$MANIFEST_DIR"; do
-    [ -d "$_d" ] && { chown -R "${_owner}:${_owner}" "$_d" 2>/dev/null || sudo chown -R "${_owner}:${_owner}" "$_d" 2>/dev/null || true; }
+    [ -d "$_d" ] && { chown -R "${_owner}:${_owner}" "$_d" 2>/dev/null || priv chown -R "${_owner}:${_owner}" "$_d" 2>/dev/null || true; }
   done
 fi
 

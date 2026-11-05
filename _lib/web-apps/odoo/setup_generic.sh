@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/service.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/service.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -73,10 +73,8 @@ export ODOO_WEBSERVER ODOO_DB_TYPE ODOO_VERSION ODOO_WWWROOT ODOO_SERVER_NAME LI
 # ## safe_tee
 # Writes standard input to a target file, using priv tee when elevated permissions are needed.
 safe_tee() {
-  if [ "${PRIV:-}" != "" ] && command -v sudo >/dev/null 2>&1; then
-    sudo tee "$@"
-  elif [ "${PRIV:-}" != "" ] && command -v doas >/dev/null 2>&1; then
-    doas tee "$@"
+  if [ "${PRIV:-}" != "" ]; then
+    priv tee "$@"
   else
     tee "$@"
   fi
@@ -104,14 +102,11 @@ if [ ! -f "${ODOO_WWWROOT}/odoo-bin" ]; then
   # Install Python dependencies into an isolated virtual environment
   if [ -f "${ODOO_WWWROOT}/requirements.txt" ]; then
     log_info "Installing Odoo Python dependencies into ${ODOO_WWWROOT}/.venv..."
-    if command -v uv >/dev/null 2>&1; then
-      priv uv venv "${ODOO_WWWROOT}/.venv" 2>/dev/null || true
+    libscript_python_venv "${ODOO_WWWROOT}/.venv" 2>/dev/null || true
+    if command -v uv >/dev/null 2>&1 && [ -x "${ODOO_WWWROOT}/.venv/bin/python" ]; then
       priv uv pip install --python "${ODOO_WWWROOT}/.venv/bin/python" -r "${ODOO_WWWROOT}/requirements.txt" || true
-    elif command -v python3 >/dev/null 2>&1; then
-      priv python3 -m venv "${ODOO_WWWROOT}/.venv" 2>/dev/null || true
-      if [ -x "${ODOO_WWWROOT}/.venv/bin/pip" ]; then
-        priv "${ODOO_WWWROOT}/.venv/bin/pip" install -r "${ODOO_WWWROOT}/requirements.txt" || true
-      fi
+    elif [ -x "${ODOO_WWWROOT}/.venv/bin/pip" ]; then
+      priv "${ODOO_WWWROOT}/.venv/bin/pip" install -r "${ODOO_WWWROOT}/requirements.txt" || true
     else
       log_warn 'python3/uv not found. Skipping python dependencies.'
     fi

@@ -157,19 +157,27 @@ if /i "!_SUB!"=="exec" (
     exit /b !ERRORLEVEL!
 )
 if /i "!_SUB!"=="sync" (
-    scp -o StrictHostKeyChecking=no -r "!LIBSCRIPT_ROOT_DIR!" "%ADMIN_USER%@!_IP!:~/libscript"
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_sync_runtime_to_remote "!ADMIN_USER!@!_IP!" "~/libscript"
     exit /b !ERRORLEVEL!
 )
 if /i "!_SUB!"=="deploy" (
-    scp -o StrictHostKeyChecking=no -r "%~5" "%ADMIN_USER%@!_IP!:%~6"
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%~5" "!ADMIN_USER!@!_IP!" "%~6"
     exit /b !ERRORLEVEL!
 )
 if /i "!_SUB!"=="upload" (
-    scp -o StrictHostKeyChecking=no -r "%~5" "%ADMIN_USER%@!_IP!:%~6"
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%~5" "!ADMIN_USER!@!_IP!" "%~6"
     exit /b !ERRORLEVEL!
 )
 if /i "!_SUB!"=="download" (
-    scp -o StrictHostKeyChecking=no -r "%ADMIN_USER%@!_IP!:%~5" "%~6"
+    if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_from_remote "!ADMIN_USER!@!_IP!" "%~5" "%~6"
     exit /b !ERRORLEVEL!
 )
 exit /b 0

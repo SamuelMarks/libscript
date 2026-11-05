@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
+if [ -z "${UNAME:-}" ]; then
+  _fbu_oi_this="${THIS_FILE}"
+  _fbu_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_fbu_oi_this}"
+  SCRIPT_DIR="${_fbu_oi_dir}"
+  unset _fbu_oi_this _fbu_oi_dir || true
+fi
+
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
 PRIMARY_USER="${2:-vagrant}"
 
@@ -81,7 +94,7 @@ cp "${USER_HOME}/.ssh/authorized_keys" "${SYSROOT}/root/.ssh/authorized_keys"
 chmod 0600 "${SYSROOT}/root/.ssh/authorized_keys"
 
 # 4. In native FreeBSD host, invoke pw useradd if chrooted
-if [ "$(uname -s 2>/dev/null || true)" = "FreeBSD" ] && command -v pw >/dev/null 2>&1; then
+if [ "${UNAME:-}" = "FreeBSD" ] && command -v pw >/dev/null 2>&1; then
   pw -R "${SYSROOT}" groupadd -n wheel -g 0 2>/dev/null || true
   pw -R "${SYSROOT}" groupadd -n operator -g 2 2>/dev/null || true
   pw -R "${SYSROOT}" groupadd -n video -g 44 2>/dev/null || true

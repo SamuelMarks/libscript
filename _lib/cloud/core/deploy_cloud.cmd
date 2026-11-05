@@ -273,27 +273,60 @@ if "!SKIP_INFRA!"=="0" (
     call :log "SSH" "Waiting for SSH readiness on '!NODE!'..."
     call :run_with_auth_check "!CLI!" node wait-ssh "!NODE!" "!CTX!"
 )
-call :log "SYNC" "Syncing LibScript runtime to '!NODE!'..."
-call :run_with_auth_check "!CLI!" node sync "!NODE!" "!CTX!"
-if errorlevel 1 exit /b 1
+set "_RT_HASH=nogit"
+for /f "delims=" %%H in ('git -C "!LIBSCRIPT_ROOT_DIR!" rev-parse HEAD 2^>nul') do set "_RT_HASH=%%H"
+set "_SKIP_RT_SYNC=0"
+if "!DRY_RUN_MODE!"=="0" if "!FORCE_REINSTALL!"=="0" if "!FORCE_REBUILD!"=="0" (
+    call "!CLI!" node exec "!NODE!" "!CTX!" "[ -x ~/libscript/libscript.sh ] && [ -f ~/.libscript_deployments/_libscript_runtime.sha256 ] && grep -qx '!_RT_HASH!' ~/.libscript_deployments/_libscript_runtime.sha256" >nul 2>&1
+    if not errorlevel 1 set "_SKIP_RT_SYNC=1"
+)
+if "!_SKIP_RT_SYNC!"=="1" (
+    call :log "REUSE" "LibScript runtime on '!NODE!' is up-to-date (!_RT_HASH!); skipping node sync."
+) else (
+    call :log "SYNC" "Syncing LibScript runtime to '!NODE!'..."
+    call :run_with_auth_check "!CLI!" node sync "!NODE!" "!CTX!"
+    if errorlevel 1 exit /b 1
+    if "!DRY_RUN_MODE!"=="0" (
+        call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_RT_HASH!' > ~/.libscript_deployments/_libscript_runtime.sha256" >nul 2>&1
+    )
+)
 
 set "PREPARED_STORAGE=0"
 if exist "!REPO_PATH!\libscript.json" (
     jq -e ".applications != null and (.applications | length > 0)" "!REPO_PATH!\libscript.json" >nul 2>&1
     if not errorlevel 1 (
-        call :log "CONFIG" "Uploading shared-stack manifest '!REPO_PATH!\libscript.json' to '!NODE!'..."
-        call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!REPO_PATH!\libscript.json" "libscript.json"
-        set "_SHARED_FLAGS="
-        if "!FORCE_REINSTALL!"=="1" set "_SHARED_FLAGS=!_SHARED_FLAGS! --force-reinstall"
-        if "!SKIP_PREPARE!"=="0" (
-            call :log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '!NODE!' from root manifest..."
-            call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
-            if errorlevel 1 exit /b 1
-            set "PREPARED_STORAGE=1"
+        set "_ROOT_MF_HASH=0"
+        for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!REPO_PATH!\libscript.json" SHA256 2^>nul') do (
+            if "!_ROOT_MF_HASH!"=="0" set "_ROOT_MF_HASH=%%H"
+        )
+        set "_SKIP_ROOT_PREP=0"
+        if "!DRY_RUN_MODE!"=="0" if "!FORCE_REINSTALL!"=="0" if "!FORCE_REBUILD!"=="0" (
+            call "!CLI!" node exec "!NODE!" "!CTX!" "[ -f ~/libscript.json ] && [ -f ~/.libscript_deployments/_root_manifest.sha256 ] && grep -qx '!_ROOT_MF_HASH!' ~/.libscript_deployments/_root_manifest.sha256" >nul 2>&1
+            if not errorlevel 1 (
+                set "_SKIP_ROOT_PREP=1"
+                set "PREPARED_STORAGE=1"
+            )
+        )
+        if "!_SKIP_ROOT_PREP!"=="1" (
+            call :log "REUSE" "Shared-stack root manifest '!REPO_PATH!\libscript.json' (!_ROOT_MF_HASH!) unchanged; skipping root prepare-storage and install-deps."
         ) else (
-            call :log "PREPARE" "Provisioning shared runtimes and databases on '!NODE!' from root manifest..."
-            call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
-            if errorlevel 1 exit /b 1
+            call :log "CONFIG" "Uploading shared-stack manifest '!REPO_PATH!\libscript.json' to '!NODE!'..."
+            call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!REPO_PATH!\libscript.json" "libscript.json"
+            set "_SHARED_FLAGS="
+            if "!FORCE_REINSTALL!"=="1" set "_SHARED_FLAGS=!_SHARED_FLAGS! --force-reinstall"
+            if "!SKIP_PREPARE!"=="0" (
+                call :log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '!NODE!' from root manifest..."
+                call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+                if errorlevel 1 exit /b 1
+                set "PREPARED_STORAGE=1"
+            ) else (
+                call :log "PREPARE" "Provisioning shared runtimes and databases on '!NODE!' from root manifest..."
+                call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+                if errorlevel 1 exit /b 1
+            )
+            if "!DRY_RUN_MODE!"=="0" (
+                call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_ROOT_MF_HASH!' > ~/.libscript_deployments/_root_manifest.sha256" >nul 2>&1
+            )
         )
     )
 )
@@ -501,35 +534,6 @@ call :parse_spec "%~1"
 call :check_only_match "!_SP_DEST!" "!_SP_REPO!"
 if "!_MATCH!"=="0" exit /b 0
 
-call :log "DEPLOY" "Deploying '!_SP_DEST!' ('!_SP_REPO!' -> '!_SP_DEST!', domain: '!_SP_DOMAIN!')..."
-call :run_with_auth_check "!CLI!" node deploy "!NODE!" "!CTX!" "!_SP_REPO!" "!_SP_DEST!"
-if errorlevel 1 exit /b 1
-
-if exist "!_SP_REPO!\.env" (
-    call :log "CONFIG" "Uploading .env for !_SP_DEST!..."
-    call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env" "!_SP_DEST!/.env"
-    if errorlevel 1 exit /b 1
-    if "!DRY_RUN_MODE!"=="0" if exist "!_SP_REPO!\libscript.json" (
-        for /f "tokens=1* delims==" %%A in ('jq -r "([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == \"object\" then .[] elif type == \"array\" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == \"string\" then (.value | sub(\"^\\$\\{[A-Za-z0-9_]+:-\"; \"\") | sub(\"\\}$\"; \"\")) else \"\" end)} | select(.def | test(\"^/[^:]+:/[^:]+\")) | \"\(.key)=\(.def)\"" "!_SP_REPO!\libscript.json" 2^>nul') do (
-            for /f "tokens=1 delims=:" %%F in ("%%B") do (
-                call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_SP_DEST!/.env ] && grep -q '^%%A=' ~/!_SP_DEST!/.env && ! grep '^%%A=' ~/!_SP_DEST!/.env | grep -F -q '%%F'; then sed 's|^%%A=.*|%%A=%%B|' ~/!_SP_DEST!/.env > ~/!_SP_DEST!/.env.tmp && mv ~/!_SP_DEST!/.env.tmp ~/!_SP_DEST!/.env; fi" >nul 2>&1
-            )
-        )
-    )
-)
-if exist "!_SP_REPO!\.env.secrets" (
-    call :log "CONFIG" "Uploading .env.secrets for !_SP_DEST!..."
-    call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env.secrets" "!_SP_DEST!/.env.secrets"
-    if errorlevel 1 exit /b 1
-)
-
-if "!SKIP_PREPARE!"=="0" if "!PREPARED_STORAGE!"=="0" (
-    call :log "PREPARE" "Preparing persistent storage and daemon overrides on '!NODE!' via LibScript..."
-    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json"
-    if errorlevel 1 exit /b 1
-    set "PREPARED_STORAGE=1"
-)
-
 set "_DEPS_FLAGS="
 if "!FORCE_REINSTALL!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-reinstall"
 if "!FORCE_REBUILD!"=="1" set "_DEPS_FLAGS=!_DEPS_FLAGS! --force-rebuild"
@@ -554,8 +558,37 @@ if "!DRY_RUN_MODE!"=="0" if "!FORCE_REINSTALL!"=="0" if "!FORCE_REBUILD!"=="0" (
     if not errorlevel 1 set "_SKIP_UNCHANGED=1"
 )
 if "!_SKIP_UNCHANGED!"=="1" (
-    call :log "REUSE" "Application '!_SP_DEST!' checksum (!_APP_HASH!) unchanged and services/databases healthy; skipping install-deps and rebuild."
+    call :log "REUSE" "Application '!_SP_DEST!' checksum (!_APP_HASH!) unchanged and services/databases healthy; skipping file upload, install-deps, and rebuild."
 ) else (
+    call :log "DEPLOY" "Deploying '!_SP_DEST!' ('!_SP_REPO!' -> '!_SP_DEST!', domain: '!_SP_DOMAIN!')..."
+    call :run_with_auth_check "!CLI!" node deploy "!NODE!" "!CTX!" "!_SP_REPO!" "!_SP_DEST!"
+    if errorlevel 1 exit /b 1
+
+    if exist "!_SP_REPO!\.env" (
+        call :log "CONFIG" "Uploading .env for !_SP_DEST!..."
+        call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env" "!_SP_DEST!/.env"
+        if errorlevel 1 exit /b 1
+        if "!DRY_RUN_MODE!"=="0" if exist "!_SP_REPO!\libscript.json" (
+            for /f "tokens=1* delims==" %%A in ('jq -r --arg eq "=" "([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == \"object\" then .[] elif type == \"array\" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == \"string\" then (.value | sub(\"^\\$\\{[A-Za-z0-9_]+:-\"; \"\") | sub(\"\\}$\"; \"\")) else \"\" end)} | select(.def | test(\"^/[^:]+:/[^:]+\")) | (.key + $eq + .def)" "!_SP_REPO!\libscript.json" 2^>nul') do (
+                for /f "tokens=1 delims=:" %%F in ("%%B") do (
+                    call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_SP_DEST!/.env ] && grep -q '^%%A=' ~/!_SP_DEST!/.env && ! grep '^%%A=' ~/!_SP_DEST!/.env | grep -F -q '%%F'; then sed 's|^%%A=.*|%%A=%%B|' ~/!_SP_DEST!/.env > ~/!_SP_DEST!/.env.tmp && mv ~/!_SP_DEST!/.env.tmp ~/!_SP_DEST!/.env; fi" >nul 2>&1
+                )
+            )
+        )
+    )
+    if exist "!_SP_REPO!\.env.secrets" (
+        call :log "CONFIG" "Uploading .env.secrets for !_SP_DEST!..."
+        call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env.secrets" "!_SP_DEST!/.env.secrets"
+        if errorlevel 1 exit /b 1
+    )
+
+    if "!SKIP_PREPARE!"=="0" if "!PREPARED_STORAGE!"=="0" (
+        call :log "PREPARE" "Preparing persistent storage and daemon overrides on '!NODE!' via LibScript..."
+        call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json"
+        if errorlevel 1 exit /b 1
+        set "PREPARED_STORAGE=1"
+    )
+
     call :log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '!_SP_DEST!'..."
     call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_DEPS_FLAGS!"
     if errorlevel 1 exit /b 1

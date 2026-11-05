@@ -30,10 +30,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+for _ml_lib in "_lib/_common/log.sh" "_lib/_common/os_info.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_ml_lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
 unset SCRIPT_NAME || true
 [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
 [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
@@ -113,7 +115,7 @@ fi
 
 # Auto-detect backend if not set
 if [ -z "$ML_BACKEND" ]; then
-  if [ "$(uname -s | tr '[:upper:]' '[:lower:]')" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
+  if [ "${UNAME_LOWER:-}" = "darwin" ] && [ "${ARCH:-}" = "arm64" ]; then
     ML_BACKEND='mlx'
   else
     ML_BACKEND='pytorch'

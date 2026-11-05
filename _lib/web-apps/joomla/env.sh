@@ -35,7 +35,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${JOOMLA_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   export JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-${HOME:-/root}/.libscript/www/joomla}"
 else
   export JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-/var/www/joomla}"

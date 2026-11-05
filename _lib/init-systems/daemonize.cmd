@@ -300,7 +300,7 @@ if not "!hc_cmd!"=="" (
             )
         )
     )
-    for /f "delims=" %%e in ('echo !svc! ^| jq -r "(.env // .environment // {}) | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do (
+    for /f "delims=" %%e in ('echo !svc! ^| jq -r --arg eq "=" "(.env // .environment // {}) | to_entries[]? | .key + $eq + (.value | tostring)" 2^>nul') do (
         set "%%e"
     )
     for %%B in ("!svc_workdir!\.venv\Scripts" "!svc_workdir!\node_modules\.bin" "!MANIFEST_DIR!\.venv\Scripts" "!MANIFEST_DIR!\node_modules\.bin") do (

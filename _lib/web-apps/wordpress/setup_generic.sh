@@ -65,25 +65,25 @@ unset _wp_sg_this _wp_sg_dir || true
 # ## safe_mkdir
 # Creates directories with mkdir -p, falling back to priv when elevated permissions are needed.
 safe_mkdir() {
-  mkdir -p "$@" 2>/dev/null || priv mkdir -p "$@" 2>/dev/null || sudo -n mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
+  mkdir -p "$@" 2>/dev/null || priv mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
 }
 
 # ## safe_tee
 # Writes standard input to a target file, using priv tee when elevated permissions are needed.
 safe_tee() {
-  tee "$@" 2>/dev/null || priv tee "$@" 2>/dev/null || sudo -n tee "$@" 2>/dev/null || tee "$@"
+  tee "$@" 2>/dev/null || priv tee "$@" 2>/dev/null || tee "$@"
 }
 
 # ## safe_cp
 # Copies files using elevated privileges when the destination directory is not writable.
 safe_cp() {
-  cp "$@" 2>/dev/null || priv cp "$@" 2>/dev/null || sudo -n cp "$@" 2>/dev/null || cp "$@"
+  cp "$@" 2>/dev/null || priv cp "$@" 2>/dev/null || cp "$@"
 }
 
 # ## safe_tar
 # Extracts a tar archive into the destination directory, using priv if needed.
 safe_tar() {
-  tar "$@" 2>/dev/null || priv tar "$@" 2>/dev/null || sudo -n tar "$@" 2>/dev/null || tar "$@"
+  tar "$@" 2>/dev/null || priv tar "$@" 2>/dev/null || tar "$@"
 }
 
 # Initialize configuration variables from environment or defaults

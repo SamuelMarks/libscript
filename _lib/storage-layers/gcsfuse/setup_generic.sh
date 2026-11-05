@@ -127,9 +127,8 @@ case "$ACTION" in
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gcsfuse/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
            mkdir -p "${TARGET_DIR}/bin"
-           ARCH=$(uname -m)
-           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-           if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+           OS="${UNAME_LOWER:-linux}"
+           if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
            TEMP_FILE=$(mktemp)
            libscript_depends 'curl'
            if [ "$OS" = "linux" ]; then

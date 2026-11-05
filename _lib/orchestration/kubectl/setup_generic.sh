@@ -136,11 +136,11 @@ case "$ACTION" in
           _kver='1.31.0'
           [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
           _karch='amd64'
-          case "$(uname -m)" in
+          case "${ARCH:-x86_64}" in
             aarch64|arm64) _karch="arm64" ;;
             *) _karch="amd64" ;;
           esac
-          _kos="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          _kos="${UNAME_LOWER:-linux}"
           KUBECTL_DOWNLOAD_URL="https://dl.k8s.io/release/v${_kver}/bin/${_kos}/${_karch}/kubectl"
         fi
         if [ "${_kos:-}" = "freebsd" ]; then

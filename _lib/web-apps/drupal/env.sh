@@ -35,7 +35,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${DRUPAL_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   export DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-${HOME:-/root}/.libscript/www/drupal}"
 else
   export DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-/var/www/drupal}"

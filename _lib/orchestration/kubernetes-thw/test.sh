@@ -27,6 +27,18 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh" ]; then
+  _k8s_test_this="${THIS_FILE:-}"
+  _k8s_test_dir="${SCRIPT_DIR:-}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/remote_sync.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="$_k8s_test_this"
+  SCRIPT_DIR="$_k8s_test_dir"
+fi
+
 # If multi-node Vagrant testing is requested via VAGRANT_MULTI_NODE=1, run full multi-node test
 if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
   export VAGRANT_N="${VAGRANT_N:-3}"
@@ -151,7 +163,7 @@ EOF'" < /dev/null
     
     if echo "$VAGRANT_IMAGE_DIR" | grep -q "alpine"; then
       for host in server node-0 node-1; do
-        scp "${SCRIPT_DIR}/alpine-systemctl.sh" root@${host}:/usr/local/bin/systemctl
+        libscript_scp_to_remote "${SCRIPT_DIR}/alpine-systemctl.sh" "root@${host}" "/usr/local/bin/systemctl"
         ssh root@${host} "chmod +x /usr/local/bin/systemctl; mkdir -p /etc/systemd/system"
       done
     fi

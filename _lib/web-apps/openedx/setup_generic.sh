@@ -56,7 +56,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/log.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/log.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -520,11 +520,7 @@ case "$ACTION" in
     log_info '3/8: Creating Python virtual environment...'
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ ! -d "${VENV_DIR}" ]; then
-      if command -v uv >/dev/null 2>&1; then
-        uv venv --python "$_py" "${VENV_DIR}" 2>/dev/null || uv venv "${VENV_DIR}" 2>/dev/null || "$_py" -m venv "${VENV_DIR}" 2>/dev/null || true
-      else
-        "$_py" -m venv "${VENV_DIR}" 2>/dev/null || true
-      fi
+      libscript_python_venv "${VENV_DIR}" 2>/dev/null || true
     fi
 
     # Inject imghdr and zero-source-edit sitecustomize.py / resource.py

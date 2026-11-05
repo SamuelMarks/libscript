@@ -84,7 +84,7 @@ case "$ACTION" in
         log_info 'Installing MySQL on FreeBSD via pkg...'
         libscript_depends "mysql84-client" "mysql84-server" || libscript_depends "mysql80-client" "mysql80-server" || libscript_depends "mysql-client" "mysql-server"
         libscript_service enable mysql 2>/dev/null || true
-      elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+      elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
         log_info 'Installing MySQL on SunOS / OmniOS...'
         libscript_depends "database/mysql-80" || libscript_depends "mysql"
         libscript_service enable "svc:/database/mysql:default" 2>/dev/null || true

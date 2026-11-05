@@ -532,8 +532,8 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="INSTALL_LMS" Value="1" Secure="yes" /^>
     echo     ^<Property Id="INSTALL_CMS" Value="1" Secure="yes" /^>
     echo     ^<Property Id="INSTALL_WORKERS" Value="1" Secure="yes" /^>
-    echo     ^<Property Id="IMPORT_DEMO_CONTENT" Value="0" Secure="yes" /^>
-    echo     ^<Property Id="INSTALL_MFES" Value="0" Secure="yes" /^>
+    echo     ^<Property Id="IMPORT_DEMO_CONTENT" Value="1" Secure="yes" /^>
+    echo     ^<Property Id="INSTALL_MFES" Value="1" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" /^>
     echo     ^<Property Id="CREATE_SHORTCUT_LMS" Value="1" Secure="yes" /^>

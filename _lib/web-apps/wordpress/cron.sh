@@ -30,6 +30,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
+if [ -z "${UNAME:-}" ]; then
+  _wpc_oi_this="${THIS_FILE}"
+  _wpc_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_wpc_oi_this}"
+  SCRIPT_DIR="${_wpc_oi_dir}"
+  export DIR="${SCRIPT_DIR}"
+  unset _wpc_oi_this _wpc_oi_dir || true
+fi
+
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
 CMD="${1:-run}"
 
@@ -44,7 +58,7 @@ case "$CMD" in
     ;;
   install)
     CRON_LINE="*/5 * * * * cd ${WWWROOT} && php wp-cron.php >/dev/null 2>&1"
-    if [ "$(uname -s)" = "Darwin" ]; then
+    if [ "${UNAME:-}" = "Darwin" ]; then
       printf '[OK] Registered WP-Cron scheduler (Darwin launchd/cron stub).\n'
     elif command -v crontab >/dev/null 2>&1; then
       ( crontab -l 2>/dev/null | grep -v 'wp-cron\.php' || true; printf '%s\n' "$CRON_LINE" ) | crontab - 2>/dev/null || true
@@ -54,7 +68,7 @@ case "$CMD" in
     fi
     ;;
   uninstall)
-    if [ "$(uname -s)" = "Darwin" ]; then
+    if [ "${UNAME:-}" = "Darwin" ]; then
       printf '[OK] Removed WP-Cron scheduler (Darwin launchd/cron stub).\n'
     elif command -v crontab >/dev/null 2>&1; then
       crontab -l 2>/dev/null | grep -v 'wp-cron\.php' | crontab - 2>/dev/null || true
@@ -62,7 +76,7 @@ case "$CMD" in
     fi
     ;;
   status)
-    if [ "$(uname -s)" = "Darwin" ]; then
+    if [ "${UNAME:-}" = "Darwin" ]; then
       printf '[INFO] WP-Cron status checked on Darwin.\n'
     elif command -v crontab >/dev/null 2>&1; then
       crontab -l 2>/dev/null | grep 'wp-cron\.php' || printf '[INFO] No WP-Cron entry found in crontab.\n'

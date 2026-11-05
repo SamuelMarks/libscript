@@ -77,7 +77,7 @@ if /i "!action!"=="prepare-storage" (
         echo [STORAGE] Ensuring persistent disk mount "%%M" ^(fstype: %%N^)...
         call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
     )
-    for /f "tokens=1* delims= " %%S in ('jq -r "(.service_overrides // {}) | to_entries[]? | \"\(.key) \(.value | to_entries | map(\"\(.key)=\(.value)\") | join(\" \"))\"" "!_ps_json!" 2^>nul') do (
+    for /f "tokens=1* delims= " %%S in ('jq -r --arg sp " " --arg eq "=" "(.service_overrides // {}) | to_entries[]? | .key + $sp + (.value | to_entries | map(.key + $eq + (.value | tostring)) | join($sp))" "!_ps_json!" 2^>nul') do (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
             echo [DAEMON] Applying service_overrides for "%%S" ^(%%T^)...
             set "STACK="
@@ -95,7 +95,7 @@ if /i "!action!"=="prepare-storage" (
     set "_ol_ovr_dir="
     for /f "delims=" %%O in ('jq -r ".service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // empty" "!_ps_json!" 2^>nul') do set "_ol_ovr_dir=%%O"
     set "_has_ol=0"
-    for /f "delims=" %%O in ('jq -r "if (.deps.ollama != null) or (.dependencies.ollama != null) or ([.dependencies.runtime[]? | select(.name == \"ollama\")] | length > 0) then \"1\" else \"0\" end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
+    for /f "delims=" %%O in ('jq -r --arg ol "ollama" --arg y "1" --arg n "0" "if (.deps.ollama != null) or (.dependencies.ollama != null) or ([.dependencies.runtime[]? | select(.name == $ol)] | length > 0) then $y else $n end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
     if not "!_ol_ovr_dir!"=="" set "_has_ol=1"
     if not "!OLLAMA_MODELS_DIR!"=="" set "_has_ol=1"
     if "!_has_ol!"=="1" (

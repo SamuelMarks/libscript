@@ -30,6 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+if [ -z "${UNAME_LOWER:-}" ]; then
+  _fmt_oi_this="${THIS_FILE}"
+  _fmt_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_fmt_oi_this}"
+  SCRIPT_DIR="${_fmt_oi_dir}"
+  unset _fmt_oi_this _fmt_oi_dir || true
+fi
+
 # ## show_help
 # Displays usage instructions and supported filesystem options.
 show_help() {
@@ -68,7 +81,7 @@ fi
 # ## detect_os
 # Identifies the active operating system kernel family.
 detect_os() {
-  uname -s | tr '[:upper:]' '[:lower:]'
+  printf '%s\n' "${UNAME_LOWER:-linux}"
 }
 
 # ## probe_existing_fs

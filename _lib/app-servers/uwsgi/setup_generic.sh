@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/python_env.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -80,7 +80,7 @@ case "$ACTION" in
     log_info "Installing uWSGI (${VERSION}) via ${UWSGI_INSTALL_METHOD}..."
     TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
     mkdir -p "${TARGET_DIR}/bin"
-    if [ "$(uname -s)" = "FreeBSD" ]; then
+    if [ "${UNAME:-}" = "FreeBSD" ]; then
       libscript_depends 'uwsgi'
       if command -v uwsgi >/dev/null 2>&1; then
         ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
@@ -96,7 +96,7 @@ case "$ACTION" in
       if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
         libscript_depends 'c' || true
       fi
-      if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ]; then
+      if [ "${UNAME:-}" = "SunOS" ]; then
         if ! command -v gcc >/dev/null 2>&1; then
           libscript_depends 'gcc' || true
         fi
@@ -110,15 +110,14 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
       export UWSGI_PROFILE_OVERRIDE="xml=no"
+      libscript_python_venv "${TARGET_DIR}"
       if command -v uv >/dev/null 2>&1; then
-        uv venv --allow-existing "${TARGET_DIR}"
         if [ "${VERSION}" = "latest" ]; then
           uv pip install --python "${TARGET_DIR}/bin/python" uwsgi
         else
           uv pip install --python "${TARGET_DIR}/bin/python" "uwsgi==${EXACT_VERSION}"
         fi
       else
-        python3 -m venv "${TARGET_DIR}"
         if [ "${VERSION}" = "latest" ]; then
           "${TARGET_DIR}/bin/python" -m pip install --no-cache-dir uwsgi
         else

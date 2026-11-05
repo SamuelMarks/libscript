@@ -54,31 +54,39 @@ fi
 discover_environment() {
   SSH_PORT=""
   if [ -d "${VAGRANT_DIR}" ]; then
-    SSH_PORT=$(if cd "${VAGRANT_DIR}" 2>/dev/null; then vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}'; fi)
+    SSH_PORT=$(if cd "${VAGRANT_DIR}" 2>/dev/null; then LIBSCRIPT_TEST_TARGET=openedx vagrant ssh-config windows-11-test-openedx 2>/dev/null | awk '/Port / {print $2; exit}'; fi)
   fi
   : "${SSH_PORT:=50523}"
 
   SSH_KEY="${HOME}/.vagrant.d/insecure_private_key"
   SSH_CMD="ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i ${SSH_KEY} vagrant@127.0.0.1"
 
-  MONITOR_SOCK=""
-  while IFS= read -r sock; do
-    [ -z "$sock" ] && continue
-    if python3 -c "import socket; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(0.5); s.connect('$sock'); s.close()" 2>/dev/null; then
-      MONITOR_SOCK="$sock"
-      break
-    fi
-  done <<EOF
-$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null || true)
-EOF
-  if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
-      printf '[ERROR] QEMU Monitor socket not found in ~/.vagrant.d/tmp. VM might not be running.\n' >&2
-  fi
-
   _active_id=""
   if [ -f "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" ]; then
     _active_id=$(tr -d '\r\n' < "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/id" 2>/dev/null || true)
   fi
+
+  MONITOR_SOCK=""
+  if [ -n "$_active_id" ] && [ -S "${HOME}/.vagrant.d/tmp/vagrant-qemu/${_active_id}/qemu_socket" ]; then
+    if python3 -c "import socket; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(0.5); s.connect('${HOME}/.vagrant.d/tmp/vagrant-qemu/${_active_id}/qemu_socket'); s.close()" 2>/dev/null; then
+      MONITOR_SOCK="${HOME}/.vagrant.d/tmp/vagrant-qemu/${_active_id}/qemu_socket"
+    fi
+  fi
+  if [ -z "$MONITOR_SOCK" ]; then
+    while IFS= read -r sock; do
+      [ -z "$sock" ] && continue
+      if python3 -c "import socket; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(0.5); s.connect('$sock'); s.close()" 2>/dev/null; then
+        MONITOR_SOCK="$sock"
+        break
+      fi
+    done <<EOF
+$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null || true)
+EOF
+  fi
+  if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
+      printf '[ERROR] QEMU Monitor socket not found in ~/.vagrant.d/tmp. VM might not be running.\n' >&2
+  fi
+
   DISK_IMG=""
   if [ -n "$_active_id" ] && [ -f "${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/${_active_id}/linked-box.img" ]; then
     DISK_IMG="${VAGRANT_DIR}/.vagrant/machines/windows-11-test-openedx/qemu/${_active_id}/linked-box.img"
@@ -285,17 +293,21 @@ register_gui_task() {
 # Rsyncs the libscript repository and MSIs to C:\libscript on the Windows guest.
 sync_guest_environment() {
   printf '=== Syncing assets and MSIs to Windows guest ===\n'
-  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/cache" -Force -ErrorAction SilentlyContinue | Out-Null'
+  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/devtools", "C:/libscript/_lib/web-apps/openedx", "C:/libscript/cache" -Force -ErrorAction SilentlyContinue | Out-Null'
   if [ -d "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets" ]; then
     scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../cc0-assets/libscript/openedx/assets/"* vagrant@127.0.0.1:C:/libscript/packaging/assets/
   fi
-  if [ -d "${REPO_ROOT}/cache" ]; then
-    scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/cache/"* vagrant@127.0.0.1:C:/libscript/cache/
-  fi
   scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/_lib/web-apps/openedx/"* vagrant@127.0.0.1:C:/libscript/_lib/web-apps/openedx/
+  scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/devtools/wait_ports.ps1" vagrant@127.0.0.1:C:/libscript/devtools/
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/build_msi.cmd" "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" "${REPO_ROOT}/packaging/create_desktop_shortcuts.cmd" "${REPO_ROOT}/packaging/open_browser.ps1" "${REPO_ROOT}/packaging/click_button.ps1" vagrant@127.0.0.1:C:/libscript/packaging/
-  if [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" ] && [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" ]; then
-    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" vagrant@127.0.0.1:C:/libscript/packaging/
+  if [ -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" ]; then
+    cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi"
+  fi
+  if [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup-Offline.msi
+  fi
+  if [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" ] && [ "${OFFLINE_ONLY:-0}" != "1" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup.msi
   fi
   register_gui_task
 }
@@ -353,9 +365,11 @@ run_msi_mode_flows() {
   launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/dashboard" "admin@openedx.local" "admin" "1"
   capture_screen "14_browser_studio_authenticated" "BROWSER"
   capture_screen "12b_browser_studio_loggedin" "BROWSER"
+  capture_screen "09_quick_cms_course_outline" "BROWSER"
   launch_browser_url "http://localhost:8000/login" "http://localhost:8001/home/" "admin@openedx.local" "admin" "1"
   capture_screen "13_browser_lms_authenticated" "BROWSER"
   capture_screen "11b_browser_lms_loggedin" "BROWSER"
+  capture_screen "13_quick_lms_courseware_view" "BROWSER"
   vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
 
   printf '\n=======================================================\n'
@@ -444,8 +458,10 @@ run_msi_mode_flows() {
   printf '\n[INFO] Custom Install Verification: Logging in to Studio CMS (:8001/signin) and LMS (:8000/login) with edx_admin...\n'
   launch_browser_url "http://localhost:8001/signin" "http://localhost:8000/learner-dashboard/" "edx_admin" "edx_password_2026!" "1"
   capture_screen "12c_browser_studio_custom_loggedin" "BROWSER"
+  capture_screen "28_custom_cms_course_outline" "BROWSER"
   launch_browser_url "http://localhost:8000/login" "http://localhost:8001/authoring/home" "edx_admin" "edx_password_2026!" "1"
   capture_screen "11c_browser_lms_custom_loggedin" "BROWSER"
+  capture_screen "31_custom_lms_courseware" "BROWSER"
   vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
 
   for _browser_step in 11_browser_lms_focused 12_browser_studio_focused 13_browser_lms_authenticated 14_browser_studio_authenticated; do
@@ -454,8 +470,51 @@ run_msi_mode_flows() {
     fi
     if [ -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_browser_step}.png" ]; then
       cp -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_var}_${_browser_step}.png"
+      cp -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_browser_step}.png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/online_${_browser_step}.png"
     fi
   done
+
+  if [ -d "${CC0_WINDOWS_SCREENSHOTS_DIR}" ]; then
+    for _step_stem in 01_simple_welcome 02_simple_license 03_simple_setup_type 04_simple_verify_ready 05_simple_exit 06_advanced_setup_type_selected 06a_advanced_features 06b_advanced_install_location 06c_advanced_runtime_selection 06d_advanced_source_repo 06e_advanced_config 07_advanced_db 08_advanced_cache_search 09_advanced_verify_ready 10_advanced_exit; do
+      if [ -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_step_stem}.png" ] && [ ! -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/online_${_step_stem}.png" ]; then
+        cp -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_step_stem}.png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/online_${_step_stem}.png"
+      fi
+    done
+    while IFS=':' read -r _src _dst; do
+      [ -z "$_src" ] && continue
+      if [ -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_src}.png" ]; then
+        cp -f "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_src}.png" "${CC0_WINDOWS_SCREENSHOTS_DIR}/${_dst}.png"
+      fi
+    done << 'ALIAS_EOF'
+01_simple_welcome:01_msi_welcome
+02_simple_license:02_msi_license
+03_simple_setup_type:03_msi_setup_type_simple
+04_simple_verify_ready:04_msi_verify_ready_simple
+04_simple_verify_ready:05_msi_installing_progress
+05_simple_exit:06_msi_completed_exit
+12_browser_studio_focused:07_quick_cms_login_page
+12b_browser_studio_loggedin:08_quick_cms_authenticated_home
+11_browser_lms_focused:10_quick_lms_landing_page
+11_browser_lms_focused:11_quick_lms_login_page
+11b_browser_lms_loggedin:12_quick_lms_learner_dashboard
+06_advanced_setup_type_selected:14_custom_msi_setup_type_advanced
+06a_advanced_features:15_custom_msi_features
+06b_advanced_install_location:16_custom_msi_install_location
+06c_advanced_runtime_selection:17_custom_msi_runtime_selection
+06d_advanced_source_repo:18_custom_msi_source_repo
+06e_advanced_config:19_custom_msi_network_credentials
+07_advanced_db:20_custom_msi_database_topology
+08_advanced_cache_search:21_custom_msi_shortcuts
+09_advanced_verify_ready:22_custom_msi_verify_ready
+09_advanced_verify_ready:23_custom_msi_installing
+10_advanced_exit:24_custom_msi_completed
+10b_desktop_icons:25_custom_desktop_shortcuts
+12_browser_studio_focused:26_custom_cms_login
+12c_browser_studio_custom_loggedin:27_custom_cms_studio_home
+11_browser_lms_focused:29_custom_lms_login
+11c_browser_lms_custom_loggedin:30_custom_lms_dashboard
+ALIAS_EOF
+  fi
 
   printf '\n[INFO] Verifying Strict Idempotency (Re-running Open edX setup.cmd install on live Custom Install)...\n'
   vm_run 'cmd.exe /c "call C:\libscript\_lib\web-apps\openedx\setup.cmd install --offline=1 --install-dir=C:\OpenEdX\app"'
@@ -470,7 +529,7 @@ restore_vanilla_snapshot() {
   printf '=======================================================\n'
 
   printf '[INFO] Stopping Windows 11 Vagrant machine...\n'
-  (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-openedx) || true
+  (cd "${VAGRANT_DIR}" && LIBSCRIPT_TEST_TARGET=openedx vagrant halt windows-11-test-openedx) || true
   sleep 3
 
   printf '[INFO] Reverting disk image to vanilla snapshot...\n'
@@ -482,11 +541,12 @@ restore_vanilla_snapshot() {
   printf '[INFO] Successfully reverted disk image to vanilla.\n'
 
   printf '[INFO] Powering on Windows 11 Vagrant VM from vanilla snapshot...\n'
-  (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-openedx)
+  (cd "${VAGRANT_DIR}" && LIBSCRIPT_TEST_TARGET=openedx vagrant up --no-provision windows-11-test-openedx)
   sleep 5
 
   discover_environment
   wait_for_ssh
+  vm_run 'if ((Test-Path "C:\Program Files\OpenEdX\codebase") -or (Test-Path "C:\OpenEdX\app\codebase")) { Write-Error "Vanilla snapshot was not clean!"; exit 1 }; Write-Host "[PASS] Vanilla Windows 11 state verified clean."'
   printf '[INFO] Vanilla environment restored and ready.\n'
 }
 
@@ -494,7 +554,16 @@ restore_vanilla_snapshot() {
 # Main Execution Orchestrator
 # =======================================================
 
-(cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-openedx)
+if [ ! -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" ]; then
+  printf '[INFO] Attempting to download %s...\n' "${RELEASE_MSI_URL}"
+  curl -fL "${RELEASE_MSI_URL}" -o "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" 2>/dev/null || rm -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi"
+fi
+if [ -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" ] && [ "${FORCE_MSI_REBUILD:-0}" != "1" ]; then
+  cp -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" "${REPO_ROOT}/packaging/OpenEdX-Setup-Offline.msi"
+  : "${SKIP_MSI_BUILD:=1}"
+fi
+
+(cd "${VAGRANT_DIR}" && LIBSCRIPT_TEST_TARGET=openedx vagrant up --no-provision windows-11-test-openedx)
 discover_environment
 wait_for_ssh
 
@@ -507,10 +576,10 @@ if [ -n "$DISK_IMG" ] && [ -f "$DISK_IMG" ]; then
   if [ ! -f "${DISK_IMG}.vanilla" ] && ! qemu-img snapshot -U -l "${DISK_IMG}" 2>/dev/null | grep -q "vanilla"; then
     printf '[INFO] Snapshot "vanilla" not found. Creating clean vanilla snapshot now...\n'
     vm_run "Stop-Process -Name msiexec, chrome, msedge, WindowsTerminal, OpenConsole, cmd -Force -ErrorAction SilentlyContinue; Remove-Item -Path 'C:\Program Files\OpenEdX', 'C:\Program Files (x86)\OpenEdX', 'C:\ProgramData\OpenEdX', 'C:\Users\vagrant\.libscript\openedx', 'C:\Users\Public\Desktop\Open edX*.lnk', 'C:\Users\vagrant\Desktop\Open edX*.lnk', 'C:\libscript\*.msi', 'C:\libscript\*.wxs', 'C:\libscript\*.wixobj' -Recurse -Force -ErrorAction SilentlyContinue"
-    (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-openedx)
+    (cd "${VAGRANT_DIR}" && LIBSCRIPT_TEST_TARGET=openedx vagrant halt windows-11-test-openedx)
     qemu-img snapshot -c vanilla "${DISK_IMG}"
     cp -cf "${DISK_IMG}" "${DISK_IMG}.vanilla" 2>/dev/null || cp -f "${DISK_IMG}" "${DISK_IMG}.vanilla"
-    (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-openedx)
+    (cd "${VAGRANT_DIR}" && LIBSCRIPT_TEST_TARGET=openedx vagrant up --no-provision windows-11-test-openedx)
     discover_environment
     wait_for_ssh
   else
@@ -520,7 +589,7 @@ fi
 fi
 
 # --- Build Offline & Online MSIs on Vagrant with msi-rs (without --use-wix) ---
-if [ "${SKIP_MSI_BUILD:-0}" = "1" ] && [ -f "${REPO_ROOT}/packaging/OpenEdX-Setup.msi" ] && [ -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" ]; then
+if [ "${SKIP_MSI_BUILD:-0}" = "1" ] && [ -f "${REPO_ROOT}/packaging/openedx-verawood.1-x64-offline.msi" ]; then
   printf '\n[INFO] Reusing existing built MSIs in packaging/...\n'
   sync_guest_environment
 else

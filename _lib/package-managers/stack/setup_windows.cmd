@@ -60,7 +60,8 @@ set "URL=https://github.com/commercialhaskell/stack/releases/download/v3.11.1/st
 set "TEMP_ZIP=%TEMP%\stack.zip"
 
 echo Downloading stack from %URL%...
-curl.exe -sSL "%URL%" -o "%TEMP_ZIP%"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%TEMP_ZIP%"
 if errorlevel 1 (
     echo Failed to download stack.
     exit /b 1

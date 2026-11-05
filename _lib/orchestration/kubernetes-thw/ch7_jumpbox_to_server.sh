@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/remote_sync.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -37,7 +37,9 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
 done
 
 
-scp "${DIR}/kubernetes-the-hard-way/downloads/controller/etcd" "${DIR}/kubernetes-the-hard-way/downloads/client/etcdctl" "${DIR}/kubernetes-the-hard-way/units/etcd.service" root@server:~/
+for _etcd_f in "${DIR}/kubernetes-the-hard-way/downloads/controller/etcd" "${DIR}/kubernetes-the-hard-way/downloads/client/etcdctl" "${DIR}/kubernetes-the-hard-way/units/etcd.service"; do
+  libscript_scp_to_remote "${_etcd_f}" "root@server" "./"
+done
 ssh root@server << 'EOF'
   set -eu
   mv -f etcd etcdctl /usr/local/bin/ || true

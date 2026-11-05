@@ -166,9 +166,8 @@ case "$ACTION" in
             fi
           fi
         else
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="x86_64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="aarch64"; fi
+          OS="${UNAME_LOWER:-linux}"
           if [ "$OS" = "darwin" ]; then OS="apple-darwin"; elif [ "$OS" = "linux" ]; then OS="unknown-linux-musl"; fi
           if [ "${EXACT_VERSION}" = "latest" ]; then
             URL="https://github.com/astral-sh/uv/releases/latest/download/uv-${ARCH}-${OS}.tar.gz"

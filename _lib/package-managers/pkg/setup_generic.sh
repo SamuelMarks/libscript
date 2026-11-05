@@ -93,7 +93,7 @@ case "$ACTION" in
       libscript_depends 'pkg'
     else
       # libscript_native implementation
-      if [ "$(uname -s)" != "FreeBSD" ]; then
+      if [ "${UNAME:-}" != "FreeBSD" ]; then
         log_info 'pkg is only supported on FreeBSD. Skipping installation.'
         exit 0
       fi

@@ -3,8 +3,9 @@
 :: ## Overview
 :: Automates Ch8 of Kubernetes the Hard Way.
 :: ## Usage
-:: Executes the steps for Ch8. setlocal EnableDelayedExpansion
+:: Executes the steps for Ch8.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -53,6 +54,19 @@ for /f "tokens=1,3" %%i in ('type "%MACHINES_TXT%" ^| findstr "server"' ) do if 
 if "!SERVER_IP!"=="" set SERVER_IP=192.168.56.10
 
 
-scp "%DIR%\\kubernetes-the-hard-way\downloads\controller\kube-apiserver" "%DIR%\\kubernetes-the-hard-way\downloads\controller\kube-controller-manager" "%DIR%\\kubernetes-the-hard-way\downloads\controller\kube-scheduler" "%DIR%\\kubernetes-the-hard-way\downloads\client\kubectl" "%DIR%\\kubernetes-the-hard-way\units\kube-apiserver.service" "%DIR%\\kubernetes-the-hard-way\units\kube-controller-manager.service" "%DIR%\\kubernetes-the-hard-way\units\kube-scheduler.service" "%DIR%\\kubernetes-the-hard-way\configs\kube-scheduler.yaml" "%DIR%\\kubernetes-the-hard-way\configs\kube-apiserver-to-kubelet.yaml" root@server:~/
+for %%f in (
+  "%DIR%\kubernetes-the-hard-way\downloads\controller\kube-apiserver"
+  "%DIR%\kubernetes-the-hard-way\downloads\controller\kube-controller-manager"
+  "%DIR%\kubernetes-the-hard-way\downloads\controller\kube-scheduler"
+  "%DIR%\kubernetes-the-hard-way\downloads\client\kubectl"
+  "%DIR%\kubernetes-the-hard-way\units\kube-apiserver.service"
+  "%DIR%\kubernetes-the-hard-way\units\kube-controller-manager.service"
+  "%DIR%\kubernetes-the-hard-way\units\kube-scheduler.service"
+  "%DIR%\kubernetes-the-hard-way\configs\kube-scheduler.yaml"
+  "%DIR%\kubernetes-the-hard-way\configs\kube-apiserver-to-kubelet.yaml"
+) do (
+  set "STACK="
+  call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%%~f" "root@server" "~/"
+)
 ssh root@server "mkdir -p /etc/kubernetes/config /var/lib/kubernetes/; mv -f kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/ || true; cp -f ca.crt ca.key kube-api-server.key kube-api-server.crt service-accounts.key service-accounts.crt encryption-config.yaml /var/lib/kubernetes/; mv -f kube-apiserver.service /etc/systemd/system/kube-apiserver.service || true; cp -f kube-controller-manager.kubeconfig /var/lib/kubernetes/ || true; mv -f kube-controller-manager.service /etc/systemd/system/ || true; cp -f kube-scheduler.kubeconfig /var/lib/kubernetes/ || true; mv -f kube-scheduler.yaml /etc/kubernetes/config/ || true; mv -f kube-scheduler.service /etc/systemd/system/ || true; if [ -f $HOME/libscript/_lib/_common/service.sh ]; then SCRIPT_NAME=$HOME/libscript/_lib/_common/service.sh . $HOME/libscript/_lib/_common/service.sh; libscript_service daemon-reload kube-apiserver || true; for _ksvc in kube-apiserver kube-controller-manager kube-scheduler; do libscript_service enable \$_ksvc || true; libscript_service start \$_ksvc || true; done; fi; sleep 10; kubectl cluster-info --kubeconfig admin.kubeconfig || true; kubectl apply -f kube-apiserver-to-kubelet.yaml --kubeconfig admin.kubeconfig || true"
 curl --cacert "%LIBSCRIPT_DATA_DIR%\ca.crt" https://!SERVER_IP!:6443/version || true

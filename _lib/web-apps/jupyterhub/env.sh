@@ -36,7 +36,7 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 export PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-${HOME:-/root}/.libscript/notebooks}"
   export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-${HOME:-/root}/.libscript/venvs/jupyter-${PYTHON_VERSION}}"
 else

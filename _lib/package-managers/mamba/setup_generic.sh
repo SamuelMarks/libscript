@@ -110,14 +110,13 @@ case "$ACTION" in
         fi
         
         # Download micromamba
-        ARCH="$(uname -m)"
-        case "${ARCH}" in
+        case "${ARCH:-x86_64}" in
           x86_64) MAMBA_ARCH="64" ;;
           aarch64|arm64) MAMBA_ARCH="aarch64" ;;
-          *) log_error "Unsupported architecture for mamba: ${ARCH}"; exit 1 ;;
+          *) log_error "Unsupported architecture for mamba: ${ARCH:-}"; exit 1 ;;
         esac
         
-        OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+        OS="${UNAME_LOWER:-linux}"
         
         log_info "Downloading micromamba for ${OS}-${MAMBA_ARCH}..."
         TEMP_DIR=$(mktemp -d)

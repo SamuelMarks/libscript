@@ -137,7 +137,7 @@ case "$ACTION" in
               log_info "No download URL provided for etcd ${VERSION}. Attempting fallback to Github..."
             libscript_depends 'curl' 'tar'
             TEMP_FILE=$(mktemp)
-            OS_ARCH=$(uname -m)
+            OS_ARCH="${ARCH:-x86_64}"
             _actual_version="${EXACT_VERSION}"
             if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
               _actual_version=$(libscript_fetch_stdout "https://api.github.com/repos/etcd-io/etcd/releases/latest" | grep -oE '"tag_name":[[:space:]]*"v[^"]+"' | sed -E 's/.*"v([^"]+)".*/v\1/' | head -n 1)

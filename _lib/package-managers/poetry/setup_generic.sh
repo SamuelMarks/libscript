@@ -129,7 +129,7 @@ case "$ACTION" in
           else
             libscript_depends 'python' || true
             libscript_depends 'curl' || true
-            if [ "$(uname -s 2>/dev/null || true)" = "SunOS" ]; then
+            if [ "${UNAME:-}" = "SunOS" ]; then
               if ! command -v gcc >/dev/null 2>&1; then
                 libscript_depends 'gcc' || true
               fi

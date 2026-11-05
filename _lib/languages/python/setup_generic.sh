@@ -36,7 +36,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/hw_tune.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -100,7 +100,7 @@ find_existing_python() {
   fi
   if command -v python3 >/dev/null 2>&1; then
     _sys_pyv=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2 || true)
-    if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ] || [ -f /etc/alpine-release ] || [ "$(uname -s)" = "FreeBSD" ] || [ "$(uname -s)" = "SunOS" ]; then
+    if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ] || [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; then
       command -v python3
       return 0
     fi
@@ -287,12 +287,13 @@ case "$ACTION" in
         mkdir -p "${PY_DIR}"
         (
           cd "${TMP_BUILD_DIR}/Python-${EXACT_VERSION}" || exit 1
-          if [ "$(uname -s)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
+          if [ "${UNAME:-}" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
             ./configure --prefix="${PY_DIR}" --enable-optimizations --with-openssl="$(brew --prefix openssl)" --with-system-zlib
           else
             ./configure --prefix="${PY_DIR}" --enable-optimizations
           fi
-          make -j"$(nproc 2>/dev/null || printf '%s\n' 2)"
+          libscript_detect_hardware
+          make -j"${LIBSCRIPT_HW_CORES:-2}"
           make altinstall
         )
         rm -rf "${TMP_BUILD_DIR}"
@@ -334,9 +335,10 @@ case "$ACTION" in
             if [ -n "${PIP_FIND_LINKS:-}" ] && [ -d "${PIP_FIND_LINKS}" ]; then
               _pip_cmd_opts="${_pip_cmd_opts} --find-links ${PIP_FIND_LINKS}"
             fi
+          else
+            # shellcheck disable=SC2086
+            "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -U pip setuptools wheel 2>/dev/null || true
           fi
-
-          "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -U pip setuptools wheel 2>/dev/null || true
           
           if [ -n "${ML_ACCELERATOR_BACKEND:-}" ] && [ "${PIP_NO_INDEX:-0}" != "1" ]; then
             log_info "Installing hardware-optimized ML profile: ${ML_ACCELERATOR_BACKEND}"
@@ -366,9 +368,10 @@ case "$ACTION" in
           fi
           
           if [ -f 'requirements.txt' ]; then
+            # shellcheck disable=SC2086
             "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -r 'requirements.txt'
-          fi
-          if [ -f 'setup.py' ] || [ -f 'setup.cfg' ] || [ -f 'pyproject.toml' ]; then
+          elif [ -f 'setup.py' ] || [ -f 'pyproject.toml' ]; then
+            # shellcheck disable=SC2086
             "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -e .
           fi
         fi

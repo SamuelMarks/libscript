@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/remote_sync.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -45,5 +45,5 @@ else
   printf '%s\n' "${ENCRYPTION_KEY}" > "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key"
 fi
 export ENCRYPTION_KEY
-envsubst < "${DIR}/kubernetes-the-hard-way/configs/encryption-config.yaml" > "${LIBSCRIPT_DATA_DIR}/encryption-config.yaml"
-scp "${LIBSCRIPT_DATA_DIR}/encryption-config.yaml" root@server:~/
+envsubst_safe < "${DIR}/kubernetes-the-hard-way/configs/encryption-config.yaml" > "${LIBSCRIPT_DATA_DIR}/encryption-config.yaml"
+libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/encryption-config.yaml" "root@server" "./"

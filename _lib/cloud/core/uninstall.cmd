@@ -3,8 +3,9 @@
 :: ## Overview
 :: Uninstallation entry point for cloud core on Windows.
 :: ## Usage
-:: Normally a no-op since this is a wrapper component. setlocal EnableDelayedExpansion Wrapper uninstall: mostly a no-op
+:: Normally a no-op since this is a wrapper component.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

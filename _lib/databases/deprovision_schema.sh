@@ -30,6 +30,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+fi
+
 engine=""
 host='127.0.0.1'
 port=""
@@ -75,14 +83,14 @@ case "$engine" in
     [ -z "$port" ] && port="5432"
     [ -z "$admin_user" ] && admin_user="postgres"
     export PGPASSWORD="$admin_pass"
-    psql -h "$host" -p "$port" -U "$admin_user" -c "DROP DATABASE IF EXISTS \"${schema_name}\";" 2>/dev/null || sudo -u postgres psql -c "DROP DATABASE IF EXISTS \"${schema_name}\";" 2>/dev/null || true
+    psql -h "$host" -p "$port" -U "$admin_user" -c "DROP DATABASE IF EXISTS \"${schema_name}\";" 2>/dev/null || priv_as postgres psql -c "DROP DATABASE IF EXISTS \"${schema_name}\";" 2>/dev/null || true
     if [ -n "$tenant_user" ] && [ "$tenant_user" != "postgres" ]; then
-      psql -h "$host" -p "$port" -U "$admin_user" -c "DROP USER IF EXISTS \"${tenant_user}\";" 2>/dev/null || sudo -u postgres psql -c "DROP USER IF EXISTS \"${tenant_user}\";" 2>/dev/null || true
+      psql -h "$host" -p "$port" -U "$admin_user" -c "DROP USER IF EXISTS \"${tenant_user}\";" 2>/dev/null || priv_as postgres psql -c "DROP USER IF EXISTS \"${tenant_user}\";" 2>/dev/null || true
     fi
     unset PGPASSWORD
     ;;
   duckdb)
-    rm -f "$schema_name" "${schema_name}.wal" "${schema_name}.shm" "${schema_name}-wal" "${schema_name}-shm" 2>/dev/null || sudo rm -f "$schema_name" "${schema_name}.wal" "${schema_name}.shm" 2>/dev/null || true
+    rm -f "$schema_name" "${schema_name}.wal" "${schema_name}.shm" "${schema_name}-wal" "${schema_name}-shm" 2>/dev/null || priv rm -f "$schema_name" "${schema_name}.wal" "${schema_name}.shm" 2>/dev/null || true
     ;;
   mongodb)
     [ -z "$port" ] && port="27017"
@@ -91,6 +99,7 @@ case "$engine" in
         mongosh_args="$mongosh_args -u $admin_user -p $admin_pass --authenticationDatabase admin"
     fi
     js_cmd="db.getSiblingDB('${schema_name}').dropDatabase(); db.getSiblingDB('${schema_name}').dropUser('${tenant_user}');"
+    # shellcheck disable=SC2086
     mongosh $mongosh_args --eval "$js_cmd" --quiet
     ;;
   sqlite)

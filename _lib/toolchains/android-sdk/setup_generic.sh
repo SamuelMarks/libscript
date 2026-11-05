@@ -54,7 +54,7 @@ ACTION="${ACTION:-install}"
 resolve_cmdtools_url() {
   _ver="$1"
   [ "$_ver" = "latest" ] && _ver="11076708"
-  _os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  _os="${UNAME_LOWER:-linux}"
   case "$_os" in
     darwin*) _plat="mac" ;;
     *) _plat="linux" ;;

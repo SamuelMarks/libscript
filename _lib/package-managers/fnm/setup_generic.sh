@@ -112,7 +112,7 @@ case "$ACTION" in
               chmod +x "${TARGET_DIR}/bin/fnm" || true
             fi
           fi
-        if [ "$(uname -s)" = "FreeBSD" ] || [ "${UNAME_LOWER:-}" = "freebsd" ]; then
+        if [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME_LOWER:-}" = "freebsd" ]; then
           libscript_depends 'fnm' || true
           if command -v fnm >/dev/null 2>&1; then
             ln -sf "$(command -v fnm)" "${TARGET_DIR}/bin/fnm"

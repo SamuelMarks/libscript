@@ -277,6 +277,7 @@ cat << EOF_FOOTER >> "$OUT_FILE"
 EOF_FOOTER
 
 if [ "$VARIANT" = "online" ] && [ -n "$DOWNLOAD_URL" ]; then
+  # libscript-allow-raw-fetch
   cat << EOF_CA >> "$OUT_FILE"
     <CustomAction Id="CA_Download_${COMPONENT}"
                   Directory="INSTALLFOLDER"

@@ -1020,6 +1020,9 @@ for step in steps:
             outs.append(os.path.join(target_out, f"online_{st_name}.png"))
     if all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
         continue
+    if os_name == "windows" and target == "openedx" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1":
+        sys.stderr.write(f"[ERROR] Live Windows browser screenshot missing for step '{sid}'. Run devtools/capture_openedx_vagrant_screenshots.sh first.\n")
+        sys.exit(1)
     if step.get("capture_type") == "desktop" or step.get("crop_mode") == "FULL":
         sys.stderr.write(f"[ERROR] Live desktop screenshot missing for step '{sid}'. Synthetic mock desktop generation is prohibited.\n")
         sys.exit(1)

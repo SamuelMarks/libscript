@@ -72,7 +72,7 @@ case "$ACTION" in
     if [ "${UNAME_LOWER}" = "freebsd" ]; then
       libscript_depends "mail/exim" || libscript_depends "exim"
       libscript_service enable exim 2>/dev/null || true
-    elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+    elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
       libscript_depends 'exim' || true
     else
       libscript_depends 'exim'

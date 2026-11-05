@@ -162,19 +162,8 @@ if "!_DO_SKIP_SYNC!"=="1" (
     set "_SYNC_STATE=UP-TO-DATE"
 ) else (
     echo [INFO] [SYNCING] !APP_NAME! -^> https://!APP_DOMAIN! ^(local: !LOCAL_SUM!, remote: !REMOTE_SUM!^)
-    ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME!"
-    
-    where rsync >nul 2>nul
-    if not errorlevel 1 (
-        rsync -avz --delete --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P data" --exclude=".git" --exclude=".vite" --exclude="webroot" --exclude=".libscript_build.sha256" --exclude=".libscript_src_hash" --exclude=".env.libscript" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="coverage.*" --exclude="combined-coverage.*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" "!APP_PATH!/" "!TARGET_HOST!:apps/!APP_NAME!/"
-    ) else (
-        where tar >nul 2>nul
-        if not errorlevel 1 (
-            tar -czf - -C "!APP_PATH!" --exclude=".git" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude=".angular" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".mypy_cache" --exclude=".pytest_cache" --exclude=".ruff_cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".DS_Store" --exclude="dist" --exclude="build" --exclude=".gradle" --exclude=".kotlin" --exclude="htmlcov" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="docs/web" --exclude="docs/api" --exclude="site" --exclude=".vitest*" --exclude="test-results" --exclude="playwright-report" --exclude="documentation" --exclude="e2e_test.db" --exclude="logs" --exclude="*.duckdb" --exclude="*.duckdb.wal" . | ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME! && find $HOME/apps/!APP_NAME! -mindepth 1 \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name webroot -o -name logs -o -name data -o -name '.env*' -o -name '*.duckdb*' -o -name '.libscript_*' \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; tar -xzf - -C $HOME/apps/!APP_NAME! && find $HOME/apps/!APP_NAME! -depth -type d -empty -exec rmdir {} + 2>/dev/null || true"
-        ) else (
-            scp -r "!APP_PATH!\*" "!TARGET_HOST!:apps/!APP_NAME!/"
-        )
-    )
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_sync_app_to_remote "!APP_PATH!" "!TARGET_HOST!" "apps/!APP_NAME!"
     
     ssh "!TARGET_HOST!" "mkdir -p $HOME/.libscript && echo !LOCAL_SUM! > $HOME/.libscript/deploy_state_!APP_NAME!"
     

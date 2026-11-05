@@ -133,7 +133,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ "$UNAME_LOWER" = "linux" ] && { [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ]; }; then
+    if [ "$UNAME_LOWER" = "linux" ] && { [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; }; then
       log_warn 'HashiCorp does not provide Vagrant binaries for Linux aarch64.'
       exit 0
     fi
@@ -169,7 +169,7 @@ case "$ACTION" in
       if [ "${TARGET_OS}" = "darwin" ]; then
         os='darwin'
       fi
-      host_arch="${ARCH:-$(uname -m)}"
+      host_arch="${ARCH:-x86_64}"
       arch='amd64'
       if [ "${host_arch}" = "aarch64" ] || [ "${host_arch}" = "arm64" ]; then
         arch='arm64'

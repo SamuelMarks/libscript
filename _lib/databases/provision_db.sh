@@ -262,9 +262,9 @@ ensure_valkey_running() {
   done
 
   if command -v valkey-server >/dev/null 2>&1; then
-    valkey-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || sudo valkey-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || true
+    valkey-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || priv valkey-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || true
   elif command -v redis-server >/dev/null 2>&1; then
-    redis-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || sudo redis-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || true
+    redis-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || priv redis-server --port "$_evr_port" --daemonize yes >/dev/null 2>&1 || true
   fi
   return 0
 }
@@ -321,7 +321,7 @@ quiesce_duckdb_lock_holders() {
   fi
   if ! duckdb "$_qdl_path" -c "SELECT 1;" >/dev/null 2>&1; then
     if command -v fuser >/dev/null 2>&1; then
-      fuser -k "$_qdl_path" >/dev/null 2>&1 || sudo fuser -k "$_qdl_path" >/dev/null 2>&1 || true
+      fuser -k "$_qdl_path" >/dev/null 2>&1 || priv fuser -k "$_qdl_path" >/dev/null 2>&1 || true
       sleep 1
     fi
   fi
@@ -437,6 +437,9 @@ while IFS= read -r db_entry <&3; do
       [ -n "$ASYNC_URL_ENV" ] && set_env_var "$ASYNC_URL_ENV" "postgresql+asyncpg://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
       [ -n "$DB_ENV_NAME" ] && set_env_var "$DB_ENV_NAME" "$DB_NAME"
       if command -v psql >/dev/null 2>&1; then
+        _db_state_dir="${REMOTE_HOME:-${HOME:-/tmp}}/.libscript_db_state"
+        mkdir -p "$_db_state_dir" 2>/dev/null || _db_state_dir="${TMPDIR:-/tmp}/.libscript_db_state"
+        mkdir -p "$_db_state_dir" 2>/dev/null || true
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
           env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
             --engine postgres --host "$DB_HOST" --port "$DB_PORT" \
@@ -448,16 +451,30 @@ while IFS= read -r db_entry <&3; do
         if [ -n "$MIGRATION_DIR" ]; then
           RES_MIG_DIR=$(resolve_db_asset_path "$MIGRATION_DIR")
           if [ -d "$RES_MIG_DIR" ]; then
-            for _mig_sql in "$RES_MIG_DIR"/*.sql; do
-              [ -f "$_mig_sql" ] || continue
-              psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$_mig_sql" >/dev/null 2>&1 || true
-            done
+            _mig_hash=$(cksum "$RES_MIG_DIR"/*.sql 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
+            _mig_stamp="${_db_state_dir}/pg_${DB_NAME}_mig.sha256"
+            if [ "${LIBSCRIPT_FORCE_SEED:-0}" != "1" ] && [ -f "$_mig_stamp" ] && [ "$(cat "$_mig_stamp" 2>/dev/null || true)" = "$_mig_hash" ]; then
+              log_info "[REUSE] PostgreSQL migrations in '$RES_MIG_DIR' unchanged for '$DB_NAME'; skipping."
+            else
+              for _mig_sql in "$RES_MIG_DIR"/*.sql; do
+                [ -f "$_mig_sql" ] || continue
+                psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$_mig_sql" >/dev/null 2>&1 || true
+              done
+              printf '%s\n' "$_mig_hash" > "$_mig_stamp" 2>/dev/null || true
+            fi
           fi
         fi
         if [ -n "$SEED_FILE" ]; then
           RES_SEED_FILE=$(resolve_db_asset_path "$SEED_FILE")
           if [ -f "$RES_SEED_FILE" ]; then
-            psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$RES_SEED_FILE" >/dev/null 2>&1 || true
+            _sf_hash=$(cksum "$RES_SEED_FILE" 2>/dev/null | awk '{print $1"_"$2}' || printf 'none')
+            _sf_stamp="${_db_state_dir}/pg_${DB_NAME}_seed.sha256"
+            if [ "${LIBSCRIPT_FORCE_SEED:-0}" != "1" ] && [ -f "$_sf_stamp" ] && [ "$(cat "$_sf_stamp" 2>/dev/null || true)" = "$_sf_hash" ]; then
+              log_info "[REUSE] PostgreSQL seed_file '$RES_SEED_FILE' unchanged for '$DB_NAME'; skipping."
+            else
+              psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$RES_SEED_FILE" >/dev/null 2>&1 || true
+              printf '%s\n' "$_sf_hash" > "$_sf_stamp" 2>/dev/null || true
+            fi
           fi
         fi
       fi
@@ -610,16 +627,16 @@ while IFS= read -r db_entry <&3; do
         )
         for _own_target in "$DB_PARENT_DIR" "$DB_PATH" "${DB_PATH}.wal" "${MANIFEST_DIR}/data"; do
           if [ -n "$_own_target" ] && [ -e "$_own_target" ]; then
-            chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || sudo chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || true
-            chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || sudo chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || true
+            chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || priv chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || true
+            chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || priv chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || true
           fi
         done
         if [ -n "$_duck_extra_paths" ]; then
           while IFS= read -r _dep_target; do
             _dep_target=$(expand_manifest_vars "$_dep_target")
             if [ -n "$_dep_target" ] && [ -e "$_dep_target" ]; then
-              chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || sudo chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || true
-              chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || sudo chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || true
+              chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || priv chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || true
+              chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || priv chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || true
             fi
           done << EOF_DUCK_EXTRA
 $_duck_extra_paths

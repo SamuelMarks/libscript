@@ -259,6 +259,7 @@ if "%FORCE_REBUILD%"=="1" (
     if exist "!src_dir!\.angular" rmdir /s /q "!src_dir!\.angular" 2>nul
     if exist "!src_dir!\.vite" rmdir /s /q "!src_dir!\.vite" 2>nul
     if exist "!src_dir!\.libscript_build.sha256" del /f /q "!src_dir!\.libscript_build.sha256" 2>nul
+    if exist "!src_dir!\.libscript_kmp_build.sha256" del /f /q "!src_dir!\.libscript_kmp_build.sha256" 2>nul
 )
 
 set "is_kmp=0"
@@ -267,7 +268,19 @@ if exist "!src_dir!\build.gradle" set "is_kmp=1"
 if not "!kmp_target!"=="" set "is_kmp=1"
 
 if "!is_kmp!"=="1" (
-    call :run_kmp_build "!src_dir!" "!kmp_target!" "!build_cmd!"
+    call :compute_frontend_fingerprint "!src_dir!"
+    set "_CACHED_KMP_FP="
+    if exist "!src_dir!\.libscript_kmp_build.sha256" (
+        set /p _CACHED_KMP_FP=<"!src_dir!\.libscript_kmp_build.sha256"
+    )
+    set "_SKIP_KMP_BUILD=0"
+    if not "%FORCE_REBUILD%"=="1" if not "!_CACHED_KMP_FP!"=="" if "!_CACHED_KMP_FP!"=="!_FE_FP!" set "_SKIP_KMP_BUILD=1"
+    if "!_SKIP_KMP_BUILD!"=="1" (
+        echo [REUSE] KMP Gradle build for '!svc_id!' in '!src_dir!' is up-to-date.
+    ) else (
+        call :run_kmp_build "!src_dir!" "!kmp_target!" "!build_cmd!"
+        > "!src_dir!\.libscript_kmp_build.sha256" echo !_FE_FP!
+    )
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
     exit /b 0
 )
@@ -312,7 +325,7 @@ if exist "!src_dir!\package.json" (
         if exist "!src_dir!\.vite" rmdir /s /q "!src_dir!\.vite" 2>nul
         if exist "!src_dir!\.libscript_build.sha256" del /f /q "!src_dir!\.libscript_build.sha256" 2>nul
         pushd "!src_dir!"
-        for /f "delims=" %%v in ('echo !svc! ^| jq -r ".env // {} | to_entries[]? | \"\(.key)=\(.value)\"" 2^>nul') do set "%%v"
+        for /f "delims=" %%v in ('echo !svc! ^| jq -r --arg eq "=" ".env // {} | to_entries[]? | .key + $eq + (.value | tostring)" 2^>nul') do set "%%v"
         if not "!build_cmd!"=="" (
             call !build_cmd!
         ) else if /i "!framework!"=="angular" (

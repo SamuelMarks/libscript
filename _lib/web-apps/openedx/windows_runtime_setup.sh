@@ -331,6 +331,7 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = str(INSTALL_DIR / 'staticfiles')
+MFE_DIST_DIR = INSTALL_DIR / 'mfe_dist'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SERVICE_VARIANT = '${_var}'
 ROOT_URLCONF = '${_var}.envs.libscript_urls'
@@ -339,37 +340,46 @@ SETEOF
       cp -f "${_cb_dir}/${_var}/envs/libscript_win.py" "${_cb_dir}/${_var}/envs/libscript.py"
       cp -f "${_cb_dir}/${_var}/envs/libscript_win.py" "${_cb_dir}/${_var}/envs/production.py"
       cat << 'URLSEOF' > "${_cb_dir}/${_var}/envs/libscript_urls.py"
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import authenticate, get_user_model, login
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 
-def index_view(request):
-    return HttpResponse("<html><head><title>Open edX</title></head><body><h1>Open edX Platform</h1></body></html>")
-
-def register_view(request):
-    resp = HttpResponse("<html><head><title>Register | Open edX</title></head><body><form method='post'><input name='email'/><input name='password' type='password'/></form></body></html>")
+def _serve_mfe_or_redirect(request, mfe_name):
+    mfe_dir = getattr(settings, "MFE_DIST_DIR", None)
+    if mfe_dir and (mfe_dir / mfe_name / "index.html").is_file():
+        html = (mfe_dir / mfe_name / "index.html").read_text(encoding="utf-8", errors="ignore")
+        resp = HttpResponse(html, content_type="text/html; charset=utf-8")
+        resp.set_cookie("csrftoken", "libscript_csrf_token_2026")
+        return resp
+    resp = HttpResponseRedirect("/authn/login")
     resp.set_cookie("csrftoken", "libscript_csrf_token_2026")
     return resp
+
+def index_view(request):
+    variant = getattr(settings, "SERVICE_VARIANT", "lms")
+    return _serve_mfe_or_redirect(request, "authoring" if variant == "cms" else "learner-dashboard")
+
+def register_view(request):
+    return _serve_mfe_or_redirect(request, "authn")
 
 @csrf_exempt
 def login_view(request):
     if request.method == "POST":
-        u_or_e = request.POST.get("email") or request.POST.get("username") or "admin"
+        u_or_e = request.POST.get("email") or request.POST.get("username") or request.POST.get("email_or_username") or "admin"
         pwd = request.POST.get("password") or "admin"
         User = get_user_model()
         u = User.objects.filter(username=u_or_e).first() or User.objects.filter(email=u_or_e).first()
         if u and u.check_password(pwd):
             login(request, u)
-            resp = JsonResponse({"success": True, "username": u.username})
-        else:
-            resp = HttpResponse("Authenticated", status=200)
-        resp.set_cookie("csrftoken", "libscript_csrf_token_2026")
-        return resp
-    resp = HttpResponse("<html><head><title>Sign In | Open edX</title></head><body><form method='post'><input name='email'/><input name='password' type='password'/></form></body></html>")
-    resp.set_cookie("csrftoken", "libscript_csrf_token_2026")
-    return resp
+            resp = JsonResponse({"success": True, "username": u.username, "redirect_url": "/learner-dashboard/"})
+            resp.set_cookie("edxloggedin", "true", httponly=False)
+            resp.set_cookie("csrftoken", "libscript_csrf_token_2026")
+            return resp
+        return JsonResponse({"success": False, "value": "Invalid username/email or password."}, status=400)
+    return _serve_mfe_or_redirect(request, "authn")
 
 def health_view(request):
     return JsonResponse({"status": "OK"})
@@ -383,8 +393,14 @@ urlpatterns = [
     path("login/", login_view),
     path("signin", login_view),
     path("signin/", login_view),
+    path("authn/login", login_view),
+    path("authn/login/", login_view),
+    path("authn/register", register_view),
+    path("authn/register/", register_view),
     path("dashboard", index_view),
     path("dashboard/", index_view),
+    path("learner-dashboard/", index_view),
+    path("authoring/home", index_view),
     path("heartbeat", health_view),
     path("health", health_view),
     re_path(r"^.*$", index_view),

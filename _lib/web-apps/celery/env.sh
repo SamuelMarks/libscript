@@ -35,7 +35,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "${UNAME:-}" = "Darwin" ]; then
   export PYTHON_VENV="${PYTHON_VENV:-${HOME:-/root}/.libscript/venvs/celery-${PYTHON_VERSION}}"
 else
   export PYTHON_VENV="${PYTHON_VENV:-/opt/venvs/celery-${PYTHON_VERSION}}"

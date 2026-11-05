@@ -3,8 +3,9 @@
 :: ## Overview
 :: Lifecycle script for setup_debian.cmd.
 :: ## Usage
-:: See setup_debian.cmd for implementation details. setlocal EnableDelayedExpansion This is a placeholder for the native Windows component setup. By default, many tools rely on winget, choco, or scoop for installation on Windows.
+:: See setup_debian.cmd for implementation details.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

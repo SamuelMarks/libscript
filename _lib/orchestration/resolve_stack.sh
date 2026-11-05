@@ -29,6 +29,19 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+if [ -z "${UNAME_LOWER:-}" ]; then
+  _rs_oi_this="${THIS_FILE}"
+  _rs_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_rs_oi_this}"
+  SCRIPT_DIR="${_rs_oi_dir}"
+  unset _rs_oi_this _rs_oi_dir || true
+fi
+
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: ${THIS_FILE} <path_to_config.json> [output_plan.json]"
   printf '%s\n' 'Resolves component dependencies and emits an execution plan.'
@@ -51,7 +64,7 @@ fi
 
 # Determine OS
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
-  OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+  OS_NAME="${UNAME_LOWER:-linux}"
   case "$OS_NAME" in
     linux*) TARGET_OS="linux" ;;
     darwin*) TARGET_OS="darwin" ;;
@@ -82,12 +95,32 @@ if [ ! -s "$CONFIG_FILE" ] || ! jq -e '.' "$CONFIG_FILE" >/dev/null 2>&1; then
   exit 0
 fi
 
-# Stream all manifests within _lib into a single temporary JSON array file
-tmp_manifests=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_manifests.$$")
-trap 'rm -f "$tmp_manifests"' EXIT INT TERM
-find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -exec jq -s '.' {} + 2>/dev/null | jq -s 'add // []' > "$tmp_manifests" 2>/dev/null || printf '[]\n' > "$tmp_manifests"
-if [ ! -s "$tmp_manifests" ]; then
-  printf '[]\n' > "$tmp_manifests"
+# Stream all manifests within _lib into a cached or temporary JSON array file
+_rs_cache_dir="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
+mkdir -p "$_rs_cache_dir" 2>/dev/null || _rs_cache_dir="${TMPDIR:-/tmp}"
+_rs_catalog="${_rs_cache_dir}/manifests_catalog.json"
+_rs_catalog_meta="${_rs_cache_dir}/manifests_catalog.meta"
+_rs_mf_count=$(find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" 2>/dev/null | wc -l | tr -d ' ')
+_rs_use_cache=0
+if [ -s "$_rs_catalog" ] && [ -f "$_rs_catalog_meta" ] && [ "$(cat "$_rs_catalog_meta" 2>/dev/null || true)" = "$_rs_mf_count" ]; then
+  _rs_newer=$(find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -newer "$_rs_catalog" 2>/dev/null | head -n 1 || true)
+  if [ -z "$_rs_newer" ]; then
+    _rs_use_cache=1
+  fi
+fi
+if [ "$_rs_use_cache" -eq 1 ]; then
+  tmp_manifests="$_rs_catalog"
+else
+  tmp_manifests=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_manifests.$$")
+  find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -exec jq -s '.' {} + 2>/dev/null | jq -s 'add // []' > "$tmp_manifests" 2>/dev/null || printf '[]\n' > "$tmp_manifests"
+  if [ ! -s "$tmp_manifests" ]; then
+    printf '[]\n' > "$tmp_manifests"
+  fi
+  if cp "$tmp_manifests" "$_rs_catalog" 2>/dev/null; then
+    printf '%s\n' "$_rs_mf_count" > "$_rs_catalog_meta" 2>/dev/null || true
+    rm -f "$tmp_manifests"
+    tmp_manifests="$_rs_catalog"
+  fi
 fi
 
 # Execute resolution
@@ -101,4 +134,6 @@ if [ -n "$OUTPUT_FILE" ]; then
 else
   jq --arg target_os "$TARGET_OS" --slurpfile manifests "$tmp_manifests" -n '{config: input, manifests: ($manifests[0] // [])}' "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
 fi
-rm -f "$tmp_manifests"
+if [ "$tmp_manifests" != "$_rs_catalog" ]; then
+  rm -f "$tmp_manifests"
+fi

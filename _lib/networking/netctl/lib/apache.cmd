@@ -67,7 +67,7 @@ for /f "delims=" %%i in ('jq -r ".listen[0] // \"80\"" "%NETCTL_STATE_FILE%"') d
 
 echo ^<VirtualHost *:%FIRST_PORT%^>
 
-for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r ".routes ^| to_entries[] ^| \"\(.key)|\(.value.type)|\(.value.target // \"\")|\(.value.pattern // \"\")\"" "%NETCTL_STATE_FILE%"`) do (
+for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r --arg sep "|" ".routes | to_entries[] | (.key + $sep + (.value.type // \"\") + $sep + (.value.target // \"\") + $sep + (.value.pattern // \"\"))" "%NETCTL_STATE_FILE%"`) do (
     if "%%b"=="static" (
         echo     Alias "%%a" "%%c"
         echo     ^<Directory "%%c"^>

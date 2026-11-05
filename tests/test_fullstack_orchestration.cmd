@@ -122,6 +122,15 @@ if errorlevel 1 (
 )
 echo [PASS] Multi-app shared-node provision, deprovision, backup, and restore dry-run orchestration
 
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" compute-hash "!TEST_TMP!\app_a" > "!TEST_TMP!\hash.out"
+if errorlevel 1 (
+    echo [FAIL] remote_sync.cmd compute-hash failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] remote_sync.cmd compute-hash
+
 rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo === ALL WINDOWS FULLSTACK ORCHESTRATION TESTS PASSED ===
 exit /b 0

@@ -57,7 +57,7 @@ if not exist "%NETCTL_STATE_FILE%" (
 
 echo http:
 echo   routers:
-for /f "tokens=1,2,3 delims=|" %%a in ('jq -r ".routes | to_entries[] | "\(.key)|\(.value.type)|\(.value.target // "")"" "%NETCTL_STATE_FILE%"') do (
+for /f "usebackq tokens=1,2,3 delims=|" %%a in (`jq -r --arg sep "|" ".routes | to_entries[] | (.key + $sep + (.value.type // \"\") + $sep + (.value.target // \"\"))" "%NETCTL_STATE_FILE%"`) do (
     echo     route_1:
     echo       rule: "PathPrefix(`%%a`)"
     echo       service: service_1

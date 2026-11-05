@@ -131,7 +131,7 @@ case "$ACTION" in
 
     mkdir -p "${TARGET_DIR}/bin"
 
-    if [ "$(uname -s)" = "FreeBSD" ]; then
+    if [ "${UNAME:-}" = "FreeBSD" ]; then
       libscript_depends 'gradle'
       if command -v gradle >/dev/null 2>&1; then
         ln -sf "$(command -v gradle)" "${TARGET_DIR}/bin/gradle"

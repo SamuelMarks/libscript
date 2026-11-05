@@ -81,7 +81,8 @@ if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%"
 
 :: 2. Automated Python venv scaffolding
 if not exist "%VENV_DIR%" (
-    python -m venv "%VENV_DIR%"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "" "%VENV_DIR%"
 )
 
 :: 3. Application Configuration Rendering

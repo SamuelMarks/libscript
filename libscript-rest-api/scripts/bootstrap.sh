@@ -54,12 +54,19 @@ else
   # Outputs error log messages.
   log_error() { printf '[ERROR] %s\n' "$1" >&2; }
 fi
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+fi
 SCRIPT_DIR="${_BOOTSTRAP_SCRIPT_DIR}"
 
 # ## detect_os
 # Detects the host operating system, distribution, and CPU architecture.
 detect_os() {
-  OS="$(uname -s)"
+  OS="${UNAME:-Linux}"
   case "$OS" in
     Linux*)     printf '%s\n' "Linux" ;;
     Darwin*)    printf '%s\n' "macOS" ;;

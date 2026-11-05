@@ -27,7 +27,20 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-case "$(uname -s)" in
+if [ -z "${UNAME:-}" ]; then
+  _iis_oi_this="${THIS_FILE}"
+  _iis_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_iis_oi_this}"
+  SCRIPT_DIR="${_iis_oi_dir}"
+  unset _iis_oi_this _iis_oi_dir || true
+fi
+
+case "${UNAME:-}" in
   MINGW*|MSYS*|CYGWIN*|Windows_NT) ;;
   *)
     printf '%s\n' 'iis is a Windows web server and cannot run on Linux.'

@@ -139,7 +139,7 @@ case "$ACTION" in
       if [ "${TARGET_OS}" = "darwin" ]; then
         os='darwin'
       fi
-      host_arch="${ARCH:-$(uname -m)}"
+      host_arch="${ARCH:-x86_64}"
       arch='amd64'
       if [ "${host_arch}" = "aarch64" ] || [ "${host_arch}" = "arm64" ]; then
         arch='arm64'

@@ -89,9 +89,6 @@ set "REBAR_PATH=%DEST_DIR%\rebar3.escript"
 echo Downloading rebar3 from %URL%...
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%URL%" "%REBAR_PATH%"
-if not exist "%REBAR_PATH%" (
-    curl.exe -fsSL "%URL%" -o "%REBAR_PATH%"
-)
 
 > "%BIN_DIR%\rebar3.cmd" echo @echo off
 >> "%BIN_DIR%\rebar3.cmd" echo "%ESCRIPT_BIN%" "%REBAR_PATH%" %%*

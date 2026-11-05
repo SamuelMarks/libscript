@@ -3,8 +3,9 @@
 :: ## Overview
 :: Orchestrates the setup and installation process for the Odoo ERP system stack.
 :: ## Usage
-:: Execute this script to install and configure odoo on the local system. setlocal EnableDelayedExpansion Fallback to running PowerShell for Windows provisioning
+:: Execute this script to install and configure odoo on the local system.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

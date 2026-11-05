@@ -45,7 +45,7 @@ export SCRIPT_NAME
 if [ -n "${POSTGRES_VERSION:-}" ] && [ "${POSTGRES_VERSION}" != "latest" ]; then
   REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION:-9}")"
   VER="${REDHAT_SUPPORT_PRODUCT_VERSION%%.*}"
-  libscript_depends 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH:-$(uname -m)}"'/pgdg-redhat-repo-latest.noarch.rpm' 2>/dev/null || true
+  libscript_depends 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH:-x86_64}"'/pgdg-redhat-repo-latest.noarch.rpm' 2>/dev/null || true
   priv dnf -qy module disable 'postgresql' 2>/dev/null || true
   if libscript_depends 'postgresql'"${POSTGRES_VERSION}"'-server' 2>/dev/null; then
     SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRES_VERSION}}"

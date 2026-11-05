@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/remote_sync.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -43,9 +43,9 @@ NODES=$(awk '$3 ~ /^node-/ {print $3}' "${MACHINES_TXT}" || echo "node-0 node-1"
 SERVER_IP=$(awk '$3 == "server" {print $1}' "${MACHINES_TXT}" || echo "192.168.56.10")
 for host in $NODES; do
   ssh root@"${host}" "mkdir -p -- /var/lib/kubelet/"
-  scp "${LIBSCRIPT_DATA_DIR}/ca.crt" root@"${host}":/var/lib/kubelet/
-  scp "${LIBSCRIPT_DATA_DIR}/${host}.crt" root@"${host}":/var/lib/kubelet/kubelet.crt
-  scp "${LIBSCRIPT_DATA_DIR}/${host}.key" root@"${host}":/var/lib/kubelet/kubelet.key
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/ca.crt" "root@${host}" "/var/lib/kubelet/"
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/${host}.crt" "root@${host}" "/var/lib/kubelet/kubelet.crt"
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/${host}.key" "root@${host}" "/var/lib/kubelet/kubelet.key"
 done
 libscript_depends kubectl
 
@@ -79,9 +79,11 @@ kubectl config use-context 'default' --kubeconfig="${LIBSCRIPT_DATA_DIR}/admin.k
 
 for host in $NODES; do
   ssh root@"${host}" "mkdir -p -- /var/lib/kube-proxy /var/lib/kubelet"
-  scp "${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig" root@"${host}":'/var/lib/kube-proxy/kubeconfig'
-  scp "${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig" root@"${host}":'/var/lib/kubelet/kubeconfig'
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig" "root@${host}" "/var/lib/kube-proxy/kubeconfig"
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig" "root@${host}" "/var/lib/kubelet/kubeconfig"
 done
 libscript_depends kubectl
 
-scp "${LIBSCRIPT_DATA_DIR}/admin.kubeconfig" "${LIBSCRIPT_DATA_DIR}/kube-controller-manager.kubeconfig" "${LIBSCRIPT_DATA_DIR}/kube-scheduler.kubeconfig" root@server:~/
+for _kc_f in admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig; do
+  libscript_scp_to_remote "${LIBSCRIPT_DATA_DIR}/${_kc_f}" "root@server" "./"
+done

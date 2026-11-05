@@ -82,9 +82,14 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
             )
             if /i not "!CAT_NAME!"=="package-managers" (
                 for %%S in ("%%D\setup*.cmd" "%%D\uninstall*.cmd") do (
-                    findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" /C:"^[ ]*scoop[ ]*install" /C:"winget[ ]*uninstall" /C:"choco[ ]*uninstall" /C:"scoop[ ]*uninstall" /C:"curl[ ]*-s" /C:"Invoke-WebRequest" /C:"Invoke-RestMethod" "%%S" >nul 2>&1
+                    findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" /C:"^[ ]*scoop[ ]*install" /C:"winget[ ]*uninstall" /C:"choco[ ]*uninstall" /C:"scoop[ ]*uninstall" /C:"curl[ ]*-s" /C:"curl\.exe[ ]*-s" /C:"Invoke-WebRequest" /C:"Invoke-RestMethod" "%%S" >nul 2>&1
                     if not errorlevel 1 (
                         echo [VM CONTRACT VIOLATION] [RAW_PKG_MGR_OR_FETCH_IN_RECIPE] %%S: Direct package manager or network fetch call in recipe .cmd >&2
+                        set /a ERRORS+=1
+                    )
+                    findstr /I /R /C:"python[0-9.]*[ ]*-m[ ]*venv" /C:"python\.exe.*-m[ ]*venv" /C:"uv[ ]*venv" "%%S" >nul 2>&1
+                    if not errorlevel 1 (
+                        echo [VM CONTRACT VIOLATION] [RAW_PYTHON_VENV] %%S: Explicit Python venv creation in recipe .cmd; delegate to _lib\_common\python_env.cmd >&2
                         set /a ERRORS+=1
                     )
                 )

@@ -3,8 +3,9 @@
 :: ## Overview
 :: Automates Ch6 of Kubernetes the Hard Way.
 :: ## Usage
-:: Executes the steps for Ch6. setlocal EnableDelayedExpansion
+:: Executes the steps for Ch6.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -59,6 +60,8 @@ if exist "%LIBSCRIPT_DATA_DIR%\.k8s_encryption_key" (
   echo !ENCRYPTION_KEY! > "%LIBSCRIPT_DATA_DIR%\.k8s_encryption_key"
 )
 
-rem PowerShell envsubst equivalent
-powershell -Command "$text = Get-Content '%DIR%\\kubernetes-the-hard-way\configs\encryption-config.yaml' -Raw; $text = $text -replace '\$\{ENCRYPTION_KEY\}', $env:ENCRYPTION_KEY; Set-Content -Path '%LIBSCRIPT_DATA_DIR%\encryption-config.yaml' -Value $text"
-scp "%LIBSCRIPT_DATA_DIR%\encryption-config.yaml" root@server:~/
+rem Use canonical envsubst_safe.cmd and remote_sync.cmd abstractions
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\envsubst_safe.cmd" "%DIR%\kubernetes-the-hard-way\configs\encryption-config.yaml" "%LIBSCRIPT_DATA_DIR%\encryption-config.yaml"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" :libscript_scp_to_remote "%LIBSCRIPT_DATA_DIR%\encryption-config.yaml" "root@server" "~/"

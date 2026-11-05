@@ -29,6 +29,19 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+if [ -z "${UNAME:-}" ]; then
+  _hl_oi_this="${THIS_FILE}"
+  _hl_oi_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_hl_oi_this}"
+  SCRIPT_DIR="${_hl_oi_dir}"
+  unset _hl_oi_this _hl_oi_dir || true
+fi
+
 
 LOG_FILE='/var/log/msi_install.log'
 TARGET_DISK=""
@@ -141,7 +154,7 @@ fi
 log_msg "Selected target storage: ${TARGET_DISK}"
 
 # Step 1: Real OS-Native Partitioning and Formatting
-OS_NAME=$(uname -s)
+OS_NAME="${UNAME:-Linux}"
 
 if [ "$OS_NAME" = "Linux" ]; then
   log_msg "[STAGE 1/4] Partitioning ${TARGET_DISK} using sgdisk (Linux)..."

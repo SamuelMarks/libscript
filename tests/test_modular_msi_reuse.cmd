@@ -3,8 +3,9 @@
 :: ## Overview
 :: Validates the modular zero-.EXE Windows Installer packaging and component reuse architecture. Verifies standalone dependency MSIs, master orchestrator packages, deterministic GUID integrity, and side-by-side database sharing between Open edX and WordPress.
 :: ## Usage
-:: call tests\test_modular_msi_reuse.cmd ## Parameters None. setlocal EnableDelayedExpansion
+:: call tests\test_modular_msi_reuse.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1

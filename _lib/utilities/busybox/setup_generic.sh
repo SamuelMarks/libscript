@@ -121,7 +121,7 @@ case "$ACTION" in
       exit 0
     fi
     if [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
-      if [ "$(uname -s)" = "Darwin" ]; then
+      if [ "${UNAME:-}" = "Darwin" ]; then
         if ! command -v busybox >/dev/null 2>&1; then
           if command -v brew >/dev/null 2>&1; then
             libscript_depends_via brew busybox 2>/dev/null || true

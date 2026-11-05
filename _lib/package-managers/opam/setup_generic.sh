@@ -99,7 +99,7 @@ case "$ACTION" in
       # libscript_native implementation
       if [ -z "${OPAM_DOWNLOAD_URL:-}" ]; then
         _opam_ver='2.2.1'
-        _arch="${ARCH:-$(uname -m)}"
+        _arch="${ARCH:-x86_64}"
         case "$_arch" in
           aarch64|arm64) _opam_arch="arm64" ;;
           x86_64|amd64) _opam_arch="x86_64" ;;

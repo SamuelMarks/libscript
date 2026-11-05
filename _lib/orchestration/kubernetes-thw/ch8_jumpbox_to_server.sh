@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/remote_sync.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -37,7 +37,18 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
 done
 
 
-scp "${DIR}/kubernetes-the-hard-way/downloads/controller/kube-apiserver" "${DIR}/kubernetes-the-hard-way/downloads/controller/kube-controller-manager" "${DIR}/kubernetes-the-hard-way/downloads/controller/kube-scheduler" "${DIR}/kubernetes-the-hard-way/downloads/client/kubectl" "${DIR}/kubernetes-the-hard-way/units/kube-apiserver.service" "${DIR}/kubernetes-the-hard-way/units/kube-controller-manager.service" "${DIR}/kubernetes-the-hard-way/units/kube-scheduler.service" "${DIR}/kubernetes-the-hard-way/configs/kube-scheduler.yaml" "${DIR}/kubernetes-the-hard-way/configs/kube-apiserver-to-kubelet.yaml" root@server:~/
+for _k8_f in \
+  "${DIR}/kubernetes-the-hard-way/downloads/controller/kube-apiserver" \
+  "${DIR}/kubernetes-the-hard-way/downloads/controller/kube-controller-manager" \
+  "${DIR}/kubernetes-the-hard-way/downloads/controller/kube-scheduler" \
+  "${DIR}/kubernetes-the-hard-way/downloads/client/kubectl" \
+  "${DIR}/kubernetes-the-hard-way/units/kube-apiserver.service" \
+  "${DIR}/kubernetes-the-hard-way/units/kube-controller-manager.service" \
+  "${DIR}/kubernetes-the-hard-way/units/kube-scheduler.service" \
+  "${DIR}/kubernetes-the-hard-way/configs/kube-scheduler.yaml" \
+  "${DIR}/kubernetes-the-hard-way/configs/kube-apiserver-to-kubelet.yaml"; do
+  libscript_scp_to_remote "${_k8_f}" "root@server" "./"
+done
 
 ssh root@server << 'EOF'
   set -eu
