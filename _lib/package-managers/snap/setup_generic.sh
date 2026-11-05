@@ -91,9 +91,8 @@ case "$ACTION" in
   install)
     if [ "$SNAP_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'snapd'
-      if [ -d /run/systemd/system ]; then
-        priv systemctl enable --now snapd.socket 2>/dev/null || true
-      fi
+      libscript_service enable snapd.socket 2>/dev/null || true
+      libscript_service start snapd.socket 2>/dev/null || true
     else
       # libscript_native implementation
       if [ -f /etc/alpine-release ]; then
@@ -109,9 +108,8 @@ case "$ACTION" in
         if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info 'Falling back to system package manager for snap...'
           libscript_depends 'snapd'
-          if [ -d /run/systemd/system ]; then
-            priv systemctl enable --now snapd.socket 2>/dev/null || true
-          fi
+          libscript_service enable snapd.socket 2>/dev/null || true
+          libscript_service start snapd.socket 2>/dev/null || true
         else
           log_error 'Native installation for snap from source is not supported.'
           exit 1

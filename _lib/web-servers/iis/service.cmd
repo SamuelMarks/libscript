@@ -49,4 +49,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-exit /b 0
+set "_IIS_ACTION=%~1"
+if "%_IIS_ACTION%"=="" set "_IIS_ACTION=status"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%_IIS_ACTION%" w3svc
+exit /b !ERRORLEVEL!

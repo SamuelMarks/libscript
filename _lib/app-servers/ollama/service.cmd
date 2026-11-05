@@ -95,7 +95,7 @@ if /i "!_ACT!"=="up" call :wait_for_ollama_ready
 exit /b !_SVC_RC!
 
 :: ## configure_ollama_env
-:: Creates the OLLAMA_MODELS directory and persists the environment override exclusively for the ollama daemon.
+:: Creates the OLLAMA_MODELS directory and persists the environment overrides (OLLAMA_MODELS, OLLAMA_HOST, OLLAMA_NUM_PARALLEL, OLLAMA_MAX_LOADED_MODELS) exclusively for the ollama daemon.
 :configure_ollama_env
 set "_COE_DIR=%~1"
 if /i "!_COE_DIR!"=="ollama" set "_COE_DIR="
@@ -103,9 +103,18 @@ if /i "!_COE_DIR!"=="libscript_ollama" set "_COE_DIR="
 if "!_COE_DIR!"=="" set "_COE_DIR=!OLLAMA_MODELS_DIR!"
 if "!_COE_DIR!"=="" set "_COE_DIR=!OLLAMA_MODELS!"
 if "!_COE_DIR!"=="" exit /b 0
-if not exist "!_COE_DIR!" mkdir "!_COE_DIR!"
+set "OLLAMA_MODELS=!_COE_DIR!"
+if not exist "!OLLAMA_MODELS!" mkdir "!OLLAMA_MODELS!"
+set "_COE_HOST=!OLLAMA_HOST!"
+if "!_COE_HOST!"=="" set "_COE_HOST=127.0.0.1:11434"
+set "_COE_HOST=!_COE_HOST:http://=!"
+set "_COE_HOST=!_COE_HOST:https://=!"
+set "_COE_PAR=!OLLAMA_NUM_PARALLEL!"
+if "!_COE_PAR!"=="" set "_COE_PAR=1"
+set "_COE_MAX=!OLLAMA_MAX_LOADED_MODELS!"
+if "!_COE_MAX!"=="" set "_COE_MAX=1"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "OLLAMA_MODELS=!_COE_DIR!"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "OLLAMA_MODELS=!OLLAMA_MODELS!" "OLLAMA_HOST=!_COE_HOST!" "OLLAMA_NUM_PARALLEL=!_COE_PAR!" "OLLAMA_MAX_LOADED_MODELS=!_COE_MAX!"
 exit /b 0
 
 :: ## wait_for_ollama_ready

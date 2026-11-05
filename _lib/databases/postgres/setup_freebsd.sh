@@ -34,7 +34,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
+for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh' '_lib/_common/service.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -43,11 +43,11 @@ done
 
 libscript_depends 'postgresql'"${POSTGRES_VERSION}"'-server' 'postgresql'"${POSTGRES_VERSION}"'-client'
 
-priv sysrc postgresql_enable='YES'
+libscript_service enable postgresql
 if [ ! -d '/var/db/postgres/data'"${POSTGRES_VERSION}" ]; then
-  priv /usr/local/etc/rc.d/postgresql initdb </dev/null >/dev/null 2>&1 || priv service postgresql initdb </dev/null >/dev/null 2>&1 || true
+  priv /usr/local/etc/rc.d/postgresql initdb </dev/null >/dev/null 2>&1 || true
 fi
-priv service postgresql status >/dev/null 2>&1 || priv service postgresql start </dev/null >/dev/null 2>&1 || true
+libscript_service is-active postgresql >/dev/null 2>&1 || libscript_service start postgresql </dev/null >/dev/null 2>&1 || true
 
 if [ -n "${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then

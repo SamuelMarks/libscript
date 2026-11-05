@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/priv.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/service.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -200,13 +200,10 @@ case "$ACTION" in
         ;;
     esac
 
-    if command -v systemctl >/dev/null 2>&1; then
-      if systemctl list-unit-files libvirtd.service >/dev/null 2>&1; then
-        log_info 'Starting and enabling libvirtd service...'
-        priv systemctl enable --now libvirtd 2>/dev/null || true
-        setup_libvirt_network
-      fi
-    fi
+    log_info 'Starting and enabling libvirtd service...'
+    libscript_service enable libvirtd 2>/dev/null || true
+    libscript_service start libvirtd 2>/dev/null || true
+    setup_libvirt_network
     ;;
   uninstall)
     log_info 'Uninstalling QEMU...'
@@ -219,9 +216,7 @@ case "$ACTION" in
     exit 0
     ;;
   start|stop|restart|status)
-    if command -v systemctl >/dev/null 2>&1; then
-      priv systemctl "$ACTION" libvirtd
-    fi
+    libscript_service "$ACTION" libvirtd || true
     exit 0
     ;;
 esac

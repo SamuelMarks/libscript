@@ -71,9 +71,7 @@ case "$ACTION" in
     log_info "Installing Exim SMTP relay via ${EXIM_INSTALL_METHOD}..."
     if [ "${UNAME_LOWER}" = "freebsd" ]; then
       libscript_depends "mail/exim" || libscript_depends "exim"
-      if command -v sysrc >/dev/null 2>&1; then
-        sysrc exim_enable="YES" || true
-      fi
+      libscript_service enable exim 2>/dev/null || true
     elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
       libscript_depends 'exim' || true
     else

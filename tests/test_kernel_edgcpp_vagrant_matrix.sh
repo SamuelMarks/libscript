@@ -115,7 +115,7 @@ run_distro_vagrant_or_host() {
       fi
 
       if [ "${KEEP_VM}" != "1" ]; then
-        (cd "${_vdir}" && vagrant halt 2>/dev/null || true)
+        (cd "${_vdir}" && vagrant halt 2>/dev/null) || true
       fi
     fi
   fi

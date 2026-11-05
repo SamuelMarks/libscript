@@ -29,7 +29,7 @@ export DIR="${_DIR}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh"; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/service.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -62,10 +62,8 @@ _pg_debian_is_active() {
 
 if [ "${FORCE_REINSTALL:-0}" != "1" ] && _pg_debian_is_active; then
   log_info "[REUSE] PostgreSQL cluster already active on port ${POSTGRES_LISTEN_PORT:-5432}."
-  if [ "$(ps -q 1 -o comm= 2>/dev/null || true)" = 'systemd' ] && command -v systemctl >/dev/null 2>&1; then
-    priv systemctl enable postgresql >/dev/null 2>&1 || true
-    priv systemctl start postgresql >/dev/null 2>&1 || true
-  fi
+  libscript_service enable postgresql >/dev/null 2>&1 || true
+  libscript_service start postgresql >/dev/null 2>&1 || true
   exit 0
 fi
 
@@ -140,7 +138,8 @@ if ! dpkg -s -- 'postgresql-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
     PID="$!"
     printf '%d' "${PID}" | priv dd status='none' of='/var/run/postgresql/'"${POSTGRES_VERSION}"'-main.pid'
   else
-    priv systemctl enable --now postgresql >/dev/null 2>&1 || priv service postgresql start >/dev/null 2>&1 || true
+    libscript_service enable postgresql >/dev/null 2>&1 || true
+    libscript_service start postgresql >/dev/null 2>&1 || true
   fi
 fi
 

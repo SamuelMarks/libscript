@@ -33,25 +33,14 @@ export DIR="${SCRIPT_DIR}"
 ACTION="${1:-status}"
 WEBSERVER="${WORDPRESS_WEBSERVER:-nginx}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
 for s in "${WEBSERVER}" php-fpm; do
-  if command -v systemctl >/dev/null 2>&1; then
-    case "$ACTION" in
-      start)
-        systemctl start "$s" 2>/dev/null || true
-        ;;
-      stop)
-        systemctl stop "$s" 2>/dev/null || true
-        ;;
-      restart)
-        systemctl restart "$s" 2>/dev/null || true
-        ;;
-      status)
-        systemctl status "$s" --no-pager 2>/dev/null || true
-        ;;
-    esac
-  elif command -v service >/dev/null 2>&1; then
-    service "$s" "$ACTION" 2>/dev/null || true
-  fi
+  libscript_service "$ACTION" "$s" 2>/dev/null || true
 done
 
 printf '[OK] Service action %s processed for WordPress stack.\n' "$ACTION"

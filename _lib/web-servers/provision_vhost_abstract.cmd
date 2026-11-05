@@ -234,15 +234,15 @@ if /I "%PROXY_ENGINE%"=="nginx" (
     set "RELOAD_CMD=nginx.exe -s reload"
 ) else if /I "%PROXY_ENGINE%"=="apache2" (
     set "TEST_CMD=httpd.exe -t"
-    REM For Apache on Windows, we restart the service via net
-    REM Assuming service name is Apache2.4, this might need parameterization in future
-    set "RELOAD_CMD=net stop Apache2.4 && net start Apache2.4"
+    REM For Apache on Windows, we reload/restart the service via the common service abstraction
+    set "RELOAD_CMD=call \"!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd\" reload Apache2.4"
 )
 
 echo [INFO] Testing %PROXY_ENGINE% configuration...
 %TEST_CMD%
 if %ERRORLEVEL% EQU 0 (
     echo [INFO] Syntax OK. Reloading...
+    set "STACK="
     %RELOAD_CMD%
     if exist "%BACKUP_FILE%" del /f /q "%BACKUP_FILE%"
     echo [PASS] Interpolation successful.

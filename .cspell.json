@@ -546,6 +546,11 @@
     "Diffie",
     "diffutils",
     "dinit",
+    "dinitctl",
+    "bootout",
+    "ksvc",
+    "mlom",
+    "dpath",
     "DINIT",
     "Dinit",
     "diskinfo",
@@ -2255,6 +2260,7 @@
     "virtualenvs",
     "virtualhost",
     "Vite",
+    "vitest",
     "vllm",
     "Vllm",
     "VLLM",
@@ -2512,7 +2518,8 @@
     "ajeetdsouza",
     "sharkdp",
     "ipsw",
-    "plists"
+    "plists",
+    "mmin"
   ],
   "ignorePaths": [
     "node_modules",
@@ -2528,6 +2535,7 @@
     "tmp/**",
     ".tmp/**",
     "TODO_PLAN.md",
+    "LIBSCRIPT_TODO_PLAN.md",
     "build/**",
     "installed/**"
   ],

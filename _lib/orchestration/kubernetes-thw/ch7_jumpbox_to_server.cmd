@@ -50,4 +50,4 @@ goto :find_root
 set "DIR=!SCRIPT_DIR!"
 
 scp "%DIR%\\kubernetes-the-hard-way\downloads\controller\etcd" "%DIR%\\kubernetes-the-hard-way\downloads\client\etcdctl" "%DIR%\\kubernetes-the-hard-way\units\etcd.service" root@server:~/
-ssh root@server "mv -f etcd etcdctl /usr/local/bin/ || true; mkdir -p /etc/etcd /var/lib/etcd; chmod 700 /var/lib/etcd; cp -f ca.crt kube-api-server.key kube-api-server.crt /etc/etcd/; mv -f etcd.service /etc/systemd/system/; systemctl daemon-reload; systemctl enable etcd; systemctl start etcd; etcdctl member list || true"
+ssh root@server "mv -f etcd etcdctl /usr/local/bin/ || true; mkdir -p /etc/etcd /var/lib/etcd; chmod 700 /var/lib/etcd; cp -f ca.crt kube-api-server.key kube-api-server.crt /etc/etcd/; mv -f etcd.service /etc/systemd/system/; if [ -f $HOME/libscript/_lib/_common/service.sh ]; then SCRIPT_NAME=$HOME/libscript/_lib/_common/service.sh . $HOME/libscript/_lib/_common/service.sh; libscript_service daemon-reload etcd || true; libscript_service enable etcd || true; libscript_service start etcd || true; fi; etcdctl member list || true"

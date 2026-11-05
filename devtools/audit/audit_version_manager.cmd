@@ -89,6 +89,15 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
                     )
                 )
             )
+            if /i not "!CAT_NAME!"=="init-systems" (
+                for %%S in ("%%D\setup*.cmd" "%%D\service*.cmd" "%%D\uninstall*.cmd" "%%D\test*.cmd") do (
+                    findstr /I /R /C:"sc\.exe[ ]*start" /C:"sc\.exe[ ]*stop" /C:"sc\.exe[ ]*query" /C:"sc[ ]*start" /C:"sc[ ]*stop" /C:"sc[ ]*query" /C:"net[ ]*start" /C:"net[ ]*stop" "%%S" >nul 2>&1
+                    if not errorlevel 1 (
+                        echo [VM CONTRACT VIOLATION] [RAW_DAEMON_MANAGER] %%S: Direct sc/net daemon call in component .cmd; delegate to _lib\_common\service.cmd >&2
+                        set /a ERRORS+=1
+                    )
+                )
+            )
         )
     )
 )

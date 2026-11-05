@@ -46,6 +46,14 @@
     "OLLAMA_READY_TIMEOUT": {
       "type": "string",
       "description": "Maximum time in seconds to poll the Ollama HTTP API for readiness after service start or restart."
+    },
+    "OLLAMA_NUM_PARALLEL": {
+      "type": "string",
+      "description": "Maximum number of parallel requests each loaded Ollama model processes simultaneously (default: 1)."
+    },
+    "OLLAMA_MAX_LOADED_MODELS": {
+      "type": "string",
+      "description": "Maximum number of Ollama models kept loaded concurrently in memory (default: 1)."
     }
   }
 }

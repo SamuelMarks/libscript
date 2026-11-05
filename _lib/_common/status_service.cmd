@@ -55,7 +55,8 @@ if "%SVC_NAME%"=="" (
     exit /b 1
 )
 
-sc query "%SVC_NAME%" | findstr /i "RUNNING" >nul
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active "%SVC_NAME%" >nul 2>&1
 if !ERRORLEVEL! equ 0 (
     echo Service %SVC_NAME% is running.
     exit /b 0

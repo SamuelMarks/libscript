@@ -61,15 +61,18 @@ if not exist "%REDIS_EXE%" (
 )
 
 if /i "%ACTION%"=="start" (
-    sc.exe query Redis 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
-    sc.exe start Redis >nul 2>&1 && exit /b 0
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active Redis >nul 2>&1 && exit /b 0
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start Redis >nul 2>&1 && exit /b 0
     if exist "%REDIS_EXE%" (
         powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 6379 -Executable "%REDIS_EXE%" 2>nul
     )
     exit /b 0
 )
 if /i "%ACTION%"=="stop" (
-    sc.exe stop Redis >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop Redis >nul 2>&1
     taskkill /F /IM redis-server.exe >nul 2>&1
     exit /b 0
 )
@@ -79,7 +82,8 @@ if /i "%ACTION%"=="restart" (
     exit /b 0
 )
 if /i "%ACTION%"=="status" (
-    sc.exe query Redis 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] Redis & exit /b 0)
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active Redis >nul 2>&1 && (echo [RUNNING] Redis & exit /b 0)
     powershell -NoProfile -Command "if (Get-Process redis-server -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] redis-server.exe & exit /b 0)
     echo [STOPPED] redis
     exit /b 1

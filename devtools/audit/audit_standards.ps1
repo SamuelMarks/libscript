@@ -68,6 +68,14 @@ function Test-ExcludedPath {
 function Audit-File {
     param([string]$FilePath)
 
+    $rootPrefix = $rootDir.Path.TrimEnd('\', '/')
+    if ($FilePath.StartsWith("$rootPrefix\", [System.StringComparison]::OrdinalIgnoreCase) -or $FilePath.StartsWith("$rootPrefix/", [System.StringComparison]::OrdinalIgnoreCase)) {
+        $FilePath = $FilePath.Substring($rootPrefix.Length + 1)
+    }
+    if ($FilePath.StartsWith(".\") -or $FilePath.StartsWith("./")) {
+        $FilePath = $FilePath.Substring(2)
+    }
+
     if (-not (Test-Path $FilePath -PathType Leaf)) {
         return
     }
@@ -102,9 +110,11 @@ function Audit-File {
         $shebangLines = @()
         $rawFetchLines = @()
         $rawPkgLines = @()
+        $rawDaemonLines = @()
         $unnecessaryDqLines = @()
         $allowFetchNext = $false
         $allowPkgNext = $false
+        $allowDaemonNext = $false
         $lineNum = 1
         foreach ($ln in (Get-Content -Path $FilePath -ErrorAction SilentlyContinue)) {
             $trimmed = $ln.Trim()
@@ -126,6 +136,7 @@ function Audit-File {
             if ($ln -match '^\s*#') {
                 $allowFetchNext = ($ln -match 'libscript-allow-raw-(fetch|curl)')
                 $allowPkgNext = ($ln -match 'libscript-allow-raw-pkg')
+                $allowDaemonNext = ($ln -match 'libscript-allow-raw-daemon')
             } else {
                 if (-not $allowFetchNext -and $ln -notmatch 'libscript-allow-raw-(fetch|curl)' -and $ln -match '(^|[\s;|&(])(curl\s+-[a-zA-Z0-9#-]*[sSfLOo]|wget\s+-[a-zA-Z0-9-]*[qO]|aria2c\s+-[dox])(\s|$)' -and $ln -notmatch '(127\.0\.0\.1|localhost|--unix-socket|--cacert|--connect-timeout|-w\s+"%\{http_code\}")') {
                     $rawFetchLines += $lineNum
@@ -133,11 +144,15 @@ function Audit-File {
                 if (-not $allowPkgNext -and $ln -notmatch 'libscript-allow-raw-pkg' -and $ln -match '(^|[\s;|&])(priv\s+|sudo\s+)?(apt-get\s+(install|remove|purge|update)|apt\s+(install|remove|purge)|apk\s+(add|del|update)|dnf\s+(install|remove|groupinstall)|yum\s+(install|remove|groupinstall)|pacman\s+(-S|-R|-Rns|-Syu)|zypper\s+(install|in|remove|rm)|brew\s+(install|uninstall|tap|services)|port\s+(install|uninstall)|pkg\s+(install|delete|add)|xbps-install|xbps-remove|emerge\s|swupd\s+bundle-add|winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update)|vcpkg\s+(install|remove)|conan\s+install|nix\s+profile\s+install|nix-env\s+-i|guix\s+(install|package)|spack\s+(install|uninstall)|npm\s+install\s+-g|composer\s+global\s+require)(\s|$)' -and $ln -notmatch '--root') {
                     $rawPkgLines += $lineNum
                 }
+                if (-not $allowDaemonNext -and $ln -notmatch 'libscript-allow-raw-daemon' -and $ln -match '(^|[\s;|&(])(priv\s+|sudo\s+)?(systemctl\s+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl\s+(load|unload|start|stop|kickstart|bootstrap|bootout)|rc-service\s+|rc-update\s+(add|del)|svcadm\s+(enable|disable|restart|refresh)|svccfg\s+(import|delete)|sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status|onestatus)|update-rc\.d\s+|chkconfig\s+|s6-svc\s+|dinitctl\s+|sysrc\s+[A-Za-z0-9_$"''-]*_enable)([\s;|&)]|$)') {
+                    $rawDaemonLines += $lineNum
+                }
                 if ($ln -match '^\s*(export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"\s*$' -or $ln -match '^\s*(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?\s*$' -or $ln -match '^\s*libscript_depends(\s+"[A-Za-z0-9_.-]+")+(\s*\|\|\s*true)?\s*$') {
                     $unnecessaryDqLines += $lineNum
                 }
                 $allowFetchNext = $false
                 $allowPkgNext = $false
+                $allowDaemonNext = $false
             }
             $lineNum++
         }
@@ -353,7 +368,7 @@ function Audit-File {
 
     # 8d. Ban hardcoded user/project paths in core substrate (_lib/ and cli/)
     if ($normPath -match '^(_lib|cli)/') {
-        $leakMatch = Select-String -Path $FilePath -Pattern '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|e4s2024|E4S2024|/opt/conda/envs|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' -Quiet
+        $leakMatch = Select-String -Path $FilePath -Pattern '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|T1D_|/mnt/data/t1d|/Volumes/TOSHIBA_EXT|e4s2024|E4S2024|/opt/conda/envs|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' -Quiet
         if ($leakMatch) {
             Log-Violation -File $FilePath -Rule "NO_HARDCODED_USER_PATHS" -Details "Hardcoded user/project path or .volta reference in substrate."
         }
@@ -368,7 +383,7 @@ function Audit-File {
     }
 
     # 8f. Ban non-POSIX sort -V and bare sed -i in .sh scripts
-    if ($ext -eq "sh" -and $normPath -ne 'devtools/audit/audit_posix.sh' -and $normPath -ne 'devtools/audit/audit_standards.sh' -and $normPath -notmatch '\.tpl$') {
+    if ($ext -eq "sh" -and $normPath -notmatch '(^|/)devtools/audit/(audit_posix|audit_standards)\.sh$' -and $normPath -notmatch '\.tpl$') {
         $nonPosixFlagMatch = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(sort\s+-V|sed\s+-i)' -Quiet
         if ($nonPosixFlagMatch) {
             Log-Violation -File $FilePath -Rule "NON_POSIX_TOOL_FLAG" -Details "Non-POSIX sort -V or sed -i detected."
@@ -379,7 +394,7 @@ function Audit-File {
     }
 
     # 8g. Raw Network Fetch & Raw Package Manager Audit
-    if ($normPath -notmatch '^(devtools|tests|docker)/') {
+    if ($normPath -notmatch '(^|/)(devtools|tests|docker)/') {
         if ($ext -eq "sh") {
             if ($normPath -notmatch '(_lib/(_common/pkg_mgr|init-systems/daemonize|utilities/(curl|wget|aria2)/test|web-apps/.*/(test_harness|health.*|service))\.sh$|docker)') {
                 if ($rawFetchLines.Count -gt 0) {
@@ -389,6 +404,11 @@ function Audit-File {
             if ($normPath -notmatch '(_lib/(_common/(pkg_mgr|service)\.sh|package-managers/|orchestration/distro/)|docker)') {
                 if ($rawPkgLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/(_common/(service|service_install|logs_service|os_info)\.sh|init-systems/)|payloads/schedulers/|\.tpl$)') {
+                if ($rawDaemonLines.Count -gt 0) {
+                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw init/daemon manager usage found (delegate to _lib/_common/service.sh or service_install.sh)."
                 }
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
@@ -404,6 +424,12 @@ function Audit-File {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd)."
                 }
             }
+            if ($normPath -notmatch '(_lib/(_common/(service|service_install)\.cmd|init-systems/)|payloads/schedulers/)') {
+                $rawDaemonCmd = Select-String -Path $FilePath -Pattern '(^|[\s&(|])(sc\.exe\s+(start|stop|create|delete|config|query|description)|sc\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop)\s+|systemctl\s+(start|stop|restart|reload|daemon-reload|enable|disable|status|is-active)|rc-service\s+|service\s+[A-Za-z0-9_$"''-]+\s+(start|stop|restart|reload|status))(\s|$)' -Context 1,0 | Where-Object { $_.Line -notmatch '^\s*(::|rem\s|echo\s)' -and $_.Line -notmatch 'libscript-allow-raw-daemon' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-daemon') }
+                if ($rawDaemonCmd) {
+                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw service/daemon manager call in batch script (delegate to _lib\_common\service.cmd or service_install.cmd)."
+                }
+            }
         } elseif ($ext -eq "ps1") {
             if ($normPath -notmatch '_lib/_common/pkg_mgr\.ps1$') {
                 $rawFetchPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*(Invoke-WebRequest|Invoke-RestMethod|\biwr\b|\birm\b|Start-BitsTransfer|Net\.WebClient)' -Context 1,0 | Where-Object { $_.Line -notmatch '(127\.0\.0\.1|localhost|libscript-allow-raw-(fetch|curl))' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-(fetch|curl)') }
@@ -415,6 +441,12 @@ function Audit-File {
                 $rawPkgPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(winget\s+(install|uninstall|upgrade)|choco\s+(install|uninstall|upgrade)|scoop\s+(install|uninstall|update))\b' -Context 1,0 | Where-Object { $_.Line -notmatch 'libscript-allow-raw-pkg' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-pkg') }
                 if ($rawPkgPs1) {
                     Log-Violation -File $FilePath -Rule "RAW_PACKAGE_MANAGER" -Details "Raw winget/choco/scoop call in PowerShell script (delegate to pkg_mgr.ps1)."
+                }
+            }
+            if ($normPath -notmatch '_lib/(_common/(service|service_install)\.ps1|init-systems/)') {
+                $rawDaemonPs1 = Select-String -Path $FilePath -Pattern '^\s*[^#]*\b(Start-Service|Stop-Service|Restart-Service|Set-Service|New-Service|sc\.exe\s+(start|stop|create|delete|config|query|description)|net\s+(start|stop))\b' -Context 1,0 | Where-Object { $_.Line -notmatch 'libscript-allow-raw-daemon' -and (($_.Context.PreContext -join '') -notmatch 'libscript-allow-raw-daemon') }
+                if ($rawDaemonPs1) {
+                    Log-Violation -File $FilePath -Rule "RAW_DAEMON_MANAGER" -Details "Raw Windows service cmdlet or sc.exe invocation found (delegate to service.ps1 or service_install.ps1)."
                 }
             }
         }
@@ -438,11 +470,13 @@ if (-not $targetFiles) {
 
 foreach ($target in $targetFiles) {
     if ($target) {
-        $candOrig = Join-Path $origPwd $target
-        if (Test-Path $candOrig) {
-            Audit-File -FilePath $candOrig
-        } elseif (Test-Path $target) {
+        if (Test-Path $target) {
             Audit-File -FilePath $target
+        } else {
+            $candOrig = Join-Path $origPwd $target
+            if (Test-Path $candOrig) {
+                Audit-File -FilePath $candOrig
+            }
         }
     }
 }

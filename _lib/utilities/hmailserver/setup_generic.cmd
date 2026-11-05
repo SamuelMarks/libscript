@@ -55,7 +55,12 @@ if "%HMAILSERVER_INSTALL_DIR%"=="" set "HMAILSERVER_INSTALL_DIR=%ProgramFiles(x8
 if "%ACTION%"=="install" (
     if exist "!HMAILSERVER_INSTALL_DIR!\Bin\hMailServer.exe" (
         echo [INFO] hMailServer is already installed at !HMAILSERVER_INSTALL_DIR!.
-        sc query hMailServer >nul 2>&1 || sc start hMailServer >nul 2>&1
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active hMailServer >nul 2>&1
+        if errorlevel 1 (
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start hMailServer >nul 2>&1
+        )
         exit /b 0
     )
     where choco >nul 2>&1
@@ -67,7 +72,8 @@ if "%ACTION%"=="install" (
     echo [INFO] hMailServer configuration ready.
     exit /b 0
 ) else if "%ACTION%"=="test" (
-    sc query hMailServer >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active hMailServer >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] hMailServer service is registered and active.
         exit /b 0

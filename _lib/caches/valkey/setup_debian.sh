@@ -36,7 +36,7 @@ PREVIOUS_WD="$(pwd)"
 _DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/git-servers/utils/git.sh"; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/_common/service.sh" "_lib/git-servers/utils/git.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -65,34 +65,19 @@ _valkey_debian_is_active() {
 }
 
 # ## _valkey_debian_ensure_started
-# Ensures an installed Valkey or Redis service is enabled and running under systemd or init.d.
+# Ensures an installed Valkey or Redis service is enabled and running via libscript_service.
 _valkey_debian_ensure_started() {
   if _valkey_debian_is_active; then
     return 0
   fi
-  if [ "$(ps -q 1 -o comm= 2>/dev/null || true)" = 'systemd' ] && command -v systemctl >/dev/null 2>&1; then
-    for _vk_svc in "${LIBSCRIPT_SERVICE_NAME:-}" valkey-server valkey redis-server redis; do
-      [ -n "$_vk_svc" ] || continue
-      if [ -f "/lib/systemd/system/${_vk_svc}.service" ] || [ -f "/etc/systemd/system/${_vk_svc}.service" ]; then
-        priv systemctl enable "$_vk_svc" >/dev/null 2>&1 || true
-        priv systemctl start "$_vk_svc" >/dev/null 2>&1 || true
-        if _valkey_debian_is_active; then
-          return 0
-        fi
-      fi
-    done
-  fi
-  if command -v service >/dev/null 2>&1; then
-    for _vk_svc in "${LIBSCRIPT_SERVICE_NAME:-}" valkey-server valkey redis-server redis; do
-      [ -n "$_vk_svc" ] || continue
-      if [ -x "/etc/init.d/${_vk_svc}" ]; then
-        priv service "$_vk_svc" start >/dev/null 2>&1 || true
-        if _valkey_debian_is_active; then
-          return 0
-        fi
-      fi
-    done
-  fi
+  for _vk_svc in "${LIBSCRIPT_SERVICE_NAME:-}" valkey-server valkey redis-server redis; do
+    [ -n "$_vk_svc" ] || continue
+    libscript_service enable "$_vk_svc" >/dev/null 2>&1 || true
+    libscript_service start "$_vk_svc" >/dev/null 2>&1 || true
+    if _valkey_debian_is_active; then
+      return 0
+    fi
+  done
   return 0
 }
 
@@ -171,9 +156,11 @@ if [ "${NOOP}" -eq 0 ]; then
   fi
   priv install -m 0644 -o 'root' -- "${VALKEY_CONF}" /etc/valkey.conf
   rm -f -- "${VALKEY_CONF}"
-  priv install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/systemd/'"${SERVICE_NAME}"'.service' /etc/systemd/system/
-  priv systemctl daemon-reload
-  priv systemctl reload-or-restart -- "${SERVICE_NAME}"
+  if [ -d /etc/systemd/system ]; then
+    priv install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/systemd/'"${SERVICE_NAME}"'.service' /etc/systemd/system/ 2>/dev/null || true
+  fi
+  libscript_service daemon-reload "${SERVICE_NAME}" || true
+  libscript_service reload-or-restart "${SERVICE_NAME}" || true
 fi
 
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"

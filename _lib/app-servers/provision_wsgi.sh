@@ -75,55 +75,35 @@ if [ -f "$req_file" ]; then
   "$venv_dir/bin/pip" install -q -r "$req_file"
 fi
 
-# 5. Multi-daemon processing & Systemd Registration
-# This extracts services from packaging.json and generates systemd unit files.
+# 5. Multi-daemon processing & Cross-Init Service Registration
+# This extracts services from packaging.json and registers them via libscript_install_service.
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+fi
+
 if command -v jq >/dev/null 2>&1; then
   jq -c '.services[]?' "$packaging_path" | while read -r svc; do
     svc_id=$(printf '%s' "$svc" | jq -r '.id')
     svc_type=$(printf '%s' "$svc" | jq -r '.type')
-    unit_file="/etc/systemd/system/${svc_id}.service"
-    
-    if [ ! -f "$unit_file" ] && [ -w "/etc/systemd/system" ]; then
-      case "$svc_type" in
-        wsgi|asgi)
-          port=$(printf '%s' "$svc" | jq -r '.port_binding')
-          entrypoint=$(printf '%s' "$svc" | jq -r '.wsgi_entrypoint')
-          cat <<EOF > "$unit_file"
-[Unit]
-Description=$svc_id
-After=network.target
-[Service]
-WorkingDirectory=$app_dir
-ExecStart=$venv_dir/bin/gunicorn -b 127.0.0.1:$port $entrypoint
-EnvironmentFile=$env_file
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-          systemctl daemon-reload
-          systemctl enable "$svc_id"
-          systemctl start "$svc_id" || true
-          ;;
-        worker|beat)
-          worker_class=$(printf '%s' "$svc" | jq -r '.worker_class')
-          cat <<EOF > "$unit_file"
-[Unit]
-Description=$svc_id worker
-After=network.target
-[Service]
-WorkingDirectory=$app_dir
-ExecStart=$venv_dir/bin/celery -A $worker_class worker
-EnvironmentFile=$env_file
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-          systemctl daemon-reload
-          systemctl enable "$svc_id"
-          systemctl start "$svc_id" || true
-          ;;
-      esac
-    fi
+    case "$svc_type" in
+      wsgi|asgi)
+        port=$(printf '%s' "$svc" | jq -r '.port_binding')
+        entrypoint=$(printf '%s' "$svc" | jq -r '.wsgi_entrypoint')
+        libscript_install_service "$svc_id" "$venv_dir/bin/gunicorn -b 127.0.0.1:$port $entrypoint" "$app_dir" "$svc_id" "" "" "$env_file"
+        libscript_service enable "$svc_id" || true
+        libscript_service start "$svc_id" || true
+        ;;
+      worker|beat)
+        worker_class=$(printf '%s' "$svc" | jq -r '.worker_class')
+        libscript_install_service "$svc_id" "$venv_dir/bin/celery -A $worker_class worker" "$app_dir" "$svc_id worker" "" "" "$env_file"
+        libscript_service enable "$svc_id" || true
+        libscript_service start "$svc_id" || true
+        ;;
+    esac
   done
 fi
 

@@ -98,7 +98,7 @@ if exist "%REQ_FILE%" (
     "%VENV_DIR%\Scripts\pip.exe" install -q -r "%REQ_FILE%"
 )
 
-:: 5. Multi-daemon processing & Windows Service Registration (using NSSM mock or sc.exe)
+:: 5. Multi-daemon processing & Cross-Init Service Registration (via _lib\_common\service_install.cmd)
 :: Note: True dynamic parsing requires PowerShell on Windows without jq.
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; if (Get-Command 'jq' -ErrorAction SilentlyContinue) { $svcs = (jq -c '.services[]?' '%PACKAGING_PATH%'); foreach ($svc in $svcs) { $id = ($svc | jq -r '.id'); $type = ($svc | jq -r '.type'); if ($type -eq 'wsgi') { Write-Host 'Registering WSGI Service:' $id } } }"
 

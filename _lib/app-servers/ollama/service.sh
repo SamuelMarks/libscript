@@ -59,7 +59,12 @@ resolve_ollama_models_dir() {
     esac
   fi
   if [ -z "$_rom_dir" ]; then
-    _rom_dir="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models"
+    _rom_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+    if [ -d "$_rom_mount" ]; then
+      _rom_dir="${_rom_mount}/ollama_models"
+    else
+      _rom_dir="${LIBSCRIPT_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/data}/ollama/models"
+    fi
   fi
   OLLAMA_MODELS="$_rom_dir"
   OLLAMA_MODELS_DIR="$_rom_dir"
@@ -67,22 +72,84 @@ resolve_ollama_models_dir() {
   printf '%s\n' "$_rom_dir"
 }
 
+# ## migrate_legacy_ollama_models
+# Migrates allowed lightweight CPU models from /usr/share/ollama/.ollama/models into the target OLLAMA_MODELS directory and purges oversized 26B/27B blobs on GPU-less nodes.
+migrate_legacy_ollama_models() {
+  _mlom_dest="$1"
+  [ -n "$_mlom_dest" ] || return 0
+  _mlom_legacy='/usr/share/ollama/.ollama/models'
+  if [ -d "$_mlom_legacy" ] && [ "$_mlom_legacy" != "$_mlom_dest" ]; then
+    if [ ! -d "${_mlom_dest}/manifests" ] || [ -z "$(ls -A "${_mlom_dest}/manifests" 2>/dev/null || true)" ]; then
+      if command -v nvidia-smi >/dev/null 2>&1; then
+        log_info "[OLLAMA] [MIGRATE] Copying existing models from ${_mlom_legacy} to ${_mlom_dest}..."
+        for _mlom_sub in blobs manifests; do
+          if [ -d "${_mlom_legacy}/${_mlom_sub}" ]; then
+            priv mkdir -p "${_mlom_dest}/${_mlom_sub}"
+            if command -v rsync >/dev/null 2>&1; then
+              priv rsync -a "${_mlom_legacy}/${_mlom_sub}/" "${_mlom_dest}/${_mlom_sub}/" 2>/dev/null || true
+            else
+              priv cp -rn "${_mlom_legacy}/${_mlom_sub}/." "${_mlom_dest}/${_mlom_sub}/" 2>/dev/null || priv cp -r "${_mlom_legacy}/${_mlom_sub}/." "${_mlom_dest}/${_mlom_sub}/" 2>/dev/null || true
+            fi
+          fi
+        done
+      else
+        log_info "[OLLAMA] [MIGRATE] GPU-less node detected; migrating only lightweight CPU models (gemma:2b, llama3.2:1b, phi4-mini) from ${_mlom_legacy}..."
+        for _mlom_allow in "gemma/2b" "llama3.2/1b" "phi4-mini/latest" "phi4-mini"; do
+          _mlom_mpath="${_mlom_legacy}/manifests/registry.ollama.ai/library/${_mlom_allow}"
+          if [ -f "$_mlom_mpath" ]; then
+            _mlom_dpath="${_mlom_dest}/manifests/registry.ollama.ai/library/${_mlom_allow}"
+            priv mkdir -p "$(dirname "$_mlom_dpath")" "${_mlom_dest}/blobs"
+            priv cp -f "$_mlom_mpath" "$_mlom_dpath" 2>/dev/null || true
+            for _mlom_digest in $(grep -oE 'sha256:[0-9a-f]{64}' "$_mlom_mpath" 2>/dev/null | tr ':' '-' || true); do
+              if [ -f "${_mlom_legacy}/blobs/${_mlom_digest}" ] && [ ! -f "${_mlom_dest}/blobs/${_mlom_digest}" ]; then
+                priv cp -f "${_mlom_legacy}/blobs/${_mlom_digest}" "${_mlom_dest}/blobs/${_mlom_digest}" 2>/dev/null || true
+              fi
+            done
+          fi
+        done
+      fi
+    fi
+  fi
+  if ! command -v nvidia-smi >/dev/null 2>&1 && [ -d "$_mlom_dest" ]; then
+    for _mlom_heavy in "26b" "27b" "32b" "70b"; do
+      find "${_mlom_dest}/manifests" -type f -name "*${_mlom_heavy}*" -exec rm -f {} + 2>/dev/null || true
+    done
+    if [ -d "${_mlom_dest}/blobs" ]; then
+      find "${_mlom_dest}/blobs" -type f -size +10G -exec rm -f {} + 2>/dev/null || true
+    fi
+  fi
+}
+
 # ## configure_ollama_models_dir
 # Idempotently ensures the OLLAMA_MODELS directory exists with 0755 permissions and service-user ownership, and applies the service override.
 configure_ollama_models_dir() {
   _com_dir="${1:-$(resolve_ollama_models_dir)}"
   [ -n "$_com_dir" ] || return 0
-  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${_com_dir:-${DATA_DISK_MOUNT:-/mnt/data}/ollama_models}}"
+  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${_com_dir:-${DATA_MOUNT_DIR:-/mnt/data}/ollama_models}}"
   export OLLAMA_MODELS
-  mkdir -p "$_com_dir" 2>/dev/null || priv mkdir -p "$_com_dir" 2>/dev/null || true
-  chmod 0755 "$_com_dir" 2>/dev/null || priv chmod 0755 "$_com_dir" 2>/dev/null || true
-  if id ollama >/dev/null 2>&1; then
-    chown -R ollama:ollama "$_com_dir" 2>/dev/null || priv chown -R ollama:ollama "$_com_dir" 2>/dev/null || true
-  elif [ -n "${SERVICE_USER:-}${REMOTE_USER:-}" ]; then
-    _com_usr="${SERVICE_USER:-${REMOTE_USER:-}}"
-    chown -R "${_com_usr}:${REMOTE_GROUP:-$_com_usr}" "$_com_dir" 2>/dev/null || priv chown -R "${_com_usr}:${REMOTE_GROUP:-$_com_usr}" "$_com_dir" 2>/dev/null || true
+  mkdir -p "${OLLAMA_MODELS}" 2>/dev/null || priv mkdir -p "${OLLAMA_MODELS}" 2>/dev/null || true
+  chmod 0755 "${OLLAMA_MODELS}" 2>/dev/null || priv chmod 0755 "${OLLAMA_MODELS}" 2>/dev/null || true
+  migrate_legacy_ollama_models "${OLLAMA_MODELS}"
+  SERVICE_USER="${SERVICE_USER:-${REMOTE_USER:-root}}"
+  SERVICE_GROUP="${SERVICE_GROUP:-${REMOTE_GROUP:-$SERVICE_USER}}"
+  chown -R ollama:ollama "${OLLAMA_MODELS}" 2>/dev/null || priv chown -R ollama:ollama "${OLLAMA_MODELS}" 2>/dev/null || chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${OLLAMA_MODELS}" 2>/dev/null || priv chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${OLLAMA_MODELS}" 2>/dev/null || true
+
+  _com_host="${OLLAMA_HOST:-127.0.0.1:11434}"
+  case "$_com_host" in
+    http://*) _com_host="${_com_host#http://}" ;;
+    https://*) _com_host="${_com_host#https://}" ;;
+  esac
+  _com_par="${OLLAMA_NUM_PARALLEL:-1}"
+  _com_max="${OLLAMA_MAX_LOADED_MODELS:-1}"
+
+  libscript_service_override_env "$_ol_svc" \
+    "OLLAMA_MODELS=${OLLAMA_MODELS}" \
+    "OLLAMA_HOST=${_com_host}" \
+    "OLLAMA_NUM_PARALLEL=${_com_par}" \
+    "OLLAMA_MAX_LOADED_MODELS=${_com_max}" || true
+  if libscript_service is-active "$_ol_svc" >/dev/null 2>&1; then
+    libscript_service restart "$_ol_svc" 2>/dev/null || true
   fi
-  libscript_service_override_env "$_ol_svc" "OLLAMA_MODELS=${_com_dir}" || true
 }
 
 # ## wait_for_ollama_ready

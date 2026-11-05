@@ -174,6 +174,26 @@ audit_component_dir() {
       done
       ;;
   esac
+
+  # 7. Ban raw daemon/init manager calls in component recipes (must delegate to _lib/_common/service.* or service_install.*)
+  case "$_rel_dir" in
+    _lib/init-systems/*)
+      ;;
+    *)
+      for _sh_file in "$_comp_dir"/setup*.sh "$_comp_dir"/service*.sh "$_comp_dir"/uninstall*.sh "$_comp_dir"/test*.sh; do
+        [ -f "$_sh_file" ] || continue
+        if grep -Eq '^[ 	]*[^#]*(priv[ 	]+|sudo[ 	]+)?(systemctl[ 	]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[ 	]+(load|unload|start|stop)|rc-service[ 	]+|rc-update[ 	]+(add|del)|svcadm[ 	]+(enable|disable|restart|refresh)|svccfg[ 	]+(import|delete)|sc\.exe[ 	]+(start|stop|create|delete|config|query)|net[ 	]+(start|stop)[ 	]+|service[ 	]+[A-Za-z0-9_$"'\''-]+[ 	]+(start|stop|restart|reload|status)|update-rc\.d[ 	]+|chkconfig[ 	]+|s6-svc[ 	]+|dinitctl[ 	]+|sysrc[ 	]+[A-Za-z0-9_$"'\''-]*_enable)' "$_sh_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_sh_file")" "RAW_DAEMON_MANAGER" "Direct init/daemon manager call in $(basename "$_sh_file"); delegate to _lib/_common/service.sh or service_install.sh."
+        fi
+      done
+      for _cmd_file in "$_comp_dir"/setup*.cmd "$_comp_dir"/service*.cmd "$_comp_dir"/uninstall*.cmd "$_comp_dir"/test*.cmd; do
+        [ -f "$_cmd_file" ] || continue
+        if grep -Eiq '^[ 	]*[^:]*(\bsc\.exe[ 	]+(start|stop|create|delete|config|query)|\bsc[ 	]+(start|stop|create|delete|config|query)|\bnet[ 	]+(start|stop)[ 	]+)' "$_cmd_file"; then
+          log_vm_violation "${_rel_dir}/$(basename "$_cmd_file")" "RAW_DAEMON_MANAGER" "Direct sc.exe/sc/net service call in $(basename "$_cmd_file"); delegate to _lib\\_common\\service.cmd or service_install.cmd."
+        fi
+      done
+      ;;
+  esac
 }
 
 # ## audit_no_adhoc_installers

@@ -213,7 +213,7 @@ if not errorlevel 1 (
     if not errorlevel 1 (
         vagrant ssh -c "svcs -a 2>/dev/null | grep -i openedx || true"
     ) else (
-        vagrant ssh -c "sudo systemctl is-active openedx-lms 2>/dev/null || sudo rc-service openedx-lms status 2>/dev/null || true"
+        vagrant ssh -c "sudo /opt/repos/libscript/_lib/_common/service.sh is-active openedx-lms 2>/dev/null || true"
     )
 )
 echo [PASS] Smoke tests passed.

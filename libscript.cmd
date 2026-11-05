@@ -322,6 +322,8 @@ if /i "!action_pkg_norm!"=="stacks/networking/openvpn" set "action_pkg_norm=_lib
 if /i "!action_pkg_norm!"=="stacks/scaffolds/serve-actix-diesel-auth-scaffold" set "action_pkg_norm=_lib/web-apps/serve-actix-diesel-auth-scaffold"
 if /i "!action_pkg_norm!"=="stacks/task-queues/celery" set "action_pkg_norm=_lib/web-apps/celery"
 if /i "!action_pkg_norm!"=="stacks/virtualization/bento-builder" set "action_pkg_norm=_lib/virtualization/bento-builder"
+if /i "!action_pkg_norm!"=="ai-tools/ollama" set "action_pkg_norm=_lib/app-servers/ollama"
+if /i "!action_pkg_norm!"=="_lib/ai-tools/ollama" set "action_pkg_norm=_lib/app-servers/ollama"
 
 set "action_pkg=!action_pkg_norm:/=\!"
 if /i "!action_pkg!"=="cloud" (

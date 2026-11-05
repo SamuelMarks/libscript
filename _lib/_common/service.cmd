@@ -56,6 +56,14 @@ if "%_ACTION:~0,1%"==":" (
     set "_SERVICE=%~3"
 )
 
+if /i "%_ACTION%"=="up" set "_ACTION=start"
+if /i "%_ACTION%"=="down" set "_ACTION=stop"
+if /i "%_ACTION%"=="query" set "_ACTION=status"
+if /i "%_ACTION%"=="reload-or-restart" set "_ACTION=reload"
+if /i "%_ACTION%"=="remove" set "_ACTION=uninstall"
+if /i "%_ACTION%"=="uninstall-service" set "_ACTION=uninstall"
+if /i "%_ACTION%"=="daemon-reload" if "%_SERVICE%"=="" set "_SERVICE=system"
+
 if "%_ACTION%"=="" (
     echo [ERROR] Usage: service.cmd ^<action^> ^<service_name^> >&2
     exit /b 1
@@ -64,12 +72,6 @@ if "%_SERVICE%"=="" (
     echo [ERROR] Usage: service.cmd ^<action^> ^<service_name^> >&2
     exit /b 1
 )
-
-if /i "%_ACTION%"=="up" set "_ACTION=start"
-if /i "%_ACTION%"=="down" set "_ACTION=stop"
-if /i "%_ACTION%"=="query" set "_ACTION=status"
-if /i "%_ACTION%"=="remove" set "_ACTION=uninstall"
-if /i "%_ACTION%"=="uninstall-service" set "_ACTION=uninstall"
 
 call :libscript_service "%_ACTION%" "%_SERVICE%"
 exit /b %ERRORLEVEL%
@@ -119,6 +121,19 @@ if /i "%_SVC_ACT%"=="restart" (
     )
     goto :fallback_service
 )
+if /i "%_SVC_ACT%"=="reload" (
+    sc.exe query "%_SVC_NAME%" >nul 2>&1
+    if not errorlevel 1 (
+        sc.exe stop "%_SVC_NAME%" >nul 2>&1
+        timeout /t 1 /nobreak >nul 2>&1
+        sc.exe start "%_SVC_NAME%"
+        exit /b !ERRORLEVEL!
+    )
+    goto :fallback_service
+)
+if /i "%_SVC_ACT%"=="daemon-reload" (
+    exit /b 0
+)
 if /i "%_SVC_ACT%"=="status" (
     sc.exe query "%_SVC_NAME%" >nul 2>&1
     if not errorlevel 1 (
@@ -126,6 +141,12 @@ if /i "%_SVC_ACT%"=="status" (
         exit /b !ERRORLEVEL!
     )
     goto :fallback_service
+)
+if /i "%_SVC_ACT%"=="is-active" (
+    sc.exe query "%_SVC_NAME%" 2>nul | findstr /I /C:"RUNNING" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    if exist "!_PID_FILE!" exit /b 0
+    exit /b 1
 )
 if /i "%_SVC_ACT%"=="enable" (
     sc.exe config "%_SVC_NAME%" start= auto >nul 2>&1
@@ -181,6 +202,22 @@ if /i "%_SVC_ACT%"=="restart" (
         echo running > "!_PID_FILE!"
     )
     exit /b 0
+)
+if /i "%_SVC_ACT%"=="reload" (
+    taskkill /fi "WINDOWTITLE eq !_SVC_NAME!" /f >nul 2>&1
+    if exist "!_PID_FILE!" del /f /q "!_PID_FILE!" >nul 2>&1
+    if exist "!_RUN_FILE!" (
+        start "!_SVC_NAME!" /B cmd.exe /v:on /c "!_RUN_FILE!"
+        echo running > "!_PID_FILE!"
+    )
+    exit /b 0
+)
+if /i "%_SVC_ACT%"=="daemon-reload" (
+    exit /b 0
+)
+if /i "%_SVC_ACT%"=="is-active" (
+    if exist "!_PID_FILE!" exit /b 0
+    exit /b 1
 )
 if /i "%_SVC_ACT%"=="status" (
     if exist "!_PID_FILE!" (

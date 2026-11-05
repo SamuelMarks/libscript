@@ -50,9 +50,14 @@ ssh root@server << 'EOF'
   cp -f kube-scheduler.kubeconfig /var/lib/kubernetes/ || true
   mv -f kube-scheduler.yaml /etc/kubernetes/config/ || true
   mkdir -p /etc/systemd/system/; mv -f kube-scheduler.service /etc/systemd/system/ || true
-  systemctl daemon-reload
-  systemctl enable kube-apiserver kube-controller-manager kube-scheduler
-  systemctl start kube-apiserver kube-controller-manager kube-scheduler
+  if [ -f "$HOME/libscript/_lib/_common/service.sh" ]; then
+    SCRIPT_NAME="$HOME/libscript/_lib/_common/service.sh" . "$HOME/libscript/_lib/_common/service.sh"
+    libscript_service daemon-reload kube-apiserver || true
+    for _ksvc in kube-apiserver kube-controller-manager kube-scheduler; do
+      libscript_service enable "$_ksvc" || true
+      libscript_service start "$_ksvc" || true
+    done
+  fi
   sleep 10
   kubectl cluster-info --kubeconfig admin.kubeconfig || true
   kubectl apply -f kube-apiserver-to-kubelet.yaml --kubeconfig admin.kubeconfig || true

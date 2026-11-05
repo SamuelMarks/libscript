@@ -34,7 +34,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
+for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh' '_lib/_common/service.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -61,7 +61,7 @@ if [ -f "/etc/init.d/${LIBSCRIPT_SERVICE_NAME:-postgresql}" ]; then
   EXISTED=1
 fi
 if [ "${EXISTED}" -ne 1 ]; then
-  priv rc-update add "${LIBSCRIPT_SERVICE_NAME:-postgresql}" || true
+  libscript_service enable "${LIBSCRIPT_SERVICE_NAME:-postgresql}" || true
 fi
 
 STDOUT="$(mktemp)"
@@ -70,7 +70,7 @@ trap 'rm -f -- "${STDOUT}" "${STDERR}"' EXIT HUP INT QUIT TERM
 
 priv /etc/init.d/postgresql setup 2>/dev/null || true
 
-if ! priv rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start >"${STDOUT}" 2>"${STDERR}"; then
+if ! libscript_service start "${LIBSCRIPT_SERVICE_NAME:-postgresql}" >"${STDOUT}" 2>"${STDERR}"; then
   if [ ! "${STDERR}" = ' * WARNING: postgresql is already starting' ]; then
     >&2 printf '%s\n' "${STDERR}"
     printf '%s\n' "${STDOUT}"

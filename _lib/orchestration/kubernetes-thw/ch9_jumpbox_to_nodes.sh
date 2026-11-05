@@ -76,13 +76,14 @@ ssh "root@${HOST}" << 'EOF'
   if swapon --show 2>/dev/null | grep -q 'NAME' || free | grep -qi swap; then
     swapoff -a
   fi
-  if command -v rc-update >/dev/null 2>&1; then
-    rc-update add cgroups boot || true
-    rc-service cgroups start || true
-    if ! mount | grep -q cgroup; then
-        mkdir -p /sys/fs/cgroup
-        mount -t cgroup2 none /sys/fs/cgroup || mount -t tmpfs cgroup_root /sys/fs/cgroup
-    fi
+  if [ -f "$HOME/libscript/_lib/_common/service.sh" ]; then
+    SCRIPT_NAME="$HOME/libscript/_lib/_common/service.sh" . "$HOME/libscript/_lib/_common/service.sh"
+    libscript_service enable cgroups 2>/dev/null || true
+    libscript_service start cgroups 2>/dev/null || true
+  fi
+  if [ -d /etc/init.d ] && ! mount | grep -q cgroup; then
+    mkdir -p /sys/fs/cgroup
+    mount -t cgroup2 none /sys/fs/cgroup || mount -t tmpfs cgroup_root /sys/fs/cgroup
   fi
   mkdir -p /etc/cni/net.d /opt/cni/bin /var/lib/kubelet /var/lib/kube-proxy /var/lib/kubernetes /var/run/kubernetes
   cp -f crictl kube-proxy kubelet runc /usr/local/bin/ || true
@@ -109,9 +110,13 @@ ssh "root@${HOST}" << 'EOF'
   cp -f kubelet.service /etc/systemd/system/ || true
   cp -f kube-proxy-config.yaml /var/lib/kube-proxy/ || true
   cp -f kube-proxy.service /etc/systemd/system/ || true
-  systemctl daemon-reload
-  systemctl enable containerd kubelet kube-proxy
-  systemctl start containerd kubelet kube-proxy
+  if [ -f "$HOME/libscript/_lib/_common/service.sh" ]; then
+    libscript_service daemon-reload containerd || true
+    for _ksvc in containerd kubelet kube-proxy; do
+      libscript_service enable "$_ksvc" || true
+      libscript_service start "$_ksvc" || true
+    done
+  fi
 EOF
 done
 

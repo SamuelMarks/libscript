@@ -55,7 +55,7 @@ libscript_detect_init_system() {
       printf '%s\n' 'fallback'
       return 0
       ;;
-    systemd|openrc|sysvinit|bsd_rc|launchd|smf|runit|s6|sc)
+    systemd|openrc|sysvinit|bsd_rc|launchd|smf|runit|s6|dinit|sc)
       printf '%s\n' "$_req_init"
       return 0
       ;;
@@ -72,6 +72,8 @@ libscript_detect_init_system() {
     printf '%s\n' 'bsd_rc'
   elif [ "$_uname_l" = "darwin" ] && command -v launchctl >/dev/null 2>&1 && [ "${LIBSCRIPT_USE_LAUNCHD:-0}" = "1" ]; then
     printf '%s\n' 'launchd'
+  elif command -v dinitctl >/dev/null 2>&1 && [ -d /etc/dinit.d ]; then
+    printf '%s\n' 'dinit'
   elif command -v sv >/dev/null 2>&1 && [ -d /etc/service ]; then
     printf '%s\n' 'runit'
   elif command -v s6-svc >/dev/null 2>&1 && { [ -d /run/service ] || [ -d /etc/s6/sv ]; }; then
@@ -131,6 +133,17 @@ libscript_write_service_runner() {
     if [ -f "${_wsr_manifest_dir}/.env.libscript" ]; then
       printf 'if [ -f "%s/.env.libscript" ]; then set -a; . "%s/.env.libscript" 2>/dev/null || true; set +a; fi\n' "$_wsr_manifest_dir" "$_wsr_manifest_dir"
     fi
+    case "$_wsr_name" in
+      ollama|libscript_ollama) ;;
+      *)
+        case "$_wsr_env" in
+          *OLLAMA_MODELS=*) ;;
+          *)
+            printf 'if [ -n "${OLLAMA_MODEL_LIST:-}" ]; then export OLLAMA_MODELS="${OLLAMA_MODEL_LIST}"; elif [ "${OLLAMA_MODELS:-}" = "%s/ollama_models" ]; then unset OLLAMA_MODELS || true; fi\n' "${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+            ;;
+        esac
+        ;;
+    esac
     printf 'if [ -n "${SERVICE_PATH:-}" ]; then export PATH="${SERVICE_PATH}:${PATH}"; fi\n'
     printf 'if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then export PATH="${SERVICE_EXTRA_PATH}:${PATH}"; fi\n'
     if [ -n "$_wsr_env_files" ]; then
@@ -523,6 +536,21 @@ EOF_S6
       priv install -m 0755 -o 'root' -- "$_tmp_file" "${_s6_base}/${_service_name}/run"
       rm -f "$_tmp_file"
       ;;
+    dinit)
+      log_info "Installing dinit service: $_service_name"
+      priv mkdir -p /etc/dinit.d
+      _tmp_file=$(mktemp)
+      cat > "$_tmp_file" <<EOF_DINIT
+type = process
+command = /bin/sh ${_runner_script}
+working-dir = ${_working_dir}
+restart = true
+logfile = /var/log/${_service_name}.log
+EOF_DINIT
+      priv install -m 0644 -o 'root' -- "$_tmp_file" "/etc/dinit.d/${_service_name}"
+      priv dinitctl enable "$_service_name" 2>/dev/null || true
+      rm -f "$_tmp_file"
+      ;;
     sysvinit)
       log_info "Installing SysVinit service: $_service_name"
       _tmp_file=$(mktemp)
@@ -594,6 +622,37 @@ EOF_SYSV
       log_info "Registered fallback daemon runner for service: $_service_name (${_runner_script})"
       ;;
   esac
+
+  if [ -f "${_manifest_dir}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+    _si_ovr_lines=$(jq -r --arg svc "$_service_name" '(.service_overrides[$svc] // .infrastructure.service_overrides[$svc] // {}) | to_entries[]? | "\(.key)=\(.value)"' "${_manifest_dir}/libscript.json" 2>/dev/null || true)
+    if [ -n "$_si_ovr_lines" ]; then
+      OIFS_SIO="$IFS"
+      IFS='
+'
+      # shellcheck disable=SC2086
+      set -- $_si_ovr_lines
+      IFS="$OIFS_SIO"
+      libscript_service_override_env "$_service_name" "$@"
+    fi
+  fi
+}
+
+# ## libscript_expand_override_value
+# Expands ${DATA_MOUNT_DIR}, ${DATA_DISK_MOUNT}, and ${LIBSCRIPT_DATA_DIR} placeholders inside a service override value.
+libscript_expand_override_value() {
+  _eov_val="${1:-}"
+  _eov_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+  _eov_data="${LIBSCRIPT_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/data}"
+  _eov_val=$(printf '%s\n' "$_eov_val" | sed \
+    -e "s|\${DATA_MOUNT_DIR:-/mnt/data}|${_eov_mount}|g" \
+    -e "s|\${DATA_MOUNT_DIR}|${_eov_mount}|g" \
+    -e "s|\$DATA_MOUNT_DIR|${_eov_mount}|g" \
+    -e "s|\${DATA_DISK_MOUNT:-/mnt/data}|${_eov_mount}|g" \
+    -e "s|\${DATA_DISK_MOUNT}|${_eov_mount}|g" \
+    -e "s|\$DATA_DISK_MOUNT|${_eov_mount}|g" \
+    -e "s|\${LIBSCRIPT_DATA_DIR}|${_eov_data}|g" \
+    -e "s|\$LIBSCRIPT_DATA_DIR|${_eov_data}|g")
+  printf '%s\n' "$_eov_val"
 }
 
 # ## libscript_service_override_env
@@ -612,8 +671,10 @@ libscript_service_override_env() {
   mkdir -p "$_ovr_fb_dir" 2>/dev/null || true
   if [ -w "$_ovr_fb_dir" ]; then
     touch "${_ovr_fb_dir}/service.env"
-    for _kv in "$@"; do
-      _k="${_kv%%=*}"
+    for _kv_raw in "$@"; do
+      _k="${_kv_raw%%=*}"
+      _v=$(libscript_expand_override_value "${_kv_raw#*=}")
+      _kv="${_k}=${_v}"
       grep -v "^export ${_k}=" "${_ovr_fb_dir}/service.env" > "${_ovr_fb_dir}/service.env.tmp" 2>/dev/null || true
       mv "${_ovr_fb_dir}/service.env.tmp" "${_ovr_fb_dir}/service.env"
       printf 'export %s\n' "$_kv" >> "${_ovr_fb_dir}/service.env"
@@ -625,8 +686,10 @@ libscript_service_override_env() {
     if [ -f "/etc/libscript/${_ovr_service}/service.env" ]; then
       cat "/etc/libscript/${_ovr_service}/service.env" > "$_tmp_gen" || true
     fi
-    for _kv in "$@"; do
-      _k="${_kv%%=*}"
+    for _kv_raw in "$@"; do
+      _k="${_kv_raw%%=*}"
+      _v=$(libscript_expand_override_value "${_kv_raw#*=}")
+      _kv="${_k}=${_v}"
       grep -v "^export ${_k}=" "$_tmp_gen" > "${_tmp_gen}.new" 2>/dev/null || true
       mv "${_tmp_gen}.new" "$_tmp_gen"
       printf 'export %s\n' "$_kv" >> "$_tmp_gen"
@@ -644,18 +707,32 @@ libscript_service_override_env() {
     _tmp_ovr=$(mktemp)
     if [ -f "${_ovr_dir}/override.conf" ]; then
       cat "${_ovr_dir}/override.conf" > "$_tmp_ovr"
+    elif [ -f "${_ovr_dir}/libscript-override.conf" ]; then
+      cat "${_ovr_dir}/libscript-override.conf" > "$_tmp_ovr"
     else
       printf '[Service]\n' > "$_tmp_ovr"
     fi
-    for _kv in "$@"; do
-      _k="${_kv%%=*}"
+    for _kv_raw in "$@"; do
+      _k="${_kv_raw%%=*}"
+      _v=$(libscript_expand_override_value "${_kv_raw#*=}")
+      _kv="${_k}=${_v}"
       grep -v "^Environment=\"${_k}=" "$_tmp_ovr" > "${_tmp_ovr}.new" 2>/dev/null || true
       mv "${_tmp_ovr}.new" "$_tmp_ovr"
       printf 'Environment="%s"\n' "$_kv" >> "$_tmp_ovr"
     done
-    priv install -m 0644 -- "$_tmp_ovr" "${_ovr_dir}/override.conf"
+    _ovr_changed=0
+    if [ ! -f "${_ovr_dir}/override.conf" ] || ! cmp -s "$_tmp_ovr" "${_ovr_dir}/override.conf"; then
+      priv install -m 0644 -- "$_tmp_ovr" "${_ovr_dir}/override.conf"
+      _ovr_changed=1
+    fi
+    if [ ! -f "${_ovr_dir}/libscript-override.conf" ] || ! cmp -s "$_tmp_ovr" "${_ovr_dir}/libscript-override.conf"; then
+      priv install -m 0644 -- "$_tmp_ovr" "${_ovr_dir}/libscript-override.conf"
+      _ovr_changed=1
+    fi
     rm -f "$_tmp_ovr"
-    priv systemctl daemon-reload 2>/dev/null || true
+    if [ "$_ovr_changed" -eq 1 ]; then
+      priv systemctl daemon-reload 2>/dev/null || true
+    fi
     log_info "[DAEMON] [OVERRIDE] Configured environment overrides for '${_ovr_service}' ($*) in ${_ovr_dir}/override.conf and reloaded init daemon."
     return 0
   fi
@@ -667,8 +744,10 @@ libscript_service_override_env() {
     if [ -f "/etc/conf.d/${_ovr_service}" ]; then
       cat "/etc/conf.d/${_ovr_service}" > "$_tmp_ovr" || true
     fi
-    for _kv in "$@"; do
-      _k="${_kv%%=*}"
+    for _kv_raw in "$@"; do
+      _k="${_kv_raw%%=*}"
+      _v=$(libscript_expand_override_value "${_kv_raw#*=}")
+      _kv="${_k}=${_v}"
       grep -v "^export ${_k}=" "$_tmp_ovr" > "${_tmp_ovr}.new" 2>/dev/null || true
       mv "${_tmp_ovr}.new" "$_tmp_ovr"
       printf 'export %s\n' "$_kv" >> "$_tmp_ovr"
@@ -685,8 +764,10 @@ libscript_service_override_env() {
     if [ -f "/etc/rc.conf.d/${_ovr_rc_name}" ]; then
       cat "/etc/rc.conf.d/${_ovr_rc_name}" > "$_tmp_ovr" || true
     fi
-    for _kv in "$@"; do
-      _k="${_kv%%=*}"
+    for _kv_raw in "$@"; do
+      _k="${_kv_raw%%=*}"
+      _v=$(libscript_expand_override_value "${_kv_raw#*=}")
+      _kv="${_k}=${_v}"
       grep -v "^export ${_k}=" "$_tmp_ovr" > "${_tmp_ovr}.new" 2>/dev/null || true
       mv "${_tmp_ovr}.new" "$_tmp_ovr"
       printf 'export %s\n' "$_kv" >> "$_tmp_ovr"
@@ -698,9 +779,9 @@ libscript_service_override_env() {
 
   # 5. macOS launchd EnvironmentVariables
   if [ "$_init_sys" = "launchd" ] || { [ "${UNAME_LOWER:-}" = "darwin" ] && command -v launchctl >/dev/null 2>&1; }; then
-    for _kv in "$@"; do
-      _k="${_kv%%=*}"
-      _v="${_kv#*=}"
+    for _kv_raw in "$@"; do
+      _k="${_kv_raw%%=*}"
+      _v=$(libscript_expand_override_value "${_kv_raw#*=}")
       launchctl setenv "$_k" "$_v" 2>/dev/null || true
     done
     return 0
@@ -778,6 +859,13 @@ libscript_uninstall_service() {
       priv s6-svc -d "/run/service/${_service_name}" 2>/dev/null || true
     fi
     priv rm -rf "/run/service/${_service_name}" "/etc/s6/sv/${_service_name}"
+  elif [ -f "/etc/dinit.d/${_service_name}" ]; then
+    log_info "Uninstalling dinit service: $_service_name"
+    if command -v dinitctl >/dev/null 2>&1; then
+      priv dinitctl stop "$_service_name" 2>/dev/null || true
+      priv dinitctl disable "$_service_name" 2>/dev/null || true
+    fi
+    priv rm -f "/etc/dinit.d/${_service_name}"
   elif [ -x "/etc/init.d/${_service_name}" ]; then
     log_info "Uninstalling SysVinit service: $_service_name"
     priv service "$_service_name" stop 2>/dev/null || true

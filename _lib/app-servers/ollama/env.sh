@@ -34,15 +34,31 @@ unset SCRIPT_NAME || true
 
 export OLLAMA_INSTALL_METHOD="${OLLAMA_INSTALL_METHOD:-libscript_native}"
 OLLAMA_VERSION="${OLLAMA_VERSION:-latest}"
+export OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+export OLLAMA_NUM_PARALLEL="${OLLAMA_NUM_PARALLEL:-1}"
+export OLLAMA_MAX_LOADED_MODELS="${OLLAMA_MAX_LOADED_MODELS:-1}"
+_ol_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+if [ -d "$_ol_mount" ]; then
+  _ol_default_models="${_ol_mount}/ollama_models"
+else
+  _ol_default_models="${LIBSCRIPT_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/data}/ollama/models"
+fi
 if [ -z "${OLLAMA_MODEL_LIST:-}" ]; then
-  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${OLLAMA_MODELS:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}}"
+  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${OLLAMA_MODELS:-${_ol_default_models}}}"
   export OLLAMA_MODELS
   OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-$OLLAMA_MODELS}"
   export OLLAMA_MODELS_DIR
 else
-  OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
+  OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-${_ol_default_models}}"
   export OLLAMA_MODELS_DIR
+  case "${OLLAMA_MODELS:-}" in
+    ""|*/*|*\\*)
+      OLLAMA_MODELS="${OLLAMA_MODELS:-${OLLAMA_MODELS_DIR}}"
+      export OLLAMA_MODELS
+      ;;
+  esac
 fi
+unset _ol_mount _ol_default_models || true
 libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/${OLLAMA_VERSION}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

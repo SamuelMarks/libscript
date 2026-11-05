@@ -201,7 +201,7 @@ if not errorlevel 1 (
     vagrant ssh -c "sudo /opt/repos/libscript/_lib/caches/memcached/status.sh || true"
 
     echo [INFO] Checking Application Services (LMS ^& CMS)...
-    vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/cli.sh status || sudo systemctl status openedx-lms || sudo rc-service openedx-lms status || sudo service openedx-lms status || true"
+    vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/cli.sh status || sudo /opt/repos/libscript/_lib/_common/service.sh status openedx-lms || true"
 
     echo [INFO] Checking General System Health...
     vagrant ssh -c "df -h && free -m && uptime || true"
@@ -238,7 +238,7 @@ if not errorlevel 1 (
     vagrant ssh -c "sudo /opt/repos/libscript/_lib/caches/memcached/logs.sh || true"
 
     echo [INFO] Checking Application Services (LMS ^& CMS)...
-    vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/logs.sh || sudo journalctl -u openedx-lms --no-pager -n 50 || sudo tail -n 50 /var/log/openedx-lms.log || sudo tail -n 50 /var/svc/log/application-openedx-lms:default.log || true"
+    vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/logs.sh || sudo /opt/repos/libscript/_lib/_common/service.sh logs openedx-lms || sudo tail -n 50 /var/log/openedx-lms.log || sudo tail -n 50 /var/svc/log/application-openedx-lms:default.log || true"
 )
 
 echo [PASS] Log inspection completed.

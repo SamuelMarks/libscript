@@ -85,7 +85,8 @@ is_excluded_path() {
 # ## audit_single_file
 # Runs all static standard checks on an individual file.
 audit_single_file() {
-  file="$1"
+  file="${1#"${REPO_ROOT}/"}"
+  file="${file#./}"
 
   if [ ! -f "$file" ]; then
     return 0
@@ -104,7 +105,7 @@ audit_single_file() {
         in_heredoc = 0; delim = ""; shebang_count = 0; shebang_lines = "";
         has_this_file = 0; has_stack = 0; has_root_dir = 0; has_zsh_eval = 0;
         has_overview = 0; has_usage = 0; has_set_feu = 0;
-        mkdir_hits = ""; ln_hits = ""; eval_hits = ""; git_push_hits = "";
+        mkdir_hits = ""; ln_hits = ""; eval_hits = ""; git_push_hits = ""; raw_daemon_hits = "";
       }
       NR == 1 {
         first_line = $0
@@ -160,8 +161,14 @@ audit_single_file() {
         if ($0 ~ /^[[:space:]]*#/) {
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
+          allow_daemon_next = ($0 ~ /libscript-allow-raw-daemon/) ? 1 : 0
           if ($0 ~ /^#[[:space:]]*Performs the .* operation and updates component state\.$/) {
             placeholder_doc_hits = (placeholder_doc_hits ? placeholder_doc_hits "; " : "") NR ":" $0
+          }
+        }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_daemon_next && $0 !~ /libscript-allow-raw-daemon/) {
+          if ($0 ~ /(^|[[:space:];|&(])(priv[[:space:]]+|sudo[[:space:]]+)?(systemctl[[:space:]]+(start|stop|restart|reload|reload-or-restart|daemon-reload|enable|disable|status|is-active)|launchctl[[:space:]]+(load|unload|start|stop|kickstart|bootstrap|bootout)|rc-service[[:space:]]+|rc-update[[:space:]]+(add|del)|svcadm[[:space:]]+(enable|disable|restart|refresh)|svccfg[[:space:]]+(import|delete)|sc\.exe[[:space:]]+(start|stop|create|delete|config|query|description)|sc[[:space:]]+(start|stop|create|delete|config|query|description)|net[[:space:]]+(start|stop)[[:space:]]+|service[[:space:]]+[A-Za-z0-9_$"\x27-]+[[:space:]]+(start|stop|restart|reload|status|onestatus)|update-rc\.d[[:space:]]+|chkconfig[[:space:]]+|s6-svc[[:space:]]+|dinitctl[[:space:]]+|sysrc[[:space:]]+[A-Za-z0-9_$"\x27-]*_enable)([[:space:];|&)]|$)/) {
+            raw_daemon_hits = (raw_daemon_hits ? raw_daemon_hits "; " : "") NR ":" $0
           }
         }
         if ($0 !~ /^[[:space:]]*#/ && !allow_pkg_next && $0 !~ /libscript-allow-raw-pkg/) {
@@ -179,6 +186,7 @@ audit_single_file() {
         if ($0 !~ /^[[:space:]]*#/) {
           allow_pkg_next = 0
           allow_fetch_next = 0
+          allow_daemon_next = 0
           if ($0 ~ /\*\x27:"\$\{THIS_FILE\}":\x27\*/) {
             bad_stack_quote_hits = (bad_stack_quote_hits ? bad_stack_quote_hits "; " : "") NR ":" $0
           }
@@ -225,6 +233,7 @@ audit_single_file() {
         if (eval_hits != "") print "BAN_EVAL|Disallowed use of eval found: " eval_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (adhoc_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw package manager usage found (delegate to pkg_mgr.sh / libscript_depends): " adhoc_pkg_hits
+        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw init/daemon manager usage found (delegate to _lib/_common/service.sh or service_install.sh): " raw_daemon_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw curl/wget/aria2c network call found (delegate to libscript_download or libscript_fetch_stdout): " raw_fetch_hits
         if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
@@ -256,6 +265,12 @@ audit_single_file() {
           RAW_PACKAGE_MANAGER)
             case "$file" in
               *_lib/_common/pkg_mgr.sh|*_lib/_common/service.sh|*_lib/package-managers/*|*_lib/orchestration/distro/*|*tests/*|*devtools/ci/*|*devtools/audit/*|*docker*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_DAEMON_MANAGER)
+            case "$file" in
+              *_lib/_common/service.sh|*_lib/_common/service_install.sh|*_lib/_common/logs_service.sh|*_lib/_common/os_info.sh|*_lib/init-systems/*|*payloads/schedulers/*|*devtools/audit/*|*.tpl) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -304,7 +319,7 @@ audit_single_file() {
       log_failure "$file" "WINDOWS_PARITY" "Missing Windows batch equivalent file ('$cmd_equiv') for PowerShell script."
     fi
     ps1_violations=$(awk '
-      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; bare_cmd_hits = ""; allow_fetch_next = 0; allow_pkg_next = 0 }
+      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = ""; raw_fetch_hits = ""; raw_pkg_hits = ""; raw_daemon_hits = ""; bs_quote_hits = ""; static_arg_hits = ""; paren_kw_hits = ""; bare_cmd_hits = ""; allow_fetch_next = 0; allow_pkg_next = 0; allow_daemon_next = 0 }
       { sub(/\r$/, "", $0) }
       NR <= 30 {
         if ($0 ~ /## Overview/) has_overview = 1
@@ -314,6 +329,7 @@ audit_single_file() {
         if ($0 ~ /^[[:space:]]*#/) {
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
+          allow_daemon_next = ($0 ~ /libscript-allow-raw-daemon/) ? 1 : 0
           next
         }
         if (tolower($0) ~ /^[[:space:]]*(invoke-expression|iex)([[:space:]]|$)/) {
@@ -332,6 +348,11 @@ audit_single_file() {
             raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
           }
         }
+        if ($0 !~ /^[[:space:]]*#/ && !allow_daemon_next && $0 !~ /libscript-allow-raw-daemon/) {
+          if (tolower($0) ~ /(^|[[:space:];|&(])(start-service|stop-service|restart-service|set-service|new-service|sc\.exe[[:space:]]+(start|stop|create|delete|config|query|description)|net[[:space:]]+(start|stop))([[:space:]]|$)/) {
+            raw_daemon_hits = (raw_daemon_hits ? raw_daemon_hits "; " : "") NR ":" $0
+          }
+        }
         if ($0 !~ /^[[:space:]]*#/) {
           if ($0 ~ /\\"/ && FILENAME !~ /(audit_standards|doc_coverage|update_results|generate_html_docs)\.ps1$/) {
             bs_quote_hits = (bs_quote_hits ? bs_quote_hits "; " : "") NR ":" $0
@@ -348,6 +369,7 @@ audit_single_file() {
         }
         allow_fetch_next = 0
         allow_pkg_next = 0
+        allow_daemon_next = 0
       }
       END {
         if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
@@ -356,6 +378,7 @@ audit_single_file() {
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw Invoke-WebRequest/Invoke-RestMethod found (delegate to pkg_mgr.ps1): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop invocation found (delegate to pkg_mgr.ps1): " raw_pkg_hits
+        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw Windows service cmdlet or sc.exe invocation found (delegate to service.ps1 or service_install.ps1): " raw_daemon_hits
         if (bs_quote_hits != "") print "PS1_SYNTAX|C-style backslash quote escape found in PowerShell script (use backtick or double quotes): " bs_quote_hits
         if (static_arg_hits != "") print "PS1_SYNTAX|Unparenthesized static method call passed as command argument: " static_arg_hits
         if (paren_kw_hits != "") print "PS1_SYNTAX|Statement keyword inside (...) instead of $(...) subexpression: " paren_kw_hits
@@ -382,6 +405,12 @@ audit_single_file() {
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
+          RAW_DAEMON_MANAGER)
+            case "$file" in
+              *_lib/_common/service.ps1|*_lib/_common/service_install.ps1|*_lib/init-systems/*|*devtools/audit/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
           *)
             log_failure "$file" "$v_rule" "$v_msg"
             ;;
@@ -403,7 +432,7 @@ audit_single_file() {
         has_overview = 0; has_usage = 0; has_dup_stack = 0;
         mkdir_hits = ""; git_push_hits = ""; script_dir_hits = ""; chained_if_else_hits = "";
         bad_script_dir_strip = ""; tab_path_hits = ""; endlocal_delayed_hits = "";
-        raw_fetch_hits = ""; raw_pkg_hits = "";
+        raw_fetch_hits = ""; raw_pkg_hits = ""; raw_daemon_hits = "";
         in_endlocal = 0;
       }
       { sub(/\r$/, "", $0) }
@@ -433,6 +462,7 @@ audit_single_file() {
         if (tolower($0) ~ /^[[:space:]]*(::|rem[[:space:]])/) {
           allow_fetch_next = ($0 ~ /libscript-allow-raw-(fetch|curl)/) ? 1 : 0
           allow_pkg_next = ($0 ~ /libscript-allow-raw-pkg/) ? 1 : 0
+          allow_daemon_next = ($0 ~ /libscript-allow-raw-daemon/) ? 1 : 0
           if ($0 ~ /^::[[:space:]]*Performs the .* operation and updates component state\.$/) {
             placeholder_doc_hits = (placeholder_doc_hits ? placeholder_doc_hits "; " : "") NR ":" $0
           }
@@ -447,9 +477,15 @@ audit_single_file() {
             raw_pkg_hits = (raw_pkg_hits ? raw_pkg_hits "; " : "") NR ":" $0
           }
         }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]]|echo[[:space:]])/ && !allow_daemon_next && $0 !~ /libscript-allow-raw-daemon/) {
+          if (tolower($0) ~ /(^|[[:space:]&(|])(sc\.exe[[:space:]]+(start|stop|create|delete|config|query|description)|sc[[:space:]]+(start|stop|create|delete|config|query|description)|net[[:space:]]+(start|stop)[[:space:]]+|systemctl[[:space:]]+(start|stop|restart|reload|daemon-reload|enable|disable|status|is-active)|rc-service[[:space:]]+|service[[:space:]]+[a-z0-9_$"\x27-]+[[:space:]]+(start|stop|restart|reload|status))([[:space:]]|$)/) {
+            raw_daemon_hits = (raw_daemon_hits ? raw_daemon_hits "; " : "") NR ":" $0
+          }
+        }
         if (tolower($0) !~ /^[[:space:]]*(::|rem[[:space:]])/) {
           allow_fetch_next = 0
           allow_pkg_next = 0
+          allow_daemon_next = 0
         }
         if ($0 ~ /SCRIPT_DIR[%!][^\\\/"[:space:])]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
@@ -545,6 +581,7 @@ audit_single_file() {
         if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits
+        if (raw_daemon_hits != "") print "RAW_DAEMON_MANAGER|Raw service/daemon manager call in batch script (delegate to _lib\\_common\\service.cmd or service_install.cmd): " raw_daemon_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
         if (dup_label_hits != "") print "BATCH_DUPLICATE_LABEL|Duplicate label definition(s) in batch script: " dup_label_hits
         if (missing_lbl_hits != "") print "BATCH_MISSING_LABEL|Undefined batch label target: " missing_lbl_hits
@@ -567,6 +604,12 @@ audit_single_file() {
           RAW_PACKAGE_MANAGER)
             case "$file" in
               *_lib/_common/pkg_mgr.cmd|*_lib/package-managers/*|*devtools/*|*tests/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_DAEMON_MANAGER)
+            case "$file" in
+              *_lib/_common/service.cmd|*_lib/_common/service_install.cmd|*_lib/init-systems/*|*payloads/schedulers/*|*devtools/audit/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -637,7 +680,7 @@ audit_single_file() {
   # 8d. Ban hardcoded user/project paths and .volta in core substrate (_lib/ and cli/)
   case "$file" in
     _lib/*|cli/*)
-      leak_hits=$(grep -nE '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|e4s2024|E4S2024|/opt/conda/envs|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' "$file" 2>/dev/null || true)
+      leak_hits=$(grep -nE '(pulse_query|pulse-query|hospital-dashboard-platform|hospital_dashboard_platform|t1d_analytics|t1d-analytics|T1D_|/mnt/data/t1d|/Volumes/TOSHIBA_EXT|e4s2024|E4S2024|/opt/conda/envs|/home/azureuser|C:\\Users\\vagrant|\.volta/bin)' "$file" 2>/dev/null || true)
       if [ -n "$leak_hits" ]; then
         log_failure "$file" "NO_HARDCODED_USER_PATHS" "Hardcoded user/project path or .volta reference in substrate: $leak_hits"
       fi

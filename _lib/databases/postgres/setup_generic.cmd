@@ -95,7 +95,8 @@ if not errorlevel 1 (
 )
 where psql >nul 2>&1
 if not errorlevel 1 (
-    sc query postgresql* >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active postgresql >nul 2>&1
     if not errorlevel 1 exit /b 0
     where postgres >nul 2>&1
     if not errorlevel 1 exit /b 0

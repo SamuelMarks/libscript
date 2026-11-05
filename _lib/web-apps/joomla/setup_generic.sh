@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/service.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -188,11 +188,7 @@ if [ "${JOOMLA_WEBSERVER}" = "nginx" ]; then
     priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf"
     priv ln -sf "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
   fi
-  if command -v systemctl >/dev/null 2>&1; then
-    if ! priv systemctl reload nginx ; then
-      true
-    fi
-  fi
+  libscript_service reload nginx 2>/dev/null || true
   rm -f "${LOC_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"
 elif [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
@@ -204,26 +200,18 @@ elif [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
   else
     grep -q "${JOOMLA_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
-  if command -v systemctl >/dev/null 2>&1; then
-    if ! priv systemctl reload caddy ; then
-      true
-    fi
-  fi
+  libscript_service reload caddy 2>/dev/null || true
   rm -f "${CADDY_BLOCK_TMP}"
 elif [ "${JOOMLA_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
     priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${JOOMLA_SERVER_NAME}.conf"
-    if ! priv systemctl reload httpd ; then
-      true
-    fi
+    libscript_service reload httpd 2>/dev/null || true
   elif [ -d /etc/apache2/sites-available ]; then
     priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${JOOMLA_SERVER_NAME}.conf"
     priv ln -sf "/etc/apache2/sites-available/${JOOMLA_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
-    if ! priv systemctl reload apache2 ; then
-      true
-    fi
+    libscript_service reload apache2 2>/dev/null || true
   else
     grep -q "${JOOMLA_SERVER_NAME}" /etc/httpd/conf/httpd.conf 2>/dev/null || priv tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
   fi

@@ -30,47 +30,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
 # ## check_service_status
-# Queries the active init system or daemon manager to verify whether a service is running.
+# Queries the active init system or daemon manager via libscript_service to verify whether a service is running.
 check_service_status() {
-    OS_NAME=$(uname -s)
     for svc in "$@"; do
-        if [ "$OS_NAME" = "Linux" ]; then
-            if command -v systemctl >/dev/null 2>&1; then
-                if systemctl is-active --quiet "$svc"; then
-                    
-                    return 0
-                fi
-            elif command -v service >/dev/null 2>&1; then
-                if service "$svc" status >/dev/null 2>&1; then
-                    
-                    return 0
-                fi
-            fi
-        elif [ "$OS_NAME" = "SunOS" ]; then
-            if command -v svcs >/dev/null 2>&1; then
-                if svcs -H -o state "$svc" 2>/dev/null | grep -q "^online"; then
-                    
-                    return 0
-                fi
-            fi
-        elif [ "$OS_NAME" = "FreeBSD" ]; then
-            if command -v service >/dev/null 2>&1; then
-                if service "$svc" onestatus >/dev/null 2>&1 || service "$svc" status >/dev/null 2>&1; then
-                    
-                    return 0
-                fi
-            fi
-        elif [ "$OS_NAME" = "Darwin" ]; then
-            if command -v launchctl >/dev/null 2>&1; then
-                if launchctl print "system/$svc" >/dev/null 2>&1 || launchctl list | grep -q "$svc"; then
-                    
-                    return 0
-                fi
-            fi
+        if libscript_service is-active "$svc" >/dev/null 2>&1; then
+            return 0
         fi
     done
-    
     return 1
 }
 

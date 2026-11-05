@@ -45,8 +45,11 @@ ssh root@server << 'EOF'
   chmod 700 /var/lib/etcd
   cp -f ca.crt kube-api-server.key kube-api-server.crt /etc/etcd/
   mkdir -p /etc/systemd/system/; mv -f etcd.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable etcd
-  systemctl start etcd
+  if [ -f "\$HOME/libscript/_lib/_common/service.sh" ]; then
+    SCRIPT_NAME="\$HOME/libscript/_lib/_common/service.sh" . "\$HOME/libscript/_lib/_common/service.sh"
+    libscript_service daemon-reload etcd || true
+    libscript_service enable etcd || true
+    libscript_service start etcd || true
+  fi
   etcdctl member list || true
 EOF

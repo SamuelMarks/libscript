@@ -509,6 +509,13 @@ if exist "!_SP_REPO!\.env" (
     call :log "CONFIG" "Uploading .env for !_SP_DEST!..."
     call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!_SP_REPO!\.env" "!_SP_DEST!/.env"
     if errorlevel 1 exit /b 1
+    if "!DRY_RUN_MODE!"=="0" if exist "!_SP_REPO!\libscript.json" (
+        for /f "tokens=1* delims==" %%A in ('jq -r "([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == \"object\" then .[] elif type == \"array\" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == \"string\" then (.value | sub(\"^\\$\\{[A-Za-z0-9_]+:-\"; \"\") | sub(\"\\}$\"; \"\")) else \"\" end)} | select(.def | test(\"^/[^:]+:/[^:]+\")) | \"\(.key)=\(.def)\"" "!_SP_REPO!\libscript.json" 2^>nul') do (
+            for /f "tokens=1 delims=:" %%F in ("%%B") do (
+                call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -f ~/!_SP_DEST!/.env ] && grep -q '^%%A=' ~/!_SP_DEST!/.env && ! grep '^%%A=' ~/!_SP_DEST!/.env | grep -F -q '%%F'; then sed 's|^%%A=.*|%%A=%%B|' ~/!_SP_DEST!/.env > ~/!_SP_DEST!/.env.tmp && mv ~/!_SP_DEST!/.env.tmp ~/!_SP_DEST!/.env; fi" >nul 2>&1
+            )
+        )
+    )
 )
 if exist "!_SP_REPO!\.env.secrets" (
     call :log "CONFIG" "Uploading .env.secrets for !_SP_DEST!..."
@@ -632,16 +639,22 @@ for /f "delims=" %%H in ('git -C "!_CAC_DIR!" rev-parse HEAD 2^>nul') do set "_C
 set "_CAC_TMP=%TEMP%\libscript_cac_%RANDOM%.txt"
 if exist "!_CAC_TMP!" del /f /q "!_CAC_TMP!" >nul 2>&1
 if not "!_CAC_GIT!"=="nogit" (
-    git -C "!_CAC_DIR!" status --porcelain >> "!_CAC_TMP!" 2>nul
-    git -C "!_CAC_DIR!" diff HEAD >> "!_CAC_TMP!" 2>nul
+    git -C "!_CAC_DIR!" status --porcelain 2>nul | findstr /V /I /C:".nyc_output" /C:"docs/web" /C:"docs/api" /C:"site/" /C:".vitest" >> "!_CAC_TMP!" 2>nul
+    git -C "!_CAC_DIR!" diff HEAD -- . ":(exclude).nyc_output" ":(exclude)**/.nyc_output/**" ":(exclude)docs/web" ":(exclude)docs/api" ":(exclude)site" ":(exclude).vitest*" >> "!_CAC_TMP!" 2>nul
     for /f "delims=" %%U in ('git -C "!_CAC_DIR!" ls-files --others --exclude-standard 2^>nul') do (
-        if exist "!_CAC_DIR!\%%U" (
-            for %%Z in ("!_CAC_DIR!\%%U") do echo %%U:%%~zZ:%%~tZ>> "!_CAC_TMP!"
+        echo "%%U" | findstr /I /C:".nyc_output" /C:"docs/web" /C:"docs/api" /C:"site/" /C:".vitest" >nul 2>&1
+        if errorlevel 1 (
+            if exist "!_CAC_DIR!\%%U" (
+                for %%Z in ("!_CAC_DIR!\%%U") do echo %%U:%%~zZ:%%~tZ>> "!_CAC_TMP!"
+            )
         )
     )
 ) else (
     for /r "!_CAC_DIR!" %%F in (*) do (
-        echo %%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
+        echo "%%~fF" | findstr /I /C:"\.nyc_output\" /C:"\docs\web\" /C:"\docs\api\" /C:"\site\" /C:"\.vitest" >nul 2>&1
+        if errorlevel 1 (
+            echo %%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
+        )
     )
 )
 for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets" "!REPO_PATH!\libscript.json") do (

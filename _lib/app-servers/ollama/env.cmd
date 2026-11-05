@@ -51,22 +51,33 @@ goto :find_root
 
 if "%OLLAMA_INSTALL_METHOD%"=="" set "OLLAMA_INSTALL_METHOD=libscript_native"
 if "%OLLAMA_VERSION%"=="" set "OLLAMA_VERSION=latest"
+if "%OLLAMA_HOST%"=="" set "OLLAMA_HOST=http://127.0.0.1:11434"
+if "%OLLAMA_NUM_PARALLEL%"=="" set "OLLAMA_NUM_PARALLEL=1"
+if "%OLLAMA_MAX_LOADED_MODELS%"=="" set "OLLAMA_MAX_LOADED_MODELS=1"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%LIBSCRIPT_DATA_DIR%"=="" set "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_HOME%\data"
 set "_OL_DEF_MOUNT=%DATA_DISK_MOUNT%"
 if "!_OL_DEF_MOUNT!"=="" set "_OL_DEF_MOUNT=%DATA_MOUNT_DIR%"
 if "!_OL_DEF_MOUNT!"=="" set "_OL_DEF_MOUNT=/mnt/data"
+if exist "!_OL_DEF_MOUNT!" (
+    set "_OL_DEF_MODELS=!_OL_DEF_MOUNT!/ollama_models"
+) else (
+    set "_OL_DEF_MODELS=!LIBSCRIPT_DATA_DIR!\ollama\models"
+)
 if "%OLLAMA_MODELS_DIR%"=="" (
     if "%OLLAMA_MODEL_LIST%"=="" (
         if not "%OLLAMA_MODELS%"=="" (
             set "OLLAMA_MODELS_DIR=%OLLAMA_MODELS%"
         ) else (
-            set "OLLAMA_MODELS_DIR=!_OL_DEF_MOUNT!/ollama_models"
+            set "OLLAMA_MODELS_DIR=!_OL_DEF_MODELS!"
         )
     ) else (
-        set "OLLAMA_MODELS_DIR=!_OL_DEF_MOUNT!/ollama_models"
+        set "OLLAMA_MODELS_DIR=!_OL_DEF_MODELS!"
     )
 )
 if "%OLLAMA_MODEL_LIST%"=="" (
+    if "%OLLAMA_MODELS%"=="" set "OLLAMA_MODELS=%OLLAMA_MODELS_DIR%"
+) else (
     if "%OLLAMA_MODELS%"=="" set "OLLAMA_MODELS=%OLLAMA_MODELS_DIR%"
 )
 set "_CAND_P=%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\bin"
@@ -79,6 +90,9 @@ endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "OLLAMA_INSTALL_METHOD=%OLLAMA_INSTALL_METHOD%"
     set "OLLAMA_VERSION=%OLLAMA_VERSION%"
+    set "OLLAMA_HOST=%OLLAMA_HOST%"
+    set "OLLAMA_NUM_PARALLEL=%OLLAMA_NUM_PARALLEL%"
+    set "OLLAMA_MAX_LOADED_MODELS=%OLLAMA_MAX_LOADED_MODELS%"
     set "OLLAMA_MODELS_DIR=%OLLAMA_MODELS_DIR%"
     set "OLLAMA_MODELS=%OLLAMA_MODELS%"
     set "PATH=%PATH%"

@@ -114,7 +114,7 @@ set "JQ_FE=([ (.services | if type == \"array\" then .[] elif type == \"object\"
 
 for /f "delims=" %%i in ('jq -c "!JQ_FE!" "!PACKAGING_PATH!" 2^>nul') do (
     set "svc=%%i"
-    call :build_single_frontend
+    call :provision_single_frontend
 )
 
 for /f "delims=" %%h in ('jq -c "((.lifecycle_hooks.pre_install // []) + (.hooks.pre_install // []))[]?" "!PACKAGING_PATH!" 2^>nul') do (
@@ -206,8 +206,11 @@ if exist "!nd_dir!\package.json" (
 )
 exit /b 0
 
-:: ## build_single_frontend
+:: ## provision_single_frontend
 :: Builds and stages a single frontend or KMP service entry.
+:provision_single_frontend
+:: ## build_single_frontend
+:: Alias for provision_single_frontend.
 :build_single_frontend
 set "svc_id=default"
 set "src_rel=."
@@ -293,6 +296,8 @@ if exist "!src_dir!\package.json" (
         call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
         if "!_ART_EXISTS!"=="1" (
             if not "!_CACHED_FE_FP!"=="" if "!_CACHED_FE_FP!"=="!_FE_FP!" set "_can_reuse_fe=1"
+            if "!_can_reuse_fe!"=="0" if exist "!src_dir!\dist\.libscript_src_hash" if not "!_CACHED_FE_FP!"=="" set "_can_reuse_fe=1"
+            if "!_can_reuse_fe!"=="0" if not exist "!src_dir!\.libscript_build.sha256" set "_can_reuse_fe=1"
         )
     )
     if "!_can_reuse_fe!"=="1" (

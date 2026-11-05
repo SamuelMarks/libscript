@@ -181,8 +181,8 @@ APPLY_CADDY=$("${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" apply "${TES
 assert_contains "$APPLY_CADDY" "try_files {path} {path}/ /index.html" "netctl apply Caddy SPA try_files"
 
 # 6. Test provision_frontend with Angular 17+ browser/ layout and KMP wasmJs layout
-mkdir -p "${TEST_TMP}/fe_app/ng-web/dist/pulse-ng/browser"
-printf '<html>Angular 17 SPA</html>\n' > "${TEST_TMP}/fe_app/ng-web/dist/pulse-ng/browser/index.html"
+mkdir -p "${TEST_TMP}/fe_app/ng-web/dist/app-ng/browser"
+printf '<html>Angular 17 SPA</html>\n' > "${TEST_TMP}/fe_app/ng-web/dist/app-ng/browser/index.html"
 printf '{"name": "ng-web"}\n' > "${TEST_TMP}/fe_app/ng-web/package.json"
 
 mkdir -p "${TEST_TMP}/fe_app/kmp-web/composeApp/build/dist/wasmJs/productionExecutable"
@@ -389,35 +389,46 @@ printf '[PASS] LIBSCRIPT_INIT_SYSTEM=fallback lifecycle (start, health, down --r
 mkdir -p "${TEST_TMP}/app_a" "${TEST_TMP}/app_b" "${TEST_TMP}/state_dir"
 cat << 'EOF' > "${TEST_TMP}/app_a/libscript.json"
 {
-  "name": "hospital-dashboard-platform",
-  "aliases": ["pulse_query", "pulse-query"],
-  "domain": "pulse-query.healthplatform.io",
+  "name": "dashboard-platform",
+  "aliases": ["metrics_query", "metrics-query"],
+  "domain": "metrics-query.example.org",
   "infrastructure": {"network": {"ports": ["8000", "4200"]}}
 }
 EOF
 cat << 'EOF' > "${TEST_TMP}/app_b/libscript.json"
 {
-  "name": "t1d-analytics",
-  "aliases": ["t1d_analytics"],
-  "domain": "t1d-analytics.healthplatform.io",
+  "name": "analytics-service",
+  "aliases": ["analytics_service"],
+  "domain": "analytics-service.example.org",
+  "services": {
+    "api": {
+      "command": "echo ok",
+      "env": {
+        "APP_DB_SEARCH_DIR": "${APP_DB_SEARCH_DIR:-/remote/data/store:/local/volume/store}"
+      }
+    }
+  },
   "infrastructure": {"network": {"ports": ["8001", "3000"]}}
 }
 EOF
-PROV_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" provision --provider azure --node test-node --rg TEST-RG --location eastus --app "${TEST_TMP}/app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "${TEST_TMP}/app_b:t1d-analytics@t1d-analytics.healthplatform.io" --dry-run 2>&1)
+_EXTRACTED_ENV_DEF=$(jq -r '([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == "object" then .[] elif type == "array" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == "string" then (.value | sub("^\\$\\{[A-Za-z0-9_]+:-"; "") | sub("\\}$"; "")) else "" end)} | select(.def | test("^/[^:]+:/[^:]+")) | "\(.key)=\(.def)"' "${TEST_TMP}/app_b/libscript.json")
+assert_contains "$_EXTRACTED_ENV_DEF" "APP_DB_SEARCH_DIR=/remote/data/store:/local/volume/store" "manifest-driven multi-host search path default extraction"
+
+PROV_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" provision --provider azure --node test-node --rg TEST-RG --location eastus --app "${TEST_TMP}/app_a:dashboard-platform@metrics-query.example.org" --app "${TEST_TMP}/app_b:analytics-service@analytics-service.example.org" --dry-run 2>&1)
 assert_contains "$PROV_DRY" "prepare-storage libscript.json" "provision --dry-run invokes declarative prepare-storage"
-assert_contains "$PROV_DRY" "hospital-dashboard-platform" "provision --dry-run deploys app_a"
-assert_contains "$PROV_DRY" "t1d-analytics" "provision --dry-run deploys app_b"
+assert_contains "$PROV_DRY" "dashboard-platform" "provision --dry-run deploys app_a"
+assert_contains "$PROV_DRY" "analytics-service" "provision --dry-run deploys app_b"
 
-PROV_ONLY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" provision --provider azure --node test-node --rg TEST-RG --location eastus --only t1d_analytics --app "${TEST_TMP}/app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "${TEST_TMP}/app_b:t1d-analytics@t1d-analytics.healthplatform.io" --dry-run 2>&1)
-assert_contains "$PROV_ONLY" "t1d-analytics" "provision --only=t1d_analytics deploys t1d-analytics"
+PROV_ONLY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" provision --provider azure --node test-node --rg TEST-RG --location eastus --only analytics_service --app "${TEST_TMP}/app_a:dashboard-platform@metrics-query.example.org" --app "${TEST_TMP}/app_b:analytics-service@analytics-service.example.org" --dry-run 2>&1)
+assert_contains "$PROV_ONLY" "analytics-service" "provision --only=analytics_service deploys analytics-service"
 
-TEARDOWN_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" deprovision --provider azure --node test-node --rg TEST-RG --location eastus --keep-infra --purge-data --only t1d-analytics --app "${TEST_TMP}/app_a:hospital-dashboard-platform" --app "${TEST_TMP}/app_b:t1d-analytics" --dry-run 2>&1)
+TEARDOWN_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" deprovision --provider azure --node test-node --rg TEST-RG --location eastus --keep-infra --purge-data --only analytics-service --app "${TEST_TMP}/app_a:dashboard-platform" --app "${TEST_TMP}/app_b:analytics-service" --dry-run 2>&1)
 assert_contains "$TEARDOWN_DRY" "--remove --purge-data" "deprovision --keep-infra --purge-data runs down --remove --purge-data"
 
-BK_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" backup test-node --provider azure --rg TEST-RG --only pulse_query --app "${TEST_TMP}/app_a:hospital-dashboard-platform@pulse-query.healthplatform.io" --app "${TEST_TMP}/app_b:t1d-analytics@t1d-analytics.healthplatform.io" --export-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
+BK_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" backup test-node --provider azure --rg TEST-RG --only metrics_query --app "${TEST_TMP}/app_a:dashboard-platform@metrics-query.example.org" --app "${TEST_TMP}/app_b:analytics-service@analytics-service.example.org" --export-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
 assert_contains "$BK_DRY" "export-state libscript.json" "backup --export-state exports selected app state"
 
-RS_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" restore test-node --provider azure --rg TEST-RG --only pulse_query --app "hospital-dashboard-platform@pulse-query.healthplatform.io" --app "t1d-analytics@t1d-analytics.healthplatform.io" --import-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
+RS_DRY=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" restore test-node --provider azure --rg TEST-RG --only metrics_query --app "dashboard-platform@metrics-query.example.org" --app "analytics-service@analytics-service.example.org" --import-state "${TEST_TMP}/state_dir" --dry-run 2>&1)
 assert_contains "$RS_DRY" "import-state libscript.json" "restore --import-state imports selected app state"
 printf '[PASS] Multi-app shared-node provision, deprovision, backup, and restore dry-run orchestration\n'
 

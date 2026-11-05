@@ -51,7 +51,7 @@ export DIR="${SCRIPT_DIR}"
 
 _wp_sg_this="${THIS_FILE}"
 _wp_sg_dir="${SCRIPT_DIR}"
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/service.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -531,7 +531,7 @@ pm.min_spare_servers = 5
 pm.max_spare_servers = 35
 EOF_FPM
   WORDPRESS_PHP_FPM_LISTEN='unix:/run/php/php-fpm-wordpress.sock'
-  priv systemctl restart php8.2-fpm 2>/dev/null || priv systemctl restart php8.3-fpm 2>/dev/null || priv systemctl restart php-fpm 2>/dev/null || true
+  libscript_service restart php8.2-fpm 2>/dev/null || libscript_service restart php8.3-fpm 2>/dev/null || libscript_service restart php-fpm 2>/dev/null || true
 fi
 
 # 6. Configure Ingress Webserver
@@ -580,7 +580,7 @@ EOF_NGINX
     "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --domain "${WORDPRESS_SERVER_NAME}" --listen "${WORDPRESS_LISTEN}" --static "/" "${WORDPRESS_WWWROOT}" --php "/" "${WORDPRESS_PHP_FPM_LISTEN}" --emit nginx >/dev/null 2>&1 || true
   fi
   rm -f "${NGINX_CONF_TMP}"
-  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/cli.sh" restart >/dev/null 2>&1 || priv systemctl reload nginx 2>/dev/null || true
+  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/cli.sh" restart >/dev/null 2>&1 || libscript_service reload nginx 2>/dev/null || true
 elif [ "${WORDPRESS_WEBSERVER}" = "httpd" ] || [ "${WORDPRESS_WEBSERVER}" = "apache2" ]; then
   cat << 'EOF_HTACCESS' | safe_tee "${WORDPRESS_WWWROOT}/.htaccess" >/dev/null
 # BEGIN WordPress
@@ -595,7 +595,7 @@ RewriteRule . /index.php [L]
 </IfModule>
 # END WordPress
 EOF_HTACCESS
-  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/cli.sh" restart >/dev/null 2>&1 || priv systemctl reload httpd 2>/dev/null || priv systemctl reload apache2 2>/dev/null || true
+  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/cli.sh" restart >/dev/null 2>&1 || libscript_service reload httpd 2>/dev/null || libscript_service reload apache2 2>/dev/null || true
 elif [ "${WORDPRESS_WEBSERVER}" = "caddy" ]; then
   CADDY_CONF_TMP=$(mktemp)
   cat << EOF_CADDY > "${CADDY_CONF_TMP}"
@@ -612,7 +612,7 @@ EOF_CADDY
     "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --domain "${WORDPRESS_SERVER_NAME}" --listen "${WORDPRESS_LISTEN}" --static "/" "${WORDPRESS_WWWROOT}" --php "/" "${WORDPRESS_PHP_FPM_LISTEN}" --emit caddy >/dev/null 2>&1 || true
   fi
   rm -f "${CADDY_CONF_TMP}"
-  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/cli.sh" restart >/dev/null 2>&1 || priv systemctl reload caddy 2>/dev/null || true
+  "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/cli.sh" restart >/dev/null 2>&1 || libscript_service reload caddy 2>/dev/null || true
 fi
 
 # 7. Optional Adminer Staging

@@ -3,7 +3,7 @@
 ::
 :: ## Overview
 :: Discovers active database instances on Windows.
-:: Uses sc.exe and netstat for probing.
+:: Uses _lib\_common\service.cmd and netstat for probing.
 ::
 :: ## Usage
 ::   call discover_databases.cmd [--json | --eval | --check --engine <type>]
@@ -78,11 +78,15 @@ netstat -an | findstr "LISTENING" | findstr ":5432 " >nul && set "FOUND_PG=1"
 netstat -an | findstr "LISTENING" | findstr ":27017 " >nul && set "FOUND_MONGO=1"
 netstat -an | findstr "LISTENING" | findstr ":6379 " >nul && set "FOUND_REDIS=1"
 
-:: ## Service Probing via sc.exe
-sc.exe query MySQL80 >nul 2>&1 && set "FOUND_MYSQL=1"
-sc.exe query PostgreSQL >nul 2>&1 && set "FOUND_PG=1"
-sc.exe query MongoDB >nul 2>&1 && set "FOUND_MONGO=1"
-sc.exe query Redis >nul 2>&1 && set "FOUND_REDIS=1"
+:: ## Service Probing via _lib\_common\service.cmd
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active MySQL80 >nul 2>&1 && set "FOUND_MYSQL=1"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active PostgreSQL >nul 2>&1 && set "FOUND_PG=1"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active MongoDB >nul 2>&1 && set "FOUND_MONGO=1"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active Redis >nul 2>&1 && set "FOUND_REDIS=1"
 
 if "%MODE%"=="check" (
     if "%TARGET_ENGINE%"=="mysql" ( if "!FOUND_MYSQL!"=="1" ( exit /b 0 ) else ( exit /b 1 ) )

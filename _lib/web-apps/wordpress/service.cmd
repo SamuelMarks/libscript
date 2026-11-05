@@ -53,24 +53,28 @@ set "ACTION=%~1"
 if "%ACTION%"=="" set "ACTION=status"
 
 if /I "%ACTION%"=="start" (
-    sc start WordPressMariaDB >nul 2>&1
-    sc start OpenEdXMySQL >nul 2>&1
-    sc start nginx >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start WordPressMariaDB >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start OpenEdXMySQL >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start nginx >nul 2>&1
     iisreset /start >nul 2>&1
     echo [OK] Started WordPress platform services.
     exit /b 0
 )
 
 if /I "%ACTION%"=="stop" (
-    sc stop nginx >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop nginx >nul 2>&1
     iisreset /stop >nul 2>&1
     echo [OK] Stopped WordPress platform services.
     exit /b 0
 )
 
 if /I "%ACTION%"=="restart" (
-    sc stop nginx >nul 2>&1
-    sc start nginx >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" restart nginx >nul 2>&1
     iisreset /restart >nul 2>&1
     echo [OK] Restarted WordPress platform services.
     exit /b 0
@@ -78,9 +82,12 @@ if /I "%ACTION%"=="restart" (
 
 if /I "%ACTION%"=="status" (
     echo Status for WordPress services:
-    sc query WordPressMariaDB 2>nul | findstr /i "STATE"
-    sc query OpenEdXMySQL 2>nul | findstr /i "STATE"
-    sc query nginx 2>nul | findstr /i "STATE"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" status WordPressMariaDB 2>nul | findstr /i "STATE RUNNING STOPPED"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" status OpenEdXMySQL 2>nul | findstr /i "STATE RUNNING STOPPED"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" status nginx 2>nul | findstr /i "STATE RUNNING STOPPED"
     exit /b 0
 )
 

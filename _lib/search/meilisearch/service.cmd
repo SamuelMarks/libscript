@@ -61,8 +61,10 @@ if not exist "%MEILI_EXE%" (
 set "DATA_DIR=%LIBSCRIPT_HOME%\meilisearch\data"
 
 if /i "%ACTION%"=="start" (
-    sc.exe query meilisearch 2>nul | findstr /C:"RUNNING" >nul 2>&1 && exit /b 0
-    sc.exe start meilisearch >nul 2>&1 && exit /b 0
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active meilisearch >nul 2>&1 && exit /b 0
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" start meilisearch >nul 2>&1 && exit /b 0
     if exist "%MEILI_EXE%" (
         if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" 2>nul
         powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\_common\daemon_launcher.ps1" -Port 7700 -DataDir "%DATA_DIR%" -HttpJson "{\"status\":\"available\"}" 2>nul
@@ -70,7 +72,8 @@ if /i "%ACTION%"=="start" (
     exit /b 0
 )
 if /i "%ACTION%"=="stop" (
-    sc.exe stop meilisearch >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop meilisearch >nul 2>&1
     taskkill /F /IM meilisearch.exe >nul 2>&1
     exit /b 0
 )
@@ -80,7 +83,8 @@ if /i "%ACTION%"=="restart" (
     exit /b 0
 )
 if /i "%ACTION%"=="status" (
-    sc.exe query meilisearch 2>nul | findstr /C:"RUNNING" >nul 2>&1 && (echo [RUNNING] meilisearch & exit /b 0)
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active meilisearch >nul 2>&1 && (echo [RUNNING] meilisearch & exit /b 0)
     powershell -NoProfile -Command "if (Get-Process meilisearch -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul && (echo [RUNNING] meilisearch.exe & exit /b 0)
     echo [STOPPED] meilisearch
     exit /b 1

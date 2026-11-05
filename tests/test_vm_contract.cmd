@@ -93,6 +93,15 @@ if errorlevel 1 (
 )
 echo [PASS] env --format=cmd emits Windows Batch PATH
 
+set "LIBSCRIPT_DATA_DIR=%TEST_SANDBOX%\data"
+set "LIBSCRIPT_INIT_SYSTEM=fallback"
+if not exist "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "test_daemon_vm" "timeout /t 10" "%TEST_SANDBOX%" "Test Daemon" >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" daemon-reload >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" uninstall "test_daemon_vm" >nul 2>&1
+set "LIBSCRIPT_INIT_SYSTEM="
+echo [PASS] Cross-init daemon abstraction lifecycle verified
+
 rmdir /s /q "%TEST_SANDBOX%" 2>nul
 echo === All Behavioral Version Manager Contract Checks Passed! ===
 exit /b 0

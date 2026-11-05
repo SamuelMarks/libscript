@@ -1111,7 +1111,9 @@ case "$ACTION" in
     if [ "${__COMP_PREFIX___INSTALL_METHOD}" = "libscript_native" ]; then
       [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__" ] && ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__"
     else
-      command -v '__SCAF_BINARY_NAME__' >/dev/null 2>&1 && '__SCAF_BINARY_NAME__' --version || true
+      if command -v '__SCAF_BINARY_NAME__' >/dev/null 2>&1; then
+        '__SCAF_BINARY_NAME__' --version || true
+      fi
     fi
     ;;
   ls-remote)

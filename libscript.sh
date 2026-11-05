@@ -167,6 +167,7 @@ normalize_component_alias() {
     stacks/scaffolds/serve-actix-diesel-auth-scaffold) printf '%s\n' "_lib/web-apps/serve-actix-diesel-auth-scaffold" ;;
     stacks/task-queues/celery) printf '%s\n' "_lib/web-apps/celery" ;;
     stacks/virtualization/bento-builder) printf '%s\n' "_lib/virtualization/bento-builder" ;;
+    ai-tools/ollama|_lib/ai-tools/ollama) printf '%s\n' "_lib/app-servers/ollama" ;;
     *) printf '%s\n' "${1:-}" ;;
   esac
 }

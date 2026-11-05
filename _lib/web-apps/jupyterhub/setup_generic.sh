@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" \
+for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/service.sh" \
             "_lib/languages/python/setup.sh" "_lib/web-apps/jupyterhub/env.sh" \
             "_lib/languages/nodejs/setup.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -124,12 +124,8 @@ if [ -d '/etc/systemd/system' ]; then
   envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/web-apps/jupyterhub/conf/systemd/jupyverse.service' > "${tmp00}"
   if [ -f "${service}" ]; then priv  rm -f -- "${service}"; fi
   priv  install -m 0644 -- "${tmp00}" "${service}"
-  if ! priv systemctl daemon-reload ; then
-    true
-  fi
-  if ! priv systemctl reload-or-restart -- "${service_name}" ; then
-    true
-  fi
+  libscript_service daemon-reload "${service_name}" || true
+  libscript_service reload-or-restart "${service_name}" || true
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 0

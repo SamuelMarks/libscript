@@ -140,6 +140,9 @@ for %%B in ("!_WORKING_DIR!\.venv\Scripts" "!_WORKING_DIR!\node_modules\.bin" "!
         echo if defined SERVICE_PATH set "PATH=%%SERVICE_PATH%%;!PATH!"
         echo if defined SERVICE_EXTRA_PATH set "PATH=%%SERVICE_EXTRA_PATH%%;!PATH!"
     )
+    if /i not "!_SERVICE_NAME!"=="ollama" if /i not "!_SERVICE_NAME!"=="libscript_ollama" (
+        echo if defined OLLAMA_MODEL_LIST set "OLLAMA_MODELS=%%OLLAMA_MODEL_LIST%%"
+    )
 ) > "!_RUNNER_FILE!"
 
 if defined LIBSCRIPT_SERVICE_ENV_FILES (
@@ -222,6 +225,14 @@ reg query "HKLM\SYSTEM\CurrentControlSet\Services\!_SERVICE_NAME!" >nul 2>&1
 if not errorlevel 1 (
     reg add "HKLM\SYSTEM\CurrentControlSet\Services\!_SERVICE_NAME!" /v Environment /t REG_MULTI_SZ /d "!_SVC_REG_ENV!" /f >nul 2>&1
 )
+if exist "!_MANIFEST_DIR!\libscript.json" (
+    where jq >nul 2>&1
+    if not errorlevel 1 (
+        for /f "usebackq delims=" %%O in (`jq -r --arg svc "!_SERVICE_NAME!" "(.service_overrides[$svc] // .infrastructure.service_overrides[$svc] // {}) | to_entries[]? | \"\(.key)=\(.value)\"" "!_MANIFEST_DIR!\libscript.json" 2^>nul`) do (
+            call :libscript_service_override_env "!_SERVICE_NAME!" "%%O"
+        )
+    )
+)
 exit /b 0
 
 :: ## libscript_uninstall_service
@@ -251,9 +262,20 @@ set "_DATA_BASE=%TEMP%\data"
 if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
 if not exist "!_DATA_BASE!\!_OVR_SVC!" mkdir "!_DATA_BASE!\!_OVR_SVC!"
 set "_ENV_FILE=!_DATA_BASE!\!_OVR_SVC!\.env.service"
+set "_EOV_MOUNT=%DATA_DISK_MOUNT%"
+if "!_EOV_MOUNT!"=="" set "_EOV_MOUNT=%DATA_MOUNT_DIR%"
+if "!_EOV_MOUNT!"=="" set "_EOV_MOUNT=/mnt/data"
 for %%K in ("%~2" "%~3" "%~4" "%~5") do (
     set "_KV=%%~K"
     if not "!_KV!"=="" (
+        set "_KV=!_KV:${DATA_MOUNT_DIR:-/mnt/data}=%_EOV_MOUNT%!"
+        set "_KV=!_KV:${DATA_MOUNT_DIR}=%_EOV_MOUNT%!"
+        set "_KV=!_KV:$DATA_MOUNT_DIR=%_EOV_MOUNT%!"
+        set "_KV=!_KV:${DATA_DISK_MOUNT:-/mnt/data}=%_EOV_MOUNT%!"
+        set "_KV=!_KV:${DATA_DISK_MOUNT}=%_EOV_MOUNT%!"
+        set "_KV=!_KV:$DATA_DISK_MOUNT=%_EOV_MOUNT%!"
+        set "_KV=!_KV:${LIBSCRIPT_DATA_DIR}=%_DATA_BASE%!"
+        set "_KV=!_KV:$LIBSCRIPT_DATA_DIR=%_DATA_BASE%!"
         for /f "tokens=1* delims==" %%A in ("!_KV!") do (
             if exist "!_ENV_FILE!" (
                 findstr /v /b /c:"%%A=" "!_ENV_FILE!" > "!_ENV_FILE!.tmp" 2>nul

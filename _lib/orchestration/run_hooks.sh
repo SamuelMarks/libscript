@@ -80,6 +80,12 @@ fi
 if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then
   export PATH="${SERVICE_EXTRA_PATH}:${PATH}"
 fi
+for _rh_std_bin in "${HOME:-/root}/.local/bin" "/usr/local/bin" "/usr/bin" "/bin"; do
+  case ":${PATH:-}:" in
+    *":${_rh_std_bin}:"*) ;;
+    *) export PATH="${_rh_std_bin}:${PATH:-/usr/bin:/bin}" ;;
+  esac
+done
 
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
   OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -94,7 +100,19 @@ else
   CURRENT_OS="$LIBSCRIPT_TARGET_OS"
 fi
 
-HOOKS=$(jq -c --arg ht "$HOOK_TYPE" '((.hooks[$ht] // .infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // .infrastructure.lifecycle_hooks[$ht] // []))[]?' "$JSON_FILE" 2>/dev/null || true)
+HOOKS=$(jq -c --arg ht "$HOOK_TYPE" '
+  ((.hooks[$ht] // []) + (.infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // []) + (.infrastructure.lifecycle_hooks[$ht] // []))
+  | reduce .[] as $item (
+      {seen: {}, list: []};
+      (($item | if type == "object" then (.name // "") else "" end)) as $k |
+      if ($k != "" and (.seen[$k] // false)) then .
+      else
+        .list += [$item] |
+        if $k != "" then .seen[$k] = true else . end
+      end
+    )
+  | .list[]?
+' "$JSON_FILE" 2>/dev/null || true)
 
 if [ -z "$HOOKS" ]; then
   exit 0

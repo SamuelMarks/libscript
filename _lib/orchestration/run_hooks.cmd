@@ -90,8 +90,10 @@ for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\
 if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
 if defined SERVICE_EXTRA_PATH set "PATH=!SERVICE_EXTRA_PATH!;!PATH!"
 
+set "_JQ_HOOK_MERGE=((.hooks[$ht] // []) + (.infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // []) + (.infrastructure.lifecycle_hooks[$ht] // [])) | reduce .[] as $item ({seen: {}, list: []}; (($item | if type == \"object\" then (.name // \"\") else \"\" end)) as $k | if ($k != \"\" and (.seen[$k] // false)) then . else .list += [$item] | if $k != \"\" then .seen[$k] = true else . end end) | .list[]?"
+
 set "HAS_HOOKS=0"
-for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "((.hooks[$ht] // .infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // .infrastructure.lifecycle_hooks[$ht] // []))[]?" "!json_file!" 2^>nul') do (
+for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "!_JQ_HOOK_MERGE!" "!json_file!" 2^>nul') do (
     set "HAS_HOOKS=1"
 )
 if "!HAS_HOOKS!"=="0" exit /b 0
@@ -99,7 +101,7 @@ if "!HAS_HOOKS!"=="0" exit /b 0
 echo [INFO] [HOOKS:!hook_type!] Running !hook_type! lifecycle hooks from !json_file!...
 
 set "HOOK_FAILED=0"
-for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "((.hooks[$ht] // .infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // .infrastructure.lifecycle_hooks[$ht] // []))[]?" "!json_file!" 2^>nul') do (
+for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "!_JQ_HOOK_MERGE!" "!json_file!" 2^>nul') do (
     if "!HOOK_FAILED!"=="0" (
         set "hook=%%i"
         call :exec_single_hook

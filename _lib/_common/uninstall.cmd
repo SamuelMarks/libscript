@@ -76,12 +76,14 @@ if "!PURGE_DATA!"=="1" (
     ) do set "pkg_upper=!pkg_upper:%%~A!"
     
     REM Nuke service
-    sc stop "libscript_!PACKAGE_NAME!" >nul 2>&1
-    sc delete "libscript_!PACKAGE_NAME!" >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "libscript_!PACKAGE_NAME!" >nul 2>&1
 ) else (
     echo [INFO] Keeping data directory intact.
-    sc stop "libscript_!PACKAGE_NAME!" >nul 2>&1
-    sc config "libscript_!PACKAGE_NAME!" start= demand >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" stop "libscript_!PACKAGE_NAME!" >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" disable "libscript_!PACKAGE_NAME!" >nul 2>&1
 )
 
 if exist "!LIBSCRIPT_ROOT_DIR!\installed\%PACKAGE_NAME%" (

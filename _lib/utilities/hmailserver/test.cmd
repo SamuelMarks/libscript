@@ -51,7 +51,8 @@ goto :find_root
 :root_found
 
 call "%~dp0env.cmd"
-sc query hMailServer >nul 2>&1
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active hMailServer >nul 2>&1
 if not errorlevel 1 (
     echo [INFO] hMailServer service verified.
     exit /b 0

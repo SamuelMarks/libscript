@@ -285,15 +285,15 @@ compute_app_checksum() {
   if [ "$_cac_git" != "nogit" ]; then
     _cac_dirty=$(
       {
-        git -C "$_cac_dir" status --porcelain 2>/dev/null || true
-        git -C "$_cac_dir" diff HEAD 2>/dev/null || true
-        git -C "$_cac_dir" ls-files --others --exclude-standard 2>/dev/null | while IFS= read -r _uf; do
+        git -C "$_cac_dir" status --porcelain 2>/dev/null | grep -Ev '(^|[[:space:]]|/)(\.nyc_output|docs/web|docs/api|site|\.vitest)(/|$)' || true
+        git -C "$_cac_dir" diff HEAD -- . ':(exclude).nyc_output' ':(exclude)**/.nyc_output/**' ':(exclude)docs/web' ':(exclude)docs/api' ':(exclude)site' ':(exclude).vitest*' 2>/dev/null || true
+        git -C "$_cac_dir" ls-files --others --exclude-standard 2>/dev/null | grep -Ev "(^|/)(\.nyc_output|docs/web|docs/api|site|\.vitest)" | while IFS= read -r _uf; do
           [ -n "$_uf" ] && [ -f "${_cac_dir}/${_uf}" ] && cksum "${_cac_dir}/${_uf}" 2>/dev/null || true
         done
       } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
     )
   else
-    _cac_dirty=$(find "$_cac_dir" \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name __pycache__ -o -name '*.duckdb*' \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+    _cac_dirty=$(find "$_cac_dir" \( -name .git -o -name node_modules -o -name .venv -o -name venv -o -name dist -o -name build -o -name .angular -o -name .vite -o -name '.vitest*' -o -name .nyc_output -o -name site -o -path '*/docs/web' -o -path '*/docs/api' -o -name __pycache__ -o -name '*.duckdb*' \) -prune -o -type f -exec cksum {} + 2>/dev/null | sort | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
   fi
   _cac_root_mf=""
   if [ -n "${REPO_PATH:-}" ] && [ -f "${REPO_PATH}/libscript.json" ] && [ "${REPO_PATH}/libscript.json" != "${_cac_dir}/libscript.json" ]; then
@@ -578,6 +578,20 @@ for _app_entry in "$@"; do
     if [ -f "${_ae_repo}/${_ef}" ]; then
       log "CONFIG" "Uploading $_ef for $_ae_name..."
       run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${_ae_repo}/${_ef}" "${_ae_dest}/${_ef}"
+      if [ "$_ef" = '.env' ] && [ "$DRY_RUN_MODE" -eq 0 ] && [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        _env_path_defs=$(jq -r '([(.env // {}), (.remote_env // {}), ((.services // .infrastructure.services) | if type == "object" then .[] elif type == "array" then .[] else empty end | (.env // .environment // {}))] | add // {}) | to_entries[] | {key: .key, def: (if (.value | type) == "string" then (.value | sub("^\\$\\{[A-Za-z0-9_]+:-"; "") | sub("\\}$"; "")) else "" end)} | select(.def | test("^/[^:]+:/[^:]+")) | "\(.key)=\(.def)"' "${_ae_repo}/libscript.json" 2>/dev/null || true)
+        if [ -n "$_env_path_defs" ]; then
+          while IFS= read -r _ep_pair; do
+            [ -n "$_ep_pair" ] || continue
+            _ep_key="${_ep_pair%%=*}"
+            _ep_def="${_ep_pair#*=}"
+            _ep_first="${_ep_def%%:*}"
+            "$CLI" node exec "$NODE" "$CTX" "if [ -f ~/${_ae_dest}/.env ] && grep -q '^${_ep_key}=' ~/${_ae_dest}/.env && ! grep '^${_ep_key}=' ~/${_ae_dest}/.env | grep -F -q '${_ep_first}'; then sed 's|^${_ep_key}=.*|${_ep_key}=${_ep_def}|' ~/${_ae_dest}/.env > ~/${_ae_dest}/.env.tmp && mv ~/${_ae_dest}/.env.tmp ~/${_ae_dest}/.env; fi" >/dev/null 2>&1 || true
+          done << EOF_ENV_DEFS
+$_env_path_defs
+EOF_ENV_DEFS
+        fi
+      fi
     fi
   done
 

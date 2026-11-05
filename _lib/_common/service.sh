@@ -87,13 +87,13 @@ libscript_service_fallback() {
       fi
       return 0
       ;;
-    restart|reload)
+    restart|reload|reload-or-restart)
       libscript_service_fallback stop "$_fb_service" || true
       sleep 1
       libscript_service_fallback start "$_fb_service"
       return $?
       ;;
-    enable|disable)
+    enable|disable|daemon-reload)
       return 0
       ;;
     uninstall)
@@ -113,7 +113,7 @@ libscript_service_fallback() {
       fi
       return 0
       ;;
-    status|health)
+    status|is-active|health)
       if [ "$_fb_action" = "health" ]; then
         libscript_check_health "$_fb_service" "$@" && return 0 || return 1
       fi
@@ -141,6 +141,10 @@ libscript_service() {
   _service="${2:-}"
   shift 2 || true
 
+  if [ "$_action" = "daemon-reload" ] && [ -z "$_service" ]; then
+    _service='system'
+  fi
+
   if [ -z "$_action" ] || [ -z "$_service" ]; then
     log_error 'Usage: libscript_service [ACTION] [SERVICE_NAME] [OPTIONS]'
     return 1
@@ -150,6 +154,7 @@ libscript_service() {
     up) _action="start" ;;
     down) _action="stop" ;;
     query) _action="status" ;;
+    reload-or-restart) _action="reload" ;;
     remove|uninstall-service) _action="uninstall" ;;
   esac
 
@@ -161,14 +166,16 @@ libscript_service() {
   # 1. Windows (sc.exe)
   if command -v sc.exe >/dev/null 2>&1; then
     case "$_action" in
-      start)     sc.exe start "$_service" ;;
-      stop)      sc.exe stop "$_service" ;;
-      restart)   sc.exe stop "$_service" || true; sleep 2; sc.exe start "$_service" ;;
-      reload)    sc.exe stop "$_service" || true; sleep 1; sc.exe start "$_service" ;;
-      status)    sc.exe query "$_service" ;;
-      enable)    sc.exe config "$_service" start= auto ;;
-      disable)   sc.exe config "$_service" start= disabled ;;
-      uninstall) libscript_uninstall_service "$_service" ;;
+      start)         sc.exe start "$_service" ;;
+      stop)          sc.exe stop "$_service" ;;
+      restart)       sc.exe stop "$_service" || true; sleep 2; sc.exe start "$_service" ;;
+      reload)        sc.exe stop "$_service" || true; sleep 1; sc.exe start "$_service" ;;
+      daemon-reload) return 0 ;;
+      status)        sc.exe query "$_service" ;;
+      is-active)     sc.exe query "$_service" 2>/dev/null | grep -q "RUNNING" ;;
+      enable)        sc.exe config "$_service" start= auto ;;
+      disable)       sc.exe config "$_service" start= disabled ;;
+      uninstall)     libscript_uninstall_service "$_service" ;;
       logs)
         if [ -f "${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_service}/service.log" ]; then
           tail "${@:--n 50}" "${LIBSCRIPT_DATA_DIR:-/tmp/data}/${_service}/service.log"
@@ -200,16 +207,18 @@ libscript_service() {
     fi
 
     case "$_action" in
-      start)     $_systemctl_cmd start "$_service" ;;
-      stop)      $_systemctl_cmd stop "$_service" ;;
-      restart)   $_systemctl_cmd restart "$_service" ;;
-      reload)    $_systemctl_cmd reload "$_service" 2>/dev/null || $_systemctl_cmd restart "$_service" ;;
-      status)    $_systemctl_cmd status "$_service" --no-pager ;;
-      enable)    $_systemctl_cmd enable "$_service" ;;
-      disable)   $_systemctl_cmd disable "$_service" ;;
-      uninstall) libscript_uninstall_service "$_service" ;;
-      logs)      priv journalctl -u "$_service" --no-pager "${@:--n 50}" 2>/dev/null || journalctl -u "$_service" --no-pager "${@:--n 50}" ;;
-      health)    libscript_check_health "$_service" "$@" ;;
+      start)         $_systemctl_cmd start "$_service" ;;
+      stop)          $_systemctl_cmd stop "$_service" ;;
+      restart)       $_systemctl_cmd restart "$_service" ;;
+      reload)        $_systemctl_cmd reload "$_service" 2>/dev/null || $_systemctl_cmd restart "$_service" ;;
+      daemon-reload) $_systemctl_cmd daemon-reload ;;
+      status)        $_systemctl_cmd status "$_service" --no-pager ;;
+      is-active)     $_systemctl_cmd is-active --quiet "$_service" ;;
+      enable)        $_systemctl_cmd enable "$_service" ;;
+      disable)       $_systemctl_cmd disable "$_service" ;;
+      uninstall)     libscript_uninstall_service "$_service" ;;
+      logs)          priv journalctl -u "$_service" --no-pager "${@:--n 50}" 2>/dev/null || journalctl -u "$_service" --no-pager "${@:--n 50}" ;;
+      health)        libscript_check_health "$_service" "$@" ;;
       *) log_error "Unknown action: $_action"; return 1 ;;
     esac
     return 0
@@ -219,10 +228,12 @@ libscript_service() {
   if command -v rc-service >/dev/null 2>&1; then
     case "$_action" in
       start|stop|restart|status) priv rc-service "$_service" "$_action" ;;
-      reload)    priv rc-service "$_service" reload 2>/dev/null || priv rc-service "$_service" restart ;;
-      enable)    priv rc-update add "$_service" default ;;
-      disable)   priv rc-update del "$_service" default ;;
-      uninstall) libscript_uninstall_service "$_service" ;;
+      is-active)     priv rc-service "$_service" status 2>/dev/null | grep -Eq "started|running" ;;
+      reload)        priv rc-service "$_service" reload 2>/dev/null || priv rc-service "$_service" restart ;;
+      daemon-reload) return 0 ;;
+      enable)        priv rc-update add "$_service" default ;;
+      disable)       priv rc-update del "$_service" default ;;
+      uninstall)     libscript_uninstall_service "$_service" ;;
       logs)
         if [ -f "/var/log/$_service.log" ]; then
           tail "${@:--n 50}" "/var/log/$_service.log"
@@ -243,10 +254,12 @@ libscript_service() {
     _rc_svc=$(printf '%s\n' "$_service" | tr '-' '_')
     case "$_action" in
       start|stop|restart|status) priv service "$_rc_svc" "$_action" 2>/dev/null || priv service "$_service" "$_action" ;;
-      reload)    priv service "$_rc_svc" reload 2>/dev/null || priv service "$_rc_svc" restart ;;
-      enable)    if command -v sysrc >/dev/null 2>&1; then priv sysrc "${_rc_svc}_enable=YES" || true; fi ;;
-      disable)   if command -v sysrc >/dev/null 2>&1; then priv sysrc "${_rc_svc}_enable=NO" || true; fi ;;
-      uninstall) libscript_uninstall_service "$_service" ;;
+      is-active)     priv service "$_rc_svc" onestatus >/dev/null 2>&1 || priv service "$_rc_svc" status >/dev/null 2>&1 || priv service "$_service" status >/dev/null 2>&1 ;;
+      reload)        priv service "$_rc_svc" reload 2>/dev/null || priv service "$_rc_svc" restart ;;
+      daemon-reload) return 0 ;;
+      enable)        if command -v sysrc >/dev/null 2>&1; then priv sysrc "${_rc_svc}_enable=YES" || true; fi ;;
+      disable)       if command -v sysrc >/dev/null 2>&1; then priv sysrc "${_rc_svc}_enable=NO" || true; fi ;;
+      uninstall)     libscript_uninstall_service "$_service" ;;
       logs)
         if [ -f "/var/log/$_rc_svc.log" ]; then
           tail "${@:--n 50}" "/var/log/$_rc_svc.log"
@@ -295,6 +308,10 @@ libscript_service() {
         sleep 1
         libscript_service start "$_service"
         ;;
+      daemon-reload)
+        if [ -f "$_plist_usr" ]; then launchctl unload "$_plist_usr" 2>/dev/null || true; launchctl load -w "$_plist_usr" 2>/dev/null || true; fi
+        if [ -f "$_plist_sys" ]; then priv launchctl unload "$_plist_sys" 2>/dev/null || true; priv launchctl load -w "$_plist_sys" 2>/dev/null || true; fi
+        ;;
       enable)
         if [ -f "$_plist_usr" ]; then launchctl load -w "$_plist_usr" 2>/dev/null || true; fi
         if [ -f "$_plist_sys" ]; then priv launchctl load -w "$_plist_sys" 2>/dev/null || true; fi
@@ -306,11 +323,14 @@ libscript_service() {
       uninstall)
         libscript_uninstall_service "$_service"
         ;;
-      status)
+      status|is-active)
         if launchctl list 2>/dev/null | grep -q "com.libscript.${_service}"; then
-          launchctl list | grep "com.libscript.${_service}"
+          [ "$_action" = "status" ] && launchctl list | grep "com.libscript.${_service}"
+          return 0
+        elif launchctl print "system/${_service}" >/dev/null 2>&1 || launchctl list 2>/dev/null | grep -q "${_service}"; then
+          return 0
         else
-          libscript_service_fallback status "$_service" "$@"
+          libscript_service_fallback "$_action" "$_service" "$@"
         fi
         ;;
       logs)
@@ -339,8 +359,10 @@ libscript_service() {
       stop|disable)   priv svcadm disable -s "$_fmri" ;;
       restart)        priv svcadm restart "$_fmri" ;;
       reload)         priv svcadm refresh "$_fmri" 2>/dev/null || priv svcadm restart "$_fmri" ;;
+      daemon-reload)  priv svcadm refresh "svc:/system/manifest-import:default" 2>/dev/null || true ;;
       uninstall)      libscript_uninstall_service "$_service" ;;
       status)         svcs -xv "$_fmri" ;;
+      is-active)      [ "$(svcs -H -o state "$_fmri" 2>/dev/null)" = "online" ] ;;
       logs)
         _smf_log=$(svcs -L "$_fmri" 2>/dev/null || true)
         if [ -n "$_smf_log" ] && [ -f "$_smf_log" ]; then
@@ -355,14 +377,34 @@ libscript_service() {
     return 0
   fi
 
-  # 7. runit (sv) / s6 (s6-svc)
+  # 7. dinit (dinitctl) / runit (sv) / s6 (s6-svc)
+  if command -v dinitctl >/dev/null 2>&1 && { [ -d /etc/dinit.d ] || [ "${LIBSCRIPT_INIT_SYSTEM:-}" = "dinit" ]; }; then
+    case "$_action" in
+      start)         priv dinitctl start "$_service" ;;
+      stop)          priv dinitctl stop "$_service" ;;
+      restart)       priv dinitctl restart "$_service" ;;
+      reload)        priv dinitctl reload "$_service" 2>/dev/null || priv dinitctl restart "$_service" ;;
+      daemon-reload) return 0 ;;
+      enable)        priv dinitctl enable "$_service" ;;
+      disable)       priv dinitctl disable "$_service" ;;
+      status)        priv dinitctl status "$_service" ;;
+      is-active)     priv dinitctl status "$_service" 2>/dev/null | grep -Eq "STARTED|RUNNING" ;;
+      uninstall)     libscript_uninstall_service "$_service" ;;
+      logs)          libscript_service_fallback logs "$_service" "$@" ;;
+      health)        libscript_check_health "$_service" "$@" ;;
+      *) log_error "Unknown action: $_action"; return 1 ;;
+    esac
+    return 0
+  fi
   if command -v sv >/dev/null 2>&1 && [ -d "/etc/service/${_service}" ]; then
     case "$_action" in
       start|enable)   priv sv up "$_service" ;;
       stop|disable)   priv sv down "$_service" ;;
       restart)        priv sv restart "$_service" ;;
       reload)         priv sv reload "$_service" 2>/dev/null || priv sv restart "$_service" ;;
+      daemon-reload)  return 0 ;;
       status)         priv sv status "$_service" ;;
+      is-active)      priv sv status "$_service" 2>/dev/null | grep -q "^run:" ;;
       uninstall)      libscript_uninstall_service "$_service" ;;
       logs)           libscript_service_fallback logs "$_service" "$@" ;;
       health)         libscript_check_health "$_service" "$@" ;;
@@ -376,7 +418,9 @@ libscript_service() {
       stop|disable)   priv s6-svc -d "/run/service/${_service}" ;;
       restart)        priv s6-svc -r "/run/service/${_service}" ;;
       reload)         priv s6-svc -h "/run/service/${_service}" ;;
+      daemon-reload)  return 0 ;;
       status)         priv s6-svstat "/run/service/${_service}" ;;
+      is-active)      priv s6-svstat "/run/service/${_service}" 2>/dev/null | grep -q "^up " ;;
       uninstall)      libscript_uninstall_service "$_service" ;;
       logs)           libscript_service_fallback logs "$_service" "$@" ;;
       health)         libscript_check_health "$_service" "$@" ;;
@@ -389,7 +433,9 @@ libscript_service() {
   if [ -x "/etc/init.d/${_service}" ] && command -v service >/dev/null 2>&1; then
     case "$_action" in
       start|stop|restart|status) priv service "$_service" "$_action" ;;
-      reload)    priv service "$_service" reload 2>/dev/null || priv service "$_service" restart ;;
+      is-active)     priv service "$_service" status >/dev/null 2>&1 ;;
+      reload)        priv service "$_service" reload 2>/dev/null || priv service "$_service" restart ;;
+      daemon-reload) return 0 ;;
       enable)
         if command -v update-rc.d >/dev/null 2>&1; then
           priv update-rc.d "$_service" defaults
@@ -447,58 +493,18 @@ libscript_check_health() {
   fi
 
   log_info "No custom healthcheck found for $_service, checking service status..."
-  if command -v systemctl >/dev/null 2>&1 && { [ -d /run/systemd/system ] || [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ]; }; then
-    _systemctl_cmd="priv systemctl"
-    if systemctl --user --quiet is-enabled "$_service" 2>/dev/null || systemctl --user --quiet is-active "$_service" 2>/dev/null; then
-      _systemctl_cmd="systemctl --user"
-    fi
-    if $_systemctl_cmd is-active --quiet "$_service"; then
-      log_info "$_service is active"
-      return 0
-    fi
-    case "$_service" in
-      libscript_*)
-        _bare_hc="${_service#libscript_}"
-        if $_systemctl_cmd is-active --quiet "$_bare_hc"; then
-          log_info "$_bare_hc is active"
-          return 0
-        fi
-        ;;
-    esac
-  elif command -v rc-service >/dev/null 2>&1; then
-    if priv rc-service "$_service" status | grep -q "started"; then
-      log_info "$_service is started"
-      return 0
-    fi
-  elif command -v svcs >/dev/null 2>&1; then
-    _fmri="$_service"
-    if ! svcs "$_fmri" >/dev/null 2>&1 && svcs "application/libscript/$_service" >/dev/null 2>&1; then
-      _fmri="application/libscript/$_service"
-    fi
-    if [ "$(svcs -H -o state "$_fmri" 2>/dev/null)" = "online" ]; then
-      log_info "$_service is online"
-      return 0
-    fi
-  elif [ "${UNAME_LOWER:-}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; then
-    if priv service "$_service" status >/dev/null 2>&1; then
-      log_info "$_service is running"
-      return 0
-    fi
-  elif command -v sc.exe >/dev/null 2>&1; then
-    if sc.exe query "$_service" | grep -q "RUNNING"; then
-      log_info "$_service is healthy"
-      return 0
-    fi
-  else
-    if libscript_service_fallback status "$_service" >/dev/null 2>&1; then
-      log_info "$_service is running (fallback PID)"
-      return 0
-    fi
+  if libscript_service is-active "$_service" >/dev/null 2>&1; then
+    log_info "$_service is active"
+    return 0
   fi
 
   log_error "$_service is NOT healthy"
   return 1
 }
+
+if [ "${THIS_FILE}" = "${0}" ] && [ $# -gt 0 ]; then
+  libscript_service "$@"
+fi
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

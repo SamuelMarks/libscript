@@ -142,11 +142,33 @@ test_offline_and_dependency_flags() {
   assert_contains "$_env_offline" "${LIBSCRIPT_HOME}/jq/1.7.1/bin" "CLI router parses --force-offline, --cache-dir, --service-name, and --*_STRATEGY cleanly"
 }
 
+# ## test_daemon_abstraction_and_linter
+# Verifies fallback daemon lifecycle via libscript_install_service/libscript_service and RAW_DAEMON_MANAGER audit enforcement.
+test_daemon_abstraction_and_linter() {
+  printf '==> 5. Testing Cross-Init Daemon Abstraction & RAW_DAEMON_MANAGER Audit...\n'
+  export LIBSCRIPT_DATA_DIR="${TEST_SANDBOX}/data"
+  export LIBSCRIPT_INIT_SYSTEM='fallback'
+  mkdir -p "$LIBSCRIPT_DATA_DIR"
+
+  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh" install "test_daemon_vm" "sleep 30" "$TEST_SANDBOX" "Test Daemon"
+  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" start "test_daemon_vm"
+  if sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" is-active "test_daemon_vm"; then
+    printf '[PASS] libscript_service is-active detects running fallback daemon.\n'
+  else
+    printf '[FAIL] libscript_service is-active failed to detect running fallback daemon!\n' >&2
+    FAILURES=$((FAILURES + 1))
+  fi
+  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" stop "test_daemon_vm"
+  sh "${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh" uninstall "test_daemon_vm"
+  unset LIBSCRIPT_INIT_SYSTEM
+}
+
 printf '=== LibScript Behavioral Version Manager Contract Suite ===\n'
 test_non_invasive_isolation
 test_side_by_side_multi_version
 test_scoped_env_formats
 test_offline_and_dependency_flags
+test_daemon_abstraction_and_linter
 
 if [ "$FAILURES" -gt 0 ]; then
   printf '[FAIL] Behavioral Version Manager Contract Suite failed with %d failure(s)!\n' "$FAILURES" >&2

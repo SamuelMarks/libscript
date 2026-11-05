@@ -33,6 +33,26 @@
       "type": "string",
       "description": "Relative directory containing secret files transferred out-of-band during cloud deployment"
     },
+    "env": {
+      "type": "object",
+      "description": "Global environment variables and colon-separated multi-host search path defaults injected across manifest operations",
+      "patternProperties": {
+        "^[A-Z0-9_]+$": {
+          "type": "string",
+          "description": "Environment variable string value or fallback expression"
+        }
+      }
+    },
+    "remote_env": {
+      "type": "object",
+      "description": "Remote-node environment variable overrides or multi-host search path defaults normalized when syncing .env during cloud deployment",
+      "patternProperties": {
+        "^[A-Z0-9_]+$": {
+          "type": "string",
+          "description": "Remote environment variable string value or fallback expression"
+        }
+      }
+    },
     "deps": {
       "type": "object",
       "description": "Map of required LibScript component names to version strings or configuration objects",
@@ -89,6 +109,14 @@
           "db_path": {
             "type": "string",
             "description": "Alias for filesystem path of file-backed databases"
+          },
+          "extra_paths": {
+            "type": "array",
+            "description": "Additional database or session files whose ownership and permissions should be aligned with the database user",
+            "items": {
+              "type": "string",
+              "description": "Filesystem path or environment variable expression for an auxiliary database file"
+            }
           },
           "url_env": {
             "type": "string",

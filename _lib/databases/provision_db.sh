@@ -602,12 +602,29 @@ while IFS= read -r db_entry <&3; do
         DB_OWNER="$SVC_OWNER_USER"
       fi
       if [ -n "$DB_OWNER" ] && id "$DB_OWNER" >/dev/null 2>&1; then
-        for _own_target in "$DB_PARENT_DIR" "$DB_PATH" "${DB_PATH}.wal" "${T1D_SESSIONS_DB_PATH:-}" "${MANIFEST_DIR}/data"; do
+        _duck_extra_paths=$(
+          {
+            printf '%s\n' "$db_entry" | jq -r '.extra_paths[]? // empty' 2>/dev/null || true
+            env | awk -F= '/^[A-Za-z0-9_]*_DB_PATH=/ {print substr($0, index($0, "=") + 1)}' 2>/dev/null || true
+          } | awk 'NF && !seen[$0]++'
+        )
+        for _own_target in "$DB_PARENT_DIR" "$DB_PATH" "${DB_PATH}.wal" "${MANIFEST_DIR}/data"; do
           if [ -n "$_own_target" ] && [ -e "$_own_target" ]; then
             chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || sudo chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || true
             chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || sudo chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || true
           fi
         done
+        if [ -n "$_duck_extra_paths" ]; then
+          while IFS= read -r _dep_target; do
+            _dep_target=$(expand_manifest_vars "$_dep_target")
+            if [ -n "$_dep_target" ] && [ -e "$_dep_target" ]; then
+              chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || sudo chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || true
+              chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || sudo chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || true
+            fi
+          done << EOF_DUCK_EXTRA
+$_duck_extra_paths
+EOF_DUCK_EXTRA
+        fi
       fi
       ;;
     valkey|redis)

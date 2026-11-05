@@ -109,16 +109,16 @@ stack) for any supported cloud provider.
 # syntax: libscript.cmd provision <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
 
 # Azure
-./libscript.sh provision azure t1d-web-node t1d-rg eastus ./ t1d-analytics
-# Windows: libscript.cmd provision azure t1d-web-node t1d-rg eastus . t1d-analytics
+./libscript.sh provision azure analytics-web-node analytics-rg eastus ./ analytics-app
+# Windows: libscript.cmd provision azure analytics-web-node analytics-rg eastus . analytics-app
 
 # AWS
-./libscript.sh provision aws t1d-web-node t1d-vpc us-east-1 ./ t1d-analytics
-# Windows: libscript.cmd provision aws t1d-web-node t1d-vpc us-east-1 . t1d-analytics
+./libscript.sh provision aws analytics-web-node analytics-vpc us-east-1 ./ analytics-app
+# Windows: libscript.cmd provision aws analytics-web-node analytics-vpc us-east-1 . analytics-app
 
 # GCP
-./libscript.sh provision gcp t1d-web-node t1d-project us-central1-a ./ t1d-analytics
-# Windows: libscript.cmd provision gcp t1d-web-node t1d-project us-central1-a . t1d-analytics
+./libscript.sh provision gcp analytics-web-node analytics-project us-central1-a ./ analytics-app
+# Windows: libscript.cmd provision gcp analytics-web-node analytics-project us-central1-a . analytics-app
 ```
 
 ### Deprovisioning
@@ -134,16 +134,16 @@ Disks, and Network Interfaces):
 # syntax: libscript.cmd deprovision <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
 
 # Azure
-./libscript.sh deprovision azure t1d-web-node t1d-rg eastus ./ t1d-analytics
-# Windows: libscript.cmd deprovision azure t1d-web-node t1d-rg eastus . t1d-analytics
+./libscript.sh deprovision azure analytics-web-node analytics-rg eastus ./ analytics-app
+# Windows: libscript.cmd deprovision azure analytics-web-node analytics-rg eastus . analytics-app
 
 # AWS
-./libscript.sh deprovision aws t1d-web-node t1d-vpc us-east-1 ./ t1d-analytics
-# Windows: libscript.cmd deprovision aws t1d-web-node t1d-vpc us-east-1 . t1d-analytics
+./libscript.sh deprovision aws analytics-web-node analytics-vpc us-east-1 ./ analytics-app
+# Windows: libscript.cmd deprovision aws analytics-web-node analytics-vpc us-east-1 . analytics-app
 
 # GCP
-./libscript.sh deprovision gcp t1d-web-node t1d-project us-central1-a ./ t1d-analytics
-# Windows: libscript.cmd deprovision gcp t1d-web-node t1d-project us-central1-a . t1d-analytics
+./libscript.sh deprovision gcp analytics-web-node analytics-project us-central1-a ./ analytics-app
+# Windows: libscript.cmd deprovision gcp analytics-web-node analytics-project us-central1-a . analytics-app
 ```
 
 ### Infrastructure-as-Code Declarations
@@ -208,7 +208,7 @@ Define your state paths and target bucket in `libscript.json`:
 ```json
 {
   "state": {
-    "paths": ["t1d.duckdb", "data/"],
+    "paths": ["analytics.duckdb", "data/"],
     "bucket": "s3://my-bucket/state-backup",
     "endpoint": "https://my-minio-or-r2-endpoint.com"
   }

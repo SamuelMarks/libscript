@@ -34,7 +34,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/envsubst_safe.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/service.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -98,24 +98,18 @@ if [ -d '/etc/systemd/system' ]; then
   priv  install -m 0644 -- '/tmp/'"${service_name}" "${service}"
   priv mkdir -p /etc/conf.d
   priv install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/"${service_name}"
-  if ! priv systemctl daemon-reload ; then
-    true
-  fi
-  if ! priv systemctl reload-or-restart -- "${service_name}" ; then
-    true
-  fi
-elif [ -d '/etc/init.d' ] && command -v rc-service >/dev/null 2>&1; then
-  # OpenRC
+  libscript_service daemon-reload "${service_name}" || true
+  libscript_service reload-or-restart "${service_name}" || true
+elif [ -d '/etc/init.d' ]; then
+  # OpenRC / SysVinit
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
-  log_info "Registering OpenRC service for ${service_name}..."
-  rc-service "${service_name}" restart 2>/dev/null || true
+  log_info "Registering init.d service for ${service_name}..."
+  libscript_service restart "${service_name}" 2>/dev/null || true
 elif [ -d '/usr/local/etc/rc.d' ]; then
   # FreeBSD
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   log_info "Configuring FreeBSD rc.d service for ${service_name}..."
-  if command -v sysrc >/dev/null 2>&1; then
-    sysrc "${service_name}_enable=YES" || true
-  fi
+  libscript_service enable "${service_name}" || true
 elif [ "${TARGET_OS:-}" = "sunos" ] || [ "$(uname -s)" = "SunOS" ]; then
   # SunOS / OmniOS
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"

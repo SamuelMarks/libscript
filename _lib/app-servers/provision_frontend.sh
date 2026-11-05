@@ -379,7 +379,15 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         elif [ -f "${src_dir}/dist/.libscript_src_hash" ]; then
           _cached_fp=$(cat "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true)
         fi
-        if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; then
+        _fresh_hook_build=0
+        if [ -f "${src_dir}/dist/.libscript_src_hash" ] && [ -n "$(find "${src_dir}/dist/.libscript_src_hash" -mmin -5 2>/dev/null || true)" ]; then
+          _fresh_hook_build=1
+        elif [ -f "${src_dir}/.libscript_build.sha256" ] && [ -n "$(find "${src_dir}/.libscript_build.sha256" -mmin -5 2>/dev/null || true)" ]; then
+          _fresh_hook_build=1
+        elif [ ! -f "${src_dir}/.libscript_build.sha256" ] && [ -d "${src_dir}/dist" ] && [ -n "$(find "${src_dir}/dist" -name 'index.html' -mmin -5 2>/dev/null || true)" ]; then
+          _fresh_hook_build=1
+        fi
+        if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && { { [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; } || [ "$_fresh_hook_build" -eq 1 ]; }; then
           printf '[REUSE] Frontend build for '\''%s'\'' (%s) in '\''%s'\'' is up-to-date (hash %s).\n' "$svc_id" "${framework:-spa}" "$src_dir" "$_fe_fp"
           printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
           if [ -d "${src_dir}/dist" ]; then
@@ -387,7 +395,9 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
           fi
         else
           printf '[BUILD] Building frontend '\''%s'\'' (%s) in '\''%s'\''...\n' "$svc_id" "${framework:-spa}" "$src_dir"
-          rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular/cache" "$src_dir/.vite" "$src_dir/.libscript_build.sha256"
+          if [ "$build_cmd" != 'true' ] && [ "$build_cmd" != ':' ]; then
+            rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular/cache" "$src_dir/.vite" "$src_dir/.libscript_build.sha256"
+          fi
           (
             cd "$src_dir"
             if [ -s "$_fe_env_file" ]; then

@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" \
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/service.sh" \
             "_lib/git-servers/utils/git.sh" "_lib/languages/rust/setup.sh" "_lib/_common/envsubst_safe.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -98,14 +98,7 @@ if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
 fi
 EXEC_START="$(pwd)"'/'"$(find target/release -depth -maxdepth 1 -type f -executable -print -quit)"
 
-NAME_FILE="$(mktemp)"
-trap 'rm -f -- "${NAME_FILE}"' EXIT HUP INT QUIT TERM
-env -i DESCRIPTION='Rust server'"${NAME}" \
-        WORKING_DIR="${RUST_SERVER_DEST}" \
-        ENV="${ENV}" \
-        EXEC_START="${EXEC_START}" \
-        "$(command -v envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${NAME_FILE}"
-priv  install -m 0644 -o 'root' -- "${NAME_FILE}" '/etc/systemd/system/'"${SERVICE_NAME}"'.service'
+libscript_install_service "${SERVICE_NAME}" "${EXEC_START}" "${RUST_SERVER_DEST}" "Rust server${NAME}" "" "" "${LIBSCRIPT_DATA_DIR}/dyn_env.sh"
 
 cd -- "${PREVIOUS_WD}"
 
