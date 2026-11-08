@@ -34,6 +34,7 @@ ACTION="${1:-boot}"
 KERNEL="${2:-${LIBSCRIPT_ROOT_DIR}/build/vmlinux}"
 DISK="${3:-${LIBSCRIPT_ROOT_DIR}/build/disk.img}"
 VIRTIOFS_DIR="${4:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
+export VIRTIOFS_DIR
 
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"

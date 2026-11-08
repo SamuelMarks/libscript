@@ -91,6 +91,10 @@ audit_batch() {
         print "[FAIL] [" prev_f "] Unnecessary double quotes where single quotes suffice: " dq_hit
         errs++
       }
+      if (sc2015_hit != "" && prev_f !~ /(audit_posix\.sh|audit_standards\.sh|\.tpl)$/) {
+        print "[FAIL] [" prev_f "] SC2015-prone `A && B || true` chain detected (use explicit `if ...; then ... || true; fi`): " sc2015_hit
+        errs++
+      }
       if (has_unguarded_home) {
         print "[FAIL] [" prev_f "] Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety"
         errs++
@@ -103,7 +107,7 @@ audit_batch() {
       first_line = $0
       has_feu = 0; has_this = 0; bad_stack_quote = 0; unreachable_stack = 0;
       has_dbl_bracket = 0; has_func_kw = 0; has_source_kw = 0; has_echo_e = 0;
-      has_sort_v = 0; has_sed_i = 0; dq_hit = ""; has_unguarded_home = 0;
+      has_sort_v = 0; has_sed_i = 0; dq_hit = ""; sc2015_hit = ""; has_unguarded_home = 0;
       in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
       is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
     }
@@ -144,6 +148,11 @@ audit_batch() {
               $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+\x27%s\\n\x27|echo)[[:space:]]+"[^$`\x5c\x27"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||
               $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
             dq_hit = FNR ":" $0
+          }
+        }
+        if (sc2015_hit == "") {
+          if ($0 ~ /^[ \t]*(\x5b[^\x5d]+\x5d([ \t]*&&[ \t]*\x5b[^\x5d]+\x5d)*|command[ \t]+-v[ \t]+[^|;]+)[ \t]*&&[ \t]*[^|;&\x5b{][^|;&]*(\|[ \t]*[^|;&]+)*\|\|[ \t]*(true|:)([ \t;]|$)/) {
+            sc2015_hit = FNR ":" $0
           }
         }
         if (is_env_sh && $0 ~ /\$HOME([^A-Za-z0-9_]|$)|(\$\{HOME\})/) has_unguarded_home = 1

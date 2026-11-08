@@ -30,6 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${NETCTL_DIR:=$(cd "$SCRIPT_DIR/.." && pwd)}"
 SCRIPT_NAME="${NETCTL_DIR}/lib/prelude.sh"
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_apache
@@ -78,6 +79,7 @@ netctl_emit_apache() {
         printf '    RewriteEngine On\n'
         printf '    RewriteCond %%{HTTP:Upgrade} websocket [NC]\n'
         printf '    RewriteCond %%{HTTP:Connection} upgrade [NC]\n'
+        # shellcheck disable=SC2016
         printf '    RewriteRule ^%s(.*) "%s$1" [P,L]\n' "$path" "$_ws_target"
         printf '    ProxyPass "%s" "%s"\n' "$path" "$target"
         printf '    ProxyPassReverse "%s" "%s"\n' "$path" "$target"

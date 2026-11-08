@@ -87,6 +87,19 @@ if exist "!MANIFEST_DIR!\.env" copy /y "!MANIFEST_DIR!\.env" "!APP_STAGE!\config
 if exist "!MANIFEST_DIR!\.env.secrets" copy /y "!MANIFEST_DIR!\.env.secrets" "!APP_STAGE!\config\env.secrets" >nul
 if exist "!MANIFEST_DIR!\.env.libscript" copy /y "!MANIFEST_DIR!\.env.libscript" "!APP_STAGE!\config\env.libscript" >nul
 
+set "_exp_cert_store=%CERT_STORE_DIR%"
+if "!_exp_cert_store!"=="" (
+    set "_exp_def_mount=%DATA_DISK_MOUNT%"
+    if "!_exp_def_mount!"=="" set "_exp_def_mount=%DATA_MOUNT_DIR%"
+    if "!_exp_def_mount!"=="" set "_exp_def_mount=/mnt/data"
+    set "_exp_cert_store=!_exp_def_mount!/certs"
+)
+for /f "delims=" %%C in ('jq -r ".ingress.cert_store_dir // empty" "!JSON_FILE!" 2^>nul') do if not "%%C"=="" set "_exp_cert_store=%%C"
+if exist "!_exp_cert_store!\live" (
+    if not exist "!APP_STAGE!\certs\live" mkdir "!APP_STAGE!\certs\live"
+    xcopy /E /I /Y "!_exp_cert_store!\live" "!APP_STAGE!\certs\live" >nul 2>&1
+)
+
 echo [INFO] Exported state for '!APP_NAME!' into '!APP_STAGE!'.
 exit /b 0
 
@@ -146,7 +159,14 @@ exit /b 0
 :: Copies a DuckDB or SQLite database file into the staging duckdb directory.
 :exp_file
 if "!_path!"=="" (
-    set "_path=!MANIFEST_DIR!\data\!_name!.!_eng!"
+    set "_exp_def_m=%DATA_DISK_MOUNT%"
+    if "!_exp_def_m!"=="" set "_exp_def_m=%DATA_MOUNT_DIR%"
+    if "!_exp_def_m!"=="" set "_exp_def_m=/mnt/data"
+    if exist "!_exp_def_m!\!_name!.!_eng!" (
+        set "_path=!_exp_def_m!\!_name!.!_eng!"
+    ) else (
+        set "_path=!MANIFEST_DIR!\data\!_name!.!_eng!"
+    )
 ) else (
     for /f "delims=" %%x in ('jq -rn --arg s "!_path!" "reduce range(3) as $_ ($s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\"))" 2^>nul') do set "_path=%%x"
     set "_path_win=!_path:/=\!"

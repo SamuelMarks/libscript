@@ -79,7 +79,9 @@ fi
 
 # Generate temporary secrets env file to copy to remote VM without leaking into ps
 TMP_ENV_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_ml_env.XXXXXX")
-trap 'rm -f "$TMP_ENV_FILE" /tmp/ml_deploy.sh' EXIT
+ML_DEPLOY_SCRIPT="${TMPDIR:-/tmp}/ml_deploy.sh"
+ML_DATA_MOUNT="${ML_DATA_MOUNT:-/mnt/ml_data}"
+trap 'rm -f "$TMP_ENV_FILE" "$ML_DEPLOY_SCRIPT"' EXIT
 chmod 600 "$TMP_ENV_FILE"
 for _sec_key in HF_TOKEN WANDB_API_KEY KERAS_BACKEND JAX_PLATFORMS MODEL_NAME DATASET_NAME DUCKDB_PATH DUCKDB_TABLE DUCKDB_URL; do
   _sec_val=$(printenv "$_sec_key" 2>/dev/null || true)
@@ -98,14 +100,15 @@ gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --
   ~/_lib/logging/tensorboard/setup.sh
 "
 
-cat << 'EOF' > /tmp/ml_deploy.sh
+cat << 'EOF' > "$ML_DEPLOY_SCRIPT"
 set -ex
 
 BUCKET_NAME="${1:-}"
+ML_MOUNT="${2:-${ML_DATA_MOUNT:-/mnt/ml_data}}"
 if [ -n "$BUCKET_NAME" ]; then
-  mkdir -p /mnt/ml_data
-  gcsfuse --implicit-dirs "$BUCKET_NAME" /mnt/ml_data || true
-  WORK_DATA_DIR="/mnt/ml_data"
+  mkdir -p "$ML_MOUNT"
+  gcsfuse --implicit-dirs "$BUCKET_NAME" "$ML_MOUNT" || true
+  WORK_DATA_DIR="$ML_MOUNT"
 else
   mkdir -p "$HOME/workspace/data"
   WORK_DATA_DIR="$HOME/workspace/data"
@@ -131,9 +134,9 @@ mkdir -p "${WORK_DATA_DIR}/logs"
 ~/_lib/logging/tensorboard/cli.sh start "${WORK_DATA_DIR}/logs" 6006 || tensorboard --logdir="${WORK_DATA_DIR}/logs" --port=6006 --host=0.0.0.0 &
 EOF
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/ml_deploy.sh "$BUCKET_NAME"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < "$ML_DEPLOY_SCRIPT" "$BUCKET_NAME" "$ML_DATA_MOUNT"
 
-REMOTE_RUN_DIR='/mnt/ml_data'
+REMOTE_RUN_DIR="$ML_DATA_MOUNT"
 if [ -z "$BUCKET_NAME" ]; then
   REMOTE_RUN_DIR="\$HOME/workspace"
 elif [ -n "$APP_DIR" ]; then

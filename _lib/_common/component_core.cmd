@@ -68,6 +68,13 @@ set "ACTION=%~1"
 set "REQ_PKG=%~2"
 set "VERSION=%~3"
 
+if /i "%ACTION%"==":libscript_Synchronize_Ingress" goto :dispatch_synchronize_ingress
+if /i "%ACTION%"=="--synchronize-ingress" goto :dispatch_synchronize_ingress
+if /i "%ACTION%"=="synchronize-ingress" goto :dispatch_synchronize_ingress
+if /i "%ACTION%"==":libscript_Warmup_Ollama" goto :dispatch_warmup_ollama
+if /i "%ACTION%"=="--warmup-ollama" goto :dispatch_warmup_ollama
+if /i "%ACTION%"=="warmup-ollama" goto :dispatch_warmup_ollama
+
 if "%ACTION%"=="" goto :show_help
 if /i "%ACTION%"=="help" goto :show_help
 if /i "%ACTION%"=="--help" goto :show_help
@@ -603,4 +610,104 @@ if !errorlevel! equ 0 (
 ) else (
     echo   ^(jq is required for dynamic options list^)
 )
+exit /b 0
+
+:: ## dispatch_synchronize_ingress
+:: Runs :libscript_Synchronize_Ingress and exports NETCTL_PROXY_* to the caller scope.
+:dispatch_synchronize_ingress
+call :libscript_Synchronize_Ingress "%~2" "%~3" "%~4" "%~5"
+endlocal & (
+    set "NETCTL_PROXY_CONNECT_TIMEOUT=%NETCTL_PROXY_CONNECT_TIMEOUT%"
+    set "NETCTL_PROXY_SEND_TIMEOUT=%NETCTL_PROXY_SEND_TIMEOUT%"
+    set "NETCTL_PROXY_READ_TIMEOUT=%NETCTL_PROXY_READ_TIMEOUT%"
+    set "NETCTL_PROXY_BUFFERING=%NETCTL_PROXY_BUFFERING%"
+)
+exit /b 0
+
+:: ## dispatch_warmup_ollama
+:: Runs :libscript_Warmup_Ollama and exports OLLAMA_KEEP_ALIVE and OLLAMA_NUM_GPU to the caller scope.
+:dispatch_warmup_ollama
+call :libscript_Warmup_Ollama "%~2"
+endlocal & (
+    set "OLLAMA_KEEP_ALIVE=%OLLAMA_KEEP_ALIVE%"
+    set "OLLAMA_NUM_GPU=%OLLAMA_NUM_GPU%"
+)
+exit /b 0
+
+:: ## libscript_Synchronize_Ingress
+:: Extracts .ingress.proxy_connect_timeout, .ingress.proxy_send_timeout, .ingress.proxy_read_timeout, and .ingress.proxy_buffering from libscript.json, normalizes numeric seconds to '<N>s', exports NETCTL_PROXY_*, and invokes netctl.cmd with the corresponding --proxy-* flags.
+:libscript_Synchronize_Ingress
+set "_LSI_JSON=%~1"
+if "!_LSI_JSON!"=="" set "_LSI_JSON=libscript.json"
+if not exist "!_LSI_JSON!" exit /b 0
+set "_LSI_CONN="
+set "_LSI_SEND="
+set "_LSI_READ="
+set "_LSI_BUF="
+where jq >nul 2>&1
+if not errorlevel 1 (
+    jq -e ".ingress != null" "!_LSI_JSON!" >nul 2>&1
+    if errorlevel 1 exit /b 0
+    for /f "delims=" %%P in ('jq -r ".ingress.proxy_connect_timeout // empty" "!_LSI_JSON!" 2^>nul') do if not "%%P"=="" if not "%%P"=="null" set "_LSI_CONN=%%P"
+    for /f "delims=" %%P in ('jq -r ".ingress.proxy_send_timeout // empty" "!_LSI_JSON!" 2^>nul') do if not "%%P"=="" if not "%%P"=="null" set "_LSI_SEND=%%P"
+    for /f "delims=" %%P in ('jq -r ".ingress.proxy_read_timeout // empty" "!_LSI_JSON!" 2^>nul') do if not "%%P"=="" if not "%%P"=="null" set "_LSI_READ=%%P"
+    for /f "delims=" %%P in ('jq -r ".ingress.proxy_buffering // empty" "!_LSI_JSON!" 2^>nul') do if not "%%P"=="" if not "%%P"=="null" set "_LSI_BUF=%%P"
+)
+if "!_LSI_CONN!"=="" set "_LSI_CONN=%NETCTL_PROXY_CONNECT_TIMEOUT%"
+if "!_LSI_CONN!"=="" set "_LSI_CONN=60s"
+echo "!_LSI_CONN!" | findstr /R "^[0-9][0-9]*$" >nul 2>&1
+if not errorlevel 1 set "_LSI_CONN=!_LSI_CONN!s"
+
+if "!_LSI_SEND!"=="" set "_LSI_SEND=%NETCTL_PROXY_SEND_TIMEOUT%"
+if "!_LSI_SEND!"=="" set "_LSI_SEND=300s"
+echo "!_LSI_SEND!" | findstr /R "^[0-9][0-9]*$" >nul 2>&1
+if not errorlevel 1 set "_LSI_SEND=!_LSI_SEND!s"
+
+if "!_LSI_READ!"=="" set "_LSI_READ=%NETCTL_PROXY_READ_TIMEOUT%"
+if "!_LSI_READ!"=="" set "_LSI_READ=300s"
+echo "!_LSI_READ!" | findstr /R "^[0-9][0-9]*$" >nul 2>&1
+if not errorlevel 1 set "_LSI_READ=!_LSI_READ!s"
+
+if "!_LSI_BUF!"=="" set "_LSI_BUF=%NETCTL_PROXY_BUFFERING%"
+if "!_LSI_BUF!"=="" set "_LSI_BUF=off"
+if /i "!_LSI_BUF!"=="true" set "_LSI_BUF=on"
+if /i "!_LSI_BUF!"=="1" set "_LSI_BUF=on"
+if /i "!_LSI_BUF!"=="false" set "_LSI_BUF=off"
+if /i "!_LSI_BUF!"=="0" set "_LSI_BUF=off"
+
+set "NETCTL_PROXY_CONNECT_TIMEOUT=!_LSI_CONN!"
+set "NETCTL_PROXY_SEND_TIMEOUT=!_LSI_SEND!"
+set "NETCTL_PROXY_READ_TIMEOUT=!_LSI_READ!"
+set "NETCTL_PROXY_BUFFERING=!_LSI_BUF!"
+
+if "%LIBSCRIPT_DRY_RUN%"=="1" if "%~2"=="" exit /b 0
+
+set "_LSI_NETCTL=!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\netctl.cmd"
+if not exist "!_LSI_NETCTL!" set "_LSI_NETCTL=!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd"
+set "_LSI_ARGS=%~2 %~3 %~4 %~5"
+set "_LSI_TRIM=!_LSI_ARGS: =!"
+if "!_LSI_TRIM!"=="" set "_LSI_ARGS=--reload"
+set "STACK="
+call "!_LSI_NETCTL!" apply "!_LSI_JSON!" --proxy-connect-timeout "!NETCTL_PROXY_CONNECT_TIMEOUT!" --proxy-send-timeout "!NETCTL_PROXY_SEND_TIMEOUT!" --proxy-read-timeout "!NETCTL_PROXY_READ_TIMEOUT!" --proxy-buffering "!NETCTL_PROXY_BUFFERING!" !_LSI_ARGS!
+exit /b !ERRORLEVEL!
+
+:: ## libscript_Warmup_Ollama
+:: Pre-warms gemma:2b in Ollama with keep_alive: "30m" and OLLAMA_NUM_GPU=0 on Windows.
+:libscript_Warmup_Ollama
+set "_LWO_MOD=%~1"
+if "!_LWO_MOD!"=="" set "_LWO_MOD=%OLLAMA_DEFAULT_MODEL%"
+if "!_LWO_MOD!"=="" set "_LWO_MOD=gemma:2b"
+set "_LWO_KA=%OLLAMA_KEEP_ALIVE%"
+if "!_LWO_KA!"=="" set "_LWO_KA=30m"
+set "OLLAMA_KEEP_ALIVE=!_LWO_KA!"
+if "%OLLAMA_NUM_GPU%"=="" set "OLLAMA_NUM_GPU=0"
+if "%LIBSCRIPT_DRY_RUN%"=="1" exit /b 0
+where curl.exe >nul 2>&1
+if errorlevel 1 exit /b 0
+set "_LWO_URL=%OLLAMA_HOST%"
+if "!_LWO_URL!"=="" set "_LWO_URL=http://127.0.0.1:11434"
+if "!_LWO_URL:~-1!"=="/" set "_LWO_URL=!_LWO_URL:~0,-1!"
+if /i "!_LWO_URL:~-3!"=="/v1" set "_LWO_URL=!_LWO_URL:~0,-3!"
+:: libscript-allow-raw-curl
+curl.exe -sS --connect-timeout 5 --max-time 120 -H "Content-Type: application/json" -d "{\"model\":\"!_LWO_MOD!\",\"prompt\":\"warmup\",\"stream\":false,\"keep_alive\":\"!_LWO_KA!\",\"options\":{\"num_predict\":1,\"num_ctx\":512,\"num_gpu\":0}}" "!_LWO_URL!/api/generate" >nul 2>&1
 exit /b 0

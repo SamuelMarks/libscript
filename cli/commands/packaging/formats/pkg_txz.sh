@@ -59,7 +59,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
         meta_depends="${meta_depends}\"${pkg_name}\": {\"version\": \"$APP_VERSION\", \"origin\": \"misc/${pkg_name}\"}"
         printf '%s\n' "printf '%s\n' \"Building $pkg_name ...\""
-        printf '%s\n' "BUILD_DIR=\"/tmp/${pkg_name}_pkgbuild\""
+        printf '%s\n' "BUILD_DIR=\"\${TMPDIR:-/tmp}/${pkg_name}_pkgbuild\""
         printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/opt/libscript\""
         printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
         if [ "$OFFLINE" = "1" ]; then printf '%s\n' "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* \"\$BUILD_DIR/root/opt/libscript/\" 2>/dev/null || true"; printf '%s\n' "rm -rf \"\$BUILD_DIR/root/opt/libscript/.git\""; fi
@@ -84,7 +84,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "rm -rf \"\$BUILD_DIR\""
       done
       printf '%s\n' "printf '%s\n' \"Building ${APP_NAME}-meta ...\""
-      printf '%s\n' "BUILD_DIR=\"/tmp/${APP_NAME}-meta_pkgbuild\""
+      printf '%s\n' "BUILD_DIR=\"\${TMPDIR:-/tmp}/${APP_NAME}-meta_pkgbuild\""
       printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
       printf '%s\n' "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${APP_NAME}-meta_installed\""
       printf '%s\n' "mkdir -p \"\$BUILD_DIR/meta\""

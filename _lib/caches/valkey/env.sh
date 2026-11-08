@@ -39,6 +39,11 @@ export VALKEY_BUILD_DIR="${VALKEY_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}}/valke
 
 VALKEY_INSTALL_METHOD="${VALKEY_INSTALL_METHOD:-system}"
 export VALKEY_INSTALL_METHOD
+VALKEY_DATA_DIR="${VALKEY_DATA_DIR:-${REDIS_DATA_DIR:-}}"
+if [ -n "$VALKEY_DATA_DIR" ]; then
+  export VALKEY_DATA_DIR
+  export REDIS_DATA_DIR="${VALKEY_DATA_DIR}"
+fi
 
 VALKEY_VERSION="${VALKEY_VERSION:-latest}"
 libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/valkey/${VALKEY_VERSION}/bin"

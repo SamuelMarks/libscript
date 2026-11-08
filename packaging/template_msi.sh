@@ -58,6 +58,7 @@ while [ $# -gt 0 ]; do
       ;;
     --msi-dir)
       MSI_DIR="$2"
+      export MSI_DIR
       shift 2
       ;;
     *)
@@ -113,9 +114,9 @@ while IFS='=' read -r _key _val; do
     APP_PUBLISHER) APP_PUBLISHER="$_val" ;;
     UPGRADE_CODE) UPGRADE_CODE="$_val" ;;
     TOPOLOGY) TOPOLOGY="$_val" ;;
-    APP_DIR) APP_DIR="$_val" ;;
-    DATA_DIR) DATA_DIR="$_val" ;;
-    LOGS_DIR) LOGS_DIR="$_val" ;;
+    APP_DIR) export APP_DIR="$_val" ;;
+    DATA_DIR) export DATA_DIR="$_val" ;;
+    LOGS_DIR) export LOGS_DIR="$_val" ;;
     HAS_DB) HAS_DB="$_val" ;;
     DB_ENGINE) DB_ENGINE="$_val" ;;
     DB_PORT) DB_PORT="$_val" ;;

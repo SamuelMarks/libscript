@@ -31,6 +31,7 @@ export DIR="${SCRIPT_DIR}"
 
 PROVISION_SH="${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh"
 DEPROVISION_SH="${LIBSCRIPT_ROOT_DIR}/_lib/databases/deprovision_schema.sh"
+export DEPROVISION_SH
 
 printf '==> Running Universal Schema Provisioning Verification Tests...\n'
 

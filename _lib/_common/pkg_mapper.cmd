@@ -200,6 +200,11 @@ if "!PKG!"=="bun" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=caddy.caddy"
 ) else if "!PKG!"=="nginx" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Nginx.Nginx"
+) else if "!PKG!"=="certbot" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=EFF.Certbot"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=certbot"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=certbot"
+    if "!PKG_MGR!"=="vcpkg" set "MAPPED_PKG=certbot"
 ) else if "!PKG!"=="etcd" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=etcd.etcd"
 ) else if "!PKG!"=="rabbitmq" (

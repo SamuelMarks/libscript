@@ -44,18 +44,21 @@ libscript_service_fallback() {
   _fb_service="$2"
   shift 2 || true
 
-  _fb_data_base="${LIBSCRIPT_DATA_DIR:-/tmp/data}"
+  _fb_data_base="${LIBSCRIPT_DATA_DIR:-${TMP_DATA_DIR:-${TMPDIR:-/tmp}/data}}"
   _fb_svc_dir="${_fb_data_base}/${_fb_service}"
   _fb_pid_file="${_fb_svc_dir}/service.pid"
+  _fb_run_dir="${LIBSCRIPT_RUN_DIR:-/var/run}"
+  _fb_tmp_dir="${TMPDIR:-/tmp}"
+  _fb_sys_log_dir="${LIBSCRIPT_LOG_DIR:-/var/log}"
   if [ ! -f "$_fb_pid_file" ]; then
-    if [ -f "/var/run/${_fb_service}.pid" ]; then
-      _fb_pid_file="/var/run/${_fb_service}.pid"
-    elif [ -f "/tmp/${_fb_service}.pid" ]; then
-      _fb_pid_file="/tmp/${_fb_service}.pid"
+    if [ -f "${_fb_run_dir}/${_fb_service}.pid" ]; then
+      _fb_pid_file="${_fb_run_dir}/${_fb_service}.pid"
+    elif [ -f "${_fb_tmp_dir}/${_fb_service}.pid" ]; then
+      _fb_pid_file="${_fb_tmp_dir}/${_fb_service}.pid"
     fi
   fi
   _fb_log_file="${_fb_svc_dir}/service.log"
-  [ -f "$_fb_log_file" ] || _fb_log_file="/var/log/${_fb_service}.log"
+  [ -f "$_fb_log_file" ] || _fb_log_file="${_fb_sys_log_dir}/${_fb_service}.log"
 
   case "$_fb_action" in
     start)

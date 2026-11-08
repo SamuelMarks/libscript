@@ -42,7 +42,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-MEMCACHED_INSTALL_METHOD="$(libscript_resolve_install_method "MEMCACHED")"
+MEMCACHED_INSTALL_METHOD="${MEMCACHED_INSTALL_METHOD:-system}"
+MEMCACHED_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$MEMCACHED_INSTALL_METHOD" libscript_resolve_install_method "MEMCACHED")"
 ACTION="${ACTION:-install}"
 VERSION="${MEMCACHED_VERSION:-latest}"
 

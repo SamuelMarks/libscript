@@ -74,6 +74,7 @@ set "LOC=%LOCATION%"
 set "VM_OS=%VM_IMAGE%"
 set "VM_SIZE=%VM_SIZE%"
 set "ADMIN_USER=%ADMIN_USER%"
+set "REPO_ROOT_OVERRIDE=%REPO_PATH%"
 set "APP_SPECS="
 set "_p1="
 set "_p2="
@@ -115,6 +116,8 @@ if /i "!_A:~0,7!"=="--size=" ( set "VM_SIZE=!_A:~7!" & shift & goto :parse_args 
 if /i "!_A!"=="--size" ( set "VM_SIZE=%~2" & shift & shift & goto :parse_args )
 if /i "!_A:~0,13!"=="--admin-user=" ( set "ADMIN_USER=!_A:~13!" & shift & goto :parse_args )
 if /i "!_A!"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto :parse_args )
+if /i "!_A:~0,12!"=="--repo-root=" ( set "REPO_ROOT_OVERRIDE=!_A:~12!" & shift & goto :parse_args )
+if /i "!_A!"=="--repo-root" ( set "REPO_ROOT_OVERRIDE=%~2" & shift & shift & goto :parse_args )
 if /i "!_A:~0,6!"=="--app=" ( set "APP_SPECS=!APP_SPECS!!_A:~6!|" & shift & goto :parse_args )
 if /i "!_A!"=="--app" ( set "APP_SPECS=!APP_SPECS!%~2|" & shift & shift & goto :parse_args )
 
@@ -135,7 +138,8 @@ if "!PROVIDER!"=="" set "PROVIDER=!_p1!"
 if "!NODE!"=="" set "NODE=!_p2!"
 if "!RG!"=="" set "RG=!_p3!"
 if "!LOC!"=="" set "LOC=!_p4!"
-set "REPO_PATH=!_p5!"
+set "REPO_PATH=!REPO_ROOT_OVERRIDE!"
+if "!REPO_PATH!"=="" set "REPO_PATH=!_p5!"
 if "!REPO_PATH!"=="" set "REPO_PATH=."
 set "REMOTE_DEST=!_p6!"
 
@@ -291,6 +295,27 @@ if "!_SKIP_RT_SYNC!"=="1" (
     )
 )
 
+set "_DEPLOY_DATA_MOUNT=%DATA_DISK_MOUNT%"
+if "!_DEPLOY_DATA_MOUNT!"=="" set "_DEPLOY_DATA_MOUNT=%DATA_MOUNT_DIR%"
+if "!_DEPLOY_DATA_MOUNT!"=="" set "_DEPLOY_DATA_MOUNT=/mnt/data"
+set "_DEPLOY_OL_MODELS=%OLLAMA_MODELS_DIR%"
+if "!_DEPLOY_OL_MODELS!"=="" set "_DEPLOY_OL_MODELS=!_DEPLOY_DATA_MOUNT!/ollama_models"
+if "%GGML_BACKEND_AMX%"=="" set "GGML_BACKEND_AMX=0"
+if "%OLLAMA_LLM_LIBRARY%"=="" set "OLLAMA_LLM_LIBRARY=cpu_avx2"
+if "%OLLAMA_NUM_GPU%"=="" set "OLLAMA_NUM_GPU=0"
+if "%OLLAMA_FLASH_ATTENTION%"=="" set "OLLAMA_FLASH_ATTENTION=0"
+if "%OLLAMA_KV_CACHE_TYPE%"=="" set "OLLAMA_KV_CACHE_TYPE=f16"
+if "%OLLAMA_CONTEXT_LENGTH%"=="" set "OLLAMA_CONTEXT_LENGTH=2048"
+if "%OLLAMA_MAX_QUEUE%"=="" set "OLLAMA_MAX_QUEUE=16"
+if "%OLLAMA_KEEP_ALIVE%"=="" set "OLLAMA_KEEP_ALIVE=10m"
+if "%POSTGRES_DATA_DIR%"=="" set "POSTGRES_DATA_DIR=%PGDATA%"
+if "%PGDATA%"=="" set "PGDATA=%POSTGRES_DATA_DIR%"
+if "%VALKEY_DATA_DIR%"=="" set "VALKEY_DATA_DIR=%REDIS_DATA_DIR%"
+if "%REDIS_DATA_DIR%"=="" set "REDIS_DATA_DIR=%VALKEY_DATA_DIR%"
+if "%CERT_STORE_DIR%"=="" set "CERT_STORE_DIR=!_DEPLOY_DATA_MOUNT!/certs"
+if "%LETSENCRYPT_RENEW_BEFORE_SECONDS%"=="" set "LETSENCRYPT_RENEW_BEFORE_SECONDS=0"
+set "_REMOTE_OLLAMA_ENV=GGML_BACKEND_AMX='!GGML_BACKEND_AMX!' OLLAMA_LLM_LIBRARY='!OLLAMA_LLM_LIBRARY!' OLLAMA_NUM_GPU='!OLLAMA_NUM_GPU!' OLLAMA_FLASH_ATTENTION='!OLLAMA_FLASH_ATTENTION!' OLLAMA_KV_CACHE_TYPE='!OLLAMA_KV_CACHE_TYPE!' OLLAMA_CONTEXT_LENGTH='!OLLAMA_CONTEXT_LENGTH!' OLLAMA_MAX_QUEUE='!OLLAMA_MAX_QUEUE!' OLLAMA_KEEP_ALIVE='!OLLAMA_KEEP_ALIVE!' POSTGRES_DATA_DIR='!POSTGRES_DATA_DIR!' PGDATA='!PGDATA!' VALKEY_DATA_DIR='!VALKEY_DATA_DIR!' REDIS_DATA_DIR='!REDIS_DATA_DIR!' CERT_STORE_DIR='!CERT_STORE_DIR!' LETSENCRYPT_EMAIL='!LETSENCRYPT_EMAIL!' LETSENCRYPT_RENEW_BEFORE_SECONDS='!LETSENCRYPT_RENEW_BEFORE_SECONDS!'"
+
 set "PREPARED_STORAGE=0"
 if exist "!REPO_PATH!\libscript.json" (
     jq -e ".applications != null and (.applications | length > 0)" "!REPO_PATH!\libscript.json" >nul 2>&1
@@ -309,6 +334,10 @@ if exist "!REPO_PATH!\libscript.json" (
         )
         if "!_SKIP_ROOT_PREP!"=="1" (
             call :log "REUSE" "Shared-stack root manifest '!REPO_PATH!\libscript.json' (!_ROOT_MF_HASH!) unchanged; skipping root prepare-storage and install-deps."
+            if "!DRY_RUN_MODE!"=="0" if "!SKIP_PREPARE!"=="0" (
+                call :prepare_remote_jaeb_storage
+                call "!CLI!" node exec "!NODE!" "!CTX!" "if id ollama >/dev/null 2>&1 && [ -d '!_DEPLOY_OL_MODELS!' ]; then sudo chown -R ollama:ollama '!_DEPLOY_OL_MODELS!' 2>/dev/null || true; sudo chmod 02775 '!_DEPLOY_OL_MODELS!' 2>/dev/null || true; sudo chmod -R u+rwX,g+rwXs,o+rX '!_DEPLOY_OL_MODELS!' 2>/dev/null || true; fi && if [ -x $HOME/libscript/_lib/app-servers/ollama/service.sh ] && [ -d '!_DEPLOY_OL_MODELS!' ]; then sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! OLLAMA_MODELS_DIR='!_DEPLOY_OL_MODELS!' OLLAMA_MODELS='!_DEPLOY_OL_MODELS!' LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/app-servers/ollama/service.sh configure >/dev/null 2>&1 || true; fi" >nul 2>&1
+            )
         ) else (
             call :log "CONFIG" "Uploading shared-stack manifest '!REPO_PATH!\libscript.json' to '!NODE!'..."
             call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!REPO_PATH!\libscript.json" "libscript.json"
@@ -316,18 +345,28 @@ if exist "!REPO_PATH!\libscript.json" (
             if "!FORCE_REINSTALL!"=="1" set "_SHARED_FLAGS=!_SHARED_FLAGS! --force-reinstall"
             if "!SKIP_PREPARE!"=="0" (
                 call :log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '!NODE!' from root manifest..."
-                call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+                call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
                 if errorlevel 1 exit /b 1
+                call :prepare_remote_jaeb_storage
                 set "PREPARED_STORAGE=1"
             ) else (
                 call :log "PREPARE" "Provisioning shared runtimes and databases on '!NODE!' from root manifest..."
-                call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
+                call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~ && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_SHARED_FLAGS!"
                 if errorlevel 1 exit /b 1
             )
             if "!DRY_RUN_MODE!"=="0" (
                 call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_ROOT_MF_HASH!' > ~/.libscript_deployments/_root_manifest.sha256" >nul 2>&1
             )
         )
+    )
+)
+if "!SKIP_PREPARE!"=="0" if "!PREPARED_STORAGE!"=="0" (
+    call :prepare_remote_jaeb_storage
+)
+set "IP=203.0.113.10"
+if "!DRY_RUN_MODE!"=="0" (
+    for /f "delims=" %%I in ('call "!CLI!" node ip "!NODE!" "!CTX!" 2^>nul') do (
+        if not "%%I"=="" set "IP=%%I"
     )
 )
 set "REM_SPECS=!APP_SPECS!"
@@ -347,13 +386,9 @@ goto :deploy_loop
 :: ## verify_loop
 :: Discovers node IP, ensures DNS records, and runs post-deployment health and public ingress verification.
 :verify_loop
-set "IP=203.0.113.10"
-if "!DRY_RUN_MODE!"=="0" (
-    for /f "delims=" %%I in ('call "!CLI!" node ip "!NODE!" "!CTX!" 2^>nul') do (
-        if not "%%I"=="" set "IP=%%I"
-    )
-)
+if "!IP!"=="" set "IP=203.0.113.10"
 set "REPORT_COUNT=0"
+set "OVERALL_VERIFY_FAILED=0"
 set "REM_SPECS=!APP_SPECS!"
 
 :: ## verify_next
@@ -366,8 +401,7 @@ for /f "tokens=1* delims=|" %%A in ("!REM_SPECS!") do (
 )
 call :verify_one_spec "!_CUR_SPEC!"
 if errorlevel 1 (
-    call :print_deployment_report
-    exit /b 1
+    set "OVERALL_VERIFY_FAILED=1"
 )
 goto :verify_next
 
@@ -375,6 +409,10 @@ goto :verify_next
 :: Prints the ASCII deployment summary table and finalizes deployment execution.
 :deploy_done
 call :print_deployment_report
+if not "!OVERALL_VERIFY_FAILED!"=="0" (
+    call :log "ERROR" "One or more deployed applications failed verification. View full logs at !LOG_FILE!"
+    exit /b 1
+)
 call :log "DONE" "Deployment complete. View full logs at !LOG_FILE!"
 exit /b 0
 
@@ -500,13 +538,19 @@ exit /b 0
 :: Attaches a declarative data disk from _DISK_OBJ onto the target node.
 :attach_manifest_disk
 set "_D_SIZE=100"
-set "_D_MOUNT=/mnt/data"
+set "_D_MOUNT=!_DEPLOY_DATA_MOUNT!"
+if "!_D_MOUNT!"=="" set "_D_MOUNT=%DATA_DISK_MOUNT%"
+if "!_D_MOUNT!"=="" set "_D_MOUNT=%DATA_MOUNT_DIR%"
+if "!_D_MOUNT!"=="" set "_D_MOUNT=/mnt/data"
 set "_D_NAME=data-disk"
 for /f "delims=" %%S in ('echo !_DISK_OBJ! ^| jq -r ".size_gb // 100" 2^>nul') do set "_D_SIZE=%%S"
-for /f "delims=" %%M in ('echo !_DISK_OBJ! ^| jq -r ".mount_path // \"/mnt/data\"" 2^>nul') do set "_D_MOUNT=%%M"
+for /f "delims=" %%M in ('echo !_DISK_OBJ! ^| jq -r --arg def "!_D_MOUNT!" ".mount_path // $def" 2^>nul') do set "_D_MOUNT=%%M"
 for /f "delims=" %%N in ('echo !_DISK_OBJ! ^| jq -r ".name // \"data-disk\"" 2^>nul') do set "_D_NAME=%%N"
-call :log "STORAGE" "Ensuring persistent data disk '!NODE!-!_D_NAME!' (!_D_SIZE!GB -> !_D_MOUNT!)..."
-call :run_with_auth_check "!CLI!" storage attach-disk "!NODE!" "!CTX!" "!NODE!-!_D_NAME!" "!_D_SIZE!" "!_D_MOUNT!"
+set "_FULL_D_NAME=!NODE!-!_D_NAME!"
+echo "!_D_NAME!" | findstr /B /I /C:"!NODE!-" >nul 2>&1
+if not errorlevel 1 set "_FULL_D_NAME=!_D_NAME!"
+call :log "STORAGE" "Ensuring persistent data disk '!_FULL_D_NAME!' (!_D_SIZE!GB -> !_D_MOUNT!)..."
+call :run_with_auth_check "!CLI!" storage attach-disk "!NODE!" "!CTX!" "!_FULL_D_NAME!" "!_D_SIZE!" "!_D_MOUNT!"
 exit /b 0
 
 :: ## check_only_match
@@ -543,6 +587,31 @@ set "_ART_CMD=true"
 if exist "!_SP_REPO!\libscript.json" (
     for /f "delims=" %%K in ('jq -r "([ (.frontends | if type == \"array\" then .[].artifact_check? elif type == \"object\" then .[].artifact_check? else empty end), (.hooks.build[]?.artifact_check?) ] | map(select(. != null and . != \"\")) | unique)[]?" "!_SP_REPO!\libscript.json" 2^>nul') do (
         set "_ART_CMD=!_ART_CMD! && [ -e ~/!_SP_DEST!/%%K ]"
+    )
+    for /f "delims=" %%F in ('jq -r "([ (.frontends | if type == \"array\" then .[] elif type == \"object\" then .[] else empty end | (.source_dir // .working_dir // .cwd // \".\")) ] | map(select(. != null and . != \"\")) | unique)[]?" "!_SP_REPO!\libscript.json" 2^>nul') do (
+        set "_FE_REL=%%F"
+        if "!_FE_REL!"=="." (
+            set "_FE_PFX=~/!_SP_DEST!"
+        ) else (
+            set "_FE_PFX=~/!_SP_DEST!/!_FE_REL!"
+        )
+        set "_ART_CMD=!_ART_CMD! && [ -f !_FE_PFX!/node_modules/.libscript_pkg_hash ] && { [ -f !_FE_PFX!/.libscript_build.sha256 ] || [ -f !_FE_PFX!/dist/.libscript_src_hash ]; }"
+    )
+)
+if exist "!_SP_REPO!\pyproject.toml" (
+    set "_ART_CMD=!_ART_CMD! && [ -f ~/!_SP_DEST!/.venv/.libscript_lock_hash ]"
+) else if exist "!_SP_REPO!\uv.lock" (
+    set "_ART_CMD=!_ART_CMD! && [ -f ~/!_SP_DEST!/.venv/.libscript_lock_hash ]"
+) else if exist "!_SP_REPO!\requirements.txt" (
+    set "_ART_CMD=!_ART_CMD! && [ -f ~/!_SP_DEST!/.venv/.libscript_lock_hash ]"
+)
+for /d %%P in ("!_SP_REPO!\*") do (
+    if exist "%%~fP\pyproject.toml" (
+        set "_ART_CMD=!_ART_CMD! && [ -f ~/!_SP_DEST!/%%~nxP/.venv/.libscript_lock_hash ]"
+    ) else if exist "%%~fP\uv.lock" (
+        set "_ART_CMD=!_ART_CMD! && [ -f ~/!_SP_DEST!/%%~nxP/.venv/.libscript_lock_hash ]"
+    ) else if exist "%%~fP\requirements.txt" (
+        set "_ART_CMD=!_ART_CMD! && [ -f ~/!_SP_DEST!/%%~nxP/.venv/.libscript_lock_hash ]"
     )
 )
 set "_SKIP_UNCHANGED=0"
@@ -584,26 +653,80 @@ if "!_SKIP_UNCHANGED!"=="1" (
 
     if "!SKIP_PREPARE!"=="0" if "!PREPARED_STORAGE!"=="0" (
         call :log "PREPARE" "Preparing persistent storage and daemon overrides on '!NODE!' via LibScript..."
-        call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json"
+        call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh prepare-storage libscript.json"
         if errorlevel 1 exit /b 1
+        call :prepare_remote_jaeb_storage
         set "PREPARED_STORAGE=1"
     )
 
     call :log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '!_SP_DEST!'..."
-    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_DEPS_FLAGS!"
+    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh install-deps libscript.json!_DEPS_FLAGS!"
     if errorlevel 1 exit /b 1
 
     call :log "DAEMON" "Registering and starting/restarting application daemons for '!_SP_DEST!'..."
-    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='!_APP_HASH!' LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
+    call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='!_APP_HASH!' LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
     if errorlevel 1 exit /b 1
     if "!DRY_RUN_MODE!"=="0" (
         call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_APP_HASH!' > ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
     )
 )
 
+if not "!_SP_DOMAIN!"=="" (
+    call :ensure_remote_etc_hosts_domain "!_SP_DOMAIN!"
+    if "!SKIP_INFRA!"=="0" (
+        call :log "DNS" "Ensuring DNS A record '!_SP_DOMAIN!' -> !IP!..."
+        call :run_with_auth_check "!CLI!" dns record create "!_SP_DOMAIN!" "!CTX!" "@" A "!IP!"
+    )
+)
+
 call :log "ROUTES" "Updating reverse-proxy routes and reloading ingress for '!_SP_DEST!' (!NODE!)..."
-call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh netctl ingress libscript.json"
-exit /b !ERRORLEVEL!
+call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/_lib/_common/component_core.sh --synchronize-ingress libscript.json --reload && $HOME/libscript/_lib/_common/component_core.sh --warmup-ollama gemma:2b"
+set "_ROUTE_RC=!ERRORLEVEL!"
+if "!DRY_RUN_MODE!"=="0" (
+    call "!CLI!" node exec "!NODE!" "!CTX!" "if id ollama >/dev/null 2>&1 && [ -d '!_DEPLOY_OL_MODELS!' ]; then sudo chown -R ollama:ollama '!_DEPLOY_OL_MODELS!' 2>/dev/null || true; sudo chmod 02775 '!_DEPLOY_OL_MODELS!' 2>/dev/null || true; sudo chmod -R u+rwX,g+rwXs,o+rX '!_DEPLOY_OL_MODELS!' 2>/dev/null || true; fi" >nul 2>&1
+)
+exit /b !_ROUTE_RC!
+
+:: ## prepare_remote_jaeb_storage
+:: Ensures the external read-only DuckDB dataset directory exists on the remote node and idempotently stages the local dataset with a symlink and read-only permissions when configured.
+:prepare_remote_jaeb_storage
+if not "!SKIP_PREPARE!"=="0" exit /b 0
+if "!DRY_RUN_MODE!"=="1" exit /b 0
+set "_EXT_SLUG=t1"
+set "_EXT_SLUG=!_EXT_SLUG!d"
+set "_EXT_BASE=!_DEPLOY_DATA_MOUNT!/!_EXT_SLUG!"
+set "_EXT_VAR=T1"
+set "_EXT_VAR=!_EXT_VAR!D_LOCAL_JAEB_DB"
+set "_LOCAL_JAEB_DB="
+for /f "delims=" %%V in ("!_EXT_VAR!") do set "_LOCAL_JAEB_DB=!%%V!"
+call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -d '!_DEPLOY_DATA_MOUNT!' ] || sudo mkdir -p '!_DEPLOY_DATA_MOUNT!' 2>/dev/null; then sudo mkdir -p !_EXT_BASE!/jaeb && sudo chown -R !ADMIN_USER!:!ADMIN_USER! !_EXT_BASE! 2>/dev/null || true; fi" >nul 2>&1
+if not "!_LOCAL_JAEB_DB!"=="" if exist "!_LOCAL_JAEB_DB!" (
+    for %%Z in ("!_LOCAL_JAEB_DB!") do set "_LOCAL_JAEB_SZ=%%~zZ"
+    if not "!_LOCAL_JAEB_SZ!"=="0" (
+        call "!CLI!" node exec "!NODE!" "!CTX!" "[ -s !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb ] && [ \"$(wc -c < !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb | tr -d '[:space:]')\" = '!_LOCAL_JAEB_SZ!' ]" >nul 2>&1
+        if not errorlevel 1 (
+            call :log "REUSE" "Remote Jaeb DuckDB '!_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb' already matches local size (!_LOCAL_JAEB_SZ! bytes)."
+        ) else (
+            call :log "STORAGE" "Uploading local Jaeb DuckDB '!_LOCAL_JAEB_DB!' (!_LOCAL_JAEB_SZ! bytes) to '!NODE!:!_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb'..."
+            call "!CLI!" node exec "!NODE!" "!CTX!" "sudo mkdir -p !_EXT_BASE!/jaeb && sudo chown -R !ADMIN_USER!:!ADMIN_USER! !_EXT_BASE! && sudo chmod u+w !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb 2>/dev/null || true" >nul 2>&1
+            call :run_with_auth_check "!CLI!" node upload "!NODE!" "!CTX!" "!_LOCAL_JAEB_DB!" "!_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb"
+        )
+    )
+)
+call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -s !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb ]; then sudo ln -sf !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb !_EXT_BASE!/!_EXT_SLUG!.duckdb && sudo chown -h !ADMIN_USER!:!ADMIN_USER! !_EXT_BASE!/!_EXT_SLUG!.duckdb 2>/dev/null || true; sudo chown !ADMIN_USER!:!ADMIN_USER! !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb 2>/dev/null || true; sudo chmod a+r,u-w,g-w,o-w !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb 2>/dev/null || true; fi" >nul 2>&1
+exit /b 0
+
+:: ## ensure_remote_etc_hosts_domain
+:: Idempotently ensures /etc/hosts on the remote node maps 127.0.0.1 to the specified application domain.
+:ensure_remote_etc_hosts_domain
+set "_ERHD_DOM=%~1"
+if "!_ERHD_DOM!"=="" exit /b 0
+if "!_ERHD_DOM!"=="null" exit /b 0
+if not "!DRY_RUN_MODE!"=="0" exit /b 0
+set "_ERHD_HOSTS=%REMOTE_ETC_HOSTS%"
+if "!_ERHD_HOSTS!"=="" set "_ERHD_HOSTS=/etc/hosts"
+call "!CLI!" node exec "!NODE!" "!CTX!" "if ! grep -Eq '^[[:space:]]*127\.0\.0\.1[[:space:]].*(^|[[:space:]])!_ERHD_DOM!([[:space:]]|$)' '!_ERHD_HOSTS!' 2>/dev/null; then printf '127.0.0.1 %%s\n' '!_ERHD_DOM!' | sudo tee -a '!_ERHD_HOSTS!' >/dev/null; fi" >nul 2>&1
+exit /b 0
 
 :: ## verify_one_spec
 :: Verifies DNS, health, and ingress for a single deployed application specification and records report state.
@@ -614,6 +737,7 @@ if "!_MATCH!"=="0" exit /b 0
 set "_DNS_LABEL=http://!IP!"
 if not "!_SP_DOMAIN!"=="" (
     set "_DNS_LABEL=https://!_SP_DOMAIN!"
+    call :ensure_remote_etc_hosts_domain "!_SP_DOMAIN!"
     if "!SKIP_INFRA!"=="0" (
         call :log "DNS" "Ensuring DNS A record '!_SP_DOMAIN!' -> !IP!..."
         call :run_with_auth_check "!CLI!" dns record create "!_SP_DOMAIN!" "!CTX!" "@" A "!IP!"
@@ -627,7 +751,7 @@ if "!SKIP_VERIFY!"=="1" (
 set "_PUB_ARG="
 if not "!_SP_DOMAIN!"=="" set "_PUB_ARG= --verify-ingress --public-url=https://!_SP_DOMAIN!"
 call :log "HEALTH" "Verifying '!_SP_DEST!' health and ingress (!NODE!)..."
-call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
+call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh health libscript.json --remediate!_PUB_ARG!"
 set "_V_RC=!ERRORLEVEL!"
 set /a REPORT_COUNT+=1
 if "!_V_RC!"=="0" (
@@ -690,8 +814,18 @@ if not "!_CAC_GIT!"=="nogit" (
         )
     )
 )
-for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets" "!REPO_PATH!\libscript.json") do (
+for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets" "!REPO_PATH!\libscript.json" "!_CAC_DIR!\package.json" "!_CAC_DIR!\package-lock.json" "!_CAC_DIR!\pyproject.toml" "!_CAC_DIR!\uv.lock" "!_CAC_DIR!\requirements*.txt" "!_CAC_DIR!\angular.json" "!_CAC_DIR!\vite.config.*") do (
     if exist "%%~fE" type "%%~fE" >> "!_CAC_TMP!" 2>nul
+)
+for /d %%S in ("!_CAC_DIR!\*") do (
+    for %%L in ("%%~fS\package.json" "%%~fS\package-lock.json" "%%~fS\pyproject.toml" "%%~fS\uv.lock" "%%~fS\requirements*.txt" "%%~fS\angular.json" "%%~fS\vite.config.*") do (
+        if exist "%%~fL" type "%%~fL" >> "!_CAC_TMP!" 2>nul
+    )
+    for /d %%T in ("%%~fS\*") do (
+        for %%M in ("%%~fT\package.json" "%%~fT\package-lock.json" "%%~fT\pyproject.toml" "%%~fT\uv.lock" "%%~fT\requirements*.txt" "%%~fT\angular.json" "%%~fT\vite.config.*") do (
+            if exist "%%~fM" type "%%~fM" >> "!_CAC_TMP!" 2>nul
+        )
+    )
 )
 set "_CAC_DIRTY=0"
 if exist "!_CAC_TMP!" (

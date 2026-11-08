@@ -66,6 +66,7 @@ ENV_SCRIPT="${PWD}/env.sh"
 if [ -f "${ENV_SCRIPT}" ]; then
   SCRIPT_NAME="${ENV_SCRIPT}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 

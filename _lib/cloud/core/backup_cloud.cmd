@@ -158,10 +158,16 @@ if "!LOCAL_DST!"=="" (
     exit /b 1
 )
 if not exist "!LOCAL_DST!" mkdir "!LOCAL_DST!"
+set "_EXPORT_STAGE=%LIBSCRIPT_EXPORT_STAGE_DIR%"
+if "!_EXPORT_STAGE!"=="" (
+    set "_bc_rtmp=%REMOTE_TMPDIR%"
+    if "!_bc_rtmp!"=="" set "_bc_rtmp=/tmp"
+    set "_EXPORT_STAGE=!_bc_rtmp!/libscript_export_stage"
+)
 set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
 call "!CLI!" node sync "!NODE!" "!RG_CTX!"
 if errorlevel 1 exit /b 1
-call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_export_stage && mkdir -p /tmp/libscript_export_stage"
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf '!_EXPORT_STAGE!' && mkdir -p '!_EXPORT_STAGE!'"
 if errorlevel 1 exit /b 1
 set "REM_SPECS=!APP_SPECS!"
 
@@ -190,7 +196,13 @@ if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
     if not errorlevel 1 set "_MATCH=1"
 )
 if "!_MATCH!"=="1" (
-    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
+    if "%CERT_STORE_DIR%"=="" (
+        set "_bc_def_mount=%DATA_DISK_MOUNT%"
+        if "!_bc_def_mount!"=="" set "_bc_def_mount=%DATA_MOUNT_DIR%"
+        if "!_bc_def_mount!"=="" set "_bc_def_mount=/mnt/data"
+        set "CERT_STORE_DIR=!_bc_def_mount!/certs"
+    )
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo CERT_STORE_DIR='!CERT_STORE_DIR!' LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh export-state libscript.json '!_EXPORT_STAGE!'"
     if errorlevel 1 exit /b 1
 )
 goto :export_next_app
@@ -198,8 +210,15 @@ goto :export_next_app
 :: ## export_finish
 :: Downloads the exported staging directory and cleans up the remote staging directory.
 :export_finish
-call "!CLI!" node download "!NODE!" "!RG_CTX!" "/tmp/libscript_export_stage/" "!LOCAL_DST!/"
+if "%CERT_STORE_DIR%"=="" (
+    set "_bc_def_mount=%DATA_DISK_MOUNT%"
+    if "!_bc_def_mount!"=="" set "_bc_def_mount=%DATA_MOUNT_DIR%"
+    if "!_bc_def_mount!"=="" set "_bc_def_mount=/mnt/data"
+    set "CERT_STORE_DIR=!_bc_def_mount!/certs"
+)
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "if [ -d '!CERT_STORE_DIR!/live' ]; then sudo mkdir -p '!_EXPORT_STAGE!/certs' && sudo cp -a '!CERT_STORE_DIR!/live' '!_EXPORT_STAGE!/certs/' 2>/dev/null || true; sudo chmod -R a+rX '!_EXPORT_STAGE!/certs' 2>/dev/null || true; fi" >nul 2>&1
+call "!CLI!" node download "!NODE!" "!RG_CTX!" "!_EXPORT_STAGE!/" "!LOCAL_DST!/"
 if errorlevel 1 exit /b 1
-call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_export_stage"
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf '!_EXPORT_STAGE!'"
 echo [INFO] Export completed successfully into '!LOCAL_DST!'.
 exit /b 0

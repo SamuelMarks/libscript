@@ -88,10 +88,19 @@ goto :action_install
 :: ## find_existing_duckdb
 :: Checks LIBSCRIPT_HOME and system PATH for an existing duckdb.exe binary.
 :find_existing_duckdb
-if exist "%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\bin\duckdb.exe" exit /b 0
-if exist "%LIBSCRIPT_HOME%\duckdb\default\bin\duckdb.exe" exit /b 0
+if exist "%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\bin\duckdb.exe" (
+    "%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%\bin\duckdb.exe" --version >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+if exist "%LIBSCRIPT_HOME%\duckdb\default\bin\duckdb.exe" (
+    "%LIBSCRIPT_HOME%\duckdb\default\bin\duckdb.exe" --version >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
 where duckdb >nul 2>&1
-if not errorlevel 1 exit /b 0
+if not errorlevel 1 (
+    duckdb --version >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
 exit /b 1
 
 :: ## action_ls
@@ -112,17 +121,29 @@ if not "%DUCKDB_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## resolve_exact_version
+:: Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
+:resolve_exact_version
+if "%DUCKDB_VERSION%"=="latest" (
+    set "EXACT_VERSION=1.2.1"
+) else if "%DUCKDB_VERSION%"=="lts" (
+    set "EXACT_VERSION=1.2.1"
+) else if "%DUCKDB_VERSION%"=="stable" (
+    set "EXACT_VERSION=1.2.1"
+) else if "%DUCKDB_VERSION%"=="" (
+    set "EXACT_VERSION=1.2.1"
+) else (
+    set "EXACT_VERSION=%DUCKDB_VERSION%"
+    if "!EXACT_VERSION:~0,1!"=="v" set "EXACT_VERSION=!EXACT_VERSION:~1!"
+)
+exit /b 0
+
 :: ## action_use
 :: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%DUCKDB_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
 
-if "%DUCKDB_VERSION%"=="latest" (set "EXACT_VERSION=%DUCKDB_VERSION%"
-) else if "%DUCKDB_VERSION%"=="lts" (set "EXACT_VERSION=%DUCKDB_VERSION%"
-) else (
-    set "EXACT_VERSION=%DUCKDB_VERSION%"
-)
-if "%EXACT_VERSION%"=="" set "EXACT_VERSION=%DUCKDB_VERSION%"
+call :resolve_exact_version
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\duckdb\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%"
@@ -147,14 +168,33 @@ if "%DUCKDB_INSTALL_METHOD%"=="libscript_native" (
             exit /b 0
         )
     )
-    echo Downloading duckdb %DUCKDB_VERSION% to %DOWNLOAD_DIR%\duckdb...
+    call :resolve_exact_version
+    echo Downloading duckdb %DUCKDB_VERSION% ^(!EXACT_VERSION!^) to %DOWNLOAD_DIR%\duckdb...
     if not exist "%DOWNLOAD_DIR%\duckdb" mkdir "%DOWNLOAD_DIR%\duckdb"
+    set "_dl_dest=%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip"
+    if exist "!_dl_dest!" del /f /q "!_dl_dest!" 2>nul
     if not "%DUCKDB_DOWNLOAD_URL%"=="" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "!_dl_dest!"
     ) else (
-        echo DUCKDB_DOWNLOAD_URL is not defined. Skipping.
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v!EXACT_VERSION!/duckdb_cli-windows-amd64.zip" "!_dl_dest!"
+        if errorlevel 1 (
+            if exist "!_dl_dest!" del /f /q "!_dl_dest!" 2>nul
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-windows-amd64.zip" "!_dl_dest!"
+        )
     )
 )
+exit /b 0
+
+:: ## purge_stale_duckdb_cache
+:: Removes any corrupt or zero-byte cached archive matching the given filename.
+:purge_stale_duckdb_cache
+set "_psdc_fname=%~nx1"
+if "!_psdc_fname!"=="" set "_psdc_fname=duckdb_cli-windows-amd64.zip"
+if exist "%DOWNLOAD_DIR%\!_psdc_fname!" del /f /q "%DOWNLOAD_DIR%\!_psdc_fname!" 2>nul
+if exist "%DOWNLOAD_DIR%\duckdb\!_psdc_fname!" del /f /q "%DOWNLOAD_DIR%\duckdb\!_psdc_fname!" 2>nul
+if exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\!_psdc_fname!" del /f /q "!LIBSCRIPT_ROOT_DIR!\cache\downloads\!_psdc_fname!" 2>nul
+if exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\duckdb\!_psdc_fname!" del /f /q "!LIBSCRIPT_ROOT_DIR!\cache\downloads\duckdb\!_psdc_fname!" 2>nul
+if exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\unknown\!_psdc_fname!" del /f /q "!LIBSCRIPT_ROOT_DIR!\cache\downloads\unknown\!_psdc_fname!" 2>nul
 exit /b 0
 
 :: ## action_install
@@ -176,29 +216,87 @@ if "%DUCKDB_INSTALL_METHOD%"=="system" (
     exit /b !errorlevel!
 )
 
-set "TARGET_DIR=%LIBSCRIPT_HOME%\duckdb\%DUCKDB_VERSION%"
+call :resolve_exact_version
+set "TARGET_DIR=%LIBSCRIPT_HOME%\duckdb\!EXACT_VERSION!"
 if not exist "%TARGET_DIR%\bin\duckdb.exe" (
-    echo Installing duckdb %DUCKDB_VERSION% natively to %TARGET_DIR%...
+    echo Installing duckdb %DUCKDB_VERSION% ^(!EXACT_VERSION!^) natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+    set "_extracted_ok=0"
     if exist "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip" (
         echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip" -C "%TARGET_DIR%"
+        tar -xf "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip" -C "%TARGET_DIR%\bin" 2>nul
+        if exist "%TARGET_DIR%\bin\duckdb.exe" (
+            set "_extracted_ok=1"
+        ) else (
+            del /f /q "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.zip" 2>nul
+        )
+    ) else if exist "%DOWNLOAD_DIR%\duckdb\duckdb-!EXACT_VERSION!.zip" (
+        echo Extracting from cache...
+        tar -xf "%DOWNLOAD_DIR%\duckdb\duckdb-!EXACT_VERSION!.zip" -C "%TARGET_DIR%\bin" 2>nul
+        if exist "%TARGET_DIR%\bin\duckdb.exe" (
+            set "_extracted_ok=1"
+        ) else (
+            del /f /q "%DOWNLOAD_DIR%\duckdb\duckdb-!EXACT_VERSION!.zip" 2>nul
+        )
     ) else if exist "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.tar.gz" (
         echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.tar.gz" -C "%TARGET_DIR%"
-    ) else if not "%DUCKDB_DOWNLOAD_URL%"=="" (
-        echo Downloading and extracting...
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb.zip"
-        tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%"
-    ) else (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb.zip"
-        if not errorlevel 1 (
-            tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%\bin"
-            del /f /q "%TEMP%\duckdb.zip" 2>nul
+        tar -xf "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.tar.gz" -C "%TARGET_DIR%" 2>nul
+        if exist "%TARGET_DIR%\bin\duckdb.exe" (
+            set "_extracted_ok=1"
         ) else (
-            echo No download URL or cache available for duckdb.
-            exit /b 1
+            del /f /q "%DOWNLOAD_DIR%\duckdb\duckdb-%DUCKDB_VERSION%.tar.gz" 2>nul
         )
+    )
+    if "!_extracted_ok!"=="0" (
+        if not "%DUCKDB_DOWNLOAD_URL%"=="" (
+            echo Downloading and extracting...
+            if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb_cli.zip"
+            if errorlevel 1 (
+                call :purge_stale_duckdb_cache "%DUCKDB_DOWNLOAD_URL%"
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%DUCKDB_DOWNLOAD_URL%" "%TEMP%\duckdb_cli.zip"
+                if errorlevel 1 (
+                    echo [ERROR] Failed to download duckdb from %DUCKDB_DOWNLOAD_URL% 1>&2
+                    exit /b 1
+                )
+            )
+            tar -xf "%TEMP%\duckdb_cli.zip" -C "%TARGET_DIR%\bin"
+            del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
+        ) else (
+            if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
+            set "_dl_ok=0"
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v!EXACT_VERSION!/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb_cli.zip"
+            if not errorlevel 1 if exist "%TEMP%\duckdb_cli.zip" (
+                tar -xf "%TEMP%\duckdb_cli.zip" -C "%TARGET_DIR%\bin" 2>nul
+                if exist "%TARGET_DIR%\bin\duckdb.exe" set "_dl_ok=1"
+            )
+            if "!_dl_ok!"=="0" (
+                call :purge_stale_duckdb_cache "duckdb_cli-windows-amd64.zip"
+                if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-windows-amd64.zip" "%TEMP%\duckdb_cli.zip"
+                if not errorlevel 1 if exist "%TEMP%\duckdb_cli.zip" (
+                    tar -xf "%TEMP%\duckdb_cli.zip" -C "%TARGET_DIR%\bin" 2>nul
+                    if exist "%TARGET_DIR%\bin\duckdb.exe" set "_dl_ok=1"
+                )
+            )
+            if exist "%TEMP%\duckdb_cli.zip" del /f /q "%TEMP%\duckdb_cli.zip" 2>nul
+            if "!_dl_ok!"=="0" (
+                echo [ERROR] No download URL or cache available for duckdb. 1>&2
+                exit /b 1
+            )
+        )
+    )
+    if exist "%TARGET_DIR%\duckdb.exe" if not exist "%TARGET_DIR%\bin\duckdb.exe" (
+        move /y "%TARGET_DIR%\duckdb.exe" "%TARGET_DIR%\bin\duckdb.exe" >nul 2>&1
+    )
+    if not exist "%TARGET_DIR%\bin\duckdb.exe" (
+        echo [ERROR] DuckDB binary verification failed at %TARGET_DIR%\bin\duckdb.exe. 1>&2
+        exit /b 1
+    )
+    "%TARGET_DIR%\bin\duckdb.exe" --version >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] DuckDB binary execution check failed at %TARGET_DIR%\bin\duckdb.exe. 1>&2
+        exit /b 1
     )
 ) else (
     echo duckdb %DUCKDB_VERSION% is already installed.

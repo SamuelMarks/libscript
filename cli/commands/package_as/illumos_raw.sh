@@ -44,6 +44,7 @@ if [ -z "${UNAME:-}" ]; then
 fi
 
 TARGET_SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
+export TARGET_SYSROOT
 OUT_IMG="${2:-${REPO_ROOT}/build/images/raw/illumos.raw}"
 SIZE_GIB="${3:-20}"
 

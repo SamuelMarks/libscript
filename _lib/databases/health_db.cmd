@@ -121,6 +121,7 @@ exit /b 0
 :: ## check_db_entry
 :: Validates a single database entry against connectivity, table, row, and command requirements.
 :check_db_entry
+set "_db_entry_failed=0"
 set "engine=postgres"
 set "db_name=app_db"
 set "db_user=postgres"
@@ -130,6 +131,7 @@ set "db_host=127.0.0.1"
 set "db_port="
 set "db_index=0"
 set "db_path="
+set "db_read_only=0"
 set "min_tables="
 set "health_cmd="
 
@@ -142,6 +144,7 @@ for /f "delims=" %%h in ('echo !db_entry! ^| jq -r ".host // \"127.0.0.1\"" 2^>n
 for /f "delims=" %%P in ('echo !db_entry! ^| jq -r ".port // empty" 2^>nul') do set "db_port=%%P"
 for /f "delims=" %%x in ('echo !db_entry! ^| jq -r ".db_index // .database // 0" 2^>nul') do set "db_index=%%x"
 for /f "delims=" %%f in ('echo !db_entry! ^| jq -r ".path // .file // .db_path // empty" 2^>nul') do set "db_path=%%f"
+for /f "delims=" %%o in ('echo !db_entry! ^| jq -r "if .read_only == true or .readonly == true then \"1\" else \"0\" end" 2^>nul') do set "db_read_only=%%o"
 for /f "delims=" %%m in ('echo !db_entry! ^| jq -r "if .min_tables != null then .min_tables elif .require_populated == true then 1 else empty end" 2^>nul') do set "min_tables=%%m"
 for /f "delims=" %%c in ('echo !db_entry! ^| jq -r ".health_command // empty" 2^>nul') do set "health_cmd=%%c"
 
@@ -174,11 +177,81 @@ if not "!health_cmd!"=="" (
 exit /b 0
 
 :: ## expand_vars
-:: Expands ${VAR:-default} and ${VAR} references in the named variable using jq and env.
+:: Expands ${VAR:-default} and ${VAR} references in the named variable using jq and env while preserving quotes and local $_vars.
 :expand_vars
 set "_ev_name=%~1"
 set "_ev_val=!%_ev_name%!"
-for /f "delims=" %%x in ('jq -rn --arg s "!_ev_val!" "reduce range(3) as $_ ($s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\"))" 2^>nul') do set "!_ev_name!=%%x"
+if "!_ev_val!"=="" exit /b 0
+for /f "delims=" %%x in ('jq -rn "reduce range(6) as $_ ($ENV._ev_val; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^{}]*)\\\\}\"; if (.k | startswith(\"_\")) and ((env[.k] // \"\") == \"\") then \"${\" + .k + \":-\" + .d + \"}\" else (env[.k] // \"\") | if . == \"\" then .d else . end end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; if (.k | startswith(\"_\")) and ((env[.k] // \"\") == \"\") then \"${\" + .k + \"}\" else (env[.k] // \"\") end))" 2^>nul') do set "!_ev_name!=%%x"
+exit /b 0
+
+:: ## find_manifest_duckdb_python
+:: Searches manifest virtualenvs, LIBSCRIPT_HOME, and PATH for a Python interpreter with duckdb installed.
+:find_manifest_duckdb_python
+set "DUCKDB_PY_BIN="
+for %%P in ("!MANIFEST_DIR!\.venv\Scripts\python.exe" "!MANIFEST_DIR!\.venv\bin\python") do (
+    if exist "%%~fP" (
+        "%%~fP" -c "import duckdb" >nul 2>&1
+        if not errorlevel 1 (
+            set "DUCKDB_PY_BIN=%%~fP"
+            exit /b 0
+        )
+    )
+)
+for /d %%D in ("!MANIFEST_DIR!\*") do (
+    if exist "%%~fD\.venv\Scripts\python.exe" (
+        "%%~fD\.venv\Scripts\python.exe" -c "import duckdb" >nul 2>&1
+        if not errorlevel 1 (
+            set "DUCKDB_PY_BIN=%%~fD\.venv\Scripts\python.exe"
+            exit /b 0
+        )
+    )
+)
+for %%P in (python python3) do (
+    where %%P >nul 2>&1
+    if not errorlevel 1 (
+        %%P -c "import duckdb" >nul 2>&1
+        if not errorlevel 1 (
+            set "DUCKDB_PY_BIN=%%P"
+            exit /b 0
+        )
+    )
+)
+exit /b 1
+
+:: ## query_duckdb_scalar
+:: Executes a scalar SQL query against a DuckDB database file using the duckdb CLI with Python duckdb fallback.
+:query_duckdb_scalar
+set "_qds_path=%~1"
+set "_qds_sql=%~2"
+set "_qds_mode=%~3"
+if "!_qds_mode!"=="" set "_qds_mode=scalar"
+set "QDS_OUT="
+where duckdb >nul 2>nul
+if errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd"
+    )
+)
+where duckdb >nul 2>nul
+if not errorlevel 1 (
+    if /i "!_qds_mode!"=="len" (
+        set /a _qds_len=0
+        for /f "delims=" %%L in ('duckdb "!_qds_path!" -readonly -csv -noheader -c "!_qds_sql!" 2^>nul') do set /a _qds_len+=1
+        set "QDS_OUT=!_qds_len!"
+    ) else (
+        for /f "delims=" %%L in ('duckdb "!_qds_path!" -readonly -csv -noheader -c "!_qds_sql!" 2^>nul') do if "!QDS_OUT!"=="" set "QDS_OUT=%%L"
+    )
+)
+if "!QDS_OUT!"=="" set "QDS_OUT=0"
+if "!QDS_OUT!"=="0" if exist "!_qds_path!" (
+    call :find_manifest_duckdb_python
+    if not errorlevel 1 if not "!DUCKDB_PY_BIN!"=="" (
+        for /f "delims=" %%R in ('"!DUCKDB_PY_BIN!" -c "import sys,duckdb; con=duckdb.connect(sys.argv[1],read_only=True); rows=con.execute(sys.argv[2]).fetchall(); con.close(); print(len(rows) if sys.argv[3]=='len' else (rows[0][0] if rows and rows[0] else 0))" "!_qds_path!" "!_qds_sql!" "!_qds_mode!" 2^>nul') do set "QDS_OUT=%%R"
+    )
+)
+if "!QDS_OUT!"=="" set "QDS_OUT=0"
 exit /b 0
 
 :: ## check_pg
@@ -191,6 +264,7 @@ set "PGPASSWORD=!db_pass!"
 psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -tc "SELECT 1;" >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] PostgreSQL health check failed: cannot connect to '!db_name!' on !db_host!:!db_port! >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
     exit /b 0
 )
@@ -199,6 +273,7 @@ for /f "delims= " %%t in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d 
 if not "!min_tables!"=="" (
     if !pg_tbl_count! lss !min_tables! (
         echo [ERROR] PostgreSQL database '!db_name!' has !pg_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
+        set "_db_entry_failed=1"
         set "HEALTH_DB_FAILED=1"
     )
 )
@@ -206,7 +281,11 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "req_tbl=%%t"
     call :check_pg_table
 )
-echo [INFO] [DB:POSTGRES] [CONFIRM] Database '!db_name!' healthy ^(!pg_tbl_count! table^(s^)^).
+if "!_db_entry_failed!"=="0" (
+    echo [INFO] [DB:POSTGRES] [CONFIRM] Database '!db_name!' healthy ^(!pg_tbl_count! table^(s^)^).
+) else (
+    echo [ERROR] [DB:POSTGRES] Database '!db_name!' failed health verification ^(!pg_tbl_count! table^(s^)^). >&2
+)
 exit /b 0
 
 :: ## check_pg_table
@@ -218,6 +297,7 @@ set "pg_row_count=-1"
 for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM \"!req_tbl!\";" 2^>nul') do set "pg_row_count=%%c"
 if !pg_row_count! lss !min_rows_req! (
     echo [ERROR] PostgreSQL database '!db_name!' required table '!req_tbl!' has insufficient rows ^(!pg_row_count! ^< !min_rows_req!^) >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
 ) else (
     echo [INFO] [DB:POSTGRES] [CONFIRM] Table '!db_name!.!req_tbl!' verified ^(!pg_row_count! rows^).
@@ -228,37 +308,37 @@ exit /b 0
 :: Validates DuckDB database file existence, non-empty size, minimum tables, and required table row counts.
 :check_duckdb
 if "!db_path!"=="" (
-    set "db_path=!MANIFEST_DIR!\data\!db_name!.duckdb"
+    set "_hdb_def_mount=%DATA_DISK_MOUNT%"
+    if "!_hdb_def_mount!"=="" set "_hdb_def_mount=%DATA_MOUNT_DIR%"
+    if "!_hdb_def_mount!"=="" set "_hdb_def_mount=/mnt/data"
+    if exist "!_hdb_def_mount!\!db_name!.duckdb" (
+        set "db_path=!_hdb_def_mount!\!db_name!.duckdb"
+    ) else (
+        set "db_path=!MANIFEST_DIR!\data\!db_name!.duckdb"
+    )
 ) else (
     set "db_path_win=!db_path:/=\!"
     if not "!db_path_win:~1,1!"==":" set "db_path=!MANIFEST_DIR!\!db_path_win!"
 )
 if not exist "!db_path!" (
-    echo [ERROR] DuckDB database file '!db_path!' does not exist. >&2
+    echo [ERROR] DuckDB database file '!db_path!' does not exist ^(read_only=!db_read_only!^). >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
     exit /b 0
 )
 for %%F in ("!db_path!") do set "duck_size=%%~zF"
 if "!duck_size!"=="0" (
-    echo [ERROR] DuckDB database file '!db_path!' is empty. >&2
+    echo [ERROR] DuckDB database file '!db_path!' is empty ^(read_only=!db_read_only!^). >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
     exit /b 0
 )
-where duckdb >nul 2>nul
-if errorlevel 1 (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd" (
-        set "STACK="
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd"
-    )
-)
-set "duck_tbl_count=0"
-where duckdb >nul 2>nul
-if not errorlevel 1 (
-    for /f "delims=" %%t in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a duck_tbl_count+=1
-)
+call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar"
+set "duck_tbl_count=!QDS_OUT!"
 if not "!min_tables!"=="" (
     if !duck_tbl_count! lss !min_tables! (
         echo [ERROR] DuckDB database '!db_path!' has !duck_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
+        set "_db_entry_failed=1"
         set "HEALTH_DB_FAILED=1"
     )
 )
@@ -266,7 +346,11 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "req_tbl=%%t"
     call :check_duckdb_table
 )
-echo [INFO] [DB:DUCKDB] [CONFIRM] DuckDB '!db_path!' healthy ^(!duck_tbl_count! table^(s^)^).
+if "!_db_entry_failed!"=="0" (
+    echo [INFO] [DB:DUCKDB] [CONFIRM] DuckDB '!db_path!' healthy ^(!duck_tbl_count! table^(s^)^).
+) else (
+    echo [ERROR] [DB:DUCKDB] DuckDB '!db_path!' failed health verification ^(!duck_tbl_count! table^(s^)^). >&2
+)
 exit /b 0
 
 :: ## check_duckdb_table
@@ -274,13 +358,11 @@ exit /b 0
 :check_duckdb_table
 set "min_rows_req=1"
 for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "!req_tbl!" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "min_rows_req=%%r"
-set "duck_row_count=-1"
-where duckdb >nul 2>nul
-if not errorlevel 1 (
-    for /f "delims=" %%c in ('duckdb "!db_path!" -readonly -csv -noheader -c "SELECT COUNT(*) FROM \"!req_tbl!\";" 2^>nul') do set "duck_row_count=%%c"
-)
+call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM \"!req_tbl!\";" "scalar"
+set "duck_row_count=!QDS_OUT!"
 if !duck_row_count! lss !min_rows_req! (
     echo [ERROR] DuckDB database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!duck_row_count! ^< !min_rows_req!^) >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
 ) else (
     echo [INFO] [DB:DUCKDB] [CONFIRM] Table '!db_name!.!req_tbl!' verified ^(!duck_row_count! rows^).
@@ -298,6 +380,7 @@ if "!db_path!"=="" (
 )
 if not exist "!db_path!" (
     echo [ERROR] SQLite database file '!db_path!' does not exist. >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
     exit /b 0
 )
@@ -308,6 +391,7 @@ for /f "delims= " %%t in ('sqlite3 "!db_path!" "SELECT count(*) FROM sqlite_mast
 if not "!min_tables!"=="" (
     if !sqlite_tbl_count! lss !min_tables! (
         echo [ERROR] SQLite database '!db_path!' has !sqlite_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
+        set "_db_entry_failed=1"
         set "HEALTH_DB_FAILED=1"
     )
 )
@@ -315,7 +399,11 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     set "req_tbl=%%t"
     call :check_sqlite_table
 )
-echo [INFO] [DB:SQLITE] [CONFIRM] SQLite '!db_path!' healthy ^(!sqlite_tbl_count! table^(s^)^).
+if "!_db_entry_failed!"=="0" (
+    echo [INFO] [DB:SQLITE] [CONFIRM] SQLite '!db_path!' healthy ^(!sqlite_tbl_count! table^(s^)^).
+) else (
+    echo [ERROR] [DB:SQLITE] SQLite '!db_path!' failed health verification ^(!sqlite_tbl_count! table^(s^)^). >&2
+)
 exit /b 0
 
 :: ## check_sqlite_table
@@ -327,6 +415,7 @@ set "sqlite_row_count=-1"
 for /f "delims= " %%c in ('sqlite3 "!db_path!" "SELECT count(*) FROM \"!req_tbl!\";" 2^>nul') do set "sqlite_row_count=%%c"
 if !sqlite_row_count! lss !min_rows_req! (
     echo [ERROR] SQLite database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!sqlite_row_count! ^< !min_rows_req!^) >&2
+    set "_db_entry_failed=1"
     set "HEALTH_DB_FAILED=1"
 ) else (
     echo [INFO] [DB:SQLITE] [CONFIRM] Table '!db_name!.!req_tbl!' verified ^(!sqlite_row_count! rows^).

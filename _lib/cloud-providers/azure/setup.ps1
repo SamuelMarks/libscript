@@ -166,7 +166,7 @@ switch ($Action) {
         if ($SubAction -eq "create") {
             $Image = $env:ARG3
             $ResourceGroup = $env:ARG4
-            $Size = if ($env:size) { $env:size } else { "Standard_D2s_v7" }
+            $Size = if ($env:size) { $env:size } elseif ($env:VM_SIZE) { $env:VM_SIZE } else { "Standard_D8s_v7" }
             $ArgsList = @()
             if ($env:vnet_name) { $ArgsList += "--vnet-name"; $ArgsList += $env:vnet_name }
             if ($env:nsg) { $ArgsList += "--nsg"; $ArgsList += $env:nsg }
@@ -185,8 +185,30 @@ switch ($Action) {
             $vmExists = az vm show -g $ResourceGroup -n $ResourceName 2>&1
             if ($LASTEXITCODE -eq 0 -and $vmExists -notmatch "ResourceNotFound") {
                 Write-Host "VM '$ResourceName' already exists in resource group '$ResourceGroup'."
+                $curSize = (az vm show -g $ResourceGroup -n $ResourceName --query "hardwareProfile.vmSize" -o tsv 2>$null).Trim()
+                if ($curSize -and $Size -and ($curSize -ne $Size)) {
+                    Write-Host "[RESIZE] Resizing Azure VM '$ResourceName' in '$ResourceGroup' from '$curSize' to '$Size'..."
+                    az vm resize --resource-group $ResourceGroup --name $ResourceName --size $Size
+                }
             } else {
-                & az vm create --resource-group $ResourceGroup --name $ResourceName --image $Image --size $Size --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard @ArgsList
+                & az vm create --resource-group $ResourceGroup --name $ResourceName --image $Image --size $Size --os-disk-delete-option Delete --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard @ArgsList
+            }
+        } elseif ($SubAction -eq "attach-disk") {
+            $ResourceGroup = $env:ARG3
+            $DiskName = $env:ARG4
+            $DiskSize = if ($env:ARG5) { $env:ARG5 } else { "100" }
+            $attached = (az vm show -g $ResourceGroup -n $ResourceName --query "storageProfile.dataDisks[?name=='$DiskName'] | [0].name" -o tsv 2>$null).Trim()
+            if ($attached) {
+                Write-Host "[REUSE] Disk '$DiskName' already attached to '$ResourceName'."
+                az vm update -g $ResourceGroup -n $ResourceName --set "storageProfile.dataDisks[?name=='$DiskName'].deleteOption=Detach" | Out-Null
+            } else {
+                $diskExists = az disk show -g $ResourceGroup -n $DiskName 2>&1
+                if ($LASTEXITCODE -eq 0 -and $diskExists -notmatch "ResourceNotFound") {
+                    az vm disk attach -g $ResourceGroup --vm-name $ResourceName --name $DiskName --delete-option Detach
+                } else {
+                    az vm disk attach -g $ResourceGroup --vm-name $ResourceName --name $DiskName --new --size-gb $DiskSize --sku Premium_LRS --delete-option Detach
+                }
+                az vm update -g $ResourceGroup -n $ResourceName --set "storageProfile.dataDisks[?name=='$DiskName'].deleteOption=Detach" | Out-Null
             }
         } elseif ($SubAction -eq "delete") {
             $ResourceGroup = $env:ARG3
@@ -198,6 +220,15 @@ switch ($Action) {
             Write-Host "Deleting Azure VM: $ResourceName from $ResourceGroup"
             $vmExists = az vm show -g $ResourceGroup -n $ResourceName 2>&1
             if ($LASTEXITCODE -eq 0 -and $vmExists -notmatch "ResourceNotFound") {
+                $attachedDisks = az vm show -g $ResourceGroup -n $ResourceName --query "storageProfile.dataDisks[].name" -o tsv 2>$null
+                foreach ($dName in $attachedDisks) {
+                    if (-not [string]::IsNullOrWhiteSpace($dName)) {
+                        $dName = $dName.Trim()
+                        Write-Host "[PRESERVE] Detaching persistent data disk '$dName' (deleteOption=Detach) before deleting VM '$ResourceName'..."
+                        az vm update -g $ResourceGroup -n $ResourceName --set "storageProfile.dataDisks[?name=='$dName'].deleteOption=Detach" | Out-Null
+                        az vm disk detach -g $ResourceGroup --vm-name $ResourceName --name $dName | Out-Null
+                    }
+                }
                 az vm delete --name $ResourceName --resource-group $ResourceGroup --yes
             } else {
                 Write-Host "VM '$ResourceName' already deleted or not found in resource group '$ResourceGroup'."

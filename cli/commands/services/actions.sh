@@ -49,7 +49,8 @@ elif [ "$CMD" = "prepare-storage" ]; then
       unset SCRIPT_NAME || true
       libscript_hydrate_manifest_env "$json_file" || true
     fi
-    _ps_mounts=$(jq -r '(.infrastructure.node.data_disks // [])[]? | "\(.mount_path // "/mnt/data") \(.fstype // "ext4")"' "$json_file" 2>/dev/null || true)
+    _ps_def_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+    _ps_mounts=$(jq -r --arg def "$_ps_def_mount" '(.infrastructure.node.data_disks // [])[]? | "\(.mount_path // $def) \(.fstype // "ext4")"' "$json_file" 2>/dev/null || true)
     if [ -n "$_ps_mounts" ]; then
       printf '%s\n' "$_ps_mounts" | while read -r _mp _fs; do
         [ -n "$_mp" ] || continue
@@ -57,7 +58,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
           _mp=$(libscript_expand_manifest_vars "$_mp")
         fi
         case "$_mp" in
-          \$\{*) _mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
+          \$\{*) _mp="$_ps_def_mount" ;;
         esac
         printf '[STORAGE] Ensuring persistent disk mount "%s" (fstype: %s, owner: %s)...\n' "$_mp" "${_fs:-ext4}" "${SERVICE_USER:-${REMOTE_USER:-root}}"
         "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" --auto-data-disk "$_mp" "${_fs:-ext4}"
@@ -69,7 +70,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
       . "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/service_install.sh"
       unset SCRIPT_NAME || true
     fi
-    _ps_overrides=$(jq -r '(.service_overrides // {}) | to_entries[]? | "\(.key) \(.value | to_entries | map("\(.key)=\(.value)") | join(" "))"' "$json_file" 2>/dev/null || true)
+    _ps_overrides=$(jq -r '((.infrastructure.service_overrides // {}) * (.service_overrides // {})) | to_entries[]? | "\(.key) \(.value | to_entries | map("\(.key)=\(.value)") | join(" "))"' "$json_file" 2>/dev/null || true)
     if [ -n "$_ps_overrides" ] && type libscript_service_override_env >/dev/null 2>&1; then
       printf '%s\n' "$_ps_overrides" | while read -r _ovr_svc _ovr_pairs; do
         if [ -z "$_ovr_svc" ] || [ -z "$_ovr_pairs" ]; then
@@ -92,7 +93,7 @@ elif [ "$CMD" = "prepare-storage" ]; then
         rm -f "$_tmp_ps_env"
       fi
     fi
-    _ol_ovr_dir=$(jq -r '.service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // empty' "$json_file" 2>/dev/null || true)
+    _ol_ovr_dir=$(jq -r '.service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // .infrastructure.service_overrides.ollama.OLLAMA_MODELS_DIR // .infrastructure.service_overrides.ollama.OLLAMA_MODELS // empty' "$json_file" 2>/dev/null || true)
     if [ -n "$_ol_ovr_dir" ] && [ "$_ol_ovr_dir" != "null" ] && type libscript_expand_manifest_vars >/dev/null 2>&1; then
       _ol_ovr_dir=$(libscript_expand_manifest_vars "$_ol_ovr_dir")
     fi
@@ -100,9 +101,99 @@ elif [ "$CMD" = "prepare-storage" ]; then
     if [ "$_has_ollama" = "1" ] || [ -n "${_ol_ovr_dir:-}" ] || [ -n "${OLLAMA_MODELS_DIR:-}" ]; then
       _ol_models="${_ol_ovr_dir:-${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}}"
       if [ -x "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" ]; then
+        _ol_ovr_kvs=$(jq -r '((.infrastructure.service_overrides.ollama // {}) * (.service_overrides.ollama // {})) | to_entries[]? | "\(.key)=\(.value)"' "$json_file" 2>/dev/null || true)
+        if [ -n "$_ol_ovr_kvs" ]; then
+          OIFS_OL_OVR="$IFS"
+          IFS='
+'
+          for _ol_kv in $_ol_ovr_kvs; do
+            IFS="$OIFS_OL_OVR"
+            _ol_k="${_ol_kv%%=*}"
+            _ol_v="${_ol_kv#*=}"
+            if type libscript_expand_manifest_vars >/dev/null 2>&1; then
+              _ol_v=$(libscript_expand_manifest_vars "$_ol_v")
+            fi
+            case "$_ol_k" in
+              OLLAMA_*|GGML_*)
+                export "${_ol_k}=${_ol_v}"
+                ;;
+            esac
+          done
+          IFS="$OIFS_OL_OVR"
+        fi
         printf '[DAEMON] Configuring ollama model storage at "%s" and restarting/reloading daemon if needed...\n' "$_ol_models"
         OLLAMA_MODELS_DIR="$_ol_models" OLLAMA_MODELS="$_ol_models" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/app-servers/ollama/service.sh" configure || true
       fi
+    fi
+    _pg_ovr_dir=$(jq -r '.service_overrides.postgres.POSTGRES_DATA_DIR // .service_overrides.postgres.PGDATA // .service_overrides.postgresql.POSTGRES_DATA_DIR // .service_overrides.postgresql.PGDATA // .infrastructure.service_overrides.postgres.POSTGRES_DATA_DIR // .infrastructure.service_overrides.postgres.PGDATA // .infrastructure.service_overrides.postgresql.POSTGRES_DATA_DIR // .infrastructure.service_overrides.postgresql.PGDATA // .vars.POSTGRES_DATA_DIR // .vars.PGDATA // empty' "$json_file" 2>/dev/null || true)
+    if [ -n "$_pg_ovr_dir" ] && [ "$_pg_ovr_dir" != "null" ] && type libscript_expand_manifest_vars >/dev/null 2>&1; then
+      _pg_ovr_dir=$(libscript_expand_manifest_vars "$_pg_ovr_dir")
+    fi
+    _pg_target_dir="${_pg_ovr_dir:-${POSTGRES_DATA_DIR:-${PGDATA:-}}}"
+    if [ -n "$_pg_target_dir" ] && [ -x "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/postgres/service.sh" ]; then
+      printf '[DAEMON] Configuring PostgreSQL persistent storage at "%s"...\n' "$_pg_target_dir"
+      POSTGRES_DATA_DIR="$_pg_target_dir" PGDATA="$_pg_target_dir" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/postgres/service.sh" configure "$_pg_target_dir" || true
+    fi
+    _vk_ovr_dir=$(jq -r '.service_overrides.valkey.VALKEY_DATA_DIR // .service_overrides.valkey.REDIS_DATA_DIR // .service_overrides.redis.REDIS_DATA_DIR // .service_overrides.redis.VALKEY_DATA_DIR // .infrastructure.service_overrides.valkey.VALKEY_DATA_DIR // .infrastructure.service_overrides.valkey.REDIS_DATA_DIR // .infrastructure.service_overrides.redis.REDIS_DATA_DIR // .infrastructure.service_overrides.redis.VALKEY_DATA_DIR // .vars.VALKEY_DATA_DIR // .vars.REDIS_DATA_DIR // empty' "$json_file" 2>/dev/null || true)
+    if [ -n "$_vk_ovr_dir" ] && [ "$_vk_ovr_dir" != "null" ] && type libscript_expand_manifest_vars >/dev/null 2>&1; then
+      _vk_ovr_dir=$(libscript_expand_manifest_vars "$_vk_ovr_dir")
+    fi
+    _vk_target_dir="${_vk_ovr_dir:-${VALKEY_DATA_DIR:-${REDIS_DATA_DIR:-}}}"
+    if [ -n "$_vk_target_dir" ] && [ -x "${LIBSCRIPT_ROOT_DIR:-.}/_lib/caches/valkey/service.sh" ]; then
+      printf '[DAEMON] Configuring Valkey/Redis persistent storage at "%s"...\n' "$_vk_target_dir"
+      VALKEY_DATA_DIR="$_vk_target_dir" REDIS_DATA_DIR="$_vk_target_dir" "${LIBSCRIPT_ROOT_DIR:-.}/_lib/caches/valkey/service.sh" configure "$_vk_target_dir" || true
+    fi
+    _ps_cert_store=$(jq -r '.ingress.cert_store_dir // empty' "$json_file" 2>/dev/null || true)
+    if [ -n "$_ps_cert_store" ] && [ "$_ps_cert_store" != "null" ] && type libscript_expand_manifest_vars >/dev/null 2>&1; then
+      _ps_cert_store=$(libscript_expand_manifest_vars "$_ps_cert_store")
+    fi
+    if [ -z "$_ps_cert_store" ] || [ "$_ps_cert_store" = "null" ]; then
+      _ps_cert_store="${CERT_STORE_DIR:-${_ps_def_mount}/certs}"
+    fi
+    mkdir -p "${_ps_cert_store}/live" "${_ps_cert_store}/letsencrypt" "${_ps_cert_store}/acme-webroot/.well-known/acme-challenge" 2>/dev/null || \
+      sudo -n mkdir -p "${_ps_cert_store}/live" "${_ps_cert_store}/letsencrypt" "${_ps_cert_store}/acme-webroot/.well-known/acme-challenge" 2>/dev/null || true
+    chmod -R 0755 "${_ps_cert_store}/acme-webroot" 2>/dev/null || sudo -n chmod -R 0755 "${_ps_cert_store}/acme-webroot" 2>/dev/null || true
+    _ps_le_etc="${LETSENCRYPT_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/letsencrypt}"
+    if [ -d "${_ps_cert_store}/letsencrypt" ]; then
+      for _ps_le_sub in accounts archive renewal; do
+        if [ -d "${_ps_cert_store}/letsencrypt/${_ps_le_sub}" ] && [ ! -d "${_ps_le_etc}/${_ps_le_sub}" ]; then
+          mkdir -p "$_ps_le_etc" 2>/dev/null || sudo -n mkdir -p "$_ps_le_etc" 2>/dev/null || true
+          cp -a "${_ps_cert_store}/letsencrypt/${_ps_le_sub}" "${_ps_le_etc}/" 2>/dev/null || sudo -n cp -a "${_ps_cert_store}/letsencrypt/${_ps_le_sub}" "${_ps_le_etc}/" 2>/dev/null || true
+        fi
+      done
+    fi
+    if [ -d "${_ps_cert_store}/live" ]; then
+      for _ps_dom_dir in "${_ps_cert_store}/live"/*; do
+        [ -d "$_ps_dom_dir" ] || continue
+        _ps_dom=$(basename "$_ps_dom_dir")
+        if [ -s "${_ps_dom_dir}/fullchain.pem" ] && [ -s "${_ps_dom_dir}/privkey.pem" ]; then
+          _ps_valid=1
+          if command -v openssl >/dev/null 2>&1; then
+            _ps_iss=$(openssl x509 -noout -issuer -in "${_ps_dom_dir}/fullchain.pem" 2>/dev/null || true)
+            _ps_sub=$(openssl x509 -noout -subject -in "${_ps_dom_dir}/fullchain.pem" 2>/dev/null || true)
+            if [ -z "$_ps_iss" ] || [ "${_ps_iss#*=}" = "${_ps_sub#*=}" ] || ! openssl x509 -checkend "${LETSENCRYPT_RENEW_BEFORE_SECONDS:-0}" -noout -in "${_ps_dom_dir}/fullchain.pem" >/dev/null 2>&1; then
+              _ps_valid=0
+            fi
+          fi
+          if [ "$_ps_valid" -eq 1 ]; then
+            chmod 0755 "$_ps_dom_dir" 2>/dev/null || sudo -n chmod 0755 "$_ps_dom_dir" 2>/dev/null || true
+            for _ps_cf in fullchain.pem cert.pem chain.pem; do
+              if [ -f "${_ps_dom_dir}/${_ps_cf}" ]; then
+                chmod 0444 "${_ps_dom_dir}/${_ps_cf}" 2>/dev/null || sudo -n chmod 0444 "${_ps_dom_dir}/${_ps_cf}" 2>/dev/null || true
+              fi
+            done
+            chmod 0400 "${_ps_dom_dir}/privkey.pem" 2>/dev/null || sudo -n chmod 0400 "${_ps_dom_dir}/privkey.pem" 2>/dev/null || true
+            chmod 0555 "$_ps_dom_dir" 2>/dev/null || sudo -n chmod 0555 "$_ps_dom_dir" 2>/dev/null || true
+            mkdir -p "${_ps_le_etc}/live/${_ps_dom}" 2>/dev/null || sudo -n mkdir -p "${_ps_le_etc}/live/${_ps_dom}" 2>/dev/null || true
+            for _ps_cf in fullchain.pem privkey.pem cert.pem chain.pem; do
+              if [ -f "${_ps_dom_dir}/${_ps_cf}" ]; then
+                cp -f "${_ps_dom_dir}/${_ps_cf}" "${_ps_le_etc}/live/${_ps_dom}/${_ps_cf}" 2>/dev/null || sudo -n cp -f "${_ps_dom_dir}/${_ps_cf}" "${_ps_le_etc}/live/${_ps_dom}/${_ps_cf}" 2>/dev/null || true
+              fi
+            done
+            printf '[STORAGE] [TLS] Restored valid non-expired Let'\''s Encrypt certificate for "%s" from "%s".\n' "$_ps_dom" "$_ps_dom_dir"
+          fi
+        fi
+      done
     fi
   fi
   exit 0
@@ -212,10 +303,51 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
       done
       for _nsd_target in "${DATA_DISK_MOUNT:-/mnt/data}" "${DATA_MOUNT_DIR:-/mnt/data}" "${TMP_DATA_DIR:-/tmp/data}" "${_nsd_dir}/data"; do
         if [ -n "$_nsd_target" ] && [ -d "$_nsd_target" ]; then
-          chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || sudo -n chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || true
-          chmod -R u+rwX,go+rX "$_nsd_target" 2>/dev/null || sudo -n chmod -R u+rwX,go+rX "$_nsd_target" 2>/dev/null || true
+          chown "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || sudo -n chown "${_nsd_user}:${_nsd_group}" "$_nsd_target" 2>/dev/null || true
+          chmod 0755 "$_nsd_target" 2>/dev/null || sudo -n chmod 0755 "$_nsd_target" 2>/dev/null || true
+          for _nsd_sub in "${_nsd_target}"/* "${_nsd_target}"/.[!.]* "${_nsd_target}"/..*; do
+            [ -e "$_nsd_sub" ] || continue
+            case "${_nsd_sub##*/}" in
+              ollama_models|postgres|postgresql|valkey|redis|certs|lost+found) continue ;;
+            esac
+            chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_sub" 2>/dev/null || sudo -n chown -R "${_nsd_user}:${_nsd_group}" "$_nsd_sub" 2>/dev/null || true
+            chmod -R u+rwX,go+rX "$_nsd_sub" 2>/dev/null || sudo -n chmod -R u+rwX,go+rX "$_nsd_sub" 2>/dev/null || true
+          done
+          if id ollama >/dev/null 2>&1 && [ -d "${_nsd_target}/ollama_models" ]; then
+            usermod -aG ollama "$_nsd_user" 2>/dev/null || sudo -n usermod -aG ollama "$_nsd_user" 2>/dev/null || true
+            usermod -aG "$_nsd_group" ollama 2>/dev/null || sudo -n usermod -aG "$_nsd_group" ollama 2>/dev/null || true
+            chown -R ollama:ollama "${_nsd_target}/ollama_models" 2>/dev/null || sudo -n chown -R ollama:ollama "${_nsd_target}/ollama_models" 2>/dev/null || true
+            chmod 02775 "${_nsd_target}/ollama_models" 2>/dev/null || sudo -n chmod 02775 "${_nsd_target}/ollama_models" 2>/dev/null || true
+            chmod -R u+rwX,g+rwXs,o+rX "${_nsd_target}/ollama_models" 2>/dev/null || sudo -n chmod -R u+rwX,g+rwXs,o+rX "${_nsd_target}/ollama_models" 2>/dev/null || true
+          fi
+          if id postgres >/dev/null 2>&1 && [ -d "${_nsd_target}/postgres" ]; then
+            chown -R postgres:postgres "${_nsd_target}/postgres" 2>/dev/null || sudo -n chown -R postgres:postgres "${_nsd_target}/postgres" 2>/dev/null || true
+            chmod 0700 "${_nsd_target}/postgres" 2>/dev/null || sudo -n chmod 0700 "${_nsd_target}/postgres" 2>/dev/null || true
+          fi
+          if [ -d "${_nsd_target}/valkey" ]; then
+            if id valkey >/dev/null 2>&1; then
+              chown -R valkey:valkey "${_nsd_target}/valkey" 2>/dev/null || sudo -n chown -R valkey:valkey "${_nsd_target}/valkey" 2>/dev/null || true
+            elif id redis >/dev/null 2>&1; then
+              chown -R redis:redis "${_nsd_target}/valkey" 2>/dev/null || sudo -n chown -R redis:redis "${_nsd_target}/valkey" 2>/dev/null || true
+            fi
+            chmod 0750 "${_nsd_target}/valkey" 2>/dev/null || sudo -n chmod 0750 "${_nsd_target}/valkey" 2>/dev/null || true
+          fi
         fi
       done
+      if id ollama >/dev/null 2>&1; then
+        for _nsd_ol_dir in "${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}" "${OLLAMA_MODELS:-}"; do
+          case "$_nsd_ol_dir" in
+            /*) ;;
+            *) continue ;;
+          esac
+          if [ -d "$_nsd_ol_dir" ]; then
+            mkdir -p "${_nsd_ol_dir}/manifests" "${_nsd_ol_dir}/blobs" 2>/dev/null || sudo -n mkdir -p "${_nsd_ol_dir}/manifests" "${_nsd_ol_dir}/blobs" 2>/dev/null || true
+            chown -R ollama:ollama "$_nsd_ol_dir" 2>/dev/null || sudo -n chown -R ollama:ollama "$_nsd_ol_dir" 2>/dev/null || true
+            chmod 02775 "$_nsd_ol_dir" "${_nsd_ol_dir}/manifests" "${_nsd_ol_dir}/blobs" 2>/dev/null || sudo -n chmod 02775 "$_nsd_ol_dir" "${_nsd_ol_dir}/manifests" "${_nsd_ol_dir}/blobs" 2>/dev/null || true
+            chmod -R u+rwX,g+rwXs,o+rX "$_nsd_ol_dir" 2>/dev/null || sudo -n chmod -R u+rwX,g+rwXs,o+rX "$_nsd_ol_dir" 2>/dev/null || true
+          fi
+        done
+      fi
     fi
   }
 
@@ -339,7 +471,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
                 postgres|postgresql|mariadb|mysql|valkey|redis|mongodb|etcd)
                   "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver"
                   ;;
-                python|nodejs|uv|duckdb|sqlite|ruby|java|csharp|go|rust|php|elixir|swift|zig|deno|bun|c|cc|cpp|sh|bazel|cmake|coursier|gradle|huggingface-cli|just|maven|xpk)
+                python|nodejs|uv|duckdb|sqlite|certbot|ruby|java|csharp|go|rust|php|elixir|swift|zig|deno|bun|c|cc|cpp|sh|bazel|cmake|coursier|gradle|huggingface-cli|just|maven|xpk)
                   ;;
                 *)
                   "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" &
@@ -347,7 +479,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
               esac
             else
               case "$pkg" in
-                python|nodejs|uv|duckdb|sqlite|ruby|java|csharp|go|rust|php|elixir|swift|zig|deno|bun|c|cc|cpp|sh|bazel|cmake|coursier|gradle|huggingface-cli|just|maven|xpk)
+                python|nodejs|uv|duckdb|sqlite|certbot|ruby|java|csharp|go|rust|php|elixir|swift|zig|deno|bun|c|cc|cpp|sh|bazel|cmake|coursier|gradle|huggingface-cli|just|maven|xpk)
                   ;;
                 *)
                   "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" &
@@ -374,7 +506,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
       normalize_service_data_ownership "$json_file"
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
       if [ "$skip_db_init" -eq 0 ] && jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
-        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/networking/netctl/cli.sh" apply "$json_file" --reload || true
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/component_core.sh" --synchronize-ingress "$json_file" --reload || true
       fi
       if [ "$skip_hooks" -eq 0 ]; then
         "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_start"
@@ -414,7 +546,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
           normalize_service_data_ownership "$json_file"
           "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "start" "$json_file"
           if jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
-            "${LIBSCRIPT_ROOT_DIR:-.}/_lib/networking/netctl/cli.sh" apply "$json_file" --reload || true
+            "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/component_core.sh" --synchronize-ingress "$json_file" --reload || true
           fi
           check_manifest_health_once "$json_file" "$@"
         else
@@ -428,7 +560,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
       normalize_service_data_ownership "$json_file"
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "start" "$json_file"
       if jq -e '.ingress != null' "$json_file" >/dev/null 2>&1; then
-        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/networking/netctl/cli.sh" apply "$json_file" --reload || true
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_common/component_core.sh" --synchronize-ingress "$json_file" --reload || true
       fi
     fi
 

@@ -73,15 +73,20 @@ if /i "!action!"=="prepare-storage" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!_ps_json!"
     )
-    for /f "tokens=1,2 delims=	 " %%M in ('jq -r --arg mp "/mnt/data" --arg fs "NTFS" ".infrastructure.node.data_disks[]? | [(.mount_path // $mp), (.fstype // $fs)] | @tsv" "!_ps_json!" 2^>nul') do (
+    set "_ps_def_mount=!DATA_DISK_MOUNT!"
+    if "!_ps_def_mount!"=="" set "_ps_def_mount=!DATA_MOUNT_DIR!"
+    if "!_ps_def_mount!"=="" set "_ps_def_mount=/mnt/data"
+    for /f "tokens=1,2 delims=	 " %%M in ('jq -r --arg mp "!_ps_def_mount!" --arg fs "NTFS" ".infrastructure.node.data_disks[]? | [(.mount_path // $mp), (.fstype // $fs)] | @tsv" "!_ps_json!" 2^>nul') do (
         echo [STORAGE] Ensuring persistent disk mount "%%M" ^(fstype: %%N^)...
         call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
     )
-    for /f "tokens=1* delims= " %%S in ('jq -r --arg sp " " --arg eq "=" "(.service_overrides // {}) | to_entries[]? | .key + $sp + (.value | to_entries | map(.key + $eq + (.value | tostring)) | join($sp))" "!_ps_json!" 2^>nul') do (
+    for /f "tokens=1* delims= " %%S in ('jq -r --arg sp " " --arg eq "=" "((.infrastructure.service_overrides // {}) * (.service_overrides // {})) | to_entries[]? | .key + $sp + (.value | to_entries | map(.key + $eq + (.value | tostring)) | join($sp))" "!_ps_json!" 2^>nul') do (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
             echo [DAEMON] Applying service_overrides for "%%S" ^(%%T^)...
-            set "STACK="
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "%%S" %%T
+            for %%O in (%%T) do (
+                set "STACK="
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "%%S" "%%O"
+            )
         )
     )
     for %%F in ("!_ps_json!") do set "_ps_dir=%%~dpF"
@@ -93,17 +98,59 @@ if /i "!action!"=="prepare-storage" (
         )
     )
     set "_ol_ovr_dir="
-    for /f "delims=" %%O in ('jq -r ".service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // empty" "!_ps_json!" 2^>nul') do set "_ol_ovr_dir=%%O"
+    for /f "delims=" %%O in ('jq -r ".service_overrides.ollama.OLLAMA_MODELS_DIR // .service_overrides.ollama.OLLAMA_MODELS // .infrastructure.service_overrides.ollama.OLLAMA_MODELS_DIR // .infrastructure.service_overrides.ollama.OLLAMA_MODELS // empty" "!_ps_json!" 2^>nul') do set "_ol_ovr_dir=%%O"
     set "_has_ol=0"
     for /f "delims=" %%O in ('jq -r --arg ol "ollama" --arg y "1" --arg n "0" "if (.deps.ollama != null) or (.dependencies.ollama != null) or ([.dependencies.runtime[]? | select(.name == $ol)] | length > 0) then $y else $n end" "!_ps_json!" 2^>nul') do set "_has_ol=%%O"
     if not "!_ol_ovr_dir!"=="" set "_has_ol=1"
     if not "!OLLAMA_MODELS_DIR!"=="" set "_has_ol=1"
     if "!_has_ol!"=="1" (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" (
+            for /f "delims=" %%O in ('jq -r --arg eq "=" "((.infrastructure.service_overrides.ollama // {}) * (.service_overrides.ollama // {})) | to_entries[]? | .key + $eq + (.value | tostring)" "!_ps_json!" 2^>nul') do (
+                set "%%O"
+            )
             if not "!_ol_ovr_dir!"=="" set "OLLAMA_MODELS_DIR=!_ol_ovr_dir!"
             echo [DAEMON] Configuring ollama model storage and restarting/reloading daemon if needed...
             set "STACK="
             call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" configure
+        )
+    )
+    set "_pg_ovr_dir="
+    for /f "delims=" %%P in ('jq -r ".service_overrides.postgres.POSTGRES_DATA_DIR // .service_overrides.postgres.PGDATA // .service_overrides.postgresql.POSTGRES_DATA_DIR // .service_overrides.postgresql.PGDATA // .infrastructure.service_overrides.postgres.POSTGRES_DATA_DIR // .infrastructure.service_overrides.postgres.PGDATA // .infrastructure.service_overrides.postgresql.POSTGRES_DATA_DIR // .infrastructure.service_overrides.postgresql.PGDATA // .vars.POSTGRES_DATA_DIR // .vars.PGDATA // empty" "!_ps_json!" 2^>nul') do set "_pg_ovr_dir=%%P"
+    if "!_pg_ovr_dir!"=="" set "_pg_ovr_dir=!POSTGRES_DATA_DIR!"
+    if "!_pg_ovr_dir!"=="" set "_pg_ovr_dir=!PGDATA!"
+    if not "!_pg_ovr_dir!"=="" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\service.cmd" (
+            set "POSTGRES_DATA_DIR=!_pg_ovr_dir!"
+            set "PGDATA=!_pg_ovr_dir!"
+            echo [DAEMON] Configuring PostgreSQL persistent storage at "!_pg_ovr_dir!"...
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\postgres\service.cmd" configure "!_pg_ovr_dir!"
+        )
+    )
+    set "_vk_ovr_dir="
+    for /f "delims=" %%V in ('jq -r ".service_overrides.valkey.VALKEY_DATA_DIR // .service_overrides.valkey.REDIS_DATA_DIR // .service_overrides.redis.REDIS_DATA_DIR // .service_overrides.redis.VALKEY_DATA_DIR // .infrastructure.service_overrides.valkey.VALKEY_DATA_DIR // .infrastructure.service_overrides.valkey.REDIS_DATA_DIR // .infrastructure.service_overrides.redis.REDIS_DATA_DIR // .infrastructure.service_overrides.redis.VALKEY_DATA_DIR // .vars.VALKEY_DATA_DIR // .vars.REDIS_DATA_DIR // empty" "!_ps_json!" 2^>nul') do set "_vk_ovr_dir=%%V"
+    if "!_vk_ovr_dir!"=="" set "_vk_ovr_dir=!VALKEY_DATA_DIR!"
+    if "!_vk_ovr_dir!"=="" set "_vk_ovr_dir=!REDIS_DATA_DIR!"
+    if not "!_vk_ovr_dir!"=="" (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\service.cmd" (
+            set "VALKEY_DATA_DIR=!_vk_ovr_dir!"
+            set "REDIS_DATA_DIR=!_vk_ovr_dir!"
+            echo [DAEMON] Configuring Valkey/Redis persistent storage at "!_vk_ovr_dir!"...
+            set "STACK="
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\caches\valkey\service.cmd" configure "!_vk_ovr_dir!"
+        )
+    )
+    set "_ps_cert_store=%CERT_STORE_DIR%"
+    if "!_ps_cert_store!"=="" set "_ps_cert_store=!_ps_def_mount!/certs"
+    for /f "delims=" %%C in ('jq -r ".ingress.cert_store_dir // empty" "!_ps_json!" 2^>nul') do if not "%%C"=="" set "_ps_cert_store=%%C"
+    if not exist "!_ps_cert_store!\live" mkdir "!_ps_cert_store!\live" >nul 2>&1
+    if not exist "!_ps_cert_store!\letsencrypt" mkdir "!_ps_cert_store!\letsencrypt" >nul 2>&1
+    if not exist "!_ps_cert_store!\acme-webroot\.well-known\acme-challenge" mkdir "!_ps_cert_store!\acme-webroot\.well-known\acme-challenge" >nul 2>&1
+    for /d %%D in ("!_ps_cert_store!\live\*") do (
+        if exist "%%~fD\fullchain.pem" if exist "%%~fD\privkey.pem" (
+            attrib +R "%%~fD\fullchain.pem" >nul 2>&1
+            attrib +R "%%~fD\privkey.pem" >nul 2>&1
+            echo [STORAGE] [TLS] Restored Let's Encrypt certificate for "%%~nxD" from "%%~fD".
         )
     )
     exit /b 0
@@ -239,12 +286,13 @@ if "!is_json!"=="1" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
             if errorlevel 1 exit /b 1
         )
+        call :normalize_service_data_ownership "!json_file!"
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
         if errorlevel 1 exit /b 1
         if "!skip_db_init!"=="0" (
             jq -e ".ingress != null" "!json_file!" >nul 2>&1
             if not errorlevel 1 (
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" --synchronize-ingress "!json_file!" --reload
             )
         )
         if "!skip_hooks!"=="0" (
@@ -290,6 +338,7 @@ if "!is_json!"=="1" (
                 )
                 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
                 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_start"
+                call :normalize_service_data_ownership "!json_file!"
                 call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "start" "!json_file!"
                 call :run_health_check
                 if errorlevel 1 exit /b 1
@@ -301,10 +350,11 @@ if "!is_json!"=="1" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "!action!" "!json_file!"
     ) else if /i "!action!"=="restart" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "stop" "!json_file!"
+        call :normalize_service_data_ownership "!json_file!"
         call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" "start" "!json_file!"
         jq -e ".ingress != null" "!json_file!" >nul 2>&1
         if not errorlevel 1 (
-            call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!json_file!" --reload
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" --synchronize-ingress "!json_file!" --reload
         )
     )
 
@@ -388,6 +438,27 @@ where redis-cli >nul 2>&1
 if not errorlevel 1 (
     redis-cli ping >nul 2>&1
     exit /b 0
+)
+exit /b 0
+
+:: ## normalize_service_data_ownership
+:: Ensures data directories and OLLAMA_MODELS_DIR retain read/write permissions for the service user and Ollama daemon on Windows.
+:normalize_service_data_ownership
+set "_NSDO_JSON=%~1"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
+    if not "!_NSDO_JSON!"=="" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" --hydrate "!_NSDO_JSON!"
+    )
+)
+set "_NSDO_OL=!OLLAMA_MODELS_DIR!"
+if "!_NSDO_OL!"=="" set "_NSDO_OL=!OLLAMA_MODELS!"
+if not "!_NSDO_OL!"=="" (
+    if exist "!_NSDO_OL!" (
+        if not exist "!_NSDO_OL!\manifests" mkdir "!_NSDO_OL!\manifests" >nul 2>&1
+        if not exist "!_NSDO_OL!\blobs" mkdir "!_NSDO_OL!\blobs" >nul 2>&1
+        icacls "!_NSDO_OL!" /grant "*S-1-5-32-544:(OI)(CI)F" /grant "*S-1-5-18:(OI)(CI)F" /T /C /Q >nul 2>&1
+    )
 )
 exit /b 0
 

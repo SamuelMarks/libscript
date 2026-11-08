@@ -105,10 +105,53 @@ if [ "$PATH_PASS_1" != "$PATH_PASS_2" ]; then
   exit 1
 fi
 
-# 3. Verify pure POSIX variable expansion
+# 3. Verify pure POSIX variable expansion (including nested ${VAR:-...${INNER}...} and preserved local $_var)
+# shellcheck disable=SC2016
 EXPANDED_VAL=$(libscript_expand_manifest_vars '${DATA_DIR:-/var/data}/analytics.duckdb')
 if [ "$EXPANDED_VAL" != "/var/data/analytics.duckdb" ]; then
   printf '[FAIL] libscript_expand_manifest_vars returned "%s" (expected "/var/data/analytics.duckdb")\n' "$EXPANDED_VAL" >&2
+  rm -rf "$TEST_TMP"
+  exit 1
+fi
+
+# shellcheck disable=SC2016
+NESTED_VAL=$(SERVICE_PATH="" REMOTE_USER="azureuser" libscript_expand_manifest_vars '_db="${T1D_DB_PATH:-/mnt/data/t1d.duckdb}" && [ -s "$_db" ] && [ "${_tcnt:-0}" -lt 25 ] && export PATH="${SERVICE_PATH:-/home/${REMOTE_USER}/.local/bin}"')
+# shellcheck disable=SC2016
+EXPECTED_NESTED='_db="/mnt/data/t1d.duckdb" && [ -s "$_db" ] && [ "${_tcnt:-0}" -lt 25 ] && export PATH="/home/azureuser/.local/bin"'
+if [ "$NESTED_VAL" != "$EXPECTED_NESTED" ]; then
+  printf '[FAIL] libscript_expand_manifest_vars nested/local expansion returned "%s" (expected "%s")\n' "$NESTED_VAL" "$EXPECTED_NESTED" >&2
+  rm -rf "$TEST_TMP"
+  exit 1
+fi
+
+# 4. Verify escape-safe expansion of t1d-analytics seed_command (preserving \", \r, \n, $(...), and subshells)
+# shellcheck disable=SC2016
+T1D_SEED_RAW='export PATH="${SERVICE_PATH:-/home/${REMOTE_USER:-azureuser}/.local/bin:$PATH}" && _db="${T1D_DB_PATH:-/mnt/data/t1d_analytics.duckdb}" && _tcnt=$(t1d-analytics-backend/.venv/bin/python -c "import duckdb; conn=duckdb.connect(\"$_db\", read_only=True); print(conn.execute(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('"'"'information_schema'"'"', '"'"'pg_catalog'"'"')\").fetchone()[0])" 2>/dev/null | tr -d '\'' \r\n'\'' || printf "0") && if [ "${_tcnt:-0}" -lt 25 ]; then (cd t1d-analytics-backend && uv sync --python 3.12); fi'
+T1D_SEED_EXPANDED=$(SERVICE_PATH="/usr/local/bin:/usr/bin:/bin" REMOTE_USER="azureuser" T1D_DB_PATH="/mnt/data/t1d_analytics.duckdb" libscript_expand_manifest_vars "$T1D_SEED_RAW")
+case "$T1D_SEED_EXPANDED" in
+  *'\"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('*'\r\n'*'(cd t1d-analytics-backend && uv sync --python 3.12)'*) ;;
+  *)
+    printf '[FAIL] libscript_expand_manifest_vars stripped escapes in t1d seed_command: %s\n' "$T1D_SEED_EXPANDED" >&2
+    rm -rf "$TEST_TMP"
+    exit 1
+    ;;
+esac
+if ! sh -n -c "$T1D_SEED_EXPANDED" 2>/dev/null; then
+  printf '[FAIL] Expanded t1d seed_command failed sh -n syntax check: %s\n' "$T1D_SEED_EXPANDED" >&2
+  rm -rf "$TEST_TMP"
+  exit 1
+fi
+
+# 5. Verify PATH and SERVICE_PATH contain zero duplicate entries
+DUP_PATH_CHECK=$(printf '%s\n' "$PATH" | tr ':' '\n' | awk 'NF && seen[$0]++ { print $0 }')
+if [ -n "$DUP_PATH_CHECK" ]; then
+  printf '[FAIL] Duplicate entries found in PATH: %s\n' "$DUP_PATH_CHECK" >&2
+  rm -rf "$TEST_TMP"
+  exit 1
+fi
+DUP_SVC_PATH_CHECK=$(printf '%s\n' "${SERVICE_PATH:-}" | tr ':' '\n' | awk 'NF && seen[$0]++ { print $0 }')
+if [ -n "$DUP_SVC_PATH_CHECK" ]; then
+  printf '[FAIL] Duplicate entries found in SERVICE_PATH: %s\n' "$DUP_SVC_PATH_CHECK" >&2
   rm -rf "$TEST_TMP"
   exit 1
 fi

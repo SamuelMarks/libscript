@@ -62,16 +62,16 @@ if /i "%~1"==":libscript_uninstall_service" (
     exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="override-env" (
-    call :libscript_service_override_env "%~2" "%~3" "%~4" "%~5" "%~6"
-    exit /b !ERRORLEVEL!
+    shift
+    goto :libscript_service_override_env
 )
 if /i "%~1"=="--override-env" (
-    call :libscript_service_override_env "%~2" "%~3" "%~4" "%~5" "%~6"
-    exit /b !ERRORLEVEL!
+    shift
+    goto :libscript_service_override_env
 )
 if /i "%~1"==":libscript_service_override_env" (
-    call :libscript_service_override_env "%~2" "%~3" "%~4" "%~5" "%~6"
-    exit /b !ERRORLEVEL!
+    shift
+    goto :libscript_service_override_env
 )
 if /i "%~1"=="install" (
     call :libscript_install_service "%~2" "%~3" "%~4" "%~5" "%~6"
@@ -228,7 +228,7 @@ if not errorlevel 1 (
 if exist "!_MANIFEST_DIR!\libscript.json" (
     where jq >nul 2>&1
     if not errorlevel 1 (
-        for /f "usebackq delims=" %%O in (`jq -r --arg svc "!_SERVICE_NAME!" --arg eq "=" "(.service_overrides[$svc] // .infrastructure.service_overrides[$svc] // {}) | to_entries[]? | .key + $eq + (.value | tostring)" "!_MANIFEST_DIR!\libscript.json" 2^>nul`) do (
+        for /f "usebackq delims=" %%O in (`jq -r --arg svc "!_SERVICE_NAME!" --arg eq "=" "((.infrastructure.service_overrides[$svc] // {}) * (.service_overrides[$svc] // {})) | to_entries[]? | .key + $eq + (.value | tostring)" "!_MANIFEST_DIR!\libscript.json" 2^>nul`) do (
             call :libscript_service_override_env "!_SERVICE_NAME!" "%%O"
         )
     )
@@ -262,30 +262,56 @@ set "_DATA_BASE=%TEMP%\data"
 if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
 if not exist "!_DATA_BASE!\!_OVR_SVC!" mkdir "!_DATA_BASE!\!_OVR_SVC!"
 set "_ENV_FILE=!_DATA_BASE!\!_OVR_SVC!\.env.service"
+set "LIBSCRIPT_OVERRIDE_CHANGED=0"
 set "_EOV_MOUNT=%DATA_DISK_MOUNT%"
 if "!_EOV_MOUNT!"=="" set "_EOV_MOUNT=%DATA_MOUNT_DIR%"
 if "!_EOV_MOUNT!"=="" set "_EOV_MOUNT=/mnt/data"
-for %%K in ("%~2" "%~3" "%~4" "%~5") do (
-    set "_KV=%%~K"
-    if not "!_KV!"=="" (
-        set "_KV=!_KV:${DATA_MOUNT_DIR:-/mnt/data}=%_EOV_MOUNT%!"
-        set "_KV=!_KV:${DATA_MOUNT_DIR}=%_EOV_MOUNT%!"
-        set "_KV=!_KV:$DATA_MOUNT_DIR=%_EOV_MOUNT%!"
-        set "_KV=!_KV:${DATA_DISK_MOUNT:-/mnt/data}=%_EOV_MOUNT%!"
-        set "_KV=!_KV:${DATA_DISK_MOUNT}=%_EOV_MOUNT%!"
-        set "_KV=!_KV:$DATA_DISK_MOUNT=%_EOV_MOUNT%!"
-        set "_KV=!_KV:${LIBSCRIPT_DATA_DIR}=%_DATA_BASE%!"
-        set "_KV=!_KV:$LIBSCRIPT_DATA_DIR=%_DATA_BASE%!"
-        for /f "tokens=1* delims==" %%A in ("!_KV!") do (
-            if exist "!_ENV_FILE!" (
-                findstr /v /b /c:"%%A=" "!_ENV_FILE!" > "!_ENV_FILE!.tmp" 2>nul
-                move /y "!_ENV_FILE!.tmp" "!_ENV_FILE!" >nul 2>&1
+
+:: ## ovr_arg_loop
+:: Iterates through all remaining KEY=VALUE positional arguments and writes them to .env.service.
+:ovr_arg_loop
+if "%~2"=="" goto :ovr_arg_done
+set "_KV=%~2"
+if not "!_KV!"=="" (
+    set "_KV=!_KV:${DATA_MOUNT_DIR:-/mnt/data}=%_EOV_MOUNT%!"
+    set "_KV=!_KV:${DATA_MOUNT_DIR}=%_EOV_MOUNT%!"
+    set "_KV=!_KV:$DATA_MOUNT_DIR=%_EOV_MOUNT%!"
+    set "_KV=!_KV:${DATA_DISK_MOUNT:-/mnt/data}=%_EOV_MOUNT%!"
+    set "_KV=!_KV:${DATA_DISK_MOUNT}=%_EOV_MOUNT%!"
+    set "_KV=!_KV:$DATA_DISK_MOUNT=%_EOV_MOUNT%!"
+    set "_KV=!_KV:${LIBSCRIPT_DATA_DIR}=%_DATA_BASE%!"
+    set "_KV=!_KV:$LIBSCRIPT_DATA_DIR=%_DATA_BASE%!"
+    for /f "tokens=1* delims==" %%A in ("!_KV!") do (
+        set "_FOUND_EXACT=0"
+        if exist "!_ENV_FILE!" (
+            findstr /x /c:"!_KV!" "!_ENV_FILE!" >nul 2>&1
+            if not errorlevel 1 set "_FOUND_EXACT=1"
+            findstr /v /b /c:"%%A=" "!_ENV_FILE!" > "!_ENV_FILE!.tmp" 2>nul
+            move /y "!_ENV_FILE!.tmp" "!_ENV_FILE!" >nul 2>&1
+        )
+        if "!_FOUND_EXACT!"=="0" set "LIBSCRIPT_OVERRIDE_CHANGED=1"
+        echo !_KV!>> "!_ENV_FILE!"
+        setx %%A "%%B" /M >nul 2>&1
+        if /i "!_OVR_SVC!"=="ollama" (
+            if /i "%%A"=="OLLAMA_MODELS" (
+                if not exist "%%B" mkdir "%%B" 2>nul
+                if not exist "%%B\manifests" mkdir "%%B\manifests" 2>nul
+                if not exist "%%B\blobs" mkdir "%%B\blobs" 2>nul
             )
-            echo !_KV!>> "!_ENV_FILE!"
-            setx %%A "%%B" /M >nul 2>&1
+            if /i "%%A"=="OLLAMA_MODELS_DIR" (
+                if not exist "%%B" mkdir "%%B" 2>nul
+                if not exist "%%B\manifests" mkdir "%%B\manifests" 2>nul
+                if not exist "%%B\blobs" mkdir "%%B\blobs" 2>nul
+            )
         )
     )
 )
+shift
+goto :ovr_arg_loop
+
+:: ## ovr_arg_done
+:: Finalizes Windows Service Registry Environment REG_MULTI_SZ after processing all KEY=VALUE overrides.
+:ovr_arg_done
 set "_REG_MULTI=PATH=!PATH!\0SERVICE_PATH=!PATH!"
 if exist "!_ENV_FILE!" (
     for /f "usebackq tokens=* delims=" %%L in ("!_ENV_FILE!") do (

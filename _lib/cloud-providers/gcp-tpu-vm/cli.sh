@@ -363,9 +363,9 @@ case "$ACTION" in
     done
     
     log_info "Initiating capture_tpu_profile session on $TPU_NAME in $TPU_ZONE..."
-    
+    TPU_PROFILE_LOGDIR="${TPU_PROFILE_LOGDIR:-${TMPDIR:-/tmp}/tpu_profile}"
     # We must tunnel into the TPU VM because the profiler port is usually not exposed externally
-    gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --worker=all --command="capture_tpu_profile --tpu=\$HOSTNAME --profiler_port=$PORT --duration_ms=$DURATION --logdir=/tmp/tpu_profile"
+    gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --worker=all --command="capture_tpu_profile --tpu=\$HOSTNAME --profiler_port=$PORT --duration_ms=$DURATION --logdir=$TPU_PROFILE_LOGDIR"
     ;;
   scp)
     # Usage: tpu-vm scp <name> <src> <dest> [--all-workers]

@@ -42,7 +42,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-POSTGRES_INSTALL_METHOD="$(libscript_resolve_install_method "POSTGRES")"
+POSTGRES_INSTALL_METHOD="${POSTGRES_INSTALL_METHOD:-system}"
+POSTGRES_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$POSTGRES_INSTALL_METHOD" libscript_resolve_install_method "POSTGRES")"
 ACTION="${ACTION:-install}"
 VERSION="${POSTGRES_VERSION:-latest}"
 
@@ -123,6 +124,9 @@ case "$ACTION" in
       fi
       libscript_symlink_alias "postgres" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "postgres" "default" "${EXACT_VERSION}"
+      if [ -n "${POSTGRES_DATA_DIR:-${PGDATA:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${POSTGRES_DATA_DIR:-${PGDATA:-}}" || true
+      fi
       log_info "[REUSE] PostgreSQL (${VERSION}) is already installed and ready."
       exit 0
     fi
@@ -179,6 +183,9 @@ case "$ACTION" in
         log_info "postgres ${VERSION} is already installed."
       fi
       libscript_symlink_alias "postgres" "$VERSION" "${EXACT_VERSION}"
+    fi
+    if [ -n "${POSTGRES_DATA_DIR:-${PGDATA:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${POSTGRES_DATA_DIR:-${PGDATA:-}}" || true
     fi
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/hw_tune.sh"

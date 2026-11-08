@@ -115,15 +115,16 @@ del /f /q "!ENV_SECRET_FILE!" >nul 2>&1
 echo Installing components on TPU VM...
 gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% --command "~/_lib/storage-layers/gcsfuse/setup.sh && ~/_lib/utilities/tmux/setup.sh && ~/_lib/logging/tensorboard/setup.sh"
 
+if "%ML_DATA_MOUNT%"=="" set "ML_DATA_MOUNT=/mnt/ml_data"
 set "SCRIPT_FILE=%TEMP%\ml_deploy.sh"
 
 (
 echo #!/bin/sh
 echo set -ex
 echo if [ -n "%BUCKET_NAME%" ]; then
-echo   mkdir -p /mnt/ml_data
-echo   gcsfuse --implicit-dirs "%BUCKET_NAME%" /mnt/ml_data ^|^| true
-echo   WORK_DATA_DIR="/mnt/ml_data"
+echo   mkdir -p "%ML_DATA_MOUNT%"
+echo   gcsfuse --implicit-dirs "%BUCKET_NAME%" "%ML_DATA_MOUNT%" ^|^| true
+echo   WORK_DATA_DIR="%ML_DATA_MOUNT%"
 echo else
 echo   mkdir -p "$HOME/workspace/data"
 echo   WORK_DATA_DIR="$HOME/workspace/data"
@@ -140,7 +141,7 @@ echo ~/_lib/logging/tensorboard/cli.sh start "${WORK_DATA_DIR}/logs" 6006 ^|^| t
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" ssh "%TPU_NAME%" "sh -s" < "%SCRIPT_FILE%"
 
-set "REMOTE_RUN_DIR=/mnt/ml_data"
+set "REMOTE_RUN_DIR=%ML_DATA_MOUNT%"
 if "%BUCKET_NAME%"=="" set "REMOTE_RUN_DIR=~/workspace"
 if not "!APP_DIR!"=="" set "REMOTE_RUN_DIR=~/workspace"
 

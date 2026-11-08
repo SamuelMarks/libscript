@@ -97,7 +97,7 @@ while IFS= read -r db_entry <&3; do
       DB_PATH=$(printf '%s\n' "$db_entry" | jq -r '.path // .file // .db_path // empty')
       DB_PATH=$(expand_manifest_vars "$DB_PATH")
       if [ -z "$DB_PATH" ]; then
-        DB_PATH="/mnt/data/${DB_NAME}.duckdb"
+        DB_PATH="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/${DB_NAME}.duckdb"
       elif [ "${DB_PATH#/}" = "$DB_PATH" ]; then
         DB_PATH="${MANIFEST_DIR}/${DB_PATH}"
       fi

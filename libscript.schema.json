@@ -458,6 +458,104 @@
           }
         }
       }
+    },
+    "ingress": {
+      "type": "object",
+      "description": "Reverse-proxy, SPA, and WebSocket ingress configuration applied via netctl.",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["nginx", "caddy", "apache", "iis", "traefik"],
+          "description": "Reverse-proxy engine used to serve the ingress configuration."
+        },
+        "engine": {
+          "type": "string",
+          "description": "Alias for provider specifying the reverse-proxy engine."
+        },
+        "domain": {
+          "type": "string",
+          "description": "Virtual host server_name or domain."
+        },
+        "server_name": {
+          "type": "string",
+          "description": "Alias for domain specifying the virtual host server_name."
+        },
+        "tls": {
+          "type": "string",
+          "enum": ["letsencrypt", "self-signed", "none"],
+          "description": "TLS certificate provisioning strategy ('letsencrypt' acquires and persists read-only CA certificates in cert_store_dir; 'self-signed' generates a local X.509 certificate)."
+        },
+        "port": {
+          "type": "integer",
+          "description": "Primary HTTP/HTTPS listen port for the ingress virtual host."
+        },
+        "expect_html": {
+          "type": "string",
+          "description": "Substring expected in the public ingress HTML response during health verification."
+        },
+        "cert_store_dir": {
+          "type": "string",
+          "description": "Persistent read-only directory on attached storage for storing Let's Encrypt certificates across VM recreations (defaults to /mnt/data/certs)."
+        },
+        "acme_webroot": {
+          "type": "string",
+          "description": "Filesystem webroot directory served under /.well-known/acme-challenge/ for Let's Encrypt HTTP-01 validation."
+        },
+        "email": {
+          "type": "string",
+          "description": "Contact email address for Let's Encrypt ACME account registration."
+        },
+        "renew_before_seconds": {
+          "type": "integer",
+          "description": "Remaining certificate validity threshold in seconds passed to openssl x509 -checkend before renewing (0 = renew only when expired)."
+        },
+        "proxy_connect_timeout": {
+          "type": ["integer", "string"],
+          "description": "Upstream proxy connection timeout (e.g., 60 or '60s')."
+        },
+        "proxy_send_timeout": {
+          "type": ["integer", "string"],
+          "description": "Upstream proxy send timeout in seconds (e.g., 300 or '300s')."
+        },
+        "proxy_read_timeout": {
+          "type": ["integer", "string"],
+          "description": "Upstream proxy read timeout in seconds for long-running LLM/SSE endpoints (e.g., 300 or '300s')."
+        },
+        "proxy_buffering": {
+          "type": ["boolean", "string"],
+          "description": "Whether upstream proxy response buffering is enabled ('on'/'off' or boolean)."
+        },
+        "listen": {
+          "type": ["integer", "array"],
+          "description": "Port or list of ports to listen on.",
+          "items": {
+            "type": "integer",
+            "description": "TCP listen port."
+          }
+        },
+        "routes": {
+          "type": ["object", "array"],
+          "description": "Routing table mapping URL prefixes to upstream proxies, WebSockets, or static/SPA directories.",
+          "items": {
+            "type": "object",
+            "description": "Single ingress route entry.",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "URL path prefix (e.g., '/', '/api', '/ws')."
+              },
+              "type": {
+                "type": "string",
+                "description": "Route type (proxy, ws, static, spa)."
+              },
+              "target": {
+                "type": "string",
+                "description": "Upstream URL or local filesystem path."
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

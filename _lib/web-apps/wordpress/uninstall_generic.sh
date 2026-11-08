@@ -51,11 +51,14 @@ if [ -x "${SCRIPT_DIR}/service.sh" ]; then
 fi
 
 # 2. Remove webserver configs
-priv rm -f "/etc/nginx/http.d/${SERVER_NAME}.conf" \
-           "/etc/nginx/conf.d/${SERVER_NAME}.conf" \
-           "/etc/nginx/sites-available/${SERVER_NAME}.conf" \
-           "/etc/nginx/sites-enabled/${SERVER_NAME}.conf" \
-           "/etc/caddy/conf.d/${SERVER_NAME}.caddy" 2>/dev/null || true
+_wp_un_etc="${LIBSCRIPT_ETC_DIR:-/etc}"
+_wp_un_ngx="${NGINX_ETC_DIR:-${_wp_un_etc}/nginx}"
+_wp_un_caddy="${CADDY_ETC_DIR:-${_wp_un_etc}/caddy}"
+priv rm -f "${_wp_un_ngx}/http.d/${SERVER_NAME}.conf" \
+           "${_wp_un_ngx}/conf.d/${SERVER_NAME}.conf" \
+           "${_wp_un_ngx}/sites-available/${SERVER_NAME}.conf" \
+           "${_wp_un_ngx}/sites-enabled/${SERVER_NAME}.conf" \
+           "${_wp_un_caddy}/conf.d/${SERVER_NAME}.caddy" 2>/dev/null || true
 
 # 3. Clean up database if --purge-db specified
 if [ "${1:-}" = "--purge-db" ]; then

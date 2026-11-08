@@ -197,7 +197,7 @@ is_installed() {
   pkg="${1}"
   case "${PKG_MGR}" in
     'apk')                apk info -e "${pkg}" >/dev/null 2>&1 ;;
-    'apt-get')            dpkg-query -W -f='${Status}\n' "${pkg}" 2>/dev/null | grep -q 'install ok installed' ;;
+    'apt'|'apt-get')      dpkg-query -W -f='${Status}\n' "${pkg}" 2>/dev/null | grep -q 'install ok installed' ;;
     'brew')               brew list --formula "${pkg}" >/dev/null 2>&1 ;;
     'dnf'|'yum'|'zypper') rpm -q "${pkg}" >/dev/null 2>&1 ;;
     'emerge')             eix -I "${pkg}" >/dev/null 2>&1 ;;
@@ -295,8 +295,9 @@ libscript_depends() {
     # Run in a subshell so if it exits early due to set -e, we can still remove the lock
     (
       _install_failed=0
+      # shellcheck disable=SC2086
       case "${PKG_MGR}" in
-        'apt-get')
+        'apt'|'apt-get')
           export DEBIAN_FRONTEND='noninteractive'
           if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
             priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
@@ -474,10 +475,11 @@ libscript_download() {
 
   # 4. Cache Check & Download
   download_needed=1
-  if [ -f "$cache_file" ]; then
+  if [ -s "$cache_file" ]; then
     log_info "[CACHED] ${url}"
     download_needed=0
   else
+    [ -f "$cache_file" ] && rm -f "$cache_file"
     # Check alternate cache directories for pre-hydrated offline bundles
     for _chk_path in "$cache_dir/$filename" \
                      "$cache_dir/runtimes/$filename" \
@@ -487,7 +489,7 @@ libscript_download() {
                      "$cache_dir/codebase/$filename" \
                      "${LIBSCRIPT_ROOT_DIR}/cache/$filename" \
                      "${LIBSCRIPT_ROOT_DIR}/cache/downloads/$filename"; do
-      if [ -f "$_chk_path" ]; then
+      if [ -s "$_chk_path" ]; then
         log_info "[CACHED] ${url} (found in ${_chk_path})"
         cp -f "$_chk_path" "$cache_file" 2>/dev/null || cache_file="$_chk_path"
         download_needed=0
@@ -518,28 +520,31 @@ libscript_download() {
 
     # Strategy A: aria2c
     if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
+      rm -f "$cache_file"
       if [ -n "$auth_header" ]; then
-        if aria2c --header="$auth_header" -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
+        if aria2c --header="$auth_header" -d "$dl_dir" -o "$filename" --allow-overwrite=true --auto-file-renaming=false "$url" && [ -s "$cache_file" ]; then download_success=1; fi
       else
-        if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
+        if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true --auto-file-renaming=false "$url" && [ -s "$cache_file" ]; then download_success=1; fi
       fi
     fi
 
     # Strategy B: curl
     if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
+      rm -f "$cache_file"
       if [ -n "$auth_header" ]; then
-        if curl -#fL -H "$auth_header" -o "$cache_file" "$url"; then download_success=1; fi
+        if curl -#fL -H "$auth_header" -o "$cache_file" "$url" && [ -s "$cache_file" ]; then download_success=1; fi
       else
-        if curl -#fL -o "$cache_file" "$url"; then download_success=1; fi
+        if curl -#fL -o "$cache_file" "$url" && [ -s "$cache_file" ]; then download_success=1; fi
       fi
     fi
 
     # Strategy C: wget
     if [ "$download_success" -eq 0 ] && command -v wget >/dev/null 2>&1; then
+      rm -f "$cache_file"
       if [ -n "$auth_header" ]; then
-        if wget -q --show-progress --header="$auth_header" -O "$cache_file" "$url"; then download_success=1; fi
+        if wget -q --show-progress --header="$auth_header" -O "$cache_file" "$url" && [ -s "$cache_file" ]; then download_success=1; fi
       else
-        if wget -q --show-progress -O "$cache_file" "$url"; then download_success=1; fi
+        if wget -q --show-progress -O "$cache_file" "$url" && [ -s "$cache_file" ]; then download_success=1; fi
       fi
     fi
 
@@ -575,6 +580,12 @@ libscript_download() {
       rm -f "$cache_file"
       return 1
     fi
+  fi
+
+  if [ ! -s "$cache_file" ]; then
+    log_error "Cached file ${cache_file} is missing or empty."
+    rm -f "$cache_file"
+    return 1
   fi
 
   # 5. Checksum Validation
@@ -626,7 +637,11 @@ libscript_download() {
   if [ -n "$dest" ] && [ "$dest" != "$cache_file" ]; then
     mkdir -p "$(dirname "$dest")"
     if [ "$cache_file" != "$dest" ] && ! cmp -s "$cache_file" "$dest"; then
-      cp "$cache_file" "$dest"
+      cp -f "$cache_file" "$dest"
+    fi
+    if [ ! -s "$dest" ]; then
+      log_error "Failed to place downloaded artifact at ${dest}"
+      return 1
     fi
   fi
 }
@@ -670,7 +685,7 @@ libscript_uninstall_pkg() {
   for _up_pkg in "$@"; do
     case "${PKG_MGR}" in
       'apk')     priv apk del "${_up_pkg}" >/dev/null 2>&1 || true ;;
-      'apt-get') priv apt-get remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
+      'apt'|'apt-get') priv apt-get remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
       'brew')    brew uninstall "${_up_pkg}" >/dev/null 2>&1 || true ;;
       'dnf')     priv dnf remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;
       'yum')     priv yum remove -y "${_up_pkg}" >/dev/null 2>&1 || true ;;

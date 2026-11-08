@@ -37,6 +37,7 @@ fi
 
 # Find up to 5 uncompleted items
 if grep -q '^- \[ \] \*\*`_lib/' "$TODO_FILE"; then
+  # shellcheck disable=SC2016
   grep '^- \[ \] \*\*`_lib/' "$TODO_FILE" | head -n 5 | sed -n 's/.*`_lib\/[^\/]*\/\([^`]*\)`.*$/\1/p' | tr '\n' ' '
 else
   grep '^- \[ \] ' "$TODO_FILE" | head -n 5 | sed 's/^- \[ \] //' | tr '\n' ' '

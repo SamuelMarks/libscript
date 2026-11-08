@@ -120,12 +120,13 @@ case "$ACTION" in
         PIP_EXTRA_ARGS="--extra-index-url https://download.pytorch.org/whl/cpu"
       fi
 
+      _vllm_tmp="${VLLM_BUILD_TMPDIR:-${TMPDIR:-/var/tmp}}"
       if [ "$EXACT_VERSION" = "latest" ]; then
         # shellcheck disable=SC2086
-        TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
+        TMPDIR="$_vllm_tmp" "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
       else
         # shellcheck disable=SC2086
-        TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
+        TMPDIR="$_vllm_tmp" "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
       fi
 
       # Ensure vllm executable wrapper exists if pip failed to generate console script
@@ -159,8 +160,8 @@ EOF
       
       if [ "${PIP_FAILED:-0}" = "1" ]; then
         log_error 'Failed to install vllm via pip.'
-        if [ "${TARGET_OS:-}" = "alpine" ]; then
-          log_warn 'vllm is known to fail on Alpine due to lack of PyTorch musl wheels. Falling back to build from source.'
+        if [ "$VLLM_INSTALL_METHOD" = "from-source" ]; then
+          log_warn 'Falling back to building vllm from source (VLLM_INSTALL_METHOD=from-source)...'
           
           # Install build dependencies
           libscript_depends 'git' 'c' 'cmake' 'ninja' 'python' || true

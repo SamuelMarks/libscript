@@ -38,6 +38,7 @@ COMP_DIR="${SCRIPT_DIR}"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 else
   # ## log_info

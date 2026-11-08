@@ -49,6 +49,8 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+if "%PYTHON_VERSION%"=="" set "_PY_VERSION_UNPINNED=1"
+if /i "%PYTHON_VERSION%"=="latest" set "_PY_VERSION_UNPINNED=1"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "python"
 

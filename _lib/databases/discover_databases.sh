@@ -62,20 +62,25 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+MYSQL_TMP_SOCK="${MYSQL_TMP_SOCKET:-${TMPDIR:-/tmp}/mysql.sock}"
+MYSQL_RUN_SOCK="${MYSQL_RUN_SOCKET:-${LIBSCRIPT_RUN_DIR:-/var/run}/mysqld/mysqld.sock}"
+POSTGRES_RUN_SOCK="${POSTGRES_RUN_SOCKET:-${LIBSCRIPT_RUN_DIR:-/var/run}/postgresql/.s.PGSQL.5432}"
+REDIS_RUN_SOCK="${REDIS_RUN_SOCKET:-${LIBSCRIPT_RUN_DIR:-/var/run}/redis/redis.sock}"
+
 if [ "$MODE" = "check" ] && [ -n "$TARGET_ENGINE" ]; then
   case "$TARGET_ENGINE" in
-    mysql|mariadb) (discover_tcp_port 3306 || discover_unix_socket /tmp/mysql.sock || discover_unix_socket /var/run/mysqld/mysqld.sock) && exit 0 ;;
-    postgres) (discover_tcp_port 5432 || discover_unix_socket /var/run/postgresql/.s.PGSQL.5432) && exit 0 ;;
+    mysql|mariadb) (discover_tcp_port 3306 || discover_unix_socket "$MYSQL_TMP_SOCK" || discover_unix_socket "$MYSQL_RUN_SOCK") && exit 0 ;;
+    postgres) (discover_tcp_port 5432 || discover_unix_socket "$POSTGRES_RUN_SOCK") && exit 0 ;;
     mongodb) discover_tcp_port 27017 && exit 0 ;;
-    redis) (discover_tcp_port 6379 || discover_unix_socket /var/run/redis/redis.sock) && exit 0 ;;
+    redis) (discover_tcp_port 6379 || discover_unix_socket "$REDIS_RUN_SOCK") && exit 0 ;;
   esac
   exit 1
 fi
 
 found_mysql=false
-if discover_tcp_port 3306 || discover_unix_socket /tmp/mysql.sock || discover_unix_socket /var/run/mysqld/mysqld.sock; then found_mysql=true; fi
+if discover_tcp_port 3306 || discover_unix_socket "$MYSQL_TMP_SOCK" || discover_unix_socket "$MYSQL_RUN_SOCK"; then found_mysql=true; fi
 found_postgres=false
-if discover_tcp_port 5432 || discover_unix_socket /var/run/postgresql/.s.PGSQL.5432; then found_postgres=true; fi
+if discover_tcp_port 5432 || discover_unix_socket "$POSTGRES_RUN_SOCK"; then found_postgres=true; fi
 found_mongodb=false
 if discover_tcp_port 27017; then found_mongodb=true; fi
 found_redis=false

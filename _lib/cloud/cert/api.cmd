@@ -73,6 +73,15 @@ if "%provider%"=="aws" (
     echo Requested certificate: !cert_name!
 ) else if "%provider%"=="azure" (
     echo Azure Front Door managed certificates are typically provisioned automatically when adding a custom domain to a CDN endpoint.
+) else if /I "%provider%"=="letsencrypt" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" ensure-cert "%domain%" "%CERT_STORE_DIR%" "" "%LETSENCRYPT_EMAIL%"
+) else if /I "%provider%"=="acme" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" ensure-cert "%domain%" "%CERT_STORE_DIR%" "" "%LETSENCRYPT_EMAIL%"
+) else if /I "%provider%"=="certbot" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" ensure-cert "%domain%" "%CERT_STORE_DIR%" "" "%LETSENCRYPT_EMAIL%"
 )
 exit /b 0
 
@@ -112,6 +121,18 @@ if "%provider%"=="aws" (
     gcloud compute ssl-certificates delete "!cert_name!" --global --quiet
 ) else if "%provider%"=="azure" (
     echo Azure managed CDN certificates are deleted when the custom domain mapping is removed.
+) else if /I "%provider%"=="letsencrypt" (
+    set "_CSTORE=%CERT_STORE_DIR%"
+    if "!_CSTORE!"=="" (
+        set "_cstore_def_mount=%DATA_DISK_MOUNT%"
+        if "!_cstore_def_mount!"=="" set "_cstore_def_mount=%DATA_MOUNT_DIR%"
+        if "!_cstore_def_mount!"=="" set "_cstore_def_mount=/mnt/data"
+        set "_CSTORE=!_cstore_def_mount!/certs"
+    )
+    if exist "!_CSTORE!\live\%domain%" (
+        attrib -R "!_CSTORE!\live\%domain%\*" >nul 2>&1
+        rmdir /s /q "!_CSTORE!\live\%domain%" >nul 2>&1
+    )
 )
 exit /b 0
 
@@ -126,5 +147,14 @@ if "%provider%"=="aws" (
     gcloud compute ssl-certificates list --global
 ) else if "%provider%"=="azure" (
     echo Azure managed certificates are tied to CDN custom domains. Use CDN list commands.
+) else if /I "%provider%"=="letsencrypt" (
+    set "_CSTORE=%CERT_STORE_DIR%"
+    if "!_CSTORE!"=="" (
+        set "_cstore_def_mount=%DATA_DISK_MOUNT%"
+        if "!_cstore_def_mount!"=="" set "_cstore_def_mount=%DATA_MOUNT_DIR%"
+        if "!_cstore_def_mount!"=="" set "_cstore_def_mount=/mnt/data"
+        set "_CSTORE=!_cstore_def_mount!/certs"
+    )
+    if exist "!_CSTORE!\live" dir /b "!_CSTORE!\live"
 )
 exit /b 0

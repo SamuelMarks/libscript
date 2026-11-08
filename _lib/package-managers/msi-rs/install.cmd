@@ -144,8 +144,12 @@ if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
 echo Downloading msi-rs %MSI_RS_VERSION% artifacts to %CACHE_DIR%...
 if not "%MSI_RS_DOWNLOAD_URL%"=="" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
-) else (
+) else if /i "%MSI_RS_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/archive/refs/tags/%EXACT_VERSION%.zip" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
+) else (
+    set "WIN_ARCH=x86_64"
+    if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "WIN_ARCH=aarch64"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-tools-%EXACT_VERSION%-!WIN_ARCH!-pc-windows-msvc.zip" "%CACHE_DIR%\msi-tools-%EXACT_VERSION%.zip"
 )
 exit /b 0
 
@@ -206,6 +210,17 @@ if not errorlevel 1 (
     )
     goto link_aliases
 ) else (
+    if /i not "%MSI_RS_INSTALL_METHOD%"=="from-source" (
+        if not "%MSI_RS_DOWNLOAD_URL%"=="" (
+            echo Downloading prebuilt msi-rs binary archive...
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%TEMP%\msi_rs_prebuilt.zip"
+            tar -xf "%TEMP%\msi_rs_prebuilt.zip" -C "%TARGET_DIR%"
+            del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
+            goto link_aliases
+        )
+        echo [WARN] Prebuilt binary download failed ^(set MSI_RS_INSTALL_METHOD=from-source to compile from source^).
+        goto link_aliases
+    )
     echo [WARN] Binary download failed. Falling back to source build...
 )
 

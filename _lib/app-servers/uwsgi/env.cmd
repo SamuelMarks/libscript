@@ -50,6 +50,7 @@ goto :find_root
 :root_found
 
 if "%UWSGI_WORKERS%"=="" set "UWSGI_WORKERS=2"
+if "%UWSGI_INSTALL_METHOD%"=="" set "UWSGI_INSTALL_METHOD=system"
 if "%UWSGI_VERSION%"=="" set "UWSGI_VERSION=2.0.24"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
@@ -66,5 +67,6 @@ endlocal & (
     set "PATH=%PATH%"
     set "UWSGI_VERSION=%UWSGI_VERSION%"
     set "UWSGI_WORKERS=%UWSGI_WORKERS%"
+    set "UWSGI_INSTALL_METHOD=%UWSGI_INSTALL_METHOD%"
 )
 exit /b 0

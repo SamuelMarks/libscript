@@ -42,7 +42,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-PHP_INSTALL_METHOD='system'
+PHP_INSTALL_METHOD="${PHP_INSTALL_METHOD:-system}"
+PHP_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$PHP_INSTALL_METHOD" libscript_resolve_install_method "PHP")"
 ACTION="${ACTION:-install}"
 VERSION="${PHP_VERSION:-latest}"
 

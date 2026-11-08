@@ -29,6 +29,7 @@ COMP_DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
+_component_core_this="${THIS_FILE}"
 
 # Source common libraries
 for LIB in "_lib/_common/log.sh" "_lib/_common/service.sh" "_lib/_common/env_printer.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -57,6 +58,111 @@ get_merged_properties() {
     log_info '{}'
   fi
 }
+
+# ## libscript_Synchronize_Ingress
+# Extracts .ingress.proxy_connect_timeout, .ingress.proxy_send_timeout, .ingress.proxy_read_timeout, and .ingress.proxy_buffering from libscript.json, normalizes numeric seconds to '<N>s', exports NETCTL_PROXY_*, and invokes netctl with the corresponding --proxy-* flags.
+libscript_Synchronize_Ingress() {
+  _lsi_json="${1:-libscript.json}"
+  shift || true
+  if [ ! -f "$_lsi_json" ]; then
+    return 0
+  fi
+  if command -v jq >/dev/null 2>&1; then
+    if ! jq -e '.ingress != null' "$_lsi_json" >/dev/null 2>&1; then
+      return 0
+    fi
+    _lsi_conn=$(jq -r '.ingress.proxy_connect_timeout // empty' "$_lsi_json" 2>/dev/null || true)
+    _lsi_send=$(jq -r '.ingress.proxy_send_timeout // empty' "$_lsi_json" 2>/dev/null || true)
+    _lsi_read=$(jq -r '.ingress.proxy_read_timeout // empty' "$_lsi_json" 2>/dev/null || true)
+    _lsi_buf=$(jq -r '.ingress.proxy_buffering // empty' "$_lsi_json" 2>/dev/null || true)
+  else
+    _lsi_conn=""
+    _lsi_send=""
+    _lsi_read=""
+    _lsi_buf=""
+  fi
+  [ -z "$_lsi_conn" ] || [ "$_lsi_conn" = "null" ] && _lsi_conn="${NETCTL_PROXY_CONNECT_TIMEOUT:-60s}"
+  case "$_lsi_conn" in *[0-9]) _lsi_conn="${_lsi_conn}s" ;; esac
+  [ -z "$_lsi_send" ] || [ "$_lsi_send" = "null" ] && _lsi_send="${NETCTL_PROXY_SEND_TIMEOUT:-300s}"
+  case "$_lsi_send" in *[0-9]) _lsi_send="${_lsi_send}s" ;; esac
+  [ -z "$_lsi_read" ] || [ "$_lsi_read" = "null" ] && _lsi_read="${NETCTL_PROXY_READ_TIMEOUT:-300s}"
+  case "$_lsi_read" in *[0-9]) _lsi_read="${_lsi_read}s" ;; esac
+  [ -z "$_lsi_buf" ] || [ "$_lsi_buf" = "null" ] && _lsi_buf="${NETCTL_PROXY_BUFFERING:-off}"
+  case "$_lsi_buf" in
+    true|1|on) _lsi_buf="on" ;;
+    false|0|off) _lsi_buf="off" ;;
+  esac
+  NETCTL_PROXY_CONNECT_TIMEOUT="$_lsi_conn"
+  NETCTL_PROXY_SEND_TIMEOUT="$_lsi_send"
+  NETCTL_PROXY_READ_TIMEOUT="$_lsi_read"
+  NETCTL_PROXY_BUFFERING="$_lsi_buf"
+  export NETCTL_PROXY_CONNECT_TIMEOUT NETCTL_PROXY_SEND_TIMEOUT NETCTL_PROXY_READ_TIMEOUT NETCTL_PROXY_BUFFERING
+  if [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ] && [ $# -eq 0 ]; then
+    return 0
+  fi
+  _lsi_netctl="${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/netctl.sh"
+  if [ ! -x "$_lsi_netctl" ]; then
+    _lsi_netctl="${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh"
+  fi
+  if [ $# -eq 0 ]; then
+    set -- --reload
+  fi
+  (
+    unset SCRIPT_NAME || true
+    env STACK="" "$_lsi_netctl" apply "$_lsi_json" \
+      --proxy-connect-timeout "$NETCTL_PROXY_CONNECT_TIMEOUT" \
+      --proxy-send-timeout "$NETCTL_PROXY_SEND_TIMEOUT" \
+      --proxy-read-timeout "$NETCTL_PROXY_READ_TIMEOUT" \
+      --proxy-buffering "$NETCTL_PROXY_BUFFERING" \
+      "$@"
+  )
+}
+
+# ## libscript_Warmup_Ollama
+# Pre-warms gemma:2b in Ollama with keep_alive: "30m" and OLLAMA_NUM_GPU=0 so the first user query does not suffer a cold-load penalty on CPU.
+libscript_Warmup_Ollama() {
+  _lwo_model="${1:-${OLLAMA_DEFAULT_MODEL:-gemma:2b}}"
+  _lwo_ka="${OLLAMA_KEEP_ALIVE:-30m}"
+  export OLLAMA_KEEP_ALIVE="$_lwo_ka"
+  export OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-0}"
+  if [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
+    return 0
+  fi
+  command -v curl >/dev/null 2>&1 || return 0
+  _lwo_host="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+  case "$_lwo_host" in
+    http://*|https://*) _lwo_url="${_lwo_host%/}" ;;
+    *) _lwo_url="http://${_lwo_host%/}" ;;
+  esac
+  _lwo_url="${_lwo_url%/v1}"
+  _lwo_payload="{\"model\":\"${_lwo_model}\",\"prompt\":\"warmup\",\"stream\":false,\"keep_alive\":\"${_lwo_ka}\",\"options\":{\"num_predict\":1,\"num_ctx\":512,\"num_gpu\":0}}"
+  curl -sS --connect-timeout 5 --max-time 120 -H "Content-Type: application/json" -d "$_lwo_payload" "${_lwo_url}/api/generate" >/dev/null 2>&1 || true
+  return 0
+}
+
+if [ "${1:-}" = "--synchronize-ingress" ] || [ "${1:-}" = "synchronize-ingress" ]; then
+  shift
+  libscript_Synchronize_Ingress "$@"
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_component_core_caller_dir:-}" ] && SCRIPT_DIR="$_component_core_caller_dir"
+  [ -n "${_component_core_caller_this:-}" ] && THIS_FILE="$_component_core_caller_this"
+  if (return 0 2>/dev/null); then return 0; else exit 0; fi
+elif [ "${1:-}" = "--warmup-ollama" ] || [ "${1:-}" = "warmup-ollama" ]; then
+  shift
+  libscript_Warmup_Ollama "$@"
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_component_core_caller_dir:-}" ] && SCRIPT_DIR="$_component_core_caller_dir"
+  [ -n "${_component_core_caller_this:-}" ] && THIS_FILE="$_component_core_caller_this"
+  if (return 0 2>/dev/null); then return 0; else exit 0; fi
+elif [ "${LIBSCRIPT_COMPONENT_CORE_LIB_ONLY:-0}" = "1" ]; then
+  STACK="${STACK%"${THIS_FILE}":}"
+  export STACK
+  [ -n "${_component_core_caller_dir:-}" ] && SCRIPT_DIR="$_component_core_caller_dir"
+  [ -n "${_component_core_caller_this:-}" ] && THIS_FILE="$_component_core_caller_this"
+  if (return 0 2>/dev/null); then return 0; else exit 0; fi
+fi
 
 # ## show_help
 # Displays command-line usage instructions and available options.
@@ -386,6 +492,15 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+STACK="${STACK%"${_component_core_this}":}"
+if [ -n "${_component_core_caller_this:-}" ]; then
+  STACK="${STACK%"${_component_core_caller_this}":}"
+fi
+if [ "${ACTION:-}" = "ls-remote" ] || [ "${ACTION:-}" = "ls" ] || [ "${ACTION:-}" = "which" ] || [ "${ACTION:-}" = "env" ] || [ "${ACTION:-}" = "info" ]; then
+  STACK=''
+fi
+export STACK
 
 # Automated Dependency Resolution
 if [ "${LIBSCRIPT_SKIP_DEPENDENCIES:-}" != "1" ] && { [ "$ACTION" = "install" ] || [ "$ACTION" = "setup" ]; }; then

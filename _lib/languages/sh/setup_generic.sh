@@ -42,7 +42,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-SH_INSTALL_METHOD="$(libscript_resolve_install_method "SH")"
+SH_INSTALL_METHOD="${SH_INSTALL_METHOD:-system}"
+SH_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$SH_INSTALL_METHOD" libscript_resolve_install_method "SH")"
 ACTION="${ACTION:-install}"
 VERSION="${SH_VERSION:-latest}"
 

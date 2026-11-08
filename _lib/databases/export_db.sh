@@ -106,7 +106,7 @@ while IFS= read -r db_entry <&3; do
       DB_PATH=$(printf '%s\n' "$db_entry" | jq -r '.path // .file // .db_path // empty')
       DB_PATH=$(expand_manifest_vars "$DB_PATH")
       if [ -z "$DB_PATH" ]; then
-        DB_PATH="/mnt/data/${DB_NAME}.duckdb"
+        DB_PATH="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/${DB_NAME}.duckdb"
       elif [ "${DB_PATH#/}" = "$DB_PATH" ]; then
         DB_PATH="${MANIFEST_DIR}/${DB_PATH}"
       fi
@@ -163,6 +163,17 @@ if [ -n "$_svc_efs" ]; then
       cp -f "${MANIFEST_DIR}/${_sef}" "${APP_STAGE}/config/${_safe_name}"
     fi
   done
+fi
+
+_exp_cert_store=$(jq -r '.ingress.cert_store_dir // empty' "$JSON_FILE" 2>/dev/null || true)
+_exp_cert_store=$(expand_manifest_vars "$_exp_cert_store")
+[ -n "$_exp_cert_store" ] || _exp_cert_store="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+if [ -d "${_exp_cert_store}/live" ]; then
+  mkdir -p "${APP_STAGE}/certs"
+  cp -a "${_exp_cert_store}/live" "${APP_STAGE}/certs/" 2>/dev/null || priv cp -a "${_exp_cert_store}/live" "${APP_STAGE}/certs/" 2>/dev/null || true
+  if [ -d "${_exp_cert_store}/letsencrypt" ]; then
+    cp -a "${_exp_cert_store}/letsencrypt" "${APP_STAGE}/certs/" 2>/dev/null || priv cp -a "${_exp_cert_store}/letsencrypt" "${APP_STAGE}/certs/" 2>/dev/null || true
+  fi
 fi
 
 chmod -R a+rX "$STAGE_DIR" 2>/dev/null || priv chmod -R a+rX "$STAGE_DIR" 2>/dev/null || true

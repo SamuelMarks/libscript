@@ -1,6 +1,53 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "description": "Network control utility for managing local service routing.",
-  "properties": {}
+  "description": "Network control utility for managing local service routing and Let's Encrypt TLS ingress.",
+  "properties": {
+    "NETCTL_DIR": {
+      "type": "string",
+      "description": "Root directory of the netctl component."
+    },
+    "NETCTL_STATE_FILE": {
+      "type": "string",
+      "description": "Path to the active netctl JSON state file."
+    },
+    "NETCTL_BOOTSTRAP_HTTP_ONLY": {
+      "type": ["string", "integer"],
+      "description": "Internal flag (0 or 1) to emit port 80 HTTP-only Nginx configuration during initial ACME HTTP-01 challenge bootstrap."
+    },
+    "CERT_STORE_DIR": {
+      "type": "string",
+      "description": "Persistent read-only directory on attached storage for storing Let's Encrypt certificates across VM recreations.",
+      "default": "/mnt/data/certs"
+    },
+    "LETSENCRYPT_EMAIL": {
+      "type": "string",
+      "description": "Contact email address for Let's Encrypt ACME registration."
+    },
+    "LETSENCRYPT_RENEW_BEFORE_SECONDS": {
+      "type": ["string", "integer"],
+      "description": "Remaining validity threshold in seconds passed to openssl x509 -checkend before renewing a certificate (0 = renew only when expired).",
+      "default": 0
+    },
+    "NETCTL_PROXY_CONNECT_TIMEOUT": {
+      "type": ["string", "integer"],
+      "description": "Upstream proxy connection timeout (e.g., 60 or '60s').",
+      "default": "60s"
+    },
+    "NETCTL_PROXY_SEND_TIMEOUT": {
+      "type": ["string", "integer"],
+      "description": "Upstream proxy send timeout in seconds (e.g., 300 or '300s').",
+      "default": "300s"
+    },
+    "NETCTL_PROXY_READ_TIMEOUT": {
+      "type": ["string", "integer"],
+      "description": "Upstream proxy read timeout in seconds for long-running LLM/SSE endpoints (e.g., 300 or '300s').",
+      "default": "300s"
+    },
+    "NETCTL_PROXY_BUFFERING": {
+      "type": ["boolean", "string"],
+      "description": "Whether upstream proxy response buffering is enabled ('on'/'off' or boolean).",
+      "default": "off"
+    }
+  }
 }

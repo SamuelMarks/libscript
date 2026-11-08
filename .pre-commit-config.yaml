@@ -1,28 +1,74 @@
 repos:
   - repo: local
     hooks:
+      - id: libscript-cspell
+        name: LibScript Spellcheck Audit (cspell)
+        entry: |
+          /bin/sh -c 'if [ -x "node_modules/.bin/cspell" ]; then
+            git ls-files --cached --others --exclude-standard | node_modules/.bin/cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin
+          elif command -v cspell >/dev/null 2>&1; then
+            git ls-files --cached --others --exclude-standard | cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin
+          elif command -v npx >/dev/null 2>&1; then
+            git ls-files --cached --others --exclude-standard | npx --yes cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin
+          fi'
+        language: system
+        pass_filenames: false
       - id: libscript-audit-standards
         name: LibScript Engineering Standards Audit
         entry: |
-          /bin/sh -c 'echo \" <<'\''BATCH_SCRIPT'\'' >/dev/null \">NUL
-          call devtools\audit\audit_standards.cmd --staged
-          exit /b %ERRORLEVEL%
-          BATCH_SCRIPT
-          if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\audit_standards.cmd --staged"
           else
             ./devtools/audit/audit_standards.sh --staged
           fi'
         language: system
         pass_filenames: false
+      - id: libscript-audit-posix
+        name: LibScript POSIX & Companion Parity Audit
+        entry: |
+          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+            cmd.exe /c "devtools\audit\audit_posix.cmd --staged"
+          else
+            ./devtools/audit/audit_posix.sh --staged
+          fi'
+        language: system
+        pass_filenames: false
+      - id: libscript-audit-version-manager
+        name: LibScript Version Manager Contract Audit
+        entry: |
+          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+            cmd.exe /c "devtools\audit\audit_version_manager.cmd"
+          else
+            ./devtools/audit/audit_version_manager.sh
+          fi'
+        language: system
+        pass_filenames: false
+      - id: libscript-audit-schema-vars
+        name: LibScript Schema Variable Coverage Audit
+        entry: |
+          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+            cmd.exe /c "devtools\audit\audit_schema_vars.cmd"
+          else
+            ./devtools/audit/audit_schema_vars.sh
+          fi'
+        language: system
+        pass_filenames: false
+      - id: libscript-shellcheck
+        name: LibScript ShellCheck Audit
+        entry: |
+          /bin/sh -c 'if command -v shellcheck >/dev/null 2>&1; then
+            OPT_ARGS=""
+            if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
+              OPT_ARGS="-o useless-use-of-cat"
+            fi
+            git ls-files --cached --others --exclude-standard "*.sh" | grep -vE "node_modules|\.git|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $OPT_ARGS
+          fi'
+        language: system
+        pass_filenames: false
       - id: libscript-doc-coverage
         name: LibScript 100% Documentation Coverage Audit
         entry: |
-          /bin/sh -c 'echo \" <<'\''BATCH_SCRIPT'\'' >/dev/null \">NUL
-          call devtools\audit\doc_coverage.cmd
-          exit /b %ERRORLEVEL%
-          BATCH_SCRIPT
-          if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\doc_coverage.cmd"
           else
             ./devtools/audit/doc_coverage.sh

@@ -72,6 +72,9 @@ for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\
         )
     )
 )
+if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
+if defined SERVICE_EXTRA_PATH set "PATH=!SERVICE_EXTRA_PATH!;!PATH!"
+call :dedup_prov_path
 
 set "JQ_DB_FILTER=((.databases // .infrastructure.databases) | if type == \"object\" then to_entries | map(.value + {name: (.value.name // .value.db_name // .key)}) elif type == \"array\" then map(. + {name: (.name // .db_name // .id)}) else [] end)[]?"
 
@@ -84,6 +87,29 @@ for /f "delims=" %%i in ('jq -c "!JQ_DB_FILTER!" "!JSON_FILE!" 2^>nul') do (
     )
 )
 if "!PROV_FAILED!"=="1" exit /b 1
+exit /b 0
+
+:: ## dedup_prov_path
+:: Deduplicates semicolon-separated entries in PATH and updates SERVICE_PATH.
+:dedup_prov_path
+set "_DPP_OUT="
+for %%P in ("!PATH:;=" "!") do (
+    set "_DPP_SEG=%%~P"
+    if not "!_DPP_SEG!"=="" (
+        echo ";!_DPP_OUT!;" | findstr /I /C:";!_DPP_SEG!;" >nul 2>&1
+        if errorlevel 1 (
+            if defined _DPP_OUT (
+                set "_DPP_OUT=!_DPP_OUT!;!_DPP_SEG!"
+            ) else (
+                set "_DPP_OUT=!_DPP_SEG!"
+            )
+        )
+    )
+)
+if defined _DPP_OUT (
+    set "PATH=!_DPP_OUT!"
+    set "SERVICE_PATH=!_DPP_OUT!"
+)
 exit /b 0
 
 :: ## process_db_entry
@@ -148,11 +174,12 @@ if /i "!engine!"=="redis" goto :prov_redis
 exit /b 0
 
 :: ## expand_vars
-:: Expands ${VAR:-default} and ${VAR} references in the named variable using jq and env.
+:: Expands ${VAR:-default} and ${VAR} references in the named variable using jq and env while preserving quotes and local $_vars.
 :expand_vars
 set "_ev_name=%~1"
 set "_ev_val=!%_ev_name%!"
-for /f "delims=" %%x in ('jq -rn --arg s "!_ev_val!" "reduce range(3) as $_ ($s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\"))" 2^>nul') do set "!_ev_name!=%%x"
+if "!_ev_val!"=="" exit /b 0
+for /f "delims=" %%x in ('jq -rn "reduce range(6) as $_ ($ENV._ev_val; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^{}]*)\\\\}\"; if (.k | startswith(\"_\")) and ((env[.k] // \"\") == \"\") then \"${\" + .k + \":-\" + .d + \"}\" else (env[.k] // \"\") | if . == \"\" then .d else . end end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; if (.k | startswith(\"_\")) and ((env[.k] // \"\") == \"\") then \"${\" + .k + \"}\" else (env[.k] // \"\") end))" 2^>nul') do set "!_ev_name!=%%x"
 exit /b 0
 
 :: ## prov_pg
@@ -308,25 +335,117 @@ if not "!seed_cmd!"=="" (
 )
 exit /b 0
 
+:: ## find_manifest_duckdb_python
+:: Searches manifest virtualenvs, LIBSCRIPT_HOME, and PATH for a Python interpreter with duckdb installed.
+:find_manifest_duckdb_python
+set "DUCKDB_PY_BIN="
+for %%P in ("!MANIFEST_DIR!\.venv\Scripts\python.exe" "!MANIFEST_DIR!\.venv\bin\python") do (
+    if exist "%%~fP" (
+        "%%~fP" -c "import duckdb" >nul 2>&1
+        if not errorlevel 1 (
+            set "DUCKDB_PY_BIN=%%~fP"
+            exit /b 0
+        )
+    )
+)
+for /d %%D in ("!MANIFEST_DIR!\*") do (
+    if exist "%%~fD\.venv\Scripts\python.exe" (
+        "%%~fD\.venv\Scripts\python.exe" -c "import duckdb" >nul 2>&1
+        if not errorlevel 1 (
+            set "DUCKDB_PY_BIN=%%~fD\.venv\Scripts\python.exe"
+            exit /b 0
+        )
+    )
+)
+for %%P in (python python3) do (
+    where %%P >nul 2>&1
+    if not errorlevel 1 (
+        %%P -c "import duckdb" >nul 2>&1
+        if not errorlevel 1 (
+            set "DUCKDB_PY_BIN=%%P"
+            exit /b 0
+        )
+    )
+)
+exit /b 1
+
+:: ## query_duckdb_scalar
+:: Executes a scalar SQL query against a DuckDB database file using the duckdb CLI with Python duckdb fallback.
+:query_duckdb_scalar
+set "_qds_path=%~1"
+set "_qds_sql=%~2"
+set "_qds_mode=%~3"
+if "!_qds_mode!"=="" set "_qds_mode=scalar"
+set "QDS_OUT="
+where duckdb >nul 2>nul
+if errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\duckdb\env.cmd"
+    )
+)
+where duckdb >nul 2>nul
+if not errorlevel 1 (
+    if /i "!_qds_mode!"=="len" (
+        set /a _qds_len=0
+        for /f "delims=" %%L in ('duckdb "!_qds_path!" -readonly -csv -noheader -c "!_qds_sql!" 2^>nul') do set /a _qds_len+=1
+        set "QDS_OUT=!_qds_len!"
+    ) else (
+        for /f "delims=" %%L in ('duckdb "!_qds_path!" -readonly -csv -noheader -c "!_qds_sql!" 2^>nul') do if "!QDS_OUT!"=="" set "QDS_OUT=%%L"
+    )
+)
+if "!QDS_OUT!"=="" set "QDS_OUT=0"
+if "!QDS_OUT!"=="0" if exist "!_qds_path!" (
+    call :find_manifest_duckdb_python
+    if not errorlevel 1 if not "!DUCKDB_PY_BIN!"=="" (
+        for /f "delims=" %%R in ('"!DUCKDB_PY_BIN!" -c "import sys,duckdb; con=duckdb.connect(sys.argv[1],read_only=True); rows=con.execute(sys.argv[2]).fetchall(); con.close(); print(len(rows) if sys.argv[3]=='len' else (rows[0][0] if rows and rows[0] else 0))" "!_qds_path!" "!_qds_sql!" "!_qds_mode!" 2^>nul') do set "QDS_OUT=%%R"
+    )
+)
+if "!QDS_OUT!"=="" set "QDS_OUT=0"
+exit /b 0
+
 :: ## prov_duckdb
 :: Provisions a DuckDB database file, imports seed SQL/CSV/Parquet, and writes DUCKDB_PATH.
 :prov_duckdb
+set "db_read_only=0"
+for /f "delims=" %%o in ('echo !db_entry! ^| jq -r "if .read_only == true or .readonly == true then \"1\" else \"0\" end" 2^>nul') do set "db_read_only=%%o"
 if "!db_path!"=="" (
-    set "db_path=!MANIFEST_DIR!\data\!db_name!.duckdb"
+    set "_pdb_def_mount=%DATA_DISK_MOUNT%"
+    if "!_pdb_def_mount!"=="" set "_pdb_def_mount=%DATA_MOUNT_DIR%"
+    if "!_pdb_def_mount!"=="" set "_pdb_def_mount=/mnt/data"
+    if exist "!_pdb_def_mount!" (
+        set "db_path=!_pdb_def_mount!\!db_name!.duckdb"
+    ) else (
+        set "db_path=!MANIFEST_DIR!\data\!db_name!.duckdb"
+    )
 ) else (
     set "db_path_win=!db_path:/=\!"
     if not "!db_path_win:~1,1!"==":" set "db_path=!MANIFEST_DIR!\!db_path_win!"
 )
 for %%D in ("!db_path!") do set "db_dir=%%~dpD"
-if not exist "!db_dir!" mkdir "!db_dir!"
+if not "!db_read_only!"=="1" (
+    if not exist "!db_dir!" mkdir "!db_dir!"
+)
 set "path_env=DUCKDB_PATH"
 for /f "delims=" %%k in ('echo !db_entry! ^| jq -r ".path_env // .env_var // \"DUCKDB_PATH\"" 2^>nul') do set "path_env=%%k"
 call :set_env_var "!path_env!" "!db_path!"
-if not "!path_env!"=="DUCKDB_PATH" (
+if not "!path_env!"=="DUCKDB_PATH" if not "!db_read_only!"=="1" (
     call :set_env_var "DUCKDB_PATH" "!db_path!"
 )
 if not "!url_env!"=="DATABASE_URL" (
     call :set_env_var "!url_env!" "duckdb:///!db_path:\=/!"
+)
+if "!db_read_only!"=="1" (
+    if exist "!db_path!" (
+        call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar"
+        set "_duck_tcnt=!QDS_OUT!"
+        for %%Z in ("!db_path!") do set "_duck_sz=%%~zZ"
+        echo [INFO] [DB:DUCKDB] [CONFIRM] Read-only DuckDB database exists at '!db_path!' ^(!_duck_sz! bytes, !_duck_tcnt! table^(s^)^).
+        call :check_duckdb_populated
+    ) else (
+        echo [WARN] [DB:DUCKDB] Read-only DuckDB database '!db_path!' is not present yet; skipping write provisioning.
+    )
+    exit /b 0
 )
 where duckdb >nul 2>nul
 if errorlevel 1 (
@@ -342,11 +461,8 @@ if not exist "!db_path!" (
         duckdb "!db_path!" -c "SELECT 1;" >nul 2>&1
     )
 ) else (
-    set "_duck_tcnt=0"
-    where duckdb >nul 2>nul
-    if not errorlevel 1 (
-        for /f "delims=" %%t in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a _duck_tcnt+=1
-    )
+    call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar"
+    set "_duck_tcnt=!QDS_OUT!"
     for %%Z in ("!db_path!") do set "_duck_sz=%%~zZ"
     echo [INFO] [DB:DUCKDB] [CONFIRM] DuckDB database exists at '!db_path!' ^(!_duck_sz! bytes, !_duck_tcnt! table^(s^)^).
 )
@@ -387,10 +503,20 @@ exit /b 0
 :quiesce_duckdb_lock_holders
 set "_qdl_file=%~1"
 if not exist "!_qdl_file!" exit /b 0
+set "_qdl_locked=0"
 where duckdb >nul 2>nul
-if errorlevel 1 exit /b 0
-duckdb "!_qdl_file!" -c "SELECT 1;" >nul 2>&1
-if not errorlevel 1 exit /b 0
+if not errorlevel 1 (
+    duckdb "!_qdl_file!" -c "SELECT 1;" 2>&1 | findstr /I /C:"Conflicting lock" /C:"Could not set lock" /C:"used by another process" >nul 2>&1
+    if not errorlevel 1 set "_qdl_locked=1"
+)
+if "!_qdl_locked!"=="0" (
+    call :find_manifest_duckdb_python
+    if not errorlevel 1 if not "!DUCKDB_PY_BIN!"=="" (
+        "!DUCKDB_PY_BIN!" -c "import sys,duckdb; con=duckdb.connect(sys.argv[1],read_only=False); con.close()" "!_qdl_file!" 2>&1 | findstr /I /C:"Conflicting lock" /C:"Could not set lock" /C:"used by another process" >nul 2>&1
+        if not errorlevel 1 set "_qdl_locked=1"
+    )
+)
+if not "!_qdl_locked!"=="1" exit /b 0
 echo [INFO] [DB:DUCKDB] Releasing active service locks on '!_qdl_file!'...
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" (
     set "STACK="
@@ -401,25 +527,23 @@ exit /b 0
 :: ## check_duckdb_populated
 :: Checks whether all min_tables, required_tables, and min_rows in a DuckDB database file are satisfied on Windows.
 :check_duckdb_populated
-if "!LIBSCRIPT_FORCE_SEED!"=="1" exit /b 1
+if "!LIBSCRIPT_FORCE_SEED!"=="1" if not "!db_read_only!"=="1" exit /b 1
 if not exist "!db_path!" exit /b 1
-where duckdb >nul 2>nul
-if errorlevel 1 exit /b 1
 set "_cdp_has_req=0"
 set "_cdp_min_tbl="
 for /f "delims=" %%m in ('echo !db_entry! ^| jq -r ".min_tables // empty" 2^>nul') do set "_cdp_min_tbl=%%m"
 if not "!_cdp_min_tbl!"=="" (
     set "_cdp_has_req=1"
-    set "_cdp_cnt=0"
-    for /f "delims=" %%c in ('duckdb "!db_path!" -readonly -csv -noheader -c "SHOW TABLES;" 2^>nul') do set /a _cdp_cnt+=1
+    call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar"
+    set "_cdp_cnt=!QDS_OUT!"
     if !_cdp_cnt! lss !_cdp_min_tbl! exit /b 1
 )
 for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
     set "_cdp_has_req=1"
     set "_cdp_min_r=1"
     for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "%%t" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "_cdp_min_r=%%r"
-    set "_cdp_rc=-1"
-    for /f "delims=" %%c in ('duckdb "!db_path!" -readonly -csv -noheader -c "SELECT COUNT(*) FROM \"%%t\";" 2^>nul') do set "_cdp_rc=%%c"
+    call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM \"%%t\";" "scalar"
+    set "_cdp_rc=!QDS_OUT!"
     if !_cdp_rc! lss !_cdp_min_r! exit /b 1
     echo [INFO] [DB:DUCKDB] [CONFIRM] Table '!db_name!.%%t' verified ^(!_cdp_rc! rows^).
 )

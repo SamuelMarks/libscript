@@ -31,10 +31,12 @@ export LIBSCRIPT_ROOT_DIR
 if [ -f "$SCRIPT_DIR/env.sh" ]; then
   SCRIPT_NAME="$SCRIPT_DIR/env.sh"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "$SCRIPT_NAME"
 fi
 
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "$SCRIPT_NAME"
 
 
@@ -46,6 +48,7 @@ fi
 
 SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh"
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "$SCRIPT_NAME"
 
 libscript_service status "mongod"

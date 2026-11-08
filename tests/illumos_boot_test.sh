@@ -33,6 +33,7 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 DISK_IMG="${1:-${REPO_ROOT}/build/illumos.qcow2}"
 EXPECTED_INIT="${2:-smf}"
 TIMEOUT_SECS="${3:-60}"
+export TIMEOUT_SECS
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/illumos_boot_test.log"

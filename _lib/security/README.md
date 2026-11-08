@@ -7,6 +7,7 @@ OpenBao).
 
 <!-- BEGIN_COMPONENTS -->
 
+- [certbot](./certbot/README.md)
 - [openbao](./openbao/README.md)
 
 <!-- END_COMPONENTS -->

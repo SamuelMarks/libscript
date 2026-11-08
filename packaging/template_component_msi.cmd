@@ -55,6 +55,11 @@ set "VERSION=1.0.0"
 set "VARIANT=offline"
 set "OUT_FILE="
 set "SOURCE_DIR="
+if defined LIBSCRIPT_TARGET_ARCH (
+    set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
+) else (
+    if not defined TARGET_ARCH set "TARGET_ARCH=x64"
+)
 
 :: ## parse_loop
 :: Iterates over command line arguments and populates options.

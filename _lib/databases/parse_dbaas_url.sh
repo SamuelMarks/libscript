@@ -145,6 +145,7 @@ if [ -n "$query_str" ]; then
   db_use_ssl=1
   old_ifs="$IFS"
   IFS='&'
+  # shellcheck disable=SC2086
   set -- $query_str
   IFS="$old_ifs"
   for param in "$@"; do

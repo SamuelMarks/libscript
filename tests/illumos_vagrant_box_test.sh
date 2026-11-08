@@ -32,6 +32,7 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 BOX_PATH="${1:-${REPO_ROOT}/build/illumos.box}"
 PROVIDER="${2:-qemu}"
+export PROVIDER
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/illumos_vagrant_box_test.log"

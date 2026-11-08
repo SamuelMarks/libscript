@@ -283,9 +283,15 @@ set "cache_file=!dl_dir!\!filename!"
 :: 4. Cache Check & Download
 set "download_needed=1"
 if exist "!cache_file!" (
-        call "!LOG_CMD!" :log_info "[CACHED] !url!"
-        set "download_needed=0"
-) else (
+        for %%A in ("!cache_file!") do set "_cf_size=%%~zA"
+        if not "!_cf_size!"=="0" (
+                call "!LOG_CMD!" :log_info "[CACHED] !url!"
+                set "download_needed=0"
+        ) else (
+                del /f /q "!cache_file!" >nul 2>&1
+        )
+)
+if "!download_needed!"=="1" (
         if exist "!cache_dir!\!filename!" (
                 call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\!filename!)"
                 copy /y "!cache_dir!\!filename!" "!cache_file!" >nul 2>&1
@@ -314,6 +320,12 @@ if exist "!cache_file!" (
                 call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !LIBSCRIPT_ROOT_DIR!\cache\!filename!)"
                 copy /y "!LIBSCRIPT_ROOT_DIR!\cache\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
+        )
+        if "!download_needed!"=="0" (
+                for %%A in ("!cache_file!") do if "%%~zA"=="0" (
+                        del /f /q "!cache_file!" >nul 2>&1
+                        set "download_needed=1"
+                )
         )
 )
 
@@ -411,6 +423,15 @@ if not "!dest!"=="" (
                 copy /y "!cache_file!" "!dest!" >nul 2>&1
                 if not exist "!dest!" (
                         powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Copy-Item -LiteralPath '!cache_file!' -Destination '!dest!' -Force" >nul 2>&1
+                )
+                if not exist "!dest!" (
+                        call "!LOG_CMD!" :log_error "Failed to place downloaded artifact at !dest!"
+                        exit /b 1
+                )
+                for %%A in ("!dest!") do if "%%~zA"=="0" (
+                        call "!LOG_CMD!" :log_error "Placed artifact at !dest! is empty"
+                        del /f /q "!dest!" >nul 2>&1
+                        exit /b 1
                 )
         )
 )

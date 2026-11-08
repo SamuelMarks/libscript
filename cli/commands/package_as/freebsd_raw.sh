@@ -70,7 +70,7 @@ if [ "${UNAME:-}" = "FreeBSD" ] && command -v mdconfig >/dev/null 2>&1; then
   gpart bootcode -b /boot/pmbr -p /boot/gptboot -i 2 "${MD_DEV}" >/dev/null 2>&1 || true
   gpart add -t freebsd-ufs -l rootfs "${MD_DEV}" >/dev/null 2>&1 || true
   newfs -U -j -L rootfs "/dev/${MD_DEV}p3" >/dev/null 2>&1 || true
-  TMP_MNT=$(mktemp -d /tmp/fbsd_mnt.XXXXXX)
+  TMP_MNT=$(mktemp -d "${TMPDIR:-/tmp}/fbsd_mnt.XXXXXX")
   mount "/dev/${MD_DEV}p3" "${TMP_MNT}"
   cp -a "${TARGET_SYSROOT}/" "${TMP_MNT}/" 2>/dev/null || true
   umount "${TMP_MNT}"

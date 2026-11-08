@@ -31,12 +31,14 @@ export DIR="${SCRIPT_DIR}"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 

@@ -28,4 +28,5 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/uninstall_base.sh"
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

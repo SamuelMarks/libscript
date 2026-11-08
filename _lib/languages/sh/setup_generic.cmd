@@ -64,7 +64,7 @@ if "%SH_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
         set "SH_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
     ) else (
-        set "SH_INSTALL_METHOD=libscript_native"
+        set "SH_INSTALL_METHOD=system"
     )
 )
 

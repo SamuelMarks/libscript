@@ -130,8 +130,14 @@ set "DATA_BASE=%TEMP%\data"
 if defined LIBSCRIPT_DATA_DIR set "DATA_BASE=!LIBSCRIPT_DATA_DIR!"
 if not exist "!DATA_BASE!" mkdir "!DATA_BASE!"
 
-if /i "!action!"=="start" call :cleanup_legacy_services
-if /i "!action!"=="up" call :cleanup_legacy_services
+if /i "!action!"=="start" (
+    call :apply_service_overrides
+    call :cleanup_legacy_services
+)
+if /i "!action!"=="up" (
+    call :apply_service_overrides
+    call :cleanup_legacy_services
+)
 if /i "!action!"=="uninstall" call :cleanup_legacy_services
 
 set "JQ_FILTER=((.services // .infrastructure.services) | if type == \"object\" then to_entries | map(.value + {name: (.value.name // .key)}) elif type == \"array\" then map(. + {name: (.name // .id)}) else [] end)[]?"
@@ -146,6 +152,92 @@ if /i "!action!"=="health" (
     if "!VERIFY_INGRESS!"=="1" call :verify_public_ingress
     if "!HEALTH_FAILED!"=="1" exit /b 1
 )
+exit /b 0
+
+:: ## apply_service_overrides
+:: Applies declarative service_overrides from the manifest (including GGML_BACKEND_AMX=0 and OLLAMA_* CPU defaults for ollama).
+:apply_service_overrides
+where jq >nul 2>&1
+if errorlevel 1 exit /b 0
+for /f "delims=" %%S in ('jq -r "((.infrastructure.service_overrides // {}) * (.service_overrides // {})) | keys[]?" "!json_file!" 2^>nul') do (
+    set "_aso_svc=%%S"
+    call :apply_one_service_override
+)
+exit /b 0
+
+:: ## apply_one_service_override
+:: Applies overrides and default CPU/AMX safety variables for a single service in _aso_svc.
+:apply_one_service_override
+if "!_aso_svc!"=="" exit /b 0
+for /f "delims=" %%K in ('jq -r --arg s "!_aso_svc!" --arg eq "=" "((.infrastructure.service_overrides[$s] // {}) * (.service_overrides[$s] // {})) | to_entries[]? | .key + $eq + (.value | tostring)" "!json_file!" 2^>nul') do (
+    set "_aso_kv=%%K"
+    call :apply_single_override_kv
+)
+if /i "!_aso_svc!"=="ollama" (
+    if not "!OLLAMA_MODELS_DIR!"=="" (
+        if not "!OLLAMA_MODELS_DIR:~0,1!"=="/" if not "!OLLAMA_MODELS_DIR:~0,1!"=="\" if not "!OLLAMA_MODELS_DIR:~1,1!"==":" set "OLLAMA_MODELS_DIR="
+    )
+    set "_aso_def_mdir=!OLLAMA_MODELS_DIR!"
+    if "!_aso_def_mdir!"=="" (
+        if not "!DATA_DISK_MOUNT!"=="" (
+            set "_aso_def_mdir=!DATA_DISK_MOUNT!/ollama_models"
+        ) else if not "!DATA_MOUNT_DIR!"=="" (
+            set "_aso_def_mdir=!DATA_MOUNT_DIR!/ollama_models"
+        ) else (
+            set "_aso_def_mdir=/mnt/data/ollama_models"
+        )
+    )
+    set "_aso_om=!OLLAMA_MODELS!"
+    if not "!_aso_om!"=="" (
+        if not "!_aso_om:~0,1!"=="/" if not "!_aso_om:~0,1!"=="\" if not "!_aso_om:~1,1!"==":" set "_aso_om=!_aso_def_mdir!"
+    ) else (
+        set "_aso_om=!_aso_def_mdir!"
+    )
+    set "_aso_oh=!OLLAMA_HOST!"
+    if "!_aso_oh!"=="" set "_aso_oh=127.0.0.1:11434"
+    set "_aso_oh=!_aso_oh:http://=!"
+    set "_aso_oh=!_aso_oh:https://=!"
+    if "!_aso_oh:~-1!"=="/" set "_aso_oh=!_aso_oh:~0,-1!"
+    if /i "!_aso_oh:~-3!"=="/v1" set "_aso_oh=!_aso_oh:~0,-3!"
+    if "!_aso_oh:~-1!"=="/" set "_aso_oh=!_aso_oh:~0,-1!"
+    if "%GGML_BACKEND_AMX%"=="" set "GGML_BACKEND_AMX=0"
+    if "%OLLAMA_FLASH_ATTENTION%"=="" set "OLLAMA_FLASH_ATTENTION=0"
+    if "%OLLAMA_KV_CACHE_TYPE%"=="" set "OLLAMA_KV_CACHE_TYPE=f16"
+    if "%OLLAMA_CONTEXT_LENGTH%"=="" set "OLLAMA_CONTEXT_LENGTH=2048"
+    if "%OLLAMA_MAX_QUEUE%"=="" set "OLLAMA_MAX_QUEUE=16"
+    if "%OLLAMA_KEEP_ALIVE%"=="" set "OLLAMA_KEEP_ALIVE=10m"
+    if "%OLLAMA_MAX_LOADED_MODELS%"=="" set "OLLAMA_MAX_LOADED_MODELS=1"
+    if "%OLLAMA_NUM_PARALLEL%"=="" set "OLLAMA_NUM_PARALLEL=1"
+    where nvidia-smi >nul 2>&1
+    if errorlevel 1 (
+        if "%OLLAMA_LLM_LIBRARY%"=="" set "OLLAMA_LLM_LIBRARY=cpu_avx2"
+        if "%OLLAMA_NUM_GPU%"=="" set "OLLAMA_NUM_GPU=0"
+    )
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "ollama" "OLLAMA_MODELS=!_aso_om!" "OLLAMA_HOST=!_aso_oh!" "GGML_BACKEND_AMX=!GGML_BACKEND_AMX!" "OLLAMA_FLASH_ATTENTION=!OLLAMA_FLASH_ATTENTION!" "OLLAMA_KV_CACHE_TYPE=!OLLAMA_KV_CACHE_TYPE!" "OLLAMA_CONTEXT_LENGTH=!OLLAMA_CONTEXT_LENGTH!" "OLLAMA_MAX_QUEUE=!OLLAMA_MAX_QUEUE!" "OLLAMA_KEEP_ALIVE=!OLLAMA_KEEP_ALIVE!" "OLLAMA_MAX_LOADED_MODELS=!OLLAMA_MAX_LOADED_MODELS!" "OLLAMA_NUM_PARALLEL=!OLLAMA_NUM_PARALLEL!" "OLLAMA_LLM_LIBRARY=!OLLAMA_LLM_LIBRARY!" "OLLAMA_NUM_GPU=!OLLAMA_NUM_GPU!" >nul 2>&1
+)
+exit /b 0
+
+:: ## apply_single_override_kv
+:: Sanitizes and applies a single key=value override pair in _aso_kv for _aso_svc.
+:apply_single_override_kv
+if /i "!_aso_svc!"=="ollama" (
+    if /i "!_aso_kv:~0,14!"=="OLLAMA_MODELS=" (
+        set "_aso_v=!_aso_kv:~14!"
+        if not "!_aso_v:~0,1!"=="/" if not "!_aso_v:~0,1!"=="\" if not "!_aso_v:~1,1!"==":" exit /b 0
+    )
+    if /i "!_aso_kv:~0,12!"=="OLLAMA_HOST=" (
+        set "_aso_v=!_aso_kv:~12!"
+        set "_aso_v=!_aso_v:http://=!"
+        set "_aso_v=!_aso_v:https://=!"
+        if "!_aso_v:~-1!"=="/" set "_aso_v=!_aso_v:~0,-1!"
+        if /i "!_aso_v:~-3!"=="/v1" set "_aso_v=!_aso_v:~0,-3!"
+        if "!_aso_v:~-1!"=="/" set "_aso_v=!_aso_v:~0,-1!"
+        set "_aso_kv=OLLAMA_HOST=!_aso_v!"
+    )
+)
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_aso_svc!" "!_aso_kv!" >nul 2>&1
 exit /b 0
 
 :: ## cleanup_legacy_services
@@ -412,10 +504,48 @@ set "_ing_base=https://!_ing_domain!"
 if /i "!_ing_domain:~0,7!"=="http://" set "_ing_base=!_ing_domain!"
 if /i "!_ing_domain:~0,8!"=="https://" set "_ing_base=!_ing_domain!"
 if "!_ing_base:~-1!"=="/" set "_ing_base=!_ing_base:~0,-1!"
+set "_ing_host=!_ing_base:https://=!"
+set "_ing_host=!_ing_host:http://=!"
+for /f "tokens=1 delims=/:" %%H in ("!_ing_host!") do set "_ing_host=%%H"
 set "_expect_html="
 for /f "delims=" %%H in ('jq -r ".ingress.expect_html // empty" "!json_file!" 2^>nul') do set "_expect_html=%%H"
+set "_ing_tls="
+for /f "delims=" %%T in ('jq -r ".ingress.tls // empty" "!json_file!" 2^>nul') do set "_ing_tls=%%T"
+set "_ing_cert_store=%CERT_STORE_DIR%"
+if "!_ing_cert_store!"=="" (
+    set "_ing_def_mount=%DATA_DISK_MOUNT%"
+    if "!_ing_def_mount!"=="" set "_ing_def_mount=%DATA_MOUNT_DIR%"
+    if "!_ing_def_mount!"=="" set "_ing_def_mount=/mnt/data"
+    set "_ing_cert_store=!_ing_def_mount!/certs"
+)
+for /f "delims=" %%C in ('jq -r ".ingress.cert_store_dir // empty" "!json_file!" 2^>nul') do if not "%%C"=="" set "_ing_cert_store=%%C"
+set "_curl_tls_flag=-k"
+if /i "!_ing_tls!"=="letsencrypt" (
+    set "_curl_tls_flag="
+    set "_le_fc=!_ing_cert_store!\live\!_ing_host!\fullchain.pem"
+    set "_le_pk=!_ing_cert_store!\live\!_ing_host!\privkey.pem"
+    if not exist "!_le_fc!" (
+        echo [ERROR] Persisted Let's Encrypt certificate missing at !_le_fc! >&2
+        set "HEALTH_FAILED=1"
+    ) else if not exist "!_le_pk!" (
+        echo [ERROR] Persisted Let's Encrypt private key missing at !_le_pk! >&2
+        set "HEALTH_FAILED=1"
+    ) else (
+        where openssl >nul 2>&1
+        if not errorlevel 1 (
+            openssl x509 -checkend 0 -noout -in "!_le_fc!" >nul 2>&1
+            if errorlevel 1 (
+                echo [ERROR] Certificate at !_le_fc! is expired >&2
+                set "HEALTH_FAILED=1"
+            )
+        )
+    )
+)
 set "_ing_html_file=!DATA_BASE!\ingress_check.html"
-curl -sfL -m 10 -o "!_ing_html_file!" "!_ing_base!" 2>nul
+curl !_curl_tls_flag! -sfL -m 10 -o "!_ing_html_file!" "!_ing_base!" 2>nul
+if errorlevel 1 (
+    curl !_curl_tls_flag! -sfL -m 10 --resolve "!_ing_host!:443:127.0.0.1" --resolve "!_ing_host!:80:127.0.0.1" -o "!_ing_html_file!" "!_ing_base!" 2>nul
+)
 if errorlevel 1 (
     echo [ERROR] Public ingress unreachable at !_ing_base! >&2
     set "HEALTH_FAILED=1"
@@ -449,7 +579,10 @@ if "!_s_path!"=="" exit /b 0
 if "!_s_path!"=="/" exit /b 0
 set "_pub_hc_url=!_ing_base!!_s_path!"
 set "_pub_hc_file=!DATA_BASE!\pub_hc_body.json"
-curl -sfL -m 10 -o "!_pub_hc_file!" "!_pub_hc_url!" 2>nul
+curl !_curl_tls_flag! -sfL -m 10 -o "!_pub_hc_file!" "!_pub_hc_url!" 2>nul
+if errorlevel 1 (
+    curl !_curl_tls_flag! -sfL -m 10 --resolve "!_ing_host!:443:127.0.0.1" --resolve "!_ing_host!:80:127.0.0.1" -o "!_pub_hc_file!" "!_pub_hc_url!" 2>nul
+)
 if errorlevel 1 (
     echo [ERROR] Public health endpoint unreachable: !_pub_hc_url! >&2
     set "HEALTH_FAILED=1"

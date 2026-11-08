@@ -39,8 +39,8 @@ cd "${SCRIPT_DIR}/../.." || exit 1
 
 printf '%s\n' '>>> RUNNING PRE-COMMIT DANCE <<<'
 
-# Stage all files so the pre-commit hook thinks they are staged
-git add -A
+# Stage all tracked files so the pre-commit hook thinks they are staged
+git add -u
 
 # Run the pre-commit script across the repository
 .githooks/pre-commit.sh --all

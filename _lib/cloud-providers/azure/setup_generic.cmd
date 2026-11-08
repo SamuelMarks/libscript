@@ -371,30 +371,33 @@ if /i "!_SUB!"=="attach-disk" (
     set "_DISK_SIZE=%~5"
     if "!_DISK_SIZE!"=="" set "_DISK_SIZE=100"
     if /i "%DRY_RUN%"=="true" (
-        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE!
+        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE! --delete-option Detach
         exit /b 0
     )
     if "%DRY_RUN%"=="1" (
-        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE!
+        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE! --delete-option Detach
         exit /b 0
     )
     where az >nul 2>nul
     if errorlevel 1 (
-        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE!
+        echo [DRY_RUN] az vm disk attach -g !_RG! --vm-name !_NAME! --name !_DISK_NAME! --size-gb !_DISK_SIZE! --delete-option Detach
         exit /b 0
     )
     set "_ATTACHED_DISK="
     for /f "delims=" %%D in ('az vm show -g "!_RG!" -n "!_NAME!" --query "storageProfile.dataDisks[?name=='!_DISK_NAME!'] | [0].name" -o tsv 2^>nul') do set "_ATTACHED_DISK=%%D"
     if not "!_ATTACHED_DISK!"=="" (
         echo [REUSE] Disk '!_DISK_NAME!' already attached to '!_NAME!'.
+        call :run_az vm update -g "!_RG!" -n "!_NAME!" --set "storageProfile.dataDisks[?name=='!_DISK_NAME!'].deleteOption=Detach" >nul 2>&1
         exit /b 0
     )
     az disk show -g "!_RG!" -n "!_DISK_NAME!" >nul 2>&1
     if not errorlevel 1 (
-        call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!"
-        exit /b !errorlevel!
+        call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!" --delete-option Detach
+        call :run_az vm update -g "!_RG!" -n "!_NAME!" --set "storageProfile.dataDisks[?name=='!_DISK_NAME!'].deleteOption=Detach" >nul 2>&1
+        exit /b 0
     )
-    call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!" --size-gb "!_DISK_SIZE!" --new --sku Premium_LRS
+    call :run_az vm disk attach --resource-group "!_RG!" --vm-name "!_NAME!" --name "!_DISK_NAME!" --size-gb "!_DISK_SIZE!" --new --sku Premium_LRS --delete-option Detach
+    call :run_az vm update -g "!_RG!" -n "!_NAME!" --set "storageProfile.dataDisks[?name=='!_DISK_NAME!'].deleteOption=Detach" >nul 2>&1
     exit /b !errorlevel!
 )
 if /i "!_SUB!"=="delete" (
@@ -442,11 +445,21 @@ if /i "!_SUB!"=="record" (
     )
     set "_TARGET_RG=!DNS_RG!"
     if "!_TARGET_RG!"=="" set "_TARGET_RG=!_RG!"
+    if "!_RNAME!"=="@" (
+        for /f "tokens=1,2* delims=." %%A in ("!_ZONE!") do (
+            if not "%%C"=="" (
+                set "_RNAME=%%A"
+                set "_ZONE=%%B.%%C"
+            )
+        )
+    )
     if /i "!_TYPE!"=="create" (
+        call :run_az network dns zone create -g "!_TARGET_RG!" -n "!_ZONE!" --tags "ManagedBy=LibScript" >nul 2>&1
         call :run_az network dns record-set a add-record -g "!_TARGET_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
         exit /b 0
     )
     if /i "!_TYPE!"=="update" (
+        call :run_az network dns zone create -g "!_TARGET_RG!" -n "!_ZONE!" --tags "ManagedBy=LibScript" >nul 2>&1
         call :run_az network dns record-set a add-record -g "!_TARGET_RG!" -z "!_ZONE!" -n "!_RNAME!" -a "!_RVAL!"
         exit /b 0
     )
@@ -495,6 +508,18 @@ if /i "!_SUB!"=="attach-disk" (
 )
 if /i "!_SUB!"=="delete" (
     set "_RG=%~3"
+    if /i not "%DRY_RUN%"=="true" if not "%DRY_RUN%"=="1" (
+        where az >nul 2>nul
+        if not errorlevel 1 (
+            for /f "delims=" %%D in ('az vm show -g "!_RG!" -n "!_NODE!" --query "storageProfile.dataDisks[].name" -o tsv 2^>nul') do (
+                if not "%%D"=="" (
+                    echo [PRESERVE] Detaching persistent data disk '%%D' ^(deleteOption=Detach^) before deleting VM '!_NODE!'...
+                    call :run_az vm update -g "!_RG!" -n "!_NODE!" --set "storageProfile.dataDisks[?name=='%%D'].deleteOption=Detach" >nul 2>&1
+                    call :run_az vm disk detach -g "!_RG!" --vm-name "!_NODE!" --name "%%D" >nul 2>&1
+                )
+            )
+        )
+    )
     call :run_az vm delete --name "!_NODE!" --resource-group "!_RG!" --yes
     exit /b !errorlevel!
 )
@@ -634,8 +659,9 @@ exit /b !errorlevel!
 set "_IMG=%~3"
 set "_RG=%~4"
 if "!_IMG!"=="" set "_IMG=Ubuntu2204"
-set "_VM_SZ=%VM_SIZE%"
-if "!_VM_SZ!"=="" set "_VM_SZ=Standard_D4s_v5"
+set "_VM_SZ=%size%"
+if "!_VM_SZ!"=="" set "_VM_SZ=%VM_SIZE%"
+if "!_VM_SZ!"=="" set "_VM_SZ=Standard_D8s_v7"
 set "_VNET="
 set "_NSG="
 set "_OS_DISK=128"
@@ -666,6 +692,12 @@ if /i not "%DRY_RUN%"=="true" (
             az vm show -g "!_RG!" -n "!_NODE!" >nul 2>&1
             if not errorlevel 1 (
                 echo [REUSE] VM '!_NODE!' already exists in '!_RG!'.
+                set "_CUR_VM_SZ="
+                for /f "delims=" %%S in ('az vm show -g "!_RG!" -n "!_NODE!" --query "hardwareProfile.vmSize" -o tsv 2^>nul') do set "_CUR_VM_SZ=%%S"
+                if not "!_CUR_VM_SZ!"=="" if not "!_CUR_VM_SZ!"=="!_VM_SZ!" (
+                    echo [RESIZE] Resizing Azure VM '!_NODE!' in '!_RG!' from '!_CUR_VM_SZ!' to '!_VM_SZ!'...
+                    call :run_az vm resize --resource-group "!_RG!" --name "!_NODE!" --size "!_VM_SZ!"
+                )
                 exit /b 0
             )
         )
@@ -674,5 +706,5 @@ if /i not "%DRY_RUN%"=="true" (
 set "_EXTRA_VM="
 if not "!_VNET!"=="" set "_EXTRA_VM=!_EXTRA_VM! --vnet-name !_VNET! --subnet default"
 if not "!_NSG!"=="" set "_EXTRA_VM=!_EXTRA_VM! --nsg !_NSG!"
-call :run_az vm create --name "!_NODE!" --resource-group "!_RG!" --image "!_IMG!" --size "!_VM_SZ!" --os-disk-size-gb "!_OS_DISK!" --admin-username "!_ADM!" --public-ip-sku Standard !_EXTRA_VM! --generate-ssh-keys --tags "ManagedBy=LibScript"
+call :run_az vm create --name "!_NODE!" --resource-group "!_RG!" --image "!_IMG!" --size "!_VM_SZ!" --os-disk-size-gb "!_OS_DISK!" --os-disk-delete-option Delete --admin-username "!_ADM!" --public-ip-sku Standard !_EXTRA_VM! --generate-ssh-keys --tags "ManagedBy=LibScript"
 exit /b !errorlevel!

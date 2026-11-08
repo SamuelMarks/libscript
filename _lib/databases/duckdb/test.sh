@@ -40,7 +40,8 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if command -v duckdb >/dev/null 2>&1; then
-  duckdb -c 'SELECT 1;'
+  duckdb --version
+  duckdb :memory: -c "SELECT 1;"
 elif [ -f "$SCRIPT_DIR/cli.sh" ]; then
   sh "$SCRIPT_DIR/cli.sh" --help >/dev/null
 fi

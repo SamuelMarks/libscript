@@ -96,13 +96,14 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
     else
       MACH_IDX=$(( $(echo "$HOST" | cut -d'-' -f2) + 1 ))
     fi
+    _vssh_cfg="${TMPDIR:-/tmp}/vssh_${MACH_IDX}"
     (
       cd "${LIBSCRIPT_ROOT_DIR}/vagrant/${VAGRANT_IMAGE_DIR}" || exit 1
-      vagrant ssh-config "${VAGRANT_IMAGE_DIR}${MACH_IDX}" > /tmp/vssh_${MACH_IDX}
+      vagrant ssh-config "${VAGRANT_IMAGE_DIR}${MACH_IDX}" > "$_vssh_cfg"
     )
-    V_HOST=$(awk '/HostName/ {print $2}' /tmp/vssh_${MACH_IDX})
-    V_PORT=$(awk '/Port/ {print $2}' /tmp/vssh_${MACH_IDX})
-    KEY_PATH=$(awk '/IdentityFile/ {print $2}' /tmp/vssh_${MACH_IDX} | head -n 1)
+    V_HOST=$(awk '/HostName/ {print $2}' "$_vssh_cfg")
+    V_PORT=$(awk '/Port/ {print $2}' "$_vssh_cfg")
+    KEY_PATH=$(awk '/IdentityFile/ {print $2}' "$_vssh_cfg" | head -n 1)
     
     mkdir -p ~/.ssh
     touch ~/.ssh/known_hosts
@@ -129,9 +130,14 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
     
     (
       cd "${LIBSCRIPT_ROOT_DIR}/vagrant/${VAGRANT_IMAGE_DIR}" || exit 1
-      vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo mkdir -p /root/.ssh && sudo cp /home/vagrant/.ssh/authorized_keys /root/.ssh/authorized_keys && sudo chown -R root:root /root/.ssh" < /dev/null
+      _k8s_root_home="${LIBSCRIPT_ROOT_HOME:-/root}"
+      _k8s_home_base="${LIBSCRIPT_HOME_BASE:-/home}"
+      _k8s_etc_hosts="${REMOTE_ETC_HOSTS:-/etc/hosts}"
+      _k8s_remote_tmp="${REMOTE_TMPDIR:-/tmp}"
+      _k8s_usr_local_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
+      vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo mkdir -p ${_k8s_root_home}/.ssh && sudo cp ${_k8s_home_base}/vagrant/.ssh/authorized_keys ${_k8s_root_home}/.ssh/authorized_keys && sudo chown -R root:root ${_k8s_root_home}/.ssh" < /dev/null
       
-      vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo sh -c 'grep -v kubernetes.local /etc/hosts > /tmp/hosts.tmp && mv /tmp/hosts.tmp /etc/hosts && cat << \\EOF >> /etc/hosts
+      vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo sh -c 'grep -v kubernetes.local ${_k8s_etc_hosts} > ${_k8s_remote_tmp}/hosts.tmp && mv ${_k8s_remote_tmp}/hosts.tmp ${_k8s_etc_hosts} && cat << \\EOF >> ${_k8s_etc_hosts}
 192.168.56.10 server.kubernetes.local server
 192.168.56.11 node-0.kubernetes.local node-0
 192.168.56.12 node-1.kubernetes.local node-1
@@ -141,7 +147,7 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
 EOF'" < /dev/null
 
       if [ "$VAGRANT_IMAGE_DIR" = "k8s-thw-alpine" ]; then
-        vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo sh -c 'cat > /usr/local/bin/systemctl && chmod +x /usr/local/bin/systemctl'" < "${SCRIPT_DIR}/alpine-systemctl.sh"
+        vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo sh -c 'cat > ${_k8s_usr_local_bin}/systemctl && chmod +x ${_k8s_usr_local_bin}/systemctl'" < "${SCRIPT_DIR}/alpine-systemctl.sh"
       fi
     )
   done < "${MACHINES_TXT}"

@@ -70,8 +70,8 @@ echo ^>^>^> RUNNING PRE-COMMIT DANCE ^<^<^<
 :: Ensure we run from the git repository root
 cd /d "%~dp0\..\.."
 
-:: Stage all files so the pre-commit hook thinks they are staged
-git add -A
+:: Stage all tracked files so the pre-commit hook thinks they are staged
+git add -u
 
 :: Run the pre-commit script across the repository
 call .githooks\pre-commit.cmd --all

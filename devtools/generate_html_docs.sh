@@ -64,6 +64,7 @@ ENVSUBST_PATH="${_envsubst_dirs}:"
 export ENVSUBST_PATH
 
 export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/find_replace.sh'
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 [ -d "${LIBSCRIPT_DOCS_DIR}" ] || mkdir -p "${LIBSCRIPT_DOCS_DIR}"

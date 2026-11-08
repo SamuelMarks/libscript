@@ -63,6 +63,10 @@ Usage:
 Commands:
   init                           Initialize .netctl.json
   domain <server_name>           Set domain / server_name
+  tls <mode>                     Set TLS mode (letsencrypt, self-signed)
+  cert-store-dir <dir>           Set persistent certificate store directory
+  acme-webroot <dir>             Set ACME HTTP-01 challenge webroot directory
+  ensure-cert <domain> [store]   Ensure valid non-expired Let's Encrypt certificate
   listen <port>                  Add a listening port
   static <path> <target>         Add a static file route
   spa <path> <target>            Add a Single-Page Application static route with index.html fallback
@@ -75,6 +79,13 @@ Commands:
 
 Options (Singular mode):
   --domain <server_name>         Set domain / server_name
+  --tls <mode>                   Set TLS mode (letsencrypt, self-signed)
+  --cert-store-dir <dir>         Set persistent certificate store directory
+  --acme-webroot <dir>           Set ACME HTTP-01 challenge webroot directory
+  --proxy-connect-timeout <val>  Set upstream proxy connect timeout (e.g., 60s)
+  --proxy-send-timeout <val>     Set upstream proxy send timeout (e.g., 300s)
+  --proxy-read-timeout <val>     Set upstream proxy read timeout (e.g., 300s)
+  --proxy-buffering <on|off>     Set upstream proxy response buffering (on|off)
   --listen <port>                Add a listening port
   --static <path> <target>       Add a static route
   --spa <path> <target>          Add a SPA static route
@@ -84,6 +95,222 @@ Options (Singular mode):
   --emit <format>                Emit to specified format and exit
 EOF
   exit 1
+}
+
+# ## netctl_restore_persisted_cert
+# Restores a valid, non-expired CA-signed certificate from the persistent store and enforces read-only permissions.
+netctl_restore_persisted_cert() {
+  _rpc_dom="$1"
+  _rpc_store="${2:-${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}}"
+  _rpc_live="${_rpc_store}/live/${_rpc_dom}"
+  _rpc_cert="${_rpc_live}/fullchain.pem"
+  _rpc_key="${_rpc_live}/privkey.pem"
+
+  if ! netctl_cert_is_valid_letsencrypt "$_rpc_dom" "$_rpc_cert" "$_rpc_key"; then
+    return 1
+  fi
+
+  chmod 0755 "$_rpc_live" 2>/dev/null || priv chmod 0755 "$_rpc_live" 2>/dev/null || true
+  for _rpc_f in fullchain.pem cert.pem chain.pem; do
+    if [ -f "${_rpc_live}/${_rpc_f}" ]; then
+      chmod 0444 "${_rpc_live}/${_rpc_f}" 2>/dev/null || priv chmod 0444 "${_rpc_live}/${_rpc_f}" 2>/dev/null || true
+    fi
+  done
+  if [ -f "$_rpc_key" ]; then
+    chmod 0400 "$_rpc_key" 2>/dev/null || priv chmod 0400 "$_rpc_key" 2>/dev/null || true
+  fi
+  chmod 0555 "$_rpc_live" 2>/dev/null || priv chmod 0555 "$_rpc_live" 2>/dev/null || true
+
+  _le_etc="${LETSENCRYPT_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/letsencrypt}"
+  _ngx_etc="${NGINX_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/nginx}"
+
+  if [ -d "${_rpc_store}/letsencrypt" ]; then
+    for _rpc_sub in accounts archive renewal; do
+      if [ -d "${_rpc_store}/letsencrypt/${_rpc_sub}" ] && [ ! -d "${_le_etc}/${_rpc_sub}" ]; then
+        mkdir -p "${_le_etc}" 2>/dev/null || priv mkdir -p "${_le_etc}" 2>/dev/null || true
+        cp -a "${_rpc_store}/letsencrypt/${_rpc_sub}" "${_le_etc}/" 2>/dev/null || priv cp -a "${_rpc_store}/letsencrypt/${_rpc_sub}" "${_le_etc}/" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  if [ -w "${_le_etc}" ] || [ -d "${_le_etc}" ] || [ "$(id -u 2>/dev/null || printf '1')" = "0" ]; then
+    mkdir -p "${_le_etc}/live/${_rpc_dom}" 2>/dev/null || priv mkdir -p "${_le_etc}/live/${_rpc_dom}" 2>/dev/null || true
+    if [ -d "${_le_etc}/live/${_rpc_dom}" ]; then
+      for _rpc_f in fullchain.pem privkey.pem cert.pem chain.pem; do
+        if [ -f "${_rpc_live}/${_rpc_f}" ] && [ "${_rpc_live}/${_rpc_f}" != "${_le_etc}/live/${_rpc_dom}/${_rpc_f}" ]; then
+          cp -f "${_rpc_live}/${_rpc_f}" "${_le_etc}/live/${_rpc_dom}/${_rpc_f}" 2>/dev/null || priv cp -f "${_rpc_live}/${_rpc_f}" "${_le_etc}/live/${_rpc_dom}/${_rpc_f}" 2>/dev/null || true
+        fi
+      done
+      chmod 0400 "${_le_etc}/live/${_rpc_dom}/privkey.pem" 2>/dev/null || priv chmod 0400 "${_le_etc}/live/${_rpc_dom}/privkey.pem" 2>/dev/null || true
+    fi
+  fi
+
+  if [ -f "${_ngx_etc}/ssl/${_rpc_dom}.crt" ] || [ -f "${_ngx_etc}/ssl/${_rpc_dom}.key" ]; then
+    rm -f "${_ngx_etc}/ssl/${_rpc_dom}.crt" "${_ngx_etc}/ssl/${_rpc_dom}.key" 2>/dev/null || priv rm -f "${_ngx_etc}/ssl/${_rpc_dom}.crt" "${_ngx_etc}/ssl/${_rpc_dom}.key" 2>/dev/null || true
+  fi
+
+  log_info "[REUSE] [TLS] Reusing valid non-expired Let's Encrypt certificate for '${_rpc_dom}' from read-only store '${_rpc_live}'."
+  return 0
+}
+
+# ## netctl_persist_cert_readonly
+# Copies issued Let's Encrypt certificates into the persistent store and locks files and directories to read-only permissions.
+netctl_persist_cert_readonly() {
+  _pcr_dom="$1"
+  _pcr_store="${2:-${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}}"
+  _pcr_le_etc="${LETSENCRYPT_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/letsencrypt}"
+  _pcr_src="${3:-${_pcr_le_etc}/live/${_pcr_dom}}"
+  _pcr_dst="${_pcr_store}/live/${_pcr_dom}"
+
+  if [ -d "$_pcr_dst" ]; then
+    chmod 0755 "$_pcr_dst" 2>/dev/null || priv chmod 0755 "$_pcr_dst" 2>/dev/null || true
+    for _pcr_f in fullchain.pem privkey.pem cert.pem chain.pem; do
+      if [ -f "${_pcr_dst}/${_pcr_f}" ]; then
+        chmod 0600 "${_pcr_dst}/${_pcr_f}" 2>/dev/null || priv chmod 0600 "${_pcr_dst}/${_pcr_f}" 2>/dev/null || true
+      fi
+    done
+  else
+    mkdir -p "$_pcr_dst" 2>/dev/null || priv mkdir -p "$_pcr_dst" 2>/dev/null || true
+  fi
+
+  if [ -d "$_pcr_src" ] && [ "$_pcr_src" != "$_pcr_dst" ]; then
+    for _pcr_f in fullchain.pem privkey.pem cert.pem chain.pem; do
+      if [ -f "${_pcr_src}/${_pcr_f}" ]; then
+        cp -L -f "${_pcr_src}/${_pcr_f}" "${_pcr_dst}/${_pcr_f}" 2>/dev/null || priv cp -L -f "${_pcr_src}/${_pcr_f}" "${_pcr_dst}/${_pcr_f}" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  if [ -d "$_pcr_le_etc" ]; then
+    mkdir -p "${_pcr_store}/letsencrypt" 2>/dev/null || priv mkdir -p "${_pcr_store}/letsencrypt" 2>/dev/null || true
+    for _pcr_sub in accounts archive renewal; do
+      if [ -d "${_pcr_le_etc}/${_pcr_sub}" ]; then
+        cp -a "${_pcr_le_etc}/${_pcr_sub}" "${_pcr_store}/letsencrypt/" 2>/dev/null || priv cp -a "${_pcr_le_etc}/${_pcr_sub}" "${_pcr_store}/letsencrypt/" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  chown -R root:root "$_pcr_dst" 2>/dev/null || priv chown -R root:root "$_pcr_dst" 2>/dev/null || true
+  for _pcr_f in fullchain.pem cert.pem chain.pem; do
+    if [ -f "${_pcr_dst}/${_pcr_f}" ]; then
+      chmod 0444 "${_pcr_dst}/${_pcr_f}" 2>/dev/null || priv chmod 0444 "${_pcr_dst}/${_pcr_f}" 2>/dev/null || true
+    fi
+  done
+  if [ -f "${_pcr_dst}/privkey.pem" ]; then
+    chmod 0400 "${_pcr_dst}/privkey.pem" 2>/dev/null || priv chmod 0400 "${_pcr_dst}/privkey.pem" 2>/dev/null || true
+  fi
+  chmod 0555 "$_pcr_dst" 2>/dev/null || priv chmod 0555 "$_pcr_dst" 2>/dev/null || true
+  log_info "[PERSIST] [TLS] Stored read-only Let's Encrypt certificate for '${_pcr_dom}' in '${_pcr_dst}'."
+}
+
+# ## netctl_install_nginx_vhost
+# Installs an emitted Nginx configuration file into /etc/nginx/conf.d and reloads Nginx.
+netctl_install_nginx_vhost() {
+  _inv_dom="$1"
+  _inv_out="$2"
+  _inv_ngx_etc="${NGINX_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/nginx}"
+  if command -v nginx >/dev/null 2>&1 && [ -d "${_inv_ngx_etc}/conf.d" ]; then
+    if [ -n "$_inv_dom" ] && [ "$_inv_dom" != "_" ]; then
+      _inv_dest="${_inv_ngx_etc}/conf.d/${_inv_dom}.conf"
+    else
+      _inv_dest="${_inv_ngx_etc}/conf.d/libscript_ingress.conf"
+    fi
+    if [ -f "$_inv_dest" ] && cmp -s "$_inv_out" "$_inv_dest" 2>/dev/null; then
+      log_info "[ROUTES] [CONFIRM] nginx virtual host config ${_inv_dest} is up-to-date."
+    elif [ -w "${_inv_ngx_etc}/conf.d" ]; then
+      rm -f "${_inv_ngx_etc}/conf.d/libscript_ingress.conf" "${_inv_ngx_etc}/sites-enabled/default" 2>/dev/null || true
+      cp "$_inv_out" "$_inv_dest"
+      if [ -d "${_inv_ngx_etc}/sites-available" ] && [ -n "$_inv_dom" ] && [ "$_inv_dom" != "_" ]; then
+        cp "$_inv_out" "${_inv_ngx_etc}/sites-available/${_inv_dom}.conf" 2>/dev/null || true
+      fi
+      log_info "[ROUTES] [WRITE] Installed nginx virtual host config -> ${_inv_dest}"
+    else
+      priv rm -f "${_inv_ngx_etc}/conf.d/libscript_ingress.conf" "${_inv_ngx_etc}/sites-enabled/default" 2>/dev/null || true
+      priv cp "$_inv_out" "$_inv_dest" 2>/dev/null || true
+      if [ -d "${_inv_ngx_etc}/sites-available" ] && [ -n "$_inv_dom" ] && [ "$_inv_dom" != "_" ]; then
+        priv cp "$_inv_out" "${_inv_ngx_etc}/sites-available/${_inv_dom}.conf" 2>/dev/null || true
+      fi
+      log_info "[ROUTES] [WRITE] Installed nginx virtual host config -> ${_inv_dest}"
+    fi
+    netctl_reload_proxy 'nginx'
+  else
+    log_info "[ROUTES] [WRITE] Generated nginx virtual host config -> ${_inv_out}"
+    netctl_reload_proxy 'nginx'
+  fi
+}
+
+# ## netctl_ensure_letsencrypt_cert
+# Ensures a valid, non-expired Let's Encrypt certificate exists for the domain, reusing persisted certs or running Certbot HTTP-01 validation when missing or expired.
+netctl_ensure_letsencrypt_cert() {
+  _elc_dom="$1"
+  _elc_store="${2:-${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}}"
+  _elc_webroot="${3:-${_elc_store}/acme-webroot}"
+  _elc_email="${4:-${LETSENCRYPT_EMAIL:-}}"
+  _elc_le_etc="${LETSENCRYPT_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/letsencrypt}"
+  _elc_ngx_etc="${NGINX_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/nginx}"
+
+  [ -n "$_elc_dom" ] && [ "$_elc_dom" != "_" ] || return 0
+
+  if netctl_restore_persisted_cert "$_elc_dom" "$_elc_store"; then
+    return 0
+  fi
+
+  if netctl_cert_is_valid_letsencrypt "$_elc_dom" "${_elc_le_etc}/live/${_elc_dom}/fullchain.pem" "${_elc_le_etc}/live/${_elc_dom}/privkey.pem"; then
+    netctl_persist_cert_readonly "$_elc_dom" "$_elc_store" "${_elc_le_etc}/live/${_elc_dom}"
+    if [ -f "${_elc_ngx_etc}/ssl/${_elc_dom}.crt" ] || [ -f "${_elc_ngx_etc}/ssl/${_elc_dom}.key" ]; then
+      rm -f "${_elc_ngx_etc}/ssl/${_elc_dom}.crt" "${_elc_ngx_etc}/ssl/${_elc_dom}.key" 2>/dev/null || priv rm -f "${_elc_ngx_etc}/ssl/${_elc_dom}.crt" "${_elc_ngx_etc}/ssl/${_elc_dom}.key" 2>/dev/null || true
+    fi
+    return 0
+  fi
+
+  log_info "[ACME] [TLS] No valid non-expired Let's Encrypt certificate found for '${_elc_dom}'; provisioning via Certbot..."
+  _cb_bin=$(command -v certbot 2>/dev/null || true)
+  if [ -n "$_cb_bin" ] && [ -f "$_cb_bin" ] && [ "$(wc -l < "$_cb_bin" 2>/dev/null | tr -d ' ')" -lt 20 ] && grep -q "certbot 3.1.0" "$_cb_bin" 2>/dev/null && ! grep -q "openssl" "$_cb_bin" 2>/dev/null; then
+    rm -f "$_cb_bin" 2>/dev/null || priv rm -f "$_cb_bin" 2>/dev/null || true
+    rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/certbot" 2>/dev/null || priv rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/certbot" 2>/dev/null || true
+    _cb_bin=""
+  fi
+  if [ -z "$_cb_bin" ] || ! command -v certbot >/dev/null 2>&1; then
+    FORCE_REINSTALL=1 STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/security/certbot/setup.sh"
+  fi
+
+  mkdir -p "${_elc_webroot}/.well-known/acme-challenge" 2>/dev/null || priv mkdir -p "${_elc_webroot}/.well-known/acme-challenge" 2>/dev/null || true
+  chmod -R 0755 "${_elc_webroot}" 2>/dev/null || priv chmod -R 0755 "${_elc_webroot}" 2>/dev/null || true
+
+  if [ -n "${NETCTL_STATE_FILE:-}" ] && [ -f "${NETCTL_STATE_FILE:-}" ] && command -v nginx >/dev/null 2>&1; then
+    _boot_conf="${LIBSCRIPT_DATA_DIR:-${TMP_DATA_DIR:-${TMPDIR:-/tmp}/data}}/ingress/nginx.bootstrap.conf"
+    mkdir -p "$(dirname -- "$_boot_conf")"
+    NETCTL_BOOTSTRAP_HTTP_ONLY=1 netctl_emit_nginx "$NETCTL_STATE_FILE" > "$_boot_conf"
+    netctl_install_nginx_vhost "$_elc_dom" "$_boot_conf"
+    rm -f "$_boot_conf" 2>/dev/null || true
+  fi
+
+  if [ -n "$_elc_email" ]; then
+    _elc_email_arg="--email ${_elc_email}"
+  else
+    _elc_email_arg='--register-unsafely-without-email'
+  fi
+
+  # shellcheck disable=SC2086
+  if ! certbot certonly --webroot -w "$_elc_webroot" -d "$_elc_dom" --non-interactive --agree-tos $_elc_email_arg --keep-until-expiring; then
+    # shellcheck disable=SC2086
+    priv certbot certonly --webroot -w "$_elc_webroot" -d "$_elc_dom" --non-interactive --agree-tos $_elc_email_arg --keep-until-expiring || \
+      priv certbot certonly --standalone -d "$_elc_dom" --non-interactive --agree-tos $_elc_email_arg --keep-until-expiring || true
+  fi
+
+  if netctl_cert_is_valid_letsencrypt "$_elc_dom" "${_elc_le_etc}/live/${_elc_dom}/fullchain.pem" "${_elc_le_etc}/live/${_elc_dom}/privkey.pem"; then
+    netctl_persist_cert_readonly "$_elc_dom" "$_elc_store" "${_elc_le_etc}/live/${_elc_dom}"
+  elif netctl_cert_is_valid_letsencrypt "$_elc_dom" "${_elc_store}/live/${_elc_dom}/fullchain.pem" "${_elc_store}/live/${_elc_dom}/privkey.pem"; then
+    netctl_persist_cert_readonly "$_elc_dom" "$_elc_store" "${_elc_store}/live/${_elc_dom}"
+  else
+    log_error "[ACME] [TLS] Failed to obtain a valid CA-signed Let's Encrypt certificate for '${_elc_dom}'."
+    return 1
+  fi
+
+  if [ -f "${_elc_ngx_etc}/ssl/${_elc_dom}.crt" ] || [ -f "${_elc_ngx_etc}/ssl/${_elc_dom}.key" ]; then
+    rm -f "${_elc_ngx_etc}/ssl/${_elc_dom}.crt" "${_elc_ngx_etc}/ssl/${_elc_dom}.key" 2>/dev/null || priv rm -f "${_elc_ngx_etc}/ssl/${_elc_dom}.crt" "${_elc_ngx_etc}/ssl/${_elc_dom}.key" 2>/dev/null || true
+  fi
+  return 0
 }
 
 # ## netctl_reload_proxy
@@ -166,7 +393,10 @@ netctl_remove_manifest_ingress() {
     _rmi_dom="$_rmi_arg"
   fi
   if [ -n "$_rmi_dom" ] && [ "$_rmi_dom" != "libscript.json" ]; then
-    for _vhost in "/etc/nginx/conf.d/${_rmi_dom}.conf" "/etc/nginx/sites-enabled/${_rmi_dom}" "/etc/nginx/sites-available/${_rmi_dom}" "/etc/httpd/conf.d/${_rmi_dom}.conf" "/etc/apache2/sites-enabled/${_rmi_dom}.conf"; do
+    _rmi_ngx_etc="${NGINX_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/nginx}"
+    _rmi_httpd_etc="${HTTPD_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/httpd}"
+    _rmi_apache_etc="${APACHE2_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/apache2}"
+    for _vhost in "${_rmi_ngx_etc}/conf.d/${_rmi_dom}.conf" "${_rmi_ngx_etc}/sites-enabled/${_rmi_dom}" "${_rmi_ngx_etc}/sites-available/${_rmi_dom}" "${_rmi_httpd_etc}/conf.d/${_rmi_dom}.conf" "${_rmi_apache_etc}/sites-enabled/${_rmi_dom}.conf"; do
       if [ -f "$_vhost" ] || [ -L "$_vhost" ]; then
         log_info "[ROUTES] [REMOVE] Removing virtual host config ${_vhost}..."
         rm -f "$_vhost" 2>/dev/null || priv rm -f "$_vhost" 2>/dev/null || true
@@ -222,6 +452,14 @@ netctl_apply_manifest() {
       --format) _format="$2"; shift 2 ;;
       --out) _out_file="$2"; shift 2 ;;
       --reload) _do_reload=1; shift ;;
+      --proxy-connect-timeout=*) NETCTL_PROXY_CONNECT_TIMEOUT="${1#*=}"; export NETCTL_PROXY_CONNECT_TIMEOUT; shift ;;
+      --proxy-connect-timeout) NETCTL_PROXY_CONNECT_TIMEOUT="$2"; export NETCTL_PROXY_CONNECT_TIMEOUT; shift 2 ;;
+      --proxy-send-timeout=*) NETCTL_PROXY_SEND_TIMEOUT="${1#*=}"; export NETCTL_PROXY_SEND_TIMEOUT; shift ;;
+      --proxy-send-timeout) NETCTL_PROXY_SEND_TIMEOUT="$2"; export NETCTL_PROXY_SEND_TIMEOUT; shift 2 ;;
+      --proxy-read-timeout=*) NETCTL_PROXY_READ_TIMEOUT="${1#*=}"; export NETCTL_PROXY_READ_TIMEOUT; shift ;;
+      --proxy-read-timeout) NETCTL_PROXY_READ_TIMEOUT="$2"; export NETCTL_PROXY_READ_TIMEOUT; shift 2 ;;
+      --proxy-buffering=*) NETCTL_PROXY_BUFFERING="${1#*=}"; export NETCTL_PROXY_BUFFERING; shift ;;
+      --proxy-buffering) NETCTL_PROXY_BUFFERING="$2"; export NETCTL_PROXY_BUFFERING; shift 2 ;;
       *) shift ;;
     esac
   done
@@ -280,12 +518,29 @@ netctl_apply_manifest() {
       elif ($ep | startswith("/")) then $ep
       elif ($ep | startswith("./")) then ($mdir + "/" + ($ep | ltrimstr("./")))
       else ($mdir + "/" + $ep) end;
+    (expand_env($ing.tls // "")) as $tls_mode |
+    ((env.DATA_DISK_MOUNT // env.DATA_MOUNT_DIR // "/mnt/data") + "/certs") as $def_cstore |
+    (expand_env($ing.cert_store_dir // env.CERT_STORE_DIR // $def_cstore)) as $cstore |
+    (expand_env($ing.acme_webroot // ($cstore + "/acme-webroot"))) as $webroot |
+    (
+      if ($ing.listen | type) == "array" then [ $ing.listen[] | tostring | expand_env(.) ]
+      elif ($ing.listen != null) then [ ($ing.listen | tostring | expand_env(.)) ]
+      elif ($tls_mode == "letsencrypt" or $tls_mode == "self-signed") then ["80", "443"]
+      else ["80"] end
+    ) as $raw_listen |
     {
       domain: expand_env($ing.domain // $ing.server_name // "_"),
+      tls: $tls_mode,
+      cert_store_dir: $cstore,
+      acme_webroot: $webroot,
+      email: expand_env($ing.email // env.LETSENCRYPT_EMAIL // ""),
+      proxy_connect_timeout: (expand_env(($ing.proxy_connect_timeout // env.NETCTL_PROXY_CONNECT_TIMEOUT // "") | tostring)),
+      proxy_send_timeout: (expand_env(($ing.proxy_send_timeout // env.NETCTL_PROXY_SEND_TIMEOUT // "") | tostring)),
+      proxy_read_timeout: (expand_env(($ing.proxy_read_timeout // env.NETCTL_PROXY_READ_TIMEOUT // "") | tostring)),
+      proxy_buffering: (expand_env(($ing.proxy_buffering // env.NETCTL_PROXY_BUFFERING // "") | tostring)),
       listen: (
-        if ($ing.listen | type) == "array" then [ $ing.listen[] | tostring | expand_env(.) ]
-        elif ($ing.listen != null) then [ ($ing.listen | tostring | expand_env(.)) ]
-        else ["80"] end
+        if $tls_mode == "letsencrypt" then (($raw_listen + ["80", "443"]) | unique)
+        else $raw_listen end
       ),
       routes: (
         ($ing.routes // {}) |
@@ -343,60 +598,48 @@ netctl_apply_manifest() {
     }
   ' > "$NETCTL_STATE_FILE"
 
+  _dom=$(jq -r '.domain // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+  _tls_mode=$(jq -r '.tls // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+  _cert_store=$(jq -r '.cert_store_dir // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+  [ -n "$_cert_store" ] || _cert_store="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+  _acme_webroot=$(jq -r '.acme_webroot // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+  [ -n "$_acme_webroot" ] || _acme_webroot="${_cert_store}/acme-webroot"
+  _le_email=$(jq -r '.email // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+  [ -n "$_le_email" ] || _le_email="${LETSENCRYPT_EMAIL:-}"
+
   if [ -n "$_out_file" ]; then
     netctl_log_state_routes "$_format" "$NETCTL_STATE_FILE"
+    if [ "$_tls_mode" = "letsencrypt" ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
+      netctl_restore_persisted_cert "$_dom" "$_cert_store" || true
+    fi
     mkdir -p "$(dirname -- "$_out_file")"
     emit_by_format "$_format" > "$_out_file"
     log_info "[ROUTES] [WRITE] Wrote ${_format} config -> ${_out_file}"
   elif [ "$_do_reload" -eq 1 ]; then
     netctl_log_state_routes "$_format" "$NETCTL_STATE_FILE"
-    _conf_dir="${LIBSCRIPT_DATA_DIR:-/tmp/data}/ingress"
+    _conf_dir="${LIBSCRIPT_DATA_DIR:-${TMP_DATA_DIR:-${TMPDIR:-/tmp}/data}}/ingress"
     mkdir -p "$_conf_dir"
-    _dom=$(jq -r '.domain // empty' "$NETCTL_STATE_FILE" 2>/dev/null || true)
+    netctl_ensure_static_permissions "$NETCTL_STATE_FILE" "$_manifest_dir"
+    _am_le_etc="${LETSENCRYPT_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/letsencrypt}"
+    _am_ngx_etc="${NGINX_ETC_DIR:-${LIBSCRIPT_ETC_DIR:-/etc}/nginx}"
     if [ "$_format" = "nginx" ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
-      if [ -f "/etc/letsencrypt/live/${_dom}/fullchain.pem" ]; then
-        log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at /etc/letsencrypt/live/${_dom}/fullchain.pem."
-      elif [ -f "/etc/nginx/ssl/${_dom}.crt" ]; then
-        log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at /etc/nginx/ssl/${_dom}.crt."
+      if [ "$_tls_mode" = "letsencrypt" ]; then
+        netctl_ensure_letsencrypt_cert "$_dom" "$_cert_store" "$_acme_webroot" "$_le_email"
+      elif [ -f "${_am_le_etc}/live/${_dom}/fullchain.pem" ]; then
+        log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at ${_am_le_etc}/live/${_dom}/fullchain.pem."
+      elif [ -f "${_am_ngx_etc}/ssl/${_dom}.crt" ]; then
+        log_info "[ROUTES] [TLS] Confirmed SSL certificate for '${_dom}' at ${_am_ngx_etc}/ssl/${_dom}.crt."
       elif command -v openssl >/dev/null 2>&1; then
-        mkdir -p /etc/nginx/ssl 2>/dev/null || priv mkdir -p /etc/nginx/ssl 2>/dev/null || true
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || \
-          priv openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/nginx/ssl/${_dom}.key" -out "/etc/nginx/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || true
-        log_info "[ROUTES] [TLS] Generated self-signed SSL certificate for '${_dom}' at /etc/nginx/ssl/${_dom}.crt."
+        mkdir -p "${_am_ngx_etc}/ssl" 2>/dev/null || priv mkdir -p "${_am_ngx_etc}/ssl" 2>/dev/null || true
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${_am_ngx_etc}/ssl/${_dom}.key" -out "${_am_ngx_etc}/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || \
+          priv openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "${_am_ngx_etc}/ssl/${_dom}.key" -out "${_am_ngx_etc}/ssl/${_dom}.crt" -subj "/CN=${_dom}" >/dev/null 2>&1 || true
+        log_info "[ROUTES] [TLS] Generated self-signed SSL certificate for '${_dom}' at ${_am_ngx_etc}/ssl/${_dom}.crt."
       fi
     fi
     _out_file="${_conf_dir}/${_format}.conf"
     emit_by_format "$_format" > "$_out_file"
-    netctl_ensure_static_permissions "$NETCTL_STATE_FILE" "$_manifest_dir"
-    if [ "$_format" = "nginx" ] && command -v nginx >/dev/null 2>&1; then
-      if [ -d /etc/nginx/conf.d ]; then
-        if [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
-          _dest="/etc/nginx/conf.d/${_dom}.conf"
-        else
-          _dest='/etc/nginx/conf.d/libscript_ingress.conf'
-        fi
-        if [ -f "$_dest" ] && cmp -s "$_out_file" "$_dest" 2>/dev/null; then
-          log_info "[ROUTES] [CONFIRM] ${_format} virtual host config ${_dest} is up-to-date."
-        elif [ -w /etc/nginx/conf.d ]; then
-          rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
-          cp "$_out_file" "$_dest"
-          if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
-            cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
-          fi
-          log_info "[ROUTES] [WRITE] Installed ${_format} virtual host config -> ${_dest}"
-        else
-          priv rm -f /etc/nginx/conf.d/libscript_ingress.conf /etc/nginx/sites-enabled/default 2>/dev/null || true
-          priv cp "$_out_file" "$_dest" 2>/dev/null || true
-          if [ -d /etc/nginx/sites-available ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
-            priv cp "$_out_file" "/etc/nginx/sites-available/${_dom}.conf" 2>/dev/null || true
-          fi
-          log_info "[ROUTES] [WRITE] Installed ${_format} virtual host config -> ${_dest}"
-        fi
-        netctl_reload_proxy "nginx"
-      else
-        log_info "[ROUTES] [WRITE] Generated ${_format} virtual host config -> ${_out_file}"
-        netctl_reload_proxy "nginx"
-      fi
+    if [ "$_format" = "nginx" ]; then
+      netctl_install_nginx_vhost "$_dom" "$_out_file"
     elif [ "$_format" = "caddy" ] && command -v caddy >/dev/null 2>&1; then
       log_info "[ROUTES] [WRITE] Installed Caddy config -> ${_out_file}"
       caddy reload --config "$_out_file" >/dev/null 2>&1 || netctl_reload_proxy "caddy"
@@ -405,6 +648,9 @@ netctl_apply_manifest() {
       netctl_reload_proxy "$_format"
     fi
   else
+    if [ "$_tls_mode" = "letsencrypt" ] && [ -n "$_dom" ] && [ "$_dom" != "_" ]; then
+      netctl_restore_persisted_cert "$_dom" "$_cert_store" || true
+    fi
     emit_by_format "$_format"
   fi
 }
@@ -434,6 +680,18 @@ case "$1" in
     ;;
   init) netctl_init; exit 0 ;;
   domain) netctl_set_domain "$2"; exit 0 ;;
+  tls) netctl_set_tls "$2"; exit 0 ;;
+  cert-store-dir|cert_store_dir) netctl_set_cert_store_dir "$2"; exit 0 ;;
+  acme-webroot|acme_webroot) netctl_set_acme_webroot "$2"; exit 0 ;;
+  proxy-connect-timeout|proxy_connect_timeout) netctl_set_proxy_connect_timeout "$2"; exit 0 ;;
+  proxy-send-timeout|proxy_send_timeout) netctl_set_proxy_send_timeout "$2"; exit 0 ;;
+  proxy-read-timeout|proxy_read_timeout) netctl_set_proxy_read_timeout "$2"; exit 0 ;;
+  proxy-buffering|proxy_buffering) netctl_set_proxy_buffering "$2"; exit 0 ;;
+  ensure-cert)
+    shift
+    netctl_ensure_letsencrypt_cert "${1:-}" "${2:-${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}}" "${3:-}" "${4:-${LETSENCRYPT_EMAIL:-}}"
+    exit $?
+    ;;
   listen) netctl_add_listen "$2"; exit 0 ;;
   static) netctl_add_static "$2" "$3"; exit 0 ;;
   spa) netctl_add_spa "$2" "$3"; exit 0 ;;
@@ -447,7 +705,9 @@ case "$1" in
     ;;
   ingress)
     shift
-    netctl_apply_manifest "${1:-libscript.json}" --reload
+    _ing_file="${1:-libscript.json}"
+    [ $# -gt 0 ] && shift
+    netctl_apply_manifest "$_ing_file" --reload "$@"
     exit 0
     ;;
   remove-ingress|unroute)
@@ -480,6 +740,66 @@ if [ "$SINGULAR_MODE" -eq 1 ]; then
     case "$1" in
       --domain)
         netctl_set_domain "$2"
+        shift 2
+        ;;
+      --tls)
+        netctl_set_tls "$2"
+        shift 2
+        ;;
+      --cert-store-dir|--cert_store_dir)
+        netctl_set_cert_store_dir "$2"
+        shift 2
+        ;;
+      --acme-webroot|--acme_webroot)
+        netctl_set_acme_webroot "$2"
+        shift 2
+        ;;
+      --proxy-connect-timeout=*|--proxy_connect_timeout=*)
+        NETCTL_PROXY_CONNECT_TIMEOUT="${1#*=}"
+        export NETCTL_PROXY_CONNECT_TIMEOUT
+        netctl_set_proxy_connect_timeout "${1#*=}"
+        shift
+        ;;
+      --proxy-connect-timeout|--proxy_connect_timeout)
+        NETCTL_PROXY_CONNECT_TIMEOUT="$2"
+        export NETCTL_PROXY_CONNECT_TIMEOUT
+        netctl_set_proxy_connect_timeout "$2"
+        shift 2
+        ;;
+      --proxy-send-timeout=*|--proxy_send_timeout=*)
+        NETCTL_PROXY_SEND_TIMEOUT="${1#*=}"
+        export NETCTL_PROXY_SEND_TIMEOUT
+        netctl_set_proxy_send_timeout "${1#*=}"
+        shift
+        ;;
+      --proxy-send-timeout|--proxy_send_timeout)
+        NETCTL_PROXY_SEND_TIMEOUT="$2"
+        export NETCTL_PROXY_SEND_TIMEOUT
+        netctl_set_proxy_send_timeout "$2"
+        shift 2
+        ;;
+      --proxy-read-timeout=*|--proxy_read_timeout=*)
+        NETCTL_PROXY_READ_TIMEOUT="${1#*=}"
+        export NETCTL_PROXY_READ_TIMEOUT
+        netctl_set_proxy_read_timeout "${1#*=}"
+        shift
+        ;;
+      --proxy-read-timeout|--proxy_read_timeout)
+        NETCTL_PROXY_READ_TIMEOUT="$2"
+        export NETCTL_PROXY_READ_TIMEOUT
+        netctl_set_proxy_read_timeout "$2"
+        shift 2
+        ;;
+      --proxy-buffering=*|--proxy_buffering=*)
+        NETCTL_PROXY_BUFFERING="${1#*=}"
+        export NETCTL_PROXY_BUFFERING
+        netctl_set_proxy_buffering "${1#*=}"
+        shift
+        ;;
+      --proxy-buffering|--proxy_buffering)
+        NETCTL_PROXY_BUFFERING="$2"
+        export NETCTL_PROXY_BUFFERING
+        netctl_set_proxy_buffering "$2"
         shift 2
         ;;
       --listen)

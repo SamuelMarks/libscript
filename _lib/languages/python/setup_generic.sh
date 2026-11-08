@@ -43,7 +43,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-PYTHON_INSTALL_METHOD="${PYTHON_INSTALL_METHOD:-libscript_native}"
+PYTHON_INSTALL_METHOD="$(libscript_resolve_install_method "PYTHON")"
 PYTHON_VERSION="${PYTHON_VERSION:-${VERSION:-3.12}}"
 ACTION="${ACTION:-install}"
 
@@ -100,7 +100,7 @@ find_existing_python() {
   fi
   if command -v python3 >/dev/null 2>&1; then
     _sys_pyv=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2 || true)
-    if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ] || [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; then
+    if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ] || [ "${_PY_VERSION_UNPINNED:-0}" = "1" ] || [ "${VERSION:-latest}" = "latest" ] || [ -f /etc/debian_version ] || [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; then
       command -v python3
       return 0
     fi
@@ -151,6 +151,73 @@ resolve_exact_version() {
   fi
 }
 
+# ## setup_python_venv_if_requested
+# Creates and populates PYTHON_VENV if requested via environment variable.
+setup_python_venv_if_requested() {
+  if [ "${PYTHON_VENV-}" ]; then
+    export VENV="${PYTHON_VENV}"
+    if [ ! -f "${PYTHON_VENV}/bin/python" ]; then
+      if ! type libscript_python_venv >/dev/null 2>&1; then
+        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+        export SCRIPT_NAME
+        # shellcheck disable=SC1090,SC1091
+        . "${SCRIPT_NAME}"
+        unset SCRIPT_NAME || true
+        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+      fi
+      libscript_python_venv "${PYTHON_VENV}" "${EXACT_VERSION:-${PYTHON_VERSION}}"
+
+      _pip_cmd_opts=''
+      if [ "${PIP_NO_INDEX:-0}" = "1" ]; then
+        _pip_cmd_opts='--no-index'
+        if [ -n "${PIP_FIND_LINKS:-}" ] && [ -d "${PIP_FIND_LINKS}" ]; then
+          _pip_cmd_opts="${_pip_cmd_opts} --find-links ${PIP_FIND_LINKS}"
+        fi
+      else
+        # shellcheck disable=SC2086
+        "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -U pip setuptools wheel 2>/dev/null || true
+      fi
+
+      if [ -n "${ML_ACCELERATOR_BACKEND:-}" ] && [ "${PIP_NO_INDEX:-0}" != "1" ]; then
+        log_info "Installing hardware-optimized ML profile: ${ML_ACCELERATOR_BACKEND}"
+        case "${ML_ACCELERATOR_BACKEND}" in
+          tpu-jax)
+            "${PYTHON_VENV}/bin/python" -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+            ;;
+          tpu-maxtext)
+            "${PYTHON_VENV}/bin/python" -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html maxtext
+            ;;
+          tpu-keras)
+            "${PYTHON_VENV}/bin/python" -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html keras
+            ;;
+          tpu-torch)
+            "${PYTHON_VENV}/bin/python" -m pip install torch~=2.2.0 torch_xla[tpu]~=2.2.0 -f https://storage.googleapis.com/libtpu-releases/index.html
+            ;;
+          gpu-cuda12)
+            "${PYTHON_VENV}/bin/python" -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+            ;;
+          gpu-jax)
+            "${PYTHON_VENV}/bin/python" -m pip install 'jax[cuda12]'
+            ;;
+          *)
+            log_warn "Unknown ML_ACCELERATOR_BACKEND: ${ML_ACCELERATOR_BACKEND}. Skipping."
+            ;;
+        esac
+      fi
+
+      if [ -f 'requirements.txt' ]; then
+        # shellcheck disable=SC2086
+        "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -r 'requirements.txt'
+      elif [ -f 'setup.py' ] || [ -f 'pyproject.toml' ]; then
+        # shellcheck disable=SC2086
+        "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -e .
+      fi
+    fi
+  fi
+}
+
 case "$ACTION" in
   ls)
     if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
@@ -191,8 +258,8 @@ case "$ACTION" in
     exit 0
     ;;
   download)
-    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
-      if [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_python >/dev/null 2>&1; then
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ] || [ "$PYTHON_INSTALL_METHOD" = "from-source" ]; then
+      if [ "$PYTHON_INSTALL_METHOD" != "from-source" ] && [ "${FORCE_REINSTALL:-0}" != "1" ] && find_existing_python >/dev/null 2>&1; then
         log_info "[REUSE] Python ${PYTHON_VERSION} is already installed; skipping download."
         exit 0
       fi
@@ -207,14 +274,24 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    if [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_py=$(find_existing_python 2>/dev/null); then
+    if [ "$PYTHON_INSTALL_METHOD" != "from-source" ] && [ "${FORCE_REINSTALL:-0}" != "1" ] && _existing_py=$(find_existing_python 2>/dev/null); then
       link_python_into_libscript_home "$_existing_py"
+      setup_python_venv_if_requested
       log_info "[REUSE] python ${PYTHON_VERSION} found at ${_existing_py}."
-      exit 0
+      if (return 0 2>/dev/null); then return 0; else exit 0; fi
     fi
 
-    # Fast native Python installation via uv python install before falling back to system/source
-    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ] || [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+    if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+      libscript_depends 'python'
+      if _sys_py=$(find_existing_python 2>/dev/null) || _sys_py=$(command -v python3 2>/dev/null); then
+        link_python_into_libscript_home "$_sys_py"
+      fi
+      setup_python_venv_if_requested
+      if (return 0 2>/dev/null); then return 0; else exit 0; fi
+    fi
+
+    # Fast native Python installation via uv python install before falling back to system package manager
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
       if ! command -v uv >/dev/null 2>&1 && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" install latest >/dev/null 2>&1 || true
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh" ]; then
@@ -236,16 +313,22 @@ case "$ACTION" in
         if uv python install "$_req_py" >/dev/null 2>&1; then
           if _uv_py=$(find_existing_python 2>/dev/null); then
             link_python_into_libscript_home "$_uv_py"
+            setup_python_venv_if_requested
             log_info "Installed Python ${PYTHON_VERSION} at ${_uv_py}."
-            exit 0
+            if (return 0 2>/dev/null); then return 0; else exit 0; fi
           fi
         fi
       fi
+      log_info 'Falling back to system package manager for Python (from-source not requested)...'
+      libscript_depends 'python'
+      if _sys_py=$(find_existing_python 2>/dev/null) || _sys_py=$(command -v python3 2>/dev/null); then
+        link_python_into_libscript_home "$_sys_py"
+      fi
+      setup_python_venv_if_requested
+      if (return 0 2>/dev/null); then return 0; else exit 0; fi
     fi
 
-    if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'python'
-    else
+    if [ "$PYTHON_INSTALL_METHOD" = "from-source" ]; then
       resolve_exact_version
       PY_DIR=$(libscript_get_version_dir "python" "${EXACT_VERSION}")
       export PATH="${PY_DIR}/bin:${PATH}"
@@ -313,69 +396,7 @@ case "$ACTION" in
         libscript_symlink_alias "python" "default" "${EXACT_VERSION}"
         libscript_symlink_alias "python" "latest" "${EXACT_VERSION}"
       fi
-
-      if [ "${PYTHON_VENV-}" ]; then
-        export VENV="${PYTHON_VENV}"
-        if [ ! -f "${PYTHON_VENV}/bin/python" ]; then
-          if ! type libscript_python_venv >/dev/null 2>&1; then
-            _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-            SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-            export SCRIPT_NAME
-            # shellcheck disable=SC1090,SC1091
-            . "${SCRIPT_NAME}"
-            unset SCRIPT_NAME || true
-            [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
-            [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
-          fi
-          libscript_python_venv "${PYTHON_VENV}" "${EXACT_VERSION}"
-          
-          _pip_cmd_opts=""
-          if [ "${PIP_NO_INDEX:-0}" = "1" ]; then
-            _pip_cmd_opts='--no-index'
-            if [ -n "${PIP_FIND_LINKS:-}" ] && [ -d "${PIP_FIND_LINKS}" ]; then
-              _pip_cmd_opts="${_pip_cmd_opts} --find-links ${PIP_FIND_LINKS}"
-            fi
-          else
-            # shellcheck disable=SC2086
-            "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -U pip setuptools wheel 2>/dev/null || true
-          fi
-          
-          if [ -n "${ML_ACCELERATOR_BACKEND:-}" ] && [ "${PIP_NO_INDEX:-0}" != "1" ]; then
-            log_info "Installing hardware-optimized ML profile: ${ML_ACCELERATOR_BACKEND}"
-            case "${ML_ACCELERATOR_BACKEND}" in
-              tpu-jax)
-                "${PYTHON_VENV}/bin/python" -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
-                ;;
-              tpu-maxtext)
-                "${PYTHON_VENV}/bin/python" -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html maxtext
-                ;;
-              tpu-keras)
-                "${PYTHON_VENV}/bin/python" -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html keras
-                ;;
-              tpu-torch)
-                "${PYTHON_VENV}/bin/python" -m pip install torch~=2.2.0 torch_xla[tpu]~=2.2.0 -f https://storage.googleapis.com/libtpu-releases/index.html
-                ;;
-              gpu-cuda12)
-                "${PYTHON_VENV}/bin/python" -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-                ;;
-              gpu-jax)
-                "${PYTHON_VENV}/bin/python" -m pip install "jax[cuda12]"
-                ;;
-              *)
-                log_warn "Unknown ML_ACCELERATOR_BACKEND: ${ML_ACCELERATOR_BACKEND}. Skipping."
-                ;;
-            esac
-          fi
-          
-          if [ -f 'requirements.txt' ]; then
-            # shellcheck disable=SC2086
-            "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -r 'requirements.txt'
-          elif [ -f 'setup.py' ] || [ -f 'pyproject.toml' ]; then
-            # shellcheck disable=SC2086
-            "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -e .
-          fi
-        fi
-      fi
+      setup_python_venv_if_requested
     fi
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)

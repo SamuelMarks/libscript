@@ -84,15 +84,15 @@ while [ $# -gt 0 ]; do
             exit 0
             ;;
         --loop|-l)
-            LOOP_MODE='1'
+            export LOOP_MODE='1'
             shift
             ;;
         --stop-after)
-            STOP_AFTER="$2"
+            export STOP_AFTER="$2"
             shift 2
             ;;
         --skip-uninstall)
-            SKIP_UNINSTALL='1'
+            export SKIP_UNINSTALL='1'
             shift
             ;;
         *)

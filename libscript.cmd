@@ -151,6 +151,14 @@ if /i "%cmd%"=="-v" (
     exit /b 0
 )
 
+if defined STACK (
+    set "STACK=!STACK::%THIS_FILE%:=:!"
+    if "!STACK!"==":" set "STACK="
+)
+for %%Q in (ls-remote ls which env info search db-search list semver) do (
+    if /i "%cmd%"=="%%Q" set "STACK="
+)
+
 :: Delegate commands to sub-scripts
 if /i "%cmd%"=="list" ( call "!SCRIPT_DIR!\cli\commands\core\list.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="search" ( call "!SCRIPT_DIR!\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )

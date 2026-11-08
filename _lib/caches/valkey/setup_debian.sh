@@ -100,7 +100,7 @@ else
     _valkey_debian_ensure_started
     log_info '[REUSE] Valkey/Redis binary already installed.'
     NOOP=1
-  elif [ "${VALKEY_BUILD_FROM_SOURCE:-0}" = "1" ]; then
+  elif [ "${VALKEY_BUILD_FROM_SOURCE:-0}" = "1" ] || [ "${VALKEY_INSTALL_METHOD:-}" = "from-source" ]; then
     libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
     TARGET="${VALKEY_BUILD_DIR}"'/valkey'
     git_get https://github.com/valkey-io/valkey "${TARGET}"
@@ -126,20 +126,15 @@ else
       _valkey_debian_ensure_started
       NOOP=1
     else
-      libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
-      TARGET="${VALKEY_BUILD_DIR}"'/valkey'
-      git_get https://github.com/valkey-io/valkey "${TARGET}"
-      cd -- "${TARGET}"
-      HASH="$(git rev-list HEAD -1)"
-      build_install
-      cd -- "${PREVIOUS_WD}"
+      log_error 'Failed to install valkey or redis-server via system package manager (set VALKEY_INSTALL_METHOD=from-source or VALKEY_BUILD_FROM_SOURCE=1 to compile from source).'
+      exit 1
     fi
   fi
 fi
 
 if [ "${NOOP}" -eq 0 ]; then
   SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-valkey}"
-  VALKEY_CONF="/tmp/valkey_$$.conf"
+  VALKEY_CONF="${TMPDIR:-/tmp}/valkey_$$.conf"
   cp -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/valkey.conf' "${VALKEY_CONF}"
   if [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
     grep -q "^port 0" "${VALKEY_CONF}" || {
@@ -154,13 +149,17 @@ if [ "${NOOP}" -eq 0 ]; then
       sed "s|^port .*|port ${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${VALKEY_CONF}" > "${VALKEY_CONF}.tmp" && mv "${VALKEY_CONF}.tmp" "${VALKEY_CONF}"
     fi
   fi
-  priv install -m 0644 -o 'root' -- "${VALKEY_CONF}" /etc/valkey.conf
+  priv install -m 0644 -o 'root' -- "${VALKEY_CONF}" "${LIBSCRIPT_ETC_DIR:-/etc}/valkey.conf"
   rm -f -- "${VALKEY_CONF}"
-  if [ -d /etc/systemd/system ]; then
-    priv install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/systemd/'"${SERVICE_NAME}"'.service' /etc/systemd/system/ 2>/dev/null || true
+  if [ -d "${LIBSCRIPT_SYSTEMD_DIR:-/etc/systemd/system}" ]; then
+    priv install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/systemd/'"${SERVICE_NAME}"'.service' "${LIBSCRIPT_SYSTEMD_DIR:-/etc/systemd/system}/" 2>/dev/null || true
   fi
   libscript_service daemon-reload "${SERVICE_NAME}" || true
   libscript_service reload-or-restart "${SERVICE_NAME}" || true
+fi
+
+if [ -n "${VALKEY_DATA_DIR:-${REDIS_DATA_DIR:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/service.sh" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/_lib/caches/valkey/service.sh" configure "${VALKEY_DATA_DIR:-${REDIS_DATA_DIR:-}}" || true
 fi
 
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"

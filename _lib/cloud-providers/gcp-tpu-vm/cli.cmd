@@ -448,8 +448,9 @@ if "%~1"=="--duration" (
     goto :profile_arg_loop
 )
 
+if "%TPU_PROFILE_LOGDIR%"=="" set "TPU_PROFILE_LOGDIR=/tmp/tpu_profile"
 call "!LOG_CMD!" :log_info "Initiating capture_tpu_profile session on %TPU_NAME% in %TPU_ZONE%..."
-gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% --worker=all --command="capture_tpu_profile --tpu=%%HOSTNAME%% --profiler_port=%PORT% --duration_ms=%DURATION% --logdir=/tmp/tpu_profile"
+gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% --worker=all --command="capture_tpu_profile --tpu=%%HOSTNAME%% --profiler_port=%PORT% --duration_ms=%DURATION% --logdir=%TPU_PROFILE_LOGDIR%"
 exit /b 0
 
 :: ## scp

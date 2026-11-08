@@ -63,7 +63,7 @@ detect_os() {
   printf '%s\n' "${UNAME_LOWER:-linux}"
 }
 
-TARGET_DIR='/mnt/target'
+TARGET_DIR="${TARGET_SYSROOT_MOUNT:-${LIBSCRIPT_TARGET_SYSROOT:-/mnt/target}}"
 ACTION='help'
 ROOT_DEV=""
 ESP_DEV=""
@@ -80,8 +80,9 @@ is_mounted() {
       return 0
     fi
   fi
-  if [ -f /proc/mounts ]; then
-    if grep -q " ${_dir} " /proc/mounts; then
+  _proc_mounts="${LIBSCRIPT_PROC_MOUNTS:-/proc/mounts}"
+  if [ -f "$_proc_mounts" ]; then
+    if grep -q " ${_dir} " "$_proc_mounts"; then
       return 0
     fi
   fi
@@ -194,8 +195,9 @@ EOF
       if [ -n "$_edev" ] && ! grep -q "/boot/efi" "${_tgt}/etc/fstab" 2>/dev/null; then
         printf '%s       /boot/efi       vfat    umask=0077      0       1\n' "$_edev" >> "${_tgt}/etc/fstab"
       fi
-      if ! grep -q "[[:space:]]/tmp[[:space:]]" "${_tgt}/etc/fstab" 2>/dev/null; then
-        printf 'tmpfs           /tmp            tmpfs   defaults,nodev,nosuid 0       0\n' >> "${_tgt}/etc/fstab"
+      _fstab_tmp="${LIBSCRIPT_TMP_MOUNT:-${TMPDIR:-/tmp}}"
+      if ! grep -q "[[:space:]]${_fstab_tmp}[[:space:]]" "${_tgt}/etc/fstab" 2>/dev/null; then
+        printf 'tmpfs           %s            tmpfs   defaults,nodev,nosuid 0       0\n' "$_fstab_tmp" >> "${_tgt}/etc/fstab"
       fi
       printf '[OK] Generated %s/etc/fstab\n' "$_tgt"
       ;;
@@ -223,7 +225,7 @@ while [ $# -gt 0 ]; do
       ;;
     --fstab)
       ACTION='fstab'
-      TARGET_DIR="${2:-/mnt/target}"
+      TARGET_DIR="${2:-${TARGET_SYSROOT_MOUNT:-${LIBSCRIPT_TARGET_SYSROOT:-/mnt/target}}}"
       shift 2
       ;;
     --help|-h|/\?|-\?)

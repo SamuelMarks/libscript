@@ -50,6 +50,9 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+call :run_ollama_service_unit_tests
+if errorlevel 1 exit /b 1
+
 where ollama >nul 2>nul
 if %errorlevel% equ 0 (
   ollama --version
@@ -59,4 +62,27 @@ if %errorlevel% equ 0 (
 if exist "%~dp0cli.cmd" (
     call "%~dp0cli.cmd" --help >nul
 )
+exit /b 0
+
+:: ## run_ollama_service_unit_tests
+:: Exercises service.cmd configure and ensure-models in dry-run mode on Windows.
+:run_ollama_service_unit_tests
+set "_T_DIR=%TEMP%\libscript_ollama_test_%RANDOM%"
+if not exist "!_T_DIR!" mkdir "!_T_DIR!"
+set "OLLAMA_MODELS_DIR=!_T_DIR!\ollama_models"
+set "OLLAMA_MODELS=!_T_DIR!\ollama_models"
+set "LIBSCRIPT_DATA_DIR=!_T_DIR!\data"
+set "LIBSCRIPT_INIT_SYSTEM=none"
+set "LIBSCRIPT_DRY_RUN=1"
+set "STACK="
+call "%~dp0service.cmd" configure "!OLLAMA_MODELS_DIR!" >nul 2>&1
+if not exist "!OLLAMA_MODELS_DIR!\manifests" (
+    rmdir /s /q "!_T_DIR!" >nul 2>&1
+    exit /b 1
+)
+if not exist "!OLLAMA_MODELS_DIR!\blobs" (
+    rmdir /s /q "!_T_DIR!" >nul 2>&1
+    exit /b 1
+)
+rmdir /s /q "!_T_DIR!" >nul 2>&1
 exit /b 0

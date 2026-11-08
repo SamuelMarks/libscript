@@ -795,6 +795,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `cargo-binstall`                      | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `cc`                                  | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `celery`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `certbot`                             | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `choco`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `clang`                               | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `cmake`                               | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

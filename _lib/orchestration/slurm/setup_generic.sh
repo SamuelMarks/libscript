@@ -37,6 +37,7 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info
 done
 
 SLURM_INSTALL_METHOD="$(libscript_resolve_install_method "SLURM")"
+export SLURM_INSTALL_METHOD
 ACTION="${ACTION:-${1:-install}}"
 VERSION="${SLURM_VERSION:-24.05.3}"
 

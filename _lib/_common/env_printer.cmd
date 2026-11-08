@@ -51,6 +51,7 @@ goto :find_root
 
 if /i "%~1"=="--hydrate" goto :do_hydrate
 if /i "%~1"=="--manifest" goto :do_manifest
+if /i "%~1"=="--expand" goto :do_expand
 
 set "FORMAT=%~1"
 if "%FORMAT%"=="" set "FORMAT=cmd"
@@ -128,15 +129,30 @@ endlocal & (
     set "POSTGRES_PORT=%POSTGRES_PORT%"
     set "POSTGRES_DB=%POSTGRES_DB%"
     set "POSTGRES_URL=%POSTGRES_URL%"
+    set "POSTGRES_DATA_DIR=%POSTGRES_DATA_DIR%"
+    set "PGDATA=%PGDATA%"
     set "DATABASE_URL=%DATABASE_URL%"
     set "DUCKDB_PATH=%DUCKDB_PATH%"
     set "SQLITE_PATH=%SQLITE_PATH%"
     set "REDIS_URL=%REDIS_URL%"
     set "VALKEY_URL=%VALKEY_URL%"
+    set "VALKEY_DATA_DIR=%VALKEY_DATA_DIR%"
+    set "REDIS_DATA_DIR=%REDIS_DATA_DIR%"
     set "DATA_MOUNT_DIR=%DATA_MOUNT_DIR%"
     set "DATA_DISK_MOUNT=%DATA_DISK_MOUNT%"
     set "OLLAMA_MODELS_DIR=%OLLAMA_MODELS_DIR%"
     set "OLLAMA_MODELS=%OLLAMA_MODELS%"
+    set "OLLAMA_HOST=%OLLAMA_HOST%"
+    set "OLLAMA_NUM_PARALLEL=%OLLAMA_NUM_PARALLEL%"
+    set "OLLAMA_MAX_LOADED_MODELS=%OLLAMA_MAX_LOADED_MODELS%"
+    set "OLLAMA_FLASH_ATTENTION=%OLLAMA_FLASH_ATTENTION%"
+    set "OLLAMA_KV_CACHE_TYPE=%OLLAMA_KV_CACHE_TYPE%"
+    set "OLLAMA_CONTEXT_LENGTH=%OLLAMA_CONTEXT_LENGTH%"
+    set "OLLAMA_MAX_QUEUE=%OLLAMA_MAX_QUEUE%"
+    set "OLLAMA_KEEP_ALIVE=%OLLAMA_KEEP_ALIVE%"
+    set "GGML_BACKEND_AMX=%GGML_BACKEND_AMX%"
+    set "OLLAMA_LLM_LIBRARY=%OLLAMA_LLM_LIBRARY%"
+    set "OLLAMA_NUM_GPU=%OLLAMA_NUM_GPU%"
     set "REMOTE_USER=%REMOTE_USER%"
     set "REMOTE_GROUP=%REMOTE_GROUP%"
     set "REMOTE_HOME=%REMOTE_HOME%"
@@ -154,6 +170,67 @@ set "FORMAT=%~3"
 if "!FORMAT!"=="" set "FORMAT=cmd"
 call :print_manifest "!MANIFEST_FILE!" "!FORMAT!"
 endlocal
+exit /b 0
+
+:: ## do_expand
+:: Expands manifest variable expressions in the named caller variable or string.
+:do_expand
+set "_DE_VAR=%~2"
+if "!_DE_VAR!"=="" (
+    endlocal
+    exit /b 0
+)
+call :expand_manifest_vars "!_DE_VAR!"
+set "_DE_RES=!%_DE_VAR%!"
+endlocal & set "%~2=%_DE_RES%"
+exit /b 0
+
+:: ## expand_manifest_vars
+:: Expands ${VAR:-default} and ${VAR} references in the named variable while preserving quotes, backslashes, and local $_vars.
+:expand_manifest_vars
+set "_emv_name=%~1"
+set "_emv_val=!%_emv_name%!"
+if "!_emv_val!"=="" exit /b 0
+where jq >nul 2>&1
+if errorlevel 1 exit /b 0
+for /f "delims=" %%x in ('jq -rn "reduce range(6) as $_ ($ENV._emv_val; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^{}]*)\\\\}\"; if (.k | startswith(\"_\")) and ((env[.k] // \"\") == \"\") then \"${\" + .k + \":-\" + .d + \"}\" else (env[.k] // \"\") | if . == \"\" then .d else . end end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; if (.k | startswith(\"_\")) and ((env[.k] // \"\") == \"\") then \"${\" + .k + \"}\" else (env[.k] // \"\") end))" 2^>nul') do set "!_emv_name!=%%x"
+exit /b 0
+
+:: ## dedup_path
+:: Deduplicates semicolon-separated entries in PATH and SERVICE_EXTRA_PATH while preserving first-seen order.
+:dedup_path
+set "_DP_OUT="
+for %%P in ("!PATH:;=" "!") do (
+    set "_DP_SEG=%%~P"
+    if not "!_DP_SEG!"=="" (
+        echo ";!_DP_OUT!;" | findstr /I /C:";!_DP_SEG!;" >nul 2>&1
+        if errorlevel 1 (
+            if defined _DP_OUT (
+                set "_DP_OUT=!_DP_OUT!;!_DP_SEG!"
+            ) else (
+                set "_DP_OUT=!_DP_SEG!"
+            )
+        )
+    )
+)
+if defined _DP_OUT set "PATH=!_DP_OUT!"
+if defined SERVICE_EXTRA_PATH (
+    set "_DP_EXTRA="
+    for %%P in ("!SERVICE_EXTRA_PATH:;=" "!") do (
+        set "_DP_SEG=%%~P"
+        if not "!_DP_SEG!"=="" (
+            echo ";!_DP_EXTRA!;" | findstr /I /C:";!_DP_SEG!;" >nul 2>&1
+            if errorlevel 1 (
+                if defined _DP_EXTRA (
+                    set "_DP_EXTRA=!_DP_EXTRA!;!_DP_SEG!"
+                ) else (
+                    set "_DP_EXTRA=!_DP_SEG!"
+                )
+            )
+        )
+    )
+    if defined _DP_EXTRA set "SERVICE_EXTRA_PATH=!_DP_EXTRA!"
+)
 exit /b 0
 
 :: ## emit_path
@@ -264,8 +341,13 @@ for /f "delims=" %%m in ('jq -r "(.infrastructure.storage.disks // .storage.disk
         if "!DATA_DISK_MOUNT!"=="" set "DATA_DISK_MOUNT=%%m"
     )
 )
-if not "!DATA_MOUNT_DIR!"=="" (
-    if "!OLLAMA_MODELS_DIR!"=="" set "OLLAMA_MODELS_DIR=!DATA_MOUNT_DIR!/ollama_models"
+if not "!OLLAMA_MODELS_DIR!"=="" (
+    if not "!OLLAMA_MODELS_DIR:~0,1!"=="/" if not "!OLLAMA_MODELS_DIR:~0,1!"=="\" if not "!OLLAMA_MODELS_DIR:~1,1!"==":" set "OLLAMA_MODELS_DIR="
+)
+set "_HM_DEF_MOUNT=!DATA_DISK_MOUNT!"
+if "!_HM_DEF_MOUNT!"=="" set "_HM_DEF_MOUNT=!DATA_MOUNT_DIR!"
+if not "!_HM_DEF_MOUNT!"=="" (
+    if "!OLLAMA_MODELS_DIR!"=="" set "OLLAMA_MODELS_DIR=!_HM_DEF_MOUNT!/ollama_models"
 )
 if defined OLLAMA_MODEL_LIST (
     if exist "!_HM_DIR!\.env.libscript" (
@@ -282,6 +364,7 @@ if defined OLLAMA_MODEL_LIST (
         )
     )
 )
+call :dedup_path
 exit /b 0
 
 :: ## emit_var
@@ -339,7 +422,7 @@ if /i "!_PM_FMT!"=="dotenv" (
     )
     call :emit_var "!_PM_FMT!" "SERVICE_PATH" "!PATH!"
 )
-for %%K in (NODEJS_VERSION PYTHON_VERSION PYTHONHOME PYTHONPATH VIRTUAL_ENV GOROOT GO_VERSION JAVA_HOME JAVA_VERSION RUST_VERSION CARGO_HOME RUSTUP_HOME POSTGRES_VERSION POSTGRESQL_VERSION POSTGRES_URL DATABASE_URL DUCKDB_PATH SQLITE_PATH REDIS_URL VALKEY_URL) do (
+for %%K in (NODEJS_VERSION PYTHON_VERSION PYTHONHOME PYTHONPATH VIRTUAL_ENV GOROOT GO_VERSION JAVA_HOME JAVA_VERSION RUST_VERSION CARGO_HOME RUSTUP_HOME POSTGRES_VERSION POSTGRESQL_VERSION POSTGRES_URL POSTGRES_DATA_DIR PGDATA DATABASE_URL DUCKDB_PATH SQLITE_PATH REDIS_URL VALKEY_URL VALKEY_DATA_DIR REDIS_DATA_DIR OLLAMA_MODELS_DIR OLLAMA_MODELS OLLAMA_HOST OLLAMA_NUM_PARALLEL OLLAMA_MAX_LOADED_MODELS OLLAMA_FLASH_ATTENTION OLLAMA_KV_CACHE_TYPE OLLAMA_CONTEXT_LENGTH OLLAMA_MAX_QUEUE OLLAMA_KEEP_ALIVE GGML_BACKEND_AMX OLLAMA_LLM_LIBRARY OLLAMA_NUM_GPU) do (
     if defined %%K (
         call :emit_var "!_PM_FMT!" "%%K" "!%%K!"
     )

@@ -91,7 +91,7 @@ if "%RUST_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
         set "RUST_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
     ) else (
-        set "RUST_INSTALL_METHOD=libscript_native"
+        set "RUST_INSTALL_METHOD=system"
     )
 )
 

@@ -54,6 +54,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "OUT_DIR=\"\$(cd \"\$OUT_DIR\" && pwd)\""
       meta_depends=""
       safe_app_name="$(printf '%s\n' "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9+.-' '-' | sed 's/^-*//;s/-*$//')"
+      # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2

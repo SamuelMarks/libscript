@@ -174,7 +174,11 @@ if "%EXACT_VERSION%"=="latest" (
 
 if not errorlevel 1 goto :create_alias
 
-echo Failed to install vllm via pip. Falling back to build from source.
+if /i not "%VLLM_INSTALL_METHOD%"=="from-source" (
+    echo Failed to install vllm via pip ^(set VLLM_INSTALL_METHOD=from-source to build from source^).
+    exit /b 1
+)
+echo Failed to install vllm via pip. Building from source...
 set "VLLM_SRC_DIR=%DOWNLOAD_DIR%\vllm-src"
 if not exist "%VLLM_SRC_DIR%\.git" (
     git clone "https://github.com/vllm-project/vllm.git" "%VLLM_SRC_DIR%"

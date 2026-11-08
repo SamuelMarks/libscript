@@ -30,6 +30,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${NETCTL_DIR:=$(cd "$SCRIPT_DIR/.." && pwd)}"
 SCRIPT_NAME="${NETCTL_DIR}/lib/prelude.sh"
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_vagrantfile

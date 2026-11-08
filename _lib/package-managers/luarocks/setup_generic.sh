@@ -96,6 +96,7 @@ case "$ACTION" in
         if ! command -v priv >/dev/null 2>&1; then
           SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
           export SCRIPT_NAME
+          # shellcheck disable=SC1090,SC1091
           . "${SCRIPT_NAME}"
         fi
         priv ln -sf /usr/local/bin/luarocks54 /usr/local/bin/luarocks || true

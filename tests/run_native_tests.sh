@@ -307,6 +307,7 @@ main() {
   done
 
   # Deduplicate targets
+  # shellcheck disable=SC2086
   _unique_targets=$(printf '%s\n' ${_expanded_targets} | grep -v '^$' | sort -u)
 
   _os_info=$(detect_host_os "${_os_override}")

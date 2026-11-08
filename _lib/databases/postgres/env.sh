@@ -59,6 +59,11 @@ if [ "${POSTGRES_PASSWORD_FILE-}" ] && [ -f "${POSTGRES_PASSWORD_FILE}" ]; then
 fi
 export POSTGRES_SERVICE_USER="${POSTGRES_SERVICE_USER:-postgres}"
 export POSTGRES_SERVICE_GROUP="${POSTGRES_SERVICE_GROUP:-${POSTGRES_SERVICE_USER}}"
+POSTGRES_DATA_DIR="${POSTGRES_DATA_DIR:-${PGDATA:-}}"
+if [ -n "$POSTGRES_DATA_DIR" ]; then
+  export POSTGRES_DATA_DIR
+  export PGDATA="${POSTGRES_DATA_DIR}"
+fi
 
 if [ -n "${POSTGRES_URL:-}" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" ]; then
   _pg_parsed=$(env -u SCRIPT_NAME -u STACK "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" "$POSTGRES_URL" --eval 2>/dev/null || true)

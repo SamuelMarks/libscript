@@ -75,7 +75,16 @@ for /f "delims=" %%U in ('echo !db_entry! ^| jq -r ".user // .username // \"post
 for /f "delims=" %%P in ('echo !db_entry! ^| jq -r ".path // .file // .db_path // empty" 2^>nul') do set "_path=%%P"
 
 if /i "!_eng!"=="duckdb" (
-    if "!_path!"=="" set "_path=!MANIFEST_DIR!\data\!_name!.duckdb"
+    if "!_path!"=="" (
+        set "_dd_def_m=%DATA_DISK_MOUNT%"
+        if "!_dd_def_m!"=="" set "_dd_def_m=%DATA_MOUNT_DIR%"
+        if "!_dd_def_m!"=="" set "_dd_def_m=/mnt/data"
+        if exist "!_dd_def_m!\!_name!.duckdb" (
+            set "_path=!_dd_def_m!\!_name!.duckdb"
+        ) else (
+            set "_path=!MANIFEST_DIR!\data\!_name!.duckdb"
+        )
+    )
     set "STACK="
     call "!SCRIPT_DIR!\deprovision_schema.cmd" --engine duckdb --schema "!_path!" --user "!_user!"
     for /f "delims=" %%F in ('echo !db_entry! ^| jq -r ".fallback_paths[]? // empty" 2^>nul') do (

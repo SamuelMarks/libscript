@@ -120,6 +120,7 @@ function Audit-File {
         $extVmLines = @()
         $rawUnameLines = @()
         $unnecessaryDqLines = @()
+        $sc2015Lines = @()
         $allowFetchNext = $false
         $allowPkgNext = $false
         $allowDaemonNext = $false
@@ -197,6 +198,9 @@ function Audit-File {
                 }
                 if ($ln -match '^\s*(export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"\s*$' -or $ln -match '^\s*(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?\s*$' -or $ln -match '^\s*libscript_depends(\s+"[A-Za-z0-9_.-]+")+(\s*\|\|\s*true)?\s*$') {
                     $unnecessaryDqLines += $lineNum
+                }
+                if ($ln -match '^\s*(\[[^\]]+\](\s*&&\s*\[[^\]]+\])*|command\s+-v\s+[^|;]+)\s*&&\s*[^\[{|;&][^|;&]*(\|\s*[^|;&]+)*\|\|\s*(true|:)([\s;]|$)') {
+                    $sc2015Lines += $lineNum
                 }
                 $allowFetchNext = $false
                 $allowPkgNext = $false
@@ -447,6 +451,9 @@ function Audit-File {
         }
         if ($unnecessaryDqLines.Count -gt 0) {
             Log-Violation -File $FilePath -Rule "UNNECESSARY_DOUBLE_QUOTES" -Details "Double quotes used where single quotes suffice."
+        }
+        if ($sc2015Lines.Count -gt 0) {
+            Log-Violation -File $FilePath -Rule "SC2015_AND_OR" -Details "SC2015-prone A && B || true chain detected (use explicit if ...; then ... || true; fi)."
         }
     }
 

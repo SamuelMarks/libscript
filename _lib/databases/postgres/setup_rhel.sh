@@ -43,6 +43,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if [ -n "${POSTGRES_VERSION:-}" ] && [ "${POSTGRES_VERSION}" != "latest" ]; then
+  # shellcheck disable=SC1090,SC1091
   REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION:-9}")"
   VER="${REDHAT_SUPPORT_PRODUCT_VERSION%%.*}"
   libscript_depends 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH:-x86_64}"'/pgdg-redhat-repo-latest.noarch.rpm' 2>/dev/null || true

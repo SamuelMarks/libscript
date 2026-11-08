@@ -88,6 +88,11 @@ for _rh_std_bin in "${HOME:-/root}/.local/bin" "/usr/local/bin" "/usr/bin" "/bin
     *) export PATH="${_rh_std_bin}:${PATH:-/usr/bin:/bin}" ;;
   esac
 done
+if type libscript_dedup_path >/dev/null 2>&1; then
+  PATH=$(libscript_dedup_path "$PATH")
+  export PATH
+  export SERVICE_PATH="$PATH"
+fi
 
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
   OS_NAME="${UNAME_LOWER:-linux}"
@@ -260,7 +265,9 @@ while IFS= read -r hook <&3; do
       fi
       case "$cmd" in
         *"uv sync"*|*"pip install -r requirements.txt"*)
-          command -v libscript_python_stamp_venv >/dev/null 2>&1 && libscript_python_stamp_venv "$HOOK_WD" || true
+          if command -v libscript_python_stamp_venv >/dev/null 2>&1; then
+            libscript_python_stamp_venv "$HOOK_WD" || true
+          fi
           ;;
       esac
       _h_end=$(date +%s 2>/dev/null || printf '0')

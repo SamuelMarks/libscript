@@ -31,6 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 SYSROOT="${1:-${LIBSCRIPT_ROOT_DIR}/build/rootfs}"
+export SYSROOT
 OUT_DIR="${2:-${LIBSCRIPT_ROOT_DIR}/build/images/raw/microvm}"
 
 mkdir -p "$OUT_DIR"

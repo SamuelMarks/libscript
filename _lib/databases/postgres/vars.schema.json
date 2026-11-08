@@ -65,6 +65,10 @@
       "description": "Directory for PostgreSQL data cluster",
       "type": "string"
     },
+    "PGDATA": {
+      "description": "PostgreSQL data directory path (alias for POSTGRES_DATA_DIR)",
+      "type": "string"
+    },
     "POSTGRES_LOCALE": {
       "description": "Locale for PostgreSQL initdb (e.g. English, United States)",
       "type": "string"
@@ -111,6 +115,10 @@
     "POSTGRES_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying postgres available remote releases."
+    },
+    "POSTGRES_ETC_DIR": {
+      "type": "string",
+      "description": "Configuration directory override for PostgreSQL."
     }
   }
 }

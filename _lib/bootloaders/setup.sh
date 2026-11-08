@@ -33,6 +33,7 @@ ACTION="${1:-compile}"
 TARGET_SYSROOT="${2:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}}"
 BOOTLOADER="${3:-grub2-efi}"
 BOOT_MODE="${4:-uefi}"
+export BOOT_MODE
 
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 mkdir -p "$STAMPS_DIR"

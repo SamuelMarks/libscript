@@ -59,6 +59,7 @@ parse_and_load() {
   done << EOF
 $_uri_out
 EOF
+  export DB_PATH DB_SSL_CERT DB_SSL_KEY DB_SSL_MODE DB_CHARSET
 }
 
 # 1. Test MySQL URI with percent-encoded password and SSL params

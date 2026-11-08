@@ -88,6 +88,7 @@ exec %s
 ' "$name" "$cmd"
       ;;
     bsd-rc)
+      # shellcheck disable=SC2016
       printf '#!/bin/sh
 # PROVIDE: %s
 . /etc/rc.subr

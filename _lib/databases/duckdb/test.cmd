@@ -58,4 +58,6 @@ if %errorlevel% neq 0 (
   exit /b 0
 )
 
-duckdb -c "SELECT 1;"
+duckdb --version
+if errorlevel 1 exit /b 1
+duckdb :memory: -c "SELECT 1;"

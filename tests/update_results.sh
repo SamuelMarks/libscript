@@ -803,6 +803,7 @@ update_todo_plan() {
   _tmp_todo=$(mktemp "${TMPDIR:-/tmp}/todo_update.XXXXXX")
   _current_comp=""
 
+  # shellcheck disable=SC2016
   while IFS= read -r _line || [ -n "${_line}" ]; do
     case "${_line}" in
       '- [ ] `_lib/'*)
@@ -940,6 +941,7 @@ update_retest_plan() {
   fi
 
   _tmp_retest=$(mktemp "${TMPDIR:-/tmp}/retest_plan.XXXXXX")
+  # shellcheck disable=SC2016
   while IFS= read -r _line || [ -n "${_line}" ]; do
     case "${_line}" in
       *'Track retesting progress by checking off'*'- [ ]'*)

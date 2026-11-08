@@ -203,6 +203,18 @@
       "type": "string",
       "description": "Flag (0 or 1) to mock systemd service management calls during testing."
     },
+    "LIBSCRIPT_SYSTEMD_DIR": {
+      "type": "string",
+      "description": "Override directory for systemd unit and drop-in override files (defaults to /etc/systemd/system)."
+    },
+    "LIBSCRIPT_ETC_DIR": {
+      "type": "string",
+      "description": "Override root configuration directory for system service config files (defaults to /etc)."
+    },
+    "LIBSCRIPT_OVERRIDE_CHANGED": {
+      "type": "string",
+      "description": "Internal flag (0 or 1) set by libscript_override_service_env when a service environment file was modified."
+    },
     "LIBSCRIPT_ARIA2_EXPORT_FILE": {
       "type": "string",
       "description": "File path to export aria2-compatible download URLs instead of downloading immediately."
@@ -334,6 +346,50 @@
     "LIBSCRIPT_VOLUME_NAME": {
       "type": "string",
       "description": "Logical storage volume name for persistent data mounts."
+    },
+    "LIBSCRIPT_LIB_SYSTEMD_DIR": {
+      "type": "string",
+      "description": "Override directory for vendor systemd unit files (defaults to /lib/systemd/system)."
+    },
+    "LIBSCRIPT_EXPORT_STAGE_DIR": {
+      "type": "string",
+      "description": "Staging directory used when exporting application and database state archives."
+    },
+    "LIBSCRIPT_IMPORT_STAGE_DIR": {
+      "type": "string",
+      "description": "Staging directory used when importing application and database state archives."
+    },
+    "LIBSCRIPT_HOME_BASE": {
+      "type": "string",
+      "description": "Base parent directory for user home directories (defaults to /home)."
+    },
+    "LIBSCRIPT_LOG_DIR": {
+      "type": "string",
+      "description": "System log directory override (defaults to /var/log)."
+    },
+    "LIBSCRIPT_ROOT_HOME": {
+      "type": "string",
+      "description": "Root user home directory override (defaults to /root)."
+    },
+    "LIBSCRIPT_USR_LOCAL_BIN": {
+      "type": "string",
+      "description": "Override directory for locally installed system binaries (defaults to /usr/local/bin)."
+    },
+    "LIBSCRIPT_USR_LOCAL_ETC": {
+      "type": "string",
+      "description": "Override directory for locally installed system configuration files (defaults to /usr/local/etc)."
+    },
+    "LIBSCRIPT_FREEBSD_RCD_DIR": {
+      "type": "string",
+      "description": "Override directory for FreeBSD rc.d service scripts (defaults to /usr/local/etc/rc.d)."
+    },
+    "LIBSCRIPT_INITD_DIR": {
+      "type": "string",
+      "description": "Override directory for SysV/OpenRC init.d scripts (defaults to /etc/init.d)."
+    },
+    "LIBSCRIPT_RUN_DIR": {
+      "type": "string",
+      "description": "Override runtime PID/socket directory (defaults to /var/run)."
     }
   }
 }

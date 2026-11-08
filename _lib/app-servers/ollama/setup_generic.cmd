@@ -98,6 +98,33 @@ where ollama >nul 2>&1
 if not errorlevel 1 exit /b 0
 exit /b 1
 
+:: ## configure_cpu_amx_and_verify_gemma
+:: Exports GGML_BACKEND_AMX=0 and OLLAMA_LLM_LIBRARY=cpu_avx2 on CPU-only Windows hosts and verifies authentic gemma:2b weights.
+:configure_cpu_amx_and_verify_gemma
+if "%GGML_BACKEND_AMX%"=="" set "GGML_BACKEND_AMX=0"
+where nvidia-smi >nul 2>&1
+if errorlevel 1 (
+    if "%OLLAMA_LLM_LIBRARY%"=="" set "OLLAMA_LLM_LIBRARY=cpu_avx2"
+    if "%OLLAMA_NUM_GPU%"=="" set "OLLAMA_NUM_GPU=0"
+)
+if "%LIBSCRIPT_DRY_RUN%"=="1" exit /b 0
+where ollama >nul 2>&1
+if errorlevel 1 exit /b 0
+set "_CAVG_GEMMA_ID="
+set "_CAVG_LLAMA_ID="
+for /f "skip=1 tokens=1,2" %%A in ('ollama list 2^>nul') do (
+    if /i "%%A"=="gemma:2b" set "_CAVG_GEMMA_ID=%%B"
+    if /i "%%A"=="llama3.2:1b" set "_CAVG_LLAMA_ID=%%B"
+)
+if not "!_CAVG_GEMMA_ID!"=="" if not "!_CAVG_LLAMA_ID!"=="" (
+    if /i "!_CAVG_GEMMA_ID!"=="!_CAVG_LLAMA_ID!" (
+        echo [WARN] [OLLAMA] Restoring authentic 'gemma:2b' weights after detecting alias... >&2
+        ollama rm "gemma:2b" >nul 2>&1
+        ollama pull "gemma:2b"
+    )
+)
+exit /b 0
+
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
@@ -167,13 +194,16 @@ exit /b 0
 if not "%FORCE_REINSTALL%"=="1" (
     call :find_existing_ollama
     if not errorlevel 1 (
+        call :configure_cpu_amx_and_verify_gemma
         echo [REUSE] ollama ^(%OLLAMA_VERSION%^) is already installed.
         exit /b 0
     )
 )
 if "%OLLAMA_INSTALL_METHOD%"=="system" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ollama
-    exit /b !errorlevel!
+    set "_SYS_RC=!errorlevel!"
+    call :configure_cpu_amx_and_verify_gemma
+    exit /b !_SYS_RC!
 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%"
@@ -205,11 +235,13 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     )
     if not exist "%ALIAS_DIR%" mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
 )
+call :configure_cpu_amx_and_verify_gemma
 exit /b 0
 
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status, configure, ensure-models, prune-models) to service.cmd.
 :action_service
+call :configure_cpu_amx_and_verify_gemma
 if exist "%SCRIPT_DIR%\service.cmd" (
     set "STACK="
     call "%SCRIPT_DIR%\service.cmd" "%ACTION%" %*

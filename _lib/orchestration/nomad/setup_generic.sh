@@ -37,6 +37,7 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info
 done
 
 NOMAD_INSTALL_METHOD="$(libscript_resolve_install_method "NOMAD")"
+export NOMAD_INSTALL_METHOD
 ACTION="${ACTION:-${1:-install}}"
 VERSION="${NOMAD_VERSION:-1.9.0}"
 

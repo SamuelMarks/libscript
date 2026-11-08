@@ -155,13 +155,26 @@ if "!DRY_RUN_MODE!"=="0" (
         exit /b 1
     )
 )
+set "_IMPORT_STAGE=%LIBSCRIPT_IMPORT_STAGE_DIR%"
+if "!_IMPORT_STAGE!"=="" (
+    set "_rc_rtmp=%REMOTE_TMPDIR%"
+    if "!_rc_rtmp!"=="" set "_rc_rtmp=/tmp"
+    set "_IMPORT_STAGE=!_rc_rtmp!/libscript_import_stage"
+)
 set "CLI=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\!PROVIDER!\cli.cmd"
 call "!CLI!" node sync "!NODE!" "!RG_CTX!"
 if errorlevel 1 exit /b 1
-call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_import_stage && mkdir -p /tmp/libscript_import_stage"
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf '!_IMPORT_STAGE!' && mkdir -p '!_IMPORT_STAGE!'"
 if errorlevel 1 exit /b 1
-call "!CLI!" node upload "!NODE!" "!RG_CTX!" "!LOCAL_SRC!/" "/tmp/libscript_import_stage/"
+call "!CLI!" node upload "!NODE!" "!RG_CTX!" "!LOCAL_SRC!/" "!_IMPORT_STAGE!/"
 if errorlevel 1 exit /b 1
+if "%CERT_STORE_DIR%"=="" (
+    set "_rc_def_mount=%DATA_DISK_MOUNT%"
+    if "!_rc_def_mount!"=="" set "_rc_def_mount=%DATA_MOUNT_DIR%"
+    if "!_rc_def_mount!"=="" set "_rc_def_mount=/mnt/data"
+    set "CERT_STORE_DIR=!_rc_def_mount!/certs"
+)
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "if [ -d '!_IMPORT_STAGE!/certs/live' ]; then sudo mkdir -p '!CERT_STORE_DIR!/live' && sudo chmod -R u+w '!CERT_STORE_DIR!/live' 2>/dev/null || true; sudo cp -a '!_IMPORT_STAGE!/certs/live/.' '!CERT_STORE_DIR!/live/' 2>/dev/null || true; fi" >nul 2>&1
 set "REM_SPECS=!APP_SPECS!"
 
 :: ## import_next_app
@@ -189,7 +202,7 @@ if "!_MATCH!"=="0" if exist "!_CUR_DEST!\libscript.json" (
     if not errorlevel 1 set "_MATCH=1"
 )
 if "!_MATCH!"=="1" (
-    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
+    call "!CLI!" node exec "!NODE!" "!RG_CTX!" "cd ~/!_CUR_DEST! && sudo CERT_STORE_DIR='!CERT_STORE_DIR!' SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' LIBSCRIPT_ROOT_DIR=$HOME/libscript $HOME/libscript/libscript.sh import-state libscript.json '!_IMPORT_STAGE!'"
     if errorlevel 1 exit /b 1
 )
 goto :import_next_app
@@ -197,7 +210,7 @@ goto :import_next_app
 :: ## import_finish
 :: Cleans up remote staging directory, verifies post-import health if enabled, and prints report.
 :import_finish
-call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf /tmp/libscript_import_stage"
+call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf '!_IMPORT_STAGE!'"
 set "IMPORT_REPORT_COUNT=0"
 set "REM_SPECS=!APP_SPECS!"
 call :verify_imported_apps

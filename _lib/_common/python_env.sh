@@ -149,12 +149,19 @@ libscript_python_resolve() {
 # Creates a Python virtual environment at the specified directory.
 libscript_python_venv() {
   if [ "$#" -lt 1 ]; then
-    log_error 'Usage: libscript_python_venv <target_dir> [python_version]'
+    log_error 'Usage: libscript_python_venv [label_or_dir] <target_dir> [python_version] [req_file]'
     return 1
   fi
 
-  _target_dir="$1"
-  _python_version="${2:-}"
+  if [ "$#" -ge 2 ] && { [ -z "$1" ] || [ "$1" = "libscript_python_venv" ] || [ "$1" = ":libscript_python_venv" ]; }; then
+    _target_dir="$2"
+    _python_version="${3:-}"
+    _req_file="${4:-}"
+  else
+    _target_dir="$1"
+    _python_version="${2:-}"
+    _req_file="${3:-}"
+  fi
   _backend="${LIBSCRIPT_PYTHON_VENV_BACKEND:-venv}"
   
   log_info "Creating Python virtual environment at '${_target_dir}' using backend '${_backend}'..."
@@ -198,13 +205,55 @@ libscript_python_venv() {
       return 1
       ;;
   esac
+
+  if [ -d "${_target_dir}" ]; then
+    printf '%s:%s\n' "${_backend}" "${_python_version:-default}" > "${_target_dir}/.libscript_venv_interp" 2>/dev/null || true
+  fi
+
+  if [ -n "${_req_file}" ] && [ -f "${_req_file}" ]; then
+    _req_hash=$(cksum "${_req_file}" 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+    _pip_rc=1
+    if [ "${_backend}" = "uv" ] && command -v uv >/dev/null 2>&1; then
+      if uv pip install --python "${_target_dir}/bin/python" -r "${_req_file}"; then
+        _pip_rc=0
+      fi
+    elif [ -x "${_target_dir}/bin/pip" ]; then
+      if "${_target_dir}/bin/pip" install -r "${_req_file}"; then
+        _pip_rc=0
+      fi
+    elif [ -f "${_target_dir}/Scripts/pip.exe" ]; then
+      if "${_target_dir}/Scripts/pip.exe" install -r "${_req_file}"; then
+        _pip_rc=0
+      fi
+    fi
+    if [ "${_pip_rc}" -eq 0 ]; then
+      printf '%s\n' "${_req_hash}" > "${_target_dir}/.libscript_lock_hash" 2>/dev/null || true
+      printf '%s\n' "${_req_hash}" > "${_target_dir}/.libscript_py_hash" 2>/dev/null || true
+    else
+      return 1
+    fi
+  fi
 }
 
 # ## libscript_python_compute_lock_fp
 # Computes a deterministic digest over Python dependency specification and lockfiles in a directory.
 libscript_python_compute_lock_fp() {
   _pclf_dir="${1:-.}"
-  (cd "$_pclf_dir" 2>/dev/null && cksum uv.lock pyproject.toml requirements.txt setup.py 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none\n')
+  (
+    cd "$_pclf_dir" 2>/dev/null || exit 0
+    _pclf_out=$(
+      for _pclf_f in uv.lock pyproject.toml requirements.txt requirements-prod.txt setup.py; do
+        if [ -f "$_pclf_f" ]; then
+          cksum "$_pclf_f" 2>/dev/null || true
+        fi
+      done
+    )
+    if [ -n "$_pclf_out" ]; then
+      printf '%s\n' "$_pclf_out" | cksum | awk '{print $1"_"$2}'
+    else
+      printf 'none\n'
+    fi
+  )
 }
 
 # ## libscript_python_venv_is_up_to_date
@@ -219,7 +268,7 @@ libscript_python_venv_is_up_to_date() {
   fi
   _pvut_cur=$(libscript_python_compute_lock_fp "$_pvut_dir")
   [ -n "$_pvut_cur" ] && [ "$_pvut_cur" != "none" ] || return 1
-  for _pvut_stamp in "${_pvut_dir}/.venv/.libscript_py_hash" "${_pvut_dir}/.venv/.libscript_lock_hash"; do
+  for _pvut_stamp in "${_pvut_dir}/.venv/.libscript_lock_hash" "${_pvut_dir}/.venv/.libscript_py_hash"; do
     if [ -f "$_pvut_stamp" ] && [ "$(cat "$_pvut_stamp" 2>/dev/null || true)" = "$_pvut_cur" ]; then
       return 0
     fi
@@ -233,9 +282,97 @@ libscript_python_stamp_venv() {
   _psv_dir="${1:-.}"
   if [ -d "${_psv_dir}/.venv" ]; then
     _psv_cur=$(libscript_python_compute_lock_fp "$_psv_dir")
-    printf '%s\n' "$_psv_cur" > "${_psv_dir}/.venv/.libscript_py_hash" 2>/dev/null || true
-    printf '%s\n' "$_psv_cur" > "${_psv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true
+    if [ -n "$_psv_cur" ] && [ "$_psv_cur" != "none" ]; then
+      printf '%s\n' "$_psv_cur" > "${_psv_dir}/.venv/.libscript_py_hash" 2>/dev/null || true
+      printf '%s\n' "$_psv_cur" > "${_psv_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true
+    fi
   fi
+}
+
+# ## libscript_python_sync_deps
+# Synchronizes Python project dependencies (.venv) via uv sync or pip install -r with deterministic lockfile hash caching.
+libscript_python_sync_deps() {
+  _psd_dir="${1:-.}"
+  _psd_ver="${2:-${PYTHON_VERSION:-3.12}}"
+  if [ "$#" -ge 2 ]; then
+    shift 2
+  elif [ "$#" -ge 1 ]; then
+    shift 1
+  fi
+
+  [ -d "$_psd_dir" ] || return 0
+  if [ -z "$_psd_ver" ] || [ "$_psd_ver" = "null" ] || [ "$_psd_ver" = "latest" ] || [ "$_psd_ver" = "default" ]; then
+    _psd_ver='3.12'
+  fi
+
+  _py_deps_hash=$(libscript_python_compute_lock_fp "$_psd_dir")
+  if [ "$_py_deps_hash" = "none" ] && [ ! -d "${_psd_dir}/.venv" ]; then
+    return 0
+  fi
+
+  _psd_bins_ok=1
+  for _psd_bin in "$@"; do
+    [ -n "$_psd_bin" ] || continue
+    if [ ! -x "${_psd_dir}/.venv/bin/${_psd_bin}" ] && [ ! -f "${_psd_dir}/.venv/Scripts/${_psd_bin}.exe" ]; then
+      _psd_bins_ok=0
+      break
+    fi
+  done
+
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && { [ -x "${_psd_dir}/.venv/bin/python" ] || [ -f "${_psd_dir}/.venv/Scripts/python.exe" ]; } && [ "$_psd_bins_ok" -eq 1 ] && [ -f "${_psd_dir}/.venv/.libscript_lock_hash" ] && [ "$(cat "${_psd_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true)" = "$_py_deps_hash" ]; then
+    printf '[REUSE] %s .venv dependencies up-to-date (hash %s); skipping install.\n' "$_psd_dir" "$_py_deps_hash"
+    return 0
+  fi
+
+  if [ ! -x "${_psd_dir}/.venv/bin/python" ] && [ ! -f "${_psd_dir}/.venv/Scripts/python.exe" ]; then
+    if command -v uv >/dev/null 2>&1; then
+      LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "" "${_psd_dir}/.venv" "$_psd_ver" || libscript_python_venv "" "${_psd_dir}/.venv" "$_psd_ver" || return 1
+    else
+      libscript_python_venv "" "${_psd_dir}/.venv" "$_psd_ver" || return 1
+    fi
+  fi
+
+  _psd_rc=0
+  if { [ -f "${_psd_dir}/uv.lock" ] || [ -f "${_psd_dir}/pyproject.toml" ]; } && command -v uv >/dev/null 2>&1; then
+    (
+      cd "$_psd_dir" && {
+        uv sync --python "$_psd_ver" || uv pip install --python "${_psd_dir}/.venv/bin/python" -e .
+      }
+    ) || _psd_rc=$?
+  elif [ -f "${_psd_dir}/pyproject.toml" ] || [ -f "${_psd_dir}/setup.py" ]; then
+    if [ -x "${_psd_dir}/.venv/bin/pip" ]; then
+      (cd "$_psd_dir" && "${_psd_dir}/.venv/bin/pip" install -e .) || _psd_rc=$?
+    fi
+  fi
+
+  if [ "$_psd_rc" -eq 0 ] && [ -f "${_psd_dir}/requirements.txt" ]; then
+    if [ -x "${_psd_dir}/.venv/bin/pip" ]; then
+      "${_psd_dir}/.venv/bin/pip" install -r "${_psd_dir}/requirements.txt" || _psd_rc=$?
+    elif command -v uv >/dev/null 2>&1; then
+      uv pip install --python "${_psd_dir}/.venv/bin/python" -r "${_psd_dir}/requirements.txt" || _psd_rc=$?
+    else
+      "${_psd_dir}/.venv/bin/python" -m pip install -r "${_psd_dir}/requirements.txt" || _psd_rc=$?
+    fi
+  fi
+
+  if [ "$_psd_rc" -eq 0 ] && [ -f "${_psd_dir}/requirements-prod.txt" ]; then
+    if [ -x "${_psd_dir}/.venv/bin/pip" ]; then
+      "${_psd_dir}/.venv/bin/pip" install -r "${_psd_dir}/requirements-prod.txt" || _psd_rc=$?
+    elif command -v uv >/dev/null 2>&1; then
+      uv pip install --python "${_psd_dir}/.venv/bin/python" -r "${_psd_dir}/requirements-prod.txt" || _psd_rc=$?
+    else
+      "${_psd_dir}/.venv/bin/python" -m pip install -r "${_psd_dir}/requirements-prod.txt" || _psd_rc=$?
+    fi
+  fi
+
+  if [ "$_psd_rc" -eq 0 ] && [ -d "${_psd_dir}/.venv" ]; then
+    _py_deps_hash=$(libscript_python_compute_lock_fp "$_psd_dir")
+    if [ -n "$_py_deps_hash" ] && [ "$_py_deps_hash" != "none" ]; then
+      printf '%s\n' "$_py_deps_hash" > "${_psd_dir}/.venv/.libscript_lock_hash" 2>/dev/null || true
+      printf '%s\n' "$_py_deps_hash" > "${_psd_dir}/.venv/.libscript_py_hash" 2>/dev/null || true
+    fi
+  fi
+  return "$_psd_rc"
 }
 
 # ## libscript_python_ensure_venv_owner
@@ -248,7 +385,7 @@ libscript_python_ensure_venv_owner() {
   _venv_home="${4:-}"
 
   [ -n "$_venv_dir" ] && [ -d "$_venv_dir" ] || return 0
-  if [ ! -f "${_venv_dir}/pyproject.toml" ] && [ ! -f "${_venv_dir}/requirements.txt" ] && [ ! -d "${_venv_dir}/.venv" ]; then
+  if [ ! -f "${_venv_dir}/pyproject.toml" ] && [ ! -f "${_venv_dir}/requirements.txt" ] && [ ! -f "${_venv_dir}/requirements-prod.txt" ] && [ ! -d "${_venv_dir}/.venv" ]; then
     return 0
   fi
 
@@ -271,17 +408,7 @@ libscript_python_ensure_venv_owner() {
     esac
   fi
 
-  if ! libscript_python_venv_is_up_to_date "$_venv_dir"; then
-    if command -v uv >/dev/null 2>&1; then
-      if [ ! -x "${_venv_dir}/.venv/bin/python" ]; then
-        HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" LIBSCRIPT_PYTHON_VENV_BACKEND=uv libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
-      fi
-      (cd "$_venv_dir" && HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" PATH="${PATH}:${_venv_home}/.local/bin:/root/.local/bin" uv sync --python "$_venv_ver" 2>/dev/null || HOME="$_venv_home" uv sync 2>/dev/null || true)
-    else
-      libscript_python_venv "${_venv_dir}/.venv" "$_venv_ver" 2>/dev/null || true
-    fi
-    libscript_python_stamp_venv "$_venv_dir"
-  fi
+  HOME="$_venv_home" UV_PYTHON_INSTALL_DIR="${_venv_home}/.local/share/uv/python" UV_CACHE_DIR="${_venv_home}/.cache/uv" PATH="${PATH}:${_venv_home}/.local/bin:/root/.local/bin" libscript_python_sync_deps "$_venv_dir" "$_venv_ver" || true
 
   if [ -n "$_venv_user" ] && id "$_venv_user" >/dev/null 2>&1 && [ -d "${_venv_dir}/.venv" ]; then
     _venv_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_venv_user}}"

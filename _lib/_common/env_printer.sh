@@ -37,6 +37,7 @@ _emit_path_entry() {
   [ -z "$_ep_dir" ] && return 0
   case "$_ep_fmt" in
     docker)
+      # shellcheck disable=SC2016
       printf 'ENV PATH="%s:$PATH"\n' "$_ep_dir"
       ;;
     docker_compose)
@@ -73,46 +74,78 @@ EOF
   esac
 }
 
+# ## libscript_dedup_path
+# Deduplicates a colon-separated PATH string while preserving first-seen directory order.
+libscript_dedup_path() {
+  _ldp_in="${1:-${PATH:-}}"
+  _ldp_out=""
+  _ldp_old_ifs="${IFS:-}"
+  IFS=':'
+  for _ldp_seg in $_ldp_in; do
+    [ -z "$_ldp_seg" ] && continue
+    case ":${_ldp_out}:" in
+      *":${_ldp_seg}:"*) ;;
+      *) _ldp_out="${_ldp_out:+${_ldp_out}:}${_ldp_seg}" ;;
+    esac
+  done
+  IFS="$_ldp_old_ifs"
+  printf '%s\n' "$_ldp_out"
+}
+
 # ## libscript_expand_manifest_vars
 # Pure POSIX awk-based expander for ${VAR:-default}, ${VAR}, and $VAR references in manifest strings.
+# Uses ENVIRON["LEMV_INPUT"] instead of awk -v to preserve C-style escape sequences (\", \r, \n, \t, \\) verbatim.
+# Supports nested ${VAR:-...${INNER}...} defaults and preserves local shell variables ($_var) or unset unbraced $VAR references.
 libscript_expand_manifest_vars() {
   _emv_val="${1:-}"
   case "$_emv_val" in
     *'$'*)
-      _emv_val=$(awk -v input="$_emv_val" '
+      _emv_val=$(LEMV_INPUT="$_emv_val" awk '
         BEGIN {
-          s = input
-          for (pass = 0; pass < 3; pass++) {
+          s = ENVIRON["LEMV_INPUT"]
+          for (pass = 0; pass < 6; pass++) {
             out = ""
-            while (match(s, /\$\{[A-Za-z_][A-Za-z0-9_]*(:-[^}]*)?\}/)) {
+            while (match(s, /\$\{[A-Za-z_][A-Za-z0-9_]*(:-[^{}]*)?\}/)) {
               out = out substr(s, 1, RSTART - 1)
               token = substr(s, RSTART + 2, RLENGTH - 3)
               sep = index(token, ":-")
               if (sep > 0) {
                 k = substr(token, 1, sep - 1)
                 def_val = substr(token, sep + 2)
-                v = (k in ENVIRON && ENVIRON[k] != "") ? ENVIRON[k] : def_val
+                if (substr(k, 1, 1) == "_" && !(k in ENVIRON)) {
+                  v = substr(s, RSTART, RLENGTH)
+                } else {
+                  v = (k in ENVIRON && ENVIRON[k] != "") ? ENVIRON[k] : def_val
+                }
               } else {
                 k = token
-                v = (k in ENVIRON) ? ENVIRON[k] : ""
+                if (substr(k, 1, 1) == "_" && !(k in ENVIRON)) {
+                  v = substr(s, RSTART, RLENGTH)
+                } else {
+                  v = (k in ENVIRON) ? ENVIRON[k] : ""
+                }
               }
               out = out v
               s = substr(s, RSTART + RLENGTH)
             }
             s = out s
-            out2 = ""
-            while (match(s, /\$[A-Za-z_][A-Za-z0-9_]*/)) {
-              out2 = out2 substr(s, 1, RSTART - 1)
-              k = substr(s, RSTART + 1, RLENGTH - 1)
-              v = (k in ENVIRON) ? ENVIRON[k] : ""
-              out2 = out2 v
-              s = substr(s, RSTART + RLENGTH)
-            }
-            s = out2 s
           }
+          out2 = ""
+          while (match(s, /\$[A-Za-z_][A-Za-z0-9_]*/)) {
+            out2 = out2 substr(s, 1, RSTART - 1)
+            k = substr(s, RSTART + 1, RLENGTH - 1)
+            if (substr(k, 1, 1) == "_" && !(k in ENVIRON)) {
+              v = "$" k
+            } else {
+              v = (k in ENVIRON && ENVIRON[k] != "") ? ENVIRON[k] : "$" k
+            }
+            out2 = out2 v
+            s = substr(s, RSTART + RLENGTH)
+          }
+          s = out2 s
           print s
         }
-      ' 2>/dev/null || printf '%s' "$_emv_val")
+      ' </dev/null 2>/dev/null || printf '%s' "$_emv_val")
       ;;
   esac
   printf '%s\n' "$_emv_val"
@@ -131,17 +164,21 @@ libscript_ensure_default_env_vars() {
   fi
   : "${REMOTE_USER:=$_ede_default_user}"
   : "${REMOTE_GROUP:=$REMOTE_USER}"
+  _ede_root_home="${LIBSCRIPT_ROOT_HOME:-/root}"
+  _ede_etc_dir="${LIBSCRIPT_ETC_DIR:-/etc}"
+  _ede_home_base="${LIBSCRIPT_HOME_BASE:-/home}"
+  _ede_usr_local_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
   if [ -z "${REMOTE_HOME:-}" ]; then
     if [ "$REMOTE_USER" = "root" ]; then
-      REMOTE_HOME='/root'
-    elif [ -r "/etc/passwd" ]; then
-      REMOTE_HOME=$(awk -F: -v u="$REMOTE_USER" '$1==u {print $6; exit}' /etc/passwd 2>/dev/null || true)
+      REMOTE_HOME="$_ede_root_home"
+    elif [ -r "${_ede_etc_dir}/passwd" ]; then
+      REMOTE_HOME=$(awk -F: -v u="$REMOTE_USER" '$1==u {print $6; exit}' "${_ede_etc_dir}/passwd" 2>/dev/null || true)
     fi
     if [ -z "${REMOTE_HOME:-}" ]; then
-      if [ -d "/home/${REMOTE_USER}" ]; then
-        REMOTE_HOME="/home/${REMOTE_USER}"
+      if [ -d "${_ede_home_base}/${REMOTE_USER}" ]; then
+        REMOTE_HOME="${_ede_home_base}/${REMOTE_USER}"
       else
-        REMOTE_HOME="${HOME:-/root}"
+        REMOTE_HOME="${HOME:-$_ede_root_home}"
       fi
     fi
   fi
@@ -150,10 +187,10 @@ libscript_ensure_default_env_vars() {
   : "${SERVICE_GROUP:=$REMOTE_GROUP}"
   : "${DATA_DISK_MOUNT:=/mnt/data}"
   : "${DATA_MOUNT_DIR:=/mnt/data}"
-  : "${TMP_DATA_DIR:=/tmp/data}"
+  : "${TMP_DATA_DIR:=${TMPDIR:-/tmp}/data}"
   export REMOTE_USER REMOTE_GROUP REMOTE_HOME REMOTE_APP_DIR SERVICE_USER SERVICE_GROUP DATA_DISK_MOUNT DATA_MOUNT_DIR TMP_DATA_DIR
 
-  for _ede_bin_dir in "${REMOTE_HOME}/.local/bin" "${REMOTE_HOME}/.cargo/bin" "/root/.local/bin" "/usr/local/bin"; do
+  for _ede_bin_dir in "${REMOTE_HOME}/.local/bin" "${REMOTE_HOME}/.cargo/bin" "${_ede_root_home}/.local/bin" "${_ede_usr_local_bin}"; do
     if [ -d "$_ede_bin_dir" ]; then
       case ":${PATH:-}:" in
         *":${_ede_bin_dir}:"*) ;;
@@ -161,7 +198,7 @@ libscript_ensure_default_env_vars() {
       esac
     fi
   done
-  for _ede_node_bin in "${REMOTE_HOME}/.libscript/nodejs/"*/bin "/root/.libscript/nodejs/"*/bin "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs/"*/bin; do
+  for _ede_node_bin in "${REMOTE_HOME}/.libscript/nodejs/"*/bin "${_ede_root_home}/.libscript/nodejs/"*/bin "${LIBSCRIPT_HOME:-${HOME:-$_ede_root_home}/.libscript}/nodejs/"*/bin; do
     if [ -d "$_ede_node_bin" ]; then
       case ":${PATH:-}:" in
         *":${_ede_node_bin}:"*) ;;
@@ -223,7 +260,7 @@ libscript_print_env() {
         *) _lpe_base_path="${_jq_dir}:${_lpe_base_path}" ;;
       esac
     fi
-    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" REMOTE_HOME="${REMOTE_HOME:-}" PYTHON_VENV="${PYTHON_VENV:-}" VIRTUAL_ENV="${VIRTUAL_ENV:-}" UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-}" UV_CACHE_DIR="${UV_CACHE_DIR:-}" POSTGRES_USER="${POSTGRES_USER:-}" POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}" POSTGRES_HOST="${POSTGRES_HOST:-}" POSTGRES_PORT="${POSTGRES_PORT:-}" POSTGRES_DB="${POSTGRES_DB:-}" POSTGRES_URL="${POSTGRES_URL:-}" DATABASE_URL="${DATABASE_URL:-}" REDIS_URL="${REDIS_URL:-}" VALKEY_URL="${VALKEY_URL:-}" DUCKDB_PATH="${DUCKDB_PATH:-}" SQLITE_PATH="${SQLITE_PATH:-}" sh << 'EOF_SH'
+    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" REMOTE_HOME="${REMOTE_HOME:-}" DATA_DISK_MOUNT="${DATA_DISK_MOUNT:-}" DATA_MOUNT_DIR="${DATA_MOUNT_DIR:-}" OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-}" OLLAMA_MODELS="${OLLAMA_MODELS:-}" OLLAMA_MODEL_LIST="${OLLAMA_MODEL_LIST:-}" OLLAMA_HOST="${OLLAMA_HOST:-}" OLLAMA_NUM_PARALLEL="${OLLAMA_NUM_PARALLEL:-}" OLLAMA_MAX_LOADED_MODELS="${OLLAMA_MAX_LOADED_MODELS:-}" OLLAMA_FLASH_ATTENTION="${OLLAMA_FLASH_ATTENTION:-}" OLLAMA_KV_CACHE_TYPE="${OLLAMA_KV_CACHE_TYPE:-}" OLLAMA_CONTEXT_LENGTH="${OLLAMA_CONTEXT_LENGTH:-}" OLLAMA_MAX_QUEUE="${OLLAMA_MAX_QUEUE:-}" OLLAMA_KEEP_ALIVE="${OLLAMA_KEEP_ALIVE:-}" OLLAMA_LLM_LIBRARY="${OLLAMA_LLM_LIBRARY:-}" OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-}" PYTHON_VENV="${PYTHON_VENV:-}" VIRTUAL_ENV="${VIRTUAL_ENV:-}" UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-}" UV_CACHE_DIR="${UV_CACHE_DIR:-}" POSTGRES_USER="${POSTGRES_USER:-}" POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}" POSTGRES_HOST="${POSTGRES_HOST:-}" POSTGRES_PORT="${POSTGRES_PORT:-}" POSTGRES_DB="${POSTGRES_DB:-}" POSTGRES_URL="${POSTGRES_URL:-}" POSTGRES_DATA_DIR="${POSTGRES_DATA_DIR:-}" PGDATA="${PGDATA:-}" DATABASE_URL="${DATABASE_URL:-}" REDIS_URL="${REDIS_URL:-}" VALKEY_URL="${VALKEY_URL:-}" VALKEY_DATA_DIR="${VALKEY_DATA_DIR:-}" REDIS_DATA_DIR="${REDIS_DATA_DIR:-}" DUCKDB_PATH="${DUCKDB_PATH:-}" SQLITE_PATH="${SQLITE_PATH:-}" sh << 'EOF_SH'
             SCRIPT_NAME="$COMP_DIR/env.sh"
             export SCRIPT_NAME
             # shellcheck disable=SC1090
@@ -310,7 +347,7 @@ libscript_hydrate_manifest_env() {
   [ ! -f "$_hm_json" ] && return 0
   _hm_dir=$(cd -- "$(dirname -- "$_hm_json")" && pwd)
 
-  if [ -f "${_hm_dir}/.env.libscript" ] && { [ -n "${OLLAMA_MODEL_LIST:-}" ] || grep -q '^OLLAMA_MODEL_LIST=' "${_hm_dir}/.env" "${_hm_dir}/.env.secrets" "${_hm_dir}/.env.libscript" 2>/dev/null || { command -v jq >/dev/null 2>&1 && jq -e '.. | objects | has("OLLAMA_MODEL_LIST")' "$_hm_json" >/dev/null 2>&1; }; }; then
+  if [ -f "${_hm_dir}/.env.libscript" ] && { [ -n "${OLLAMA_MODEL_LIST:-}" ] || grep -q '^OLLAMA_MODEL_LIST=' "${_hm_dir}/.env" "${_hm_dir}/.env.secrets" "${_hm_dir}/.env.libscript" 2>/dev/null || grep -qE '^OLLAMA_MODELS=["'"'"']?[^/"'"'"']' "${_hm_dir}/.env" 2>/dev/null || { command -v jq >/dev/null 2>&1 && jq -e '.. | objects | has("OLLAMA_MODEL_LIST")' "$_hm_json" >/dev/null 2>&1; }; }; then
     if grep -qE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_hm_dir}/.env.libscript" 2>/dev/null; then
       _hm_tmp_el=$(mktemp "${TMPDIR:-/tmp}/libscript_el.XXXXXX" 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_el.$$")
       grep -vE '^OLLAMA_MODELS=(/|[A-Za-z]:[\\/])' "${_hm_dir}/.env.libscript" > "$_hm_tmp_el" 2>/dev/null || true
@@ -322,6 +359,11 @@ libscript_hydrate_manifest_env() {
   for _hm_ef in "$_hm_dir/.env" "$_hm_dir/.env.secrets" "$_hm_dir/.env.libscript"; do
     libscript_source_env_preserve_existing "$_hm_ef"
   done
+
+  case "${OLLAMA_MODELS_DIR:-}" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+    *) unset OLLAMA_MODELS_DIR || true ;;
+  esac
 
   if [ -n "${OLLAMA_MODEL_LIST:-}" ]; then
     case "${OLLAMA_MODELS:-}" in
@@ -411,7 +453,9 @@ libscript_hydrate_manifest_env() {
     NPX_BIN=$(command -v npx 2>/dev/null || printf 'npx')
     export NPX_BIN
   fi
-  export SERVICE_PATH="${PATH:-/usr/bin:/bin}"
+  PATH=$(libscript_dedup_path "${PATH:-/usr/bin:/bin}")
+  export PATH
+  export SERVICE_PATH="$PATH"
 }
 
 # ## libscript_print_manifest_env
@@ -528,6 +572,7 @@ libscript_print_manifest_env() {
   fi
 
   if [ -n "$_pm_agg_path" ]; then
+    # shellcheck disable=SC2016
     case "$_pm_fmt" in
       docker)         printf 'ENV SERVICE_PATH="%s:$PATH"\n' "$_pm_agg_path" ;;
       powershell|ps1) printf '$env:SERVICE_PATH = "%s;" + $env:PATH\n' "$_pm_agg_path" ;;

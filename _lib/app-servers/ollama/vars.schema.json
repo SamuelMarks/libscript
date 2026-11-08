@@ -54,6 +54,42 @@
     "OLLAMA_MAX_LOADED_MODELS": {
       "type": "string",
       "description": "Maximum number of Ollama models kept loaded concurrently in memory (default: 1)."
+    },
+    "OLLAMA_LLM_LIBRARY": {
+      "type": "string",
+      "description": "GGML CPU/GPU backend library override for Ollama llama-server (e.g. 'cpu_avx2' on GPU-less VMs to prevent AVX-512/AMX segmentation faults)."
+    },
+    "OLLAMA_NUM_GPU": {
+      "type": "string",
+      "description": "Number of model layers to offload to GPU (set to '0' on CPU-only nodes to disable headless GPU probing)."
+    },
+    "OLLAMA_FLASH_ATTENTION": {
+      "type": "string",
+      "description": "Whether to enable experimental flash attention kernels in Ollama ('0' disables CPU flash attention to prevent crashes)."
+    },
+    "OLLAMA_KV_CACHE_TYPE": {
+      "type": "string",
+      "description": "Data type for Ollama KV cache memory allocation (default: 'f16')."
+    },
+    "OLLAMA_CONTEXT_LENGTH": {
+      "type": "string",
+      "description": "Default context window length in tokens allocated by Ollama llama-server (default: '2048')."
+    },
+    "OLLAMA_MAX_QUEUE": {
+      "type": "string",
+      "description": "Maximum number of queued generation requests in the Ollama server (default: '16')."
+    },
+    "OLLAMA_KEEP_ALIVE": {
+      "type": "string",
+      "description": "Duration models remain loaded in memory after an inference request (default: '10m')."
+    },
+    "GGML_BACKEND_AMX": {
+      "type": "string",
+      "description": "Controls Intel AMX backend buffer allocation in GGML/llama-server (set to '0' to prevent ggml_backend_amx_buffer_type_alloc_buffer segmentation faults on Intel Sapphire/Emerald Rapids CPUs)."
+    },
+    "OLLAMA_VERIFY_INFERENCE": {
+      "type": "string",
+      "description": "When set to '1', runs a 1-token /api/generate smoke test on pulled models and re-pulls if llama-server crashes."
     }
   }
 }

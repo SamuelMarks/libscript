@@ -95,12 +95,13 @@ if [ "$CMD" = "install-deps" ]; then
     done
   fi
 
-  _data_disks=$(jq -r '(.infrastructure.node.data_disks // [])[]? | "\(.mount_path // "/mnt/data") \(.fstype // "ext4")"' "$json_file" 2>/dev/null || true)
+  _inst_def_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+  _data_disks=$(jq -r --arg def "$_inst_def_mount" '(.infrastructure.node.data_disks // [])[]? | "\(.mount_path // $def) \(.fstype // "ext4")"' "$json_file" 2>/dev/null || true)
   if [ -n "$_data_disks" ] && [ -x "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" ]; then
     printf '%s\n' "$_data_disks" | while read -r _dd_mp _dd_fs; do
       [ -n "$_dd_mp" ] || continue
       case "$_dd_mp" in
-        *'$'*) _dd_mp="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" ;;
+        *'$'*) _dd_mp="$_inst_def_mount" ;;
       esac
       "${LIBSCRIPT_ROOT_DIR:-.}/traits/storage/mount.sh" --auto-data-disk "$_dd_mp" "${_dd_fs:-ext4}" || true
     done
@@ -131,7 +132,7 @@ if [ "$CMD" = "install-deps" ]; then
 
     # Serial Reuse-Else-Create Install Phase (in main shell so each component env.sh updates parent PATH)
     printf '%s\n' 'Resolving dependencies (reuse-else-create)...'
-    tmp_deps_env=$(mktemp 2>/dev/null || printf '%s' "/tmp/libscript_deps_env.$$")
+    tmp_deps_env=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_deps_env.$$")
     printf '%s\n' "$deps" > "$tmp_deps_env"
     _inst_saved_script_dir="${SCRIPT_DIR:-}"
     _inst_saved_this_file="${THIS_FILE:-}"
@@ -214,8 +215,9 @@ if [ "$CMD" = "install-deps" ]; then
   [ -z "$_py_ver" ] || [ "$_py_ver" = "null" ] && _py_ver="3.12"
   _target_user="${SERVICE_USER:-${REMOTE_USER:-${SUDO_USER:-}}}"
   _target_home="${REMOTE_HOME:-}"
-  if [ -n "$_target_user" ] && [ -z "$_target_home" ] && [ -d "/home/${_target_user}" ]; then
-    _target_home="/home/${_target_user}"
+  _home_base="${LIBSCRIPT_HOME_BASE:-/home}"
+  if [ -n "$_target_user" ] && [ -z "$_target_home" ] && [ -d "${_home_base}/${_target_user}" ]; then
+    _target_home="${_home_base}/${_target_user}"
   fi
   if [ -n "$_target_home" ] && [ -d "$_target_home" ]; then
     export UV_PYTHON_INSTALL_DIR="${_target_home}/.local/share/uv/python"
@@ -256,6 +258,8 @@ if [ "$CMD" = "install-deps" ]; then
 
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "post_install"
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "db_migrate"
+  LIBSCRIPT_PRE_BUILD_TS=$(date +%s)
+  export LIBSCRIPT_PRE_BUILD_TS
   "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
   _has_fe=$(jq -r '([ (.services | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) | select(.type == "static" or .type == "spa" or .type == "frontend" or .type == "kmp" or .framework != null or .target != null) ] + [ (.frontends | if type == "array" then .[] elif type == "object" then to_entries[].value else empty end) ]) | length' "$json_file" 2>/dev/null || printf '0')
   if [ "${_has_fe:-0}" -eq 0 ]; then

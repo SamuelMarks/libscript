@@ -37,22 +37,45 @@ OLLAMA_VERSION="${OLLAMA_VERSION:-latest}"
 export OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
 export OLLAMA_NUM_PARALLEL="${OLLAMA_NUM_PARALLEL:-1}"
 export OLLAMA_MAX_LOADED_MODELS="${OLLAMA_MAX_LOADED_MODELS:-1}"
+export OLLAMA_FLASH_ATTENTION="${OLLAMA_FLASH_ATTENTION:-0}"
+export OLLAMA_KV_CACHE_TYPE="${OLLAMA_KV_CACHE_TYPE:-f16}"
+export OLLAMA_CONTEXT_LENGTH="${OLLAMA_CONTEXT_LENGTH:-2048}"
+export OLLAMA_MAX_QUEUE="${OLLAMA_MAX_QUEUE:-16}"
+export OLLAMA_KEEP_ALIVE="${OLLAMA_KEEP_ALIVE:-10m}"
+export GGML_BACKEND_AMX="${GGML_BACKEND_AMX:-0}"
+if ! command -v nvidia-smi >/dev/null 2>&1; then
+  export OLLAMA_LLM_LIBRARY="${OLLAMA_LLM_LIBRARY:-cpu_avx2}"
+  export OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-0}"
+else
+  [ -n "${OLLAMA_LLM_LIBRARY:-}" ] && export OLLAMA_LLM_LIBRARY
+  [ -n "${OLLAMA_NUM_GPU:-}" ] && export OLLAMA_NUM_GPU
+fi
 _ol_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
 if [ -d "$_ol_mount" ]; then
   _ol_default_models="${_ol_mount}/ollama_models"
 else
   _ol_default_models="${LIBSCRIPT_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/data}/ollama/models"
 fi
-if [ -z "${OLLAMA_MODEL_LIST:-}" ]; then
-  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${OLLAMA_MODELS:-${_ol_default_models}}}"
-  export OLLAMA_MODELS
-  OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-$OLLAMA_MODELS}"
-  export OLLAMA_MODELS_DIR
-else
-  OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-${_ol_default_models}}"
-  export OLLAMA_MODELS_DIR
+case "${OLLAMA_MODELS_DIR:-}" in
+  /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+  *) OLLAMA_MODELS_DIR="" ;;
+esac
+if [ -z "${OLLAMA_MODELS_DIR:-}" ]; then
   case "${OLLAMA_MODELS:-}" in
-    ""|*/*|*\\*)
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) OLLAMA_MODELS_DIR="$OLLAMA_MODELS" ;;
+    *) OLLAMA_MODELS_DIR="$_ol_default_models" ;;
+  esac
+fi
+export OLLAMA_MODELS_DIR
+if [ -z "${OLLAMA_MODEL_LIST:-}" ]; then
+  case "${OLLAMA_MODELS:-}" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+    "") OLLAMA_MODELS="$OLLAMA_MODELS_DIR" ;;
+  esac
+  export OLLAMA_MODELS
+else
+  case "${OLLAMA_MODELS:-}" in
+    ""|/*|[A-Za-z]:\\*|[A-Za-z]:/*)
       OLLAMA_MODELS="${OLLAMA_MODELS:-${OLLAMA_MODELS_DIR}}"
       export OLLAMA_MODELS
       ;;

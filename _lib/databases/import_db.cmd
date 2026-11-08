@@ -87,6 +87,23 @@ for /f "delims=" %%i in ('jq -c "!JQ_DB_FILTER!" "!JSON_FILE!" 2^>nul') do (
     call :import_one_db
 )
 
+set "_imp_cert_store=%CERT_STORE_DIR%"
+if "!_imp_cert_store!"=="" (
+    set "_imp_def_mount=%DATA_DISK_MOUNT%"
+    if "!_imp_def_mount!"=="" set "_imp_def_mount=%DATA_MOUNT_DIR%"
+    if "!_imp_def_mount!"=="" set "_imp_def_mount=/mnt/data"
+    set "_imp_cert_store=!_imp_def_mount!/certs"
+)
+for /f "delims=" %%C in ('jq -r ".ingress.cert_store_dir // empty" "!JSON_FILE!" 2^>nul') do if not "%%C"=="" set "_imp_cert_store=%%C"
+if exist "!APP_STAGE!\certs\live" (
+    if not exist "!_imp_cert_store!\live" mkdir "!_imp_cert_store!\live"
+    xcopy /E /I /Y "!APP_STAGE!\certs\live" "!_imp_cert_store!\live" >nul 2>&1
+    for /d %%D in ("!_imp_cert_store!\live\*") do (
+        attrib +R "%%~fD\fullchain.pem" >nul 2>&1
+        attrib +R "%%~fD\privkey.pem" >nul 2>&1
+    )
+)
+
 call "!LIBSCRIPT_ROOT_DIR!\_lib\init-systems\daemonize.cmd" start "!JSON_FILE!"
 echo [INFO] Imported state for '!APP_NAME!' from '!APP_STAGE!'.
 exit /b 0
@@ -148,7 +165,14 @@ exit /b 0
 :: Restores a DuckDB or SQLite database file from the staging directory to its configured path.
 :imp_file
 if "!_path!"=="" (
-    set "_path=!MANIFEST_DIR!\data\!_name!.!_eng!"
+    set "_imp_def_m=%DATA_DISK_MOUNT%"
+    if "!_imp_def_m!"=="" set "_imp_def_m=%DATA_MOUNT_DIR%"
+    if "!_imp_def_m!"=="" set "_imp_def_m=/mnt/data"
+    if exist "!_imp_def_m!" (
+        set "_path=!_imp_def_m!\!_name!.!_eng!"
+    ) else (
+        set "_path=!MANIFEST_DIR!\data\!_name!.!_eng!"
+    )
 ) else (
     for /f "delims=" %%x in ('jq -rn --arg s "!_path!" "reduce range(3) as $_ ($s; gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*):-(?<d>[^}]*)\\\\}\"; (env[.k] // \"\") | if . == \"\" then .d else . end) | gsub(\"\\\\$\\\\{(?<k>[A-Za-z_][A-Za-z0-9_]*)\\\\}\"; env[.k] // \"\"))" 2^>nul') do set "_path=%%x"
     set "_path_win=!_path:/=\!"

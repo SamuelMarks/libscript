@@ -49,8 +49,13 @@ goto :find_root
 :root_found
 
 if /i "%~1"=="libscript_python_venv" goto :libscript_python_venv
+if /i "%~1"==":libscript_python_venv" goto :libscript_python_venv
 if /i "%~1"=="libscript_python_resolve" goto :libscript_python_resolve
+if /i "%~1"==":libscript_python_resolve" goto :libscript_python_resolve
 if /i "%~1"=="libscript_python_ensure_venv_owner" goto :libscript_python_ensure_venv_owner
+if /i "%~1"==":libscript_python_ensure_venv_owner" goto :libscript_python_ensure_venv_owner
+if /i "%~1"=="libscript_python_sync_deps" goto :libscript_python_sync_deps
+if /i "%~1"==":libscript_python_sync_deps" goto :libscript_python_sync_deps
 goto :EOF
 
 :: ## libscript_python_resolve
@@ -124,12 +129,13 @@ exit /b 0
 :: Creates a Python virtual environment at the specified directory.
 :libscript_python_venv
 if "%~2"=="" (
-    echo [ERROR] Usage: libscript_python_venv ^<target_dir^> [python_version] >&2
+    echo [ERROR] Usage: libscript_python_venv ^<target_dir^> [python_version] [req_file] >&2
     exit /b 1
 )
 
 set "_target_dir=%~2"
 set "_python_version=%~3"
+set "_req_file=%~4"
 set "_backend=%LIBSCRIPT_PYTHON_VENV_BACKEND%"
 if "%_backend%"=="" set "_backend=venv"
 
@@ -141,6 +147,7 @@ if "%_backend%"=="uv" (
     ) else (
         uv venv --seed -- "%_target_dir%"
     )
+    if errorlevel 1 exit /b 1
 ) else if "%_backend%"=="venv" (
     set "_python_exe="
     if not "%_python_version%"=="" (
@@ -180,7 +187,136 @@ if "%_backend%"=="uv" (
     echo [ERROR] Unsupported Python venv backend: %_backend% >&2
     exit /b 1
 )
+
+if exist "%_target_dir%" (
+    > "%_target_dir%\.libscript_venv_interp" echo %_backend%:%_python_version%
+)
+
+if not "!_req_file!"=="" if exist "!_req_file!" (
+    set "_req_hash=0"
+    for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_req_file!" SHA256 2^>nul') do (
+        if "!_req_hash!"=="0" set "_req_hash=%%H"
+    )
+    if "%_backend%"=="uv" (
+        uv pip install --python "%_target_dir%\Scripts\python.exe" -r "!_req_file!"
+    ) else (
+        "%_target_dir%\Scripts\pip.exe" install -r "!_req_file!"
+    )
+    if not errorlevel 1 (
+        > "%_target_dir%\.libscript_lock_hash" echo !_req_hash!
+        > "%_target_dir%\.libscript_py_hash" echo !_req_hash!
+    ) else (
+        exit /b 1
+    )
+)
 exit /b 0
+
+:: ## libscript_python_sync_deps
+:: Synchronizes Python project dependencies (.venv) via uv sync or pip install -r with deterministic lockfile hash caching on Windows.
+:libscript_python_sync_deps
+set "_psd_dir=%~2"
+set "_psd_ver=%~3"
+if "!_psd_dir!"=="" set "_psd_dir=."
+if not exist "!_psd_dir!" exit /b 0
+if "!_psd_ver!"=="" set "_psd_ver=%PYTHON_VERSION%"
+if "!_psd_ver!"=="" set "_psd_ver=3.12"
+
+set "_PY_DEPS_HASH=none"
+set "_PY_LOCK_TMP=%TEMP%\libscript_py_lock_%RANDOM%.txt"
+if exist "!_PY_LOCK_TMP!" del /f /q "!_PY_LOCK_TMP!" >nul 2>&1
+for %%L in ("!_psd_dir!\uv.lock" "!_psd_dir!\pyproject.toml" "!_psd_dir!\requirements.txt" "!_psd_dir!\requirements-prod.txt" "!_psd_dir!\setup.py") do (
+    if exist "%%~fL" type "%%~fL" >> "!_PY_LOCK_TMP!" 2>nul
+)
+if exist "!_PY_LOCK_TMP!" (
+    for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_PY_LOCK_TMP!" SHA256 2^>nul') do (
+        if "!_PY_DEPS_HASH!"=="none" set "_PY_DEPS_HASH=%%H"
+    )
+    del /f /q "!_PY_LOCK_TMP!" >nul 2>&1
+)
+if "!_PY_DEPS_HASH!"=="none" (
+    if not exist "!_psd_dir!\.venv" exit /b 0
+)
+
+set "_psd_bins_ok=1"
+for %%B in (%~4 %~5 %~6) do (
+    if not "%%~B"=="" (
+        if not exist "!_psd_dir!\.venv\Scripts\%%~B.exe" (
+            if not exist "!_psd_dir!\.venv\bin\%%~B" set "_psd_bins_ok=0"
+        )
+    )
+)
+
+set "_psd_cached_hash="
+if exist "!_psd_dir!\.venv\.libscript_lock_hash" (
+    set /p _psd_cached_hash=<"!_psd_dir!\.venv\.libscript_lock_hash"
+)
+if not "%FORCE_REINSTALL%"=="1" if exist "!_psd_dir!\.venv\Scripts\python.exe" if "!_psd_bins_ok!"=="1" if not "!_psd_cached_hash!"=="" if "!_psd_cached_hash!"=="!_PY_DEPS_HASH!" (
+    echo [REUSE] !_psd_dir! .venv dependencies up-to-date ^(hash !_PY_DEPS_HASH!^); skipping install.
+    exit /b 0
+)
+
+if not exist "!_psd_dir!\.venv\Scripts\python.exe" (
+    where uv >nul 2>&1
+    if not errorlevel 1 (
+        set "LIBSCRIPT_PYTHON_VENV_BACKEND=uv"
+    )
+    call :libscript_python_venv "" "!_psd_dir!\.venv" "!_psd_ver!"
+    if errorlevel 1 exit /b 1
+)
+
+set "_psd_rc=0"
+set "_has_pyproject=0"
+if exist "!_psd_dir!\uv.lock" set "_has_pyproject=1"
+if exist "!_psd_dir!\pyproject.toml" set "_has_pyproject=1"
+if "!_has_pyproject!"=="1" (
+    where uv >nul 2>&1
+    if not errorlevel 1 (
+        pushd "!_psd_dir!"
+        uv sync --python "!_psd_ver!"
+        if errorlevel 1 uv pip install --python "!_psd_dir!\.venv\Scripts\python.exe" -e .
+        if errorlevel 1 set "_psd_rc=1"
+        popd
+    ) else if exist "!_psd_dir!\.venv\Scripts\pip.exe" (
+        pushd "!_psd_dir!"
+        "!_psd_dir!\.venv\Scripts\pip.exe" install -e .
+        if errorlevel 1 set "_psd_rc=1"
+        popd
+    )
+)
+
+if "!_psd_rc!"=="0" if exist "!_psd_dir!\requirements.txt" (
+    if exist "!_psd_dir!\.venv\Scripts\pip.exe" (
+        "!_psd_dir!\.venv\Scripts\pip.exe" install -r "!_psd_dir!\requirements.txt"
+        if errorlevel 1 set "_psd_rc=1"
+    ) else (
+        where uv >nul 2>&1
+        if not errorlevel 1 (
+            uv pip install --python "!_psd_dir!\.venv\Scripts\python.exe" -r "!_psd_dir!\requirements.txt"
+            if errorlevel 1 set "_psd_rc=1"
+        )
+    )
+)
+
+if "!_psd_rc!"=="0" if exist "!_psd_dir!\requirements-prod.txt" (
+    if exist "!_psd_dir!\.venv\Scripts\pip.exe" (
+        "!_psd_dir!\.venv\Scripts\pip.exe" install -r "!_psd_dir!\requirements-prod.txt"
+        if errorlevel 1 set "_psd_rc=1"
+    ) else (
+        where uv >nul 2>&1
+        if not errorlevel 1 (
+            uv pip install --python "!_psd_dir!\.venv\Scripts\python.exe" -r "!_psd_dir!\requirements-prod.txt"
+            if errorlevel 1 set "_psd_rc=1"
+        )
+    )
+)
+
+if "!_psd_rc!"=="0" if exist "!_psd_dir!\.venv" (
+    if not "!_PY_DEPS_HASH!"=="none" (
+        > "!_psd_dir!\.venv\.libscript_lock_hash" echo !_PY_DEPS_HASH!
+        > "!_psd_dir!\.venv\.libscript_py_hash" echo !_PY_DEPS_HASH!
+    )
+)
+exit /b !_psd_rc!
 
 :: ## libscript_python_ensure_venv_owner
 :: Ensures the target project directory has a valid .venv ready for service execution on Windows.
@@ -190,43 +326,11 @@ set "_venv_ver=%~3"
 if "!_venv_dir!"=="" exit /b 0
 if not exist "!_venv_dir!" exit /b 0
 if not exist "!_venv_dir!\pyproject.toml" (
-    if not exist "!_venv_dir!\requirements.txt" exit /b 0
+    if not exist "!_venv_dir!\requirements.txt" (
+        if not exist "!_venv_dir!\requirements-prod.txt" exit /b 0
+    )
 )
 if "!_venv_ver!"=="" set "_venv_ver=%PYTHON_VERSION%"
 if "!_venv_ver!"=="" set "_venv_ver=3.12"
-set "_PY_LOCK_FP=none"
-set "_PY_LOCK_ACC="
-for %%L in ("!_venv_dir!\uv.lock" "!_venv_dir!\pyproject.toml" "!_venv_dir!\requirements.txt" "!_venv_dir!\setup.py") do (
-    if exist "%%~fL" (
-        for %%Z in ("%%~fL") do set "_PY_LOCK_ACC=!_PY_LOCK_ACC!_%%~nxZ_%%~zZ_%%~tZ"
-    )
-)
-if not "!_PY_LOCK_ACC!"=="" set "_PY_LOCK_FP=!_PY_LOCK_ACC: =_!"
-set "_PY_CACHED_FP="
-if exist "!_venv_dir!\.venv\.libscript_py_hash" (
-    set /p _PY_CACHED_FP=<"!_venv_dir!\.venv\.libscript_py_hash"
-) else if exist "!_venv_dir!\.venv\.libscript_lock_hash" (
-    set /p _PY_CACHED_FP=<"!_venv_dir!\.venv\.libscript_lock_hash"
-)
-if not "%FORCE_REINSTALL%"=="1" if exist "!_venv_dir!\.venv\Scripts\python.exe" if not "!_PY_CACHED_FP!"=="" if "!_PY_CACHED_FP!"=="!_PY_LOCK_FP!" exit /b 0
-where uv >nul 2>&1
-if not errorlevel 1 (
-    set "LIBSCRIPT_PYTHON_VENV_BACKEND=uv"
-    if not exist "!_venv_dir!\.venv\Scripts\python.exe" (
-        call :libscript_python_venv "" "!_venv_dir!\.venv" "!_venv_ver!" >nul 2>&1
-    )
-    pushd "!_venv_dir!"
-    uv sync --python "!_venv_ver!" >nul 2>&1
-    popd
-    if exist "!_venv_dir!\.venv" (
-        > "!_venv_dir!\.venv\.libscript_py_hash" echo !_PY_LOCK_FP!
-        > "!_venv_dir!\.venv\.libscript_lock_hash" echo !_PY_LOCK_FP!
-    )
-    exit /b 0
-)
-call :libscript_python_venv "" "!_venv_dir!\.venv" "!_venv_ver!" >nul 2>&1
-if exist "!_venv_dir!\.venv" (
-    > "!_venv_dir!\.venv\.libscript_py_hash" echo !_PY_LOCK_FP!
-    > "!_venv_dir!\.venv\.libscript_lock_hash" echo !_PY_LOCK_FP!
-)
+call :libscript_python_sync_deps "" "!_venv_dir!" "!_venv_ver!"
 exit /b 0

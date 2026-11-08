@@ -165,10 +165,13 @@ if [ "$IMPORT_MODE" -eq 1 ]; then
     exit 1
   fi
   CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
+  _RESTORE_CERT_STORE="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+  _IMPORT_STAGE_DIR="${LIBSCRIPT_IMPORT_STAGE_DIR:-${REMOTE_TMPDIR:-/tmp}/libscript_import_stage}"
   log_info "Importing state from '${LOCAL_SRC}' into '${NODE}' for '${ONLY_TARGET}'..."
   "$CLI" node sync "$NODE" "$RG_CTX"
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_import_stage && mkdir -p /tmp/libscript_import_stage"
-  "$CLI" node upload "$NODE" "$RG_CTX" "${LOCAL_SRC}/" "/tmp/libscript_import_stage/"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf '${_IMPORT_STAGE_DIR}' && mkdir -p '${_IMPORT_STAGE_DIR}'"
+  "$CLI" node upload "$NODE" "$RG_CTX" "${LOCAL_SRC}/" "${_IMPORT_STAGE_DIR}/"
+  "$CLI" node exec "$NODE" "$RG_CTX" "if [ -d '${_IMPORT_STAGE_DIR}/certs/live' ]; then sudo mkdir -p '${_RESTORE_CERT_STORE}/live' && sudo chmod -R u+w '${_RESTORE_CERT_STORE}/live' 2>/dev/null || true; sudo cp -a '${_IMPORT_STAGE_DIR}/certs/live/.' '${_RESTORE_CERT_STORE}/live/' 2>/dev/null || true; fi" >/dev/null 2>&1 || true
   OIFS="$IFS"
   IFS="|"
   # shellcheck disable=SC2086
@@ -195,9 +198,9 @@ if [ "$IMPORT_MODE" -eq 1 ]; then
     if ! matches_only_target "$_im_dest" "$_im_repo" && ! matches_only_target "${_im_domain%%.*}" "$_im_repo"; then
       continue
     fi
-    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh import-state libscript.json /tmp/libscript_import_stage"
+    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_im_dest} && sudo CERT_STORE_DIR='${_RESTORE_CERT_STORE}' SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh import-state libscript.json '${_IMPORT_STAGE_DIR}'"
   done
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_import_stage"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf '${_IMPORT_STAGE_DIR}'"
   IMPORT_REPORT_ROWS=""
   for _im_spec in "$@"; do
     [ -n "$_im_spec" ] || continue

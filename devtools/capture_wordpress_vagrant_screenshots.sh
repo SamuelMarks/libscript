@@ -537,6 +537,7 @@ printf '
 
 printf '[INFO] Waiting for real PHP-FPM/Nginx stack on port 80...\n'
 vm_run 'New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoLowDiskSpaceChecks" -Value 1 -Type DWord -Force; Stop-Process -Name ShellExperienceHost, msiexec -Force -ErrorAction SilentlyContinue'
+# shellcheck disable=SC2016
 vm_run 'powershell -NoProfile -Command "while ((Test-NetConnection localhost -Port 80 -InformationLevel Quiet) -eq $false) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 80...'' }"'
 
 # 4. browser tab (WordPress homepage)

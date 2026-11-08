@@ -65,6 +65,7 @@ DOCKERFILE_ONLINE="$TEST_TMP_DIR/Dockerfile.online"
 "${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker.sh" --online python 3.11 https://example.com/python-3.11.tar.gz > "$DOCKERFILE_ONLINE"
 
 assert_contains "$DOCKERFILE_ONLINE" 'ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache"' "Cache directory env variable declared"
+# shellcheck disable=SC2016
 assert_contains "$DOCKERFILE_ONLINE" 'ADD ${PYTHON_URL} /opt/libscript_cache/python/python-3.11.tar.gz' "ADD instruction for layer caching synthesized"
 assert_contains "$DOCKERFILE_ONLINE" 'RUN ./libscript.sh install python' "Install command references component"
 assert_not_contains "$DOCKERFILE_ONLINE" 'COPY cache/ /opt/libscript_cache/' "COPY cache not present in online mode"
@@ -78,6 +79,7 @@ assert_contains "$DOCKERFILE_OFFLINE" 'ENV LIBSCRIPT_OFFLINE="1"' "LIBSCRIPT_OFF
 assert_contains "$DOCKERFILE_OFFLINE" 'ENV PIP_NO_INDEX="1"' "PIP_NO_INDEX=1 configured"
 assert_contains "$DOCKERFILE_OFFLINE" 'ENV PIP_FIND_LINKS="/opt/libscript_cache/wheels"' "PIP_FIND_LINKS directed to cache/wheels"
 assert_contains "$DOCKERFILE_OFFLINE" 'COPY cache/ /opt/libscript_cache/' "COPY cache/ directive present in offline header"
+# shellcheck disable=SC2016
 assert_contains "$DOCKERFILE_OFFLINE" 'RUN ./libscript.sh install python ${PYTHON_VERSION} --offline' "Offline flag passed to installer"
 assert_not_contains "$DOCKERFILE_OFFLINE" 'ADD http' "No remote ADD instructions present in offline mode"
 assert_not_contains "$DOCKERFILE_OFFLINE" 'curl' "No curl commands present in offline mode"

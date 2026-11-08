@@ -438,16 +438,17 @@ while true; do
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
         # Build remote command depending on component type
+        _rtmp="${REMOTE_TMPDIR:-/tmp}"
         case "$target" in
             bootloaders/*)
                 _bl_name="${target#bootloaders/}"
-                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -rf /tmp/test-bl-$_bl_name && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile /tmp/test-bl-$_bl_name $_bl_name uefi && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile /tmp/test-bl-$_bl_name $_bl_name uefi && rm -rf /tmp/test-bl-$_bl_name"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -rf ${_rtmp}/test-bl-$_bl_name && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile ${_rtmp}/test-bl-$_bl_name $_bl_name uefi && sh /opt/repos/libscript/_lib/bootloaders/setup.sh compile ${_rtmp}/test-bl-$_bl_name $_bl_name uefi && rm -rf ${_rtmp}/test-bl-$_bl_name"
                 ;;
             storage/provision_disk)
-                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -f /tmp/test-disk.img && sh /opt/repos/libscript/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && sh /opt/repos/libscript/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && rm -f /tmp/test-disk.img"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; rm -f ${_rtmp}/test-disk.img && sh /opt/repos/libscript/_lib/storage/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && sh /opt/repos/libscript/_lib/storage/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && rm -f ${_rtmp}/test-disk.img"
                 ;;
             runtimes/provision_isolated_runtime)
-                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt && sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt && sh /opt/repos/libscript/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt"
                 ;;
             ml-training)
                 test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; sh /opt/repos/libscript/_lib/ml-training/cli.sh install latest && sh /opt/repos/libscript/_lib/ml-training/cli.sh test && sh /opt/repos/libscript/_lib/ml-training/cli.sh install latest && sh /opt/repos/libscript/_lib/ml-training/cli.sh test"
@@ -466,7 +467,7 @@ while true; do
                 ;;
             topologies/*)
                 _topo_name="${target#topologies/}"
-                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TOPOLOGY_STATE_FILE=/tmp/topo-$_topo_name.json; rm -f /tmp/topo-$_topo_name.json*; sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh status && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh destroy && rm -f /tmp/topo-$_topo_name.json*"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TOPOLOGY_STATE_FILE=${_rtmp}/topo-$_topo_name.json; rm -f ${_rtmp}/topo-$_topo_name.json*; sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh status && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh up && sh /opt/repos/libscript/topologies/$_topo_name/cli.sh destroy && rm -f ${_rtmp}/topo-$_topo_name.json*"
                 ;;
             payloads/schedulers/*)
                 _sched_name="${target#payloads/schedulers/}"
@@ -474,7 +475,7 @@ while true; do
                 ;;
             traits/*)
                 _trait_name="${target#traits/}"
-                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TARGET_SYSROOT=/tmp/trait-sysroot-$_trait_name LIBSCRIPT_OFFLINE=1; rm -rf /tmp/trait-sysroot-$_trait_name && mkdir -p /tmp/trait-sysroot-$_trait_name && sh /opt/repos/libscript/traits/engine.sh enable $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh verify $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh teardown $_trait_name && rm -rf /tmp/trait-sysroot-$_trait_name"
+                test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_TARGET_SYSROOT=${_rtmp}/trait-sysroot-$_trait_name LIBSCRIPT_OFFLINE=1; rm -rf ${_rtmp}/trait-sysroot-$_trait_name && mkdir -p ${_rtmp}/trait-sysroot-$_trait_name && sh /opt/repos/libscript/traits/engine.sh enable $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh verify $_trait_name && sh /opt/repos/libscript/traits/engine.sh apply $_trait_name && sh /opt/repos/libscript/traits/engine.sh teardown $_trait_name && rm -rf ${_rtmp}/trait-sysroot-$_trait_name"
                 ;;
             *)
                 test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && (/opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true) && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
@@ -506,7 +507,7 @@ while true; do
 
         # Clean up installed files if snapshot restoration is disabled
         if [ "$USE_SNAPSHOT" != "1" ] && [ -z "$SKIP_UNINSTALL" ]; then
-            cleanup_cmd="export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf /home/vagrant/.libscript/$_short_target /tmp/libscript_pkg_mgr_lock 2>/dev/null || true"
+            cleanup_cmd="export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf /home/vagrant/.libscript/$_short_target ${_rtmp}/libscript_pkg_mgr_lock 2>/dev/null || true"
             ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     done

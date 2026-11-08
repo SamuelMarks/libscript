@@ -128,7 +128,7 @@ while IFS= read -r db_entry <&3; do
       DB_PATH=$(printf '%s\n' "$db_entry" | jq -r '.path // .file // .db_path // empty')
       DB_PATH=$(expand_manifest_vars "$DB_PATH")
       if [ -z "$DB_PATH" ]; then
-        DB_PATH="/mnt/data/${DB_NAME}.duckdb"
+        DB_PATH="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/${DB_NAME}.duckdb"
       elif [ "${DB_PATH#/}" = "$DB_PATH" ]; then
         DB_PATH="${MANIFEST_DIR}/${DB_PATH}"
       fi
@@ -165,10 +165,32 @@ EOF_IMP_DBS
 
 _owner="${SERVICE_USER:-${REMOTE_USER:-${ADMIN_USER:-${SUDO_USER:-}}}}"
 if [ -n "$_owner" ] && id "$_owner" >/dev/null 2>&1; then
-  for _d in "${DATA_DISK_MOUNT:-/mnt/data}" "$MANIFEST_DIR"; do
+  for _d in "${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" "$MANIFEST_DIR"; do
     [ -d "$_d" ] && { chown -R "${_owner}:${_owner}" "$_d" 2>/dev/null || priv chown -R "${_owner}:${_owner}" "$_d" 2>/dev/null || true; }
   done
 fi
+
+_imp_cert_store=$(jq -r '.ingress.cert_store_dir // empty' "$JSON_FILE" 2>/dev/null || true)
+_imp_cert_store=$(expand_manifest_vars "$_imp_cert_store")
+[ -n "$_imp_cert_store" ] || _imp_cert_store="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+for _cand_certs in "${APP_STAGE}/certs" "${STAGE_DIR}/certs"; do
+  if [ -d "${_cand_certs}/live" ]; then
+    mkdir -p "${_imp_cert_store}/live" 2>/dev/null || priv mkdir -p "${_imp_cert_store}/live" 2>/dev/null || true
+    for _c_dom_dir in "${_cand_certs}/live"/*; do
+      [ -d "$_c_dom_dir" ] || continue
+      _c_dom=$(basename "$_c_dom_dir")
+      "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ensure-cert "$_c_dom" "$_imp_cert_store" >/dev/null 2>&1 || {
+        mkdir -p "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || priv mkdir -p "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || true
+        chmod 0755 "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || priv chmod 0755 "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || true
+        cp -f "${_c_dom_dir}"/* "${_imp_cert_store}/live/${_c_dom}/" 2>/dev/null || priv cp -f "${_c_dom_dir}"/* "${_imp_cert_store}/live/${_c_dom}/" 2>/dev/null || true
+        chmod 0444 "${_imp_cert_store}/live/${_c_dom}/fullchain.pem" 2>/dev/null || priv chmod 0444 "${_imp_cert_store}/live/${_c_dom}/fullchain.pem" 2>/dev/null || true
+        chmod 0400 "${_imp_cert_store}/live/${_c_dom}/privkey.pem" 2>/dev/null || priv chmod 0400 "${_imp_cert_store}/live/${_c_dom}/privkey.pem" 2>/dev/null || true
+        chmod 0555 "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || priv chmod 0555 "${_imp_cert_store}/live/${_c_dom}" 2>/dev/null || true
+      }
+    done
+    break
+  fi
+done
 
 "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" start "$JSON_FILE"
 log_info "Imported state for '$APP_NAME' from '$APP_STAGE'."

@@ -52,6 +52,7 @@ while IFS='=' read -r _k _v; do
 done << EOF
 $_parsed_dbaas
 EOF
+export DB_ENGINE DB_SSL_MODE
 
 if [ "$DB_USER" != "wp_cloud_user" ]; then
   printf '[ERROR] DB_USER parse failed. Expected wp_cloud_user, got: %s\n' "$DB_USER" >&2

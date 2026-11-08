@@ -33,6 +33,7 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 DISK_IMG="${1:-${REPO_ROOT}/build/freebsd.qcow2}"
 EXPECTED_INIT="${2:-bsd-rc}"
 TIMEOUT_SECS="${3:-60}"
+export TIMEOUT_SECS
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/freebsd_boot_test.log"

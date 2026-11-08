@@ -1,9 +1,9 @@
 @echo off
 :: # service.cmd
 :: ## Overview
-:: Manages background service lifecycle operations (start, stop, status) for the redis component.
+:: Manages background service lifecycle operations (start, stop, status, configure, override-env) and persistent REDIS_DATA_DIR / VALKEY_DATA_DIR configuration for the redis component on Windows.
 :: ## Usage
-:: service.cmd
+:: service.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,6 +49,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
+call "!SCRIPT_DIR!\env.cmd"
 set "ACTION=%~1"
 if "%ACTION%"=="" set "ACTION=status"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
@@ -60,7 +62,16 @@ if not exist "%REDIS_EXE%" (
     )
 )
 
+if /i "%ACTION%"=="configure" (
+    call :configure_redis_storage "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "%ACTION%"=="override-env" (
+    call :configure_redis_storage "%~2"
+    exit /b !ERRORLEVEL!
+)
 if /i "%ACTION%"=="start" (
+    call :configure_redis_storage
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active Redis >nul 2>&1 && exit /b 0
     set "STACK="
@@ -77,6 +88,7 @@ if /i "%ACTION%"=="stop" (
     exit /b 0
 )
 if /i "%ACTION%"=="restart" (
+    call :configure_redis_storage
     call "%~f0" stop
     call "%~f0" start
     exit /b 0
@@ -88,4 +100,24 @@ if /i "%ACTION%"=="status" (
     echo [STOPPED] redis
     exit /b 1
 )
+exit /b 0
+
+:: ## configure_redis_storage
+:: Ensures the persistent Redis/Valkey data directory exists, grants service ACLs, and persists REDIS_DATA_DIR and VALKEY_DATA_DIR overrides on Windows.
+:configure_redis_storage
+set "_CRS_DIR=%~1"
+if /i "!_CRS_DIR!"=="redis" set "_CRS_DIR="
+if /i "!_CRS_DIR!"=="redis-server" set "_CRS_DIR="
+if /i "!_CRS_DIR!"=="valkey" set "_CRS_DIR="
+if /i "!_CRS_DIR!"=="valkey-server" set "_CRS_DIR="
+if /i "!_CRS_DIR!"=="libscript_redis" set "_CRS_DIR="
+if "!_CRS_DIR!"=="" set "_CRS_DIR=!REDIS_DATA_DIR!"
+if "!_CRS_DIR!"=="" set "_CRS_DIR=!VALKEY_DATA_DIR!"
+if "!_CRS_DIR!"=="" exit /b 0
+set "REDIS_DATA_DIR=!_CRS_DIR!"
+set "VALKEY_DATA_DIR=!_CRS_DIR!"
+if not exist "!REDIS_DATA_DIR!" mkdir "!REDIS_DATA_DIR!" >nul 2>&1
+icacls "!REDIS_DATA_DIR!" /grant "*S-1-5-32-544:(OI)(CI)F" /grant "*S-1-5-18:(OI)(CI)F" /T /C /Q >nul 2>&1
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "Redis" "REDIS_DATA_DIR=!REDIS_DATA_DIR!" "VALKEY_DATA_DIR=!VALKEY_DATA_DIR!" >nul 2>&1
 exit /b 0

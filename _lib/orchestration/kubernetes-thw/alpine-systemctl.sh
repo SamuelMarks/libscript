@@ -37,8 +37,11 @@ if [ "$CMD" = "daemon-reload" ] || [ "$CMD" = "enable" ]; then
 fi
 
 if [ "$CMD" = "start" ]; then
+    SYSTEMD_DIR="${LIBSCRIPT_SYSTEMD_DIR:-/etc/systemd/system}"
+    LOG_DIR="${LIBSCRIPT_LOG_DIR:-/var/log}"
+    TMP_DIR="${TMPDIR:-/tmp}"
     # Simple parse of ExecStart (assuming continuation lines with \)
-    awk -v svc="$SVC" '
+    awk -v svc="$SVC" -v log_dir="$LOG_DIR" '
     BEGIN { in_exec = 0; cmd = "" }
     /^ExecStart=/ {
         in_exec = 1;
@@ -53,11 +56,11 @@ if [ "$CMD" = "start" ]; then
             cmd = cmd " " line;
             in_exec = 0;
             # Output the command wrapped in nohup
-            print "nohup " cmd " > /var/log/" svc ".log 2>&1 &"
+            print "nohup " cmd " > " log_dir "/" svc ".log 2>&1 &"
         }
     }
-    ' "/etc/systemd/system/${SVC}.service" > "/tmp/start_${SVC}.sh"
+    ' "${SYSTEMD_DIR}/${SVC}.service" > "${TMP_DIR}/start_${SVC}.sh"
     
-    sh "/tmp/start_${SVC}.sh"
+    sh "${TMP_DIR}/start_${SVC}.sh"
     exit 0
 fi

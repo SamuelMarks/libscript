@@ -61,6 +61,7 @@ case "$ACTION" in
     export PACKAGE_NAME='tensorboard'
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
     export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
     . "${SCRIPT_NAME}"
     ;;
 esac

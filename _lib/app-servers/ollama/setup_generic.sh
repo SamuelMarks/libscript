@@ -35,12 +35,15 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/service_install.sh"; do
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/${LIB}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+  fi
 done
+unset SCRIPT_NAME || true
 
 OLLAMA_INSTALL_METHOD="$(libscript_resolve_install_method "OLLAMA")"
 ACTION="${ACTION:-install}"
@@ -79,6 +82,74 @@ resolve_exact_version() {
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
+
+# ## ensure_ollama_systemd_unit
+# Idempotently registers /etc/systemd/system/ollama.service when ollama is installed as a native binary on a systemd system and no unit file exists yet.
+ensure_ollama_systemd_unit() {
+  if [ "$(libscript_detect_init_system 2>/dev/null || printf 'fallback')" != "systemd" ]; then
+    return 0
+  fi
+  if [ -f "/etc/systemd/system/ollama.service" ] || [ -f "/lib/systemd/system/ollama.service" ]; then
+    return 0
+  fi
+  _eos_bin=$(find_existing_ollama 2>/dev/null || true)
+  [ -n "$_eos_bin" ] || return 0
+  _eos_user="${SERVICE_USER:-root}"
+  if id ollama >/dev/null 2>&1; then
+    _eos_user='ollama'
+  fi
+  libscript_install_service "ollama" "${_eos_bin} serve" "/" "Ollama Service" "" "$_eos_user" || true
+  # libscript-allow-raw-daemon
+  priv systemctl daemon-reload 2>/dev/null || systemctl daemon-reload 2>/dev/null || true
+  return 0
+}
+
+# ## configure_cpu_amx_and_verify_gemma
+# Exports GGML_BACKEND_AMX=0 and OLLAMA_LLM_LIBRARY=cpu_avx2 on CPU-only hosts, ensures systemd unit exists, applies service overrides if running, and verifies that gemma:2b has its authentic gemma family/digest (re-pulling if previously aliased to llama3.2:1b).
+configure_cpu_amx_and_verify_gemma() {
+  export GGML_BACKEND_AMX="${GGML_BACKEND_AMX:-0}"
+  if ! command -v nvidia-smi >/dev/null 2>&1; then
+    export OLLAMA_LLM_LIBRARY="${OLLAMA_LLM_LIBRARY:-cpu_avx2}"
+    export OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-0}"
+  fi
+  ensure_ollama_systemd_unit
+  if [ -x "${SCRIPT_DIR}/service.sh" ] && { [ -f "/etc/systemd/system/ollama.service" ] || [ -f "/lib/systemd/system/ollama.service" ] || [ -f "/etc/systemd/system/libscript_ollama.service" ]; }; then
+    "${SCRIPT_DIR}/service.sh" configure >/dev/null 2>&1 || true
+  fi
+  if command -v ollama >/dev/null 2>&1 && [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" != "1" ] && [ "${LIBSCRIPT_DRY_RUN:-0}" != "1" ]; then
+    _cavg_url="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+    case "$_cavg_url" in
+      http://*|https://*) ;;
+      *) _cavg_url="http://${_cavg_url}" ;;
+    esac
+    _cavg_url="${_cavg_url%/}"
+    _cavg_url="${_cavg_url%/v1}"
+    _cavg_url="${_cavg_url%/}"
+    export OLLAMA_HOST="$_cavg_url"
+    _cavg_gemma_id=$(ollama list 2>/dev/null | awk '$1 == "gemma:2b" {print $2}' || true)
+    if [ -n "$_cavg_gemma_id" ]; then
+      _cavg_llama_id=$(ollama list 2>/dev/null | awk '$1 == "llama3.2:1b" {print $2}' || true)
+      _cavg_repull=0
+      if [ -n "$_cavg_llama_id" ] && [ "$_cavg_gemma_id" = "$_cavg_llama_id" ]; then
+        _cavg_repull=1
+      fi
+      if [ "$_cavg_repull" -eq 0 ] && command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+        _cavg_tags=$(curl -sS --connect-timeout 3 --max-time 5 "${_cavg_url%/}/api/tags" 2>/dev/null || true)
+        if [ -n "$_cavg_tags" ]; then
+          _cavg_fam=$(printf '%s\n' "$_cavg_tags" | jq -r '.models[]? | select(.name == "gemma:2b") | .details.family // empty' 2>/dev/null | head -n 1 || true)
+          if [ -n "$_cavg_fam" ] && [ "$_cavg_fam" != "gemma" ]; then
+            _cavg_repull=1
+          fi
+        fi
+      fi
+      if [ "$_cavg_repull" -eq 1 ]; then
+        log_warn "[OLLAMA] Restoring authentic 'gemma:2b' weights after detecting alias..."
+        ollama rm "gemma:2b" 2>/dev/null || true
+        ollama pull "gemma:2b" || true
+      fi
+    fi
   fi
 }
 
@@ -123,6 +194,7 @@ case "$ACTION" in
       fi
       libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
+      configure_cpu_amx_and_verify_gemma
       log_info "[REUSE] ollama (${VERSION}) already installed at ${_existing_ol}."
       exit 0
     fi
@@ -135,6 +207,7 @@ case "$ACTION" in
           ln -sf "$(command -v ollama)" "${TARGET_DIR}/bin/ollama"
           libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
           libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
+          configure_cpu_amx_and_verify_gemma
           exit 0
         fi
       fi
@@ -225,8 +298,14 @@ SHIM
     fi
     libscript_symlink_alias "ollama" "$VERSION" "${EXACT_VERSION}"
     libscript_symlink_alias "ollama" "default" "${EXACT_VERSION}"
+    configure_cpu_amx_and_verify_gemma
     ;;
   start|stop|restart|status|health|logs|up|down|configure|override-env|ensure-models|prune-models)
+    export GGML_BACKEND_AMX="${GGML_BACKEND_AMX:-0}"
+    if ! command -v nvidia-smi >/dev/null 2>&1; then
+      export OLLAMA_LLM_LIBRARY="${OLLAMA_LLM_LIBRARY:-cpu_avx2}"
+      export OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-0}"
+    fi
     if [ -x "${SCRIPT_DIR}/service.sh" ]; then
       "${SCRIPT_DIR}/service.sh" "$ACTION" "$@"
       exit $?

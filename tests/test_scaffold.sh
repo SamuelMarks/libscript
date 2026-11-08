@@ -30,8 +30,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-TMP_JSON_SPEC="/tmp/libscript_test_scaffold_$$.json"
-TMP_EXPORT_JSON="/tmp/libscript_test_scaffold_export_$$.json"
+TMP_JSON_SPEC="${TMPDIR:-/tmp}/libscript_test_scaffold_$$.json"
+TMP_EXPORT_JSON="${TMPDIR:-/tmp}/libscript_test_scaffold_export_$$.json"
 COMP_A_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/scaftest_json"
 COMP_B_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/scaftest_interactive"
 

@@ -171,8 +171,16 @@ if /i "%DRY_RUN%"=="true" (
     exit /b 0
 )
 
+if "!PURGE_DATA!"=="0" (
+    echo [STORAGE] Persistent data disk '!NODE!-data-disk' is retained ^(deleteOption=Detach^). Pass --purge-data to delete it.
+)
 call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh stop"
 call "!CLI!" node delete "!NODE!" "!CTX!"
+if "!PURGE_DATA!"=="1" if /i "!PROVIDER!"=="azure" (
+    echo [STORAGE] Purging detached persistent data disk '!NODE!-data-disk' ^(--purge-data enabled^)...
+    where az >nul 2>nul
+    if not errorlevel 1 call az disk delete -g "!RG!" -n "!NODE!-data-disk" --yes >nul 2>&1
+)
 if /i "!PROVIDER!"=="azure" (
     call "!CLI!" firewall delete "!NODE!-nsg" "!RG!"
     call "!CLI!" network delete "!NODE!-vnet" "!RG!"

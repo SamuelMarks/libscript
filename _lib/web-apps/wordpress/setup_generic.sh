@@ -491,7 +491,9 @@ chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
 
 # 5. WAMP-Class PHP Runtime Optimization
 printf '[INFO] Applying WAMP-class PHP optimization tuning...\n'
-for php_ini in /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini /etc/php.ini /usr/local/etc/php.ini; do
+_wp_etc_dir="${LIBSCRIPT_ETC_DIR:-/etc}"
+_wp_usr_local_etc="${LIBSCRIPT_USR_LOCAL_ETC:-/usr/local/etc}"
+for php_ini in "${_wp_etc_dir}"/php/*/fpm/php.ini "${_wp_etc_dir}"/php/*/cli/php.ini "${_wp_etc_dir}/php.ini" "${_wp_usr_local_etc}/php.ini"; do
   if [ -f "$php_ini" ]; then
     _php_tmp=$(mktemp)
     sed -e "s|^memory_limit =.*|memory_limit = ${WORDPRESS_PHP_MEMORY_LIMIT}|" \
@@ -507,20 +509,23 @@ for php_ini in /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini /etc/php.ini /usr/l
 done
 
 # Provision dedicated PHP-FPM pool for WordPress
-php_fpm_pool_dir=""
-if [ -d "/etc/php/8.2/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.2/fpm/pool.d";
-elif [ -d "/etc/php/8.3/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.3/fpm/pool.d";
-elif [ -d "/etc/php/8.1/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.1/fpm/pool.d";
-elif [ -d "/etc/php-fpm.d" ]; then php_fpm_pool_dir="/etc/php-fpm.d";
+php_fpm_pool_dir="${WORDPRESS_PHP_FPM_POOL_DIR:-}"
+if [ -z "$php_fpm_pool_dir" ]; then
+  if [ -d "${_wp_etc_dir}/php/8.2/fpm/pool.d" ]; then php_fpm_pool_dir="${_wp_etc_dir}/php/8.2/fpm/pool.d";
+  elif [ -d "${_wp_etc_dir}/php/8.3/fpm/pool.d" ]; then php_fpm_pool_dir="${_wp_etc_dir}/php/8.3/fpm/pool.d";
+  elif [ -d "${_wp_etc_dir}/php/8.1/fpm/pool.d" ]; then php_fpm_pool_dir="${_wp_etc_dir}/php/8.1/fpm/pool.d";
+  elif [ -d "${_wp_etc_dir}/php-fpm.d" ]; then php_fpm_pool_dir="${_wp_etc_dir}/php-fpm.d";
+  fi
 fi
 
 WORDPRESS_PHP_FPM_LISTEN='127.0.0.1:9000'
+_wp_fpm_sock="${WORDPRESS_PHP_FPM_SOCK:-${LIBSCRIPT_RUN_DIR:-/run}/php/php-fpm-wordpress.sock}"
 if [ -n "$php_fpm_pool_dir" ]; then
   cat << EOF_FPM | safe_tee "${php_fpm_pool_dir}/wordpress.conf" >/dev/null
 [wordpress]
 user = www-data
 group = www-data
-listen = /run/php/php-fpm-wordpress.sock
+listen = ${_wp_fpm_sock}
 listen.owner = www-data
 listen.group = www-data
 listen.mode = 0660
@@ -530,12 +535,14 @@ pm.start_servers = 5
 pm.min_spare_servers = 5
 pm.max_spare_servers = 35
 EOF_FPM
-  WORDPRESS_PHP_FPM_LISTEN='unix:/run/php/php-fpm-wordpress.sock'
+  WORDPRESS_PHP_FPM_LISTEN="unix:${_wp_fpm_sock}"
   libscript_service restart php8.2-fpm 2>/dev/null || libscript_service restart php8.3-fpm 2>/dev/null || libscript_service restart php-fpm 2>/dev/null || true
 fi
 
 # 6. Configure Ingress Webserver
 printf '[INFO] Configuring Ingress Web Server (%s)...\n' "${WORDPRESS_WEBSERVER}"
+_wp_ngx_etc="${NGINX_ETC_DIR:-${_wp_etc_dir}/nginx}"
+_wp_caddy_etc="${CADDY_ETC_DIR:-${_wp_etc_dir}/caddy}"
 
 if [ "${WORDPRESS_WEBSERVER}" = "nginx" ]; then
   NGINX_CONF_TMP=$(mktemp)
@@ -569,13 +576,13 @@ server {
 }
 EOF_NGINX
 
-  if [ -d /etc/nginx/http.d ]; then
-    safe_cp "${NGINX_CONF_TMP}" "/etc/nginx/http.d/${WORDPRESS_SERVER_NAME}.conf"
-  elif [ -d /etc/nginx/conf.d ]; then
-    safe_cp "${NGINX_CONF_TMP}" "/etc/nginx/conf.d/${WORDPRESS_SERVER_NAME}.conf"
-  elif [ -d /etc/nginx/sites-available ]; then
-    safe_cp "${NGINX_CONF_TMP}" "/etc/nginx/sites-available/${WORDPRESS_SERVER_NAME}.conf"
-    priv ln -sf "/etc/nginx/sites-available/${WORDPRESS_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
+  if [ -d "${_wp_ngx_etc}/http.d" ]; then
+    safe_cp "${NGINX_CONF_TMP}" "${_wp_ngx_etc}/http.d/${WORDPRESS_SERVER_NAME}.conf"
+  elif [ -d "${_wp_ngx_etc}/conf.d" ]; then
+    safe_cp "${NGINX_CONF_TMP}" "${_wp_ngx_etc}/conf.d/${WORDPRESS_SERVER_NAME}.conf"
+  elif [ -d "${_wp_ngx_etc}/sites-available" ]; then
+    safe_cp "${NGINX_CONF_TMP}" "${_wp_ngx_etc}/sites-available/${WORDPRESS_SERVER_NAME}.conf"
+    priv ln -sf "${_wp_ngx_etc}/sites-available/${WORDPRESS_SERVER_NAME}.conf" "${_wp_ngx_etc}/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
   elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --domain "${WORDPRESS_SERVER_NAME}" --listen "${WORDPRESS_LISTEN}" --static "/" "${WORDPRESS_WWWROOT}" --php "/" "${WORDPRESS_PHP_FPM_LISTEN}" --emit nginx >/dev/null 2>&1 || true
   fi
@@ -606,8 +613,8 @@ ${WORDPRESS_SERVER_NAME}:${WORDPRESS_LISTEN} {
     file_server
 }
 EOF_CADDY
-  if [ -d /etc/caddy/conf.d ]; then
-    safe_cp "${CADDY_CONF_TMP}" "/etc/caddy/conf.d/${WORDPRESS_SERVER_NAME}.caddy"
+  if [ -d "${_wp_caddy_etc}/conf.d" ]; then
+    safe_cp "${CADDY_CONF_TMP}" "${_wp_caddy_etc}/conf.d/${WORDPRESS_SERVER_NAME}.caddy"
   elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --domain "${WORDPRESS_SERVER_NAME}" --listen "${WORDPRESS_LISTEN}" --static "/" "${WORDPRESS_WWWROOT}" --php "/" "${WORDPRESS_PHP_FPM_LISTEN}" --emit caddy >/dev/null 2>&1 || true
   fi
@@ -632,9 +639,10 @@ EOF_ADMINER
 fi
 
 # 8. Update /etc/hosts if requested
+_wp_hosts_file="${WORDPRESS_HOSTS_FILE:-${_wp_etc_dir}/hosts}"
 if [ "${WORDPRESS_UPDATE_HOSTS_FILE}" -eq 1 ] && [ "${WORDPRESS_SERVER_NAME}" != "localhost" ]; then
-  if ! grep -q "${WORDPRESS_SERVER_NAME}" /etc/hosts 2>/dev/null; then
-    printf '127.0.0.1 %s\n' "${WORDPRESS_SERVER_NAME}" | safe_tee -a /etc/hosts >/dev/null || true
+  if ! grep -q "${WORDPRESS_SERVER_NAME}" "$_wp_hosts_file" 2>/dev/null; then
+    printf '127.0.0.1 %s\n' "${WORDPRESS_SERVER_NAME}" | safe_tee -a "$_wp_hosts_file" >/dev/null || true
   fi
 fi
 

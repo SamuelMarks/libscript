@@ -53,6 +53,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "OUT_DIR=\"\$(cd \"\$OUT_DIR\" && pwd)\""
       meta_depends=""
       safe_app_name="$(printf '%s\n' "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9+.-' '-' | sed 's/^-*//;s/-*$//')"
+      # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -61,7 +62,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
         meta_depends="${meta_depends}${pkg_name} = ${APP_VERSION}"
         printf '%s\n' "printf '%s\n' \"Building $pkg_name ...\""
-        printf '%s\n' "BUILD_DIR=\"/tmp/${pkg_name}_rpmbuild\""
+        printf '%s\n' "BUILD_DIR=\"\${TMPDIR:-/tmp}/${pkg_name}_rpmbuild\""
         printf '%s\n' "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${pkg_name}.spec\""
         printf '%s\n' "Name: $pkg_name"
@@ -96,7 +97,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       done
       meta_pkg_name="${safe_app_name}-meta"
       printf '%s\n' "printf '%s\n' \"Building ${meta_pkg_name} ...\""
-      printf '%s\n' "BUILD_DIR=\"/tmp/${meta_pkg_name}_rpmbuild\""
+      printf '%s\n' "BUILD_DIR=\"\${TMPDIR:-/tmp}/${meta_pkg_name}_rpmbuild\""
       printf '%s\n' "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
       printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${meta_pkg_name}.spec\""
       printf '%s\n' "Name: ${meta_pkg_name}"

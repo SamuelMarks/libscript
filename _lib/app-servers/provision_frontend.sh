@@ -47,17 +47,74 @@ fi
 app_dir=""
 manifest_path=""
 packaging_path=""
+compute_src_hash_dir=""
+compute_pkg_hash_dir=""
+FORCE_REBUILD="${FORCE_REBUILD:-0}"
+FORCE_REINSTALL="${FORCE_REINSTALL:-0}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --app-dir) app_dir="$2"; shift 2 ;;
     --manifest) manifest_path="$2"; shift 2 ;;
     --packaging) packaging_path="$2"; shift 2 ;;
-    --force-rebuild) export FORCE_REBUILD=1; shift ;;
-    --force-reinstall) export FORCE_REINSTALL=1; shift ;;
+    --compute-src-hash) compute_src_hash_dir="$2"; shift 2 ;;
+    --compute-pkg-hash) compute_pkg_hash_dir="$2"; shift 2 ;;
+    --force-rebuild) FORCE_REBUILD=1; export FORCE_REBUILD=1; shift ;;
+    --force-reinstall) FORCE_REINSTALL=1; export FORCE_REINSTALL=1; shift ;;
     *) shift ;;
   esac
 done
+export FORCE_REBUILD FORCE_REINSTALL
+
+# ## compute_pkg_lock_hash
+# Computes a deterministic cksum over package.json, package-lock.json, npm-shrinkwrap.json, pnpm-lock.yaml, and yarn.lock.
+compute_pkg_lock_hash() {
+  _cplh_dir="${1:-.}"
+  (
+    cd "$_cplh_dir" 2>/dev/null || exit 0
+    _cplh_out=$(
+      for _cplh_f in package.json package-lock.json npm-shrinkwrap.json pnpm-lock.yaml yarn.lock; do
+        if [ -f "$_cplh_f" ]; then
+          cksum "$_cplh_f" 2>/dev/null || true
+        fi
+      done
+    )
+    if [ -n "$_cplh_out" ]; then
+      printf '%s\n' "$_cplh_out" | cksum | awk '{print $1"_"$2}'
+    else
+      printf 'none\n'
+    fi
+  )
+}
+
+# ## compute_frontend_fingerprint
+# Computes a deterministic checksum over package.json, lockfiles, configs, index.html, src/, and public/ for build cache validation.
+compute_frontend_fingerprint() {
+  _cff_dir="$1"
+  (
+    cd "$_cff_dir" 2>/dev/null || exit 0
+    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js vite.config.mts tsconfig.json tsconfig.app.json tsconfig.spec.json index.html postcss.config.js postcss.config.cjs tailwind.config.js tailwind.config.ts .env .env.production; do
+      if [ -f "$_cff_f" ]; then
+        cksum "$_cff_f" 2>/dev/null || true
+      fi
+    done
+    for _cff_sub in src public; do
+      if [ -d "$_cff_sub" ]; then
+        find "$_cff_sub" -type f -exec cksum {} + 2>/dev/null | sort || true
+      fi
+    done
+  ) | cksum | awk '{print $1"_"$2}'
+}
+
+if [ -n "$compute_src_hash_dir" ]; then
+  compute_frontend_fingerprint "$compute_src_hash_dir"
+  exit 0
+fi
+
+if [ -n "$compute_pkg_hash_dir" ]; then
+  compute_pkg_lock_hash "$compute_pkg_hash_dir"
+  exit 0
+fi
 
 if [ -z "$app_dir" ]; then
   printf '%s\n' 'Error: --app-dir is required.' >&2
@@ -91,11 +148,13 @@ hydrate_frontend_node_env() {
       set +a
     fi
   done
-  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
-    # shellcheck disable=SC1090,SC1091
-    STACK="" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" >/dev/null 2>&1 || true
+  if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
+      # shellcheck disable=SC1090,SC1091
+      STACK="" SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" >/dev/null 2>&1 || true
+    fi
   fi
-  PATH="${SERVICE_EXTRA_PATH:-$HOME/.local/bin}:${PATH}"
+  PATH="${PATH}:${SERVICE_EXTRA_PATH:-$HOME/.local/bin}"
   export PATH
 }
 
@@ -119,25 +178,6 @@ stamp_bundle_utc() {
   done
 }
 
-# ## compute_frontend_fingerprint
-# Computes a deterministic checksum over package.json, lockfiles, configs, index.html, src/, and public/ for build cache validation.
-compute_frontend_fingerprint() {
-  _cff_dir="$1"
-  (
-    cd "$_cff_dir" 2>/dev/null || exit 0
-    for _cff_f in package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js vite.config.mts tsconfig.json tsconfig.app.json tsconfig.spec.json index.html postcss.config.js postcss.config.cjs tailwind.config.js tailwind.config.ts .env .env.production; do
-      if [ -f "$_cff_f" ]; then
-        cksum "$_cff_f" 2>/dev/null || true
-      fi
-    done
-    for _cff_sub in src public; do
-      if [ -d "$_cff_sub" ]; then
-        find "$_cff_sub" -type f -exec cksum {} + 2>/dev/null | sort || true
-      fi
-    done
-  ) | cksum | awk '{print $1"_"$2}'
-}
-
 # ## install_node_deps
 # Installs npm/pnpm/yarn/bun dependencies in a target directory if package.json exists, reusing node_modules if lockfile hash matches.
 install_node_deps() {
@@ -147,29 +187,32 @@ install_node_deps() {
     (
       cd "$_dir"
       if [ "${FORCE_REINSTALL:-0}" = "1" ]; then
-        rm -rf "node_modules"
+        rm -rf "node_modules" ".libscript_deps.sha256"
       fi
-      _pkg_fp=$(cksum package.json package-lock.json pnpm-lock.yaml yarn.lock 2>/dev/null | cksum | awk '{print $1"_"$2}' || printf 'none')
-      if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ -d "node_modules" ] && [ -f "node_modules/.libscript_pkg_hash" ] && [ "$(cat node_modules/.libscript_pkg_hash 2>/dev/null || true)" = "$_pkg_fp" ]; then
-        printf '[REUSE] Frontend dependencies in %s are up-to-date.\n' "$_dir"
+      _pkg_hash=$(compute_pkg_lock_hash "$_dir")
+      if [ "${FORCE_REINSTALL:-0}" = "0" ] && [ -d "$_dir/node_modules" ] && [ -f "$_dir/node_modules/.libscript_pkg_hash" ] && [ "$(cat "$_dir/node_modules/.libscript_pkg_hash" 2>/dev/null || true)" = "$_pkg_hash" ]; then
+        printf '[REUSE] Frontend dependencies in %s are up-to-date (hash %s).\n' "$_dir" "$_pkg_hash"
+        printf '%s\n' "$_pkg_hash" > "$_dir/.libscript_deps.sha256" 2>/dev/null || true
         exit 0
       fi
+      _inst_rc=0
       if [ -n "$_custom_inst" ] && [ "$_custom_inst" != "null" ]; then
-        sh -c "$_custom_inst"
+        sh -c "$_custom_inst" || _inst_rc=$?
       elif [ -f "pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
-        pnpm install --frozen-lockfile || pnpm install
+        pnpm install --frozen-lockfile || pnpm install || _inst_rc=$?
       elif [ -f "yarn.lock" ] && command -v yarn >/dev/null 2>&1; then
-        yarn install --frozen-lockfile || yarn install
+        yarn install --frozen-lockfile || yarn install || _inst_rc=$?
       elif [ -f "bun.lockb" ] && command -v bun >/dev/null 2>&1; then
-        bun install
-      elif [ -f "package-lock.json" ] || [ -f "npm-shrinkwrap.json" ]; then
-        npm ci --prefer-offline --no-audit --no-fund || npm install --legacy-peer-deps --no-audit --no-fund
+        bun install || _inst_rc=$?
       else
-        npm install --no-audit --no-fund
+        npm install --no-audit --no-fund --no-package-lock || npm install --legacy-peer-deps --no-audit --no-fund --no-package-lock || _inst_rc=$?
       fi
-      if [ -d "node_modules" ]; then
-        printf '%s\n' "$_pkg_fp" > "node_modules/.libscript_pkg_hash" 2>/dev/null || true
+      if [ "$_inst_rc" -eq 0 ] && [ -d "$_dir/node_modules" ]; then
+        _pkg_hash=$(compute_pkg_lock_hash "$_dir")
+        printf '%s\n' "$_pkg_hash" > "$_dir/node_modules/.libscript_pkg_hash" 2>/dev/null || true
+        printf '%s\n' "$_pkg_hash" > "$_dir/.libscript_deps.sha256" 2>/dev/null || true
       fi
+      exit "$_inst_rc"
     )
   fi
 }
@@ -219,10 +262,14 @@ compute_kmp_fingerprint() {
     cd "$_ckf_dir" 2>/dev/null || exit 0
     {
       for _kf in build.gradle.kts build.gradle settings.gradle.kts settings.gradle gradle.properties gradle/libs.versions.toml composeApp/build.gradle.kts composeApp/build.gradle; do
-        [ -f "$_kf" ] && cksum "$_kf" 2>/dev/null || true
+        if [ -f "$_kf" ]; then
+          cksum "$_kf" 2>/dev/null || true
+        fi
       done
       for _kd in src composeApp/src shared/src; do
-        [ -d "$_kd" ] && find "$_kd" -type f -exec cksum {} + 2>/dev/null | sort || true
+        if [ -d "$_kd" ]; then
+          find "$_kd" -type f -exec cksum {} + 2>/dev/null | sort || true
+        fi
       done
     } | cksum | awk '{print $1"_"$2}'
   )
@@ -367,7 +414,49 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
       fi
       mkdir -p "$target_webroot"
 
-      if [ "${FORCE_REBUILD:-0}" = "1" ]; then
+      _fe_fp=""
+      _cached_fp=""
+      _fresh_hook_build=0
+      if [ -f "$src_dir/package.json" ]; then
+        _fe_fp=$(compute_frontend_fingerprint "$src_dir")
+        if [ -f "${src_dir}/.libscript_build.sha256" ]; then
+          _cached_fp=$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)
+        elif [ -f "${src_dir}/dist/.libscript_src_hash" ]; then
+          _cached_fp=$(cat "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true)
+        fi
+        if [ -n "${LIBSCRIPT_PRE_BUILD_TS:-}" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk"; then
+          _dist_mtime=0
+          for _cand_m in "${src_dir}/dist/.libscript_src_hash" "${src_dir}/.libscript_build.sha256" "${src_dir}/dist"; do
+            if [ -e "$_cand_m" ]; then
+              _m_val=$(stat -c '%Y' "$_cand_m" 2>/dev/null || stat -f '%m' "$_cand_m" 2>/dev/null || printf '0')
+              if [ "${_m_val:-0}" -ge "${_dist_mtime:-0}" ] 2>/dev/null; then
+                _dist_mtime="$_m_val"
+              fi
+            fi
+          done
+          if [ "${_dist_mtime:-0}" -ge "${LIBSCRIPT_PRE_BUILD_TS}" ] 2>/dev/null; then
+            if [ -z "$_cached_fp" ] || [ "$_cached_fp" = "$_fe_fp" ]; then
+              _fresh_hook_build=1
+            fi
+          elif [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; then
+            if [ -f "${src_dir}/dist/.libscript_src_hash" ] && [ -n "$(find "${src_dir}/dist/.libscript_src_hash" -mmin -5 2>/dev/null || true)" ]; then
+              _fresh_hook_build=1
+            elif [ -f "${src_dir}/.libscript_build.sha256" ] && [ -n "$(find "${src_dir}/.libscript_build.sha256" -mmin -5 2>/dev/null || true)" ]; then
+              _fresh_hook_build=1
+            fi
+          fi
+        elif [ "${FORCE_REBUILD:-0}" != "1" ]; then
+          if [ -f "${src_dir}/dist/.libscript_src_hash" ] && [ -n "$(find "${src_dir}/dist/.libscript_src_hash" -mmin -5 2>/dev/null || true)" ] && [ "$_cached_fp" = "$_fe_fp" ]; then
+            _fresh_hook_build=1
+          elif [ -f "${src_dir}/.libscript_build.sha256" ] && [ -n "$(find "${src_dir}/.libscript_build.sha256" -mmin -5 2>/dev/null || true)" ] && [ "$_cached_fp" = "$_fe_fp" ]; then
+            _fresh_hook_build=1
+          elif [ ! -f "${src_dir}/.libscript_build.sha256" ] && [ -d "${src_dir}/dist" ] && [ -n "$(find "${src_dir}/dist" -name 'index.html' -mmin -5 2>/dev/null || true)" ]; then
+            _fresh_hook_build=1
+          fi
+        fi
+      fi
+
+      if [ "${FORCE_REBUILD:-0}" = "1" ] && [ "$_fresh_hook_build" -eq 0 ]; then
         rm -rf "$src_dir/dist" "$src_dir/build" "$src_dir/.angular" "$src_dir/.vite" "$src_dir/.libscript_build.sha256" "$src_dir/.libscript_kmp_build.sha256"
         _extra_cleans=$(printf '%s\n' "$svc" | jq -r '.clean_dirs[]? // empty' 2>/dev/null || true)
         if [ -n "$_extra_cleans" ]; then
@@ -417,22 +506,8 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
         if [ "$src_dir" != "$app_dir" ] || [ -n "$inst_cmd" ]; then
           install_node_deps "$src_dir" "$inst_cmd"
         fi
-        _fe_fp=$(compute_frontend_fingerprint "$src_dir")
-        _cached_fp=""
-        if [ -f "${src_dir}/.libscript_build.sha256" ]; then
-          _cached_fp=$(cat "${src_dir}/.libscript_build.sha256" 2>/dev/null || true)
-        elif [ -f "${src_dir}/dist/.libscript_src_hash" ]; then
-          _cached_fp=$(cat "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true)
-        fi
-        _fresh_hook_build=0
-        if [ -f "${src_dir}/dist/.libscript_src_hash" ] && [ -n "$(find "${src_dir}/dist/.libscript_src_hash" -mmin -5 2>/dev/null || true)" ]; then
-          _fresh_hook_build=1
-        elif [ -f "${src_dir}/.libscript_build.sha256" ] && [ -n "$(find "${src_dir}/.libscript_build.sha256" -mmin -5 2>/dev/null || true)" ]; then
-          _fresh_hook_build=1
-        elif [ ! -f "${src_dir}/.libscript_build.sha256" ] && [ -d "${src_dir}/dist" ] && [ -n "$(find "${src_dir}/dist" -name 'index.html' -mmin -5 2>/dev/null || true)" ]; then
-          _fresh_hook_build=1
-        fi
-        if [ "${FORCE_REBUILD:-0}" != "1" ] && resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && { { [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; } || [ "$_fresh_hook_build" -eq 1 ]; }; then
+        [ -n "$_fe_fp" ] || _fe_fp=$(compute_frontend_fingerprint "$src_dir")
+        if resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk" && { [ "$_fresh_hook_build" -eq 1 ] || { [ "${FORCE_REBUILD:-0}" != "1" ] && [ -n "$_cached_fp" ] && [ "$_cached_fp" = "$_fe_fp" ]; }; }; then
           printf '[REUSE] Frontend build for '\''%s'\'' (%s) in '\''%s'\'' is up-to-date (hash %s).\n' "$svc_id" "${framework:-spa}" "$src_dir" "$_fe_fp"
           printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
           if [ -d "${src_dir}/dist" ]; then
@@ -452,12 +527,14 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
             if [ -n "$build_cmd" ]; then
               sh -c "$build_cmd"
             elif [ "$framework" = "angular" ] || [ -f "angular.json" ]; then
-              if grep -q '"build"' "package.json"; then
+              if [ -f "angular.json" ] && command -v jq >/dev/null 2>&1 && jq -e '.projects[].architect.build.configurations.release' "angular.json" >/dev/null 2>&1; then
+                npx ng build --configuration=release
+              elif grep -q '"build"' "package.json"; then
                 npm run build
               else
-                npx ng build
+                npx ng build --configuration=production
               fi
-            elif [ "$framework" = "vite" ] || [ -f "vite.config.ts" ] || [ -f "vite.config.js" ] || [ -f "vite.config.mts" ]; then
+            elif [ "$framework" = "vite" ] || [ "$framework" = "react" ] || [ "$framework" = "spa" ] || [ -f "vite.config.ts" ] || [ -f "vite.config.js" ] || [ -f "vite.config.mts" ]; then
               if grep -q '"build"' "package.json"; then
                 npm run build
               else
@@ -468,9 +545,14 @@ if command -v jq >/dev/null 2>&1 && [ -f "$packaging_path" ]; then
             fi
           )
           stamp_bundle_utc "$src_dir/dist"
-          printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
-          if [ -d "${src_dir}/dist" ]; then
-            printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
+          if resolve_artifact_exists "$src_dir" "$app_dir" "$out_dir" "$art_chk"; then
+            printf '%s\n' "$_fe_fp" > "${src_dir}/.libscript_build.sha256" 2>/dev/null || true
+            if [ -d "${src_dir}/dist" ]; then
+              printf '%s\n' "$_fe_fp" > "${src_dir}/dist/.libscript_src_hash" 2>/dev/null || true
+            fi
+            if [ -n "$out_dir" ] && [ "$out_dir" != "null" ] && [ -d "${src_dir}/${out_dir}" ]; then
+              printf '%s\n' "$_fe_fp" > "${src_dir}/${out_dir}/.libscript_src_hash" 2>/dev/null || true
+            fi
           fi
         fi
         stage_compiled_assets "$src_dir" "$target_webroot" "$out_dir"

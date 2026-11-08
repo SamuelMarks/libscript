@@ -98,7 +98,7 @@ vm_run() {
 # Helper to capture QEMU screendump and convert to PNG.
 capture_screen() {
   _name="$1"
-  _ppm="/tmp/${_name}.ppm"
+  _ppm="${TMPDIR:-/tmp}/${_name}.ppm"
   _png="${TEMP_DIR}/${_name}.png"
   sleep 1.5
   if [ -n "${MONITOR_SOCK}" ] && [ -S "${MONITOR_SOCK}" ]; then

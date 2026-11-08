@@ -212,7 +212,8 @@ for %%T in (!TARGETS!) do (
                 echo Failure > "!FAILURE_FILE!"
                 echo [FAILED] !TARGET_NAME!
             )
-            vagrant ssh --no-tty -c "export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall !TARGET_NAME! >/dev/null 2>&1 || true; rm -rf \"$HOME/.libscript/!TARGET_NAME!\" /tmp/libscript_pkg_mgr_lock 2>/dev/null || true" >nul 2>&1
+            if "%REMOTE_TMPDIR%"=="" set "REMOTE_TMPDIR=/tmp"
+            vagrant ssh --no-tty -c "export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall !TARGET_NAME! >/dev/null 2>&1 || true; rm -rf \"$HOME/.libscript/!TARGET_NAME!\" !REMOTE_TMPDIR!/libscript_pkg_mgr_lock 2>/dev/null || true" >nul 2>&1
         )
     ) else (
         set "LIBSCRIPT_TEST_TARGET=!TARGET_NAME!"

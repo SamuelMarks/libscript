@@ -211,6 +211,18 @@
     "WORDPRESS_SKIP_DEPS": {
       "type": "string",
       "description": "Configuration variable WORDPRESS_SKIP_DEPS for wordpress."
+    },
+    "WORDPRESS_HOSTS_FILE": {
+      "type": "string",
+      "description": "Override path to the system hosts file updated when WORDPRESS_UPDATE_HOSTS_FILE is enabled."
+    },
+    "WORDPRESS_PHP_FPM_POOL_DIR": {
+      "type": "string",
+      "description": "Override directory for PHP-FPM pool configuration files."
+    },
+    "WORDPRESS_PHP_FPM_SOCK": {
+      "type": "string",
+      "description": "Override UNIX socket path for PHP-FPM."
     }
   }
 }

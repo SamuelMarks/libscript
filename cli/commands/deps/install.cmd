@@ -117,6 +117,15 @@ if "!force_rebuild!"=="1" (
     )
 )
 
+set "_inst_def_mount=!DATA_DISK_MOUNT!"
+if "!_inst_def_mount!"=="" set "_inst_def_mount=!DATA_MOUNT_DIR!"
+if "!_inst_def_mount!"=="" set "_inst_def_mount=/mnt/data"
+if exist "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" (
+    for /f "tokens=1,2 delims=	 " %%M in ('jq -r --arg mp "!_inst_def_mount!" --arg fs "NTFS" ".infrastructure.node.data_disks[]? | [(.mount_path // $mp), (.fstype // $fs)] | @tsv" "!json_file!" 2^>nul') do (
+        call "!LIBSCRIPT_ROOT_DIR!\traits\storage\mount.cmd" --auto-data-disk "%%M" "%%N"
+    )
+)
+
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "pre_install"
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
@@ -256,6 +265,8 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "post
 if errorlevel 1 exit /b 1
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "db_migrate"
 if errorlevel 1 exit /b 1
+for /f "delims=" %%T in ('jq -rn "now | floor" 2^>nul') do set "LIBSCRIPT_PRE_BUILD_TS=%%T"
+if "!LIBSCRIPT_PRE_BUILD_TS!"=="" set "LIBSCRIPT_PRE_BUILD_TS=1"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\run_hooks.cmd" "!json_file!" "build"
 if errorlevel 1 exit /b 1
 set "_HAS_FE=0"

@@ -97,7 +97,7 @@ if [ -z "$ACTION" ] || [ -z "$JSON_FILE" ] || [ ! -f "$JSON_FILE" ]; then
 fi
 
 MANIFEST_DIR=$(cd -- "$(dirname -- "$JSON_FILE")" && pwd)
-DATA_BASE="${LIBSCRIPT_DATA_DIR:-/tmp/data}"
+DATA_BASE="${LIBSCRIPT_DATA_DIR:-${TMP_DATA_DIR:-${TMPDIR:-/tmp}/data}}"
 
 if [ -f "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh" ]; then
   SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
@@ -152,7 +152,7 @@ if [ -z "${LIBSCRIPT_INIT_SYSTEM:-}" ] && [ -z "${INIT_SYSTEM:-}" ]; then
   _mf_init=$(jq -r '.init_system // (.infrastructure.node.capabilities // [] | map(select(. == "systemd" or . == "openrc" or . == "sysvinit" or . == "bsd_rc" or . == "launchd" or . == "smf" or . == "runit" or . == "s6" or . == "fallback" or . == "none")) | .[0]) // empty' "$JSON_FILE" 2>/dev/null || true)
   _mf_init=$(expand_manifest_vars "$_mf_init")
   if [ -n "$_mf_init" ] && [ "$_mf_init" != "null" ] && [ "$_mf_init" != "auto" ]; then
-    if [ "$_mf_init" != "systemd" ] || [ -d /run/systemd/system ]; then
+    if [ "$_mf_init" != "systemd" ] || [ -d "${LIBSCRIPT_RUN_DIR:-/run}/systemd/system" ]; then
       LIBSCRIPT_INIT_SYSTEM="$_mf_init"
       export LIBSCRIPT_INIT_SYSTEM
     fi
@@ -185,6 +185,129 @@ $LEGACY_SERVICES
 EOF_LEGACY
   fi
 }
+
+# ## apply_service_overrides
+# Applies declarative service_overrides from the manifest (including default CPU/AMX crash-prevention overrides and OLLAMA_MODELS ownership for ollama).
+apply_service_overrides() {
+  command -v jq >/dev/null 2>&1 || return 0
+  _aso_svcs=$(jq -r '((.infrastructure.service_overrides // {}) * (.service_overrides // {})) | keys[]?' "$JSON_FILE" 2>/dev/null || true)
+  if [ -z "$_aso_svcs" ]; then
+    return 0
+  fi
+  while IFS= read -r _aso_svc; do
+    [ -n "$_aso_svc" ] || continue
+    _aso_lines=$(jq -r --arg s "$_aso_svc" '((.infrastructure.service_overrides[$s] // {}) * (.service_overrides[$s] // {})) | to_entries[]? | "\(.key)=\(.value)"' "$JSON_FILE" 2>/dev/null || true)
+    [ -n "$_aso_lines" ] || continue
+    if [ "$_aso_svc" = "ollama" ] || [ "$_aso_svc" = "libscript_ollama" ]; then
+      case "${OLLAMA_MODELS_DIR:-}" in
+        /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+        *) unset OLLAMA_MODELS_DIR || true ;;
+      esac
+      case "${OLLAMA_MODELS:-}" in
+        /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+        *) unset OLLAMA_MODELS || true ;;
+      esac
+      _aso_mdir=""
+      while IFS= read -r _aso_kv; do
+        case "$_aso_kv" in
+          OLLAMA_MODELS=*|OLLAMA_MODELS_DIR=*)
+            _aso_val=$(expand_manifest_vars "${_aso_kv#*=}")
+            case "$_aso_val" in
+              /*) _aso_mdir="$_aso_val" ;;
+            esac
+            ;;
+        esac
+      done << EOF_ASO_KV
+$_aso_lines
+EOF_ASO_KV
+      if [ -z "$_aso_mdir" ]; then
+        _aso_mdir="${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
+      fi
+      if [ -n "$_aso_mdir" ]; then
+        mkdir -p "$_aso_mdir" "${_aso_mdir}/manifests" "${_aso_mdir}/blobs" 2>/dev/null || priv mkdir -p "$_aso_mdir" "${_aso_mdir}/manifests" "${_aso_mdir}/blobs" 2>/dev/null || true
+        if id ollama >/dev/null 2>&1; then
+          chown -R ollama:ollama "$_aso_mdir" 2>/dev/null || priv chown -R ollama:ollama "$_aso_mdir" 2>/dev/null || true
+        else
+          chown -R "${SERVICE_USER:-$(id -un)}" "$_aso_mdir" 2>/dev/null || priv chown -R "${SERVICE_USER:-$(id -un)}" "$_aso_mdir" 2>/dev/null || true
+        fi
+        chmod 02775 "$_aso_mdir" "${_aso_mdir}/manifests" "${_aso_mdir}/blobs" 2>/dev/null || priv chmod 02775 "$_aso_mdir" "${_aso_mdir}/manifests" "${_aso_mdir}/blobs" 2>/dev/null || true
+        chmod -R u+rwX,g+rwXs,o+rX "$_aso_mdir" 2>/dev/null || priv chmod -R u+rwX,g+rwXs,o+rX "$_aso_mdir" 2>/dev/null || true
+      fi
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_MODELS=' || _aso_lines="${_aso_lines}
+OLLAMA_MODELS=${_aso_mdir}"
+      printf '%s\n' "$_aso_lines" | grep -q '^GGML_BACKEND_AMX=' || _aso_lines="${_aso_lines}
+GGML_BACKEND_AMX=${GGML_BACKEND_AMX:-0}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_FLASH_ATTENTION=' || _aso_lines="${_aso_lines}
+OLLAMA_FLASH_ATTENTION=${OLLAMA_FLASH_ATTENTION:-0}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_KV_CACHE_TYPE=' || _aso_lines="${_aso_lines}
+OLLAMA_KV_CACHE_TYPE=${OLLAMA_KV_CACHE_TYPE:-f16}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_CONTEXT_LENGTH=' || _aso_lines="${_aso_lines}
+OLLAMA_CONTEXT_LENGTH=${OLLAMA_CONTEXT_LENGTH:-2048}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_MAX_QUEUE=' || _aso_lines="${_aso_lines}
+OLLAMA_MAX_QUEUE=${OLLAMA_MAX_QUEUE:-16}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_KEEP_ALIVE=' || _aso_lines="${_aso_lines}
+OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-10m}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_MAX_LOADED_MODELS=' || _aso_lines="${_aso_lines}
+OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-1}"
+      printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_NUM_PARALLEL=' || _aso_lines="${_aso_lines}
+OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-1}"
+      if ! command -v nvidia-smi >/dev/null 2>&1; then
+        printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_LLM_LIBRARY=' || _aso_lines="${_aso_lines}
+OLLAMA_LLM_LIBRARY=${OLLAMA_LLM_LIBRARY:-cpu_avx2}"
+        printf '%s\n' "$_aso_lines" | grep -q '^OLLAMA_NUM_GPU=' || _aso_lines="${_aso_lines}
+OLLAMA_NUM_GPU=${OLLAMA_NUM_GPU:-0}"
+      fi
+    fi
+    _aso_expanded=""
+    while IFS= read -r _aso_line; do
+      [ -n "$_aso_line" ] || continue
+      _aso_k="${_aso_line%%=*}"
+      if { [ "$_aso_svc" = "ollama" ] || [ "$_aso_svc" = "libscript_ollama" ]; } && { [ "$_aso_k" = "OLLAMA_MODELS" ] || [ "$_aso_k" = "OLLAMA_MODELS_DIR" ]; }; then
+        case "${OLLAMA_MODELS:-}" in
+          /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+          *) unset OLLAMA_MODELS || true ;;
+        esac
+        _aso_v=$(expand_manifest_vars "${_aso_line#*=}")
+        case "$_aso_v" in
+          /*) ;;
+          *) _aso_v="${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}" ;;
+        esac
+      elif { [ "$_aso_svc" = "ollama" ] || [ "$_aso_svc" = "libscript_ollama" ]; } && [ "$_aso_k" = "OLLAMA_HOST" ]; then
+        _aso_v=$(expand_manifest_vars "${_aso_line#*=}")
+        _aso_v="${_aso_v#http://}"
+        _aso_v="${_aso_v#https://}"
+        _aso_v="${_aso_v%/}"
+        _aso_v="${_aso_v%/v1}"
+        _aso_v="${_aso_v%/}"
+        [ -n "$_aso_v" ] || _aso_v="127.0.0.1:11434"
+      else
+        _aso_v=$(expand_manifest_vars "${_aso_line#*=}")
+      fi
+      _aso_expanded="${_aso_expanded}${_aso_k}=${_aso_v}
+"
+    done << EOF_ASO_EXP
+$_aso_lines
+EOF_ASO_EXP
+    OIFS_ASO="$IFS"
+    IFS='
+'
+    # shellcheck disable=SC2086
+    set -- $_aso_expanded
+    IFS="$OIFS_ASO"
+    if [ $# -gt 0 ]; then
+      libscript_service_override_env "$_aso_svc" "$@" || true
+      if [ "${LIBSCRIPT_OVERRIDE_CHANGED:-0}" = "1" ] && libscript_service status "$_aso_svc" >/dev/null 2>&1; then
+        libscript_service restart "$_aso_svc" 2>/dev/null || true
+      fi
+    fi
+  done << EOF_ASO_SVCS
+$_aso_svcs
+EOF_ASO_SVCS
+}
+
+if [ "$ACTION" = "start" ] || [ "$ACTION" = "up" ]; then
+  apply_service_overrides
+fi
 
 if [ "$ACTION" = "start" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "uninstall" ]; then
   cleanup_legacy_services
@@ -333,15 +456,16 @@ EOF_HC_ENV_KV
 dump_service_failure_logs() {
   _dsf_name="$1"
   _dsf_data="${DATA_BASE}/${_dsf_name}"
+  _dsf_log_dir="${LIBSCRIPT_LOG_DIR:-/var/log}"
   if [ -f "${_dsf_data}/service.log" ]; then
     log_error "Recent fallback logs for '${_dsf_name}' (${_dsf_data}/service.log):"
     tail -n 25 "${_dsf_data}/service.log" >&2 2>/dev/null || true
   elif [ -f "${_dsf_data}/stdout.log" ]; then
     log_error "Recent logs for '${_dsf_name}' (${_dsf_data}/stdout.log):"
     tail -n 25 "${_dsf_data}/stdout.log" >&2 2>/dev/null || true
-  elif [ -f "/var/log/${_dsf_name}.log" ]; then
-    log_error "Recent init logs for '${_dsf_name}' (/var/log/${_dsf_name}.log):"
-    tail -n 25 "/var/log/${_dsf_name}.log" >&2 2>/dev/null || true
+  elif [ -f "${_dsf_log_dir}/${_dsf_name}.log" ]; then
+    log_error "Recent init logs for '${_dsf_name}' (${_dsf_log_dir}/${_dsf_name}.log):"
+    tail -n 25 "${_dsf_log_dir}/${_dsf_name}.log" >&2 2>/dev/null || true
   else
     log_error "Recent service logs for '${_dsf_name}':"
     libscript_service logs "$_dsf_name" -n 25 >&2 2>/dev/null || true
@@ -598,17 +722,57 @@ if [ "$ACTION" = "health" ] && [ "$VERIFY_INGRESS" -eq 1 ]; then
     _ing_domain=$(jq -r '.ingress.domain // .domain // empty' "$JSON_FILE" 2>/dev/null || true)
     _ing_domain=$(expand_manifest_vars "$_ing_domain")
   fi
+  _ing_tls=$(jq -r '.ingress.tls // empty' "$JSON_FILE" 2>/dev/null || true)
+  _ing_tls=$(expand_manifest_vars "$_ing_tls")
+  _ing_cert_store=$(jq -r '.ingress.cert_store_dir // empty' "$JSON_FILE" 2>/dev/null || true)
+  _ing_cert_store=$(expand_manifest_vars "$_ing_cert_store")
+  [ -n "$_ing_cert_store" ] || _ing_cert_store="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
   if [ -n "$_ing_domain" ]; then
     case "$_ing_domain" in
       http://*|https://*) _ing_base="${_ing_domain%/}" ;;
       *) _ing_base="https://${_ing_domain%/}" ;;
     esac
+    _ing_host="${_ing_base#http://}"
+    _ing_host="${_ing_host#https://}"
+    _ing_host="${_ing_host%%/*}"
+    _ing_host="${_ing_host%%:*}"
+    _curl_tls_flag='-k'
+    if [ "$_ing_tls" = "letsencrypt" ]; then
+      _curl_tls_flag=""
+      _le_fc="${_ing_cert_store}/live/${_ing_host}/fullchain.pem"
+      _le_pk="${_ing_cert_store}/live/${_ing_host}/privkey.pem"
+      if [ ! -s "$_le_fc" ] || [ ! -s "$_le_pk" ]; then
+        log_error "Persisted Let's Encrypt certificate missing at ${_le_fc}"
+        HEALTH_FAILED=1
+      elif [ -w "$_le_fc" ] && [ "$(id -u 2>/dev/null || printf '1')" != "0" ]; then
+        log_error "Persisted Let's Encrypt certificate ${_le_fc} is not read-only"
+        HEALTH_FAILED=1
+      elif command -v openssl >/dev/null 2>&1; then
+        _le_iss=$(openssl x509 -noout -issuer -in "$_le_fc" 2>/dev/null || true)
+        _le_sub=$(openssl x509 -noout -subject -in "$_le_fc" 2>/dev/null || true)
+        if [ -z "$_le_iss" ] || [ "${_le_iss#*=}" = "${_le_sub#*=}" ]; then
+          log_error "Certificate at ${_le_fc} is self-signed instead of Let's Encrypt CA-signed"
+          HEALTH_FAILED=1
+        elif ! openssl x509 -checkend 0 -noout -in "$_le_fc" >/dev/null 2>&1; then
+          log_error "Certificate at ${_le_fc} is expired"
+          HEALTH_FAILED=1
+        fi
+      fi
+    fi
     _expect_html=$(jq -r '.ingress.expect_html // empty' "$JSON_FILE" 2>/dev/null || true)
     log_info "Verifying public ingress at ${_ing_base}..."
     _ing_ok=0
     _ing_try=1
     while [ "$_ing_try" -le 10 ]; do
-      if _ing_html=$(curl -sfL -m 10 "$_ing_base" 2>/dev/null); then
+      _ing_html=""
+      # shellcheck disable=SC2086
+      if _ing_html=$(curl $_curl_tls_flag -sfL -m 10 "$_ing_base" 2>/dev/null); then
+        :
+      elif [ -n "$_ing_host" ]; then
+        # shellcheck disable=SC2086
+        _ing_html=$(curl $_curl_tls_flag -sfL -m 10 --resolve "${_ing_host}:443:127.0.0.1" --resolve "${_ing_host}:80:127.0.0.1" "$_ing_base" 2>/dev/null || true)
+      fi
+      if [ -n "$_ing_html" ]; then
         if [ -z "$_expect_html" ] || printf '%s\n' "$_ing_html" | grep -Fq "$_expect_html"; then
           _ing_ok=1
           break
@@ -636,7 +800,15 @@ if [ "$ACTION" = "health" ] && [ "$VERIFY_INGRESS" -eq 1 ]; then
           if [ "$_s_path" != "/" ] && [ -n "$_s_path" ]; then
             _pub_hc_url="${_ing_base}${_s_path}"
             log_info "Polling public health endpoint: $_pub_hc_url"
-            if _pub_body=$(curl -sfL -m 10 "$_pub_hc_url" 2>/dev/null); then
+            _pub_body=""
+            _pub_ok=0
+            # shellcheck disable=SC2086
+            if _pub_body=$(curl $_curl_tls_flag -sfL -m 10 "$_pub_hc_url" 2>/dev/null); then
+              _pub_ok=1
+            elif [ -n "$_ing_host" ] && _pub_body=$(curl $_curl_tls_flag -sfL -m 10 --resolve "${_ing_host}:443:127.0.0.1" --resolve "${_ing_host}:80:127.0.0.1" "$_pub_hc_url" 2>/dev/null); then
+              _pub_ok=1
+            fi
+            if [ "$_pub_ok" -eq 1 ]; then
               if [ -n "$_s_json" ] && ! evaluate_json_expr "$_pub_body" "$_s_json"; then
                 log_error "Public health JSON assertion failed for $_pub_hc_url: $_s_json"
                 HEALTH_FAILED=1

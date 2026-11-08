@@ -47,6 +47,14 @@
       "type": "string",
       "description": "Unix socket for REDIS to listen on"
     },
+    "REDIS_DATA_DIR": {
+      "type": "string",
+      "description": "Directory for Redis persistent data"
+    },
+    "VALKEY_DATA_DIR": {
+      "type": "string",
+      "description": "Directory for Valkey/Redis persistent data (alias for REDIS_DATA_DIR)"
+    },
     "REDIS_DOWNLOAD_URL": {
       "type": "string",
       "description": "Override URL for downloading redis binary or archive artifacts."

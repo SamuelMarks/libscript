@@ -62,10 +62,14 @@ echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "valkey" "%VALKEY_VERSION%"
+if "%VALKEY_DATA_DIR%"=="" if not "%REDIS_DATA_DIR%"=="" set "VALKEY_DATA_DIR=%REDIS_DATA_DIR%"
+if not "%VALKEY_DATA_DIR%"=="" set "REDIS_DATA_DIR=%VALKEY_DATA_DIR%"
 
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "PATH=%PATH%"
     set "VALKEY_VERSION=%VALKEY_VERSION%"
+    set "VALKEY_DATA_DIR=%VALKEY_DATA_DIR%"
+    set "REDIS_DATA_DIR=%REDIS_DATA_DIR%"
 )
 exit /b 0

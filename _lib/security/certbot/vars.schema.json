@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/security/certbot/vars.schema.json",
+  "title": "certbot vars",
+  "description": "Configuration variables for the Certbot Let's Encrypt ACME client component.",
+  "type": "object",
+  "properties": {
+    "CERTBOT_VERSION": {
+      "description": "Specific version of certbot to install. Can be a numeric version or an alias.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "CERTBOT_INSTALL_METHOD": {
+      "description": "Installation strategy for Certbot ('system' uses the OS package manager, 'libscript_native' uses isolated version directories).",
+      "type": "string",
+      "enum": ["system", "libscript_native"],
+      "default": "system"
+    },
+    "CERTBOT_INSTALL_DIR": {
+      "description": "Custom target installation directory for isolated Certbot installations.",
+      "type": "string"
+    },
+    "CERTBOT_DOWNLOAD_URL": {
+      "description": "Override URL for downloading Certbot release archives.",
+      "type": "string"
+    },
+    "CERTBOT_RELEASES_URL": {
+      "description": "Override URL for querying available upstream Certbot releases.",
+      "type": "string"
+    },
+    "CERT_STORE_DIR": {
+      "description": "Persistent read-only directory on attached data storage for storing Let's Encrypt certificates across VM instance recreations.",
+      "type": "string",
+      "default": "/mnt/data/certs"
+    },
+    "LETSENCRYPT_EMAIL": {
+      "description": "Contact email address for Let's Encrypt ACME account registration (if empty, registers with --register-unsafely-without-email).",
+      "type": "string"
+    },
+    "LETSENCRYPT_RENEW_BEFORE_SECONDS": {
+      "description": "Minimum remaining validity threshold in seconds passed to openssl x509 -checkend before renewing a certificate (default 0 means renew only when expired).",
+      "type": ["string", "integer"],
+      "default": 0
+    },
+    "LETSENCRYPT_DISABLE_AUTO_RENEW": {
+      "description": "Flag (0 or 1) to disable background OS certbot timers so certificates are only renewed when expired.",
+      "type": ["string", "integer"],
+      "default": 1
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Global fallback TCP port for network-listening components."
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global fallback bind address for network-listening components."
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global fallback UNIX domain socket path for listening components."
+    },
+    "LIBSCRIPT_ALLOW_CERTBOT_SHIM": {
+      "description": "Flag (0 or 1) to allow creating a lightweight certbot CLI shim in isolated dry-run test environments.",
+      "type": ["string", "integer"],
+      "default": 0
+    }
+  }
+}

@@ -280,6 +280,14 @@ if [ "$CMD" = "--version" ] || [ "$CMD" = "-v" ]; then
   exit 0
 fi
 
+STACK="${STACK%"${LIBSCRIPT_ENTRY_FILE}":}"
+case "$CMD" in
+  ls-remote|ls|which|env|info|search|db-search|list|semver)
+    STACK=''
+    ;;
+esac
+export STACK
+
 shift || true
 
 # shellcheck disable=SC1091

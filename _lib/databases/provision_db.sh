@@ -71,6 +71,17 @@ else
     fi
   done
 fi
+if [ -n "${SERVICE_PATH:-}" ]; then
+  export PATH="${SERVICE_PATH}:${PATH}"
+fi
+if [ -n "${SERVICE_EXTRA_PATH:-}" ]; then
+  export PATH="${SERVICE_EXTRA_PATH}:${PATH}"
+fi
+if type libscript_dedup_path >/dev/null 2>&1; then
+  PATH=$(libscript_dedup_path "$PATH")
+  export PATH
+  export SERVICE_PATH="$PATH"
+fi
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
@@ -192,6 +203,24 @@ resolve_min_rows() {
   printf '%s\n' "$_rmr_val"
 }
 
+# ## find_manifest_duckdb_python
+# Searches manifest virtualenvs, LIBSCRIPT_HOME, and PATH for a Python interpreter with duckdb installed.
+find_manifest_duckdb_python() {
+  for _fmdp_cand in \
+    "${MANIFEST_DIR}/.venv/bin/python" \
+    "${MANIFEST_DIR}"/*/.venv/bin/python \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}"/python/*/bin/python3 \
+    "$(command -v python3 2>/dev/null || true)"; do
+    if [ -n "$_fmdp_cand" ] && [ -x "$_fmdp_cand" ]; then
+      if "$_fmdp_cand" -c "import duckdb" >/dev/null 2>&1; then
+        printf '%s\n' "$_fmdp_cand"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
 # ## ensure_duckdb_cli
 # Ensures the duckdb binary is available in PATH by sourcing _lib/databases/duckdb/env.sh or installing it.
 ensure_duckdb_cli() {
@@ -209,6 +238,82 @@ ensure_duckdb_cli() {
     "${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb/cli.sh" install latest >/dev/null 2>&1 || true
   fi
   command -v duckdb >/dev/null 2>&1
+}
+
+# ## query_duckdb_scalar
+# Executes a scalar SQL query against a DuckDB database file using the duckdb CLI with WAL snapshot and Python duckdb fallback.
+query_duckdb_scalar() {
+  _qds_path="$1"
+  _qds_sql="$2"
+  _qds_mode="${3:-scalar}"
+  _qds_out=""
+  if ensure_duckdb_cli; then
+    if [ "$_qds_mode" = "len" ]; then
+      _qds_out=$(duckdb "$_qds_path" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | awk 'NF {c++} END {print c+0}')
+    else
+      _qds_out=$(duckdb "$_qds_path" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | tr -d '[:space:]' | head -n 1 || true)
+    fi
+    if { [ -z "$_qds_out" ] || [ "$_qds_out" = "0" ]; } && [ -f "${_qds_path}.wal" ]; then
+      _qds_tmp=$(mktemp -d 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_duckdb_pv.$$")
+      mkdir -p "$_qds_tmp"
+      _qds_snap="${_qds_tmp}/$(basename -- "$_qds_path")"
+      cp -f "$_qds_path" "$_qds_snap" 2>/dev/null || true
+      if [ -f "${_qds_path}.wal" ]; then
+        cp -f "${_qds_path}.wal" "${_qds_snap}.wal" 2>/dev/null || true
+      fi
+      if [ "$_qds_mode" = "len" ]; then
+        _qds_out=$(duckdb "$_qds_snap" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | awk 'NF {c++} END {print c+0}')
+      else
+        _qds_out=$(duckdb "$_qds_snap" -readonly -csv -noheader -c "$_qds_sql" 2>/dev/null | tr -d '[:space:]' | head -n 1 || true)
+      fi
+      rm -rf "$_qds_tmp"
+    fi
+  fi
+  if { [ -z "$_qds_out" ] || [ "$_qds_out" = "0" ]; } && [ -s "$_qds_path" ]; then
+    if _qds_py=$(find_manifest_duckdb_python 2>/dev/null); then
+      _qds_py_out=$("$_qds_py" - "$_qds_path" "$_qds_sql" "$_qds_mode" << 'PY_DUCKDB_FALLBACK' 2>/dev/null || true
+import os, shutil, sys, tempfile, duckdb
+db_path, sql, mode = sys.argv[1], sys.argv[2], sys.argv[3]
+def run_q(p, ro=True):
+    con = duckdb.connect(p, read_only=ro)
+    try:
+        rows = con.execute(sql).fetchall()
+        if mode == "len":
+            return str(len(rows))
+        return str(rows[0][0] if rows and rows[0] else 0)
+    finally:
+        con.close()
+try:
+    res = run_q(db_path, True)
+    if res in ("0", "") and os.path.exists(db_path + ".wal"):
+        raise RuntimeError("retry with wal snapshot")
+    print(res)
+except Exception:
+    tmpdir = tempfile.mkdtemp(prefix="libscript_duck_py_")
+    try:
+        snap = os.path.join(tmpdir, os.path.basename(db_path))
+        shutil.copy2(db_path, snap)
+        if os.path.exists(db_path + ".wal"):
+            shutil.copy2(db_path + ".wal", snap + ".wal")
+        try:
+            print(run_q(snap, False))
+        except Exception:
+            print(run_q(snap, True))
+    except Exception:
+        print("0")
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+PY_DUCKDB_FALLBACK
+      )
+      _qds_py_out=$(printf '%s\n' "$_qds_py_out" | tr -d '[:space:]' | head -n 1 || true)
+      if [ -n "$_qds_py_out" ] && [ "$_qds_py_out" != "0" ]; then
+        _qds_out="$_qds_py_out"
+      elif [ -z "$_qds_out" ] && [ -n "$_qds_py_out" ]; then
+        _qds_out="$_qds_py_out"
+      fi
+    fi
+  fi
+  printf '%s\n' "${_qds_out:-0}"
 }
 
 # ## ensure_valkey_running
@@ -311,19 +416,33 @@ EOF_CPP_REQ
 quiesce_duckdb_lock_holders() {
   _qdl_path="$1"
   [ -e "$_qdl_path" ] || return 0
-  ensure_duckdb_cli || return 0
-  if duckdb "$_qdl_path" -c "SELECT 1;" >/dev/null 2>&1; then
-    return 0
+  _qdl_locked=0
+  if command -v fuser >/dev/null 2>&1 && fuser "$_qdl_path" >/dev/null 2>&1; then
+    _qdl_locked=1
+  elif ensure_duckdb_cli; then
+    _qdl_err=$(duckdb "$_qdl_path" -c "SELECT 1;" 2>&1 >/dev/null || true)
+    case "$_qdl_err" in
+      *"Conflicting lock"*|*"Could not set lock"*|*"Resource temporarily unavailable"*)
+        _qdl_locked=1
+        ;;
+    esac
   fi
+  if [ "$_qdl_locked" -eq 0 ] && _qdl_py=$(find_manifest_duckdb_python 2>/dev/null); then
+    _qdl_py_err=$("$_qdl_py" -c "import sys, duckdb; con = duckdb.connect(sys.argv[1], read_only=False); con.close()" "$_qdl_path" 2>&1 >/dev/null || true)
+    case "$_qdl_py_err" in
+      *"Conflicting lock"*|*"Could not set lock"*|*"Resource temporarily unavailable"*)
+        _qdl_locked=1
+        ;;
+    esac
+  fi
+  [ "$_qdl_locked" -eq 1 ] || return 0
   log_info "[DB:DUCKDB] Releasing active service locks on '${_qdl_path}'..."
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" ]; then
     STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/daemonize.sh" stop "$JSON_FILE" >/dev/null 2>&1 || true
   fi
-  if ! duckdb "$_qdl_path" -c "SELECT 1;" >/dev/null 2>&1; then
-    if command -v fuser >/dev/null 2>&1; then
-      fuser -k "$_qdl_path" >/dev/null 2>&1 || priv fuser -k "$_qdl_path" >/dev/null 2>&1 || true
-      sleep 1
-    fi
+  if command -v fuser >/dev/null 2>&1 && fuser "$_qdl_path" >/dev/null 2>&1; then
+    fuser -k "$_qdl_path" >/dev/null 2>&1 || priv fuser -k "$_qdl_path" >/dev/null 2>&1 || true
+    sleep 1
   fi
   return 0
 }
@@ -333,16 +452,13 @@ quiesce_duckdb_lock_holders() {
 check_duckdb_populated() {
   _cdp_entry="$1"
   _cdp_path="$2"
-  [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ] && return 1
+  _cdp_ro=$(printf '%s\n' "$_cdp_entry" | jq -r 'if .read_only == true or .readonly == true then "1" else "0" end' 2>/dev/null || printf '0')
+  [ "${LIBSCRIPT_FORCE_SEED:-0}" = "1" ] && [ "$_cdp_ro" != "1" ] && return 1
   [ -s "$_cdp_path" ] || return 1
-  ensure_duckdb_cli || return 1
   _cdp_req=$(printf '%s\n' "$_cdp_entry" | jq -r '.required_tables[]?' 2>/dev/null || true)
   _cdp_min_tbl=$(printf '%s\n' "$_cdp_entry" | jq -r '.min_tables // empty' 2>/dev/null || true)
   [ -z "$_cdp_req" ] && [ -z "$_cdp_min_tbl" ] && return 1
-  if ! duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" >/dev/null 2>&1; then
-    quiesce_duckdb_lock_holders "$_cdp_path"
-  fi
-  _cdp_cnt=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
+  _cdp_cnt=$(query_duckdb_scalar "$_cdp_path" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar" || printf '0')
   : "${_cdp_cnt:=0}"
   if [ -n "$_cdp_min_tbl" ]; then
     [ "$_cdp_cnt" -lt "$_cdp_min_tbl" ] 2>/dev/null && return 1
@@ -352,7 +468,7 @@ check_duckdb_populated() {
     while IFS= read -r _cdp_tbl; do
       [ -n "$_cdp_tbl" ] || continue
       _cdp_min_r=$(resolve_min_rows "$_cdp_entry" "$_cdp_tbl")
-      _cdp_rc=$(duckdb "$_cdp_path" -readonly -csv -noheader -c "SELECT COUNT(*) FROM \"${_cdp_tbl}\";" 2>/dev/null | tr -d '[:space:]' | head -n 1 || printf '%s' "-1")
+      _cdp_rc=$(query_duckdb_scalar "$_cdp_path" "SELECT COUNT(*) FROM \"${_cdp_tbl}\";" "scalar" || printf '%s' "-1")
       if [ -z "$_cdp_rc" ] || [ "$_cdp_rc" -lt "$_cdp_min_r" ] 2>/dev/null; then
         return 1
       fi
@@ -386,6 +502,26 @@ import_duckdb_table_file() {
   if ensure_duckdb_cli; then
     duckdb "$_import_db" -c "$_import_sql" >/dev/null 2>&1
   fi
+}
+
+# ## run_manifest_seed_cmd
+# Executes a database seed_command inside MANIFEST_DIR after sourcing .env, .env.secrets, and .env.libscript.
+run_manifest_seed_cmd() {
+  _rms_cmd="$1"
+  (
+    cd "$MANIFEST_DIR"
+    set -a
+    set +u
+    for _rms_ef in "${MANIFEST_DIR}/.env" "${MANIFEST_DIR}/.env.secrets" "${MANIFEST_DIR}/.env.libscript"; do
+      if [ -f "$_rms_ef" ]; then
+        # shellcheck disable=SC1090
+        . "$_rms_ef" 2>/dev/null || true
+      fi
+    done
+    set -u
+    set +a
+    sh -c "$_rms_cmd"
+  )
 }
 
 SVC_OWNER_USER=$(jq -r '((.services // .infrastructure.services) | if type == "object" then [to_entries[].value] elif type == "array" then . else [] end) | .[0].user // empty' "$JSON_FILE" 2>/dev/null || true)
@@ -487,7 +623,7 @@ while IFS= read -r db_entry <&3; do
         else
           ensure_manifest_python_venvs
           log_info "[UPSERT:POSTGRES] Running PostgreSQL seed_command for '$DB_NAME': $SEED_CMD"
-          (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+          run_manifest_seed_cmd "$SEED_CMD"
           set_env_var "LIBSCRIPT_DB_POSTGRES_POPULATED" "1"
           set_env_var "LIBSCRIPT_DB_${_pg_up_name}_POPULATED" "1"
         fi
@@ -511,7 +647,7 @@ while IFS= read -r db_entry <&3; do
       if [ -n "$SEED_CMD" ]; then
         ensure_manifest_python_venvs
         log_info "[UPSERT:MYSQL] Running MySQL/MariaDB seed_command for '$DB_NAME': $SEED_CMD"
-        (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+        run_manifest_seed_cmd "$SEED_CMD"
       fi
       ;;
     sqlite|sqlite3)
@@ -539,15 +675,17 @@ while IFS= read -r db_entry <&3; do
       if [ -n "$SEED_CMD" ]; then
         ensure_manifest_python_venvs
         log_info "[UPSERT:SQLITE] Running SQLite seed_command for '$DB_NAME': $SEED_CMD"
-        (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
+        run_manifest_seed_cmd "$SEED_CMD"
       fi
       ;;
     duckdb)
+      DB_READ_ONLY=$(printf '%s\n' "$db_entry" | jq -r 'if .read_only == true or .readonly == true then "1" else "0" end' 2>/dev/null || printf '0')
       DB_PATH=$(printf '%s\n' "$db_entry" | jq -r '.path // .file // .db_path // empty')
       DB_PATH=$(expand_manifest_vars "$DB_PATH")
       if [ -z "$DB_PATH" ]; then
-        if [ -d "/mnt/data" ] && [ -w "/mnt/data" ]; then
-          DB_PATH="/mnt/data/${DB_NAME}.duckdb"
+        _pdb_def_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+        if [ -d "$_pdb_def_mount" ] && [ -w "$_pdb_def_mount" ]; then
+          DB_PATH="${_pdb_def_mount}/${DB_NAME}.duckdb"
         else
           DB_PATH="${MANIFEST_DIR}/data/${DB_NAME}.duckdb"
         fi
@@ -555,92 +693,108 @@ while IFS= read -r db_entry <&3; do
         DB_PATH="${MANIFEST_DIR}/${DB_PATH}"
       fi
       DB_PARENT_DIR=$(dirname -- "$DB_PATH")
-      mkdir -p "$DB_PARENT_DIR"
+      if [ "$DB_READ_ONLY" != "1" ]; then
+        mkdir -p "$DB_PARENT_DIR"
+      fi
       PATH_ENV_VAR=$(printf '%s\n' "$db_entry" | jq -r '.path_env // .env_var // "DUCKDB_PATH"')
       set_env_var "$PATH_ENV_VAR" "$DB_PATH"
-      if [ "$PATH_ENV_VAR" != "DUCKDB_PATH" ]; then
+      if [ "$PATH_ENV_VAR" != "DUCKDB_PATH" ] && [ "$DB_READ_ONLY" != "1" ]; then
         set_env_var "DUCKDB_PATH" "$DB_PATH"
       fi
       if [ "$ENV_VAR_NAME" != "DATABASE_URL" ]; then
         set_env_var "$ENV_VAR_NAME" "duckdb:///${DB_PATH}"
       fi
-      if [ ! -s "$DB_PATH" ]; then
-        log_info "[DB:DUCKDB] [CREATE] Initializing new DuckDB database at '$DB_PATH'..."
-        if ensure_duckdb_cli; then
-          duckdb "$DB_PATH" -c "SELECT 1;" >/dev/null 2>&1 || true
+      _duck_up_name=$(printf '%s' "$DB_NAME" | tr '[:lower:]-.' '[:upper:]__')
+      if [ "$DB_READ_ONLY" = "1" ]; then
+        if [ -s "$DB_PATH" ]; then
+          _duck_sz=$(du -sh "$DB_PATH" 2>/dev/null | awk '{print $1}' || printf '0B')
+          _duck_tcnt=$(query_duckdb_scalar "$DB_PATH" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar" || printf '0')
+          log_info "[DB:DUCKDB] [CONFIRM] Read-only DuckDB database exists at '$DB_PATH' (${_duck_sz:-0B}, ${_duck_tcnt:-0} table(s))."
+          if check_duckdb_populated "$db_entry" "$DB_PATH"; then
+            set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
+          fi
+        else
+          log_warn "[DB:DUCKDB] Read-only DuckDB database '$DB_PATH' is not present yet; skipping write provisioning."
         fi
       else
-        _duck_sz=$(du -sh "$DB_PATH" 2>/dev/null | awk '{print $1}' || printf '0B')
-        _duck_tcnt=0
-        if ensure_duckdb_cli; then
-          _duck_tcnt=$(duckdb "$DB_PATH" -readonly -csv -noheader -c "SHOW TABLES;" 2>/dev/null | awk 'NF {c++} END {print c+0}')
-        fi
-        log_info "[DB:DUCKDB] [CONFIRM] DuckDB database exists at '$DB_PATH' (${_duck_sz:-0B}, ${_duck_tcnt:-0} table(s))."
-      fi
-      if [ -n "$SEED_FILE" ]; then
-        RES_SEED_FILE=$(resolve_db_asset_path "$SEED_FILE")
-        if [ -f "$RES_SEED_FILE" ]; then
-          exec_duckdb_sql_file "$DB_PATH" "$RES_SEED_FILE" || true
-        fi
-      fi
-      if [ -n "$SEED_DIR" ]; then
-        RES_SEED_DIR=$(resolve_db_asset_path "$SEED_DIR")
-        if [ -d "$RES_SEED_DIR" ]; then
-          for _sd_item in "$RES_SEED_DIR"/*; do
-            [ -f "$_sd_item" ] || continue
-            case "$_sd_item" in
-              *.sql) exec_duckdb_sql_file "$DB_PATH" "$_sd_item" || true ;;
-              *.csv|*.parquet) import_duckdb_table_file "$DB_PATH" "$_sd_item" || true ;;
-            esac
-          done
-        fi
-      fi
-      _duck_up_name=$(printf '%s' "$DB_NAME" | tr '[:lower:]-.' '[:upper:]__')
-      if [ -n "$SEED_CMD" ]; then
-        if check_duckdb_populated "$db_entry" "$DB_PATH"; then
-          log_info "[REUSE] DuckDB database '$DB_PATH' already has required tables and minimum rows; skipping full re-seed."
-          set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
-          set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
-        else
-          quiesce_duckdb_lock_holders "$DB_PATH"
-          ensure_manifest_python_venvs
-          log_info "[UPSERT:DUCKDB] Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
-          (cd "$MANIFEST_DIR" && sh -c "$SEED_CMD")
-          set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
-          set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
-        fi
-      elif check_duckdb_populated "$db_entry" "$DB_PATH"; then
-        set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
-        set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
-      fi
-      DB_OWNER=$(printf '%s\n' "$db_entry" | jq -r '.user // empty')
-      DB_OWNER=$(expand_manifest_vars "$DB_OWNER")
-      if [ -z "$DB_OWNER" ] || [ "$DB_OWNER" = "postgres" ]; then
-        DB_OWNER="$SVC_OWNER_USER"
-      fi
-      if [ -n "$DB_OWNER" ] && id "$DB_OWNER" >/dev/null 2>&1; then
-        _duck_extra_paths=$(
-          {
-            printf '%s\n' "$db_entry" | jq -r '.extra_paths[]? // empty' 2>/dev/null || true
-            env | awk -F= '/^[A-Za-z0-9_]*_DB_PATH=/ {print substr($0, index($0, "=") + 1)}' 2>/dev/null || true
-          } | awk 'NF && !seen[$0]++'
-        )
-        for _own_target in "$DB_PARENT_DIR" "$DB_PATH" "${DB_PATH}.wal" "${MANIFEST_DIR}/data"; do
-          if [ -n "$_own_target" ] && [ -e "$_own_target" ]; then
-            chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || priv chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || true
-            chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || priv chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || true
+        if [ ! -s "$DB_PATH" ]; then
+          log_info "[DB:DUCKDB] [CREATE] Initializing new DuckDB database at '$DB_PATH'..."
+          if ensure_duckdb_cli; then
+            duckdb "$DB_PATH" -c "SELECT 1;" >/dev/null 2>&1 || true
           fi
-        done
-        if [ -n "$_duck_extra_paths" ]; then
-          while IFS= read -r _dep_target; do
-            _dep_target=$(expand_manifest_vars "$_dep_target")
-            if [ -n "$_dep_target" ] && [ -e "$_dep_target" ]; then
-              chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || priv chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || true
-              chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || priv chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || true
+        else
+          _duck_sz=$(du -sh "$DB_PATH" 2>/dev/null | awk '{print $1}' || printf '0B')
+          _duck_tcnt=$(query_duckdb_scalar "$DB_PATH" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar" || printf '0')
+          log_info "[DB:DUCKDB] [CONFIRM] DuckDB database exists at '$DB_PATH' (${_duck_sz:-0B}, ${_duck_tcnt:-0} table(s))."
+        fi
+        if [ -n "$SEED_FILE" ]; then
+          RES_SEED_FILE=$(resolve_db_asset_path "$SEED_FILE")
+          if [ -f "$RES_SEED_FILE" ]; then
+            exec_duckdb_sql_file "$DB_PATH" "$RES_SEED_FILE" || true
+          fi
+        fi
+        if [ -n "$SEED_DIR" ]; then
+          RES_SEED_DIR=$(resolve_db_asset_path "$SEED_DIR")
+          if [ -d "$RES_SEED_DIR" ]; then
+            for _sd_item in "$RES_SEED_DIR"/*; do
+              [ -f "$_sd_item" ] || continue
+              case "$_sd_item" in
+                *.sql) exec_duckdb_sql_file "$DB_PATH" "$_sd_item" || true ;;
+                *.csv|*.parquet) import_duckdb_table_file "$DB_PATH" "$_sd_item" || true ;;
+              esac
+            done
+          fi
+        fi
+        if [ -n "$SEED_CMD" ]; then
+          if check_duckdb_populated "$db_entry" "$DB_PATH"; then
+            log_info "[REUSE] DuckDB database '$DB_PATH' already has required tables and minimum rows; skipping full re-seed."
+            set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
+            set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
+          else
+            quiesce_duckdb_lock_holders "$DB_PATH"
+            ensure_manifest_python_venvs
+            log_info "[UPSERT:DUCKDB] Running DuckDB seed_command for '$DB_NAME': $SEED_CMD"
+            run_manifest_seed_cmd "$SEED_CMD"
+            set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
+            set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
+          fi
+        elif check_duckdb_populated "$db_entry" "$DB_PATH"; then
+          set_env_var "LIBSCRIPT_DB_DUCKDB_POPULATED" "1"
+          set_env_var "LIBSCRIPT_DB_${_duck_up_name}_POPULATED" "1"
+        fi
+        DB_OWNER=$(printf '%s\n' "$db_entry" | jq -r '.user // empty')
+        DB_OWNER=$(expand_manifest_vars "$DB_OWNER")
+        if [ -z "$DB_OWNER" ] || [ "$DB_OWNER" = "postgres" ]; then
+          DB_OWNER="$SVC_OWNER_USER"
+        fi
+        if [ -n "$DB_OWNER" ] && id "$DB_OWNER" >/dev/null 2>&1; then
+          _duck_extra_paths=$(
+            {
+              printf '%s\n' "$db_entry" | jq -r '.extra_paths[]? // empty' 2>/dev/null || true
+              env | awk -F= '/^[A-Za-z0-9_]*_DB_PATH=/ {print substr($0, index($0, "=") + 1)}' 2>/dev/null || true
+            } | awk 'NF && !seen[$0]++'
+          )
+          if [ -n "$DB_PARENT_DIR" ] && [ -d "$DB_PARENT_DIR" ]; then
+            chown "$DB_OWNER" "$DB_PARENT_DIR" 2>/dev/null || priv chown "$DB_OWNER" "$DB_PARENT_DIR" 2>/dev/null || true
+            chmod u+rwX,go+rX "$DB_PARENT_DIR" 2>/dev/null || priv chmod u+rwX,go+rX "$DB_PARENT_DIR" 2>/dev/null || true
+          fi
+          for _own_target in "$DB_PATH" "${DB_PATH}.wal" "${MANIFEST_DIR}/data"; do
+            if [ -n "$_own_target" ] && [ -e "$_own_target" ]; then
+              chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || priv chown -R "$DB_OWNER" "$_own_target" 2>/dev/null || true
+              chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || priv chmod -R u+rwX,go+rX "$_own_target" 2>/dev/null || true
             fi
-          done << EOF_DUCK_EXTRA
+          done
+          if [ -n "$_duck_extra_paths" ]; then
+            while IFS= read -r _dep_target; do
+              _dep_target=$(expand_manifest_vars "$_dep_target")
+              if [ -n "$_dep_target" ] && [ -e "$_dep_target" ] && [ -w "$_dep_target" ]; then
+                chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || priv chown -R "$DB_OWNER" "$_dep_target" 2>/dev/null || true
+                chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || priv chmod -R u+rwX,go+rX "$_dep_target" 2>/dev/null || true
+              fi
+            done << EOF_DUCK_EXTRA
 $_duck_extra_paths
 EOF_DUCK_EXTRA
+          fi
         fi
       fi
       ;;

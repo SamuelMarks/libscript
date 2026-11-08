@@ -1162,6 +1162,23 @@ map_package() {
         *) printf 'nginx\n' ;;
       esac
       ;;
+    'certbot')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get'|'apk'|'dnf'|'yum'|'pacman'|'brew'|'port'|'xbps') printf 'certbot\n' ;;
+        'zypper') printf 'python3-certbot\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
+            printf 'web/certbot\n'
+          else
+            printf 'py311-certbot\n'
+          fi
+          ;;
+        'emerge') printf 'app-crypt/certbot\n' ;;
+        'winget') printf 'EFF.Certbot\n' ;;
+        'choco'|'scoop'|'vcpkg') printf 'certbot\n' ;;
+        *) printf 'certbot\n' ;;
+      esac
+      ;;
     'openbao'|'bao')
       case "${PKG_MGR}" in
         'apt-get'|'apk'|'dnf'|'yum'|'zypper'|'pacman') return 1 ;;

@@ -47,6 +47,7 @@ case "${1:-}" in
       aws s3 cp "$IMG_PATH" "s3://${S3_BUCKET}/$(basename "$IMG_PATH")"
       printf '[CLOUD] Importing snapshot and registering AMI %s...\n' "$AMI_NAME"
       IMPORT_TASK_ID=$(aws ec2 import-snapshot --disk-container "Format=raw,UserBucket={S3Bucket=${S3_BUCKET},S3Key=$(basename "$IMG_PATH")}" --query "ImportTaskId" --output text 2>/dev/null || printf 'snap-task-mock')
+      export IMPORT_TASK_ID
       printf '[CLOUD] Registering EC2 AMI with LibScript metadata tags...\n'
       AMI_ID=$(aws ec2 register-image --name "$AMI_NAME" --architecture x86_64 --root-device-name "/dev/sda1" --query "ImageId" --output text 2>/dev/null || printf 'ami-mocklibscript')
       aws ec2 create-tags --resources "$AMI_ID" --tags "Key=Framework,Value=LibScript" "Key=ManagedBy,Value=LibScript" 2>/dev/null || true

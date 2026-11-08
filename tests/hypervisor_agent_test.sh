@@ -35,7 +35,7 @@ printf '[TEST-HYPERVISOR] Starting Guest Agent Protocol & Integration Validation
 # 1. Test guest-ping payload
 PING_REQ='{"execute":"guest-ping"}'
 PING_RESP='{"return":{}}'
-printf '[TEST-HYPERVISOR] Validating guest-ping format...\n'
+printf '[TEST-HYPERVISOR] Validating guest-ping format (%s)...\n' "$PING_REQ"
 case "$PING_RESP" in
   *'{"return":{}}'*) printf '[PASS] guest-ping handshake matches QGA specification.\n' ;;
   *) printf '[FAIL] Invalid guest-ping response.\n' >&2; exit 1 ;;

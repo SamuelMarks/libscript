@@ -154,7 +154,31 @@ set "_SYNC_STATE=SYNCED"
 set "_DO_SKIP_SYNC=0"
 if "!FORCE_REINSTALL!"=="0" (
     if "!FORCE_REBUILD!"=="0" (
-        if "!LOCAL_SUM!"=="!REMOTE_SUM!" set "_DO_SKIP_SYNC=1"
+        if "!LOCAL_SUM!"=="!REMOTE_SUM!" (
+            set "_DR_MK_CMD=true"
+            if exist "!APP_PATH!\libscript.json" (
+                for /f "delims=" %%F in ('jq -r "([ (.frontends | if type == \"array\" then .[] elif type == \"object\" then .[] else empty end | (.source_dir // .working_dir // .cwd // \".\")) ] | map(select(. != null and . != \"\")) | unique)[]?" "!APP_PATH!\libscript.json" 2^>nul') do (
+                    set "_DR_FE_REL=%%F"
+                    if "!_DR_FE_REL!"=="." (
+                        set "_DR_FE_PFX=$HOME/apps/!APP_NAME!"
+                    ) else (
+                        set "_DR_FE_PFX=$HOME/apps/!APP_NAME!/!_DR_FE_REL!"
+                    )
+                    set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f !_DR_FE_PFX!/node_modules/.libscript_pkg_hash ] && [ -f !_DR_FE_PFX!/.libscript_build.sha256 ]"
+                )
+            ) else if exist "!APP_PATH!\package.json" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/node_modules/.libscript_pkg_hash ]"
+            )
+            if exist "!APP_PATH!\pyproject.toml" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/.venv/.libscript_lock_hash ]"
+            ) else if exist "!APP_PATH!\uv.lock" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/.venv/.libscript_lock_hash ]"
+            ) else if exist "!APP_PATH!\requirements.txt" (
+                set "_DR_MK_CMD=!_DR_MK_CMD! && [ -f $HOME/apps/!APP_NAME!/.venv/.libscript_lock_hash ]"
+            )
+            ssh "!TARGET_HOST!" "!_DR_MK_CMD!" >nul 2>&1
+            if not errorlevel 1 set "_DO_SKIP_SYNC=1"
+        )
     )
 )
 if "!_DO_SKIP_SYNC!"=="1" (
@@ -252,6 +276,14 @@ if exist "!tgt_dir!\.git" (
     if exist "!tgt_dir!\libscript.json" type "!tgt_dir!\libscript.json" >> "!_dr_tmp!" 2>nul
     if exist "!tgt_dir!\.env" type "!tgt_dir!\.env" >> "!_dr_tmp!" 2>nul
     if exist "!tgt_dir!\.env.secrets" type "!tgt_dir!\.env.secrets" >> "!_dr_tmp!" 2>nul
+    for %%L in ("!tgt_dir!\package.json" "!tgt_dir!\package-lock.json" "!tgt_dir!\pyproject.toml" "!tgt_dir!\uv.lock" "!tgt_dir!\requirements*.txt" "!tgt_dir!\angular.json" "!tgt_dir!\vite.config.*") do (
+        if exist "%%~fL" type "%%~fL" >> "!_dr_tmp!" 2>nul
+    )
+    for /d %%S in ("!tgt_dir!\*") do (
+        for %%M in ("%%~fS\package.json" "%%~fS\package-lock.json" "%%~fS\pyproject.toml" "%%~fS\uv.lock" "%%~fS\requirements*.txt" "%%~fS\angular.json" "%%~fS\vite.config.*") do (
+            if exist "%%~fM" type "%%~fM" >> "!_dr_tmp!" 2>nul
+        )
+    )
     set "_dr_dirty=0"
     for /f "skip=1 tokens=1" %%D in ('certutil -hashfile "!_dr_tmp!" SHA256 2^>nul') do (
         if "!_dr_dirty!"=="0" set "_dr_dirty=%%D"

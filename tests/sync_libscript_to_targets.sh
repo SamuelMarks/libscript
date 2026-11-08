@@ -36,7 +36,6 @@ if [ $# -lt 1 ]; then
 fi
 
 TARGET="$1"
-SSH_OPTS=""
 
 if [ -d "$TARGET" ] && [ -f "$TARGET/Vagrantfile" ]; then
     # It's a vagrant directory
@@ -51,7 +50,6 @@ if [ -d "$TARGET" ] && [ -f "$TARGET/Vagrantfile" ]; then
         echo "[ERROR] Failed to generate vagrant ssh-config. Is the machine running? LIBSCRIPT_TEST_TARGET=$LIBSCRIPT_TEST_TARGET"
         exit 1
     fi
-    SSH_OPTS="-e 'ssh -F $VAGRANT_DIR/ssh_config'"
     
     # Extract Host from config (usually default or name of machine)
     VAGRANT_HOST=$(awk '/^Host / {print $2; exit}' ssh_config)

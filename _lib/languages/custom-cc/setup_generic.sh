@@ -98,7 +98,7 @@ install_custom_cc_component() {
         stage_custom_cc_wrapper "${LIBSCRIPT_BUILD_TARGET_DIR}" "${CUSTOM_CC_BIN:-}"
       else
         stage_custom_cc_wrapper "${LIBSCRIPT_BUILD_TARGET_DIR}" "${CUSTOM_CC_BIN:-}"
-        LIBSCRIPT_LAST_COMPILE_TIME_MS=10
+        export LIBSCRIPT_LAST_COMPILE_TIME_MS=10
       fi
       TARGET_DIR="${LIBSCRIPT_BUILD_TARGET_DIR}"
       libscript_emit_build_metrics "custom-cc" "${EXACT_VERSION}" "${TARGET_DIR}/bin/custom-cc" "${CUSTOM_CC_EXTRA_CFLAGS:-}" ""

@@ -1,9 +1,9 @@
 @echo off
 :: # service.cmd
 :: ## Overview
-:: Manages background service lifecycle operations (start, stop, status) for the valkey component.
+:: Manages background service lifecycle operations (start, stop, status, configure, override-env) and persistent VALKEY_DATA_DIR / REDIS_DATA_DIR configuration for the valkey component on Windows.
 :: ## Usage
-:: service.cmd
+:: service.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,4 +49,45 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
+call "!SCRIPT_DIR!\env.cmd"
+set "_ACT=%~1"
+if "!_ACT!"=="" set "_ACT=%ACTION%"
+if "!_ACT!"=="" exit /b 0
+set "_SVC=%LIBSCRIPT_SERVICE_NAME%"
+if "!_SVC!"=="" set "_SVC=valkey"
+
+if /i "!_ACT!"=="configure" (
+    call :configure_valkey_storage "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "!_ACT!"=="override-env" (
+    call :configure_valkey_storage "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "!_ACT!"=="start" call :configure_valkey_storage
+if /i "!_ACT!"=="restart" call :configure_valkey_storage
+if /i "!_ACT!"=="up" call :configure_valkey_storage
+if /i "!_ACT!"=="install-service" call :configure_valkey_storage
+
+exit /b 0
+
+:: ## configure_valkey_storage
+:: Ensures the persistent Valkey data directory exists, grants service ACLs, and persists VALKEY_DATA_DIR and REDIS_DATA_DIR overrides on Windows.
+:configure_valkey_storage
+set "_CVS_DIR=%~1"
+if /i "!_CVS_DIR!"=="valkey" set "_CVS_DIR="
+if /i "!_CVS_DIR!"=="valkey-server" set "_CVS_DIR="
+if /i "!_CVS_DIR!"=="redis" set "_CVS_DIR="
+if /i "!_CVS_DIR!"=="redis-server" set "_CVS_DIR="
+if /i "!_CVS_DIR!"=="libscript_valkey" set "_CVS_DIR="
+if "!_CVS_DIR!"=="" set "_CVS_DIR=!VALKEY_DATA_DIR!"
+if "!_CVS_DIR!"=="" set "_CVS_DIR=!REDIS_DATA_DIR!"
+if "!_CVS_DIR!"=="" exit /b 0
+set "VALKEY_DATA_DIR=!_CVS_DIR!"
+set "REDIS_DATA_DIR=!_CVS_DIR!"
+if not exist "!VALKEY_DATA_DIR!" mkdir "!VALKEY_DATA_DIR!" >nul 2>&1
+icacls "!VALKEY_DATA_DIR!" /grant "*S-1-5-32-544:(OI)(CI)F" /grant "*S-1-5-18:(OI)(CI)F" /T /C /Q >nul 2>&1
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "VALKEY_DATA_DIR=!VALKEY_DATA_DIR!" "REDIS_DATA_DIR=!REDIS_DATA_DIR!" >nul 2>&1
 exit /b 0

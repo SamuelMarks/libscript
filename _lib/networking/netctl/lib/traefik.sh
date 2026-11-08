@@ -45,8 +45,9 @@ netctl_emit_traefik() {
   routers:
 '
   idx=0
-  jq -r '.routes | to_entries[] | "\(.key)	\(.value.type)	\(.value.target // "")"' "$state_file" | while IFS="$(printf '	')" read -r path rtype target; do
+  jq -r '.routes | to_entries[] | "\(.key)	\(.value.type)	\(.value.target // "")"' "$state_file" | while IFS="$(printf '	')" read -r path _rtype _target; do
     idx=$((idx + 1))
+    # shellcheck disable=SC2016
     printf '    route_%d:
       rule: "PathPrefix(`%s`)"
       service: service_%d
@@ -54,7 +55,7 @@ netctl_emit_traefik() {
   done
   printf '  services:\n'
   idx=0
-  jq -r '.routes | to_entries[] | "\(.key)	\(.value.type)	\(.value.target // "")"' "$state_file" | while IFS="$(printf '	')" read -r path rtype target; do
+  jq -r '.routes | to_entries[] | "\(.key)	\(.value.type)	\(.value.target // "")"' "$state_file" | while IFS="$(printf '	')" read -r _path _rtype target; do
     idx=$((idx + 1))
     printf '    service_%d:
       loadBalancer:

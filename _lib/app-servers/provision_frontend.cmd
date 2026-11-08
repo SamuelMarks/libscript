@@ -50,6 +50,10 @@ goto :find_root
 set "APP_DIR="
 set "MANIFEST_PATH="
 set "PACKAGING_PATH="
+set "COMPUTE_SRC_HASH_DIR="
+set "COMPUTE_PKG_HASH_DIR="
+if "%FORCE_REBUILD%"=="" set "FORCE_REBUILD=0"
+if "%FORCE_REINSTALL%"=="" set "FORCE_REINSTALL=0"
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -73,6 +77,18 @@ if "%~1"=="--packaging" (
     shift
     goto parse_args
 )
+if "%~1"=="--compute-src-hash" (
+    set "COMPUTE_SRC_HASH_DIR=%~2"
+    shift
+    shift
+    goto parse_args
+)
+if "%~1"=="--compute-pkg-hash" (
+    set "COMPUTE_PKG_HASH_DIR=%~2"
+    shift
+    shift
+    goto parse_args
+)
 if /i "%~1"=="--force-rebuild" (
     set "FORCE_REBUILD=1"
     shift
@@ -89,6 +105,18 @@ goto parse_args
 :: ## run_provision
 :: Executes the frontend build and asset staging workflow.
 :run_provision
+if not "!COMPUTE_SRC_HASH_DIR!"=="" (
+    call :compute_frontend_fingerprint "!COMPUTE_SRC_HASH_DIR!"
+    echo !_FE_FP!
+    exit /b 0
+)
+if not "!COMPUTE_PKG_HASH_DIR!"=="" (
+    pushd "!COMPUTE_PKG_HASH_DIR!" 2>nul
+    call :compute_pkg_lock_hash
+    popd
+    echo !_PKG_FP!
+    exit /b 0
+)
 if "!APP_DIR!"=="" (
     echo Error: Missing --app-dir >&2
     exit /b 1
@@ -128,13 +156,17 @@ exit /b 0
 :: Computes a deterministic hash of package.json and lockfiles in the current directory.
 :compute_pkg_lock_hash
 set "_PKG_FP=none"
-set "_PKG_ACC="
-for %%F in (package.json package-lock.json pnpm-lock.yaml yarn.lock) do (
-    if exist "%%F" (
-        for %%Z in ("%%F") do set "_PKG_ACC=!_PKG_ACC!_%%~nxZ_%%~zZ_%%~tZ"
-    )
+set "_PKG_TMP=%TEMP%\libscript_pkg_fp_%RANDOM%.txt"
+if exist "!_PKG_TMP!" del /f /q "!_PKG_TMP!" >nul 2>&1
+for %%F in (package.json package-lock.json npm-shrinkwrap.json pnpm-lock.yaml yarn.lock) do (
+    if exist "%%F" type "%%F" >> "!_PKG_TMP!" 2>nul
 )
-if not "!_PKG_ACC!"=="" set "_PKG_FP=!_PKG_ACC: =_!"
+if exist "!_PKG_TMP!" (
+    for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_PKG_TMP!" SHA256 2^>nul') do (
+        if "!_PKG_FP!"=="none" set "_PKG_FP=%%H"
+    )
+    del /f /q "!_PKG_TMP!" >nul 2>&1
+)
 exit /b 0
 
 :: ## compute_frontend_fingerprint
@@ -179,6 +211,7 @@ if exist "!nd_dir!\package.json" (
     pushd "!nd_dir!"
     if "%FORCE_REINSTALL%"=="1" (
         if exist "node_modules" rmdir /s /q "node_modules" 2>nul
+        if exist ".libscript_deps.sha256" del /f /q ".libscript_deps.sha256" 2>nul
     )
     call :compute_pkg_lock_hash
     set "_CACHED_PKG_FP="
@@ -186,21 +219,20 @@ if exist "!nd_dir!\package.json" (
         set /p _CACHED_PKG_FP=<"node_modules\.libscript_pkg_hash"
     )
     if not "%FORCE_REINSTALL%"=="1" if exist "node_modules\.libscript_pkg_hash" if "!_CACHED_PKG_FP!"=="!_PKG_FP!" (
-        echo [REUSE] Frontend dependencies in !nd_dir! are up-to-date.
+        echo [REUSE] Frontend dependencies in !nd_dir! are up-to-date ^(hash !_PKG_FP!^).
+        > ".libscript_deps.sha256" echo !_PKG_FP!
         popd
         exit /b 0
     )
     if not "!nd_cmd!"=="" (
         call !nd_cmd!
-    ) else if exist "package-lock.json" (
-        call npm ci --prefer-offline --no-audit --no-fund || call npm install --legacy-peer-deps --no-audit --no-fund
-    ) else if exist "npm-shrinkwrap.json" (
-        call npm ci --prefer-offline --no-audit --no-fund || call npm install --legacy-peer-deps --no-audit --no-fund
     ) else (
-        call npm install --no-audit --no-fund
+        call npm install --no-audit --no-fund --no-package-lock || call npm install --legacy-peer-deps --no-audit --no-fund --no-package-lock
     )
-    if exist "node_modules" (
+    if not errorlevel 1 if exist "node_modules" (
+        call :compute_pkg_lock_hash
         > "node_modules\.libscript_pkg_hash" echo !_PKG_FP!
+        > ".libscript_deps.sha256" echo !_PKG_FP!
     )
     popd
 )
@@ -212,6 +244,9 @@ exit /b 0
 :: ## build_single_frontend
 :: Alias for provision_single_frontend.
 :build_single_frontend
+:: ## build_one_fe
+:: Alias for building a single frontend entry.
+:build_one_fe
 set "svc_id=default"
 set "src_rel=."
 set "inst_cmd="
@@ -253,7 +288,28 @@ if not "!stage_override!"=="" (
 )
 if not exist "!target_webroot!" mkdir "!target_webroot!"
 
-if "%FORCE_REBUILD%"=="1" (
+set "_fresh_hook_build=0"
+set "_CACHED_FE_FP="
+if exist "!src_dir!\package.json" (
+    call :compute_frontend_fingerprint "!src_dir!"
+    if exist "!src_dir!\.libscript_build.sha256" (
+        set /p _CACHED_FE_FP=<"!src_dir!\.libscript_build.sha256"
+    ) else if exist "!src_dir!\dist\.libscript_src_hash" (
+        set /p _CACHED_FE_FP=<"!src_dir!\dist\.libscript_src_hash"
+    )
+    call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
+    if "!_ART_EXISTS!"=="1" (
+        if not "!LIBSCRIPT_PRE_BUILD_TS!"=="" (
+            if "!_CACHED_FE_FP!"=="" set "_fresh_hook_build=1"
+            if "!_CACHED_FE_FP!"=="!_FE_FP!" set "_fresh_hook_build=1"
+        ) else if not "%FORCE_REBUILD%"=="1" (
+            if not "!_CACHED_FE_FP!"=="" if "!_CACHED_FE_FP!"=="!_FE_FP!" set "_fresh_hook_build=1"
+            if "!_fresh_hook_build!"=="0" if not exist "!src_dir!\.libscript_build.sha256" set "_fresh_hook_build=1"
+        )
+    )
+)
+
+if "%FORCE_REBUILD%"=="1" if "!_fresh_hook_build!"=="0" (
     if exist "!src_dir!\dist" rmdir /s /q "!src_dir!\dist" 2>nul
     if exist "!src_dir!\build" rmdir /s /q "!src_dir!\build" 2>nul
     if exist "!src_dir!\.angular" rmdir /s /q "!src_dir!\.angular" 2>nul
@@ -305,11 +361,11 @@ if exist "!src_dir!\package.json" (
         set /p _CACHED_FE_FP=<"!src_dir!\dist\.libscript_src_hash"
     )
     set "_can_reuse_fe=0"
-    if not "%FORCE_REBUILD%"=="1" (
-        call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
-        if "!_ART_EXISTS!"=="1" (
+    call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
+    if "!_ART_EXISTS!"=="1" (
+        if "!_fresh_hook_build!"=="1" set "_can_reuse_fe=1"
+        if not "%FORCE_REBUILD%"=="1" (
             if not "!_CACHED_FE_FP!"=="" if "!_CACHED_FE_FP!"=="!_FE_FP!" set "_can_reuse_fe=1"
-            if "!_can_reuse_fe!"=="0" if exist "!src_dir!\dist\.libscript_src_hash" if not "!_CACHED_FE_FP!"=="" set "_can_reuse_fe=1"
             if "!_can_reuse_fe!"=="0" if not exist "!src_dir!\.libscript_build.sha256" set "_can_reuse_fe=1"
         )
     )
@@ -329,11 +385,20 @@ if exist "!src_dir!\package.json" (
         if not "!build_cmd!"=="" (
             call !build_cmd!
         ) else if /i "!framework!"=="angular" (
-            findstr /C:"\"build\"" "package.json" >nul 2>&1
-            if not errorlevel 1 (
-                call npm run build
+            set "_ng_has_rel=0"
+            if exist "angular.json" (
+                jq -e ".projects[].architect.build.configurations.release" "angular.json" >nul 2>&1
+                if not errorlevel 1 set "_ng_has_rel=1"
+            )
+            if "!_ng_has_rel!"=="1" (
+                call npx ng build --configuration=release
             ) else (
-                call npx ng build
+                findstr /C:"\"build\"" "package.json" >nul 2>&1
+                if not errorlevel 1 (
+                    call npm run build
+                ) else (
+                    call npx ng build --configuration=production
+                )
             )
         ) else if /i "!framework!"=="vite" (
             findstr /C:"\"build\"" "package.json" >nul 2>&1
@@ -346,9 +411,12 @@ if exist "!src_dir!\package.json" (
             findstr /C:"\"build\"" "package.json" >nul 2>&1
             if not errorlevel 1 call npm run build
         )
-        > ".libscript_build.sha256" echo !_FE_FP!
-        if exist "dist" > "dist\.libscript_src_hash" echo !_FE_FP!
         popd
+        call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
+        if "!_ART_EXISTS!"=="1" (
+            > "!src_dir!\.libscript_build.sha256" echo !_FE_FP!
+            if exist "!src_dir!\dist" > "!src_dir!\dist\.libscript_src_hash" echo !_FE_FP!
+        )
     )
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
 ) else (

@@ -188,6 +188,12 @@ export CADDY_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN:-}"
 EOF
 export ENV_SCRIPT_FILE
 
+_odoo_etc_dir="${LIBSCRIPT_ETC_DIR:-/etc}"
+_odoo_ngx_etc="${NGINX_ETC_DIR:-${_odoo_etc_dir}/nginx}"
+_odoo_caddy_etc="${CADDY_ETC_DIR:-${_odoo_etc_dir}/caddy}"
+_odoo_httpd_etc="${HTTPD_ETC_DIR:-${_odoo_etc_dir}/httpd}"
+_odoo_apache_etc="${APACHE2_ETC_DIR:-${_odoo_etc_dir}/apache2}"
+
 if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
   LOC_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" > "${LOC_BLOCK_TMP}"
@@ -198,13 +204,13 @@ if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/http.d ]; then
-    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${ODOO_SERVER_NAME}.conf"
-  elif [ -d /etc/nginx/conf.d ]; then
-    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${ODOO_SERVER_NAME}.conf"
-  elif [ -d /etc/nginx/sites-available ]; then
-    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${ODOO_SERVER_NAME}.conf"
-    priv ln -sf "/etc/nginx/sites-available/${ODOO_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${ODOO_SERVER_NAME}.conf"
+  if [ -d "${_odoo_ngx_etc}/http.d" ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "${_odoo_ngx_etc}/http.d/${ODOO_SERVER_NAME}.conf"
+  elif [ -d "${_odoo_ngx_etc}/conf.d" ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "${_odoo_ngx_etc}/conf.d/${ODOO_SERVER_NAME}.conf"
+  elif [ -d "${_odoo_ngx_etc}/sites-available" ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "${_odoo_ngx_etc}/sites-available/${ODOO_SERVER_NAME}.conf"
+    priv ln -sf "${_odoo_ngx_etc}/sites-available/${ODOO_SERVER_NAME}.conf" "${_odoo_ngx_etc}/sites-enabled/${ODOO_SERVER_NAME}.conf"
   else
     priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
     priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf"
@@ -215,27 +221,27 @@ if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
 elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/caddy/create_server_block.sh" > "${CADDY_BLOCK_TMP}"
-  if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
-    conf_dir='/etc/caddy/conf.d'
-    [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
+  if [ -d "${_odoo_caddy_etc}/conf.d" ] || [ -d "${_odoo_caddy_etc}/caddy.d" ]; then
+    conf_dir="${_odoo_caddy_etc}/conf.d"
+    [ -d "${_odoo_caddy_etc}/caddy.d" ] && conf_dir="${_odoo_caddy_etc}/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${ODOO_SERVER_NAME}.caddy"
   else
-    grep -q "${ODOO_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || safe_tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
+    grep -q "${ODOO_SERVER_NAME}" "${_odoo_caddy_etc}/Caddyfile" 2>/dev/null || safe_tee -a "${_odoo_caddy_etc}/Caddyfile" < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
   libscript_service reload caddy 2>/dev/null || true
   rm -f "${CADDY_BLOCK_TMP}"
 elif [ "${ODOO_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
-  if [ -d /etc/httpd/conf.d ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${ODOO_SERVER_NAME}.conf"
+  if [ -d "${_odoo_httpd_etc}/conf.d" ]; then
+    priv cp "${HTTPD_BLOCK_TMP}" "${_odoo_httpd_etc}/conf.d/${ODOO_SERVER_NAME}.conf"
     libscript_service reload httpd 2>/dev/null || true
-  elif [ -d /etc/apache2/sites-available ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${ODOO_SERVER_NAME}.conf"
-    priv ln -sf "/etc/apache2/sites-available/${ODOO_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${ODOO_SERVER_NAME}.conf"
+  elif [ -d "${_odoo_apache_etc}/sites-available" ]; then
+    priv cp "${HTTPD_BLOCK_TMP}" "${_odoo_apache_etc}/sites-available/${ODOO_SERVER_NAME}.conf"
+    priv ln -sf "${_odoo_apache_etc}/sites-available/${ODOO_SERVER_NAME}.conf" "${_odoo_apache_etc}/sites-enabled/${ODOO_SERVER_NAME}.conf"
     libscript_service reload apache2 2>/dev/null || true
   else
-    grep -q "${ODOO_SERVER_NAME}" /etc/httpd/conf/httpd.conf 2>/dev/null || safe_tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
+    grep -q "${ODOO_SERVER_NAME}" "${_odoo_httpd_etc}/conf/httpd.conf" 2>/dev/null || safe_tee -a "${_odoo_httpd_etc}/conf/httpd.conf" < "${HTTPD_BLOCK_TMP}" >/dev/null
   fi
   rm -f "${HTTPD_BLOCK_TMP}"
 fi

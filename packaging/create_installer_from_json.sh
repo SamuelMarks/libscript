@@ -93,6 +93,7 @@ export base
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/parse_installer_json.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 parse_json "${filename}"

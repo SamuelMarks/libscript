@@ -162,9 +162,10 @@ if [ "$EXPORT_MODE" -eq 1 ]; then
   fi
   mkdir -p "$LOCAL_DST"
   CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
+  _EXPORT_STAGE_DIR="${LIBSCRIPT_EXPORT_STAGE_DIR:-${REMOTE_TMPDIR:-/tmp}/libscript_export_stage}"
   log_info "Exporting remote state for '${ONLY_TARGET}' from '${NODE}' into '${LOCAL_DST}'..."
   "$CLI" node sync "$NODE" "$RG_CTX"
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_export_stage && mkdir -p /tmp/libscript_export_stage"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf '${_EXPORT_STAGE_DIR}' && mkdir -p '${_EXPORT_STAGE_DIR}'"
   OIFS="$IFS"
   IFS="|"
   # shellcheck disable=SC2086
@@ -191,10 +192,13 @@ if [ "$EXPORT_MODE" -eq 1 ]; then
     if ! matches_only_target "$_ex_dest" "$_ex_repo" && ! matches_only_target "${_ex_domain%%.*}" "$_ex_repo"; then
       continue
     fi
-    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_ex_dest} && sudo LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh export-state libscript.json /tmp/libscript_export_stage"
+    _BACKUP_CERT_STORE="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+    "$CLI" node exec "$NODE" "$RG_CTX" "cd ~/${_ex_dest} && sudo CERT_STORE_DIR='${_BACKUP_CERT_STORE}' LIBSCRIPT_ROOT_DIR=\"\$(cd ~/libscript && pwd)\" ~/libscript/libscript.sh export-state libscript.json '${_EXPORT_STAGE_DIR}'"
   done
-  "$CLI" node download "$NODE" "$RG_CTX" "/tmp/libscript_export_stage/" "${LOCAL_DST}/"
-  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf /tmp/libscript_export_stage"
+  _BACKUP_CERT_STORE="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+  "$CLI" node exec "$NODE" "$RG_CTX" "if [ -d '${_BACKUP_CERT_STORE}/live' ]; then sudo mkdir -p '${_EXPORT_STAGE_DIR}/certs' && sudo cp -a '${_BACKUP_CERT_STORE}/live' '${_EXPORT_STAGE_DIR}/certs/' 2>/dev/null || true; sudo chmod -R a+rX '${_EXPORT_STAGE_DIR}/certs' 2>/dev/null || true; fi" >/dev/null 2>&1 || true
+  "$CLI" node download "$NODE" "$RG_CTX" "${_EXPORT_STAGE_DIR}/" "${LOCAL_DST}/"
+  "$CLI" node exec "$NODE" "$RG_CTX" "sudo rm -rf '${_EXPORT_STAGE_DIR}'"
   log_info "Export completed successfully into '${LOCAL_DST}'."
   exit 0
 fi

@@ -97,7 +97,7 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/${EXACT_VERSION}"
       if [ ! -x "${TARGET_DIR}/bin/conda" ]; then
         log_info "Installing conda ${VERSION} natively to ${TARGET_DIR}..."
-        if [ -f /etc/alpine-release ]; then
+        if [ -f "${LIBSCRIPT_ETC_DIR:-/etc}/alpine-release" ]; then
           log_info 'Package is not supported on Alpine Linux (musl).'
           mkdir -p "${TARGET_DIR}/bin"
           echo '#!/bin/sh' > "${TARGET_DIR}/bin/conda"
@@ -111,7 +111,7 @@ case "$ACTION" in
           else
             URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${MINICONDA_ARCH}.sh"
           fi
-          TEMP_FILE=$(mktemp --suffix=.sh 2>/dev/null || mktemp /tmp/miniconda_XXXXXX.sh)
+          TEMP_FILE=$(mktemp --suffix=.sh 2>/dev/null || mktemp "${TMPDIR:-/tmp}/miniconda_XXXXXX.sh")
           libscript_depends 'curl'
           if ! libscript_download "$URL" "$TEMP_FILE"; then
             log_error "Failed to download conda from $URL"

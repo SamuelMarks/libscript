@@ -154,23 +154,32 @@ if "%IS_OFFLINE%"=="1" (
     )
 )
 
+set "DOCKER_ROOT_DIR=%DOCKER_LIBSCRIPT_ROOT_DIR%"
+if "!DOCKER_ROOT_DIR!"=="" set "DOCKER_ROOT_DIR=/opt/libscript"
+set "DOCKER_BUILD_DIR=%DOCKER_LIBSCRIPT_BUILD_DIR%"
+if "!DOCKER_BUILD_DIR!"=="" set "DOCKER_BUILD_DIR=/opt/libscript_build"
+set "DOCKER_DATA_DIR=%DOCKER_LIBSCRIPT_DATA_DIR%"
+if "!DOCKER_DATA_DIR!"=="" set "DOCKER_DATA_DIR=/opt/libscript_data"
+set "DOCKER_CACHE_DIR=%DOCKER_LIBSCRIPT_CACHE_DIR%"
+if "!DOCKER_CACHE_DIR!"=="" set "DOCKER_CACHE_DIR=/opt/libscript_cache"
+
 echo FROM %BASE_IMAGE%
 echo ARG TARGETOS=linux
 echo ARG TARGETARCH=amd64
 echo ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
-echo ENV LIBSCRIPT_ROOT_DIR="/opt/libscript"
-echo ENV LIBSCRIPT_BUILD_DIR="/opt/libscript_build"
-echo ENV LIBSCRIPT_DATA_DIR="/opt/libscript_data"
-echo ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache"
+echo ENV LIBSCRIPT_ROOT_DIR="!DOCKER_ROOT_DIR!"
+echo ENV LIBSCRIPT_BUILD_DIR="!DOCKER_BUILD_DIR!"
+echo ENV LIBSCRIPT_DATA_DIR="!DOCKER_DATA_DIR!"
+echo ENV LIBSCRIPT_CACHE_DIR="!DOCKER_CACHE_DIR!"
 
 if "%IS_OFFLINE%"=="1" (
     echo ENV LIBSCRIPT_OFFLINE="1"
     echo ENV PIP_NO_INDEX="1"
-    echo ENV PIP_FIND_LINKS="/opt/libscript_cache/wheels"
+    echo ENV PIP_FIND_LINKS="!DOCKER_CACHE_DIR!/wheels"
     echo ENV npm_config_offline="true"
     echo ENV npm_config_prefer_offline="true"
-    echo ENV npm_config_cache="/opt/libscript_cache/npm"
-    echo COPY cache/ /opt/libscript_cache/
+    echo ENV npm_config_cache="!DOCKER_CACHE_DIR!/npm"
+    echo COPY cache/ !DOCKER_CACHE_DIR!/
 )
 
 set "BUNDLE_FILE="
@@ -184,16 +193,16 @@ if "%IS_OFFLINE%"=="0" if defined BUNDLE_FILE (
     where jq >nul 2>&1
     if not errorlevel 1 (
         for /f "tokens=1,2,3" %%a in ('jq -r ".runtimes[]? | "\(.extract_dir // "runtimes"^) \(.filename^) \(.url^)"" "!BUNDLE_FILE!" 2^>nul') do (
-            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c /opt/libscript_cache/%%a/%%b
+            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
         for /f "tokens=1,2,3" %%a in ('jq -r ".databases[]? | "\(.extract_dir // "databases"^) \(.filename^) \(.url^)"" "!BUNDLE_FILE!" 2^>nul') do (
-            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c /opt/libscript_cache/%%a/%%b
+            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
         for /f "tokens=1,2,3" %%a in ('jq -r ".wheels.packages[]? | "wheels \(.filename^) \(.url^)"" "!BUNDLE_FILE!" 2^>nul') do (
-            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c /opt/libscript_cache/%%a/%%b
+            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
         for /f "tokens=1,2,3" %%a in ('jq -r "if .codebase.archive_url then "codebase \(.codebase.archive_filename^) \(.codebase.archive_url^)" else empty end" "!BUNDLE_FILE!" 2^>nul') do (
-            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c /opt/libscript_cache/%%a/%%b
+            if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
     )
 )
@@ -208,22 +217,22 @@ if defined PKG (
     if "%IS_OFFLINE%"=="0" if defined OVERRIDE_URL (
         echo ENV !PKG_UP!_URL="%OVERRIDE_URL%"
         for %%F in ("%OVERRIDE_URL%") do set "FILENAME=%%~nxF"
-        echo ADD ${!PKG_UP!_URL} /opt/libscript_cache/!PKG_CLEAN!/!FILENAME!
+        echo ADD ${!PKG_UP!_URL} !DOCKER_CACHE_DIR!/!PKG_CLEAN!/!FILENAME!
     )
 )
 
-echo COPY . /opt/libscript
-echo WORKDIR /opt/libscript
+echo COPY . !DOCKER_ROOT_DIR!
+echo WORKDIR !DOCKER_ROOT_DIR!
 
 if defined PKG (
     if "!ARTIFACT_TYPE!"=="deb" (
-        echo RUN dpkg -s !PKG_CLEAN! ^>nul 2^>^&1 ^|^| ^(apt-get update ^&^& apt-get install -y /opt/libscript/*-!PKG_CLEAN!_*.deb^)
+        echo RUN dpkg -s !PKG_CLEAN! ^>nul 2^>^&1 ^|^| ^(apt-get update ^&^& apt-get install -y !DOCKER_ROOT_DIR!/*-!PKG_CLEAN!_*.deb^)
     ) else if "!ARTIFACT_TYPE!"=="rpm" (
-        echo RUN rpm -q !PKG_CLEAN! ^>nul 2^>^&1 ^|^| dnf install -y /opt/libscript/*-!PKG_CLEAN!-*.rpm
+        echo RUN rpm -q !PKG_CLEAN! ^>nul 2^>^&1 ^|^| dnf install -y !DOCKER_ROOT_DIR!/*-!PKG_CLEAN!-*.rpm
     ) else if "!ARTIFACT_TYPE!"=="apk" (
-        echo RUN apk info -e !PKG_CLEAN! ^>nul 2^>^&1 ^|^| apk add --allow-untrusted /opt/libscript/*-!PKG_CLEAN!-*.apk
+        echo RUN apk info -e !PKG_CLEAN! ^>nul 2^>^&1 ^|^| apk add --allow-untrusted !DOCKER_ROOT_DIR!/*-!PKG_CLEAN!-*.apk
     ) else if "!ARTIFACT_TYPE!"=="txz" (
-        echo RUN pkg install -y /opt/libscript/*-!PKG_CLEAN!*.txz /opt/libscript/*-!PKG_CLEAN!*.pkg 2^>nul^|^|true
+        echo RUN pkg install -y !DOCKER_ROOT_DIR!/*-!PKG_CLEAN!*.txz !DOCKER_ROOT_DIR!/*-!PKG_CLEAN!*.pkg 2^>nul^|^|true
     ) else if "!ARTIFACT_TYPE!"=="msi" (
         echo RUN for %%I in ^(C:\opt\libscript\*-!PKG_CLEAN!-*.msi^) do msiexec /i "%%I" /qn /norestart
     ) else if "!ARTIFACT_TYPE!"=="exe" (

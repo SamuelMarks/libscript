@@ -30,7 +30,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 THIS_DIR="${SCRIPT_DIR}"
-REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 APP_ID=""
 SERVER_NAME=""
 PROXY_ENGINE='nginx'
@@ -197,8 +196,6 @@ interpolate_block() {
 # Validates the web server configuration syntax and reloads the daemon or rolls back on error.
 test_and_reload() {
   backup_file="${CONF_FILE}.bak"
-  test_cmd=""
-  reload_cmd=""
 
   if [ "$PROXY_ENGINE" = "nginx" ]; then
     printf '[INFO] Testing nginx configuration...\n'

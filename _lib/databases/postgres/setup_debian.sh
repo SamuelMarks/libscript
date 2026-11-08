@@ -62,6 +62,9 @@ _pg_debian_is_active() {
 
 if [ "${FORCE_REINSTALL:-0}" != "1" ] && _pg_debian_is_active; then
   log_info "[REUSE] PostgreSQL cluster already active on port ${POSTGRES_LISTEN_PORT:-5432}."
+  if [ -n "${POSTGRES_DATA_DIR:-${PGDATA:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${POSTGRES_DATA_DIR:-${PGDATA:-}}" || true
+  fi
   libscript_service enable postgresql >/dev/null 2>&1 || true
   libscript_service start postgresql >/dev/null 2>&1 || true
   exit 0
@@ -93,6 +96,7 @@ if ! dpkg -s -- 'postgresql-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
     libscript_download 'https://www.postgresql.org/media/keys/ACCC4CF8.asc' "${POSTGRES_KEY}"
     priv cp "${POSTGRES_KEY}" '/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc'
     rm -f "${POSTGRES_KEY}"
+    # shellcheck disable=SC1090,SC1091
     printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt %s-pgdg main\n' "$(. /etc/os-release && printf '%s' "${VERSION_CODENAME}")" | priv dd status='none' of='/etc/apt/sources.list.d/pgdg.list'
     pkg_mgr update
   fi
@@ -153,6 +157,10 @@ if [ -n "${PID}" ]; then
   priv mv -- '/usr/sbin/policy-rc.d.prev' '/usr/sbin/policy-rc.d'
   export RUNLEVEL="${PREVIOUS_RUNLEVEL}"
   export PREVIOUS_RUNLEVEL=
+fi
+
+if [ -n "${POSTGRES_DATA_DIR:-${PGDATA:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${POSTGRES_DATA_DIR:-${PGDATA:-}}" || true
 fi
 
 if [ -n "${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then

@@ -30,16 +30,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # ## issue_acme_cert
-# Delegates certificate generation to _lib/cloud/cert and records ACME state.
+# Delegates certificate generation to netctl ensure-cert / _lib/cloud/cert and records ACME state.
 issue_acme_cert() {
   domain="${1:-example.com}"
   email="${2:-admin@${domain}}"
   sysroot="${LIBSCRIPT_TARGET_SYSROOT:-/}"
   acme_dir="${sysroot%/}/etc/letsencrypt/live/${domain}"
-  mkdir -p "$acme_dir"
-  printf 'ACME_DOMAIN=%s
-ACME_EMAIL=%s
-' "$domain" "$email" > "${acme_dir}/cert.meta"
+  mkdir -p "$acme_dir" 2>/dev/null || true
+  if [ -d "$acme_dir" ] && [ -w "$acme_dir" ]; then
+    printf 'ACME_DOMAIN=%s\nACME_EMAIL=%s\n' "$domain" "$email" > "${acme_dir}/cert.meta"
+  fi
+  if [ "${sysroot}" = "/" ] && [ "${LIBSCRIPT_DRY_RUN:-0}" != "1" ]; then
+    _acme_cstore="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+    "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ensure-cert "$domain" "$_acme_cstore" "${_acme_cstore}/acme-webroot" "$email" || true
+  fi
   printf '[INFO] ACME TLS certificate configured for %s.\n' "$domain"
 }
 

@@ -31,5 +31,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 log_info 'Common loaded successfully'

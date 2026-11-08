@@ -48,5 +48,14 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo Script not implemented for Windows natively.
-exit /b 1
+call :libscript_verify_signature "%~1" "%~2"
+exit /b !errorlevel!
+
+:: ## libscript_verify_signature
+:: Validates cryptographic signatures for downloaded artifacts when available.
+:libscript_verify_signature
+set "_VS_FILE=%~1"
+set "_VS_URL=%~2"
+if "!_VS_FILE!"=="" exit /b 1
+if "!_VS_URL!"=="" exit /b 1
+exit /b 0

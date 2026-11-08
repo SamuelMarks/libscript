@@ -42,7 +42,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-UWSGI_INSTALL_METHOD="$(libscript_resolve_install_method "UWSGI")"
+UWSGI_INSTALL_METHOD="${UWSGI_INSTALL_METHOD:-system}"
+UWSGI_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$UWSGI_INSTALL_METHOD" libscript_resolve_install_method "UWSGI")"
 ACTION="${ACTION:-install}"
 VERSION="${UWSGI_VERSION:-2.0.24}"
 
@@ -80,13 +81,28 @@ case "$ACTION" in
     log_info "Installing uWSGI (${VERSION}) via ${UWSGI_INSTALL_METHOD}..."
     TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
     mkdir -p "${TARGET_DIR}/bin"
-    if [ "${UNAME:-}" = "FreeBSD" ]; then
-      libscript_depends 'uwsgi'
+    if [ "$UWSGI_INSTALL_METHOD" != "from-source" ] && command -v uwsgi >/dev/null 2>&1; then
+      ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
+      libscript_symlink_alias "uwsgi" "$VERSION" "${EXACT_VERSION}"
+      log_info "[REUSE] uWSGI is already available on the system: $(command -v uwsgi)"
+      exit 0
+    fi
+    if [ "$UWSGI_INSTALL_METHOD" = "system" ] || [ "${UNAME:-}" = "FreeBSD" ]; then
+      libscript_depends 'uwsgi' || true
       if command -v uwsgi >/dev/null 2>&1; then
         ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
+        libscript_symlink_alias "uwsgi" "$VERSION" "${EXACT_VERSION}"
+        exit 0
       fi
-      libscript_symlink_alias "uwsgi" "$VERSION" "${EXACT_VERSION}"
-    elif [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ]; then
+    fi
+    if [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ] || [ "$UWSGI_INSTALL_METHOD" = "from-source" ]; then
+      if [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ]; then
+        if libscript_depends 'uwsgi' 2>/dev/null && command -v uwsgi >/dev/null 2>&1; then
+          ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
+          libscript_symlink_alias "uwsgi" "$VERSION" "${EXACT_VERSION}"
+          exit 0
+        fi
+      fi
       if ! command -v uv >/dev/null 2>&1; then
         if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
           log_info 'Python runtime required for uwsgi. Installing python...'

@@ -177,6 +177,7 @@ case "$ACTION" in
     if [ "${KUBECTL_INSTALL_METHOD:-}" = "libscript_native" ] || [ "${KUBECTL_INSTALL_METHOD:-}" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
       libscript_service "$ACTION" "$service_name" "$@"
@@ -189,6 +190,7 @@ case "$ACTION" in
     if [ "${KUBECTL_INSTALL_METHOD:-}" = "libscript_native" ] || [ "${KUBECTL_INSTALL_METHOD:-}" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
       libscript_install_service "$service_name" "$@"
@@ -201,6 +203,7 @@ case "$ACTION" in
     if [ "${KUBECTL_INSTALL_METHOD:-}" = "libscript_native" ] || [ "${KUBECTL_INSTALL_METHOD:-}" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
       libscript_uninstall_service "$service_name" "$@"

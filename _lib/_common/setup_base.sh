@@ -41,22 +41,26 @@ export SCRIPT_NAME
 # Source common OS info
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # Source package manager utilities (includes libscript_depends and libscript_download)
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # Source versioning and generic lifecycle action helpers
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/versioning.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # Source path resolution
 _SCRIPT_DIR_NAME="${_setup_base_dir}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 THIS_FILE="${_setup_base_this}"
 DIR="${_setup_base_dir}"
@@ -93,6 +97,7 @@ ENV_SCRIPT="${DIR}"'/env.sh'
 if [ -f "${ENV_SCRIPT}" ]; then
   SCRIPT_NAME="${ENV_SCRIPT}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
   THIS_FILE="${_setup_base_this}"
   DIR="${_setup_base_dir}"
@@ -100,18 +105,26 @@ if [ -f "${ENV_SCRIPT}" ]; then
 fi
 
 # OS-specific delegation logic
+STACK="${STACK%"${_setup_base_this}":}"
+if [ -n "${_setup_base_caller_this:-}" ]; then
+  STACK="${STACK%"${_setup_base_caller_this}":}"
+fi
+export STACK
 OS_SETUP_SCRIPT="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
 if [ "${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-${LIBSCRIPT_INSTALL_METHOD:-}}" = "from-source" ] && [ -f "${DIR}/setup_generic.sh" ]; then
   SCRIPT_NAME="${DIR}"'/setup_generic.sh'
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 elif [ -f "${OS_SETUP_SCRIPT}" ]; then
   SCRIPT_NAME="${OS_SETUP_SCRIPT}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 else
   SCRIPT_NAME="${DIR}"'/setup_generic.sh'
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 THIS_FILE="${_setup_base_this}"

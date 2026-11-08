@@ -41,7 +41,8 @@ SSH_CMD="ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/d
 
 printf '[INFO] Initiating remote compilation for %s.wxs via Vagrant guest...\n' "${OUT_FILE}"
 
-cat << 'PS1_EOF' > /tmp/remote_build.ps1
+REMOTE_BUILD_PS1="${TMPDIR:-/tmp}/remote_build.ps1"
+cat << 'PS1_EOF' > "$REMOTE_BUILD_PS1"
 $env:Path += ';C:\Program Files (x86)\WiX Toolset v3.14\bin'
 Set-Location "C:\libscript"
 candle.exe -nologo -arch arm64 -out "C:\libscript\packaging\${OUT_FILE}.wixobj" "C:\libscript\packaging\${OUT_FILE}.wxs"
@@ -49,12 +50,12 @@ candle.exe -nologo -arch arm64 -out "C:\libscript\packaging\${OUT_FILE}_payload.
 light.exe -nologo -sval -ext WixUIExtension -out "C:\libscript\packaging\${OUT_FILE}.msi" "C:\libscript\packaging\${OUT_FILE}.wixobj" "C:\libscript\packaging\${OUT_FILE}_payload.wixobj"
 PS1_EOF
 
-sed "s|\${OUT_FILE}|${OUT_FILE}|g" /tmp/remote_build.ps1 > /tmp/remote_build.ps1.tmp && mv /tmp/remote_build.ps1.tmp /tmp/remote_build.ps1
+sed "s|\${OUT_FILE}|${OUT_FILE}|g" "$REMOTE_BUILD_PS1" > "${REMOTE_BUILD_PS1}.tmp" && mv "${REMOTE_BUILD_PS1}.tmp" "$REMOTE_BUILD_PS1"
 
 # Sync whole repo to VM for remote build, excluding cache and build stuff
-scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "packaging/${OUT_FILE}.wxs" "packaging/${OUT_FILE}_payload.wxs" /tmp/remote_build.ps1 "vagrant@127.0.0.1:C:/libscript/packaging/"
+scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "packaging/${OUT_FILE}.wxs" "packaging/${OUT_FILE}_payload.wxs" "$REMOTE_BUILD_PS1" "vagrant@127.0.0.1:C:/libscript/packaging/"
 
-scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" /tmp/remote_build.ps1 "vagrant@127.0.0.1:C:/Users/vagrant/Desktop/remote_build.ps1"
+scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "$REMOTE_BUILD_PS1" "vagrant@127.0.0.1:C:/Users/vagrant/Desktop/remote_build.ps1"
 
 $SSH_CMD "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:/Users/vagrant/Desktop/remote_build.ps1"
 

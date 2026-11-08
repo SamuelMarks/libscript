@@ -1,9 +1,9 @@
 @echo off
 :: # service.cmd
 :: ## Overview
-:: Manages background service lifecycle operations (start, stop, status) for the postgres component.
+:: Manages background service lifecycle operations (start, stop, status, configure, override-env) and persistent POSTGRES_DATA_DIR / PGDATA configuration for the postgres component on Windows.
 :: ## Usage
-:: service.cmd
+:: service.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,4 +49,43 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+set "STACK="
+call "!SCRIPT_DIR!\env.cmd"
+set "_ACT=%~1"
+if "!_ACT!"=="" set "_ACT=%ACTION%"
+if "!_ACT!"=="" exit /b 0
+set "_SVC=%LIBSCRIPT_SERVICE_NAME%"
+if "!_SVC!"=="" set "_SVC=postgresql"
+
+if /i "!_ACT!"=="configure" (
+    call :configure_postgres_storage "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "!_ACT!"=="override-env" (
+    call :configure_postgres_storage "%~2"
+    exit /b !ERRORLEVEL!
+)
+if /i "!_ACT!"=="start" call :configure_postgres_storage
+if /i "!_ACT!"=="restart" call :configure_postgres_storage
+if /i "!_ACT!"=="up" call :configure_postgres_storage
+if /i "!_ACT!"=="install-service" call :configure_postgres_storage
+
+exit /b 0
+
+:: ## configure_postgres_storage
+:: Ensures the persistent PostgreSQL data directory exists, grants service ACLs, and persists POSTGRES_DATA_DIR and PGDATA overrides on Windows.
+:configure_postgres_storage
+set "_CPS_DIR=%~1"
+if /i "!_CPS_DIR!"=="postgres" set "_CPS_DIR="
+if /i "!_CPS_DIR!"=="postgresql" set "_CPS_DIR="
+if /i "!_CPS_DIR!"=="libscript_postgres" set "_CPS_DIR="
+if "!_CPS_DIR!"=="" set "_CPS_DIR=!POSTGRES_DATA_DIR!"
+if "!_CPS_DIR!"=="" set "_CPS_DIR=!PGDATA!"
+if "!_CPS_DIR!"=="" exit /b 0
+set "POSTGRES_DATA_DIR=!_CPS_DIR!"
+set "PGDATA=!_CPS_DIR!"
+if not exist "!POSTGRES_DATA_DIR!" mkdir "!POSTGRES_DATA_DIR!" >nul 2>&1
+icacls "!POSTGRES_DATA_DIR!" /grant "*S-1-5-32-544:(OI)(CI)F" /grant "*S-1-5-18:(OI)(CI)F" /T /C /Q >nul 2>&1
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" override-env "!_SVC!" "POSTGRES_DATA_DIR=!POSTGRES_DATA_DIR!" "PGDATA=!PGDATA!" >nul 2>&1
 exit /b 0

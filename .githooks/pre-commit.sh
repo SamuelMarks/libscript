@@ -160,7 +160,7 @@ if command -v shellcheck >/dev/null 2>&1; then
   fi
   if printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" >/dev/null 2>&1; then
     # shellcheck disable=SC2086
-    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS -e SC2086,SC2317,SC2148,SC1090,SC1091,SC2129,SC2016,SC2296,SC2209,SC2154,SC2034,SC2038,SC1083,SC2018,SC2019,SC1003,SC2251,SC2081,SC2054
+    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS
   fi
 fi
 

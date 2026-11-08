@@ -50,6 +50,7 @@ envsubst_safe() {
     fi
   fi
 
+  # shellcheck disable=SC2016
   awk_script='
   BEGIN {
       for (name in ENVIRON) {

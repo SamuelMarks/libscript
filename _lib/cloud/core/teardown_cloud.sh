@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
     --tpu|--accelerator) IS_TPU=1; shift ;;
     --shared-storage) export SHARED_STORAGE=1; shift ;;
     --retain-ip) RETAIN_IP=1; shift ;;
-    --retain-data) RETAIN_DATA=1; shift ;;
+    --retain-data) export RETAIN_DATA=1; shift ;;
     --keep-infra|--remove-app) KEEP_INFRA=1; shift ;;
     --purge-data) PURGE_DATA=1; shift ;;
     --dry-run|-n) DRY_RUN_MODE=1; export DRY_RUN="true"; shift ;;
@@ -230,6 +230,7 @@ if [ -f "$JSON_FILE" ] && command -v jq >/dev/null 2>&1; then
   STATE_ENDPOINT=$(jq -r '.state.endpoint // ""' "$JSON_FILE")
   STATE_PATHS=$(jq -r '.state.paths[]? // empty' "$JSON_FILE")
 fi
+export STATE_BUCKET STATE_ENDPOINT
 
 # ## ensure_cli
 # Ensures required CLI commands and packages are installed.
@@ -295,11 +296,18 @@ if [ -n "$DOMAIN" ] && [ "$RETAIN_IP" -eq 0 ]; then
 fi
 
 log "INFRA" "Deleting Node..."
+if [ "$PURGE_DATA" -eq 0 ]; then
+  log "STORAGE" "Persistent data disk '${NODE}-data-disk' is retained (deleteOption=Detach). Pass --purge-data to delete it."
+fi
 if [ "$IS_TPU" -eq 1 ] && [ "$PROVIDER" = "gcp" ]; then
   TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp-tpu-vm/cli.sh"
   run_with_auth_check "$TPU_CLI" delete "$NODE" || true
 else
   run_with_auth_check "$CLI" node delete "$NODE" "$CTX" || true
+fi
+if [ "$PURGE_DATA" -eq 1 ] && [ "$PROVIDER" = "azure" ] && command -v az >/dev/null 2>&1; then
+  log "STORAGE" "Purging detached persistent data disk '${NODE}-data-disk' (--purge-data enabled)..."
+  az disk delete -g "$RG" -n "${NODE}-data-disk" --yes >/dev/null 2>&1 || true
 fi
 
 log "INFRA" "Deleting Firewall..."

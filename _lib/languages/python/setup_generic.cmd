@@ -95,7 +95,11 @@ if "%DOWNLOAD_DIR%"=="" (
 
 :: Resolve install method
 if "%PYTHON_INSTALL_METHOD%"=="" (
-    set "PYTHON_INSTALL_METHOD=libscript_native"
+    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
+        set "PYTHON_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+    ) else (
+        set "PYTHON_INSTALL_METHOD=libscript_native"
+    )
 )
 
 if "%ACTION%"=="ls" goto :action_ls
@@ -124,6 +128,7 @@ for /f "delims=" %%P in ('where python 2^>nul') do (
     echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
     if errorlevel 1 (
         if /i "%PYTHON_VERSION%"=="latest" exit /b 0
+        if "%_PY_VERSION_UNPINNED%"=="1" exit /b 0
         for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
             echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
             if not errorlevel 1 exit /b 0
@@ -226,6 +231,10 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if /i "%PYTHON_INSTALL_METHOD%"=="from-source" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "python" "%PYTHON_VERSION%" "python" "c"
+    exit /b !errorlevel!
+)
 if not "%FORCE_REINSTALL%"=="1" (
     call :find_existing_python
     if not errorlevel 1 (

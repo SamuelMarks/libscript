@@ -108,6 +108,24 @@ resolve_min_rows() {
   printf '%s\n' "$_rmr_val"
 }
 
+# ## find_manifest_duckdb_python
+# Searches manifest virtualenvs, LIBSCRIPT_HOME, and PATH for a Python interpreter with duckdb installed.
+find_manifest_duckdb_python() {
+  for _fmdp_cand in \
+    "${MANIFEST_DIR}/.venv/bin/python" \
+    "${MANIFEST_DIR}"/*/.venv/bin/python \
+    "${LIBSCRIPT_HOME:-$HOME/.libscript}"/python/*/bin/python3 \
+    "$(command -v python3 2>/dev/null || true)"; do
+    if [ -n "$_fmdp_cand" ] && [ -x "$_fmdp_cand" ]; then
+      if "$_fmdp_cand" -c "import duckdb" >/dev/null 2>&1; then
+        printf '%s\n' "$_fmdp_cand"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
 # ## ensure_duckdb_cli
 # Ensures the duckdb binary is available in PATH by sourcing _lib/databases/duckdb/env.sh or installing it.
 ensure_duckdb_cli() {
@@ -128,7 +146,7 @@ ensure_duckdb_cli() {
 }
 
 # ## query_duckdb_scalar
-# Executes a scalar SQL query against a DuckDB database file using the duckdb CLI with WAL snapshot fallback.
+# Executes a scalar SQL query against a DuckDB database file using the duckdb CLI with WAL snapshot and Python duckdb fallback.
 query_duckdb_scalar() {
   _qds_path="$1"
   _qds_sql="$2"
@@ -156,6 +174,50 @@ query_duckdb_scalar() {
       rm -rf "$_qds_tmp"
     fi
   fi
+  if { [ -z "$_qds_out" ] || [ "$_qds_out" = "0" ]; } && [ -s "$_qds_path" ]; then
+    if _qds_py=$(find_manifest_duckdb_python 2>/dev/null); then
+      _qds_py_out=$("$_qds_py" - "$_qds_path" "$_qds_sql" "$_qds_mode" << 'PY_DUCKDB_FALLBACK' 2>/dev/null || true
+import os, shutil, sys, tempfile, duckdb
+db_path, sql, mode = sys.argv[1], sys.argv[2], sys.argv[3]
+def run_q(p, ro=True):
+    con = duckdb.connect(p, read_only=ro)
+    try:
+        rows = con.execute(sql).fetchall()
+        if mode == "len":
+            return str(len(rows))
+        return str(rows[0][0] if rows and rows[0] else 0)
+    finally:
+        con.close()
+try:
+    res = run_q(db_path, True)
+    if res in ("0", "") and os.path.exists(db_path + ".wal"):
+        raise RuntimeError("retry with wal snapshot")
+    print(res)
+except Exception:
+    tmpdir = tempfile.mkdtemp(prefix="libscript_duck_py_")
+    try:
+        snap = os.path.join(tmpdir, os.path.basename(db_path))
+        shutil.copy2(db_path, snap)
+        if os.path.exists(db_path + ".wal"):
+            shutil.copy2(db_path + ".wal", snap + ".wal")
+        try:
+            print(run_q(snap, False))
+        except Exception:
+            print(run_q(snap, True))
+    except Exception:
+        print("0")
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+PY_DUCKDB_FALLBACK
+      )
+      _qds_py_out=$(printf '%s\n' "$_qds_py_out" | tr -d '[:space:]' | head -n 1 || true)
+      if [ -n "$_qds_py_out" ] && [ "$_qds_py_out" != "0" ]; then
+        _qds_out="$_qds_py_out"
+      elif [ -z "$_qds_out" ] && [ -n "$_qds_py_out" ]; then
+        _qds_out="$_qds_py_out"
+      fi
+    fi
+  fi
   printf '%s\n' "${_qds_out:-0}"
 }
 
@@ -163,6 +225,7 @@ HEALTH_DB_FAILED=0
 
 while IFS= read -r db_entry <&3; do
   [ -n "$db_entry" ] || continue
+  _db_entry_failed=0
   ENGINE=$(printf '%s\n' "$db_entry" | jq -r '(.engine // .type // "postgres") | ascii_downcase')
   DB_NAME=$(printf '%s\n' "$db_entry" | jq -r '.name // .db_name // "app_db"')
   DB_USER=$(printf '%s\n' "$db_entry" | jq -r '.user // .username // "postgres"')
@@ -170,6 +233,7 @@ while IFS= read -r db_entry <&3; do
   RAW_PASS=$(printf '%s\n' "$db_entry" | jq -r '.password // empty')
   DB_HOST=$(printf '%s\n' "$db_entry" | jq -r '.host // "127.0.0.1"')
   DB_PORT=$(printf '%s\n' "$db_entry" | jq -r '.port // empty')
+  DB_READ_ONLY=$(printf '%s\n' "$db_entry" | jq -r 'if .read_only == true or .readonly == true then "1" else "0" end' 2>/dev/null || printf '0')
   MIN_TABLES=$(printf '%s\n' "$db_entry" | jq -r 'if .min_tables != null then .min_tables elif .require_populated == true then 1 else empty end' 2>/dev/null || true)
   REQ_TABLES=$(printf '%s\n' "$db_entry" | jq -r '.required_tables[]?' 2>/dev/null || true)
   HEALTH_CMD=$(printf '%s\n' "$db_entry" | jq -r '.health_command // empty' 2>/dev/null || true)
@@ -190,6 +254,7 @@ while IFS= read -r db_entry <&3; do
         export PGPASSWORD="${DB_PASS}"
         if ! psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tc "SELECT 1;" >/dev/null 2>&1; then
           log_error "PostgreSQL health check failed: cannot connect to database '$DB_NAME' on ${DB_HOST}:${DB_PORT} as '$DB_USER'."
+          _db_entry_failed=1
           HEALTH_DB_FAILED=1
         else
           PG_TBL_COUNT=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2>/dev/null | tr -d '[:space:]' || printf '0')
@@ -197,6 +262,7 @@ while IFS= read -r db_entry <&3; do
           if [ -n "$MIN_TABLES" ]; then
             if [ "$PG_TBL_COUNT" -lt "$MIN_TABLES" ] 2>/dev/null; then
               log_error "PostgreSQL database '$DB_NAME' has $PG_TBL_COUNT tables (expected >= $MIN_TABLES)."
+              _db_entry_failed=1
               HEALTH_DB_FAILED=1
             fi
           fi
@@ -209,6 +275,7 @@ while IFS= read -r db_entry <&3; do
               PG_ROW_COUNT=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -Atc "$_sql_q" 2>/dev/null | tr -d '[:space:]' || printf '%s' "-1")
               if [ -z "$PG_ROW_COUNT" ] || [ "$PG_ROW_COUNT" -lt "$MIN_ROWS_REQ" ] 2>/dev/null; then
                 log_error "PostgreSQL database '$DB_NAME' required table '$req_tbl' missing or has insufficient rows (${PG_ROW_COUNT:-0} < $MIN_ROWS_REQ)."
+                _db_entry_failed=1
                 HEALTH_DB_FAILED=1
               else
                 _pg_tbl_summary="${_pg_tbl_summary:+$_pg_tbl_summary, }${req_tbl}=${PG_ROW_COUNT} rows"
@@ -217,16 +284,22 @@ while IFS= read -r db_entry <&3; do
 $REQ_TABLES
 EOF_PG_REQ
           fi
-          log_info "[DB:POSTGRES] [CONFIRM] Database '$DB_NAME' healthy (${PG_TBL_COUNT} table(s)${_pg_tbl_summary:+: $_pg_tbl_summary})."
+          if [ "$_db_entry_failed" -eq 0 ]; then
+            log_info "[DB:POSTGRES] [CONFIRM] Database '$DB_NAME' healthy (${PG_TBL_COUNT} table(s)${_pg_tbl_summary:+: $_pg_tbl_summary})."
+          else
+            log_error "[DB:POSTGRES] Database '$DB_NAME' failed health verification (${PG_TBL_COUNT} table(s)${_pg_tbl_summary:+: $_pg_tbl_summary})."
+          fi
         fi
       fi
       ;;
     duckdb)
+      DB_READ_ONLY=$(printf '%s\n' "$db_entry" | jq -r 'if .read_only == true or .readonly == true then "1" else "0" end' 2>/dev/null || printf '0')
       DB_PATH=$(printf '%s\n' "$db_entry" | jq -r '.path // .file // .db_path // empty')
       DB_PATH=$(expand_manifest_vars "$DB_PATH")
       if [ -z "$DB_PATH" ]; then
-        if [ -f "/mnt/data/${DB_NAME}.duckdb" ]; then
-          DB_PATH="/mnt/data/${DB_NAME}.duckdb"
+        _hdb_def_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+        if [ -f "${_hdb_def_mount}/${DB_NAME}.duckdb" ]; then
+          DB_PATH="${_hdb_def_mount}/${DB_NAME}.duckdb"
         else
           DB_PATH="${MANIFEST_DIR}/data/${DB_NAME}.duckdb"
         fi
@@ -234,14 +307,16 @@ EOF_PG_REQ
         DB_PATH="${MANIFEST_DIR}/${DB_PATH}"
       fi
       if [ ! -s "$DB_PATH" ]; then
-        log_error "DuckDB database file '$DB_PATH' does not exist or is empty."
+        log_error "DuckDB database file '$DB_PATH' does not exist or is empty (read_only=${DB_READ_ONLY})."
+        _db_entry_failed=1
         HEALTH_DB_FAILED=1
       else
-        DUCK_TBL_COUNT=$(query_duckdb_scalar "$DB_PATH" "SHOW TABLES;" "len" || printf '0')
+        DUCK_TBL_COUNT=$(query_duckdb_scalar "$DB_PATH" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar" || printf '0')
         : "${DUCK_TBL_COUNT:=0}"
         if [ -n "$MIN_TABLES" ]; then
           if [ "$DUCK_TBL_COUNT" -lt "$MIN_TABLES" ] 2>/dev/null; then
             log_error "DuckDB database '$DB_PATH' has $DUCK_TBL_COUNT tables (expected >= $MIN_TABLES)."
+            _db_entry_failed=1
             HEALTH_DB_FAILED=1
           fi
         fi
@@ -254,6 +329,7 @@ EOF_PG_REQ
             DUCK_ROW_COUNT=$(query_duckdb_scalar "$DB_PATH" "$_sql_q" "scalar" || printf '%s' "-1")
             if [ -z "$DUCK_ROW_COUNT" ] || [ "$DUCK_ROW_COUNT" -lt "$MIN_ROWS_REQ" ] 2>/dev/null; then
               log_error "DuckDB database '$DB_PATH' required table '$req_tbl' missing or has insufficient rows (${DUCK_ROW_COUNT:-0} < $MIN_ROWS_REQ)."
+              _db_entry_failed=1
               HEALTH_DB_FAILED=1
             else
               _duck_tbl_summary="${_duck_tbl_summary:+$_duck_tbl_summary, }${req_tbl}=${DUCK_ROW_COUNT} rows"
@@ -262,7 +338,11 @@ EOF_PG_REQ
 $REQ_TABLES
 EOF_DUCK_REQ
         fi
-        log_info "[DB:DUCKDB] [CONFIRM] DuckDB '$DB_PATH' healthy (${DUCK_TBL_COUNT} table(s)${_duck_tbl_summary:+: $_duck_tbl_summary})."
+        if [ "$_db_entry_failed" -eq 0 ]; then
+          log_info "[DB:DUCKDB] [CONFIRM] DuckDB '$DB_PATH' healthy (${DUCK_TBL_COUNT} table(s)${_duck_tbl_summary:+: $_duck_tbl_summary})."
+        else
+          log_error "[DB:DUCKDB] DuckDB '$DB_PATH' failed health verification (${DUCK_TBL_COUNT} table(s)${_duck_tbl_summary:+: $_duck_tbl_summary})."
+        fi
       fi
       ;;
     sqlite|sqlite3)
@@ -275,6 +355,7 @@ EOF_DUCK_REQ
       fi
       if [ ! -f "$DB_PATH" ]; then
         log_error "SQLite database file '$DB_PATH' does not exist."
+        _db_entry_failed=1
         HEALTH_DB_FAILED=1
       elif command -v sqlite3 >/dev/null 2>&1; then
         SQLITE_TBL_COUNT=$(sqlite3 "$DB_PATH" "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';" 2>/dev/null | tr -d '[:space:]' || printf '0')
@@ -282,6 +363,7 @@ EOF_DUCK_REQ
         if [ -n "$MIN_TABLES" ]; then
           if [ "$SQLITE_TBL_COUNT" -lt "$MIN_TABLES" ] 2>/dev/null; then
             log_error "SQLite database '$DB_PATH' has $SQLITE_TBL_COUNT tables (expected >= $MIN_TABLES)."
+            _db_entry_failed=1
             HEALTH_DB_FAILED=1
           fi
         fi
@@ -294,6 +376,7 @@ EOF_DUCK_REQ
             SQLITE_ROW_COUNT=$(sqlite3 "$DB_PATH" "$_sql_q" 2>/dev/null | tr -d '[:space:]' || printf '%s' "-1")
             if [ -z "$SQLITE_ROW_COUNT" ] || [ "$SQLITE_ROW_COUNT" -lt "$MIN_ROWS_REQ" ] 2>/dev/null; then
               log_error "SQLite database '$DB_PATH' required table '$req_tbl' missing or has insufficient rows (${SQLITE_ROW_COUNT:-0} < $MIN_ROWS_REQ)."
+              _db_entry_failed=1
               HEALTH_DB_FAILED=1
             else
               _sqlite_tbl_summary="${_sqlite_tbl_summary:+$_sqlite_tbl_summary, }${req_tbl}=${SQLITE_ROW_COUNT} rows"
@@ -302,7 +385,11 @@ EOF_DUCK_REQ
 $REQ_TABLES
 EOF_SQLITE_REQ
         fi
-        log_info "[DB:SQLITE] [CONFIRM] SQLite '$DB_PATH' healthy (${SQLITE_TBL_COUNT} table(s)${_sqlite_tbl_summary:+: $_sqlite_tbl_summary})."
+        if [ "$_db_entry_failed" -eq 0 ]; then
+          log_info "[DB:SQLITE] [CONFIRM] SQLite '$DB_PATH' healthy (${SQLITE_TBL_COUNT} table(s)${_sqlite_tbl_summary:+: $_sqlite_tbl_summary})."
+        else
+          log_error "[DB:SQLITE] SQLite '$DB_PATH' failed health verification (${SQLITE_TBL_COUNT} table(s)${_sqlite_tbl_summary:+: $_sqlite_tbl_summary})."
+        fi
       fi
       ;;
     valkey|redis)
@@ -331,7 +418,20 @@ EOF_SQLITE_REQ
 
   if [ -n "$HEALTH_CMD" ]; then
     log_info "Executing database health command for '$DB_NAME': $HEALTH_CMD"
-    if ! (cd "$MANIFEST_DIR" && sh -c "$HEALTH_CMD"); then
+    if ! (
+      cd "$MANIFEST_DIR"
+      set -a
+      set +u
+      for _hcmd_ef in "${MANIFEST_DIR}/.env" "${MANIFEST_DIR}/.env.secrets" "${MANIFEST_DIR}/.env.libscript"; do
+        if [ -f "$_hcmd_ef" ]; then
+          # shellcheck disable=SC1090
+          . "$_hcmd_ef" 2>/dev/null || true
+        fi
+      done
+      set -u
+      set +a
+      sh -c "$HEALTH_CMD"
+    ); then
       log_error "Database health_command failed for '$DB_NAME': $HEALTH_CMD"
       HEALTH_DB_FAILED=1
     fi

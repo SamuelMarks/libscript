@@ -101,6 +101,7 @@ QEMU_PID=$!
 ELAPSED=0
 BOOT_SUCCESS=0
 INIT_MILESTONE_FOUND=0
+export INIT_MILESTONE_FOUND
 while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
   if [ -f "$SERIAL_LOG" ]; then
     # Detect init milestones

@@ -54,6 +54,20 @@ printf '%s
 ' "$NGINX_OUT" | grep -q "try_files \$uri \$uri/ /index.html;"
 printf '%s
 ' "$NGINX_OUT" | grep -q "proxy_set_header Upgrade \$http_upgrade;"
+printf '%s
+' "$NGINX_OUT" | grep -q "proxy_connect_timeout 60s;"
+printf '%s
+' "$NGINX_OUT" | grep -q "proxy_send_timeout 300s;"
+printf '%s
+' "$NGINX_OUT" | grep -q "proxy_read_timeout 300s;"
+printf '%s
+' "$NGINX_OUT" | grep -q "proxy_buffering off;"
+printf '%s
+' "$NGINX_OUT" | grep -q "proxy_cache off;"
+
+CUSTOM_TIMEOUT_OUT=$("${SCRIPT_DIR}/netctl.sh" --domain example.local --listen 80 --listen 443 --proxy-read-timeout 600s --proxy /api "http://127.0.0.1:8000" --emit nginx)
+printf '%s
+' "$CUSTOM_TIMEOUT_OUT" | grep -q "proxy_read_timeout 600s;"
 
 CADDY_OUT=$("${SCRIPT_DIR}/cli.sh" --listen 8080 --spa / "/var/www/app" --emit caddy)
 printf '%s
@@ -64,6 +78,47 @@ printf '%s
 ' "$APACHE_OUT" | grep -q "FallbackResource /index.html"
 printf '%s
 ' "$APACHE_OUT" | grep -q "RewriteCond %{HTTP:Upgrade} websocket"
+
+# Verify /.well-known/acme-challenge/ emission, tls: "letsencrypt" cert resolution from CERT_STORE_DIR, and read-only permission enforcement
+printf '%s\n' "$NGINX_OUT" | grep -q "location ^~ /.well-known/acme-challenge/"
+
+if command -v openssl >/dev/null 2>&1; then
+  _netctl_tmp=$(mktemp -d "${TMPDIR:-/tmp}/netctl_tls_test.XXXXXX")
+  _cstore="${_netctl_tmp}/certs"
+  _dom='secure.example.org'
+  mkdir -p "${_cstore}/live/${_dom}"
+  openssl req -x509 -nodes -days 30 -newkey rsa:2048 -keyout "${_netctl_tmp}/ca.key" -out "${_netctl_tmp}/ca.crt" -subj "/CN=Test Fake LE Root CA" >/dev/null 2>&1
+  openssl req -nodes -newkey rsa:2048 -keyout "${_cstore}/live/${_dom}/privkey.pem" -out "${_netctl_tmp}/leaf.csr" -subj "/CN=${_dom}" >/dev/null 2>&1
+  openssl x509 -req -days 30 -in "${_netctl_tmp}/leaf.csr" -CA "${_netctl_tmp}/ca.crt" -CAkey "${_netctl_tmp}/ca.key" -CAcreateserial -out "${_cstore}/live/${_dom}/fullchain.pem" >/dev/null 2>&1
+
+  cat << EOF_TLS_MF > "${_netctl_tmp}/libscript.json"
+{
+  "ingress": {
+    "provider": "nginx",
+    "domain": "${_dom}",
+    "tls": "letsencrypt",
+    "cert_store_dir": "${_cstore}",
+    "routes": {
+      "/": {"static": "./dist", "spa": true}
+    }
+  }
+}
+EOF_TLS_MF
+
+  TLS_NGINX_OUT=$(CERT_STORE_DIR="$_cstore" "${SCRIPT_DIR}/cli.sh" apply "${_netctl_tmp}/libscript.json" --format nginx)
+  printf '%s\n' "$TLS_NGINX_OUT" | grep -q "listen 443 ssl;"
+  printf '%s\n' "$TLS_NGINX_OUT" | grep -q "ssl_certificate ${_cstore}/live/${_dom}/fullchain.pem;"
+  printf '%s\n' "$TLS_NGINX_OUT" | grep -q "ssl_certificate_key ${_cstore}/live/${_dom}/privkey.pem;"
+  printf '%s\n' "$TLS_NGINX_OUT" | grep -q "root ${_cstore}/acme-webroot;"
+  if [ -w "${_cstore}/live/${_dom}/fullchain.pem" ] && [ "$(id -u 2>/dev/null || printf '1')" != "0" ]; then
+    chmod -R u+w "$_netctl_tmp" 2>/dev/null || true
+    rm -rf "$_netctl_tmp"
+    printf '%s\n' '[FAIL] Persisted fullchain.pem should be read-only (0444)' >&2
+    exit 1
+  fi
+  chmod -R u+w "$_netctl_tmp" 2>/dev/null || true
+  rm -rf "$_netctl_tmp"
+fi
 
 printf '%s
 ' "netctl test pass"

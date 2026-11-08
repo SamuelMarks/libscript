@@ -107,7 +107,7 @@ install_clang_component() {
         libscript_execute_source_build "cmake" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" -DLLVM_ENABLE_PROJECTS=clang
       else
         stage_host_clang_shim "${LIBSCRIPT_BUILD_TARGET_DIR}"
-        LIBSCRIPT_LAST_COMPILE_TIME_MS=10
+        export LIBSCRIPT_LAST_COMPILE_TIME_MS=10
       fi
       TARGET_DIR="${LIBSCRIPT_BUILD_TARGET_DIR}"
       libscript_emit_build_metrics "clang" "${EXACT_VERSION}" "${TARGET_DIR}/bin/clang" "${CLANG_CFLAGS:--O2}" ""

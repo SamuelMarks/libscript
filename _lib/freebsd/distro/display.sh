@@ -57,6 +57,7 @@ fi
 # Kernel DRM driver loading in rc.conf
 if [ "${DRIVER}" = "drm-kmod" ]; then
   if ! grep -q 'virtio_gpu.ko' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+    # shellcheck disable=SC2016
     printf 'kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko"\n' >> "${SYSROOT}/etc/rc.conf"
   fi
 fi

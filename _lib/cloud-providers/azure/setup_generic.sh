@@ -136,7 +136,7 @@ case "$ACTION" in
       create)
         IMAGE=${3:-}; RG=${4:-}
         if [ -z "$IMAGE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: node create <name> <image> <rg> [args...]"; exit 1; fi
-        SIZE="${size:-Standard_D2s_v7}"
+        SIZE="${size:-${VM_SIZE:-Standard_D8s_v7}}"
         VNET_VAL="${vnet_name:-}"
         NSG_VAL="${nsg:-}"
         DISK_VAL="${os_disk_size_gb:-}"
@@ -164,10 +164,17 @@ case "$ACTION" in
         TAGS_ARG="$(libscript_format_tags azure)"
         if az vm show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
           printf '%s\n' "VM '$RESOURCE_NAME' already exists in resource group '$RG'."
+          if [ "${DRY_RUN:-}" != "true" ] && [ "${DRY_RUN:-0}" != "1" ] && command -v az >/dev/null 2>&1; then
+            _cur_vm_size=$(az vm show -g "$RG" -n "$RESOURCE_NAME" --query "hardwareProfile.vmSize" -o tsv 2>/dev/null | tr -d '\r[:space:]' || true)
+            if [ -n "$_cur_vm_size" ] && [ -n "$SIZE" ] && [ "$_cur_vm_size" != "$SIZE" ]; then
+              printf '%s\n' "[RESIZE] Resizing Azure VM '$RESOURCE_NAME' in '$RG' from '$_cur_vm_size' to '$SIZE'..."
+              az vm resize --resource-group "$RG" --name "$RESOURCE_NAME" --size "$SIZE" || true
+            fi
+          fi
         else
           printf '%s\n' "Creating Azure VM: $RESOURCE_NAME in $RG ($SIZE, $IMAGE)"
           # shellcheck disable=SC2086
-          az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --admin-username "$ADMIN_VAL" --generate-ssh-keys --public-ip-sku Standard $ARGS $TAGS_ARG
+          az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --os-disk-delete-option Delete --admin-username "$ADMIN_VAL" --generate-ssh-keys --public-ip-sku Standard $ARGS $TAGS_ARG
         fi
         ;;
       ip)
@@ -183,6 +190,17 @@ case "$ACTION" in
         libscript_invalidate_cached_vm_ip 'azure' "$RG" "$RESOURCE_NAME"
         printf '%s\n' "Deleting Azure VM: $RESOURCE_NAME from $RG"
         if az vm show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          if [ "${DRY_RUN:-}" != "true" ] && [ "${DRY_RUN:-0}" != "1" ] && command -v az >/dev/null 2>&1; then
+            _attached_disks=$(az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[].name" -o tsv 2>/dev/null | tr -d '\r' || true)
+            if [ -n "$_attached_disks" ]; then
+              for _dname in $_attached_disks; do
+                [ -n "$_dname" ] || continue
+                printf '%s\n' "[PRESERVE] Detaching persistent data disk '$_dname' (deleteOption=Detach) before deleting VM '$RESOURCE_NAME'..."
+                az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$_dname'].deleteOption=Detach" >/dev/null 2>&1 || true
+                az vm disk detach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$_dname" >/dev/null 2>&1 || true
+              done
+            fi
+          fi
           az vm delete --name "$RESOURCE_NAME" --resource-group "$RG" --yes
         else
           printf '%s\n' "VM '$RESOURCE_NAME' already deleted or not found in resource group '$RG'."
@@ -251,16 +269,19 @@ case "$ACTION" in
           exit 0
         fi
         if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
-          printf '[DRY_RUN] az vm disk attach -g %s --vm-name %s --name %s --size-gb %s\n' "$RG" "$RESOURCE_NAME" "$DISK_NAME" "$DISK_SIZE"
+          printf '[DRY_RUN] az vm disk attach -g %s --vm-name %s --name %s --size-gb %s --delete-option Detach\n' "$RG" "$RESOURCE_NAME" "$DISK_NAME" "$DISK_SIZE"
           exit 0
         fi
         if az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[?name=='$DISK_NAME'] | [0].name" -o tsv 2>/dev/null | grep -q .; then
           printf '[REUSE] Disk '%s' already attached to '%s'.
 ' "$DISK_NAME" "$RESOURCE_NAME"
+          az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$DISK_NAME'].deleteOption=Detach" >/dev/null 2>&1 || true
         elif az disk show -g "$RG" -n "$DISK_NAME" >/dev/null 2>&1; then
-          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --delete-option Detach 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
+          az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$DISK_NAME'].deleteOption=Detach" >/dev/null 2>&1 || true
         else
-          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" || true
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS --delete-option Detach 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" || true
+          az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$DISK_NAME'].deleteOption=Detach" >/dev/null 2>&1 || true
         fi
         ;;
       deploy)
@@ -337,16 +358,19 @@ case "$ACTION" in
           exit 0
         fi
         if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
-          printf '[DRY_RUN] az vm disk attach -g %s --vm-name %s --name %s --size-gb %s\n' "$RG" "$RESOURCE_NAME" "$DISK_NAME" "$DISK_SIZE"
+          printf '[DRY_RUN] az vm disk attach -g %s --vm-name %s --name %s --size-gb %s --delete-option Detach\n' "$RG" "$RESOURCE_NAME" "$DISK_NAME" "$DISK_SIZE"
           exit 0
         fi
         if az vm show -g "$RG" -n "$RESOURCE_NAME" --query "storageProfile.dataDisks[?name=='$DISK_NAME'] | [0].name" -o tsv 2>/dev/null | grep -q .; then
           printf '[REUSE] Disk '%s' already attached to '%s'.
 ' "$DISK_NAME" "$RESOURCE_NAME"
+          az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$DISK_NAME'].deleteOption=Detach" >/dev/null 2>&1 || true
         elif az disk show -g "$RG" -n "$DISK_NAME" >/dev/null 2>&1; then
-          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --delete-option Detach 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" || true
+          az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$DISK_NAME'].deleteOption=Detach" >/dev/null 2>&1 || true
         else
-          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" || true
+          az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS --delete-option Detach 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" --sku Premium_LRS 2>/dev/null || az vm disk attach -g "$RG" --vm-name "$RESOURCE_NAME" --name "$DISK_NAME" --new --size-gb "$DISK_SIZE" || true
+          az vm update -g "$RG" -n "$RESOURCE_NAME" --set "storageProfile.dataDisks[?name=='$DISK_NAME'].deleteOption=Detach" >/dev/null 2>&1 || true
         fi
         ;;
       delete)
@@ -411,6 +435,14 @@ case "$ACTION" in
               _tmp_z="$ZONE"; ZONE="$RG"; RG="$_tmp_z"; TYPE="$NAME"; NAME="@"
             fi
             _TARGET_RG="${DNS_RG:-$RG}"
+            if [ "$NAME" = "@" ] && [ "${ZONE#*.*.}" != "$ZONE" ]; then
+              _p_zone="${ZONE#*.}"
+              _s_name="${ZONE%%.*}"
+              if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1 || ! az network dns zone show -g "$_TARGET_RG" -n "$ZONE" >/dev/null 2>&1; then
+                ZONE="$_p_zone"
+                NAME="$_s_name"
+              fi
+            fi
             if [ "${DRY_RUN:-}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || ! command -v az >/dev/null 2>&1; then
               printf '[DRY_RUN] az network dns record-set %s (%s) in zone %s (%s) -> %s\n' "$NAME" "$TYPE" "$ZONE" "$_TARGET_RG" "$VALUE"
               exit 0
@@ -418,17 +450,10 @@ case "$ACTION" in
             if ! az network dns zone show -g "$_TARGET_RG" -n "$ZONE" >/dev/null 2>&1; then
               if [ "$_TARGET_RG" != "$RG" ] && az network dns zone show -g "$RG" -n "$ZONE" >/dev/null 2>&1; then
                 _TARGET_RG="$RG"
-              elif [ "$NAME" = "@" ] && [ "${ZONE#*.*.}" != "$ZONE" ]; then
-                _p_zone="${ZONE#*.}"
-                _s_name="${ZONE%%.*}"
-                if az network dns zone show -g "$_TARGET_RG" -n "$_p_zone" >/dev/null 2>&1; then
-                  ZONE="$_p_zone"
-                  NAME="$_s_name"
-                elif [ "$_TARGET_RG" != "$RG" ] && az network dns zone show -g "$RG" -n "$_p_zone" >/dev/null 2>&1; then
-                  _TARGET_RG="$RG"
-                  ZONE="$_p_zone"
-                  NAME="$_s_name"
-                fi
+              else
+                TAGS_ARG="$(libscript_format_tags azure)"
+                # shellcheck disable=SC2086
+                az network dns zone create -g "$_TARGET_RG" -n "$ZONE" $TAGS_ARG >/dev/null 2>&1 || true
               fi
             fi
             if [ "$SUBTYPE" = "update" ]; then

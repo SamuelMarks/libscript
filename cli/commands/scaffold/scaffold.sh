@@ -1164,11 +1164,11 @@ case "$ACTION" in
       URL="${__COMP_PREFIX___DOWNLOAD_URL:-__SCAF_URL_UNIX__}"
       URL=$(printf '%s\n' "$URL" | sed "s/{VERSION}/${EXACT_VERSION}/g")
       ARCHIVE_NAME=$(basename "$URL")
-      CACHED_DL="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/__SCAF_NAME__/$ARCHIVE_NAME"
+      CACHED_DL="${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/__SCAF_NAME__/$ARCHIVE_NAME"
       if [ -f "$CACHED_DL" ]; then
         TMP_FILE="$CACHED_DL"
       else
-        TMP_FILE="/tmp/__SCAF_NAME__-$$.archive"
+        TMP_FILE="${TMPDIR:-/tmp}/__SCAF_NAME__-$$.archive"
         libscript_download "$URL" "$TMP_FILE"
       fi
       case "$URL" in

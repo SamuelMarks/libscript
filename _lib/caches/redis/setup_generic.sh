@@ -42,7 +42,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-REDIS_INSTALL_METHOD="$(libscript_resolve_install_method "REDIS")"
+REDIS_INSTALL_METHOD="${REDIS_INSTALL_METHOD:-system}"
+REDIS_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$REDIS_INSTALL_METHOD" libscript_resolve_install_method "REDIS")"
 ACTION="${ACTION:-install}"
 VERSION="${REDIS_VERSION:-latest}"
 
@@ -173,6 +174,9 @@ case "$ACTION" in
       fi
       libscript_symlink_alias "redis" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "redis" "default" "${EXACT_VERSION}"
+      if [ -n "${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/service.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/service.sh" configure "${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}" || true
+      fi
       log_info "[REUSE] redis (${VERSION}) is already installed at ${_existing_rd}."
       exit 0
     fi
@@ -231,6 +235,9 @@ case "$ACTION" in
         log_info "redis ${VERSION} is already installed."
       fi
       libscript_symlink_alias "redis" "$VERSION" "${EXACT_VERSION}"
+    fi
+    if [ -n "${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/service.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/service.sh" configure "${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}" || true
     fi
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)

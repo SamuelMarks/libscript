@@ -231,11 +231,11 @@ SHIM
           if command -v meilisearch >/dev/null 2>&1; then
             ln -sf "$(command -v meilisearch)" "${TARGET_DIR}/bin/meilisearch"
           fi
-        elif command -v cargo >/dev/null 2>&1; then
+        elif [ "$MEILISEARCH_INSTALL_METHOD" = "from-source" ] && command -v cargo >/dev/null 2>&1; then
           log_info 'Compiling meilisearch from source via cargo...'
           cargo install meilisearch --root "${TARGET_DIR}" || true
         else
-          log_warn 'Unable to download or install Meilisearch binary.'
+          libscript_depends 'meilisearch' 2>/dev/null || log_warn 'Unable to download or install Meilisearch binary (set MEILISEARCH_INSTALL_METHOD=from-source to compile via cargo).'
         fi
       fi
     fi

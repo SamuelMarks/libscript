@@ -48,6 +48,7 @@ if [ "${run_before}" -eq 0 ]; then
     rm -f "${NGINX_KEY}"
   fi
   if [ ! -f '/etc/apt/sources.list.d/nginx.list' ]; then
+    # shellcheck disable=SC1090,SC1091
     ID="$(. /etc/os-release && printf "%s" "${ID}")"
     printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/%s %s nginx\n' "${ID}" "$(lsb_release -cs)" | priv  tee /etc/apt/sources.list.d/nginx.list
   fi
@@ -145,6 +146,7 @@ if [ "${NGINX_VARS-}" ] || [ "${NGINX_WWWROOT_NAME-}" ] || [ "${NGINX_SERVER_NAM
     printf '%s\n' "export NGINX_WWWROOT='${NGINX_WWWROOT_PATH}'" >> "${ENV_SCRIPT_FILE}"
   fi
   
+  # shellcheck disable=SC1090,SC1091
   . "${ENV_SCRIPT_FILE}"
 
   SERVER_NAME="${NGINX_SERVER_NAME:-${NGINX_WWWROOT_NAME:-}}"

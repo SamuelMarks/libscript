@@ -35,6 +35,7 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 export UWSGI_WORKERS="${UWSGI_WORKERS:-2}"
+export UWSGI_INSTALL_METHOD="${UWSGI_INSTALL_METHOD:-system}"
 UWSGI_VERSION="${UWSGI_VERSION:-2.0.24}"
 if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${UWSGI_VERSION}/bin" ]; then
   libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/uwsgi/${UWSGI_VERSION}/bin"

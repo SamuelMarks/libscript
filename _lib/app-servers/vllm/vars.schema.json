@@ -52,6 +52,10 @@
     "VLLM_TARGET_DEVICE": {
       "type": "string",
       "description": "Configuration variable VLLM_TARGET_DEVICE for vllm."
+    },
+    "VLLM_BUILD_TMPDIR": {
+      "type": "string",
+      "description": "Temporary directory used when building vLLM wheels from source."
     }
   }
 }

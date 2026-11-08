@@ -38,6 +38,7 @@ cleanup_sec_test() {
 trap cleanup_sec_test EXIT INT TERM
 
 printf 'DB_PASSWORD=super_secret_val_998877\n' > "${TEST_TMP}/secrets.kv"
+# shellcheck disable=SC2016
 printf 'password_setting = ${DB_PASSWORD}\n' > "${TEST_TMP}/app.conf.tpl"
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/traits/secrets/exec_with_secrets.sh" sh "${LIBSCRIPT_ROOT_DIR}/traits/secrets/exec_with_secrets.sh" --source "${TEST_TMP}/secrets.kv" --template "${TEST_TMP}/app.conf.tpl" --output "${TEST_TMP}/app.conf"

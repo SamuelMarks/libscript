@@ -54,6 +54,19 @@ if "%~1"=="-h" goto :help
 
 set "DOMAIN=%~1"
 if "%DOMAIN%"=="" set "DOMAIN=example.com"
+set "EMAIL=%~2"
+if "%CERT_STORE_DIR%"=="" (
+    set "_ACME_DEF_MOUNT=%DATA_DISK_MOUNT%"
+    if "!_ACME_DEF_MOUNT!"=="" set "_ACME_DEF_MOUNT=%DATA_MOUNT_DIR%"
+    if "!_ACME_DEF_MOUNT!"=="" set "_ACME_DEF_MOUNT=/mnt/data"
+    set "CERT_STORE_DIR=!_ACME_DEF_MOUNT!/certs"
+)
+if not "%LIBSCRIPT_DRY_RUN%"=="1" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" ensure-cert "%DOMAIN%" "%CERT_STORE_DIR%" "" "%EMAIL%"
+    )
+)
 echo [INFO] ACME TLS certificate configured for %DOMAIN%.
 exit /b 0
 

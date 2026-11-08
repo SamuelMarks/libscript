@@ -62,6 +62,10 @@ libscript_cert_create() {
     azure)
       printf "Azure Front Door managed certificates are typically provisioned automatically when adding a custom domain to a CDN endpoint.\n"
       ;;
+    letsencrypt|acme|certbot)
+      _cstore="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+      "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" ensure-cert "$domain" "$_cstore" "${_cstore}/acme-webroot" "${LETSENCRYPT_EMAIL:-}"
+      ;;
   esac
 }
 
@@ -108,6 +112,13 @@ libscript_cert_delete() {
     azure)
       printf "Azure managed CDN certificates are deleted when the custom domain mapping is removed.\n"
       ;;
+    letsencrypt|acme|certbot)
+      _cstore="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+      if [ -d "${_cstore}/live/${domain}" ]; then
+        chmod -R u+w "${_cstore}/live/${domain}" 2>/dev/null || true
+        rm -rf "${_cstore}/live/${domain}" 2>/dev/null || true
+      fi
+      ;;
   esac
 }
 
@@ -125,6 +136,12 @@ libscript_cert_list() {
       ;;
     azure)
       printf "Azure managed certificates are tied to CDN custom domains. Use CDN list commands.\n"
+      ;;
+    letsencrypt|acme|certbot)
+      _cstore="${CERT_STORE_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/certs}"
+      if [ -d "${_cstore}/live" ]; then
+        ls -1 "${_cstore}/live" 2>/dev/null || true
+      fi
       ;;
   esac
 }

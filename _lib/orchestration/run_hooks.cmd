@@ -89,6 +89,7 @@ for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\
 )
 if defined SERVICE_PATH set "PATH=!SERVICE_PATH!;!PATH!"
 if defined SERVICE_EXTRA_PATH set "PATH=!SERVICE_EXTRA_PATH!;!PATH!"
+call :dedup_hook_path
 
 set "_JQ_HOOK_MERGE=((.hooks[$ht] // []) + (.infrastructure.hooks[$ht] // []) + (.lifecycle_hooks[$ht] // []) + (.infrastructure.lifecycle_hooks[$ht] // [])) | reduce .[] as $item ({seen: {}, list: []}; (($item | if type == \"object\" then (.name // \"\") else \"\" end)) as $k | if ($k != \"\" and (.seen[$k] // false)) then . else .list += [$item] | if $k != \"\" then .seen[$k] = true else . end end) | .list[]?"
 
@@ -109,6 +110,29 @@ for /f "delims=" %%i in ('jq -c --arg ht "!hook_type!" "!_JQ_HOOK_MERGE!" "!json
     )
 )
 if "!HOOK_FAILED!"=="1" exit /b 1
+exit /b 0
+
+:: ## dedup_hook_path
+:: Deduplicates semicolon-separated entries in PATH and updates SERVICE_PATH.
+:dedup_hook_path
+set "_DHP_OUT="
+for %%P in ("!PATH:;=" "!") do (
+    set "_DHP_SEG=%%~P"
+    if not "!_DHP_SEG!"=="" (
+        echo ";!_DHP_OUT!;" | findstr /I /C:";!_DHP_SEG!;" >nul 2>&1
+        if errorlevel 1 (
+            if defined _DHP_OUT (
+                set "_DHP_OUT=!_DHP_OUT!;!_DHP_SEG!"
+            ) else (
+                set "_DHP_OUT=!_DHP_SEG!"
+            )
+        )
+    )
+)
+if defined _DHP_OUT (
+    set "PATH=!_DHP_OUT!"
+    set "SERVICE_PATH=!_DHP_OUT!"
+)
 exit /b 0
 
 :: ## exec_single_hook

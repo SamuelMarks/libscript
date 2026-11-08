@@ -387,7 +387,8 @@ else
         ((.runtime // [])[]? | parse_dep_item("runtime")),
         ((.build // [])[]? | parse_dep_item("build")),
         ((.optional // [])[]? | parse_dep_item("optional")),
-        (to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional" and .key != "required") | if (.value | type) == "string" or (.value | type) == "number" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (.value | tostring)} elif (.value | type) == "object" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: ((.value.version // "latest") | tostring)} else empty end)
+        ((.system // {}) | if type == "array" then .[] | parse_dep_item("system") elif type == "object" then to_entries[] | if (.value | type) == "string" or (.value | type) == "number" then {layer: "system", type: "name", val: normalize_pkg_alias(.key), version: (.value | tostring)} elif (.value | type) == "object" then {layer: "system", type: "name", val: normalize_pkg_alias(.key), version: ((.value.version // "latest") | tostring)} else empty end else empty end),
+        (to_entries[] | select(.key != "runtime" and .key != "build" and .key != "optional" and .key != "required" and .key != "system") | if (.value | type) == "string" or (.value | type) == "number" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: (.value | tostring)} elif (.value | type) == "object" then {layer: "deps", type: "name", val: normalize_pkg_alias(.key), version: ((.value.version // "latest") | tostring)} else empty end)
       ) else empty end) ] +
     ($decl_dbs | extract_db_engine) +
     [ ($req.databases[]?  | parse_dep_item("databases")) ] +

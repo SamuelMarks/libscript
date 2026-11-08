@@ -166,7 +166,7 @@ case "$ACTION" in
                cp "/opt/homebrew/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
              elif [ -x "/usr/local/bin/gcsfuse" ]; then
                cp "/usr/local/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
-             elif command -v go >/dev/null 2>&1; then
+             elif [ "$GCSFUSE_INSTALL_METHOD" = "from-source" ] && command -v go >/dev/null 2>&1; then
                GOBIN="${TARGET_DIR}/bin" go install github.com/googlecloudplatform/gcsfuse/v2@latest 2>/dev/null || true
              fi
              if [ ! -x "${TARGET_DIR}/bin/gcsfuse" ]; then

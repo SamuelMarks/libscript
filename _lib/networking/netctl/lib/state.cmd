@@ -53,6 +53,19 @@ if "%NETCTL_STATE_FILE%"=="" set NETCTL_STATE_FILE=.netctl.json
 
 if /i "%~1"=="init" goto init
 if /i "%~1"=="domain" goto domain
+if /i "%~1"=="tls" goto netctl_set_tls
+if /i "%~1"=="cert-store-dir" goto netctl_set_cert_store_dir
+if /i "%~1"=="cert_store_dir" goto netctl_set_cert_store_dir
+if /i "%~1"=="acme-webroot" goto netctl_set_acme_webroot
+if /i "%~1"=="acme_webroot" goto netctl_set_acme_webroot
+if /i "%~1"=="proxy-connect-timeout" goto netctl_set_proxy_connect_timeout
+if /i "%~1"=="proxy_connect_timeout" goto netctl_set_proxy_connect_timeout
+if /i "%~1"=="proxy-send-timeout" goto netctl_set_proxy_send_timeout
+if /i "%~1"=="proxy_send_timeout" goto netctl_set_proxy_send_timeout
+if /i "%~1"=="proxy-read-timeout" goto netctl_set_proxy_read_timeout
+if /i "%~1"=="proxy_read_timeout" goto netctl_set_proxy_read_timeout
+if /i "%~1"=="proxy-buffering" goto netctl_set_proxy_buffering
+if /i "%~1"=="proxy_buffering" goto netctl_set_proxy_buffering
 if /i "%~1"=="listen" goto listen
 if /i "%~1"=="static" goto static
 if /i "%~1"=="spa" goto spa
@@ -65,10 +78,10 @@ exit /b 1
 :: Initializes default environment variables and module state.
 :init
 if not exist "%NETCTL_STATE_FILE%" (
-    echo {"domain":"_","listen":[],"routes":{}} > "%NETCTL_STATE_FILE%"
+    echo {"domain":"_","listen":[],"tls":"","cert_store_dir":"","acme_webroot":"","routes":{}} > "%NETCTL_STATE_FILE%"
 ) else (
     for %%I in ("%NETCTL_STATE_FILE%") do if %%~zI equ 0 (
-        echo {"domain":"_","listen":[],"routes":{}} > "%NETCTL_STATE_FILE%"
+        echo {"domain":"_","listen":[],"tls":"","cert_store_dir":"","acme_webroot":"","routes":{}} > "%NETCTL_STATE_FILE%"
     )
 )
 exit /b 0
@@ -78,6 +91,62 @@ exit /b 0
 :domain
 call :init
 jq --arg d "%~2" ".domain = $d" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_tls
+:: Sets the TLS provider mode in the state file.
+:netctl_set_tls
+call :init
+jq --arg t "%~2" ".tls = $t" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_cert_store_dir
+:: Sets the persistent read-only certificate store directory in the state file.
+:netctl_set_cert_store_dir
+call :init
+jq --arg c "%~2" ".cert_store_dir = $c" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_acme_webroot
+:: Sets the ACME HTTP-01 challenge webroot directory in the state file.
+:netctl_set_acme_webroot
+call :init
+jq --arg w "%~2" ".acme_webroot = $w" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_proxy_connect_timeout
+:: Sets the upstream proxy connect timeout in the state file.
+:netctl_set_proxy_connect_timeout
+call :init
+jq --arg t "%~2" ".proxy_connect_timeout = $t" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_proxy_send_timeout
+:: Sets the upstream proxy send timeout in the state file.
+:netctl_set_proxy_send_timeout
+call :init
+jq --arg t "%~2" ".proxy_send_timeout = $t" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_proxy_read_timeout
+:: Sets the upstream proxy read timeout in the state file.
+:netctl_set_proxy_read_timeout
+call :init
+jq --arg t "%~2" ".proxy_read_timeout = $t" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
+move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
+exit /b 0
+
+:: ## netctl_set_proxy_buffering
+:: Sets the upstream proxy buffering mode in the state file.
+:netctl_set_proxy_buffering
+call :init
+jq --arg b "%~2" ".proxy_buffering = $b" "%NETCTL_STATE_FILE%" > "%NETCTL_STATE_FILE%.tmp"
 move /Y "%NETCTL_STATE_FILE%.tmp" "%NETCTL_STATE_FILE%" >nul
 exit /b 0
 

@@ -123,6 +123,7 @@ test_scoped_env_formats() {
 
   assert_contains "$_env_sh" 'export PATH=' "env --format=sh emits POSIX export PATH"
   assert_contains "$_env_cmd" 'SET "PATH=' "env --format=cmd emits Windows Batch SET PATH"
+  # shellcheck disable=SC2016
   assert_contains "$_env_ps1" '$env:PATH =' "env --format=ps1 emits PowerShell \$env:PATH"
   assert_contains "$_env_fish" 'set -gx PATH' "env --format=fish emits Fish set -gx PATH"
   assert_contains "$_env_json" '"PATH":' "env --format=json emits JSON PATH key"

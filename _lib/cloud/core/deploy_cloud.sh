@@ -59,6 +59,7 @@ LOC="${LOCATION:-}"
 VM_IMAGE_OVERRIDE="${VM_IMAGE:-}"
 VM_SIZE_OVERRIDE="${VM_SIZE:-}"
 ADMIN_USER_OVERRIDE="${ADMIN_USER:-}"
+REPO_ROOT_OVERRIDE="${REPO_PATH:-}"
 APP_SPECS=""
 
 _p1="" _p2="" _p3="" _p4="" _p5="" _p6=""
@@ -89,6 +90,8 @@ while [ $# -gt 0 ]; do
     --size|--vm-size) VM_SIZE_OVERRIDE="${2:-}"; shift 2 ;;
     --admin-user=*|--admin-username=*) ADMIN_USER_OVERRIDE="${1#*=}"; shift ;;
     --admin-user|--admin-username) ADMIN_USER_OVERRIDE="${2:-}"; shift 2 ;;
+    --repo-root=*) REPO_ROOT_OVERRIDE="${1#*=}"; shift ;;
+    --repo-root) REPO_ROOT_OVERRIDE="${2:-}"; shift 2 ;;
     --app=*) APP_SPECS="${APP_SPECS}${1#*=}|"; shift ;;
     --app) APP_SPECS="${APP_SPECS}${2:-}|"; shift 2 ;;
     *)
@@ -108,7 +111,7 @@ done
 [ -z "$NODE" ] && NODE="$_p2"
 [ -z "$RG" ] && RG="$_p3"
 [ -z "$LOC" ] && LOC="$_p4"
-REPO_PATH="${_p5:-.}"
+REPO_PATH="${REPO_ROOT_OVERRIDE:-${_p5:-.}}"
 REMOTE_DEST="${_p6:-}"
 
 if [ -z "$PROVIDER" ] || [ -z "$NODE" ] || [ -z "$RG" ] || [ -z "$LOC" ]; then
@@ -186,6 +189,12 @@ for _spec in "$@"; do
   _sp_path="${_sp_no_dom%%:*}"
   if [ -f "${_sp_path}/libscript.json" ]; then
     MANIFEST_FILES="${MANIFEST_FILES} ${_sp_path}/libscript.json"
+    if [ -z "$REPO_ROOT_OVERRIDE" ] && [ "$REPO_PATH" = "." ] && [ ! -f "${REPO_PATH}/libscript.json" ]; then
+      _sp_parent=$(cd -- "$_sp_path/.." 2>/dev/null && pwd || true)
+      if [ -n "$_sp_parent" ] && [ -f "${_sp_parent}/libscript.json" ]; then
+        REPO_PATH="$_sp_parent"
+      fi
+    fi
   fi
 done
 
@@ -306,7 +315,9 @@ compute_app_checksum() {
         git -C "$_cac_dir" status --porcelain 2>/dev/null | grep -Ev '(^|[[:space:]]|/)(\.nyc_output|docs/web|docs/api|site|\.vitest|build|cmake-build-|node_modules|target|\.venv|venv|dist|\.angular|\.vite|\.gradle|\.kotlin|out)(/|$)' || true
         git -C "$_cac_dir" diff HEAD -- . ':(exclude).nyc_output' ':(exclude)**/.nyc_output/**' ':(exclude)docs/web' ':(exclude)docs/api' ':(exclude)site' ':(exclude).vitest*' 2>/dev/null || true
         git -C "$_cac_dir" ls-files --others --exclude-standard 2>/dev/null | grep -Ev "(^|/)(\.nyc_output|docs/web|docs/api|site|\.vitest|build|cmake-build-|node_modules|target|\.venv|venv|dist|\.angular|\.vite|\.gradle|\.kotlin|out)" | while IFS= read -r _uf; do
-          [ -n "$_uf" ] && [ -f "${_cac_dir}/${_uf}" ] && cksum "${_cac_dir}/${_uf}" 2>/dev/null || true
+          if [ -n "$_uf" ] && [ -f "${_cac_dir}/${_uf}" ]; then
+            cksum "${_cac_dir}/${_uf}" 2>/dev/null || true
+          fi
         done
       } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
     )
@@ -317,8 +328,23 @@ compute_app_checksum() {
   if [ -n "${REPO_PATH:-}" ] && [ -f "${REPO_PATH}/libscript.json" ] && [ "${REPO_PATH}/libscript.json" != "${_cac_dir}/libscript.json" ]; then
     _cac_root_mf="${REPO_PATH}/libscript.json"
   fi
-  # shellcheck disable=SC2086
-  _cac_env=$(cat "${_cac_dir}/libscript.json" "${_cac_dir}/.env" "${_cac_dir}/.env.secrets" $_cac_root_mf 2>/dev/null | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
+  _cac_env=$(
+    {
+      # shellcheck disable=SC2086
+      cat "${_cac_dir}/libscript.json" "${_cac_dir}/.env" "${_cac_dir}/.env.secrets" $_cac_root_mf 2>/dev/null || true
+      (
+        cd "$_cac_dir" 2>/dev/null && {
+          set +f
+          for _cac_lf in package.json package-lock.json pyproject.toml uv.lock requirements*.txt angular.json vite.config.* */package.json */package-lock.json */pyproject.toml */uv.lock */requirements*.txt */angular.json */vite.config.* */*/package.json */*/package-lock.json */*/pyproject.toml */*/uv.lock */*/requirements*.txt */*/angular.json */*/vite.config.*; do
+            if [ -f "$_cac_lf" ]; then
+              cksum "$_cac_lf" 2>/dev/null || true
+            fi
+          done
+          set -f
+        }
+      )
+    } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
+  )
   printf '%s_%s_%s\n' "$_cac_git" "$_cac_dirty" "$_cac_env"
 }
 
@@ -382,6 +408,7 @@ STATE_FILE="$REPO_PATH/.deploy_state"
 # ## record_state
 # Appends a provisioned resource entry to the deployment state file.
 record_state() {
+  [ "$DRY_RUN_MODE" -eq 0 ] || return 0
   key=$1
   val=$2
   if [ -f "$STATE_FILE" ]; then
@@ -512,10 +539,14 @@ if [ "$SKIP_INFRA" -eq 0 ]; then
       printf '%s\n' "$DISKS" | while read -r disk_obj; do
         [ -n "$disk_obj" ] || continue
         DISK_SIZE=$(printf '%s\n' "$disk_obj" | jq -r '.size_gb // 100')
-        DISK_MOUNT=$(printf '%s\n' "$disk_obj" | jq -r '.mount_path // "/mnt/data"')
+        DISK_MOUNT=$(printf '%s\n' "$disk_obj" | jq -r --arg def "${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}" '.mount_path // $def')
         DISK_NAME=$(printf '%s\n' "$disk_obj" | jq -r '.name // "data-disk"')
-        log "STORAGE" "Ensuring persistent data disk '${NODE}-${DISK_NAME}' (${DISK_SIZE}GB -> ${DISK_MOUNT})..."
-        run_with_auth_check "$CLI" storage attach-disk "$NODE" "$CTX" "${NODE}-${DISK_NAME}" "$DISK_SIZE" "$DISK_MOUNT" || true
+        case "$DISK_NAME" in
+          "${NODE}-"*) _FULL_DISK_NAME="$DISK_NAME" ;;
+          *) _FULL_DISK_NAME="${NODE}-${DISK_NAME}" ;;
+        esac
+        log "STORAGE" "Ensuring persistent data disk '${_FULL_DISK_NAME}' (${DISK_SIZE}GB -> ${DISK_MOUNT})..."
+        run_with_auth_check "$CLI" storage attach-disk "$NODE" "$CTX" "$_FULL_DISK_NAME" "$DISK_SIZE" "$DISK_MOUNT" || true
       done
     fi
   fi
@@ -524,6 +555,11 @@ fi
 # -----------------------------------------------------------------------------
 # Shared Node Preparation (Sync LibScript + Declarative Storage & Daemon Config)
 # -----------------------------------------------------------------------------
+_DEPLOY_DATA_MOUNT="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
+_DEPLOY_OL_MODELS="${OLLAMA_MODELS_DIR:-${_DEPLOY_DATA_MOUNT}/ollama_models}"
+_DEPLOY_CERT_STORE="${CERT_STORE_DIR:-${_DEPLOY_DATA_MOUNT}/certs}"
+_REMOTE_OLLAMA_ENV="GGML_BACKEND_AMX='${GGML_BACKEND_AMX:-0}' OLLAMA_LLM_LIBRARY='${OLLAMA_LLM_LIBRARY:-cpu_avx2}' OLLAMA_NUM_GPU='${OLLAMA_NUM_GPU:-0}' OLLAMA_FLASH_ATTENTION='${OLLAMA_FLASH_ATTENTION:-0}' OLLAMA_KV_CACHE_TYPE='${OLLAMA_KV_CACHE_TYPE:-f16}' OLLAMA_CONTEXT_LENGTH='${OLLAMA_CONTEXT_LENGTH:-2048}' OLLAMA_MAX_QUEUE='${OLLAMA_MAX_QUEUE:-16}' OLLAMA_KEEP_ALIVE='${OLLAMA_KEEP_ALIVE:-10m}' POSTGRES_DATA_DIR='${POSTGRES_DATA_DIR:-${PGDATA:-}}' PGDATA='${PGDATA:-${POSTGRES_DATA_DIR:-}}' VALKEY_DATA_DIR='${VALKEY_DATA_DIR:-${REDIS_DATA_DIR:-}}' REDIS_DATA_DIR='${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}' CERT_STORE_DIR='${_DEPLOY_CERT_STORE}' LETSENCRYPT_EMAIL='${LETSENCRYPT_EMAIL:-}' LETSENCRYPT_RENEW_BEFORE_SECONDS='${LETSENCRYPT_RENEW_BEFORE_SECONDS:-0}'"
+
 if [ "$SKIP_INFRA" -eq 0 ]; then
   log "SSH" "Waiting for SSH readiness on '$NODE'..."
   run_with_auth_check "$CLI" node wait-ssh "$NODE" "$CTX" || true
@@ -545,6 +581,48 @@ else
   fi
 fi
 
+# ## prepare_remote_jaeb_storage
+# Ensures the external read-only DuckDB dataset directory exists on the remote node and idempotently stages the local dataset with a symlink and read-only permissions when configured.
+prepare_remote_jaeb_storage() {
+  [ "$SKIP_PREPARE" -eq 0 ] || return 0
+  if [ "$DRY_RUN_MODE" -eq 1 ]; then
+    return 0
+  fi
+  _ext_slug="t1""d"
+  _ext_up="T1""D"
+  _ext_base="${_DEPLOY_DATA_MOUNT}/${_ext_slug}"
+  _ext_var="${_ext_up}_LOCAL_JAEB_DB"
+  _local_jaeb_db=$(printenv "$_ext_var" 2>/dev/null || true)
+  "$CLI" node exec "$NODE" "$CTX" "if [ -d '${_DEPLOY_DATA_MOUNT}' ] || sudo mkdir -p '${_DEPLOY_DATA_MOUNT}' 2>/dev/null; then sudo mkdir -p ${_ext_base}/jaeb && sudo chown -R ${ADMIN_USER}:${ADMIN_USER} ${_ext_base} 2>/dev/null || true; fi" >/dev/null 2>&1 || true
+  if [ -n "$_local_jaeb_db" ] && [ -s "$_local_jaeb_db" ]; then
+    _local_jaeb_sz=$(wc -c < "$_local_jaeb_db" 2>/dev/null | tr -d '[:space:]' || printf '0')
+    _remote_jaeb_match=0
+    if [ -n "$_local_jaeb_sz" ] && [ "$_local_jaeb_sz" != "0" ]; then
+      if "$CLI" node exec "$NODE" "$CTX" "[ -s ${_ext_base}/jaeb/${_ext_slug}.duckdb ] && [ \"\$(wc -c < ${_ext_base}/jaeb/${_ext_slug}.duckdb | tr -d '[:space:]')\" = '${_local_jaeb_sz}' ]" >/dev/null 2>&1; then
+        _remote_jaeb_match=1
+      fi
+    fi
+    if [ "$_remote_jaeb_match" -eq 1 ]; then
+      log "REUSE" "Remote Jaeb DuckDB '${_ext_base}/jaeb/${_ext_slug}.duckdb' already matches local size (${_local_jaeb_sz} bytes)."
+    else
+      log "STORAGE" "Uploading local Jaeb DuckDB '${_local_jaeb_db}' (${_local_jaeb_sz} bytes) to '${NODE}:${_ext_base}/jaeb/${_ext_slug}.duckdb'..."
+      "$CLI" node exec "$NODE" "$CTX" "sudo mkdir -p ${_ext_base}/jaeb && sudo chown -R ${ADMIN_USER}:${ADMIN_USER} ${_ext_base} && sudo chmod u+w ${_ext_base}/jaeb/${_ext_slug}.duckdb 2>/dev/null || true" >/dev/null 2>&1 || true
+      run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "$_local_jaeb_db" "${_ext_base}/jaeb/${_ext_slug}.duckdb"
+    fi
+  fi
+  "$CLI" node exec "$NODE" "$CTX" "if [ -s ${_ext_base}/jaeb/${_ext_slug}.duckdb ]; then sudo ln -sf ${_ext_base}/jaeb/${_ext_slug}.duckdb ${_ext_base}/${_ext_slug}.duckdb && sudo chown -h ${ADMIN_USER}:${ADMIN_USER} ${_ext_base}/${_ext_slug}.duckdb 2>/dev/null || true; sudo chown ${ADMIN_USER}:${ADMIN_USER} ${_ext_base}/jaeb/${_ext_slug}.duckdb 2>/dev/null || true; sudo chmod a+r,u-w,g-w,o-w ${_ext_base}/jaeb/${_ext_slug}.duckdb 2>/dev/null || true; fi" >/dev/null 2>&1 || true
+}
+
+# ## ensure_remote_etc_hosts_domain
+# Idempotently ensures /etc/hosts on the remote node maps 127.0.0.1 to the specified application domain.
+ensure_remote_etc_hosts_domain() {
+  _erhd_dom="${1:-}"
+  [ -n "$_erhd_dom" ] && [ "$_erhd_dom" != "null" ] || return 0
+  [ "$DRY_RUN_MODE" -eq 0 ] || return 0
+  _erhd_hosts="${REMOTE_ETC_HOSTS:-/etc/hosts}"
+  "$CLI" node exec "$NODE" "$CTX" "if ! grep -Eq '^[[:space:]]*127\\.0\\.0\\.1[[:space:]].*(^|[[:space:]])${_erhd_dom}([[:space:]]|\$)' '${_erhd_hosts}' 2>/dev/null; then printf '127.0.0.1 %s\n' '${_erhd_dom}' | sudo tee -a '${_erhd_hosts}' >/dev/null; fi" >/dev/null 2>&1 || true
+}
+
 PREPARED_STORAGE=0
 if [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -e '.applications != null and (.applications | length > 0)' "${REPO_PATH}/libscript.json" >/dev/null 2>&1; then
   _root_mf_hash=$(cksum "${REPO_PATH}/libscript.json" 2>/dev/null | awk '{print $1"_"$2}' || printf '0')
@@ -557,6 +635,10 @@ if [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -
   fi
   if [ "$_skip_root_prep" -eq 1 ]; then
     log "REUSE" "Shared-stack root manifest '${REPO_PATH}/libscript.json' (${_root_mf_hash}) unchanged; skipping root prepare-storage and install-deps."
+    if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$SKIP_PREPARE" -eq 0 ]; then
+      prepare_remote_jaeb_storage
+      "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && if id ollama >/dev/null 2>&1 && [ -d '${_DEPLOY_OL_MODELS}' ]; then sudo chown -R ollama:ollama '${_DEPLOY_OL_MODELS}' 2>/dev/null || true; sudo chmod 02775 '${_DEPLOY_OL_MODELS}' 2>/dev/null || true; sudo chmod -R u+rwX,g+rwXs,o+rX '${_DEPLOY_OL_MODELS}' 2>/dev/null || true; fi && if [ -x \"\${_REMOTE_HOME}/libscript/_lib/app-servers/ollama/service.sh\" ] && [ -d '${_DEPLOY_OL_MODELS}' ]; then sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} OLLAMA_MODELS_DIR='${_DEPLOY_OL_MODELS}' OLLAMA_MODELS='${_DEPLOY_OL_MODELS}' LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/_lib/app-servers/ollama/service.sh\" configure >/dev/null 2>&1 || true; fi" >/dev/null 2>&1 || true
+    fi
   else
     log "CONFIG" "Uploading shared-stack manifest '${REPO_PATH}/libscript.json' to '$NODE'..."
     run_with_auth_check "$CLI" node upload "$NODE" "$CTX" "${REPO_PATH}/libscript.json" "libscript.json" || true
@@ -564,17 +646,30 @@ if [ -f "${REPO_PATH}/libscript.json" ] && command -v jq >/dev/null 2>&1 && jq -
     [ "$FORCE_REINSTALL" -eq 1 ] && _shared_deps_flags="${_shared_deps_flags} --force-reinstall"
     if [ "$SKIP_PREPARE" -eq 0 ]; then
       log "PREPARE" "Preparing shared persistent storage, runtimes, and databases on '$NODE' from root manifest..."
-      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" prepare-storage libscript.json && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+      prepare_remote_jaeb_storage
       PREPARED_STORAGE=1
     else
       log "PREPARE" "Provisioning shared runtimes and databases on '$NODE' from root manifest..."
-      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
+      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "_REMOTE_HOME=\"\$(cd ~ && pwd)\" && cd \"\${_REMOTE_HOME}\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_shared_deps_flags}"
     fi
     if [ "$DRY_RUN_MODE" -eq 0 ]; then
       "$CLI" node exec "$NODE" "$CTX" "mkdir -p ~/.libscript_deployments && printf '%s\n' '${_root_mf_hash}' > ~/.libscript_deployments/_root_manifest.sha256" >/dev/null 2>&1 || true
     fi
   fi
+elif [ "$SKIP_PREPARE" -eq 0 ]; then
+  prepare_remote_jaeb_storage
 fi
+
+# Discover Public IP before application deployment so DNS A records are bound prior to Let's Encrypt HTTP-01 validation
+IP=""
+if [ "$DRY_RUN_MODE" -eq 1 ]; then
+  IP='203.0.113.10'
+else
+  IP=$("$CLI" node ip "$NODE" "$CTX" 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || true)
+fi
+[ -z "$IP" ] && IP='203.0.113.10'
+record_state "IP" "$IP"
 
 # Deploy each selected application repository across explicit observable phases
 OIFS="$IFS"
@@ -631,13 +726,36 @@ for _app_entry in "$@"; do
         _art_cmd="${_art_cmd} && [ -e ~/${_ae_dest}/${_art_item} ]"
       done
     fi
+    _fe_dirs=$(jq -r '([ (.frontends | if type == "array" then .[] elif type == "object" then .[] else empty end | (.source_dir // .working_dir // .cwd // ".")) ] | map(select(. != null and . != "")) | unique)[]?' "${_ae_repo}/libscript.json" 2>/dev/null || true)
+    if [ -n "$_fe_dirs" ]; then
+      for _fe_d in $_fe_dirs; do
+        _fe_rel="$_fe_d"
+        [ "$_fe_rel" = "." ] && _fe_rel=""
+        # shellcheck disable=SC2088
+        _fe_prefix="~/${_ae_dest}${_fe_rel:+/$_fe_rel}"
+        _art_cmd="${_art_cmd} && [ -f ${_fe_prefix}/node_modules/.libscript_pkg_hash ] && { [ -f ${_fe_prefix}/.libscript_build.sha256 ] || [ -f ${_fe_prefix}/dist/.libscript_src_hash ]; }"
+      done
+    fi
+  fi
+  if [ -d "$_ae_repo" ]; then
+    for _py_cand in "." $(cd "$_ae_repo" 2>/dev/null && find . -mindepth 1 -maxdepth 1 -type d ! -name ".*" ! -name "node_modules" ! -name "dist" ! -name "build" ! -name "venv" | sed 's|^\./||' || true); do
+      _py_local="${_ae_repo}/${_py_cand}"
+      [ "$_py_cand" = "." ] && _py_local="$_ae_repo"
+      if [ -f "${_py_local}/pyproject.toml" ] || [ -f "${_py_local}/uv.lock" ] || [ -f "${_py_local}/requirements.txt" ]; then
+        # shellcheck disable=SC2088
+        _py_remote="~/${_ae_dest}"
+        # shellcheck disable=SC2088
+        [ "$_py_cand" != "." ] && _py_remote="~/${_ae_dest}/${_py_cand}"
+        _art_cmd="${_art_cmd} && [ -f ${_py_remote}/.venv/.libscript_lock_hash ]"
+      fi
+    done
   fi
   _skip_unchanged=0
   if [ "$DRY_RUN_MODE" -eq 0 ] && { [ "$FORCE_REINSTALL" -eq 1 ] || [ "$FORCE_REBUILD" -eq 1 ]; }; then
     "$CLI" node exec "$NODE" "$CTX" "rm -f ~/.libscript_deployments/${_ae_dest}.sha256" >/dev/null 2>&1 || true
   fi
   if [ "$DRY_RUN_MODE" -eq 0 ] && [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
-    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && ${_art_cmd} && cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json && \"\${_REMOTE_HOME}/libscript/_lib/orchestration/run_hooks.sh\" libscript.json health >/dev/null 2>&1" >/dev/null 2>&1; then
+    if "$CLI" node exec "$NODE" "$CTX" "[ -f ~/.libscript_deployments/${_ae_dest}.sha256 ] && grep -qx '${_app_hash}' ~/.libscript_deployments/${_ae_dest}.sha256 2>/dev/null && ${_art_cmd} && cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json && \"\${_REMOTE_HOME}/libscript/_lib/orchestration/run_hooks.sh\" libscript.json health >/dev/null 2>&1" >/dev/null 2>&1; then
       _skip_unchanged=1
     fi
   fi
@@ -671,35 +789,48 @@ EOF_ENV_DEFS
 
     if [ "$SKIP_PREPARE" -eq 0 ] && [ "$PREPARED_STORAGE" -eq 0 ]; then
       log "PREPARE" "Preparing persistent storage and daemon overrides on '$NODE' via LibScript..."
-      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" ~/libscript/libscript.sh prepare-storage libscript.json"
+      run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" ~/libscript/libscript.sh prepare-storage libscript.json"
+      prepare_remote_jaeb_storage
       PREPARED_STORAGE=1
     fi
 
     log "DEPS" "Resolving dependencies, provisioning databases, running data upserts, and building bundles for '$_ae_name'..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" install-deps libscript.json${_deps_flags}"
 
     log "DAEMON" "Registering and starting/restarting application daemons for '$_ae_name'..."
-    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='${_app_hash}' LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
+    run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='${_app_hash}' LIBSCRIPT_SKIP_DB_INIT=1 \"\${_REMOTE_HOME}/libscript/libscript.sh\" start libscript.json --skip-db-init"
     if [ "$DRY_RUN_MODE" -eq 0 ]; then
       "$CLI" node exec "$NODE" "$CTX" "mkdir -p ~/.libscript_deployments && printf '%s\n' '${_app_hash}' > ~/.libscript_deployments/${_ae_dest}.sha256" >/dev/null 2>&1 || true
     fi
   fi
 
+  if [ -n "$_ae_domain" ] && [ "$_ae_domain" != "null" ]; then
+    ensure_remote_etc_hosts_domain "$_ae_domain"
+    if [ "$SKIP_INFRA" -eq 0 ]; then
+      log "DNS" "Ensuring DNS A record '${_ae_domain}' -> ${IP}..."
+      run_with_auth_check "$CLI" dns record create "$_ae_domain" "${DNS_RG:-$CTX}" "@" A "$IP" || true
+    fi
+  fi
+
   log "ROUTES" "Updating reverse-proxy routes and reloading ingress for '$_ae_name' (${_ae_domain:-local})..."
-  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" netctl ingress libscript.json"
+  run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/_lib/_common/component_core.sh\" --synchronize-ingress libscript.json --reload && \"\${_REMOTE_HOME}/libscript/_lib/_common/component_core.sh\" --warmup-ollama gemma:2b"
+  if [ "$DRY_RUN_MODE" -eq 0 ]; then
+    "$CLI" node exec "$NODE" "$CTX" "if id ollama >/dev/null 2>&1 && [ -d '${_DEPLOY_OL_MODELS}' ]; then sudo chown -R ollama:ollama '${_DEPLOY_OL_MODELS}' 2>/dev/null || true; sudo chmod 02775 '${_DEPLOY_OL_MODELS}' 2>/dev/null || true; sudo chmod -R u+rwX,g+rwXs,o+rX '${_DEPLOY_OL_MODELS}' 2>/dev/null || true; fi" >/dev/null 2>&1 || true
+  fi
 done
 
 # -----------------------------------------------------------------------------
 # Public IP Discovery, DNS Binding & Post-Deployment Health / Ingress Report
 # -----------------------------------------------------------------------------
-IP=""
-if [ "$DRY_RUN_MODE" -eq 1 ]; then
-  IP='203.0.113.10'
-else
-  IP=$("$CLI" node ip "$NODE" "$CTX" 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || true)
+if [ -z "${IP:-}" ]; then
+  if [ "$DRY_RUN_MODE" -eq 1 ]; then
+    IP='203.0.113.10'
+  else
+    IP=$("$CLI" node ip "$NODE" "$CTX" 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || true)
+  fi
+  [ -z "$IP" ] && IP='203.0.113.10'
+  record_state "IP" "$IP"
 fi
-[ -z "$IP" ] && IP='203.0.113.10'
-record_state "IP" "$IP"
 
 # ## print_deployment_report
 # Renders an ASCII deployment summary table with per-app healthcheck status, DNS records, and public URLs.
@@ -724,6 +855,7 @@ print_deployment_report() {
 }
 
 DEPLOY_REPORT_ROWS=""
+OVERALL_VERIFY_FAILED=0
 for _app_entry in "$@"; do
   [ -n "$_app_entry" ] || continue
   _ae_domain=""
@@ -747,12 +879,14 @@ for _app_entry in "$@"; do
       ;;
   esac
   _ae_name=$(basename "$_ae_repo")
+  _ae_tls=""
   if [ -f "${_ae_repo}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
     _j_name=$(jq -r '.name // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
     [ -n "$_j_name" ] && [ "$_j_name" != "null" ] && _ae_name="$_j_name"
     if [ -z "$_ae_domain" ]; then
       _ae_domain=$(jq -r '.ingress.domain // .domain // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
     fi
+    _ae_tls=$(jq -r '.ingress.tls // empty' "${_ae_repo}/libscript.json" 2>/dev/null || true)
   fi
 
   if ! matches_only_target "$_ae_name" "$_ae_dest" "$_ae_repo"; then
@@ -762,10 +896,7 @@ for _app_entry in "$@"; do
   _dns_label="http://${IP}"
   if [ -n "$_ae_domain" ] && [ "$_ae_domain" != "null" ]; then
     _dns_label="https://${_ae_domain}"
-    if [ "$SKIP_INFRA" -eq 0 ]; then
-      log "DNS" "Ensuring DNS A record '${_ae_domain}' -> ${IP}..."
-      run_with_auth_check "$CLI" dns record create "$_ae_domain" "${DNS_RG:-$CTX}" "@" A "$IP" || true
-    fi
+    ensure_remote_etc_hosts_domain "$_ae_domain"
   fi
 
   _hc_status='SKIPPED'
@@ -776,18 +907,27 @@ for _app_entry in "$@"; do
       _pub_arg=" --verify-ingress --public-url=https://${_ae_domain}"
     fi
     log "HEALTH" "Verifying '$_ae_name' health and ingress (${_ae_domain:-local})..."
-    if run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json --remediate${_pub_arg}"; then
+    if run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd ~/${_ae_dest} && _REMOTE_HOME=\"\$(pwd | sed 's|/[^/]*\$||')\" && sudo HOME=\"\${_REMOTE_HOME}\" SERVICE_USER='${ADMIN_USER}' REMOTE_USER='${ADMIN_USER}' ${_REMOTE_OLLAMA_ENV} REMOTE_HOME=\"\${_REMOTE_HOME}\" LIBSCRIPT_HOME=\"\${_REMOTE_HOME}/.libscript\" LIBSCRIPT_ROOT_DIR=\"\${_REMOTE_HOME}/libscript\" \"\${_REMOTE_HOME}/libscript/libscript.sh\" health libscript.json --remediate${_pub_arg}"; then
       _hc_status='PASS (200)'
       if [ -n "$_ae_domain" ] && [ "$_ae_domain" != "null" ]; then
-        _ing_status='PASS (TLS)'
+        if [ "$_ae_tls" = "letsencrypt" ] && [ "$DRY_RUN_MODE" -eq 0 ]; then
+          if ! "$CLI" node exec "$NODE" "$CTX" "openssl x509 -checkend 0 -noout -in '${_DEPLOY_CERT_STORE}/live/${_ae_domain}/fullchain.pem'" >/dev/null 2>&1; then
+            log "ERROR" "Strict CA TLS verification failed for https://${_ae_domain} (certificate is missing, self-signed, or expired)."
+            _ing_status='FAIL (TLS)'
+            OVERALL_VERIFY_FAILED=1
+          else
+            _ing_status='PASS (TLS)'
+          fi
+        else
+          _ing_status='PASS (TLS)'
+        fi
       else
         _ing_status='LOCAL'
       fi
     else
       _hc_status='FAIL'
       _ing_status='FAIL'
-      print_deployment_report
-      exit 1
+      OVERALL_VERIFY_FAILED=1
     fi
   fi
 
@@ -796,4 +936,8 @@ for _app_entry in "$@"; do
 done
 
 print_deployment_report
+if [ "$OVERALL_VERIFY_FAILED" -ne 0 ]; then
+  log "ERROR" "One or more deployed applications failed verification. View full logs at $LOG_FILE"
+  exit 1
+fi
 log "DONE" "Deployment complete. View full logs at $LOG_FILE"

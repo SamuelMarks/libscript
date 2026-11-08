@@ -38,7 +38,8 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-CURL_INSTALL_METHOD="$(libscript_resolve_install_method "CURL")"
+CURL_INSTALL_METHOD="${CURL_INSTALL_METHOD:-system}"
+CURL_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$CURL_INSTALL_METHOD" libscript_resolve_install_method "CURL")"
 ACTION="${ACTION:-install}"
 VERSION="${CURL_VERSION:-latest}"
 
@@ -127,18 +128,20 @@ case "$ACTION" in
             i386|i686) BARCH="i386" ;;
             *) BARCH="amd64" ;;
           esac
-          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
-            cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
-            cp "$cache_file" "/tmp/curl"
+          _curl_tmp="${TMPDIR:-/tmp}/curl"
+          _curl_sys_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
+          if ls "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
+            cache_file=$(find "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
+            cp "$cache_file" "$_curl_tmp"
           else
-            libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "/tmp/curl" || { printf '%s\n' "Failed to download static curl"; exit 1; }
+            libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "$_curl_tmp" || { printf '%s\n' "Failed to download static curl"; exit 1; }
           fi
-          chmod +x /tmp/curl
-          if [ -w /usr/local/bin ]; then
-            mv /tmp/curl /usr/local/bin/curl
+          chmod +x "$_curl_tmp"
+          if [ -w "$_curl_sys_bin" ]; then
+            mv "$_curl_tmp" "${_curl_sys_bin}/curl"
           else
             mkdir -p ~/.local/bin
-            mv /tmp/curl ~/.local/bin/curl
+            mv "$_curl_tmp" ~/.local/bin/curl
           fi
         fi
       fi
@@ -155,18 +158,20 @@ case "$ACTION" in
             i386|i686) BARCH="i386" ;;
             *) BARCH="amd64" ;;
           esac
-          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
-            cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
-            cp "$cache_file" "/tmp/curl"
+          _curl_tmp="${TMPDIR:-/tmp}/curl"
+          _curl_sys_bin="${LIBSCRIPT_USR_LOCAL_BIN:-/usr/local/bin}"
+          if ls "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
+            cache_file=$(find "${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
+            cp "$cache_file" "$_curl_tmp"
           else
-            libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "/tmp/curl" || { printf '%s\n' "Failed to download static curl"; exit 1; }
+            libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "$_curl_tmp" || { printf '%s\n' "Failed to download static curl"; exit 1; }
           fi
-          chmod +x /tmp/curl
-          if [ -w /usr/local/bin ]; then
-            mv /tmp/curl /usr/local/bin/curl
+          chmod +x "$_curl_tmp"
+          if [ -w "$_curl_sys_bin" ]; then
+            mv "$_curl_tmp" "${_curl_sys_bin}/curl"
           else
             mkdir -p ~/.local/bin
-            mv /tmp/curl ~/.local/bin/curl
+            mv "$_curl_tmp" ~/.local/bin/curl
           fi
         fi
       fi

@@ -131,6 +131,141 @@ if errorlevel 1 (
 )
 echo [PASS] remote_sync.cmd compute-hash
 
+:: 9. Test remote_sync.cmd ssh-opts generates short ControlPath under 65 bytes even when TMPDIR is 90+ chars
+set "STACK="
+set "TMPDIR=/var/folders/w5/21g61wls7ksd3z8cxrj41s1c0000gn/T/very_long_nested_subdir_for_testing_90chars/"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" ssh-opts > "!TEST_TMP!\ssh_opts.out"
+set "TMPDIR="
+findstr /C:"ControlPath=/tmp/ls_mux/" "!TEST_TMP!\ssh_opts.out" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] remote_sync.cmd ssh-opts did not emit short ControlPath >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] remote_sync.cmd ssh-opts short ControlPath
+
+:: 10. Test provision_frontend.cmd --compute-pkg-hash and --compute-src-hash modes
+if not exist "!TEST_TMP!\fe_sub\src" mkdir "!TEST_TMP!\fe_sub\src"
+echo {"name": "fe-sub", "version": "1.0.0"} > "!TEST_TMP!\fe_sub\package.json"
+echo console.log("hi"); > "!TEST_TMP!\fe_sub\src\main.ts"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" --compute-pkg-hash "!TEST_TMP!\fe_sub" > "!TEST_TMP!\pkg_hash1.out"
+if errorlevel 1 (
+    echo [FAIL] provision_frontend.cmd --compute-pkg-hash failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\provision_frontend.cmd" --compute-src-hash "!TEST_TMP!\fe_sub" > "!TEST_TMP!\src_hash1.out"
+if errorlevel 1 (
+    echo [FAIL] provision_frontend.cmd --compute-src-hash failed >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] provision_frontend.cmd --compute-pkg-hash and --compute-src-hash
+
+:: 5. Test Ollama CPU runner defaults in env.cmd and >4 argument override-env persistence in service_install.cmd
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\env.cmd"
+if not "!OLLAMA_FLASH_ATTENTION!"=="0" (
+    echo [FAIL] ollama\env.cmd did not set OLLAMA_FLASH_ATTENTION=0 >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+if not "!OLLAMA_KV_CACHE_TYPE!"=="f16" (
+    echo [FAIL] ollama\env.cmd did not set OLLAMA_KV_CACHE_TYPE=f16 >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+if not "!OLLAMA_CONTEXT_LENGTH!"=="2048" (
+    echo [FAIL] ollama\env.cmd did not set OLLAMA_CONTEXT_LENGTH=2048 >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+set "LIBSCRIPT_DATA_DIR=!TEST_TMP!\win_svc_data"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\ollama\service.cmd" override-env "!TEST_TMP!\win_ol_models"
+if not exist "!LIBSCRIPT_DATA_DIR!\ollama\.env.service" (
+    echo [FAIL] ollama\service.cmd override-env did not create .env.service >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+findstr /C:"OLLAMA_CONTEXT_LENGTH=2048" "!LIBSCRIPT_DATA_DIR!\ollama\.env.service" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] service_install.cmd truncated OLLAMA_CONTEXT_LENGTH beyond 4 arguments >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+findstr /C:"OLLAMA_KEEP_ALIVE=10m" "!LIBSCRIPT_DATA_DIR!\ollama\.env.service" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] service_install.cmd truncated OLLAMA_KEEP_ALIVE beyond 4 arguments >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] ollama\env.cmd CPU defaults and service_install.cmd 11-key override-env persistence
+
+:: 11. Test Let's Encrypt certificate store resolution and /.well-known/acme-challenge/ emission on Windows
+if not exist "!TEST_TMP!\mnt_data\certs\live\pulse-query.healthplatform.io" mkdir "!TEST_TMP!\mnt_data\certs\live\pulse-query.healthplatform.io"
+echo cert > "!TEST_TMP!\mnt_data\certs\live\pulse-query.healthplatform.io\fullchain.pem"
+echo key > "!TEST_TMP!\mnt_data\certs\live\pulse-query.healthplatform.io\privkey.pem"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" --domain pulse-query.healthplatform.io --tls letsencrypt --cert-store-dir "!TEST_TMP!\mnt_data\certs" --listen 80 --listen 443 --spa / "/var/www/html" --emit nginx > "!TEST_TMP!\le_nginx.conf"
+findstr /C:"location ^~ /.well-known/acme-challenge/" "!TEST_TMP!\le_nginx.conf" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] netctl.cmd did not emit /.well-known/acme-challenge/ >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+findstr /C:"ssl_certificate !TEST_TMP!\mnt_data\certs/live/pulse-query.healthplatform.io/fullchain.pem;" "!TEST_TMP!\le_nginx.conf" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] netctl.cmd did not resolve Let's Encrypt cert from CERT_STORE_DIR >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] Let's Encrypt persistent certificate store resolution and ACME challenge route on Windows
+
+:: 12. Test DATA_DISK_MOUNT override for CERT_STORE_DIR in certbot\env.cmd
+set "CERT_STORE_DIR="
+set "DATA_DISK_MOUNT=!TEST_TMP!\custom_mount"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\security\certbot\env.cmd"
+if not "!CERT_STORE_DIR!"=="!TEST_TMP!\custom_mount/certs" (
+    echo [FAIL] certbot\env.cmd did not derive CERT_STORE_DIR from DATA_DISK_MOUNT ^(!CERT_STORE_DIR!^) >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] DATA_DISK_MOUNT overrides default /mnt/data in certbot\env.cmd
+
+:: 13. Test .ingress.proxy_read_timeout propagation to NETCTL_PROXY_READ_TIMEOUT during libscript_Synchronize_Ingress
+if not exist "!TEST_TMP!\ing_timeout" mkdir "!TEST_TMP!\ing_timeout"
+(
+echo {
+echo   "ingress": {
+echo     "provider": "nginx",
+echo     "domain": "t1d-analytics.healthplatform.io",
+echo     "proxy_read_timeout": 600,
+echo     "routes": {
+echo       "/api": "http://127.0.0.1:8000"
+echo     }
+echo   }
+echo }
+) > "!TEST_TMP!\ing_timeout\libscript.json"
+set "NETCTL_PROXY_READ_TIMEOUT="
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" --synchronize-ingress "!TEST_TMP!\ing_timeout\libscript.json" --format nginx --out "!TEST_TMP!\ing_timeout\nginx.conf"
+if not "!NETCTL_PROXY_READ_TIMEOUT!"=="600s" (
+    echo [FAIL] libscript_Synchronize_Ingress did not set NETCTL_PROXY_READ_TIMEOUT=600s ^(!NETCTL_PROXY_READ_TIMEOUT!^) >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+findstr /C:"proxy_read_timeout 600s;" "!TEST_TMP!\ing_timeout\nginx.conf" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] libscript_Synchronize_Ingress did not emit proxy_read_timeout 600s in nginx.conf >&2
+    rmdir /s /q "!TEST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo [PASS] .ingress.proxy_read_timeout propagates to NETCTL_PROXY_READ_TIMEOUT during libscript_Synchronize_Ingress
+
 rmdir /s /q "!TEST_TMP!" >nul 2>&1
 echo === ALL WINDOWS FULLSTACK ORCHESTRATION TESTS PASSED ===
 exit /b 0

@@ -95,6 +95,7 @@ case "$ACTION" in
   start|stop|restart|status|health|logs|up|down)
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
     export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
     . "${SCRIPT_NAME}"
     service_name="${LIBSCRIPT_SERVICE_NAME:-elasticsearch}"
     libscript_service "$ACTION" "$service_name" "$@"

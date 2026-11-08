@@ -204,13 +204,23 @@ case "$ACTION" in
     exit 0
     ;;
   download)
-    _amal_url="$(resolve_sqlite_amalgamation_url)"
     _cache_dir="${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/sqlite}"
     mkdir -p "${_cache_dir}"
-    PACKAGE_NAME="sqlite" libscript_download "${_amal_url}" "${_cache_dir}/$(basename "${_amal_url}")"
+    if [ "$SQLITE_INSTALL_METHOD" = "from-source" ] || [ -n "${SQLITE_BUILD_TOOLCHAIN:-${SQLITE_COMPILER:-${LIBSCRIPT_BUILD_TOOLCHAIN:-}}}" ]; then
+      _amal_url="$(resolve_sqlite_amalgamation_url)"
+      PACKAGE_NAME="sqlite" libscript_download "${_amal_url}" "${_cache_dir}/$(basename "${_amal_url}")"
+    elif [ -n "${SQLITE_DOWNLOAD_URL:-}" ]; then
+      PACKAGE_NAME="sqlite" libscript_download "${SQLITE_DOWNLOAD_URL}" "${_cache_dir}/$(basename "${SQLITE_DOWNLOAD_URL}")"
+    else
+      log_info 'No SQLITE_DOWNLOAD_URL set for prebuilt SQLite; download skipped (from-source not requested).'
+    fi
     exit 0
     ;;
   install)
+    if [ -n "${SQLITE_BUILD_TOOLCHAIN:-${SQLITE_COMPILER:-${LIBSCRIPT_BUILD_TOOLCHAIN:-}}}" ] && [ "${SQLITE_BUILD_TOOLCHAIN:-${SQLITE_COMPILER:-${LIBSCRIPT_BUILD_TOOLCHAIN:-default}}}" != "default" ]; then
+      build_sqlite_from_source
+      exit 0
+    fi
     case "$SQLITE_INSTALL_METHOD" in
       from-source)
         build_sqlite_from_source
@@ -246,7 +256,7 @@ case "$ACTION" in
           libscript_symlink_alias "sqlite" "$VERSION" "${EXACT_VERSION}"
           libscript_symlink_alias "sqlite" "default" "${EXACT_VERSION}"
         else
-          build_sqlite_from_source
+          install_sqlite_via_pkg_mgr
         fi
         ;;
     esac

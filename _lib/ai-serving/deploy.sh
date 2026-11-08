@@ -48,7 +48,8 @@ fi
 printf '%s\n' "Deploying $MODEL_NAME to TPU VM $TPU_NAME..."
 
 # The deployment script runs commands via SSH on the TPU VM
-cat << 'EOF' > /tmp/deploy_tpu.sh
+DEPLOY_TPU_SCRIPT="${TMPDIR:-/tmp}/deploy_tpu.sh"
+cat << 'EOF' > "$DEPLOY_TPU_SCRIPT"
 set -ex
 
 # Install docker via canonical LibScript component if not present
@@ -81,6 +82,6 @@ priv docker run -d --rm \
   --tensor-parallel-size 1
 EOF
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/deploy_tpu.sh "$MODEL_NAME"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < "$DEPLOY_TPU_SCRIPT"
 
 printf '%s\n' 'Deploy complete.'

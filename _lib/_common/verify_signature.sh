@@ -76,3 +76,11 @@ export STACK
 [ -n "${_verify_signature_caller_dir:-}" ] && SCRIPT_DIR="$_verify_signature_caller_dir"
 [ -n "${_verify_signature_caller_this:-}" ] && THIS_FILE="$_verify_signature_caller_this"
 unset _verify_signature_caller_this _verify_signature_caller_dir || true
+
+if (return 0 2>/dev/null); then
+  if [ $# -gt 0 ]; then
+    libscript_verify_signature "$@"
+  fi
+else
+  libscript_verify_signature "$@"
+fi

@@ -238,6 +238,7 @@ for target in $UNIQUE_TARGETS; do
     if [ "$REUSE_VM" = "1" ]; then
         cd "$REPO_ROOT/vagrant/$OS_TARGET"
         if [ "$OS_ID" = "windows" ]; then
+            # shellcheck disable=SC2016
             test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
             if vagrant ssh --no-tty -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
                 echo "Success" > "$success_file"
@@ -257,7 +258,7 @@ for target in $UNIQUE_TARGETS; do
                 echo "Failure" > "$failure_file"
                 echo "[FAILED] $target"
             fi
-            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf \"\$HOME/.libscript/$target\" /tmp/libscript_pkg_mgr_lock 2>/dev/null || true"
+            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf \"\$HOME/.libscript/$target\" \"\${TMPDIR:-/tmp}/libscript_pkg_mgr_lock\" 2>/dev/null || true"
             vagrant ssh --no-tty -c "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     else

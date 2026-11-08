@@ -272,6 +272,9 @@ audit_single_file() {
               $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
             unnecessary_dq_hits = (unnecessary_dq_hits ? unnecessary_dq_hits "; " : "") NR ":" $0
           }
+          if ($0 ~ /^[ \t]*(\x5b[^\x5d]+\x5d([ \t]*&&[ \t]*\x5b[^\x5d]+\x5d)*|command[ \t]+-v[ \t]+[^|;]+)[ \t]*&&[ \t]*[^|;&\x5b{][^|;&]*(\|[ \t]*[^|;&]+)*\|\|[ \t]*(true|:)([ \t;]|$)/) {
+            sc2015_hits = (sc2015_hits ? sc2015_hits "; " : "") NR ":" $0
+          }
         }
       }
       END {
@@ -308,6 +311,7 @@ audit_single_file() {
         if (raw_uname_hits != "") print "RAW_UNAME|Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh): " raw_uname_hits
         if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
+        if (sc2015_hits != "") print "SC2015_AND_OR|SC2015-prone A && B || true chain (use explicit if ...; then ... || true; fi): " sc2015_hits
         if (bad_stack_quote_hits != "") print "RECURSION_GUARD|Single-quoted literal ${THIS_FILE} in STACK guard (SC2016 bug): " bad_stack_quote_hits
         if (unreachable_stack_hits != "") print "RECURSION_GUARD|Unreachable STACK pop after return/exit (SC2317 bug): " unreachable_stack_hits
       }
@@ -399,7 +403,7 @@ audit_single_file() {
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
-          UNNECESSARY_DOUBLE_QUOTES)
+          UNNECESSARY_DOUBLE_QUOTES|SC2015_AND_OR)
             case "$file" in
               *audit_posix.sh|*audit_standards.sh|*.tpl) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
@@ -952,13 +956,15 @@ audit_single_file() {
 
 # Execute audit based on arguments
 if [ "${1:-}" = "--all" ]; then
-  OIFS="$IFS"
-  IFS='
-'
-  for candidate in $(git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt"); do
-    [ -f "$candidate" ] && audit_single_file "$candidate"
-  done
-  IFS="$OIFS"
+  _all_candidates=$(mktemp)
+  git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt" > "$_all_candidates"
+  if [ -s "$_all_candidates" ]; then
+    if ! STACK="" xargs -n 500 -P 4 "$THIS_FILE" < "$_all_candidates" >/dev/null; then
+      rm -f "$_all_candidates"
+      exit 1
+    fi
+  fi
+  rm -f "$_all_candidates"
   for cat_dir in _lib/*; do
     [ -d "$cat_dir" ] || continue
     [ "$(basename "$cat_dir")" = "_common" ] && continue

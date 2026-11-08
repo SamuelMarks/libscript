@@ -77,6 +77,7 @@ for vdir in $VAGRANT_DIRS; do
         
         # Determine the name of the VM so we can clean it up
         VM_NAME="${vdir}-test-${script_name}"
+        export VM_NAME
         
         # Ensure fresh state
         vagrant destroy -f >/dev/null 2>&1 || true

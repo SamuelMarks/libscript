@@ -36,8 +36,14 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 export LIBSCRIPT_LISTEN_PORT="${REDIS_LISTEN:-${LIBSCRIPT_LISTEN_PORT:-}}"
+REDIS_DATA_DIR="${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}"
+if [ -n "$REDIS_DATA_DIR" ]; then
+  export REDIS_DATA_DIR
+  export VALKEY_DATA_DIR="${REDIS_DATA_DIR}"
+fi
 
 REDIS_VERSION="${REDIS_VERSION:-latest}"
+export REDIS_INSTALL_METHOD="${REDIS_INSTALL_METHOD:-system}"
 libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/redis/${REDIS_VERSION}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

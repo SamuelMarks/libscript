@@ -29,6 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${NETCTL_DIR:=$(cd "$SCRIPT_DIR/.." && pwd)}"
 SCRIPT_NAME="${NETCTL_DIR}/lib/prelude.sh"
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 NETCTL_STATE_FILE="${NETCTL_STATE_FILE:-.netctl.json}"
@@ -37,8 +38,7 @@ NETCTL_STATE_FILE="${NETCTL_STATE_FILE:-.netctl.json}"
 # Initializes a fresh netctl state structure in the temporary workspace.
 netctl_init() {
   if [ ! -s "$NETCTL_STATE_FILE" ]; then
-    printf '%s
-' '{"domain":"_","listen":[],"routes":{}}' > "$NETCTL_STATE_FILE"
+    printf '%s\n' '{"domain":"_","listen":[],"tls":"","cert_store_dir":"","acme_webroot":"","routes":{}}' > "$NETCTL_STATE_FILE"
   fi
 }
 
@@ -56,6 +56,62 @@ netctl_set_domain() {
   domain="$1"
   netctl_init
   jq --arg d "$domain" '.domain = $d' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_tls
+# Sets the TLS provider mode (such as letsencrypt or self-signed) in the netctl state file.
+netctl_set_tls() {
+  tls_mode="$1"
+  netctl_init
+  jq --arg t "$tls_mode" '.tls = $t' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_cert_store_dir
+# Sets the persistent read-only certificate store directory in the netctl state file.
+netctl_set_cert_store_dir() {
+  cert_dir="$1"
+  netctl_init
+  jq --arg c "$cert_dir" '.cert_store_dir = $c' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_acme_webroot
+# Sets the ACME HTTP-01 challenge webroot directory in the netctl state file.
+netctl_set_acme_webroot() {
+  webroot="$1"
+  netctl_init
+  jq --arg w "$webroot" '.acme_webroot = $w' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_proxy_connect_timeout
+# Sets the upstream proxy connect timeout in the netctl state file.
+netctl_set_proxy_connect_timeout() {
+  timeout="$1"
+  netctl_init
+  jq --arg t "$timeout" '.proxy_connect_timeout = $t' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_proxy_send_timeout
+# Sets the upstream proxy send timeout in the netctl state file.
+netctl_set_proxy_send_timeout() {
+  timeout="$1"
+  netctl_init
+  jq --arg t "$timeout" '.proxy_send_timeout = $t' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_proxy_read_timeout
+# Sets the upstream proxy read timeout in the netctl state file.
+netctl_set_proxy_read_timeout() {
+  timeout="$1"
+  netctl_init
+  jq --arg t "$timeout" '.proxy_read_timeout = $t' "$NETCTL_STATE_FILE" | netctl_state_write
+}
+
+# ## netctl_set_proxy_buffering
+# Sets the upstream proxy buffering mode in the netctl state file.
+netctl_set_proxy_buffering() {
+  buffering="$1"
+  netctl_init
+  jq --arg b "$buffering" '.proxy_buffering = $b' "$NETCTL_STATE_FILE" | netctl_state_write
 }
 
 # ## netctl_add_listen

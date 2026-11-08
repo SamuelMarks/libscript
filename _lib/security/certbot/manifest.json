@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "certbot",
+  "title": "Certbot (Let's Encrypt ACME Client)",
+  "description": "Electronic Frontier Foundation ACME client for automated Let's Encrypt TLS certificate acquisition and expiry-gated persistence.",
+  "category": "security",
+  "provides": ["certbot", "acme-client", "letsencrypt"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "ports": [],
+  "repository": "https://github.com/certbot/certbot"
+}

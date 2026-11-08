@@ -760,11 +760,13 @@ else:
     export OPENEDX_SAFE_COOKIE
   fi
 
-  _wp_load=""
-  if [ -f "/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php" ]; then
-    _wp_load='/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php'
-  elif [ -f "/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php" ]; then
-    _wp_load='/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php'
+  _wp_load="${WORDPRESS_WP_LOAD_PATH:-}"
+  if [ -z "$_wp_load" ] && [ -n "${WORDPRESS_WWWROOT:-}" ] && [ -f "${WORDPRESS_WWWROOT}/wp-load.php" ]; then
+    _wp_load="${WORDPRESS_WWWROOT}/wp-load.php"
+  elif [ -z "$_wp_load" ] && [ -f "${TMPDIR:-/tmp}/wp_live/wp-load.php" ]; then
+    _wp_load="${TMPDIR:-/tmp}/wp_live/wp-load.php"
+  elif [ -z "$_wp_load" ] && [ -f "${TMPDIR:-/tmp}/wordpress_www/wp-load.php" ]; then
+    _wp_load="${TMPDIR:-/tmp}/wordpress_www/wp-load.php"
   fi
   if [ "$_tname" = "wordpress" ] && [ -z "${WORDPRESS_COOKIES_JSON:-}" ] && [ -n "$_wp_load" ]; then
     # shellcheck disable=SC2016

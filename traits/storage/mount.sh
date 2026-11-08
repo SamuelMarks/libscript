@@ -55,7 +55,7 @@ AUTO_DISCOVER=0
 if [ "${1:-}" = "--auto-data-disk" ]; then
   AUTO_DISCOVER=1
   shift
-  MOUNT_POINT="${1:-/mnt/data}"
+  MOUNT_POINT="${1:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}}"
   FSTYPE="${2:-ext4}"
   DEVICE=""
 else
@@ -77,16 +77,110 @@ else
   FSTAB_FILE="${SYSROOT%/}/etc/fstab"
 fi
 
+# ## restore_ollama_models_ownership
+# Restores ollama:ollama ownership and 02775 permissions on ollama_models directories inside the mounted volume.
+restore_ollama_models_ownership() {
+  _romo_base="${1:-${SYSROOT%/}${MOUNT_POINT}}"
+  _romo_user="${2:-${SERVICE_USER:-${REMOTE_USER:-${ADMIN_USER:-${SUDO_USER:-}}}}}"
+  _romo_grp="${3:-${SERVICE_GROUP:-${REMOTE_GROUP:-$_romo_user}}}"
+  if id ollama >/dev/null 2>&1; then
+    if [ -n "$_romo_user" ] && id "$_romo_user" >/dev/null 2>&1; then
+      usermod -aG ollama "$_romo_user" 2>/dev/null || priv usermod -aG ollama "$_romo_user" 2>/dev/null || true
+    fi
+    if [ -n "$_romo_grp" ]; then
+      usermod -aG "$_romo_grp" ollama 2>/dev/null || priv usermod -aG "$_romo_grp" ollama 2>/dev/null || true
+    fi
+    for _romo_dir in "${_romo_base%/}/ollama_models" "${OLLAMA_MODELS_DIR:-}" "${OLLAMA_MODELS:-}"; do
+      case "$_romo_dir" in
+        /*) ;;
+        *) continue ;;
+      esac
+      if [ -d "$_romo_dir" ]; then
+        chown -R ollama:ollama "$_romo_dir" 2>/dev/null || priv chown -R ollama:ollama "$_romo_dir" 2>/dev/null || true
+        chmod 02775 "$_romo_dir" 2>/dev/null || priv chmod 02775 "$_romo_dir" 2>/dev/null || true
+        chmod -R u+rwX,g+rwXs,o+rX "$_romo_dir" 2>/dev/null || priv chmod -R u+rwX,g+rwXs,o+rX "$_romo_dir" 2>/dev/null || true
+      fi
+    done
+  fi
+}
+
+# ## restore_service_data_ownership
+# Restores postgres:postgres (0700) and valkey:valkey or redis:redis (0750) ownership on persistent service directories inside the mounted volume.
+restore_service_data_ownership() {
+  _rsdo_base="${1:-${SYSROOT%/}${MOUNT_POINT}}"
+  chmod 0755 "$_rsdo_base" 2>/dev/null || priv chmod 0755 "$_rsdo_base" 2>/dev/null || true
+
+  if id postgres >/dev/null 2>&1; then
+    for _rsdo_pg in "${_rsdo_base%/}/postgres" "${_rsdo_base%/}/postgresql" "${POSTGRES_DATA_DIR:-}" "${PGDATA:-}"; do
+      case "$_rsdo_pg" in
+        /*) ;;
+        *) continue ;;
+      esac
+      if [ -d "$_rsdo_pg" ]; then
+        chown -R postgres:postgres "$_rsdo_pg" 2>/dev/null || priv chown -R postgres:postgres "$_rsdo_pg" 2>/dev/null || true
+        chmod 0700 "$_rsdo_pg" 2>/dev/null || priv chmod 0700 "$_rsdo_pg" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  _rsdo_vk_user=""
+  if id valkey >/dev/null 2>&1; then
+    _rsdo_vk_user='valkey'
+  elif id redis >/dev/null 2>&1; then
+    _rsdo_vk_user='redis'
+  fi
+  if [ -n "$_rsdo_vk_user" ]; then
+    for _rsdo_vk in "${_rsdo_base%/}/valkey" "${VALKEY_DATA_DIR:-}"; do
+      case "$_rsdo_vk" in
+        /*) ;;
+        *) continue ;;
+      esac
+      if [ -d "$_rsdo_vk" ]; then
+        chown -R "${_rsdo_vk_user}:${_rsdo_vk_user}" "$_rsdo_vk" 2>/dev/null || priv chown -R "${_rsdo_vk_user}:${_rsdo_vk_user}" "$_rsdo_vk" 2>/dev/null || true
+        chmod 0750 "$_rsdo_vk" 2>/dev/null || priv chmod 0750 "$_rsdo_vk" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  _rsdo_rd_user=""
+  if id redis >/dev/null 2>&1; then
+    _rsdo_rd_user='redis'
+  elif id valkey >/dev/null 2>&1; then
+    _rsdo_rd_user='valkey'
+  fi
+  if [ -n "$_rsdo_rd_user" ]; then
+    for _rsdo_rd in "${_rsdo_base%/}/redis" "${REDIS_DATA_DIR:-}"; do
+      case "$_rsdo_rd" in
+        /*) ;;
+        *) continue ;;
+      esac
+      if [ -d "$_rsdo_rd" ]; then
+        chown -R "${_rsdo_rd_user}:${_rsdo_rd_user}" "$_rsdo_rd" 2>/dev/null || priv chown -R "${_rsdo_rd_user}:${_rsdo_rd_user}" "$_rsdo_rd" 2>/dev/null || true
+        chmod 0750 "$_rsdo_rd" 2>/dev/null || priv chmod 0750 "$_rsdo_rd" 2>/dev/null || true
+      fi
+    done
+  fi
+}
+
 # ## normalize_mount_ownership
-# Ensures the mounted directory is owned by SERVICE_USER or REMOTE_USER when configured.
+# Ensures the mounted directory is owned by SERVICE_USER or REMOTE_USER when configured while excluding and preserving service ownership on ollama_models, postgres, valkey, and redis.
 normalize_mount_ownership() {
   _nmo_dir="${SYSROOT%/}${MOUNT_POINT}"
   mkdir -p "$_nmo_dir" 2>/dev/null || priv mkdir -p "$_nmo_dir" 2>/dev/null || true
   _nmo_user="${SERVICE_USER:-${REMOTE_USER:-${ADMIN_USER:-${SUDO_USER:-}}}}"
+  _nmo_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_nmo_user}}"
   if [ -n "$_nmo_user" ] && id "$_nmo_user" >/dev/null 2>&1; then
-    _nmo_grp="${SERVICE_GROUP:-${REMOTE_GROUP:-$_nmo_user}}"
-    chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || priv chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || true
+    chown "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || priv chown "${_nmo_user}:${_nmo_grp}" "$_nmo_dir" 2>/dev/null || true
+    for _nmo_entry in "${_nmo_dir}"/* "${_nmo_dir}"/.[!.]* "${_nmo_dir}"/..*; do
+      [ -e "$_nmo_entry" ] || continue
+      case "${_nmo_entry##*/}" in
+        ollama_models|postgres|postgresql|valkey|redis|certs|lost+found) continue ;;
+      esac
+      chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_entry" 2>/dev/null || priv chown -R "${_nmo_user}:${_nmo_grp}" "$_nmo_entry" 2>/dev/null || true
+    done
   fi
+  restore_ollama_models_ownership "$_nmo_dir" "$_nmo_user" "$_nmo_grp"
+  restore_service_data_ownership "$_nmo_dir"
 }
 
 # ## is_already_mounted

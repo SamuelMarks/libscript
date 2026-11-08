@@ -149,7 +149,7 @@ vm_action() {
 capture_screen() {
   _name="$1"
   _crop_mode="${2:-INSTALLER}"
-  _ppm="/tmp/${_name}.ppm"
+  _ppm="${TMPDIR:-/tmp}/${_name}.ppm"
   _png="${TEMP_DIR}/${_name}.png"
   _bounds=""
   if [ "$_crop_mode" != "FULL" ]; then
@@ -602,10 +602,11 @@ else
   fi
   scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/_lib/web-apps/openedx/"* vagrant@127.0.0.1:C:/libscript/_lib/web-apps/openedx/
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/packaging/build_msi.cmd" "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" "${REPO_ROOT}/packaging/create_desktop_shortcuts.cmd" "${REPO_ROOT}/packaging/open_browser.ps1" "${REPO_ROOT}/packaging/click_button.ps1" vagrant@127.0.0.1:C:/libscript/packaging/
+  _mfe_bundle_cache="${OPENEDX_MFE_BUNDLE_CACHE:-${TMPDIR:-/tmp}/mfe_test/mfe-bundle-verawood.1.tar.gz}"
   if [ -d "${REPO_ROOT}/cache" ]; then
     scp -P "${SSH_PORT}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/cache/"* vagrant@127.0.0.1:C:/libscript/cache/
-  elif [ -f "/Users/samuel/.gemini/tmp/libscript/mfe_test/mfe-bundle-verawood.1.tar.gz" ]; then
-    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "/Users/samuel/.gemini/tmp/libscript/mfe_test/mfe-bundle-verawood.1.tar.gz" vagrant@127.0.0.1:C:/libscript/cache/codebase/mfe-bundle-verawood.1.tar.gz
+  elif [ -f "$_mfe_bundle_cache" ]; then
+    scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "$_mfe_bundle_cache" vagrant@127.0.0.1:C:/libscript/cache/codebase/mfe-bundle-verawood.1.tar.gz
   fi
   if [ -d "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release" ]; then
     scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/candle.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/light.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msiinfo.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/msi-cli.exe" "${REPO_ROOT}/../msi-rs/target/aarch64-pc-windows-gnullvm/release/wix.exe" vagrant@127.0.0.1:C:/Users/vagrant/.libscript/msi-rs/v0.0.1/bin/

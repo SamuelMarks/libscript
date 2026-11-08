@@ -121,9 +121,22 @@ calculate_checksum() {
         git -C "$local_path" status --porcelain 2>/dev/null || true
         git -C "$local_path" diff HEAD 2>/dev/null || true
         git -C "$local_path" ls-files --others --exclude-standard 2>/dev/null | while IFS= read -r _uf; do
-          [ -n "$_uf" ] && [ -f "${local_path}/${_uf}" ] && cksum "${local_path}/${_uf}" 2>/dev/null || true
+          if [ -n "$_uf" ] && [ -f "${local_path}/${_uf}" ]; then
+            cksum "${local_path}/${_uf}" 2>/dev/null || true
+          fi
         done
         cat "${local_path}/libscript.json" "${local_path}/.env" "${local_path}/.env.secrets" 2>/dev/null || true
+        (
+          cd "$local_path" 2>/dev/null && {
+            set +f
+            for _dr_lf in package.json package-lock.json pyproject.toml uv.lock requirements*.txt angular.json vite.config.* */package.json */package-lock.json */pyproject.toml */uv.lock */requirements*.txt */angular.json */vite.config.*; do
+              if [ -f "$_dr_lf" ]; then
+                cksum "$_dr_lf" 2>/dev/null || true
+              fi
+            done
+            set -f
+          }
+        )
       } | cksum 2>/dev/null | awk '{print $1"_"$2}' || printf '0'
     )
     printf '%s_%s\n' "$_dr_git" "$_dr_dirty"
@@ -267,8 +280,34 @@ for app_path in "$@"; do
   # shellcheck disable=SC2029
   remote_sum=$(ssh "$TARGET_HOST" "cat $remote_state_file 2>/dev/null" || true)
 
-  _sync_state='SYNCED'
+  _dr_markers_cmd='true'
+  if [ -f "$app_path/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+    _dr_fe_dirs=$(jq -r '([ (.frontends | if type == "array" then .[] elif type == "object" then .[] else empty end | (.source_dir // .working_dir // .cwd // ".")) ] | map(select(. != null and . != "")) | unique)[]?' "$app_path/libscript.json" 2>/dev/null || true)
+    if [ -n "$_dr_fe_dirs" ]; then
+      for _dr_fe_d in $_dr_fe_dirs; do
+        _dr_fe_rel="$_dr_fe_d"
+        [ "$_dr_fe_rel" = "." ] && _dr_fe_rel=""
+        _dr_fe_pfx="\$HOME/apps/$app_name${_dr_fe_rel:+/$_dr_fe_rel}"
+        _dr_markers_cmd="${_dr_markers_cmd} && [ -f ${_dr_fe_pfx}/node_modules/.libscript_pkg_hash ] && [ -f ${_dr_fe_pfx}/.libscript_build.sha256 ]"
+      done
+    fi
+  elif [ -f "$app_path/package.json" ]; then
+    _dr_markers_cmd="${_dr_markers_cmd} && [ -f \$HOME/apps/$app_name/node_modules/.libscript_pkg_hash ]"
+  fi
+  if [ -f "$app_path/pyproject.toml" ] || [ -f "$app_path/uv.lock" ] || [ -f "$app_path/requirements.txt" ]; then
+    _dr_markers_cmd="${_dr_markers_cmd} && [ -f \$HOME/apps/$app_name/.venv/.libscript_lock_hash ]"
+  fi
+
+  _dr_markers_ok=0
   if [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ] && [ "$local_sum" = "$remote_sum" ]; then
+    # shellcheck disable=SC2029
+    if ssh "$TARGET_HOST" "$_dr_markers_cmd" >/dev/null 2>&1; then
+      _dr_markers_ok=1
+    fi
+  fi
+
+  _sync_state='SYNCED'
+  if [ "$FORCE_REINSTALL" -eq 0 ] && [ "$FORCE_REBUILD" -eq 0 ] && [ "$local_sum" = "$remote_sum" ] && [ "$_dr_markers_ok" -eq 1 ]; then
     log_info "[SKIPPED] $app_name -> https://$app_domain is live and up-to-date."
     _sync_state='UP-TO-DATE'
   else

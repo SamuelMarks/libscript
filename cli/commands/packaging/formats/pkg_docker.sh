@@ -96,23 +96,28 @@ if [ "$is_offline" -eq 1 ]; then
 fi
 
 # Print Dockerfile Header
+DOCKER_ROOT_DIR="${DOCKER_LIBSCRIPT_ROOT_DIR:-/opt/libscript}"
+DOCKER_BUILD_DIR="${DOCKER_LIBSCRIPT_BUILD_DIR:-/opt/libscript_build}"
+DOCKER_DATA_DIR="${DOCKER_LIBSCRIPT_DATA_DIR:-/opt/libscript_data}"
+DOCKER_CACHE_DIR="${DOCKER_LIBSCRIPT_CACHE_DIR:-/opt/libscript_cache}"
+
 printf '%s\n' "FROM $base_image"
 printf '%s\n' 'ARG TARGETOS=linux'
 printf '%s\n' 'ARG TARGETARCH=amd64'
 printf '%s\n' 'ENV LC_ALL=C.UTF-8 LANG=C.UTF-8'
-printf '%s\n' 'ENV LIBSCRIPT_ROOT_DIR="/opt/libscript"'
-printf '%s\n' 'ENV LIBSCRIPT_BUILD_DIR="/opt/libscript_build"'
-printf '%s\n' 'ENV LIBSCRIPT_DATA_DIR="/opt/libscript_data"'
-printf '%s\n' 'ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache"'
+printf 'ENV LIBSCRIPT_ROOT_DIR="%s"\n' "$DOCKER_ROOT_DIR"
+printf 'ENV LIBSCRIPT_BUILD_DIR="%s"\n' "$DOCKER_BUILD_DIR"
+printf 'ENV LIBSCRIPT_DATA_DIR="%s"\n' "$DOCKER_DATA_DIR"
+printf 'ENV LIBSCRIPT_CACHE_DIR="%s"\n' "$DOCKER_CACHE_DIR"
 
 if [ "$is_offline" -eq 1 ]; then
   printf '%s\n' 'ENV LIBSCRIPT_OFFLINE="1"'
   printf '%s\n' 'ENV PIP_NO_INDEX="1"'
-  printf '%s\n' 'ENV PIP_FIND_LINKS="/opt/libscript_cache/wheels"'
+  printf 'ENV PIP_FIND_LINKS="%s/wheels"\n' "$DOCKER_CACHE_DIR"
   printf '%s\n' 'ENV npm_config_offline="true"'
   printf '%s\n' 'ENV npm_config_prefer_offline="true"'
-  printf '%s\n' 'ENV npm_config_cache="/opt/libscript_cache/npm"'
-  printf '%s\n' 'COPY cache/ /opt/libscript_cache/'
+  printf 'ENV npm_config_cache="%s/npm"\n' "$DOCKER_CACHE_DIR"
+  printf 'COPY cache/ %s/\n' "$DOCKER_CACHE_DIR"
 fi
 
 # Collect positional arguments
@@ -139,25 +144,25 @@ if [ "$is_offline" -ne 1 ] && [ -n "$bundle_file" ] && command -v jq >/dev/null 
   # Extract runtimes
   jq -r '.runtimes[]? | "\(.extract_dir // "runtimes") \(.filename) \(.url)"' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s %s/%s/%s\n' "$_url" "$DOCKER_CACHE_DIR" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
   # Extract databases
   jq -r '.databases[]? | "\(.extract_dir // "databases") \(.filename) \(.url)"' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s %s/%s/%s\n' "$_url" "$DOCKER_CACHE_DIR" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
   # Extract wheels
   jq -r '.wheels.packages[]? | "\("wheels") \(.filename) \(.url)"' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s %s/%s/%s\n' "$_url" "$DOCKER_CACHE_DIR" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
   # Extract codebase
   jq -r 'if .codebase.archive_url then "codebase \(.codebase.archive_filename) \(.codebase.archive_url)" else empty end' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s %s/%s/%s\n' "$_url" "$DOCKER_CACHE_DIR" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
 fi
@@ -235,32 +240,35 @@ if [ -n "$deps_list" ]; then
       filename=$(basename "${override%%\?*}")
       if [ "$is_offline" -ne 1 ]; then
         printf 'ENV %s_URL="%s"\n' "$pkg_up" "$override" >> "$tmp_env_add"
-        printf 'ADD ${%s_URL} /opt/libscript_cache/%s/%s\n' "$pkg_up" "$pkg_clean" "$filename" >> "$tmp_add"
+        # shellcheck disable=SC2016
+        printf 'ADD ${%s_URL} %s/%s/%s\n' "$pkg_up" "$DOCKER_CACHE_DIR" "$pkg_clean" "$filename" >> "$tmp_add"
       fi
     fi
 
     if [ "$artifact_type" = "deb" ]; then
-      printf 'RUN dpkg -s %s >/dev/null 2>&1 || (apt-get update && apt-get install -y /opt/libscript/*-%s_*.deb)\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN dpkg -s %s >/dev/null 2>&1 || (apt-get update && apt-get install -y %s/*-%s_*.deb)\n' "$pkg_clean" "$DOCKER_ROOT_DIR" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "rpm" ]; then
-      printf 'RUN rpm -q %s >/dev/null 2>&1 || dnf install -y /opt/libscript/*-%s-*.rpm\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN rpm -q %s >/dev/null 2>&1 || dnf install -y %s/*-%s-*.rpm\n' "$pkg_clean" "$DOCKER_ROOT_DIR" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "apk" ]; then
-      printf 'RUN apk info -e %s >/dev/null 2>&1 || apk add --allow-untrusted /opt/libscript/*-%s-*.apk\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN apk info -e %s >/dev/null 2>&1 || apk add --allow-untrusted %s/*-%s-*.apk\n' "$pkg_clean" "$DOCKER_ROOT_DIR" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "txz" ]; then
-      printf 'RUN pkg install -y /opt/libscript/*-%s*.txz /opt/libscript/*-%s*.pkg || true\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN pkg install -y %s/*-%s*.txz %s/*-%s*.pkg || true\n' "$DOCKER_ROOT_DIR" "$pkg_clean" "$DOCKER_ROOT_DIR" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "msi" ]; then
       printf 'RUN for %%I in (C:\opt\libscript\*-%s-*.msi) do msiexec /i "%%I" /qn /norestart\n' "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "exe" ]; then
       printf 'RUN for %%I in (C:\opt\libscript\*-%s-*.exe) do "%%I" /SILENT /VERYSILENT\n' "$pkg_clean" >> "$tmp_run"
     else
       if [ "$is_offline" -eq 1 ]; then
+        # shellcheck disable=SC2016
         printf 'RUN ./libscript.sh install %s ${%s_VERSION} --offline\n' "$pkg" "$pkg_up" >> "$tmp_run"
       else
+        # shellcheck disable=SC2016
         printf 'RUN ./libscript.sh install %s ${%s_VERSION}\n' "$pkg" "$pkg_up" >> "$tmp_run"
       fi
     fi
 
     if [ -f "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
-      PREFIX="/opt/libscript/installed/$pkg_clean" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" env "$pkg_clean" "$ver" --format=docker 2>/dev/null | grep -vE '^(ENV STACK=|ENV SCRIPT_NAME=)' >> "$tmp_run" || true
+      PREFIX="${DOCKER_ROOT_DIR}/installed/$pkg_clean" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" env "$pkg_clean" "$ver" --format=docker 2>/dev/null | grep -vE '^(ENV STACK=|ENV SCRIPT_NAME=)' >> "$tmp_run" || true
     fi
   done
 else
@@ -278,8 +286,8 @@ if [ -s "$tmp_add" ]; then
   cat "$tmp_add"
 fi
 
-printf '%s\n' 'COPY . /opt/libscript'
-printf '%s\n' 'WORKDIR /opt/libscript'
+printf 'COPY . %s\n' "$DOCKER_ROOT_DIR"
+printf 'WORKDIR %s\n' "$DOCKER_ROOT_DIR"
 
 if [ -s "$tmp_run" ]; then
   cat "$tmp_run"

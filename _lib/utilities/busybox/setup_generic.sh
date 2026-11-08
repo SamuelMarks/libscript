@@ -31,12 +31,14 @@ export DIR="${SCRIPT_DIR}"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh" "_lib/_common/source_builder.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
@@ -125,9 +127,6 @@ case "$ACTION" in
         if ! command -v busybox >/dev/null 2>&1; then
           if command -v brew >/dev/null 2>&1; then
             libscript_depends_via brew busybox 2>/dev/null || true
-          fi
-          if ! command -v busybox >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
-            cargo install busybox 2>/dev/null || true
           fi
         fi
       fi

@@ -46,7 +46,7 @@ infer_locations() {
       if [ -w . ]; then
         ENV_SAVED_FILE='tmp.nginx.env.sh'
       else
-        ENV_SAVED_FILE='/tmp/nginx.env.sh'
+        ENV_SAVED_FILE="${TMPDIR:-/tmp}/nginx.env.sh"
       fi
 
       export ENV_SAVED_FILE
@@ -57,7 +57,7 @@ infer_locations() {
       if [ -w . ]; then
         ENV_SAVED_FILE='tmp.nginx.env.sh'
       else
-        ENV_SAVED_FILE='/tmp/nginx.env.sh'
+        ENV_SAVED_FILE="${TMPDIR:-/tmp}/nginx.env.sh"
       fi
       trap 'rm -f -- "${ENV_SAVED_FILE}"' EXIT HUP INT QUIT TERM
 

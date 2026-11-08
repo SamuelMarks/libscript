@@ -473,12 +473,13 @@ while true; do
             _t_test='timeout 90'
         fi
 
+        _rtmp="${REMOTE_TMPDIR:-${TMPDIR:-/tmp}}"
         case "$target" in
             storage/provision_disk)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; rm -f /tmp/test-disk.img && sh $_exec_root/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && sh $_exec_root/_lib/storage/provision_disk.sh /tmp/test-disk.img 1 gpt uefi && rm -f /tmp/test-disk.img"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; rm -f ${_rtmp}/test-disk.img && sh $_exec_root/_lib/storage/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && sh $_exec_root/_lib/storage/provision_disk.sh ${_rtmp}/test-disk.img 1 gpt uefi && rm -f ${_rtmp}/test-disk.img"
                 ;;
             runtimes/provision_isolated_runtime)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt && sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path /tmp/test-rt"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt && sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt"
                 ;;
             ml-training)
                 test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/ml-training/cli.sh install latest && sh $_exec_root/_lib/ml-training/cli.sh test && sh $_exec_root/_lib/ml-training/cli.sh install latest && sh $_exec_root/_lib/ml-training/cli.sh test"
@@ -497,7 +498,7 @@ while true; do
                 ;;
             topologies/*)
                 _topo_name="${target#topologies/}"
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root LIBSCRIPT_TOPOLOGY_STATE_FILE=/tmp/topo-$_topo_name.json; rm -f /tmp/topo-$_topo_name.json*; sh $_exec_root/topologies/$_topo_name/cli.sh up && sh $_exec_root/topologies/$_topo_name/cli.sh status && sh $_exec_root/topologies/$_topo_name/cli.sh up && sh $_exec_root/topologies/$_topo_name/cli.sh destroy && rm -f /tmp/topo-$_topo_name.json*"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root LIBSCRIPT_TOPOLOGY_STATE_FILE=${_rtmp}/topo-$_topo_name.json; rm -f ${_rtmp}/topo-$_topo_name.json*; sh $_exec_root/topologies/$_topo_name/cli.sh up && sh $_exec_root/topologies/$_topo_name/cli.sh status && sh $_exec_root/topologies/$_topo_name/cli.sh up && sh $_exec_root/topologies/$_topo_name/cli.sh destroy && rm -f ${_rtmp}/topo-$_topo_name.json*"
                 ;;
             payloads/schedulers/*)
                 _sched_name="${target#payloads/schedulers/}"
@@ -505,7 +506,7 @@ while true; do
                 ;;
             traits/*)
                 _trait_name="${target#traits/}"
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root LIBSCRIPT_TARGET_SYSROOT=/tmp/trait-sysroot-$_trait_name LIBSCRIPT_OFFLINE=1; rm -rf /tmp/trait-sysroot-$_trait_name && mkdir -p /tmp/trait-sysroot-$_trait_name && sh $_exec_root/traits/engine.sh enable $_trait_name && sh $_exec_root/traits/engine.sh apply $_trait_name && sh $_exec_root/traits/engine.sh verify $_trait_name && sh $_exec_root/traits/engine.sh apply $_trait_name && sh $_exec_root/traits/engine.sh teardown $_trait_name && rm -rf /tmp/trait-sysroot-$_trait_name"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root LIBSCRIPT_TARGET_SYSROOT=${_rtmp}/trait-sysroot-$_trait_name LIBSCRIPT_OFFLINE=1; rm -rf ${_rtmp}/trait-sysroot-$_trait_name && mkdir -p ${_rtmp}/trait-sysroot-$_trait_name && sh $_exec_root/traits/engine.sh enable $_trait_name && sh $_exec_root/traits/engine.sh apply $_trait_name && sh $_exec_root/traits/engine.sh verify $_trait_name && sh $_exec_root/traits/engine.sh apply $_trait_name && sh $_exec_root/traits/engine.sh teardown $_trait_name && rm -rf ${_rtmp}/trait-sysroot-$_trait_name"
                 ;;
             *)
                 test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; $_t_inst $_exec_root/libscript.sh install $target && $_t_test $_exec_root/libscript.sh test $target && ($_exec_root/libscript.sh env $target latest >/dev/null 2>&1 || true) && $_t_inst $_exec_root/libscript.sh install $target && $_t_test $_exec_root/libscript.sh test $target"

@@ -47,10 +47,64 @@ if [ ! -f "/etc/systemd/system/ollama.service" ] && [ ! -f "/lib/systemd/system/
   fi
 fi
 
+# ## sanitize_ollama_host_value
+# Strips http://, https://, and any /v1 or /v1/ suffix from an OLLAMA_HOST value.
+sanitize_ollama_host_value() {
+  _soh_val="${1:-127.0.0.1:11434}"
+  _soh_val="${_soh_val#http://}"
+  _soh_val="${_soh_val#https://}"
+  _soh_val="${_soh_val%/}"
+  _soh_val="${_soh_val%/v1}"
+  _soh_val="${_soh_val%/}"
+  [ -n "$_soh_val" ] || _soh_val='127.0.0.1:11434'
+  printf '%s\n' "$_soh_val"
+}
+
+# ## ensure_ollama_systemd_unit
+# Idempotently registers /etc/systemd/system/ollama.service when ollama is installed as a native binary on a systemd system and no unit file exists yet.
+ensure_ollama_systemd_unit() {
+  if [ "$(libscript_detect_init_system 2>/dev/null || printf 'fallback')" != "systemd" ]; then
+    return 0
+  fi
+  if [ -f "/etc/systemd/system/ollama.service" ] || [ -f "/lib/systemd/system/ollama.service" ]; then
+    return 0
+  fi
+  _eos_bin=""
+  for _eos_cand in \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/default/bin/ollama" \
+    "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/ollama/latest/bin/ollama" \
+    "/usr/local/bin/ollama" \
+    "/usr/bin/ollama" \
+    "$(command -v ollama 2>/dev/null || true)"; do
+    if [ -n "$_eos_cand" ] && [ -x "$_eos_cand" ]; then
+      _eos_bin="$_eos_cand"
+      break
+    fi
+  done
+  [ -n "$_eos_bin" ] || return 0
+  _eos_user="${SERVICE_USER:-root}"
+  if id ollama >/dev/null 2>&1; then
+    _eos_user='ollama'
+  fi
+  libscript_install_service "ollama" "${_eos_bin} serve" "/" "Ollama Service" "" "$_eos_user" || true
+  # libscript-allow-raw-daemon
+  priv systemctl daemon-reload 2>/dev/null || systemctl daemon-reload 2>/dev/null || true
+  _ol_svc='ollama'
+  return 0
+}
+
 # ## resolve_ollama_models_dir
 # Resolves the effective Ollama daemon model storage directory from OLLAMA_MODELS_DIR or OLLAMA_MODELS.
 resolve_ollama_models_dir() {
-  _rom_dir="${OLLAMA_MODELS_DIR:-}"
+  _rom_dir=""
+  case "${OLLAMA_MODELS_DIR:-}" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*)
+      _rom_dir="$OLLAMA_MODELS_DIR"
+      ;;
+    *)
+      OLLAMA_MODELS_DIR=""
+      ;;
+  esac
   if [ -z "$_rom_dir" ]; then
     case "${OLLAMA_MODELS:-}" in
       /*|[A-Za-z]:\\*|[A-Za-z]:/*)
@@ -60,7 +114,7 @@ resolve_ollama_models_dir() {
   fi
   if [ -z "$_rom_dir" ]; then
     _rom_mount="${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}"
-    if [ -d "$_rom_mount" ]; then
+    if [ -d "$_rom_mount" ] || [ -n "${DATA_DISK_MOUNT:-}" ] || [ -n "${DATA_MOUNT_DIR:-}" ]; then
       _rom_dir="${_rom_mount}/ollama_models"
     else
       _rom_dir="${LIBSCRIPT_DATA_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/data}/ollama/models"
@@ -71,6 +125,10 @@ resolve_ollama_models_dir() {
   export OLLAMA_MODELS OLLAMA_MODELS_DIR
   printf '%s\n' "$_rom_dir"
 }
+
+resolve_ollama_models_dir >/dev/null
+OLLAMA_HOST="http://$(sanitize_ollama_host_value "${OLLAMA_HOST:-127.0.0.1:11434}")"
+export OLLAMA_HOST
 
 # ## migrate_legacy_ollama_models
 # Migrates allowed lightweight CPU models from /usr/share/ollama/.ollama/models into the target OLLAMA_MODELS directory and purges oversized 26B/27B blobs on GPU-less nodes.
@@ -121,35 +179,176 @@ migrate_legacy_ollama_models() {
 }
 
 # ## configure_ollama_models_dir
-# Idempotently ensures the OLLAMA_MODELS directory exists with 0755 permissions and service-user ownership, and applies the service override.
+# Idempotently ensures the OLLAMA_MODELS directory exists with 02775 permissions and appropriate ownership, and applies the service override.
 configure_ollama_models_dir() {
-  _com_dir="${1:-$(resolve_ollama_models_dir)}"
-  [ -n "$_com_dir" ] || return 0
-  OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${_com_dir:-${DATA_MOUNT_DIR:-/mnt/data}/ollama_models}}"
-  export OLLAMA_MODELS
-  mkdir -p "${OLLAMA_MODELS}" 2>/dev/null || priv mkdir -p "${OLLAMA_MODELS}" 2>/dev/null || true
-  chmod 0755 "${OLLAMA_MODELS}" 2>/dev/null || priv chmod 0755 "${OLLAMA_MODELS}" 2>/dev/null || true
-  migrate_legacy_ollama_models "${OLLAMA_MODELS}"
-  SERVICE_USER="${SERVICE_USER:-${REMOTE_USER:-root}}"
-  SERVICE_GROUP="${SERVICE_GROUP:-${REMOTE_GROUP:-$SERVICE_USER}}"
-  chown -R ollama:ollama "${OLLAMA_MODELS}" 2>/dev/null || priv chown -R ollama:ollama "${OLLAMA_MODELS}" 2>/dev/null || chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${OLLAMA_MODELS}" 2>/dev/null || priv chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${OLLAMA_MODELS}" 2>/dev/null || true
-
-  _com_host="${OLLAMA_HOST:-127.0.0.1:11434}"
-  case "$_com_host" in
-    http://*) _com_host="${_com_host#http://}" ;;
-    https://*) _com_host="${_com_host#https://}" ;;
+  ensure_ollama_systemd_unit
+  _com_dir="${1:-}"
+  case "$_com_dir" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+    *) _com_dir="" ;;
   esac
+  if [ -z "$_com_dir" ]; then
+    _com_dir=$(resolve_ollama_models_dir)
+  fi
+  case "${OLLAMA_MODELS_DIR:-}" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+    *) unset OLLAMA_MODELS_DIR || true ;;
+  esac
+  OLLAMA_MODELS="$_com_dir"
+  case "${OLLAMA_MODELS:-}" in
+    /*|[A-Za-z]:\\*|[A-Za-z]:/*) ;;
+    *)
+      OLLAMA_MODELS="${OLLAMA_MODELS_DIR:-${DATA_DISK_MOUNT:-${DATA_MOUNT_DIR:-/mnt/data}}/ollama_models}"
+      ;;
+  esac
+  OLLAMA_MODELS_DIR="$OLLAMA_MODELS"
+  export OLLAMA_MODELS OLLAMA_MODELS_DIR
+  mkdir -p "${OLLAMA_MODELS}" "${OLLAMA_MODELS}/manifests" "${OLLAMA_MODELS}/blobs" 2>/dev/null || priv mkdir -p "${OLLAMA_MODELS}" "${OLLAMA_MODELS}/manifests" "${OLLAMA_MODELS}/blobs" 2>/dev/null || true
+  migrate_legacy_ollama_models "${OLLAMA_MODELS}"
+  SERVICE_USER="${SERVICE_USER:-${REMOTE_USER:-$(id -un 2>/dev/null || printf 'root')}}"
+  SERVICE_GROUP="${SERVICE_GROUP:-${REMOTE_GROUP:-$SERVICE_USER}}"
+  if id ollama >/dev/null 2>&1; then
+    if [ -n "$SERVICE_USER" ] && [ "$SERVICE_USER" != "root" ] && id "$SERVICE_USER" >/dev/null 2>&1; then
+      usermod -aG ollama "$SERVICE_USER" 2>/dev/null || priv usermod -aG ollama "$SERVICE_USER" 2>/dev/null || true
+      usermod -aG "$SERVICE_GROUP" ollama 2>/dev/null || priv usermod -aG "$SERVICE_GROUP" ollama 2>/dev/null || true
+    fi
+    chown -R ollama:ollama "${OLLAMA_MODELS}" 2>/dev/null || priv chown -R ollama:ollama "${OLLAMA_MODELS}" 2>/dev/null || true
+  else
+    chown -R "${SERVICE_USER:-$(id -un)}" "${OLLAMA_MODELS}" 2>/dev/null || priv chown -R "${SERVICE_USER:-$(id -un)}" "${OLLAMA_MODELS}" 2>/dev/null || true
+  fi
+  chmod 02775 "${OLLAMA_MODELS}" "${OLLAMA_MODELS}/manifests" "${OLLAMA_MODELS}/blobs" 2>/dev/null || priv chmod 02775 "${OLLAMA_MODELS}" "${OLLAMA_MODELS}/manifests" "${OLLAMA_MODELS}/blobs" 2>/dev/null || true
+  chmod -R u+rwX,g+rwXs,o+rX "${OLLAMA_MODELS}" 2>/dev/null || priv chmod -R u+rwX,g+rwXs,o+rX "${OLLAMA_MODELS}" 2>/dev/null || true
+
+  _com_host=$(sanitize_ollama_host_value "${OLLAMA_HOST:-127.0.0.1:11434}")
+  OLLAMA_HOST="http://${_com_host}"
+  export OLLAMA_HOST
   _com_par="${OLLAMA_NUM_PARALLEL:-1}"
   _com_max="${OLLAMA_MAX_LOADED_MODELS:-1}"
+  _com_fa="${OLLAMA_FLASH_ATTENTION:-0}"
+  _com_kv="${OLLAMA_KV_CACHE_TYPE:-f16}"
+  _com_ctx="${OLLAMA_CONTEXT_LENGTH:-2048}"
+  _com_q="${OLLAMA_MAX_QUEUE:-16}"
+  _com_ka="${OLLAMA_KEEP_ALIVE:-10m}"
+  _com_amx="${GGML_BACKEND_AMX:-0}"
+  _com_llm_lib="${OLLAMA_LLM_LIBRARY:-}"
+  _com_num_gpu="${OLLAMA_NUM_GPU:-}"
+  if ! command -v nvidia-smi >/dev/null 2>&1; then
+    _com_llm_lib="${_com_llm_lib:-cpu_avx2}"
+    _com_num_gpu="${_com_num_gpu:-0}"
+  fi
 
-  libscript_service_override_env "$_ol_svc" \
+  set -- "$_ol_svc" \
     "OLLAMA_MODELS=${OLLAMA_MODELS}" \
     "OLLAMA_HOST=${_com_host}" \
     "OLLAMA_NUM_PARALLEL=${_com_par}" \
-    "OLLAMA_MAX_LOADED_MODELS=${_com_max}" || true
-  if libscript_service is-active "$_ol_svc" >/dev/null 2>&1; then
-    libscript_service restart "$_ol_svc" 2>/dev/null || true
+    "OLLAMA_MAX_LOADED_MODELS=${_com_max}" \
+    "OLLAMA_FLASH_ATTENTION=${_com_fa}" \
+    "OLLAMA_KV_CACHE_TYPE=${_com_kv}" \
+    "OLLAMA_CONTEXT_LENGTH=${_com_ctx}" \
+    "OLLAMA_MAX_QUEUE=${_com_q}" \
+    "OLLAMA_KEEP_ALIVE=${_com_ka}" \
+    "GGML_BACKEND_AMX=${_com_amx}"
+  if [ -n "$_com_llm_lib" ]; then
+    set -- "$@" "OLLAMA_LLM_LIBRARY=${_com_llm_lib}"
   fi
+  if [ -n "$_com_num_gpu" ]; then
+    set -- "$@" "OLLAMA_NUM_GPU=${_com_num_gpu}"
+  fi
+  libscript_service_override_env "$@" || true
+  if [ "${LIBSCRIPT_OVERRIDE_CHANGED:-0}" = "1" ] && libscript_service status "$_ol_svc" >/dev/null 2>&1; then
+    libscript_service restart "$_ol_svc" 2>/dev/null || true
+    wait_for_ollama_ready
+  fi
+}
+
+# ## verify_authentic_gemma_model
+# Verifies that gemma:2b has its genuine Google Gemma family/digest and was not aliased to llama3.2:1b; if aliased, removes and re-pulls authentic gemma:2b.
+verify_authentic_gemma_model() {
+  _vag_model="${1:-gemma:2b}"
+  [ "$_vag_model" = "gemma:2b" ] || return 0
+  if [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
+    return 0
+  fi
+  command -v ollama >/dev/null 2>&1 || return 0
+  _vag_host=$(sanitize_ollama_host_value "${OLLAMA_HOST:-127.0.0.1:11434}")
+  OLLAMA_HOST="http://${_vag_host}"
+  export OLLAMA_HOST
+  _vag_needs_repull=0
+  _vag_gemma_id=$(ollama list 2>/dev/null | awk '$1 == "gemma:2b" {print $2}' || true)
+  _vag_llama_id=$(ollama list 2>/dev/null | awk '$1 == "llama3.2:1b" {print $2}' || true)
+  if [ -n "$_vag_gemma_id" ] && [ -n "$_vag_llama_id" ] && [ "$_vag_gemma_id" = "$_vag_llama_id" ]; then
+    _vag_needs_repull=1
+  fi
+  if [ "$_vag_needs_repull" -eq 0 ] && command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    _vag_url="http://${_vag_host}"
+    _vag_tags=$(curl -sS --connect-timeout 5 --max-time 10 "${_vag_url%/}/api/tags" 2>/dev/null || true)
+    if [ -n "$_vag_tags" ]; then
+      _vag_fam=$(printf '%s\n' "$_vag_tags" | jq -r '.models[]? | select(.name == "gemma:2b") | .details.family // empty' 2>/dev/null | head -n 1 || true)
+      if [ -n "$_vag_fam" ] && [ "$_vag_fam" != "gemma" ]; then
+        _vag_needs_repull=1
+      fi
+    fi
+  fi
+  if [ "$_vag_needs_repull" -eq 1 ]; then
+    log_warn "[OLLAMA] [AUTHENTICITY] Detected non-genuine 'gemma:2b' alias (family/digest mismatch); restoring authentic Google Gemma 2B weights..."
+    ollama rm "gemma:2b" 2>/dev/null || true
+    ollama pull "gemma:2b" || return 1
+  fi
+  return 0
+}
+
+# ## verify_ollama_model_inference
+# Sends a 1-token /api/generate smoke request for a model and re-pulls the authentic model once if llama-server crashes.
+verify_ollama_model_inference() {
+  _vomi_model="${1:-}"
+  [ -n "$_vomi_model" ] || return 0
+  if [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
+    return 0
+  fi
+  if [ "$_vomi_model" = "gemma:2b" ]; then
+    verify_authentic_gemma_model "gemma:2b" || return 1
+  fi
+  command -v curl >/dev/null 2>&1 || return 0
+  _vomi_host=$(sanitize_ollama_host_value "${OLLAMA_HOST:-127.0.0.1:11434}")
+  OLLAMA_HOST="http://${_vomi_host}"
+  export OLLAMA_HOST
+  _vomi_url="http://${_vomi_host}"
+  _vomi_gen="${_vomi_url%/}/api/generate"
+  _vomi_ka="${OLLAMA_KEEP_ALIVE:-30m}"
+  _vomi_payload="{\"model\":\"${_vomi_model}\",\"prompt\":\"SELECT 1;\",\"stream\":false,\"keep_alive\":\"${_vomi_ka}\",\"options\":{\"num_predict\":1,\"num_ctx\":512,\"num_gpu\":0,\"num_thread\":4,\"use_mmap\":false}}"
+  _vomi_resp=$(curl -sS --connect-timeout 5 --max-time 60 -H "Content-Type: application/json" -d "$_vomi_payload" "$_vomi_gen" 2>/dev/null || true)
+  case "$_vomi_resp" in
+    *"llama-server process has terminated"*|*"segmentation fault"*|*"core dumped"*|*"signal: "*)
+      log_warn "[OLLAMA] [HEAL] Model '${_vomi_model}' crashed during 1-token smoke test (${_vomi_resp}); applying GGML_BACKEND_AMX=0 / cpu_avx2 overrides, repairing permissions, and re-pulling authentic model..."
+      _vomi_mdir=$(resolve_ollama_models_dir)
+      if [ -n "$_vomi_mdir" ] && [ -d "$_vomi_mdir" ]; then
+        if id ollama >/dev/null 2>&1; then
+          chown -R ollama:ollama "$_vomi_mdir" 2>/dev/null || priv chown -R ollama:ollama "$_vomi_mdir" 2>/dev/null || true
+        else
+          chown -R "${SERVICE_USER:-$(id -un)}" "$_vomi_mdir" 2>/dev/null || priv chown -R "${SERVICE_USER:-$(id -un)}" "$_vomi_mdir" 2>/dev/null || true
+        fi
+        chmod 02775 "$_vomi_mdir" "${_vomi_mdir}/manifests" "${_vomi_mdir}/blobs" 2>/dev/null || priv chmod 02775 "$_vomi_mdir" "${_vomi_mdir}/manifests" "${_vomi_mdir}/blobs" 2>/dev/null || true
+        chmod -R u+rwX,g+rwXs,o+rX "$_vomi_mdir" 2>/dev/null || priv chmod -R u+rwX,g+rwXs,o+rX "$_vomi_mdir" 2>/dev/null || true
+      fi
+      configure_ollama_models_dir "$_vomi_mdir"
+      if libscript_service status "$_ol_svc" >/dev/null 2>&1; then
+        libscript_service restart "$_ol_svc" 2>/dev/null || true
+        wait_for_ollama_ready
+      fi
+      if command -v ollama >/dev/null 2>&1; then
+        ollama rm "$_vomi_model" 2>/dev/null || true
+        ollama pull "$_vomi_model" || true
+      fi
+      _vomi_resp2=$(curl -sS --connect-timeout 5 --max-time 60 -H "Content-Type: application/json" -d "$_vomi_payload" "$_vomi_gen" 2>/dev/null || true)
+      case "$_vomi_resp2" in
+        *"llama-server process has terminated"*|*"segmentation fault"*|*"core dumped"*|*"signal: "*)
+          log_error "[OLLAMA] Model '${_vomi_model}' still failed 1-token smoke test after re-pull: ${_vomi_resp2}"
+          return 1
+          ;;
+      esac
+      ;;
+  esac
+  return 0
 }
 
 # ## wait_for_ollama_ready
@@ -158,11 +357,10 @@ wait_for_ollama_ready() {
   if [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
     return 0
   fi
-  _wor_url="${OLLAMA_HOST:-http://127.0.0.1:11434}"
-  case "$_wor_url" in
-    http://*|https://*) ;;
-    *) _wor_url="http://${_wor_url}" ;;
-  esac
+  _wor_host=$(sanitize_ollama_host_value "${OLLAMA_HOST:-127.0.0.1:11434}")
+  OLLAMA_HOST="http://${_wor_host}"
+  export OLLAMA_HOST
+  _wor_url="http://${_wor_host}"
   _wor_tags="${_wor_url%/}/api/tags"
   _wor_elapsed=0
   _wor_max="${OLLAMA_READY_TIMEOUT:-30}"
@@ -190,16 +388,15 @@ is_ollama_model_installed() {
     *:*) ;;
     *) _iom_alt="${_iom_model}:latest" ;;
   esac
+  _iom_host=$(sanitize_ollama_host_value "${OLLAMA_HOST:-127.0.0.1:11434}")
+  OLLAMA_HOST="http://${_iom_host}"
+  export OLLAMA_HOST
   _iom_list=""
   if command -v ollama >/dev/null 2>&1; then
     _iom_list=$(ollama list 2>/dev/null | awk 'NR>1 {print $1}' || true)
   fi
   if [ -z "$_iom_list" ] && command -v jq >/dev/null 2>&1; then
-    _iom_url="${OLLAMA_HOST:-http://127.0.0.1:11434}"
-    case "$_iom_url" in
-      http://*|https://*) ;;
-      *) _iom_url="http://${_iom_url}" ;;
-    esac
+    _iom_url="http://${_iom_host}"
     _iom_json=$(libscript_fetch_stdout "${_iom_url%/}/api/tags" 2>/dev/null || true)
     if [ -n "$_iom_json" ]; then
       _iom_list=$(printf '%s\n' "$_iom_json" | jq -r '.models[]?.name // empty' 2>/dev/null || true)
@@ -214,6 +411,7 @@ is_ollama_model_installed() {
 # ## ensure_ollama_models
 # Idempotently ensures each requested model is present, pulling missing models and verifying registration.
 ensure_ollama_models() {
+  configure_ollama_models_dir "$(resolve_ollama_models_dir)"
   wait_for_ollama_ready
   _eom_raw="$*"
   if [ -z "$_eom_raw" ]; then
@@ -224,6 +422,9 @@ ensure_ollama_models() {
     [ -n "$_eom_m" ] || continue
     if is_ollama_model_installed "$_eom_m"; then
       log_info "[OLLAMA] [REUSE] Model '${_eom_m}' is already present."
+      if [ "${OLLAMA_VERIFY_INFERENCE:-0}" = "1" ] || [ "$_eom_m" = "gemma:2b" ]; then
+        verify_ollama_model_inference "$_eom_m" || return 1
+      fi
       continue
     fi
     log_info "[OLLAMA] [PULL] Pulling model '${_eom_m}'..."
@@ -234,6 +435,9 @@ ensure_ollama_models() {
     if ! is_ollama_model_installed "$_eom_m"; then
       log_error "[OLLAMA] Model '${_eom_m}' was not registered in 'ollama list' after pull."
       return 1
+    fi
+    if [ "${OLLAMA_VERIFY_INFERENCE:-0}" = "1" ] || [ "$_eom_m" = "gemma:2b" ]; then
+      verify_ollama_model_inference "$_eom_m" || return 1
     fi
     log_info "[OLLAMA] Verified model '${_eom_m}' is registered."
   done

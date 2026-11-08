@@ -36,7 +36,18 @@ libscript_ssh_mux_opts() {
     printf '%s\n' "$_smo_base"
     return 0
   fi
-  _smo_dir="${TMPDIR:-/tmp}/libscript_ssh_mux"
+  _smo_tmp="${TMPDIR:-/tmp}"
+  _smo_tmp="${_smo_tmp%/}"
+  if [ -n "${LIBSCRIPT_SSH_MUX_DIR:-}" ]; then
+    _smo_dir="${LIBSCRIPT_SSH_MUX_DIR}"
+  elif [ "${#_smo_tmp}" -gt 36 ]; then
+    _smo_uid=$(id -u 2>/dev/null || printf '0')
+    _smo_short_tmp="${LIBSCRIPT_SHORT_TMPDIR:-/tmp}"
+    _smo_dir="${_smo_short_tmp%/}/ls_mux_${_smo_uid}"
+  else
+    _smo_dir="${_smo_tmp}/ls_mux"
+  fi
+  _smo_dir="${_smo_dir%/}"
   mkdir -p "$_smo_dir" 2>/dev/null || true
   chmod 0700 "$_smo_dir" 2>/dev/null || true
   if [ -d "$_smo_dir" ] && [ -w "$_smo_dir" ]; then
@@ -118,6 +129,22 @@ libscript_compute_tree_hash() {
   if [ -f "${_cth_dir}/libscript.json" ]; then
     _cth_manifest=$(cksum "${_cth_dir}/libscript.json" 2>/dev/null | awk '{print $1"_"$2}' || printf 'manifest')
   fi
+  _cth_locks=$(
+    cd "$_cth_dir" 2>/dev/null && {
+      for _cth_lf in package.json package-lock.json pnpm-lock.yaml yarn.lock requirements.txt requirements-prod.txt pyproject.toml uv.lock angular.json; do
+        if [ -f "$_cth_lf" ]; then
+          cksum "$_cth_lf" 2>/dev/null || true
+        fi
+      done
+      set +f
+      for _cth_vf in vite.config.* */package.json */package-lock.json */pnpm-lock.yaml */yarn.lock */requirements*.txt */pyproject.toml */uv.lock */angular.json */vite.config.*; do
+        if [ -f "$_cth_vf" ]; then
+          cksum "$_cth_vf" 2>/dev/null || true
+        fi
+      done
+      set -f
+    } | sort | cksum | awk '{print $1"_"$2}'
+  )
   _cth_tree=$(
     cd "$_cth_dir" 2>/dev/null && find . \
       \( -name ".git" -o -name "build" -o -name "cmake-build-debug" -o -name "cmake-build-release" \
@@ -131,7 +158,7 @@ libscript_compute_tree_hash() {
       -o -type f ! -name "*.pyc" ! -name "*.pyo" ! -name "*.duckdb" ! -name "*.duckdb.wal" \
          ! -name "CMakeCache.txt" ! -name ".env.libscript" -exec cksum {} + 2>/dev/null | sort | cksum | awk '{print $1"_"$2}'
   )
-  _cth_raw="${_cth_git_head}-${_cth_git_dirty}-${_cth_manifest}-${_cth_tree:-0}"
+  _cth_raw="${_cth_git_head}-${_cth_git_dirty}-${_cth_manifest}-${_cth_locks:-0}-${_cth_tree:-0}"
   if command -v sha256sum >/dev/null 2>&1; then
     printf '%s' "$_cth_raw" | sha256sum | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
@@ -164,11 +191,33 @@ libscript_sync_app_to_remote() {
 
   _sar_src_clean="${_sar_src%/}"
   _sar_remote_rsync_dest="${_sar_dest%/}/"
+  _sar_hash_dir="${HOME:-/tmp}/.cache/libscript/sync_hashes"
+  mkdir -p "$_sar_hash_dir" 2>/dev/null || true
+  _sar_key=$(printf '%s_%s' "$_sar_target" "$_sar_dest" | tr -c 'A-Za-z0-9_.-' '_')
+  _sar_hash_file="${_sar_hash_dir}/${_sar_key}.sha256"
+  _sar_cur_hash=$(libscript_compute_tree_hash "$_sar_src_clean")
+
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${FORCE_UPLOAD:-0}" != "1" ] && [ -f "$_sar_hash_file" ]; then
+    if [ "$(cat "$_sar_hash_file" 2>/dev/null || true)" = "$_sar_cur_hash" ]; then
+      # shellcheck disable=SC2029,SC2086
+      if ssh $_sar_ssh_opts "$_sar_target" "[ -d ${_sar_dest} ]" >/dev/null 2>&1; then
+        printf '[REUSE] Remote directory %s:%s matches local tree hash (%s); skipping sync.\n' "$_sar_target" "$_sar_dest" "$_sar_cur_hash"
+        return 0
+      fi
+    fi
+  fi
 
   # shellcheck disable=SC2029,SC2086
   ssh $_sar_ssh_opts "$_sar_target" "mkdir -p ${_sar_dest}"
 
   if command -v rsync >/dev/null 2>&1; then
+    _sar_excl_file=$(mktemp "${TMPDIR:-/tmp}/libscript_sar_excl.XXXXXX")
+    if command -v git >/dev/null 2>&1 && git -C "$_sar_src_clean" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      git -C "$_sar_src_clean" ls-files --others -i --exclude-standard --directory 2>/dev/null | sed "s|^|/|" > "$_sar_excl_file" || true
+      _sar_gi_arg="--exclude-from=${_sar_excl_file}"
+    else
+      _sar_gi_arg="--filter=:- .gitignore"
+    fi
     if rsync -avz --delete \
       --filter='P build' \
       --filter='P cmake-build-debug' \
@@ -210,11 +259,19 @@ libscript_sync_app_to_remote() {
       --filter='P .libscript_kmp_build.sha256' \
       --filter='P data' \
       --filter='P logs' \
+      --filter='P coverage' \
+      --filter='P .coverage' \
+      --filter='P .nyc_output' \
+      --filter='P composeApp/build' \
       --filter='P *.duckdb' \
       --filter='P *.duckdb.wal' \
-      --filter=':- .gitignore' \
+      "$_sar_gi_arg" \
       --exclude='.git' \
       --exclude='build' \
+      --exclude='coverage/' \
+      --exclude='.coverage' \
+      --exclude='.nyc_output/' \
+      --exclude='composeApp/build/' \
       --exclude='cmake-build-debug' \
       --exclude='cmake-build-release' \
       --exclude='cmake-build-relwithdebinfo' \
@@ -255,8 +312,11 @@ libscript_sync_app_to_remote() {
       --exclude='.env.libscript' \
       -e "ssh ${_sar_ssh_opts}" \
       "${_sar_src_clean}/" "${_sar_target}:${_sar_remote_rsync_dest}"; then
+      rm -f "$_sar_excl_file"
+      printf '%s\n' "$_sar_cur_hash" > "$_sar_hash_file" 2>/dev/null || true
       return 0
     fi
+    rm -f "$_sar_excl_file"
   fi
 
   # Fallback: gitignore-aware tar stream over SSH with remote protected-directory prune + empty dir cleanup
@@ -278,14 +338,19 @@ libscript_sync_app_to_remote() {
       # shellcheck disable=SC2029,SC2086
       if [ -s "$_sar_flist" ] && tar -czf - -C "$_sar_src_clean" -T "$_sar_flist" 2>/dev/null | ssh $_sar_ssh_opts "$_sar_target" "tar -xzf - -C ${_sar_dest}"; then
         rm -f "$_sar_flist"
+        printf '%s\n' "$_sar_cur_hash" > "$_sar_hash_file" 2>/dev/null || true
         return 0
       fi
       rm -f "$_sar_flist"
     fi
     # shellcheck disable=SC2029,SC2086
-    tar -czf - \
+    if tar -czf - \
       --exclude='.git' \
       --exclude='build' \
+      --exclude='coverage' \
+      --exclude='.coverage' \
+      --exclude='.nyc_output' \
+      --exclude='composeApp/build' \
       --exclude='cmake-build-debug' \
       --exclude='cmake-build-release' \
       --exclude='cmake-build-relwithdebinfo' \
@@ -324,12 +389,19 @@ libscript_sync_app_to_remote() {
       --exclude='*.duckdb' \
       --exclude='*.duckdb.wal' \
       --exclude='.env.libscript' \
-      -C "$_sar_src_clean" . | ssh $_sar_ssh_opts "$_sar_target" "tar -xzf - -C ${_sar_dest}"
-    return $?
+      -C "$_sar_src_clean" . | ssh $_sar_ssh_opts "$_sar_target" "tar -xzf - -C ${_sar_dest}"; then
+      printf '%s\n' "$_sar_cur_hash" > "$_sar_hash_file" 2>/dev/null || true
+      return 0
+    fi
+    return 1
   fi
 
   # shellcheck disable=SC2086
-  scp $_sar_ssh_opts -r "${_sar_src_clean}/"* "${_sar_target}:${_sar_remote_rsync_dest}"
+  if scp $_sar_ssh_opts -r "${_sar_src_clean}/"* "${_sar_target}:${_sar_remote_rsync_dest}"; then
+    printf '%s\n' "$_sar_cur_hash" > "$_sar_hash_file" 2>/dev/null || true
+    return 0
+  fi
+  return 1
 }
 
 # ## libscript_sync_runtime_to_remote
@@ -347,11 +419,33 @@ libscript_sync_runtime_to_remote() {
   fi
 
   _srr_rsync_dest="${_srr_dest%/}/"
+  _srr_hash_dir="${HOME:-/tmp}/.cache/libscript/sync_hashes"
+  mkdir -p "$_srr_hash_dir" 2>/dev/null || true
+  _srr_key=$(printf 'runtime_%s_%s' "$_srr_target" "$_srr_dest" | tr -c 'A-Za-z0-9_.-' '_')
+  _srr_hash_file="${_srr_hash_dir}/${_srr_key}.sha256"
+  _srr_cur_hash=$(libscript_compute_tree_hash "$_srr_src")
+
+  if [ "${FORCE_REINSTALL:-0}" != "1" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${FORCE_UPLOAD:-0}" != "1" ] && [ -f "$_srr_hash_file" ]; then
+    if [ "$(cat "$_srr_hash_file" 2>/dev/null || true)" = "$_srr_cur_hash" ]; then
+      # shellcheck disable=SC2029,SC2086
+      if ssh $_srr_ssh_opts "$_srr_target" "[ -x ${_srr_dest}/libscript.sh ]" >/dev/null 2>&1; then
+        printf '[REUSE] Remote LibScript runtime %s:%s matches local tree hash (%s); skipping sync.\n' "$_srr_target" "$_srr_dest" "$_srr_cur_hash"
+        return 0
+      fi
+    fi
+  fi
 
   # shellcheck disable=SC2029,SC2086
   ssh $_srr_ssh_opts "$_srr_target" "mkdir -p ${_srr_dest}"
 
   if command -v rsync >/dev/null 2>&1; then
+    _srr_excl_file=$(mktemp "${TMPDIR:-/tmp}/libscript_srr_excl.XXXXXX")
+    if command -v git >/dev/null 2>&1 && git -C "$_srr_src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      git -C "$_srr_src" ls-files --others -i --exclude-standard --directory 2>/dev/null | sed "s|^|/|" > "$_srr_excl_file" || true
+      _srr_gi_arg="--exclude-from=${_srr_excl_file}"
+    else
+      _srr_gi_arg="--filter=:- .gitignore"
+    fi
     if rsync -avz --delete \
       --filter='P cache' \
       --filter='P build' \
@@ -365,7 +459,7 @@ libscript_sync_runtime_to_remote() {
       --filter='P logs' \
       --filter='P tmp' \
       --filter='P tests_tmp' \
-      --filter=':- .gitignore' \
+      "$_srr_gi_arg" \
       --exclude='.git' \
       --exclude='cache' \
       --exclude='build' \
@@ -389,15 +483,18 @@ libscript_sync_runtime_to_remote() {
       --exclude='.DS_Store' \
       -e "ssh ${_srr_ssh_opts}" \
       "${_srr_src}/" "${_srr_target}:${_srr_rsync_dest}"; then
+      rm -f "$_srr_excl_file"
+      printf '%s\n' "$_srr_cur_hash" > "$_srr_hash_file" 2>/dev/null || true
       return 0
     fi
+    rm -f "$_srr_excl_file"
   fi
 
   if command -v tar >/dev/null 2>&1; then
     # shellcheck disable=SC2029,SC2086
     ssh $_srr_ssh_opts "$_srr_target" "find ${_srr_dest} -mindepth 1 \\( -name cache -o -name build -o -name cmake-build-debug -o -name cmake-build-release -o -name 'cmake-build-*' -o -name target -o -name node_modules -o -name .venv -o -name venv -o -name logs -o -name tmp -o -name tests_tmp \\) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; find ${_srr_dest} -mindepth 1 -depth \\( -name cache -o -name build -o -name cmake-build-debug -o -name cmake-build-release -o -name 'cmake-build-*' -o -name target -o -name node_modules -o -name .venv -o -name venv -o -name logs -o -name tmp -o -name tests_tmp \\) -prune -o -type d -empty -exec rmdir {} + 2>/dev/null || true"
     # shellcheck disable=SC2029,SC2086
-    tar -czf - \
+    if tar -czf - \
       --exclude='.git' \
       --exclude='cache' \
       --exclude='build' \
@@ -419,12 +516,19 @@ libscript_sync_runtime_to_remote() {
       --exclude='*.vmdk' \
       --exclude='*.msi' \
       --exclude='.DS_Store' \
-      -C "$_srr_src" . | ssh $_srr_ssh_opts "$_srr_target" "tar -xzf - -C ${_srr_dest}"
-    return $?
+      -C "$_srr_src" . | ssh $_srr_ssh_opts "$_srr_target" "tar -xzf - -C ${_srr_dest}"; then
+      printf '%s\n' "$_srr_cur_hash" > "$_srr_hash_file" 2>/dev/null || true
+      return 0
+    fi
+    return 1
   fi
 
   # shellcheck disable=SC2086
-  scp $_srr_ssh_opts -r "${_srr_src}/"* "${_srr_target}:${_srr_rsync_dest}"
+  if scp $_srr_ssh_opts -r "${_srr_src}/"* "${_srr_target}:${_srr_rsync_dest}"; then
+    printf '%s\n' "$_srr_cur_hash" > "$_srr_hash_file" 2>/dev/null || true
+    return 0
+  fi
+  return 1
 }
 
 # ## libscript_scp_to_remote

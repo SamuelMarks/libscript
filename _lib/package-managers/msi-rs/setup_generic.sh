@@ -78,6 +78,7 @@ ensure_c_toolchain() {
 # ## ensure_rust_toolchain
 # Verifies presence of cargo and rustc or installs the Rust toolchain via libscript languages/rust.
 ensure_rust_toolchain() {
+  # shellcheck disable=SC1090,SC1091
   [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
   [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
   [ -d "/opt/ooce/bin" ] && export PATH="/opt/ooce/bin:${PATH}"
@@ -87,11 +88,13 @@ ensure_rust_toolchain() {
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" install rust latest || true
+      # shellcheck disable=SC1090,SC1091
       [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
       [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
     elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rustup/setup.sh" ]; then
       unset SCRIPT_NAME || true
       ACTION="install" sh "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rustup/setup.sh" install rustup latest || true
+      # shellcheck disable=SC1090,SC1091
       [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
       [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
     elif type libscript_depends >/dev/null 2>&1; then
@@ -169,16 +172,18 @@ case "$ACTION" in
     exit 0
     ;;
   download)
-    if [ "$MSI_RS_INSTALL_METHOD" = "libscript_native" ]; then
+    if [ "$MSI_RS_INSTALL_METHOD" = "libscript_native" ] || [ "$MSI_RS_INSTALL_METHOD" = "from-source" ]; then
       resolve_exact_version
       target_cache_dir="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/msi-rs"
       log_info "Downloading msi-rs ${VERSION} artifacts to ${target_cache_dir}..."
       mkdir -p "${target_cache_dir}"
       if [ -n "${MSI_RS_DOWNLOAD_URL:-}" ]; then
         libscript_download "${MSI_RS_DOWNLOAD_URL}" "${target_cache_dir}/msi-rs-${EXACT_VERSION}.tar.gz"
-      else
+      elif [ "$MSI_RS_INSTALL_METHOD" = "from-source" ]; then
         archive_url="${REPO_URL}/archive/refs/tags/${EXACT_VERSION}.tar.gz"
         libscript_download "${archive_url}" "${target_cache_dir}/msi-rs-${EXACT_VERSION}.tar.gz" || true
+      else
+        log_info 'Skipping source tarball download under libscript_native (set MSI_RS_INSTALL_METHOD=from-source for source archive).'
       fi
     fi
     exit 0
@@ -187,7 +192,7 @@ case "$ACTION" in
     if [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'msi-rs' || true
     else
-      # libscript_native implementation
+      # libscript_native or from-source implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${EXACT_VERSION}"
       
@@ -199,7 +204,7 @@ case "$ACTION" in
         exit 0
       fi
 
-      log_info "Installing msi-rs ${VERSION} natively to ${TARGET_DIR}..."
+      log_info "Installing msi-rs ${VERSION} (${MSI_RS_INSTALL_METHOD}) to ${TARGET_DIR}..."
       mkdir -p "${TARGET_DIR}/bin"
 
       os_name="${UNAME_LOWER:-linux}"
@@ -243,7 +248,7 @@ case "$ACTION" in
         fi
       fi
 
-      if [ -n "$target_tuple" ]; then
+      if [ "$MSI_RS_INSTALL_METHOD" != "from-source" ] && [ -n "$target_tuple" ]; then
         asset_name="msi-tools-${EXACT_VERSION}-${target_tuple}.tar.gz"
         release_url="${REPO_URL}/releases/download/${EXACT_VERSION}/${asset_name}"
         log_info "Downloading pre-compiled binary release: ${release_url}"
@@ -279,9 +284,24 @@ case "$ACTION" in
           libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
           log_info "msi-rs ${EXACT_VERSION} installed successfully from binary."
           exit 0
-        else
-          log_warn 'Binary download failed. Falling back to source build...'
         fi
+      fi
+
+      if [ "$MSI_RS_INSTALL_METHOD" != "from-source" ] && [ -n "${MSI_RS_DOWNLOAD_URL:-}" ]; then
+        log_info "Fetching prebuilt binary release from ${MSI_RS_DOWNLOAD_URL}..."
+        tmp_archive=$(mktemp)
+        libscript_download "${MSI_RS_DOWNLOAD_URL}" "${tmp_archive}"
+        tar -xzf "${tmp_archive}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q "${tmp_archive}" -d "${TARGET_DIR}" || true
+        rm -f "${tmp_archive}"
+        libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"
+        libscript_symlink_alias "msi-rs" "default" "${EXACT_VERSION}"
+        exit 0
+      fi
+
+      if [ "$MSI_RS_INSTALL_METHOD" != "from-source" ]; then
+        log_info 'Prebuilt binary not available; attempting system package manager (set MSI_RS_INSTALL_METHOD=from-source to compile from source)...'
+        libscript_depends 'msi-rs' || true
+        exit 0
       fi
 
       ensure_c_toolchain

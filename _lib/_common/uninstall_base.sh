@@ -34,16 +34,19 @@ export LIBSCRIPT_ROOT_DIR
 # Source common OS info
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # Source package manager utilities
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 # Source path resolution
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'
 export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 resolve_component_paths
 
@@ -52,11 +55,13 @@ OS_UNINSTALL_SCRIPT="${DIR}"'/uninstall_'"${TARGET_OS}"'.sh'
 if [ -f "${OS_UNINSTALL_SCRIPT}" ]; then
   SCRIPT_NAME="${OS_UNINSTALL_SCRIPT}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 else
   # Generic uninstall logic often just removes directories or package manager packages
   SCRIPT_NAME="${DIR}"'/uninstall_generic.sh'
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   [ -f "${SCRIPT_NAME}" ] && . "${SCRIPT_NAME}"
 fi
 

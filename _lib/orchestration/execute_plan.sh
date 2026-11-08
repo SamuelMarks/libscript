@@ -99,9 +99,10 @@ while [ "$STAGE_IDX" -lt "$TOTAL_STAGES" ]; do
         if [ -f "$EXEC_SCRIPT" ]; then
           # Extract environment variables from task definition
           ENV_JSON=$(jq -c ".stages[$STAGE_IDX].tasks[$TASK_IDX].env // {}" "$PLAN_FILE")
+          export ENV_JSON
           # Run task script with sysroot context
-          LIBSCRIPT_TARGET_SYSROOT="$TARGET_SYSROOT" 
-            LIBSCRIPT_STAGE="$STAGE_NAME" 
+          LIBSCRIPT_TARGET_SYSROOT="$TARGET_SYSROOT" \
+            LIBSCRIPT_STAGE="$STAGE_NAME" \
             sh "$EXEC_SCRIPT" "$TASK_ACTION"
         else
           printf '[INFO]  No leaf script %s; registering step completion\n' "$EXEC_SCRIPT"

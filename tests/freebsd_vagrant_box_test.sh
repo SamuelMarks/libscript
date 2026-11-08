@@ -32,6 +32,7 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 BOX_PATH="${1:-${REPO_ROOT}/build/freebsd.box}"
 PROVIDER="${2:-qemu}"
+export PROVIDER
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/freebsd_vagrant_box_test.log"

@@ -65,45 +65,53 @@ if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
   fi
 fi
 
-if [ -d '/etc/systemd/system' ]; then
+CELERY_SYSTEMD_DIR="${LIBSCRIPT_SYSTEMD_DIR:-/etc/systemd/system}"
+CELERY_HOME_BASE="${LIBSCRIPT_HOME_BASE:-/home}"
+CELERY_RUN_DIR="${CELERY_RUN_DIR:-${LIBSCRIPT_RUN_DIR:-/var/run}/celery}"
+CELERY_LOG_DIR="${CELERY_LOG_DIR:-${LIBSCRIPT_LOG_DIR:-/var/log}/celery}"
+CELERY_ETC_DIR="${LIBSCRIPT_ETC_DIR:-/etc}"
+CELERY_TMP_DIR="${TMPDIR:-/tmp}"
+
+if [ -d "${CELERY_SYSTEMD_DIR}" ]; then
   CELERY_SERVICE_USER="${CELERY_SERVICE_USER:-celery}"
+  CELERY_USER_HOME="${CELERY_USER_HOME:-${CELERY_HOME_BASE}/${CELERY_SERVICE_USER}}"
   if ! id "${CELERY_SERVICE_USER}" >/dev/null 2>&1; then
     if command -v pw >/dev/null 2>&1; then
-      priv pw useradd "${CELERY_SERVICE_USER}" -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -s /bin/sh || true
+      priv pw useradd "${CELERY_SERVICE_USER}" -m -d "${CELERY_USER_HOME}/" -s /bin/sh || true
     elif command -v useradd >/dev/null 2>&1; then
-      priv useradd -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -c '' "${CELERY_SERVICE_USER}" || true
+      priv useradd -m -d "${CELERY_USER_HOME}/" -c '' "${CELERY_SERVICE_USER}" || true
     else
-      priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}" || true
+      priv adduser --disabled-password --gecos '' --home "${CELERY_USER_HOME}/" "${CELERY_SERVICE_USER}" || true
     fi
   else
     if command -v usermod >/dev/null 2>&1; then
-      priv usermod -d '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}" 2>/dev/null || true
+      priv usermod -d "${CELERY_USER_HOME}/" "${CELERY_SERVICE_USER}" 2>/dev/null || true
     fi
-    priv mkdir -p '/home/'"${CELERY_SERVICE_USER}"'/'
-    priv chown "${CELERY_SERVICE_USER}" '/home/'"${CELERY_SERVICE_USER}"'/' 2>/dev/null || true
+    priv mkdir -p "${CELERY_USER_HOME}/"
+    priv chown "${CELERY_SERVICE_USER}" "${CELERY_USER_HOME}/" 2>/dev/null || true
   fi
-  priv mkdir -p -- '/var/run/celery' '/var/log/celery'
+  priv mkdir -p -- "${CELERY_RUN_DIR}" "${CELERY_LOG_DIR}"
   if [ "${UNAME:-}" = "Darwin" ]; then
-    priv chown -R -- "${CELERY_SERVICE_USER}" '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
+    priv chown -R -- "${CELERY_SERVICE_USER}" "${CELERY_RUN_DIR}" "${CELERY_LOG_DIR}" "${PYTHON_VENV}"
   else
-    priv chown -R -- "${CELERY_SERVICE_USER}":"${CELERY_SERVICE_USER}" '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
+    priv chown -R -- "${CELERY_SERVICE_USER}":"${CELERY_SERVICE_USER}" "${CELERY_RUN_DIR}" "${CELERY_LOG_DIR}" "${PYTHON_VENV}"
   fi
 
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
-  service='/etc/systemd/system/'"${service_name}"'.service'
-  envsubst_safe < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
+  service="${CELERY_SYSTEMD_DIR}/${service_name}.service"
+  envsubst_safe < "${DIR}"'/conf/systemd/celery.service' > "${CELERY_TMP_DIR}/${service_name}"
 
-  priv  install -m 0644 -- '/tmp/'"${service_name}" "${service}"
-  priv mkdir -p /etc/conf.d
-  priv install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/"${service_name}"
+  priv  install -m 0644 -- "${CELERY_TMP_DIR}/${service_name}" "${service}"
+  priv mkdir -p "${CELERY_ETC_DIR}/conf.d"
+  priv install -D -m 0644 -- "${DIR}"'/conf/celery_env' "${CELERY_ETC_DIR}/conf.d/${service_name}"
   libscript_service daemon-reload "${service_name}" || true
   libscript_service reload-or-restart "${service_name}" || true
-elif [ -d '/etc/init.d' ]; then
+elif [ -d "${LIBSCRIPT_INITD_DIR:-/etc/init.d}" ]; then
   # OpenRC / SysVinit
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   log_info "Registering init.d service for ${service_name}..."
   libscript_service restart "${service_name}" 2>/dev/null || true
-elif [ -d '/usr/local/etc/rc.d' ]; then
+elif [ -d "${LIBSCRIPT_FREEBSD_RCD_DIR:-/usr/local/etc/rc.d}" ]; then
   # FreeBSD
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   log_info "Configuring FreeBSD rc.d service for ${service_name}..."

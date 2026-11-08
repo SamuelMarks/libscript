@@ -109,12 +109,14 @@ if not errorlevel 1 (
     vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as apk _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk build/openedx-setup.apk"
     goto step1
 )
+if "%REMOTE_TMPDIR%"=="" set "REMOTE_TMPDIR=/tmp"
+if "%REMOTE_OPT_LIBSCRIPT%"=="" set "REMOTE_OPT_LIBSCRIPT=/opt/libscript"
 echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
     echo [INFO] Building package archive for OmniOS inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
     vagrant rsync || rem
-    vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf /tmp/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib || tar -czf /tmp/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib; }"
+    vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib || tar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib; }"
     goto step1
 )
 echo !TARGET_OS! | findstr /b /i "windows" >nul
@@ -190,7 +192,7 @@ if not errorlevel 1 (
 )
 echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
-    vagrant ssh -c "sudo mkdir -p /opt/libscript && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf /tmp/openedx-setup.tar.gz -C /opt/libscript || sudo tar -xzf /tmp/openedx-setup.tar.gz -C /opt/libscript; } && sudo /opt/libscript/libscript.sh install-service _lib/web-apps/openedx"
+    vagrant ssh -c "sudo mkdir -p !REMOTE_OPT_LIBSCRIPT! && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT! || sudo tar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT!; } && sudo !REMOTE_OPT_LIBSCRIPT!/libscript.sh install-service _lib/web-apps/openedx"
     goto verify
 )
 echo !TARGET_OS! | findstr /b /i "windows" >nul

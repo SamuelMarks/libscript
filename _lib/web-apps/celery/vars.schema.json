@@ -84,6 +84,18 @@
     "LIBSCRIPT_SERVICE_NAME": {
       "type": "string",
       "description": "Overrides the default service name."
+    },
+    "CELERY_LOG_DIR": {
+      "type": "string",
+      "description": "Directory for Celery worker and beat log files."
+    },
+    "CELERY_RUN_DIR": {
+      "type": "string",
+      "description": "Runtime directory for Celery PID and state files."
+    },
+    "CELERY_USER_HOME": {
+      "type": "string",
+      "description": "Home directory for the Celery service user."
     }
   }
 }

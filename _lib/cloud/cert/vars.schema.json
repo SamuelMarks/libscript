@@ -9,6 +9,15 @@
     "LIBSCRIPT_DOMAIN": {
       "type": "string",
       "description": "The domain name for the certificate."
+    },
+    "CERT_STORE_DIR": {
+      "type": "string",
+      "description": "Persistent read-only directory on attached storage for storing Let's Encrypt certificates.",
+      "default": "/mnt/data/certs"
+    },
+    "LETSENCRYPT_EMAIL": {
+      "type": "string",
+      "description": "Contact email address for Let's Encrypt ACME registration."
     }
   },
   "title": "Cloud Certificate variables",

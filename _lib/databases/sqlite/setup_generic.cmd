@@ -106,14 +106,23 @@ exit /b 0
 :: Downloads the SQLite amalgamation or prebuilt archive into the local offline cache.
 :action_download
 if not exist "%DOWNLOAD_DIR%\sqlite" mkdir "%DOWNLOAD_DIR%\sqlite"
-set "_dl_url=%SQLITE_AMALGAMATION_URL%"
-if "!_dl_url!"=="" set "_dl_url=https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip"
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_dl_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-amalgamation-3460100.zip"
+if /i "%SQLITE_INSTALL_METHOD%"=="from-source" (
+    set "_dl_url=%SQLITE_AMALGAMATION_URL%"
+    if "!_dl_url!"=="" set "_dl_url=https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_dl_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-amalgamation-3460100.zip"
+    exit /b !errorlevel!
+)
+set "_dl_url=%SQLITE_DOWNLOAD_URL%"
+if "!_dl_url!"=="" set "_dl_url=https://www.sqlite.org/2024/sqlite-tools-win-x64-3460100.zip"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_dl_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-tools-%EXACT_VERSION%.zip"
 exit /b !errorlevel!
 
 :: ## action_install
 :: Routes SQLite installation to Mode 1 (package manager), Mode 2/3 (from-source amalgamation), or prebuilt binary.
 :action_install
+if not "%SQLITE_BUILD_TOOLCHAIN%"=="" if /i not "%SQLITE_BUILD_TOOLCHAIN%"=="default" goto :build_sqlite_from_source
+if not "%SQLITE_COMPILER%"=="" if /i not "%SQLITE_COMPILER%"=="default" goto :build_sqlite_from_source
+if not "%LIBSCRIPT_BUILD_TOOLCHAIN%"=="" if /i not "%LIBSCRIPT_BUILD_TOOLCHAIN%"=="default" goto :build_sqlite_from_source
 if /i "%SQLITE_INSTALL_METHOD%"=="from-source" goto :build_sqlite_from_source
 if /i "%SQLITE_INSTALL_METHOD%"=="system" goto :install_sqlite_via_pkg_mgr
 if /i "%SQLITE_INSTALL_METHOD%"=="winget" goto :install_sqlite_via_pkg_mgr
