@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 set "DIR=!SCRIPT_DIR!"
 
-call libscript_depends openssl
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends openssl
 
 set CA_CONF=%DIR%\\kubernetes-the-hard-way\ca.conf
 if not exist "%CA_CONF%" (

@@ -40,7 +40,7 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 THIS_FILE="$_noop_caller_this"
 SCRIPT_DIR="$_noop_caller_dir"
-unset _noop_caller_this _noop_caller_dir || true
+unset SCRIPT_NAME _noop_caller_this _noop_caller_dir || true
 
 # No env vars
 STACK="${STACK%"${THIS_FILE}":}"

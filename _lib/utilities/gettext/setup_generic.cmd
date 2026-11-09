@@ -118,6 +118,10 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of gettext on Windows.
 :action_install
+if /i "%GETTEXT_INSTALL_METHOD%"=="from-source" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "gettext" "%GETTEXT_VERSION%" "msgfmt" "c"
+    exit /b !errorlevel!
+)
 set "EXACT_VERSION=%GETTEXT_VERSION%"
 if "%EXACT_VERSION%"=="latest" set "EXACT_VERSION=0.22.5"
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gettext\%EXACT_VERSION%"

@@ -50,9 +50,10 @@ goto :find_root
 :root_found
 set "DIR=!SCRIPT_DIR!"
 
-call libscript_depends wget curl vim openssl git tar
-if not exist "%DIR%\\kubernetes-the-hard-way" (
-  git clone --depth 1 https://github.com/kelseyhightower/%DIR%\\kubernetes-the-hard-way.git
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends wget curl vim openssl git tar
+if not exist "%DIR%\kubernetes-the-hard-way\.git" (
+  if exist "%DIR%\kubernetes-the-hard-way" rmdir /s /q "%DIR%\kubernetes-the-hard-way" >nul 2>&1
+  git clone --depth 1 https://github.com/kelseyhightower/kubernetes-the-hard-way.git "%DIR%\kubernetes-the-hard-way"
 )
 cd %DIR%\\kubernetes-the-hard-way
 if not exist downloads mkdir downloads

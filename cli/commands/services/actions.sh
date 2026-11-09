@@ -27,7 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-
+unset SCRIPT_NAME || true
 if [ "$CMD" = "deprovision-db" ]; then
   json_file="${1:-libscript.json}"
   exec "${LIBSCRIPT_ROOT_DIR:-.}/_lib/databases/deprovision_db.sh" "$json_file"

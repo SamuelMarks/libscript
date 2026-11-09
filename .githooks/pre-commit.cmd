@@ -49,6 +49,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+cd /d "%LIBSCRIPT_ROOT_DIR%"
 
 if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
     set "STACK="

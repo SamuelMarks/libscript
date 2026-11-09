@@ -20,7 +20,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_setup_base_caller_this" ] && THIS_FILE="$_setup_base_caller_this"
     [ -n "$_setup_base_caller_dir" ] && SCRIPT_DIR="$_setup_base_caller_dir"
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -99,6 +99,9 @@ if [ -f "${ENV_SCRIPT}" ]; then
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  STACK="${STACK%"${ENV_SCRIPT}":}"
+  export STACK
   THIS_FILE="${_setup_base_this}"
   DIR="${_setup_base_dir}"
   SCRIPT_DIR="${_setup_base_dir}"
@@ -112,21 +115,20 @@ fi
 export STACK
 OS_SETUP_SCRIPT="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
 if [ "${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-${LIBSCRIPT_INSTALL_METHOD:-}}" = "from-source" ] && [ -f "${DIR}/setup_generic.sh" ]; then
-  SCRIPT_NAME="${DIR}"'/setup_generic.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
+  _delegated_setup="${DIR}"'/setup_generic.sh'
 elif [ -f "${OS_SETUP_SCRIPT}" ]; then
-  SCRIPT_NAME="${OS_SETUP_SCRIPT}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
+  _delegated_setup="${OS_SETUP_SCRIPT}"
 else
-  SCRIPT_NAME="${DIR}"'/setup_generic.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
+  _delegated_setup="${DIR}"'/setup_generic.sh'
 fi
+SCRIPT_NAME="${_delegated_setup}"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+STACK="${STACK%"${_delegated_setup}":}"
+export STACK
+unset _delegated_setup || true
 THIS_FILE="${_setup_base_this}"
 DIR="${_setup_base_dir}"
 SCRIPT_DIR="${_setup_base_dir}"
@@ -164,4 +166,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_setup_base_caller_dir:-}" ] && SCRIPT_DIR="$_setup_base_caller_dir"
 [ -n "${_setup_base_caller_this:-}" ] && THIS_FILE="$_setup_base_caller_this"
-unset _setup_base_caller_this _setup_base_caller_dir || true
+unset SCRIPT_NAME _setup_base_caller_this _setup_base_caller_dir || true

@@ -128,4 +128,4 @@ fi
 if [ -n "$_eb_caller_this" ]; then
   THIS_FILE="$_eb_caller_this"
 fi
-unset _eb_caller_this _eb_caller_dir || true
+unset SCRIPT_NAME _eb_caller_this _eb_caller_dir || true

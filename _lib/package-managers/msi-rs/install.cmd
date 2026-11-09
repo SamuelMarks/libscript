@@ -273,7 +273,10 @@ if exist "%CACHE_ZIP%" (
     del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
 ) else (
     echo Cloning source repository from %MSI_RS_REPO_URL%...
-    git clone "%MSI_RS_REPO_URL%" "%BUILD_DIR%"
+    if not exist "%BUILD_DIR%\.git" (
+        if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%" >nul 2>&1
+        git clone "%MSI_RS_REPO_URL%" "%BUILD_DIR%"
+    )
     cd /d "%BUILD_DIR%"
     git checkout %EXACT_VERSION%
     cd /d "%BUILD_DIR%"

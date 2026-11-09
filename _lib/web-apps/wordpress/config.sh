@@ -94,7 +94,7 @@ case "$CMD" in
     cat << 'EOF_HEADER'
 === WordPress 7.1.2 wp-config.php Constants ===
 EOF_HEADER
-    grep "define( *'" "$WP_CONFIG" 2>/dev/null | grep -v 'KEY\|SALT' | sed -E "s/define\( *'([^']*)' *, *'([^']*)'.*/\1 = \2/" || true
+    grep "define( *'" "$WP_CONFIG" 2>/dev/null | grep -Ev 'KEY|SALT' | sed -E "s/define\( *'([^']*)' *, *'([^']*)'.*/\1 = \2/" || true
     ;;
   help|--help|-h)
     cat << 'EOF_HELP'

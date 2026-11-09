@@ -113,37 +113,39 @@ case "$ACTION" in
         OPENBAO_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    if [ "${EXACT_VERSION}" = "latest" ]; then
-       EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/openbao/openbao/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
-       [ -z "$EXACT_VERSION" ] && EXACT_VERSION="2.1.0"
-    fi
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/openbao/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing openbao ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if [ "${UNAME:-}" = "FreeBSD" ]; then
-        libscript_depends 'openbao'
-        if command -v bao >/dev/null 2>&1; then
-          ln -sf "$(command -v bao)" "${TARGET_DIR}/bin/bao"
+    if [ "$OPENBAO_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      if [ "${EXACT_VERSION}" = "latest" ]; then
+         EXACT_VERSION=$(libscript_fetch_stdout "https://api.github.com/repos/openbao/openbao/releases/latest" | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+         [ -z "$EXACT_VERSION" ] && EXACT_VERSION="2.1.0"
+      fi
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/openbao/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing openbao ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if [ "${UNAME:-}" = "FreeBSD" ]; then
+          libscript_depends 'openbao'
+          if command -v bao >/dev/null 2>&1; then
+            ln -sf "$(command -v bao)" "${TARGET_DIR}/bin/bao"
+          fi
+        else
+          OS="${UNAME_LOWER:-linux}"
+          if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
+          URL="https://github.com/openbao/openbao/releases/download/v${EXACT_VERSION}/openbao_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends 'curl'
+          libscript_depends 'tar'
+          libscript_download "$URL" "$TEMP_FILE.tar.gz"
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "bao" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/bao"
+          chmod +x "${TARGET_DIR}/bin/bao"
+          rm -f "$TEMP_FILE.tar.gz"
         fi
       else
-        OS="${UNAME_LOWER:-linux}"
-        if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
-        URL="https://github.com/openbao/openbao/releases/download/v${EXACT_VERSION}/openbao_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
-        TEMP_FILE=$(mktemp)
-        libscript_depends 'curl'
-        libscript_depends 'tar'
-        libscript_download "$URL" "$TEMP_FILE.tar.gz"
-        tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "bao" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/bao"
-        chmod +x "${TARGET_DIR}/bin/bao"
-        rm -f "$TEMP_FILE.tar.gz"
+        log_info "openbao ${VERSION} is already installed."
       fi
-    else
-      log_info "openbao ${VERSION} is already installed."
+      libscript_symlink_alias "openbao" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "openbao" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "openbao" "$ACTION" "$VERSION" "${OPENBAO_INSTALL_METHOD}" "" "" "" "$@"

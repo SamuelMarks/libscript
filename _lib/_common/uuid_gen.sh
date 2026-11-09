@@ -22,7 +22,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_uuid_gen_caller_this" ] && THIS_FILE="$_uuid_gen_caller_this"
     [ -n "$_uuid_gen_caller_dir" ] && SCRIPT_DIR="$_uuid_gen_caller_dir"
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -103,5 +103,5 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_uuid_gen_caller_dir:-}" ] && SCRIPT_DIR="$_uuid_gen_caller_dir"
 [ -n "${_uuid_gen_caller_this:-}" ] && THIS_FILE="$_uuid_gen_caller_this"
-unset _uuid_gen_caller_this _uuid_gen_caller_dir || true
+unset SCRIPT_NAME _uuid_gen_caller_this _uuid_gen_caller_dir || true
 generate_uuid_v5 "${NAMESPACE}" "${SEED_NAME}"

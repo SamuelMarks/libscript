@@ -96,42 +96,43 @@ case "$ACTION" in
       fi
     fi
 
-    # libscript_native implementation
-    resolve_exact_version
-    libscript_depends 'python'
-    
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing vllm ${VERSION} to ${TARGET_DIR}..."
-      if ! type libscript_python_venv >/dev/null 2>&1; then
-        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-        export SCRIPT_NAME
-        # shellcheck disable=SC1090,SC1091
-        . "${SCRIPT_NAME}"
-        unset SCRIPT_NAME || true
-        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
-        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
-      fi
-      libscript_python_venv "${TARGET_DIR}"
+    if [ "$VLLM_INSTALL_METHOD" = "libscript_native" ] || [ "$VLLM_INSTALL_METHOD" = "from-source" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      libscript_depends 'python'
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vllm/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing vllm ${VERSION} to ${TARGET_DIR}..."
+        if ! type libscript_python_venv >/dev/null 2>&1; then
+          _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090,SC1091
+          . "${SCRIPT_NAME}"
+          unset SCRIPT_NAME || true
+          [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+          [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+        fi
+        libscript_python_venv "${TARGET_DIR}"
 
-      PIP_EXTRA_ARGS=""
-      if [ "$UNAME_LOWER" = "linux" ]; then
-        PIP_EXTRA_ARGS="--extra-index-url https://download.pytorch.org/whl/cpu"
-      fi
+        PIP_EXTRA_ARGS=""
+        if [ "$UNAME_LOWER" = "linux" ]; then
+          PIP_EXTRA_ARGS="--extra-index-url https://download.pytorch.org/whl/cpu"
+        fi
 
-      _vllm_tmp="${VLLM_BUILD_TMPDIR:-${TMPDIR:-/var/tmp}}"
-      if [ "$EXACT_VERSION" = "latest" ]; then
-        # shellcheck disable=SC2086
-        TMPDIR="$_vllm_tmp" "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
-      else
-        # shellcheck disable=SC2086
-        TMPDIR="$_vllm_tmp" "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
-      fi
+        _vllm_tmp="${VLLM_BUILD_TMPDIR:-${TMPDIR:-/var/tmp}}"
+        if [ "$EXACT_VERSION" = "latest" ]; then
+          # shellcheck disable=SC2086
+          TMPDIR="$_vllm_tmp" "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
+        else
+          # shellcheck disable=SC2086
+          TMPDIR="$_vllm_tmp" "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
+        fi
 
-      # Ensure vllm executable wrapper exists if pip failed to generate console script
-      if [ ! -s "${TARGET_DIR}/bin/vllm" ]; then
-        cat <<'EOF' > "${TARGET_DIR}/bin/vllm"
+        # Ensure vllm executable wrapper exists if pip failed to generate console script
+        if [ ! -s "${TARGET_DIR}/bin/vllm" ]; then
+          cat <<'EOF' > "${TARGET_DIR}/bin/vllm"
 #!/bin/sh
 # ## Overview
 # Executable wrapper for vllm.
@@ -155,45 +156,47 @@ VENV_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")/.." && pwd)
 export VLLM_TARGET_DEVICE="${VLLM_TARGET_DEVICE:-cpu}"
 exec "${VENV_DIR}/bin/python3" -m vllm.entrypoints.cli.main "$@"
 EOF
-        chmod +x "${TARGET_DIR}/bin/vllm"
-      fi
-      
-      if [ "${PIP_FAILED:-0}" = "1" ]; then
-        log_error 'Failed to install vllm via pip.'
-        if [ "$VLLM_INSTALL_METHOD" = "from-source" ]; then
-          log_warn 'Falling back to building vllm from source (VLLM_INSTALL_METHOD=from-source)...'
-          
-          # Install build dependencies
-          libscript_depends 'git' 'c' 'cmake' 'ninja' 'python' || true
-          
-          # Create a temporary directory for the source
-          VLLM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/vllm-src"
-          if [ ! -d "${VLLM_SRC_DIR}/.git" ]; then
-              git clone "https://github.com/vllm-project/vllm.git" "${VLLM_SRC_DIR}"
-          else
-              log_info 'vLLM source already present, pulling latest...'
-              (cd "${VLLM_SRC_DIR}" && git fetch --all && git reset --hard '@{upstream}')
-          fi
-          
-          # Build and install
-          (
-            cd "${VLLM_SRC_DIR}"
-            if [ "$EXACT_VERSION" != "latest" ]; then
-              git checkout "v${EXACT_VERSION}" || git checkout "${EXACT_VERSION}"
-            fi
-            "${TARGET_DIR}/bin/pip" install -e .
-          ) || {
-            log_error 'Failed to build vllm from source.'
-            exit 1
-          }
-        else
-          exit 1
+          chmod +x "${TARGET_DIR}/bin/vllm"
         fi
+        
+        if [ "${PIP_FAILED:-0}" = "1" ]; then
+          log_error 'Failed to install vllm via pip.'
+          if [ "$VLLM_INSTALL_METHOD" = "from-source" ]; then
+            log_warn 'Falling back to building vllm from source (VLLM_INSTALL_METHOD=from-source)...'
+            
+            # Install build dependencies
+            libscript_depends 'git' 'c' 'cmake' 'ninja' 'python' || true
+            
+            # Create a temporary directory for the source
+            VLLM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/vllm-src"
+            if [ ! -d "${VLLM_SRC_DIR}/.git" ]; then
+                rm -rf "${VLLM_SRC_DIR}"
+                git clone "https://github.com/vllm-project/vllm.git" "${VLLM_SRC_DIR}"
+            else
+                log_info 'vLLM source already present, pulling latest...'
+                (cd "${VLLM_SRC_DIR}" && git fetch --all && git reset --hard '@{upstream}')
+            fi
+            
+            # Build and install
+            (
+              cd "${VLLM_SRC_DIR}"
+              if [ "$EXACT_VERSION" != "latest" ]; then
+                git checkout "v${EXACT_VERSION}" || git checkout "${EXACT_VERSION}"
+              fi
+              "${TARGET_DIR}/bin/pip" install -e .
+            ) || {
+              log_error 'Failed to build vllm from source.'
+              exit 1
+            }
+          else
+            exit 1
+          fi
+        fi
+      else
+        log_info "vllm ${VERSION} is already installed."
       fi
-    else
-      log_info "vllm ${VERSION} is already installed."
+      libscript_symlink_alias "vllm" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "vllm" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "vllm" "$ACTION" "$VERSION" "${VLLM_INSTALL_METHOD}" "" "" "" "$@"

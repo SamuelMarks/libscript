@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Hardware-aware optimization module (`hw_tune.sh`).
-# Automatically detects host CPU cores (`LIBSCRIPT_HW_CORES`), total RAM in MiB
-# (`LIBSCRIPT_HW_MEM_MB`), and calculates optimal tuning parameters for databases
-# (PostgreSQL `shared_buffers`, `effective_cache_size`, `maintenance_work_mem`, `work_mem`),
-# caches (Redis/Valkey `maxmemory`), and web servers (Nginx `worker_processes`, `worker_connections`).
+# Hardware-aware optimization module (`hw_tune.sh`). Detects host CPU cores, RAM, and calculates optimal daemon tuning parameters.
 # ## Usage
 # Source this file and call `libscript_detect_hardware` or `libscript_apply_hardware_tuning <component>`.
 set -feu
@@ -22,7 +18,9 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "${_hw_tune_caller_this:-}" ] && THIS_FILE="$_hw_tune_caller_this"
+    [ -n "${_hw_tune_caller_dir:-}" ] && SCRIPT_DIR="$_hw_tune_caller_dir"
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -74,7 +72,7 @@ libscript_detect_hardware() {
       _simd='avx512'
     elif grep -q "avx2" /proc/cpuinfo 2>/dev/null; then
       _simd='avx2'
-    elif grep -q "asimd\|neon" /proc/cpuinfo 2>/dev/null; then
+    elif grep -Eq "asimd|neon" /proc/cpuinfo 2>/dev/null; then
       _simd='neon'
     fi
   elif command -v sysctl >/dev/null 2>&1; then
@@ -187,4 +185,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_hw_tune_caller_dir:-}" ] && SCRIPT_DIR="$_hw_tune_caller_dir"
 [ -n "${_hw_tune_caller_this:-}" ] && THIS_FILE="$_hw_tune_caller_this"
-unset _hw_tune_caller_this _hw_tune_caller_dir || true
+unset SCRIPT_NAME _hw_tune_caller_this _hw_tune_caller_dir || true

@@ -22,7 +22,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_tags_caller_this" ] && THIS_FILE="$_tags_caller_this"
     [ -n "$_tags_caller_dir" ] && SCRIPT_DIR="$_tags_caller_dir"
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -215,4 +215,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_tags_caller_dir:-}" ] && SCRIPT_DIR="$_tags_caller_dir"
 [ -n "${_tags_caller_this:-}" ] && THIS_FILE="$_tags_caller_this"
-unset _tags_caller_this _tags_caller_dir || true
+unset SCRIPT_NAME _tags_caller_this _tags_caller_dir || true

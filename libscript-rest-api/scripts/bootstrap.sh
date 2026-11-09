@@ -159,6 +159,7 @@ VENDOR_DIR="${SCRIPT_DIR}/../vendor"
 mkdir -p "$VENDOR_DIR"
 if [ ! -d "$VENDOR_DIR/c-rest-framework/.git" ]; then
   log_info 'Cloning c-rest-framework into vendor directory...'
+  rm -rf "$VENDOR_DIR/c-rest-framework"
   git clone https://github.com/SamuelMarks/c-rest-framework "$VENDOR_DIR/c-rest-framework"
 else
   log_info 'c-rest-framework already cloned. Pulling latest...'

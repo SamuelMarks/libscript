@@ -36,6 +36,7 @@ for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
 # ## show_help
 # Displays command-line usage instructions and available options.
@@ -290,40 +291,48 @@ export STACK
 
 shift || true
 
+# ## libscript_source_cli_cmd
+# Sources a CLI command handler script while preserving THIS_FILE, SCRIPT_DIR, and SCRIPT_NAME hygiene.
+libscript_source_cli_cmd() {
+  _ls_src_this="${THIS_FILE:-}"
+  _ls_src_dir="${SCRIPT_DIR:-}"
+  unset SCRIPT_NAME || true
+  SCRIPT_NAME="$1"
+  shift
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+  [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+}
+
 # shellcheck disable=SC1091
 case "$CMD" in
-  list) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/list.sh" ;;
-  process-downloads) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" ;;
-  provision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" ;;
-  deprovision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" ;;
-  deploy) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy.sh" ;;
-  deploy-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" ;;
-  backup|export-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/backup.sh" ;;
-  restore|import-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/restore.sh" ;;
+  list) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/list.sh" "$@" ;;
+  process-downloads) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" "$@" ;;
+  provision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" "$@" ;;
+  deprovision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" "$@" ;;
+  deploy) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy.sh" "$@" ;;
+  deploy-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" "$@" ;;
+  backup|export-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/backup.sh" "$@" ;;
+  restore|import-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/restore.sh" "$@" ;;
   netctl) exec "$LIBSCRIPT_ROOT_DIR/_lib/networking/netctl/cli.sh" "$@" ;;
-  search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" ;;
-  start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;
+  search) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" "$@" ;;
+  start|stop|status|health|logs|restart|up|down|deprovision-db|export-state|import-state|prepare-storage) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" "$@" ;;
   uninstall-service)
     if [ $# -eq 0 ] || [ "${1:-}" = "libscript.json" ] || [ "${1##*.}" = "json" ] || [ "${1#--}" != "${1:-}" ]; then
-      _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-      SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090,SC1091
-      . "${SCRIPT_NAME}"
-      unset SCRIPT_NAME || true
-      [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
-      [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+      libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" "$@"
     fi
     ;;
-  install-deps) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" ;;
-  db-search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" ;;
-  update-db) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" ;;
-  semver) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" ;;
-  package-as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" ;;
+  install-deps) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" "$@" ;;
+  db-search) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" "$@" ;;
+  update-db) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" "$@" ;;
+  semver) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" "$@" ;;
+  package-as) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" "$@" ;;
   scaffold|new-component) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/scaffold/scaffold.sh" "$@" ;;
-  config) . "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" ;;
-  repogen) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" ;;
-  distro) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/distro/distro.sh" ;;
+  config) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" "$@" ;;
+  repogen) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" "$@" ;;
+  distro) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/distro/distro.sh" "$@" ;;
   payload) exec "$LIBSCRIPT_ROOT_DIR/payloads/engine.sh" "$@" ;;
   topology) exec "$LIBSCRIPT_ROOT_DIR/topologies/engine.sh" "$@" ;;
   trait) exec "$LIBSCRIPT_ROOT_DIR/traits/engine.sh" "$@" ;;

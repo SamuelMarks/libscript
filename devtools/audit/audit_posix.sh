@@ -52,7 +52,7 @@ audit_batch() {
         errs++
       }
       if (!has_this) {
-        print "[FAIL] [" prev_f "] Missing canonical THIS_FILE= resolution dance in first 65 lines"
+        print "[FAIL] [" prev_f "] Missing canonical THIS_FILE= resolution dance in first 30 lines"
         errs++
       }
       if (bad_stack_quote) {
@@ -87,6 +87,10 @@ audit_batch() {
         print "[FAIL] [" prev_f "] Non-portable `sed -i` detected; use temp file or `libscript_sed_in_place`"
         errs++
       }
+      if (has_gnu_bre) {
+        print "[FAIL] [" prev_f "] Non-POSIX GNU BRE extension (\\+, \\|, \\?) in grep without -E"
+        errs++
+      }
       if (dq_hit != "" && prev_f !~ /(audit_posix\.sh|audit_standards\.sh|\.tpl)$/) {
         print "[FAIL] [" prev_f "] Unnecessary double quotes where single quotes suffice: " dq_hit
         errs++
@@ -107,15 +111,13 @@ audit_batch() {
       first_line = $0
       has_feu = 0; has_this = 0; bad_stack_quote = 0; unreachable_stack = 0;
       has_dbl_bracket = 0; has_func_kw = 0; has_source_kw = 0; has_echo_e = 0;
-      has_sort_v = 0; has_sed_i = 0; dq_hit = ""; sc2015_hit = ""; has_unguarded_home = 0;
+      has_sort_v = 0; has_sed_i = 0; has_gnu_bre = 0; dq_hit = ""; sc2015_hit = ""; has_unguarded_home = 0;
       in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
       is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
     }
     { sub(/\r$/, "", $0) }
-    FNR <= 35 {
+    FNR <= 30 {
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /set -feu/) has_feu = 1
-    }
-    FNR <= 65 {
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /THIS_FILE=/) has_this = 1
     }
     {
@@ -143,6 +145,7 @@ audit_batch() {
       if ($0 !~ /^[[:space:]]*#/) {
         if ($0 ~ /(^|[^A-Za-z0-9_])sort[[:space:]]+-V([^A-Za-z0-9_]|$)/) has_sort_v = 1
         if ($0 ~ /(^|[^A-Za-z0-9_])sed[[:space:]]+-i/) has_sed_i = 1
+        if ($0 ~ /(^|[[:space:];|&(])grep[[:space:]]+/ && $0 !~ /grep[[:space:]]+-[a-zA-Z]*[EF]/ && $0 ~ /\\[+|?]/) has_gnu_bre = 1
         if (dq_hit == "") {
           if ($0 ~ /^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_.\/:@+-]+"[[:space:]]*$/ ||
               $0 ~ /^[[:space:]]*(log_(info|warn|error)|printf[[:space:]]+\x27%s\\n\x27|echo)[[:space:]]+"[^$`\x5c\x27"]+"([[:space:]]*>&2)?[[:space:]]*$/ ||

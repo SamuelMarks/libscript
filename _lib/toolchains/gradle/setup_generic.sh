@@ -123,66 +123,68 @@ case "$ACTION" in
         GRADLE_INSTALL_METHOD='libscript_native'
       fi
     fi
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/${EXACT_VERSION}"
-    
-    if [ -x "${TARGET_DIR}/bin/gradle" ]; then
-      libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
-      exit 0
-    fi
-
-    mkdir -p "${TARGET_DIR}/bin"
-
-    if [ "${UNAME:-}" = "FreeBSD" ]; then
-      libscript_depends 'gradle'
-      if command -v gradle >/dev/null 2>&1; then
-        ln -sf "$(command -v gradle)" "${TARGET_DIR}/bin/gradle"
+    if [ "${GRADLE_INSTALL_METHOD}" = "libscript_native" ]; then
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gradle/${EXACT_VERSION}"
+      
+      if [ -x "${TARGET_DIR}/bin/gradle" ]; then
+        libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
+        exit 0
       fi
-    elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/"*"${VERSION:-}"* >/dev/null 2>&1; then
-      log_info 'Extracting from cache...'
-      cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
-      if [ -n "$cache_file" ]; then
-        if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-          tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-        elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-          unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-        else
-          cp "$cache_file" "${TARGET_DIR}/bin/gradle" || true
-          chmod +x "${TARGET_DIR}/bin/gradle" || true
+
+      mkdir -p "${TARGET_DIR}/bin"
+
+      if [ "${UNAME:-}" = "FreeBSD" ]; then
+        libscript_depends 'gradle'
+        if command -v gradle >/dev/null 2>&1; then
+          ln -sf "$(command -v gradle)" "${TARGET_DIR}/bin/gradle"
         fi
-      fi
-    else
-      libscript_depends 'java' 'unzip' || true
-      if [ -z "${GRADLE_DOWNLOAD_URL:-}" ]; then
-        _gver='8.10.2'
-        [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _gver="${EXACT_VERSION}"
-        GRADLE_DOWNLOAD_URL="https://services.gradle.org/distributions/gradle-${_gver}-bin.zip"
-      fi
-      if [ -n "${GRADLE_DOWNLOAD_URL:-}" ]; then
-        TEMP_FILE=$(mktemp)
-        libscript_download "${GRADLE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-        if case "${GRADLE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-          tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-        elif case "${GRADLE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-          EXTRACT_DIR=$(mktemp -d)
-          unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
-          top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-          if [ -n "$top_dir" ]; then
-            cp -R "${top_dir}/." "${TARGET_DIR}/"
+      elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/"*"${VERSION:-}"* >/dev/null 2>&1; then
+        log_info 'Extracting from cache...'
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+          else
+            cp "$cache_file" "${TARGET_DIR}/bin/gradle" || true
+            chmod +x "${TARGET_DIR}/bin/gradle" || true
           fi
-          rm -rf "${EXTRACT_DIR}"
-        else
-          cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gradle" || true
-          chmod +x "${TARGET_DIR}/bin/gradle" || true
         fi
-        rm -f "${TEMP_FILE}"
       else
-        log_error "No download URL provided for gradle ${VERSION:-}."
-        exit 1
+        libscript_depends 'java' 'unzip' || true
+        if [ -z "${GRADLE_DOWNLOAD_URL:-}" ]; then
+          _gver='8.10.2'
+          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _gver="${EXACT_VERSION}"
+          GRADLE_DOWNLOAD_URL="https://services.gradle.org/distributions/gradle-${_gver}-bin.zip"
+        fi
+        if [ -n "${GRADLE_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${GRADLE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${GRADLE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${GRADLE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            EXTRACT_DIR=$(mktemp -d)
+            unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
+            top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            if [ -n "$top_dir" ]; then
+              cp -R "${top_dir}/." "${TARGET_DIR}/"
+            fi
+            rm -rf "${EXTRACT_DIR}"
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gradle" || true
+            chmod +x "${TARGET_DIR}/bin/gradle" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_error "No download URL provided for gradle ${VERSION:-}."
+          exit 1
+        fi
       fi
+      
+      libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
     fi
-    
-    libscript_symlink_alias "gradle" "${GRADLE_VERSION}" "${EXACT_VERSION}"
 
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)

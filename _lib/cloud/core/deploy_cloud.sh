@@ -211,7 +211,7 @@ log() {
 
 log "INIT" "Starting $PROVIDER deployment for $NODE in $LOC (target: $ONLY_TARGET)..."
 
-CLI="$SCRIPT_DIR/../../cloud-providers/$PROVIDER/cli.sh"
+CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
 if [ ! -f "$CLI" ]; then
   log "ERROR" "Provider $PROVIDER not supported ($CLI missing)."
   exit 1
@@ -227,7 +227,7 @@ ensure_cli() {
   fi
   if ! command -v "$cmd" >/dev/null 2>&1; then
     log "INFO" "Command '$cmd' not found. Installing '$pkg' via LibScript..."
-    "$SCRIPT_DIR/../../../libscript.sh" install "$pkg" "latest" || {
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$pkg" "latest" || {
       log "ERROR" "Failed to auto-install $pkg. Please install it manually."
       exit 1
     }

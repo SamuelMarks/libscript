@@ -96,40 +96,42 @@ case "$ACTION" in
       fi
     fi
 
-    # libscript_native implementation
-    resolve_exact_version
-    libscript_depends 'python'
-    
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/tensorboard/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing tensorboard ${VERSION} to ${TARGET_DIR}..."
-      if ! type libscript_python_venv >/dev/null 2>&1; then
-        _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
-        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
-        export SCRIPT_NAME
-        # shellcheck disable=SC1090,SC1091
-        . "${SCRIPT_NAME}"
-        unset SCRIPT_NAME || true
-        [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
-        [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
-      fi
-      libscript_python_venv "${TARGET_DIR}"
+    if [ "$TENSORBOARD_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      libscript_depends 'python'
       
-      if [ "$EXACT_VERSION" = "latest" ]; then
-        "${TARGET_DIR}/bin/pip" install --upgrade tensorboard || PIP_FAILED=1
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/tensorboard/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing tensorboard ${VERSION} to ${TARGET_DIR}..."
+        if ! type libscript_python_venv >/dev/null 2>&1; then
+          _ls_src_this="${THIS_FILE:-}"; _ls_src_dir="${SCRIPT_DIR:-}"
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090,SC1091
+          . "${SCRIPT_NAME}"
+          unset SCRIPT_NAME || true
+          [ -n "${_ls_src_this:-}" ] && THIS_FILE="$_ls_src_this"
+          [ -n "${_ls_src_dir:-}" ] && SCRIPT_DIR="$_ls_src_dir"
+        fi
+        libscript_python_venv "${TARGET_DIR}"
+        
+        if [ "$EXACT_VERSION" = "latest" ]; then
+          "${TARGET_DIR}/bin/pip" install --upgrade tensorboard || PIP_FAILED=1
+        else
+          "${TARGET_DIR}/bin/pip" install "tensorboard==${EXACT_VERSION}" || PIP_FAILED=1
+        fi
+        
+        if [ "${PIP_FAILED:-0}" = "1" ]; then
+          log_error 'Failed to install tensorboard via pip.'
+          exit 1
+        fi
       else
-        "${TARGET_DIR}/bin/pip" install "tensorboard==${EXACT_VERSION}" || PIP_FAILED=1
+        log_info "tensorboard ${VERSION} is already installed."
       fi
       
-      if [ "${PIP_FAILED:-0}" = "1" ]; then
-        log_error 'Failed to install tensorboard via pip.'
-        exit 1
-      fi
-    else
-      log_info "tensorboard ${VERSION} is already installed."
+      libscript_symlink_alias "tensorboard" "$VERSION" "${EXACT_VERSION}"
     fi
-    
-    libscript_symlink_alias "tensorboard" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "tensorboard" "$ACTION" "$VERSION" "${TENSORBOARD_INSTALL_METHOD}" "" "" "" "$@"

@@ -176,15 +176,20 @@ case "$ACTION" in
       fi
 
       target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/vagrant/${ver}/bin"
-      mkdir -p "$target_dir"
-      zip_url="https://releases.hashicorp.com/vagrant/${ver}/vagrant_${ver}_${os}_${arch}.zip"
-      zip_tmp=$(mktemp)
-      log_info "Downloading Vagrant binary from $zip_url..."
-      libscript_download "$zip_url" "$zip_tmp"
-      unzip -q -o "$zip_tmp" -d "$target_dir"
-      chmod +x "$target_dir/vagrant"
-      rm -f "$zip_tmp"
-      log_info "Vagrant installed to $target_dir/vagrant"
+      if [ -x "$target_dir/vagrant" ]; then
+        log_info "Vagrant ${ver} is already installed at $target_dir/vagrant"
+      else
+        mkdir -p "$target_dir"
+        zip_url="https://releases.hashicorp.com/vagrant/${ver}/vagrant_${ver}_${os}_${arch}.zip"
+        zip_tmp=$(mktemp)
+        log_info "Downloading Vagrant binary from $zip_url..."
+        libscript_download "$zip_url" "$zip_tmp"
+        unzip -q -o "$zip_tmp" -d "$target_dir"
+        chmod +x "$target_dir/vagrant"
+        rm -f "$zip_tmp"
+        log_info "Vagrant installed to $target_dir/vagrant"
+      fi
+      libscript_symlink_alias "vagrant" "$VAGRANT_VERSION" "$ver"
     fi
 
     if [ "$VAGRANT_INSTALL_LIBVIRT_PLUGIN" = "1" ]; then

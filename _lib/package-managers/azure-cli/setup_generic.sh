@@ -91,15 +91,14 @@ case "$ACTION" in
     if [ "$AZURE_CLI_INSTALL_METHOD" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         AZURE_CLI_INSTALL_METHOD='libscript_native'
-      else
-        libscript_depends 'azure-cli'
+      elif ! libscript_depends 'azure-cli'; then
+        AZURE_CLI_INSTALL_METHOD='libscript_native'
       fi
-    else
+    fi
+    if [ "$AZURE_CLI_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/azure-cli/${EXACT_VERSION}"
-      log_info "DEBUG: TARGET_DIR='${TARGET_DIR}', EXACT_VERSION='${EXACT_VERSION}', VERSION='${VERSION}'"
-      log_info "DEBUG: ls -la $TARGET_DIR : $(ls -la "$TARGET_DIR" 2>&1 || true)"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing azure-cli ${VERSION} natively to ${TARGET_DIR}..."
         if [ -f /etc/alpine-release ] || [ "${TARGET_OS:-}" = "alpine" ] || [ "${TARGET_OS:-}" = "rhel" ] || [ "${PKG_MGR:-}" = "dnf" ]; then

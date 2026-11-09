@@ -95,60 +95,62 @@ case "$ACTION" in
         KAFKA_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kafka/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing kafka ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kafka/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info 'Extracting from cache...'
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kafka/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+    if [ "$KAFKA_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kafka/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing kafka ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kafka/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info 'Extracting from cache...'
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kafka/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/kafka" || true
+              chmod +x "${TARGET_DIR}/bin/kafka" || true
+            fi
+          fi
+        else
+          if [ -n "${KAFKA_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${KAFKA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${KAFKA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${KAFKA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kafka" || true
+              chmod +x "${TARGET_DIR}/bin/kafka" || true
+            fi
+            rm -f "${TEMP_FILE}"
           else
-            cp "$cache_file" "${TARGET_DIR}/bin/kafka" || true
-            chmod +x "${TARGET_DIR}/bin/kafka" || true
+            log_info "No download URL provided for kafka ${VERSION}. Attempting fallback to Apache..."
+            libscript_depends 'curl' 'tar'
+            TEMP_FILE=$(mktemp)
+            _actual_version="${EXACT_VERSION}"
+            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+              _actual_version='4.1.2'
+            fi
+            # We assume Scala 2.13 build as it's the current default
+            DL_URL="https://downloads.apache.org/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
+            if ! libscript_download "$DL_URL" "${TEMP_FILE}"; then
+              DL_URL="https://archive.apache.org/dist/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
+              libscript_download "$DL_URL" "${TEMP_FILE}" || true
+            fi
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            rm -f "${TEMP_FILE}"
           fi
         fi
       else
-        if [ -n "${KAFKA_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${KAFKA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${KAFKA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${KAFKA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kafka" || true
-            chmod +x "${TARGET_DIR}/bin/kafka" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_info "No download URL provided for kafka ${VERSION}. Attempting fallback to Apache..."
-          libscript_depends 'curl' 'tar'
-          TEMP_FILE=$(mktemp)
-          _actual_version="${EXACT_VERSION}"
-          if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-            _actual_version='4.1.2'
-          fi
-          # We assume Scala 2.13 build as it's the current default
-          DL_URL="https://downloads.apache.org/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
-          if ! libscript_download "$DL_URL" "${TEMP_FILE}"; then
-            DL_URL="https://archive.apache.org/dist/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
-            libscript_download "$DL_URL" "${TEMP_FILE}" || true
-          fi
-          tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          rm -f "${TEMP_FILE}"
-        fi
+        log_info "kafka ${VERSION} is already installed."
       fi
-    else
-      log_info "kafka ${VERSION} is already installed."
+      libscript_symlink_alias "kafka" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "kafka" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "kafka" "$ACTION" "$VERSION" "${KAFKA_INSTALL_METHOD}" "" "" "" "$@"

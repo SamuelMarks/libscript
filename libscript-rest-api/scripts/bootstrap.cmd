@@ -119,6 +119,7 @@ set "VENDOR_DIR=%SCRIPT_DIR%\..\vendor"
 if not exist "%VENDOR_DIR%" mkdir "%VENDOR_DIR%"
 if not exist "%VENDOR_DIR%\c-rest-framework\.git" (
     echo [INFO] Cloning c-rest-framework into vendor directory...
+    if exist "%VENDOR_DIR%\c-rest-framework" rmdir /s /q "%VENDOR_DIR%\c-rest-framework" >nul 2>&1
     git clone https://github.com/SamuelMarks/c-rest-framework "%VENDOR_DIR%\c-rest-framework"
 ) else (
     echo [INFO] c-rest-framework already cloned. Pulling latest...

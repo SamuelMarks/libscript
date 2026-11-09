@@ -96,28 +96,30 @@ case "$ACTION" in
       fi
     fi
 
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing swift ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if [ "$UNAME_LOWER" = "darwin" ] && command -v swift >/dev/null 2>&1; then
-        ln -sf "$(command -v swift)" "${TARGET_DIR}/bin/swift" 2>/dev/null || true
-      elif [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ] && [ -n "${PKG_MGR:-}" ]; then
-        log_info 'Falling back to system package manager for swift...'
-        libscript_depends 'swift' || true
-        if command -v swift >/dev/null 2>&1; then
+    if [ "$SWIFT_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing swift ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if [ "$UNAME_LOWER" = "darwin" ] && command -v swift >/dev/null 2>&1; then
           ln -sf "$(command -v swift)" "${TARGET_DIR}/bin/swift" 2>/dev/null || true
+        elif [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ] && [ -n "${PKG_MGR:-}" ]; then
+          log_info 'Falling back to system package manager for swift...'
+          libscript_depends 'swift' || true
+          if command -v swift >/dev/null 2>&1; then
+            ln -sf "$(command -v swift)" "${TARGET_DIR}/bin/swift" 2>/dev/null || true
+          fi
+        else
+          log_error 'Native installation for swift from source is not supported yet.'
+          exit 1
         fi
       else
-        log_error 'Native installation for swift from source is not supported yet.'
-        exit 1
+        log_info "swift ${VERSION} is already installed."
       fi
-    else
-      log_info "swift ${VERSION} is already installed."
+      libscript_symlink_alias "swift" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "swift" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "swift" "$ACTION" "$VERSION" "${SWIFT_INSTALL_METHOD}" "" "" "" "$@"

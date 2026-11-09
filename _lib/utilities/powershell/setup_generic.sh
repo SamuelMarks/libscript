@@ -120,6 +120,7 @@ case "$ACTION" in
         POWERSHELL_INSTALL_METHOD='libscript_native'
       fi
     fi
+    if [ "${POWERSHELL_INSTALL_METHOD}" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       if [ "${EXACT_VERSION}" = "latest" ]; then
@@ -162,6 +163,7 @@ case "$ACTION" in
       if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
         libscript_symlink_alias "powershell" "$VERSION" "${EXACT_VERSION}"
       fi
+    fi
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "powershell" "$ACTION" "$VERSION" "${POWERSHELL_INSTALL_METHOD}" "" "" "" "$@"

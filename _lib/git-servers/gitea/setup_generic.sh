@@ -95,51 +95,53 @@ case "$ACTION" in
         GITEA_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gitea/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing gitea ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if [ "${UNAME:-}" = "FreeBSD" ]; then
-        libscript_depends 'gitea'
-        if command -v gitea >/dev/null 2>&1; then
-          ln -sf "$(command -v gitea)" "${TARGET_DIR}/bin/gitea"
-        fi
-      elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info 'Extracting from cache...'
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+    if [ "$GITEA_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gitea/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing gitea ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if [ "${UNAME:-}" = "FreeBSD" ]; then
+          libscript_depends 'gitea'
+          if command -v gitea >/dev/null 2>&1; then
+            ln -sf "$(command -v gitea)" "${TARGET_DIR}/bin/gitea"
+          fi
+        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info 'Extracting from cache...'
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/gitea" || true
+              chmod +x "${TARGET_DIR}/bin/gitea" || true
+            fi
+          fi
+        else
+          if [ -n "${GITEA_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${GITEA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${GITEA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${GITEA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gitea" || true
+              chmod +x "${TARGET_DIR}/bin/gitea" || true
+            fi
+            rm -f "${TEMP_FILE}"
           else
-            cp "$cache_file" "${TARGET_DIR}/bin/gitea" || true
-            chmod +x "${TARGET_DIR}/bin/gitea" || true
+            log_warn "No download URL provided for gitea ${VERSION}."
           fi
         fi
       else
-        if [ -n "${GITEA_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${GITEA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${GITEA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${GITEA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gitea" || true
-            chmod +x "${TARGET_DIR}/bin/gitea" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_warn "No download URL provided for gitea ${VERSION}."
-        fi
+        log_info "gitea ${VERSION} is already installed."
       fi
-    else
-      log_info "gitea ${VERSION} is already installed."
+      libscript_symlink_alias "gitea" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "gitea" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "gitea" "$ACTION" "$VERSION" "${GITEA_INSTALL_METHOD}" "" "" "" "$@"

@@ -96,56 +96,58 @@ case "$ACTION" in
         JULIA_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing julia ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info 'Extracting from cache...'
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+    if [ "$JULIA_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/julia/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing julia ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info 'Extracting from cache...'
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/julia/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/julia" || true
+              chmod +x "${TARGET_DIR}/bin/julia" || true
+            fi
+          fi
+        else
+          if [ -z "${JULIA_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
+            _jver='1.10.5'
+            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _jver="${EXACT_VERSION}"
+            case "${ARCH:-}" in
+              aarch64|arm64) _jarch="aarch64" ;;
+              *) _jarch="x86_64" ;;
+            esac
+            _jminor="${_jver%.*}"
+            JULIA_DOWNLOAD_URL="https://julialang-s3.julialang.org/bin/linux/${_jarch}/${_jminor}/julia-${_jver}-linux-${_jarch}.tar.gz"
+          fi
+          if [ -n "${JULIA_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${JULIA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${JULIA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${JULIA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/julia" || true
+              chmod +x "${TARGET_DIR}/bin/julia" || true
+            fi
+            rm -f "${TEMP_FILE}"
           else
-            cp "$cache_file" "${TARGET_DIR}/bin/julia" || true
-            chmod +x "${TARGET_DIR}/bin/julia" || true
+            log_warn "No download URL provided for julia ${VERSION}."
           fi
         fi
       else
-        if [ -z "${JULIA_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
-          _jver='1.10.5'
-          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _jver="${EXACT_VERSION}"
-          case "${ARCH:-}" in
-            aarch64|arm64) _jarch="aarch64" ;;
-            *) _jarch="x86_64" ;;
-          esac
-          _jminor="${_jver%.*}"
-          JULIA_DOWNLOAD_URL="https://julialang-s3.julialang.org/bin/linux/${_jarch}/${_jminor}/julia-${_jver}-linux-${_jarch}.tar.gz"
-        fi
-        if [ -n "${JULIA_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${JULIA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${JULIA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${JULIA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/julia" || true
-            chmod +x "${TARGET_DIR}/bin/julia" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_warn "No download URL provided for julia ${VERSION}."
-        fi
+        log_info "julia ${VERSION} is already installed."
       fi
-    else
-      log_info "julia ${VERSION} is already installed."
+      libscript_symlink_alias "julia" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "julia" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "julia" "$ACTION" "$VERSION" "${JULIA_INSTALL_METHOD}" "" "" "" "$@"

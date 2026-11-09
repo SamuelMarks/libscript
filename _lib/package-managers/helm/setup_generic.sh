@@ -96,63 +96,65 @@ case "$ACTION" in
         HELM_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/helm/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing helm ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/helm/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info 'Extracting from cache...'
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/helm/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+    if [ "$HELM_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/helm/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing helm ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/helm/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info 'Extracting from cache...'
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/helm/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/helm" || true
+              chmod +x "${TARGET_DIR}/bin/helm" || true
+            fi
+          fi
+        else
+          if [ -z "${HELM_DOWNLOAD_URL:-}" ]; then
+            _hver='3.16.4'
+            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _hver="${EXACT_VERSION}"
+            _harch='amd64'
+            case "${ARCH:-x86_64}" in
+              aarch64|arm64) _harch="arm64" ;;
+              *) _harch="amd64" ;;
+            esac
+            _hos="${UNAME_LOWER:-linux}"
+            HELM_DOWNLOAD_URL="https://get.helm.sh/helm-v${_hver}-${_hos}-${_harch}.tar.gz"
+          fi
+          if [ "${_hos:-}" = "freebsd" ]; then
+            log_info 'FreeBSD detected, installing helm via system package manager...'
+            libscript_depends 'helm' || true
+            if command -v helm >/dev/null 2>&1; then
+              ln -sf "$(command -v helm)" "${TARGET_DIR}/bin/helm"
+            fi
+          elif [ -n "${HELM_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${HELM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${HELM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
+            elif case "${HELM_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/helm" || true
+              chmod +x "${TARGET_DIR}/bin/helm" || true
+            fi
+            rm -f "${TEMP_FILE}"
           else
-            cp "$cache_file" "${TARGET_DIR}/bin/helm" || true
-            chmod +x "${TARGET_DIR}/bin/helm" || true
+            log_warn "No download URL provided for helm ${VERSION}."
           fi
         fi
       else
-        if [ -z "${HELM_DOWNLOAD_URL:-}" ]; then
-          _hver='3.16.4'
-          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _hver="${EXACT_VERSION}"
-          _harch='amd64'
-          case "${ARCH:-x86_64}" in
-            aarch64|arm64) _harch="arm64" ;;
-            *) _harch="amd64" ;;
-          esac
-          _hos="${UNAME_LOWER:-linux}"
-          HELM_DOWNLOAD_URL="https://get.helm.sh/helm-v${_hver}-${_hos}-${_harch}.tar.gz"
-        fi
-        if [ "${_hos:-}" = "freebsd" ]; then
-          log_info 'FreeBSD detected, installing helm via system package manager...'
-          libscript_depends 'helm' || true
-          if command -v helm >/dev/null 2>&1; then
-            ln -sf "$(command -v helm)" "${TARGET_DIR}/bin/helm"
-          fi
-        elif [ -n "${HELM_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${HELM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${HELM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
-          elif case "${HELM_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/helm" || true
-            chmod +x "${TARGET_DIR}/bin/helm" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_warn "No download URL provided for helm ${VERSION}."
-        fi
+        log_info "helm ${VERSION} is already installed."
       fi
-    else
-      log_info "helm ${VERSION} is already installed."
+      libscript_symlink_alias "helm" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "helm" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "helm" "$ACTION" "$VERSION" "${HELM_INSTALL_METHOD}" "" "" "" "$@"

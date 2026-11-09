@@ -1128,8 +1128,8 @@ case "$ACTION" in
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
     fi
-    libscript_symlink_alias "$TARGET_DIR" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${VERSION}"
-    libscript_symlink_alias "$TARGET_DIR" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/default"
+    libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
+    libscript_symlink_alias '__SCAF_NAME__' 'default' "${EXACT_VERSION}"
     ;;
   download)
     resolve_exact_version
@@ -1147,8 +1147,8 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${EXACT_VERSION}"
       SRC_URL="${__COMP_PREFIX___DOWNLOAD_URL:-__SCAF_SRC_URL__}"
       SRC_URL=$(printf '%s\n' "$SRC_URL" | sed "s/{VERSION}/${EXACT_VERSION}/g")
-      libscript_build_component_from_source '__SCAF_NAME__' "$EXACT_VERSION" "$SRC_URL" "$TARGET_DIR" '__SCAF_SRC_BUILD_SYS__' '__SCAF_SRC_LANG__'
-      libscript_symlink_alias "$TARGET_DIR" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${VERSION}"
+      libscript_build_component_from_source '__SCAF_NAME__' "$EXACT_VERSION" '__SCAF_BINARY_NAME__' '__SCAF_SRC_LANG__' '__SCAF_SRC_BUILD_SYS__' "$SRC_URL"
+      libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
       exit 0
     elif [ "${__COMP_PREFIX___INSTALL_METHOD}" = "system" ]; then
       libscript_depends '__SCAF_NAME__'
@@ -1157,7 +1157,7 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${EXACT_VERSION}"
       if [ -x "${TARGET_DIR}/bin/__SCAF_BINARY_NAME__" ] && [ "${FORCE_REINSTALL:-0}" != "1" ]; then
         printf '[INFO] %s %s is already installed at %s.\n' '__SCAF_NAME__' "${EXACT_VERSION}" "${TARGET_DIR}"
-        libscript_symlink_alias "$TARGET_DIR" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${VERSION}"
+        libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
         exit 0
       fi
       mkdir -p "$TARGET_DIR/bin"
@@ -1187,7 +1187,8 @@ case "$ACTION" in
           ;;
       esac
       [ "$TMP_FILE" != "$CACHED_DL" ] && rm -f "$TMP_FILE"
-      libscript_symlink_alias "$TARGET_DIR" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${VERSION}"
+      libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias '__SCAF_NAME__' 'default' "${EXACT_VERSION}"
     fi
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
@@ -1323,7 +1324,7 @@ if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="from-source" (
     set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME%\!EXACT_VERSION!"
     set "SRC_URL=%__COMP_PREFIX___DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=__SCAF_SRC_URL__"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "__SCAF_NAME__" "!EXACT_VERSION!" "!SRC_URL!" "!TARGET_DIR!" "__SCAF_SRC_BUILD_SYS__" "__SCAF_SRC_LANG__"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "__SCAF_NAME__" "!EXACT_VERSION!" "__SCAF_BINARY_NAME__" "__SCAF_SRC_LANG__"
     exit /b !errorlevel!
 )
 if "%__COMP_PREFIX___INSTALL_METHOD%"=="system" (

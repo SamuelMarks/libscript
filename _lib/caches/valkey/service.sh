@@ -82,13 +82,13 @@ configure_valkey_storage() {
   for _vk_conf in "${LIBSCRIPT_ETC_DIR:-/etc}/valkey/valkey.conf" "${LIBSCRIPT_ETC_DIR:-/etc}/valkey.conf" "${LIBSCRIPT_ETC_DIR:-/etc}/redis/redis.conf" "${LIBSCRIPT_ETC_DIR:-/etc}/redis.conf"; do
     [ -f "$_vk_conf" ] || continue
     _vk_tmp_conf=$(mktemp)
-    if grep -q '^[[:space:]]*dir[[:space:]]\+' "$_vk_conf" 2>/dev/null; then
+    if grep -Eq '^[[:space:]]*dir[[:space:]]+' "$_vk_conf" 2>/dev/null; then
       sed "s|^[[:space:]]*dir[[:space:]].*|dir ${_vk_dir}|" "$_vk_conf" > "$_vk_tmp_conf"
     else
       cat "$_vk_conf" > "$_vk_tmp_conf"
       printf '%s\n' "dir ${_vk_dir}" >> "$_vk_tmp_conf"
     fi
-    if grep -q '^[#[:space:]]*appendonly[[:space:]]\+' "$_vk_tmp_conf" 2>/dev/null; then
+    if grep -Eq '^[#[:space:]]*appendonly[[:space:]]+' "$_vk_tmp_conf" 2>/dev/null; then
       sed "s|^[#[:space:]]*appendonly[[:space:]].*|appendonly yes|" "$_vk_tmp_conf" > "${_vk_tmp_conf}.2" && mv "${_vk_tmp_conf}.2" "$_vk_tmp_conf"
     else
       printf '%s\n' 'appendonly yes' >> "$_vk_tmp_conf"

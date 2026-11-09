@@ -153,10 +153,10 @@ audit_single_file() {
           shebang_count++
           shebang_lines = (shebang_lines ? shebang_lines ", " : "") NR
         }
-        if ($0 ~ /^[[:space:]]*mkdir[[:space:]]+[^-]/ && tolower($0) !~ /lock|while|if[[:space:]]+!/) {
+        if ($0 !~ /^[[:space:]]*#/ && $0 ~ /(^|[[:space:];|&(])mkdir[[:space:]]+[^-\r\n]/ && tolower($0) !~ /lock|while|if[[:space:]]+!|if[[:space:]]+not[[:space:]]+exist|vagrant[[:space:]]+ssh/) {
           mkdir_hits = (mkdir_hits ? mkdir_hits "; " : "") NR ":" $0
         }
-        if ($0 ~ /^[[:space:]]*ln[[:space:]]+-s[[:space:]]+[^-]/) {
+        if ($0 !~ /^[[:space:]]*#/ && $0 ~ /(^|[[:space:];|&(])ln[[:space:]]+-s[[:space:]]+[^-\r\n]/) {
           ln_hits = (ln_hits ? ln_hits "; " : "") NR ":" $0
         }
         if ($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || $0 ~ /;[[:space:]]*eval([[:space:]]|$)/) {
@@ -262,7 +262,7 @@ audit_single_file() {
           if ($0 ~ /SCRIPT_NAME=/) {
             last_script_name_nr = NR
           }
-          if ($0 ~ /^[[:space:]]*\.[[:space:]]+["\x27]?(\$[{]?SCRIPT_DIR[}]?|\$[{]?LIBSCRIPT_ROOT_DIR[}]?|\$[{]?REPO_ROOT[}]?)\/[^[:space:]"\x27;]+\.sh["\x27]?([[:space:]]|$)/) {
+          if ($0 ~ /(^|[[:space:];|&()])\.[[:space:]]+["\x27]?(\$[{]?SCRIPT_DIR[}]?|\$[{]?LIBSCRIPT_ROOT_DIR[}]?|\$[{]?REPO_ROOT[}]?)\/[^[:space:]"\x27;]+\.sh["\x27]?([[:space:];|&)]|$)/) {
             if (NR - last_script_name_nr > 4 && $0 !~ /SCRIPT_NAME/) {
               unguarded_src_hits = (unguarded_src_hits ? unguarded_src_hits "; " : "") NR ":" $0
             }

@@ -118,6 +118,10 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of lynx on Windows.
 :action_install
+if /i "%LYNX_INSTALL_METHOD%"=="from-source" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "lynx" "%LYNX_VERSION%" "lynx" "c"
+    exit /b !errorlevel!
+)
 set "EXACT_VERSION=%LYNX_VERSION%"
 if "%EXACT_VERSION%"=="latest" set "EXACT_VERSION=2.9.2"
 set "TARGET_DIR=%LIBSCRIPT_HOME%\lynx\%EXACT_VERSION%"

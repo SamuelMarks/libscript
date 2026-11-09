@@ -29,6 +29,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
+unset SCRIPT_NAME || true
 
 PROFILE=""
 IMAGE_PATH=""
@@ -54,6 +55,8 @@ if [ -n "$PROFILE" ] && [ -f "$PROFILE" ]; then
   fi
 fi
 
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
 case "$PROVIDER" in
   aws)
     if [ -n "$IMAGE_PATH" ] && [ -f "$IMAGE_PATH" ]; then

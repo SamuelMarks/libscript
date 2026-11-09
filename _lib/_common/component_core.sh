@@ -38,6 +38,9 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/service.sh" "_lib/_common/env_pri
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
+THIS_FILE="${_component_core_this}"
+SCRIPT_DIR="${COMP_DIR}"
 
 SCHEMA_FILE="$COMP_DIR/vars.schema.json"
 MANIFEST_FILE="$COMP_DIR/manifest.json"
@@ -639,6 +642,8 @@ if [ -n "$ACTION" ] && [ "$ACTION" != "install" ] && [ "$ACTION" != "setup" ] &&
 fi
 
 # Fallback to setup.sh for install, setup, and service actions
+STACK="${STACK%"${_component_core_this}":}"
+export STACK
 if [ -x "$COMP_DIR/setup.sh" ]; then
   unset SCRIPT_NAME || true
   exec "$COMP_DIR/setup.sh" "$@"
@@ -649,9 +654,3 @@ else
   log_error "Error: setup.sh not found in $COMP_DIR"
   exit 1
 fi
-
-STACK="${STACK%"${THIS_FILE}":}"
-export STACK
-[ -n "${_component_core_caller_dir:-}" ] && SCRIPT_DIR="$_component_core_caller_dir"
-[ -n "${_component_core_caller_this:-}" ] && THIS_FILE="$_component_core_caller_this"
-unset _component_core_caller_this _component_core_caller_dir || true

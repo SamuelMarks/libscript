@@ -95,64 +95,66 @@ case "$ACTION" in
         KOTLIN_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing kotlin ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if [ "${UNAME:-}" = "FreeBSD" ]; then
-        libscript_depends 'kotlin'
-        if command -v kotlinc >/dev/null 2>&1; then
-          ln -sf "$(command -v kotlinc)" "${TARGET_DIR}/bin/kotlinc"
-          ln -sf "$(command -v kotlin)" "${TARGET_DIR}/bin/kotlin"
-        fi
-      elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info 'Extracting from cache...'
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+    if [ "$KOTLIN_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kotlin/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing kotlin ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if [ "${UNAME:-}" = "FreeBSD" ]; then
+          libscript_depends 'kotlin'
+          if command -v kotlinc >/dev/null 2>&1; then
+            ln -sf "$(command -v kotlinc)" "${TARGET_DIR}/bin/kotlinc"
+            ln -sf "$(command -v kotlin)" "${TARGET_DIR}/bin/kotlin"
+          fi
+        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info 'Extracting from cache...'
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/kotlin/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/kotlin" || true
+              chmod +x "${TARGET_DIR}/bin/kotlin" || true
+            fi
+          fi
+        else
+          libscript_depends 'java' 'unzip' || true
+          if [ -z "${KOTLIN_DOWNLOAD_URL:-}" ]; then
+            _kver='2.1.0'
+            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
+            KOTLIN_DOWNLOAD_URL="https://github.com/JetBrains/kotlin/releases/download/v${_kver}/kotlin-compiler-${_kver}.zip"
+          fi
+          if [ -n "${KOTLIN_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${KOTLIN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${KOTLIN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${KOTLIN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              EXTRACT_DIR=$(mktemp -d)
+              unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
+              top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+              if [ -n "$top_dir" ]; then
+                cp -R "${top_dir}/." "${TARGET_DIR}/"
+              fi
+              rm -rf "${EXTRACT_DIR}"
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kotlin" || true
+              chmod +x "${TARGET_DIR}/bin/kotlin" || true
+            fi
+            rm -f "${TEMP_FILE}"
           else
-            cp "$cache_file" "${TARGET_DIR}/bin/kotlin" || true
-            chmod +x "${TARGET_DIR}/bin/kotlin" || true
+            log_warn "No download URL provided for kotlin ${VERSION}."
           fi
         fi
       else
-        libscript_depends 'java' 'unzip' || true
-        if [ -z "${KOTLIN_DOWNLOAD_URL:-}" ]; then
-          _kver='2.1.0'
-          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
-          KOTLIN_DOWNLOAD_URL="https://github.com/JetBrains/kotlin/releases/download/v${_kver}/kotlin-compiler-${_kver}.zip"
-        fi
-        if [ -n "${KOTLIN_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${KOTLIN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${KOTLIN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${KOTLIN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            EXTRACT_DIR=$(mktemp -d)
-            unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
-            top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-            if [ -n "$top_dir" ]; then
-              cp -R "${top_dir}/." "${TARGET_DIR}/"
-            fi
-            rm -rf "${EXTRACT_DIR}"
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kotlin" || true
-            chmod +x "${TARGET_DIR}/bin/kotlin" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_warn "No download URL provided for kotlin ${VERSION}."
-        fi
+        log_info "kotlin ${VERSION} is already installed."
       fi
-    else
-      log_info "kotlin ${VERSION} is already installed."
+      libscript_symlink_alias "kotlin" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "kotlin" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "kotlin" "$ACTION" "$VERSION" "${KOTLIN_INSTALL_METHOD}" "" "" "" "$@"

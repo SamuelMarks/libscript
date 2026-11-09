@@ -587,4 +587,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_ep_caller_dir:-}" ] && SCRIPT_DIR="$_ep_caller_dir"
 [ -n "${_ep_caller_this:-}" ] && THIS_FILE="$_ep_caller_this"
-unset _ep_caller_this _ep_caller_dir || true
+unset SCRIPT_NAME _ep_caller_this _ep_caller_dir || true

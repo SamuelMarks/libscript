@@ -122,7 +122,7 @@ case "$ACTION" in
           _py_ver='3.10'
         else
           if [ "${PKG_MGR:-}" = "dnf" ] || [ "${PKG_MGR:-}" = "yum" ]; then
-            pkg_mgr_install python3.11 python3.11-pip python3.11-devel || true
+            libscript_depends python3.11 python3.11-pip python3.11-devel || true
             if command -v python3.11 >/dev/null 2>&1; then
               _py_ver='3.11'
             fi
@@ -132,6 +132,7 @@ case "$ACTION" in
         
         JETSTREAM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream-src"
         if [ ! -d "${JETSTREAM_SRC_DIR}/.git" ]; then
+            rm -rf "${JETSTREAM_SRC_DIR}"
             git clone https://github.com/google/JetStream.git "${JETSTREAM_SRC_DIR}"
         else
             log_info 'Jetstream source already present, pulling latest...'

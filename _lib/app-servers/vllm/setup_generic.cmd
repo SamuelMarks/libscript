@@ -181,6 +181,7 @@ if /i not "%VLLM_INSTALL_METHOD%"=="from-source" (
 echo Failed to install vllm via pip. Building from source...
 set "VLLM_SRC_DIR=%DOWNLOAD_DIR%\vllm-src"
 if not exist "%VLLM_SRC_DIR%\.git" (
+    if exist "%VLLM_SRC_DIR%" rmdir /s /q "%VLLM_SRC_DIR%" >nul 2>&1
     git clone "https://github.com/vllm-project/vllm.git" "%VLLM_SRC_DIR%"
 ) else (
     echo vLLM source already present, pulling latest...

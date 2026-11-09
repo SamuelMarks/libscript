@@ -20,7 +20,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_tui_engine_caller_this" ] && THIS_FILE="$_tui_engine_caller_this"
     [ -n "$_tui_engine_caller_dir" ] && SCRIPT_DIR="$_tui_engine_caller_dir"
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -122,4 +122,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_tui_engine_caller_dir:-}" ] && SCRIPT_DIR="$_tui_engine_caller_dir"
 [ -n "${_tui_engine_caller_this:-}" ] && THIS_FILE="$_tui_engine_caller_this"
-unset _tui_engine_caller_this _tui_engine_caller_dir || true
+unset SCRIPT_NAME _tui_engine_caller_this _tui_engine_caller_dir || true

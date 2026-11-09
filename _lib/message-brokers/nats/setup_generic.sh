@@ -95,70 +95,72 @@ case "$ACTION" in
         NATS_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing nats ${VERSION} natively to ${TARGET_DIR}..."
-      mkdir -p "${TARGET_DIR}/bin"
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info 'Extracting from cache...'
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+    if [ "$NATS_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nats/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing nats ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info 'Extracting from cache...'
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nats/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/nats" || true
+              chmod +x "${TARGET_DIR}/bin/nats" || true
+            fi
+          fi
+        else
+          if [ -n "${NATS_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${NATS_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${NATS_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${NATS_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/nats" || true
+              chmod +x "${TARGET_DIR}/bin/nats" || true
+            fi
+            rm -f "${TEMP_FILE}"
           else
-            cp "$cache_file" "${TARGET_DIR}/bin/nats" || true
-            chmod +x "${TARGET_DIR}/bin/nats" || true
+            if [ "$UNAME_LOWER" = "linux" ]; then
+              _actual_version="${EXACT_VERSION}"
+              if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+                _actual_version=$(libscript_fetch_stdout "https://api.github.com/repos/nats-io/nats-server/releases/latest" | grep -oE '"tag_name":[[:space:]]*"v[^"]+"' | sed -E 's/.*"v([^"]+)".*/v\1/' | head -n 1)
+                [ -z "$_actual_version" ] && _actual_version="v2.10.22"
+              fi
+              case "${ARCH:-}" in
+                aarch64|arm64) _nats_arch="arm64" ;;
+                *) _nats_arch="amd64" ;;
+              esac
+              DL_URL="https://github.com/nats-io/nats-server/releases/download/${_actual_version}/nats-server-${_actual_version}-linux-${_nats_arch}.tar.gz"
+              TEMP_FILE=$(mktemp)
+              libscript_download "$DL_URL" "$TEMP_FILE"
+              tar -xzf "$TEMP_FILE" -C "$TARGET_DIR" --strip-components=1 || true
+              mkdir -p "${TARGET_DIR}/bin"
+              if [ -f "${TARGET_DIR}/nats-server" ]; then
+                mv "${TARGET_DIR}/nats-server" "${TARGET_DIR}/bin/nats-server"
+              fi
+              rm -f "$TEMP_FILE"
+            elif [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info 'Falling back to system package manager for nats...'
+              libscript_depends 'nats-server'
+            else
+              log_warn "No download URL provided for nats ${VERSION}."
+            fi
           fi
         fi
       else
-        if [ -n "${NATS_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${NATS_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${NATS_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${NATS_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/nats" || true
-            chmod +x "${TARGET_DIR}/bin/nats" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          if [ "$UNAME_LOWER" = "linux" ]; then
-            _actual_version="${EXACT_VERSION}"
-            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-              _actual_version=$(libscript_fetch_stdout "https://api.github.com/repos/nats-io/nats-server/releases/latest" | grep -oE '"tag_name":[[:space:]]*"v[^"]+"' | sed -E 's/.*"v([^"]+)".*/v\1/' | head -n 1)
-              [ -z "$_actual_version" ] && _actual_version="v2.10.22"
-            fi
-            case "${ARCH:-}" in
-              aarch64|arm64) _nats_arch="arm64" ;;
-              *) _nats_arch="amd64" ;;
-            esac
-            DL_URL="https://github.com/nats-io/nats-server/releases/download/${_actual_version}/nats-server-${_actual_version}-linux-${_nats_arch}.tar.gz"
-            TEMP_FILE=$(mktemp)
-            libscript_download "$DL_URL" "$TEMP_FILE"
-            tar -xzf "$TEMP_FILE" -C "$TARGET_DIR" --strip-components=1 || true
-            mkdir -p "${TARGET_DIR}/bin"
-            if [ -f "${TARGET_DIR}/nats-server" ]; then
-              mv "${TARGET_DIR}/nats-server" "${TARGET_DIR}/bin/nats-server"
-            fi
-            rm -f "$TEMP_FILE"
-          elif [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-            log_info 'Falling back to system package manager for nats...'
-            libscript_depends 'nats-server'
-          else
-            log_warn "No download URL provided for nats ${VERSION}."
-          fi
-        fi
+        log_info "nats ${VERSION} is already installed."
       fi
-    else
-      log_info "nats ${VERSION} is already installed."
+      libscript_symlink_alias "nats" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "nats" "$VERSION" "${EXACT_VERSION}"
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "nats" "$ACTION" "$VERSION" "${NATS_INSTALL_METHOD}" "" "" "" "$@"

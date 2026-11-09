@@ -316,10 +316,10 @@ function Audit-File {
     # 3. Idempotency checks
     $allContent = Get-Content -Path $FilePath -Raw -ErrorAction SilentlyContinue
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[ \t]*mkdir[ \t]+[^-]' -and $allContent -notmatch '(?m)^[ \t]*mkdir[ \t]+.*lock' -and $allContent -notmatch 'while[ \t]+![ \t]+mkdir') {
+        if ($allContent -match '(?m)^[^#\r\n]*(^|[\s;|&(])mkdir[ \t]+[^-\r\n]' -and $allContent -notmatch '(?m)mkdir[ \t]+.*lock' -and $allContent -notmatch 'while[ \t]+![ \t]+mkdir' -and $allContent -notmatch '(?i)if[ \t]+not[ \t]+exist') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' found without '-p'. Use 'mkdir -p' for idempotency."
         }
-        if ($allContent -match '(?m)^[ \t]*ln[ \t]+-s[ \t]+[^-]') {
+        if ($allContent -match '(?m)^[^#\r\n]*(^|[\s;|&(])ln[ \t]+-s[ \t]+[^-\r\n]') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'ln -s' found without '-f'. Use 'ln -sf' for idempotency."
         }
         $lastScriptNameLine = -10
@@ -328,7 +328,7 @@ function Audit-File {
             $shLineIdx++
             if ($sLine -match '^\s*#') { continue }
             if ($sLine -match 'SCRIPT_NAME=') { $lastScriptNameLine = $shLineIdx }
-            if ($sLine -match '^\s*\.\s+["'']?(\$\{?SCRIPT_DIR\}?|\$\{?LIBSCRIPT_ROOT_DIR\}?|\$\{?REPO_ROOT\}?)/[^\s"'';]+\.sh["'']?(\s|$)') {
+            if ($sLine -match '(^|[\s;|&()])\.\s+["'']?(\$\{?SCRIPT_DIR\}?|\$\{?LIBSCRIPT_ROOT_DIR\}?|\$\{?REPO_ROOT\}?)/[^\s"'';]+\.sh["'']?([\s;|&)]|$)') {
                 if (($shLineIdx - $lastScriptNameLine) -gt 4 -and $sLine -notmatch 'SCRIPT_NAME') {
                     Log-Violation -File $FilePath -Rule "UNGUARDED_SOURCE_SH" -Details "Sourcing LibScript .sh file at line $shLineIdx without setting SCRIPT_NAME first."
                 }

@@ -111,7 +111,7 @@ export AZURE_LOCATION="$LOC"
 export LOCATION="$LOC"
 export ADMIN_USER
 
-CLI="$SCRIPT_DIR/../../cloud-providers/$PROVIDER/cli.sh"
+CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/${PROVIDER}/cli.sh"
 if [ ! -f "$CLI" ]; then
   printf '%s\n' "Provider $PROVIDER not supported." >&2
   exit 1
@@ -239,7 +239,7 @@ ensure_cli() {
   pkg=$2
   if ! command -v "$cmd" >/dev/null 2>&1; then
     log "INFO" "Command '$cmd' not found. Installing '$pkg' via LibScript..."
-    "$SCRIPT_DIR/../../../libscript.sh" install "$pkg" "latest" || {
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$pkg" "latest" || {
       log "ERROR" "Failed to auto-install $pkg. Please install it manually."
       exit 1
     }
@@ -300,7 +300,7 @@ if [ "$PURGE_DATA" -eq 0 ]; then
   log "STORAGE" "Persistent data disk '${NODE}-data-disk' is retained (deleteOption=Detach). Pass --purge-data to delete it."
 fi
 if [ "$IS_TPU" -eq 1 ] && [ "$PROVIDER" = "gcp" ]; then
-  TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp-tpu-vm/cli.sh"
+  TPU_CLI="${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh"
   run_with_auth_check "$TPU_CLI" delete "$NODE" || true
 else
   run_with_auth_check "$CLI" node delete "$NODE" "$CTX" || true

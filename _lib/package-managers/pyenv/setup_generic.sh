@@ -95,25 +95,27 @@ case "$ACTION" in
         PYENV_INSTALL_METHOD='libscript_native'
       fi
     fi
-    # libscript_native implementation
-    resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pyenv/${EXACT_VERSION}"
-    if [ ! -d "${TARGET_DIR}" ]; then
-      log_info "Installing pyenv ${VERSION} natively to ${TARGET_DIR}..."
-      libscript_depends 'git'
-      libscript_depends 'bash'
-
-      if [ "${EXACT_VERSION}" = "latest" ]; then
-         EXACT_VERSION=$(git ls-remote --tags "https://github.com/pyenv/pyenv.git" | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | libscript_sort_versions | tail -n1)
-      fi
+    if [ "$PYENV_INSTALL_METHOD" = "libscript_native" ]; then
+      # libscript_native implementation
+      resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pyenv/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
-         git clone --depth 1 -b "${EXACT_VERSION}" https://github.com/pyenv/pyenv.git "${TARGET_DIR}"
+        log_info "Installing pyenv ${VERSION} natively to ${TARGET_DIR}..."
+        libscript_depends 'git'
+        libscript_depends 'bash'
+
+        if [ "${EXACT_VERSION}" = "latest" ]; then
+           EXACT_VERSION=$(git ls-remote --tags "https://github.com/pyenv/pyenv.git" | awk -F/ '{print $3}' | grep -v '\^{}' | grep '^v' | libscript_sort_versions | tail -n1)
+        fi
+        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pyenv/${EXACT_VERSION}"
+        if [ ! -d "${TARGET_DIR}" ]; then
+           git clone --depth 1 -b "${EXACT_VERSION}" https://github.com/pyenv/pyenv.git "${TARGET_DIR}"
+        fi
+      else
+        log_info "pyenv ${VERSION} is already installed."
       fi
-    else
-      log_info "pyenv ${VERSION} is already installed."
+      libscript_symlink_alias "pyenv" "$VERSION" "${EXACT_VERSION}"
     fi
-    libscript_symlink_alias "pyenv" "$VERSION" "${EXACT_VERSION}"
 
     ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)

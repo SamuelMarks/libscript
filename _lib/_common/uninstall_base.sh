@@ -20,7 +20,7 @@ case "${STACK+x}" in
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     [ -n "$_uninstall_base_caller_this" ] && THIS_FILE="$_uninstall_base_caller_this"
     [ -n "$_uninstall_base_caller_dir" ] && SCRIPT_DIR="$_uninstall_base_caller_dir"
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -30,6 +30,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR
 export LIBSCRIPT_ROOT_DIR
+_uninstall_base_this="${THIS_FILE}"
+_uninstall_base_dir="${DIR}"
 
 # Source common OS info
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
@@ -44,26 +46,38 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # Source path resolution
+_SCRIPT_DIR_NAME="${_uninstall_base_dir}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+THIS_FILE="${_uninstall_base_this}"
+DIR="${_uninstall_base_dir}"
+SCRIPT_DIR="${_uninstall_base_dir}"
 resolve_component_paths
 
 # OS-specific delegation logic for uninstall
 OS_UNINSTALL_SCRIPT="${DIR}"'/uninstall_'"${TARGET_OS}"'.sh'
 if [ -f "${OS_UNINSTALL_SCRIPT}" ]; then
-  SCRIPT_NAME="${OS_UNINSTALL_SCRIPT}"
+  _delegated_uninstall="${OS_UNINSTALL_SCRIPT}"
+else
+  # Generic uninstall logic often just removes directories or package manager packages
+  _delegated_uninstall="${DIR}"'/uninstall_generic.sh'
+fi
+if [ -f "${_delegated_uninstall}" ]; then
+  SCRIPT_NAME="${_delegated_uninstall}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
-else
-  # Generic uninstall logic often just removes directories or package manager packages
-  SCRIPT_NAME="${DIR}"'/uninstall_generic.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  [ -f "${SCRIPT_NAME}" ] && . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  STACK="${STACK%"${_delegated_uninstall}":}"
+  export STACK
 fi
+unset _delegated_uninstall || true
+THIS_FILE="${_uninstall_base_this}"
+DIR="${_uninstall_base_dir}"
+SCRIPT_DIR="${_uninstall_base_dir}"
 
 
 # Automated netctl unregistration
@@ -95,4 +109,4 @@ STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_uninstall_base_caller_dir:-}" ] && SCRIPT_DIR="$_uninstall_base_caller_dir"
 [ -n "${_uninstall_base_caller_this:-}" ] && THIS_FILE="$_uninstall_base_caller_this"
-unset _uninstall_base_caller_this _uninstall_base_caller_dir || true
+unset SCRIPT_NAME _uninstall_base_caller_this _uninstall_base_caller_dir || true
