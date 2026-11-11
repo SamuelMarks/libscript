@@ -315,12 +315,26 @@ function Audit-File {
 
     # 3. Idempotency checks
     $allContent = Get-Content -Path $FilePath -Raw -ErrorAction SilentlyContinue
+    $normPath = $FilePath.Replace([char]92, [char]47)
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[^#\r\n]*(^|[\s;|&(])mkdir[ \t]+[^-\r\n]' -and $allContent -notmatch '(?m)mkdir[ \t]+.*lock' -and $allContent -notmatch 'while[ \t]+![ \t]+mkdir' -and $allContent -notmatch '(?i)if[ \t]+not[ \t]+exist') {
-            Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' found without '-p'. Use 'mkdir -p' for idempotency."
-        }
-        if ($allContent -match '(?m)^[^#\r\n]*(^|[\s;|&(])ln[ \t]+-s[ \t]+[^-\r\n]') {
-            Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'ln -s' found without '-f'. Use 'ln -sf' for idempotency."
+        if ($normPath -notmatch '(^|/)devtools/audit/(audit_posix|audit_standards)\.sh$') {
+            $hasUnguardedMkdir = $false
+            $hasUnguardedLn = $false
+            foreach ($sLine in ($allContent -split "`r?`n")) {
+                if ($sLine -match '^\s*#') { continue }
+                if ($sLine -match '(^|[\s;|&(])mkdir[ \t]+[^-\r\n]' -and $sLine -notmatch '(?i)(lock|while|if[ \t]+!|if[ \t]+not[ \t]+exist|vagrant[ \t]+ssh)') {
+                    $hasUnguardedMkdir = $true
+                }
+                if ($sLine -match '(^|[\s;|&(])ln[ \t]+-s[ \t]+[^-\r\n]') {
+                    $hasUnguardedLn = $true
+                }
+            }
+            if ($hasUnguardedMkdir) {
+                Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' found without '-p'. Use 'mkdir -p' for idempotency."
+            }
+            if ($hasUnguardedLn) {
+                Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'ln -s' found without '-f'. Use 'ln -sf' for idempotency."
+            }
         }
         $lastScriptNameLine = -10
         $shLineIdx = 0

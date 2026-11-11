@@ -63,12 +63,12 @@ if not "%EDGCPP_DOWNLOAD_URL%"=="" (
     set "EDGCPP_ASSET_SHA256="
 ) else (
     set "EDGCPP_ASSET_URL=https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v%EXACT_VERSION%/%EDGCPP_ASSET_NAME%"
-    set "EDGCPP_ASSET_SHA256=bc824476fd072dcd76409d8f0970c21ddb532976d378d1351adbf4bfea97d933"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=c8652f6631e2eda41611b84d7a930ee5f4898feb87b4b46e7009c081937e8a66"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=b883cb639dd306d676ca390e8effe8b7b284f3d91f8ac31cdb754c81a5fb80c8"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=c4773d7a1bbfba0c75d0ef09b6a250c96f706a0e7d5b21ace78ffe9b271ae7ef"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a"
-    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c"
+    set "EDGCPP_ASSET_SHA256=3221b67308aed3d5144a3b6cbc5ac2958f4c4c0ebc126584136279a32f1a1c1d"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=0ac2b826cb1dacce195c50da9bdc8062999a15323346dc94ac2a12fbaeb0621b"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=9d02a8f933b3eb0c8eb7415f94d6fbeb14d89523f8620a1c966f436c2707a30c"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=2663c9f8caebb75d43fd6c316fe776ffc25331647380e32f78b29dfd1d272488"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=b1c2be566247de89e9663eb0a4e8369b98e2d591d3b5a8ea32a0e8b909fa54b6"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=8e99c17d62a4104bf6a646018a69dd972e1281561f7c38c6c18bf14e12973b49"
 )
 
 if /i "%ACTION%"=="ls" goto :action_ls
@@ -125,15 +125,24 @@ exit /b 0
 :: Downloads/extracts the edgcpp v7.0.1 release archive, stages driver wrappers, and updates the default junction.
 :action_install
 set "TARGET_DIR=%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-if exist "%TARGET_DIR%\bin\edgcpp.cmd" (
-    if exist "%TARGET_DIR%\bin\cpfe.exe" (
-        if exist "%TARGET_DIR%\edgcpp-release-metadata.json" (
-            if not "%FORCE_REBUILD%"=="1" (
-                echo [INFO] edgcpp %EXACT_VERSION% ^(%EDGCPP_FLAVOR%^) is already installed at %TARGET_DIR%.
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
-                exit /b 0
+set "_meta_ok=1"
+if not "%EDGCPP_ASSET_SHA256%"=="" (
+    if exist "%TARGET_DIR%\edgcpp-release-metadata.json" (
+        findstr /I /C:"\"asset_sha256\": \"%EDGCPP_ASSET_SHA256%\"" "%TARGET_DIR%\edgcpp-release-metadata.json" >nul 2>&1
+        if errorlevel 1 set "_meta_ok=0"
+    )
+)
+if "!_meta_ok!"=="1" (
+    if exist "%TARGET_DIR%\bin\edgcpp.cmd" (
+        if exist "%TARGET_DIR%\bin\cpfe.exe" (
+            if exist "%TARGET_DIR%\edgcpp-release-metadata.json" (
+                if not "%FORCE_REBUILD%"=="1" (
+                    echo [INFO] edgcpp %EXACT_VERSION% ^(%EDGCPP_FLAVOR%^) is already installed at %TARGET_DIR%.
+                    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EXACT_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_FLAVOR%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
+                    exit /b 0
+                )
             )
         )
     )
@@ -144,6 +153,9 @@ if not exist "%TARGET_DIR%\include_c++" mkdir "%TARGET_DIR%\include_c++"
 
 if not exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp" mkdir "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp"
 set "_dl_zip=!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp\%EDGCPP_ASSET_NAME%"
+if "!_meta_ok!"=="0" (
+    if exist "!_dl_zip!" del /f /q "!_dl_zip!" >nul 2>&1
+)
 if not exist "!_dl_zip!" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!_dl_zip!" "%EDGCPP_ASSET_SHA256%"
 )

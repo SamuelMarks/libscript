@@ -403,7 +403,7 @@ audit_single_file() {
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
-          UNNECESSARY_DOUBLE_QUOTES|SC2015_AND_OR)
+          UNNECESSARY_DOUBLE_QUOTES|SC2015_AND_OR|IDEMPOTENCY)
             case "$file" in
               *audit_posix.sh|*audit_standards.sh|*.tpl) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;

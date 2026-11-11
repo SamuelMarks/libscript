@@ -34,6 +34,7 @@ cd "$(git rev-parse --show-toplevel)"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   _pc_saved_this="${THIS_FILE:-}"
   _pc_saved_dir="${SCRIPT_DIR:-}"
+  _pc_saved_stack="${STACK:-}"
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -41,7 +42,9 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   unset SCRIPT_NAME || true
   THIS_FILE="$_pc_saved_this"
   SCRIPT_DIR="$_pc_saved_dir"
-  unset _pc_saved_this _pc_saved_dir || true
+  STACK="$_pc_saved_stack"
+  export STACK
+  unset _pc_saved_this _pc_saved_dir _pc_saved_stack || true
 fi
 
 printf '%s\n' 'Running pre-commit hooks...'

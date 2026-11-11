@@ -4,11 +4,7 @@
 # ## Usage
 # . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/env_base.sh"
 set -feu
-_eb_caller_this="${_EB_CALLER_THIS:-}"
-_eb_caller_dir="${_EB_CALLER_DIR:-}"
-if [ -z "$_eb_caller_dir" ] && [ -n "${SCRIPT_DIR:-}" ]; then
-  _eb_caller_dir="$SCRIPT_DIR"
-fi
+_eb_caller_this="${_EB_CALLER_THIS:-}"; _eb_caller_dir="${_EB_CALLER_DIR:-${SCRIPT_DIR:-}}"
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -22,7 +18,9 @@ fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+    [ -n "$_eb_caller_dir" ] && SCRIPT_DIR="$_eb_caller_dir"
+    [ -n "$_eb_caller_this" ] && THIS_FILE="$_eb_caller_this"
+    unset SCRIPT_NAME _eb_caller_this _eb_caller_dir || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
@@ -50,7 +48,7 @@ libscript_path_prepend() {
     case ":${PATH:-}:" in
       ":${_dir}:"*) ;;
       *":${_dir}:"*)
-        _eb_clean_p=$(printf '%s' ":${PATH}:" | sed "s|:${_dir}:|:|g")
+        _eb_clean_p=$(printf '%s' ":${PATH:-}:" | sed "s|:${_dir}:|:|g")
         _eb_clean_p="${_eb_clean_p#:}"
         _eb_clean_p="${_eb_clean_p%:}"
         PATH="${_dir}${_eb_clean_p:+:${_eb_clean_p}}"
@@ -61,6 +59,19 @@ libscript_path_prepend() {
   export PATH
 }
 
+if [ -z "${LIBSCRIPT_HOME:-}" ]; then
+  if [ -n "${REMOTE_HOME:-}" ] && [ -d "${REMOTE_HOME}" ]; then
+    LIBSCRIPT_HOME="${REMOTE_HOME}/.libscript"
+  elif [ -n "${SERVICE_USER:-}" ] && [ "${SERVICE_USER}" != "root" ] && [ -d "/home/${SERVICE_USER}" ]; then
+    LIBSCRIPT_HOME="/home/${SERVICE_USER}/.libscript"
+  elif [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ] && [ -d "/home/${SUDO_USER}" ]; then
+    LIBSCRIPT_HOME="/home/${SUDO_USER}/.libscript"
+  else
+    LIBSCRIPT_HOME="${HOME:-/root}/.libscript"
+  fi
+  export LIBSCRIPT_HOME
+fi
+
 _eb_pkg="${PACKAGE_NAME:-}"
 if [ -z "$_eb_pkg" ] && [ -n "${_eb_caller_dir:-}" ]; then
   _eb_pkg=$(basename "$_eb_caller_dir")
@@ -68,19 +79,7 @@ elif [ -z "$_eb_pkg" ] && [ -n "${DIR:-}" ]; then
   _eb_pkg=$(basename "$DIR")
 fi
 if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]; then
-  if [ -z "${LIBSCRIPT_HOME:-}" ]; then
-    if [ -n "${REMOTE_HOME:-}" ] && [ -d "${REMOTE_HOME}" ]; then
-      LIBSCRIPT_HOME="${REMOTE_HOME}/.libscript"
-    elif [ -n "${SERVICE_USER:-}" ] && [ "${SERVICE_USER}" != "root" ] && [ -d "/home/${SERVICE_USER}" ]; then
-      LIBSCRIPT_HOME="/home/${SERVICE_USER}/.libscript"
-    elif [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ] && [ -d "/home/${SUDO_USER}" ]; then
-      LIBSCRIPT_HOME="/home/${SUDO_USER}/.libscript"
-    else
-      LIBSCRIPT_HOME="${HOME:-/root}/.libscript"
-    fi
-    export LIBSCRIPT_HOME
-  fi
-  _eb_home="${LIBSCRIPT_HOME}"
+  _eb_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
   _eb_pkg_up=$(printf '%s' "$_eb_pkg" | tr '[:lower:]-' '[:upper:]_')
   if [ "$_eb_pkg_up" = "7ZIP" ]; then _eb_pkg_up="SEVENZIP"; fi
   case "$_eb_pkg_up" in [0-9]*) _eb_pkg_up="_${_eb_pkg_up}" ;; esac

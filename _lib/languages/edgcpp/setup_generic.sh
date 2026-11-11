@@ -117,26 +117,26 @@ resolve_edgcpp_release_asset() {
   EDGCPP_SHA256SUMS_URL="https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v${EXACT_VERSION}/SHA256SUMS.txt"
   EDGCPP_SHA256SUMS_DIGEST=""
   if [ "${EXACT_VERSION}" = "7.0.1" ]; then
-    EDGCPP_SHA256SUMS_DIGEST='ca39696f727ba7a7e3926f711f61537a0e33017dc61b0540338aa9af47cc5357'
+    EDGCPP_SHA256SUMS_DIGEST='1463b963d76d1b6fb1950f43dc1d3a8e53703923e4a44d778ac33b412516d0c0'
   fi
   EDGCPP_ASSET_SHA256=""
 
   case "${EDGCPP_ASSET_NAME}" in
-    "edgcpp+llvm+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="a848a68c6e116eed2c06638bf5149aa727f95a359f192bd3ab8f423558aa94bc" ;;
-    "edgcpp+llvm+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="84b0bb06bfbe034e02b47a3d81b2ece99a75aee1336be666ded2885c212e133a" ;;
-    "edgcpp+llvm+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="ba9e214f590310eab92e8a7cc7a93fad90395d92c6df367f009a065e1234cb64" ;;
-    "edgcpp+llvm+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="bc824476fd072dcd76409d8f0970c21ddb532976d378d1351adbf4bfea97d933" ;;
-    "edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="c8652f6631e2eda41611b84d7a930ee5f4898feb87b4b46e7009c081937e8a66" ;;
-    "edgcpp+llvm-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="e56eee2cfdc43820e778a305cd8e6549c9b6b78ec82a4901a114a3ad79146aff" ;;
-    "edgcpp+llvm-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="e9b9dbb385c11a7a66afd94b567c0ad1b7ebdfb0177da172b93e351a69f8b708" ;;
-    "edgcpp+llvm-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="7caf4ff85567ed6c6bf2048881e46a7d9ee2c1a8b42604925331e334dd994809" ;;
-    "edgcpp+llvm-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="b883cb639dd306d676ca390e8effe8b7b284f3d91f8ac31cdb754c81a5fb80c8" ;;
-    "edgcpp+llvm-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="c4773d7a1bbfba0c75d0ef09b6a250c96f706a0e7d5b21ace78ffe9b271ae7ef" ;;
-    "edgcpp+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="e1fce29ebf4fec8d8f1338c94036e305fc0f95bc4b54f84e7a52aeacd8a9198a" ;;
-    "edgcpp+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="2fd3162a3c8cc4dd15728695d7e1b89845b3b916be198a8e9fd5278c2a869ac3" ;;
-    "edgcpp+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="8d5571d014e18e3b1d28e0a5a7cd9b5eb2973a58af0e4920381509250f3f9d52" ;;
-    "edgcpp+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="e308ea54067dee50475acc7647a2351280c172ac86abaf77f8969694cc59790a" ;;
-    "edgcpp+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="d9867f12b357053fc8bd6b4b12fa89ef97b24bc413ed5c132b74c182b598015c" ;;
+    "edgcpp+llvm+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="16441f25f2cd25d45a1fc95ed503027cf392b96e9e00bd533f55690cd44d4f56" ;;
+    "edgcpp+llvm+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="b73e8b9fbeedd398a24d0292d56a8aa40fc4b38c3d2a2ad8e0ce020895954350" ;;
+    "edgcpp+llvm+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="6a8c087a4d43e934393244bf866fff622eda4e0290903f860e5cb8f9b61a8bd5" ;;
+    "edgcpp+llvm+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="3221b67308aed3d5144a3b6cbc5ac2958f4c4c0ebc126584136279a32f1a1c1d" ;;
+    "edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="0ac2b826cb1dacce195c50da9bdc8062999a15323346dc94ac2a12fbaeb0621b" ;;
+    "edgcpp+llvm-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="e96329691fe8c73a9314daa5052af84ee0dfd6ff5ec3f09f2b13b256732b3330" ;;
+    "edgcpp+llvm-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="59ace4efc81f069a2f7d0c7047340ba63c41a7f0a8864c419c5e057eb5959a19" ;;
+    "edgcpp+llvm-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="c2dd91eaa4eb1b89ecfea71ed6c1e89289c86aa602dc9c0d67e6f961bdba99c9" ;;
+    "edgcpp+llvm-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="9d02a8f933b3eb0c8eb7415f94d6fbeb14d89523f8620a1c966f436c2707a30c" ;;
+    "edgcpp+llvm-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="2663c9f8caebb75d43fd6c316fe776ffc25331647380e32f78b29dfd1d272488" ;;
+    "edgcpp+gcc-v7.0.1-linux-x86_64.tar.gz") EDGCPP_ASSET_SHA256="7d057519f9a735dcdf63e0130a78327f7039bd1d7c290527930a52191825b9be" ;;
+    "edgcpp+gcc-v7.0.1-linux-aarch64.tar.gz") EDGCPP_ASSET_SHA256="f82768fbdb292fd4082066151f48de71a72b450bdddfbf4b23a170bd51bedb08" ;;
+    "edgcpp+gcc-v7.0.1-macos-aarch64.tar.gz") EDGCPP_ASSET_SHA256="19c91cae85deccd39bb56bbbb012fc3911b5a60c8cb1f0cc48f755a7f0c25eb1" ;;
+    "edgcpp+gcc-v7.0.1-windows-x86_64.zip") EDGCPP_ASSET_SHA256="b1c2be566247de89e9663eb0a4e8369b98e2d591d3b5a8ea32a0e8b909fa54b6" ;;
+    "edgcpp+gcc-v7.0.1-windows-arm64.zip") EDGCPP_ASSET_SHA256="8e99c17d62a4104bf6a646018a69dd972e1281561f7c38c6c18bf14e12973b49" ;;
   esac
 
   if [ -z "${EDGCPP_ASSET_SHA256}" ] && [ -z "${EDGCPP_DOWNLOAD_URL:-}" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
@@ -516,7 +516,14 @@ install_edgcpp_component() {
   resolve_edgcpp_release_asset
   TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}-${EDGCPP_FLAVOR}"
 
-  if [ -x "${TARGET_DIR}/bin/edgcpp" ] && [ -x "${TARGET_DIR}/bin/cpfe" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ]; then
+  _metadata_matches=1
+  if [ -n "${EDGCPP_ASSET_SHA256}" ] && [ -f "${TARGET_DIR}/edgcpp-release-metadata.json" ]; then
+    if ! grep -q "\"asset_sha256\": \"${EDGCPP_ASSET_SHA256}\"" "${TARGET_DIR}/edgcpp-release-metadata.json" 2>/dev/null; then
+      _metadata_matches=0
+    fi
+  fi
+
+  if [ "${_metadata_matches}" = "1" ] && [ -x "${TARGET_DIR}/bin/edgcpp" ] && [ -x "${TARGET_DIR}/bin/cpfe" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ]; then
     if [ ! -f "${TARGET_DIR}/edgcpp-release-metadata.json" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-gcc-be" ] || { { [ -f "/etc/redhat-release" ] || [ -f "/etc/rocky-release" ]; } && [ ! -f "${TARGET_DIR}/lib/libedg_el9_compat.so" ]; }; then
       stage_edgcpp_wrappers "${TARGET_DIR}"
     fi
@@ -542,6 +549,9 @@ install_edgcpp_component() {
         _cache_dir="${EDGCPP_DOWNLOAD_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/edgcpp}"
         mkdir -p "${_cache_dir}"
         _dl_file="${_cache_dir}/${EDGCPP_ASSET_NAME}"
+        if [ -f "${_dl_file}" ] && [ "${_metadata_matches}" = "0" ]; then
+          rm -f "${_dl_file}"
+        fi
         if [ ! -f "${_dl_file}" ]; then
           PACKAGE_NAME="edgcpp" libscript_download "${EDGCPP_ASSET_URL}" "${_dl_file}" "${EDGCPP_ASSET_SHA256}" || true
         fi
@@ -567,6 +577,9 @@ install_edgcpp_component() {
       _cache_dir="${EDGCPP_DOWNLOAD_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/edgcpp}"
       mkdir -p "${_cache_dir}"
       _dl_file="${_cache_dir}/${EDGCPP_ASSET_NAME}"
+      if [ -f "${_dl_file}" ] && [ "${_metadata_matches}" = "0" ]; then
+        rm -f "${_dl_file}"
+      fi
       if [ ! -f "${_dl_file}" ]; then
         log_info "Downloading edgcpp ${EXACT_VERSION} (${EDGCPP_FLAVOR}) from ${EDGCPP_ASSET_URL}..."
         PACKAGE_NAME="edgcpp" libscript_download "${EDGCPP_ASSET_URL}" "${_dl_file}" "${EDGCPP_ASSET_SHA256}" || true

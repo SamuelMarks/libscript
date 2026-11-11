@@ -84,13 +84,13 @@ if %ERRORLEVEL% neq 0 (
 git diff --no-ext-diff --cached --exit-code
 if %ERRORLEVEL% neq 0 (
     echo Error: The pre-commit hook modified staged files. Please run the pre-commit hook locally and commit the changes.
-    git status --short
+    git status --short -uno
     exit /b 1
 )
 git diff --no-ext-diff --exit-code
 if %ERRORLEVEL% neq 0 (
     echo Error: The pre-commit hook modified working tree files. Please run the pre-commit hook locally and commit the changes.
-    git status --short
+    git status --short -uno
     exit /b 1
 )
 
