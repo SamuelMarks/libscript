@@ -88,14 +88,13 @@ function Check-ManifestSupport {
         return $true
     }
 
-    $family = switch ($TargetOs) {
-        { $_ -in 'alpine', 'debian', 'rhel', 'rocky', 'linux' } { 'linux' }
-        { $_ -in 'freebsd', 'bsd' } { 'bsd' }
-        { $_ -in 'darwin', 'macos' } { 'darwin' }
-        { $_ -in 'windows' } { 'windows' }
-        'darwin'  { 'darwin' }
-        'sunos'   { 'sunos' }
-        default   { '' }
+    $aliases = switch ($TargetOs) {
+        { $_ -in 'alpine', 'debian', 'rhel', 'rocky', 'linux' } { @($TargetOs, 'linux') }
+        { $_ -in 'freebsd', 'bsd' } { @($TargetOs, 'bsd') }
+        { $_ -in 'darwin', 'macos', 'mac' } { @('darwin', 'macos', 'mac') }
+        'windows' { @('windows') }
+        { $_ -in 'sunos', 'illumos', 'solaris' } { @('sunos', 'illumos', 'solaris') }
+        default   { @($TargetOs) }
     }
 
     try {
@@ -107,15 +106,22 @@ function Check-ManifestSupport {
 
     if ($null -ne $manifest.os_blacklist) {
         $bl = @($manifest.os_blacklist)
-        if ($bl -contains $TargetOs -or ($family -and $bl -contains $family)) {
-            return $false
+        foreach ($alias in $aliases) {
+            if ($bl -contains $alias) {
+                return $false
+            }
         }
     }
 
     if ($null -ne $manifest.os_whitelist) {
         $wl = @($manifest.os_whitelist)
-        if ($wl -contains 'all' -or $wl -contains $TargetOs -or ($family -and $wl -contains $family)) {
+        if ($wl -contains 'all') {
             return $true
+        }
+        foreach ($alias in $aliases) {
+            if ($wl -contains $alias) {
+                return $true
+            }
         }
         return $false
     }

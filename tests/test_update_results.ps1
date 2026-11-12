@@ -25,11 +25,19 @@ try {
     # Setup mock directory structure
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/catA/compA") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/catB/compB") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/virtualization/apple_vm") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/utilities/no_darwin") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/init-systems/illumos_init") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "topologies/compS") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/_common/helper") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "tests_tmp") -Force | Out-Null
 
     New-Item -ItemType File -Path (Join-Path $testTmp "libscript.sh") | Out-Null
+
+    $utf8NoBomInit = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText((Join-Path $testTmp "_lib/virtualization/apple_vm/manifest.json"), '{"name":"apple_vm","provides":["apple_vm"],"os_whitelist":["linux","macos","windows"]}', $utf8NoBomInit)
+    [System.IO.File]::WriteAllText((Join-Path $testTmp "_lib/utilities/no_darwin/manifest.json"), '{"name":"no_darwin","provides":["no_darwin"],"os_blacklist":["windows","macos"]}', $utf8NoBomInit)
+    [System.IO.File]::WriteAllText((Join-Path $testTmp "_lib/init-systems/illumos_init/manifest.json"), '{"name":"illumos_init","provides":["illumos_init"],"os_whitelist":["illumos"]}', $utf8NoBomInit)
 
     $symCheck = [string][char]0x2705
     $symCross = [string][char]0x274C
@@ -89,6 +97,17 @@ MIT
     # Verification 3: _common / helper must NOT be in the table
     if ($updatedReadme -match 'helper') {
         throw "Error: helper from _common found in README.md table"
+    }
+
+    # Verification 3b: macos and illumos aliases map to darwin and sunos columns
+    if ($updatedReadme -notmatch "\|\s*``apple_vm``\s*\|\s*``virtualization``\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*-\s*\|\s*-\s*\|\s*$symQuest\s*\|") {
+        throw "Error: apple_vm os_whitelist ['macos'] did not map to darwin column in README.md"
+    }
+    if ($updatedReadme -notmatch "\|\s*``no_darwin``\s*\|\s*``utilities``\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*-\s*\|\s*$symQuest\s*\|\s*$symQuest\s*\|\s*-\s*\|") {
+        throw "Error: no_darwin os_blacklist ['macos'] did not map to darwin column in README.md"
+    }
+    if ($updatedReadme -notmatch "\|\s*``illumos_init``\s*\|\s*``init-systems``\s*\|\s*-\s*\|\s*-\s*\|\s*-\s*\|\s*-\s*\|\s*$symQuest\s*\|\s*-\s*\|\s*-\s*\|") {
+        throw "Error: illumos_init os_whitelist ['illumos'] did not map to sunos column in README.md"
     }
 
     # Verification 4: TODO_PLAN.md updated completed items

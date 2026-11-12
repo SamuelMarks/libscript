@@ -49,14 +49,12 @@ goto :find_root
 :root_found
 
 if /i "%~1"=="deploy" (
-    shift
-    call "!SCRIPT_DIR!\deploy.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
+    call "!SCRIPT_DIR!\deploy.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="teardown" (
-    shift
-    call "!SCRIPT_DIR!\teardown.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %ERRORLEVEL%
+    call "!SCRIPT_DIR!\teardown.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b !ERRORLEVEL!
 )
 
 set "PACKAGE_NAME=tpu-vm-vllm"

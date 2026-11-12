@@ -51,17 +51,16 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+:: Source logging
+set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\log.cmd"
+
 if not "%~1"=="" (
     set "_SB_SUB=%~1"
     if "!_SB_SUB:~0,1!"==":" (
         shift
-        call !_SB_SUB! "%~1" "%~2" "%~3" "%~4" "%~5" "%~6" "%~7" "%~8" "%~9"
-        exit /b !errorlevel!
+        goto !_SB_SUB!
     )
 )
-
-:: Source logging
-set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\log.cmd"
 
 :: Resolve target component directory
 set "TARGET_DIR="

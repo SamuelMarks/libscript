@@ -646,6 +646,7 @@
     "ensurepip",
     "entrancy",
     "envfile",
+    "envoyproxy",
     "ENVSUBST",
     "envsubst",
     "eopkg",

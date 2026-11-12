@@ -41,7 +41,7 @@ assert_file_contains() {
   _file="$1"
   _pattern="$2"
   _desc="$3"
-  if grep -q "$_pattern" "$_file"; then
+  if grep -Eq "$_pattern" "$_file"; then
     printf '[PASS] %s
 ' "$_desc"
   else
@@ -59,11 +59,13 @@ JSON_OUT="${TMP_TEST_DIR}/matrix_results.json"
 
 sh "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "${LIBSCRIPT_ROOT_DIR}" --output "${TMP_TEST_DIR}/README.md" --json "${JSON_OUT}"
 
+_bt=$(printf '\140')
 assert_file_contains "${TMP_TEST_DIR}/README.md" "### Tier 1: Leaf Recipes, Toolchains & Native Version Managers" "Renders Tier 1 heading"
 assert_file_contains "${TMP_TEST_DIR}/README.md" "### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops" "Renders Tier 1.5 heading"
 assert_file_contains "${TMP_TEST_DIR}/README.md" "### Tier 2: OS Synthesizers, Kernels, Bootloaders, Storage & Image Builders" "Renders Tier 2 heading"
 assert_file_contains "${TMP_TEST_DIR}/README.md" "### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners" "Renders Tier 3 heading"
 assert_file_contains "${TMP_TEST_DIR}/README.md" "### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits" "Renders Tier 3.5/4/Traits heading"
+assert_file_contains "${TMP_TEST_DIR}/README.md" "\\|[[:space:]]*${_bt}envoy${_bt}" "Renders envoy component row in Tier 1 table"
 assert_file_contains "${JSON_OUT}" '"tier":' "JSON output contains tier field"
 assert_file_contains "${JSON_OUT}" '"category":' "JSON output contains category field"
 assert_file_contains "${JSON_OUT}" '"idempotent":' "JSON output contains idempotent field"
@@ -79,6 +81,23 @@ else
 ' >&2
   FAILURES=$((FAILURES + 1))
 fi
+
+# Verify OS alias handling (macos/darwin/mac and illumos/solaris/sunos)
+SYNTH_DIR="${TMP_TEST_DIR}/synth_repo"
+mkdir -p "${SYNTH_DIR}/_lib/virtualization/apple_vm" \
+         "${SYNTH_DIR}/_lib/utilities/no_darwin" \
+         "${SYNTH_DIR}/_lib/init-systems/illumos_init" \
+         "${SYNTH_DIR}/tests_tmp"
+: > "${SYNTH_DIR}/libscript.sh"
+printf '%s\n' '{"name":"apple_vm","provides":["apple_vm"],"os_whitelist":["linux","macos","windows"]}' > "${SYNTH_DIR}/_lib/virtualization/apple_vm/manifest.json"
+printf '%s\n' '{"name":"no_darwin","provides":["no_darwin"],"os_blacklist":["windows","macos"]}' > "${SYNTH_DIR}/_lib/utilities/no_darwin/manifest.json"
+printf '%s\n' '{"name":"illumos_init","provides":["illumos_init"],"os_whitelist":["illumos"]}' > "${SYNTH_DIR}/_lib/init-systems/illumos_init/manifest.json"
+printf '# Synth\n\n## Supported Components\n\n## License\n' > "${SYNTH_DIR}/README.md"
+
+sh "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "${SYNTH_DIR}"
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}apple_vm${_bt}[[:space:]]*\\|[[:space:]]*${_bt}virtualization${_bt}[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|" "update_results.sh maps os_whitelist macos to darwin column"
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}no_darwin${_bt}[[:space:]]*\\|[[:space:]]*${_bt}utilities${_bt}[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_blacklist macos to darwin column"
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}illumos_init${_bt}[[:space:]]*\\|[[:space:]]*${_bt}init-systems${_bt}[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_whitelist illumos to sunos column"
 
 if [ "$FAILURES" -gt 0 ]; then
   printf '[FAIL] test_update_results failed with %d error(s).

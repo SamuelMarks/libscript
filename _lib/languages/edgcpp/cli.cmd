@@ -50,18 +50,15 @@ goto :find_root
 :root_found
 
 if /i "%~1"=="experiments" (
-    shift
-    call "!SCRIPT_DIR!\benchmark_experiments.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+    call "!SCRIPT_DIR!\benchmark_experiments.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
 if /i "%~1"=="cloud-experiments" (
-    shift
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
 if /i "%~1"=="torture" (
-    shift
-    call "!SCRIPT_DIR!\torture_suite.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+    call "!SCRIPT_DIR!\torture_suite.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
 

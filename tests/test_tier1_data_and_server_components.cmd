@@ -153,6 +153,12 @@ if exist "!FAKE_LS_HOME!\surrealdb\2.1.4\bin\surreal.cmd" (
     call :fail_check "Offline cached zip install of surrealdb 2.1.4 missing bin\surreal.cmd"
 )
 
+if exist "!FAKE_LS_HOME!\surrealdb\default\bin\surreal.cmd" (
+    call :pass_check "versioning.cmd :libscript_symlink_alias created default junction for surrealdb"
+) else (
+    call :fail_check "versioning.cmd :libscript_symlink_alias failed to create default junction for surrealdb"
+)
+
 set "IDEMP_LOG=!TEST_WS!\surrealdb_idemp.log"
 set "STACK="
 call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install surrealdb 2.1.4 > "!IDEMP_LOG!" 2>&1
@@ -161,6 +167,12 @@ if errorlevel 1 (
     call :fail_check "Second install of surrealdb 2.1.4 did not hit idempotent early exit"
 ) else (
     call :pass_check "Second install of surrealdb 2.1.4 exited idempotently"
+)
+findstr /I /C:"syntax is incorrect" "!IDEMP_LOG!" >nul 2>&1
+if not errorlevel 1 (
+    call :fail_check "Second install of surrealdb 2.1.4 emitted cmd.exe path syntax error"
+) else (
+    call :pass_check "Second install of surrealdb 2.1.4 emitted zero cmd.exe path syntax errors"
 )
 
 rmdir /s /q "!TEST_WS!" >nul 2>&1

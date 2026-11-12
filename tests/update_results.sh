@@ -78,30 +78,37 @@ check_manifest_support() {
     'alpine'|'debian'|'rhel'|'rocky'|'linux') _m_family="linux" ;;
     'freebsd'|'bsd') _m_family="bsd" ;;
     'windows') _m_family="windows" ;;
-    'darwin'|'macos') _m_family="darwin" ;;
-    'sunos') _m_family="sunos" ;;
+    'darwin'|'macos'|'mac') _m_family="darwin" ;;
+    'sunos'|'illumos'|'solaris') _m_family="sunos" ;;
   esac
 
   awk -v os="${_m_os}" -v family="${_m_family}" '
+    function matches_os(line) {
+      if (line ~ q os q) return 1
+      if (family != "" && line ~ q family q) return 1
+      if (family == "darwin" && (line ~ q "darwin" q || line ~ q "macos" q || line ~ q "mac" q)) return 1
+      if (family == "sunos" && (line ~ q "sunos" q || line ~ q "illumos" q || line ~ q "solaris" q)) return 1
+      return 0
+    }
     BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes"; q="\"" }
-    /"os_blacklist"\s*:/ {
+    /"os_blacklist"[[:space:]]*:/ {
       in_bl=1; in_wl=0
-      if ($0 ~ q os q || (family != "" && $0 ~ q family q) || (os ~ /darwin|macos/ && ($0 ~ q "darwin" q || $0 ~ q "macos" q))) { result="no"; exit }
+      if (matches_os($0)) { result="no"; exit }
       if ($0 ~ /\]/) { in_bl=0 }
       next
     }
-    /"os_whitelist"\s*:/ {
+    /"os_whitelist"[[:space:]]*:/ {
       in_wl=1; in_bl=0; has_wl=1
-      if ($0 ~ q os q || $0 ~ q "all" q || (family != "" && $0 ~ q family q) || (os ~ /darwin|macos/ && ($0 ~ q "darwin" q || $0 ~ q "macos" q))) { wl_match=1 }
+      if ($0 ~ q "all" q || matches_os($0)) { wl_match=1 }
       if ($0 ~ /\]/) { in_wl=0 }
       next
     }
     in_bl {
-      if ($0 ~ q os q || (family != "" && $0 ~ q family q) || (os ~ /darwin|macos/ && ($0 ~ q "darwin" q || $0 ~ q "macos" q))) { result="no"; exit }
+      if (matches_os($0)) { result="no"; exit }
       if ($0 ~ /\]/) { in_bl=0 }
     }
     in_wl {
-      if ($0 ~ q os q || $0 ~ q "all" q || (family != "" && $0 ~ q family q) || (os ~ /darwin|macos/ && ($0 ~ q "darwin" q || $0 ~ q "macos" q))) { wl_match=1 }
+      if ($0 ~ q "all" q || matches_os($0)) { wl_match=1 }
       if ($0 ~ /\]/) { in_wl=0 }
     }
     END {

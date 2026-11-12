@@ -62,7 +62,9 @@ venv/
 .venv/
 .venv*/
 venv*/
-env*/
+/env*/
+!_lib/web-servers/envoy/
+!_lib/web-servers/envoy/**
 env.bak/
 venv.bak/
 coverage/

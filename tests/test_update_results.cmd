@@ -70,6 +70,44 @@ if errorlevel 1 (
 )
 echo [PASS] Tier 1..4 headings rendered and verified.
 
+findstr /C:"| `envoy`" "%TMP_TEST_DIR%\README.md" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] envoy row missing from Tier 1 table >&2
+    rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+    exit /b 1
+)
+echo [PASS] envoy row rendered in Tier 1 table.
+
+copy /y "%TMP_TEST_DIR%\README.md" "%TMP_TEST_DIR%\README.pass1.md" >nul
+call "%LIBSCRIPT_ROOT_DIR%\tests\update_results.cmd" "%LIBSCRIPT_ROOT_DIR%" --output "%TMP_TEST_DIR%\README.md" --json "%TMP_TEST_DIR%\matrix_results.json"
+if errorlevel 1 (
+    echo [FAIL] 2nd run of update_results.cmd failed >&2
+    rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+    exit /b 1
+)
+fc /b "%TMP_TEST_DIR%\README.pass1.md" "%TMP_TEST_DIR%\README.md" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] 2x consecutive runs of update_results.cmd produced a diff >&2
+    rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+    exit /b 1
+)
+echo [PASS] 2x consecutive runs of update_results.cmd are 100%% idempotent.
+
+where pwsh >nul 2>&1
+if %ERRORLEVEL% equ 0 (
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.ps1"
+    if errorlevel 1 (
+        rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+        exit /b 1
+    )
+) else (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.ps1"
+    if errorlevel 1 (
+        rmdir /s /q "%TMP_TEST_DIR%" 2>nul
+        exit /b 1
+    )
+)
+
 rmdir /s /q "%TMP_TEST_DIR%" 2>nul
 echo === All Tiered README Table Generator Checks Passed! ===
 exit /b 0

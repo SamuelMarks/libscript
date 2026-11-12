@@ -53,8 +53,11 @@ if not "%~1"=="" (
     set "_VER_SUB=%~1"
     if "!_VER_SUB:~0,1!"==":" (
         shift
-        call !_VER_SUB! "%~1" "%~2" "%~3" "%~4" "%~5" "%~6" "%~7" "%~8" "%~9"
-        exit /b !errorlevel!
+        goto !_VER_SUB!
+    )
+    if /i "!_VER_SUB!"=="libscript_get_version_dir" (
+        shift
+        goto :libscript_get_version_dir
     )
 )
 goto :eof
@@ -70,7 +73,9 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_BASE_DIR%\%component%\%version%"
-goto :eof
+echo %LIBSCRIPT_VERSION_DIR%
+endlocal & set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_VERSION_DIR%"
+exit /b 0
 
 :: ## libscript_symlink_alias
 :: Updates the default or named version symlink/junction to point to the target version.

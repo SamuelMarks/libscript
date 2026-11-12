@@ -156,14 +156,39 @@ echo Running shellcheck...
 set "SHELLCHECK_OPT_ARGS="
 shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
 if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
-for /f "tokens=*" %%F in ('!GIT_FILE_CMD! 2^>nul ^| findstr /R "\.sh$ ^\.githooks/pre-commit$" ^| findstr /V /R "node_modules \.git/ gen/"') do (
-    if exist "%%F" (
-        shellcheck -s sh !SHELLCHECK_OPT_ARGS! "%%F"
-        if errorlevel 1 (
-            echo [ERROR] ShellCheck failed on %%F.
-            exit /b 1
+set "_SC_BATCH="
+set "_SC_COUNT=0"
+set "_SC_FAILED=0"
+for /f "delims=" %%F in ('!GIT_FILE_CMD! 2^>nul') do (
+    set "_SC_CAND=%%F"
+    set "_SC_NORM=!_SC_CAND:\=/!"
+    set "_SC_MATCH=0"
+    if /i "%%~xF"==".sh" set "_SC_MATCH=1"
+    if /i "!_SC_NORM!"==".githooks/pre-commit" set "_SC_MATCH=1"
+    if "!_SC_MATCH!"=="1" (
+        if not "!_SC_NORM:node_modules/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
+        if not "!_SC_NORM:.git/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
+        if /i "!_SC_NORM:~0,4!"=="gen/" set "_SC_MATCH=0"
+        if not "!_SC_NORM:/gen/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
+    )
+    if "!_SC_MATCH!"=="1" if exist "%%F" (
+        set "_SC_BATCH=!_SC_BATCH! "%%F""
+        set /a "_SC_COUNT+=1"
+        if !_SC_COUNT! geq 40 (
+            shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
+            if errorlevel 1 set "_SC_FAILED=1"
+            set "_SC_BATCH="
+            set "_SC_COUNT=0"
         )
     )
+)
+if !_SC_COUNT! gtr 0 (
+    shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
+    if errorlevel 1 set "_SC_FAILED=1"
+)
+if "!_SC_FAILED!"=="1" (
+    echo [ERROR] ShellCheck audit failed.
+    exit /b 1
 )
 
 if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
@@ -173,12 +198,14 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
         echo [ERROR] generate_markdown_docs.cmd failed.
         exit /b 1
     )
-    for /f "delims=" %%F in ('git ls-files -m ^| findstr /E "README.md"') do (
-        where npx >nul 2>&1
-        if not errorlevel 1 (
-            call npx --yes prettier --write "%%F" >nul 2>&1
+    for /f "delims=" %%F in ('git ls-files -m 2^>nul') do (
+        if /i "%%~nxF"=="README.md" (
+            where npx >nul 2>&1
+            if not errorlevel 1 (
+                call npx --yes prettier --write "%%F" >nul 2>&1
+            )
+            git add "%%F"
         )
-        git add "%%F"
     )
 )
 
