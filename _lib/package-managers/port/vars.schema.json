@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/port/vars.schema.json",
+  "title": "port variables",
+  "description": "Configuration variables for port",
+  "type": "object",
+  "properties": {
+    "PORT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install port. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "PORT_VERSION": {
+      "description": "Specific version of port to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "PORT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading port binary or archive artifacts."
+    },
+    "PORT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying port available remote releases."
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/automake/vars.schema.json",
+  "title": "automake variables",
+  "description": "Configuration variables for automake",
+  "type": "object",
+  "properties": {
+    "AUTOMAKE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install automake. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "AUTOMAKE_VERSION": {
+      "description": "Specific version of automake to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "1.17"]
+    },
+    "AUTOMAKE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading automake binary or archive artifacts."
+    },
+    "AUTOMAKE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying automake available remote releases."
+    }
+  }
+}

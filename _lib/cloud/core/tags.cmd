@@ -189,6 +189,10 @@ if "%provider%"=="aws" (
     echo --tags %LIBSCRIPT_TAG_KEY%:%LIBSCRIPT_TAG_VALUE%
 ) else if "%provider%"=="vultr" (
     echo --tags %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="oci" (
+    echo --freeform-tags {"%LIBSCRIPT_TAG_KEY%":"%LIBSCRIPT_TAG_VALUE%"}
+) else if "%provider%"=="ovh" (
+    echo --label %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
 ) else (
     echo Error: Unknown cloud provider "%provider%" for tagging. >&2
     exit /b 1
@@ -213,6 +217,10 @@ if "%provider%"=="aws" (
     echo --tags %LIBSCRIPT_TAG_KEY%:%LIBSCRIPT_TAG_VALUE%
 ) else if "%provider%"=="vultr" (
     echo --tag %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
+) else if "%provider%"=="oci" (
+    echo --query "data[?\"freeform-tags\".\"%LIBSCRIPT_TAG_KEY%\"=='%LIBSCRIPT_TAG_VALUE%']"
+) else if "%provider%"=="ovh" (
+    echo --label %LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%
 ) else (
     echo Error: Unknown cloud provider "%provider%" for tag filtering. >&2
     exit /b 1

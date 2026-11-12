@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "apache",
+  "title": "Apache HTTP Server",
+  "description": "Apache HTTP Server (apachectl / apache2) modular, cross-platform web server recipe.",
+  "category": "web-server",
+  "provides": ["web-server", "apache", "apache2", "apachectl"],
+  "os_whitelist": ["all"],
+  "conflicts": ["httpd"],
+  "ports": [80, 443],
+  "multitenant": true,
+  "repository": "https://github.com/apache/httpd",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

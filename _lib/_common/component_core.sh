@@ -268,7 +268,7 @@ case "${1:-}" in
       exit 1
     fi
     ;;
-  auth*|location*|group*|project*|network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|dashboard*|cost*|usage*|logs-aggregate*|aws*|azure*|gcp*|hetzner*|proxmox*|digitalocean*|linode*|vultr*|cleanup*)
+  auth*|location*|group*|project*|compartment*|network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|dashboard*|cost*|usage*|logs-aggregate*|aws*|azure*|gcp*|hetzner*|proxmox*|digitalocean*|linode*|vultr*|oci*|ovh*|cleanup*)
     ACTION="${1:-}"
     shift
     ;;
@@ -579,6 +579,15 @@ elif [ "$ACTION" = "env" ]; then
 elif [ "$ACTION" = "run" ]; then
   INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
+  if [ ! -x "$BIN_PATH" ] && [ -d "$INSTALLED_DIR/bin" ]; then
+    for _entry in $(ls -1 "$INSTALLED_DIR/bin" 2>/dev/null || true); do
+      _cand="$INSTALLED_DIR/bin/$_entry"
+      if [ -f "$_cand" ] && [ -x "$_cand" ]; then
+        BIN_PATH="$_cand"
+        break
+      fi
+    done
+  fi
   if [ ! -x "$BIN_PATH" ]; then
     log_error "$PACKAGE_NAME version $VERSION not installed at $BIN_PATH"
     exit 1
@@ -587,6 +596,15 @@ elif [ "$ACTION" = "run" ]; then
 elif [ "$ACTION" = "which" ]; then
   INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
+  if [ ! -x "$BIN_PATH" ] && [ -d "$INSTALLED_DIR/bin" ]; then
+    for _entry in $(ls -1 "$INSTALLED_DIR/bin" 2>/dev/null || true); do
+      _cand="$INSTALLED_DIR/bin/$_entry"
+      if [ -f "$_cand" ] && [ -x "$_cand" ]; then
+        BIN_PATH="$_cand"
+        break
+      fi
+    done
+  fi
   if [ -x "$BIN_PATH" ]; then
     log_info "$BIN_PATH"
     exit 0

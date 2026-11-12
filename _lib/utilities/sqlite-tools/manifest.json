@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sqlite-tools",
+  "title": "SQLite CLI Tools",
+  "description": "Official SQLite command-line bundle providing sqlite3 shell, sqldiff, and sqlite3_analyzer.",
+  "category": "utility",
+  "provides": ["sqlite-tools", "sqldiff", "sqlite3_analyzer"],
+  "os_whitelist": ["all"]
+}

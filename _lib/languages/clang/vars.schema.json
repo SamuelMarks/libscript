@@ -39,6 +39,10 @@
       "description": "Default optimization and code generation flags exported when using Clang.",
       "type": "string",
       "default": "-O2"
+    },
+    "CLANG_BUILD_TARGET": {
+      "description": "Specific LLVM/Clang target to build when benchmarking ('llvm-core' for opt/llc/llvm-core, 'clang' for C/C++ frontend, or 'clang++' for full C++ toolchain).",
+      "type": "string"
     }
   }
 }

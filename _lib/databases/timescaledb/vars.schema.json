@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/databases/timescaledb/vars.schema.json",
+  "title": "timescaledb variables",
+  "description": "Configuration variables for timescaledb",
+  "type": "object",
+  "properties": {
+    "TIMESCALEDB_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install timescaledb. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "TIMESCALEDB_VERSION": {
+      "description": "Specific version of timescaledb to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "TIMESCALEDB_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading timescaledb binary or archive artifacts."
+    },
+    "TIMESCALEDB_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying timescaledb available remote releases."
+    },
+    "TIMESCALEDB_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the timescaledb service listens.",
+      "default": 5432
+    }
+  }
+}

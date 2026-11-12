@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tcl",
+  "title": "Tcl/Tk",
+  "description": "Tool Command Language (tclsh) dynamic scripting interpreter and embeddable runtime.",
+  "category": "language",
+  "provides": ["tcl", "tclsh", "tk"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/tcltk/tcl"
+}

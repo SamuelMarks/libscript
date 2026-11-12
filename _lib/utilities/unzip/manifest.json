@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "unzip",
+  "title": "Info-ZIP UnZip",
+  "description": "Portable Info-ZIP extraction and integrity testing utility for PKZIP (.zip) archives.",
+  "category": "utility",
+  "provides": ["unzip", "zip-extractor"],
+  "os_whitelist": ["all"]
+}

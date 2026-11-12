@@ -62,7 +62,7 @@ set "AUDIT_MODE=--staged"
 set "GIT_FILE_CMD=git diff --no-ext-diff --cached --name-only --diff-filter=ACM"
 if /i "%~1"=="--all" (
     set "AUDIT_MODE=--all"
-    set "GIT_FILE_CMD=git ls-files"
+    set "GIT_FILE_CMD=git ls-files --cached --others --exclude-standard"
 )
 
 :: 1. Enforce line endings and indent via Prettier where applicable
@@ -146,20 +146,22 @@ if exist "devtools\audit\audit_schema_vars.cmd" (
     )
 )
 
-:: 4. ShellCheck (if available)
-where shellcheck >nul 2>&1
-if not errorlevel 1 (
-    echo Running shellcheck...
-    set "SHELLCHECK_OPT_ARGS="
-    shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
-    if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
-    for /f "tokens=*" %%F in ('!GIT_FILE_CMD! 2^>nul ^| findstr /R "\.sh$" ^| findstr /V /R "node_modules \.git gen/"') do (
-        if exist "%%F" (
-            shellcheck -s sh !SHELLCHECK_OPT_ARGS! "%%F"
-            if errorlevel 1 (
-                echo [ERROR] ShellCheck failed on %%F.
-                exit /b 1
-            )
+:: 4. ShellCheck (bootstrapped via _lib\toolchains\shellcheck when nonexistent)
+call :ensure_shellcheck_bootstrapped
+if errorlevel 1 (
+    echo [ERROR] ShellCheck bootstrap failed.
+    exit /b 1
+)
+echo Running shellcheck...
+set "SHELLCHECK_OPT_ARGS="
+shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
+if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
+for /f "tokens=*" %%F in ('!GIT_FILE_CMD! 2^>nul ^| findstr /R "\.sh$ ^\.githooks/pre-commit$" ^| findstr /V /R "node_modules \.git/ gen/"') do (
+    if exist "%%F" (
+        shellcheck -s sh !SHELLCHECK_OPT_ARGS! "%%F"
+        if errorlevel 1 (
+            echo [ERROR] ShellCheck failed on %%F.
+            exit /b 1
         )
     )
 )
@@ -208,4 +210,43 @@ if errorlevel 1 (
 )
 
 echo Pre-commit hook completed successfully.
+exit /b 0
+
+:: ## load_shellcheck_env
+:: Loads the isolated ShellCheck version manager PATH while preserving STACK state.
+:load_shellcheck_env
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\shellcheck\env.cmd" (
+    set "_SC_SAVED_STACK=%STACK%"
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\shellcheck\env.cmd" >nul 2>&1
+    set "STACK=!_SC_SAVED_STACK!"
+)
+exit /b 0
+
+:: ## ensure_shellcheck_bootstrapped
+:: Ensures shellcheck is available on PATH on Windows, installing it via LibScript when nonexistent.
+:ensure_shellcheck_bootstrapped
+call :load_shellcheck_env
+where shellcheck >nul 2>&1
+if not errorlevel 1 exit /b 0
+
+echo [BOOTSTRAP] shellcheck not found on PATH; installing via LibScript version manager...
+set "_SC_BOOT_VER=%SHELLCHECK_VERSION%"
+if "!_SC_BOOT_VER!"=="" set "_SC_BOOT_VER=latest"
+set "_PC_SAVED_STACK=%STACK%"
+set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
+set "STACK="
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install shellcheck "!_SC_BOOT_VER!"
+set "_SC_INST_RC=!errorlevel!"
+set "STACK=!_PC_SAVED_STACK!"
+if not "!_SC_INST_RC!"=="0" (
+    echo [ERROR] Failed to bootstrap shellcheck via LibScript version manager. 1>&2
+    exit /b 1
+)
+call :load_shellcheck_env
+where shellcheck >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] shellcheck still not found on PATH after bootstrap. 1>&2
+    exit /b 1
+)
 exit /b 0

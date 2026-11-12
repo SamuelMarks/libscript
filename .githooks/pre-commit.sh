@@ -47,12 +47,57 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   unset _pc_saved_this _pc_saved_dir _pc_saved_stack || true
 fi
 
+# ## load_shellcheck_env
+# Sources the isolated ShellCheck version manager environment while preserving caller path and recursion state.
+load_shellcheck_env() {
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/shellcheck/env.sh" ]; then
+    _sc_saved_this="${THIS_FILE:-}"
+    _sc_saved_dir="${SCRIPT_DIR:-}"
+    _sc_saved_stack="${STACK:-}"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/shellcheck/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+    unset SCRIPT_NAME || true
+    THIS_FILE="$_sc_saved_this"
+    SCRIPT_DIR="$_sc_saved_dir"
+    STACK="$_sc_saved_stack"
+    export STACK
+    unset _sc_saved_this _sc_saved_dir _sc_saved_stack || true
+  fi
+}
+
+# ## ensure_shellcheck_bootstrapped
+# Ensures shellcheck is available on PATH, bootstrapping it idempotently via LibScript when nonexistent.
+ensure_shellcheck_bootstrapped() {
+  load_shellcheck_env
+  if command -v shellcheck >/dev/null 2>&1; then
+    return 0
+  fi
+  printf '%s\n' '[BOOTSTRAP] shellcheck not found on PATH; installing via LibScript version manager...'
+  if ! (
+    unset SCRIPT_NAME || true
+    LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
+    STACK="" \
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install shellcheck "${SHELLCHECK_VERSION:-latest}"
+  ); then
+    printf '%s\n' '[ERROR] Failed to bootstrap shellcheck via LibScript version manager.' >&2
+    return 1
+  fi
+  load_shellcheck_env
+  if ! command -v shellcheck >/dev/null 2>&1; then
+    printf '%s\n' '[ERROR] shellcheck still not found on PATH after bootstrap.' >&2
+    return 1
+  fi
+  return 0
+}
+
 printf '%s\n' 'Running pre-commit hooks...'
 
 AUDIT_MODE='--staged'
 STAGED_FILES=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM)
 if [ "${1:-}" = "--all" ]; then
-    CHECK_FILES=$(git ls-files)
+    CHECK_FILES=$(git ls-files --cached --others --exclude-standard)
     AUDIT_MODE='--all'
 else
     CHECK_FILES="$STAGED_FILES"
@@ -154,17 +199,16 @@ if [ -x "devtools/audit/audit_schema_vars.sh" ]; then
     fi
 fi
 
-# 4. Shellcheck
-if command -v shellcheck >/dev/null 2>&1; then
-  printf '%s\n' 'Running shellcheck...'
-  SHELLCHECK_OPT_ARGS=""
-  if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
-    SHELLCHECK_OPT_ARGS="-o useless-use-of-cat"
-  fi
-  if printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" >/dev/null 2>&1; then
-    # shellcheck disable=SC2086
-    printf "%s\n" "$CHECK_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS
-  fi
+# 4. Shellcheck (bootstrapped via _lib/toolchains/shellcheck when nonexistent)
+ensure_shellcheck_bootstrapped
+printf '%s\n' 'Running shellcheck...'
+SHELLCHECK_OPT_ARGS=""
+if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
+  SHELLCHECK_OPT_ARGS="-o useless-use-of-cat"
+fi
+if printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "node_modules|\.git/|gen/.*" >/dev/null 2>&1; then
+  # shellcheck disable=SC2086
+  printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "node_modules|\.git/|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS
 fi
 
 # 5. Regenerate Markdown Readmes

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "buildah",
+  "title": "Buildah OCI Image Builder",
+  "description": "Daemonless tool for building Open Container Initiative (OCI) and Docker container images.",
+  "category": "orchestration",
+  "provides": ["buildah"],
+  "os_whitelist": ["linux", "freebsd"],
+  "os_blacklist": ["windows"],
+  "repository": "https://github.com/containers/buildah"
+}

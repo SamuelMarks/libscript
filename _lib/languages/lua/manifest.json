@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lua",
+  "title": "Lua",
+  "description": "Lightweight, embeddable, fast scripting language interpreter and bytecode compiler.",
+  "category": "language",
+  "provides": ["lua", "luac"],
+  "os_whitelist": ["all"],
+  "repository": "https://www.lua.org/"
+}

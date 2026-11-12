@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "timescaledb",
+  "title": "TimescaleDB",
+  "description": "Open-source time-series SQL database extension and tuning toolkit engineered on PostgreSQL.",
+  "category": "database",
+  "provides": ["timescaledb", "tsdb", "postgres-extension"],
+  "os_whitelist": ["all"],
+  "ports": [5432],
+  "repository": "https://github.com/timescale/timescaledb"
+}

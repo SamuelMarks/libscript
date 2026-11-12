@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/zip/vars.schema.json",
+  "title": "zip variables",
+  "description": "Configuration variables for zip",
+  "type": "object",
+  "properties": {
+    "ZIP_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install zip. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "ZIP_VERSION": {
+      "description": "Specific version of zip to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ZIP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading zip binary or archive artifacts."
+    },
+    "ZIP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying zip available remote releases."
+    }
+  }
+}

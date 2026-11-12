@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "triton",
+  "title": "NVIDIA Triton Inference Server",
+  "description": "Open-source inference serving software streamlining AI model deployment across GPUs and CPUs.",
+  "category": "app-server",
+  "provides": ["triton", "inference-server", "app-server"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["darwin", "freebsd", "sunos"],
+  "ports": [8000, 8001, 8002],
+  "multitenant": true,
+  "repository": "https://github.com/triton-inference-server/server",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

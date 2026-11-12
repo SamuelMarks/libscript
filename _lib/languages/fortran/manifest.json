@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "fortran",
+  "title": "GNU Fortran",
+  "description": "GNU Fortran (gfortran) scientific and numerical array programming compiler.",
+  "category": "language",
+  "provides": ["fortran", "gfortran", "f95"],
+  "os_whitelist": ["all"],
+  "repository": "https://gcc.gnu.org/fortran/"
+}

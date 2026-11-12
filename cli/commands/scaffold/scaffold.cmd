@@ -388,6 +388,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "  '__SCAF_URL_UNIX__' = '!SCAF_URL_UNIX!'; " ^
     "  '__SCAF_URL_WINDOWS__' = '!SCAF_URL_WINDOWS!'; " ^
     "  '__SCAF_RELEASES_URL__' = '!SCAF_RELEASES_URL!'; " ^
+    "  '__SCAF_STRIP_COMPONENTS__' = '!SCAF_STRIP_COMPONENTS!'; " ^
+    "  '__SCAF_SRC_URL__' = '!SCAF_URL_UNIX!'; " ^
+    "  '__SCAF_SRC_LANG__' = '!SCAF_SRC_LANG!'; " ^
+    "  '__SCAF_SRC_BUILD_SYS__' = '!SCAF_SRC_BUILD_SYS!'; " ^
+    "  '__SCAF_SRC_FALLBACK_VER__' = '!SCAF_SRC_FALLBACK_VER!'; " ^
     "  '__SCAF_TEST_CMD__' = '!SCAF_TEST_CMD!'; " ^
     "  '__COMP_PREFIX__' = '!COMP_PREFIX!' " ^
     "}; " ^

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "scons",
+  "title": "SCons",
+  "description": "Software construction tool configured with Python scripts.",
+  "category": "toolchain",
+  "provides": ["scons", "build-system"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/SCons/scons"
+}

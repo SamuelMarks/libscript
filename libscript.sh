@@ -312,6 +312,7 @@ case "$CMD" in
   process-downloads) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" "$@" ;;
   provision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" "$@" ;;
   deprovision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" "$@" ;;
+  experiment|rapid-experiment) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/experiment.sh" "$@" ;;
   deploy) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy.sh" "$@" ;;
   deploy-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" "$@" ;;
   backup|export-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/backup.sh" "$@" ;;

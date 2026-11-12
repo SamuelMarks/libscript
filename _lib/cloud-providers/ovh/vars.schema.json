@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/ovh/vars.schema.json",
+  "title": "OVHcloud",
+  "description": "Configuration variables for OVHcloud CLI (ovhcloud) and Public Cloud compute/network driver",
+  "type": "object",
+  "properties": {
+    "OVH_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ovhcloud. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "OVH_VERSION": {
+      "description": "Specific version of ovhcloud to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "OVH_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ovhcloud binary or archive artifacts."
+    },
+    "OVH_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ovhcloud available remote releases."
+    },
+    "OVH_REGION": {
+      "type": "string",
+      "description": "Default OVHcloud Public Cloud region (e.g., GRA11, BHS5, SBG5).",
+      "default": "GRA11"
+    },
+    "OVH_PROJECT_ID": {
+      "type": "string",
+      "description": "Default OVHcloud Public Cloud project serviceName / ID."
+    },
+    "OVH_FLAVOR": {
+      "type": "string",
+      "description": "Default OVHcloud Public Cloud compute flavor.",
+      "default": "d2-4"
+    }
+  }
+}

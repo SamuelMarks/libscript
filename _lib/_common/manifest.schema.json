@@ -219,7 +219,18 @@
         "bootloaders",
         "kernel",
         "orchestration",
-        "message-brokers"
+        "message-brokers",
+        "virtualization",
+        "cloud-providers",
+        "search",
+        "logging",
+        "web-apps",
+        "runtimes",
+        "ai-serving",
+        "ml-training",
+        "storage",
+        "freebsd",
+        "illumos"
       ]
     },
     "license": {

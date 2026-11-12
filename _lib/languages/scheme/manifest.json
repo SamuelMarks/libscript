@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "scheme",
+  "title": "Scheme",
+  "description": "Chez Scheme and GNU Guile (scheme / guile) minimalist lexically scoped Lisp dialect.",
+  "category": "language",
+  "provides": ["scheme", "guile", "chez"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/cisco/ChezScheme"
+}

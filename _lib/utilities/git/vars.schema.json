@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/git/vars.schema.json",
+  "title": "git variables",
+  "description": "Configuration variables for git",
+  "type": "object",
+  "properties": {
+    "GIT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install git. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "GIT_VERSION": {
+      "description": "Specific version of git to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "GIT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading git binary or archive artifacts."
+    },
+    "GIT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying git available remote releases."
+    }
+  }
+}

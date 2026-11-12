@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "crystal",
+  "title": "Crystal",
+  "description": "Statically type-checked compiled systems programming language with Ruby-inspired syntax.",
+  "category": "language",
+  "provides": ["crystal", "shards"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/crystal-lang/crystal"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "llvm",
+  "title": "LLVM",
+  "description": "Modular compiler infrastructure and backend toolchain utilities.",
+  "category": "toolchain",
+  "provides": ["llvm", "llvm-config", "llc", "opt"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/llvm/llvm-project"
+}

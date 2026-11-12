@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/php-fpm/vars.schema.json",
+  "title": "php-fpm variables",
+  "description": "Configuration variables for php-fpm",
+  "type": "object",
+  "properties": {
+    "PHP_FPM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install php-fpm. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "PHP_FPM_VERSION": {
+      "description": "Specific version of php-fpm to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "PHP_FPM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading php-fpm binary or archive artifacts."
+    },
+    "PHP_FPM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying php-fpm available remote releases."
+    },
+    "PHP_FPM_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the php-fpm service listens.",
+      "default": 9000
+    }
+  }
+}

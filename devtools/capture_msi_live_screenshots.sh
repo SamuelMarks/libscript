@@ -57,8 +57,8 @@ show_help() {
 
 # ## cleanup
 # Removes temporary artifacts and staging directory.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "${TEMP_DIR}" 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
@@ -292,4 +292,5 @@ if [ "$TARGET_MODE" = "all" ] || [ "$TARGET_MODE" = "loggedin" ]; then
 fi
 
 printf '[DONE] Screenshot acquisition completed. Stored in ../cc0-assets\n'
+cleanup
 exit 0

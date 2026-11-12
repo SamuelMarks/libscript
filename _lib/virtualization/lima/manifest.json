@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lima",
+  "title": "Lima Linux Virtual Machines",
+  "description": "Lima (limactl) Linux virtual machines with automatic file sharing, port forwarding, and containerd/Docker support on macOS and Linux.",
+  "category": "virtualization",
+  "provides": ["lima", "limactl", "nerdctl.lima"],
+  "os_whitelist": ["macos", "linux", "freebsd", "netbsd"],
+  "os_blacklist": ["windows"],
+  "repository": "https://github.com/lima-vm/lima"
+}

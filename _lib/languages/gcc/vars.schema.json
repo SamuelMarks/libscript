@@ -34,6 +34,15 @@
       "description": "Default compiler flags exported by the GCC environment.",
       "type": "string",
       "default": "-O2"
+    },
+    "GCC_ENABLE_LANGUAGES": {
+      "description": "Comma-separated list of languages to enable when building GCC from source ('c' for gcc-core or 'c,c++' for g++).",
+      "type": "string",
+      "default": "c,c++"
+    },
+    "GCC_BUILD_TARGET": {
+      "description": "Specific GCC subsystem target to build when benchmarking ('gcc-core' for C front-end or 'g++' for C++ front-end).",
+      "type": "string"
     }
   }
 }

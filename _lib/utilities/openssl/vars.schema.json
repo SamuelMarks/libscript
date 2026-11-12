@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/openssl/vars.schema.json",
+  "title": "openssl variables",
+  "description": "Configuration variables for openssl",
+  "type": "object",
+  "properties": {
+    "OPENSSL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install openssl. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "OPENSSL_VERSION": {
+      "description": "Specific version of openssl to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "OPENSSL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading openssl binary or archive artifacts."
+    },
+    "OPENSSL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying openssl available remote releases."
+    }
+  }
+}

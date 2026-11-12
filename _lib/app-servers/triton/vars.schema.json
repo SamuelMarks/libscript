@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/triton/vars.schema.json",
+  "title": "triton variables",
+  "description": "Configuration variables for triton",
+  "type": "object",
+  "properties": {
+    "TRITON_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install triton. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "TRITON_VERSION": {
+      "description": "Specific version of triton to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "TRITON_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading triton binary or archive artifacts."
+    },
+    "TRITON_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying triton available remote releases."
+    },
+    "TRITON_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the triton service listens.",
+      "default": 8000
+    }
+  }
+}

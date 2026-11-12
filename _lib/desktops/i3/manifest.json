@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "i3",
+  "title": "i3 Tiling Window Manager",
+  "description": "Dynamic tiling X11 window manager (i3, i3-msg, i3bar) designed for keyboard-driven workflows.",
+  "category": "desktops",
+  "provides": ["i3", "i3wm", "i3-msg"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "os_blacklist": ["windows", "macos"],
+  "repository": "https://github.com/i3/i3"
+}

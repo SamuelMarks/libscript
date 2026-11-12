@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "clojure",
+  "title": "Clojure CLI",
+  "description": "Dynamic, functional Lisp dialect on the JVM with immutable data structures and concurrent programming primitives.",
+  "category": "language",
+  "provides": ["clojure", "clj"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/clojure/brew-install"
+}

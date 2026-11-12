@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/i3/vars.schema.json",
+  "title": "i3 variables",
+  "description": "Configuration variables for i3",
+  "type": "object",
+  "properties": {
+    "I3_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install i3. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "I3_VERSION": {
+      "description": "Specific version of i3 to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "I3_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading i3 binary or archive artifacts."
+    },
+    "I3_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying i3 available remote releases."
+    }
+  }
+}

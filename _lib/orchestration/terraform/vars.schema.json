@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/terraform/vars.schema.json",
+  "title": "terraform variables",
+  "description": "Configuration variables for terraform",
+  "type": "object",
+  "properties": {
+    "TERRAFORM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install terraform. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "TERRAFORM_VERSION": {
+      "description": "Specific version of terraform to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "TERRAFORM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading terraform binary or archive artifacts."
+    },
+    "TERRAFORM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying terraform available remote releases."
+    }
+  }
+}

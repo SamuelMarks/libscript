@@ -270,3 +270,23 @@ To compare Linux kernel compilation across `4.19.322`, `5.4.284`, `5.10.226`, `5
 # Or on Windows Command Prompt:
 .\tests\test_kernel_edgcpp_vagrant_matrix.cmd
 ```
+
+## 8. Automated Rapid Experiment-Runner Interface (`./libscript.sh experiment`)
+
+All Bento fork cloning (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`), virtualization stack
+installation (`vagrant`, `packer`, `ruby`, `qemu`), Vagrant box deployment, `vanilla` snapshot
+creation/restoration, 2x idempotent component testing, and host log collection can be orchestrated
+automatically via `./libscript.sh experiment` (or `libscript.cmd experiment`):
+
+```sh
+# Test a single component-version and package-manager on one target OS
+./libscript.sh experiment bento_matrix --target-os=debian-13 --component=postgres@16.2 --pkg-mgr=apt-get
+
+# Or run the full lifecycle (a: provision, 0..5: Bento Vagrant matrix across OSs, i: deprovision)
+./libscript.sh experiment a
+./libscript.sh experiment bento_matrix --target-os=alpine-3.24
+./libscript.sh experiment bento_matrix --target-os=debian-13
+./libscript.sh experiment i
+```
+
+See [EXPERIMENTS.md](EXPERIMENTS.md) and [USAGE.md](USAGE.md) for the complete parameter reference.

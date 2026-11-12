@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/odin/vars.schema.json",
+  "title": "odin variables",
+  "description": "Configuration variables for odin",
+  "type": "object",
+  "properties": {
+    "ODIN_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install odin. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ODIN_VERSION": {
+      "description": "Specific version of odin to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ODIN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading odin binary or archive artifacts."
+    },
+    "ODIN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying odin available remote releases."
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "xorriso",
+  "title": "GNU xorriso",
+  "description": "ISO-9660 and Rock Ridge filesystem image manipulation, El Torito bootable ISO creation, and burning tool.",
+  "category": "utility",
+  "provides": ["xorriso", "iso-builder"],
+  "os_whitelist": ["all"]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zip",
+  "title": "Info-ZIP Zip",
+  "description": "Portable Info-ZIP compression and file packaging utility producing standard .zip archives.",
+  "category": "utility",
+  "provides": ["zip", "zip-archiver"],
+  "os_whitelist": ["all"]
+}

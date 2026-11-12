@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "qmake",
+  "title": "Qt qmake",
+  "description": "Cross-platform Makefile generator from the Qt framework.",
+  "category": "toolchain",
+  "provides": ["qmake"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/qt/qtbase"
+}

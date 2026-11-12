@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "perl",
+  "title": "Perl",
+  "description": "Highly capable, feature-rich general-purpose scripting and text-processing programming language.",
+  "category": "language",
+  "provides": ["perl"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/Perl/perl5"
+}

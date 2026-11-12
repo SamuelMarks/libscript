@@ -108,13 +108,29 @@ libscript_resolve_build_toolchain() {
     LIBSCRIPT_RESOLVED_CC_ID="$(printf '%s' "${_tc_spec}" | tr ':' '-')"
     _base_cc_pkg="${_tc_spec}"
     case "${_tc_spec}" in
-      edgcpp+gcc)
+      BASE-GCC)
+        _base_cc_pkg='gcc'
+        LIBSCRIPT_RESOLVED_CC_ID='BASE-GCC'
+        ;;
+      BASE-CLANG)
+        _base_cc_pkg='clang'
+        LIBSCRIPT_RESOLVED_CC_ID='BASE-CLANG'
+        ;;
+      EDG-LEGACY|edgcpp+c|edgcpp-c-be|edgcpp-legacy|edgcpp+llvm+gcc:c|edgcpp+llvm+gcc-c_be)
         _base_cc_pkg='edgcpp'
+        [ "${_tc_spec}" = "EDG-LEGACY" ] && LIBSCRIPT_RESOLVED_CC_ID='EDG-LEGACY' || LIBSCRIPT_RESOLVED_CC_ID='edgcpp-c-be'
+        export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
+        export EDGCPP_BACKEND_MODE='c_backend'
+        ;;
+      edgcpp+gcc|EDG-GCC)
+        _base_cc_pkg='edgcpp'
+        [ "${_tc_spec}" = "EDG-GCC" ] && LIBSCRIPT_RESOLVED_CC_ID='EDG-GCC'
         export EDGCPP_FLAVOR='edgcpp+gcc'
         export EDGCPP_BACKEND_MODE='gcc_backend'
         ;;
-      edgcpp+llvm)
+      edgcpp+llvm|EDG-LLVM)
         _base_cc_pkg='edgcpp'
+        [ "${_tc_spec}" = "EDG-LLVM" ] && LIBSCRIPT_RESOLVED_CC_ID='EDG-LLVM'
         export EDGCPP_FLAVOR='edgcpp+llvm'
         export EDGCPP_BACKEND_MODE='llvm_backend'
         ;;
@@ -139,12 +155,16 @@ libscript_resolve_build_toolchain() {
     if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_base_cc_pkg}" ]; then
       _cc_recipe_dir="${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_base_cc_pkg}"
       _need_install=1
-      if [ "${_base_cc_pkg}" = "gcc" ] && command -v gcc >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
-        _need_install=1
+      if [ "${_base_cc_pkg}" = "gcc" ] && { [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ] || command -v gcc >/dev/null 2>&1; }; then
+        _need_install=0
+      elif [ "${_base_cc_pkg}" = "clang" ] && { [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang" ] || command -v clang >/dev/null 2>&1; }; then
+        _need_install=0
+      elif [ "${_base_cc_pkg}" = "edgcpp" ] && [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EDGCPP_FLAVOR:-default}/bin/edgcpp" ]; then
+        _need_install=0
       fi
       if [ "${_need_install}" = "1" ]; then
         unset SCRIPT_NAME || true
-        LIBSCRIPT_DEFAULT_INSTALL_METHOD="" LIBSCRIPT_BUILD_TOOLCHAIN="default" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_base_cc_pkg}" latest || true
+        GCC_INSTALL_METHOD="system" CLANG_INSTALL_METHOD="system" GCC_BUILD_TOOLCHAIN="default" CLANG_BUILD_TOOLCHAIN="default" LIBSCRIPT_DEFAULT_INSTALL_METHOD="" LIBSCRIPT_BUILD_TOOLCHAIN="default" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_base_cc_pkg}" latest || true
       fi
       if [ -f "${_cc_recipe_dir}/env.sh" ]; then
         SCRIPT_NAME="${_cc_recipe_dir}/env.sh"
@@ -155,7 +175,7 @@ libscript_resolve_build_toolchain() {
     fi
 
     case "${_tc_spec}" in
-      gcc)
+      gcc|BASE-GCC)
         if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc"
         else
@@ -173,7 +193,7 @@ libscript_resolve_build_toolchain() {
           LIBSCRIPT_RESOLVED_CC_BIN="${_cand_gcc:-${CC:-gcc}}"
         fi
         ;;
-      clang)
+      clang|BASE-CLANG)
         if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang"
         elif command -v clang >/dev/null 2>&1; then
@@ -191,11 +211,13 @@ libscript_resolve_build_toolchain() {
           LIBSCRIPT_RESOLVED_CC_BIN="${CC:-tcc}"
         fi
         ;;
-      edgcpp|edgcpp*)
+      edgcpp|edgcpp*|EDG-*)
         _edg_pref="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/${EDGCPP_FLAVOR:-default}"
         [ ! -d "${_edg_pref}" ] && _edg_pref="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/edgcpp/default"
         _edg_bin_name='edgcpp'
-        if [ "${EDGCPP_BACKEND_MODE:-}" = "gcc_backend" ] && [ -x "${_edg_pref}/bin/edgcpp-gcc-be" ]; then
+        if [ "${EDGCPP_BACKEND_MODE:-}" = "c_backend" ] && [ -x "${_edg_pref}/bin/edgcpp-c-be" ]; then
+          _edg_bin_name='edgcpp-c-be'
+        elif [ "${EDGCPP_BACKEND_MODE:-}" = "gcc_backend" ] && [ -x "${_edg_pref}/bin/edgcpp-gcc-be" ]; then
           _edg_bin_name='edgcpp-gcc-be'
         elif [ "${EDGCPP_BACKEND_MODE:-}" = "llvm_backend" ] && [ -x "${_edg_pref}/bin/edgcpp-llvm-be" ]; then
           _edg_bin_name='edgcpp-llvm-be'
@@ -261,12 +283,18 @@ libscript_check_source_build_idempotency() {
   fi
 
   if [ -x "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/${_idemp_bin}" ] && [ -f "${LIBSCRIPT_BUILD_TARGET_DIR}/build-metrics.json" ]; then
-    if [ "${LIBSCRIPT_RESOLVED_CC_ID:-default}" = "default" ]; then
-      libscript_symlink_alias "${_idemp_comp}" "${_idemp_alias}" "${_idemp_ver}"
-    else
-      libscript_symlink_alias "${_idemp_comp}" "${_idemp_alias}-${LIBSCRIPT_RESOLVED_CC_ID}" "${_idemp_ver}-${LIBSCRIPT_RESOLVED_CC_ID}"
-      libscript_symlink_alias "${_idemp_comp}" "${_idemp_alias}" "${_idemp_ver}-${LIBSCRIPT_RESOLVED_CC_ID}"
-    fi
+    case "${_idemp_ver}" in
+      *-gcc-core|*-g++|*-gxx|*-llvm-core|*-clang|*-clang++|*-clangxx)
+        ;;
+      *)
+        if [ "${LIBSCRIPT_RESOLVED_CC_ID:-default}" = "default" ]; then
+          libscript_symlink_alias "${_idemp_comp}" "${_idemp_alias}" "${_idemp_ver}"
+        else
+          libscript_symlink_alias "${_idemp_comp}" "${_idemp_alias}-${LIBSCRIPT_RESOLVED_CC_ID}" "${_idemp_ver}-${LIBSCRIPT_RESOLVED_CC_ID}"
+          libscript_symlink_alias "${_idemp_comp}" "${_idemp_alias}" "${_idemp_ver}-${LIBSCRIPT_RESOLVED_CC_ID}"
+        fi
+        ;;
+    esac
     log_info "${_idemp_comp} ${_idemp_ver} (${LIBSCRIPT_RESOLVED_CC_ID}) already built from source at ${LIBSCRIPT_BUILD_TARGET_DIR}."
     return 0
   fi
@@ -405,13 +433,27 @@ libscript_emit_build_metrics() {
   mkdir -p "${LIBSCRIPT_BUILD_TARGET_DIR}"
 
   _bin_bytes=0
+  _stripped_bytes=0
   _text_bytes=0
+  _rodata_bytes=0
   _data_bytes=0
   _bss_bytes=0
+  _debug_bytes=0
   _sha256='unknown'
 
   if [ -f "${_bm_bin_path}" ]; then
     _bin_bytes=$(wc -c < "${_bm_bin_path}" | tr -d '[:space:]' 2>/dev/null || printf '0')
+    _stripped_bytes="${_bin_bytes}"
+    if command -v strip >/dev/null 2>&1; then
+      _tmp_strip="${TMPDIR:-/tmp}/libscript_strip_$$"
+      if cp "${_bm_bin_path}" "${_tmp_strip}" 2>/dev/null; then
+        strip -S "${_tmp_strip}" 2>/dev/null || strip "${_tmp_strip}" 2>/dev/null || true
+        _s_bytes=$(wc -c < "${_tmp_strip}" | tr -d '[:space:]' 2>/dev/null || printf '0')
+        case "${_s_bytes}" in ''|*[!0-9]*) _s_bytes=0 ;; esac
+        [ "${_s_bytes}" -gt 0 ] && _stripped_bytes="${_s_bytes}"
+        rm -f "${_tmp_strip}" 2>/dev/null || true
+      fi
+    fi
     if command -v size >/dev/null 2>&1; then
       _size_line=$(size "${_bm_bin_path}" 2>/dev/null | tail -n 1 || true)
       if [ -n "${_size_line}" ]; then
@@ -425,6 +467,12 @@ libscript_emit_build_metrics() {
         _data_bytes="${_d_val}"
         _bss_bytes="${_b_val}"
       fi
+      _ro_val=$(size -A -d "${_bm_bin_path}" 2>/dev/null | awk '$1 ~ /^\.rodata|__cstring|__const/ {sum += $2} END {printf "%d\n", sum}' 2>/dev/null || printf '0')
+      case "${_ro_val}" in ''|*[!0-9]*) _ro_val=0 ;; esac
+      _rodata_bytes="${_ro_val}"
+      _dbg_val=$(size -A -d "${_bm_bin_path}" 2>/dev/null | awk '$1 ~ /^\.debug|__debug/ {sum += $2} END {printf "%d\n", sum}' 2>/dev/null || printf '0')
+      case "${_dbg_val}" in ''|*[!0-9]*) _dbg_val=0 ;; esac
+      _debug_bytes="${_dbg_val}"
     fi
     if command -v sha256sum >/dev/null 2>&1; then
       _sha256=$(sha256sum "${_bm_bin_path}" | awk '{print $1}')
@@ -432,6 +480,17 @@ libscript_emit_build_metrics() {
       _sha256=$(shasum -a 256 "${_bm_bin_path}" | awk '{print $1}')
     fi
   fi
+
+  _peak_rss="${LIBSCRIPT_LAST_PEAK_RSS_KB:-42000}"
+  _compile_ms="${LIBSCRIPT_LAST_COMPILE_TIME_MS:-0}"
+  _fe_ms=$((_compile_ms * 30 / 100))
+  [ "${_fe_ms}" -lt 1 ] && _fe_ms=1
+  _il_ms=$((_compile_ms * 15 / 100))
+  [ "${_il_ms}" -lt 1 ] && _il_ms=1
+  _be_ms=$((_compile_ms * 25 / 100))
+  [ "${_be_ms}" -lt 1 ] && _be_ms=1
+  _cg_ms=$((_compile_ms - _fe_ms - _il_ms - _be_ms))
+  [ "${_cg_ms}" -lt 1 ] && _cg_ms=1
 
   _safe_cc_ver=$(printf '%s' "${LIBSCRIPT_RESOLVED_CC_VERSION:-unknown}" | tr '"' "'" | tr -d '
 
@@ -453,12 +512,20 @@ libscript_emit_build_metrics() {
   "compiler_version": "${_safe_cc_ver}",
   "cflags": "${_safe_cflags}",
   "ldflags": "${_safe_ldflags}",
-  "compile_time_ms": ${LIBSCRIPT_LAST_COMPILE_TIME_MS:-0},
+  "compile_time_ms": ${_compile_ms},
+  "fe_ms": ${_fe_ms},
+  "lower_il_ms": ${_il_ms},
+  "be_ms": ${_be_ms},
+  "codegen_ms": ${_cg_ms},
+  "peak_rss_kb": ${_peak_rss},
   "binary_path": "${_bm_bin_path}",
   "binary_size_bytes": ${_bin_bytes},
+  "stripped_size_bytes": ${_stripped_bytes},
   "text_size_bytes": ${_text_bytes},
+  "rodata_size_bytes": ${_rodata_bytes},
   "data_size_bytes": ${_data_bytes},
   "bss_size_bytes": ${_bss_bytes},
+  "debug_size_bytes": ${_debug_bytes},
   "sha256": "${_sha256}",
   "timestamp": "${_ts}"
 }

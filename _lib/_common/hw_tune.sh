@@ -181,6 +181,60 @@ EOF
   esac
 }
 
+# ## libscript_prepare_benchmark_host
+# Standardizes the host OS and CPU environment for reproducible compiler benchmarking (locks CPU frequency governor to performance, disables ASLR for deterministic RSS, and disables swap when LIBSCRIPT_BENCH_PREPARE_HOST=1).
+libscript_prepare_benchmark_host() {
+  libscript_detect_hardware
+  if [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ] || [ "${LIBSCRIPT_BENCH_PREPARE_HOST:-0}" != "1" ]; then
+    return 0
+  fi
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+  fi
+  if [ "${UNAME:-}" = "Linux" ]; then
+    if command -v cpupower >/dev/null 2>&1; then
+      priv cpupower frequency-set --governor performance >/dev/null 2>&1 || true
+    fi
+    if [ -w /proc/sys/kernel/randomize_va_space ]; then
+      printf '0\n' > /proc/sys/kernel/randomize_va_space 2>/dev/null || true
+    else
+      printf '0\n' | priv tee /proc/sys/kernel/randomize_va_space >/dev/null 2>&1 || true
+    fi
+    if command -v swapoff >/dev/null 2>&1; then
+      priv swapoff -a >/dev/null 2>&1 || true
+    fi
+  fi
+}
+
+# ## libscript_drop_benchmark_caches
+# Flushes filesystem buffers and drops kernel page cache, dentries, and inodes prior to a benchmark run when LIBSCRIPT_BENCH_DROP_CACHES=1.
+libscript_drop_benchmark_caches() {
+  if [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ] || [ "${LIBSCRIPT_BENCH_DROP_CACHES:-0}" != "1" ]; then
+    return 0
+  fi
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+  fi
+  sync 2>/dev/null || true
+  if [ "${UNAME:-}" = "Linux" ]; then
+    if [ -w /proc/sys/vm/drop_caches ]; then
+      printf '3\n' > /proc/sys/vm/drop_caches 2>/dev/null || true
+    else
+      printf '3\n' | priv tee /proc/sys/vm/drop_caches >/dev/null 2>&1 || true
+    fi
+  elif [ "${UNAME:-}" = "Darwin" ] && command -v purge >/dev/null 2>&1; then
+    if [ "$(id -u 2>/dev/null || printf '1')" = "0" ]; then
+      purge >/dev/null 2>&1 || true
+    fi
+  fi
+}
+
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_hw_tune_caller_dir:-}" ] && SCRIPT_DIR="$_hw_tune_caller_dir"

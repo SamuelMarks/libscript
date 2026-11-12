@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/security/vault/vars.schema.json",
+  "title": "vault variables",
+  "description": "Configuration variables for vault",
+  "type": "object",
+  "properties": {
+    "VAULT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install vault. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "VAULT_VERSION": {
+      "description": "Specific version of vault to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "VAULT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading vault binary or archive artifacts."
+    },
+    "VAULT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying vault available remote releases."
+    },
+    "VAULT_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the vault service listens.",
+      "default": 8200
+    }
+  }
+}

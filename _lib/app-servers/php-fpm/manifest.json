@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "php-fpm",
+  "title": "PHP-FPM",
+  "description": "PHP FastCGI Process Manager daemon with adaptive process spawning for high-traffic PHP sites.",
+  "category": "app-server",
+  "provides": ["php-fpm", "fastcgi", "app-server"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"],
+  "ports": [9000],
+  "multitenant": true,
+  "repository": "https://github.com/php/php-src",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

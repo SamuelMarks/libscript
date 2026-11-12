@@ -167,9 +167,12 @@ if exist "!_dl_zip!" (
 )
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-cc.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-c-be.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-legacy.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-gcc-be.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-llvm-be.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-c++.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-cxx.cmd" >nul
 if not exist "%TARGET_DIR%\include_c99\stdint.h" (
     (
         echo #ifndef _EDG_STDINT_H

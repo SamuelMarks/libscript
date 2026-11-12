@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "oci",
+  "title": "Oracle Cloud Infrastructure (OCI)",
+  "description": "Oracle Cloud Infrastructure CLI (oci) version manager and declarative compute, VCN network, security list, and DNS cloud driver.",
+  "category": "cloud-providers",
+  "provides": ["oci", "oci-cli"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/oracle/oci-cli"
+}

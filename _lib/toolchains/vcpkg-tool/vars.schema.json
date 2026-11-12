@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/vcpkg-tool/vars.schema.json",
+  "title": "vcpkg-tool variables",
+  "description": "Configuration variables for vcpkg-tool",
+  "type": "object",
+  "properties": {
+    "VCPKG_TOOL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install vcpkg-tool. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "VCPKG_TOOL_VERSION": {
+      "description": "Specific version of vcpkg-tool to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "2024-12-09"]
+    },
+    "VCPKG_TOOL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading vcpkg-tool binary or archive artifacts."
+    },
+    "VCPKG_TOOL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying vcpkg-tool available remote releases."
+    }
+  }
+}

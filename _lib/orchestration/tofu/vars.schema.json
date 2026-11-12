@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/tofu/vars.schema.json",
+  "title": "tofu variables",
+  "description": "Configuration variables for tofu",
+  "type": "object",
+  "properties": {
+    "TOFU_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install tofu. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "TOFU_VERSION": {
+      "description": "Specific version of tofu to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "TOFU_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading tofu binary or archive artifacts."
+    },
+    "TOFU_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying tofu available remote releases."
+    }
+  }
+}

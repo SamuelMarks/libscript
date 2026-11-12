@@ -56,13 +56,28 @@ repos:
       - id: libscript-shellcheck
         name: LibScript ShellCheck Audit
         entry: |
-          /bin/sh -c 'if command -v shellcheck >/dev/null 2>&1; then
-            OPT_ARGS=""
-            if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
-              OPT_ARGS="-o useless-use-of-cat"
+          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+            cmd.exe /c "if exist _lib\toolchains\shellcheck\env.cmd call _lib\toolchains\shellcheck\env.cmd >nul 2>&1 & where shellcheck >nul 2>&1 || (set LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 && call libscript.cmd install shellcheck latest && call _lib\toolchains\shellcheck\env.cmd >nul 2>&1)"
+          else
+            if [ -f "./_lib/toolchains/shellcheck/env.sh" ]; then
+              SCRIPT_NAME="./_lib/toolchains/shellcheck/env.sh"
+              export SCRIPT_NAME
+              . "./_lib/toolchains/shellcheck/env.sh" >/dev/null 2>&1 || true
+              unset SCRIPT_NAME || true
             fi
-            git ls-files --cached --others --exclude-standard "*.sh" | grep -vE "node_modules|\.git|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $OPT_ARGS
-          fi'
+            if ! command -v shellcheck >/dev/null 2>&1; then
+              LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 STACK="" ./libscript.sh install shellcheck "${SHELLCHECK_VERSION:-latest}"
+              SCRIPT_NAME="./_lib/toolchains/shellcheck/env.sh"
+              export SCRIPT_NAME
+              . "./_lib/toolchains/shellcheck/env.sh" >/dev/null 2>&1 || true
+              unset SCRIPT_NAME || true
+            fi
+          fi
+          OPT_ARGS=""
+          if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
+            OPT_ARGS="-o useless-use-of-cat"
+          fi
+          git ls-files --cached --others --exclude-standard "*.sh" ".githooks/pre-commit" | grep -vE "node_modules|\.git/|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $OPT_ARGS'
         language: system
         pass_filenames: false
       - id: libscript-doc-coverage

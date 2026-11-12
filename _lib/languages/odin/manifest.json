@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "odin",
+  "title": "Odin",
+  "description": "Data-oriented systems programming language built for high performance, simplicity, and modern software development.",
+  "category": "language",
+  "provides": ["odin"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/odin-lang/Odin"
+}

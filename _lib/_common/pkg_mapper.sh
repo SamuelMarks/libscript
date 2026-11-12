@@ -435,6 +435,265 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'shellcheck')
+      case "${PKG_MGR}" in
+        'apk') printf 'shellcheck\n' ;;
+        'apt'|'apt-get') printf 'shellcheck\n' ;;
+        'brew') printf 'shellcheck\n' ;;
+        'dnf'|'yum') printf 'ShellCheck\n' ;;
+        'zypper') printf 'ShellCheck\n' ;;
+        'emerge') printf 'dev-util/shellcheck\n' ;;
+        'pacman') printf 'shellcheck\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
+            printf 'ooce/developer/shellcheck\n'
+          else
+            printf 'hs-ShellCheck\n'
+          fi
+          ;;
+        'port') printf 'shellcheck\n' ;;
+        'xbps') printf 'ShellCheck\n' ;;
+        'nix'|'guix'|'spack'|'pkgx') printf 'shellcheck\n' ;;
+        'winget') printf 'koalaman.shellcheck\n' ;;
+        'choco'|'scoop') printf 'shellcheck\n' ;;
+        *) printf 'shellcheck\n' ;;
+      esac
+      ;;
+    'ninja')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get'|'dnf'|'yum') printf 'ninja-build\n' ;;
+        'winget') printf 'Ninja-build.Ninja\n' ;;
+        *) printf 'ninja\n' ;;
+      esac
+      ;;
+    'ccache')
+      case "${PKG_MGR}" in
+        'winget') printf 'Ccache.Ccache\n' ;;
+        *) printf 'ccache\n' ;;
+      esac
+      ;;
+    'sccache')
+      case "${PKG_MGR}" in
+        'winget') printf 'Mozilla.sccache\n' ;;
+        *) printf 'sccache\n' ;;
+      esac
+      ;;
+    'meson')
+      case "${PKG_MGR}" in
+        'winget') printf 'mesonbuild.meson\n' ;;
+        *) printf 'meson\n' ;;
+      esac
+      ;;
+    'nasm')
+      case "${PKG_MGR}" in
+        'winget') printf 'NASM.NASM\n' ;;
+        *) printf 'nasm\n' ;;
+      esac
+      ;;
+    'yasm') printf 'yasm\n' ;;
+    'xmake')
+      case "${PKG_MGR}" in
+        'winget') printf 'xmake-io.xmake\n' ;;
+        *) printf 'xmake\n' ;;
+      esac
+      ;;
+    'wasmtime')
+      case "${PKG_MGR}" in
+        'winget') printf 'BytecodeAlliance.Wasmtime\n' ;;
+        *) printf 'wasmtime\n' ;;
+      esac
+      ;;
+    'protobuf')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get'|'dnf'|'yum') printf 'protobuf-compiler\n' ;;
+        'apk'|'choco') printf 'protoc\n' ;;
+        'zypper') printf 'protobuf-devel\n' ;;
+        'winget') printf 'Google.Protobuf\n' ;;
+        *) printf 'protobuf\n' ;;
+      esac
+      ;;
+    'autoconf') printf 'autoconf\n' ;;
+    'automake') printf 'automake\n' ;;
+    'libtool')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get') printf 'libtool-bin\n' ;;
+        *) printf 'libtool\n' ;;
+      esac
+      ;;
+    'pkgconfig')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get'|'zypper'|'scoop') printf 'pkg-config\n' ;;
+        'dnf'|'yum') printf 'pkgconf-pkg-config\n' ;;
+        'choco') printf 'pkgconfiglite\n' ;;
+        *) printf 'pkgconf\n' ;;
+      esac
+      ;;
+    'scons') printf 'scons\n' ;;
+    'swig')
+      case "${PKG_MGR}" in
+        'winget') printf 'SWIG.SWIG\n' ;;
+        *) printf 'swig\n' ;;
+      esac
+      ;;
+    'vcpkg-tool') printf 'vcpkg\n' ;;
+    'emscripten') printf 'emscripten\n' ;;
+    'buck2') printf 'buck2\n' ;;
+    'qmake')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get') printf 'qt6-base-dev-tools\n' ;;
+        'apk') printf 'qt6-qtbase-dev\n' ;;
+        'dnf'|'yum') printf 'qt6-qtbase-devel\n' ;;
+        'zypper') printf 'qt6-base-devel\n' ;;
+        'brew') printf 'qt\n' ;;
+        'choco') printf 'qt6-base-dev\n' ;;
+        *) printf 'qt6-base\n' ;;
+      esac
+      ;;
+    'msbuild')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get'|'dnf'|'yum') printf 'mono-devel\n' ;;
+        'pacman') printf 'mono-msbuild\n' ;;
+        'brew') printf 'mono\n' ;;
+        'winget') printf 'Microsoft.BuildTools\n' ;;
+        'choco') printf 'visualstudio2022buildtools\n' ;;
+        *) printf 'msbuild\n' ;;
+      esac
+      ;;
+    'clojure')
+      case "${PKG_MGR}" in
+        'brew') printf 'clojure/tools/clojure\n' ;;
+        *) printf 'clojure\n' ;;
+      esac
+      ;;
+    'crystal')
+      printf 'crystal\n'
+      ;;
+    'dart')
+      case "${PKG_MGR}" in
+        'brew'|'choco') printf 'dart-sdk\n' ;;
+        'winget') printf 'Google.DartSDK\n' ;;
+        *) printf 'dart\n' ;;
+      esac
+      ;;
+    'erlang')
+      case "${PKG_MGR}" in
+        'winget') printf 'Erlang.ErlangOTP\n' ;;
+        *) printf 'erlang\n' ;;
+      esac
+      ;;
+    'fortran'|'gfortran')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'gcc-gfortran\n' ;;
+        'pacman') printf 'gcc-fortran\n' ;;
+        'brew'|'pkg'|'scoop') printf 'gcc\n' ;;
+        'winget') printf 'BrechtSanders.WinLibs.POSIX.UCRT\n' ;;
+        'choco') printf 'mingw\n' ;;
+        *) printf 'gfortran\n' ;;
+      esac
+      ;;
+    'gleam')
+      case "${PKG_MGR}" in
+        'winget') printf 'Gleam.Gleam\n' ;;
+        *) printf 'gleam\n' ;;
+      esac
+      ;;
+    'groovy')
+      printf 'groovy\n'
+      ;;
+    'haskell'|'ghc')
+      case "${PKG_MGR}" in
+        'winget') printf 'Haskell.GHCup\n' ;;
+        *) printf 'ghc\n' ;;
+      esac
+      ;;
+    'lua')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get'|'apk') printf 'lua5.4\n' ;;
+        'pkg') printf 'lua54\n' ;;
+        'winget') printf 'DEVCOM.Lua\n' ;;
+        *) printf 'lua\n' ;;
+      esac
+      ;;
+    'nim')
+      case "${PKG_MGR}" in
+        'winget') printf 'NimLang.Nim\n' ;;
+        *) printf 'nim\n' ;;
+      esac
+      ;;
+    'ocaml')
+      case "${PKG_MGR}" in
+        'winget') printf 'OCaml.opam\n' ;;
+        *) printf 'ocaml\n' ;;
+      esac
+      ;;
+    'odin')
+      printf 'odin\n'
+      ;;
+    'perl')
+      case "${PKG_MGR}" in
+        'pkg') printf 'perl5\n' ;;
+        'winget') printf 'StrawberryPerl.StrawberryPerl\n' ;;
+        *) printf 'perl\n' ;;
+      esac
+      ;;
+    'prolog'|'swipl')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'pl\n' ;;
+        'winget') printf 'SWI-Prolog.SWI-Prolog\n' ;;
+        *) printf 'swi-prolog\n' ;;
+      esac
+      ;;
+    'racket')
+      case "${PKG_MGR}" in
+        'brew') printf 'minimal-racket\n' ;;
+        'winget') printf 'Racket.Racket\n' ;;
+        *) printf 'racket\n' ;;
+      esac
+      ;;
+    'scala')
+      case "${PKG_MGR}" in
+        'winget') printf 'VirtusLab.ScalaCli\n' ;;
+        *) printf 'scala\n' ;;
+      esac
+      ;;
+    'scheme'|'guile')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get') printf 'guile-3.0\n' ;;
+        'dnf'|'yum') printf 'guile30\n' ;;
+        'pkg') printf 'guile3\n' ;;
+        'winget') printf 'Cisco.ChezScheme\n' ;;
+        'choco'|'scoop') printf 'chezscheme\n' ;;
+        *) printf 'guile\n' ;;
+      esac
+      ;;
+    'tcl'|'tclsh')
+      case "${PKG_MGR}" in
+        'pkg') printf 'tcl86\n' ;;
+        'brew') printf 'tcl-tk\n' ;;
+        *) printf 'tcl\n' ;;
+      esac
+      ;;
+    'vala'|'valac')
+      case "${PKG_MGR}" in
+        'apt'|'apt-get') printf 'valac\n' ;;
+        *) printf 'vala\n' ;;
+      esac
+      ;;
+    'vlang')
+      printf 'vlang\n'
+      ;;
+    'maven-wrapper')
+      printf 'maven\n'
+      ;;
+    'pkgsrc')
+      printf 'pkgin\n'
+      ;;
+    'port')
+      printf 'macports\n'
+      ;;
+    'yum')
+      printf 'yum\n'
+      ;;
     'c'|'cc'|'c_compiler')
       case "${PKG_MGR}" in
         'apk') printf 'gcc musl-dev\n' ;;
@@ -983,14 +1242,21 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
-    'httpd'|'apache2')
+    'httpd'|'apache2'|'apache')
       case "${PKG_MGR}" in
         'winget') printf 'Apache.HTTPD\n' ;;
+        'choco') printf 'apache-httpd\n' ;;
         'apt-get') printf 'apache2\n' ;;
         'apk') printf 'apache2\n' ;;
         'dnf'|'yum'|'pacman') printf 'httpd\n' ;;
         'brew') printf 'httpd\n' ;;
-        'pkg') printf 'apache24\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
+            printf 'ooce/server/apache-24\n'
+          else
+            printf 'apache24\n'
+          fi
+          ;;
         *) printf 'apache2\n' ;;
       esac
       ;;
@@ -1641,6 +1907,878 @@ map_package() {
         'apk') printf 'gcc musl-dev\n' ;;
         'apt-get') printf 'gcc build-essential\n' ;;
         *) printf 'gcc\n' ;;
+      esac
+      ;;
+    'cassandra')
+      case "${PKG_MGR}" in
+        'pkg') printf 'cassandra4\n' ;;
+        'emerge') printf 'dev-db/cassandra\n' ;;
+        'choco') printf 'cassandra\n' ;;
+        *) printf 'cassandra\n' ;;
+      esac
+      ;;
+    'clickhouse')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'clickhouse-server clickhouse-client\n' ;;
+        'dnf'|'yum') printf 'clickhouse-server clickhouse-client\n' ;;
+        'pkg') printf 'clickhouse\n' ;;
+        'brew') printf 'clickhouse\n' ;;
+        *) printf 'clickhouse\n' ;;
+      esac
+      ;;
+    'cockroachdb')
+      case "${PKG_MGR}" in
+        'brew') printf 'cockroachdb/tap/cockroach\n' ;;
+        'pkg') printf 'cockroach\n' ;;
+        'choco'|'scoop') printf 'cockroachdb\n' ;;
+        *) printf 'cockroachdb\n' ;;
+      esac
+      ;;
+    'couchdb')
+      case "${PKG_MGR}" in
+        'pkg') printf 'couchdb3\n' ;;
+        'emerge') printf 'dev-db/couchdb\n' ;;
+        'winget') printf 'Apache.CouchDB\n' ;;
+        'choco'|'scoop'|'brew') printf 'couchdb\n' ;;
+        *) printf 'couchdb\n' ;;
+      esac
+      ;;
+    'ferretdb')
+      case "${PKG_MGR}" in
+        'brew') printf 'ferretdb\n' ;;
+        'winget') printf 'FerretDB.FerretDB\n' ;;
+        'scoop') printf 'ferretdb\n' ;;
+        *) printf 'ferretdb\n' ;;
+      esac
+      ;;
+    'firebird')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'firebird3.0-server firebird3.0-utils\n' ;;
+        'dnf'|'yum') printf 'firebird firebird-utils\n' ;;
+        'pkg') printf 'firebird40-server firebird40-client\n' ;;
+        'emerge') printf 'dev-db/firebird\n' ;;
+        'winget') printf 'FirebirdProject.Firebird\n' ;;
+        'choco') printf 'firebird\n' ;;
+        *) printf 'firebird\n' ;;
+      esac
+      ;;
+    'influxdb')
+      case "${PKG_MGR}" in
+        'pkg') printf 'influxdb\n' ;;
+        'emerge') printf 'dev-db/influxdb\n' ;;
+        'winget') printf 'InfluxData.InfluxDB\n' ;;
+        'choco'|'scoop'|'brew') printf 'influxdb\n' ;;
+        *) printf 'influxdb\n' ;;
+      esac
+      ;;
+    'lmdb')
+      case "${PKG_MGR}" in
+        'apk') printf 'lmdb lmdb-tools\n' ;;
+        'apt-get') printf 'lmdb-utils liblmdb-dev\n' ;;
+        'dnf'|'yum') printf 'lmdb lmdb-devel\n' ;;
+        'zypper') printf 'lmdb liblmdb-devel\n' ;;
+        'emerge') printf 'dev-db/lmdb\n' ;;
+        'vcpkg') printf 'lmdb\n' ;;
+        *) printf 'lmdb\n' ;;
+      esac
+      ;;
+    'mssql')
+      case "${PKG_MGR}" in
+        'brew') printf 'sqlcmd\n' ;;
+        'winget') printf 'Microsoft.Sqlcmd\n' ;;
+        'choco') printf 'sqlserver-cmdlineutils\n' ;;
+        *) printf 'mssql-tools18\n' ;;
+      esac
+      ;;
+    'neo4j')
+      case "${PKG_MGR}" in
+        'pkg') printf 'neo4j\n' ;;
+        'winget') printf 'Neo4j.Neo4j\n' ;;
+        'choco') printf 'neo4j-community\n' ;;
+        'scoop'|'brew') printf 'neo4j\n' ;;
+        *) printf 'neo4j\n' ;;
+      esac
+      ;;
+    'questdb')
+      case "${PKG_MGR}" in
+        'brew'|'scoop'|'choco') printf 'questdb\n' ;;
+        *) printf 'questdb\n' ;;
+      esac
+      ;;
+    'rethinkdb')
+      case "${PKG_MGR}" in
+        'emerge') printf 'dev-db/rethinkdb\n' ;;
+        'brew'|'choco'|'scoop') printf 'rethinkdb\n' ;;
+        *) printf 'rethinkdb\n' ;;
+      esac
+      ;;
+    'rocksdb')
+      case "${PKG_MGR}" in
+        'apk') printf 'rocksdb\n' ;;
+        'apt-get') printf 'rocksdb-tools librocksdb-dev\n' ;;
+        'dnf'|'yum') printf 'rocksdb rocksdb-devel\n' ;;
+        'emerge') printf 'dev-libs/rocksdb\n' ;;
+        'vcpkg'|'brew') printf 'rocksdb\n' ;;
+        *) printf 'rocksdb\n' ;;
+      esac
+      ;;
+    'scylladb')
+      case "${PKG_MGR}" in
+        'apt-get'|'dnf'|'yum') printf 'scylla\n' ;;
+        *) printf 'scylla\n' ;;
+      esac
+      ;;
+    'surrealdb')
+      case "${PKG_MGR}" in
+        'brew') printf 'surrealdb/tap/surreal\n' ;;
+        'winget') printf 'SurrealDB.SurrealDB\n' ;;
+        'choco'|'scoop') printf 'surreal\n' ;;
+        *) printf 'surrealdb\n' ;;
+      esac
+      ;;
+    'tidb')
+      case "${PKG_MGR}" in
+        'brew') printf 'tidb\n' ;;
+        *) printf 'tidb\n' ;;
+      esac
+      ;;
+    'timescaledb')
+      case "${PKG_MGR}" in
+        'apk') printf 'postgresql-timescaledb\n' ;;
+        'pkg') printf 'timescaledb\n' ;;
+        'brew') printf 'timescaledb\n' ;;
+        *) printf 'timescaledb\n' ;;
+      esac
+      ;;
+    'dragonfly')
+      case "${PKG_MGR}" in
+        'brew') printf 'dragonflydb/tap/dragonfly\n' ;;
+        *) printf 'dragonfly\n' ;;
+      esac
+      ;;
+    'hazelcast')
+      case "${PKG_MGR}" in
+        'brew') printf 'hazelcast/hz/hazelcast\n' ;;
+        *) printf 'hazelcast\n' ;;
+      esac
+      ;;
+    'keydb')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum'|'pacman'|'brew') printf 'keydb\n' ;;
+        *) printf 'keydb\n' ;;
+      esac
+      ;;
+    'varnish')
+      case "${PKG_MGR}" in
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
+            printf 'ooce/server/varnish\n'
+          else
+            printf 'varnish7\n'
+          fi
+          ;;
+        'emerge') printf 'www-servers/varnish\n' ;;
+        *) printf 'varnish\n' ;;
+      esac
+      ;;
+    'opensearch')
+      case "${PKG_MGR}" in
+        'pkg') printf 'opensearch\n' ;;
+        'brew'|'choco'|'scoop') printf 'opensearch\n' ;;
+        *) printf 'opensearch\n' ;;
+      esac
+      ;;
+    'solr')
+      case "${PKG_MGR}" in
+        'pkg') printf 'apache-solr\n' ;;
+        'brew'|'choco'|'scoop') printf 'solr\n' ;;
+        *) printf 'solr\n' ;;
+      esac
+      ;;
+    'sonic')
+      case "${PKG_MGR}" in
+        'brew') printf 'sonic\n' ;;
+        *) printf 'sonic\n' ;;
+      esac
+      ;;
+    'typesense')
+      case "${PKG_MGR}" in
+        'brew') printf 'typesense/tap/typesense-server\n' ;;
+        *) printf 'typesense-server\n' ;;
+      esac
+      ;;
+    'activemq')
+      case "${PKG_MGR}" in
+        'brew'|'pkg'|'choco'|'scoop') printf 'activemq\n' ;;
+        *) printf 'activemq\n' ;;
+      esac
+      ;;
+    'pulsar')
+      case "${PKG_MGR}" in
+        'brew') printf 'apache-pulsar\n' ;;
+        *) printf 'pulsar\n' ;;
+      esac
+      ;;
+    'redpanda')
+      case "${PKG_MGR}" in
+        'brew') printf 'redpanda-data/tap/redpanda\n' ;;
+        'scoop') printf 'rpk\n' ;;
+        *) printf 'redpanda\n' ;;
+      esac
+      ;;
+    'zeromq')
+      case "${PKG_MGR}" in
+        'apk') printf 'zeromq zeromq-dev\n' ;;
+        'apt-get') printf 'libzmq3-dev\n' ;;
+        'dnf'|'yum') printf 'zeromq-devel\n' ;;
+        'zypper') printf 'zeromq-devel\n' ;;
+        'pacman') printf 'zeromq\n' ;;
+        'pkg') printf 'libzmq4\n' ;;
+        'emerge') printf 'net-libs/zeromq\n' ;;
+        'vcpkg') printf 'zeromq\n' ;;
+        'choco') printf 'zeromq\n' ;;
+        *) printf 'zeromq\n' ;;
+      esac
+      ;;
+    'envoy')
+      case "${PKG_MGR}" in
+        'apk'|'pacman'|'brew'|'pkg') printf 'envoy\n' ;;
+        *) printf 'envoy\n' ;;
+      esac
+      ;;
+    'haproxy')
+      case "${PKG_MGR}" in
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
+            printf 'ooce/network/haproxy\n'
+          else
+            printf 'haproxy\n'
+          fi
+          ;;
+        'emerge') printf 'net-proxy/haproxy\n' ;;
+        *) printf 'haproxy\n' ;;
+      esac
+      ;;
+    'openresty')
+      case "${PKG_MGR}" in
+        'brew') printf 'openresty/brew/openresty\n' ;;
+        'pkg'|'choco'|'scoop') printf 'openresty\n' ;;
+        *) printf 'openresty\n' ;;
+      esac
+      ;;
+    'tomcat')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'tomcat10\n' ;;
+        'pkg') printf 'tomcat101\n' ;;
+        'winget') printf 'Apache.Tomcat.10\n' ;;
+        'choco') printf 'tomcat\n' ;;
+        *) printf 'tomcat\n' ;;
+      esac
+      ;;
+    'traefik')
+      case "${PKG_MGR}" in
+        'winget') printf 'TraefikLabs.Traefik\n' ;;
+        'choco'|'scoop'|'brew'|'apk'|'pacman'|'pkg') printf 'traefik\n' ;;
+        *) printf 'traefik\n' ;;
+      esac
+      ;;
+    'glassfish')
+      case "${PKG_MGR}" in
+        'pkg') printf 'glassfish\n' ;;
+        'brew'|'choco') printf 'glassfish\n' ;;
+        *) printf 'glassfish\n' ;;
+      esac
+      ;;
+    'jboss'|'wildfly')
+      case "${PKG_MGR}" in
+        'pkg'|'brew'|'choco'|'scoop') printf 'wildfly\n' ;;
+        *) printf 'wildfly\n' ;;
+      esac
+      ;;
+    'jetty')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'jetty9\n' ;;
+        'pkg') printf 'jetty10\n' ;;
+        'brew'|'choco'|'scoop') printf 'jetty\n' ;;
+        *) printf 'jetty\n' ;;
+      esac
+      ;;
+    'passenger')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'passenger\n' ;;
+        'pkg') printf 'rubygem-passenger\n' ;;
+        'brew') printf 'passenger\n' ;;
+        *) printf 'passenger\n' ;;
+      esac
+      ;;
+    'payara')
+      case "${PKG_MGR}" in
+        'brew'|'choco') printf 'payara\n' ;;
+        *) printf 'payara\n' ;;
+      esac
+      ;;
+    'pm2')
+      case "${PKG_MGR}" in
+        'brew') printf 'pm2\n' ;;
+        *) printf 'pm2\n' ;;
+      esac
+      ;;
+    'puma')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'puma\n' ;;
+        'pkg') printf 'rubygem-puma\n' ;;
+        *) printf 'puma\n' ;;
+      esac
+      ;;
+    'triton')
+      case "${PKG_MGR}" in
+        *) printf 'tritonserver\n' ;;
+      esac
+      ;;
+    'unicorn')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'unicorn\n' ;;
+        'pkg') printf 'rubygem-unicorn\n' ;;
+        *) printf 'unicorn\n' ;;
+      esac
+      ;;
+    'fd')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'fd-find\n' ;;
+        'dnf'|'yum'|'zypper') printf 'fd-find\n' ;;
+        'pkg') printf 'fd-find\n' ;;
+        'emerge') printf 'sys-apps/fd\n' ;;
+        'winget') printf 'sharkdp.fd\n' ;;
+        *) printf 'fd\n' ;;
+      esac
+      ;;
+    'ffmpeg')
+      case "${PKG_MGR}" in
+        'emerge') printf 'media-video/ffmpeg\n' ;;
+        'winget') printf 'Gyan.FFmpeg\n' ;;
+        *) printf 'ffmpeg\n' ;;
+      esac
+      ;;
+    'fzf')
+      case "${PKG_MGR}" in
+        'emerge') printf 'app-shells/fzf\n' ;;
+        'winget') printf 'junegunn.fzf\n' ;;
+        *) printf 'fzf\n' ;;
+      esac
+      ;;
+    'htop')
+      case "${PKG_MGR}" in
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
+            printf 'ooce/system/htop\n'
+          else
+            printf 'htop\n'
+          fi
+          ;;
+        'emerge') printf 'sys-process/htop\n' ;;
+        *) printf 'htop\n' ;;
+      esac
+      ;;
+    'imagemagick')
+      case "${PKG_MGR}" in
+        'dnf'|'yum'|'zypper') printf 'ImageMagick\n' ;;
+        'pkg') printf 'ImageMagick7\n' ;;
+        'emerge') printf 'media-gfx/imagemagick\n' ;;
+        'winget') printf 'ImageMagick.ImageMagick\n' ;;
+        *) printf 'imagemagick\n' ;;
+      esac
+      ;;
+    'openssl')
+      case "${PKG_MGR}" in
+        'emerge') printf 'dev-libs/openssl\n' ;;
+        'winget') printf 'ShiningLight.OpenSSL.Light\n' ;;
+        'vcpkg') printf 'openssl\n' ;;
+        *) printf 'openssl\n' ;;
+      esac
+      ;;
+    'pandoc')
+      case "${PKG_MGR}" in
+        'pkg') printf 'hs-pandoc\n' ;;
+        'emerge') printf 'app-text/pandoc\n' ;;
+        'winget') printf 'JohnMacFarlane.Pandoc\n' ;;
+        *) printf 'pandoc\n' ;;
+      esac
+      ;;
+    'ripgrep')
+      case "${PKG_MGR}" in
+        'emerge') printf 'sys-apps/ripgrep\n' ;;
+        'winget') printf 'BurntSushi.ripgrep.MSVC\n' ;;
+        *) printf 'ripgrep\n' ;;
+      esac
+      ;;
+    'rsync')
+      case "${PKG_MGR}" in
+        'emerge') printf 'net-misc/rsync\n' ;;
+        'choco'|'scoop') printf 'rsync\n' ;;
+        *) printf 'rsync\n' ;;
+      esac
+      ;;
+    'sqlite-tools')
+      case "${PKG_MGR}" in
+        'apk') printf 'sqlite\n' ;;
+        'apt-get') printf 'sqlite3\n' ;;
+        'dnf'|'yum'|'zypper'|'pacman'|'brew') printf 'sqlite\n' ;;
+        'pkg') printf 'sqlite3\n' ;;
+        'winget') printf 'SQLite.SQLite\n' ;;
+        'choco'|'scoop') printf 'sqlite\n' ;;
+        *) printf 'sqlite3\n' ;;
+      esac
+      ;;
+    'tree')
+      case "${PKG_MGR}" in
+        'emerge') printf 'app-text/tree\n' ;;
+        'winget') printf 'GnuWin32.Tree\n' ;;
+        *) printf 'tree\n' ;;
+      esac
+      ;;
+    'vim')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'vim-enhanced\n' ;;
+        'emerge') printf 'app-editors/vim\n' ;;
+        'winget') printf 'vim.vim\n' ;;
+        *) printf 'vim\n' ;;
+      esac
+      ;;
+    'yq')
+      case "${PKG_MGR}" in
+        'pkg') printf 'go-yq\n' ;;
+        'emerge') printf 'app-misc/yq-go\n' ;;
+        'winget') printf 'MikeFarah.yq\n' ;;
+        *) printf 'yq\n' ;;
+      esac
+      ;;
+    'zip')
+      case "${PKG_MGR}" in
+        'emerge') printf 'app-arch/zip\n' ;;
+        'winget') printf 'GnuWin32.Zip\n' ;;
+        *) printf 'zip\n' ;;
+      esac
+      ;;
+    'crowdsec')
+      case "${PKG_MGR}" in
+        'winget') printf 'CrowdSecurity.CrowdSec\n' ;;
+        *) printf 'crowdsec\n' ;;
+      esac
+      ;;
+    'fail2ban')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py311-fail2ban\n' ;;
+        'emerge') printf 'net-analyzer/fail2ban\n' ;;
+        *) printf 'fail2ban\n' ;;
+      esac
+      ;;
+    'keycloak')
+      case "${PKG_MGR}" in
+        'pkg'|'brew'|'choco') printf 'keycloak\n' ;;
+        *) printf 'keycloak\n' ;;
+      esac
+      ;;
+    'step-ca')
+      case "${PKG_MGR}" in
+        'brew') printf 'step\n' ;;
+        'pkg') printf 'step-certificates\n' ;;
+        'winget') printf 'Smallstep.step-ca\n' ;;
+        *) printf 'step-ca\n' ;;
+      esac
+      ;;
+    'vault')
+      case "${PKG_MGR}" in
+        'winget') printf 'Hashicorp.Vault\n' ;;
+        'brew'|'choco'|'scoop'|'apk'|'pacman'|'pkg') printf 'vault\n' ;;
+        *) printf 'vault\n' ;;
+      esac
+      ;;
+    'wireguard')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum'|'zypper'|'pacman'|'brew'|'pkg') printf 'wireguard-tools\n' ;;
+        'emerge') printf 'net-vpn/wireguard-tools\n' ;;
+        'winget') printf 'WireGuard.WireGuard\n' ;;
+        *) printf 'wireguard-tools\n' ;;
+      esac
+      ;;
+    'grafana')
+      case "${PKG_MGR}" in
+        'pkg') printf 'grafana\n' ;;
+        'winget') printf 'GrafanaLabs.Grafana.OSS\n' ;;
+        'choco'|'scoop'|'brew') printf 'grafana\n' ;;
+        *) printf 'grafana\n' ;;
+      esac
+      ;;
+    'loki')
+      case "${PKG_MGR}" in
+        'apk'|'pacman'|'brew'|'pkg'|'choco'|'scoop') printf 'loki\n' ;;
+        *) printf 'loki\n' ;;
+      esac
+      ;;
+    'otel-collector')
+      case "${PKG_MGR}" in
+        'brew') printf 'opentelemetry-collector\n' ;;
+        'scoop') printf 'otelcol\n' ;;
+        *) printf 'opentelemetry-collector\n' ;;
+      esac
+      ;;
+    'prometheus')
+      case "${PKG_MGR}" in
+        'apt-get'|'apk'|'dnf'|'yum'|'pacman'|'brew'|'pkg'|'choco'|'scoop') printf 'prometheus\n' ;;
+        'winget') printf 'Prometheus.Prometheus\n' ;;
+        *) printf 'prometheus\n' ;;
+      esac
+      ;;
+    'vector')
+      case "${PKG_MGR}" in
+        'brew') printf 'vectordotdev/brew/vector\n' ;;
+        'winget') printf 'Datadog.Vector\n' ;;
+        'scoop') printf 'vector\n' ;;
+        *) printf 'vector\n' ;;
+      esac
+      ;;
+    'ceph')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'ceph-common\n' ;;
+        'dnf'|'yum') printf 'ceph-common\n' ;;
+        'pkg') printf 'ceph18\n' ;;
+        *) printf 'ceph\n' ;;
+      esac
+      ;;
+    'garage')
+      case "${PKG_MGR}" in
+        'apk'|'pacman'|'pkg') printf 'garage\n' ;;
+        *) printf 'garage\n' ;;
+      esac
+      ;;
+    'glusterfs')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'glusterfs-server\n' ;;
+        'dnf'|'yum') printf 'glusterfs-server\n' ;;
+        'pkg') printf 'glusterfs\n' ;;
+        *) printf 'glusterfs\n' ;;
+      esac
+      ;;
+    'juicefs')
+      case "${PKG_MGR}" in
+        'brew'|'scoop') printf 'juicefs\n' ;;
+        *) printf 'juicefs\n' ;;
+      esac
+      ;;
+    'seaweedfs')
+      case "${PKG_MGR}" in
+        'brew'|'pkg'|'scoop') printf 'seaweedfs\n' ;;
+        *) printf 'seaweedfs\n' ;;
+      esac
+      ;;
+    'zfs')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'zfsutils-linux\n' ;;
+        'apk'|'dnf'|'yum'|'zypper'|'pacman') printf 'zfs\n' ;;
+        'brew') printf 'openzfs\n' ;;
+        *) printf 'zfs\n' ;;
+      esac
+      ;;
+    'cgit')
+      case "${PKG_MGR}" in
+        'emerge') printf 'www-apps/cgit\n' ;;
+        *) printf 'cgit\n' ;;
+      esac
+      ;;
+    'forgejo')
+      case "${PKG_MGR}" in
+        'apk'|'pacman'|'brew'|'pkg'|'choco'|'scoop') printf 'forgejo\n' ;;
+        *) printf 'forgejo\n' ;;
+      esac
+      ;;
+    'dbus')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'dbus\n' ;;
+        'dnf'|'yum') printf 'dbus-daemon\n' ;;
+        *) printf 'dbus\n' ;;
+      esac
+      ;;
+    'locales')
+      case "${PKG_MGR}" in
+        'apk') printf 'musl-locales\n' ;;
+        'dnf'|'yum'|'zypper') printf 'glibc-langpack-en\n' ;;
+        'pacman') printf 'glibc\n' ;;
+        *) printf 'locales\n' ;;
+      esac
+      ;;
+    'ntp')
+      case "${PKG_MGR}" in
+        'apk') printf 'openntpd\n' ;;
+        *) printf 'ntp\n' ;;
+      esac
+      ;;
+    'sysctl')
+      case "${PKG_MGR}" in
+        'apk'|'pacman'|'xbps') printf 'procps-ng\n' ;;
+        'apt-get') printf 'procps\n' ;;
+        'dnf'|'yum'|'zypper') printf 'procps-ng\n' ;;
+        *) printf 'procps\n' ;;
+      esac
+      ;;
+    'tzdata')
+      case "${PKG_MGR}" in
+        *) printf 'tzdata\n' ;;
+      esac
+      ;;
+    'supervisord')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py311-supervisor\n' ;;
+        *) printf 'supervisor\n' ;;
+      esac
+      ;;
+    'bind9')
+      case "${PKG_MGR}" in
+        'apk'|'dnf'|'yum'|'pacman'|'zypper'|'brew') printf 'bind\n' ;;
+        'pkg') printf 'bind918\n' ;;
+        *) printf 'bind9\n' ;;
+      esac
+      ;;
+    'coredns')
+      case "${PKG_MGR}" in
+        'winget') printf 'CoreDNS.CoreDNS\n' ;;
+        *) printf 'coredns\n' ;;
+      esac
+      ;;
+    'dnsmasq')
+      case "${PKG_MGR}" in
+        *) printf 'dnsmasq\n' ;;
+      esac
+      ;;
+    'firewalld')
+      case "${PKG_MGR}" in
+        *) printf 'firewalld\n' ;;
+      esac
+      ;;
+    'frr')
+      case "${PKG_MGR}" in
+        'pkg') printf 'frr10\n' ;;
+        *) printf 'frr\n' ;;
+      esac
+      ;;
+    'keepalived')
+      case "${PKG_MGR}" in
+        *) printf 'keepalived\n' ;;
+      esac
+      ;;
+    'tailscale')
+      case "${PKG_MGR}" in
+        'winget') printf 'Tailscale.Tailscale\n' ;;
+        *) printf 'tailscale\n' ;;
+      esac
+      ;;
+    'ufw')
+      case "${PKG_MGR}" in
+        *) printf 'ufw\n' ;;
+      esac
+      ;;
+    'jack')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'jackd2\n' ;;
+        'dnf'|'yum') printf 'jack-audio-connection-kit\n' ;;
+        'pacman'|'apk'|'pkg'|'brew') printf 'jack2\n' ;;
+        'winget') printf 'JACKAudio.JACK2\n' ;;
+        *) printf 'jack2\n' ;;
+      esac
+      ;;
+    'sndio')
+      case "${PKG_MGR}" in
+        *) printf 'sndio\n' ;;
+      esac
+      ;;
+    'ly')
+      case "${PKG_MGR}" in
+        *) printf 'ly\n' ;;
+      esac
+      ;;
+    'i3')
+      case "${PKG_MGR}" in
+        'apt-get'|'pacman') printf 'i3-wm\n' ;;
+        *) printf 'i3\n' ;;
+      esac
+      ;;
+    'mate')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'mate-desktop-environment-core\n' ;;
+        'dnf'|'yum') printf 'mate-session-manager\n' ;;
+        'pacman'|'apk'|'pkg') printf 'mate-session-manager\n' ;;
+        *) printf 'mate\n' ;;
+      esac
+      ;;
+    'grub')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'grub2-common\n' ;;
+        'dnf'|'yum'|'zypper'|'pkg') printf 'grub2-tools\n' ;;
+        *) printf 'grub\n' ;;
+      esac
+      ;;
+    'limine')
+      case "${PKG_MGR}" in
+        *) printf 'limine\n' ;;
+      esac
+      ;;
+    'refind')
+      case "${PKG_MGR}" in
+        *) printf 'refind\n' ;;
+      esac
+      ;;
+    'systemd-boot')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'systemd-udev\n' ;;
+        *) printf 'systemd-boot\n' ;;
+      esac
+      ;;
+    'lima')
+      case "${PKG_MGR}" in
+        *) printf 'lima\n' ;;
+      esac
+      ;;
+    'multipass')
+      case "${PKG_MGR}" in
+        'winget') printf 'Canonical.Multipass\n' ;;
+        *) printf 'multipass\n' ;;
+      esac
+      ;;
+    'utm')
+      case "${PKG_MGR}" in
+        *) printf 'utm\n' ;;
+      esac
+      ;;
+    'wsl')
+      case "${PKG_MGR}" in
+        'winget') printf 'Microsoft.WSL\n' ;;
+        *) printf 'wsl\n' ;;
+      esac
+      ;;
+    'ansible')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py311-ansible\n' ;;
+        *) printf 'ansible\n' ;;
+      esac
+      ;;
+    'buildah')
+      case "${PKG_MGR}" in
+        *) printf 'buildah\n' ;;
+      esac
+      ;;
+    'cilium')
+      case "${PKG_MGR}" in
+        'brew'|'pacman'|'apk') printf 'cilium-cli\n' ;;
+        'winget') printf 'Cilium.CiliumCLI\n' ;;
+        'choco'|'scoop') printf 'cilium-cli\n' ;;
+        *) printf 'cilium-cli\n' ;;
+      esac
+      ;;
+    'consul')
+      case "${PKG_MGR}" in
+        'winget') printf 'HashiCorp.Consul\n' ;;
+        *) printf 'consul\n' ;;
+      esac
+      ;;
+    'containerd')
+      case "${PKG_MGR}" in
+        *) printf 'containerd\n' ;;
+      esac
+      ;;
+    'cri-o')
+      case "${PKG_MGR}" in
+        *) printf 'cri-o\n' ;;
+      esac
+      ;;
+    'helm-controller')
+      case "${PKG_MGR}" in
+        *) printf 'helm-controller\n' ;;
+      esac
+      ;;
+    'k3s')
+      case "${PKG_MGR}" in
+        *) printf 'k3s\n' ;;
+      esac
+      ;;
+    'kubeadm')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'kubernetes-kubeadm\n' ;;
+        'winget') printf 'Kubernetes.kubeadm\n' ;;
+        *) printf 'kubeadm\n' ;;
+      esac
+      ;;
+    'libvirt')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libvirt-clients\n' ;;
+        'dnf'|'yum') printf 'libvirt-client\n' ;;
+        *) printf 'libvirt\n' ;;
+      esac
+      ;;
+    'lxc')
+      case "${PKG_MGR}" in
+        *) printf 'lxc\n' ;;
+      esac
+      ;;
+    'lxd')
+      case "${PKG_MGR}" in
+        *) printf 'lxd\n' ;;
+      esac
+      ;;
+    'opensearch-dashboards')
+      case "${PKG_MGR}" in
+        *) printf 'opensearch-dashboards\n' ;;
+      esac
+      ;;
+    'podman')
+      case "${PKG_MGR}" in
+        'winget') printf 'RedHat.Podman\n' ;;
+        'choco') printf 'podman-cli\n' ;;
+        *) printf 'podman\n' ;;
+      esac
+      ;;
+    'pulumi')
+      case "${PKG_MGR}" in
+        'winget') printf 'Pulumi.Pulumi\n' ;;
+        *) printf 'pulumi\n' ;;
+      esac
+      ;;
+    'rancher')
+      case "${PKG_MGR}" in
+        'brew') printf 'rancher-cli\n' ;;
+        'scoop'|'choco') printf 'rancher\n' ;;
+        *) printf 'rancher\n' ;;
+      esac
+      ;;
+    'skopeo')
+      case "${PKG_MGR}" in
+        *) printf 'skopeo\n' ;;
+      esac
+      ;;
+    'terraform')
+      case "${PKG_MGR}" in
+        'winget') printf 'Hashicorp.Terraform\n' ;;
+        *) printf 'terraform\n' ;;
+      esac
+      ;;
+    'tofu')
+      case "${PKG_MGR}" in
+        'brew'|'apk'|'pacman'|'pkg'|'choco'|'scoop') printf 'opentofu\n' ;;
+        'winget') printf 'OpenTofu.tofu\n' ;;
+        *) printf 'opentofu\n' ;;
+      esac
+      ;;
+    'oci')
+      case "${PKG_MGR}" in
+        'brew'|'apk') printf 'oci-cli\n' ;;
+        'pkg') printf 'py311-oci-cli\n' ;;
+        'winget') printf 'Oracle.OCICLI\n' ;;
+        'choco'|'scoop') printf 'oci-cli\n' ;;
+        *) printf 'oci-cli\n' ;;
+      esac
+      ;;
+    'ovh')
+      case "${PKG_MGR}" in
+        'brew'|'scoop') printf 'ovhcloud-cli\n' ;;
+        *) printf 'ovhcloud-cli\n' ;;
       esac
       ;;
     *)

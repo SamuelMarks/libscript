@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/jboss/vars.schema.json",
+  "title": "jboss variables",
+  "description": "Configuration variables for jboss",
+  "type": "object",
+  "properties": {
+    "JBOSS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install jboss. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "JBOSS_VERSION": {
+      "description": "Specific version of jboss to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "JBOSS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading jboss binary or archive artifacts."
+    },
+    "JBOSS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying jboss available remote releases."
+    },
+    "JBOSS_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the jboss service listens.",
+      "default": 8080
+    }
+  }
+}

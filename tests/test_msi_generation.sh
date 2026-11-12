@@ -32,8 +32,8 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test artifacts upon exit or preserves them on error.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
@@ -72,4 +72,5 @@ else
 fi
 
 printf '=== All MSI tests completed successfully ===\n'
+cleanup
 exit 0

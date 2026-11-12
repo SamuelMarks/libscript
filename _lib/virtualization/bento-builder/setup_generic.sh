@@ -44,6 +44,8 @@ done
 
 ACTION="${ACTION:-install}"
 BENTO_DIR="${BENTO_DIR:-}"
+BENTO_REPO_URL="${BENTO_REPO_URL:-${BENTO_BUILDER_REPO_URL:-https://github.com/SamuelMarks/bento.git}}"
+BENTO_BRANCH="${BENTO_BRANCH:-${BENTO_BUILDER_BRANCH:-multi-os-qemu-aarch64}}"
 
 # ## find_bento_dir
 # Locates the bento project directory on the filesystem.
@@ -52,8 +54,8 @@ find_bento_dir() {
     printf '%s\n' "$BENTO_DIR"
     return 0
   fi
-  for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "$HOME/bento" "$HOME/bento/bento"; do
-    if [ -f "$candidate/packer_templates/pkr-builder.pkr.hcl" ] || [ -f "$candidate/builds.yml" ]; then
+  for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "${HOME:-/root}/bento" "${HOME:-/root}/bento/bento"; do
+    if [ -f "$candidate/packer_templates/pkr-builder.pkr.hcl" ] || [ -f "$candidate/builds.yml" ] || [ -d "$candidate/.git" ]; then
       printf '%s\n' "$candidate"
       return 0
     fi
@@ -61,20 +63,40 @@ find_bento_dir() {
   return 1
 }
 
+# ## ensure_bento_fork_checkout
+# Idempotently ensures the Bento repository uses the configured fork (SamuelMarks/bento) and branch (multi-os-qemu-aarch64).
+ensure_bento_fork_checkout() {
+  _b_target="${1:-${BENTO_DIR:-${LIBSCRIPT_ROOT_DIR}/../bento}}"
+  if [ ! -d "$_b_target/.git" ]; then
+    if [ -n "$BENTO_DIR" ] && command -v git >/dev/null 2>&1 && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+      log_info "Cloning Bento fork ${BENTO_REPO_URL} (branch ${BENTO_BRANCH}) into ${_b_target}..."
+      mkdir -p "$(dirname "$_b_target")"
+      git clone --branch "$BENTO_BRANCH" "$BENTO_REPO_URL" "$_b_target" || log_warn "Could not clone ${BENTO_REPO_URL}."
+    fi
+  elif command -v git >/dev/null 2>&1; then
+    _cur_branch=$(git -C "$_b_target" rev-parse --abbrev-ref HEAD 2>/dev/null || printf '%s' "")
+    if [ -n "$_cur_branch" ] && [ "$_cur_branch" != "$BENTO_BRANCH" ]; then
+      log_info "Switching Bento repository at ${_b_target} from ${_cur_branch} to ${BENTO_BRANCH}..."
+      git -C "$_b_target" checkout "$BENTO_BRANCH" 2>/dev/null || log_warn "Branch ${BENTO_BRANCH} not checked out locally."
+    fi
+  fi
+}
+
 # ## configure_bento_repo
 # Configures the local Bento repository dependencies and plugins.
 configure_bento_repo() {
+  ensure_bento_fork_checkout "${BENTO_DIR:-}"
   if b_dir=$(find_bento_dir); then
-    log_info "Found Bento repository at $b_dir"
+    log_info "Found Bento repository at $b_dir (target branch: ${BENTO_BRANCH})"
 
     if [ -f "$b_dir/packer_templates/pkr-plugins.pkr.hcl" ] && command -v packer >/dev/null 2>&1; then
       log_info 'Initializing Packer plugins for Bento...'
-      (cd "$b_dir/packer_templates" && packer init pkr-plugins.pkr.hcl) || log_warn "Packer plugin init failed."
+      (cd "$b_dir/packer_templates" && packer init pkr-plugins.pkr.hcl) || log_warn 'Packer plugin init failed.'
     fi
 
     if [ -f "$b_dir/Gemfile" ] && command -v bundle >/dev/null 2>&1; then
       log_info 'Installing Bento Ruby bundle dependencies...'
-      (cd "$b_dir" && bundle install) || log_warn "Bundle install failed."
+      (cd "$b_dir" && bundle install) || log_warn 'Bundle install failed.'
     fi
   else
     log_info 'No local Bento repository detected; skipping repo-specific initialization.'

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lxc",
+  "title": "Linux Containers (LXC) Userspace Tools",
+  "description": "Low-level Linux Containers userspace tools and library (lxc-create, lxc-start, lxc-ls, lxc-attach) over kernel namespaces and cgroups.",
+  "category": "orchestration",
+  "provides": ["lxc", "lxc-ls", "lxc-create"],
+  "os_whitelist": ["linux"],
+  "repository": "https://github.com/lxc/lxc"
+}

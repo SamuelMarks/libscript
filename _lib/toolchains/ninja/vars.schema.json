@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/ninja/vars.schema.json",
+  "title": "ninja variables",
+  "description": "Configuration variables for ninja",
+  "type": "object",
+  "properties": {
+    "NINJA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ninja. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "NINJA_VERSION": {
+      "description": "Specific version of ninja to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "1.12.1", "1.11.1"]
+    },
+    "NINJA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ninja binary or archive artifacts."
+    },
+    "NINJA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ninja available remote releases."
+    }
+  }
+}

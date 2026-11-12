@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/xmake/vars.schema.json",
+  "title": "xmake variables",
+  "description": "Configuration variables for xmake",
+  "type": "object",
+  "properties": {
+    "XMAKE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install xmake. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "XMAKE_VERSION": {
+      "description": "Specific version of xmake to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "2.9.7"]
+    },
+    "XMAKE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading xmake binary or archive artifacts."
+    },
+    "XMAKE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying xmake available remote releases."
+    }
+  }
+}

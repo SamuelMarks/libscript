@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pkgconfig",
+  "title": "pkg-config / pkgconf",
+  "description": "Compiler and linker metadata query tool for installed libraries.",
+  "category": "toolchain",
+  "provides": ["pkgconfig", "pkg-config", "pkgconf"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/pkgconf/pkgconf"
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/zstd/vars.schema.json",
+  "title": "zstd variables",
+  "description": "Configuration variables for zstd",
+  "type": "object",
+  "properties": {
+    "ZSTD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install zstd. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ZSTD_VERSION": {
+      "description": "Specific version of zstd to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ZSTD_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading zstd binary or archive artifacts."
+    },
+    "ZSTD_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying zstd available remote releases."
+    }
+  }
+}

@@ -46,15 +46,7 @@ fi
 ORIG_PWD=$(pwd)
 cd "$REPO_ROOT"
 
-# ## handle_interrupt
-# Signal handler to abort audit immediately on interruption.
-# shellcheck disable=SC2329
-handle_interrupt() {
-  trap - INT TERM HUP EXIT
-  exit 130
-}
-
-trap 'handle_interrupt' INT TERM HUP
+trap 'trap - INT TERM HUP EXIT; exit 130' INT TERM HUP
 
 ERRORS=0
 
@@ -272,7 +264,8 @@ audit_single_file() {
               $0 ~ /^[[:space:]]*libscript_depends([[:space:]]+"[A-Za-z0-9_.-]+")+([[:space:]]*\|\|[[:space:]]*true)?[[:space:]]*$/) {
             unnecessary_dq_hits = (unnecessary_dq_hits ? unnecessary_dq_hits "; " : "") NR ":" $0
           }
-          if ($0 ~ /^[ \t]*(\x5b[^\x5d]+\x5d([ \t]*&&[ \t]*\x5b[^\x5d]+\x5d)*|command[ \t]+-v[ \t]+[^|;]+)[ \t]*&&[ \t]*[^|;&\x5b{][^|;&]*(\|[ \t]*[^|;&]+)*\|\|[ \t]*(true|:)([ \t;]|$)/) {
+          if ($0 ~ /^[ \t]*(\x5b[^\x5d]+\x5d([ \t]*&&[ \t]*\x5b[^\x5d]+\x5d)*|command[ \t]+-v[ \t]+[^|;]+)[ \t]*&&[ \t]*[^|;&\x5b{][^|;&]*(\|[ \t]*[^|;&]+)*\|\|[ \t]*(true|:)([ \t;]|$)/ ||
+              $0 ~ /\$\([ \t]*cd[ \t]+[^|;&]+&&[ \t]*[^|;&]+(\|[ \t]*[^|;&]+)*\|\|[ \t]*(true|:)[ \t]*\)/) {
             sc2015_hits = (sc2015_hits ? sc2015_hits "; " : "") NR ":" $0
           }
         }

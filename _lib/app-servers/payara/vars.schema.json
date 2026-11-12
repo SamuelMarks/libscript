@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/payara/vars.schema.json",
+  "title": "payara variables",
+  "description": "Configuration variables for payara",
+  "type": "object",
+  "properties": {
+    "PAYARA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install payara. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "PAYARA_VERSION": {
+      "description": "Specific version of payara to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "PAYARA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading payara binary or archive artifacts."
+    },
+    "PAYARA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying payara available remote releases."
+    },
+    "PAYARA_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the payara service listens.",
+      "default": 8080
+    }
+  }
+}

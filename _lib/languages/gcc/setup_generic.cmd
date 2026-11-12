@@ -98,8 +98,14 @@ if not "%GCC_DOWNLOAD_URL%"=="" (
 exit /b 0
 
 :: ## action_install
-:: Installs GCC via the configured package manager or stages a local shim.
+:: Installs GCC via the configured package manager or builds from source.
 :action_install
+if /i "%GCC_INSTALL_METHOD%"=="from-source" (
+    set "_build_ver=%EXACT_VERSION%"
+    if not "%GCC_BUILD_TARGET%"=="" set "_build_ver=%EXACT_VERSION%-%GCC_BUILD_TARGET%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "gcc" "!_build_ver!" "gcc"
+    exit /b !errorlevel!
+)
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gcc\%EXACT_VERSION%"
 if exist "%TARGET_DIR%\bin\gcc.exe" (
     echo [INFO] gcc %EXACT_VERSION% is already installed at %TARGET_DIR%.

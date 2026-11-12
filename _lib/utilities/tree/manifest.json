@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tree",
+  "title": "tree",
+  "description": "Recursive depth-indented directory listing utility supporting colorized text, JSON, and XML output.",
+  "category": "utility",
+  "provides": ["tree", "directory-lister"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/Old-Man-Programmer/tree"
+}

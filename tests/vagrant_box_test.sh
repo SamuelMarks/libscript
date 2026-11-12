@@ -71,8 +71,8 @@ mkdir -p "$TEST_DIR"
 
 # ## cleanup
 # Cleans up temporary test directory and destroys test Vagrant VM instances.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   if [ "$DRY_RUN" -eq 0 ] && command -v vagrant >/dev/null 2>&1; then
     (cd "$TEST_DIR" && vagrant destroy -f 2>/dev/null) || true
     vagrant box remove "$BOX_NAME" --provider "$PROVIDER" 2>/dev/null || true
@@ -101,6 +101,7 @@ box.img
   printf '[SIMULATED] Testing init system supervisor active\n'
   printf '[SIMULATED] Testing clean teardown: vagrant halt && vagrant destroy\n'
   printf '=== Vagrant Box Lifecycle Verification Succeeded! ===\n'
+  cleanup
   exit 0
 fi
 
@@ -130,4 +131,5 @@ fi
 printf '[PASS] Verified passwordless sudo escalation.\n'
 
 printf '=== Vagrant Box Lifecycle Verification Succeeded! ===\n'
+cleanup
 exit 0

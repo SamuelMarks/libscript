@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pulsar",
+  "title": "Apache Pulsar",
+  "description": "Cloud-native distributed messaging and streaming platform with tiered storage and multi-tenancy.",
+  "category": "message-broker",
+  "provides": ["pulsar", "message-broker", "streaming"],
+  "os_whitelist": ["all"],
+  "ports": [6650, 8080],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/apache/pulsar",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

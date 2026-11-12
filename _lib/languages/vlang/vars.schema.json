@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/vlang/vars.schema.json",
+  "title": "vlang variables",
+  "description": "Configuration variables for vlang",
+  "type": "object",
+  "properties": {
+    "VLANG_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install vlang. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "VLANG_VERSION": {
+      "description": "Specific version of vlang to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "VLANG_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading vlang binary or archive artifacts."
+    },
+    "VLANG_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying vlang available remote releases."
+    }
+  }
+}

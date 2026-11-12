@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pulumi",
+  "title": "Pulumi Infrastructure as Code CLI",
+  "description": "Pulumi open-source Infrastructure-as-Code SDK and CLI supporting TypeScript, Python, Go, C#, Java, and YAML.",
+  "category": "orchestration",
+  "provides": ["pulumi"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/pulumi/pulumi"
+}

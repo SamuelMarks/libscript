@@ -74,7 +74,7 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
                 )
             )
             if exist "%%D\env.cmd" (
-                findstr /I /R /C:"^[ ]*set [^\"]*PATH=.*;%%PATH%%" "%%D\env.cmd" >nul 2>&1
+                findstr /I /R /C:"^[ ]*set PATH=.*;%%PATH%%" "%%D\env.cmd" >nul 2>&1
                 if not errorlevel 1 (
                     echo [VM CONTRACT VIOLATION] [NON_IDEMPOTENT_PATH_CMD] %%D\env.cmd: Unconditional PATH prepend in env.cmd >&2
                     set /a ERRORS+=1

@@ -1,0 +1,29 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "loki",
+  "title": "Grafana Loki",
+  "description": "Horizontally scalable, highly available, multi-tenant log aggregation system inspired by Prometheus.",
+  "category": "logging",
+  "provides": ["loki", "log-aggregation", "observability"],
+  "os_whitelist": ["all"],
+  "ports": [3100, 9096],
+  "multitenant": true,
+  "repository": "https://github.com/grafana/loki",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

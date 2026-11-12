@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/podman/vars.schema.json",
+  "title": "podman variables",
+  "description": "Configuration variables for podman",
+  "type": "object",
+  "properties": {
+    "PODMAN_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install podman. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "PODMAN_VERSION": {
+      "description": "Specific version of podman to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "PODMAN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading podman binary or archive artifacts."
+    },
+    "PODMAN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying podman available remote releases."
+    }
+  }
+}

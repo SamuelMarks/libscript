@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/gleam/vars.schema.json",
+  "title": "gleam variables",
+  "description": "Configuration variables for gleam",
+  "type": "object",
+  "properties": {
+    "GLEAM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install gleam. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "GLEAM_VERSION": {
+      "description": "Specific version of gleam to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "GLEAM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading gleam binary or archive artifacts."
+    },
+    "GLEAM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying gleam available remote releases."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "locales",
+  "title": "POSIX & glibc System Locales",
+  "description": "POSIX and GNU C Library (glibc) system locale definition compiler (localedef / locale-gen) and declarative locale staging.",
+  "category": "base-system",
+  "provides": ["locales", "localedef", "locale-gen"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
+  "os_blacklist": ["windows"],
+  "repository": "https://sourceware.org/git/glibc.git"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "vlang",
+  "title": "V (Vlang)",
+  "description": "Simple, fast, safe, compiled systems programming language (v) with rapid C/native compilation.",
+  "category": "language",
+  "provides": ["vlang", "v"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/vlang/v"
+}

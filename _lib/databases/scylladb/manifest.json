@@ -1,0 +1,31 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "scylladb",
+  "title": "ScyllaDB",
+  "description": "Ultra-low-latency C++ distributed wide-column NoSQL database compatible with Apache Cassandra and Amazon DynamoDB.",
+  "category": "database",
+  "provides": ["scylladb", "wide-column-store", "cassandra-compatible", "database"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows", "darwin", "sunos"],
+  "ports": [9042, 7000],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/scylladb/scylladb",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

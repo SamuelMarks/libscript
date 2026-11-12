@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/sysctl/vars.schema.json",
+  "title": "sysctl variables",
+  "description": "Configuration variables for kernel sysctl.d declarative parameter management",
+  "type": "object",
+  "properties": {
+    "SYSCTL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install sysctl. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "SYSCTL_VERSION": {
+      "description": "Specific version of sysctl to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "SYSCTL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading sysctl binary or archive artifacts."
+    },
+    "SYSCTL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying sysctl available remote releases."
+    },
+    "SYSCTL_PARAMS": {
+      "type": "string",
+      "description": "Comma-separated list of kernel key=value parameters rendered into /etc/sysctl.d/<SYSCTL_CONF_NAME>.",
+      "default": "net.ipv4.ip_forward=1"
+    },
+    "SYSCTL_CONF_NAME": {
+      "type": "string",
+      "description": "Drop-in filename written under /etc/sysctl.d/ when staging declarative kernel parameters.",
+      "default": "99-libscript.conf"
+    }
+  }
+}

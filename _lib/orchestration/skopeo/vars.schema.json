@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/skopeo/vars.schema.json",
+  "title": "skopeo variables",
+  "description": "Configuration variables for skopeo",
+  "type": "object",
+  "properties": {
+    "SKOPEO_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install skopeo. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "SKOPEO_VERSION": {
+      "description": "Specific version of skopeo to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "SKOPEO_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading skopeo binary or archive artifacts."
+    },
+    "SKOPEO_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying skopeo available remote releases."
+    }
+  }
+}

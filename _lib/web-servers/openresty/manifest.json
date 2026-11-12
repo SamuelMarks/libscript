@@ -1,0 +1,29 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openresty",
+  "title": "OpenResty",
+  "description": "Dynamic web platform based on Nginx and LuaJIT for high-concurrency API gateways and web apps.",
+  "category": "web-server",
+  "provides": ["openresty", "web-server", "reverse-proxy"],
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
+  "multitenant": true,
+  "repository": "https://github.com/openresty/openresty",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

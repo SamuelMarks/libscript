@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/haskell/vars.schema.json",
+  "title": "haskell variables",
+  "description": "Configuration variables for haskell",
+  "type": "object",
+  "properties": {
+    "HASKELL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install haskell. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "HASKELL_VERSION": {
+      "description": "Specific version of haskell to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "HASKELL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading haskell binary or archive artifacts."
+    },
+    "HASKELL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying haskell available remote releases."
+    }
+  }
+}

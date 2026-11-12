@@ -159,6 +159,12 @@ libscript_format_tags() {
     vultr)
       printf -- '--tags %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
+    oci)
+      printf -- '--freeform-tags {"%s":"%s"}' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    ovh)
+      printf -- '--label %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
     *)
       printf 'Error: Unknown cloud provider "%s" for tagging.\n' "${provider}" >&2
       return 1
@@ -203,6 +209,12 @@ libscript_format_tag_filter() {
       ;;
     vultr)
       printf -- '--tag %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    oci)
+      printf -- '--query "data[?\"freeform-tags\".\"%s\" == '\''%s'\'']"' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      ;;
+    ovh)
+      printf -- '--label %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     *)
       printf 'Error: Unknown cloud provider "%s" for tag filtering.\n' "${provider}" >&2

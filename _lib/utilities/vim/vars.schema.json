@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/vim/vars.schema.json",
+  "title": "vim variables",
+  "description": "Configuration variables for vim",
+  "type": "object",
+  "properties": {
+    "VIM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install vim. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "VIM_VERSION": {
+      "description": "Specific version of vim to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "VIM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading vim binary or archive artifacts."
+    },
+    "VIM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying vim available remote releases."
+    }
+  }
+}

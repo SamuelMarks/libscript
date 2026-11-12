@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "opensearch-dashboards",
+  "title": "OpenSearch Dashboards",
+  "description": "Open-source data visualization, search analytics, and observability UI dashboard server for OpenSearch.",
+  "category": "orchestration",
+  "provides": ["opensearch-dashboards"],
+  "os_whitelist": ["all"],
+  "ports": [5601],
+  "repository": "https://github.com/opensearch-project/OpenSearch-Dashboards",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

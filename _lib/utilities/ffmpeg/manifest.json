@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ffmpeg",
+  "title": "FFmpeg",
+  "description": "Complete cross-platform solution to record, convert, transcode, and stream audio and video.",
+  "category": "utility",
+  "provides": ["ffmpeg", "ffprobe", "media-converter"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/FFmpeg/FFmpeg"
+}

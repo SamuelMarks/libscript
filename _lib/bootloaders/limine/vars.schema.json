@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/bootloaders/limine/vars.schema.json",
+  "title": "limine variables",
+  "description": "Configuration variables for limine",
+  "type": "object",
+  "properties": {
+    "LIMINE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install limine. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "LIMINE_VERSION": {
+      "description": "Specific version of limine to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "LIMINE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading limine binary or archive artifacts."
+    },
+    "LIMINE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying limine available remote releases."
+    }
+  }
+}

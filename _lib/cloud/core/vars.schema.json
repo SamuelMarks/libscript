@@ -58,6 +58,131 @@
     "CORE_VERSION": {
       "type": "string",
       "description": "Specific version of core to install (e.g., latest, lts, or exact version)."
+    },
+    "CORE_EXPERIMENT_PROVIDER": {
+      "type": "string",
+      "default": "azure",
+      "description": "Cloud vendor for rapid experimentation (defaults to 'azure')."
+    },
+    "CORE_EXPERIMENT_SIZE": {
+      "type": "string",
+      "default": "160-vCPU Standard_D160ads_v7",
+      "description": "Cloud instance size for rapid experimentation (defaults to '160-vCPU Standard_D160ads_v7' on Azure)."
+    },
+    "CORE_EXPERIMENT_NODE": {
+      "type": "string",
+      "default": "edg-exp-node",
+      "description": "Compute node name for rapid cloud experimentation."
+    },
+    "CORE_EXPERIMENT_RG": {
+      "type": "string",
+      "default": "edg-experiments-rg",
+      "description": "Cloud resource group or project name for rapid experimentation."
+    },
+    "CORE_EXPERIMENT_LOCATION": {
+      "type": "string",
+      "default": "eastus2",
+      "description": "Cloud region/location for rapid experimentation (defaults to 'eastus2')."
+    },
+    "CORE_EXPERIMENT_OS": {
+      "type": "string",
+      "default": "Ubuntu2404",
+      "description": "Target VM operating system image for rapid experimentation."
+    },
+    "CORE_EXPERIMENT_ADMIN_USER": {
+      "type": "string",
+      "default": "azureuser",
+      "description": "SSH administrator username on the experiment cloud VM."
+    },
+    "CORE_EXPERIMENT_STEPS": {
+      "type": "string",
+      "default": "a_provision_instance,b_use_bento_fork,c_install_virtualization_stack,d_deploy_vagrant_box,e_snapshot_vagrant_box,f_test_libscript_components,g_collect_logs,h_pull_logs,i_deprovision_instance",
+      "description": "Comma-separated or semicolon-separated named experiment lifecycle steps to execute ('a_provision_instance' / 'provision_instance', 'b_use_bento_fork' / 'use_bento_fork', 'c_install_virtualization_stack' / 'install_virtualization_stack', 'd_deploy_vagrant_box' / 'deploy_vagrant_box', 'e_snapshot_vagrant_box' / 'snapshot_vagrant_box', 'f_test_libscript_components' / 'test_libscript_components' / 'run_experiments', 'g_collect_logs' / 'collect_logs' / 'move_to_log_dir', 'h_pull_logs' / 'pull_logs' / 'move_log_dir_to_host' / 'send_logs_to_host', 'i_deprovision_instance' / 'deprovision_instance', 'bento_matrix', or 'all')."
+    },
+    "CORE_EXPERIMENT_REMOTE_DIR": {
+      "type": "string",
+      "default": "~/libscript/build/experiment_bundle",
+      "description": "Single consolidated remote directory where experimental log results and tables are staged in collect_logs."
+    },
+    "CORE_EXPERIMENT_LOCAL_DIR": {
+      "type": "string",
+      "description": "Local destination directory on the current host where consolidated experiment results are transferred in pull_logs."
+    },
+    "CORE_EXPERIMENT_STATE_FILE": {
+      "type": "string",
+      "description": "Path to the JSON state file tracking idempotency across named experiment lifecycle steps."
+    },
+    "CORE_EXPERIMENT_WORKLOADS": {
+      "type": "string",
+      "description": "Comma-separated list of experiment workloads to run in Step 1."
+    },
+    "CORE_EXPERIMENT_COMPILERS": {
+      "type": "string",
+      "description": "Comma-separated list of compiler configurations to benchmark in Step 1."
+    },
+    "CORE_EXPERIMENT_RUNS": {
+      "type": "string",
+      "description": "Number of benchmark iterations per workload/compiler cell in Step 1."
+    },
+    "CORE_EXPERIMENT_BENTO_REPO": {
+      "type": "string",
+      "default": "https://github.com/SamuelMarks/bento.git",
+      "description": "Git repository URL for the Bento fork (defaults to 'https://github.com/SamuelMarks/bento.git')."
+    },
+    "CORE_EXPERIMENT_BENTO_BRANCH": {
+      "type": "string",
+      "default": "multi-os-qemu-aarch64",
+      "description": "Git branch to checkout in the Bento repository (defaults to 'multi-os-qemu-aarch64')."
+    },
+    "CORE_EXPERIMENT_BENTO_DIR": {
+      "type": "string",
+      "default": "../bento",
+      "description": "Filesystem directory where the Bento fork is cloned or located (defaults to '../bento')."
+    },
+    "CORE_EXPERIMENT_TARGET_OS": {
+      "type": "string",
+      "default": "alpine-3.24",
+      "description": "Target OS (or comma-separated list of target OSs) to deploy and test as Vagrant boxes (e.g., 'alpine-3.24', 'debian-13', 'rockylinux-10.2', 'freebsd-15.1', 'omnios', 'windows-11', 'macos-14-arm64')."
+    },
+    "CORE_EXPERIMENT_SNAPSHOT_NAME": {
+      "type": "string",
+      "default": "vanilla",
+      "description": "Clean baseline Vagrant/QEMU snapshot name restored before each component test (defaults to 'vanilla')."
+    },
+    "CORE_EXPERIMENT_COMPONENTS": {
+      "type": "string",
+      "default": "all",
+      "description": "Comma-separated list of LibScript components (or single component or component@version) to test on the target OS Vagrant box, or 'all' to test every component in LibScript (defaults to 'all')."
+    },
+    "CORE_EXPERIMENT_COMPONENT_VERSION": {
+      "type": "string",
+      "default": "latest",
+      "description": "Specific component version to install and test inside the target OS Vagrant box (e.g., '22.14.0', '3.12.3', '16.2', '3.46.1', 'latest')."
+    },
+    "CORE_EXPERIMENT_PKG_MGR": {
+      "type": "string",
+      "default": "",
+      "description": "Specific package manager override to test component installation against (e.g., 'apt-get', 'apk', 'dnf', 'brew', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan', 'pkg')."
+    },
+    "CORE_EXPERIMENT_INSTALL_METHOD": {
+      "type": "string",
+      "default": "",
+      "description": "Specific installation method override for component testing ('libscript_native', 'system', 'from-source', 'nix', 'guix', 'spack', 'vcpkg', 'conan', 'brew', 'winget', 'choco', 'scoop')."
+    },
+    "CORE_EXPERIMENT_TOOLCHAIN": {
+      "type": "string",
+      "default": "",
+      "description": "Specific C/C++ compiler toolchain override when testing component builds from source ('default', 'gcc', 'clang', 'tcc', 'edgcpp', 'custom-cc')."
+    },
+    "CORE_EXPERIMENT_IDEMPOTENCY_RUNS": {
+      "type": "string",
+      "default": "2",
+      "description": "Number of consecutive install+test passes per component after restoring the clean snapshot to verify strict idempotency (defaults to '2')."
+    },
+    "CORE_EXPERIMENT_SUITE": {
+      "type": "string",
+      "default": "all",
+      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', or 'all')."
     }
   }
 }

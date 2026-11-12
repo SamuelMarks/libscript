@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bind9",
+  "title": "ISC BIND 9 DNS Server",
+  "description": "ISC BIND 9 (named) authoritative, recursive, and DNSSEC-validating Domain Name System server and utilities.",
+  "category": "networking",
+  "provides": ["bind9", "named", "rndc", "dig"],
+  "os_whitelist": ["all"],
+  "ports": [53, 953],
+  "repository": "https://gitlab.isc.org/isc-projects/bind9",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

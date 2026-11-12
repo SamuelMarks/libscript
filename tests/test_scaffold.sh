@@ -37,8 +37,8 @@ COMP_B_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/scaftest_interactive"
 
 # ## cleanup_test_artifacts
 # Removes temporary test components and JSON specification files on exit.
-# shellcheck disable=SC2329
 cleanup_test_artifacts() {
+  trap - EXIT INT TERM HUP
   rm -rf "$COMP_A_DIR" "$COMP_B_DIR" "$TMP_JSON_SPEC" "$TMP_EXPORT_JSON"
 }
 
@@ -144,4 +144,5 @@ fi
 "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_schema_vars.sh" "$COMP_B_DIR"
 
 printf '%s\n' '[PASS] All component scaffolder tests passed!'
+cleanup_test_artifacts
 exit 0

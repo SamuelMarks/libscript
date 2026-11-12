@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/scala/vars.schema.json",
+  "title": "scala variables",
+  "description": "Configuration variables for scala",
+  "type": "object",
+  "properties": {
+    "SCALA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install scala. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "SCALA_VERSION": {
+      "description": "Specific version of scala to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "SCALA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading scala binary or archive artifacts."
+    },
+    "SCALA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying scala available remote releases."
+    }
+  }
+}

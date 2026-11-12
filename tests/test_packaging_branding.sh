@@ -32,8 +32,8 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test artifacts upon exit or preserves them on error.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
@@ -106,4 +106,5 @@ if [ -d "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript" ]; then
 fi
 
 printf '=== All branding tests completed successfully! ===\n'
+cleanup
 exit 0

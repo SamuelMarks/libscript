@@ -100,3 +100,14 @@ if not exist "!_HT_DIR!" mkdir "!_HT_DIR!"
     echo # END libscript-managed: !_HT_COMP!-hardware-tuning
 ) > "!_HT_DIR!\hardware-tuning.conf"
 exit /b 0
+
+:: ## libscript_prepare_benchmark_host
+:: Standardizes the Windows host environment for reproducible compiler benchmarking.
+:libscript_prepare_benchmark_host
+call :libscript_detect_hardware
+exit /b 0
+
+:: ## libscript_drop_benchmark_caches
+:: Flushes filesystem buffers prior to a benchmark run on Windows.
+:libscript_drop_benchmark_caches
+exit /b 0

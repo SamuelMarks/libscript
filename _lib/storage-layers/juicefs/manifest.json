@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "juicefs",
+  "title": "JuiceFS",
+  "description": "High-performance cloud-native POSIX distributed filesystem built on top of object storage and metadata engines.",
+  "category": "storage-layers",
+  "provides": ["juicefs", "distributed-filesystem"],
+  "os_whitelist": ["all"],
+  "ports": [9567],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/juicedata/juicefs",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

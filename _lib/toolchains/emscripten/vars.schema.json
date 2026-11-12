@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/emscripten/vars.schema.json",
+  "title": "emscripten variables",
+  "description": "Configuration variables for emscripten",
+  "type": "object",
+  "properties": {
+    "EMSCRIPTEN_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install emscripten. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "EMSCRIPTEN_VERSION": {
+      "description": "Specific version of emscripten to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "3.1.74"]
+    },
+    "EMSCRIPTEN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading emscripten binary or archive artifacts."
+    },
+    "EMSCRIPTEN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying emscripten available remote releases."
+    }
+  }
+}

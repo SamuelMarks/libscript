@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "terraform",
+  "title": "HashiCorp Terraform",
+  "description": "HashiCorp Terraform declarative Infrastructure-as-Code CLI for provisioning and managing cloud and on-prem resources.",
+  "category": "orchestration",
+  "provides": ["terraform"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/hashicorp/terraform"
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "firewalld",
+  "title": "Firewalld Dynamic Firewall Daemon",
+  "description": "Dynamically managed Linux firewall daemon (firewalld and firewall-cmd) supporting network/firewall zones over nftables and iptables.",
+  "category": "networking",
+  "provides": ["firewalld", "firewall-cmd"],
+  "os_whitelist": ["linux"],
+  "repository": "https://github.com/firewalld/firewalld",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

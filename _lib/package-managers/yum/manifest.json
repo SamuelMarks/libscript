@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "yum",
+  "title": "YUM",
+  "description": "Legacy RHEL/CentOS Yellowdog Updater Modified (yum) RPM package manager wrapper.",
+  "category": "package-manager",
+  "provides": ["yum"],
+  "os_whitelist": ["rhel", "fedora", "centos", "rocky", "almalinux", "linux"],
+  "repository": "https://github.com/rpm-software-management/yum"
+}

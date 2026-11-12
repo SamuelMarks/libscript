@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/lua/vars.schema.json",
+  "title": "lua variables",
+  "description": "Configuration variables for lua",
+  "type": "object",
+  "properties": {
+    "LUA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install lua. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "LUA_VERSION": {
+      "description": "Specific version of lua to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "LUA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading lua binary or archive artifacts."
+    },
+    "LUA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying lua available remote releases."
+    }
+  }
+}

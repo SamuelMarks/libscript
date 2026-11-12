@@ -98,6 +98,26 @@ libscript_check_preflight() {
         return 1
       fi
       ;;
+    oci)
+      if ! command -v oci >/dev/null 2>&1; then
+        printf "Error: Oracle Cloud CLI ('oci') is not installed. Run 'libscript install oci'.\n" >&2
+        return 1
+      fi
+      if ! oci iam region list >/dev/null 2>&1; then
+        printf "Error: Oracle Cloud CLI is not authenticated. Please run 'oci setup config'.\n" >&2
+        return 1
+      fi
+      ;;
+    ovh)
+      if ! command -v ovhcloud >/dev/null 2>&1; then
+        printf "Error: OVHcloud CLI ('ovhcloud') is not installed. Run 'libscript install ovh'.\n" >&2
+        return 1
+      fi
+      if ! ovhcloud account info >/dev/null 2>&1; then
+        printf "Error: OVHcloud CLI is not authenticated. Please run 'ovhcloud login'.\n" >&2
+        return 1
+      fi
+      ;;
     *)
       printf "Error: Unknown provider '%s' for pre-flight check.\n" "$provider" >&2
       return 1

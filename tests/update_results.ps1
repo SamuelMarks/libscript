@@ -216,8 +216,13 @@ function Update-SupportedComponents {
     }
 
     if (Test-Path -LiteralPath (Join-Path $libPath "bootloaders")) {
+        if (Test-Path -LiteralPath (Join-Path (Join-Path $libPath "bootloaders") "setup.sh")) {
+            $entries += [PSCustomObject]@{ Tier = '2'; Category = 'bootloaders'; Comp = 'bootloaders/setup'; Short = 'setup'; Manifest = '' }
+        }
         foreach ($bl in @('grub','limine','refind','systemd-boot')) {
-            $entries += [PSCustomObject]@{ Tier = '2'; Category = 'bootloaders'; Comp = "bootloaders/$bl"; Short = $bl; Manifest = '' }
+            if (-not (Test-Path -LiteralPath (Join-Path (Join-Path $libPath "bootloaders") $bl))) {
+                $entries += [PSCustomObject]@{ Tier = '2'; Category = 'bootloaders'; Comp = "bootloaders/$bl"; Short = $bl; Manifest = '' }
+            }
         }
     }
     if (Test-Path -LiteralPath (Join-Path $libPath "storage")) {

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/imagemagick/vars.schema.json",
+  "title": "imagemagick variables",
+  "description": "Configuration variables for imagemagick",
+  "type": "object",
+  "properties": {
+    "IMAGEMAGICK_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install imagemagick. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "IMAGEMAGICK_VERSION": {
+      "description": "Specific version of imagemagick to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "IMAGEMAGICK_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading imagemagick binary or archive artifacts."
+    },
+    "IMAGEMAGICK_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying imagemagick available remote releases."
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "shellcheck",
+  "title": "ShellCheck",
+  "description": "A static analysis tool and linter for POSIX sh and shell scripts.",
+  "category": "toolchains",
+  "provides": ["shellcheck", "shell-linter"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/koalaman/shellcheck",
+  "license": "GPL-3.0-or-later",
+  "license_name": "GNU General Public License v3.0 or later",
+  "license_url": "https://github.com/koalaman/shellcheck/blob/master/LICENSE"
+}

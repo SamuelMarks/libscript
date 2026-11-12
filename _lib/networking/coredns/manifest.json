@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "coredns",
+  "title": "CoreDNS",
+  "description": "CoreDNS cloud-native, plugin-driven DNS server and service discovery engine.",
+  "category": "networking",
+  "provides": ["coredns", "dns-server"],
+  "os_whitelist": ["all"],
+  "ports": [53, 9153],
+  "repository": "https://github.com/coredns/coredns",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

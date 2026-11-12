@@ -127,14 +127,6 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# ## sanitize_wix_id
-# Sanitizes arbitrary path strings into valid WiX Id tokens (alphanumeric and underscores).
-# shellcheck disable=SC2329
-sanitize_wix_id() {
-  _val="$1"
-  printf '%s' "$_val" | tr -c 'A-Za-z0-9_' '_'
-}
-
 TMP_LIST="$(mktemp "${TMPDIR:-/tmp}/harvest_files.XXXXXX")"
 TMP_FILTERED="$(mktemp "${TMPDIR:-/tmp}/harvest_filtered.XXXXXX")"
 trap 'rm -f "$TMP_LIST" "$TMP_FILTERED"' EXIT INT TERM

@@ -127,6 +127,28 @@ if "%provider%"=="aws" (
         echo Error: Vultr CLI is not authenticated. Please set VULTR_API_KEY. >&2
         exit /b 1
     )
+) else if "%provider%"=="oci" (
+    where oci >nul 2>nul
+    if errorlevel 1 (
+        echo Error: Oracle Cloud CLI ('oci'^) is not installed. Run 'libscript install oci'. >&2
+        exit /b 1
+    )
+    oci iam region list >nul 2>nul
+    if errorlevel 1 (
+        echo Error: Oracle Cloud CLI is not authenticated. Please run 'oci setup config'. >&2
+        exit /b 1
+    )
+) else if "%provider%"=="ovh" (
+    where ovhcloud >nul 2>nul
+    if errorlevel 1 (
+        echo Error: OVHcloud CLI ('ovhcloud'^) is not installed. Run 'libscript install ovh'. >&2
+        exit /b 1
+    )
+    ovhcloud account info >nul 2>nul
+    if errorlevel 1 (
+        echo Error: OVHcloud CLI is not authenticated. Please run 'ovhcloud login'. >&2
+        exit /b 1
+    )
 ) else (
     echo Error: Unknown provider '%provider%' for pre-flight check. >&2
     exit /b 1

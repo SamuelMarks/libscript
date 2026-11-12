@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "buck2",
+  "title": "Buck2",
+  "description": "Fast, hermetic, multi-language large-scale build system from Meta.",
+  "category": "toolchain",
+  "provides": ["buck2", "build-system"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/facebook/buck2"
+}

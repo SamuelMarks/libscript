@@ -190,7 +190,7 @@ for _spec in "$@"; do
   if [ -f "${_sp_path}/libscript.json" ]; then
     MANIFEST_FILES="${MANIFEST_FILES} ${_sp_path}/libscript.json"
     if [ -z "$REPO_ROOT_OVERRIDE" ] && [ "$REPO_PATH" = "." ] && [ ! -f "${REPO_PATH}/libscript.json" ]; then
-      _sp_parent=$(cd -- "$_sp_path/.." 2>/dev/null && pwd || true)
+      _sp_parent=$(if cd -- "$_sp_path/.." 2>/dev/null; then pwd; fi)
       if [ -n "$_sp_parent" ] && [ -f "${_sp_parent}/libscript.json" ]; then
         REPO_PATH="$_sp_parent"
       fi
@@ -738,7 +738,7 @@ for _app_entry in "$@"; do
     fi
   fi
   if [ -d "$_ae_repo" ]; then
-    for _py_cand in "." $(cd "$_ae_repo" 2>/dev/null && find . -mindepth 1 -maxdepth 1 -type d ! -name ".*" ! -name "node_modules" ! -name "dist" ! -name "build" ! -name "venv" | sed 's|^\./||' || true); do
+    for _py_cand in "." $(if cd "$_ae_repo" 2>/dev/null; then find . -mindepth 1 -maxdepth 1 -type d ! -name ".*" ! -name "node_modules" ! -name "dist" ! -name "build" ! -name "venv" | sed 's|^\./||'; fi); do
       _py_local="${_ae_repo}/${_py_cand}"
       [ "$_py_cand" = "." ] && _py_local="$_ae_repo"
       if [ -f "${_py_local}/pyproject.toml" ] || [ -f "${_py_local}/uv.lock" ] || [ -f "${_py_local}/requirements.txt" ]; then

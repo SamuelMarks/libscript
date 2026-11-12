@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "otel-collector",
+  "title": "OpenTelemetry Collector",
+  "description": "Vendor-agnostic proxy receiving, processing, and exporting OpenTelemetry traces, metrics, and logs.",
+  "category": "logging",
+  "provides": ["otel-collector", "otelcol", "telemetry"],
+  "os_whitelist": ["all"],
+  "ports": [4317, 4318],
+  "repository": "https://github.com/open-telemetry/opentelemetry-collector-releases",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

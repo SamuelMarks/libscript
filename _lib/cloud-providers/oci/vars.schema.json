@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/oci/vars.schema.json",
+  "title": "Oracle Cloud Infrastructure (OCI)",
+  "description": "Configuration variables for Oracle Cloud Infrastructure CLI (oci) and compute/network cloud driver",
+  "type": "object",
+  "properties": {
+    "OCI_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install oci. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "OCI_VERSION": {
+      "description": "Specific version of oci to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "OCI_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading oci binary or archive artifacts."
+    },
+    "OCI_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying oci available remote releases."
+    },
+    "OCI_REGION": {
+      "type": "string",
+      "description": "Default Oracle Cloud Infrastructure region identifier (e.g., us-ashburn-1).",
+      "default": "us-ashburn-1"
+    },
+    "OCI_COMPARTMENT_ID": {
+      "type": "string",
+      "description": "Default OCI compartment OCID for VCN, security list, and compute instance provisioning."
+    },
+    "OCI_SUBNET_ID": {
+      "type": "string",
+      "description": "Default OCI subnet OCID attached to provisioned compute instances."
+    },
+    "OCI_AVAILABILITY_DOMAIN": {
+      "type": "string",
+      "description": "Target OCI availability domain (e.g., Uocm:PHX-AD-1) for compute instances."
+    },
+    "OCI_SHAPE": {
+      "type": "string",
+      "description": "Default OCI compute instance shape.",
+      "default": "VM.Standard.E4.Flex"
+    }
+  }
+}

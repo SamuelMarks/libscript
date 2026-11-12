@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openssl",
+  "title": "OpenSSL",
+  "description": "Full-featured commercial-grade TLS/SSL cryptography library and openssl command-line toolkit.",
+  "category": "utility",
+  "provides": ["openssl", "tls-toolkit"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/openssl/openssl"
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/yq/vars.schema.json",
+  "title": "yq variables",
+  "description": "Configuration variables for yq",
+  "type": "object",
+  "properties": {
+    "YQ_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install yq. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "YQ_VERSION": {
+      "description": "Specific version of yq to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "YQ_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading yq binary or archive artifacts."
+    },
+    "YQ_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying yq available remote releases."
+    }
+  }
+}

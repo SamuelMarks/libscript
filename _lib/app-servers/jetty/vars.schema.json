@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/jetty/vars.schema.json",
+  "title": "jetty variables",
+  "description": "Configuration variables for jetty",
+  "type": "object",
+  "properties": {
+    "JETTY_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install jetty. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "JETTY_VERSION": {
+      "description": "Specific version of jetty to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "JETTY_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading jetty binary or archive artifacts."
+    },
+    "JETTY_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying jetty available remote releases."
+    },
+    "JETTY_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the jetty service listens.",
+      "default": 8080
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/ripgrep/vars.schema.json",
+  "title": "ripgrep variables",
+  "description": "Configuration variables for ripgrep",
+  "type": "object",
+  "properties": {
+    "RIPGREP_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ripgrep. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "RIPGREP_VERSION": {
+      "description": "Specific version of ripgrep to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "RIPGREP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ripgrep binary or archive artifacts."
+    },
+    "RIPGREP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ripgrep available remote releases."
+    }
+  }
+}

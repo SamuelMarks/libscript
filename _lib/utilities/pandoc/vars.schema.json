@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/pandoc/vars.schema.json",
+  "title": "pandoc variables",
+  "description": "Configuration variables for pandoc",
+  "type": "object",
+  "properties": {
+    "PANDOC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install pandoc. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "PANDOC_VERSION": {
+      "description": "Specific version of pandoc to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "PANDOC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading pandoc binary or archive artifacts."
+    },
+    "PANDOC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying pandoc available remote releases."
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/databases/rocksdb/vars.schema.json",
+  "title": "rocksdb variables",
+  "description": "Configuration variables for rocksdb",
+  "type": "object",
+  "properties": {
+    "ROCKSDB_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install rocksdb. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "ROCKSDB_VERSION": {
+      "description": "Specific version of rocksdb to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ROCKSDB_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading rocksdb binary or archive artifacts."
+    },
+    "ROCKSDB_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying rocksdb available remote releases."
+    }
+  }
+}

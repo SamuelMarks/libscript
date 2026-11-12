@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "haskell",
+  "title": "GHC Haskell",
+  "description": "Glasgow Haskell Compiler (ghc) purely functional programming language toolchain.",
+  "category": "language",
+  "provides": ["haskell", "ghc", "ghci", "runghc"],
+  "os_whitelist": ["all"],
+  "repository": "https://gitlab.haskell.org/ghc/ghc"
+}

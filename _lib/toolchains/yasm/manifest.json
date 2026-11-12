@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "yasm",
+  "title": "Yasm",
+  "description": "Modular BSD-licensed rewrite of the NASM x86/AMD64 assembler.",
+  "category": "toolchain",
+  "provides": ["yasm", "assembler"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/yasm/yasm"
+}

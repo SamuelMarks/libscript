@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/audio/sndio/vars.schema.json",
+  "title": "sndio variables",
+  "description": "Configuration variables for sndio",
+  "type": "object",
+  "properties": {
+    "SNDIO_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install sndio. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "SNDIO_VERSION": {
+      "description": "Specific version of sndio to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "SNDIO_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading sndio binary or archive artifacts."
+    },
+    "SNDIO_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying sndio available remote releases."
+    },
+    "SNDIO_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the sndio service listens.",
+      "default": 8080
+    }
+  }
+}

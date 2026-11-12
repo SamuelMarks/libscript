@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wasmtime",
+  "title": "Wasmtime",
+  "description": "A fast and secure runtime and CLI toolchain for WebAssembly.",
+  "category": "toolchain",
+  "provides": ["wasmtime", "wasm-runtime"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/bytecodealliance/wasmtime"
+}

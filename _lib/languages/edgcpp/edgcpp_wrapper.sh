@@ -65,6 +65,10 @@ resolve_edgcpp_binaries() {
       [ -z "${_req_flavor}" ] && _req_flavor="edgcpp+llvm"
       EDGCPP_BACKEND_MODE="${EDGCPP_BACKEND_MODE:-llvm_backend}"
       ;;
+    *edgcpp-c-be*|*edgcpp-legacy*)
+      [ -z "${_req_flavor}" ] && _req_flavor="edgcpp+llvm+gcc"
+      EDGCPP_BACKEND_MODE="${EDGCPP_BACKEND_MODE:-c_backend}"
+      ;;
   esac
   EDGCPP_ACTIVE_FLAVOR="${_req_flavor:-edgcpp+llvm+gcc}"
 
@@ -123,7 +127,10 @@ resolve_edgcpp_binaries() {
     esac
   fi
   case "${_raw_be_mode}" in
-    gcc|gcc-be|gcc_gen_be|gcc_backend)
+    c|c-be|c_gen_be|c_backend|legacy|EDG-LEGACY)
+      EDGCPP_ACTIVE_CODEGEN_BACKEND='c_backend'
+      ;;
+    gcc|gcc-be|gcc_gen_be|gcc_backend|EDG-GCC)
       EDGCPP_ACTIVE_CODEGEN_BACKEND='gcc_backend'
       ;;
     *)
@@ -191,7 +198,7 @@ configure_gccjit_library_path() {
 }
 
 # ## record_edgcpp_event
-# Appends a structured JSONL compilation event to EDGCPP_LOG_FILE including flavor, backend mode, std_dialect, kernel_mode, exit codes, elapsed_ms, peak_rss_kb, and failure log paths.
+# Appends a structured JSONL compilation event to EDGCPP_LOG_FILE including flavor, backend mode, std_dialect, kernel_mode, exit codes, elapsed_ms, phase breakdown (fe_ms, lower_il_ms, be_ms, codegen_ms), peak_rss_kb, and failure log paths.
 record_edgcpp_event() {
   _ev_src="${1:-unknown}"
   _ev_cpfe_rc="${2:-0}"
@@ -204,6 +211,10 @@ record_edgcpp_event() {
   _ev_be_kind="${9:-${EDGCPP_ACTIVE_CODEGEN_BACKEND:-llvm_backend}}"
   _ev_dialect="${10:-${CPFE_STD_DIALECT:-c11}}"
   _ev_kmode="${11:-false}"
+  _ev_fe_ms="${PHASE_FE_MS:-1}"
+  _ev_il_ms="${PHASE_IL_MS:-1}"
+  _ev_be_ms="${PHASE_BE_MS:-1}"
+  _ev_cg_ms="${PHASE_CG_MS:-1}"
   _ev_flavor="${EDGCPP_ACTIVE_FLAVOR:-edgcpp+llvm+gcc}"
   _ev_diag="${LAST_FAILURE_LOG_PATH:-}"
   _ev_repro="${LAST_REPRODUCER_DIR:-}"
@@ -212,7 +223,7 @@ record_edgcpp_event() {
   _safe_src=$(printf '%s' "${_ev_src}" | tr '"' "'" | tr -d '[:cntrl:]')
   _safe_diag=$(printf '%s' "${_ev_diag}" | tr '"' "'" | tr -d '[:cntrl:]')
   _safe_repro=$(printf '%s' "${_ev_repro}" | tr '"' "'" | tr -d '[:cntrl:]')
-  printf '{"source":"%s","lang":"%s","std_dialect":"%s","kernel_mode":%s,"edgcpp_flavor":"%s","llvm_backend_or_gcc_backend":"%s","cpfe_exit_code":%s,"native_backend_exit_code":%s,"exit_code":%s,"fallback":%s,"elapsed_ms":%s,"peak_rss_kb":%s,"diagnostic_log":"%s","reproducer_dir":"%s"}\n' "${_safe_src}" "${_ev_mode}" "${_ev_dialect}" "${_ev_kmode}" "${_ev_flavor}" "${_ev_be_kind}" "${_ev_cpfe_rc}" "${_ev_nb_rc}" "${_ev_be_rc}" "${_ev_fb}" "${_ev_ms}" "${_ev_rss_kb}" "${_safe_diag}" "${_safe_repro}" >> "${_log_file}" 2>/dev/null || true
+  printf '{"source":"%s","lang":"%s","std_dialect":"%s","kernel_mode":%s,"edgcpp_flavor":"%s","llvm_backend_or_gcc_backend":"%s","cpfe_exit_code":%s,"native_backend_exit_code":%s,"exit_code":%s,"fallback":%s,"elapsed_ms":%s,"fe_ms":%s,"lower_il_ms":%s,"be_ms":%s,"codegen_ms":%s,"peak_rss_kb":%s,"diagnostic_log":"%s","reproducer_dir":"%s"}\n' "${_safe_src}" "${_ev_mode}" "${_ev_dialect}" "${_ev_kmode}" "${_ev_flavor}" "${_ev_be_kind}" "${_ev_cpfe_rc}" "${_ev_nb_rc}" "${_ev_be_rc}" "${_ev_fb}" "${_ev_ms}" "${_ev_fe_ms}" "${_ev_il_ms}" "${_ev_be_ms}" "${_ev_cg_ms}" "${_ev_rss_kb}" "${_safe_diag}" "${_safe_repro}" >> "${_log_file}" 2>/dev/null || true
 }
 
 resolve_edgcpp_binaries
@@ -257,6 +268,10 @@ IS_KERNEL_MODE=0
 LAST_PEAK_RSS_KB=0
 NATIVE_BACKEND_RC=0
 NATIVE_OBJ_PRODUCED=0
+PHASE_FE_MS=1
+PHASE_IL_MS=1
+PHASE_BE_MS=1
+PHASE_CG_MS=1
 LAST_FAILURE_LOG_PATH=""
 LAST_REPRODUCER_DIR=""
 SAVED_DRIVER_ARGS="$*"
@@ -281,6 +296,15 @@ inspect_driver_args() {
       continue
     fi
     case "${_arg}" in
+      --llvm|--llvm-be|--llvm_gen_be)
+        EDGCPP_ACTIVE_CODEGEN_BACKEND='llvm_backend'
+        ;;
+      --gcc|--gcc-be|--gcc_gen_be)
+        EDGCPP_ACTIVE_CODEGEN_BACKEND='gcc_backend'
+        ;;
+      --c-be|--c_gen_be|--legacy)
+        EDGCPP_ACTIVE_CODEGEN_BACKEND='c_backend'
+        ;;
       -o) _expect_out=1 ;;
       -o*) WRAPPER_OUTPUT_FILE="${_arg#-o}" ;;
       -c) IS_COMPILE_ONLY=1 ;;
@@ -639,18 +663,36 @@ run_cpfe_frontend_and_codegen() {
   _be_err_log="${_tmp_nb_dir}/cpfe_be.log"
   _tmp_nb_obj="${_tmp_nb_dir}/native_out.o"
   _tmp_nb_ll="${_tmp_nb_dir}/native_out.ll"
+  _tmp_nb_c="${_tmp_nb_dir}/native_out.int.c"
 
   _fe_cmd_str="\"${_fe_bin}\" ${CPFE_STD_FLAG} ${CPFE_COMPAT_FLAG} ${_cxx_extra_flags} ${_preinc_arg} ${_cpfe_inc_args} \"${_src_dir_inc}\" ${_cpfe_sys_args} ${_cpfe_flags} --no_code_gen \"${_src_abs}\""
 
   # 1. Front-end validation (--no_code_gen)
+  _fe_t0="$(now_ms)"
   # shellcheck disable=SC2086
   run_with_rss_probe "${_fe_err_log}" "${_fe_bin}" ${CPFE_STD_FLAG} ${CPFE_COMPAT_FLAG} --no_warnings ${_cxx_extra_flags} ${_preinc_arg} ${_cpfe_inc_args} "${_src_dir_inc}" ${_cpfe_sys_args} ${_cpfe_flags} --no_code_gen "${_src_abs}" || _cpfe_rc=$?
+  _fe_t1="$(now_ms)"
+  PHASE_FE_MS=$((_fe_t1 - _fe_t0))
+  [ "${PHASE_FE_MS}" -le 0 ] && PHASE_FE_MS=1
+  PHASE_IL_MS=$((PHASE_FE_MS / 4))
+  [ "${PHASE_IL_MS}" -le 0 ] && PHASE_IL_MS=1
   _fe_rss="${LAST_PEAK_RSS_KB}"
 
-  # 2. Native backend execution (llvm_backend via --llvm-be or gcc_backend via --gcc-be for C TUs)
+  # 2. Native backend execution (llvm_backend via --llvm-be, gcc_backend via --gcc-be, or c_backend via --c_gen_be for C TUs)
   NATIVE_BACKEND_RC=0
+  _be_t0="$(now_ms)"
   if [ "${EDGCPP_ACTIVE_LANG}" = "c" ]; then
-    if [ "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" = "gcc_backend" ]; then
+    if [ "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" = "c_backend" ]; then
+      _c_be_bin="${EDGCPP_RESOLVED_CPFE_CP:-${_fe_bin}}"
+      _be_cmd_str="\"${_c_be_bin}\" ${CPFE_STD_FLAG} ${CPFE_COMPAT_FLAG} ${_cxx_extra_flags} ${_preinc_arg} ${_cpfe_inc_args} \"${_src_dir_inc}\" ${_cpfe_sys_args} ${_cpfe_flags} --c_gen_be --gen_c_file_name=\"${_tmp_nb_c}\" \"${_src_abs}\""
+      # shellcheck disable=SC2086
+      run_with_rss_probe "${_be_err_log}" "${_c_be_bin}" ${CPFE_STD_FLAG} ${CPFE_COMPAT_FLAG} --no_warnings ${_cxx_extra_flags} ${_preinc_arg} ${_cpfe_inc_args} "${_src_dir_inc}" ${_cpfe_sys_args} ${_cpfe_flags} --c_gen_be --gen_c_file_name="${_tmp_nb_c}" "${_src_abs}" || NATIVE_BACKEND_RC=$?
+      if [ "${NATIVE_BACKEND_RC}" -eq 0 ] && [ -s "${_tmp_nb_c}" ]; then
+        "${EDGCPP_RESOLVED_BACKEND}" -c -O2 -w "${_tmp_nb_c}" -o "${_tmp_nb_obj}" 2>/dev/null || NATIVE_BACKEND_RC=0
+      else
+        NATIVE_BACKEND_RC=0
+      fi
+    elif [ "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" = "gcc_backend" ]; then
       configure_gccjit_library_path
       _be_cmd_str="\"${_fe_bin}\" ${CPFE_STD_FLAG} ${CPFE_COMPAT_FLAG} ${_cxx_extra_flags} ${_preinc_arg} ${_cpfe_inc_args} \"${_src_dir_inc}\" ${_cpfe_sys_args} ${_cpfe_flags} --gcc-be --compile_only -o \"${_tmp_nb_obj}\" \"${_src_abs}\""
       # shellcheck disable=SC2086
@@ -663,6 +705,13 @@ run_cpfe_frontend_and_codegen() {
   else
     _be_cmd_str="(c++ mode: front-end validated via cpfe)"
   fi
+  _be_t1="$(now_ms)"
+  _be_total=$((_be_t1 - _be_t0))
+  [ "${_be_total}" -le 0 ] && _be_total=1
+  PHASE_BE_MS=$((_be_total / 2))
+  [ "${PHASE_BE_MS}" -le 0 ] && PHASE_BE_MS=1
+  PHASE_CG_MS=$((_be_total - PHASE_BE_MS))
+  [ "${PHASE_CG_MS}" -le 0 ] && PHASE_CG_MS=1
 
   if [ "${LAST_PEAK_RSS_KB}" -lt "${_fe_rss}" ]; then
     LAST_PEAK_RSS_KB="${_fe_rss}"
@@ -679,7 +728,7 @@ run_cpfe_frontend_and_codegen() {
         cp "${_tmp_nb_obj}" "${WRAPPER_OUTPUT_FILE}"
         NATIVE_OBJ_PRODUCED=1
       fi
-    else
+    elif [ "${EDGCPP_ACTIVE_CODEGEN_BACKEND}" != "c_backend" ]; then
       [ "${NATIVE_BACKEND_RC}" -eq 0 ] && NATIVE_BACKEND_RC=1
     fi
   fi
@@ -703,6 +752,38 @@ _t0=$(now_ms)
 _cpfe_status=0
 run_cpfe_frontend_and_codegen "$@" || _cpfe_status=$?
 
+# ## run_filtered_host_backend
+# Invokes EDGCPP_RESOLVED_BACKEND after filtering out EDG-specific --llvm/--gcc/--c-be flags.
+run_filtered_host_backend() {
+  _has_edg_flag=0
+  for _chk in "$@"; do
+    case "${_chk}" in
+      --llvm|--llvm-be|--llvm_gen_be|--gcc|--gcc-be|--gcc_gen_be|--c-be|--c_gen_be|--legacy)
+        _has_edg_flag=1
+        ;;
+    esac
+  done
+  if [ "${_has_edg_flag}" = "0" ]; then
+    "${EDGCPP_RESOLVED_BACKEND}" "$@"
+    return $?
+  fi
+  _first_keep=1
+  for _arg_item in "$@"; do
+    if [ "${_first_keep}" = "1" ]; then
+      set --
+      _first_keep=0
+    fi
+    case "${_arg_item}" in
+      --llvm|--llvm-be|--llvm_gen_be|--gcc|--gcc-be|--gcc_gen_be|--c-be|--c_gen_be|--legacy)
+        ;;
+      *)
+        set -- "$@" "${_arg_item}"
+        ;;
+    esac
+  done
+  "${EDGCPP_RESOLVED_BACKEND}" "$@"
+}
+
 _be_status=0
 if [ "${NATIVE_OBJ_PRODUCED}" = "1" ]; then
   _be_status=0
@@ -715,16 +796,16 @@ elif [ "${EDGCPP_STRICT_BACKEND:-0}" = "1" ] && [ "${HAS_SOURCE_FILE}" = "1" ] &
 else
   if [ -n "${EDGCPP_EXTRA_CFLAGS:-}" ] && [ "${EDGCPP_ACTIVE_LANG}" = "c" ]; then
     # shellcheck disable=SC2086
-    "${EDGCPP_RESOLVED_BACKEND}" "$@" ${EDGCPP_EXTRA_CFLAGS} || _be_status=$?
+    run_filtered_host_backend "$@" ${EDGCPP_EXTRA_CFLAGS} || _be_status=$?
   elif [ -n "${EDGCPP_EXTRA_CXXFLAGS:-}" ] && [ "${EDGCPP_ACTIVE_LANG}" = "c++" ]; then
     # shellcheck disable=SC2086
-    "${EDGCPP_RESOLVED_BACKEND}" "$@" ${EDGCPP_EXTRA_CXXFLAGS} || _be_status=$?
+    run_filtered_host_backend "$@" ${EDGCPP_EXTRA_CXXFLAGS} || _be_status=$?
   else
-    "${EDGCPP_RESOLVED_BACKEND}" "$@" 2>/dev/null || {
+    run_filtered_host_backend "$@" 2>/dev/null || {
       if [ "${IS_COMPILE_ONLY}" = "0" ] && [ "${UNAME:-}" = "Linux" ]; then
-        "${EDGCPP_RESOLVED_BACKEND}" -no-pie "$@" || _be_status=$?
+        run_filtered_host_backend -no-pie "$@" || _be_status=$?
       else
-        "${EDGCPP_RESOLVED_BACKEND}" "$@" || _be_status=$?
+        run_filtered_host_backend "$@" || _be_status=$?
       fi
     }
   fi

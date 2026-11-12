@@ -93,7 +93,7 @@ if /i "%ACTION%"=="-v" (
 
 set "RAW_ARGS=%*"
 set "IS_CLOUD_VERB=0"
-for %%V in (auth location group project network node dns firewall ssh backup restore diff list-managed storage dashboard cost usage logs-aggregate aws azure gcp hetzner proxmox digitalocean linode vultr cleanup setup deploy) do (
+for %%V in (auth location group project compartment network node dns firewall ssh backup restore diff list-managed storage dashboard cost usage logs-aggregate aws azure gcp hetzner proxmox digitalocean linode vultr oci ovh cleanup setup deploy) do (
     if /i "%ACTION%"=="%%V" set "IS_CLOUD_VERB=1"
 )
 if "!IS_CLOUD_VERB!"=="1" (
@@ -419,18 +419,34 @@ if /i "!ACTION!"=="use" (
 )
 
 if /i "!ACTION!"=="which" (
-    if exist "!INSTALLED_DIR!\bin\!PACKAGE_NAME!.exe" (
-        echo !INSTALLED_DIR!\bin\!PACKAGE_NAME!.exe
-        exit /b 0
+    for %%X in (exe cmd bat) do (
+        if exist "!INSTALLED_DIR!\bin\!PACKAGE_NAME!.%%X" (
+            echo !INSTALLED_DIR!\bin\!PACKAGE_NAME!.%%X
+            exit /b 0
+        )
+    )
+    for %%F in ("!INSTALLED_DIR!\bin\*.exe" "!INSTALLED_DIR!\bin\*.cmd" "!INSTALLED_DIR!\bin\*.bat") do (
+        if exist "%%~fF" (
+            echo %%~fF
+            exit /b 0
+        )
     )
     where "!PACKAGE_NAME!" 2>nul
     exit /b !errorlevel!
 )
 
 if /i "!ACTION!"=="run" (
-    if exist "!INSTALLED_DIR!\bin\!PACKAGE_NAME!.exe" (
-        "!INSTALLED_DIR!\bin\!PACKAGE_NAME!.exe" %1 %2 %3 %4 %5 %6 %7 %8 %9
-        exit /b !errorlevel!
+    for %%X in (exe cmd bat) do (
+        if exist "!INSTALLED_DIR!\bin\!PACKAGE_NAME!.%%X" (
+            call "!INSTALLED_DIR!\bin\!PACKAGE_NAME!.%%X" %1 %2 %3 %4 %5 %6 %7 %8 %9
+            exit /b !errorlevel!
+        )
+    )
+    for %%F in ("!INSTALLED_DIR!\bin\*.exe" "!INSTALLED_DIR!\bin\*.cmd" "!INSTALLED_DIR!\bin\*.bat") do (
+        if exist "%%~fF" (
+            call "%%~fF" %1 %2 %3 %4 %5 %6 %7 %8 %9
+            exit /b !errorlevel!
+        )
     )
     echo [ERROR] !PACKAGE_NAME! version !VERSION! not installed at !INSTALLED_DIR! >&2
     exit /b 1

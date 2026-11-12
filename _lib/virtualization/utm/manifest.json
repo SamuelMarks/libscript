@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "utm",
+  "title": "UTM Virtual Machines for macOS",
+  "description": "UTM (utmctl) QEMU and Apple Virtualization.framework virtual machine frontend and CLI controller for macOS.",
+  "category": "virtualization",
+  "provides": ["utm", "utmctl"],
+  "os_whitelist": ["macos", "darwin"],
+  "repository": "https://github.com/utmapp/UTM"
+}

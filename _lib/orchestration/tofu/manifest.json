@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tofu",
+  "title": "OpenTofu",
+  "description": "OpenTofu (tofu) Linux Foundation open-source Infrastructure-as-Code CLI drop-in replacement for Terraform.",
+  "category": "orchestration",
+  "provides": ["tofu", "opentofu"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/opentofu/opentofu"
+}

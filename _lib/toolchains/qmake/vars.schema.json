@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/qmake/vars.schema.json",
+  "title": "qmake variables",
+  "description": "Configuration variables for qmake",
+  "type": "object",
+  "properties": {
+    "QMAKE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install qmake. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "QMAKE_VERSION": {
+      "description": "Specific version of qmake to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "6.8.1"]
+    },
+    "QMAKE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading qmake binary or archive artifacts."
+    },
+    "QMAKE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying qmake available remote releases."
+    }
+  }
+}

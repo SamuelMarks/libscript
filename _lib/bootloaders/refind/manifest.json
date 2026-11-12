@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "refind",
+  "title": "rEFInd UEFI Boot Manager",
+  "description": "Graphical UEFI boot manager and automatic EFI OS/kernel discovery tool (refind-install).",
+  "category": "bootloaders",
+  "provides": ["refind", "refind-install"],
+  "os_whitelist": ["linux", "freebsd", "macos"],
+  "os_blacklist": ["windows", "sunos"],
+  "repository": "https://sourceforge.net/projects/refind/"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pandoc",
+  "title": "Pandoc",
+  "description": "Universal markup document converter supporting Markdown, LaTeX, HTML, DOCX, EPUB, and PDF.",
+  "category": "utility",
+  "provides": ["pandoc", "document-converter"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/jgm/pandoc"
+}

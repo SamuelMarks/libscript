@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sndio",
+  "title": "OpenBSD sndio Audio & MIDI Framework",
+  "description": "Lightweight OpenBSD audio and MIDI server daemon and library (sndiod, aucat, sndioctl).",
+  "category": "audio",
+  "provides": ["sndio", "sndiod", "aucat"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "os_blacklist": ["windows"],
+  "repository": "https://sndio.org/"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "protobuf",
+  "title": "Protocol Buffers",
+  "description": "Protocol Buffers data interchange compiler (protoc) and schema toolchain.",
+  "category": "toolchain",
+  "provides": ["protobuf", "protoc"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/protocolbuffers/protobuf"
+}

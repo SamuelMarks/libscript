@@ -153,6 +153,11 @@ build_sqlite_from_source() {
   fi
 
   _amal_url="$(resolve_sqlite_amalgamation_url)"
+  _cache_zip="${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/sqlite}/$(basename "${_amal_url}")"
+  if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ ! -f "${_cache_zip}" ]; then
+    libscript_build_component_from_source "sqlite" "${EXACT_VERSION}" "sqlite3" "c" "make" ""
+    return 0
+  fi
   libscript_fetch_and_extract_source "sqlite" "${_amal_url}"
   libscript_execute_source_build "custom" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" compile_sqlite_amalgamation_callback
   libscript_emit_build_metrics "sqlite" "${EXACT_VERSION}" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/sqlite3" "${SQLITE_EFFECTIVE_CFLAGS:-}" "${SQLITE_EFFECTIVE_LDFLAGS:-}"

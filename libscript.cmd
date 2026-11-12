@@ -164,6 +164,8 @@ if /i "%cmd%"=="list" ( call "!SCRIPT_DIR!\cli\commands\core\list.cmd" %* & exit
 if /i "%cmd%"=="search" ( call "!SCRIPT_DIR!\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="provision" ( call "!SCRIPT_DIR!\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deprovision" ( call "!SCRIPT_DIR!\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="rapid-experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "%cmd%"=="backup" ( call "!SCRIPT_DIR!\cli\commands\cloud\backup.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="export-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\backup.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="restore" ( call "!SCRIPT_DIR!\cli\commands\cloud\restore.cmd" %* & exit /b !errorlevel! )

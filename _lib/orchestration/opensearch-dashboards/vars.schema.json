@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/opensearch-dashboards/vars.schema.json",
+  "title": "opensearch-dashboards variables",
+  "description": "Configuration variables for opensearch-dashboards",
+  "type": "object",
+  "properties": {
+    "OPENSEARCH_DASHBOARDS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install opensearch-dashboards. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "OPENSEARCH_DASHBOARDS_VERSION": {
+      "description": "Specific version of opensearch-dashboards to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "OPENSEARCH_DASHBOARDS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading opensearch-dashboards binary or archive artifacts."
+    },
+    "OPENSEARCH_DASHBOARDS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying opensearch-dashboards available remote releases."
+    },
+    "OPENSEARCH_DASHBOARDS_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the opensearch-dashboards service listens.",
+      "default": 5601
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zstd",
+  "title": "Zstandard",
+  "description": "Fast real-time lossless compression algorithm and zstd CLI offering high compression ratios.",
+  "category": "utility",
+  "provides": ["zstd", "compressor"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/facebook/zstd"
+}

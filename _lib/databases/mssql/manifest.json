@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mssql",
+  "title": "Microsoft SQL Server Tools",
+  "description": "Microsoft SQL Server relational database engine and sqlcmd command-line management utility.",
+  "category": "database",
+  "provides": ["mssql", "sqlserver", "sqlcmd", "database"],
+  "os_whitelist": ["all"],
+  "ports": [1433],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/microsoft/go-sqlcmd",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

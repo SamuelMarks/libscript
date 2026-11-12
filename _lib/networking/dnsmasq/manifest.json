@@ -1,0 +1,29 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "dnsmasq",
+  "title": "Dnsmasq DNS/DHCP/TFTP Server",
+  "description": "Lightweight DNS forwarder, DHCPv4/v6 server, router advertisement, and PXE/TFTP network boot server.",
+  "category": "networking",
+  "provides": ["dnsmasq"],
+  "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd", "sunos"],
+  "os_blacklist": ["windows"],
+  "ports": [53, 67, 69],
+  "repository": "https://thekelleys.org.uk/gitweb/?p=dnsmasq.git",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

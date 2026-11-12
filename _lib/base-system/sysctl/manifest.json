@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sysctl",
+  "title": "Kernel sysctl.d Parameter Manager",
+  "description": "Declarative kernel runtime parameter manager (sysctl and /etc/sysctl.d drop-in configuration).",
+  "category": "base-system",
+  "provides": ["sysctl", "sysctl-d"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "macos"],
+  "os_blacklist": ["windows", "sunos"],
+  "repository": "https://gitlab.com/procps-ng/procps"
+}

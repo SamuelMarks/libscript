@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ovh",
+  "title": "OVHcloud",
+  "description": "OVHcloud CLI (ovhcloud) version manager and declarative Public Cloud compute, vRack private network, security group, and DNS driver.",
+  "category": "cloud-providers",
+  "provides": ["ovh", "ovhcloud"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/ovh/ovhcloud-cli"
+}

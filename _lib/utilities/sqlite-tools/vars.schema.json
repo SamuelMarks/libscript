@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/sqlite-tools/vars.schema.json",
+  "title": "sqlite-tools variables",
+  "description": "Configuration variables for sqlite-tools",
+  "type": "object",
+  "properties": {
+    "SQLITE_TOOLS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install sqlite-tools. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "SQLITE_TOOLS_VERSION": {
+      "description": "Specific version of sqlite-tools to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "SQLITE_TOOLS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading sqlite-tools binary or archive artifacts."
+    },
+    "SQLITE_TOOLS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying sqlite-tools available remote releases."
+    }
+  }
+}

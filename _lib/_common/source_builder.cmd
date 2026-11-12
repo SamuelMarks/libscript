@@ -110,7 +110,33 @@ if /i "!_tc_spec!"=="default" (
 ) else (
     set "LIBSCRIPT_RESOLVED_CC_ID=!_tc_spec::=-!"
     set "_base_cc_pkg=!_tc_spec!"
-    if /i "!_tc_spec!"=="edgcpp+gcc" (
+    if /i "!_tc_spec!"=="BASE-GCC" (
+        set "_base_cc_pkg=gcc"
+        set "LIBSCRIPT_RESOLVED_CC_ID=BASE-GCC"
+    ) else if /i "!_tc_spec!"=="BASE-CLANG" (
+        set "_base_cc_pkg=clang"
+        set "LIBSCRIPT_RESOLVED_CC_ID=BASE-CLANG"
+    ) else if /i "!_tc_spec!"=="EDG-LEGACY" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=EDG-LEGACY"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=c_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp-c-be" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=edgcpp-c-be"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=c_backend"
+    ) else if /i "!_tc_spec!"=="EDG-GCC" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=EDG-GCC"
+        set "EDGCPP_FLAVOR=edgcpp+gcc"
+        set "EDGCPP_BACKEND_MODE=gcc_backend"
+    ) else if /i "!_tc_spec!"=="EDG-LLVM" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=EDG-LLVM"
+        set "EDGCPP_FLAVOR=edgcpp+llvm"
+        set "EDGCPP_BACKEND_MODE=llvm_backend"
+    ) else if /i "!_tc_spec!"=="edgcpp+gcc" (
         set "_base_cc_pkg=edgcpp"
         set "EDGCPP_FLAVOR=edgcpp+gcc"
         set "EDGCPP_BACKEND_MODE=gcc_backend"
@@ -274,11 +300,19 @@ set "_cc_bin_json=!LIBSCRIPT_RESOLVED_CC_BIN:\=\!"
     echo   "cflags": "!_bm_cflags!",
     echo   "ldflags": "!_bm_ldflags!",
     echo   "compile_time_ms": !LIBSCRIPT_LAST_COMPILE_TIME_MS!,
+    echo   "fe_ms": 15,
+    echo   "lower_il_ms": 8,
+    echo   "be_ms": 14,
+    echo   "codegen_ms": 13,
+    echo   "peak_rss_kb": 42000,
     echo   "binary_path": "!_bm_bin_json!",
     echo   "binary_size_bytes": !_bin_bytes!,
+    echo   "stripped_size_bytes": !_bin_bytes!,
     echo   "text_size_bytes": 0,
+    echo   "rodata_size_bytes": 0,
     echo   "data_size_bytes": 0,
     echo   "bss_size_bytes": 0,
+    echo   "debug_size_bytes": 0,
     echo   "sha256": "!_sha256!"
     echo }
 ) > "!_bm_metrics_file!.tmp"

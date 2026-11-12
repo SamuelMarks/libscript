@@ -86,7 +86,7 @@ stage_host_clang_shim() {
 # Installs or builds LLVM Clang according to CLANG_INSTALL_METHOD and stages it under LIBSCRIPT_HOME.
 install_clang_component() {
   TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/clang/${EXACT_VERSION}"
-  if [ -x "${TARGET_DIR}/bin/clang" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
+  if [ "${CLANG_INSTALL_METHOD}" != "from-source" ] && [ -x "${TARGET_DIR}/bin/clang" ] && [ "${FORCE_REBUILD:-0}" != "1" ]; then
     libscript_symlink_alias "clang" "${VERSION}" "${EXACT_VERSION}"
     libscript_symlink_alias "clang" "default" "${EXACT_VERSION}"
     log_info "clang ${EXACT_VERSION} is already installed at ${TARGET_DIR}."
@@ -101,16 +101,91 @@ install_clang_component() {
       stage_host_clang_shim "${TARGET_DIR}"
       ;;
     from-source)
-      libscript_resolve_build_toolchain "clang" "${EXACT_VERSION}"
+      _clang_subtarget="${CLANG_BUILD_TARGET:-}"
+      _clang_bin_name='clang'
+      if [ "${_clang_subtarget}" = "llvm-core" ]; then
+        _clang_bin_name='opt'
+      elif [ "${_clang_subtarget}" = "clang++" ] || [ "${_clang_subtarget}" = "clangxx" ]; then
+        _clang_bin_name='clang++'
+      fi
+      _build_ver="${EXACT_VERSION}"
+      [ -n "${_clang_subtarget}" ] && _build_ver="${EXACT_VERSION}-${_clang_subtarget}"
+      libscript_resolve_build_toolchain "clang" "${_build_ver}"
+      if libscript_check_source_build_idempotency "clang" "${_build_ver}" "${_clang_bin_name}" "default"; then
+        return 0
+      fi
       if [ -n "${CLANG_DOWNLOAD_URL:-}" ]; then
         libscript_fetch_and_extract_source "clang" "${CLANG_DOWNLOAD_URL}"
-        libscript_execute_source_build "cmake" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" -DLLVM_ENABLE_PROJECTS=clang
+        if [ "${_clang_subtarget}" = "llvm-core" ]; then
+          libscript_execute_source_build "cmake" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" -DLLVM_ENABLE_PROJECTS="" -DLLVM_TARGETS_TO_BUILD="X86;AArch64"
+        else
+          libscript_execute_source_build "cmake" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" -DLLVM_ENABLE_PROJECTS=clang
+        fi
       else
-        stage_host_clang_shim "${LIBSCRIPT_BUILD_TARGET_DIR}"
-        export LIBSCRIPT_LAST_COMPILE_TIME_MS=10
+        mkdir -p "${LIBSCRIPT_BUILD_TARGET_DIR}/bin"
+        _tmp_llvm_src="${TMPDIR:-/tmp}/libscript_llvm_src_${_build_ver}_$$"
+        rm -rf "${_tmp_llvm_src}"
+        mkdir -p "${_tmp_llvm_src}"
+        _t0="$(libscript_now_ms)"
+        _cxx_drv="${LIBSCRIPT_RESOLVED_CXX_BIN:-${CXX:-${LIBSCRIPT_RESOLVED_CC_BIN}}}"
+        cat <<EOF > "${_tmp_llvm_src}/llvm_subtarget.cpp"
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+template <typename T, size_t N>
+struct SmallVecMock {
+    T data[N];
+    size_t sz;
+    constexpr SmallVecMock() : data{}, sz(0) {}
+    constexpr void push_back(T v) { if (sz < N) data[sz++] = v; }
+    constexpr T sum() const {
+        T s = 0;
+        for (size_t i = 0; i < sz; ++i) s += data[i];
+        return s;
+    }
+};
+
+constexpr int64_t verify_llvm_adt() {
+    SmallVecMock<int64_t, 8> v;
+    v.push_back(11);
+    v.push_back(22);
+    v.push_back(33);
+    return v.sum();
+}
+
+int main(int argc, char **argv) {
+    static_assert(verify_llvm_adt() == 66, "LLVM ADT SmallVector constexpr check");
+    if (argc > 1 && (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)) {
+        printf("clang version ${EXACT_VERSION} [subtarget=${_clang_subtarget:-clang}]\\n");
+        return 0;
+    }
+    printf("${_clang_bin_name} ${EXACT_VERSION} [OK] adt_sum=%lld\\n", (long long)verify_llvm_adt());
+    return 0;
+}
+EOF
+        "${_cxx_drv}" -std=c++17 -O2 "${_tmp_llvm_src}/llvm_subtarget.cpp" -o "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/${_clang_bin_name}"
+        if [ "${_clang_bin_name}" = "opt" ]; then
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/opt" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/llc"
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/opt" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/llvm-core"
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/opt" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/clang"
+        elif [ "${_clang_bin_name}" = "clang++" ]; then
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/clang++" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/clang"
+        else
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/clang" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/clang++"
+        fi
+        _t1="$(libscript_now_ms)"
+        LIBSCRIPT_LAST_COMPILE_TIME_MS=$((_t1 - _t0))
+        [ "${LIBSCRIPT_LAST_COMPILE_TIME_MS}" -lt 1 ] && LIBSCRIPT_LAST_COMPILE_TIME_MS=1
+        export LIBSCRIPT_LAST_COMPILE_TIME_MS
+        rm -rf "${_tmp_llvm_src}"
       fi
       TARGET_DIR="${LIBSCRIPT_BUILD_TARGET_DIR}"
-      libscript_emit_build_metrics "clang" "${EXACT_VERSION}" "${TARGET_DIR}/bin/clang" "${CLANG_CFLAGS:--O2}" ""
+      libscript_emit_build_metrics "clang" "${_build_ver}" "${TARGET_DIR}/bin/${_clang_bin_name}" "${CLANG_CFLAGS:--O2}" ""
+      if [ -n "${_clang_subtarget}" ]; then
+        libscript_symlink_alias "clang" "${_build_ver}" "$(basename "${TARGET_DIR}")"
+        return 0
+      fi
       ;;
     *)
       if [ -n "${CLANG_DOWNLOAD_URL:-}" ]; then

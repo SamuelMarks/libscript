@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/fd/vars.schema.json",
+  "title": "fd variables",
+  "description": "Configuration variables for fd",
+  "type": "object",
+  "properties": {
+    "FD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install fd. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "FD_VERSION": {
+      "description": "Specific version of fd to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "FD_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading fd binary or archive artifacts."
+    },
+    "FD_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying fd available remote releases."
+    }
+  }
+}

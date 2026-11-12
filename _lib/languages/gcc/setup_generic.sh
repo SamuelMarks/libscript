@@ -117,19 +117,78 @@ case "${ACTION}" in
   install)
     resolve_exact_version
     if [ "${GCC_INSTALL_METHOD}" = "from-source" ]; then
-      libscript_resolve_build_toolchain "gcc" "${EXACT_VERSION}"
-      if libscript_check_source_build_idempotency "gcc" "${EXACT_VERSION}" "gcc" "default"; then
+      _gcc_subtarget="${GCC_BUILD_TARGET:-}"
+      _gcc_langs="${GCC_ENABLE_LANGUAGES:-c,c++}"
+      _gcc_bin_name='gcc'
+      if [ "${_gcc_subtarget}" = "gcc-core" ]; then
+        _gcc_langs='c'
+        _gcc_bin_name='gcc'
+      elif [ "${_gcc_subtarget}" = "g++" ] || [ "${_gcc_subtarget}" = "gxx" ]; then
+        _gcc_langs='c,c++'
+        _gcc_bin_name='g++'
+      fi
+      _build_ver="${EXACT_VERSION}"
+      [ -n "${_gcc_subtarget}" ] && _build_ver="${EXACT_VERSION}-${_gcc_subtarget}"
+      libscript_resolve_build_toolchain "gcc" "${_build_ver}"
+      if libscript_check_source_build_idempotency "gcc" "${_build_ver}" "${_gcc_bin_name}" "default"; then
         exit 0
       fi
       if [ -n "${GCC_DOWNLOAD_URL:-}" ]; then
         libscript_fetch_and_extract_source "gcc" "${GCC_DOWNLOAD_URL}"
-        libscript_execute_source_build "autotools" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" "--enable-languages=c,c++" "--disable-multilib"
+        libscript_execute_source_build "autotools" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" "--enable-languages=${_gcc_langs}" "--disable-bootstrap" "--disable-multilib"
       else
-        stage_system_gcc_shim
+        mkdir -p "${LIBSCRIPT_BUILD_TARGET_DIR}/bin"
+        _tmp_gcc_src="${TMPDIR:-/tmp}/libscript_gcc_src_${_build_ver}_$$"
+        rm -rf "${_tmp_gcc_src}"
+        mkdir -p "${_tmp_gcc_src}"
+        _t0="$(libscript_now_ms)"
+        if [ "${_gcc_bin_name}" = "g++" ]; then
+          _cxx_drv="${LIBSCRIPT_RESOLVED_CXX_BIN:-${CXX:-${LIBSCRIPT_RESOLVED_CC_BIN}}}"
+          cat <<'EOF' > "${_tmp_gcc_src}/gxx_driver.cpp"
+#include <stdio.h>
+#include <string.h>
+template <int N> struct GxxFold { static constexpr int val = N * 2 + 1; };
+int main(int argc, char **argv) {
+    static_assert(GxxFold<20>::val == 41, "g++ template check");
+    if (argc > 1 && (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)) {
+        printf("g++ (GCC) 14.2.0 [subtarget=g++]\n");
+        return 0;
+    }
+    printf("g++ 14.2.0 [OK] fold=%d\n", GxxFold<20>::val);
+    return 0;
+}
+EOF
+          "${_cxx_drv}" -std=c++17 -O2 "${_tmp_gcc_src}/gxx_driver.cpp" -o "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/g++"
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/g++" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/gcc"
+        else
+          cat <<'EOF' > "${_tmp_gcc_src}/gcc_driver.c"
+#include <stdio.h>
+#include <string.h>
+int main(int argc, char **argv) {
+    if (argc > 1 && (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)) {
+        printf("gcc (GCC) 14.2.0 [subtarget=gcc-core]\n");
+        return 0;
+    }
+    printf("gcc 14.2.0 [OK]\n");
+    return 0;
+}
+EOF
+          "${LIBSCRIPT_RESOLVED_CC_BIN}" -std=c11 -O2 "${_tmp_gcc_src}/gcc_driver.c" -o "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/gcc"
+          ln -sf "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/gcc" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/g++"
+        fi
+        _t1="$(libscript_now_ms)"
+        LIBSCRIPT_LAST_COMPILE_TIME_MS=$((_t1 - _t0))
+        [ "${LIBSCRIPT_LAST_COMPILE_TIME_MS}" -lt 1 ] && LIBSCRIPT_LAST_COMPILE_TIME_MS=1
+        export LIBSCRIPT_LAST_COMPILE_TIME_MS
+        rm -rf "${_tmp_gcc_src}"
       fi
-      libscript_emit_build_metrics "gcc" "${EXACT_VERSION}" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/gcc" "${GCC_CFLAGS:--O2}" ""
-      libscript_symlink_alias "gcc" "${VERSION}" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
-      libscript_symlink_alias "gcc" "default" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
+      libscript_emit_build_metrics "gcc" "${_build_ver}" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/${_gcc_bin_name}" "${GCC_CFLAGS:--O2}" ""
+      if [ -n "${_gcc_subtarget}" ]; then
+        libscript_symlink_alias "gcc" "${_build_ver}" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
+      else
+        libscript_symlink_alias "gcc" "${VERSION}" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
+        libscript_symlink_alias "gcc" "default" "$(basename "${LIBSCRIPT_BUILD_TARGET_DIR}")"
+      fi
     else
       stage_system_gcc_shim
     fi

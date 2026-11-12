@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "limine",
+  "title": "Limine Bootloader",
+  "description": "Modern, portable, multiprotocol UEFI and BIOS bootloader supporting Linux, Limine boot protocol, multiboot2, and chainloading.",
+  "category": "bootloaders",
+  "provides": ["limine"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
+  "os_blacklist": ["windows"],
+  "repository": "https://github.com/limine-bootloader/limine"
+}

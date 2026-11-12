@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tar",
+  "title": "GNU/BSD tar",
+  "description": "Tape archive creation, inspection, and extraction utility supporting POSIX ustar and pax formats.",
+  "category": "utility",
+  "provides": ["tar", "archiver"],
+  "os_whitelist": ["all"]
+}

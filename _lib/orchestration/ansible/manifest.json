@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ansible",
+  "title": "Ansible Automation Engine",
+  "description": "Agentless IT automation, configuration management, and application deployment engine (ansible, ansible-playbook, ansible-vault).",
+  "category": "orchestration",
+  "provides": ["ansible", "ansible-playbook", "ansible-core"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/ansible/ansible"
+}

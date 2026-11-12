@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rethinkdb",
+  "title": "RethinkDB",
+  "description": "Open-source distributed JSON database built for real-time changefeeds and reactive web applications.",
+  "category": "database",
+  "provides": ["rethinkdb", "document-store", "database"],
+  "os_whitelist": ["all"],
+  "ports": [28015, 8080],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/rethinkdb/rethinkdb",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

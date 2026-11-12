@@ -417,12 +417,12 @@ mkdir -p "$TMP_WORK_DIR"
 
 # ## Overview
 # Removes temporary build directory.
-# shellcheck disable=SC2317,SC2329
 # ## Usage
 #   Internal function.
 # ## cleanup_tmp
 # Removes temporary MSI build directories and intermediate WiX artifacts on exit.
 cleanup_tmp() {
+  trap - EXIT INT TERM
   rm -rf "$TMP_WORK_DIR"
   rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs"
 }
@@ -1408,4 +1408,5 @@ compile_msi() {
 }
 
 compile_msi || { exit 1; }
+cleanup_tmp
 exit 0

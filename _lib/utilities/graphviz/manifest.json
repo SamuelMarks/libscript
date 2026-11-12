@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "graphviz",
+  "title": "Graphviz",
+  "description": "Open-source graph visualization software and DOT layout CLI tools (dot, neato, fdp).",
+  "category": "utility",
+  "provides": ["graphviz", "dot"],
+  "os_whitelist": ["all"]
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "surrealdb",
+  "title": "SurrealDB",
+  "description": "Scalable distributed multi-model cloud database supporting relational, document, graph, and vector queries.",
+  "category": "database",
+  "provides": ["surrealdb", "multi-model-database", "database"],
+  "os_whitelist": ["all"],
+  "ports": [8000],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/surrealdb/surrealdb",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

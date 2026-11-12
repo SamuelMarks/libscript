@@ -34,9 +34,9 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test directory upon exit or preserves on error.
-# shellcheck disable=SC2317,SC2329
 cleanup() {
   _status=$?
+  trap - EXIT INT TERM
   if [ "$_status" -eq 0 ]; then
     rm -rf "$TEST_TMP_DIR"
   else
@@ -188,4 +188,5 @@ fi
 printf '[PASS] WiX identifiers are legal, sanitized, and within the 72-character limit\n'
 
 printf '=== All Harvest Payload Tests Passed ===\n'
+cleanup
 exit 0

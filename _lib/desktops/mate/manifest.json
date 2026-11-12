@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mate",
+  "title": "MATE Desktop Environment",
+  "description": "MATE Desktop Environment session manager, panel, and traditional GTK desktop suite (mate-session).",
+  "category": "desktops",
+  "provides": ["mate", "mate-desktop", "mate-session"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "os_blacklist": ["windows", "macos"],
+  "repository": "https://github.com/mate-desktop/mate-session-manager"
+}

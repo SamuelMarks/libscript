@@ -86,11 +86,25 @@ call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_version_manager.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_schema_vars.cmd" --all
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\doc_coverage.cmd" --strict
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_doc_coverage.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_vm_contract.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_shellcheck_vm_and_hooks.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_cloud_experiment_lifecycle.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_languages_and_package_managers.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_data_and_server_components.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_utilities_security_logging_storage.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier15_2_3_system_orchestration_cloud.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.cmd"
 exit /b %ERRORLEVEL%

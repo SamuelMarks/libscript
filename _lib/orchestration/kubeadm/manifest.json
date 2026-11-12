@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kubeadm",
+  "title": "Kubernetes kubeadm Bootstrapper",
+  "description": "Official Kubernetes cluster lifecycle bootstrapper (kubeadm init, kubeadm join, kubeadm upgrade).",
+  "category": "orchestration",
+  "provides": ["kubeadm"],
+  "os_whitelist": ["linux", "windows"],
+  "repository": "https://github.com/kubernetes/kubernetes"
+}

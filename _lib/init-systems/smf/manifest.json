@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "smf",
+  "title": "illumos/Solaris Service Management Facility (SMF)",
+  "description": "illumos and Solaris Service Management Facility (SMF) manifest and service control adapter (svcadm, svccfg, svcs).",
+  "category": "init-systems",
+  "provides": ["smf", "svcadm", "svccfg"],
+  "os_whitelist": ["sunos", "illumos", "solaris"],
+  "repository": "https://github.com/illumos/illumos-gate"
+}

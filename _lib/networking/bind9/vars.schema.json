@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/bind9/vars.schema.json",
+  "title": "bind9 variables",
+  "description": "Configuration variables for bind9",
+  "type": "object",
+  "properties": {
+    "BIND9_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install bind9. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "BIND9_VERSION": {
+      "description": "Specific version of bind9 to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "BIND9_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading bind9 binary or archive artifacts."
+    },
+    "BIND9_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying bind9 available remote releases."
+    },
+    "BIND9_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the bind9 service listens.",
+      "default": 53
+    }
+  }
+}

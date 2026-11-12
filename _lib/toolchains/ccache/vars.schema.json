@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/ccache/vars.schema.json",
+  "title": "ccache variables",
+  "description": "Configuration variables for ccache",
+  "type": "object",
+  "properties": {
+    "CCACHE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ccache. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "CCACHE_VERSION": {
+      "description": "Specific version of ccache to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "4.10.2"]
+    },
+    "CCACHE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ccache binary or archive artifacts."
+    },
+    "CCACHE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ccache available remote releases."
+    }
+  }
+}

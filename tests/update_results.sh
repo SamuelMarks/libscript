@@ -191,9 +191,13 @@ discover_all_entries() {
 
   # Additional Tier 1/2/4 single-dir or multi-script subsystems
   if [ -d "${_repo_root}/_lib/bootloaders" ]; then
+    if [ -f "${_repo_root}/_lib/bootloaders/setup.sh" ]; then
+      printf '2|bootloaders|bootloaders/setup|\n' >>"${_raw_list}"
+    fi
     for _bl in grub limine refind systemd-boot; do
-      printf '2|bootloaders|bootloaders/%s|
-' "${_bl}" >>"${_raw_list}"
+      if [ ! -d "${_repo_root}/_lib/bootloaders/${_bl}" ]; then
+        printf '2|bootloaders|bootloaders/%s|\n' "${_bl}" >>"${_raw_list}"
+      fi
     done
   fi
   if [ -d "${_repo_root}/_lib/storage" ]; then

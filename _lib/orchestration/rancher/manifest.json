@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rancher",
+  "title": "Rancher Multi-Cluster Kubernetes Manager",
+  "description": "Rancher multi-cluster Kubernetes management CLI and control-plane server orchestration recipe.",
+  "category": "orchestration",
+  "provides": ["rancher", "rancher-cli"],
+  "os_whitelist": ["all"],
+  "ports": [80, 443],
+  "repository": "https://github.com/rancher/cli",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

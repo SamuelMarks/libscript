@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "multipass",
+  "title": "Canonical Multipass",
+  "description": "Canonical Multipass lightweight Ubuntu VM orchestrator (multipass and multipassd) across Linux, macOS, and Windows.",
+  "category": "virtualization",
+  "provides": ["multipass", "multipassd"],
+  "os_whitelist": ["linux", "macos", "windows"],
+  "repository": "https://github.com/canonical/multipass"
+}

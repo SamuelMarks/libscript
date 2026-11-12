@@ -51,6 +51,12 @@ goto :find_root
 
 set "OS_TARGET=alpine-3.24"
 set "REUSE_VM=0"
+set "COMPONENT_VERSION=latest"
+set "PKG_MGR="
+set "INSTALL_METHOD="
+set "TOOLCHAIN="
+set "SNAPSHOT_NAME=vanilla"
+set "IDEMPOTENCY_RUNS=2"
 set "ARGS="
 
 :: ## parse_args
@@ -62,6 +68,77 @@ if /I "%~1"=="-h" goto :show_help
 if /I "%~1"=="/?" goto :show_help
 if /I "%~1"=="--os" (
     set "OS_TARGET=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--target-os" (
+    set "OS_TARGET=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--component" (
+    set "ARGS=!ARGS! %~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--components" (
+    set "ARGS=!ARGS! %~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--version" (
+    set "COMPONENT_VERSION=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--component-version" (
+    set "COMPONENT_VERSION=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--pkg-mgr" (
+    set "PKG_MGR=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--package-manager" (
+    set "PKG_MGR=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--install-method" (
+    set "INSTALL_METHOD=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--from-source" (
+    set "INSTALL_METHOD=from-source"
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--toolchain" (
+    set "TOOLCHAIN=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--snapshot" (
+    set "SNAPSHOT_NAME=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--idempotency-runs" (
+    set "IDEMPOTENCY_RUNS=%~2"
     shift
     shift
     goto :parse_args
@@ -193,24 +270,27 @@ for %%T in (!TARGETS!) do (
 
     if "!REUSE_VM!"=="1" (
         cd /d "%REPO_ROOT%\vagrant\!OS_TARGET!"
+        if not "!SNAPSHOT_NAME!"=="" (
+            vagrant snapshot restore "!SNAPSHOT_NAME!" >nul 2>&1
+        )
         if /I "!OS_ID!"=="windows" (
-            vagrant ssh --no-tty -c "Set-Location C:\libscript; cmd.exe /c \"C:\libscript\libscript.cmd install !TARGET_NAME!\" ; $iExit = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !TARGET_NAME!\" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
+            vagrant ssh --no-tty -c "Set-Location C:\libscript; cmd.exe /c \"C:\libscript\libscript.cmd install !TARGET_NAME! !COMPONENT_VERSION!\" ; $iExit = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !TARGET_NAME!\" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
             if !errorlevel! equ 0 (
                 echo Success > "!SUCCESS_FILE!"
-                echo [OK] !TARGET_NAME!
+                echo [OK] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             ) else (
                 echo Failure > "!FAILURE_FILE!"
-                echo [FAILED] !TARGET_NAME!
+                echo [FAILED] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             )
             vagrant ssh --no-tty -c "powershell -Command \"cd C:\libscript; & C:\libscript\libscript.cmd uninstall !TARGET_NAME! *>&1 | Out-Null; Remove-Item -Recurse -Force \"\"\"$env:USERPROFILE\.libscript\!TARGET_NAME!\"\"\" -ErrorAction SilentlyContinue\"" >nul 2>&1
         ) else (
-            vagrant ssh --no-tty -c "export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 300 /opt/repos/libscript/libscript.sh install !TARGET_NAME! && timeout 120 /opt/repos/libscript/libscript.sh test !TARGET_NAME!" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
+            vagrant ssh --no-tty -c "export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_PKG_MGR='!PKG_MGR!' LIBSCRIPT_GLOBAL_INSTALL_METHOD='!INSTALL_METHOD!' LIBSCRIPT_BUILD_TOOLCHAIN='!TOOLCHAIN!'; timeout 300 /opt/repos/libscript/libscript.sh install !TARGET_NAME! !COMPONENT_VERSION! && timeout 120 /opt/repos/libscript/libscript.sh test !TARGET_NAME!" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
             if !errorlevel! equ 0 (
                 echo Success > "!SUCCESS_FILE!"
-                echo [OK] !TARGET_NAME!
+                echo [OK] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             ) else (
                 echo Failure > "!FAILURE_FILE!"
-                echo [FAILED] !TARGET_NAME!
+                echo [FAILED] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             )
             if "%REMOTE_TMPDIR%"=="" set "REMOTE_TMPDIR=/tmp"
             vagrant ssh --no-tty -c "export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall !TARGET_NAME! >/dev/null 2>&1 || true; rm -rf \"$HOME/.libscript/!TARGET_NAME!\" !REMOTE_TMPDIR!/libscript_pkg_mgr_lock 2>/dev/null || true" >nul 2>&1

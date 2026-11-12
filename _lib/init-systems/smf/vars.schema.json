@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/smf/vars.schema.json",
+  "title": "smf variables",
+  "description": "Configuration variables for smf",
+  "type": "object",
+  "properties": {
+    "SMF_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install smf. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "SMF_VERSION": {
+      "description": "Specific version of smf to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "SMF_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading smf binary or archive artifacts."
+    },
+    "SMF_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying smf available remote releases."
+    }
+  }
+}

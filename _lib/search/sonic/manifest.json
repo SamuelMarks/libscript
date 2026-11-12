@@ -1,0 +1,29 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sonic",
+  "title": "Sonic",
+  "description": "Fast, lightweight, and schema-less search backend written in Rust as a minimal alternative to heavy search clusters.",
+  "category": "search",
+  "provides": ["sonic", "search"],
+  "os_whitelist": ["all"],
+  "ports": [1491],
+  "stateful": true,
+  "repository": "https://github.com/valeriansaliou/sonic",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

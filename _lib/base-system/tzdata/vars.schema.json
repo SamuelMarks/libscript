@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/tzdata/vars.schema.json",
+  "title": "tzdata variables",
+  "description": "Configuration variables for IANA Time Zone Database (tzdata)",
+  "type": "object",
+  "properties": {
+    "TZDATA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install tzdata. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "TZDATA_VERSION": {
+      "description": "Specific version of tzdata to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "TZDATA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading tzdata binary or archive artifacts."
+    },
+    "TZDATA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying tzdata available remote releases."
+    },
+    "TZDATA_TIMEZONE": {
+      "type": "string",
+      "description": "IANA timezone identifier (e.g., UTC or America/New_York) staged into /etc/timezone and /etc/localtime.",
+      "default": "UTC"
+    }
+  }
+}

@@ -566,7 +566,7 @@ libscript_scp_from_remote() {
   scp $_sfr_ssh_opts -r "${_sfr_target}:${_sfr_src}" "$_sfr_dest"
 }
 
-if [ $# -gt 0 ]; then
+if [ $# -gt 0 ] && [ -z "${_rs_caller_this:-}" ]; then
   case "${1:-}" in
     sync-app)
       shift

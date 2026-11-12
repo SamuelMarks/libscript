@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/bootloaders/refind/vars.schema.json",
+  "title": "refind variables",
+  "description": "Configuration variables for refind",
+  "type": "object",
+  "properties": {
+    "REFIND_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install refind. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "REFIND_VERSION": {
+      "description": "Specific version of refind to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "REFIND_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading refind binary or archive artifacts."
+    },
+    "REFIND_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying refind available remote releases."
+    }
+  }
+}

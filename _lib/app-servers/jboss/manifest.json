@@ -1,0 +1,29 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "jboss",
+  "title": "JBoss Application Server",
+  "description": "JBoss EAP / WildFly upstream Jakarta EE application server runtime and jboss-cli management tool.",
+  "category": "app-server",
+  "provides": ["jboss", "jakarta-ee", "app-server"],
+  "os_whitelist": ["all"],
+  "ports": [8080, 9990],
+  "multitenant": true,
+  "repository": "https://github.com/wildfly/wildfly",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

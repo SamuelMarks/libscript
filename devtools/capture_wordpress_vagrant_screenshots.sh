@@ -169,20 +169,6 @@ vm_radio() {
   sleep 1.5
 }
 
-# ## vm_check
-# shellcheck disable=SC2329
-vm_check() {
-  vm_action "CHECK:$1"
-  sleep 1
-}
-
-# ## vm_uncheck
-# shellcheck disable=SC2329
-vm_uncheck() {
-  vm_action "UNCHECK:$1"
-  sleep 1
-}
-
 # ## vm_set_edit
 # Populates a text input control in the active MSI dialog inside the guest VM.
 vm_set_edit() {
@@ -198,14 +184,6 @@ vm_wait_dialog() {
   _title="$1"
   vm_action "WAIT_DIALOG:$_title"
   sleep 1
-}
-
-# ## vm_wait
-# shellcheck disable=SC2329
-vm_wait() {
-  _btn="$1"
-  vm_action "WAIT:$_btn"
-  sleep 1.5
 }
 
 # ## vm_launch_msi

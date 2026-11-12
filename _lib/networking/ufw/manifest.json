@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ufw",
+  "title": "Uncomplicated Firewall (UFW)",
+  "description": "Uncomplicated Firewall (ufw) command-line host firewall configuration frontend for netfilter/iptables and nftables.",
+  "category": "networking",
+  "provides": ["ufw"],
+  "os_whitelist": ["linux"],
+  "repository": "https://git.launchpad.net/ufw"
+}

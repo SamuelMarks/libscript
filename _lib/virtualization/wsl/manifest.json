@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wsl",
+  "title": "Windows Subsystem for Linux (WSL)",
+  "description": "Microsoft Windows Subsystem for Linux (wsl.exe) distribution lifecycle and kernel manager.",
+  "category": "virtualization",
+  "provides": ["wsl", "wsl.exe"],
+  "os_whitelist": ["windows"],
+  "repository": "https://github.com/microsoft/WSL"
+}

@@ -53,6 +53,8 @@ goto :find_root
 if "%ACTION%"=="" set ACTION=install
 if "%VERSION%"=="" set "VERSION=latest"
 if not defined LIBSCRIPT_HOME set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%BENTO_REPO_URL%"=="" set "BENTO_REPO_URL=https://github.com/SamuelMarks/bento.git"
+if "%BENTO_BRANCH%"=="" set "BENTO_BRANCH=multi-os-qemu-aarch64"
 
 if "%ACTION%"=="install" (
     if exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%\.installed" (
@@ -71,6 +73,8 @@ if "%ACTION%"=="install" (
     set "STACK="
     call "%~dp0\..\..\..\_lib\orchestration\vagrant\setup.cmd" install
     set "STACK="
+    call "%~dp0\..\..\..\_lib\languages\ruby\setup.cmd" install
+    set "STACK="
 
     where 7z >nul 2>&1
     if !errorlevel! neq 0 (
@@ -81,6 +85,13 @@ if "%ACTION%"=="install" (
     if !errorlevel! neq 0 (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install git-servers/utils latest
+    )
+    if defined BENTO_DIR (
+        if not exist "!BENTO_DIR!\.git" (
+            git clone --branch "!BENTO_BRANCH!" "!BENTO_REPO_URL!" "!BENTO_DIR!" 2>nul
+        ) else (
+            git -C "!BENTO_DIR!" checkout "!BENTO_BRANCH!" 2>nul
+        )
     )
     if not exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%" mkdir "%LIBSCRIPT_HOME%\bento-builder\%VERSION%"
     echo installed > "%LIBSCRIPT_HOME%\bento-builder\%VERSION%\.installed"

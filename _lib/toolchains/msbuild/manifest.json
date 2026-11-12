@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "msbuild",
+  "title": "MSBuild",
+  "description": "Microsoft Build Engine for .NET and Visual C++ project files.",
+  "category": "toolchain",
+  "provides": ["msbuild"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/dotnet/msbuild"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nim",
+  "title": "Nim",
+  "description": "Statically typed compiled systems programming language combining Pythonic expressiveness with C performance.",
+  "category": "language",
+  "provides": ["nim"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/nim-lang/Nim"
+}

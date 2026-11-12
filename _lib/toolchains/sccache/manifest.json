@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sccache",
+  "title": "sccache",
+  "description": "Shared compilation cache for C, C++, Rust, and CUDA.",
+  "category": "toolchain",
+  "provides": ["sccache", "compiler-cache"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/mozilla/sccache"
+}

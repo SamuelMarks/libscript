@@ -56,8 +56,8 @@ PID_FILE="$TMP_DIR/test_services.pid"
 
 # ## cleanup
 # Cleans up background test services and temporary directories.
-# shellcheck disable=SC2317,SC2329
 cleanup() {
+  trap - EXIT INT TERM
   if [ -f "$PID_FILE" ]; then
     while read -r p; do
       if [ -n "$p" ]; then
@@ -201,4 +201,5 @@ printf '  -> PASSED: Studio CMS verified operational without server error (HTTP 
 printf '\n======================================================================\n'
 printf '[SUCCESS] Real Open edX LMS and Studio/CMS Services Verified Successfully!\n'
 printf '======================================================================\n'
+cleanup
 exit 0

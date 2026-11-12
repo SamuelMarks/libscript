@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "podman",
+  "title": "Podman Daemonless Container Engine",
+  "description": "Daemonless, rootless OCI container and pod management engine (podman) compatible with Docker CLI workflows.",
+  "category": "orchestration",
+  "provides": ["podman"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/containers/podman"
+}

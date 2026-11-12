@@ -199,7 +199,7 @@ function Audit-File {
                 if ($ln -match '^\s*(export\s+)?[A-Za-z_][A-Za-z0-9_]*="[A-Za-z0-9_./:@+-]+"\s*$' -or $ln -match '^\s*(log_(info|warn|error)|printf\s+''%s\\n''|echo)\s+"[^$`\\''"]+"(\s*>&2)?\s*$' -or $ln -match '^\s*libscript_depends(\s+"[A-Za-z0-9_.-]+")+(\s*\|\|\s*true)?\s*$') {
                     $unnecessaryDqLines += $lineNum
                 }
-                if ($ln -match '^\s*(\[[^\]]+\](\s*&&\s*\[[^\]]+\])*|command\s+-v\s+[^|;]+)\s*&&\s*[^\[{|;&][^|;&]*(\|\s*[^|;&]+)*\|\|\s*(true|:)([\s;]|$)') {
+                if ($ln -match '^\s*(\[[^\]]+\](\s*&&\s*\[[^\]]+\])*|command\s+-v\s+[^|;]+)\s*&&\s*[^\[{|;&][^|;&]*(\|\s*[^|;&]+)*\|\|\s*(true|:)([\s;]|$)' -or $ln -match '\$\(\s*cd\s+[^|;&]+&&\s*[^|;&]+(\|\s*[^|;&]+)*\|\|\s*(true|:)\s*\)') {
                     $sc2015Lines += $lineNum
                 }
                 $allowFetchNext = $false

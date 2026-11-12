@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "windows-scm",
+  "title": "Windows Service Control Manager (sc.exe) Adapter",
+  "description": "Windows Service Control Manager (SCM / sc.exe) native service lifecycle adapter and cross-platform compatibility shim.",
+  "category": "init-systems",
+  "provides": ["windows-scm", "sc", "sc.exe"],
+  "os_whitelist": ["windows"],
+  "repository": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sc-create"
+}

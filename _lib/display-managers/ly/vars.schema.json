@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-managers/ly/vars.schema.json",
+  "title": "ly variables",
+  "description": "Configuration variables for ly",
+  "type": "object",
+  "properties": {
+    "LY_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ly. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "LY_VERSION": {
+      "description": "Specific version of ly to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "LY_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ly binary or archive artifacts."
+    },
+    "LY_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ly available remote releases."
+    },
+    "LY_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the ly service listens.",
+      "default": 8080
+    }
+  }
+}

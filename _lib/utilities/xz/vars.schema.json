@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/xz/vars.schema.json",
+  "title": "xz variables",
+  "description": "Configuration variables for xz",
+  "type": "object",
+  "properties": {
+    "XZ_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install xz. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "XZ_VERSION": {
+      "description": "Specific version of xz to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "XZ_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading xz binary or archive artifacts."
+    },
+    "XZ_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying xz available remote releases."
+    }
+  }
+}

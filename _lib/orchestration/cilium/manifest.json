@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cilium",
+  "title": "Cilium CLI",
+  "description": "Cilium CLI (cilium) for installing, managing, and troubleshooting eBPF-powered Kubernetes networking, observability, and security.",
+  "category": "orchestration",
+  "provides": ["cilium", "cilium-cli"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/cilium/cilium-cli"
+}

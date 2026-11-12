@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "jack",
+  "title": "JACK Audio Connection Kit",
+  "description": "JACK2 low-latency professional real-time audio and MIDI server daemon (jackd).",
+  "category": "audio",
+  "provides": ["jack", "jack2", "jackd"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/jackaudio/jack2"
+}

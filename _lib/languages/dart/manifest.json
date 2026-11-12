@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "dart",
+  "title": "Dart SDK",
+  "description": "Client-optimized language and SDK for fast multi-platform applications.",
+  "category": "language",
+  "provides": ["dart"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/dart-lang/sdk"
+}

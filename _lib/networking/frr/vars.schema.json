@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/frr/vars.schema.json",
+  "title": "frr variables",
+  "description": "Configuration variables for frr",
+  "type": "object",
+  "properties": {
+    "FRR_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install frr. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "FRR_VERSION": {
+      "description": "Specific version of frr to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "FRR_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading frr binary or archive artifacts."
+    },
+    "FRR_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying frr available remote releases."
+    },
+    "FRR_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the frr service listens.",
+      "default": 179
+    }
+  }
+}

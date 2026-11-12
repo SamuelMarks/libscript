@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rsync",
+  "title": "rsync",
+  "description": "Fast incremental delta-transfer file synchronization and remote backup utility.",
+  "category": "utility",
+  "provides": ["rsync", "file-sync"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/RsyncProject/rsync"
+}

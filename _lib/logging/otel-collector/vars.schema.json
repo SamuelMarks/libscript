@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/logging/otel-collector/vars.schema.json",
+  "title": "otel-collector variables",
+  "description": "Configuration variables for otel-collector",
+  "type": "object",
+  "properties": {
+    "OTEL_COLLECTOR_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install otel-collector. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "OTEL_COLLECTOR_VERSION": {
+      "description": "Specific version of otel-collector to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "OTEL_COLLECTOR_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading otel-collector binary or archive artifacts."
+    },
+    "OTEL_COLLECTOR_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying otel-collector available remote releases."
+    },
+    "OTEL_COLLECTOR_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the otel-collector service listens.",
+      "default": 4317
+    }
+  }
+}

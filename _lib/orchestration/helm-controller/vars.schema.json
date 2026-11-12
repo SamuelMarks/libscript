@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/helm-controller/vars.schema.json",
+  "title": "helm-controller variables",
+  "description": "Configuration variables for helm-controller",
+  "type": "object",
+  "properties": {
+    "HELM_CONTROLLER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install helm-controller. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "HELM_CONTROLLER_VERSION": {
+      "description": "Specific version of helm-controller to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "HELM_CONTROLLER_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading helm-controller binary or archive artifacts."
+    },
+    "HELM_CONTROLLER_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying helm-controller available remote releases."
+    }
+  }
+}

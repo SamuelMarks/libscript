@@ -29,8 +29,8 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test directory if tests succeeded.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
@@ -141,4 +141,5 @@ fi
 printf '==========================================================\n'
 printf '[SUCCESS] All cache hydration unit tests passed!\n'
 printf '==========================================================\n'
+cleanup
 exit 0

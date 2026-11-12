@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/nasm/vars.schema.json",
+  "title": "nasm variables",
+  "description": "Configuration variables for nasm",
+  "type": "object",
+  "properties": {
+    "NASM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install nasm. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "NASM_VERSION": {
+      "description": "Specific version of nasm to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "2.16.03"]
+    },
+    "NASM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading nasm binary or archive artifacts."
+    },
+    "NASM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying nasm available remote releases."
+    }
+  }
+}

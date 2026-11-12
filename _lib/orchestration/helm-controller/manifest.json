@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "helm-controller",
+  "title": "Helm Controller Operator",
+  "description": "Kubernetes HelmChart custom resource operator (helm-controller) for declarative Helm release lifecycle management.",
+  "category": "orchestration",
+  "provides": ["helm-controller"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/k3s-io/helm-controller"
+}

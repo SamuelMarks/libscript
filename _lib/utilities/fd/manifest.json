@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "fd",
+  "title": "fd",
+  "description": "Simple, fast, and user-friendly alternative to find written in Rust with gitignore awareness.",
+  "category": "utility",
+  "provides": ["fd", "file-finder"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/sharkdp/fd"
+}

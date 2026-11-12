@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "grub",
+  "title": "GNU GRUB 2 Bootloader",
+  "description": "Standalone GNU GRand Unified Bootloader v2 (grub-install, grub-mkconfig, grub-mkstandalone) for BIOS and UEFI systems.",
+  "category": "bootloaders",
+  "provides": ["grub", "grub2", "grub-install", "grub-mkconfig"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
+  "os_blacklist": ["windows"],
+  "repository": "https://git.savannah.gnu.org/git/grub.git"
+}

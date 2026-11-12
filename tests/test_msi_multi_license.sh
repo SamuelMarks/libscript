@@ -34,8 +34,8 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Removes temporary test directory on script exit.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
@@ -99,4 +99,5 @@ assert_wxs_contains 'AGREE_ALL_LICENSES="1"' "Blanket opt-in property AGREE_ALL_
 assert_wxs_contains '<Custom Action="CA_AbortNoLicense" Before="InstallInitialize">' "License agreement check scheduled before InstallInitialize"
 
 printf '=== All WiX MSI multi-license tests passed successfully! ===\n'
+cleanup
 exit 0

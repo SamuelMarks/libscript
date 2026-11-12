@@ -209,9 +209,9 @@ json_extract_scalar() {
   _jkey="$2"
   _jdef="${3:-}"
   if command -v jq >/dev/null 2>&1; then
-    _val=$(jq -r "if has(\"${_jkey}\") and .[\"${_jkey}\"] != null then (.[\"${_jkey}\"] | tostring) else \"\" end" "$_jfile" 2>/dev/null || true)
-    if [ -n "$_val" ]; then
-      printf '%s\n' "$_val"
+    _has_k=$(jq -r "if has(\"${_jkey}\") and .[\"${_jkey}\"] != null then \"yes\" else \"no\" end" "$_jfile" 2>/dev/null || true)
+    if [ "$_has_k" = 'yes' ]; then
+      jq -r ".[\"${_jkey}\"] | tostring" "$_jfile" 2>/dev/null || true
     else
       printf '%s\n' "$_jdef"
     fi
@@ -750,6 +750,14 @@ synthesize_manifest_json() {
     _extra_fields="${_extra_fields},
   \"ports\": ${_ports_arr}"
   fi
+  if [ "$SCAF_IS_SERVICE" = 'true' ]; then
+    case "$SCAF_CATEGORY" in
+      databases|caches|search|message-brokers|storage-layers|git-servers)
+        _extra_fields="${_extra_fields},
+  \"stateful\": true"
+        ;;
+    esac
+  fi
   if [ "$SCAF_MULTITENANT" = 'true' ]; then
     _extra_fields="${_extra_fields},
   \"multitenant\": true"
@@ -757,6 +765,30 @@ synthesize_manifest_json() {
   if [ -n "$SCAF_REPOSITORY" ]; then
     _extra_fields="${_extra_fields},
   \"repository\": \"${SCAF_REPOSITORY}\""
+  fi
+  if [ "$SCAF_ENABLE_HOOKS" = 'true' ] || [ "$SCAF_MULTITENANT" = 'true' ]; then
+    _logical_hooks='[]'
+    if [ "$SCAF_MULTITENANT" = 'true' ]; then
+      _logical_hooks='["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"]'
+    fi
+    _extra_fields="${_extra_fields},
+  \"hooks\": {
+    \"physical\": [
+      \"configure\",
+      \"probe\",
+      \"announce\",
+      \"log_stream\",
+      \"metrics\",
+      \"backup\",
+      \"restore\",
+      \"upgrade\",
+      \"rollback\",
+      \"maintenance\"
+    ],
+    \"logical\": ${_logical_hooks},
+    \"probe_timeout_seconds\": 30,
+    \"metrics_scrape_path\": \"/metrics\"
+  }"
   fi
 
   write_component_file "${_comp_dir}/manifest.json" 0 0 << EOF
@@ -1095,15 +1127,54 @@ VERSION="${__COMP_PREFIX___VERSION:-__SCAF_DEFAULT_VERSION__}"
 # Resolves dynamic version aliases such as latest or lts into an exact upstream version string.
 resolve_exact_version() {
   if [ "${VERSION}" = "latest" ] || [ "${VERSION}" = "lts" ]; then
-    if [ -n '__SCAF_GITHUB_REPO__' ]; then
-      EXACT_VERSION=$(libscript_fetch_stdout 'https://api.github.com/repos/__SCAF_GITHUB_REPO__/releases/latest' | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^__SCAF_TAG_PREFIX__//' || true)
-      [ -z "$EXACT_VERSION" ] && EXACT_VERSION='__SCAF_SRC_FALLBACK_VER__'
+    _gh_repo='__SCAF_GITHUB_REPO__'
+    if [ -n "$_gh_repo" ]; then
+      EXACT_VERSION=$(libscript_fetch_stdout 'https://api.github.com/repos/__SCAF_GITHUB_REPO__/releases/latest' | tr ',' '\n' | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1 | sed 's/^__SCAF_TAG_PREFIX__//' || true)
+      if [ -z "$EXACT_VERSION" ]; then
+        EXACT_VERSION='__SCAF_SRC_FALLBACK_VER__'
+      fi
     else
-      EXACT_VERSION="${VERSION}"
+      EXACT_VERSION='__SCAF_SRC_FALLBACK_VER__'
     fi
   else
     EXACT_VERSION="${VERSION}"
   fi
+}
+
+# ## resolve_artifact_url
+# Substitutes version, OS, and CPU architecture tokens into an artifact URL template.
+resolve_artifact_url() {
+  _tpl="$1"
+  _os_tok="${UNAME_LOWER:-linux}"
+  _os_title='Linux'
+  case "$_os_tok" in
+    darwin*) _os_tok='darwin'; _os_title='Darwin' ;;
+    freebsd*) _os_tok='freebsd'; _os_title='FreeBSD' ;;
+    sunos*) _os_tok='sunos'; _os_title='SunOS' ;;
+    *) _os_tok='linux'; _os_title='Linux' ;;
+  esac
+  _arch_raw="${ARCH:-x86_64}"
+  _arch_x86='x86_64'
+  _arch_go='amd64'
+  case "$_arch_raw" in
+    aarch64|arm64) _arch_x86='aarch64'; _arch_go='arm64' ;;
+    x86_64|amd64) _arch_x86='x86_64'; _arch_go='amd64' ;;
+    *) _arch_x86="$_arch_raw"; _arch_go="$_arch_raw" ;;
+  esac
+  _rust_target="${_arch_x86}-unknown-linux-musl"
+  case "${_os_tok}:${_arch_x86}" in
+    linux:aarch64) _rust_target='aarch64-unknown-linux-gnu' ;;
+    linux:*) _rust_target="${_arch_x86}-unknown-linux-musl" ;;
+    darwin:*) _rust_target="${_arch_x86}-apple-darwin" ;;
+    freebsd:*) _rust_target="${_arch_x86}-unknown-freebsd" ;;
+  esac
+  printf '%s\n' "$_tpl" | sed \
+    -e "s/{VERSION}/${EXACT_VERSION}/g" \
+    -e "s/{OS}/${_os_tok}/g" \
+    -e "s/{OS_TITLE}/${_os_title}/g" \
+    -e "s/{ARCH}/${_arch_x86}/g" \
+    -e "s/{ARCH_GO}/${_arch_go}/g" \
+    -e "s/{RUST_TARGET}/${_rust_target}/g"
 }
 
 case "$ACTION" in
@@ -1133,8 +1204,9 @@ case "$ACTION" in
     ;;
   download)
     resolve_exact_version
-    URL="${__COMP_PREFIX___DOWNLOAD_URL:-__SCAF_URL_UNIX__}"
-    URL=$(printf '%s\n' "$URL" | sed "s/{VERSION}/${EXACT_VERSION}/g")
+    _def_dl_url='__SCAF_URL_UNIX__'
+    URL="${__COMP_PREFIX___DOWNLOAD_URL:-${_def_dl_url}}"
+    URL=$(resolve_artifact_url "$URL")
     DL_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/__SCAF_NAME__"
     mkdir -p "$DL_DIR"
     ARCHIVE_NAME=$(basename "$URL")
@@ -1145,48 +1217,104 @@ case "$ACTION" in
     if [ "${__COMP_PREFIX___INSTALL_METHOD}" = "from-source" ]; then
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${EXACT_VERSION}"
-      SRC_URL="${__COMP_PREFIX___DOWNLOAD_URL:-__SCAF_SRC_URL__}"
-      SRC_URL=$(printf '%s\n' "$SRC_URL" | sed "s/{VERSION}/${EXACT_VERSION}/g")
+      _def_src_url='__SCAF_SRC_URL__'
+      SRC_URL="${__COMP_PREFIX___DOWNLOAD_URL:-${_def_src_url}}"
+      SRC_URL=$(resolve_artifact_url "$SRC_URL")
       libscript_build_component_from_source '__SCAF_NAME__' "$EXACT_VERSION" '__SCAF_BINARY_NAME__' '__SCAF_SRC_LANG__' '__SCAF_SRC_BUILD_SYS__' "$SRC_URL"
       libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
       exit 0
     elif [ "${__COMP_PREFIX___INSTALL_METHOD}" = "system" ]; then
       libscript_depends '__SCAF_NAME__'
+    elif [ "${__COMP_PREFIX___INSTALL_METHOD}" = "nix" ] || [ "${__COMP_PREFIX___INSTALL_METHOD}" = "guix" ] || [ "${__COMP_PREFIX___INSTALL_METHOD}" = "spack" ] || [ "${__COMP_PREFIX___INSTALL_METHOD}" = "brew" ] || [ "${__COMP_PREFIX___INSTALL_METHOD}" = "winget" ] || [ "${__COMP_PREFIX___INSTALL_METHOD}" = "choco" ] || [ "${__COMP_PREFIX___INSTALL_METHOD}" = "scoop" ]; then
+      libscript_depends_via "${__COMP_PREFIX___INSTALL_METHOD}" '__SCAF_NAME__'
     else
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/__SCAF_NAME__/${EXACT_VERSION}"
       if [ -x "${TARGET_DIR}/bin/__SCAF_BINARY_NAME__" ] && [ "${FORCE_REINSTALL:-0}" != "1" ]; then
         printf '[INFO] %s %s is already installed at %s.\n' '__SCAF_NAME__' "${EXACT_VERSION}" "${TARGET_DIR}"
         libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
+        libscript_symlink_alias '__SCAF_NAME__' 'default' "${EXACT_VERSION}"
+        exit 0
+      fi
+      _def_url='__SCAF_URL_UNIX__'
+      URL="${__COMP_PREFIX___DOWNLOAD_URL:-${_def_url}}"
+      URL=$(resolve_artifact_url "$URL")
+      if [ -z "$URL" ]; then
+        libscript_depends '__SCAF_NAME__'
         exit 0
       fi
       mkdir -p "$TARGET_DIR/bin"
-      URL="${__COMP_PREFIX___DOWNLOAD_URL:-__SCAF_URL_UNIX__}"
-      URL=$(printf '%s\n' "$URL" | sed "s/{VERSION}/${EXACT_VERSION}/g")
       ARCHIVE_NAME=$(basename "$URL")
-      CACHED_DL="${DOWNLOAD_DIR:-${TMPDIR:-/tmp}/libscript_downloads}/__SCAF_NAME__/$ARCHIVE_NAME"
-      if [ -f "$CACHED_DL" ]; then
+      CACHED_DL="${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}}/__SCAF_NAME__/$ARCHIVE_NAME"
+      if [ -s "$CACHED_DL" ]; then
         TMP_FILE="$CACHED_DL"
       else
         TMP_FILE="${TMPDIR:-/tmp}/__SCAF_NAME__-$$.archive"
-        libscript_download "$URL" "$TMP_FILE"
+        PACKAGE_NAME='__SCAF_NAME__' libscript_download "$URL" "$TMP_FILE"
       fi
       case "$URL" in
         *.tar.gz|*.tgz)
           tar -xzf "$TMP_FILE" -C "$TARGET_DIR" --strip-components=__SCAF_STRIP_COMPONENTS__ 2>/dev/null || tar -xzf "$TMP_FILE" -C "$TARGET_DIR"
           ;;
-        *.tar.xz)
+        *.tar.xz|*.txz)
           tar -xJf "$TMP_FILE" -C "$TARGET_DIR" --strip-components=__SCAF_STRIP_COMPONENTS__ 2>/dev/null || tar -xJf "$TMP_FILE" -C "$TARGET_DIR"
+          ;;
+        *.tar.bz2|*.tbz2)
+          tar -xjf "$TMP_FILE" -C "$TARGET_DIR" --strip-components=__SCAF_STRIP_COMPONENTS__ 2>/dev/null || tar -xjf "$TMP_FILE" -C "$TARGET_DIR"
           ;;
         *.zip)
           unzip -q -o "$TMP_FILE" -d "$TARGET_DIR"
           ;;
         *)
-          cp "$TMP_FILE" "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
+          cp -f "$TMP_FILE" "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
           chmod +x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
           ;;
       esac
-      [ "$TMP_FILE" != "$CACHED_DL" ] && rm -f "$TMP_FILE"
+      if [ ! -x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__" ]; then
+        _sub_dirs=$(find "$TARGET_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null || true)
+        for _sub in $_sub_dirs; do
+          [ "$_sub" = "$TARGET_DIR/bin" ] && continue
+          if [ -f "$_sub/bin/__SCAF_BINARY_NAME__" ] || [ -f "$_sub/bin/__SCAF_BINARY_NAME__.sh" ] || [ -f "$_sub/sbin/__SCAF_BINARY_NAME__" ] || [ -f "$_sub/__SCAF_BINARY_NAME__" ]; then
+            _flat_tmp="${TARGET_DIR}.flat.$$"
+            rm -rf "$_flat_tmp"
+            mv "$_sub" "$_flat_tmp"
+            cp -Rf "$_flat_tmp"/. "$TARGET_DIR"/
+            rm -rf "$_flat_tmp"
+            break
+          fi
+        done
+      fi
+      if [ ! -x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__" ] && [ -f "$TARGET_DIR/bin/__SCAF_BINARY_NAME__.sh" ]; then
+        chmod +x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__.sh"
+        ln -sf "__SCAF_BINARY_NAME__.sh" "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
+      fi
+      if [ ! -x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__" ] && [ -f "$TARGET_DIR/sbin/__SCAF_BINARY_NAME__" ]; then
+        chmod +x "$TARGET_DIR/sbin/__SCAF_BINARY_NAME__"
+        ln -sf "../sbin/__SCAF_BINARY_NAME__" "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
+      fi
+      if [ ! -x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__" ] && [ -f "$TARGET_DIR/__SCAF_BINARY_NAME__" ]; then
+        chmod +x "$TARGET_DIR/__SCAF_BINARY_NAME__"
+        ln -sf "../__SCAF_BINARY_NAME__" "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
+      fi
+      if [ ! -x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__" ]; then
+        for _entry in $(ls -1 "$TARGET_DIR" 2>/dev/null || true); do
+          case "$_entry" in
+            __SCAF_BINARY_NAME__-*|__SCAF_BINARY_NAME___*)
+              if [ -f "$TARGET_DIR/$_entry" ]; then
+                chmod +x "$TARGET_DIR/$_entry"
+                ln -sf "../$_entry" "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
+                break
+              fi
+              ;;
+          esac
+        done
+      fi
+      if [ -f "$TARGET_DIR/bin/__SCAF_BINARY_NAME__" ]; then
+        chmod +x "$TARGET_DIR/bin/__SCAF_BINARY_NAME__"
+      fi
+      if [ "$TMP_FILE" != "$CACHED_DL" ]; then
+        rm -f "$TMP_FILE"
+      fi
       libscript_symlink_alias '__SCAF_NAME__' "${VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias '__SCAF_NAME__' 'default' "${EXACT_VERSION}"
     fi
@@ -1289,16 +1417,14 @@ exit /b 0
 :: Activates a specific installed version of __SCAF_NAME__ and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME%\!EXACT_VERSION!"
+set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME__\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
     call "%~f0"
 )
-if exist "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%" rmdir "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%" 2>nul
-mklink /J "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%" "!TARGET_DIR!" >nul
-if exist "%LIBSCRIPT_HOME%\__SCAF_NAME%\default" rmdir "%LIBSCRIPT_HOME%\__SCAF_NAME%\default" 2>nul
-mklink /J "%LIBSCRIPT_HOME%\__SCAF_NAME%\default" "!TARGET_DIR!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_download
@@ -1307,6 +1433,7 @@ exit /b 0
 call :resolve_version
 set "URL=%__COMP_PREFIX___DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=__SCAF_URL_WINDOWS__"
+call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
 set "DL_DIR=%DOWNLOAD_DIR%"
 if "!DL_DIR!"=="" set "DL_DIR=%TEMP%\libscript_downloads"
 set "DL_DIR=!DL_DIR!\__SCAF_NAME__"
@@ -1321,74 +1448,144 @@ exit /b !errorlevel!
 :action_install
 if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="from-source" (
     call :resolve_version
-    set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME%\!EXACT_VERSION!"
+    set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME__\!EXACT_VERSION!"
     set "SRC_URL=%__COMP_PREFIX___DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=__SCAF_SRC_URL__"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "__SCAF_NAME__" "!EXACT_VERSION!" "__SCAF_BINARY_NAME__" "__SCAF_SRC_LANG__"
+    call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "__SCAF_NAME__" "!EXACT_VERSION!" "__SCAF_BINARY_NAME__" "__SCAF_SRC_LANG__" "__SCAF_SRC_BUILD_SYS__" "!SRC_URL!"
     exit /b !errorlevel!
 )
 if "%__COMP_PREFIX___INSTALL_METHOD%"=="system" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends __SCAF_NAME__
     exit /b !errorlevel!
 )
+if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="winget" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget __SCAF_NAME__
+    exit /b !errorlevel!
+)
+if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="choco" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco __SCAF_NAME__
+    exit /b !errorlevel!
+)
+if /i "%__COMP_PREFIX___INSTALL_METHOD%"=="scoop" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop __SCAF_NAME__
+    exit /b !errorlevel!
+)
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME%\!EXACT_VERSION!"
-if exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.exe" (
+set "TARGET_DIR=%LIBSCRIPT_HOME%\__SCAF_NAME__\!EXACT_VERSION!"
+set "_BIN_FOUND=0"
+if exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.exe" set "_BIN_FOUND=1"
+if exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.cmd" set "_BIN_FOUND=1"
+if exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.bat" set "_BIN_FOUND=1"
+if "!_BIN_FOUND!"=="1" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] __SCAF_NAME__ !EXACT_VERSION! is already installed at !TARGET_DIR!.
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
         exit /b 0
     )
 )
-if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 set "URL=%__COMP_PREFIX___DOWNLOAD_URL%"
 if "!URL!"=="" set "URL=__SCAF_URL_WINDOWS__"
+call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
+if "!URL!"=="" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends __SCAF_NAME__
+    exit /b !errorlevel!
+)
+if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 set "DL_DIR=%DOWNLOAD_DIR%"
 if "!DL_DIR!"=="" set "DL_DIR=%TEMP%\libscript_downloads"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
-set "CACHED_DL=!DL_DIR!\__SCAF_NAME%\!ARCHIVE_NAME!"
+set "CACHED_DL=!DL_DIR!\__SCAF_NAME__\!ARCHIVE_NAME!"
 if exist "!CACHED_DL!" (
     echo [install] Using cached archive !CACHED_DL!...
     set "TMP_FILE=!CACHED_DL!"
 ) else (
     set "TMP_FILE=%TEMP%\__SCAF_NAME__-!RANDOM!.archive"
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+    if errorlevel 1 exit /b 1
 )
-if /i "!URL:~-4!"==".zip" (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
+set "_IS_ARCHIVE=0"
+if /i "!URL:~-4!"==".zip" set "_IS_ARCHIVE=zip"
+if /i "!URL:~-7!"==".tar.gz" set "_IS_ARCHIVE=tar"
+if /i "!URL:~-4!"==".tgz" set "_IS_ARCHIVE=tar"
+if /i "!URL:~-7!"==".tar.xz" set "_IS_ARCHIVE=tar"
+if /i "!URL:~-4!"==".txz" set "_IS_ARCHIVE=tar"
+if /i "!URL:~-8!"==".tar.bz2" set "_IS_ARCHIVE=tar"
+if /i "!URL:~-5!"==".tbz2" set "_IS_ARCHIVE=tar"
+if not "!_IS_ARCHIVE!"=="0" (
+    if "!_IS_ARCHIVE!"=="zip" (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
+    ) else (
+        tar -xf "!TMP_FILE!" -C "!TARGET_DIR!" --strip-components=__SCAF_STRIP_COMPONENTS__ 2>nul || tar -xf "!TMP_FILE!" -C "!TARGET_DIR!"
+    )
+    for /d %%D in ("!TARGET_DIR!\*") do (
+        if /i not "%%~nxD"=="bin" (
+            set "_DO_FLAT=0"
+            if exist "%%~fD\bin\__SCAF_BINARY_NAME__.exe" set "_DO_FLAT=1"
+            if exist "%%~fD\bin\__SCAF_BINARY_NAME__.bat" set "_DO_FLAT=1"
+            if exist "%%~fD\bin\__SCAF_BINARY_NAME__.cmd" set "_DO_FLAT=1"
+            if exist "%%~fD\__SCAF_BINARY_NAME__.exe" set "_DO_FLAT=1"
+            if exist "%%~fD\__SCAF_BINARY_NAME__.cmd" set "_DO_FLAT=1"
+            if exist "%%~fD\__SCAF_BINARY_NAME__.bat" set "_DO_FLAT=1"
+            if "!_DO_FLAT!"=="1" (
+                move /y "%%~fD" "!TARGET_DIR!_flat" >nul
+                xcopy /E /I /Y "!TARGET_DIR!_flat\*" "!TARGET_DIR!\" >nul
+                rmdir /s /q "!TARGET_DIR!_flat"
+            )
+        )
+    )
+    if not exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.exe" (
+        if exist "!TARGET_DIR!\__SCAF_BINARY_NAME__.exe" (
+            copy /y "!TARGET_DIR!\__SCAF_BINARY_NAME__.exe" "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.exe" >nul
+        )
+    )
+    if not exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.cmd" (
+        if exist "!TARGET_DIR!\__SCAF_BINARY_NAME__.cmd" (
+            copy /y "!TARGET_DIR!\__SCAF_BINARY_NAME__.cmd" "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.cmd" >nul
+        )
+    )
+    if not exist "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.bat" (
+        if exist "!TARGET_DIR!\__SCAF_BINARY_NAME__.bat" (
+            copy /y "!TARGET_DIR!\__SCAF_BINARY_NAME__.bat" "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.bat" >nul
+        )
+    )
 ) else (
     copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\__SCAF_BINARY_NAME__.exe" >nul
 )
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-if exist "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%" rmdir "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%" 2>nul
-mklink /J "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%" "!TARGET_DIR!" >nul
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "%__COMP_PREFIX___VERSION%" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "__SCAF_NAME__" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## resolve_version
 :: Resolves latest or lts version alias into EXACT_VERSION.
 :resolve_version
-if "%__COMP_PREFIX___VERSION%"=="latest" (
-    if not "__SCAF_GITHUB_REPO__" == "" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "__SCAF_GITHUB_REPO__" "__SCAF_TAG_PREFIX__" EXACT_VERSION
-        if "!EXACT_VERSION!"=="" set "EXACT_VERSION=__SCAF_SRC_FALLBACK_VER__"
-    ) else (
-        set "EXACT_VERSION=%__COMP_PREFIX___VERSION%"
+if /i "%__COMP_PREFIX___VERSION%"=="latest" goto :resolve_remote_gh_tag
+if /i "%__COMP_PREFIX___VERSION%"=="lts" goto :resolve_remote_gh_tag
+if /i "%__COMP_PREFIX___VERSION%"=="stable" goto :resolve_remote_gh_tag
+set "EXACT_VERSION=%__COMP_PREFIX___VERSION%"
+exit /b 0
+
+:: ## resolve_remote_gh_tag
+:: Queries GitHub Releases API for the latest tag with offline fallback.
+:resolve_remote_gh_tag
+set "EXACT_VERSION="
+if not "__SCAF_GITHUB_REPO__" == "" (
+    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/__SCAF_GITHUB_REPO__/releases/latest"') do (
+        set "EXACT_VERSION=%%T"
     )
-) else if "%__COMP_PREFIX___VERSION%"=="lts" (
-    if not "__SCAF_GITHUB_REPO__" == "" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "__SCAF_GITHUB_REPO__" "__SCAF_TAG_PREFIX__" EXACT_VERSION
-        if "!EXACT_VERSION!"=="" set "EXACT_VERSION=__SCAF_SRC_FALLBACK_VER__"
-    ) else (
-        set "EXACT_VERSION=%__COMP_PREFIX___VERSION%"
-    )
-) else (
-    set "EXACT_VERSION=%__COMP_PREFIX___VERSION%"
 )
+if not "__SCAF_TAG_PREFIX__" == "" (
+    if not "!EXACT_VERSION!"=="" set "EXACT_VERSION=!EXACT_VERSION:__SCAF_TAG_PREFIX__=!"
+)
+if "!EXACT_VERSION!"=="" set "EXACT_VERSION=__SCAF_SRC_FALLBACK_VER__"
 exit /b 0
 
 :: ## action_other
 :: Delegates service and lifecycle actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "__SCAF_NAME__" "%ACTION%" "%__COMP_PREFIX___VERSION%" "%__COMP_PREFIX___INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%\\bin\\__SCAF_BINARY_NAME__.exe\"" "%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "__SCAF_NAME__" "%ACTION%" "%__COMP_PREFIX___VERSION%" "%__COMP_PREFIX___INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%\\bin\\__SCAF_BINARY_NAME__.exe\"" "%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%"
 exit /b !errorlevel!
 EOF
 }
@@ -1508,7 +1705,7 @@ if "%__COMP_PREFIX___VERSION%"=="" (
     set "__COMP_PREFIX___VERSION=__SCAF_DEFAULT_VERSION__"
 )
 
-set "_CAND_P=%LIBSCRIPT_HOME%\__SCAF_NAME%\%__COMP_PREFIX___VERSION%\bin"
+set "_CAND_P=%LIBSCRIPT_HOME%\__SCAF_NAME__\%__COMP_PREFIX___VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"

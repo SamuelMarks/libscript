@@ -43,8 +43,8 @@ if [ "$SKIP_STATE" -eq 0 ]; then
     if [ -f "$SCRIPT_DIR/state_backend.sh" ]; then
         # ## cleanup_state
         # Pushes state and releases backend locks upon script termination.
-        # shellcheck disable=SC2329
         cleanup_state() {
+            trap - EXIT INT TERM
             if [ -f "$SCRIPT_DIR/state_backend.sh" ]; then
                 "$SCRIPT_DIR/state_backend.sh" push_state || true
                 "$SCRIPT_DIR/state_backend.sh" unlock_state || true
@@ -59,8 +59,12 @@ fi
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
 export SCRIPT_NAME
+_cli_rc=0
 (
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
-)
-exit $?
+) || _cli_rc=$?
+if [ "$SKIP_STATE" -eq 0 ] && [ -f "$SCRIPT_DIR/state_backend.sh" ]; then
+    cleanup_state
+fi
+exit "$_cli_rc"

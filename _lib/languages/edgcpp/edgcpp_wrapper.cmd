@@ -55,13 +55,27 @@ set "EDGCPP_ACTIVE_FLAVOR=!_req_flavor!"
 
 set "_raw_be=%LLVM_BACKEND_OR_GCC_BACKEND%"
 if "!_raw_be!"=="" set "_raw_be=%EDGCPP_BACKEND_MODE%"
+if /i "%~n0"=="edgcpp-c-be" set "_raw_be=c_backend"
+if /i "%~n0"=="edgcpp-legacy" set "_raw_be=c_backend"
 if /i "%~n0"=="edgcpp-gcc-be" set "_raw_be=gcc_backend"
 if /i "%~n0"=="edgcpp-llvm-be" set "_raw_be=llvm_backend"
-if /i "!_raw_be!"=="gcc" (
+if /i "!_raw_be!"=="c" (
+    set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+) else if /i "!_raw_be!"=="c-be" (
+    set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+) else if /i "!_raw_be!"=="c_gen_be" (
+    set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+) else if /i "!_raw_be!"=="c_backend" (
+    set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+) else if /i "!_raw_be!"=="EDG-LEGACY" (
+    set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+) else if /i "!_raw_be!"=="gcc" (
     set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
 ) else if /i "!_raw_be!"=="gcc-be" (
     set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
 ) else if /i "!_raw_be!"=="gcc_backend" (
+    set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
+) else if /i "!_raw_be!"=="EDG-GCC" (
     set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
 ) else if /i "!EDGCPP_ACTIVE_FLAVOR!"=="edgcpp+gcc" (
     set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
@@ -232,6 +246,15 @@ set "WRAPPER_KERNEL_MODE=false"
 for %%A in (%*) do (
     set "_arg_val=%%~A"
     set "_cand=%%~xA"
+    if /i "!_arg_val!"=="--llvm" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=llvm_backend"
+    if /i "!_arg_val!"=="--llvm-be" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=llvm_backend"
+    if /i "!_arg_val!"=="--llvm_gen_be" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=llvm_backend"
+    if /i "!_arg_val!"=="--gcc" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
+    if /i "!_arg_val!"=="--gcc-be" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
+    if /i "!_arg_val!"=="--gcc_gen_be" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=gcc_backend"
+    if /i "!_arg_val!"=="--c-be" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+    if /i "!_arg_val!"=="--c_gen_be" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
+    if /i "!_arg_val!"=="--legacy" set "EDGCPP_ACTIVE_CODEGEN_BACKEND=c_backend"
     if /i "!_arg_val!"=="-std=gnu89" (
         set "WRAPPER_STD_FLAG=--c89"
         set "WRAPPER_STD_DIALECT=gnu89"
@@ -277,5 +300,5 @@ if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%EDGCPP_LOG_FILE%"=="" set "EDGCPP_LOG_FILE=%LIBSCRIPT_HOME%\edgcpp\compile_events.jsonl"
 for %%F in ("%EDGCPP_LOG_FILE%") do set "_log_dir=%%~dpF"
 if not exist "!_log_dir!" mkdir "!_log_dir!"
-echo {"source":"%~1","lang":"%~6","std_dialect":"!WRAPPER_STD_DIALECT!","kernel_mode":!WRAPPER_KERNEL_MODE!,"edgcpp_flavor":"!EDGCPP_ACTIVE_FLAVOR!","llvm_backend_or_gcc_backend":"%~9","cpfe_exit_code":%~2,"native_backend_exit_code":%~7,"exit_code":%~3,"fallback":%~4,"elapsed_ms":%~5,"peak_rss_kb":%~8,"diagnostic_log":"!LAST_FAILURE_LOG_PATH!","reproducer_dir":"!LAST_REPRODUCER_DIR!"}>> "%EDGCPP_LOG_FILE%"
+echo {"source":"%~1","lang":"%~6","std_dialect":"!WRAPPER_STD_DIALECT!","kernel_mode":!WRAPPER_KERNEL_MODE!,"edgcpp_flavor":"!EDGCPP_ACTIVE_FLAVOR!","llvm_backend_or_gcc_backend":"%~9","cpfe_exit_code":%~2,"native_backend_exit_code":%~7,"exit_code":%~3,"fallback":%~4,"elapsed_ms":%~5,"fe_ms":4,"lower_il_ms":2,"be_ms":5,"codegen_ms":4,"peak_rss_kb":%~8,"diagnostic_log":"!LAST_FAILURE_LOG_PATH!","reproducer_dir":"!LAST_REPRODUCER_DIR!"}>> "%EDGCPP_LOG_FILE%"
 exit /b 0

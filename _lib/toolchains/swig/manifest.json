@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "swig",
+  "title": "SWIG",
+  "description": "Simplified Wrapper and Interface Generator connecting C/C++ with high-level languages.",
+  "category": "toolchain",
+  "provides": ["swig"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/swig/swig"
+}

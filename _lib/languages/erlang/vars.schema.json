@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/erlang/vars.schema.json",
+  "title": "erlang variables",
+  "description": "Configuration variables for erlang",
+  "type": "object",
+  "properties": {
+    "ERLANG_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install erlang. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "ERLANG_VERSION": {
+      "description": "Specific version of erlang to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ERLANG_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading erlang binary or archive artifacts."
+    },
+    "ERLANG_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying erlang available remote releases."
+    }
+  }
+}

@@ -390,6 +390,46 @@
     "LIBSCRIPT_RUN_DIR": {
       "type": "string",
       "description": "Override runtime PID/socket directory (defaults to /var/run)."
+    },
+    "LIBSCRIPT_BENCH_PREPARE_HOST": {
+      "type": "string",
+      "description": "Flag (0 or 1) to lock CPU frequency scaling governor to performance, disable ASLR, and disable swap before running compiler benchmarks."
+    },
+    "LIBSCRIPT_BENCH_DROP_CACHES": {
+      "type": "string",
+      "description": "Flag (0 or 1) to flush filesystem buffers and drop OS page caches before each compiler benchmark run."
+    },
+    "LIBSCRIPT_RESOLVED_CXX_BIN": {
+      "type": "string",
+      "description": "Resolved path to the active C++ compiler driver executable (e.g. g++, clang++, edg-c++) selected by libscript_resolve_build_toolchain."
+    },
+    "LIBSCRIPT_LAST_PEAK_RSS_KB": {
+      "type": "string",
+      "description": "Peak resident set size (in kilobytes) recorded during the most recent source build invocation."
+    },
+    "LIBSCRIPT_EXPERIMENT_PROVIDER": {
+      "type": "string",
+      "description": "Default cloud vendor for rapid experimentation (defaults to 'azure')."
+    },
+    "LIBSCRIPT_EXPERIMENT_SIZE": {
+      "type": "string",
+      "description": "Default instance size for rapid experimentation (defaults to '160-vCPU Standard_D160ads_v7')."
+    },
+    "LIBSCRIPT_EXPERIMENT_NODE": {
+      "type": "string",
+      "description": "Default compute node name for rapid cloud experimentation."
+    },
+    "LIBSCRIPT_EXPERIMENT_RG": {
+      "type": "string",
+      "description": "Default resource group for rapid cloud experimentation."
+    },
+    "LIBSCRIPT_EXPERIMENT_LOCATION": {
+      "type": "string",
+      "description": "Default cloud location/region for rapid cloud experimentation."
+    },
+    "LIBSCRIPT_EXPERIMENT_OS": {
+      "type": "string",
+      "description": "Default VM operating system image for rapid cloud experimentation."
     }
   }
 }

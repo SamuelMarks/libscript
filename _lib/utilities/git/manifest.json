@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "git",
+  "title": "Git",
+  "description": "Fast, scalable, distributed revision control system with cryptographic integrity.",
+  "category": "utility",
+  "provides": ["git", "vcs"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/git/git"
+}

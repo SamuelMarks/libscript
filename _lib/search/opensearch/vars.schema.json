@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/search/opensearch/vars.schema.json",
+  "title": "opensearch variables",
+  "description": "Configuration variables for opensearch",
+  "type": "object",
+  "properties": {
+    "OPENSEARCH_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install opensearch. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "OPENSEARCH_VERSION": {
+      "description": "Specific version of opensearch to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "OPENSEARCH_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading opensearch binary or archive artifacts."
+    },
+    "OPENSEARCH_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying opensearch available remote releases."
+    },
+    "OPENSEARCH_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the opensearch service listens.",
+      "default": 9200
+    }
+  }
+}

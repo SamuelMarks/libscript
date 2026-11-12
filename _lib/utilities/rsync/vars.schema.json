@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/rsync/vars.schema.json",
+  "title": "rsync variables",
+  "description": "Configuration variables for rsync",
+  "type": "object",
+  "properties": {
+    "RSYNC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install rsync. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "RSYNC_VERSION": {
+      "description": "Specific version of rsync to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "RSYNC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading rsync binary or archive artifacts."
+    },
+    "RSYNC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying rsync available remote releases."
+    }
+  }
+}

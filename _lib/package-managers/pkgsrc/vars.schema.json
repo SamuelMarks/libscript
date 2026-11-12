@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/pkgsrc/vars.schema.json",
+  "title": "pkgsrc variables",
+  "description": "Configuration variables for pkgsrc",
+  "type": "object",
+  "properties": {
+    "PKGSRC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install pkgsrc. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "PKGSRC_VERSION": {
+      "description": "Specific version of pkgsrc to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "PKGSRC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading pkgsrc binary or archive artifacts."
+    },
+    "PKGSRC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying pkgsrc available remote releases."
+    }
+  }
+}

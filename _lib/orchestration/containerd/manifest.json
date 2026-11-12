@@ -1,0 +1,27 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "containerd",
+  "title": "containerd Container Runtime",
+  "description": "Industry-standard CNCF graduated core container runtime daemon (containerd, ctr, containerd-shim-runc-v2).",
+  "category": "orchestration",
+  "provides": ["containerd", "ctr"],
+  "os_whitelist": ["linux", "windows", "freebsd"],
+  "repository": "https://github.com/containerd/containerd",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

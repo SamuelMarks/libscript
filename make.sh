@@ -60,9 +60,16 @@ case "$target" in
     "$SCRIPT_DIR/devtools/audit/audit_standards.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_posix.sh"
     "$SCRIPT_DIR/devtools/audit/audit_version_manager.sh"
+    "$SCRIPT_DIR/devtools/audit/audit_schema_vars.sh" --all
     "$SCRIPT_DIR/devtools/audit/doc_coverage.sh" --strict
     "$SCRIPT_DIR/tests/test_doc_coverage.sh"
     "$SCRIPT_DIR/tests/test_vm_contract.sh"
+    "$SCRIPT_DIR/tests/test_shellcheck_vm_and_hooks.sh"
+    "$SCRIPT_DIR/tests/test_cloud_experiment_lifecycle.sh"
+    "$SCRIPT_DIR/tests/test_tier1_languages_and_package_managers.sh"
+    "$SCRIPT_DIR/tests/test_tier1_data_and_server_components.sh"
+    "$SCRIPT_DIR/tests/test_tier1_utilities_security_logging_storage.sh"
+    "$SCRIPT_DIR/tests/test_tier15_2_3_system_orchestration_cloud.sh"
     "$SCRIPT_DIR/tests/test_update_results.sh"
     ;;
   update_results)

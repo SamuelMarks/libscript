@@ -446,6 +446,23 @@ EOF
   mv -f "${_target_dir}/bin/edgcpp-llvm-be.tmp" "${_target_dir}/bin/edgcpp-llvm-be"
   ln -sf "${_target_dir}/bin/edgcpp-llvm-be" "${_target_dir}/bin/edgcpp-llvm"
 
+  cat <<'EOF' > "${_target_dir}/bin/edgcpp-c-be.tmp"
+#!/bin/sh
+_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "${_self_dir}/edgcpp.env" ]; then
+  # shellcheck disable=SC1091
+  . "${_self_dir}/edgcpp.env"
+fi
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+llvm+gcc}}"
+export EDGCPP_BACKEND_MODE="c_backend"
+export EDGCPP_DRIVER_LANG="${EDGCPP_DRIVER_LANG:-c}"
+exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
+EOF
+  chmod +x "${_target_dir}/bin/edgcpp-c-be.tmp"
+  mv -f "${_target_dir}/bin/edgcpp-c-be.tmp" "${_target_dir}/bin/edgcpp-c-be"
+  ln -sf "${_target_dir}/bin/edgcpp-c-be" "${_target_dir}/bin/edgcpp-legacy"
+
   cat <<'EOF' > "${_target_dir}/bin/edg-c++.tmp"
 #!/bin/sh
 _self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
@@ -460,6 +477,7 @@ exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
 EOF
   chmod +x "${_target_dir}/bin/edg-c++.tmp"
   mv -f "${_target_dir}/bin/edg-c++.tmp" "${_target_dir}/bin/edg-c++"
+  ln -sf "${_target_dir}/bin/edg-c++" "${_target_dir}/bin/edg-cxx"
   ln -sf "${_target_dir}/bin/edg-c++" "${_target_dir}/bin/c++"
 
   cat <<EOF > "${_target_dir}/edgcpp-release-metadata.json.tmp"
@@ -524,7 +542,7 @@ install_edgcpp_component() {
   fi
 
   if [ "${_metadata_matches}" = "1" ] && [ -x "${TARGET_DIR}/bin/edgcpp" ] && [ -x "${TARGET_DIR}/bin/cpfe" ] && [ "${FORCE_REBUILD:-0}" != "1" ] && [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ]; then
-    if [ ! -f "${TARGET_DIR}/edgcpp-release-metadata.json" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-gcc-be" ] || { { [ -f "/etc/redhat-release" ] || [ -f "/etc/rocky-release" ]; } && [ ! -f "${TARGET_DIR}/lib/libedg_el9_compat.so" ]; }; then
+    if [ ! -f "${TARGET_DIR}/edgcpp-release-metadata.json" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-gcc-be" ] || [ ! -x "${TARGET_DIR}/bin/edgcpp-c-be" ] || { { [ -f "/etc/redhat-release" ] || [ -f "/etc/rocky-release" ]; } && [ ! -f "${TARGET_DIR}/lib/libedg_el9_compat.so" ]; }; then
       stage_edgcpp_wrappers "${TARGET_DIR}"
     fi
     libscript_symlink_alias "edgcpp" "${EXACT_VERSION}" "$(basename "${TARGET_DIR}")"

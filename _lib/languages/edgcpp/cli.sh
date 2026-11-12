@@ -28,6 +28,28 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
+unset SCRIPT_NAME || true
+
+case "${1:-}" in
+  experiments)
+    shift
+    STACK="${STACK%"${THIS_FILE}":}"
+    export STACK
+    exec "${SCRIPT_DIR}/benchmark_experiments.sh" "$@"
+    ;;
+  cloud-experiments|rapid-experiment)
+    shift
+    STACK="${STACK%"${THIS_FILE}":}"
+    export STACK
+    exec "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/experiment_cloud.sh" "$@"
+    ;;
+  torture)
+    shift
+    STACK="${STACK%"${THIS_FILE}":}"
+    export STACK
+    exec "${SCRIPT_DIR}/torture_suite.sh" "$@"
+    ;;
+esac
 
 export PACKAGE_NAME='edgcpp'
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"

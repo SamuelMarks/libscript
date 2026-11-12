@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "meson",
+  "title": "Meson",
+  "description": "The Meson high-productivity build system.",
+  "category": "toolchain",
+  "provides": ["meson", "build-system"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/mesonbuild/meson"
+}

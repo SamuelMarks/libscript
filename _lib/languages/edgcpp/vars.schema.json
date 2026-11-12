@@ -159,6 +159,18 @@
     "EDGCPP_RESOLVED_CPFE_CP": {
       "type": "string",
       "description": "Resolved path to the cpfe-cp C++-generating backend executable."
+    },
+    "EDGCPP_PHASE_TIMING": {
+      "type": "string",
+      "description": "Whether to record detailed 4-phase compilation latency breakdown (fe_ms, lower_il_ms, be_ms, codegen_ms) in compile_events.jsonl."
+    },
+    "EDGCPP_TORTURE_SUITE_DIR": {
+      "type": "string",
+      "description": "Optional directory path to an external GCC C torture execution suite when running _lib/languages/edgcpp/torture_suite.sh."
+    },
+    "EDGCPP_BENCH_RUNS": {
+      "type": "string",
+      "description": "Number of compilation benchmark runs per workload/compiler configuration (defaults to 5: 1 cold run + 4 warm runs averaged)."
     }
   }
 }

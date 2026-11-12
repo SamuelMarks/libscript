@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/perl/vars.schema.json",
+  "title": "perl variables",
+  "description": "Configuration variables for perl",
+  "type": "object",
+  "properties": {
+    "PERL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install perl. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "PERL_VERSION": {
+      "description": "Specific version of perl to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "PERL_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading perl binary or archive artifacts."
+    },
+    "PERL_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying perl available remote releases."
+    }
+  }
+}

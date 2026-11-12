@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "autoconf",
+  "title": "GNU Autoconf",
+  "description": "Extensible M4 macro package producing portable POSIX configure scripts.",
+  "category": "toolchain",
+  "provides": ["autoconf"],
+  "os_whitelist": ["all"],
+  "repository": "https://savannah.gnu.org/projects/autoconf"
+}

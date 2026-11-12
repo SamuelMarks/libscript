@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/graphviz/vars.schema.json",
+  "title": "graphviz variables",
+  "description": "Configuration variables for graphviz",
+  "type": "object",
+  "properties": {
+    "GRAPHVIZ_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install graphviz. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "GRAPHVIZ_VERSION": {
+      "description": "Specific version of graphviz to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "GRAPHVIZ_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading graphviz binary or archive artifacts."
+    },
+    "GRAPHVIZ_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying graphviz available remote releases."
+    }
+  }
+}

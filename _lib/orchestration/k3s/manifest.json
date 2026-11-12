@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "k3s",
+  "title": "Rancher K3s Lightweight Kubernetes",
+  "description": "CNCF certified lightweight single-binary Kubernetes distribution (k3s) built for edge, IoT, CI, and cloud workloads.",
+  "category": "orchestration",
+  "provides": ["k3s", "kubernetes-distro"],
+  "os_whitelist": ["linux"],
+  "ports": [6443],
+  "repository": "https://github.com/k3s-io/k3s",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "scala",
+  "title": "Scala",
+  "description": "Expressive statically typed JVM programming language seamlessly combining object-oriented and functional paradigms.",
+  "category": "language",
+  "provides": ["scala", "scalac"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/scala/scala3"
+}

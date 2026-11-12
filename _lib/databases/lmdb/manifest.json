@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lmdb",
+  "title": "Symas LMDB",
+  "description": "Symas Lightning Memory-Mapped Database ultra-fast, ultra-compact transactional embedded key-value store tools.",
+  "category": "database",
+  "provides": ["lmdb", "kv-store"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/LMDB/lmdb"
+}

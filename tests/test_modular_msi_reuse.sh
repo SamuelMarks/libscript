@@ -34,9 +34,9 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Removes temporary test directory on success.
-# shellcheck disable=SC2317,SC2329
 cleanup() {
   _status=$?
+  trap - EXIT INT TERM
   if [ "$_status" -eq 0 ]; then
     rm -rf "$TEST_TMP_DIR"
   else
@@ -137,4 +137,5 @@ done
 printf '[PASS] XML entity escaping and SharedDllRefCount attribute syntax verified.\n'
 
 printf '=== All Modular Zero-.EXE MSI Reuse Tests Passed ===\n'
+cleanup
 exit 0

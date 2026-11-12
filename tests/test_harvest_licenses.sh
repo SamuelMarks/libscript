@@ -34,8 +34,8 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test files upon exit.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
@@ -114,4 +114,5 @@ fi
 printf '[PASS] Idempotency confirmed: stamp unchanged on subsequent execution\n'
 
 printf '=== All license harvester tests completed successfully! ===\n'
+cleanup
 exit 0

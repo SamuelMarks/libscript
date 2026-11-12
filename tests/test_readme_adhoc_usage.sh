@@ -35,8 +35,8 @@ mkdir -p "$TMP_DIR"
 
 # ## cleanup
 # Removes temporary artifacts created during README ad-hoc usage verification.
-# shellcheck disable=SC2329
 cleanup() {
+  trap - EXIT INT TERM
   rm -rf "$TMP_DIR" "${LIBSCRIPT_ROOT_DIR}/build/images" "${LIBSCRIPT_ROOT_DIR}/build/disk."* "${LIBSCRIPT_ROOT_DIR}/build/"*_temp.raw*
 }
 trap cleanup EXIT INT TERM
@@ -131,5 +131,6 @@ for emit_target in nginx caddy httpd iis; do
   [ "$out1" = "$out2" ] || exit 1
 done
 
+cleanup
 printf '[PASS] All README.md ad-hoc usage scripts verified with 2x consecutive idempotency!
 '

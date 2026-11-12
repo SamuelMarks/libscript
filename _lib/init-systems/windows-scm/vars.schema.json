@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/windows-scm/vars.schema.json",
+  "title": "windows-scm variables",
+  "description": "Configuration variables for windows-scm",
+  "type": "object",
+  "properties": {
+    "WINDOWS_SCM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install windows-scm. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "WINDOWS_SCM_VERSION": {
+      "description": "Specific version of windows-scm to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "WINDOWS_SCM_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading windows-scm binary or archive artifacts."
+    },
+    "WINDOWS_SCM_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying windows-scm available remote releases."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zfs",
+  "title": "OpenZFS",
+  "description": "OpenZFS copy-on-write enterprise filesystem and logical volume administration utilities (zfs and zpool).",
+  "category": "storage-layers",
+  "provides": ["zfs", "zpool", "openzfs"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"],
+  "repository": "https://github.com/openzfs/zfs"
+}

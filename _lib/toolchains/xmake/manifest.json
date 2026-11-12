@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "xmake",
+  "title": "Xmake",
+  "description": "A cross-platform Lua-based build utility.",
+  "category": "toolchain",
+  "provides": ["xmake", "build-system"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/xmake-io/xmake"
+}

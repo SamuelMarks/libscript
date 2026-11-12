@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/message-brokers/activemq/vars.schema.json",
+  "title": "activemq variables",
+  "description": "Configuration variables for activemq",
+  "type": "object",
+  "properties": {
+    "ACTIVEMQ_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install activemq. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ACTIVEMQ_VERSION": {
+      "description": "Specific version of activemq to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ACTIVEMQ_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading activemq binary or archive artifacts."
+    },
+    "ACTIVEMQ_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying activemq available remote releases."
+    },
+    "ACTIVEMQ_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the activemq service listens.",
+      "default": 61616
+    }
+  }
+}

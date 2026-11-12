@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/maven-wrapper/vars.schema.json",
+  "title": "maven-wrapper variables",
+  "description": "Configuration variables for maven-wrapper",
+  "type": "object",
+  "properties": {
+    "MAVEN_WRAPPER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install maven-wrapper. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "MAVEN_WRAPPER_VERSION": {
+      "description": "Specific version of maven-wrapper to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "MAVEN_WRAPPER_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading maven-wrapper binary or archive artifacts."
+    },
+    "MAVEN_WRAPPER_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying maven-wrapper available remote releases."
+    }
+  }
+}

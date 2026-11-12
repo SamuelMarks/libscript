@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "racket",
+  "title": "Racket",
+  "description": "General-purpose, multi-paradigm Lisp/Scheme language platform for language-oriented programming.",
+  "category": "language",
+  "provides": ["racket", "raco"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/racket/racket"
+}

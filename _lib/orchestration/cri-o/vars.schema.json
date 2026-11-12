@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/cri-o/vars.schema.json",
+  "title": "cri-o variables",
+  "description": "Configuration variables for cri-o",
+  "type": "object",
+  "properties": {
+    "CRI_O_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install cri-o. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "CRI_O_VERSION": {
+      "description": "Specific version of cri-o to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "CRI_O_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading cri-o binary or archive artifacts."
+    },
+    "CRI_O_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying cri-o available remote releases."
+    },
+    "CRI_O_LISTEN_PORT": {
+      "type": "integer",
+      "description": "TCP port on which the cri-o service listens.",
+      "default": 8080
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ninja",
+  "title": "Ninja",
+  "description": "A small build system with a focus on speed.",
+  "category": "toolchain",
+  "provides": ["ninja", "build-system"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/ninja-build/ninja"
+}

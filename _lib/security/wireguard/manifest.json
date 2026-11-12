@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wireguard",
+  "title": "WireGuard Tools",
+  "description": "Fast, modern, cryptographically opinionated VPN tunnel configuration utilities (wg and wg-quick).",
+  "category": "security",
+  "provides": ["wireguard", "wg", "vpn"],
+  "os_whitelist": ["all"],
+  "ports": [51820]
+}

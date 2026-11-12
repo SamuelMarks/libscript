@@ -41,9 +41,16 @@
       "default": "-O2"
     },
     "LINUX_CONFIG_TARGET": {
-      "description": "Kernel Kconfig target ('tinyconfig', 'defconfig', 'allnoconfig', 'virtconfig', or 'custom').",
+      "description": "Kernel Kconfig target ('tinyconfig', 'defconfig', 'x86_64_defconfig', 'allnoconfig', 'virtconfig', or 'custom').",
       "type": "string",
-      "enum": ["tinyconfig", "defconfig", "allnoconfig", "virtconfig", "custom"],
+      "enum": [
+        "tinyconfig",
+        "defconfig",
+        "x86_64_defconfig",
+        "allnoconfig",
+        "virtconfig",
+        "custom"
+      ],
       "default": "tinyconfig"
     },
     "LINUX_SOURCE_URL": {

@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "activemq",
+  "title": "Apache ActiveMQ",
+  "description": "Multi-protocol Java message broker supporting JMS, AMQP, STOMP, MQTT, and OpenWire.",
+  "category": "message-broker",
+  "provides": ["activemq", "message-broker", "amqp", "jms"],
+  "os_whitelist": ["all"],
+  "ports": [61616, 8161],
+  "stateful": true,
+  "multitenant": true,
+  "repository": "https://github.com/apache/activemq",
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

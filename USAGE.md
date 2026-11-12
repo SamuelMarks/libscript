@@ -513,3 +513,64 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 # 6. Aggregate test markers and update README compatibility table
 ./tests/update_results.sh
 ```
+
+---
+
+## 11. Rapid Cloud & Bento Multi-OS Vagrant Experimentation (`experiment`)
+
+The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) links
+cloud instance provisioning with the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant
+test matrix across all 307+ LibScript components.
+
+### Lifecycle Steps (`a`, `0`..`5`, `i`)
+
+- **`a` / `provision_instance`**: Provisions the cloud host (default `160-vCPU Standard_D160ads_v7`
+  on Azure), waits for SSH, and syncs LibScript (decoupled from `i` so multiple target OSs can be
+  tested before teardown).
+- **`0` / `use_bento_fork`**: Clones/checks out `https://github.com/SamuelMarks/bento.git` at branch
+  `multi-os-qemu-aarch64`.
+- **`1` / `install_virtualization_stack`**: Installs Vagrant, Packer, Ruby, QEMU, VirtualBox, and
+  ISO tools via `_lib/virtualization/bento-builder`.
+- **`2` / `deploy_vagrant_box`**: Registers Bento `.box` images and boots `vagrant/<target_os>`.
+- **`3` / `snapshot_vagrant_box`**: Saves a clean baseline `vanilla` snapshot of the target OS VM.
+- **`4` / `test_libscript_components`**: Runs every component (or filtered `--component`,
+  `--version`, `--pkg-mgr`, `--toolchain`), restoring the `vanilla` snapshot before each component
+  and running **twice (`2x`)** to verify idempotency.
+- **`5` / `send_logs_to_host`**: Consolidates remote `tests_tmp/` and experiment reports and pulls
+  them back to the host (`build/experiment_results/transfer-manifest.json`).
+- **`i` / `deprovision_instance`**: Deprovisions the cloud instance once all target OS runs
+  complete.
+
+### Testing a Single Component-Version & Package-Manager on One OS
+
+```sh
+# Test postgres 16.2 via apt-get on Debian 13 (using component@version shorthand)
+./libscript.sh experiment bento_matrix --target-os=debian-13 --component=postgres@16.2 --pkg-mgr=apt-get
+
+# Or using explicit --component and --version flags
+./libscript.sh experiment --steps=2,3,4,5 --target-os=debian-13 --component=postgres --version=16.2 --pkg-mgr=apt-get
+
+# Test sqlite 3.46.1 built from source with the EDG C/C++ frontend on Alpine 3.24
+./libscript.sh experiment --steps=4,5 --target-os=alpine-3.24 --component=sqlite --version=3.46.1 --from-source --toolchain=edgcpp
+
+# Windows Batch equivalent
+libscript.cmd experiment bento_matrix --target-os=debian-13 --component=postgres@16.2 --pkg-mgr=apt-get
+```
+
+### Testing Multiple OSs Before Deprovisioning
+
+```sh
+# 1. Provision the cloud instance once
+./libscript.sh experiment a
+
+# 2. Run steps 0..5 across multiple target OSs (steps 0 and 1 exit early idempotently on subsequent OSs)
+./libscript.sh experiment bento_matrix --target-os=alpine-3.24
+./libscript.sh experiment bento_matrix --target-os=debian-13
+./libscript.sh experiment bento_matrix --target-os=rockylinux-10.2
+./libscript.sh experiment bento_matrix --target-os=freebsd-15.1
+
+# 3. Deprovision the instance when finished
+./libscript.sh experiment i
+```
+
+For the complete parameter reference and architecture diagram, see [EXPERIMENTS.md](EXPERIMENTS.md).

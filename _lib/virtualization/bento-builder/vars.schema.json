@@ -10,6 +10,26 @@
       "description": "Path to the local bento repository (default: auto-detected)",
       "default": ""
     },
+    "BENTO_REPO_URL": {
+      "type": "string",
+      "description": "Git repository URL for the Bento fork (default: https://github.com/SamuelMarks/bento.git)",
+      "default": "https://github.com/SamuelMarks/bento.git"
+    },
+    "BENTO_BRANCH": {
+      "type": "string",
+      "description": "Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)",
+      "default": "multi-os-qemu-aarch64"
+    },
+    "BENTO_BUILDER_REPO_URL": {
+      "type": "string",
+      "description": "Component-prefixed Git repository URL for the Bento fork (default: https://github.com/SamuelMarks/bento.git)",
+      "default": "https://github.com/SamuelMarks/bento.git"
+    },
+    "BENTO_BUILDER_BRANCH": {
+      "type": "string",
+      "description": "Component-prefixed Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)",
+      "default": "multi-os-qemu-aarch64"
+    },
     "INSTALL_QEMU": {
       "type": "string",
       "description": "Install QEMU/KVM virtualization (1 or 0)",

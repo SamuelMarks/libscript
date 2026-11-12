@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "launchd",
+  "title": "macOS/Darwin launchd Adapter",
+  "description": "macOS and Darwin launchd Property List (plist) service manager adapter and launchctl lifecycle bridge.",
+  "category": "init-systems",
+  "provides": ["launchd", "launchctl"],
+  "os_whitelist": ["macos", "darwin"],
+  "repository": "https://github.com/apple-oss-distributions/xnu"
+}

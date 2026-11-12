@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ly",
+  "title": "Ly TUI Display Manager",
+  "description": "Lightweight ncurses-like terminal user interface (TUI) display manager for Linux and BSD supporting Wayland and X11.",
+  "category": "display-managers",
+  "provides": ["ly", "display-manager"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "os_blacklist": ["windows", "macos"],
+  "repository": "https://github.com/fairyglade/ly"
+}

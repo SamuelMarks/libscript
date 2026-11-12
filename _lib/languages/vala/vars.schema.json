@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/vala/vars.schema.json",
+  "title": "vala variables",
+  "description": "Configuration variables for vala",
+  "type": "object",
+  "properties": {
+    "VALA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install vala. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "VALA_VERSION": {
+      "description": "Specific version of vala to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "VALA_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading vala binary or archive artifacts."
+    },
+    "VALA_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying vala available remote releases."
+    }
+  }
+}

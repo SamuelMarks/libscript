@@ -35,32 +35,107 @@ set +f
 OS_TARGET='alpine-3.24'
 TARGETS=""
 REUSE_VM=""
+COMPONENT_VERSION="${COMPONENT_VERSION:-latest}"
+PKG_MGR="${PKG_MGR:-${LIBSCRIPT_PKG_MGR:-}}"
+INSTALL_METHOD="${INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-}}"
+TOOLCHAIN="${TOOLCHAIN:-${LIBSCRIPT_BUILD_TOOLCHAIN:-}}"
+SNAPSHOT_NAME="${SNAPSHOT_NAME:-vanilla}"
+IDEMPOTENCY_RUNS="${IDEMPOTENCY_RUNS:-2}"
 
 # First pass to capture OS_TARGET and handle help
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--os OS_NAME] [--reuse-vm]"
+            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--os OS_NAME] [--version VER] [--pkg-mgr PM] [--install-method METHOD] [--toolchain TC] [--snapshot NAME] [--idempotency-runs N] [--reuse-vm]"
             echo ""
             echo 'Runs local tests using Vagrant across specified categories or individual targets'
-            echo 'to verify libscript installation and testing.'
+            echo 'to verify libscript installation, testing, and 2x idempotency.'
             echo ""
             echo 'Arguments:'
-            echo '  TARGETS...     A list of categories (e.g., databases, languages) or specific targets.'
-            echo '                 If no targets are provided, defaults to: databases languages toolchains'
-            echo '  all            Run tests across all categories in the _lib directory.'
-            echo '  --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24).'
-            echo '                 Example: --os debian-13, --os rockylinux-10.2, --os omnios'
-            echo '  --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target.'
-            echo '  --fast         Alias for --reuse-vm.'
-            echo '  --help, -h, /? Show this help message.'
+            echo '  TARGETS...             Categories, components, or component@version (e.g., postgres@16.2).'
+            echo '  all                    Run tests across all categories in the _lib directory.'
+            echo '  --os, --target-os OS   The OS environment from vagrant/ (default: alpine-3.24).'
+            echo '  --component, --components COMP  Target component(s) to test.'
+            echo '  --version VER          Component version to install/test (default: latest).'
+            echo '  --pkg-mgr PM           Package manager override (apt-get, apk, dnf, brew, winget, choco, nix, etc.).'
+            echo '  --install-method METH  Install method override (libscript_native, system, from-source, nix, etc.).'
+            echo '  --from-source          Build component from source.'
+            echo '  --toolchain TC         Compiler toolchain for source builds (default, gcc, clang, tcc, edgcpp).'
+            echo '  --snapshot NAME        Vagrant snapshot name to restore before each target (default: vanilla).'
+            echo '  --idempotency-runs N   Number of consecutive install+test passes per component (default: 2).'
+            echo '  --reuse-vm, --fast     Reuse a running VM and restore snapshot per target.'
+            echo '  --help, -h, /?         Show this help message.'
             echo ""
             echo 'Results are written to the tests_tmp directory.'
             exit 0
             ;;
-        --os)
+        --os|--target-os)
             OS_TARGET="$2"
             shift 2
+            ;;
+        --os=*|--target-os=*)
+            OS_TARGET="${1#*=}"
+            shift
+            ;;
+        --component|--components)
+            TARGETS="$TARGETS $(printf '%s' "$2" | tr ',' ' ')"
+            shift 2
+            ;;
+        --component=*|--components=*)
+            TARGETS="$TARGETS $(printf '%s' "${1#*=}" | tr ',' ' ')"
+            shift
+            ;;
+        --version|--component-version)
+            COMPONENT_VERSION="$2"
+            shift 2
+            ;;
+        --version=*|--component-version=*)
+            COMPONENT_VERSION="${1#*=}"
+            shift
+            ;;
+        --pkg-mgr|--package-manager)
+            PKG_MGR="$2"
+            shift 2
+            ;;
+        --pkg-mgr=*|--package-manager=*)
+            PKG_MGR="${1#*=}"
+            shift
+            ;;
+        --install-method)
+            INSTALL_METHOD="$2"
+            shift 2
+            ;;
+        --install-method=*)
+            INSTALL_METHOD="${1#*=}"
+            shift
+            ;;
+        --from-source)
+            INSTALL_METHOD='from-source'
+            shift
+            ;;
+        --toolchain)
+            TOOLCHAIN="$2"
+            shift 2
+            ;;
+        --toolchain=*)
+            TOOLCHAIN="${1#*=}"
+            shift
+            ;;
+        --snapshot|--snapshot-name)
+            SNAPSHOT_NAME="$2"
+            shift 2
+            ;;
+        --snapshot=*|--snapshot-name=*)
+            SNAPSHOT_NAME="${1#*=}"
+            shift
+            ;;
+        --idempotency-runs)
+            IDEMPOTENCY_RUNS="$2"
+            shift 2
+            ;;
+        --idempotency-runs=*)
+            IDEMPOTENCY_RUNS="${1#*=}"
+            shift
             ;;
         --reuse-vm|--fast)
             REUSE_VM=1
@@ -72,6 +147,13 @@ while [ $# -gt 0 ]; do
             ;;
     esac
 done
+
+if [ -n "$PKG_MGR" ] && [ -z "$INSTALL_METHOD" ]; then
+    case "$PKG_MGR" in
+        nix|guix|spack|vcpkg|conan|brew|winget|choco|scoop) INSTALL_METHOD="$PKG_MGR" ;;
+        *) INSTALL_METHOD='system' ;;
+    esac
+fi
 
 if [ -z "$(echo "$TARGETS" | tr -d ' ')" ]; then
     TARGETS="databases caches languages toolchains"
@@ -86,7 +168,23 @@ TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
 mkdir -p "$TESTS_TMP_DIR"
 
 EXPANDED_TARGETS=""
-for arg in $TARGETS; do
+for raw_arg in $TARGETS; do
+    arg="$raw_arg"
+    case "$arg" in
+        *@*)
+            [ "$COMPONENT_VERSION" = "latest" ] && COMPONENT_VERSION="${arg##*@}"
+            arg="${arg%@*}"
+            ;;
+        *:*)
+            [ "$COMPONENT_VERSION" = "latest" ] && COMPONENT_VERSION="${arg##*:}"
+            arg="${arg%:*}"
+            ;;
+    esac
+    case "$arg" in
+        */*)
+            arg="${arg##*/}"
+            ;;
+    esac
     if [ "$arg" = "all" ]; then
         for cat_dir in "$REPO_ROOT"/_lib/*; do
             if [ -d "$cat_dir" ] && [ "$(basename "$cat_dir")" != "_common" ]; then
@@ -225,38 +323,60 @@ for target in $UNIQUE_TARGETS; do
         fi
     fi
     echo '============================================================'
-    echo "Running test for $target on $OS_TARGET..."
+    echo "Running test for $target (version=$COMPONENT_VERSION, pkg_mgr=${PKG_MGR:-auto}, method=${INSTALL_METHOD:-auto}, runs=$IDEMPOTENCY_RUNS) on $OS_TARGET..."
     echo '============================================================'
     
     stdout_file="$TESTS_TMP_DIR/$target.$OS_TAG.stdout"
     stderr_file="$TESTS_TMP_DIR/$target.$OS_TAG.stderr"
     success_file="$TESTS_TMP_DIR/$target.$OS_TAG.success"
     failure_file="$TESTS_TMP_DIR/$target.$OS_TAG.failure"
+    idemp_file="$TESTS_TMP_DIR/$target.idempotent.success"
     
     rm -f "$success_file" "$failure_file"
 
     if [ "$REUSE_VM" = "1" ]; then
         cd "$REPO_ROOT/vagrant/$OS_TARGET"
+        if [ -n "$SNAPSHOT_NAME" ]; then
+            vagrant snapshot restore "$SNAPSHOT_NAME" >/dev/null 2>&1 || true
+        fi
+        _env_overrides="LIBSCRIPT_ROOT_DIR=/opt/repos/libscript"
+        [ -n "$PKG_MGR" ] && _env_overrides="$_env_overrides LIBSCRIPT_PKG_MGR='$PKG_MGR'"
+        [ -n "$INSTALL_METHOD" ] && _env_overrides="$_env_overrides LIBSCRIPT_GLOBAL_INSTALL_METHOD='$INSTALL_METHOD'"
+        [ -n "$TOOLCHAIN" ] && _env_overrides="$_env_overrides LIBSCRIPT_BUILD_TOOLCHAIN='$TOOLCHAIN'"
+        _cli_overrides=""
+        [ -n "$PKG_MGR" ] && _cli_overrides="$_cli_overrides --pkg-mgr='$PKG_MGR'"
+        [ "$INSTALL_METHOD" = "from-source" ] && _cli_overrides="$_cli_overrides --from-source"
+        [ -n "$TOOLCHAIN" ] && _cli_overrides="$_cli_overrides --toolchain='$TOOLCHAIN'"
+
         if [ "$OS_ID" = "windows" ]; then
             # shellcheck disable=SC2016
-            test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
+            test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target' '$COMPONENT_VERSION'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
+            if [ "${IDEMPOTENCY_RUNS:-1}" -ge 2 ] 2>/dev/null; then
+                test_cmd="$test_cmd ; $test_cmd"
+            fi
             if vagrant ssh --no-tty -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
                 echo "Success" > "$success_file"
-                echo "[OK] $target"
+                [ "${IDEMPOTENCY_RUNS:-1}" -ge 2 ] 2>/dev/null && echo "Success" > "$idemp_file"
+                echo "[OK] $target ($COMPONENT_VERSION)"
             else
                 echo "Failure" > "$failure_file"
-                echo "[FAILED] $target"
+                echo "[FAILED] $target ($COMPONENT_VERSION)"
             fi
             cleanup_cmd="cd C:\libscript; & C:\libscript\libscript.cmd uninstall $target *>&1 | Out-Null; Remove-Item -Recurse -Force \"\$env:USERPROFILE\.libscript\\$target\" -ErrorAction SilentlyContinue"
             vagrant ssh --no-tty -c "powershell -Command \"$cleanup_cmd\"" >/dev/null 2>&1 || true
         else
-            test_cmd="export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 300 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+            single_pass="timeout 300 /opt/repos/libscript/libscript.sh install $target $COMPONENT_VERSION $_cli_overrides && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+            test_cmd="export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a $_env_overrides; $single_pass"
+            if [ "${IDEMPOTENCY_RUNS:-1}" -ge 2 ] 2>/dev/null; then
+                test_cmd="export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a $_env_overrides; $single_pass && $single_pass"
+            fi
             if vagrant ssh --no-tty -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
                 echo "Success" > "$success_file"
-                echo "[OK] $target"
+                [ "${IDEMPOTENCY_RUNS:-1}" -ge 2 ] 2>/dev/null && echo "Success" > "$idemp_file"
+                echo "[OK] $target ($COMPONENT_VERSION)"
             else
                 echo "Failure" > "$failure_file"
-                echo "[FAILED] $target"
+                echo "[FAILED] $target ($COMPONENT_VERSION)"
             fi
             cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf \"\$HOME/.libscript/$target\" \"\${TMPDIR:-/tmp}/libscript_pkg_mgr_lock\" 2>/dev/null || true"
             vagrant ssh --no-tty -c "$cleanup_cmd" >/dev/null 2>&1 || true

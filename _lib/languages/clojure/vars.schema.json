@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/clojure/vars.schema.json",
+  "title": "clojure variables",
+  "description": "Configuration variables for clojure",
+  "type": "object",
+  "properties": {
+    "CLOJURE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install clojure. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "CLOJURE_VERSION": {
+      "description": "Specific version of clojure to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "CLOJURE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading clojure binary or archive artifacts."
+    },
+    "CLOJURE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying clojure available remote releases."
+    }
+  }
+}

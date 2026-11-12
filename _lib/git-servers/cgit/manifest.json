@@ -1,0 +1,30 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cgit",
+  "title": "cgit",
+  "description": "Hyperfast C CGI web frontend for Git repositories with built-in caching.",
+  "category": "git-servers",
+  "provides": ["cgit", "git-web"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"],
+  "ports": [80],
+  "stateful": true,
+  "multitenant": true,
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

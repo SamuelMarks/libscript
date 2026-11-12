@@ -92,8 +92,14 @@ if not "%CLANG_DOWNLOAD_URL%"=="" (
 exit /b 0
 
 :: ## action_install
-:: Installs Clang via the configured package manager or stages a local shim.
+:: Installs Clang via the configured package manager or builds from source.
 :action_install
+if /i "%CLANG_INSTALL_METHOD%"=="from-source" (
+    set "_build_ver=%EXACT_VERSION%"
+    if not "%CLANG_BUILD_TARGET%"=="" set "_build_ver=%EXACT_VERSION%-%CLANG_BUILD_TARGET%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "clang" "!_build_ver!" "clang"
+    exit /b !errorlevel!
+)
 set "TARGET_DIR=%LIBSCRIPT_HOME%\clang\%EXACT_VERSION%"
 if exist "%TARGET_DIR%\bin\clang.exe" (
     echo [INFO] clang %EXACT_VERSION% is already installed at %TARGET_DIR%.

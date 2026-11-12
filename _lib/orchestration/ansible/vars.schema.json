@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/ansible/vars.schema.json",
+  "title": "ansible variables",
+  "description": "Configuration variables for ansible",
+  "type": "object",
+  "properties": {
+    "ANSIBLE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ansible. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ANSIBLE_VERSION": {
+      "description": "Specific version of ansible to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "ANSIBLE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ansible binary or archive artifacts."
+    },
+    "ANSIBLE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying ansible available remote releases."
+    }
+  }
+}

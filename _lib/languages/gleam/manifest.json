@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gleam",
+  "title": "Gleam",
+  "description": "Friendly type-safe functional language for building scalable systems on BEAM and JavaScript.",
+  "category": "language",
+  "provides": ["gleam"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/gleam-lang/gleam"
+}

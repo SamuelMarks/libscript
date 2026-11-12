@@ -367,7 +367,7 @@ EOF
   fi
 
   case "${COMPILER_ID}" in
-    edgcpp|edgcpp*)
+    edgcpp|edgcpp*|EDG-*)
       export EDGCPP_STRICT_BACKEND="${EDGCPP_STRICT_BACKEND:-1}"
       export EDGCPP_USE_NATIVE_CODEGEN="${EDGCPP_USE_NATIVE_CODEGEN:-1}"
       export EDGCPP_FAILURE_LOG="${KERNEL_LOG_DIR}/edgcpp-diagnostics.log"

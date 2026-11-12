@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/shellcheck/vars.schema.json",
+  "title": "ShellCheck variables",
+  "description": "Configuration variables for ShellCheck",
+  "type": "object",
+  "properties": {
+    "SHELLCHECK_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ShellCheck. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": [
+        "libscript_native",
+        "system",
+        "source",
+        "from-source",
+        "nix",
+        "guix",
+        "spack",
+        "brew",
+        "winget",
+        "choco",
+        "scoop"
+      ],
+      "default": "libscript_native"
+    },
+    "SHELLCHECK_VERSION": {
+      "description": "Specific version or alias of ShellCheck to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable", "0.11.0", "0.10.0"]
+    },
+    "SHELLCHECK_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading ShellCheck binary or archive artifacts."
+    },
+    "SHELLCHECK_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying available remote ShellCheck releases.",
+      "default": "https://api.github.com/repos/koalaman/shellcheck/releases"
+    },
+    "SHELLCHECK_GIT_REPO": {
+      "type": "string",
+      "description": "Upstream Git repository URL for ShellCheck tag resolution and source builds.",
+      "default": "https://github.com/koalaman/shellcheck.git"
+    },
+    "SHELLCHECK_FORMAT": {
+      "type": "string",
+      "description": "Default output format passed to ShellCheck when invoked in lint helpers (tty, gcc, checkstyle, diff, json1, quiet).",
+      "default": "tty"
+    },
+    "SHELLCHECK_SHELL": {
+      "type": "string",
+      "description": "Default target shell dialect enforced by ShellCheck (sh, dash, ash, bash, ksh).",
+      "default": "sh"
+    },
+    "SHELLCHECK_OPTIONAL_CHECKS": {
+      "type": "string",
+      "description": "Comma-separated optional ShellCheck checks enabled via -o when supported.",
+      "default": "useless-use-of-cat"
+    }
+  }
+}
