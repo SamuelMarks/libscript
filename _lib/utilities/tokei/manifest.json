@@ -1,0 +1,14 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tokei",
+  "title": "Tokei Source Code Auditor",
+  "description": "Fast, deterministic polyglot source line (SLOC) and file statistics auditor.",
+  "category": "utilities",
+  "provides": ["tokei"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/XAMPPRocky/tokei",
+  "dependencies": {
+    "host_tools": ["rust"],
+    "tier": "optional"
+  }
+}

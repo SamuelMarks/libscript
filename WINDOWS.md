@@ -13,39 +13,62 @@ optionally accompanied by a PowerShell (`.ps1`) wrapper.
 
 ### Standard Windows Batch Script Preamble
 
-All `.cmd` files enforce delayed expansion, canonical `THIS_FILE` path resolution, and re-entrant
-`STACK` recursion guards within their first 25 lines:
+All `.cmd` files enforce structured doc headers, delayed expansion, canonical `THIS_FILE` path
+resolution, and re-entrant `:!THIS_FILE!:` `STACK` recursion guards within their first 25 lines:
 
 ```cmd
 @echo off
+:: # script_name.cmd
+::
+:: ## Overview
+:: Concise description of what this batch script accomplishes.
+::
+:: ## Usage
+:: script_name.cmd [args]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto end
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
     )
 )
+set "STACK=%STACK%:!THIS_FILE!:"
 
-:: Canonical SCRIPT_DIR and LIBSCRIPT_ROOT_DIR resolution
-for %%I in ("%THIS_FILE%\..") do set "SCRIPT_DIR=%%~fI"
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%"
-    :find_root
-    if not exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
-        for %%I in ("!LIBSCRIPT_ROOT_DIR!\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-        goto find_root
-    )
+    set "d=!SCRIPT_DIR!"
+    call :find_root
 )
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 ```
 
 ---

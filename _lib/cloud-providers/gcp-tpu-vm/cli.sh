@@ -367,7 +367,7 @@ case "$ACTION" in
     # We must tunnel into the TPU VM because the profiler port is usually not exposed externally
     gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --worker=all --command="capture_tpu_profile --tpu=\$HOSTNAME --profiler_port=$PORT --duration_ms=$DURATION --logdir=$TPU_PROFILE_LOGDIR"
     ;;
-  scp)
+  scp|scp-from)
     # Usage: tpu-vm scp <name> <src> <dest> [--all-workers]
     if [ -z "$TPU_NAME" ]; then log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"; exit 1; fi
     shift 2

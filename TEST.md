@@ -58,8 +58,9 @@ architectural invariants:
 
 1. **`POSIX_SHEBANG`**: Strict `#!/bin/sh` on line 1; bans non-POSIX shells (`bash`, `zsh`, `ksh`)
    and non-portable bashisms (`[[ ... ]]`, `source`, `type`).
-2. **`THIS_FILE_DANCE`**: Canonical `THIS_FILE=` path resolution within the first 65 lines.
-3. **`RECURSION_GUARD`**: Re-entrant `STACK` recursion guard in the first 65 lines.
+2. **`THIS_FILE_DANCE`**: Canonical `THIS_FILE=` path resolution within the first 35 lines.
+3. **`RECURSION_GUARD`**: Re-entrant `STACK` recursion guard (`*':'"${THIS_FILE}"':'*` in POSIX,
+   `:!THIS_FILE!:` `findstr` in Batch within the first 25 lines).
 4. **`WINDOWS_PARITY`**: Exact paired `.cmd` companion for every single `.sh` script.
 5. **`BATCH_THIS_FILE`**: Canonical `set "THIS_FILE=%~f0"` and delayed expansion within the first 25
    lines of `.cmd` files.
@@ -216,13 +217,15 @@ environments in `vagrant/`:
 tests\run_local_tests.cmd postgres redis
 ```
 
-Supported Vagrant testing boxes:
+Supported Vagrant testing boxes (`vagrant/`):
 
 - `bento/windows-11` (Windows 11 / Server)
 - `bento/alpine-3.24` (Alpine Linux)
 - `bento/debian-13` (Debian Trixie)
 - `bento/freebsd-15.1` (FreeBSD)
 - `bento/rockylinux-10.2` (Rocky Linux)
+- `bento/omnios-r151050` (illumos / OmniOS)
+- `bento/macos-14-arm64` (macOS Apple Silicon)
 
 _Box building instructions for Apple Silicon (`aarch64`) and `x86_64` hosts are documented in
 [VAGRANT.md](VAGRANT.md)._
@@ -231,8 +234,14 @@ _Box building instructions for Apple Silicon (`aarch64`) and `x86_64` hosts are 
 
 ## 8. Multi-Platform CI Matrix & Results Reporting
 
-The GitHub Actions workflow (`.github/workflows/multiplatform_tests.yml`) executes parallel matrix
-jobs across Alpine, Debian, FreeBSD, and Windows.
+GitHub Actions workflows in `.github/workflows/` validate cross-platform standards and installer
+pipelines:
+
+- **`.github/workflows/ci.yml`**: Executes `devtools/ci/precommit_dance.{sh,cmd}` across Ubuntu,
+  macOS, and Windows runners (enforcing `cspell`, `prettier`, `audit_standards`, `audit_posix`,
+  `audit_version_manager`, `audit_schema_vars`, `shellcheck`, and 100% `doc_coverage`).
+- **`.github/workflows/release.yml`**: Hydrates air-gapped offline caches (`hydrate_offline_cache`)
+  and verifies online/offline native installer builds across target platforms.
 
 Matrix test results are aggregated and updated automatically:
 

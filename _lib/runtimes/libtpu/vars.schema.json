@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/runtimes/libtpu/vars.schema.json",
+  "title": "libtpu variables",
+  "description": "Configuration variables for libtpu",
+  "type": "object",
+  "properties": {
+    "LIBTPU_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install libtpu. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "LIBTPU_VERSION": {
+      "description": "Specific version of libtpu to install.",
+      "type": "string",
+      "default": "0.0.52",
+      "version_aliases": ["latest", "lts"]
+    },
+    "LIBTPU_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading libtpu binary or archive artifacts."
+    },
+    "LIBTPU_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying libtpu available remote releases."
+    },
+    "LIBTPU_WHEEL_ARCH": {
+      "type": "string",
+      "description": "Wheel architecture(s) to fetch and extract ('x86_64', 'aarch64', or 'both').",
+      "default": "both"
+    },
+    "LIBTPU_SO_PATH": {
+      "type": "string",
+      "description": "Explicit override path to an extracted upstream libtpu.so shared object."
+    },
+    "LIBTPU_SDK_SO_PATH": {
+      "type": "string",
+      "description": "Explicit override path to an extracted upstream sdk.so / sdk.abi3.so shared object."
+    },
+    "LIBTPU_REFERENCE_DIR": {
+      "type": "string",
+      "description": "Resolved directory containing extracted upstream libtpu reference wheels and shared objects."
+    },
+    "LIBTPU_REFERENCE_SO": {
+      "type": "string",
+      "description": "Resolved path to the active host-matching upstream libtpu.so artifact."
+    },
+    "LIBTPU_REFERENCE_SDK_SO": {
+      "type": "string",
+      "description": "Resolved path to the active host-matching upstream sdk.so artifact."
+    },
+    "LIBTPU_ACTIVATE_TPU_LIBRARY_PATH": {
+      "type": "string",
+      "description": "Flag (0 or 1) controlling whether env.sh/env.cmd exports TPU_LIBRARY_PATH pointing at upstream libtpu.so.",
+      "default": "0"
+    }
+  }
+}

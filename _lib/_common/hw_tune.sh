@@ -66,6 +66,49 @@ libscript_detect_hardware() {
   export LIBSCRIPT_HW_CORES="${LIBSCRIPT_HW_CORES:-$_cores}"
   export LIBSCRIPT_HW_MEM_MB="${LIBSCRIPT_HW_MEM_MB:-$_mem_mb}"
 
+  _cpu_model='unknown-cpu'
+  if [ -r /proc/cpuinfo ]; then
+    _cpu_model=$(awk -F: '/^(model name|Hardware|Processor)[[:space:]]*:/ {sub(/^[[:space:]]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null || true)
+  elif command -v sysctl >/dev/null 2>&1; then
+    _cpu_model=$(sysctl -n machdep.cpu.brand_string 2>/dev/null || sysctl -n hw.model 2>/dev/null || true)
+  fi
+  [ -n "$_cpu_model" ] || _cpu_model="${ARCH:-unknown}-cpu"
+  export LIBSCRIPT_HW_CPU_MODEL="${LIBSCRIPT_HW_CPU_MODEL:-$_cpu_model}"
+
+  _phys_cores="$_cores"
+  if [ -r /proc/cpuinfo ]; then
+    _pc=$(awk -F: '
+      /^physical id[[:space:]]*:/ { pid=$2; gsub(/[[:space:]]+/, "", pid) }
+      /^core id[[:space:]]*:/ { cid=$2; gsub(/[[:space:]]+/, "", cid); seen[pid ":" cid]=1 }
+      END { n=0; for (k in seen) n++; if (n > 0) print n }
+    ' /proc/cpuinfo 2>/dev/null || true)
+    if [ -n "$_pc" ] && [ "$_pc" -ge 1 ] 2>/dev/null; then
+      _phys_cores="$_pc"
+    fi
+  elif command -v sysctl >/dev/null 2>&1; then
+    _pc=$(sysctl -n hw.physicalcpu 2>/dev/null || true)
+    if [ -n "$_pc" ] && [ "$_pc" -ge 1 ] 2>/dev/null; then
+      _phys_cores="$_pc"
+    fi
+  fi
+  export LIBSCRIPT_HW_PHYS_CORES="${LIBSCRIPT_HW_PHYS_CORES:-$_phys_cores}"
+
+  _perf_cores="$_phys_cores"
+  if [ "${UNAME:-}" = "Darwin" ] && command -v sysctl >/dev/null 2>&1; then
+    _pfc=$(sysctl -n hw.perflevel0.physicalcpu 2>/dev/null || true)
+    if [ -n "$_pfc" ] && [ "$_pfc" -ge 1 ] 2>/dev/null; then
+      _perf_cores="$_pfc"
+    fi
+  fi
+  export LIBSCRIPT_HW_PERF_CORES="${LIBSCRIPT_HW_PERF_CORES:-$_perf_cores}"
+
+  _numa_nodes=1
+  if [ -d /sys/devices/system/node ]; then
+    _nn=$(find /sys/devices/system/node -maxdepth 1 -type d -name 'node[0-9]*' 2>/dev/null | wc -l | awk '{print $1+0}')
+    [ "$_nn" -ge 1 ] && _numa_nodes="$_nn"
+  fi
+  export LIBSCRIPT_HW_NUMA_NODES="${LIBSCRIPT_HW_NUMA_NODES:-$_numa_nodes}"
+
   _simd='generic'
   if [ -r /proc/cpuinfo ]; then
     if grep -q "avx512" /proc/cpuinfo 2>/dev/null; then
@@ -233,6 +276,76 @@ libscript_drop_benchmark_caches() {
       purge >/dev/null 2>&1 || true
     fi
   fi
+}
+
+# ## libscript_emit_hw_manifest_json
+# Emits a deterministic host hardware and toolchain JSON manifest (CPU/SoC, core counts, RAM GiB, OS/kernel, rustc, clang, python3, jax/jaxlib) to the specified output file.
+libscript_emit_hw_manifest_json() {
+  _ehm_out="${1}"
+  _ehm_py="${2:-python3}"
+  libscript_detect_hardware
+  mkdir -p "$(dirname -- "$_ehm_out")"
+
+  _ehm_ram_gib=$(awk -v m="${LIBSCRIPT_HW_MEM_MB}" 'BEGIN { printf "%.2f", m / 1024.0 }')
+  _ehm_rustc='unavailable'
+  if command -v rustc >/dev/null 2>&1; then
+    _ehm_rustc=$(rustc -vV 2>/dev/null | awk 'NR==1 {printf "%s", $0}; /^host:/ {printf " (%s)", $2}; /^LLVM version:/ {printf " [LLVM %s]", $3}' || printf 'unavailable')
+  fi
+  _ehm_clang='unavailable'
+  if command -v clang >/dev/null 2>&1; then
+    _ehm_clang=$(clang --version 2>/dev/null | head -n 1 | tr -d '\r' || printf 'unavailable')
+  fi
+  _ehm_pyver='unavailable'
+  _ehm_jax='unavailable'
+  _ehm_jaxlib='unavailable'
+  if command -v "$_ehm_py" >/dev/null 2>&1 || [ -x "$_ehm_py" ]; then
+    _ehm_pyver=$("$_ehm_py" --version 2>&1 | head -n 1 | tr -d '\r' || printf 'unavailable')
+    _ehm_jax=$("$_ehm_py" -c 'import jax; print(jax.__version__)' 2>/dev/null | tr -d '\r' || printf 'unavailable')
+    _ehm_jaxlib=$("$_ehm_py" -c 'import jaxlib; print(jaxlib.__version__)' 2>/dev/null | tr -d '\r' || printf 'unavailable')
+  fi
+
+  _ehm_gov='unknown'
+  if [ -r /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+    _ehm_gov=$(head -n 1 /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || printf 'unknown')
+  fi
+  _ehm_aslr='unknown'
+  if [ -r /proc/sys/kernel/randomize_va_space ]; then
+    _ehm_aslr=$(head -n 1 /proc/sys/kernel/randomize_va_space 2>/dev/null || printf 'unknown')
+  fi
+
+  _ehm_esc_cpu=$(printf '%s' "${LIBSCRIPT_HW_CPU_MODEL}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _ehm_esc_rustc=$(printf '%s' "${_ehm_rustc}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _ehm_esc_clang=$(printf '%s' "${_ehm_clang}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _ehm_esc_py=$(printf '%s' "${_ehm_pyver}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+  cat <<EOF > "${_ehm_out}.tmp"
+{
+  "schema_version": "1.0.0",
+  "os": "${UNAME:-unknown}",
+  "os_lower": "${UNAME_LOWER:-unknown}",
+  "arch": "${ARCH:-unknown}",
+  "kernel_release": "${KERNEL_RELEASE:-unknown}",
+  "cpu_model": "${_ehm_esc_cpu}",
+  "logical_cores": ${LIBSCRIPT_HW_CORES},
+  "physical_cores": ${LIBSCRIPT_HW_PHYS_CORES},
+  "performance_cores": ${LIBSCRIPT_HW_PERF_CORES},
+  "numa_nodes": ${LIBSCRIPT_HW_NUMA_NODES},
+  "ram_mib": ${LIBSCRIPT_HW_MEM_MB},
+  "ram_gib": ${_ehm_ram_gib},
+  "simd": "${LIBSCRIPT_HW_SIMD}",
+  "nvme": ${LIBSCRIPT_HW_NVME},
+  "cpu_governor": "${_ehm_gov}",
+  "aslr_mode": "${_ehm_aslr}",
+  "toolchains": {
+    "rustc": "${_ehm_esc_rustc}",
+    "clang": "${_ehm_esc_clang}",
+    "python3": "${_ehm_esc_py}",
+    "jax": "${_ehm_jax}",
+    "jaxlib": "${_ehm_jaxlib}"
+  }
+}
+EOF
+  mv -f "${_ehm_out}.tmp" "${_ehm_out}"
 }
 
 STACK="${STACK%"${THIS_FILE}":}"

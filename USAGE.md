@@ -10,8 +10,8 @@ maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and 
 ## 1. Native Toolchain Version Management (Tier 1)
 
 LibScript natively replaces external version managers like `nvm`, `fnm`, `pyenv`, `rustup`, `rvm`,
-and `sdkman`. It provides five universal lifecycle operations across all 299+ supported runtimes and
-databases.
+and `sdkman`. It provides five universal lifecycle operations across all 320+ supported tools,
+runtimes, and databases.
 
 ### The Universal Lifecycle Verbs
 
@@ -259,14 +259,16 @@ LibScript provides an automated engine for building turn-key live bootable insta
 `msi-rs`:
 
 ```sh
-# 1. Build a live hybrid installer ISO from an execution plan schema
-./devtools/build_live_installer.sh execution-plan.live.schema.json build/live-installer.iso
+# 1. Build a live hybrid installer ISO (--target linux|freebsd|illumos|all, --mode all|headless|tui|gui)
+./devtools/build_live_installer.sh --target linux --mode all --output build/live-installer.iso
+# Windows Batch:
+devtools\build_live_installer.cmd --target linux --mode all --output build\live-installer.iso
 
 # 2. Write the bootable installer image directly to physical USB media
 ./devtools/write_usb.sh build/live-installer.iso /dev/sdX
 
 # 3. Capture automated visual verification screenshots across installer stages
-./devtools/capture_msi_live_screenshots.sh build/live-installer.iso
+./devtools/capture_msi_live_screenshots.sh --all
 ```
 
 For mode options (Headless, TUI, kiosk GUI) and multi-OS co-installation details, consult
@@ -369,17 +371,20 @@ Use the `netctl` routing abstraction to emit configurations directly:
 
 ### Programmatic Orchestration via REST API (`libscript-rest-api`)
 
-Build and launch the lightweight C++ daemon to orchestrate LibScript over HTTP:
+Build and launch the lightweight C11 daemon (`c-rest-framework`, OpenAPI 3.2.0) to orchestrate
+LibScript over HTTP:
 
 ```sh
 # Build and run the REST API daemon
 cd libscript-rest-api && mkdir -p build && cd build
 cmake .. && cmake --build .
-./libscript_api_server --port 8080
+./bin/libscript-rest-api
 
-# Query API health or submit a component install
-curl http://localhost:8080/health
-curl -X POST http://localhost:8080/api/v1/install -H "Content-Type: application/json" -d '{"component":"nodejs","version":"22.14.0"}'
+# Query API status or submit an asynchronous component installation
+curl http://127.0.0.1:8080/api/v1/status
+curl -X POST http://127.0.0.1:8080/api/v1/installations \
+  -H "Content-Type: application/json" \
+  -d '{"component_id":"nodejs","version":"22.14.0"}'
 ```
 
 ---
@@ -473,8 +478,8 @@ Apply composable host and sysroot capabilities in deterministic priority order (
 # Physical & multi-tenant backups and point-in-time restores
 ./_lib/_common/hooks.sh --exec postgres backup /var/backups/postgres
 ./_lib/_common/hooks.sh --exec postgres restore /var/backups/postgres
-./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant-id acme_corp
-./_lib/_common/hooks.sh --exec postgres restore_tenant --tenant-id acme_corp
+./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant acme_corp
+./_lib/_common/hooks.sh --exec postgres restore_tenant --tenant acme_corp
 
 # Stateful application/database version upgrade and atomic downgrade/rollback
 ./_lib/_common/hooks.sh --exec postgres upgrade 15 16
@@ -520,26 +525,30 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 
 The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) links
 cloud instance provisioning with the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant
-test matrix across all 307+ LibScript components.
+test matrix across all 320+ Tier 1 tools and 520+ total subsystems.
 
-### Lifecycle Steps (`a`, `0`..`5`, `i`)
+### Lifecycle Steps (`a_provision_instance` .. `i_deprovision_instance`)
 
-- **`a` / `provision_instance`**: Provisions the cloud host (default `160-vCPU Standard_D160ads_v7`
-  on Azure), waits for SSH, and syncs LibScript (decoupled from `i` so multiple target OSs can be
-  tested before teardown).
-- **`0` / `use_bento_fork`**: Clones/checks out `https://github.com/SamuelMarks/bento.git` at branch
-  `multi-os-qemu-aarch64`.
-- **`1` / `install_virtualization_stack`**: Installs Vagrant, Packer, Ruby, QEMU, VirtualBox, and
-  ISO tools via `_lib/virtualization/bento-builder`.
-- **`2` / `deploy_vagrant_box`**: Registers Bento `.box` images and boots `vagrant/<target_os>`.
-- **`3` / `snapshot_vagrant_box`**: Saves a clean baseline `vanilla` snapshot of the target OS VM.
-- **`4` / `test_libscript_components`**: Runs every component (or filtered `--component`,
+- **`a_provision_instance`** _(alias `a`)_: Provisions the cloud host (default
+  `160-vCPU Standard_D160ads_v7` on Azure), waits for SSH, and syncs LibScript (decoupled from
+  `i_deprovision_instance` so multiple target OSs can be tested before teardown).
+- **`b_use_bento_fork`** _(alias `0`)_: Clones/checks out `https://github.com/SamuelMarks/bento.git`
+  at branch `multi-os-qemu-aarch64`.
+- **`c_install_virtualization_stack`** _(alias `1`)_: Installs Vagrant, Packer, Ruby, QEMU,
+  VirtualBox, and ISO tools via `_lib/virtualization/bento-builder`.
+- **`d_deploy_vagrant_box`** _(alias `2`)_: Registers Bento `.box` images and boots
+  `vagrant/<target_os>`.
+- **`e_snapshot_vagrant_box`** _(alias `3`)_: Saves a clean baseline `vanilla` snapshot of the
+  target OS VM.
+- **`f_test_libscript_components`** _(alias `4`)_: Runs every component (or filtered `--component`,
   `--version`, `--pkg-mgr`, `--toolchain`), restoring the `vanilla` snapshot before each component
   and running **twice (`2x`)** to verify idempotency.
-- **`5` / `send_logs_to_host`**: Consolidates remote `tests_tmp/` and experiment reports and pulls
-  them back to the host (`build/experiment_results/transfer-manifest.json`).
-- **`i` / `deprovision_instance`**: Deprovisions the cloud instance once all target OS runs
-  complete.
+- **`g_collect_logs`**: Stages structured remote `tests_tmp/` artifacts and experiment reports into
+  a clean per-OS remote bundle directory.
+- **`h_pull_logs`** _(alias `5`)_: Pulls consolidated remote logs back to the host and writes
+  `build/experiment_results/transfer-manifest.json`.
+- **`i_deprovision_instance`** _(alias `i`)_: Deprovisions the cloud instance once all target OS
+  runs complete.
 
 ### Testing a Single Component-Version & Package-Manager on One OS
 
@@ -547,11 +556,14 @@ test matrix across all 307+ LibScript components.
 # Test postgres 16.2 via apt-get on Debian 13 (using component@version shorthand)
 ./libscript.sh experiment bento_matrix --target-os=debian-13 --component=postgres@16.2 --pkg-mgr=apt-get
 
-# Or using explicit --component and --version flags
-./libscript.sh experiment --steps=2,3,4,5 --target-os=debian-13 --component=postgres --version=16.2 --pkg-mgr=apt-get
+# Or using explicit --steps, --component, and --version flags
+./libscript.sh experiment \
+  --steps=d_deploy_vagrant_box,e_snapshot_vagrant_box,f_test_libscript_components,g_collect_logs,h_pull_logs \
+  --target-os=debian-13 --component=postgres --version=16.2 --pkg-mgr=apt-get
 
 # Test sqlite 3.46.1 built from source with the EDG C/C++ frontend on Alpine 3.24
-./libscript.sh experiment --steps=4,5 --target-os=alpine-3.24 --component=sqlite --version=3.46.1 --from-source --toolchain=edgcpp
+./libscript.sh experiment --steps=f_test_libscript_components,g_collect_logs,h_pull_logs \
+  --target-os=alpine-3.24 --component=sqlite --version=3.46.1 --from-source --toolchain=edgcpp
 
 # Windows Batch equivalent
 libscript.cmd experiment bento_matrix --target-os=debian-13 --component=postgres@16.2 --pkg-mgr=apt-get
@@ -561,16 +573,16 @@ libscript.cmd experiment bento_matrix --target-os=debian-13 --component=postgres
 
 ```sh
 # 1. Provision the cloud instance once
-./libscript.sh experiment a
+./libscript.sh experiment a_provision_instance
 
-# 2. Run steps 0..5 across multiple target OSs (steps 0 and 1 exit early idempotently on subsequent OSs)
+# 2. Run bento_matrix (steps b..h) across multiple target OSs (steps b and c exit early idempotently on subsequent OSs)
 ./libscript.sh experiment bento_matrix --target-os=alpine-3.24
 ./libscript.sh experiment bento_matrix --target-os=debian-13
 ./libscript.sh experiment bento_matrix --target-os=rockylinux-10.2
 ./libscript.sh experiment bento_matrix --target-os=freebsd-15.1
 
 # 3. Deprovision the instance when finished
-./libscript.sh experiment i
+./libscript.sh experiment i_deprovision_instance
 ```
 
 For the complete parameter reference and architecture diagram, see [EXPERIMENTS.md](EXPERIMENTS.md).

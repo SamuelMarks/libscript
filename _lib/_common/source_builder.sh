@@ -40,6 +40,12 @@ SCRIPT_DIR="${_sb_saved_script_dir}"
 # ## libscript_now_ms
 # Returns the current monotonic/epoch timestamp in milliseconds for build timing metrics.
 libscript_now_ms() {
+  if command -v libscript_now_ns >/dev/null 2>&1; then
+    _sb_ns=$(libscript_now_ns 2>/dev/null || true)
+    if [ -n "${_sb_ns}" ]; then
+      awk -v ns="${_sb_ns}" 'BEGIN { printf "%.0f\n", (ns + 0) / 1000000.0 }' && return 0
+    fi
+  fi
   if [ -r /proc/uptime ]; then
     awk '{printf "%d\n", $1 * 1000}' /proc/uptime 2>/dev/null && return 0
   fi

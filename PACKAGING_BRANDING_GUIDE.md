@@ -5,19 +5,19 @@ installation artifacts for Windows, macOS, Linux, and Cloud/PaaS targets.
 
 ## Supported Packaging Targets & Visual Branding Features
 
-| Target Format                    | Generator Script                           | Custom License / EULA              | Custom Logo / Icon                | Top Banner                     | Left/Side Splash Banner        | Non-Interactive Silent Flag         |
-| :------------------------------- | :----------------------------------------- | :--------------------------------- | :-------------------------------- | :----------------------------- | :----------------------------- | :---------------------------------- |
-| **WiX Windows Installer (.msi)** | `packaging/template_msi.*`                 | Scrollable RTF EULA with checkbox  | `.ico` (embedded & ARP icon)      | `WixUIBannerBmp` (493x58)      | `WixUIDialogBmp` (493x312)     | `/qn`                               |
-| **Inno Setup (.exe)**            | `packaging/template_inno.*`                | `LicenseFile=` directive           | `SetupIconFile=` (`.ico`)         | `WizardSmallImageFile` (55x58) | `WizardImageFile` (164x314)    | `/VERYSILENT /SUPPRESSMSGBOXES`     |
-| **NSIS (.exe)**                  | `packaging/template_nsis.*`                | Modern UI `Page license`           | `MUI_ICON` (`.ico`)               | `MUI_HEADERIMAGE_BITMAP`       | `MUI_WELCOMEFINISHPAGE_BITMAP` | `/S`                                |
-| **macOS Disk Image (.dmg)**      | `cli/commands/packaging/formats/pkg_dmg.*` | Embedded SLA agreement via UDIF    | Custom Volume `.icns`             | N/A                            | Finder background (600x400)    | Headless mount via `hdiutil attach` |
-| **macOS Flat Package (.pkg)**    | `cli/commands/packaging/formats/pkg_pkg.*` | Embedded distribution SLA          | Package installer bundle icon     | Installer header banner        | N/A                            | `installer -pkg ... -target /`      |
-| **Debian (.deb)**                | `cli/commands/packaging/formats/pkg_deb.*` | `/usr/share/doc/.../copyright`     | Desktop icon `/usr/share/pixmaps` | N/A                            | N/A                            | `DEBIAN_FRONTEND=noninteractive`    |
-| **Red Hat (.rpm)**               | `cli/commands/packaging/formats/pkg_rpm.*` | `/usr/share/licenses/.../LICENSE`  | Desktop icon `/usr/share/pixmaps` | N/A                            | N/A                            | `-y` / `--nogpgcheck`               |
-| **Alpine Linux (.apk)**          | `cli/commands/packaging/formats/pkg_apk.*` | Package metadata license field     | N/A                               | N/A                            | N/A                            | `--no-interactive`                  |
-| **FreeBSD Package (.txz)**       | `cli/commands/packaging/formats/pkg_txz.*` | `/usr/local/share/licenses/...`    | Desktop entry / pixmap            | N/A                            | N/A                            | `pkg add -y`                        |
-| **Live Multiboot Media (.iso)**  | `devtools/build_live_installer.*`          | Scrollable EULA / RTF & Text       | Branded boot splash & desktop     | Top wizard banner              | Welcome sidebar dialog         | `msiexec /i ... /qn`                |
-| **Terminal UI (TUI)**            | `cli/commands/packaging/formats/pkg_tui.*` | Terminal pager with `[Y/n]` prompt | ASCII / Sixel logo display        | Header bar                     | N/A                            | `--accept-license --yes`            |
+| Target Format                    | Generator Script                                                               | Custom License / EULA              | Custom Logo / Icon                | Top Banner                     | Left/Side Splash Banner        | Non-Interactive Silent Flag         |
+| :------------------------------- | :----------------------------------------------------------------------------- | :--------------------------------- | :-------------------------------- | :----------------------------- | :----------------------------- | :---------------------------------- |
+| **WiX Windows Installer (.msi)** | `cli/commands/packaging/formats/pkg_msi.*` (`packaging/template_msi.*`)        | Scrollable RTF EULA with checkbox  | `.ico` (embedded & ARP icon)      | `WixUIBannerBmp` (493x58)      | `WixUIDialogBmp` (493x312)     | `/qn`                               |
+| **Inno Setup (.exe)**            | `cli/commands/packaging/formats/pkg_innosetup.*` (`packaging/template_inno.*`) | `LicenseFile=` directive           | `SetupIconFile=` (`.ico`)         | `WizardSmallImageFile` (55x58) | `WizardImageFile` (164x314)    | `/VERYSILENT /SUPPRESSMSGBOXES`     |
+| **NSIS (.exe)**                  | `cli/commands/packaging/formats/pkg_nsis.*` (`packaging/template_nsis.*`)      | Modern UI `Page license`           | `MUI_ICON` (`.ico`)               | `MUI_HEADERIMAGE_BITMAP`       | `MUI_WELCOMEFINISHPAGE_BITMAP` | `/S`                                |
+| **macOS Disk Image (.dmg)**      | `cli/commands/packaging/formats/pkg_dmg.*`                                     | Embedded SLA agreement via UDIF    | Custom Volume `.icns`             | N/A                            | Finder background (600x400)    | Headless mount via `hdiutil attach` |
+| **macOS Flat Package (.pkg)**    | `cli/commands/packaging/formats/pkg_pkg.*`                                     | Embedded distribution SLA          | Package installer bundle icon     | Installer header banner        | N/A                            | `installer -pkg ... -target /`      |
+| **Debian (.deb)**                | `cli/commands/packaging/formats/pkg_deb.*`                                     | `/usr/share/doc/.../copyright`     | Desktop icon `/usr/share/pixmaps` | N/A                            | N/A                            | `DEBIAN_FRONTEND=noninteractive`    |
+| **Red Hat (.rpm)**               | `cli/commands/packaging/formats/pkg_rpm.*`                                     | `/usr/share/licenses/.../LICENSE`  | Desktop icon `/usr/share/pixmaps` | N/A                            | N/A                            | `-y` / `--nogpgcheck`               |
+| **Alpine Linux (.apk)**          | `cli/commands/packaging/formats/pkg_apk.*`                                     | Package metadata license field     | N/A                               | N/A                            | N/A                            | `--no-interactive`                  |
+| **FreeBSD Package (.txz)**       | `cli/commands/packaging/formats/pkg_txz.*`                                     | `/usr/local/share/licenses/...`    | Desktop entry / pixmap            | N/A                            | N/A                            | `pkg add -y`                        |
+| **Live Multiboot Media (.iso)**  | `devtools/build_live_installer.*`                                              | Scrollable EULA / RTF & Text       | Branded boot splash & desktop     | Top wizard banner              | Welcome sidebar dialog         | `msiexec /i ... /qn`                |
+| **Terminal UI (TUI)**            | `cli/commands/packaging/formats/pkg_tui.*`                                     | Terminal pager with `[Y/n]` prompt | ASCII / Sixel logo display        | Header bar                     | N/A                            | `--accept-license --yes`            |
 
 ---
 
@@ -70,7 +70,7 @@ All packaging generators accept normalized command-line flags across POSIX `/bin
   --banner-side "assets/sidebar.bmp"
 
 # Generate Inno Setup package
-./libscript.sh package-as inno
+./libscript.sh package-as innosetup
   --app-name "MyEnterpriseApp"
   --license-file "legal/LICENSE.txt"
   --banner-side "assets/sidebar.bmp"

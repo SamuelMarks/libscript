@@ -119,6 +119,7 @@ if "%ACTION%"=="start" goto :start
 if "%ACTION%"=="stop" goto :stop
 if "%ACTION%"=="ssh" goto :ssh
 if "%ACTION%"=="scp" goto :scp
+if "%ACTION%"=="scp-from" goto :scp
 if "%ACTION%"=="profile" goto :profile
 if "%ACTION%"=="status" goto :status
 

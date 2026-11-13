@@ -61,6 +61,9 @@ if errorlevel 1 exit /b 1
 call :verify_combined_all_steps_execution
 if errorlevel 1 exit /b 1
 
+call :verify_libtpu_dual_isa_and_tpu_vm_campaign
+if errorlevel 1 exit /b 1
+
 echo [PASS] Named rapid cloud experimentation lifecycle tests succeeded on Windows!
 exit /b 0
 
@@ -119,5 +122,23 @@ call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment --steps="provision_instance
 if not exist "!_st_file!" exit /b 1
 if not exist "!_loc_dir!\manifest_transfer.json" exit /b 1
 del /f /q "!_st_file!" >nul 2>&1
+rmdir /s /q "!_loc_dir!" >nul 2>&1
+exit /b 0
+
+:: ## verify_libtpu_dual_isa_and_tpu_vm_campaign
+:: Verifies `--suite=libtpu` Dual-ISA (`linux_x64` + `macos_arm64`) multi-host artifact consolidation and `gcp-tpu-vm` routing on Windows.
+:verify_libtpu_dual_isa_and_tpu_vm_campaign
+set "_st_x64=%TEMP%\cloud_libtpu_x64_%RANDOM%.json"
+set "_st_tpu=%TEMP%\cloud_libtpu_tpu_%RANDOM%.json"
+set "_loc_dir=%TEMP%\cloud_libtpu_res_%RANDOM%"
+set "LIBTPU_RS_ALLOW_DIRTY=1"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment libtpu_campaign --suite=libtpu --host-arch=linux_x64 --subsuites=E0,E1,E2,E8 --dry-run "--state-file=!_st_x64!" "--local-dir=!_loc_dir!"
+if errorlevel 1 exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment libtpu_campaign --suite=libtpu --provider=gcp-tpu-vm --size=v6e-8 --host-arch=macos_arm64 --subsuites=E0,E2,E8 --dry-run "--state-file=!_st_tpu!" "--local-dir=!_loc_dir!"
+if errorlevel 1 exit /b 1
+if not exist "!_loc_dir!\results\e2_startup_linux_x64.json" exit /b 1
+if not exist "!_loc_dir!\results\e2_startup_macos_arm64.json" exit /b 1
+if not exist "!_loc_dir!\results\generated_metrics.tex" exit /b 1
+del /f /q "!_st_x64!" "!_st_tpu!" >nul 2>&1
 rmdir /s /q "!_loc_dir!" >nul 2>&1
 exit /b 0

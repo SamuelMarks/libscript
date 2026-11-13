@@ -1,0 +1,14 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "libtpu",
+  "title": "Upstream Google libtpu Reference Wheel & Shared Objects",
+  "description": "Isolated version manager and SHA-256 verified artifact cache for upstream PyPI libtpu wheels (libtpu.so and sdk.so).",
+  "category": "runtimes",
+  "provides": ["libtpu"],
+  "os_whitelist": ["all"],
+  "repository": "https://pypi.org/project/libtpu/",
+  "dependencies": {
+    "host_tools": ["unzip", "curl"],
+    "tier": "optional"
+  }
+}

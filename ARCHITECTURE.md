@@ -27,7 +27,7 @@ orchestrators, multi-node cluster schedulers, and high-availability topologies.
 
 ```mermaid
 flowchart TD
-    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>160+ Isolated Recipes"]
+    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>320+ Isolated Recipes"]
 
     PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso"]
 
@@ -540,16 +540,17 @@ infrastructure into a managed PaaS:
 
 ### 4. LibScript REST API & OpenAPI Engine (`libscript-rest-api`)
 
-For programmatic cluster orchestration and remote build execution, LibScript includes a native C++
-REST API microservice located in `libscript-rest-api/`:
+For programmatic cluster orchestration and remote build execution, LibScript includes a native C11
+REST API daemon (`c-rest-framework`) located in `libscript-rest-api/`:
 
-- **OpenAPI 3.0 Conformance**: Fully typed API contract defined in `openapi.yaml`.
-- **Remote Lifecycle Control**: Endpoints for component installs, stack provisioning, packaging
-  jobs, topologies (`/api/v1/topologies`), payloads (`/api/v1/payloads`), traits (`/api/v1/traits`),
-  and component lifecycle hooks (`/api/v1/components/{name}/hooks/{hook}`), plus real-time log
-  streaming over HTTP.
-- **Embedded Lightweight Server**: Zero heavy dependencies, compilable via CMake, with system
-  service integration scripts.
+- **OpenAPI 3.2.0 Conformance**: Fully typed API contract defined in `openapi.yaml`.
+- **Remote Lifecycle Control**: Endpoints for health/status (`GET /api/v1/status`), component
+  installations (`POST /api/v1/installations`), stack provisioning, packaging jobs, topologies
+  (`/api/v1/topologies`), payloads (`/api/v1/payloads`), traits (`/api/v1/traits`), and component
+  lifecycle hooks (`/api/v1/components/{name}/hooks/{hook}`), plus real-time log streaming over
+  HTTP.
+- **Embedded Lightweight Server**: Zero heavy dependencies, compilable via CMake
+  (`build/bin/libscript-rest-api`), with system service integration scripts.
 
 ---
 
@@ -655,7 +656,7 @@ stateful clusters (`topologies/engine.sh` and `topologies/engine.cmd`):
   unreachable over both private VPC and WireGuard mesh networks.
 - **Production HA Blueprints**: Turnkey topologies for `postgres-ha` (Patroni + etcd + PgBouncer +
   `netctl`), `valkey-cluster`, `redis-cluster`, `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`,
-  `minio-distributed`, `gke-tpu-cluster`, and RabbitMQ HA quorum clustering.
+  `minio-distributed`, `openedx-ha`, `gke-tpu-cluster`, and RabbitMQ HA quorum clustering.
 
 ---
 
@@ -756,14 +757,25 @@ LibScript enforces strict engineering invariants across all scripts and automati
 
 All `.sh` scripts enforce pure `#!/bin/sh` without bashisms. To ensure robust relative path
 resolution regardless of how a script is invoked (sourced, subshell, symlinked), every shell script
-contains the canonical preamble:
+contains the canonical preamble within its first 35 lines:
 
 ```sh
+#!/bin/sh
+# ## Overview
+# Concise description of what this script accomplishes.
+#
+# ## Usage
+# ./path/to/script.sh [args]
+
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -782,28 +794,62 @@ export LIBSCRIPT_ROOT_DIR
 
 ### 2. Windows Batch (`.cmd`) Parity & Recursion Guards
 
-Every shell script has an exact `.cmd` companion implementing delayed expansion and matching
-recursion guards:
+Every shell script has an exact `.cmd` companion implementing delayed expansion and the canonical
+`:!THIS_FILE!:` recursion guard within its first 25 lines:
 
 ```cmd
 @echo off
+:: # script_name.cmd
+::
+:: ## Overview
+:: Concise description of what this batch script accomplishes.
+::
+:: ## Usage
+:: script_name.cmd [args]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto end
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
     )
 )
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 ```
 
 ### 3. Option A Win32 Hard-Fail Boundary Proforma

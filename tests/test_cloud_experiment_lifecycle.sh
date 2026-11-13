@@ -186,9 +186,54 @@ verify_combined_all_steps_execution() {
   rm -rf "${_t_dir}"
 }
 
+# ## verify_libtpu_dual_isa_and_tpu_vm_campaign
+# Verifies `--suite=libtpu` Dual-ISA (`linux_x64` + `macos_arm64`) multi-host artifact consolidation, `gcp-tpu-vm` routing, and LaTeX macro emission.
+verify_libtpu_dual_isa_and_tpu_vm_campaign() {
+  _t_dir="${TMPDIR:-/tmp}/test_cloud_libtpu_$$"
+  _st_x64="${_t_dir}/state_x64.json"
+  _st_tpu="${_t_dir}/state_tpu.json"
+  _loc_dir="${_t_dir}/consolidated_results"
+  rm -rf "${_t_dir}"
+  mkdir -p "${_t_dir}"
+
+  # Host 1: Dedicated Linux x86_64 node
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment libtpu_campaign \
+    --suite='libtpu' \
+    --host-arch='linux_x64' \
+    --subsuites='E0,E1,E2,E3,E4,E5,E6,E7,E8' \
+    --warmup=1 \
+    --trials=3 \
+    --state-file="${_st_x64}" \
+    --local-dir="${_loc_dir}"
+
+  [ -s "${_loc_dir}/results/e2_startup_linux_x64.json" ]
+  [ -s "${_loc_dir}/results/generated_metrics.tex" ]
+
+  # Host 2: Second architecture tag + gcp-tpu-vm provider without clobbering linux_x64 artifacts
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment libtpu_campaign \
+    --suite='libtpu' \
+    --provider='gcp-tpu-vm' \
+    --size='v6e-8' \
+    --location='us-east5-a' \
+    --rg='libtpu-eval-proj' \
+    --host-arch='macos_arm64' \
+    --subsuites='E0,E2,E8' \
+    --warmup=1 \
+    --trials=3 \
+    --state-file="${_st_tpu}" \
+    --local-dir="${_loc_dir}"
+
+  [ -s "${_loc_dir}/results/e2_startup_linux_x64.json" ]
+  [ -s "${_loc_dir}/results/e2_startup_macos_arm64.json" ]
+  grep -q '"provider": "gcp-tpu-vm"' "${_st_tpu}"
+  grep -q '"emit_latex_and_verify_pdf": true' "${_st_tpu}"
+
+  rm -rf "${_t_dir}"
+}
+
 verify_step_by_step_execution
 verify_bento_multi_os_experiment_runner
 verify_single_component_version_pkg_mgr_execution
 verify_combined_all_steps_execution
-printf '[PASS] Named rapid cloud experimentation lifecycle tests succeeded!
-'
+verify_libtpu_dual_isa_and_tpu_vm_campaign
+printf '[PASS] Named rapid cloud experimentation lifecycle tests succeeded!\n'

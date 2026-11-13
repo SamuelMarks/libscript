@@ -155,7 +155,7 @@ respect the Standard Context Contract:
 
 ## 🔒 Mandatory Engineering Invariants & Coding Standards
 
-Every script submitted to LibScript must adhere to these eight non-negotiable invariants:
+Every script submitted to LibScript must adhere to these nine non-negotiable invariants:
 
 ### 1. Strict POSIX `/bin/sh` Compliance
 
@@ -167,15 +167,26 @@ All `.sh` scripts must use the `#!/bin/sh` shebang on line 1.
 
 ### 2. Canonical `THIS_FILE=` Dance & `STACK` Guard
 
-Within the first 65 lines of every `.sh` script, implement canonical path resolution and recursion
-protection:
+Include `## Overview` and `## Usage` docstrings in the first 30 lines and implement canonical path
+resolution and recursion protection within the first 35 lines of every `.sh` script:
 
 ```sh
+#!/bin/sh
+# ## Overview
+# Concise description of what this script accomplishes.
+#
+# ## Usage
+# ./path/to/script.sh [args]
+
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -195,27 +206,61 @@ export LIBSCRIPT_ROOT_DIR
 ### 3. Exact Windows Batch (`.cmd`) Parity
 
 Every `.sh` script must have an identical paired `.cmd` companion. Batch scripts must enable delayed
-expansion and implement matching recursion guards within their first 25 lines:
+expansion and implement the canonical `:!THIS_FILE!:` recursion guard within their first 25 lines:
 
 ```cmd
 @echo off
+:: # script_name.cmd
+::
+:: ## Overview
+:: Concise description of what this batch script accomplishes.
+::
+:: ## Usage
+:: script_name.cmd [args]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto end
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
     )
 )
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 ```
 
 ### 4. Option A Win32 Hard-Fail Boundary Proforma
@@ -275,27 +320,21 @@ mutated diffs.
   mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
   ```
 
-### 7. Option A Win32 Hard-Fail Proforma
+### 7. Contributing to `libscript-rest-api`
 
-Operating system synthesis operations that rely on Linux/Unix kernel primitives (`mount`, `unshare`,
-`losetup`, `mknod`) must never be simulated with fake emulation on Windows. Instead, companion
-`.cmd` scripts must immediately terminate with **exit code `86`** (`EX_UNAVAILABLE` / `ENOSYS`) and
-direct the developer to `vm_builder.cmd` or `package-as docker`.
+When working on the native C11 REST API daemon (`c-rest-framework`) in `libscript-rest-api/`:
 
-### 8. Contributing to `libscript-rest-api`
+- Place `.h` and `.c` files in `src/`.
+- Ensure strict adherence to the OpenAPI 3.2.0 specification in `openapi.yaml`.
+- Build with standard CMake (`cmake -B build && cmake --build build`, producing
+  `build/bin/libscript-rest-api`).
 
-When working on the C++ REST API microservice in `libscript-rest-api/`:
-
-- Place `.hpp` and `.cpp` files in `src/`.
-- Ensure strict adherence to the OpenAPI 3.0 specification in `openapi.yaml`.
-- Build with standard CMake (`cmake -B build && cmake --build build`).
-
-### 9. Absolute Ban on Dynamic Eval
+### 8. Absolute Ban on Dynamic Eval
 
 Dynamic string evaluation (`eval` in POSIX, `Invoke-Expression` / `iex` in PowerShell) is strictly
 prohibited. It introduces security vulnerabilities and code obfuscation.
 
-### 10. Git Safety Invariant
+### 9. Git Safety Invariant
 
 Under no circumstances should any build script, test runner, CI job, or subagent invoke
 **`git push`**.

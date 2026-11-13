@@ -3,13 +3,30 @@
 LibScript aims to become the universal substrate for software delivery, independent of cloud vendor
 or operating system.
 
-## Phase 3: Advanced PaaS & Cluster Mesh (Current)
+## Phase 12: Observability Control Plane & Transactional OS Updates (Next)
+
+- [ ] Lightweight, decentralized Web Dashboard / Control Plane for real-time cluster visualization,
+      topology state inspection, and multi-node log streaming on top of `libscript-rest-api`.
+- [ ] Real-time multicloud resource cost estimation and usage reporting across AWS, Azure, GCP,
+      Hetzner, DigitalOcean, Linode, and Vultr.
+- [ ] Hardware-Aware Auto-Tuning: Dynamically adjusting compiler flags (`-march`), database memory
+      pools, and storage scheduler parameters based on detected CPU ISA extensions and NVMe
+      topology.
+- [ ] Transactional A/B sysroot update partitions and `ostree`-style atomic rollback for immutable
+      Tier 2 OS deployments.
+
+---
+
+## Completed Phases (Phases 3–11)
+
+### Phase 3: Advanced PaaS & Cluster Mesh (Completed)
 
 - [x] High-availability cluster orchestration blueprints (Master/Slave election, Raft-based state,
-      Cross-cloud mesh: `postgres-ha`, `redis-cluster`, `valkey-cluster`, `mesos-marathon-ha`,
-      `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`).
+      Cross-cloud mesh: `postgres-ha`, `redis-cluster`, `valkey-cluster`, `openedx-ha`,
+      `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`).
 - [x] Automated global load balancer and reverse proxy configuration (`traits/ingress/`, `netctl`).
-- [x] Provider Expansion: Add support for DigitalOcean, Linode, and Vultr to the multicloud wrapper.
+- [x] Provider Expansion: Added DigitalOcean, Linode, Vultr, Hetzner, OCI, OVH, and Proxmox VE to
+      the multicloud wrapper (`_lib/cloud-providers/`).
 - [x] Unified Deployment Grammar: High-level declarative DSLs (`payloads/payload.schema.json` and
       `topologies/topology.schema.json`) to describe globally distributed stacks and clusters.
 - [x] Encrypted cross-node mesh networking / Zero-Trust Sidecars (`traits/mesh/` WireGuard &
@@ -17,24 +34,23 @@ or operating system.
 - [x] Git-driven deployment workflows (`libscript deploy`).
 - [x] Cross-cloud persistent volume and state management (`traits/storage/`, `traits/backup/`).
 
-## Phase 4: Hardware & Observability (Next)
+### Phase 4: Terminal UI & Structured Telemetry (Completed)
 
-- [x] Hardware-Aware Optimization: Automatically tuning component installations based on detected
-      hardware (CPU instructions, NVMe presence).
-- [x] Terminal User Interface (TUI) for stack and PaaS management via `package-as TUI`.
-- [x] Lightweight, decentralized Web Dashboard / Control Plane for real-time monitoring and resource
-      management.
-- [x] Integrated log aggregation and health monitoring.
-- [x] Real-time multicloud resource cost and usage reporting.
+- [x] Terminal User Interface (TUI) for OS synthesis (`libscript config os`) and stack packaging via
+      `package-as tui`.
+- [x] Integrated log aggregation, health probing, and structured metrics via `traits/logging/`,
+      `traits/metrics/`, and component `hooks/{probe,log_stream,metrics}`.
 
-## Phase 5: Hardware Acceleration & AI Infrastructure (Current)
+### Phase 5: Hardware Acceleration & AI Infrastructure (Completed)
 
-- [x] Abstracted provisioning for TPU and GPU Virtual Machines.
-- [x] GKE integration for distributed AI workloads via XPK.
-- [x] Automation for inference engines (vLLM, JetStream).
+- [x] Abstracted provisioning for TPU and GPU Virtual Machines (`payloads/ai/gcp-tpu-vm/`,
+      `gcp-gpu-vm/`).
+- [x] GKE integration for distributed AI workloads via XPK (`payloads/ai/gke-xpk-training/`,
+      `gke-xpk-inference/`, `topologies/gke-tpu-cluster/`).
+- [x] Automation for inference engines (`vLLM`, `JetStream`, `Ollama`).
 - [x] Bare-metal generic GPU passthrough setup for local development.
 
-## Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix
+### Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix (Completed)
 
 - [x] Specification & schema (`execution-plan.freebsd.schema.json`) with modular profiles.
 - [x] Pluggable Init Systems (`bsd-rc`, `openrc`, `runit`, `s6`, `dinit`).
@@ -44,7 +60,7 @@ or operating system.
 - [x] Vagrant-only multi-platform verification matrix across
       `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
-## Phase 7: Illumos-Based Modular Distribution & Verification Matrix
+### Phase 7: Illumos-Based Modular Distribution & Verification Matrix (Completed)
 
 - [x] Specification & schema (`execution-plan.illumos.schema.json`) with modular profiles
       (`minimal-server`, `zfs-cloud`, `desktop-mate-x11`, `desktop-xfce-x11`, `cde-retro-x11`,
@@ -59,7 +75,7 @@ or operating system.
 - [x] Vagrant-only multi-platform verification matrix across
       `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
-## Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`)
+### Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`) (Completed)
 
 - [x] Specification and execution schema (`execution-plan.live.schema.json`).
 - [x] Live installer image builder (`devtools/build_live_installer.sh` / `.cmd`).
@@ -74,15 +90,15 @@ or operating system.
 - [x] Engineering specification and checklist tracked in
       [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
 
-## Phase 9: Native REST API & OpenAPI 3.0 Control Plane
+### Phase 9: Native C11 REST API & OpenAPI 3.2.0 Control Plane (Completed)
 
-- [x] High-performance C++ HTTP daemon in `libscript-rest-api/`.
-- [x] Strongly typed OpenAPI 3.0 specification (`libscript-rest-api/openapi.yaml`).
-- [x] REST endpoints for component lifecycle, stack synthesis, artifact packaging, and job status
-      polling.
+- [x] High-performance pure C11 HTTP daemon (`c-rest-framework`) in `libscript-rest-api/`.
+- [x] Strongly typed OpenAPI 3.2.0 specification (`libscript-rest-api/openapi.yaml`).
+- [x] REST endpoints for component lifecycle, stack synthesis, artifact packaging, topologies,
+      payloads, traits, hooks, and job status polling.
 - [x] Native CMake build system, architecture guide, and daemon integration scripts.
 
-## Phase 10: Generic 3-Mode Build Substrate & 4-Way C Compiler Differential Verification
+### Phase 10: Generic 3-Mode Build Substrate & Multi-Compiler C/C++ Differential Verification (Completed)
 
 - [x] Universal 3-mode build/install substrate (`_lib/_common/source_builder.{sh,cmd}`,
       `pkg_mgr.{sh,cmd}`, `component_core.{sh,cmd}`) supporting `--pkg-mgr=<pm>`,
@@ -99,7 +115,7 @@ or operating system.
 - [x] Linux kernel multi-toolchain Kbuild engine, ELF/`System.map` ABI differential harness
       (`_lib/kernel/linux/compare_compilers.{sh,cmd}`), and declarative kernel compiler profiles.
 
-## Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks
+### Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks (Completed)
 
 - [x] Tier 4 Declarative Workload Engine (`payloads/`) and pluggable scheduler drivers for
       **Kubernetes** (`kubernetes`, `k8s-marathon`, `kubernetes-k0s`, `kubernetes-thw`), **Apache
@@ -109,7 +125,7 @@ or operating system.
 - [x] Tier 3.5 High-Availability Topology Engine (`topologies/engine.{sh,cmd}`), distributed lease
       locking (`topologies/lock.{sh,cmd}`), and automated split-brain fencing
       (`topologies/fence.{sh,cmd}`).
-- [x] Turnkey HA blueprints for `postgres-ha`, `redis-cluster`, `valkey-cluster`,
+- [x] Turnkey HA blueprints for `postgres-ha`, `redis-cluster`, `valkey-cluster`, `openedx-ha`,
       `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and
       `gke-tpu-cluster`.
 - [x] Unified Cross-Cutting Node Traits (`traits/engine.{sh,cmd}`): `storage`, `secrets`
@@ -122,4 +138,5 @@ or operating system.
       `rollback`, `maintenance`) and logical multi-tenant hooks (`provision_tenant`,
       `deprovision_tenant`, `backup_tenant`, `restore_tenant`).
 
-_For completed phases (Phase 1 and 2), please see the [CHANGELOG.md](CHANGELOG.md)._
+_For earlier completed phases (Phases 1 and 2) and detailed release notes, see
+[CHANGELOG.md](CHANGELOG.md)._

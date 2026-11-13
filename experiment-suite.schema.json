@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/experiment-suite.schema.json",
+  "title": "LibScript Empirical Experiment Suite Manifest",
+  "description": "Declarative specification for reproducible, multi-ISA empirical benchmark suites, SIGPLAN statistical policies, provenance envelopes, prerequisite gates, and LaTeX macro emission.",
+  "type": "object",
+  "required": ["id", "title", "protocol_version", "subsuites"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "Unique lowercase identifier for the experiment suite (e.g., libtpu, edgcpp, libscript)."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable title describing the empirical evaluation campaign."
+    },
+    "protocol_version": {
+      "type": "string",
+      "description": "Semantic version or conference protocol tag for the evaluation specification."
+    },
+    "manuscript_dir": {
+      "type": "string",
+      "description": "Relative or absolute path to the manuscript directory containing the target LaTeX source."
+    },
+    "manuscript_tex": {
+      "type": "string",
+      "description": "Primary LaTeX manuscript filename relative to manuscript_dir (e.g., libtpu_paper.tex)."
+    },
+    "target_repo_dir": {
+      "type": "string",
+      "description": "Relative or absolute path to the subject source repository under empirical evaluation."
+    },
+    "results_dir": {
+      "type": "string",
+      "description": "Output directory where mechanical JSON benchmark artifacts are emitted."
+    },
+    "generated_tex_path": {
+      "type": "string",
+      "description": "Output path for generated single-source LaTeX metric macros and tables."
+    },
+    "host_constraints": {
+      "type": "object",
+      "description": "Host ISA, binary translation prohibition, and OS preparation constraints (RULE-2, RULE-3).",
+      "properties": {
+        "required_native_isas": {
+          "type": "array",
+          "description": "List of native OS/ISA targets required across the evaluation campaign (e.g., linux_x64, macos_arm64).",
+          "items": {
+            "type": "string",
+            "description": "Canonical OS/ISA target identifier."
+          }
+        },
+        "forbid_binary_translation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether execution under Rosetta 2, QEMU user/TCG, binfmt_misc, or WoW64 emulation must fail hard."
+        },
+        "prepare_host": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether CPU performance governor locking, ASLR disablement, and swapoff are requested when privileged."
+        },
+        "drop_caches_on_cold": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether cold subprocess measurements drop kernel page caches (or use cold binary copy fallback)."
+        },
+        "cloud_sku_by_arch": {
+          "type": "object",
+          "description": "Recommended bare-metal or dedicated-core cloud VM SKUs keyed by OS/ISA target.",
+          "patternProperties": {
+            "^[a-z0-9_-]+$": {
+              "type": "string",
+              "description": "Cloud instance SKU identifier for the target architecture."
+            }
+          }
+        }
+      }
+    },
+    "trial_policy": {
+      "type": "object",
+      "description": "Non-parametric trial, warmup, quantile, and PRNG seed policy (RULE-3, RULE-4).",
+      "properties": {
+        "warmup_runs": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10,
+          "description": "Number of unrecorded warmup runs executed prior to timed trials."
+        },
+        "measured_trials": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 200,
+          "description": "Number of recorded fresh trials captured into samples_ns."
+        },
+        "quantiles": {
+          "type": "array",
+          "description": "Non-parametric quantiles reported alongside min and max (e.g., [0.25, 0.50, 0.75, 0.99]).",
+          "items": {
+            "type": "number",
+            "description": "Quantile fraction in the closed interval [0.0, 1.0]."
+          }
+        },
+        "dispersion_metric": {
+          "type": "string",
+          "enum": ["iqr_and_p99", "iqr", "mad"],
+          "default": "iqr_and_p99",
+          "description": "Primary non-parametric dispersion estimator used for tables and PGFPlots error bars."
+        },
+        "prng_seed": {
+          "type": "integer",
+          "default": 42,
+          "description": "Deterministic PRNG seed shared across reference and target workload runs."
+        }
+      }
+    },
+    "build_profile": {
+      "type": "object",
+      "description": "Pinned release compiler and post-link stripping configuration (RULE-6).",
+      "properties": {
+        "cargo_profile_flags": {
+          "type": "object",
+          "description": "Pinned Cargo release environment variables (opt-level, lto, codegen-units).",
+          "patternProperties": {
+            "^[A-Z0-9_]+$": {
+              "type": "string",
+              "description": "Pinned Cargo profile environment variable value."
+            }
+          }
+        },
+        "c_compiler_flags": {
+          "type": "array",
+          "description": "Pinned C11 benchmark harness compiler flags (e.g., ['-std=c11', '-O3']).",
+          "items": {
+            "type": "string",
+            "description": "Single C compiler command-line flag."
+          }
+        },
+        "strip_mode": {
+          "type": "string",
+          "enum": ["strip-unneeded", "strip-local", "none"],
+          "default": "strip-unneeded",
+          "description": "Deterministic post-link symbol stripping policy applied after recording unstripped sizes."
+        },
+        "feature_variants": {
+          "type": "array",
+          "description": "Named Cargo feature configurations built and measured (e.g., full vs. slim).",
+          "items": {
+            "type": "string",
+            "description": "Feature configuration identifier."
+          }
+        }
+      }
+    },
+    "prereq_checks": {
+      "type": "array",
+      "description": "Codebase prerequisite predicates that gate final benchmark locking (RULE-7).",
+      "items": {
+        "type": "object",
+        "description": "Single prerequisite check gating one or more sub-suites.",
+        "required": ["id", "suites", "kind", "target"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the prerequisite gate."
+          },
+          "suites": {
+            "type": "array",
+            "description": "Sub-suite identifiers gated by this check (e.g., ['E4', 'E6']).",
+            "items": {
+              "type": "string",
+              "description": "Sub-suite identifier."
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["file_exists", "grep_present", "grep_absent", "command_zero"],
+            "description": "Verification predicate type evaluated against the target repository."
+          },
+          "target": {
+            "type": "string",
+            "description": "Relative file path or command inspected by the prerequisite gate."
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Extended regular expression pattern matched for grep_present or grep_absent predicates."
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable explanation of what codebase milestone this gate verifies."
+          }
+        }
+      }
+    },
+    "subsuites": {
+      "type": "array",
+      "description": "Ordered DAG of empirical evaluation sub-suites (e.g., E0 through E8).",
+      "items": {
+        "type": "object",
+        "description": "Declarative definition of a single empirical sub-suite.",
+        "required": ["id", "title", "entrypoint", "outputs"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Short sub-suite identifier (e.g., E0, E1, E2, E3, E4, E5, E6, E7, E8)."
+          },
+          "title": {
+            "type": "string",
+            "description": "Descriptive title of the sub-suite and manuscript targets."
+          },
+          "depends_on_suites": {
+            "type": "array",
+            "description": "Upstream sub-suite IDs that must complete before this sub-suite runs.",
+            "items": {
+              "type": "string",
+              "description": "Upstream sub-suite ID."
+            }
+          },
+          "libscript_deps": {
+            "type": "array",
+            "description": "Reusable Tier 1 LibScript components required by this sub-suite.",
+            "items": {
+              "type": "string",
+              "description": "Tier 1 component name in _lib/."
+            }
+          },
+          "entrypoint": {
+            "type": "string",
+            "description": "Relative POSIX/Batch script stem invoked to execute the sub-suite."
+          },
+          "require_native_isa": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this sub-suite enforces native non-translated ISA execution (RULE-2)."
+          },
+          "outputs": {
+            "type": "array",
+            "description": "Expected JSON or LaTeX output artifact paths relative to results_dir.",
+            "items": {
+              "type": "string",
+              "description": "Relative artifact filename or pattern."
+            }
+          }
+        }
+      }
+    }
+  }
+}

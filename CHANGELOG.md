@@ -67,14 +67,15 @@ All notable changes to the LibScript framework are documented here.
     - Built-in PaaS & universal reverse proxying via `netctl` for Nginx, Caddy, Apache, and Windows
       IIS with automated Let's Encrypt TLS and OS init supervision (`systemd`, `launchd`, Windows
       Services).
-    - Programmatic REST API and OpenAPI 3.0 control plane via `libscript-rest-api`.
+    - Programmatic C11 REST API (`c-rest-framework`) and OpenAPI 3.2.0 control plane via
+      `libscript-rest-api`.
   - **Tier 3.5: High-Availability Topologies & Consensus Choreography (`topologies/`)**:
     - DAG state machine (`topologies/engine.{sh,cmd}`) managing `.topology_state.json` with atomic
       write-then-rename checkpointing, distributed lease locking (`topologies/lock.{sh,cmd}`), and
       automated split-brain fencing (`topologies/fence.{sh,cmd}`).
     - Turnkey HA cluster blueprints: `postgres-ha` (Patroni + etcd Raft + PgBouncer),
-      `redis-cluster`, `valkey-cluster`, `mesos-marathon-ha` (ZooKeeper + Mesos + Marathon),
-      `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and `gke-tpu-cluster`.
+      `redis-cluster`, `valkey-cluster`, `openedx-ha`, `mesos-marathon-ha` (ZooKeeper + Mesos +
+      Marathon), `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and `gke-tpu-cluster`.
   - **Tier 4: Declarative Payloads & Multi-Node Cluster Schedulers (`payloads/`)**:
     - Universal workload schema (`payloads/payload.schema.json`) and dispatcher
       (`payloads/engine.{sh,cmd}`) supporting stateless services, stateful sets, batch ETL/search
@@ -120,7 +121,18 @@ All notable changes to the LibScript framework are documented here.
 
 ### Completed Initiatives
 
-#### Phase 10: Generic 3-Mode Build Substrate & 4-Way C Compiler Differential Verification
+#### Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks
+
+- Added Tier 4 Declarative Workload Engine (`payloads/`) and scheduler drivers (`kubernetes`,
+  `nomad`, `mesos`, `slurm_ray`, `xpk`, `microvm`, `native`).
+- Added Tier 3.5 High-Availability Topology Engine (`topologies/engine.{sh,cmd}`), lease locking,
+  split-brain fencing, and turnkey HA blueprints (`postgres-ha`, `redis-cluster`, `valkey-cluster`,
+  `openedx-ha`, `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`,
+  `gke-tpu-cluster`).
+- Added Unified Cross-Cutting Node Traits (`traits/`) and Dual-Layer Component Lifecycle Hooks
+  (`_lib/_common/hooks.{sh,cmd}`) for physical and multi-tenant operations.
+
+#### Phase 10: Generic 3-Mode Build Substrate & Multi-Compiler C/C++ Differential Verification
 
 - Added universal 3-mode component provisioning and source compilation in `_lib/_common/`:
   - **Mode 1 (`--pkg-mgr=<pm>`)**: Explicit package manager selection and auto-bootstrapping across
@@ -130,21 +142,22 @@ All notable changes to the LibScript framework are documented here.
     (`_lib/_common/source_builder.{sh,cmd}`) using the host's default C toolchain.
   - **Mode 3 (`--from-source --toolchain=<cc>` / `--custom-cc=<path>`)**: Compiler-namespaced source
     builds with `build-metrics.json` section and timing telemetry.
-- Added standalone Tier 1 C compiler version managers (`_lib/languages/{gcc,clang,tcc,custom-cc}/`)
-  with `cc_wrapper.{sh,cmd}` GNU flag sanitization and per-TU JSONL telemetry.
+- Added standalone Tier 1 C/C++ compiler version managers
+  (`_lib/languages/{gcc,clang,tcc,edgcpp,custom-cc}/`) with `cc_wrapper.{sh,cmd}`,
+  `edgcpp_wrapper.{sh,cmd}`, and per-TU JSONL telemetry.
 - Upgraded `_lib/databases/sqlite/` with 3-mode provisioning, C amalgamation source compilation, a
   deterministic 6-stage SQL torture suite (`test.{sh,cmd}`), and a 4-way differential compiler
   benchmark (`compare_compilers.{sh,cmd}`).
 - Upgraded `_lib/kernel/linux/` and `_lib/orchestration/resolve_stack.jq` with multi-toolchain
-  Kbuild support, ELF/`System.map` differential analysis (`compare_compilers.{sh,cmd}`), and 6
+  Kbuild support, ELF/`System.map` differential analysis (`compare_compilers.{sh,cmd}`), and 8
   declarative kernel compiler profiles in `profiles/`.
 
-#### Phase 9: Native REST API & OpenAPI 3.0 Control Plane
+#### Phase 9: Native C11 REST API & OpenAPI 3.2.0 Control Plane
 
-- High-performance C++ HTTP microservice daemon in `libscript-rest-api/`.
-- Strongly typed OpenAPI 3.0 specification (`libscript-rest-api/openapi.yaml`).
-- REST endpoints for remote component installation, stack synthesis, packaging execution, and log
-  streaming.
+- High-performance pure C11 HTTP daemon (`c-rest-framework`) in `libscript-rest-api/`.
+- Strongly typed OpenAPI 3.2.0 specification (`libscript-rest-api/openapi.yaml`).
+- REST endpoints for remote component installation, stack synthesis, packaging execution,
+  topologies, payloads, traits, hooks, and log streaming.
 - CMake build configuration and platform daemon service scripts.
 
 #### Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`)

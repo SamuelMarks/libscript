@@ -1,41 +1,45 @@
 # Documentation Roadmap
 
-This document outlines the planned improvements and ongoing initiatives for LibScript's
-documentation. The goal is to provide clear, technically accurate guides for utilizing the
-framework's native execution and generation capabilities.
+This document outlines completed documentation milestones and upcoming documentation initiatives for
+LibScript, maintaining 100% static documentation coverage (`devtools/audit/doc_coverage.sh`).
 
-## Current Objectives
+## Completed Documentation Deliverables
 
-- **Automated Schema Synchronization:** Ensure all `README.md` files dynamically inherit and display
-  accurate variable tables from `vars.schema.json` and `base_vars.schema.json`. _(Implemented via
-  `devtools/docs-gen`)_
-- **Dynamic Compatibility Matrices:** Automatically detect and maintain "Platform Support" tables in
-  component READMEs by inspecting execution scripts. _(Implemented via `devtools/docs-gen`)_
-- **Generator Documentation:** Provide detailed examples of utilizing the `package-as` command to
-  generate Dockerfiles, Docker Compose setups, and native OS installers (Windows, Linux, FreeBSD,
-  macOS).
-- **Universal Live Installer Documentation:** Document the `msi-rs` live multiboot installer
-  architecture, console parameters, interactive canvas, and multi-OS co-installation in
-  [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
-- **illumos Distribution Synthesis:** Document the illumos kernel, SMF services, and ZFS `rpool`
-  hierarchy across OmniOS and OpenIndiana profiles.
-- **REST API & OpenAPI Documentation:** Document the programmatic C++ HTTP microservice and OpenAPI
-  3.0 contract in `libscript-rest-api/`.
-- **Multi-Node Schedulers, Topologies & Traits Documentation:** Document Tier 3.5 HA topologies
-  ([topologies/README.md](topologies/README.md)), Tier 4 scheduler drivers for Kubernetes, Mesos,
-  and Nomad ([payloads/README.md](payloads/README.md)), and cross-cutting traits
-  ([traits/README.md](traits/README.md)).
+- [x] **100% Static Doc Coverage & Automated Schema Synchronization:** All component `README.md`
+      files dynamically inherit variable tables from `vars.schema.json` and `base_vars.schema.json`,
+      verified via `devtools/docs-gen/` and `devtools/audit/doc_coverage.{sh,cmd}`.
+- [x] **Dynamic Platform Compatibility Matrices:** Automated OS/package-manager support tables
+      across all 520+ subsystems (`devtools/docs-gen/generate_markdown_docs.*` and
+      `tests/update_results.*`).
+- [x] **Packaging & Branding Guides:** Documented `package-as` installer targets, online/offline
+      air-gapped variants, and modular WiX/MSI chaining in
+      [PACKAGING_BRANDING_GUIDE.md](PACKAGING_BRANDING_GUIDE.md), [WINDOWS_MSI.md](WINDOWS_MSI.md),
+      and [WINDOWS.md](WINDOWS.md).
+- [x] **Universal Live Installer Operator Guide:** Documented the `msi-rs` live multiboot installer,
+      partitioning canvas, and multi-OS co-installation in
+      [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+- [x] **C11 REST API & OpenAPI 3.2.0 Documentation:** Documented the native C11 HTTP daemon
+      (`c-rest-framework`) and OpenAPI 3.2.0 contract (`libscript-rest-api/openapi.yaml`) in
+      [libscript-rest-api/README.md](libscript-rest-api/README.md),
+      [libscript-rest-api/ARCHITECTURE.md](libscript-rest-api/ARCHITECTURE.md), and
+      [libscript-rest-api/USAGE.md](libscript-rest-api/USAGE.md).
+- [x] **Multi-Node Schedulers, Topologies, Traits & Cloud Experimentation:** Documented Tier 3.5 HA
+      topologies ([topologies/README.md](topologies/README.md)), Tier 4 scheduler drivers
+      ([payloads/README.md](payloads/README.md)), cross-cutting traits
+      ([traits/README.md](traits/README.md)), and cloud Bento Vagrant matrix execution
+      ([EXPERIMENTS.md](EXPERIMENTS.md)).
+- [x] **Procedural HTML Documentation Generator:** Implemented static HTML portal synthesis in
+      `devtools/generate_html_docs.{sh,cmd,ps1}` and `docs-web-template/`.
 
-## Future Enhancements
+## Active & Future Objectives
 
-1. **Procedural Web Docs Generation:** Expand the `generate_html_docs.sh` toolchain to synthesize an
-   entire static documentation website utilizing the auto-generated markdown tables.
-2. **Interactive Examples:** Provide interactive CLI or TUI examples within the documentation to
-   demonstrate stack building.
-3. **Configuration Management Integration:** Detail how LibScript can be called from existing tools
-   (like Chef, Ansible, and Puppet) to simplify playbook complexity.
-4. **Stack & Topology Templates:** Document common stack definitions (`libscript.json`), workload
-   payloads (`payloads/`), and HA cluster blueprints (`topologies/`).
-5. **Machine Learning Infrastructure:** Expand tutorials around `payloads/ai/*`,
-   `topologies/gke-tpu-cluster/`, and `_lib/ml-training/` to demonstrate TPU/GPU provisioning,
-   distributed XPK training, and vLLM/JetStream deployment workflows.
+1. **Hosted Searchable Documentation Portal:** Extend `devtools/generate_html_docs.{sh,cmd}` with
+   client-side search indexing across all 320+ Tier 1 recipes, JSON schemas, and OpenAPI 3.2.0
+   endpoints.
+2. **illumos & FreeBSD Deep-Dive Internals:** Add dedicated architecture walkthroughs for ZFS boot
+   environments (`beadm`), SMF service manifests, and FreeBSD `MAKEOBJDIRPREFIX` world cross-builds.
+3. **Configuration Management Interoperability:** Document patterns for invoking LibScript recipes
+   from existing Ansible, Chef, Puppet, or Terraform workflows during incremental migrations.
+4. **End-to-End HA & AI Cookbooks:** Expand step-by-step runbooks around `topologies/openedx-ha/`,
+   `topologies/postgres-ha/`, `topologies/gke-tpu-cluster/`, and `payloads/ai/*` (distributed XPK
+   training, `vLLM`, and `JetStream` serving).

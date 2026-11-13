@@ -200,6 +200,17 @@ Vagrant.configure("2") do |config|
 end
 ```
 
+### Pre-Configured Repository Vagrant Environments (`vagrant/`)
+
+Ready-to-run `Vagrantfile` environments live directly under `vagrant/`:
+
+- `vagrant/alpine-3.24/`, `vagrant/debian-13/`, `vagrant/rockylinux-10.2/` (Linux targets)
+- `vagrant/freebsd-15.1/`, `vagrant/omnios/` (BSD & illumos targets)
+- `vagrant/windows-11/`, `vagrant/macos-14-arm64/` (Windows & Apple Silicon macOS targets)
+- `vagrant/k8s-thw-alpine/`, `vagrant/k8s-thw-debian/` (Multi-node Kubernetes-The-Hard-Way
+  topologies)
+- `vagrant/up_multiple.{sh,cmd}` (Multi-box parallel launcher)
+
 ## 4. Packaging Custom Vagrant Boxes Directly with LibScript
 
 LibScript also includes built-in automation to transform synthesized Linux From Scratch or custom
@@ -282,11 +293,11 @@ automatically via `./libscript.sh experiment` (or `libscript.cmd experiment`):
 # Test a single component-version and package-manager on one target OS
 ./libscript.sh experiment bento_matrix --target-os=debian-13 --component=postgres@16.2 --pkg-mgr=apt-get
 
-# Or run the full lifecycle (a: provision, 0..5: Bento Vagrant matrix across OSs, i: deprovision)
-./libscript.sh experiment a
+# Or run the full lifecycle (a_provision_instance, b..h via bento_matrix across OSs, i_deprovision_instance)
+./libscript.sh experiment a_provision_instance
 ./libscript.sh experiment bento_matrix --target-os=alpine-3.24
 ./libscript.sh experiment bento_matrix --target-os=debian-13
-./libscript.sh experiment i
+./libscript.sh experiment i_deprovision_instance
 ```
 
 See [EXPERIMENTS.md](EXPERIMENTS.md) and [USAGE.md](USAGE.md) for the complete parameter reference.

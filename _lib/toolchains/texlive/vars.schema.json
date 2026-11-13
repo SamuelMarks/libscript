@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/texlive/vars.schema.json",
+  "title": "texlive variables",
+  "description": "Configuration variables for texlive",
+  "type": "object",
+  "properties": {
+    "TEXLIVE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install texlive. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "TEXLIVE_VERSION": {
+      "description": "Specific version of texlive to install.",
+      "type": "string",
+      "default": "2025",
+      "version_aliases": ["latest", "lts"]
+    },
+    "TEXLIVE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading texlive binary or archive artifacts."
+    },
+    "TEXLIVE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying texlive available remote releases."
+    },
+    "TEXLIVE_SCHEME": {
+      "type": "string",
+      "description": "TeX Live base scheme installed into the isolated version prefix.",
+      "default": "scheme-basic"
+    },
+    "TEXLIVE_EXTRA_PACKAGES": {
+      "type": "string",
+      "description": "Space-separated CTAN packages installed via tlmgr to prevent missing styles or Type-3 bitmap PK fonts.",
+      "default": "acmart pgfplots pgf booktabs microtype hyperref cm-super libertine"
+    }
+  }
+}

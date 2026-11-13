@@ -1,30 +1,34 @@
 # Experimental Ideas
 
-This document tracks experimental features and potential use-cases for LibScript's architecture.
-These concepts explore capabilities beyond standard software provisioning.
+This document tracks experimental research directions and potential use-cases for LibScript's
+architecture beyond what has already graduated into core tiers.
 
-## AI and Machine Learning Toolchains (Partially Implemented)
+## Bare-Metal Accelerator Driver & Runtime Auto-Tuning (Partially Implemented)
 
-We have implemented automation for provisioning GPU and TPU Virtual Machines on Google Cloud
-(including XPK and vLLM stacks). We are now investigating the viability of generically provisioning
-complex, hardware-dependent stacks (such as CUDA drivers and vLLM) locally on bare-metal host
-machines to avoid the overhead associated with containerized GPU passthrough.
+Google Cloud TPU/GPU VM lifecycles (`payloads/ai/gcp-tpu-vm/`, `gcp-gpu-vm/`), GKE XPK training and
+inference (`payloads/ai/gke-xpk-*`), and local/cluster AI serving recipes (`_lib/app-servers/vllm/`,
+`_lib/app-servers/ollama/`, `_lib/ai-serving/jetstream/`) have graduated into core. Active research
+focuses on zero-reboot bare-metal kernel driver staging (NVIDIA open kernel modules, AMD ROCm, and
+VFIO IOMMU passthrough) with automatic CPU socket and PCIe topology pinning.
 
-## Immutable OS Deployment (Partially Implemented)
+## Transactional A/B Immutable OS Updates (Partially Implemented)
 
-Tier 2 now natively synthesizes signed Unified Kernel Images (UKI), immutable SquashFS + OverlayFS
-hybrid live ISOs, and Firecracker microVM direct boot kernels. We are now exploring integrations
-with tools like `ostree` and transactional A/B sysroot update partitions for atomic over-the-air
-upgrades.
+Tier 2 natively synthesizes signed Unified Kernel Images (UKI), immutable SquashFS + OverlayFS
+hybrid live ISOs, and Firecracker/Unikraft/OSv unikernels. Ongoing experimentation explores
+transactional A/B root partition switching, `ostree`-style content-addressed sysroot deltas, and
+automatic bootloader fallback on failed `hooks/probe readiness` boot checks.
 
-## Auto-Scaling Native Clusters
+## Reactive Metric-Driven Native Autoscaling
 
-Design a mechanism to automatically spin up additional compute nodes and register them with a
-dynamic `netctl` load balancer configuration, effectively mimicking Kubernetes Horizontal Pod
-Autoscaler (HPA) using raw VMs and native orchestration primitives.
+`topologies/engine.{sh,cmd} scale` and `traits/ingress/` (`netctl`) already support declarative
+worker pool scaling and dynamic load-balancer registration. The next experimental step is a
+lightweight, zero-daemon closed-loop controller that consumes `traits/metrics/` endpoints to
+autonomously provision or drain cloud VMs in response to latency, queue-depth, or GPU utilization
+thresholds—bringing Kubernetes HPA semantics to raw VMs and native init supervisors.
 
-## Edge Computing Constraints
+## Resource-Constrained Edge & Embedded Footprints
 
-Because LibScript operates without heavy runtimes (like Python or Ruby), it presents an opportunity
-to provision resource-constrained embedded and edge devices more efficiently than traditional
-configuration management tools.
+Because LibScript operates in pure POSIX `/bin/sh` without heavy interpreter runtimes (Python, Ruby,
+or Node.js), we are investigating ultra-minimal BusyBox/Toybox edge profiles (< 16 MB RAM) and
+peer-to-peer LAN artifact caching so air-gapped edge fleets can synchronize `_lib/` updates over
+`traits/mesh/` without central registries.

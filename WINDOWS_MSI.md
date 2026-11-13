@@ -109,7 +109,8 @@ msiexec /x MyStack.msi PURGE_mysql="--purge-data" PURGE_meilisearch="--purge-dat
 
 To configure custom branding in `packaging/template_msi.*` or via `libscript.sh package-as msi`:
 
-- **License Agreement**: `--license <path>` (Plain text or `.rtf`). Automatically formatted into a
+- **License Agreement**: `--license <path>` (`template_msi.*` / `build_msi.*`) or
+  `--license-file <path>` (`package-as msi`, plain text or `.rtf`). Automatically formatted into a
   scrollable EULA dialog with acceptance checkbox.
 - **Application Icon**: `--icon <path.ico>`. Embedded into binary and registered in
   `ARPPRODUCTICON`.
@@ -126,7 +127,7 @@ Every LibScript MSI installer embeds the complete execution engine, recipe modul
 orchestration scripts into a dedicated subfolder (`[INSTALLFOLDER]\libscript`), ensuring complete
 standalone autonomy without requiring pre-installed host packages or external tools:
 
-```
+```text
 C:\Program Files (x86)\OpenEdX\
 ├── cli.cmd                      # Management console dispatcher
 ├── healthcheck.cmd              # Full-stack diagnostic probe
@@ -134,11 +135,12 @@ C:\Program Files (x86)\OpenEdX\
 └── libscript\                   # Full embedded LibScript engine
     ├── libscript.cmd            # Root Windows batch engine
     ├── libscript.sh             # Root POSIX /bin/sh engine
-    ├── _lib\                    # Core runtime, database, and cache recipes
+    ├── _lib\                    # Core runtime, database, cache, and netctl recipes
     ├── cli\                     # CLI dispatchers
-    ├── netctl\                  # Networking managers
     ├── packaging\               # WiX generators, branding tools, and browser launcher
-    └── stacks\                  # Platform and stack configurations
+    ├── payloads\                # Declarative workload definitions and schedulers
+    ├── topologies\              # Multi-node HA cluster topologies
+    └── traits\                  # Cross-cutting node traits (storage, secrets, firewall, backup)
 ```
 
 ### WiX Multi-Fragment Synthesis

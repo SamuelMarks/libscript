@@ -265,6 +265,7 @@ all_scripts.txt
 !/execution-plan.freebsd.schema.json
 !/execution-plan.live.schema.json
 !/component-scaffold.schema.json
+!/experiment-suite.schema.json
 !/.cspell.json
 /*.txt
 !_lib/checksums.txt

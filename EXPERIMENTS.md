@@ -171,3 +171,49 @@ Every step can be executed individually by its lexicographical step name or unpr
 ./libscript.sh experiment h_pull_logs --target-os=alpine-3.24               # Pull consolidated log bundle dir to current host
 ./libscript.sh experiment i_deprovision_instance                            # Deprovision cloud instance
 ```
+
+---
+
+## 4. Multi-Suite SIGPLAN Empirical Evaluation (`--suite=libtpu|edgcpp|manifest`)
+
+Beyond Bento Vagrant OS matrices, LibScript's experiment runner provides a zero-dependency
+statistical, provenance, and LaTeX macro synthesis substrate (`_lib/_common/experiment_harness.sh`
+and `.cmd`, governed by `experiment-suite.schema.json`) enforcing SIGPLAN empirical evaluation
+invariants (`RULE-1` through `RULE-7`):
+
+- **`RULE-1` (Single-Source Provenance & LaTeX Emission):** Every `results/*.json` records exact
+  40-hex `git_commit_sha`, clean worktree verification, and `host_manifest_ref`; Suite `E8`
+  mechanically emits `results/generated_metrics.tex` and rejects unresolved `\tbd` / `???` tokens.
+- **`RULE-2` (Native ISA Guard — Zero Rosetta/QEMU Timing):** Rejects Rosetta 2
+  (`sysctl.proc_translated=1`), QEMU user/TCG emulation, and WoW64 translation during native timing.
+- **`RULE-3` & `RULE-4` (Cold vs. Warm Subprocesses & Non-Parametric Dispersion):** Separates cold
+  runs (`drop_caches` / cold binary copy) from warm loops ($W \ge 10$ warmups + $N \ge 200$ fresh
+  subprocesses), recording full `samples_ns` arrays alongside sorted median (`P50`), `IQR`
+  (`P75 - P25`), `P99`, and `min`/`max`.
+- **`RULE-5` (OS-Normalized `ru_maxrss`):** Normalizes `Darwin`/`Windows_NT` bytes vs. `Linux` KiB
+  ($\times 1024$) into binary MiB ($2^{20}$ bytes) and records empty-C11 baseline RSS subtraction.
+- **`RULE-6` & `RULE-7` (Pinned Release Profiles & Prerequisite Gates):** Pins Cargo/C11 release
+  flags + deterministic `llvm-strip --strip-unneeded` / `strip -x`, and gates suites on codebase
+  readiness predicates.
+
+### POSIX (`/bin/sh`) & Windows Batch (`.cmd`) Dual-ISA Campaign Examples
+
+```sh
+# 1. Remote bare-metal/dedicated Linux x86_64 campaign (E0-E8) + host pull
+./libscript.sh experiment libtpu_campaign --suite=libtpu --host-arch=linux_x64 \
+  --provider=azure --size="160-vCPU Standard_D160ads_v7" \
+  --subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8 --warmup=10 --trials=200 \
+  --repo-dir=../libtpu-rs --paper-dir=../new_research/libtpu_paper
+
+# 2. Local native macOS arm64 execution into consolidated results directory + PDF audit
+./libscript.sh libtpu-rs experiments --host-arch=macos_arm64 \
+  --subsuites=E0,E2,E4,E8 --warmup=10 --trials=200 \
+  --results-dir=./build/experiment_results/results \
+  --paper-dir=../new_research/libtpu_paper --build-pdf
+```
+
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd experiment libtpu_campaign --suite=libtpu --host-arch=linux_x64 --warmup=10 --trials=200
+.\libscript.cmd libtpu-rs experiments --subsuites=E0,E1,E2,E5,E6,E7,E8 --results-dir=.\build\libtpu_results
+```

@@ -113,7 +113,8 @@ All shell scripts must be strictly POSIX compliant (`#!/bin/sh`), never Bash (`#
 
 ### Canonical Script Header Template
 
-Every `.sh` script must begin with this exact structure within the first 30 lines:
+Every `.sh` script must include `## Overview` and `## Usage` docstrings within the first 30 lines
+and begin its `THIS_FILE=` resolution block within the first 35 lines:
 
 ```sh
 #!/bin/sh
@@ -312,6 +313,10 @@ All `*.schema.json` files must provide a non-empty `"description"` for every pro
 3. **Recipe Boundaries**: Tier 1 leaf packages (`_lib/*/*`) must not invoke storage/kernel
    partitioning primitives (`mount`, `umount`, `fdisk`, `mkfs`, `cryptsetup`). Such actions belong
    strictly to Tier 2 image synthesizers.
+4. **Native C11 HTTP Daemon (`libscript-rest-api/`)**: The programmatic REST API server in
+   `libscript-rest-api/` is implemented in pure C11 (`.c`/`.h` in `src/`, `c-rest-framework`) and
+   governed by the OpenAPI 3.2.0 contract in `libscript-rest-api/openapi.yaml` (not C++ or OpenAPI
+   3.0).
 
 ---
 

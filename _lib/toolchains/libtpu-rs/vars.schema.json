@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/libtpu-rs/vars.schema.json",
+  "title": "libtpu-rs variables",
+  "description": "Configuration variables for libtpu-rs",
+  "type": "object",
+  "properties": {
+    "LIBTPU_RS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install libtpu-rs. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "from-source"
+    },
+    "LIBTPU_RS_VERSION": {
+      "description": "Specific version of libtpu-rs to install.",
+      "type": "string",
+      "default": "0.0.52",
+      "version_aliases": ["latest", "lts"]
+    },
+    "LIBTPU_RS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading libtpu-rs binary or archive artifacts."
+    },
+    "LIBTPU_RS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying libtpu-rs available remote releases."
+    },
+    "LIBTPU_RS_REPO_DIR": {
+      "type": "string",
+      "description": "Local filesystem path to the libtpu-rs workspace repository."
+    },
+    "LIBTPU_RS_GIT_URL": {
+      "type": "string",
+      "description": "Optional Git URL cloned when LIBTPU_RS_REPO_DIR is not already present on disk."
+    },
+    "LIBTPU_RS_PAPER_DIR": {
+      "type": "string",
+      "description": "Local filesystem path to the libtpu_paper manuscript directory."
+    },
+    "LIBTPU_RS_RESULTS_DIR": {
+      "type": "string",
+      "description": "Directory where mechanical E0-E7 JSON artifacts and generated_metrics.tex are emitted."
+    },
+    "LIBTPU_RS_CARGO_PROFILE": {
+      "type": "string",
+      "description": "Pinned Cargo release profile identifier enforced under SIGPLAN RULE-6.",
+      "default": "opt3-lto-thin-cgu1"
+    },
+    "LIBTPU_RS_SLIM_FEATURES": {
+      "type": "string",
+      "description": "Cargo feature flags passed when building the slim shared library variant without embedded reflection/CSR catalogs.",
+      "default": "--no-default-features"
+    },
+    "LIBTPU_RS_JAX_VERSION": {
+      "type": "string",
+      "description": "Upstream jax and jaxlib version installed into the isolated component virtual environment for Suite E3.",
+      "default": "0.4.38"
+    },
+    "LIBTPU_RS_WARMUP": {
+      "type": "string",
+      "description": "Number of unrecorded warmup runs executed prior to recorded trials.",
+      "default": "10"
+    },
+    "LIBTPU_RS_TRIALS": {
+      "type": "string",
+      "description": "Number of recorded fresh trials executed per benchmark cell.",
+      "default": "200"
+    },
+    "LIBTPU_RS_SUBSUITES": {
+      "type": "string",
+      "description": "Comma-separated list of libtpu_paper empirical sub-suites to execute.",
+      "default": "E0,E1,E2,E3,E4,E5,E6,E7,E8"
+    },
+    "LIBTPU_RS_BUILD_PDF": {
+      "type": "string",
+      "description": "Flag (0 or 1) enabling full pdflatex + bibtex compilation and Overfull/Type-3 PK log verification in Suite E8.",
+      "default": "0"
+    },
+    "LIBTPU_RS_SYNTHETIC_FIXTURES": {
+      "type": "string",
+      "description": "Internal CI test flag (0 or 1) enabling deterministic synthetic repository/manuscript fixtures for smoke testing without hardware or external repos.",
+      "default": "0"
+    },
+    "LIBTPU_RS_DRY_RUN": {
+      "type": "string",
+      "description": "Flag (0 or 1) logging planned benchmark actions and verifying prerequisites without executing heavy workloads.",
+      "default": "0"
+    },
+    "LIBTPU_RS_HOST_ARCH": {
+      "type": "string",
+      "description": "Canonical OS/ISA identifier ('linux_x64', 'macos_arm64', or 'windows_x64') tagged onto per-host benchmark artifacts."
+    },
+    "LIBTPU_RS_ALLOW_DIRTY": {
+      "type": "string",
+      "description": "Flag (0 or 1) permitting exploratory local development runs on dirty git worktrees prior to final RULE-1 locking.",
+      "default": "0"
+    }
+  }
+}

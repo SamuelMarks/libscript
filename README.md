@@ -25,7 +25,7 @@ the entire lifecycle through a single, idempotent interface.
 flowchart TD
     subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["300+ Recipes..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["320+ Recipes..."]
     end
 
     subgraph T1["1. Native Installers & Container Packages (package-as)"]
@@ -103,7 +103,7 @@ everything from **Node.js**, **Python**, **Rust**, and **Ruby** to **PostgreSQL*
 | :----------------------- | :----------------------------------------------------------- | :---------------------------------------------------------------- |
 | **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch) |
 | **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`) and PowerShell (`.ps1`)**    |
-| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 304+ tools & 324+ subsystems**    |
+| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 320+ tools & 520+ subsystems**    |
 | **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**   |
 | **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **Per-shell dynamic path injection via `use` or `env`**           |
 
@@ -511,7 +511,7 @@ filesystem snapshots, and encrypted off-site object storage replication (`traits
 ```sh
 # Execute a physical or tenant-scoped backup with SHA-256 manifest verification
 ./_lib/_common/hooks.sh --exec postgres backup /var/backups/postgres
-./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant-id acme_corp
+./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant acme_corp
 
 # Take an atomic ZFS/Btrfs CoW snapshot and ship encrypted backups to S3 / GCS / Azure
 ./libscript.sh trait apply backup
@@ -737,10 +737,12 @@ cd libscript
 - [PAAS.md](PAAS.md): Universal PaaS orchestration, reverse proxy (`netctl`), and daemon
   supervision.
 - [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and Tarjan SCC solver mechanics.
-- [TEST.md](TEST.md) & [VAGRANT.md](VAGRANT.md): Multi-OS testing architecture, QEMU boot harnesses,
-  and Vagrant verification matrix.
-- [ROADMAP.md](ROADMAP.md) & [DOCS_ROADMAP.md](DOCS_ROADMAP.md): Master development and
-  documentation roadmaps across all tiers.
+- [TEST.md](TEST.md), [VAGRANT.md](VAGRANT.md) & [EXPERIMENTS.md](EXPERIMENTS.md): Multi-OS testing
+  architecture, QEMU boot harnesses, Vagrant verification matrix, and cloud Bento experimentation
+  runner.
+- [ROADMAP.md](ROADMAP.md), [DOCS_ROADMAP.md](DOCS_ROADMAP.md), [CHANGELOG.md](CHANGELOG.md) &
+  [IDEAS.md](IDEAS.md): Master development/documentation roadmaps, release history, and future
+  research directions.
 - [packaging/README.md](packaging/README.md),
   [packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md](packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md) &
   [packaging/ARCHITECTURE_MODULAR_MSI.md](packaging/ARCHITECTURE_MODULAR_MSI.md): Multi-format
@@ -904,6 +906,8 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `krew`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `lfs-toolchain`                       | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `libtool`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `libtpu`                              | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `libtpu-rs`                           | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lighttpd`                            | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `llvm`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lmdb`                                | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1041,9 +1045,11 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `tcc`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `tcl`                                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tensorboard`                         | `logging`          | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `texlive`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tidb`                                | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `timescaledb`                         | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tmux`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `tokei`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tomcat`                              | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `traefik`                             | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tree`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |

@@ -1,0 +1,146 @@
+{
+  "$schema": "../../../experiment-suite.schema.json",
+  "id": "libtpu",
+  "title": "libtpu-rs Empirical Evaluation Protocol (SIGPLAN E0-E8)",
+  "protocol_version": "PLDI-2027-v1",
+  "manuscript_dir": "../new_research/libtpu_paper",
+  "manuscript_tex": "libtpu_paper.tex",
+  "target_repo_dir": "../libtpu-rs",
+  "results_dir": "results",
+  "generated_tex_path": "results/generated_metrics.tex",
+  "host_constraints": {
+    "required_native_isas": ["linux_x64", "macos_arm64"],
+    "forbid_binary_translation": true,
+    "prepare_host": true,
+    "drop_caches_on_cold": true,
+    "cloud_sku_by_arch": {
+      "linux_x64": "Standard_D160ads_v7",
+      "macos_arm64": "mac2.metal"
+    }
+  },
+  "trial_policy": {
+    "warmup_runs": 10,
+    "measured_trials": 200,
+    "quantiles": [0.25, 0.5, 0.75, 0.99],
+    "dispersion_metric": "iqr_and_p99",
+    "prng_seed": 42
+  },
+  "build_profile": {
+    "cargo_profile_flags": {
+      "CARGO_PROFILE_RELEASE_OPT_LEVEL": "3",
+      "CARGO_PROFILE_RELEASE_LTO": "thin",
+      "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "1"
+    },
+    "c_compiler_flags": ["-std=c11", "-O3"],
+    "strip_mode": "strip-unneeded",
+    "feature_variants": ["full", "slim"]
+  },
+  "prereq_checks": [
+    {
+      "id": "e4_differential_oracle_pjrt_compile",
+      "suites": ["E4"],
+      "kind": "grep_present",
+      "target": "scripts/differential_oracle.py",
+      "pattern": "PJRT_Compile",
+      "description": "Verifies differential_oracle.py invokes live PJRT_Compile rather than a stub."
+    },
+    {
+      "id": "e4_hlo_bridge_bounded_fix",
+      "suites": ["E4"],
+      "kind": "grep_absent",
+      "target": "crates/libtpu-core/src/compiler/hlo_bridge.rs",
+      "pattern": "Bounded\\(0\\)",
+      "description": "Verifies Bounded(0) dynamic dimension bug is resolved in hlo_bridge.rs."
+    },
+    {
+      "id": "e6_vliw_modulo_scheduler",
+      "suites": ["E6"],
+      "kind": "grep_present",
+      "target": "crates/libtpu-core/src/compiler/vliw.rs",
+      "pattern": "ModuloPipelineScheduler",
+      "description": "Verifies ModuloPipelineScheduler implementation is present in vliw.rs."
+    }
+  ],
+  "subsuites": [
+    {
+      "id": "E0",
+      "title": "Provenance, Environment & Codebase Static Audit",
+      "libscript_deps": ["tokei", "libtpu", "git"],
+      "entrypoint": "suites/e0_provenance",
+      "require_native_isa": false,
+      "outputs": ["e0_wheel_provenance.json", "e0_tcb.json"]
+    },
+    {
+      "id": "E1",
+      "title": "Binary Forensics, ABI Parity & Prologue/CFG Analysis",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["libtpu", "libtpu-rs", "python"],
+      "entrypoint": "suites/e1_forensics",
+      "require_native_isa": false,
+      "outputs": ["e1_abi_parity.json", "e1_disasm.json", "e1_carver.json"]
+    },
+    {
+      "id": "E2",
+      "title": "Artifact Section Anatomy, Cold/Warm Startup, RSS & Pod Scaling",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["clang", "llvm", "libtpu", "libtpu-rs"],
+      "entrypoint": "suites/e2_footprint_startup",
+      "require_native_isa": true,
+      "outputs": ["e2_footprint.json", "e2_startup.json", "e2_pod_scaling.json"]
+    },
+    {
+      "id": "E3",
+      "title": "End-to-End Unmodified Upstream jax Drop-In Validation",
+      "depends_on_suites": ["E2"],
+      "libscript_deps": ["python", "libtpu-rs"],
+      "entrypoint": "suites/e3_jax_e2e",
+      "require_native_isa": true,
+      "outputs": ["e3_jax_single.json", "e3_jax_spmd.json"]
+    },
+    {
+      "id": "E4",
+      "title": "Compiler Stage Breakdown & Head-to-Head Linux libtpu.so AOT Baseline",
+      "depends_on_suites": ["E0", "E2"],
+      "libscript_deps": ["clang", "libtpu", "libtpu-rs"],
+      "entrypoint": "suites/e4_compiler_aot",
+      "require_native_isa": true,
+      "outputs": ["e4_stages.json", "e4_vs_google_linux_x64.json"]
+    },
+    {
+      "id": "E5",
+      "title": "Decoupled Pass 14 Memory Studies (2D VMEM Packing & Reg Spill Sweep)",
+      "depends_on_suites": ["E4"],
+      "libscript_deps": ["rust", "libtpu-rs"],
+      "entrypoint": "suites/e5_memory_studies",
+      "require_native_isa": false,
+      "outputs": ["e5_vmem_pack.json", "e5_reg_spill.json"]
+    },
+    {
+      "id": "E6",
+      "title": "VLIW Modulo Pipelining & Pass-Level Ablations",
+      "depends_on_suites": ["E4"],
+      "libscript_deps": ["rust", "libtpu-rs"],
+      "entrypoint": "suites/e6_vliw_ablations",
+      "require_native_isa": false,
+      "outputs": ["e6_modulo_speedup.json", "e6_pass_ablations.json"]
+    },
+    {
+      "id": "E7",
+      "title": "29-Dtype Microscaling Numerics, Stochastic Rounding & SparseCore",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["rust", "libtpu-rs"],
+      "entrypoint": "suites/e7_numerics_sparsecore",
+      "require_native_isa": false,
+      "outputs": ["e7_numerics.json", "e7_sparsecore.json"]
+    },
+    {
+      "id": "E8",
+      "title": "Deterministic LaTeX Macro Emission & Reproducible PDF Audit",
+      "depends_on_suites": ["E0", "E1", "E2", "E3", "E4", "E5", "E6", "E7"],
+      "libscript_deps": ["texlive"],
+      "entrypoint": "suites/e8_latex",
+      "require_native_isa": false,
+      "outputs": ["generated_metrics.tex"]
+    }
+  ]
+}

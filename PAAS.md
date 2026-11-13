@@ -13,7 +13,7 @@ can run on any infrastructure—from a single laptop to a distributed multicloud
 
 ```mermaid
 flowchart TD
-    ControlPlane["Control Plane: libscript CLI + libscript-rest-api (OpenAPI 3.0)"]
+    ControlPlane["Control Plane: libscript CLI + libscript-rest-api (OpenAPI 3.2.0)"]
     Tier4["Tier 4 Payloads & Schedulers: K8s | Nomad | Mesos | 8+ Native Inits | MicroVMs | XPK/Slurm"]
     Tier35["Tier 3.5 Topologies: .topology_state.json + Lease Locking + Split-Brain Fencing"]
     Traits["Unified Traits: Storage | Zero-Leak Secrets | Firewall | Mesh/Cloud DNS | netctl Ingress | CoW/Object Backup"]
@@ -59,9 +59,9 @@ flowchart TD
 - **Machine Learning Primitives:** Out-of-the-box infrastructure definitions for AI Serving and ML
   Training, including TPU/GPU VM lifecycles, GKE integration (via XPK), and automated data ingestion
   workflows using `gcsfuse` and `tmux`.
-- **Programmatic REST API & OpenAPI Engine:** The native C++ microservice (`libscript-rest-api`)
-  provides an HTTP API conforming to OpenAPI 3.0 for remote provisioning, continuous deployment, and
-  fleet management.
+- **Programmatic REST API & OpenAPI Engine:** The native C11 HTTP daemon (`libscript-rest-api`,
+  built on `c-rest-framework`) provides an HTTP API conforming to OpenAPI 3.2.0 for remote
+  provisioning, continuous deployment, and fleet management.
 
 ## Roadmap to Maturity
 
@@ -82,7 +82,7 @@ backup synchronization (`traits/backup/`) across multiple cloud providers and lo
 
 ### Phase 4: Programmatic REST API & Edge Interface (Implemented)
 
-A decentralized C++ HTTP management microservice (`libscript-rest-api`) and OpenAPI specification
+A decentralized C11 HTTP management daemon (`libscript-rest-api`) and OpenAPI 3.2.0 specification
 for orchestrating provisioning, monitoring stack health, and remote execution across fleets.
 
 ### Phase 5: Multi-Node Cluster Schedulers & HA Topologies (Implemented)
@@ -91,7 +91,8 @@ Compile and schedule declarative workloads (`payloads/payload.schema.json`) onto
 (`kubernetes`, `k8s-marathon`, `k0s`), **Apache Mesos & Marathon** (`mesos`, `marathon`),
 **HashiCorp Nomad** (`nomad`), **Slurm/Ray** (`slurm_ray`), **Google XPK** (`xpk`), and **8+ Native
 Init Systems** (`native`), backed by turnkey High-Availability blueprints (`postgres-ha`,
-`redis-cluster`, `valkey-cluster`, `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`).
+`redis-cluster`, `valkey-cluster`, `openedx-ha`, `minio-distributed`, `mesos-marathon-ha`,
+`k8s-marathon-paas`, `k0s-ha`).
 
 ## Automated Orchestration
 
@@ -235,14 +236,6 @@ During `deploy`, the framework will pull the state from the remote storage and s
 to the node. During `teardown`, the framework automatically pulls the mutated state back from the
 node and uploads it securely to the bucket, seamlessly ensuring zero ephemeral data loss.
 
-### Automated Secrets Provisioning
-
-`libscript.json` defines secrets (e.g., `"secrets_dir": "./secrets"`). While the primary
-`.gitignore`-aware deployment engine correctly skips ignored files to prevent committing secrets to
-instances via insecure paths, the `provision` command automatically detects this block and invokes a
-secure `node scp` operation natively over SSH or WinRM _before_ the daemonized stack bootstraps. You
-do not need to sync secrets out-of-band.
-
 ### Automated DNS & Dangling Records Cleanup
 
 The `dns map-node` command dynamically maps instances, supporting Azure DNS, AWS Route53, and Google
@@ -254,9 +247,9 @@ You **must** invoke `dns unmap-node` (handled automatically by `deprovision`) be
 the infrastructure. Failing to do so will result in Subdomain Takeover vulnerabilities once the
 ephemeral IP is reclaimed by the provider pool.
 
-### Phase 4: Continuous Deployment (CD)
+### Continuous Deployment (CD) Integration
 
-You can seamlessly integrate LibScript's \`provision\` and \`deprovision\` primitives into CI/CD
+You can seamlessly integrate LibScript's `provision` and `deprovision` primitives into CI/CD
 pipelines.
 
 #### GitHub Actions Example (.github/workflows/cd.yml)
@@ -281,8 +274,8 @@ jobs:
 
       - name: Provision Stack
         run: |
-          curl -sSL https://get.libscript.org | sh
-          libscript provision azure my-node my-rg eastus . ~/my-app
+          git clone --depth 1 https://github.com/SamuelMarks/libscript.git /tmp/libscript
+          /tmp/libscript/libscript.sh provision azure my-node my-rg eastus . ~/my-app
 ```
 
 ### Robust Deployment Features

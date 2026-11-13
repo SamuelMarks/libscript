@@ -430,6 +430,66 @@
     "LIBSCRIPT_EXPERIMENT_OS": {
       "type": "string",
       "description": "Default VM operating system image for rapid cloud experimentation."
+    },
+    "LIBSCRIPT_EXPERIMENT_SUITE_MANIFEST": {
+      "type": "string",
+      "description": "Path to a declarative experiment-suite.schema.json manifest file executed by the experiment runner."
+    },
+    "LIBSCRIPT_EXPERIMENT_WARMUP": {
+      "type": "string",
+      "description": "Default number of unrecorded warmup runs executed before recorded benchmark trials (defaults to '10')."
+    },
+    "LIBSCRIPT_EXPERIMENT_TRIALS": {
+      "type": "string",
+      "description": "Default number of recorded fresh trials captured per benchmark cell (defaults to '200')."
+    },
+    "LIBSCRIPT_EXPERIMENT_SUBSUITES": {
+      "type": "string",
+      "description": "Comma- or space-separated list of sub-suite identifiers to execute (e.g., 'E0,E1,E2,E3,E4,E5,E6,E7,E8')."
+    },
+    "LIBSCRIPT_EXPERIMENT_OUT_DIR": {
+      "type": "string",
+      "description": "Output directory for mechanical experiment JSON results and generated LaTeX macros."
+    },
+    "LIBSCRIPT_EXPERIMENT_REPO_DIR": {
+      "type": "string",
+      "description": "Local or synced remote filesystem path to the target repository under benchmark evaluation."
+    },
+    "LIBSCRIPT_EXPERIMENT_PAPER_DIR": {
+      "type": "string",
+      "description": "Local or synced remote filesystem path to the paper manuscript directory receiving generated LaTeX metrics."
+    },
+    "LIBSCRIPT_BENCH_REQUIRE_NATIVE_ISA": {
+      "type": "string",
+      "description": "Flag (0 or 1) enforcing native hardware ISA execution and rejecting Rosetta 2, QEMU, or WoW64 binary translation."
+    },
+    "LIBSCRIPT_BENCH_CARGO_PROFILE": {
+      "type": "string",
+      "description": "Pinned Cargo release profile specification ('opt3-lto-thin-cgu1' or custom key=value list) enforced across Rust benchmarks."
+    },
+    "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA": {
+      "type": "string",
+      "description": "Internal test override flag (0 or 1) simulating Rosetta/QEMU binary translation to test RULE-2 failure handling."
+    },
+    "LIBSCRIPT_BENCH_CLOCK_NS_BIN": {
+      "type": "string",
+      "description": "Cached path to the compiled C11 monotonic nanosecond clock helper executable."
+    },
+    "LIBSCRIPT_HW_CPU_MODEL": {
+      "type": "string",
+      "description": "Detected host CPU or SoC model string exported by libscript_detect_hardware."
+    },
+    "LIBSCRIPT_HW_PHYS_CORES": {
+      "type": "string",
+      "description": "Detected host physical CPU core count exported by libscript_detect_hardware."
+    },
+    "LIBSCRIPT_HW_PERF_CORES": {
+      "type": "string",
+      "description": "Detected host performance CPU core count exported by libscript_detect_hardware."
+    },
+    "LIBSCRIPT_HW_NUMA_NODES": {
+      "type": "string",
+      "description": "Detected host NUMA node count exported by libscript_detect_hardware."
     }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "texlive",
+  "title": "TeX Live Typesetting Toolchain",
+  "description": "Reproducible scholarly LaTeX typesetting toolchain providing pdflatex and bibtex.",
+  "category": "toolchains",
+  "provides": ["texlive", "pdflatex", "bibtex", "latex"],
+  "os_whitelist": ["all"],
+  "repository": "https://tug.org/texlive/"
+}

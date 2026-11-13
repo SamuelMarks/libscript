@@ -66,6 +66,8 @@ case "$target" in
     "$SCRIPT_DIR/tests/test_vm_contract.sh"
     "$SCRIPT_DIR/tests/test_shellcheck_vm_and_hooks.sh"
     "$SCRIPT_DIR/tests/test_cloud_experiment_lifecycle.sh"
+    "$SCRIPT_DIR/tests/test_experiment_harness.sh"
+    "$SCRIPT_DIR/tests/test_libtpu_experiments.sh"
     "$SCRIPT_DIR/tests/test_tier1_languages_and_package_managers.sh"
     "$SCRIPT_DIR/tests/test_tier1_data_and_server_components.sh"
     "$SCRIPT_DIR/tests/test_tier1_utilities_security_logging_storage.sh"

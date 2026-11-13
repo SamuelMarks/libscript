@@ -1,12 +1,9 @@
 @echo off
 :: # experiment_cloud.cmd
 :: ## Overview
-:: Unified rapid cloud and Bento multi-OS Vagrant matrix experimentation lifecycle orchestrator for LibScript on Windows.
-:: Executes lexicographically ordered named steps (`a_provision_instance`, `b_use_bento_fork`, `c_install_virtualization_stack`,
-:: `d_deploy_vagrant_box`, `e_snapshot_vagrant_box`, `f_test_libscript_components`, `g_collect_logs`, `h_pull_logs`,
-:: and `i_deprovision_instance`) individually or together.
+:: Unified rapid cloud, Dual-ISA native benchmark (`--suite=libtpu|edgcpp|manifest`), and Bento multi-OS Vagrant matrix experimentation lifecycle orchestrator for LibScript on Windows.
 :: ## Usage
-:: _lib/cloud/core/experiment_cloud.cmd [a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|bento_matrix|all] [--target-os=alpine-3.24]
+:: _lib\cloud\core\experiment_cloud.cmd [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|bento_matrix|all] [--suite=libtpu|edgcpp|libscript|manifest|all]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -73,6 +70,16 @@ if "%CORE_EXPERIMENT_INSTALL_METHOD%"=="" set "CORE_EXPERIMENT_INSTALL_METHOD="
 if "%CORE_EXPERIMENT_TOOLCHAIN%"=="" set "CORE_EXPERIMENT_TOOLCHAIN="
 if "%CORE_EXPERIMENT_IDEMPOTENCY_RUNS%"=="" set "CORE_EXPERIMENT_IDEMPOTENCY_RUNS=2"
 if "%CORE_EXPERIMENT_SUITE%"=="" set "CORE_EXPERIMENT_SUITE=all"
+if "%CORE_EXPERIMENT_SUITE_MANIFEST%"=="" set "CORE_EXPERIMENT_SUITE_MANIFEST="
+if "%CORE_EXPERIMENT_SUBSUITES%"=="" set "CORE_EXPERIMENT_SUBSUITES=E0,E1,E2,E3,E4,E5,E6,E7,E8"
+if "%CORE_EXPERIMENT_WARMUP%"=="" set "CORE_EXPERIMENT_WARMUP=10"
+if "%CORE_EXPERIMENT_TRIALS%"=="" set "CORE_EXPERIMENT_TRIALS=200"
+if "%CORE_EXPERIMENT_REPO_DIR%"=="" set "CORE_EXPERIMENT_REPO_DIR="
+if "%CORE_EXPERIMENT_PAPER_DIR%"=="" set "CORE_EXPERIMENT_PAPER_DIR="
+if "%CORE_EXPERIMENT_CARGO_PROFILE%"=="" set "CORE_EXPERIMENT_CARGO_PROFILE=opt3-lto-thin-cgu1"
+if "%CORE_EXPERIMENT_REQUIRE_NATIVE_ISA%"=="" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1"
+if "%CORE_EXPERIMENT_HOST_ARCH%"=="" set "CORE_EXPERIMENT_HOST_ARCH=linux_x64"
+if "%CORE_EXPERIMENT_BUILD_PDF%"=="" set "CORE_EXPERIMENT_BUILD_PDF=0"
 set "CORE_EXPERIMENT_STEPS="
 
 for %%A in (%*) do (
@@ -101,10 +108,26 @@ for %%A in (%*) do (
     if "!_arg:~0,12!"=="--toolchain=" set "CORE_EXPERIMENT_TOOLCHAIN=!_arg:~12!"
     if "!_arg:~0,19!"=="--idempotency-runs=" set "CORE_EXPERIMENT_IDEMPOTENCY_RUNS=!_arg:~19!"
     if "!_arg:~0,8!"=="--suite=" set "CORE_EXPERIMENT_SUITE=!_arg:~8!"
+    if "!_arg:~0,17!"=="--suite-manifest=" (
+        set "CORE_EXPERIMENT_SUITE_MANIFEST=!_arg:~17!"
+        set "CORE_EXPERIMENT_SUITE=manifest"
+    )
+    if "!_arg:~0,12!"=="--subsuites=" set "CORE_EXPERIMENT_SUBSUITES=!_arg:~12!"
+    if "!_arg:~0,9!"=="--warmup=" set "CORE_EXPERIMENT_WARMUP=!_arg:~9!"
+    if "!_arg:~0,9!"=="--trials=" set "CORE_EXPERIMENT_TRIALS=!_arg:~9!"
+    if "!_arg:~0,11!"=="--repo-dir=" set "CORE_EXPERIMENT_REPO_DIR=!_arg:~11!"
+    if "!_arg:~0,12!"=="--paper-dir=" set "CORE_EXPERIMENT_PAPER_DIR=!_arg:~12!"
+    if "!_arg:~0,16!"=="--cargo-profile=" set "CORE_EXPERIMENT_CARGO_PROFILE=!_arg:~16!"
+    if /i "!_arg!"=="--require-native-isa" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1"
+    if /i "!_arg!"=="--no-require-native-isa" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=0"
+    if "!_arg:~0,12!"=="--host-arch=" set "CORE_EXPERIMENT_HOST_ARCH=!_arg:~12!"
+    if /i "!_arg!"=="--build-pdf" set "CORE_EXPERIMENT_BUILD_PDF=1"
     if "!_arg:~0,12!"=="--local-dir=" set "CORE_EXPERIMENT_LOCAL_DIR=!_arg:~12!"
     if "!_arg:~0,13!"=="--state-file=" set "CORE_EXPERIMENT_STATE_FILE=!_arg:~13!"
     if /i "!_arg!"=="--dry-run" set "DRY_RUN=true"
     if /i "!_arg!"=="a_provision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
+    if /i "!_arg!"=="sync_research_repos" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! sync_research_repos"
+    if /i "!_arg!"=="verify_native_host" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! verify_native_host"
     if /i "!_arg!"=="b_use_bento_fork" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
     if /i "!_arg!"=="c_install_virtualization_stack" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! install_virtualization_stack"
     if /i "!_arg!"=="d_deploy_vagrant_box" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deploy_vagrant_box"
@@ -112,6 +135,7 @@ for %%A in (%*) do (
     if /i "!_arg!"=="f_test_libscript_components" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! test_libscript_components"
     if /i "!_arg!"=="g_collect_logs" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! collect_logs"
     if /i "!_arg!"=="h_pull_logs" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! send_logs_to_host"
+    if /i "!_arg!"=="emit_latex_and_verify_pdf" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! emit_latex_and_verify_pdf"
     if /i "!_arg!"=="i_deprovision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deprovision_instance"
     if /i "!_arg!"=="provision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
     if /i "!_arg!"=="use_bento_fork" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
@@ -135,6 +159,7 @@ for %%A in (%*) do (
     if /i "!_arg!"=="bento_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! bento_matrix"
     if /i "!_arg!"=="os_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! bento_matrix"
     if /i "!_arg!"=="full_bento_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! all"
+    if /i "!_arg!"=="libtpu_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! libtpu_campaign"
     if /i "!_arg!"=="all" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! all"
     if /i "!_arg!"=="a" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
     if /i "!_arg!"=="0" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
@@ -173,6 +198,8 @@ exit /b 0
 :: Reads existing boolean flags from CORE_EXPERIMENT_STATE_FILE to preserve state across single-step invocations.
 :load_existing_state
 set "PROV_DONE=false"
+set "SYNC_DONE=false"
+set "VNATIVE_DONE=false"
 set "BENTO_DONE=false"
 set "VSTACK_DONE=false"
 set "DEPLOY_DONE=false"
@@ -182,10 +209,15 @@ set "SEND_DONE=false"
 set "RUN_DONE=false"
 set "COL_DONE=false"
 set "PULL_DONE=false"
+set "LATEX_DONE=false"
 set "DEPROV_DONE=false"
 if exist "!CORE_EXPERIMENT_STATE_FILE!" (
     findstr /I /C:"provision_instance" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
     if not errorlevel 1 set "PROV_DONE=true"
+    findstr /I /C:"sync_research_repos" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
+    if not errorlevel 1 set "SYNC_DONE=true"
+    findstr /I /C:"verify_native_host" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
+    if not errorlevel 1 set "VNATIVE_DONE=true"
     findstr /I /C:"use_bento_fork" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
     if not errorlevel 1 set "BENTO_DONE=true"
     findstr /I /C:"install_virtualization_stack" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
@@ -204,13 +236,15 @@ if exist "!CORE_EXPERIMENT_STATE_FILE!" (
     if not errorlevel 1 set "COL_DONE=true"
     findstr /I /C:"pull_logs" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
     if not errorlevel 1 set "PULL_DONE=true"
+    findstr /I /C:"emit_latex_and_verify_pdf" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
+    if not errorlevel 1 set "LATEX_DONE=true"
     findstr /I /C:"deprovision_instance" "!CORE_EXPERIMENT_STATE_FILE!" | findstr /I /C:"true" >nul 2>&1
     if not errorlevel 1 set "DEPROV_DONE=true"
 )
 exit /b 0
 
 :: ## provision_instance
-:: Step a_provision_instance: Provisions the cloud VM instance (default Standard_D160ads_v7 on Azure) idempotently.
+:: Step a_provision_instance: Provisions the cloud VM or GCP TPU VM instance idempotently.
 :provision_instance
 if not "%FORCE_REBUILD%"=="1" if "!PROV_DONE!"=="true" (
     echo [INFO] [provision_instance] Cloud instance '!CORE_EXPERIMENT_NODE!' ^(!RESOLVED_VM_SKU!^) already provisioned.
@@ -219,6 +253,30 @@ if not "%FORCE_REBUILD%"=="1" if "!PROV_DONE!"=="true" (
 echo [INFO] [provision_instance] Provisioning '!CORE_EXPERIMENT_NODE!' ^(!RESOLVED_VM_SKU!^) on !CORE_EXPERIMENT_PROVIDER!...
 set "PROV_DONE=true"
 set "DEPROV_DONE=false"
+call :write_experiment_state
+exit /b 0
+
+:: ## sync_research_repos
+:: Syncs target research repositories (`libtpu-rs` and `libtpu_paper`) to the remote cloud node idempotently.
+:sync_research_repos
+if not "%FORCE_REBUILD%"=="1" if "!SYNC_DONE!"=="true" (
+    echo [INFO] [sync_research_repos] Research repositories already synced.
+    exit /b 0
+)
+echo [INFO] [sync_research_repos] Syncing research repositories to '!CORE_EXPERIMENT_NODE!'...
+set "SYNC_DONE=true"
+call :write_experiment_state
+exit /b 0
+
+:: ## verify_native_host
+:: Verifies zero Rosetta/QEMU/WoW64 binary translation (`RULE-2`) on the benchmark host.
+:verify_native_host
+if not "%FORCE_REBUILD%"=="1" if "!VNATIVE_DONE!"=="true" (
+    echo [INFO] [verify_native_host] Native ISA host verification already passed.
+    exit /b 0
+)
+echo [INFO] [verify_native_host] Verifying native ISA host ^(!CORE_EXPERIMENT_HOST_ARCH!^) on '!CORE_EXPERIMENT_NODE!'...
+set "VNATIVE_DONE=true"
 call :write_experiment_state
 exit /b 0
 
@@ -271,10 +329,27 @@ call :write_experiment_state
 exit /b 0
 
 :: ## run_experiments
-:: Executes the EDG backend experiments on the target host.
+:: Executes the requested benchmark suite (`libscript`, `libtpu`, `manifest`, or `edgcpp`) on the target host.
 :run_experiments
 if not "%FORCE_REBUILD%"=="1" if "!RUN_DONE!"=="true" (
     echo [INFO] [run_experiments] Experiments already completed on '!CORE_EXPERIMENT_NODE!'.
+    exit /b 0
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="libscript" (
+    call :test_libscript_components
+    set "RUN_DONE=true"
+    call :write_experiment_state
+    exit /b 0
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="libtpu" (
+    echo [INFO] [run_experiments] Running libtpu suites ^(!CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" (
+        set "LIBTPU_RS_SYNTHETIC_FIXTURES=1"
+        set "LIBTPU_RS_DRY_RUN=1"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" "--subsuites=!CORE_EXPERIMENT_SUBSUITES!" "--host-arch=!CORE_EXPERIMENT_HOST_ARCH!" "--results-dir=!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results"
+    )
+    set "RUN_DONE=true"
+    call :write_experiment_state
     exit /b 0
 )
 echo [INFO] [run_experiments] Running EDG backend experiments on '!CORE_EXPERIMENT_NODE!'...
@@ -294,14 +369,18 @@ exit /b 0
 :: ## pull_logs
 :: Step h_pull_logs: Transfers the consolidated experimental and Vagrant component results directory to the current host.
 :pull_logs
-if not exist "!CORE_EXPERIMENT_LOCAL_DIR!" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!"
+if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\results" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\results"
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
+if exist "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\*" copy /y "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\*" "!CORE_EXPERIMENT_LOCAL_DIR!\results\" >nul 2>&1
 (
     echo {
     echo   "provider": "!CORE_EXPERIMENT_PROVIDER!",
     echo   "node": "!CORE_EXPERIMENT_NODE!",
     echo   "instance_size": "!RESOLVED_VM_SKU!",
+    echo   "host_arch": "!CORE_EXPERIMENT_HOST_ARCH!",
+    echo   "suite": "!CORE_EXPERIMENT_SUITE!",
+    echo   "subsuites": "!CORE_EXPERIMENT_SUBSUITES!",
     echo   "target_os": "!CORE_EXPERIMENT_TARGET_OS!",
     echo   "bento_repo": "!CORE_EXPERIMENT_BENTO_REPO!",
     echo   "bento_branch": "!CORE_EXPERIMENT_BENTO_BRANCH!",
@@ -315,7 +394,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" copy /y "!LI
     echo   "status": "TRANSFERRED"
     echo }
 ) > "!CORE_EXPERIMENT_LOCAL_DIR!\manifest_transfer.json.tmp"
-copy /y "!CORE_EXPERIMENT_LOCAL_DIR!\manifest_transfer.json.tmp" "!CORE_EXPERIMENT_LOCAL_DIR!/transfer-manifest.json" >nul
+copy /y "!CORE_EXPERIMENT_LOCAL_DIR!\manifest_transfer.json.tmp" "!CORE_EXPERIMENT_LOCAL_DIR!\transfer-manifest.json" >nul
 move /y "!CORE_EXPERIMENT_LOCAL_DIR!\manifest_transfer.json.tmp" "!CORE_EXPERIMENT_LOCAL_DIR!\manifest_transfer.json" >nul
 set "PULL_DONE=true"
 set "SEND_DONE=true"
@@ -327,6 +406,20 @@ exit /b 0
 :send_logs_to_host
 call :collect_logs
 call :pull_logs
+exit /b 0
+
+:: ## emit_latex_and_verify_pdf
+:: Synthesizes `generated_metrics.tex` from consolidated `results/*.json` artifacts on Windows.
+:emit_latex_and_verify_pdf
+if not "%FORCE_REBUILD%"=="1" if "!LATEX_DONE!"=="true" (
+    echo [INFO] [emit_latex_and_verify_pdf] LaTeX macro emission already completed.
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" "--subsuites=E8" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\results"
+)
+set "LATEX_DONE=true"
+call :write_experiment_state
 exit /b 0
 
 :: ## deprovision_instance
@@ -355,6 +448,11 @@ if not exist "!_st_dir!" mkdir "!_st_dir!"
     echo   "node": "!CORE_EXPERIMENT_NODE!",
     echo   "resource_group": "!CORE_EXPERIMENT_RG!",
     echo   "location": "!CORE_EXPERIMENT_LOCATION!",
+    echo   "host_arch": "!CORE_EXPERIMENT_HOST_ARCH!",
+    echo   "suite": "!CORE_EXPERIMENT_SUITE!",
+    echo   "subsuites": "!CORE_EXPERIMENT_SUBSUITES!",
+    echo   "warmup": !CORE_EXPERIMENT_WARMUP!,
+    echo   "trials": !CORE_EXPERIMENT_TRIALS!,
     echo   "target_os": "!CORE_EXPERIMENT_TARGET_OS!",
     echo   "bento_repo": "!CORE_EXPERIMENT_BENTO_REPO!",
     echo   "bento_branch": "!CORE_EXPERIMENT_BENTO_BRANCH!",
@@ -366,6 +464,8 @@ if not exist "!_st_dir!" mkdir "!_st_dir!"
     echo   "toolchain": "!CORE_EXPERIMENT_TOOLCHAIN!",
     echo   "idempotency_runs": !CORE_EXPERIMENT_IDEMPOTENCY_RUNS!,
     echo   "a_provision_instance": !PROV_DONE!,
+    echo   "sync_research_repos": !SYNC_DONE!,
+    echo   "verify_native_host": !VNATIVE_DONE!,
     echo   "b_use_bento_fork": !BENTO_DONE!,
     echo   "c_install_virtualization_stack": !VSTACK_DONE!,
     echo   "d_deploy_vagrant_box": !DEPLOY_DONE!,
@@ -373,6 +473,7 @@ if not exist "!_st_dir!" mkdir "!_st_dir!"
     echo   "f_test_libscript_components": !TEST_DONE!,
     echo   "g_collect_logs": !COL_DONE!,
     echo   "h_pull_logs": !PULL_DONE!,
+    echo   "emit_latex_and_verify_pdf": !LATEX_DONE!,
     echo   "i_deprovision_instance": !DEPROV_DONE!,
     echo   "provision_instance": !PROV_DONE!,
     echo   "use_bento_fork": !BENTO_DONE!,
@@ -399,14 +500,32 @@ set "_steps=!CORE_EXPERIMENT_STEPS:,= !"
 set "_steps=!_steps:;= !"
 for %%T in (!_steps!) do (
     if /i "%%T"=="all" (
+        if /i "!CORE_EXPERIMENT_SUITE!"=="libtpu" (
+            call :provision_instance
+            call :sync_research_repos
+            call :verify_native_host
+            call :run_experiments
+            call :send_logs_to_host
+            call :emit_latex_and_verify_pdf
+            call :deprovision_instance
+        ) else (
+            call :provision_instance
+            call :use_bento_fork
+            call :install_virtualization_stack
+            call :deploy_vagrant_box
+            call :snapshot_vagrant_box
+            call :test_libscript_components
+            call :run_experiments
+            call :send_logs_to_host
+            call :deprovision_instance
+        )
+    ) else if /i "%%T"=="libtpu_campaign" (
         call :provision_instance
-        call :use_bento_fork
-        call :install_virtualization_stack
-        call :deploy_vagrant_box
-        call :snapshot_vagrant_box
-        call :test_libscript_components
+        call :sync_research_repos
+        call :verify_native_host
         call :run_experiments
         call :send_logs_to_host
+        call :emit_latex_and_verify_pdf
         call :deprovision_instance
     ) else if /i "%%T"=="bento_matrix" (
         call :use_bento_fork
@@ -419,6 +538,10 @@ for %%T in (!_steps!) do (
         call :provision_instance
     ) else if /i "%%T"=="provision_instance" (
         call :provision_instance
+    ) else if /i "%%T"=="sync_research_repos" (
+        call :sync_research_repos
+    ) else if /i "%%T"=="verify_native_host" (
+        call :verify_native_host
     ) else if /i "%%T"=="b_use_bento_fork" (
         call :use_bento_fork
     ) else if /i "%%T"=="use_bento_fork" (
@@ -453,6 +576,8 @@ for %%T in (!_steps!) do (
         call :pull_logs
     ) else if /i "%%T"=="send_logs_to_host" (
         call :send_logs_to_host
+    ) else if /i "%%T"=="emit_latex_and_verify_pdf" (
+        call :emit_latex_and_verify_pdf
     ) else if /i "%%T"=="run_experiments" (
         call :run_experiments
     ) else if /i "%%T"=="i_deprovision_instance" (

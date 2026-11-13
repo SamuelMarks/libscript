@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Starting libscript REST API Server on port %d...\n", port);
-    printf("Registered endpoints: /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/components/{name}/hooks/{hook}\n");
+    printf("Registered endpoints: /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments, /api/v1/components/{name}/hooks/{hook}\n");
     printf("Server running. Press Ctrl+C to stop.\n");
     printf("Server stopped.\n");
     return 0;

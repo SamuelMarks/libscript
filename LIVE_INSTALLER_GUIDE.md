@@ -16,6 +16,21 @@ tools, and msitools replacements) to perform:
 - Base operating system installation for Linux (Alpine, Debian, Rocky, LFS), FreeBSD, and illumos.
 - Offline preloading of complex web applications and platforms (Open edX, WordPress).
 
+### Building & Flashing Live Media (`devtools/build_live_installer.*` & `devtools/write_usb.*`)
+
+```sh
+# Build live installer ISOs (--target linux|freebsd|illumos|all, --mode all|headless|tui|gui)
+./devtools/build_live_installer.sh --target linux --mode all --output build/live-linux.iso
+./devtools/build_live_installer.sh --target freebsd --mode all --output build/live-freebsd.iso
+./devtools/build_live_installer.sh --target illumos --mode all --output build/live-illumos.iso
+
+# Windows Batch equivalent:
+devtools\build_live_installer.cmd --target linux --mode all --output build\live-linux.iso
+
+# Flash a built hybrid ISO onto USB media
+./devtools/write_usb.sh build/live-linux.iso /dev/sdX
+```
+
 ---
 
 ## 2. Boot Modes & Console Parameters
@@ -219,8 +234,8 @@ Install pure vanilla OS base without preloading any LibScript components:
 
 ### Option B: Scrollable Dynamic Component Selection
 
-Select any combination of components from the 260+ package catalog (e.g. `nginx`, `wordpress`,
-`odoo`, `openedx`):
+Select any combination of components from the 320+ package catalog (520+ total subsystems, e.g.,
+`nginx`, `wordpress`, `odoo`, `openedx`):
 
 ```sh
 # Query dynamic catalog via CLI
