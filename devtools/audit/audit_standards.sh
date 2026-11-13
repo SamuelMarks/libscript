@@ -89,9 +89,15 @@ audit_single_file() {
   fi
 
   ext="${file##*.}"
+  case "$file" in
+    .githooks/pre-commit|*/.githooks/pre-commit) ext="sh" ;;
+  esac
 
   # 1. POSIX /bin/sh, THIS_FILE dance, idempotency, eval, and doc header (for .sh files)
   if [ "$ext" = "sh" ]; then
+    if awk '/\r$/ { found=1; exit } END { exit(found ? 0 : 1) }' "$file" 2>/dev/null; then
+      log_failure "$file" "POSIX_EOL_LF" "Literal carriage return (CRLF) detected in POSIX shell script; enforce LF line endings."
+    fi
     sh_violations=$(awk '
       BEGIN {
         in_heredoc = 0; delim = ""; shebang_count = 0; shebang_lines = "";
@@ -947,10 +953,50 @@ audit_single_file() {
   esac
 }
 
+# ## audit_gitattributes_eol
+# Verifies via git check-attr that all tracked POSIX/PowerShell scripts resolve to eol=lf and Batch scripts resolve to eol=crlf.
+audit_gitattributes_eol() {
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    return 0
+  fi
+  _eol_violations=$(
+    git ls-files --cached --others --exclude-standard "*.sh" "*.ps1" "*.cmd" "*.bat" ".githooks/pre-commit" 2>/dev/null \
+      | git check-attr --stdin eol 2>/dev/null \
+      | awk -F': eol: ' '
+        NF == 2 {
+          path = $1
+          val = $2
+          sub(/\r$/, "", val)
+          if (path ~ /\.(cmd|bat)$/) {
+            if (val != "crlf") {
+              print path "|Expected git attribute eol=crlf for Windows Batch script, found eol=" val
+            }
+          } else {
+            if (val != "lf") {
+              print path "|Expected git attribute eol=lf for script, found eol=" val
+            }
+          }
+        }
+      ' || true
+  )
+  if [ -n "$_eol_violations" ]; then
+    OIFS_E="$IFS"
+    IFS='
+'
+    for _ev in $_eol_violations; do
+      _ep="${_ev%%|*}"
+      _em="${_ev#*|}"
+      log_failure "$_ep" "GITATTRIBUTES_EOL" "$_em"
+    done
+    IFS="$OIFS_E"
+  fi
+}
+
 # Execute audit based on arguments
 if [ "${1:-}" = "--all" ]; then
+  audit_gitattributes_eol
   _all_candidates=$(mktemp)
-  git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt" > "$_all_candidates"
+  git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt" ".githooks/pre-commit" > "$_all_candidates"
   if [ -s "$_all_candidates" ]; then
     if ! STACK="" xargs -n 500 -P 4 "$THIS_FILE" < "$_all_candidates" >/dev/null; then
       rm -f "$_all_candidates"
@@ -976,6 +1022,9 @@ elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
     printf '%s\n' '[AUDIT] No matching files to audit.'
     exit 0
   fi
+  case "$staged_files" in
+    *".gitattributes"*|*".githooks/pre-commit"*) audit_gitattributes_eol ;;
+  esac
   OIFS="$IFS"
   IFS='
 '
@@ -985,6 +1034,9 @@ elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
   IFS="$OIFS"
 else
   for candidate in "$@"; do
+    case "$candidate" in
+      *.gitattributes|*.githooks/pre-commit) audit_gitattributes_eol ;;
+    esac
     if [ -f "${ORIG_PWD}/${candidate}" ]; then
       audit_single_file "${ORIG_PWD}/${candidate}"
     elif [ -f "$candidate" ]; then

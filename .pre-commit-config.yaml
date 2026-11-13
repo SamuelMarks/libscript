@@ -58,6 +58,13 @@ repos:
         entry: |
           /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "if exist _lib\toolchains\shellcheck\env.cmd call _lib\toolchains\shellcheck\env.cmd >nul 2>&1 & where shellcheck >nul 2>&1 || (set LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 && call libscript.cmd install shellcheck latest && call _lib\toolchains\shellcheck\env.cmd >nul 2>&1)"
+            if ! command -v shellcheck >/dev/null 2>&1; then
+              _win_ls_home="${LIBSCRIPT_HOME:-${USERPROFILE:-${HOME:-}}/.libscript}"
+              _win_ls_home=$(printf "%s" "$_win_ls_home" | tr "\\\\" "/")
+              for _sc_d in "$_win_ls_home"/shellcheck/*/bin; do
+                if [ -d "$_sc_d" ]; then PATH="$_sc_d:$PATH"; export PATH; fi
+              done
+            fi
           else
             if [ -f "./_lib/toolchains/shellcheck/env.sh" ]; then
               SCRIPT_NAME="./_lib/toolchains/shellcheck/env.sh"

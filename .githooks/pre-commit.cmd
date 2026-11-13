@@ -153,40 +153,8 @@ if errorlevel 1 (
     exit /b 1
 )
 echo Running shellcheck...
-set "SHELLCHECK_OPT_ARGS="
-shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
-if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
-set "_SC_BATCH="
-set "_SC_COUNT=0"
-set "_SC_FAILED=0"
-for /f "delims=" %%F in ('!GIT_FILE_CMD! 2^>nul') do (
-    set "_SC_CAND=%%F"
-    set "_SC_NORM=!_SC_CAND:\=/!"
-    set "_SC_MATCH=0"
-    if /i "%%~xF"==".sh" set "_SC_MATCH=1"
-    if /i "!_SC_NORM!"==".githooks/pre-commit" set "_SC_MATCH=1"
-    if "!_SC_MATCH!"=="1" (
-        if not "!_SC_NORM:node_modules/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
-        if not "!_SC_NORM:.git/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
-        if /i "!_SC_NORM:~0,4!"=="gen/" set "_SC_MATCH=0"
-        if not "!_SC_NORM:/gen/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
-    )
-    if "!_SC_MATCH!"=="1" if exist "%%F" (
-        set "_SC_BATCH=!_SC_BATCH! "%%F""
-        set /a "_SC_COUNT+=1"
-        if !_SC_COUNT! geq 40 (
-            shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
-            if errorlevel 1 set "_SC_FAILED=1"
-            set "_SC_BATCH="
-            set "_SC_COUNT=0"
-        )
-    )
-)
-if !_SC_COUNT! gtr 0 (
-    shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
-    if errorlevel 1 set "_SC_FAILED=1"
-)
-if "!_SC_FAILED!"=="1" (
+call :run_shellcheck_audit
+if errorlevel 1 (
     echo [ERROR] ShellCheck audit failed.
     exit /b 1
 )
@@ -276,4 +244,66 @@ if errorlevel 1 (
     echo [ERROR] shellcheck still not found on PATH after bootstrap. 1>&2
     exit /b 1
 )
+exit /b 0
+
+:: ## run_shellcheck_audit
+:: Executes ShellCheck across candidate POSIX scripts using 4 parallel workers when PowerShell is available, falling back to pure Batch.
+:run_shellcheck_audit
+set "SHELLCHECK_OPT_ARGS="
+shellcheck --list-optional 2>nul | findstr /C:"useless-use-of-cat" >nul 2>&1
+if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
+
+set "_SC_LIST_TMP=%TEMP%\libscript_sc_files_%RANDOM%.txt"
+!GIT_FILE_CMD! -- "*.sh" ".githooks/pre-commit" > "!_SC_LIST_TMP!" 2>nul
+if not exist "!_SC_LIST_TMP!" exit /b 0
+for %%S in ("!_SC_LIST_TMP!") do if %%~zS equ 0 (
+    del /f /q "!_SC_LIST_TMP!" >nul 2>&1
+    exit /b 0
+)
+
+set "_SC_PS="
+where pwsh >nul 2>&1
+if not errorlevel 1 set "_SC_PS=pwsh"
+if not defined _SC_PS (
+    where powershell.exe >nul 2>&1
+    if not errorlevel 1 set "_SC_PS=powershell.exe"
+)
+
+if defined _SC_PS (
+    set "_LS_SC_LIST=!_SC_LIST_TMP!"
+    set "_LS_SC_OPTS=!SHELLCHECK_OPT_ARGS!"
+    "!_SC_PS!" -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $scExe = (Get-Command shellcheck -ErrorAction Stop).Source; $cwd = (Get-Location).Path; $raw = [System.IO.File]::ReadAllLines($env:_LS_SC_LIST); $files = New-Object 'System.Collections.Generic.List[string]'; foreach ($f in $raw) { if ([string]::IsNullOrWhiteSpace($f)) { continue }; $n = $f.Replace([char]92, [char]47); if ($n -match '(^|/)(node_modules|\.git|gen)/') { continue }; $full = [System.IO.Path]::Combine($cwd, $f); if ([System.IO.File]::Exists($full)) { [void]$files.Add($f) } }; if ($files.Count -eq 0) { exit 0 }; $opts = if ($env:_LS_SC_OPTS) { $env:_LS_SC_OPTS.Trim() } else { '' }; $running = New-Object 'System.Collections.Generic.List[object]'; $failed = $false; for ($i = 0; $i -lt $files.Count; $i += 80) { while ($running.Count -ge 4) { $doneIdx = -1; for ($k = 0; $k -lt $running.Count; $k++) { if ($running[$k].Proc.HasExited) { $doneIdx = $k; break } }; if ($doneIdx -lt 0) { Start-Sleep -Milliseconds 20; continue }; $item = $running[$doneIdx]; $running.RemoveAt($doneIdx); $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; $end = [Math]::Min($i + 79, $files.Count - 1); $quoted = for ($j = $i; $j -le $end; $j++) { [char]34 + $files[$j] + [char]34 }; $argStr = '-s sh ' + $(if ($opts) { $opts + ' ' } else { '' }) + ($quoted -join ' '); $psi = New-Object System.Diagnostics.ProcessStartInfo; $psi.FileName = $scExe; $psi.Arguments = $argStr; $psi.UseShellExecute = $false; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true; $p = [System.Diagnostics.Process]::Start($psi); [void]$running.Add(@{ Proc = $p; Out = $p.StandardOutput.ReadToEndAsync(); Err = $p.StandardError.ReadToEndAsync() }) }; foreach ($item in $running) { $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; if ($failed) { exit 1 }; exit 0"
+    set "_SC_RC=!ERRORLEVEL!"
+    del /f /q "!_SC_LIST_TMP!" >nul 2>&1
+    exit /b !_SC_RC!
+)
+
+set "_SC_BATCH="
+set "_SC_COUNT=0"
+set "_SC_FAILED=0"
+for /f "usebackq delims=" %%F in ("!_SC_LIST_TMP!") do (
+    set "_SC_CAND=%%F"
+    set "_SC_NORM=!_SC_CAND:\=/!"
+    set "_SC_MATCH=1"
+    if not "!_SC_NORM:node_modules/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
+    if not "!_SC_NORM:.git/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
+    if /i "!_SC_NORM:~0,4!"=="gen/" set "_SC_MATCH=0"
+    if not "!_SC_NORM:/gen/=!"=="!_SC_NORM!" set "_SC_MATCH=0"
+    if "!_SC_MATCH!"=="1" if exist "%%F" (
+        set "_SC_BATCH=!_SC_BATCH! "%%F""
+        set /a "_SC_COUNT+=1"
+        if !_SC_COUNT! geq 40 (
+            shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
+            if errorlevel 1 set "_SC_FAILED=1"
+            set "_SC_BATCH="
+            set "_SC_COUNT=0"
+        )
+    )
+)
+del /f /q "!_SC_LIST_TMP!" >nul 2>&1
+if !_SC_COUNT! gtr 0 (
+    shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
+    if errorlevel 1 set "_SC_FAILED=1"
+)
+if "!_SC_FAILED!"=="1" exit /b 1
 exit /b 0

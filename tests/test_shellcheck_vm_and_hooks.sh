@@ -360,6 +360,70 @@ else
   pass_check "Bootstrapped shellcheck in pre-commit hook caught broken_script.sh and exited non-zero"
 fi
 
+printf '%s\n' '=== 4. Testing Windows core.autocrlf=true Checkout LF Hygiene (.gitattributes / SC1017 Regression) ==='
+PRECOMMIT_EOL=$(git check-attr eol -- .githooks/pre-commit | awk -F': eol: ' '{print $2}')
+CMD_EOL=$(git check-attr eol -- .githooks/pre-commit.cmd | awk -F': eol: ' '{print $2}')
+if [ "$PRECOMMIT_EOL" = "lf" ] && [ "$CMD_EOL" = "crlf" ]; then
+  pass_check ".gitattributes resolves .githooks/pre-commit -> eol=lf and .githooks/pre-commit.cmd -> eol=crlf"
+else
+  fail_check "Unexpected .gitattributes eol resolution: pre-commit='${PRECOMMIT_EOL}', pre-commit.cmd='${CMD_EOL}'"
+fi
+
+AUTOCRLF_REPO="${TEST_WS}/autocrlf_repo"
+mkdir -p "$AUTOCRLF_REPO/.githooks"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.gitattributes" "$AUTOCRLF_REPO/.gitattributes"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.githooks/pre-commit" "$AUTOCRLF_REPO/.githooks/pre-commit"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.githooks/pre-commit.sh" "$AUTOCRLF_REPO/.githooks/pre-commit.sh"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.githooks/pre-commit.cmd" "$AUTOCRLF_REPO/.githooks/pre-commit.cmd"
+(
+  cd "$AUTOCRLF_REPO"
+  git init -q
+  git config user.email 'test@example.com'
+  git config user.name 'LibScript Test'
+  git config core.autocrlf true
+  git add .gitattributes .githooks/pre-commit .githooks/pre-commit.sh .githooks/pre-commit.cmd
+  git commit -q -m 'test autocrlf checkout'
+  rm -f .githooks/pre-commit .githooks/pre-commit.sh .githooks/pre-commit.cmd
+  git checkout -q -- .githooks/pre-commit .githooks/pre-commit.sh .githooks/pre-commit.cmd
+)
+
+if awk '/\r$/ { found=1; exit } END { exit(found ? 0 : 1) }' "$AUTOCRLF_REPO/.githooks/pre-commit"; then
+  fail_check "core.autocrlf=true checkout injected CRLF into no-extension .githooks/pre-commit"
+else
+  pass_check "core.autocrlf=true checkout preserved pure LF in no-extension .githooks/pre-commit"
+fi
+
+if (
+  PATH="${HOOK_LS_HOME}/shellcheck/0.11.0/bin:$PATH"
+  export PATH
+  shellcheck -s sh "$AUTOCRLF_REPO/.githooks/pre-commit" "$AUTOCRLF_REPO/.githooks/pre-commit.sh" >/dev/null 2>&1
+); then
+  pass_check "shellcheck -s sh passed without SC1017 on core.autocrlf=true checked-out .githooks/pre-commit"
+else
+  fail_check "shellcheck -s sh failed on core.autocrlf=true checked-out .githooks/pre-commit"
+fi
+
+BAD_ATTR_REPO="${TEST_WS}/bad_attr_repo"
+mkdir -p "$BAD_ATTR_REPO/.githooks"
+printf '* text=auto\n*.sh text eol=lf\n*.cmd text eol=crlf\n' > "$BAD_ATTR_REPO/.gitattributes"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.githooks/pre-commit" "$BAD_ATTR_REPO/.githooks/pre-commit"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.githooks/pre-commit.cmd" "$BAD_ATTR_REPO/.githooks/pre-commit.cmd"
+cp -f "${LIBSCRIPT_ROOT_DIR}/.githooks/pre-commit.sh" "$BAD_ATTR_REPO/.githooks/pre-commit.sh"
+(
+  cd "$BAD_ATTR_REPO"
+  git init -q
+  git add .gitattributes .githooks/pre-commit .githooks/pre-commit.cmd .githooks/pre-commit.sh
+)
+if (
+  _audit_sh="${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh"
+  cd "$BAD_ATTR_REPO"
+  LIBSCRIPT_ROOT_DIR="$BAD_ATTR_REPO" STACK="" "$_audit_sh" --staged >/dev/null 2>&1
+); then
+  fail_check "audit_standards.sh should have flagged missing eol=lf on .githooks/pre-commit (GITATTRIBUTES_EOL)"
+else
+  pass_check "audit_standards.sh caught missing eol=lf on no-extension .githooks/pre-commit (GITATTRIBUTES_EOL)"
+fi
+
 if [ "$FAILURES" -gt 0 ]; then
   printf '[FAIL] ShellCheck VM & Hook Bootstrap Suite failed (%d/%d checks failed)\n' "$FAILURES" "$CHECKS" >&2
   exit 1

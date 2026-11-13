@@ -49,22 +49,32 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo === LibScript POSIX Compliance ^& Bashism Prohibition Audit (Win32) ===
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+goto :main
+
+:: ## show_help
+:: Displays command-line usage instructions for audit_posix.cmd.
+:show_help
+echo Usage: %~nx0 [--all ^| --staged ^| ^<file^>...]
+echo Audits shell scripts for strict POSIX /bin/sh compliance and Windows Batch companion parity.
+exit /b 0
+
+:: ## main
+:: Dispatches execution to the PowerShell POSIX and companion parity auditor.
+:main
+where pwsh >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_posix.ps1" %*
+    exit /b !ERRORLEVEL!
+)
 
 where powershell.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_standards.ps1" --all
-    if errorlevel 1 exit /b 1
-    echo [PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.
-    exit /b 0
-)
-
-where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_standards.ps1" --all
-    if errorlevel 1 exit /b 1
-    echo [PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.
-    exit /b 0
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_posix.ps1" %*
+    exit /b !ERRORLEVEL!
 )
 
 echo [PASS] Windows companions verified with delayed expansion and STACK guards.

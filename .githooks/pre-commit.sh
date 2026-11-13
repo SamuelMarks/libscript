@@ -117,7 +117,7 @@ else
         filename=$(basename "$file")
         if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
             printf '%s\n' "$file" >> "$_tmp_crlf"
-        elif [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "conf" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || printf '%s\n' "$filename" | grep -q "Dockerfile" || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
+        elif [ "$file" = ".githooks/pre-commit" ] || [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "awk" ] || [ "$ext" = "jq" ] || [ "$ext" = "conf" ] || [ "$ext" = "service" ] || [ "$ext" = "tpl" ] || [ "$ext" = "txt" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || printf '%s\n' "$filename" | grep -q "Dockerfile" || [ "$filename" = "Makefile" ] || [ "$filename" = ".prettierrc" ] || [ "$filename" = "Vagrantfile" ] || [ "$filename" = "celery_env" ] || [ "$filename" = "ssh_config" ] || [ "$filename" = "ROOT" ] || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
             printf '%s\n' "$file" >> "$_tmp_lf"
         fi
         if [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "md" ]; then

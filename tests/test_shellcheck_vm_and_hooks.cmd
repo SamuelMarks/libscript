@@ -112,6 +112,49 @@ if errorlevel 1 (
     call :pass_check "shellcheck smoke test passed"
 )
 
+echo === 3. Testing .gitattributes LF Enforcement ^& core.autocrlf=true SC1017 Regression ===
+set "ATTR_LOG=!TEST_WS!\attr.log"
+git check-attr eol -- .githooks/pre-commit > "!ATTR_LOG!" 2>&1
+findstr /C:"eol: lf" "!ATTR_LOG!" >nul 2>&1
+if errorlevel 1 (
+    call :fail_check ".gitattributes did not resolve .githooks/pre-commit to eol=lf"
+) else (
+    call :pass_check ".gitattributes resolves .githooks/pre-commit to eol=lf"
+)
+
+set "AUTOCRLF_REPO=!TEST_WS!\autocrlf_repo"
+if not exist "!AUTOCRLF_REPO!\.githooks" mkdir "!AUTOCRLF_REPO!\.githooks"
+copy /y "%LIBSCRIPT_ROOT_DIR%\.gitattributes" "!AUTOCRLF_REPO!\.gitattributes" >nul
+copy /y "%LIBSCRIPT_ROOT_DIR%\.githooks\pre-commit" "!AUTOCRLF_REPO!\.githooks\pre-commit" >nul
+copy /y "%LIBSCRIPT_ROOT_DIR%\.githooks\pre-commit.sh" "!AUTOCRLF_REPO!\.githooks\pre-commit.sh" >nul
+copy /y "%LIBSCRIPT_ROOT_DIR%\.githooks\pre-commit.cmd" "!AUTOCRLF_REPO!\.githooks\pre-commit.cmd" >nul
+
+pushd "!AUTOCRLF_REPO!"
+git init -q
+git config user.email "test@example.com"
+git config user.name "LibScript Test"
+git config core.autocrlf true
+git add .gitattributes .githooks/pre-commit .githooks/pre-commit.sh .githooks/pre-commit.cmd
+git commit -q -m "test autocrlf checkout"
+del /f /q ".githooks\pre-commit" ".githooks\pre-commit.sh" ".githooks\pre-commit.cmd"
+git checkout -q -- .githooks/pre-commit .githooks/pre-commit.sh .githooks/pre-commit.cmd
+"!FAKE_LS_HOME!\shellcheck\0.11.0\bin\shellcheck.exe" -s sh ".githooks/pre-commit" ".githooks/pre-commit.sh" >nul 2>&1
+set "_AC_SC_RC=!ERRORLEVEL!"
+popd
+if "!_AC_SC_RC!"=="0" (
+    call :pass_check "core.autocrlf=true checkout preserved LF in .githooks/pre-commit (zero SC1017 errors)"
+) else (
+    call :fail_check "shellcheck failed on core.autocrlf=true checked-out .githooks/pre-commit"
+)
+
+set "STACK="
+call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd" ".githooks\pre-commit" >nul 2>&1
+if errorlevel 1 (
+    call :fail_check "audit_posix.cmd failed on .githooks\pre-commit"
+) else (
+    call :pass_check "audit_posix.cmd passed on .githooks\pre-commit"
+)
+
 rmdir /s /q "!TEST_WS!" >nul 2>&1
 
 if not "!FAILURES!"=="0" (

@@ -103,10 +103,15 @@ audit_batch() {
         print "[FAIL] [" prev_f "] Unguarded $HOME reference in env.sh; use ${HOME:-/root} for set -u daemon safety"
         errs++
       }
+      if (has_crlf) {
+        print "[FAIL] [" prev_f "] Literal carriage return (CRLF) detected in POSIX shell script; enforce LF line endings"
+        errs++
+      }
     }
     FNR == 1 {
       check_prev()
       prev_f = FILENAME
+      if ($0 ~ /\r$/) has_crlf = 1; else has_crlf = 0
       sub(/\r$/, "", $0)
       first_line = $0
       has_feu = 0; has_this = 0; bad_stack_quote = 0; unreachable_stack = 0;
@@ -115,7 +120,7 @@ audit_batch() {
       in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
       is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
     }
-    { sub(/\r$/, "", $0) }
+    { if ($0 ~ /\r$/) has_crlf = 1; sub(/\r$/, "", $0) }
     FNR <= 30 {
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /set -feu/) has_feu = 1
       if ($0 !~ /^[[:space:]]*#/ && $0 ~ /THIS_FILE=/) has_this = 1
@@ -250,7 +255,7 @@ audit_companions() {
 
 if [ "${1:-}" = "--staged" ]; then
   _staged_list=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git diff --no-ext-diff --cached --name-only --diff-filter=ACM -- "*.sh" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_staged_list"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git diff --no-ext-diff --cached --name-only --diff-filter=ACM -- "*.sh" ".githooks/pre-commit" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_staged_list"
   if [ -s "$_staged_list" ]; then
     audit_batch < "$_staged_list"
   fi
@@ -284,7 +289,7 @@ elif [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
 else
   _all_sh=$(mktemp)
   _all_scripts=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_all_sh"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" ".githooks/pre-commit" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_all_sh"
   (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat") > "$_all_scripts"
   audit_batch < "$_all_sh"
   audit_companions < "$_all_scripts"

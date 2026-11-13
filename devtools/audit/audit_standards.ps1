@@ -85,6 +85,9 @@ function Audit-File {
     }
 
     $ext = [System.IO.Path]::GetExtension($FilePath).TrimStart('.').ToLowerInvariant()
+    if ($FilePath.Replace([char]92, [char]47) -match '(^|/)\.githooks/pre-commit$') {
+        $ext = "sh"
+    }
     $lines = Get-Content -Path $FilePath -TotalCount 65 -ErrorAction SilentlyContinue
 
     if (-not $lines) {
@@ -95,6 +98,10 @@ function Audit-File {
 
     # 1. POSIX /bin/sh and THIS_FILE dance for shell scripts
     if ($ext -eq "sh") {
+        $rawShBytes = [System.IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $FilePath).Path)
+        if ([Array]::IndexOf($rawShBytes, [byte]13) -ge 0) {
+            Log-Violation -File $FilePath -Rule "POSIX_EOL_LF" -Details "Literal carriage return (CRLF) detected in POSIX shell script; enforce LF line endings."
+        }
         $firstLine = $lines[0]
         if ($firstLine -match "bash|zsh|ksh") {
             Log-Violation -File $FilePath -Rule "POSIX_SHEBANG" -Details "Non-POSIX shebang found: '$firstLine'. LibScript requires '#!/bin/sh'."
@@ -589,14 +596,50 @@ function Audit-File {
     }
 }
 
+# ## Test-GitAttributesEol
+# Verifies via git check-attr that all tracked POSIX/PowerShell scripts resolve to eol=lf and Batch scripts resolve to eol=crlf.
+function Test-GitAttributesEol {
+    $insideGit = git rev-parse --is-inside-work-tree 2>$null
+    if ($LASTEXITCODE -ne 0 -or $insideGit -ne "true") {
+        return
+    }
+    $trackedScripts = @(git ls-files --cached --others --exclude-standard "*.sh" "*.ps1" "*.cmd" "*.bat" ".githooks/pre-commit" 2>$null)
+    if ($trackedScripts.Count -eq 0) {
+        return
+    }
+    $attrOut = $trackedScripts | git check-attr --stdin eol 2>$null
+    foreach ($line in $attrOut) {
+        if ($line -match '^(.+?): eol: (.+)$') {
+            $p = $matches[1]
+            $v = $matches[2].Trim()
+            if ($p -match '\.(cmd|bat)$') {
+                if ($v -ne "crlf") {
+                    Log-Violation -File $p -Rule "GITATTRIBUTES_EOL" -Details "Expected git attribute eol=crlf for Windows Batch script, found eol=$v"
+                }
+            } else {
+                if ($v -ne "lf") {
+                    Log-Violation -File $p -Rule "GITATTRIBUTES_EOL" -Details "Expected git attribute eol=lf for script, found eol=$v"
+                }
+            }
+        }
+    }
+}
+
 # Determine target files
 $targetFiles = @()
 if ($args -contains "--all") {
-    $targetFiles = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1"
+    Test-GitAttributesEol
+    $targetFiles = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" ".githooks/pre-commit"
 } elseif ($args -contains "--staged" -or $args.Count -eq 0) {
     $targetFiles = git diff --no-ext-diff --cached --name-only --diff-filter=ACM
+    if ($targetFiles | Where-Object { $_ -match '(\.gitattributes|\.githooks/pre-commit)$' }) {
+        Test-GitAttributesEol
+    }
 } else {
     $targetFiles = $args
+    if ($targetFiles | Where-Object { $_ -match '(\.gitattributes|\.githooks[\\/]pre-commit)$' }) {
+        Test-GitAttributesEol
+    }
 }
 
 if (-not $targetFiles) {
