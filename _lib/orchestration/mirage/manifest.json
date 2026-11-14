@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mirage",
+  "title": "MirageOS Unikernel",
+  "description": "OCaml library operating system and Solo5 (hvt/spt) unikernel synthesizer.",
+  "category": "orchestration",
+  "provides": ["mirage", "mirageos", "unikernel-builder"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/mirage/mirage",
+  "dependencies": {
+    "runtime_deps": ["ocaml", "opam", "solo5"]
+  }
+}

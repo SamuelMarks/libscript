@@ -6,5 +6,5 @@
   "os_blacklist": ["windows", "mac"],
   "title": "eopkg",
   "description": "Bootstrap script for `eopkg`, the system package manager for Solus OS.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

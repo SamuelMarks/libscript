@@ -3,7 +3,7 @@
   "name": "surrealdb",
   "title": "SurrealDB",
   "description": "Scalable distributed multi-model cloud database supporting relational, document, graph, and vector queries.",
-  "category": "database",
+  "category": "databases",
   "provides": ["surrealdb", "multi-model-database", "database"],
   "os_whitelist": ["all"],
   "ports": [8000],

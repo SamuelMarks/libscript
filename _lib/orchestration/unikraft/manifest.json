@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "unikraft",
+  "title": "Unikraft (KraftKit)",
+  "description": "Modular POSIX-compatible unikernel SDK and KraftKit image builder targeting KVM, Firecracker, and Xen.",
+  "category": "orchestration",
+  "provides": ["unikraft", "kraft", "unikernel-builder"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/unikraft/kraftkit"
+}

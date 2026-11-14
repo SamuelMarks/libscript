@@ -5,7 +5,7 @@
   "os_whitelist": ["all"],
   "title": "rebar3",
   "description": "Bootstrap module for the `rebar3` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["sunos"],
   "repository": "https://github.com/erlang/rebar3"
 }

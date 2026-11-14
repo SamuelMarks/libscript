@@ -3,7 +3,7 @@
   "name": "varnish",
   "title": "Varnish Cache",
   "description": "High-performance caching HTTP reverse proxy accelerator with flexible VCL policy configuration.",
-  "category": "cache",
+  "category": "caches",
   "provides": ["varnish", "http-cache", "cache"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],

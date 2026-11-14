@@ -66,6 +66,11 @@
     "REDIS_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying redis available remote releases."
+    },
+    "REDIS_PORT": {
+      "type": "string",
+      "default": "6379",
+      "description": "TCP listening port configured in redis.conf for Redis server instances."
     }
   }
 }

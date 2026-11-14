@@ -5,7 +5,7 @@
   "os_whitelist": ["arch", "artix", "manjaro"],
   "title": "yay",
   "description": "Bootstrap module for the `yay` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["freebsd"],
   "repository": "https://github.com/Jguer/yay"
 }

@@ -3,7 +3,7 @@
   "name": "auto-win-msvc",
   "title": "auto-win-msvc C89 Compatibility Layer",
   "description": "91-module C89 POSIX/BSD/Linux/Solaris/macOS compatibility header and static library layer for MSVC and OpenWatcom.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["auto-win-msvc"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/SamuelMarks/auto-win-msvc"

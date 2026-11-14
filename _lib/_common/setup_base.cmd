@@ -71,12 +71,28 @@ if "%TARGET_DIR:~-1%"=="\" set "TARGET_DIR=%TARGET_DIR:~0,-1%"
 if "%TARGET_DIR%"=="" set "TARGET_DIR=%CD%"
 if /i "%TARGET_DIR%"=="!LIBSCRIPT_ROOT_DIR!\_lib\_common" set "TARGET_DIR=%CD%"
 
-:: Privilege Check
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :check_admin
-if errorlevel 1 (
-    call "!LOG_CMD!" :log_info "Elevating to administrator..."
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :priv "%~f0"
-    exit /b %errorlevel%
+:: Relocate target paths cleanly when staging into LIBSCRIPT_TARGET_SYSROOT
+if defined LIBSCRIPT_TARGET_SYSROOT (
+    if not "!LIBSCRIPT_TARGET_SYSROOT!"=="/" if not "!LIBSCRIPT_TARGET_SYSROOT!"=="\" (
+        set "LIBSCRIPT_HOME=!LIBSCRIPT_TARGET_SYSROOT!\opt\libscript"
+        set "LIBSCRIPT_DATA_DIR=!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript"
+        set "LIBSCRIPT_ETC_DIR=!LIBSCRIPT_TARGET_SYSROOT!\etc"
+        set "LIBSCRIPT_LOG_DIR=!LIBSCRIPT_TARGET_SYSROOT!\var\log"
+        set "PREFIX=!LIBSCRIPT_TARGET_SYSROOT!\usr\local\bin"
+        if not exist "!LIBSCRIPT_HOME!" mkdir "!LIBSCRIPT_HOME!"
+        if not exist "!LIBSCRIPT_DATA_DIR!" mkdir "!LIBSCRIPT_DATA_DIR!"
+        if not exist "!PREFIX!" mkdir "!PREFIX!"
+    )
+)
+
+:: Privilege Check (skipped when staging offline into LIBSCRIPT_TARGET_SYSROOT)
+if not defined LIBSCRIPT_TARGET_SYSROOT (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :check_admin
+    if errorlevel 1 (
+        call "!LOG_CMD!" :log_info "Elevating to administrator..."
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :priv "%~f0"
+        exit /b %errorlevel%
+    )
 )
 
 :: Delegate to specific setup script

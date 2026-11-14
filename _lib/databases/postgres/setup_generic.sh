@@ -166,10 +166,12 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if { [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ]; } && [ -n "${PKG_MGR:-}" ]; then
+            if [ "${LIBSCRIPT_TARGET_OS:-}" = "osv" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "nanos" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "unikraft" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "rumprun" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "mirageos" ]; then
+              LIBSCRIPT_UNIKERNEL_FRAMEWORK="${LIBSCRIPT_TARGET_OS}" STACK='' "${DIR}/unikernel_build.sh" "${LIBSCRIPT_TARGET_SYSROOT:-${TARGET_DIR}}" "${TARGET_DIR}/bin/postgres.unikernel.img"
+            elif { [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ]; } && [ -n "${PKG_MGR:-}" ] && [ "${LIBSCRIPT_IMAGE_BUILD:-0}" != "1" ]; then
               log_info 'Falling back to system package manager for postgres...'
               libscript_depends 'postgres'
-              export PATH="/opt/ooce/bin:/opt/ooce/pgsql-17/bin:/opt/ooce/pgsql-18/bin:/usr/local/bin:${PATH}"
+              export PATH="/opt/ooce/bin:/opt/ooce/pgsql-16/bin:/opt/ooce/pgsql-17/bin:/opt/ooce/pgsql-18/bin:/usr/local/bin:${PATH}"
               if command -v psql >/dev/null 2>&1; then
                 ln -sf "$(command -v psql)" "${TARGET_DIR}/bin/psql" 2>/dev/null || true
                 ln -sf "$(command -v postgres)" "${TARGET_DIR}/bin/postgres" 2>/dev/null || true
@@ -183,6 +185,21 @@ case "$ACTION" in
         log_info "postgres ${VERSION} is already installed."
       fi
       libscript_symlink_alias "postgres" "$VERSION" "${EXACT_VERSION}"
+    fi
+    if [ -n "${LIBSCRIPT_TARGET_SYSROOT:-}" ] && [ "${LIBSCRIPT_TARGET_SYSROOT}" != "/" ]; then
+      _pg_sr="${LIBSCRIPT_TARGET_SYSROOT%/}"
+      mkdir -p "${_pg_sr}/var/lib/postgresql/data" "${_pg_sr}/usr/local/libexec"
+      cat << 'PG_FIRSTBOOT' > "${_pg_sr}/usr/local/libexec/libscript-postgres-initdb.sh"
+#!/bin/sh
+set -feu
+PGDATA="${PGDATA:-/var/lib/postgresql/data}"
+if [ ! -f "${PGDATA}/PG_VERSION" ] && command -v initdb >/dev/null 2>&1; then
+  mkdir -p "$PGDATA"
+  initdb -D "$PGDATA" --auth-local=trust --auth-host=scram-sha-256
+fi
+PG_FIRSTBOOT
+      chmod +x "${_pg_sr}/usr/local/libexec/libscript-postgres-initdb.sh"
+      "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${_pg_sr}/var/lib/postgresql/data" || true
     fi
     if [ -n "${POSTGRES_DATA_DIR:-${PGDATA:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/_lib/databases/postgres/service.sh" configure "${POSTGRES_DATA_DIR:-${PGDATA:-}}" || true

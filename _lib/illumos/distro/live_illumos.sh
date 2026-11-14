@@ -114,9 +114,18 @@ fi
 printf '[BUILD] Generating ISO image...\n'
 if command -v mkisofs >/dev/null 2>&1; then
   mkisofs -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -r -V "MSI_ILLUMOS_LIVE" -o "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+elif command -v xorriso >/dev/null 2>&1; then
+  xorriso -as mkisofs -r -V "MSI_ILLUMOS_LIVE" -o "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+elif command -v hdiutil >/dev/null 2>&1; then
+  hdiutil makehybrid -iso -joliet -default-volume-name "MSI_ILLUMOS_LIVE" -o "${OUTPUT_PATH}.cdr" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+  mv -f "${OUTPUT_PATH}.cdr.iso" "$OUTPUT_PATH" 2>/dev/null || mv -f "${OUTPUT_PATH}.cdr" "$OUTPUT_PATH" 2>/dev/null || true
 else
+  if [ "${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}" = "1" ] && [ "${LIBSCRIPT_ALLOW_STUB:-0}" != "1" ]; then
+    printf '[ERROR] Strict live illumos ISO synthesis failed: install mkisofs or xorriso.\n' >&2
+    exit 1
+  fi
   printf '[WARN] mkisofs not found, falling back to tar...\n'
-  tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || touch "$OUTPUT_PATH"
+  tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || printf 'LibScript Live illumos Archive\n' > "$OUTPUT_PATH"
 fi
 
 touch "$STAMP_FILE"

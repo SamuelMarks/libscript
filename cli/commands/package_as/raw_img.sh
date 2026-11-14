@@ -1,10 +1,9 @@
 #!/bin/sh
 # ## Overview
 # Packages a target sysroot into a partitioned, bootable raw disk image (.img)
-# suitable for direct block writing (dd) to physical disks or hypervisor attachments.
-#
+# delegating GPT/ESP/rootfs population and fstab synthesis to disk_builder.sh.
 # ## Usage
-# Run `raw_img.sh [target_sysroot] [output_image] [size_gib] [boot_mode]`
+# ./cli/commands/package_as/raw_img.sh [--strict | --allow-stub] [target_sysroot] [output_image] [size_gib] [boot_mode]
 
 set -feu
 
@@ -30,23 +29,32 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
+EXTRA_FLAGS=''
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --help|-h)
+      printf 'Usage: %s [--strict | --allow-stub] [target_sysroot] [output_image] [size_gib] [boot_mode]\n' "$(basename "$THIS_FILE")"
+      exit 0
+      ;;
+    --strict) EXTRA_FLAGS='--strict'; shift ;;
+    --allow-stub) EXTRA_FLAGS='--allow-stub'; shift ;;
+    *) break ;;
+  esac
+done
+
 TARGET_SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}}"
 OUT_IMG="${2:-${LIBSCRIPT_ROOT_DIR}/build/images/raw/disk.img}"
-SIZE_GIB="${3:-10}"
+SIZE_GIB="${3:-4}"
 BOOT_MODE="${4:-uefi}"
-
-OUT_DIR="${OUT_IMG%/*}"
-[ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"
-
-printf '[PACKAGE] Synthesizing raw disk image: %s (%sG, %s)...\n' "$OUT_IMG" "$SIZE_GIB" "$BOOT_MODE"
-
-# 1. Provision raw disk image
-"${LIBSCRIPT_ROOT_DIR}/_lib/storage/provision_disk.sh" "$OUT_IMG" "$SIZE_GIB" "gpt" "$BOOT_MODE"
-
-# 2. Bootloader and rootfs synchronization
-if [ -d "$TARGET_SYSROOT" ]; then
-  "${LIBSCRIPT_ROOT_DIR}/_lib/bootloaders/setup.sh" compile "$TARGET_SYSROOT" grub2-efi "$BOOT_MODE"
+BOOTLOADER='grub2-efi'
+if [ "$BOOT_MODE" = "bios" ] || [ "$BOOT_MODE" = "bios-legacy" ]; then
+  BOOTLOADER='grub2-bios'
 fi
 
+if [ -n "$EXTRA_FLAGS" ]; then
+  STACK='' "${SCRIPT_DIR}/disk_builder.sh" "$EXTRA_FLAGS" "$TARGET_SYSROOT" "$OUT_IMG" "$SIZE_GIB" "$BOOTLOADER"
+else
+  STACK='' "${SCRIPT_DIR}/disk_builder.sh" "$TARGET_SYSROOT" "$OUT_IMG" "$SIZE_GIB" "$BOOTLOADER"
+fi
 printf '[OK] Successfully synthesized raw disk image: %s\n' "$OUT_IMG"
 exit 0

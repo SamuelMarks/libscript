@@ -5,7 +5,7 @@
   "os_whitelist": ["all"],
   "title": "mix",
   "description": "Bootstrap module for `mix` (Elixir package manager and build tool).",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["sunos"],
   "repository": "https://github.com/elixir-lang/elixir"
 }

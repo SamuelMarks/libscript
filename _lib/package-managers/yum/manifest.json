@@ -3,7 +3,7 @@
   "name": "yum",
   "title": "YUM",
   "description": "Legacy RHEL/CentOS Yellowdog Updater Modified (yum) RPM package manager wrapper.",
-  "category": "package-manager",
+  "category": "package-managers",
   "provides": ["yum"],
   "os_whitelist": ["rhel", "fedora", "centos", "rocky", "almalinux", "linux"],
   "repository": "https://github.com/rpm-software-management/yum"

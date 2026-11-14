@@ -3,7 +3,7 @@
   "name": "7zip",
   "title": "7-Zip",
   "description": "A highly efficient, open-source file archiver known for its high compression ratio.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["7zip", "7z"],
   "os_whitelist": ["all"]
 }

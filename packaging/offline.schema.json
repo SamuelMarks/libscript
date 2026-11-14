@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "LibScript Offline Bundle Specification Schema",
   "type": "object",
   "description": "Defines the offline air-gapped dependency declarations including runtimes, databases, wheels, npm packages, codebase archives, and SHA-256 integrity checksums for self-contained installer builds.",

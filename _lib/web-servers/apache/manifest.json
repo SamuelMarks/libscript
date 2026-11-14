@@ -3,7 +3,7 @@
   "name": "apache",
   "title": "Apache HTTP Server",
   "description": "Apache HTTP Server (apachectl / apache2) modular, cross-platform web server recipe.",
-  "category": "web-server",
+  "category": "web-servers",
   "provides": ["web-server", "apache", "apache2", "apachectl"],
   "os_whitelist": ["all"],
   "conflicts": ["httpd"],

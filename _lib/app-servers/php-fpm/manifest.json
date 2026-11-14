@@ -3,7 +3,7 @@
   "name": "php-fpm",
   "title": "PHP-FPM",
   "description": "PHP FastCGI Process Manager daemon with adaptive process spawning for high-traffic PHP sites.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["php-fpm", "fastcgi", "app-server"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],

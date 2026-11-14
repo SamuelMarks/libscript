@@ -188,6 +188,10 @@ if [ "$CMD" = "package-as" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/vagrant_box.sh" "$@"
   elif [ "${pkg_type:-}" = "disk-builder" ] || [ "${pkg_type:-}" = "disk_builder" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/disk_builder.sh" "$@"
+  elif [ "${pkg_type:-}" = "zfs-stream" ] || [ "${pkg_type:-}" = "zfs_stream" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/zfs_stream.sh" "$@"
+  elif [ "${pkg_type:-}" = "direct-kernel" ] || [ "${pkg_type:-}" = "direct_kernel" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/direct_kernel.sh" "$@"
   elif [ "${pkg_type:-}" = "cloud-img" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/cloud_img.sh" "$@"
   else

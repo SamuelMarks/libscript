@@ -6,5 +6,5 @@
   "os_blacklist": ["darwin", "windows", "freebsd"],
   "title": "emerge",
   "description": "Bootstrap module for the Gentoo `emerge` package manager.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

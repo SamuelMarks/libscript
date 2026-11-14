@@ -3,7 +3,7 @@
   "name": "csmith",
   "title": "Csmith Random C11 Differential Testing Generator",
   "description": "Standalone version manager and source builder for Csmith, generating UB-free random C programs and providing runtime checksum headers under CSMITH_HOME/include.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["csmith"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/csmith-project/csmith"

@@ -5,5 +5,5 @@
   "os_whitelist": ["all"],
   "title": "conan",
   "description": "Bootstrap module for `conan` (C/C++ package manager).",
-  "category": "package-manager"
+  "category": "package-managers"
 }

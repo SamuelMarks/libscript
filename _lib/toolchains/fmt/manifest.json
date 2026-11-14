@@ -3,7 +3,7 @@
   "name": "fmt",
   "title": "{fmt} Modern C++17 Formatting Library",
   "description": "Standalone version manager and CMake source builder for {fmt} (pinned default 11.0.2), providing both single-TU fmt/format.cc template inputs and full multi-TU CTest verification.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["fmt", "libfmt"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/fmtlib/fmt"

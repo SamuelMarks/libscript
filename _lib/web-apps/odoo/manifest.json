@@ -5,6 +5,8 @@
   "title": "odoo",
   "description": "odoo stack",
   "provides": ["odoo"],
-  "runtime_deps": ["python", "nginx", "postgres"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["nginx", "postgres", "python"]
+  }
 }

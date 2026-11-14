@@ -3,8 +3,8 @@
   "name": "ferretdb",
   "title": "FerretDB",
   "description": "Truly open-source MongoDB alternative proxy backed by PostgreSQL or SQLite storage engines.",
-  "category": "database",
-  "provides": ["ferretdb", "mongodb-compatible", "database"],
+  "category": "databases",
+  "provides": ["database", "ferretdb", "mongodb-compatible", "mongodb-wire"],
   "os_whitelist": ["all"],
   "ports": [27017],
   "stateful": true,
@@ -26,5 +26,11 @@
     "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
+  },
+  "os_blacklist": [],
+  "process_model": "single-process",
+  "unikernel_support": ["unikraft", "nanos", "osv"],
+  "dependencies": {
+    "runtime_deps": ["postgres"]
   }
 }

@@ -9,6 +9,6 @@
   "provides": ["runtime", "javascript", "nodejs", "npm"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": [],
   "ports": []
 }

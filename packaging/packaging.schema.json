@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "LibScript Packaging Specification Schema",
   "type": "object",
   "description": "Defines the packaging, branding, runtime detection, and deployment configuration for generating native installers",
@@ -113,7 +113,8 @@
             "type": "object",
             "description": "Map of static environment overrides required by this specific service",
             "additionalProperties": {
-              "type": "string"
+              "type": "string",
+              "description": "Static environment variable string value injected into the service runtime."
             }
           },
           "wsgi_entrypoint": {
@@ -821,17 +822,23 @@
         "pre_install": {
           "type": "array",
           "description": "Actions to execute before stack files and services are provisioned",
-          "items": { "$ref": "#/$defs/hook_action" }
+          "items": {
+            "$ref": "#/$defs/hook_action"
+          }
         },
         "post_install": {
           "type": "array",
           "description": "Actions or checks to execute after stack files and services are provisioned",
-          "items": { "$ref": "#/$defs/hook_action" }
+          "items": {
+            "$ref": "#/$defs/hook_action"
+          }
         },
         "on_upgrade": {
           "type": "array",
           "description": "Actions to execute specifically during a product upgrade cycle",
-          "items": { "$ref": "#/$defs/hook_action" }
+          "items": {
+            "$ref": "#/$defs/hook_action"
+          }
         }
       }
     }

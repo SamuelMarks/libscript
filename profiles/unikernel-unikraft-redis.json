@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "unikernel-unikraft-redis",
+  "description": "Single-address-space Unikraft unikernel appliance running Redis with AOF persistence over KVM/Firecracker.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "unikernel-unikraft",
+    "libc": "musl",
+    "platform": "firecracker"
+  },
+  "kernel": {
+    "provider": "unikraft-core",
+    "version": "0.17.0",
+    "config_method": "fragments",
+    "fragments": ["plat_kvm.cfg", "lib_musl.cfg", "lib_lwip.cfg", "app_redis.cfg"],
+    "cmdline": "netdev.ipv4_addr=172.30.0.10 netdev.ipv4_gw_addr=172.30.0.1 netdev.ipv4_subnet_mask=255.255.255.0 -- /etc/redis.conf"
+  },
+  "init_system": {
+    "provider": "unikernel-entrypoint"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "output_formats": ["direct-kernel", "qcow2"],
+  "components": ["redis"]
+}

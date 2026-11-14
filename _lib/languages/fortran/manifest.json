@@ -3,7 +3,7 @@
   "name": "fortran",
   "title": "GNU Fortran",
   "description": "GNU Fortran (gfortran) scientific and numerical array programming compiler.",
-  "category": "language",
+  "category": "languages",
   "provides": ["fortran", "gfortran", "f95"],
   "os_whitelist": ["all"],
   "repository": "https://gcc.gnu.org/fortran/"

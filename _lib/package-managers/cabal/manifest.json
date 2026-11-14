@@ -6,6 +6,6 @@
   "os_blacklist": ["sunos"],
   "title": "cabal",
   "description": "Bootstrap module for `cabal` (Haskell package manager).",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/haskell/cabal"
 }

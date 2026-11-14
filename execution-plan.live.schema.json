@@ -220,6 +220,36 @@
           }
         }
       }
+    },
+    "components": {
+      "type": "array",
+      "description": "Declarative list of Tier 1 LibScript components ({component0, component1, ...}) staged into the image or installer",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component identifier or capability alias"
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target installer or base-image output formats synthesized from this OS specification",
+      "items": {
+        "type": "string",
+        "description": "Target image or installer packaging format identifier",
+        "enum": [
+          "live-iso",
+          "live-usb",
+          "raw",
+          "qcow2",
+          "vmdk",
+          "vhd",
+          "vhdx",
+          "vagrant-box",
+          "zfs-stream",
+          "rootfs-tar",
+          "oci-image",
+          "direct-kernel"
+        ]
+      }
     }
   }
 }

@@ -7,22 +7,6 @@
   "license_name": "GNU Affero General Public License v3.0",
   "description": "Open edX LMS and Studio/CMS enterprise learning management platform.",
   "provides": ["openedx", "lms", "cms"],
-  "runtime_deps": [
-    "python",
-    "nodejs",
-    "mysql",
-    "mongodb",
-    "redis",
-    "caddy",
-    "meilisearch",
-    "gunicorn",
-    "waitress",
-    "exim",
-    "hmailserver",
-    "lynx",
-    "gettext",
-    "nodeenv"
-  ],
   "os_blacklist": [],
   "hooks": {
     "physical": [
@@ -40,5 +24,40 @@
     "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/heartbeat"
-  }
+  },
+  "dependencies": {
+    "runtime_deps": [
+      "python",
+      "nodejs",
+      "mysql",
+      "mongodb-compatible",
+      "redis",
+      "caddy",
+      "meilisearch",
+      "wsgi",
+      "smtp",
+      "lynx",
+      "gettext",
+      "nodeenv",
+      "celery"
+    ]
+  },
+  "process_model": "multi-service-stack",
+  "unikernel_support": ["nanos", "osv", "unikraft"],
+  "requires_databases": [
+    {
+      "engine": "mysql",
+      "default_db_name": "openedx",
+      "default_user": "edxapp"
+    },
+    {
+      "engine": "mongodb",
+      "default_db_name": "edxapp",
+      "default_user": "edxapp"
+    },
+    {
+      "engine": "redis",
+      "default_db_name": "0"
+    }
+  ]
 }

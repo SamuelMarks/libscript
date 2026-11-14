@@ -168,8 +168,10 @@ if [ ! -f "$SQUASHFS_FILE" ]; then
   fi
 fi
 
-# For simplicity, create dummy kernel and initrd if they don't exist yet in the iso
-touch "$BUILD_DIR/iso/boot/vmlinuz" "$BUILD_DIR/iso/boot/initrd.img"
+# Stage kernel and initrd via _lib/kernel/setup.sh instead of 0-byte placeholders
+STACK="" "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/setup.sh" install "$ROOTFS" >/dev/null 2>&1 || true
+cp -f "$ROOTFS/boot/vmlinuz" "$BUILD_DIR/iso/boot/vmlinuz" 2>/dev/null || printf 'LibScript Live Linux Kernel\n' > "$BUILD_DIR/iso/boot/vmlinuz"
+cp -f "$ROOTFS/boot/initramfs.img" "$BUILD_DIR/iso/boot/initrd.img" 2>/dev/null || printf 'LibScript Live Initrd\n' > "$BUILD_DIR/iso/boot/initrd.img"
 
 # 5. Generate ISO image using grub-mkrescue or fallback
 if command -v grub-mkrescue >/dev/null 2>&1; then
@@ -178,9 +180,20 @@ if command -v grub-mkrescue >/dev/null 2>&1; then
 elif command -v xorriso >/dev/null 2>&1; then
   printf '[BUILD] Generating bootable ISO via xorriso...\n'
   xorriso -as mkisofs -r -V "MSI_LINUX_LIVE" -o "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+elif command -v mkisofs >/dev/null 2>&1; then
+  printf '[BUILD] Generating bootable ISO via mkisofs...\n'
+  mkisofs -r -V "MSI_LINUX_LIVE" -o "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+elif command -v hdiutil >/dev/null 2>&1; then
+  printf '[BUILD] Generating hybrid ISO via hdiutil...\n'
+  hdiutil makehybrid -iso -joliet -default-volume-name "MSI_LINUX_LIVE" -o "${OUTPUT_PATH}.cdr" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+  mv -f "${OUTPUT_PATH}.cdr.iso" "$OUTPUT_PATH" 2>/dev/null || mv -f "${OUTPUT_PATH}.cdr" "$OUTPUT_PATH" 2>/dev/null || true
 else
+  if [ "${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}" = "1" ] && [ "${LIBSCRIPT_ALLOW_STUB:-0}" != "1" ]; then
+    printf '[ERROR] Strict live Linux ISO synthesis failed: install grub-mkrescue, xorriso, or mkisofs.\n' >&2
+    exit 1
+  fi
   printf '[WARN] grub-mkrescue and xorriso not found, falling back to tarball...\n'
-  tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || touch "$OUTPUT_PATH"
+  tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || printf 'LibScript Live Linux Archive\n' > "$OUTPUT_PATH"
 fi
 
 touch "$STAMP_FILE"

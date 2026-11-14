@@ -5,5 +5,5 @@
   "os_whitelist": ["clearlinux"],
   "title": "swupd",
   "description": "Bootstrap module for `swupd` (Clear Linux OS package manager).",
-  "category": "package-manager"
+  "category": "package-managers"
 }

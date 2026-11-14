@@ -3,7 +3,7 @@
   "name": "pm2",
   "title": "PM2",
   "description": "Production process manager and cluster load balancer for Node.js and polyglot applications.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["pm2", "process-manager", "app-server"],
   "os_whitelist": ["all"],
   "ports": [9615],

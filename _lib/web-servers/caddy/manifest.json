@@ -7,7 +7,7 @@
   "provides": ["web-server", "reverse-proxy", "caddy"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": [],
   "ports": [80, 443],
   "stateful": false,
   "multitenant": true,
@@ -27,5 +27,7 @@
     "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
-  }
+  },
+  "process_model": "single-process",
+  "unikernel_support": ["unikraft", "nanos", "osv"]
 }

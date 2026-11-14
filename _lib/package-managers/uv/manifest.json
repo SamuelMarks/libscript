@@ -6,5 +6,5 @@
   "os_blacklist": ["sunos", "freebsd", "bsd"],
   "title": "uv",
   "description": "Bootstrap module for the `uv` package manager (astral.sh).",
-  "category": "package-manager"
+  "category": "package-managers"
 }

@@ -6,5 +6,5 @@
   "os_blacklist": [],
   "title": "spack",
   "description": "Bootstrap script for [Spack](https://spack.io/), a flexible package manager that supports multiple versions, configurations, platforms, and compilers.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

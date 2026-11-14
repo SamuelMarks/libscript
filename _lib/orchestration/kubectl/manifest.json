@@ -3,7 +3,7 @@
   "name": "kubectl",
   "title": "Kubectl",
   "description": "A fast, scalable, multi-language and extensible build system, installed via Kubectlisk.",
-  "category": "toolchain",
+  "category": "orchestration",
   "provides": ["build-system", "kubectl", "kubectlisk"],
   "conflicts": [],
   "os_whitelist": ["all"],

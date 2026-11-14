@@ -3,7 +3,7 @@
   "name": "couchdb",
   "title": "Apache CouchDB",
   "description": "Seamless multi-master syncing document database with an intuitive HTTP/JSON API and reliability focus.",
-  "category": "database",
+  "category": "databases",
   "provides": ["couchdb", "document-store", "database"],
   "os_whitelist": ["all"],
   "ports": [5984],

@@ -5,6 +5,6 @@
   "os_whitelist": ["all"],
   "title": "ansible-galaxy",
   "description": "Bootstrap module for the `ansible-galaxy` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/ansible/ansible"
 }

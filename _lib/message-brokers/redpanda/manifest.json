@@ -3,7 +3,7 @@
   "name": "redpanda",
   "title": "Redpanda",
   "description": "C++ Kafka-compatible streaming data platform and rpk CLI engineered without JVM or ZooKeeper dependencies.",
-  "category": "message-broker",
+  "category": "message-brokers",
   "provides": ["redpanda", "rpk", "kafka-compatible", "message-broker"],
   "os_whitelist": ["all"],
   "ports": [9092, 9644],

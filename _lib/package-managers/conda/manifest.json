@@ -6,5 +6,5 @@
   "os_blacklist": ["windows", "alpine"],
   "title": "conda",
   "description": "Bootstrap module for the `conda` package manager via Miniconda.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

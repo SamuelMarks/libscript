@@ -6,6 +6,6 @@
   "os_blacklist": ["windows"],
   "title": "asdf",
   "description": "Bootstrap module for the `asdf` universal version manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/asdf-vm/asdf"
 }

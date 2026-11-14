@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "unikernel-nanos-postgres",
+  "description": "NanoVMs Nanos/Ops unikernel appliance running PostgreSQL with an isolated ext4 data volume.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "unikernel-nanos",
+    "libc": "glibc",
+    "platform": "qemu"
+  },
+  "kernel": {
+    "provider": "nanos-kernel",
+    "version": "0.1.53",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "unikernel-entrypoint"
+  },
+  "storage": {
+    "disk_size_gib": 4,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "unikernel-direct"
+  },
+  "output_formats": ["qcow2", "raw"],
+  "components": ["postgres"]
+}

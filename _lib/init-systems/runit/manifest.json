@@ -3,7 +3,7 @@
   "name": "runit",
   "title": "runit",
   "description": "Cross-platform Unix init scheme with service supervision.",
-  "category": "init-system",
+  "category": "init-systems",
   "provides": ["runit", "init-system"],
   "conflicts": [],
   "versions": ["latest", "2.1.2"],

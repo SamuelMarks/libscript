@@ -3,7 +3,7 @@
   "name": "nasm",
   "title": "NASM",
   "description": "The Netwide Assembler portable x86 and x86-64 assembler.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["nasm", "assembler"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/netwide-assembler/nasm"

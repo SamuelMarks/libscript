@@ -3,7 +3,7 @@
   "name": "lua",
   "title": "Lua",
   "description": "Lightweight, embeddable, fast scripting language interpreter and bytecode compiler.",
-  "category": "language",
+  "category": "languages",
   "provides": ["lua", "luac"],
   "os_whitelist": ["all"],
   "repository": "https://www.lua.org/"

@@ -177,6 +177,8 @@ if /i "%cmd%"=="netctl" (
 if /i "%cmd%"=="deploy" ( call "!SCRIPT_DIR!\cli\commands\cloud\deploy.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deploy-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\deploy-remote.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="package-as" ( call "!SCRIPT_DIR!\cli\commands\packaging\package-as.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="build-image" ( call "!SCRIPT_DIR!\cli\commands\packaging\synthesize-image.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="build-installer" ( call "!SCRIPT_DIR!\cli\commands\packaging\synthesize-image.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="install-deps" ( call "!SCRIPT_DIR!\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="db-search" ( call "!SCRIPT_DIR!\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="update-db" ( call "!SCRIPT_DIR!\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )

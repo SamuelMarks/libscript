@@ -5,7 +5,7 @@
   "os_whitelist": ["linux", "darwin"],
   "title": "pkgx",
   "description": "pkgx",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["freebsd"],
   "repository": "https://github.com/pkgxdev/pkgx"
 }

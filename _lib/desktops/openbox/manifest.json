@@ -3,7 +3,7 @@
   "name": "openbox",
   "title": "Openbox",
   "description": "Highly configurable, next-generation X11 stacking window manager with extensive standards support.",
-  "category": "desktop",
+  "category": "desktops",
   "provides": ["openbox", "window-manager"],
   "conflicts": [],
   "versions": ["latest", "3.6.1"],

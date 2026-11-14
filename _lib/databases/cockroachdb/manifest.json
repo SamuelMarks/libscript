@@ -3,7 +3,7 @@
   "name": "cockroachdb",
   "title": "CockroachDB",
   "description": "Cloud-native distributed SQL database built for transactional consistency, horizontal scalability, and survivability.",
-  "category": "database",
+  "category": "databases",
   "provides": ["cockroachdb", "distributed-sql", "database"],
   "os_whitelist": ["all"],
   "ports": [26257, 8080],

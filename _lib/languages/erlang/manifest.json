@@ -3,7 +3,7 @@
   "name": "erlang",
   "title": "Erlang/OTP",
   "description": "Concurrent, fault-tolerant functional programming language and BEAM runtime environment.",
-  "category": "language",
+  "category": "languages",
   "provides": ["erlang", "erl", "erlc", "beam"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/erlang/otp"

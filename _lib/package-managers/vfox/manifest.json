@@ -5,5 +5,5 @@
   "os_whitelist": ["linux", "darwin", "windows"],
   "title": "vfox",
   "description": "Version Fox",
-  "category": "package-manager"
+  "category": "package-managers"
 }

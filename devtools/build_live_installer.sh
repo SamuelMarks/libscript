@@ -33,6 +33,7 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 TARGET_OS='all'
 MODE='all'
 OUTPUT_PATH=""
+COMPONENTS_CSV="${MSI_RS_COMPONENTS:-}"
 
 # ## show_help
 # Displays usage instructions and supported build parameters.
@@ -50,6 +51,7 @@ show_help() {
   printf '
 '
   printf '%s\n' 'Options:'
+  printf '%s\n' '  --components <c0,c1,...>               Tier 1 components preloaded into the live media'
   printf '%s\n' '  --output <file_path>                   Output image path override'
   printf '%s\n' '  --help, -h, /?, -?                     Show this help message'
 }
@@ -60,13 +62,33 @@ while [ $# -gt 0 ]; do
       TARGET_OS="${2:-all}"
       shift 2
       ;;
+    --target=*)
+      TARGET_OS="${1#*=}"
+      shift
+      ;;
     --mode)
       MODE="${2:-all}"
       shift 2
       ;;
+    --mode=*)
+      MODE="${1#*=}"
+      shift
+      ;;
+    --components)
+      COMPONENTS_CSV="${2:-}"
+      shift 2
+      ;;
+    --components=*)
+      COMPONENTS_CSV="${1#*=}"
+      shift
+      ;;
     --output)
       OUTPUT_PATH="${2:-}"
       shift 2
+      ;;
+    --output=*)
+      OUTPUT_PATH="${1#*=}"
+      shift
       ;;
     --help|-h|/\?|-\?)
       show_help
@@ -86,6 +108,9 @@ mkdir -p "${REPO_ROOT}/build"
 build_linux() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-linux-live.iso}"
   printf '[ORCHESTRATE] Building Live Linux installer (%s)...\n' "$MODE"
+  if [ -n "$COMPONENTS_CSV" ]; then
+    LIBSCRIPT_TARGET_OS='linux' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-linux-stage/rootfs" "$COMPONENTS_CSV"
+  fi
   "${REPO_ROOT}/_lib/orchestration/distro/live_linux.sh" "alpine" "$_out" "${REPO_ROOT}/build/live-linux-stage"
 }
 
@@ -94,6 +119,9 @@ build_linux() {
 build_freebsd() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-freebsd-live.iso}"
   printf '[ORCHESTRATE] Building Live FreeBSD installer (%s)...\n' "$MODE"
+  if [ -n "$COMPONENTS_CSV" ]; then
+    LIBSCRIPT_TARGET_OS='freebsd' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-freebsd-stage/rootfs" "$COMPONENTS_CSV"
+  fi
   "${REPO_ROOT}/_lib/freebsd/distro/live_freebsd.sh" "$_out" "${REPO_ROOT}/build/live-freebsd-stage"
 }
 
@@ -102,6 +130,9 @@ build_freebsd() {
 build_illumos() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-illumos-live.iso}"
   printf '[ORCHESTRATE] Building Live illumos installer (%s)...\n' "$MODE"
+  if [ -n "$COMPONENTS_CSV" ]; then
+    LIBSCRIPT_TARGET_OS='sunos' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-illumos-stage/rootfs" "$COMPONENTS_CSV"
+  fi
   "${REPO_ROOT}/_lib/illumos/distro/live_illumos.sh" "$_out" "${REPO_ROOT}/build/live-illumos-stage"
 }
 

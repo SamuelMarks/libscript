@@ -3,7 +3,7 @@
   "name": "pulsar",
   "title": "Apache Pulsar",
   "description": "Cloud-native distributed messaging and streaming platform with tiered storage and multi-tenancy.",
-  "category": "message-broker",
+  "category": "message-brokers",
   "provides": ["pulsar", "message-broker", "streaming"],
   "os_whitelist": ["all"],
   "ports": [6650, 8080],

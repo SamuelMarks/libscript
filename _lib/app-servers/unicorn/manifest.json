@@ -3,7 +3,7 @@
   "name": "unicorn",
   "title": "Unicorn",
   "description": "Rack HTTP server for fast clients and Unix-like operating systems utilizing pre-forking worker processes.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["unicorn", "rack-server", "app-server"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],

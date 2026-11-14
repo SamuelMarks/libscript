@@ -7,6 +7,8 @@
   "license_name": "BSD 3-Clause 'New' or 'Revised' License",
   "description": "jupyterhub stack",
   "provides": ["jupyterhub"],
-  "runtime_deps": ["python", "nginx"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["nginx", "python"]
+  }
 }

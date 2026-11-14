@@ -3,7 +3,7 @@
   "name": "ocaml",
   "title": "OCaml",
   "description": "Industrial-strength functional, imperative, and object-oriented programming language with static type inference.",
-  "category": "language",
+  "category": "languages",
   "provides": ["ocaml", "ocamlc", "ocamlopt"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/ocaml/ocaml"

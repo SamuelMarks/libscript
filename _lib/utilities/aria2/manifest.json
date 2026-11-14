@@ -3,7 +3,7 @@
   "name": "aria2",
   "title": "aria2",
   "description": "A lightweight multi-protocol & multi-source command-line download utility.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["aria2", "aria2c"],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"]

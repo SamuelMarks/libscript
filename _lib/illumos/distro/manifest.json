@@ -3,7 +3,7 @@
   "name": "illumos-distro",
   "title": "illumos Distribution Synthesizer",
   "description": "Synthesizes bootable illumos/OmniOS ZFS root pools, boot archives, and live installer ISO/USB images.",
-  "category": "orchestration",
+  "category": "illumos",
   "provides": ["illumos-distro"],
   "conflicts": [],
   "versions": ["latest", "r151050"],

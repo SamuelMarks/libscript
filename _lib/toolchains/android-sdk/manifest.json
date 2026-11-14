@@ -3,7 +3,7 @@
   "name": "android-sdk",
   "title": "Android SDK Command-Line Tools",
   "description": "Google Android SDK command-line tools (sdkmanager), platform-tools, platforms, and build-tools for Android and Kotlin Multiplatform builds.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["android-sdk", "sdkmanager"],
   "os_whitelist": ["linux", "darwin", "windows"],
   "os_blacklist": ["sunos", "freebsd"]

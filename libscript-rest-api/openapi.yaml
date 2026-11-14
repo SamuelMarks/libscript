@@ -964,7 +964,8 @@ paths:
       tags:
         - Artifacts
       summary:
-        Generate production-ready artifacts (Dockerfile, .deb, .msi, etc.) from the current stack
+        Generate production-ready installers, OS base images, ZFS streams, or unikernels for a
+        selected kernel and component set
       operationId: generateArtifact
       requestBody:
         required: true
@@ -974,9 +975,59 @@ paths:
               type: object
               required: [format]
               properties:
+                kernel:
+                  type: string
+                  description:
+                    Target kernel or unikernel runtime family for OS image and installer synthesis.
+                  enum:
+                    - linux-glibc
+                    - linux-musl
+                    - freebsd
+                    - illumos
+                    - unikernel-unikraft
+                    - unikernel-nanos
+                    - unikernel-osv
+                    - unikernel-rumprun
+                    - unikernel-mirageos
+                    - microvm-firecracker
                 format:
                   type: string
-                  enum: [docker, docker_compose, deb, rpm, apk, pkg, dmg, txz, msi, inno, nsis, tui]
+                  description:
+                    Target installer, VM disk image, ZFS archive, or direct-boot kernel format.
+                  enum:
+                    - docker
+                    - docker_compose
+                    - deb
+                    - rpm
+                    - apk
+                    - pkg
+                    - dmg
+                    - txz
+                    - msi
+                    - inno
+                    - nsis
+                    - tui
+                    - live-iso
+                    - live-usb
+                    - raw
+                    - qcow2
+                    - vmdk
+                    - vhd
+                    - vhdx
+                    - vagrant-box
+                    - zfs-stream
+                    - rootfs-tar
+                    - oci-image
+                    - direct-kernel
+                    - unikernel
+                components:
+                  type: array
+                  description:
+                    List of Tier 1 LibScript components ({component0, component1, ...}) staged into
+                    the synthesized artifact.
+                  items:
+                    type: string
+                    description: Canonical LibScript component name or capability alias.
                 args:
                   type: array
                   items:

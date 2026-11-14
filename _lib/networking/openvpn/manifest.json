@@ -5,6 +5,8 @@
   "title": "openvpn",
   "description": "openvpn stack",
   "provides": ["openvpn"],
-  "runtime_deps": ["openvpn"],
-  "os_blacklist": ["sunos", "darwin"]
+  "os_blacklist": ["sunos", "darwin"],
+  "dependencies": {
+    "runtime_deps": ["openvpn"]
+  }
 }

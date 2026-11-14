@@ -3,7 +3,7 @@
   "name": "racket",
   "title": "Racket",
   "description": "General-purpose, multi-paradigm Lisp/Scheme language platform for language-oriented programming.",
-  "category": "language",
+  "category": "languages",
   "provides": ["racket", "raco"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/racket/racket"

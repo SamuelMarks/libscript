@@ -3,7 +3,7 @@
   "name": "questdb",
   "title": "QuestDB",
   "description": "High-throughput open-source time-series database with fast SQL, InfluxDB Line Protocol, and PostgreSQL wire support.",
-  "category": "database",
+  "category": "databases",
   "provides": ["questdb", "tsdb", "database"],
   "os_whitelist": ["all"],
   "ports": [9000, 8812],

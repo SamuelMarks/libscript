@@ -3,7 +3,7 @@
   "name": "graphviz",
   "title": "Graphviz",
   "description": "Open-source graph visualization software and DOT layout CLI tools (dot, neato, fdp).",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["graphviz", "dot"],
   "os_whitelist": ["all"]
 }

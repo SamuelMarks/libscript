@@ -5,6 +5,6 @@
   "os_whitelist": ["linux", "darwin", "windows"],
   "title": "pipx",
   "description": "Bootstrap module for the `pipx` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/pypa/pipx"
 }

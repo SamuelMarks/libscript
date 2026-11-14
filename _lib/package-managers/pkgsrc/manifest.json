@@ -3,7 +3,7 @@
   "name": "pkgsrc",
   "title": "NetBSD pkgsrc",
   "description": "NetBSD pkgsrc portable cross-platform package management framework (pkgin / bmake).",
-  "category": "package-manager",
+  "category": "package-managers",
   "provides": ["pkgsrc", "pkgin", "bmake"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/NetBSD/pkgsrc"

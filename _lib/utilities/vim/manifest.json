@@ -3,7 +3,7 @@
   "name": "vim",
   "title": "Vim",
   "description": "Vi IMproved highly configurable modal text editor built for efficient code editing.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["vim", "editor"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/vim/vim"

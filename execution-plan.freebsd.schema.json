@@ -66,7 +66,9 @@
         },
         "services_enabled": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "List of service daemons enabled by default"
         }
       }
@@ -171,7 +173,9 @@
           },
           "groups": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "default": ["wheel"],
             "description": "Supplementary groups for the user account"
           },
@@ -182,7 +186,9 @@
           },
           "ssh_authorized_keys": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Public SSH keys authorized for the user"
           }
         }
@@ -204,7 +210,9 @@
         },
         "dns_servers": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": ["1.1.1.1", "8.8.8.8"],
           "description": "Upstream DNS nameservers for resolv.conf"
         }
@@ -213,7 +221,10 @@
     "packages": {
       "type": "array",
       "description": "Additional FreeBSD binary packages to stage",
-      "items": { "type": "string", "description": "FreeBSD package name" }
+      "items": {
+        "type": "string",
+        "description": "FreeBSD package name"
+      }
     },
     "traits": {
       "type": "array",
@@ -252,6 +263,36 @@
             "description": "Virtual host domain name routed via netctl"
           }
         }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Declarative list of Tier 1 LibScript components ({component0, component1, ...}) staged into the image or installer",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component identifier or capability alias"
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target installer or base-image output formats synthesized from this OS specification",
+      "items": {
+        "type": "string",
+        "description": "Target image or installer packaging format identifier",
+        "enum": [
+          "live-iso",
+          "live-usb",
+          "raw",
+          "qcow2",
+          "vmdk",
+          "vhd",
+          "vhdx",
+          "vagrant-box",
+          "zfs-stream",
+          "rootfs-tar",
+          "oci-image",
+          "direct-kernel"
+        ]
       }
     }
   }

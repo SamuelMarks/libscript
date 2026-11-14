@@ -161,6 +161,13 @@ exit /b 1
 :depends_loop
 if "%~1"=="" exit /b 0
 set "_generic_pkg=%~1"
+if "%LIBSCRIPT_IMAGE_BUILD%"=="1" if defined LIBSCRIPT_TARGET_SYSROOT (
+    echo [INFO] [SYSROOT] Recording package dependency '!_generic_pkg!' for offline sysroot !LIBSCRIPT_TARGET_SYSROOT!
+    if not exist "!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript" mkdir "!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript"
+    echo !_generic_pkg!>> "!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript\sysroot_deps.list"
+    shift
+    goto :depends_loop
+)
 call "%MAPPER_CMD%" :map_package "!_generic_pkg!"
 if "!MAPPED_PKG!"=="" set "MAPPED_PKG=!_generic_pkg!"
 if "%LIBSCRIPT_DRY_RUN_PKG_MGR%"=="1" (

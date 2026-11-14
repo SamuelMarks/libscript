@@ -3,7 +3,7 @@
   "name": "triton",
   "title": "NVIDIA Triton Inference Server",
   "description": "Open-source inference serving software streamlining AI model deployment across GPUs and CPUs.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["triton", "inference-server", "app-server"],
   "os_whitelist": ["all"],
   "os_blacklist": ["darwin", "freebsd", "sunos"],

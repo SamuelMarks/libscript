@@ -3,7 +3,7 @@
   "name": "memtier-benchmark",
   "title": "memtier_benchmark Load Generator",
   "description": "High-throughput NoSQL Redis and Memcached traffic generator recording P50, IQR, and P99 tail latencies.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["memtier-benchmark", "memtier_benchmark"],
   "os_whitelist": ["linux", "darwin", "freebsd", "windows"],
   "repository": "https://github.com/RedisLabs/memtier_benchmark"

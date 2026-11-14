@@ -3,7 +3,7 @@
   "name": "rethinkdb",
   "title": "RethinkDB",
   "description": "Open-source distributed JSON database built for real-time changefeeds and reactive web applications.",
-  "category": "database",
+  "category": "databases",
   "provides": ["rethinkdb", "document-store", "database"],
   "os_whitelist": ["all"],
   "ports": [28015, 8080],

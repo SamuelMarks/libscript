@@ -5,5 +5,5 @@
   "os_whitelist": ["linux", "darwin", "windows"],
   "title": "vcpkg",
   "description": "Bootstrap module for the `vcpkg` package manager/tool.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

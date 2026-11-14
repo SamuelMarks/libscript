@@ -3,7 +3,7 @@
   "name": "zip",
   "title": "Info-ZIP Zip",
   "description": "Portable Info-ZIP compression and file packaging utility producing standard .zip archives.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["zip", "zip-archiver"],
   "os_whitelist": ["all"]
 }

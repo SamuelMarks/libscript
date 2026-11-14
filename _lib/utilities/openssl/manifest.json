@@ -3,7 +3,7 @@
   "name": "openssl",
   "title": "OpenSSL",
   "description": "Full-featured commercial-grade TLS/SSL cryptography library and openssl command-line toolkit.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["openssl", "tls-toolkit"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/openssl/openssl"

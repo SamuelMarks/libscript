@@ -1,9 +1,11 @@
 @echo off
 :: # run_in_session1.cmd
+::
 :: ## Overview
-:: Windows batch companion script for run_in_session1.ps1.
+:: Executes a target command inside Windows interactive desktop Session 1 via Task Scheduler (/IT) or native session runner.
+::
 :: ## Usage
-:: run_in_session1.cmd [args...]
+:: run_in_session1.cmd [-Command <cmd> | <cmd> [args...]]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,5 +51,39 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\run_in_session1.ps1" %*
-exit /b %ERRORLEVEL%
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+
+set "TARGET_CMD=msiexec.exe /i C:\libscript\packaging\OpenEdX-Setup.msi"
+if /I "%~1"=="-Command" (
+    if not "%~2"=="" set "TARGET_CMD=%~2"
+) else if /I "%~1"=="--command" (
+    if not "%~2"=="" set "TARGET_CMD=%~2"
+) else if not "%~1"=="" (
+    set "TARGET_CMD=%*"
+)
+
+goto :dispatch_session1
+
+:: ## show_help
+:: Displays command-line usage instructions for Windows Session 1 execution.
+:show_help
+echo Usage: %~nx0 [-Command ^<cmd^> ^| ^<cmd^> [args...]]
+echo Runs a command interactively within Windows Session 1.
+exit /b 0
+
+:: ## dispatch_session1
+:: Schedules and runs the target command interactively in the logged-on user's desktop session.
+:dispatch_session1
+schtasks /Create /F /TN "LibScriptSession1Runner" /SC ONCE /ST 00:00 /IT /TR "!TARGET_CMD!" >nul 2>&1
+if not errorlevel 1 (
+    schtasks /Run /TN "LibScriptSession1Runner" >nul 2>&1
+    set "RUN_RC=!ERRORLEVEL!"
+    schtasks /Delete /F /TN "LibScriptSession1Runner" >nul 2>&1
+    exit /b !RUN_RC!
+)
+
+cmd.exe /c "!TARGET_CMD!"
+exit /b !ERRORLEVEL!

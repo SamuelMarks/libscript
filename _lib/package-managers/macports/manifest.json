@@ -5,6 +5,6 @@
   "os_whitelist": ["darwin"],
   "title": "macports",
   "description": "Bootstrap module for the `macports` package manager/tool.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/macports/macports-base"
 }

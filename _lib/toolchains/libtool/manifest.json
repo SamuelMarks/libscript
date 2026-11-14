@@ -3,7 +3,7 @@
   "name": "libtool",
   "title": "GNU Libtool",
   "description": "Generic shared library support script abstracting platform library conventions.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["libtool"],
   "os_whitelist": ["all"],
   "repository": "https://savannah.gnu.org/projects/libtool"

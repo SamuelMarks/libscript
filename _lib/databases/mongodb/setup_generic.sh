@@ -129,16 +129,30 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_info "No download URL provided for mongodb ${VERSION}. Using static fallback..."
-            libscript_depends 'curl' 'tar'
-            MONGO_ARCH='x86_64'
-            if [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then
-              MONGO_ARCH='aarch64'
+            if [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "freebsd" ]; then
+              log_info 'Installing MongoDB on FreeBSD via pkg (mongodb70/mongodb80)...'
+              libscript_depends 'mongodb80' 2>/dev/null || libscript_depends 'mongodb70' 2>/dev/null || true
+              if command -v mongod >/dev/null 2>&1; then
+                ln -sf "$(command -v mongod)" "${TARGET_DIR}/bin/mongod"
+              fi
+            elif [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "sunos" ] || [ -f "/etc/alpine-release" ] || [ "${LIBSCRIPT_TARGET_LIBC:-}" = "musl" ]; then
+              log_info 'Upstream SSPL MongoDB binary unavailable on target OS/libc; delegating to wire-compatible FerretDB + PostgreSQL...'
+              STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install postgres latest || true
+              STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install ferretdb latest || true
+            elif [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "darwin" ]; then
+              libscript_depends 'mongodb-community' 2>/dev/null || log_warn 'Set MONGODB_DOWNLOAD_URL for macOS native tarball.'
+            else
+              log_info "No download URL provided for mongodb ${VERSION}. Using Linux glibc tarball..."
+              libscript_depends 'curl' 'tar'
+              MONGO_ARCH='x86_64'
+              if [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then
+                MONGO_ARCH='aarch64'
+              fi
+              TEMP_FILE=$(mktemp)
+              libscript_download "https://fastdl.mongodb.org/linux/mongodb-linux-${MONGO_ARCH}-ubuntu2404-8.0.32.tgz" "${TEMP_FILE}"
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=2 || true
+              rm -f "${TEMP_FILE}"
             fi
-            TEMP_FILE=$(mktemp)
-            libscript_download "https://fastdl.mongodb.org/linux/mongodb-linux-${MONGO_ARCH}-ubuntu2404-8.0.32.tgz" "${TEMP_FILE}"
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=2 || true
-            rm -f "${TEMP_FILE}"
           fi
         fi
       else

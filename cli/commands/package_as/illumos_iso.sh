@@ -4,7 +4,7 @@
 #
 # ## Usage
 # Package bootable ISO:
-#   cli/commands/package_as/illumos_iso.sh [target_sysroot] [output_iso]
+#   cli/commands/package_as/illumos_iso.sh [--strict | --allow-stub] [target_sysroot] [output_iso]
 
 set -feu
 
@@ -28,31 +28,109 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-TARGET_SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
-OUT_ISO="${2:-${REPO_ROOT}/build/images/iso/illumos.iso}"
+STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}"
+ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
 
-OUT_DIR="${OUT_ISO%/*}"
-[ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --help|-h)
+      printf 'Usage: %s [--strict | --allow-stub] [target_sysroot] [output_iso]\n' "$0"
+      printf 'Synthesizes bootable illumos ISO image.\n'
+      exit 0
+      ;;
+    --strict)
+      STRICT_BUILD=1
+      shift
+      ;;
+    --allow-stub)
+      ALLOW_STUB=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+TARGET_SYSROOT="${1:-${LIBSCRIPT_ROOT_DIR}/build/illumos-sysroot}"
+OUT_ISO="${2:-${LIBSCRIPT_ROOT_DIR}/build/illumos.iso}"
+
+mkdir -p "$(dirname "${OUT_ISO}")"
+mkdir -p "${TARGET_SYSROOT}/boot"
 
 STAMP_FILE="${OUT_ISO}.stamp"
-if [ -f "${STAMP_FILE}" ] && [ -f "${OUT_ISO}" ]; then
-  printf '[SKIP]     illumos ISO image %s already synthesized\n' "${OUT_ISO}"
-  exit 0
+
+# ## has_illumos_iso_tool
+# Returns 0 if a genuine ISO 9660 synthesis utility is installed on the host.
+has_illumos_iso_tool() {
+  command -v xorriso >/dev/null 2>&1 ||
+    command -v mkisofs >/dev/null 2>&1 ||
+    command -v hdiutil >/dev/null 2>&1
+}
+
+if [ -f "${STAMP_FILE}" ] && [ -s "${OUT_ISO}" ]; then
+  if grep -q '^mode=stub$' "${STAMP_FILE}" 2>/dev/null; then
+    if [ "${STRICT_BUILD}" = "1" ] || has_illumos_iso_tool; then
+      rm -f "${STAMP_FILE}"
+    else
+      printf '[SKIP]     illumos ISO %s already synthesized (stub)\n' "${OUT_ISO}"
+      exit 0
+    fi
+  else
+    printf '[SKIP]     illumos ISO %s already synthesized\n' "${OUT_ISO}"
+    exit 0
+  fi
 fi
 
 printf '[PACKAGE]  Synthesizing illumos bootable ISO: %s...\n' "${OUT_ISO}"
+BUILT_NATIVE=0
+rm -f "${OUT_ISO}"
 
 if command -v xorriso >/dev/null 2>&1; then
-  xorriso -as mkisofs -r -V "ILLUMOS_INSTALL" -o "${OUT_ISO}" "${TARGET_SYSROOT}" 2>/dev/null || true
-elif command -v mkisofs >/dev/null 2>&1; then
-  mkisofs -r -V "ILLUMOS_INSTALL" -o "${OUT_ISO}" "${TARGET_SYSROOT}" 2>/dev/null || true
-else
-  printf '[WARN]     mkisofs/xorriso not found, creating placeholder ISO...\n'
-  touch "${OUT_ISO}"
+  if [ -f "${TARGET_SYSROOT}/boot/cdboot" ]; then
+    xorriso -as mkisofs -r -J -V "ILLUMOS_INSTALL" -b boot/cdboot -no-emul-boot -boot-info-table -o "${OUT_ISO}" "${TARGET_SYSROOT}" >/dev/null 2>&1 || true
+  if [ -s "${OUT_ISO}" ]; then BUILT_NATIVE=1; fi
+  elif [ -f "${TARGET_SYSROOT}/boot/grub/stage2_eltorito" ]; then
+    xorriso -as mkisofs -r -J -V "ILLUMOS_INSTALL" -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o "${OUT_ISO}" "${TARGET_SYSROOT}" >/dev/null 2>&1 || true
+  if [ -s "${OUT_ISO}" ]; then BUILT_NATIVE=1; fi
+  else
+    xorriso -as mkisofs -r -J -V "ILLUMOS_INSTALL" -o "${OUT_ISO}" "${TARGET_SYSROOT}" >/dev/null 2>&1 || true
+  if [ -s "${OUT_ISO}" ]; then BUILT_NATIVE=1; fi
+  fi
 fi
 
-date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
+if [ "${BUILT_NATIVE}" -eq 0 ] && command -v mkisofs >/dev/null 2>&1; then
+  if [ -f "${TARGET_SYSROOT}/boot/cdboot" ]; then
+    mkisofs -r -J -V "ILLUMOS_INSTALL" -b boot/cdboot -no-emul-boot -boot-info-table -o "${OUT_ISO}" "${TARGET_SYSROOT}" >/dev/null 2>&1 || true
+  if [ -s "${OUT_ISO}" ]; then BUILT_NATIVE=1; fi
+  else
+    mkisofs -r -J -V "ILLUMOS_INSTALL" -o "${OUT_ISO}" "${TARGET_SYSROOT}" >/dev/null 2>&1 || true
+  if [ -s "${OUT_ISO}" ]; then BUILT_NATIVE=1; fi
+  fi
+fi
+
+if [ "${BUILT_NATIVE}" -eq 0 ] && command -v hdiutil >/dev/null 2>&1; then
+  hdiutil makehybrid -iso -joliet -default-volume-name "ILLUMOS_INSTALL" -o "${OUT_ISO}.cdr" "${TARGET_SYSROOT}" >/dev/null 2>&1 || true
+    mv -f "${OUT_ISO}.cdr.iso" "${OUT_ISO}" 2>/dev/null || mv -f "${OUT_ISO}.cdr" "${OUT_ISO}" 2>/dev/null || true
+  if [ -s "${OUT_ISO}" ]; then BUILT_NATIVE=1; fi
+fi
+
+if [ "${BUILT_NATIVE}" -eq 1 ]; then
+  printf 'mode=native\ntimestamp=%s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
+  mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
+  printf '[OK]       illumos ISO generated: %s\n' "${OUT_ISO}"
+  exit 0
+fi
+
+if [ "${STRICT_BUILD}" = "1" ] && [ "${ALLOW_STUB}" != "1" ]; then
+  printf '[ERROR]    Strict illumos ISO synthesis failed: install xorriso or mkisofs.\n' >&2
+  rm -f "${OUT_ISO}" "${STAMP_FILE}"
+  exit 1
+fi
+
+printf 'LibScript illumos ISO Stub\n' > "${OUT_ISO}"
+printf 'mode=stub\ntimestamp=%s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-printf '[OK]       illumos ISO generated: %s\n' "${OUT_ISO}"
+printf '[WARN]     xorriso/mkisofs not found; wrote stub ISO: %s\n' "${OUT_ISO}"
+exit 0

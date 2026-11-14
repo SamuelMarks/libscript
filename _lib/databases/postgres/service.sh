@@ -154,6 +154,31 @@ configure_postgres_storage() {
       libscript_service restart postgresql >/dev/null 2>&1 || true
     fi
   fi
+
+  _pg_etc="${LIBSCRIPT_ETC_DIR:-/etc}"
+  if [ "${UNAME_LOWER:-}" = "freebsd" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "freebsd" ]; then
+    mkdir -p "${_pg_etc}/rc.conf.d" 2>/dev/null || priv mkdir -p "${_pg_etc}/rc.conf.d" 2>/dev/null || true
+    printf 'postgresql_enable="YES"\npostgresql_data="%s"\n' "$_pg_cluster_dir" > "${_pg_etc}/rc.conf.d/postgresql" 2>/dev/null || true
+  elif [ "${UNAME_LOWER:-}" = "sunos" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "sunos" ]; then
+    _pg_smf_dir="${LIBSCRIPT_TARGET_SYSROOT:-}/var/svc/manifest/site"
+    mkdir -p "$_pg_smf_dir" 2>/dev/null || priv mkdir -p "$_pg_smf_dir" 2>/dev/null || true
+    cat <<PG_SMF_EOF > "${_pg_smf_dir}/postgresql.xml" 2>/dev/null || true
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<service_bundle type='manifest' name='libscript:postgresql'>
+  <service name='application/database/postgresql' type='service' version='1'>
+    <create_default_instance enabled='true' />
+    <exec_method type='method' name='start' exec='/opt/ooce/pgsql-16/bin/pg_ctl -D ${_pg_cluster_dir} start' timeout_seconds='120' />
+    <exec_method type='method' name='stop' exec='/opt/ooce/pgsql-16/bin/pg_ctl -D ${_pg_cluster_dir} stop' timeout_seconds='60' />
+    <property_group name='postgresql' type='application'>
+      <propval name='data' type='astring' value='${_pg_cluster_dir}' />
+    </property_group>
+  </service>
+</service_bundle>
+PG_SMF_EOF
+  elif [ -d "${_pg_etc}/conf.d" ]; then
+    printf 'PGDATA="%s"\n' "$_pg_cluster_dir" > "${_pg_etc}/conf.d/postgresql" 2>/dev/null || true
+  fi
   return 0
 }
 

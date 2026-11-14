@@ -5,7 +5,7 @@
   "os_whitelist": ["linux", "darwin", "windows"],
   "title": "pub",
   "description": "Bootstrap module for `pub` (Dart / Flutter package manager).",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["freebsd", "alpine", "sunos"],
   "repository": "https://github.com/dart-lang/pub"
 }

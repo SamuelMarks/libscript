@@ -3,7 +3,7 @@
   "name": "clickhouse",
   "title": "ClickHouse",
   "description": "High-performance column-oriented SQL database management system for online analytical processing (OLAP).",
-  "category": "database",
+  "category": "databases",
   "provides": ["clickhouse", "olap-database", "database"],
   "os_whitelist": ["all"],
   "ports": [8123, 9000],

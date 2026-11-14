@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/mirage/vars.schema.json",
+  "title": "mirage variables",
+  "description": "Configuration variables for mirage",
+  "type": "object",
+  "properties": {
+    "MIRAGE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install mirage. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "from-source"
+    },
+    "MIRAGE_VERSION": {
+      "description": "Specific version of mirage to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "MIRAGE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading mirage binary or archive artifacts."
+    },
+    "MIRAGE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying mirage available remote releases."
+    }
+  }
+}

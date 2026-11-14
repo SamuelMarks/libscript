@@ -6,7 +6,7 @@
   "license_name": "The PostgreSQL License",
   "description": "A powerful, open source object-relational database system.",
   "category": "databases",
-  "provides": ["database", "postgres", "postgresql"],
+  "provides": ["database", "postgres", "postgresql", "rdbms", "sql"],
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": [],
@@ -30,5 +30,7 @@
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
   },
-  "repository": "https://github.com/postgres/postgres"
+  "repository": "https://github.com/postgres/postgres",
+  "process_model": "multiprocess-fork",
+  "unikernel_support": ["osv", "nanos"]
 }

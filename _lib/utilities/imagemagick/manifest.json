@@ -3,7 +3,7 @@
   "name": "imagemagick",
   "title": "ImageMagick",
   "description": "Raster and vector digital image creation, editing, composition, and conversion CLI suite (magick).",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["imagemagick", "magick", "image-converter"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/ImageMagick/ImageMagick"

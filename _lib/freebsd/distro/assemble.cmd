@@ -1,7 +1,7 @@
 @echo off
 :: # assemble.cmd
 :: ## Overview
-:: Orchestrates FreeBSD distribution synthesis from a JSON profile specification on Windows host environments.
+:: Orchestrates FreeBSD distribution synthesis from a JSON profile specification using jq on Windows.
 :: ## Usage
 :: assemble.cmd [profile_json_path] [target_sysroot]
 
@@ -49,48 +49,65 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-
-if "%~1"=="--help" (
-    echo Usage: %~nx0 [profile_json_path] [target_sysroot]
-    echo Orchestrates FreeBSD distribution assembly.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %~nx0 [profile_json_path] [target_sysroot]
-    echo Orchestrates FreeBSD distribution assembly.
-    exit /b 0
-)
-
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
 
 set "PROFILE=%~1"
-if "%PROFILE%"=="" set "PROFILE=%REPO_ROOT%\profiles\freebsd\minimal-server.json"
+if "!PROFILE!"=="" set "PROFILE=!LIBSCRIPT_ROOT_DIR!\profiles\freebsd\minimal-server.json"
 set "SYSROOT=%~2"
-if "%SYSROOT%"=="" set "SYSROOT=%REPO_ROOT%\build\freebsd-sysroot"
+if "!SYSROOT!"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\freebsd-sysroot"
 
-set "STAMP_DIR=%SYSROOT%\.libscript_stamps"
-set "STAMP_FILE=%STAMP_DIR%\assembled.stamp"
+for %%F in ("!PROFILE!") do set "PROFILE_NAME=%%~nF"
+set "STAMP_DIR=!SYSROOT!\.libscript-stamps"
+set "STAMP_FILE=!STAMP_DIR!\freebsd-assemble-!PROFILE_NAME!.stamp"
 
-if not exist "%STAMP_DIR%" mkdir "%STAMP_DIR%"
-
-if exist "%STAMP_FILE%" (
-    echo [SKIP]     FreeBSD distribution already assembled in %SYSROOT%
+if exist "!STAMP_FILE!" (
+    echo [SKIP]     FreeBSD distribution ^(!PROFILE_NAME!^) already assembled at !SYSROOT!
     exit /b 0
 )
+if not exist "!STAMP_DIR!" mkdir "!STAMP_DIR!"
 
-echo [ASSEMBLE] Synthesizing FreeBSD distribution using profile: %PROFILE%...
+set "FB_VER=14.1-RELEASE"
+set "ARCH=amd64"
+set "FS=ufs2"
+set "HOSTNAME=freebsd-node"
+set "INIT_PROV=bsd-rc"
+set "DISP_SRV=none"
+set "COMP=none"
+set "DESK=none"
+set "DM=none"
+set "AUTOLOGIN="
+set "AUDIO_SUB=oss"
+set "PKG_BRANCH=quarterly"
 
-call "!SCRIPT_DIR!\base.cmd" "%SYSROOT%" "14.1-RELEASE" "amd64"
-call "!SCRIPT_DIR!\config.cmd" "%SYSROOT%" "freebsd-distro" "ufs2"
-call "!SCRIPT_DIR!\pkg.cmd" "%SYSROOT%" "quarterly"
-call "!SCRIPT_DIR!\users.cmd" "%SYSROOT%" "vagrant"
-call "!SCRIPT_DIR!\init.cmd" "%SYSROOT%" "bsd-rc" "sshd,cron,devd"
-call "!SCRIPT_DIR!\display.cmd" "%SYSROOT%" "none" "none"
-call "!SCRIPT_DIR!\desktop.cmd" "%SYSROOT%" "none" "vagrant"
-call "!SCRIPT_DIR!\dm.cmd" "%SYSROOT%" "none" ""
-call "!SCRIPT_DIR!\audio.cmd" "%SYSROOT%" "none"
+where jq >nul 2>&1
+if not errorlevel 1 if exist "!PROFILE!" (
+    for /f "usebackq delims=" %%V in (`jq -r ".freebsd_version // \"14.1-RELEASE\"" "!PROFILE!"`) do set "FB_VER=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".target.arch // \"amd64\"" "!PROFILE!"`) do set "ARCH=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".storage.filesystem // \"ufs2\"" "!PROFILE!"`) do set "FS=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".network.hostname // \"freebsd-node\"" "!PROFILE!"`) do set "HOSTNAME=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".init_system.provider // \"bsd-rc\"" "!PROFILE!"`) do set "INIT_PROV=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".package_manager.branch // \"quarterly\"" "!PROFILE!"`) do set "PKG_BRANCH=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".audio.subsystem // \"oss\"" "!PROFILE!"`) do set "AUDIO_SUB=%%V"
+)
 
-echo %DATE% %TIME%> "%STAMP_FILE%"
+echo [ASSEMBLE] Synthesizing FreeBSD ^(!FB_VER!^) from profile !PROFILE_NAME!...
+call "!SCRIPT_DIR!\base.cmd" "!SYSROOT!" "!FB_VER!" "!ARCH!"
+call "!SCRIPT_DIR!\config.cmd" "!SYSROOT!" "!HOSTNAME!" "!FS!"
+call "!SCRIPT_DIR!\pkg.cmd" "!SYSROOT!" "!PKG_BRANCH!"
+call "!SCRIPT_DIR!\users.cmd" "!SYSROOT!" "vagrant" "vagrant" "1001" "wheel" "yes"
+call "!SCRIPT_DIR!\init.cmd" "!SYSROOT!" "!INIT_PROV!"
+call "!SCRIPT_DIR!\display.cmd" "!SYSROOT!" "!DISP_SRV!" "!COMP!"
+call "!SCRIPT_DIR!\desktop.cmd" "!SYSROOT!" "!DESK!" "vagrant"
+call "!SCRIPT_DIR!\dm.cmd" "!SYSROOT!" "!DM!" "!AUTOLOGIN!"
+call "!SCRIPT_DIR!\audio.cmd" "!SYSROOT!" "!AUDIO_SUB!"
+
+echo %DATE% %TIME%> "!STAMP_FILE!"
 echo [OK]       FreeBSD distribution assembly complete.
+exit /b 0
+
+:: ## show_help
+:: Displays usage instructions for FreeBSD distribution assembly on Windows.
+:show_help
+echo Usage: %~nx0 [profile_json_path] [target_sysroot]
 exit /b 0

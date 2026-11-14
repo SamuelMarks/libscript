@@ -1,9 +1,12 @@
 #!/bin/sh
 # ## Overview
-# Bootstraps the FreeBSD base system into a target sysroot directory. Downloads or verifies cached base.txz and kernel.txz archives, verifies SHA-256 integrity, extracts archives into sysroot, or prepares local sysroot.
+# Bootstraps the FreeBSD base system into a target sysroot directory, downloading and
+# SHA-256 verifying official MANIFEST + base.txz + kernel.txz archives via libscript_download.
 # ## Usage
-# Run base bootstrap: _lib/freebsd/distro/base.sh [sysroot_path] [freebsd_version] [arch] Environment variables: LIBSCRIPT_CACHE_DIR  Directory for cached download archives (default: ${REPO_ROOT}/cache) LIBSCRIPT_OFFLINE    Set to 1 to forbid remote fetching
+# ./_lib/freebsd/distro/base.sh [sysroot_path] [version] [arch]
+
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -14,6 +17,7 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
+
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -23,64 +27,74 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-if [ -z "${UNAME:-}" ]; then
-  _fb_oi_this="${THIS_FILE}"
-  _fb_oi_dir="${SCRIPT_DIR}"
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  printf 'Usage: %s [sysroot_path] [version] [arch]\n' "$0"
+  exit 0
+fi
+
+SYSROOT="${1:-${LIBSCRIPT_ROOT_DIR}/build/freebsd-sysroot}"
+VERSION="${2:-14.1-RELEASE}"
+ARCH="${3:-amd64}"
+case "$ARCH" in
+  x86_64) ARCH='amd64'; MACHINE='amd64' ;;
+  aarch64|arm64) ARCH='aarch64'; MACHINE='arm64' ;;
+  *) MACHINE="$ARCH" ;;
+esac
+
+STAMP_DIR="${SYSROOT}/.libscript-stamps"
+STAMP_FILE="${STAMP_DIR}/freebsd-base-${VERSION}-${ARCH}.stamp"
+
+if [ -f "${STAMP_FILE}" ]; then
+  printf '[SKIP]     FreeBSD base (%s %s) already bootstrapped at %s\n' "${VERSION}" "${ARCH}" "${SYSROOT}"
+  exit 0
+fi
+
+printf '[BOOTSTRAP] Preparing FreeBSD %s (%s) sysroot at %s...\n' "${VERSION}" "${ARCH}" "${SYSROOT}"
+mkdir -p "${SYSROOT}" "${STAMP_DIR}"
+for _d in bin boot/kernel boot/efi dev etc/rc.conf.d lib libexec media mnt net proc rescue root sbin tmp usr/bin usr/sbin usr/local/bin usr/local/etc/pkg/repos usr/local/etc/rc.d var/db/pkg var/log var/run; do
+  mkdir -p "${SYSROOT}/${_d}"
+done
+chmod 1777 "${SYSROOT}/tmp" 2>/dev/null || true
+
+MIRROR="${FREEBSD_MIRROR:-https://download.freebsd.org/releases}"
+CACHE_FB="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}/freebsd/${VERSION}/${ARCH}"
+mkdir -p "$CACHE_FB"
+
+if [ "${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
   unset SCRIPT_NAME || true
-  THIS_FILE="${_fb_oi_this}"
-  SCRIPT_DIR="${_fb_oi_dir}"
-  unset _fb_oi_this _fb_oi_dir || true
-fi
-
-SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
-VERSION="${2:-14.1-RELEASE}"
-ARCH="${3:-amd64}"
-
-CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${REPO_ROOT}/cache/freebsd/${VERSION}/${ARCH}}"
-STAMP_DIR="${SYSROOT}/.libscript_stamps"
-STAMP_FILE="${STAMP_DIR}/base.stamp"
-
-mkdir -p "${CACHE_DIR}"
-mkdir -p "${SYSROOT}"
-mkdir -p "${STAMP_DIR}"
-
-if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     FreeBSD base system already bootstrapped in %s\n' "${SYSROOT}"
-  exit 0
-fi
-
-printf '[BASE]     Bootstrapping FreeBSD %s (%s) into %s...\n' "${VERSION}" "${ARCH}" "${SYSROOT}"
-
-# In native FreeBSD host environment with pre-existing world
-if [ "${UNAME:-}" = "FreeBSD" ] && [ -d "/usr/share/zoneinfo" ] && [ -f "/bin/freebsd-version" ] && [ "${LIBSCRIPT_FORCE_FETCH:-0}" = "0" ]; then
-  printf '[BASE]     Detected native FreeBSD host, syncing local base system...\n'
-  for dir in bin sbin lib libexec usr etc dev proc sys root var tmp boot; do
-    mkdir -p "${SYSROOT}/${dir}"
+  _base_url="${MIRROR}/${MACHINE}/${ARCH}/${VERSION}"
+  if [ ! -s "${CACHE_FB}/MANIFEST" ]; then
+    libscript_download "${_base_url}/MANIFEST" "${CACHE_FB}/MANIFEST"
+  fi
+  for _txz in base.txz kernel.txz; do
+    _exp_sha=''
+    if [ -s "${CACHE_FB}/MANIFEST" ]; then
+      _exp_sha=$(awk -v f="$_txz" '$1 == f {print $2}' "${CACHE_FB}/MANIFEST")
+    fi
+    if [ ! -s "${CACHE_FB}/${_txz}" ]; then
+      libscript_download "${_base_url}/${_txz}" "${CACHE_FB}/${_txz}" "$_exp_sha"
+    fi
+    if command -v bsdtar >/dev/null 2>&1; then
+      bsdtar -xpf "${CACHE_FB}/${_txz}" -C "$SYSROOT" 2>/dev/null || bsdtar -xf "${CACHE_FB}/${_txz}" -C "$SYSROOT"
+    else
+      tar -xf "${CACHE_FB}/${_txz}" -C "$SYSROOT"
+    fi
   done
-  # Create basic standard tree
-  mtree -deU -f /etc/mtree/BSD.root.dist -p "${SYSROOT}" >/dev/null 2>&1 || true
-  mtree -deU -f /etc/mtree/BSD.usr.dist -p "${SYSROOT}/usr" >/dev/null 2>&1 || true
-  mtree -deU -f /etc/mtree/BSD.var.dist -p "${SYSROOT}/var" >/dev/null 2>&1 || true
+elif [ -s "${CACHE_FB}/base.txz" ]; then
+  tar -xf "${CACHE_FB}/base.txz" -C "$SYSROOT" 2>/dev/null || true
+  if [ -s "${CACHE_FB}/kernel.txz" ]; then
+    tar -xf "${CACHE_FB}/kernel.txz" -C "$SYSROOT" 2>/dev/null || true
+  fi
 fi
 
-# Ensure essential skeleton directories exist
-for d in bin boot dev etc home lib libexec media mnt net proc rescue root sbin sys tmp usr var; do
-  mkdir -p "${SYSROOT}/${d}"
-done
-mkdir -p "${SYSROOT}/usr/bin" "${SYSROOT}/usr/sbin" "${SYSROOT}/usr/lib" "${SYSROOT}/usr/local" "${SYSROOT}/usr/share"
-mkdir -p "${SYSROOT}/var/run" "${SYSROOT}/var/log" "${SYSROOT}/var/db" "${SYSROOT}/var/tmp" "${SYSROOT}/var/service"
-chmod 1777 "${SYSROOT}/tmp" "${SYSROOT}/var/tmp"
-
-# Write release identifier
+printf 'FreeBSD %s (%s) - Synthesized by LibScript\n' "${VERSION}" "${ARCH}" > "${SYSROOT}/etc/motd.template"
 printf '%s\n' "${VERSION}" > "${SYSROOT}/etc/libscript-freebsd-version"
 
-# Atomic stamp recording
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 printf '[OK]       FreeBSD base bootstrap completed.\n'

@@ -3,7 +3,7 @@
   "name": "wix",
   "title": "WiX Toolset",
   "description": "Cross-platform .NET 8 WiX v4/v5 CLI and Windows WiX v3.14 Toolset for building MSI installation packages.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["wix", "msi-builder"],
   "conflicts": [],
   "versions": ["latest", "5.0.2", "4.0.5", "3.14"],

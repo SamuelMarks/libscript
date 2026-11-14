@@ -161,6 +161,15 @@ libscript_service() {
     remove|uninstall-service) _action="uninstall" ;;
   esac
 
+  if [ "${LIBSCRIPT_IMAGE_BUILD:-0}" = "1" ] || { [ -n "${LIBSCRIPT_TARGET_SYSROOT:-}" ] && [ "${LIBSCRIPT_TARGET_SYSROOT}" != "/" ]; }; then
+    case "$_action" in
+      start|stop|restart|reload|daemon-reload|enable|disable)
+        log_info "[SYSROOT] Deferring live service action '${_action}' for '${_service}' during offline image synthesis."
+        return 0
+        ;;
+    esac
+  fi
+
   if [ "${LIBSCRIPT_FORCE_FALLBACK_DAEMON:-0}" = "1" ] || [ "${LIBSCRIPT_INIT_SYSTEM:-${INIT_SYSTEM:-auto}}" = "fallback" ] || [ "${LIBSCRIPT_INIT_SYSTEM:-${INIT_SYSTEM:-auto}}" = "none" ]; then
     libscript_service_fallback "$_action" "$_service" "$@"
     return $?

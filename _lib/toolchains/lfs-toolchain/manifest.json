@@ -3,7 +3,7 @@
   "name": "lfs-toolchain",
   "title": "LFS Cross-Compilation Toolchain",
   "description": "Linux From Scratch (LFS) Chapter 5 Stage 1 & 2 cross-compiler and binutils toolchain.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["lfs-toolchain"],
   "conflicts": [],
   "versions": ["latest", "12.2"],

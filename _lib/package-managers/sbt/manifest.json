@@ -5,7 +5,7 @@
   "os_whitelist": ["all"],
   "title": "sbt",
   "description": "Bootstrap module for the `sbt` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["sunos"],
   "repository": "https://github.com/sbt/sbt"
 }

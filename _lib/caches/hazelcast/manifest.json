@@ -3,7 +3,7 @@
   "name": "hazelcast",
   "title": "Hazelcast",
   "description": "Distributed in-memory data grid and real-time stream processing platform.",
-  "category": "cache",
+  "category": "caches",
   "provides": ["hazelcast", "data-grid", "cache"],
   "os_whitelist": ["all"],
   "ports": [5701],

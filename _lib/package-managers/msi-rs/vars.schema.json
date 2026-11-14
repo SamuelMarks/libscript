@@ -27,6 +27,10 @@
     "MSI_RS_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying msi-rs available remote releases."
+    },
+    "MSI_RS_COMPONENTS": {
+      "type": "string",
+      "description": "Comma-separated list of Tier 1 components preloaded into live installer media or installed onto the target disk."
     }
   }
 }

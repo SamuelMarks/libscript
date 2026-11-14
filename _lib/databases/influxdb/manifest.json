@@ -3,7 +3,7 @@
   "name": "influxdb",
   "title": "InfluxDB",
   "description": "Scalable datastore purpose-built for metrics, events, and real-time time-series analytics.",
-  "category": "database",
+  "category": "databases",
   "provides": ["influxdb", "tsdb", "database"],
   "os_whitelist": ["all"],
   "ports": [8086],

@@ -3,7 +3,7 @@
   "name": "ninja",
   "title": "Ninja",
   "description": "A small build system with a focus on speed.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["ninja", "build-system"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/ninja-build/ninja"

@@ -3,7 +3,7 @@
   "name": "msitools",
   "title": "GNOME msitools (wixl)",
   "description": "GNOME msitools suite providing wixl, msiinfo, msibuild, msidump, and msiextract for MSI authoring baselines.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["msitools", "wixl"],
   "os_whitelist": ["linux", "darwin", "freebsd"],
   "repository": "https://gitlab.gnome.org/GNOME/msitools"

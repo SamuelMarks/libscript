@@ -3,7 +3,7 @@
   "name": "meson",
   "title": "Meson",
   "description": "The Meson high-productivity build system.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["meson", "build-system"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/mesonbuild/meson"

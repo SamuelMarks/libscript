@@ -3,7 +3,7 @@
   "name": "gcp",
   "provides": ["gcp"],
   "os_whitelist": ["all"],
-  "category": "cloud",
+  "category": "cloud-providers",
   "title": "Gcp",
   "description": "LibScript component for GCP"
 }

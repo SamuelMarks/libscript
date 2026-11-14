@@ -3,7 +3,7 @@
   "name": "fzf",
   "title": "fzf",
   "description": "General-purpose interactive command-line fuzzy finder written in Go.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["fzf", "fuzzy-finder"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/junegunn/fzf"

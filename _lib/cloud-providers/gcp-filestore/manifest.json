@@ -1,9 +1,14 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libscript.org/schema/cloud-providers/gcp-filestore/manifest.json",
-  "title": "GCP Filestore Component",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gcp-filestore",
+  "title": "GCP Filestore",
   "description": "Component for managing Google Cloud Filestore (NFS) instances.",
-  "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "category": "cloud-providers",
+  "provides": ["cloud-filestore", "gcp-filestore", "nfs-cloud"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "dependencies": {
+    "runtime_deps": ["gcp-cli"]
+  }
 }

@@ -3,7 +3,7 @@
   "name": "freebsd-distro",
   "title": "FreeBSD Distribution Synthesizer",
   "description": "Synthesizes bootable FreeBSD rootfs, ZFS boot environments, and live installer ISO/USB images.",
-  "category": "orchestration",
+  "category": "freebsd",
   "provides": ["freebsd-distro"],
   "conflicts": [],
   "versions": ["latest", "14.1"],

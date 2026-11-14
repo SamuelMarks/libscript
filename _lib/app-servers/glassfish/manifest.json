@@ -3,7 +3,7 @@
   "name": "glassfish",
   "title": "Eclipse GlassFish",
   "description": "Eclipse Foundation open-source Jakarta EE compatible enterprise application server.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["glassfish", "jakarta-ee", "app-server"],
   "os_whitelist": ["all"],
   "ports": [8080, 4848],

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/unikraft/vars.schema.json",
+  "title": "unikraft variables",
+  "description": "Configuration variables for unikraft",
+  "type": "object",
+  "properties": {
+    "UNIKRAFT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install unikraft. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "UNIKRAFT_VERSION": {
+      "description": "Specific version of unikraft to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "UNIKRAFT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading unikraft binary or archive artifacts."
+    },
+    "UNIKRAFT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying unikraft available remote releases."
+    }
+  }
+}

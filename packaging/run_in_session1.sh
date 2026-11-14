@@ -1,9 +1,10 @@
 #!/bin/sh
 # ## Overview
-# POSIX companion script for run_in_session1.
+# Executes a target command inside the active interactive desktop session on POSIX
+# (Wayland/X11 user session) or delegates to run_in_session1.cmd on Windows without pwsh.
 #
 # ## Usage
-# ./packaging/run_in_session1.sh [args...]
+# ./packaging/run_in_session1.sh [command...]
 
 set -feu
 
@@ -28,8 +29,37 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-if command -v pwsh >/dev/null 2>&1; then
-  pwsh -NoProfile -ExecutionPolicy Bypass -File "${SCRIPT_DIR}/run_in_session1.ps1" "$@"
-else
-  printf '[SKIP] PowerShell (pwsh) not installed for %s.ps1\n' "run_in_session1"
+# ## show_help
+# Displays usage instructions for interactive desktop session command dispatch.
+show_help() {
+  printf 'Usage: %s [-Command <cmd> | <cmd> [args...]]\n' "$(basename "$THIS_FILE")"
+  printf 'Runs a command inside the active interactive GUI session.\n'
+}
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  show_help
+  exit 0
 fi
+
+if [ "${1:-}" = "-Command" ] || [ "${1:-}" = "--command" ]; then
+  shift
+fi
+
+if [ $# -eq 0 ]; then
+  printf '[INFO] No command supplied to run_in_session1.sh; nothing to execute.\n'
+  exit 0
+fi
+
+if command -v cmd.exe >/dev/null 2>&1 && [ "${OS:-}" = "Windows_NT" ]; then
+  cmd.exe /c "${SCRIPT_DIR}/run_in_session1.cmd" "$@"
+  exit $?
+fi
+
+: "${DISPLAY:=:0}"
+export DISPLAY
+if [ -z "${XDG_RUNTIME_DIR:-}" ] && [ -d "/run/user/$(id -u)" ]; then
+  XDG_RUNTIME_DIR="/run/user/$(id -u)"
+  export XDG_RUNTIME_DIR
+fi
+
+exec "$@"

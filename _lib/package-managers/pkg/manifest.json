@@ -6,6 +6,6 @@
   "os_blacklist": ["linux", "darwin", "windows"],
   "title": "pkg",
   "description": "Bootstrap module for the FreeBSD `pkg` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/freebsd/pkg"
 }

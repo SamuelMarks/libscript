@@ -3,7 +3,7 @@
   "name": "git",
   "title": "Git",
   "description": "Fast, scalable, distributed revision control system with cryptographic integrity.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["git", "vcs"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/git/git"

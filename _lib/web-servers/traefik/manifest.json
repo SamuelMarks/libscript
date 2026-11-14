@@ -3,7 +3,7 @@
   "name": "traefik",
   "title": "Traefik",
   "description": "Modern HTTP reverse proxy and cloud-native edge router with automatic service discovery and TLS.",
-  "category": "web-server",
+  "category": "web-servers",
   "provides": ["traefik", "reverse-proxy", "edge-router", "web-server"],
   "os_whitelist": ["all"],
   "ports": [80, 443, 8080],

@@ -5,6 +5,6 @@
   "os_whitelist": ["suse", "opensuse"],
   "title": "zypper",
   "description": "Bootstrap module for the `zypper` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/openSUSE/zypper"
 }

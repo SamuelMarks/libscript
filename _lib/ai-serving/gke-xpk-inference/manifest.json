@@ -1,12 +1,14 @@
 {
+  "$schema": "../../_common/manifest.schema.json",
   "name": "gke-xpk-inference",
-  "version": "1.0.0",
+  "title": "GKE XPK Inference",
   "description": "Production-grade TPU deployment using XPK on GKE.",
+  "category": "ai-serving",
+  "provides": ["ai-serving", "gke-xpk-inference", "tpu-inference"],
+  "conflicts": [],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
   "dependencies": {
-    "cloud-providers/gcp-cli": "latest",
-    "toolchains/python": "latest",
-    "orchestration/kubectl": "latest",
-    "toolchains/xpk": "latest"
-  },
-  "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"]
+    "runtime_deps": ["gcp-cli", "python", "kubectl", "xpk"]
+  }
 }

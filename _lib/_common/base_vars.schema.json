@@ -514,6 +514,65 @@
     "LIBSCRIPT_HW_NUMA_NODES": {
       "type": "string",
       "description": "Detected host NUMA node count exported by libscript_detect_hardware."
+    },
+    "LIBSCRIPT_STRICT_IMAGE_BUILD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enforcing strict native image synthesis and rejecting missing-tool stub fallbacks without writing completion stamps."
+    },
+    "LIBSCRIPT_ALLOW_STUB": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) explicitly permitting structural stub artifacts during unit and dry-run testing when hypervisor or mkfs tools are absent."
+    },
+    "LIBSCRIPT_IMAGE_BUILD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) indicating offline sysroot/image synthesis mode so service installers stage unit files without starting host daemons."
+    },
+    "LIBSCRIPT_VM_WORKER": {
+      "type": "string",
+      "description": "Virtualization worker backend override (docker, wsl2, qemu, bhyve, omnios-vm) for cross-OS disk and filesystem synthesis."
+    },
+    "LIBSCRIPT_UNIKERNEL_FRAMEWORK": {
+      "type": "string",
+      "description": "Target unikernel build framework (unikraft, nanos, osv, rumprun, mirageos) when synthesizing unikernel appliances."
+    },
+    "LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) instructing _lib/kernel/setup.sh to compile the Linux kernel from source via _lib/kernel/linux when no prebuilt kernel exists."
+    },
+    "LIBSCRIPT_FREEBSD_BUILDWORLD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) instructing _lib/freebsd/setup.sh to execute buildworld and buildkernel from FREEBSD_SRC_DIR."
+    },
+    "LIBSCRIPT_FETCH_FREEBSD_BASE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) instructing _lib/freebsd/setup.sh to download and extract official FreeBSD base.txz and kernel.txz archives."
+    },
+    "LIBSCRIPT_RELEASEVER": {
+      "type": "string",
+      "default": "9",
+      "description": "Target Enterprise Linux major release version passed to dnf --releasever when staging into LIBSCRIPT_TARGET_SYSROOT."
+    },
+    "LIBSCRIPT_POD_DAEMONS": {
+      "type": "string",
+      "description": "Comma-separated daemon component names decomposed into isolated single-process unikernel appliances by unikernel_pod."
+    },
+    "LIBSCRIPT_FETCH_ILLUMOS_BASE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) instructing _lib/illumos/distro/base.sh to fetch and extract upstream OmniOS, OpenIndiana, Tribblix, or SmartOS base archives."
     }
   }
 }

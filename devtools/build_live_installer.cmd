@@ -69,6 +69,7 @@ echo   --target ^<name^>    Target OS distribution family (default: all)
 echo.
 echo Modes:
 echo   --mode ^<name^>      Interaction mode embedded (default: all)
+echo   --components ^<csv^> Comma-separated Tier 1 components preloaded into live media
 exit /b 0
 
 :: ## main

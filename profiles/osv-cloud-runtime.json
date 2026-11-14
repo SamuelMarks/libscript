@@ -4,18 +4,18 @@
   "description": "OSv modular cloud runtime designed to run unmodified single-application Linux workloads on KVM hypervisors.",
   "target": {
     "arch": "x86_64",
-    "os_family": "unikernel-unikraft",
+    "os_family": "unikernel-osv",
     "libc": "glibc",
     "submodel": "generic"
   },
   "kernel": {
-    "provider": "unikraft-core",
+    "provider": "osv-kernel",
     "config_method": "defconfig",
     "fragments": ["osv_base.cfg", "virtio.cfg"],
     "cmdline": "--verbose /libtools/sysinfo.so"
   },
   "init_system": {
-    "provider": "none",
+    "provider": "unikernel-entrypoint",
     "default_target": "multi-user",
     "services_enabled": []
   },
@@ -64,5 +64,5 @@
     "enabled": false,
     "cache_dir": "/var/cache/libscript"
   },
-  "packages": ["osv-core", "curl"]
+  "packages": ["osv", "curl"]
 }

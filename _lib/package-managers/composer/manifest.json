@@ -6,5 +6,5 @@
   "os_blacklist": ["sunos"],
   "title": "composer",
   "description": "Bootstrap module for the `composer` package manager.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

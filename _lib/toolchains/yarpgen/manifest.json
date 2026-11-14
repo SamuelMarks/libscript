@@ -3,7 +3,7 @@
   "name": "yarpgen",
   "title": "YARPGen v2 Random C/C++17 Optimizer Fuzzing Generator",
   "description": "Standalone version manager and source builder for YARPGen v2, generating deterministic UB-free C and C++17 differential checksum programs.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["yarpgen"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/intel/yarpgen"

@@ -3,7 +3,7 @@
   "name": "neo4j",
   "title": "Neo4j",
   "description": "High-performance native graph database platform for connected data and Cypher query workloads.",
-  "category": "database",
+  "category": "databases",
   "provides": ["neo4j", "graph-database", "database"],
   "os_whitelist": ["all"],
   "ports": [7474, 7687],

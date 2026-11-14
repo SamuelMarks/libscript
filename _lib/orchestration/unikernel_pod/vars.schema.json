@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/unikernel_pod/vars.schema.json",
+  "title": "unikernel_pod variables",
+  "description": "Configuration variables for unikernel_pod",
+  "type": "object",
+  "properties": {
+    "UNIKERNEL_POD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install unikernel_pod. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "UNIKERNEL_POD_VERSION": {
+      "description": "Specific version of unikernel_pod to install.",
+      "type": "string",
+      "default": "1.0.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "UNIKERNEL_POD_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading unikernel_pod binary or archive artifacts."
+    },
+    "UNIKERNEL_POD_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying unikernel_pod available remote releases."
+    },
+    "UNIKERNEL_POD_VMM": {
+      "type": "string",
+      "default": "qemu",
+      "description": "Target virtual machine monitor for multi-unikernel pod synthesis (qemu, firecracker, cloud-hypervisor, bhyve, solo5-hvt)."
+    },
+    "UNIKERNEL_POD_SUBNET": {
+      "type": "string",
+      "default": "172.30.0",
+      "description": "IPv4 /24 prefix assigned deterministically across decomposed unikernel pod appliances."
+    },
+    "UNIKERNEL_POD_OUT_DIR": {
+      "type": "string",
+      "description": "Output directory where decomposed unikernel appliance images and launch scripts are written."
+    }
+  }
+}

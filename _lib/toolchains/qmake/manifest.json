@@ -3,7 +3,7 @@
   "name": "qmake",
   "title": "Qt qmake",
   "description": "Cross-platform Makefile generator from the Qt framework.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["qmake"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/qt/qtbase"

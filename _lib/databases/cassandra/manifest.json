@@ -3,7 +3,7 @@
   "name": "cassandra",
   "title": "Apache Cassandra",
   "description": "Distributed wide-column NoSQL database designed to handle large amounts of data across commodity servers with high availability.",
-  "category": "database",
+  "category": "databases",
   "provides": ["cassandra", "wide-column-store", "database"],
   "os_whitelist": ["all"],
   "ports": [9042, 7000],

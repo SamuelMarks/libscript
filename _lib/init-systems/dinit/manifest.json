@@ -3,7 +3,7 @@
   "name": "dinit",
   "title": "Dinit",
   "description": "Service manager and dependency-aware init system for Unix-like operating systems.",
-  "category": "init-system",
+  "category": "init-systems",
   "provides": ["dinit", "init-system"],
   "conflicts": [],
   "versions": ["latest", "0.18.0"],

@@ -109,9 +109,25 @@ if /i "%PKG_TYPE%"=="vagrant_box" goto do_vagrant_box
 if /i "%PKG_TYPE%"=="vagrant" goto do_vagrant_box
 if /i "%PKG_TYPE%"=="disk-builder" goto do_disk_builder
 if /i "%PKG_TYPE%"=="disk_builder" goto do_disk_builder
+if /i "%PKG_TYPE%"=="zfs-stream" goto do_zfs_stream
+if /i "%PKG_TYPE%"=="zfs_stream" goto do_zfs_stream
+if /i "%PKG_TYPE%"=="direct-kernel" goto do_direct_kernel
+if /i "%PKG_TYPE%"=="direct_kernel" goto do_direct_kernel
 
 echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
+
+:: ## do_zfs_stream
+:: Exports target sysroot into a compressed ZFS replication stream.
+:do_zfs_stream
+call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\zfs_stream.cmd" %*
+exit /b %ERRORLEVEL%
+
+:: ## do_direct_kernel
+:: Synthesizes a direct-boot kernel and initrd bundle.
+:do_direct_kernel
+call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\direct_kernel.cmd" %*
+exit /b %ERRORLEVEL%
 
 :: ## do_vagrant_box
 :: Packages the provisioned image into a Vagrant (.box) archive.

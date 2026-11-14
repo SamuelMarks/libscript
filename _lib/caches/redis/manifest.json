@@ -5,11 +5,11 @@
   "license": "RSALv2 OR SSPL-1.0 OR AGPL-3.0-only",
   "license_name": "RSALv2 OR SSPL-1.0 OR AGPL-3.0-only (Redis 8+ Tri-License; 7.2 and prior BSD-3-Clause)",
   "description": "In-memory data structure store used as a database, cache, message broker, and streaming engine.",
-  "category": "cache",
-  "provides": ["cache", "redis", "key-value"],
+  "category": "caches",
+  "provides": ["cache", "key-value", "kv-store", "redis"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": [],
   "ports": [6379],
   "stateful": true,
   "multitenant": true,
@@ -29,5 +29,7 @@
     "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
-  }
+  },
+  "process_model": "single-process",
+  "unikernel_support": ["unikraft", "nanos", "osv", "rumprun"]
 }

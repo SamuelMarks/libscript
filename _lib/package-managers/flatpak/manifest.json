@@ -5,5 +5,5 @@
   "os_whitelist": ["linux"],
   "title": "flatpak",
   "description": "Bootstrap module for the `flatpak` package manager/tool.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

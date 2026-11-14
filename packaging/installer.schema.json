@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Schema for install JSON file",
   "type": "object",
   "properties": {
@@ -122,7 +122,7 @@
             "description": "Port or socket specification where the web service listens"
           },
           "dependencies": {
-            "$ref": "#/definitions/Dependencies",
+            "$ref": "#/$defs/Dependencies",
             "description": "Dependencies required specifically by this web service endpoint"
           },
           "domain": {
@@ -142,7 +142,7 @@
       }
     },
     "dependencies": {
-      "$ref": "#/definitions/Dependencies",
+      "$ref": "#/$defs/Dependencies",
       "description": "Component and service dependencies required by the application"
     },
     "log_server": {
@@ -365,7 +365,7 @@
     }
   },
   "required": ["name", "scripts_root", "dependencies"],
-  "definitions": {
+  "$defs": {
     "Dependencies": {
       "type": "object",
       "properties": {

@@ -3,7 +3,7 @@
   "name": "scylladb",
   "title": "ScyllaDB",
   "description": "Ultra-low-latency C++ distributed wide-column NoSQL database compatible with Apache Cassandra and Amazon DynamoDB.",
-  "category": "database",
+  "category": "databases",
   "provides": ["scylladb", "wide-column-store", "cassandra-compatible", "database"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows", "darwin", "sunos"],

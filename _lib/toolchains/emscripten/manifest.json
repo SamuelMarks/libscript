@@ -3,7 +3,7 @@
   "name": "emscripten",
   "title": "Emscripten",
   "description": "LLVM-based C and C++ compiler toolchain targeting WebAssembly.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["emscripten", "emcc"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/emscripten-core/emsdk"

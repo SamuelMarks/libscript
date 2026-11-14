@@ -144,8 +144,12 @@ detect_pkg_mgr() {
     PKG_MGR='zypper' # OpenSUSE
   elif libscript_cmd_avail emerge; then
     PKG_MGR='emerge'  # Gentoo
+  elif libscript_cmd_avail pkgin; then
+    PKG_MGR='pkgin' # SmartOS, NetBSD, and illumos pkgsrc
+  elif libscript_cmd_avail zap; then
+    PKG_MGR='zap'   # Tribblix illumos
   elif libscript_cmd_avail pkg; then
-    PKG_MGR='pkg'  # FreeBSD
+    PKG_MGR='pkg'  # FreeBSD or illumos IPS
   elif libscript_cmd_avail port; then
     PKG_MGR='port'  # MacPorts
   elif libscript_cmd_avail brew; then
@@ -192,22 +196,42 @@ detect_pkg_mgr() {
 }
 
 # ## is_installed
-# Checks whether a given package or command is already installed on the host system.
+# Checks whether a given package is installed on the host or inside LIBSCRIPT_TARGET_SYSROOT.
 is_installed() {
   pkg="${1}"
+  _pm_root="${LIBSCRIPT_TARGET_SYSROOT:-}"
+  if [ "$_pm_root" = "/" ]; then _pm_root=''; fi
   case "${PKG_MGR}" in
-    'apk')                apk info -e "${pkg}" >/dev/null 2>&1 ;;
-    'apt'|'apt-get')      dpkg-query -W -f='${Status}\n' "${pkg}" 2>/dev/null | grep -q 'install ok installed' ;;
+    'apk')
+      if [ -n "$_pm_root" ]; then apk --root "$_pm_root" info -e "${pkg}" >/dev/null 2>&1; else apk info -e "${pkg}" >/dev/null 2>&1; fi ;;
+    'apt'|'apt-get')
+      if [ -n "$_pm_root" ]; then dpkg-query --admindir="${_pm_root}/var/lib/dpkg" -W -f='${Status}\n' "${pkg}" 2>/dev/null | grep -q 'install ok installed'; else dpkg-query -W -f='${Status}\n' "${pkg}" 2>/dev/null | grep -q 'install ok installed'; fi ;;
     'brew')               brew list --formula "${pkg}" >/dev/null 2>&1 ;;
-    'dnf'|'yum'|'zypper') rpm -q "${pkg}" >/dev/null 2>&1 ;;
+    'dnf'|'yum'|'zypper')
+      if [ -n "$_pm_root" ]; then rpm --root "$_pm_root" -q "${pkg}" >/dev/null 2>&1; else rpm -q "${pkg}" >/dev/null 2>&1; fi ;;
     'emerge')             eix -I "${pkg}" >/dev/null 2>&1 ;;
     'eopkg')              eopkg list-installed | grep -q '^'"${pkg}"'[[:space:]]' ;;
-    'pacman')             pacman -Q "${pkg}" >/dev/null 2>&1 ;;
+    'pacman')
+      if [ -n "$_pm_root" ]; then pacman --root "$_pm_root" -Q "${pkg}" >/dev/null 2>&1; else pacman -Q "${pkg}" >/dev/null 2>&1; fi ;;
     'pkg')
       if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
-        pkg list -q "${pkg}" >/dev/null 2>&1
+        if [ -n "$_pm_root" ]; then pkg -R "$_pm_root" list -q "${pkg}" >/dev/null 2>&1; else pkg list -q "${pkg}" >/dev/null 2>&1; fi
       else
-        pkg info -e "${pkg}"
+        if [ -n "$_pm_root" ]; then pkg -r "$_pm_root" info -e "${pkg}" >/dev/null 2>&1; else pkg info -e "${pkg}"; fi
+      fi
+      ;;
+    'pkgin')
+      if [ -n "$_pm_root" ] && [ -x "${_pm_root}/opt/local/bin/pkgin" ]; then
+        chroot "$_pm_root" /opt/local/bin/pkgin list 2>/dev/null | grep -q "^${pkg}-"
+      else
+        pkgin list 2>/dev/null | grep -q "^${pkg}-"
+      fi
+      ;;
+    'zap')
+      if [ -n "$_pm_root" ]; then
+        [ -d "${_pm_root}/var/sadm/pkg/TRIB${pkg}" ] || [ -d "${_pm_root}/var/sadm/pkg/${pkg}" ]
+      else
+        [ -d "/var/sadm/pkg/TRIB${pkg}" ] || [ -d "/var/sadm/pkg/${pkg}" ]
       fi
       ;;
     'port')               port installed "${pkg}" | grep -q 'active' ;;
@@ -295,72 +319,133 @@ libscript_depends() {
     # Run in a subshell so if it exits early due to set -e, we can still remove the lock
     (
       _install_failed=0
+      _pm_sysroot="${LIBSCRIPT_TARGET_SYSROOT:-}"
+      if [ "$_pm_sysroot" = "/" ]; then _pm_sysroot=''; fi
       # shellcheck disable=SC2086
       case "${PKG_MGR}" in
         'apt'|'apt-get')
           export DEBIAN_FRONTEND='noninteractive'
-          if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
-            priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
-          fi
-          _created_policy_rc=0
-          case " ${pkgs_to_install} " in
-            *gdm3*|*lightdm*|*sddm*|*greetd*|*network-manager*|*dhcpcd*|*wpasupplicant*|*iwd*|*openvpn*|*chrony*|*avahi*|*plasma*|*gnome*|*lxqt*|*xfce4*|*openbox*|*sway*|*weston*|*labwc*|*seatd*|*dinit*|*openrc*|*runit*|*s6*|*sysvinit*)
-              if [ ! -f /usr/sbin/policy-rc.d ]; then
-                printf '#!/bin/sh\nexit 101\n' | priv tee /usr/sbin/policy-rc.d >/dev/null 2>&1 || true
-                priv chmod +x /usr/sbin/policy-rc.d 2>/dev/null || true
-                _created_policy_rc=1
-              fi
-              ;;
-          esac
-          _apt_cache="${LIBSCRIPT_APT_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apt}"
-          if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apt_cache" ]; then
-            log_info "Offline mode: installing deb packages from $_apt_cache..."
-            priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a dpkg -i "$_apt_cache"/*.deb || priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+          if [ -n "$_pm_sysroot" ]; then
+            mkdir -p "${_pm_sysroot}/var/lib/dpkg" "${_pm_sysroot}/var/cache/apt/archives"
+            if [ -x "${_pm_sysroot}/usr/bin/apt-get" ]; then
+              priv chroot "$_pm_sysroot" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -qq 2>/dev/null || true
+              priv chroot "$_pm_sysroot" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+            else
+              priv env DEBIAN_FRONTEND=noninteractive apt-get -o RootDir="$_pm_sysroot" install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+            fi
           else
-            priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
-          fi
-          if [ "${_created_policy_rc}" -eq 1 ]; then
-            priv rm -f /usr/sbin/policy-rc.d 2>/dev/null || true
+            if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+              priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
+            fi
+            _created_policy_rc=0
+            case " ${pkgs_to_install} " in
+              *gdm3*|*lightdm*|*sddm*|*greetd*|*network-manager*|*dhcpcd*|*wpasupplicant*|*iwd*|*openvpn*|*chrony*|*avahi*|*plasma*|*gnome*|*lxqt*|*xfce4*|*openbox*|*sway*|*weston*|*labwc*|*seatd*|*dinit*|*openrc*|*runit*|*s6*|*sysvinit*)
+                if [ ! -f /usr/sbin/policy-rc.d ]; then
+                  printf '#!/bin/sh\nexit 101\n' | priv tee /usr/sbin/policy-rc.d >/dev/null 2>&1 || true
+                  priv chmod +x /usr/sbin/policy-rc.d 2>/dev/null || true
+                  _created_policy_rc=1
+                fi
+                ;;
+            esac
+            _apt_cache="${LIBSCRIPT_APT_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apt}"
+            if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apt_cache" ]; then
+              log_info "Offline mode: installing deb packages from $_apt_cache..."
+              priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a dpkg -i "$_apt_cache"/*.deb || priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+            else
+              priv env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Dpkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install -y --no-install-recommends ${pkgs_to_install} || _install_failed=1
+            fi
+            if [ "${_created_policy_rc}" -eq 1 ]; then
+              priv rm -f /usr/sbin/policy-rc.d 2>/dev/null || true
+            fi
           fi ;;
         'apk')
+          _apk_root_args=''
+          if [ -n "$_pm_sysroot" ]; then
+            mkdir -p "${_pm_sysroot}/etc/apk"
+            _apk_root_args="--root $_pm_sysroot --initdb"
+          fi
           _apk_cache="${LIBSCRIPT_APK_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apk}"
           if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apk_cache" ]; then
             log_info "Offline mode: installing apk packages from $_apk_cache..."
-            priv apk add --allow-untrusted "$_apk_cache"/*.apk || priv apk add --no-cache ${pkgs_to_install} || (priv apk fix && priv apk add --no-cache ${pkgs_to_install}) || _install_failed=1
+            priv apk $_apk_root_args add --allow-untrusted "$_apk_cache"/*.apk || priv apk $_apk_root_args add --no-cache ${pkgs_to_install} || _install_failed=1
           else
-            priv apk add --no-cache ${pkgs_to_install} || (priv apk fix && priv apk add --no-cache ${pkgs_to_install}) || _install_failed=1
+            priv apk $_apk_root_args add --no-cache ${pkgs_to_install} || (priv apk $_apk_root_args fix && priv apk $_apk_root_args add --no-cache ${pkgs_to_install}) || _install_failed=1
           fi ;;
         'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
         'dnf')
-          if ! rpm -q epel-release >/dev/null 2>&1; then
+          _dnf_root_args=''
+          if [ -n "$_pm_sysroot" ]; then
+            _dnf_root_args="--installroot=${_pm_sysroot} --releasever=${LIBSCRIPT_RELEASEVER:-9}"
+          elif ! rpm -q epel-release >/dev/null 2>&1; then
             priv dnf install -y epel-release >/dev/null 2>&1 || true
           fi
           _dnf_cache="${LIBSCRIPT_DNF_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/dnf}"
           if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_dnf_cache" ]; then
             log_info "Offline mode: installing rpm packages from $_dnf_cache..."
-            priv dnf install -y --allowerasing "$_dnf_cache"/*.rpm || priv dnf install -y --allowerasing ${pkgs_to_install} || _install_failed=1
+            priv dnf $_dnf_root_args install -y --allowerasing "$_dnf_cache"/*.rpm || priv dnf $_dnf_root_args install -y --allowerasing ${pkgs_to_install} || _install_failed=1
           else
-            priv dnf install -y --allowerasing ${pkgs_to_install} || _install_failed=1
+            priv dnf $_dnf_root_args install -y --allowerasing ${pkgs_to_install} || _install_failed=1
           fi ;;
         'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
         'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
-        'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
+        'pacman')
+          if [ -n "$_pm_sysroot" ]; then
+            priv pacman --root "$_pm_sysroot" -S --noconfirm ${pkgs_to_install} || _install_failed=1
+          else
+            priv pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1
+          fi ;;
         'pkg')
           if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-}" = "SunOS" ]; then
-            priv pkg install --accept ${pkgs_to_install} || _install_failed=1
+            if [ -n "$_pm_sysroot" ]; then
+              priv pkg -R "$_pm_sysroot" install --accept ${pkgs_to_install} || _install_failed=1
+            else
+              priv pkg install --accept ${pkgs_to_install} || _install_failed=1
+            fi
           else
-            priv pkg install -y ${pkgs_to_install} || _install_failed=1
+            if [ -n "$_pm_sysroot" ]; then
+              priv pkg -r "$_pm_sysroot" install -y ${pkgs_to_install} || _install_failed=1
+            else
+              priv pkg install -y ${pkgs_to_install} || _install_failed=1
+            fi
+          fi
+          ;;
+        'pkgin')
+          if [ -n "$_pm_sysroot" ] && [ -x "${_pm_sysroot}/opt/local/bin/pkgin" ]; then
+            priv chroot "$_pm_sysroot" /opt/local/bin/pkgin -y install ${pkgs_to_install} || _install_failed=1
+          else
+            priv pkgin -y install ${pkgs_to_install} || _install_failed=1
+          fi
+          ;;
+        'zap')
+          if [ -n "$_pm_sysroot" ]; then
+            priv zap -R "$_pm_sysroot" install ${pkgs_to_install} || _install_failed=1
+          else
+            priv zap install ${pkgs_to_install} || _install_failed=1
           fi
           ;;
         'port')   priv  port install          ${pkgs_to_install} || _install_failed=1 ;;
         'swupd')  priv  swupd bundle-add      ${pkgs_to_install} || _install_failed=1 ;;
-        'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;
+        'xbps')
+          if [ -n "$_pm_sysroot" ]; then
+            priv xbps-install -r "$_pm_sysroot" -Sy ${pkgs_to_install} || _install_failed=1
+          else
+            priv xbps-install -Sy ${pkgs_to_install} || _install_failed=1
+          fi ;;
         'yum')
-          if ! rpm -q epel-release >/dev/null 2>&1; then
-            priv yum install -y epel-release >/dev/null 2>&1 || true
-          fi
-          priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
-        'zypper') priv  zypper install -y     ${pkgs_to_install} || _install_failed=1 ;;
+          if [ -n "$_pm_sysroot" ]; then
+            priv yum --installroot="$_pm_sysroot" install -y ${pkgs_to_install} || _install_failed=1
+          else
+            if ! rpm -q epel-release >/dev/null 2>&1; then
+              priv yum install -y epel-release >/dev/null 2>&1 || true
+            fi
+            priv yum install -y ${pkgs_to_install} || _install_failed=1
+          fi ;;
+        'zypper')
+          if [ -n "$_pm_sysroot" ]; then
+            priv zypper --root "$_pm_sysroot" install -y ${pkgs_to_install} || _install_failed=1
+          else
+            priv zypper install -y ${pkgs_to_install} || _install_failed=1
+          fi ;;
         'nix')
           for _npkg in ${pkgs_to_install}; do
             nix profile install "nixpkgs#${_npkg}" || _install_failed=1

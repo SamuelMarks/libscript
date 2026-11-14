@@ -5,7 +5,7 @@
   "os_whitelist": ["arch", "artix", "manjaro"],
   "title": "paru",
   "description": "Bootstrap module for the `paru` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["freebsd"],
   "repository": "https://github.com/Morganamilo/paru"
 }

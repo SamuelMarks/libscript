@@ -190,6 +190,14 @@ if /i "!_INIT_SYS!"=="none" (
     echo [INFO] Registered fallback daemon runner for service: !_SERVICE_NAME! ^(!_RUNNER_FILE!^)
     exit /b 0
 )
+if "%LIBSCRIPT_IMAGE_BUILD%"=="1" (
+    echo [INFO] [SYSROOT] Staged offline service runner for !_SERVICE_NAME! at !_RUNNER_FILE!
+    exit /b 0
+)
+if defined LIBSCRIPT_TARGET_SYSROOT if not "!LIBSCRIPT_TARGET_SYSROOT!"=="/" if not "!LIBSCRIPT_TARGET_SYSROOT!"=="\" (
+    echo [INFO] [SYSROOT] Staged offline service runner for !_SERVICE_NAME! at !_RUNNER_FILE!
+    exit /b 0
+)
 
 sc.exe query "!_SERVICE_NAME!" >nul 2>&1
 if not errorlevel 1 (

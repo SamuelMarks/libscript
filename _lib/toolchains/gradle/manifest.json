@@ -3,7 +3,7 @@
   "name": "gradle",
   "title": "Gradle",
   "description": "A build automation tool for multi-language software development, primarily Java.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["gradle", "build-system"],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"]

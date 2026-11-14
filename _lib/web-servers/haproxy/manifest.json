@@ -3,7 +3,7 @@
   "name": "haproxy",
   "title": "HAProxy",
   "description": "Reliable, high-performance TCP/HTTP load balancer and proxy server for high-availability systems.",
-  "category": "web-server",
+  "category": "web-servers",
   "provides": ["haproxy", "load-balancer", "reverse-proxy"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],

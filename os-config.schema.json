@@ -26,7 +26,7 @@
         "arch": {
           "type": "string",
           "description": "Target processor architecture instruction set",
-          "enum": ["x86_64", "aarch64", "riscv64", "armv7l", "i686"]
+          "enum": ["x86_64", "amd64", "aarch64", "arm64", "riscv64", "armv7l", "i686"]
         },
         "os_family": {
           "type": "string",
@@ -35,14 +35,29 @@
             "linux-glibc",
             "linux-musl",
             "freebsd",
+            "illumos",
             "unikernel-unikraft",
+            "unikernel-nanos",
+            "unikernel-osv",
+            "unikernel-rumprun",
+            "unikernel-mirageos",
             "microvm-firecracker"
           ]
         },
         "libc": {
           "type": "string",
           "description": "Standard C runtime library implementation",
-          "enum": ["glibc", "musl", "bsd-libc", "nolibc"]
+          "enum": [
+            "glibc",
+            "musl",
+            "bsd-libc",
+            "illumos-libc",
+            "sunos-libc",
+            "newlib",
+            "nolibc",
+            "rump-libc",
+            "mirage-ocaml"
+          ]
         },
         "distro_style": {
           "type": "string",
@@ -60,22 +75,32 @@
           "type": "string",
           "description": "Target deployment platform or appliance hypervisor runtime",
           "enum": [
-            "docker",
-            "qemu",
-            "vmware",
-            "hyper-v",
-            "proxmox",
-            "virtualbox",
-            "xen",
             "aws",
             "azure",
+            "bare-metal",
+            "bhyve",
+            "cloud-hypervisor",
+            "docker",
+            "firecracker",
             "gcp",
-            "bare-metal"
+            "hyper-v",
+            "kvm",
+            "proxmox",
+            "qemu",
+            "solo5-hvt",
+            "solo5-spt",
+            "virtualbox",
+            "vmware",
+            "xen"
           ]
         },
         "submodel": {
           "type": "string",
           "description": "Microarchitecture optimization flags passed to GCC/Clang (e.g. x86-64-v3, neoverse-n1)"
+        },
+        "flavor": {
+          "type": "string",
+          "description": "Specific OS distribution flavor (e.g. debian, alpine, rocky, lfs, freebsd-release, omnios, openindiana, tribblix, smartos)"
         }
       }
     },
@@ -92,7 +117,15 @@
             "linux-lts",
             "linux-hardened",
             "freebsd-kernel",
+            "illumos-gate",
+            "omnios-kernel",
             "unikraft-core",
+            "nanos-kernel",
+            "osv-kernel",
+            "rumprun-hw",
+            "rumprun-xen",
+            "mirage-solo5-hvt",
+            "mirage-solo5-spt",
             "none"
           ]
         },
@@ -141,7 +174,19 @@
         "provider": {
           "type": "string",
           "description": "Init system daemon implementation provider",
-          "enum": ["systemd", "openrc", "sysvinit", "runit", "s6", "dinit", "bsd-init", "none"]
+          "enum": [
+            "systemd",
+            "openrc",
+            "sysvinit",
+            "runit",
+            "s6",
+            "dinit",
+            "bsd-init",
+            "bsd-rc",
+            "smf",
+            "unikernel-entrypoint",
+            "none"
+          ]
         },
         "default_target": {
           "type": "string",
@@ -202,17 +247,28 @@
         "partition_table": {
           "type": "string",
           "description": "Partition table scheme format",
-          "enum": ["gpt", "mbr", "bsd-slice"]
+          "enum": ["bsd-slice", "gpt", "mbr", "none"]
         },
         "boot_mode": {
           "type": "string",
           "description": "Target firmware boot mode architecture",
-          "enum": ["uefi", "bios-legacy", "hybrid-uefi-bios"]
+          "enum": ["bios-legacy", "direct-kernel", "hybrid-uefi-bios", "uefi"]
         },
         "bootloader": {
           "type": "string",
           "description": "Bootloader binary and EFI payload implementation",
-          "enum": ["grub2-efi", "grub2-bios", "systemd-boot", "limine", "freebsd-bootcode", "none"]
+          "enum": [
+            "grub2-efi",
+            "grub2-bios",
+            "systemd-boot",
+            "limine",
+            "freebsd-bootcode",
+            "freebsd-loader",
+            "illumos-loader",
+            "unikernel-direct",
+            "multiboot2",
+            "none"
+          ]
         },
         "uki": {
           "type": "boolean",
@@ -233,7 +289,22 @@
               "filesystem": {
                 "type": "string",
                 "description": "Target filesystem format type",
-                "enum": ["ext4", "btrfs", "xfs", "vfat", "zfs", "swap"]
+                "enum": [
+                  "9pfs",
+                  "btrfs",
+                  "cpio",
+                  "erofs",
+                  "ext4",
+                  "rofs",
+                  "squashfs",
+                  "stubfs",
+                  "swap",
+                  "ufs2",
+                  "vfat",
+                  "virtiofs",
+                  "xfs",
+                  "zfs"
+                ]
               },
               "mountpoint": {
                 "type": "string",
@@ -646,6 +717,36 @@
             "description": "Virtual host domain name routed via netctl"
           }
         }
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target installer or base-image output formats synthesized from this OS specification",
+      "items": {
+        "type": "string",
+        "description": "Target image or installer packaging format identifier",
+        "enum": [
+          "live-iso",
+          "live-usb",
+          "raw",
+          "qcow2",
+          "vmdk",
+          "vhd",
+          "vhdx",
+          "vagrant-box",
+          "zfs-stream",
+          "rootfs-tar",
+          "oci-image",
+          "direct-kernel"
+        ]
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Declarative list of Tier 1 LibScript components ({component0, component1, ...}) staged into the image or installer",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component identifier or capability alias"
       }
     }
   }

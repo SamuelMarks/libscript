@@ -111,6 +111,14 @@ PRETTY_NAME="LibScript Debian-style GNU/Linux"
 HOME_URL="https://github.com/libscript/libscript"
 EOF
 
+# Stage resolved Tier 1 components from profile into TARGET_ROOTFS
+if [ -f "$PROFILE" ] && command -v jq >/dev/null 2>&1; then
+  _prof_comps=$(jq -r '(.components // [])[]' "$PROFILE" 2>/dev/null || true)
+  for _pc in $_prof_comps; do
+    [ -n "$_pc" ] || continue
+    LIBSCRIPT_TARGET_SYSROOT="$TARGET_ROOTFS" LIBSCRIPT_IMAGE_BUILD='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$_pc" latest || true
+  done
+fi
 touch "$STAMP_FILE"
 printf '[OK] Debian-style distribution synthesis complete at: %s\n' "$TARGET_ROOTFS"
 exit 0

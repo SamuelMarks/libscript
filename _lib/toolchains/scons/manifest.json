@@ -3,7 +3,7 @@
   "name": "scons",
   "title": "SCons",
   "description": "Software construction tool configured with Python scripts.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["scons", "build-system"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/SCons/scons"

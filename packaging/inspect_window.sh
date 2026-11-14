@@ -1,9 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Diagnostic utility to inspect UI automation element hierarchy and button properties.
-# Invokes inspect_window.ps1 via PowerShell on Windows.
+# Diagnostic utility to inspect GUI window trees and control properties across
+# Wayland (swaymsg), X11 (xwininfo/xdotool), and Windows (inspect_window.cmd) without pwsh.
+#
 # ## Usage
-# ./packaging/inspect_window.sh
+# ./packaging/inspect_window.sh [--help]
 
 set -feu
 
@@ -25,21 +26,40 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-PS_SCRIPT="${SCRIPT_DIR}/inspect_window.ps1"
-if [ ! -f "${PS_SCRIPT}" ] && [ -f "C:/libscript/inspect_window.ps1" ]; then
-  PS_SCRIPT='C:/libscript/inspect_window.ps1'
+# ## show_help
+# Prints command-line usage instructions for window hierarchy inspection.
+show_help() {
+  printf 'Usage: %s [--help]\n' "$(basename "$THIS_FILE")"
+  printf 'Inspects active GUI window hierarchy via Wayland swaymsg, X11 xwininfo, or Windows cmd.\n'
+}
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  show_help
+  exit 0
 fi
 
-if command -v powershell.exe >/dev/null 2>&1; then
-  WIN_PS_SCRIPT="$(cygpath -w "${PS_SCRIPT}" 2>/dev/null || printf '%s' "${PS_SCRIPT}")"
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${WIN_PS_SCRIPT}" "$@"
-elif command -v pwsh >/dev/null 2>&1; then
-  pwsh -NoProfile -ExecutionPolicy Bypass -File "${PS_SCRIPT}" "$@"
-else
-  printf '%s\n' 'Window inspection requires PowerShell on Windows.' >&2
-  exit 1
+if command -v cmd.exe >/dev/null 2>&1 && [ "${OS:-}" = "Windows_NT" ]; then
+  cmd.exe /c "${SCRIPT_DIR}/inspect_window.cmd" "$@"
+  exit $?
 fi
+
+if [ -n "${SWAYSOCK:-}" ] && command -v swaymsg >/dev/null 2>&1; then
+  swaymsg -t get_tree
+  exit 0
+fi
+
+if [ -n "${DISPLAY:-}" ] && command -v xwininfo >/dev/null 2>&1; then
+  xwininfo -root -tree
+  exit 0
+fi
+
+if [ -n "${DISPLAY:-}" ] && command -v xdotool >/dev/null 2>&1; then
+  xdotool search --onlyvisible --name ".*" getwindowname %@ 2>/dev/null || true
+  exit 0
+fi
+
+printf '[ERROR] No active GUI inspection backend available (requires swaymsg on Wayland, xwininfo/xdotool on X11, or Windows).\n' >&2
+exit 1

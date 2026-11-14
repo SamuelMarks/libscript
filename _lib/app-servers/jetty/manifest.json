@@ -3,7 +3,7 @@
   "name": "jetty",
   "title": "Eclipse Jetty",
   "description": "Lightweight, highly scalable Java HTTP web server and Jakarta Servlet container.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["jetty", "servlet-container", "app-server"],
   "os_whitelist": ["all"],
   "ports": [8080, 8443],

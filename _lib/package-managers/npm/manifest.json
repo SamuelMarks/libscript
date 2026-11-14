@@ -5,7 +5,7 @@
   "os_whitelist": ["all"],
   "title": "npm",
   "description": "Bootstrap module for the `npm` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["sunos"],
   "repository": "https://github.com/npm/cli"
 }

@@ -3,7 +3,7 @@
   "name": "aws",
   "provides": ["aws"],
   "os_whitelist": ["all"],
-  "category": "cloud",
+  "category": "cloud-providers",
   "title": "Aws",
   "description": "LibScript component for AWS"
 }

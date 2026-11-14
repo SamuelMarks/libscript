@@ -216,15 +216,29 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+            if [ "${LIBSCRIPT_TARGET_OS:-}" = "unikraft" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "nanos" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "osv" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "rumprun" ]; then
+              LIBSCRIPT_UNIKERNEL_FRAMEWORK="${LIBSCRIPT_TARGET_OS}" STACK='' "${DIR}/unikernel_build.sh" "${LIBSCRIPT_TARGET_SYSROOT:-${TARGET_DIR}}" "${TARGET_DIR}/bin/redis.unikernel.img"
+            elif { [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ]; } && [ -n "${PKG_MGR:-}" ] && [ "${LIBSCRIPT_IMAGE_BUILD:-0}" != "1" ]; then
               log_info 'Falling back to system package manager for redis...'
-              libscript_depends "redis" || libscript_depends "valkey"
+              if [ "$UNAME_LOWER" = "sunos" ]; then
+                libscript_depends "ooce/database/redis" 2>/dev/null || libscript_depends "database/redis" 2>/dev/null || libscript_depends "redis" || true
+                export PATH="/opt/ooce/bin:/opt/local/bin:${PATH}"
+              else
+                libscript_depends "redis" || libscript_depends "valkey"
+              fi
               if command -v redis-server >/dev/null 2>&1; then
                 ln -sf "$(command -v redis-server)" "${TARGET_DIR}/bin/redis-server"
                 ln -sf "$(command -v redis-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
               elif command -v valkey-server >/dev/null 2>&1; then
                 ln -sf "$(command -v valkey-server)" "${TARGET_DIR}/bin/redis-server"
                 ln -sf "$(command -v valkey-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
+              elif [ "$UNAME_LOWER" = "sunos" ] && command -v gmake >/dev/null 2>&1 && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+                _rd_src=$(mktemp -d)
+                if libscript_download "https://download.redis.io/releases/redis-7.2.5.tar.gz" "${_rd_src}/redis.tar.gz" 2>/dev/null; then
+                  tar -xzf "${_rd_src}/redis.tar.gz" -C "$_rd_src" --strip-components=1
+                  gmake -C "$_rd_src" MALLOC=libc PREFIX="${TARGET_DIR}" install >/dev/null 2>&1 || true
+                fi
+                rm -rf "$_rd_src"
               fi
             else
               log_warn "No download URL provided for redis ${VERSION}."
@@ -235,6 +249,31 @@ case "$ACTION" in
         log_info "redis ${VERSION} is already installed."
       fi
       libscript_symlink_alias "redis" "$VERSION" "${EXACT_VERSION}"
+    fi
+    if [ -n "${LIBSCRIPT_TARGET_SYSROOT:-}" ] && [ "${LIBSCRIPT_TARGET_SYSROOT}" != "/" ]; then
+      _rd_sys="${LIBSCRIPT_TARGET_SYSROOT%/}"
+      mkdir -p "${_rd_sys}/etc/redis" "${_rd_sys}/var/lib/redis"
+      printf 'bind 0.0.0.0\nport %s\ndir /var/lib/redis\nappendonly yes\n' "${REDIS_PORT:-6379}" > "${_rd_sys}/etc/redis/redis.conf"
+      if [ "${LIBSCRIPT_TARGET_OS:-}" = "freebsd" ]; then
+        mkdir -p "${_rd_sys}/usr/local/etc" "${_rd_sys}/etc/rc.conf.d"
+        cp -f "${_rd_sys}/etc/redis/redis.conf" "${_rd_sys}/usr/local/etc/redis.conf"
+        printf 'redis_enable="YES"\n' > "${_rd_sys}/etc/rc.conf.d/redis"
+      elif [ "${LIBSCRIPT_TARGET_OS:-}" = "sunos" ]; then
+        mkdir -p "${_rd_sys}/var/svc/manifest/site"
+        cat << 'RD_SMF' > "${_rd_sys}/var/svc/manifest/site/redis.xml"
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<service_bundle type='manifest' name='libscript:redis'>
+  <service name='application/database/redis' type='service' version='1'>
+    <create_default_instance enabled='true' />
+    <exec_method type='method' name='start' exec='/opt/ooce/bin/redis-server /etc/redis/redis.conf' timeout_seconds='60' />
+    <exec_method type='method' name='stop' exec=':kill' timeout_seconds='60' />
+  </service>
+</service_bundle>
+RD_SMF
+      else
+        LIBSCRIPT_IMAGE_BUILD='1' libscript_install_service 'redis-server' '/usr/bin/redis-server /etc/redis/redis.conf' '/' 'Redis In-Memory Data Store' || true
+      fi
     fi
     if [ -n "${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/service.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis/service.sh" configure "${REDIS_DATA_DIR:-${VALKEY_DATA_DIR:-}}" || true

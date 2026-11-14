@@ -3,7 +3,7 @@
   "name": "payara",
   "title": "Payara Server",
   "description": "Cloud-native open-source Jakarta EE and MicroProfile enterprise application server runtime.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["payara", "jakarta-ee", "app-server"],
   "os_whitelist": ["all"],
   "ports": [8080, 4848],

@@ -59,12 +59,9 @@ printf '[WORKLOAD-OPENEDX] Preloading Open edX stack into %s...\n' "$TARGET_DIR"
 if [ -x "${REPO_ROOT}/libscript.sh" ]; then
   printf '[WORKLOAD-OPENEDX] Provisioning dependencies (MySQL, MongoDB, Redis, Python, Node.js, Meilisearch)...\n'
   if [ "${LIBSCRIPT_WORKLOAD_INSTALL_DEPS:-0}" = "1" ]; then
-    "${REPO_ROOT}/libscript.sh" install mariadb latest || true
-    "${REPO_ROOT}/libscript.sh" install mongodb latest || true
-    "${REPO_ROOT}/libscript.sh" install redis latest || true
-    "${REPO_ROOT}/libscript.sh" install python latest || true
-    "${REPO_ROOT}/libscript.sh" install nodejs latest || true
-    "${REPO_ROOT}/libscript.sh" install meilisearch latest || true
+    for _ox_dep in mariadb mongodb redis python nodejs meilisearch caddy; do
+      LIBSCRIPT_TARGET_SYSROOT="$TARGET_DIR" LIBSCRIPT_IMAGE_BUILD='1' STACK='' "${REPO_ROOT}/libscript.sh" install "$_ox_dep" latest || true
+    done
   fi
   printf '[WORKLOAD-OPENEDX] Dependency provisioning complete.\n'
 fi
@@ -72,7 +69,7 @@ fi
 # 1. Create directory structures and virtualenv hierarchy
 mkdir -p "$TARGET_DIR/edx/app/edxapp/venvs/edxapp/bin" "$TARGET_DIR/edx/app/edxapp/edx-platform"
 mkdir -p "$TARGET_DIR/edx/var/log/lms" "$TARGET_DIR/edx/var/log/cms" "$TARGET_DIR/edx/bin"
-mkdir -p "$TARGET_DIR/etc/edx" "$TARGET_DIR/etc/systemd/system"
+mkdir -p "$TARGET_DIR/etc/edx" "$TARGET_DIR/etc/caddy" "$TARGET_DIR/etc/systemd/system" "$TARGET_DIR/usr/local/etc/rc.d" "$TARGET_DIR/var/svc/manifest/site"
 
 # 2. Configure Open edX environment properties via canonical config.sh recipe
 if [ -x "${REPO_ROOT}/_lib/web-apps/openedx/config.sh" ]; then
@@ -88,7 +85,19 @@ cat << 'EOF' > "$TARGET_DIR/etc/edx/config.json"
 }
 EOF
 
-# 3. Create systemd service definitions
+cat << 'EOF' > "$TARGET_DIR/etc/caddy/Caddyfile"
+:80 {
+  reverse_proxy localhost:18000
+}
+:18010 {
+  reverse_proxy localhost:8001
+}
+EOF
+
+# 3. Create systemd, FreeBSD rc.d, and illumos SMF service definitions
+if [ -x "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" ]; then
+  LIBSCRIPT_TARGET_SYSROOT="$TARGET_DIR" LIBSCRIPT_IMAGE_BUILD='1' OPENEDX_INSTALL_DIR="/edx/app/edxapp/edx-platform" STACK='' "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" install-service >/dev/null 2>&1 || true
+fi
 cat << 'EOF' > "$TARGET_DIR/etc/systemd/system/openedx-lms.service"
 [Unit]
 Description=Open edX LMS Application Service
@@ -106,13 +115,39 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
+cat << 'EOF' > "$TARGET_DIR/usr/local/etc/rc.d/openedx_lms"
+#!/bin/sh
+# PROVIDE: openedx_lms
+# REQUIRE: networking
+. /etc/rc.subr
+name="openedx_lms"
+rcvar="openedx_lms_enable"
+command="/edx/bin/start_openedx.sh"
+load_rc_config $name
+: ${openedx_lms_enable:="YES"}
+run_rc_command "$1"
+EOF
+chmod +x "$TARGET_DIR/usr/local/etc/rc.d/openedx_lms"
+
+cat << 'EOF' > "$TARGET_DIR/var/svc/manifest/site/openedx-lms.xml"
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<service_bundle type='manifest' name='libscript:openedx-lms'>
+  <service name='application/web/openedx-lms' type='service' version='1'>
+    <create_default_instance enabled='true' />
+    <exec_method type='method' name='start' exec='/edx/bin/start_openedx.sh' timeout_seconds='120' />
+    <exec_method type='method' name='stop' exec=':kill' timeout_seconds='60' />
+  </service>
+</service_bundle>
+EOF
+
 # 4. Create service startup script delegating to _lib/web-apps/openedx/service.sh
 cat << EOF > "$TARGET_DIR/edx/bin/start_openedx.sh"
 #!/bin/sh
 set -feu
 printf '[OPENEDX] Starting MariaDB, MongoDB, Redis, and OpenSearch...\n'
-if [ -x "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" ]; then
-  OPENEDX_LMS_PORT=18000 OPENEDX_CMS_PORT=18010 "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" start
+if [ -x "/opt/libscript/libscript/_lib/web-apps/openedx/service.sh" ]; then
+  OPENEDX_LMS_PORT=18000 OPENEDX_CMS_PORT=18010 "/opt/libscript/libscript/_lib/web-apps/openedx/service.sh" start
 fi
 printf '[OPENEDX] LMS and Studio services online at http://localhost:18000\n'
 EOF

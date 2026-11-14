@@ -3,7 +3,7 @@
   "name": "maven-wrapper",
   "title": "Maven Wrapper",
   "description": "Apache Maven Wrapper (mvnw) standalone distribution manager for reproducible JVM project builds.",
-  "category": "package-manager",
+  "category": "package-managers",
   "provides": ["maven-wrapper", "mvnw"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/apache/maven-wrapper"

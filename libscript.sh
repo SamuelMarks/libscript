@@ -330,6 +330,7 @@ case "$CMD" in
   update-db) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" "$@" ;;
   semver) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" "$@" ;;
   package-as) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" "$@" ;;
+  build-image|build-installer) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/synthesize-image.sh" "$@" ;;
   scaffold|new-component) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/scaffold/scaffold.sh" "$@" ;;
   config) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" "$@" ;;
   repogen) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" "$@" ;;

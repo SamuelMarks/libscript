@@ -3,7 +3,7 @@
   "name": "puma",
   "title": "Puma",
   "description": "Fast, multithreaded, and highly concurrent HTTP 1.1 server for Ruby and Rack applications.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["puma", "rack-server", "app-server"],
   "os_whitelist": ["all"],
   "ports": [9292],

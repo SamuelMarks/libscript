@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "unikernel-openedx-pod",
+  "description": "Decomposed multi-unikernel Open edX appliance pod pairing Nanos/OSv Gunicorn LMS/CMS/Celery images with Caddy MFE ingress, Redis cache, and FerretDB+PostgreSQL/MySQL datastores.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "unikernel-nanos",
+    "libc": "glibc",
+    "platform": "qemu"
+  },
+  "kernel": {
+    "provider": "nanos-kernel",
+    "version": "0.1.53",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "unikernel-entrypoint"
+  },
+  "storage": {
+    "disk_size_gib": 20,
+    "partition_table": "gpt",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "output_formats": ["direct-kernel", "qcow2"],
+  "components": ["openedx"]
+}

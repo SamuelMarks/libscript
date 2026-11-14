@@ -1,9 +1,9 @@
 @echo off
 :: # illumos_raw.cmd
 :: ## Overview
-:: Synthesizes a raw illumos disk image from a target sysroot on Windows.
+:: Synthesizes a raw illumos ZFS disk image from a target sysroot on Windows via vm_builder or exits 86 when unsupported.
 :: ## Usage
-:: illumos_raw.cmd [target_sysroot] [output_image] [size_gib]
+:: illumos_raw.cmd [--worker=docker|wsl2] [--allow-stub] [target_sysroot] [output_image] [size_gib]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -49,40 +49,34 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
 
-if "%~1"=="--help" (
-    echo Usage: %~nx0 [target_sysroot] [output_image] [size_gib]
-    echo Synthesizes raw illumos disk image.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %~nx0 [target_sysroot] [output_image] [size_gib]
-    echo Synthesizes raw illumos disk image.
-    exit /b 0
+if /I "%~1"=="--allow-stub" (
+    set "LIBSCRIPT_ALLOW_STUB=1"
+    shift
 )
 
-set "REPO_ROOT=!SCRIPT_DIR!\..\..\.."
-for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
-
-set "TARGET_SYSROOT=%~1"
-if "%TARGET_SYSROOT%"=="" set "TARGET_SYSROOT=%REPO_ROOT%\build\illumos-sysroot"
-set "OUT_IMG=%~2"
-if "%OUT_IMG%"=="" set "OUT_IMG=%REPO_ROOT%\build\illumos.raw"
-set "SIZE_GIB=%~3"
-if "%SIZE_GIB%"=="" set "SIZE_GIB=20"
-
-for %%f in ("%OUT_IMG%") do set "OUT_DIR=%%~dpf"
-if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
-
-set "STAMP_FILE=%OUT_IMG%.stamp"
-if exist "%STAMP_FILE%" if exist "%OUT_IMG%" (
-    echo [SKIP]     illumos raw image %OUT_IMG% already synthesized
+if "%LIBSCRIPT_ALLOW_STUB%"=="1" (
+    set "OUT_IMG=%~2"
+    if "!OUT_IMG!"=="" set "OUT_IMG=!LIBSCRIPT_ROOT_DIR!\build\illumos.raw"
+    for %%F in ("!OUT_IMG!") do set "OUT_DIR=%%~dpF"
+    if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
+    if exist "!OUT_IMG!.stamp" if exist "!OUT_IMG!" (
+        echo [SKIP]     illumos raw image !OUT_IMG! already synthesized ^(stub^)
+        exit /b 0
+    )
+    echo LibScript illumos Raw Disk Stub> "!OUT_IMG!"
+    echo mode=stub> "!OUT_IMG!.stamp"
     exit /b 0
 )
 
-echo [PACKAGE]  Synthesizing illumos raw image: %OUT_IMG% (%SIZE_GIB%G)...
-type nul > "%OUT_IMG%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\vm_builder.cmd" "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\illumos_raw.sh" %*
+exit /b !ERRORLEVEL!
 
-echo %DATE% %TIME%> "%STAMP_FILE%"
-echo [OK]       illumos raw image generated: %OUT_IMG%
+:: ## show_help
+:: Displays usage instructions for illumos raw image generation.
+:show_help
+echo Usage: %~nx0 [--worker=docker^|wsl2] [--allow-stub] [target_sysroot] [output_image] [size_gib]
+echo Synthesizes illumos raw disk image via vm_builder ^(or exits 86 if unavailable^).
 exit /b 0

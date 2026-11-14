@@ -3,7 +3,7 @@
   "name": "tar",
   "title": "GNU/BSD tar",
   "description": "Tape archive creation, inspection, and extraction utility supporting POSIX ustar and pax formats.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["tar", "archiver"],
   "os_whitelist": ["all"]
 }

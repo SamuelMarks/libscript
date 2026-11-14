@@ -3,7 +3,7 @@
   "name": "lz4",
   "title": "LZ4 Lossless Compression Library & CLI",
   "description": "Standalone version manager and custom-compiler source builder for LZ4 (pinned default 1.10.0) with upstream make check/test verification.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["lz4"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/lz4/lz4"

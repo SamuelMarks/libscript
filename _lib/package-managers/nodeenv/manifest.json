@@ -7,5 +7,5 @@
   "license": "BSD-3-Clause",
   "license_name": "BSD 3-Clause 'New' or 'Revised' License",
   "description": "Bootstrap module for the nodeenv Node.js virtual environment manager.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "unikernel_pod",
+  "title": "Unikernel Pod Composer",
+  "description": "Decomposes multi-daemon component stacks into isolated single-process unikernel appliances with virtual bridge networking and service discovery.",
+  "category": "orchestration",
+  "provides": ["unikernel-pod", "unikernel_pod"],
+  "os_whitelist": ["all"]
+}

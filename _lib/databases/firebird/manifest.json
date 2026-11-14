@@ -3,7 +3,7 @@
   "name": "firebird",
   "title": "Firebird SQL",
   "description": "Open-source relational SQL database management system offering ANSI SQL standard compliance and stored procedures.",
-  "category": "database",
+  "category": "databases",
   "provides": ["firebird", "sql-database", "database"],
   "os_whitelist": ["all"],
   "ports": [3050],

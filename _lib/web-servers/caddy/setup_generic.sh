@@ -127,21 +127,32 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing caddy ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        OS="${UNAME_LOWER:-linux}"
-        if [ "${ARCH:-}" = "x86_64" ]; then ARCH="amd64"; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH="arm64"; fi
-        if [ "$OS" = "darwin" ]; then OS="mac"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
-        URL="https://github.com/caddyserver/caddy/releases/download/v${EXACT_VERSION}/caddy_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
-        TEMP_FILE=$(mktemp)
-        libscript_depends 'curl'
-        libscript_depends 'tar'
-        if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
-          log_error "Failed to download caddy from $URL"
+        OS="${TARGET_OS:-${UNAME_LOWER:-linux}}"
+        if [ "${ARCH:-}" = "x86_64" ]; then ARCH='amd64'; elif [ "${ARCH:-}" = "aarch64" ] || [ "${ARCH:-}" = "arm64" ]; then ARCH='arm64'; fi
+        if [ "$OS" = "darwin" ]; then OS='mac'; elif [ "$OS" = "linux" ]; then OS='linux'; fi
+        if [ "$OS" = "sunos" ]; then
+          if command -v pkgin >/dev/null 2>&1 && [ "${LIBSCRIPT_IMAGE_BUILD:-0}" != "1" ]; then
+            libscript_depends 'caddy' 2>/dev/null || true
+          fi
+          if command -v caddy >/dev/null 2>&1; then
+            ln -sf "$(command -v caddy)" "${TARGET_DIR}/bin/caddy"
+          elif command -v go >/dev/null 2>&1 && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+            GOBIN="${TARGET_DIR}/bin" GOOS='illumos' GOARCH='amd64' go install "github.com/caddyserver/caddy/v2/cmd/caddy@v${EXACT_VERSION}" || true
+          fi
+        elif [ "${LIBSCRIPT_IMAGE_BUILD:-0}" != "1" ]; then
+          URL="https://github.com/caddyserver/caddy/releases/download/v${EXACT_VERSION}/caddy_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends 'curl'
+          libscript_depends 'tar'
+          if ! libscript_download "$URL" "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download caddy from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
+          fi
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "caddy" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/caddy"
+          chmod +x "${TARGET_DIR}/bin/caddy"
           rm -f "$TEMP_FILE.tar.gz"
-          exit 1
         fi
-        tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "caddy" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/caddy"
-        chmod +x "${TARGET_DIR}/bin/caddy"
-        rm -f "$TEMP_FILE.tar.gz"
       else
         log_info "caddy ${VERSION} is already installed."
       fi

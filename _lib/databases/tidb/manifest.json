@@ -3,7 +3,7 @@
   "name": "tidb",
   "title": "TiDB",
   "description": "Open-source distributed Hybrid Transactional and Analytical Processing (HTAP) SQL database compatible with MySQL.",
-  "category": "database",
+  "category": "databases",
   "provides": ["tidb", "distributed-sql", "mysql-compatible", "database"],
   "os_whitelist": ["all"],
   "ports": [4000, 10080],

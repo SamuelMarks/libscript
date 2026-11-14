@@ -3,7 +3,7 @@
   "name": "bazel",
   "title": "Bazel",
   "description": "A fast, scalable, multi-language and extensible build system, installed via Bazelisk.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["build-system", "bazel", "bazelisk"],
   "conflicts": [],
   "os_whitelist": ["all"],

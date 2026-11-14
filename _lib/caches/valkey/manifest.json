@@ -5,11 +5,11 @@
   "license": "BSD-3-Clause",
   "license_name": "BSD 3-Clause 'New' or 'Revised' License",
   "description": "A high-performance, open-source, in-memory data store that is fully compatible with Redis.",
-  "category": "cache",
-  "provides": ["kv-store", "redis-compatible", "valkey", "cache"],
+  "category": "caches",
+  "provides": ["cache", "kv-store", "redis-compatible", "valkey"],
   "conflicts": ["redis"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["windows", "sunos"],
+  "os_blacklist": ["windows"],
   "ports": [6379],
   "stateful": true,
   "multitenant": true,
@@ -29,5 +29,7 @@
     "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
-  }
+  },
+  "process_model": "single-process",
+  "unikernel_support": ["unikraft", "nanos", "osv", "rumprun"]
 }

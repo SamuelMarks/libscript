@@ -3,7 +3,7 @@
   "name": "groovy",
   "title": "Apache Groovy",
   "description": "Multi-faceted dynamic and optionally typed programming language for the Java platform.",
-  "category": "language",
+  "category": "languages",
   "provides": ["groovy", "groovyc"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/apache/groovy"

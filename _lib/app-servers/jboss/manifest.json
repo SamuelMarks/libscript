@@ -3,7 +3,7 @@
   "name": "jboss",
   "title": "JBoss Application Server",
   "description": "JBoss EAP / WildFly upstream Jakarta EE application server runtime and jboss-cli management tool.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["jboss", "jakarta-ee", "app-server"],
   "os_whitelist": ["all"],
   "ports": [8080, 9990],

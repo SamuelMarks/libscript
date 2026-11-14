@@ -3,7 +3,7 @@
   "name": "coursier",
   "title": "Coursier",
   "description": "A Scala artifact fetcher and tool launcher.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["scala", "java", "coursier", "cs"],
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],

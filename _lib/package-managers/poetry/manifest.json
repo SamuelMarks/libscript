@@ -6,6 +6,6 @@
   "os_blacklist": ["sunos"],
   "title": "poetry",
   "description": "Bootstrap script for [Poetry](https://python-poetry.org/), a tool for Python dependency management and packaging. Requires Python 3 to be installed.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/python-poetry/poetry"
 }

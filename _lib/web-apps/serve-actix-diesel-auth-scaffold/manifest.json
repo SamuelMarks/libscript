@@ -5,6 +5,8 @@
   "title": "serve-actix-diesel-auth-scaffold",
   "description": "serve-actix-diesel-auth-scaffold stack",
   "provides": ["serve-actix-diesel-auth-scaffold"],
-  "runtime_deps": ["rust", "postgres", "redis", "caddy"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["caddy", "postgres", "redis", "rust"]
+  }
 }

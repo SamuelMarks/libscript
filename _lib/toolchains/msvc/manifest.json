@@ -3,7 +3,7 @@
   "name": "msvc",
   "title": "MSVC Build Tools",
   "description": "Microsoft Visual C++ (MSVC) Build Tools and Windows SDK compiler toolchain.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["msvc", "c-compiler", "cxx-compiler"],
   "conflicts": [],
   "versions": ["latest", "2022"],

@@ -5,5 +5,5 @@
   "os_whitelist": ["windows"],
   "title": "cygwin bootstrap",
   "description": "Cygwin POSIX environment for Windows.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

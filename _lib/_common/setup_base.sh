@@ -56,6 +56,30 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
+# Relocate paths cleanly into LIBSCRIPT_TARGET_SYSROOT during offline image synthesis
+if [ -n "${LIBSCRIPT_TARGET_SYSROOT:-}" ] && [ "${LIBSCRIPT_TARGET_SYSROOT}" != "/" ]; then
+  _sb_sys="${LIBSCRIPT_TARGET_SYSROOT%/}"
+  case "${LIBSCRIPT_HOME:-}" in
+    ""|"${HOME:-/nonexistent}"*) LIBSCRIPT_HOME="${_sb_sys}/opt/libscript"; export LIBSCRIPT_HOME ;;
+  esac
+  case "${LIBSCRIPT_DATA_DIR:-}" in
+    ""|"/tmp"*|"/var/lib"*) LIBSCRIPT_DATA_DIR="${_sb_sys}/var/lib/libscript"; export LIBSCRIPT_DATA_DIR ;;
+  esac
+  : "${LIBSCRIPT_ETC_DIR:=${_sb_sys}/etc}"
+  : "${LIBSCRIPT_LOG_DIR:=${_sb_sys}/var/log}"
+  : "${LIBSCRIPT_RUN_DIR:=${_sb_sys}/var/run}"
+  : "${LIBSCRIPT_SYSTEMD_DIR:=${_sb_sys}/etc/systemd/system}"
+  : "${LIBSCRIPT_INITD_DIR:=${_sb_sys}/etc/init.d}"
+  : "${LIBSCRIPT_FREEBSD_RCD_DIR:=${_sb_sys}/usr/local/etc/rc.d}"
+  : "${PREFIX:=${_sb_sys}/usr/local/bin}"
+  export LIBSCRIPT_ETC_DIR LIBSCRIPT_LOG_DIR LIBSCRIPT_RUN_DIR LIBSCRIPT_SYSTEMD_DIR LIBSCRIPT_INITD_DIR LIBSCRIPT_FREEBSD_RCD_DIR PREFIX
+  mkdir -p "$LIBSCRIPT_HOME" "$LIBSCRIPT_DATA_DIR" "$LIBSCRIPT_ETC_DIR" "$LIBSCRIPT_LOG_DIR" "$PREFIX"
+fi
+if [ -n "${LIBSCRIPT_TARGET_OS:-}" ]; then
+  TARGET_OS="${LIBSCRIPT_TARGET_OS}"
+  export TARGET_OS
+fi
+
 # Source path resolution
 _SCRIPT_DIR_NAME="${_setup_base_dir}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'

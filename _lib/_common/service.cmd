@@ -81,6 +81,14 @@ exit /b %ERRORLEVEL%
 :libscript_service
 set "_SVC_ACT=%~1"
 set "_SVC_NAME=%~2"
+if "%LIBSCRIPT_IMAGE_BUILD%"=="1" (
+    echo [INFO] [SYSROOT] Deferring live service action '!_SVC_ACT!' for '!_SVC_NAME!' during offline image synthesis.
+    exit /b 0
+)
+if defined LIBSCRIPT_TARGET_SYSROOT if not "!LIBSCRIPT_TARGET_SYSROOT!"=="/" if not "!LIBSCRIPT_TARGET_SYSROOT!"=="\" (
+    echo [INFO] [SYSROOT] Deferring live service action '!_SVC_ACT!' for '!_SVC_NAME!' during offline image synthesis.
+    exit /b 0
+)
 set "_DATA_BASE=%TEMP%\data"
 if defined LIBSCRIPT_DATA_DIR set "_DATA_BASE=!LIBSCRIPT_DATA_DIR!"
 set "_SVC_DIR=!_DATA_BASE!\!_SVC_NAME!"

@@ -5,6 +5,6 @@
   "os_whitelist": ["linux", "darwin"],
   "title": "mise",
   "description": "mise-en-place",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/jdx/mise"
 }

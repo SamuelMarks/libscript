@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "description": "Network control utility for managing local service routing and Let's Encrypt TLS ingress.",
   "properties": {

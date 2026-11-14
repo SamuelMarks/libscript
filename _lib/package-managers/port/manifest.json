@@ -3,7 +3,7 @@
   "name": "port",
   "title": "BSD Ports / MacPorts",
   "description": "Unified wrapper recipe for BSD Ports and MacPorts (port) package management.",
-  "category": "package-manager",
+  "category": "package-managers",
   "provides": ["port", "bsd-ports"],
   "os_whitelist": ["darwin", "freebsd", "openbsd", "netbsd"],
   "repository": "https://github.com/macports/macports-base"

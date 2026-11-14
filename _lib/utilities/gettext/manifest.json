@@ -3,7 +3,7 @@
   "name": "gettext",
   "title": "GNU gettext",
   "description": "Internationalization and localization utilities (msgfmt, xgettext, msginit, msgmerge) used by Open edX translation compilation.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["gettext", "msgfmt", "xgettext"],
   "os_whitelist": ["all"]
 }

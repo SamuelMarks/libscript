@@ -3,7 +3,7 @@
   "name": "keydb",
   "title": "KeyDB",
   "description": "High-performance multithreaded fork of Redis focusing on active-active replication and flash storage.",
-  "category": "cache",
+  "category": "caches",
   "provides": ["keydb", "redis-compatible", "kv-store", "cache"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows", "sunos"],

@@ -3,7 +3,7 @@
   "name": "win-cmd-rs",
   "title": "win-cmd-rs Batch Interpreter & Linter",
   "description": "Safe Rust Windows cmd.exe interpreter (wincmd) and linear Packrat 50-rule linter / 4-pass CST rewriter (wincheck).",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["win-cmd-rs", "wincmd", "wincheck"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/SamuelMarks/win-cmd-rs"

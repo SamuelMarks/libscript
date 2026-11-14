@@ -1,11 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Orchestrates FreeBSD distribution synthesis from a JSON profile specification.
-# Invokes base, config, pkg, users, init, display, desktop, and audio modules
-# deterministically with full idempotency guarantees.
+# Orchestrates FreeBSD distribution synthesis from a JSON profile specification using jq,
+# invoking base, config, pkg, users, init, display, desktop, audio, and Tier 1 components.
 # ## Usage
-# Assemble FreeBSD distribution:
-#   _lib/freebsd/distro/assemble.sh [profile_json_path] [target_sysroot]
+# ./_lib/freebsd/distro/assemble.sh [profile_json_path] [target_sysroot]
+
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,82 +27,71 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-PROFILE="${1:-${REPO_ROOT}/profiles/freebsd/minimal-server.json}"
-SYSROOT="${2:-${REPO_ROOT}/build/freebsd-sysroot}"
-
-if [ ! -f "${PROFILE}" ]; then
-  printf '[ERROR]    Profile configuration "%s" not found!\n' "${PROFILE}" >&2
-  exit 1
-fi
-
-STAMP_DIR="${SYSROOT}/.libscript_stamps"
-STAMP_FILE="${STAMP_DIR}/assembled.stamp"
-
-mkdir -p "${STAMP_DIR}"
-
-if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     FreeBSD distribution already assembled in %s\n' "${SYSROOT}"
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  printf 'Usage: %s [profile_json_path] [target_sysroot]\n' "$0"
   exit 0
 fi
 
-printf '[ASSEMBLE] Synthesizing FreeBSD distribution using profile: %s...\n' "${PROFILE}"
+PROFILE="${1:-${LIBSCRIPT_ROOT_DIR}/profiles/freebsd/minimal-server.json}"
+SYSROOT="${2:-${LIBSCRIPT_ROOT_DIR}/build/freebsd-sysroot}"
 
-# Extract key profile fields via python / sh helper
-PROFILE_NAME=$(awk -F'"' '/"profile_name":/ { print $4 }' "${PROFILE}" | head -n 1)
-FBSD_VERSION=$(awk -F'"' '/"freebsd_version":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${FBSD_VERSION:=14.1-RELEASE}"
-ARCH=$(awk -F'"' '/"arch":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${ARCH:=amd64}"
-INIT_SYS=$(awk -F'"' '/"provider":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${INIT_SYS:=bsd-rc}"
-DISP_PROTO=$(awk -F'"' '/"protocol":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${DISP_PROTO:=none}"
-DESKTOP_ENV=$(awk -F'"' '/"environment":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${DESKTOP_ENV:=none}"
-DM=$(awk -F'"' '/"display_manager":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${DM:=none}"
-FILESYSTEM=$(awk -F'"' '/"filesystem":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${FILESYSTEM:=ufs2}"
-AUDIO_SUB=$(awk -F'"' '/"subsystem":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${AUDIO_SUB:=none}"
-HOSTNAME=$(awk -F'"' '/"hostname":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${HOSTNAME:=freebsd-distro}"
-PRIMARY_USER=$(awk -F'"' '/"username":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${PRIMARY_USER:=vagrant}"
+if [ ! -f "${PROFILE}" ]; then
+  printf '[ERROR] Profile not found: %s\n' "${PROFILE}" >&2
+  exit 1
+fi
 
-printf '[ASSEMBLE] Profile: %s | Init: %s | Desktop: %s | DM: %s | FS: %s\n' \
-  "${PROFILE_NAME}" "${INIT_SYS}" "${DESKTOP_ENV}" "${DM}" "${FILESYSTEM}"
+PROFILE_NAME=$(basename "${PROFILE}" .json)
+STAMP_DIR="${SYSROOT}/.libscript-stamps"
+STAMP_FILE="${STAMP_DIR}/freebsd-assemble-${PROFILE_NAME}.stamp"
 
-# Step 1: Base userland bootstrap
-"${SCRIPT_DIR}/base.sh" "${SYSROOT}" "${FBSD_VERSION}" "${ARCH}"
+if [ -f "${STAMP_FILE}" ]; then
+  printf '[SKIP]     FreeBSD distribution (%s) already assembled at %s\n' "${PROFILE_NAME}" "${SYSROOT}"
+  exit 0
+fi
 
-# Step 2: Core configuration
-"${SCRIPT_DIR}/config.sh" "${SYSROOT}" "${HOSTNAME}" "${FILESYSTEM}"
+mkdir -p "${STAMP_DIR}"
 
-# Step 3: Package repository configuration
-"${SCRIPT_DIR}/pkg.sh" "${SYSROOT}" "quarterly"
+if command -v jq >/dev/null 2>&1; then
+  FB_VER=$(jq -r '.freebsd_version // "14.1-RELEASE"' "${PROFILE}")
+  ARCH=$(jq -r '.target.arch // "amd64"' "${PROFILE}")
+  FS=$(jq -r '.storage.filesystem // (.storage.partitions[0].filesystem // "ufs2")' "${PROFILE}")
+  HOSTNAME=$(jq -r '.network.hostname // "freebsd-node"' "${PROFILE}")
+  INIT_PROV=$(jq -r '.init_system.provider // "bsd-rc"' "${PROFILE}")
+  DISP_SRV=$(jq -r '.display.server // "none"' "${PROFILE}")
+  COMP=$(jq -r '.display.compositor // "none"' "${PROFILE}")
+  DESK=$(jq -r '.desktop.environment // (.desktop.desktop_suite // "none")' "${PROFILE}")
+  DM=$(jq -r '.desktop.display_manager // (.desktop.greeter // "none")' "${PROFILE}")
+  AUTOLOGIN=$(jq -r '.desktop.autologin_user // ""' "${PROFILE}")
+  AUDIO_SUB=$(jq -r '.audio.subsystem // "oss"' "${PROFILE}")
+  PKG_BRANCH=$(jq -r '.package_manager.branch // "quarterly"' "${PROFILE}")
+else
+  FB_VER='14.1-RELEASE'; ARCH='amd64'; FS='ufs2'; HOSTNAME='freebsd-node'; INIT_PROV='bsd-rc'
+  DISP_SRV='none'; COMP='none'; DESK='none'; DM='none'; AUTOLOGIN=''; AUDIO_SUB='oss'; PKG_BRANCH='quarterly'
+fi
 
-# Step 4: User accounts and authentication
-"${SCRIPT_DIR}/users.sh" "${SYSROOT}" "${PRIMARY_USER}"
-
-# Step 5: Init system configuration
-"${SCRIPT_DIR}/init.sh" "${SYSROOT}" "${INIT_SYS}" "sshd,cron,devd"
-
-# Step 6: Display protocol configuration
-"${SCRIPT_DIR}/display.sh" "${SYSROOT}" "${DISP_PROTO}" "drm-kmod"
-
-# Step 7: Desktop environment staging
-"${SCRIPT_DIR}/desktop.sh" "${SYSROOT}" "${DESKTOP_ENV}" "${PRIMARY_USER}"
-
-# Step 8: Display manager configuration
-"${SCRIPT_DIR}/dm.sh" "${SYSROOT}" "${DM}" "${PRIMARY_USER}"
-
-# Step 9: Audio subsystem configuration
+printf '[ASSEMBLE] Synthesizing FreeBSD (%s) from profile %s...\n' "${FB_VER}" "${PROFILE_NAME}"
+"${SCRIPT_DIR}/base.sh" "${SYSROOT}" "${FB_VER}" "${ARCH}"
+"${SCRIPT_DIR}/config.sh" "${SYSROOT}" "${HOSTNAME}" "${FS}"
+"${SCRIPT_DIR}/pkg.sh" "${SYSROOT}" "${PKG_BRANCH}"
+"${SCRIPT_DIR}/users.sh" "${SYSROOT}" "vagrant" "vagrant" "1001" "wheel,video,operator" "yes"
+"${SCRIPT_DIR}/init.sh" "${SYSROOT}" "${INIT_PROV}"
+"${SCRIPT_DIR}/display.sh" "${SYSROOT}" "${DISP_SRV}" "${COMP}"
+"${SCRIPT_DIR}/desktop.sh" "${SYSROOT}" "${DESK}" "vagrant"
+"${SCRIPT_DIR}/dm.sh" "${SYSROOT}" "${DM}" "${AUTOLOGIN}"
 "${SCRIPT_DIR}/audio.sh" "${SYSROOT}" "${AUDIO_SUB}"
 
-# Final assembly stamp
+# Stage requested LibScript Tier 1 components into FreeBSD sysroot
+if command -v jq >/dev/null 2>&1; then
+  _comps=$(jq -r '((.components // []) + (.packages // []))[]?' "${PROFILE}" 2>/dev/null || true)
+  for _c in $_comps; do
+    [ -n "$_c" ] || continue
+    if [ -d "${LIBSCRIPT_ROOT_DIR}/_lib" ] && find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d -name "$_c" | grep -q .; then
+      LIBSCRIPT_TARGET_SYSROOT="${SYSROOT}" LIBSCRIPT_TARGET_OS='freebsd' LIBSCRIPT_IMAGE_BUILD='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$_c" latest || true
+    fi
+  done
+fi
+
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 printf '[OK]       FreeBSD distribution assembly complete for %s.\n' "${PROFILE_NAME}"

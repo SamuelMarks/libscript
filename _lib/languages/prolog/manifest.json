@@ -3,7 +3,7 @@
   "name": "prolog",
   "title": "SWI-Prolog",
   "description": "Comprehensive SWI-Prolog (swipl) logic programming environment and compiler.",
-  "category": "language",
+  "category": "languages",
   "provides": ["prolog", "swipl"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/SWI-Prolog/swipl-devel"

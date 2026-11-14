@@ -3,7 +3,7 @@
   "name": "rocksdb",
   "title": "RocksDB",
   "description": "Embeddable persistent LSM-tree key-value store library and ldb administration CLI tools optimized for fast flash storage.",
-  "category": "database",
+  "category": "databases",
   "provides": ["rocksdb", "ldb", "kv-store"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/facebook/rocksdb"

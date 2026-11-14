@@ -79,18 +79,32 @@ v1.36.0
     if [ -f "${TARGET_DIR}/bin/meilisearch" ] && "${TARGET_DIR}/bin/meilisearch" --version >/dev/null 2>&1; then
       log_info "Meilisearch ${EXACT_VERSION} is already installed in ${TARGET_DIR}."
     else
-      mkdir -p "${TARGET_DIR}/bin"
-      # Resolve binary download URL
+      mkdir -p "${TARGET_DIR}/bin" "${TARGET_DIR}/lib"
+      EFF_OS="${TARGET_OS:-${UNAME_LOWER}}"
+      if [ "$EFF_OS" = "freebsd" ] || [ "$EFF_OS" = "sunos" ]; then
+        if [ "$EFF_OS" = "freebsd" ] && [ "${LIBSCRIPT_IMAGE_BUILD:-0}" != "1" ]; then
+          libscript_depends 'meilisearch' 2>/dev/null || true
+        fi
+        if command -v meilisearch >/dev/null 2>&1; then
+          ln -sf "$(command -v meilisearch)" "${TARGET_DIR}/bin/meilisearch"
+        elif command -v cargo >/dev/null 2>&1 && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ "${MEILISEARCH_INSTALL_METHOD}" = "from-source" ]; then
+          log_info "Compiling Meilisearch from source via cargo for ${EFF_OS}..."
+          cargo install meilisearch --root "${TARGET_DIR}" || true
+        else
+          log_info "Native Meilisearch prebuilt binary unavailable on ${EFF_OS}; OpenSearch or database search fallback active."
+        fi
+        libscript_symlink_alias "meilisearch" "$VERSION" "${EXACT_VERSION}"
+        exit 0
+      fi
+      # Resolve binary download URL for Linux and macOS
       OS_NAME='linux'
-      if [ "${UNAME_LOWER}" = "darwin" ]; then
+      if [ "${EFF_OS}" = "darwin" ]; then
         OS_NAME='macos'
-      elif [ "${UNAME_LOWER}" = "freebsd" ]; then
-        OS_NAME='freebsd'
       fi
 
       ARCH_NAME='amd64'
       case "${ARCH:-x86_64}" in
-        x86_64|amd64) ARCH_NAME="amd64" ;;
+        x86_64|amd64) ARCH_NAME='amd64' ;;
         aarch64|arm64)
           if [ "$OS_NAME" = "macos" ]; then
             ARCH_NAME='apple-silicon'
@@ -107,7 +121,6 @@ v1.36.0
         chmod +x "${TARGET_DIR}/bin/meilisearch"
         if [ -f "/etc/alpine-release" ] && command -v apk >/dev/null 2>&1; then
           libscript_depends gcompat gcc musl-dev >/dev/null 2>&1 || true
-          priv mkdir -p /usr/local/lib
           _shim_src=$(mktemp)
           cat << 'CSRC' > "$_shim_src"
 int __res_init(void) { return 0; }
@@ -115,14 +128,15 @@ int res_init(void) { return 0; }
 int __register_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void), void *dso_handle) { return 0; }
 const char *gnu_get_libc_version(void) { return "2.38"; }
 CSRC
-          priv gcc -shared -fPIC -x c "$_shim_src" -o /usr/local/lib/libresinit.so 2>/dev/null || true
+          gcc -shared -fPIC -x c "$_shim_src" -o "${TARGET_DIR}/lib/libresinit.so" 2>/dev/null || true
           rm -f "$_shim_src"
-          if [ -f "/usr/local/lib/libresinit.so" ]; then
+          if [ -f "${TARGET_DIR}/lib/libresinit.so" ]; then
             mv "${TARGET_DIR}/bin/meilisearch" "${TARGET_DIR}/bin/meilisearch.bin"
             cat << 'SHIM' > "${TARGET_DIR}/bin/meilisearch"
 #!/bin/sh
-export LD_PRELOAD="/usr/local/lib/libresinit.so:/lib/libgcompat.so.0:${LD_PRELOAD:-}"
-exec "$(dirname "$0")/meilisearch.bin" "$@"
+_d=$(cd -- "$(dirname -- "$0")" && pwd)
+export LD_PRELOAD="${_d}/../lib/libresinit.so:/lib/libgcompat.so.0:${LD_PRELOAD:-}"
+exec "${_d}/meilisearch.bin" "$@"
 SHIM
             chmod +x "${TARGET_DIR}/bin/meilisearch"
           fi

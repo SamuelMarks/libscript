@@ -3,7 +3,7 @@
   "name": "wildfly",
   "title": "WildFly",
   "description": "Flexible, lightweight, managed Jakarta EE and MicroProfile application runtime.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["wildfly", "jakarta-ee", "app-server"],
   "os_whitelist": ["all"],
   "ports": [8080, 9990],

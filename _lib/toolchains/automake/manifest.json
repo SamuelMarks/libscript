@@ -3,7 +3,7 @@
   "name": "automake",
   "title": "GNU Automake",
   "description": "Tool for automatically generating GNU Standards-compliant Makefile.in files.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["automake"],
   "os_whitelist": ["all"],
   "repository": "https://savannah.gnu.org/projects/automake"

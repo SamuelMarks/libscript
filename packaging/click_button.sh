@@ -1,7 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Automates finding and clicking UI controls by text in GUI sessions.
-# Invokes click_button.ps1 via PowerShell on Windows or provides CLI parity.
+# Automates finding and clicking GUI controls by label across X11/Wayland (xdotool/ydotool)
+# and Windows (click_button.cmd) using pure POSIX shell without pwsh.
+#
 # ## Usage
 # ./packaging/click_button.sh [button_text]
 
@@ -25,29 +26,49 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-PS_SCRIPT="${SCRIPT_DIR}/click_button.ps1"
-if [ ! -f "${PS_SCRIPT}" ] && [ -f "C:/libscript/click_button.ps1" ]; then
-  PS_SCRIPT='C:/libscript/click_button.ps1'
+# ## show_help
+# Displays usage syntax for automated GUI button clicking.
+show_help() {
+  printf 'Usage: %s [button_text]\n' "$(basename "$THIS_FILE")"
+  printf 'Triggers GUI button activation on X11, Wayland, or Windows.\n'
+}
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  show_help
+  exit 0
 fi
 
 TARGET_TEXT="${1:-}"
-if [ -n "${TARGET_TEXT}" ]; then
-  TARGET_FILE="${TEMP:-/tmp}/target_btn.txt"
-  printf '%s\n' "${TARGET_TEXT}" > "${TARGET_FILE}"
+TMP_BASE="${TEMP:-${TMPDIR:-/tmp}}"
+mkdir -p "$TMP_BASE"
+
+if [ -n "$TARGET_TEXT" ]; then
+  printf '%s\n' "$TARGET_TEXT" > "${TMP_BASE}/target_btn.txt"
 fi
 
-LOG_FILE="${TEMP:-/tmp}/libscript_click.log"
-
-if command -v powershell.exe >/dev/null 2>&1; then
-  WIN_PS_SCRIPT="$(cygpath -w "${PS_SCRIPT}" 2>/dev/null || printf '%s' "${PS_SCRIPT}")"
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${WIN_PS_SCRIPT}" > "${LOG_FILE}" 2>&1
-elif command -v pwsh >/dev/null 2>&1; then
-  pwsh -NoProfile -ExecutionPolicy Bypass -File "${PS_SCRIPT}" > "${LOG_FILE}" 2>&1
-else
-  printf '%s\n' 'GUI control automation requires PowerShell on Windows.' >&2
-  exit 1
+if command -v cmd.exe >/dev/null 2>&1 && [ "${OS:-}" = "Windows_NT" ]; then
+  cmd.exe /c "${SCRIPT_DIR}/click_button.cmd" "$@"
+  exit $?
 fi
+
+LOG_FILE="${TMP_BASE}/libscript_click.log"
+
+if [ -n "${DISPLAY:-}" ] && command -v xdotool >/dev/null 2>&1; then
+  if [ -n "$TARGET_TEXT" ]; then
+    xdotool search --name "$TARGET_TEXT" windowactivate --sync key Return > "$LOG_FILE" 2>&1 || xdotool key Return >> "$LOG_FILE" 2>&1
+  else
+    xdotool click 1 > "$LOG_FILE" 2>&1
+  fi
+  exit 0
+fi
+
+if command -v ydotool >/dev/null 2>&1; then
+  ydotool key 28:1 28:0 > "$LOG_FILE" 2>&1
+  exit 0
+fi
+
+printf '[ERROR] GUI control automation requires xdotool (X11), ydotool (Wayland), or Windows.\n' >&2
+exit 1

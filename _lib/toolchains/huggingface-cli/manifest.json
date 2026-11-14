@@ -3,7 +3,7 @@
   "name": "huggingface_hub",
   "title": "huggingface_hub",
   "description": "A fast, scalable, multi-language and extensible build system, installed via huggingface_hubisk.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["build-system", "huggingface_hub", "huggingface_hubisk"],
   "conflicts": [],
   "os_whitelist": ["all"],

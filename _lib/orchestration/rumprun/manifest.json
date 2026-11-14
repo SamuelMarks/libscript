@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rumprun",
+  "title": "Rumprun Unikernel",
+  "description": "NetBSD rump kernel unikernel cross-toolchain and rumpbake image baker targeting KVM/VirtIO (hw_virtio) and Xen.",
+  "category": "orchestration",
+  "provides": ["rumprun", "rumpbake", "unikernel-builder"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/rumpkernel/rumprun"
+}

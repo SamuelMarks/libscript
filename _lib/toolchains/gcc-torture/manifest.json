@@ -3,7 +3,7 @@
   "name": "gcc-torture",
   "title": "Upstream GCC C Torture Execute Conformance Suite",
   "description": "Standalone version manager for the upstream GCC gcc.c-torture/execute C execution test corpus with DejaGnu .x and nested-function filter manifests.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["gcc-torture"],
   "os_whitelist": ["all"],
   "repository": "https://gcc.gnu.org/git/gcc.git"

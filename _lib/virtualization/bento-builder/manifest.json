@@ -9,5 +9,7 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "build_deps": ["qemu", "virtualbox", "packer", "vagrant", "ruby"]
+  "dependencies": {
+    "build_deps": ["packer", "qemu", "ruby", "vagrant", "virtualbox"]
+  }
 }

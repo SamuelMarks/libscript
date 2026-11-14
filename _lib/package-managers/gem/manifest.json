@@ -6,6 +6,6 @@
   "os_blacklist": ["sunos"],
   "title": "gem",
   "description": "Bootstrap module for the `gem` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/rubygems/rubygems"
 }

@@ -5,6 +5,8 @@
   "title": "phpbb",
   "description": "phpbb stack",
   "provides": ["phpbb"],
-  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "dependencies": {
+    "runtime_deps": ["mysql", "nginx", "php", "unzip"]
+  }
 }

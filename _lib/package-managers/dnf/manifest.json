@@ -5,5 +5,5 @@
   "os_whitelist": ["rhel", "fedora", "centos", "rocky", "almalinux"],
   "title": "dnf",
   "description": "Bootstrap module for the `dnf` package manager.",
-  "category": "package-manager"
+  "category": "package-managers"
 }

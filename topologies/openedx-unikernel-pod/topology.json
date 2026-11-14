@@ -1,0 +1,70 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "openedx-unikernel-pod",
+  "version": "1.0.0",
+  "description": "Decomposed Open edX multi-unikernel and microVM appliance pod isolating Caddy+MFE static ingress, Unikraft/Rumprun Redis cache, Nanos/OSv Gunicorn LMS/CMS/Celery workers, and OSv/ZFS FerretDB+PostgreSQL and MySQL datastores.",
+  "scheduler": "microvm",
+  "tiers": [
+    {
+      "name": "ingress-mfe",
+      "component": "caddy",
+      "replicas": 1,
+      "role": "ingress",
+      "traits": ["tls", "ingress", "firewall"]
+    },
+    {
+      "name": "cache-kv",
+      "component": "redis",
+      "replicas": 1,
+      "role": "cache",
+      "traits": ["discovery", "metrics"]
+    },
+    {
+      "name": "lms-wsgi",
+      "component": "openedx",
+      "replicas": 2,
+      "role": "app",
+      "traits": ["secrets", "discovery", "logging"]
+    },
+    {
+      "name": "cms-studio",
+      "component": "openedx",
+      "replicas": 1,
+      "role": "app",
+      "traits": ["secrets", "discovery", "logging"]
+    },
+    {
+      "name": "celery-workers",
+      "component": "celery",
+      "replicas": 2,
+      "role": "worker",
+      "traits": ["secrets", "discovery", "logging"]
+    },
+    {
+      "name": "modulestore-docdb",
+      "component": "ferretdb",
+      "replicas": 1,
+      "role": "database",
+      "traits": ["storage", "backup", "discovery"]
+    },
+    {
+      "name": "relational-db",
+      "component": "mysql",
+      "replicas": 1,
+      "role": "database",
+      "traits": ["storage", "backup", "discovery"]
+    },
+    {
+      "name": "search-index",
+      "component": "meilisearch",
+      "replicas": 1,
+      "role": "search",
+      "traits": ["storage", "discovery"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "172.30.0.0/24",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "openedx-pod.internal"
+  }
+}

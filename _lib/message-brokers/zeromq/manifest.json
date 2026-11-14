@@ -3,7 +3,7 @@
   "name": "zeromq",
   "title": "ZeroMQ",
   "description": "High-performance asynchronous distributed messaging library (libzmq) and CurveZMQ key generation tools.",
-  "category": "message-broker",
+  "category": "message-brokers",
   "provides": ["zeromq", "libzmq", "zmq"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/zeromq/libzmq"

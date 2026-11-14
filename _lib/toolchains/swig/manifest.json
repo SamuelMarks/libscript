@@ -3,7 +3,7 @@
   "name": "swig",
   "title": "SWIG",
   "description": "Simplified Wrapper and Interface Generator connecting C/C++ with high-level languages.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["swig"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/swig/swig"

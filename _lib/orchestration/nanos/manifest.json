@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nanos",
+  "title": "Nanos Unikernel (Ops)",
+  "description": "NanoVMs Ops CLI and Nanos unikernel image packager running unmodified ELF binaries on KVM, QEMU, Xen, and cloud hypervisors.",
+  "category": "orchestration",
+  "provides": ["nanos", "ops", "unikernel-builder"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/nanovms/ops"
+}

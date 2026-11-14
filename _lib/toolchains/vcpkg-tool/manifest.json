@@ -3,7 +3,7 @@
   "name": "vcpkg-tool",
   "title": "vcpkg-tool",
   "description": "Native C++ command-line binary frontend for the vcpkg package manager.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["vcpkg-tool", "vcpkg-cli"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/microsoft/vcpkg-tool"

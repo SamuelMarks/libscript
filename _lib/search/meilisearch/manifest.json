@@ -9,6 +9,8 @@
   "provides": ["search", "meilisearch"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
-  "ports": [7700]
+  "os_blacklist": [],
+  "ports": [7700],
+  "process_model": "single-process",
+  "unikernel_support": ["nanos", "osv"]
 }

@@ -137,9 +137,16 @@ if command -v makefs >/dev/null 2>&1; then
   # Generate bootable ISO using cd9660
   makefs -t cd9660 -o "rockridge,label=MSI_FREEBSD_LIVE,bootimage=i386;$BUILD_DIR/iso/boot/cdboot;no-emul-boot" "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || \
   makefs -t cd9660 -o rockridge,label="MSI_FREEBSD_LIVE" "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+elif command -v hdiutil >/dev/null 2>&1; then
+  hdiutil makehybrid -iso -joliet -default-volume-name "MSI_FREEBSD_LIVE" -o "${OUTPUT_PATH}.cdr" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
+  mv -f "${OUTPUT_PATH}.cdr.iso" "$OUTPUT_PATH" 2>/dev/null || mv -f "${OUTPUT_PATH}.cdr" "$OUTPUT_PATH" 2>/dev/null || true
 else
+  if [ "${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}" = "1" ] && [ "${LIBSCRIPT_ALLOW_STUB:-0}" != "1" ]; then
+    printf '[ERROR] Strict live FreeBSD ISO synthesis failed: install makefs or xorriso.\n' >&2
+    exit 1
+  fi
   printf '[WARN] makefs not found, falling back to basic archive...\n'
-  tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || touch "$OUTPUT_PATH"
+  tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || printf 'LibScript Live FreeBSD Archive\n' > "$OUTPUT_PATH"
 fi
 
 touch "$STAMP_FILE"

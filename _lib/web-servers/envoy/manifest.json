@@ -3,7 +3,7 @@
   "name": "envoy",
   "title": "Envoy",
   "description": "Cloud-native high-performance C++ distributed L4/L7 edge and service proxy.",
-  "category": "web-server",
+  "category": "web-servers",
   "provides": ["envoy", "reverse-proxy", "edge-router", "load-balancer", "web-server"],
   "os_whitelist": ["all"],
   "ports": [10000, 9901],

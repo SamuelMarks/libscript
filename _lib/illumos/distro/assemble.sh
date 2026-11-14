@@ -1,11 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Orchestrates illumos modular distribution synthesis from a JSON profile specification.
-# Invokes base, zfs, config, pkg, users, init, display, desktop, dm, and audio modules
-# deterministically with full idempotency guarantees.
+# Orchestrates illumos modular distribution synthesis from a JSON profile specification using jq,
+# invoking base, zfs, config, pkg, users, init, display, desktop, dm, audio, and Tier 1 components.
 # ## Usage
-# Assemble illumos distribution:
-#   _lib/illumos/distro/assemble.sh [profile_json_path] [target_sysroot]
+# ./_lib/illumos/distro/assemble.sh [profile_json] [target_sysroot]
+
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
@@ -28,111 +27,92 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-PROFILE="${1:-${REPO_ROOT}/profiles/illumos/minimal-server.json}"
-SYSROOT="${2:-${REPO_ROOT}/build/illumos-sysroot}"
-
-if [ ! -f "${PROFILE}" ]; then
-  printf '[ERROR]    Profile configuration "%s" not found!\n' "${PROFILE}" >&2
-  exit 1
-fi
-
-STAMP_DIR="${SYSROOT}/.libscript_stamps"
-STAMP_FILE="${STAMP_DIR}/assembled.stamp"
-
-mkdir -p "${STAMP_DIR}"
-
-if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     illumos distribution already assembled in %s\n' "${SYSROOT}"
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  printf 'Usage: %s [profile_json] [target_sysroot]\n' "$0"
   exit 0
 fi
 
-printf '[ASSEMBLE] Synthesizing illumos distribution using profile: %s...\n' "${PROFILE}"
+PROFILE="${1:-${LIBSCRIPT_ROOT_DIR}/profiles/illumos/minimal-server.json}"
+SYSROOT="${2:-${LIBSCRIPT_ROOT_DIR}/build/illumos-sysroot}"
 
-# Extract key profile fields via POSIX awk helper
-PROFILE_NAME=$(awk -F'"' '/"profile_name":/ { print $4 }' "${PROFILE}" | head -n 1)
-ILLUMOS_VERSION=$(awk -F'"' '/"illumos_version":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${ILLUMOS_VERSION:=r151048}"
-ARCH=$(awk -F'"' '/"arch":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${ARCH:=amd64}"
-INIT_SYS=$(awk -F'"' '/"provider":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${INIT_SYS:=smf}"
-MILESTONE=$(awk -F'"' '/"milestone":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${MILESTONE:=svc:/milestone/multi-user-server:default}"
-DISP_PROTO=$(awk -F'"' '/"protocol":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${DISP_PROTO:=none}"
-GRAPHICS_DRIVER=$(awk -F'"' '/"graphics_driver":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${GRAPHICS_DRIVER:=none}"
-DESKTOP_ENV=$(awk -F'"' '/"environment":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${DESKTOP_ENV:=none}"
-DM=$(awk -F'"' '/"display_manager":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${DM:=none}"
-POOL_NAME=$(awk -F'"' '/"pool_name":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${POOL_NAME:=rpool}"
-COMPRESSION=$(awk -F'"' '/"compression":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${COMPRESSION:=lz4}"
-AUDIO_SUB=$(awk -F'"' '/"subsystem":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${AUDIO_SUB:=none}"
-PKG_PROVIDER=$(awk -F'"' '/"provider":/ { print $4 }' "${PROFILE}" | sed -n '2p')
-: "${PKG_PROVIDER:=ips}"
-PUB_URL=$(awk -F'"' '/"publisher_url":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${PUB_URL:=https://pkg.omnios.org/r151048/core}"
-HOSTNAME=$(awk -F'"' '/"hostname":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${HOSTNAME:=illumos-distro}"
-PRIMARY_USER=$(awk -F'"' '/"username":/ { print $4 }' "${PROFILE}" | head -n 1)
-: "${PRIMARY_USER:=vagrant}"
+if [ ! -f "${PROFILE}" ]; then
+  printf '[ERROR] Profile JSON not found: %s\n' "${PROFILE}" >&2
+  exit 1
+fi
 
-printf '[ASSEMBLE] Profile: %s | Init: %s | Desktop: %s | DM: %s | Pool: %s\n' \
-  "${PROFILE_NAME}" "${INIT_SYS}" "${DESKTOP_ENV}" "${DM}" "${POOL_NAME}"
+PROFILE_BASE=$(basename "${PROFILE}" .json)
+STAMP_DIR="${SYSROOT}/.libscript-stamps"
+STAMP_FILE="${STAMP_DIR}/illumos-assemble-${PROFILE_BASE}.stamp"
 
-# Step 1: Base directory and userland bootstrap
-"${SCRIPT_DIR}/base.sh" "${SYSROOT}" "${ILLUMOS_VERSION}" "${ARCH}"
+if [ -f "${STAMP_FILE}" ]; then
+  printf '[SKIP]     illumos profile (%s) already assembled at %s\n' "${PROFILE_BASE}" "${SYSROOT}"
+  exit 0
+fi
 
-# Step 2: ZFS dataset layout and vfstab
+mkdir -p "${STAMP_DIR}"
+
+if command -v jq >/dev/null 2>&1; then
+  ILLUMOS_VER=$(jq -r '.illumos_version // "r151048"' "${PROFILE}")
+  ARCH=$(jq -r '.target.arch // "amd64"' "${PROFILE}")
+  FLAVOR=$(jq -r '.target.flavor // "omnios"' "${PROFILE}")
+  POOL_NAME=$(jq -r '.storage.pool_name // "rpool"' "${PROFILE}")
+  COMPRESSION=$(jq -r '.storage.compression // "lz4"' "${PROFILE}")
+  HOSTNAME=$(jq -r '.network.hostname // "illumos-node"' "${PROFILE}")
+  INIT_PROV=$(jq -r '.init_system.provider // "smf"' "${PROFILE}")
+  PKG_PROV=$(jq -r '.package_manager.provider // "ips"' "${PROFILE}")
+  DISP_SRV=$(jq -r '.display.server // "none"' "${PROFILE}")
+  DISP_COMP=$(jq -r '.display.compositor // "none"' "${PROFILE}")
+  DESK_ENV=$(jq -r '.desktop.environment // "none"' "${PROFILE}")
+  DM_GREETER=$(jq -r '.desktop.display_manager // "none"' "${PROFILE}")
+  AUTOLOGIN=$(jq -r '.desktop.autologin_user // ""' "${PROFILE}")
+  AUDIO_SUB=$(jq -r '.audio.subsystem // "none"' "${PROFILE}")
+else
+  ILLUMOS_VER='r151048'; ARCH='amd64'; FLAVOR='omnios'; POOL_NAME='rpool'; COMPRESSION='lz4'
+  HOSTNAME='illumos-node'; INIT_PROV='smf'; PKG_PROV='ips'; DISP_SRV='none'; DISP_COMP='none'
+  DESK_ENV='none'; DM_GREETER='none'; AUTOLOGIN=''; AUDIO_SUB='none'
+fi
+
+printf '[ASSEMBLE] Building illumos (%s, flavor=%s) from profile: %s...\n' "${ILLUMOS_VER}" "${FLAVOR}" "${PROFILE_BASE}"
+
+"${SCRIPT_DIR}/base.sh" "${SYSROOT}" "${ILLUMOS_VER}" "${ARCH}" "${FLAVOR}"
 "${SCRIPT_DIR}/zfs.sh" "${SYSROOT}" "${POOL_NAME}" "${COMPRESSION}"
-
-# Step 3: Core OS configuration
-"${SCRIPT_DIR}/config.sh" "${SYSROOT}" "${HOSTNAME}" "true"
-
-# Step 4: Package publisher configuration
-"${SCRIPT_DIR}/pkg.sh" "${SYSROOT}" "${PKG_PROVIDER}" "${PUB_URL}"
-
-# Step 5: User accounts, RBAC, and SSH keys
-"${SCRIPT_DIR}/users.sh" "${SYSROOT}" "${PRIMARY_USER}"
-
-# Step 6: Init system supervision
-"${SCRIPT_DIR}/init.sh" "${SYSROOT}" "${INIT_SYS}" "svc:/network/ssh:default,svc:/system/cron:default" "${MILESTONE}"
-
-# Step 7: Display subsystem and driver
-"${SCRIPT_DIR}/display.sh" "${SYSROOT}" "${DISP_PROTO}" "${GRAPHICS_DRIVER}"
-
-# Step 8: Desktop environment
-"${SCRIPT_DIR}/desktop.sh" "${SYSROOT}" "${DESKTOP_ENV}" "${PRIMARY_USER}"
-
-# Step 9: Display manager
-"${SCRIPT_DIR}/dm.sh" "${SYSROOT}" "${DM}" "${PRIMARY_USER}"
-
-# Step 10: Audio subsystem
+"${SCRIPT_DIR}/config.sh" "${SYSROOT}" "${HOSTNAME}" "UTC"
+"${SCRIPT_DIR}/pkg.sh" "${SYSROOT}" "${PKG_PROV}"
+"${SCRIPT_DIR}/users.sh" "${SYSROOT}" "vagrant" "vagrant" "1000" "yes"
+"${SCRIPT_DIR}/init.sh" "${SYSROOT}" "${INIT_PROV}"
+"${SCRIPT_DIR}/display.sh" "${SYSROOT}" "${DISP_SRV}" "${DISP_COMP}"
+"${SCRIPT_DIR}/desktop.sh" "${SYSROOT}" "${DESK_ENV}" "vagrant"
+"${SCRIPT_DIR}/dm.sh" "${SYSROOT}" "${DM_GREETER}" "${AUTOLOGIN}"
 "${SCRIPT_DIR}/audio.sh" "${SYSROOT}" "${AUDIO_SUB}"
 
-# Write assembly completion manifest and stamp
-cat << EOF > "${SYSROOT}/etc/libscript-distro.manifest"
-profile_name=${PROFILE_NAME}
-illumos_version=${ILLUMOS_VERSION}
+if command -v jq >/dev/null 2>&1; then
+  _comps=$(jq -r '((.components // []) + (.packages // []))[]?' "${PROFILE}" 2>/dev/null || true)
+  for _c in $_comps; do
+    [ -n "$_c" ] || continue
+    case "$_c" in
+      pkg:/*) continue ;;
+    esac
+    if find "${LIBSCRIPT_ROOT_DIR}/_lib" -mindepth 2 -maxdepth 2 -type d -name "$_c" | grep -q .; then
+      LIBSCRIPT_TARGET_SYSROOT="${SYSROOT}" LIBSCRIPT_TARGET_OS='sunos' LIBSCRIPT_IMAGE_BUILD='1' STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$_c" latest || true
+    fi
+  done
+fi
+
+cat <<PROF_EOF > "${SYSROOT}/etc/libscript-profile.conf"
+profile=${PROFILE_BASE}
+version=${ILLUMOS_VER}
+flavor=${FLAVOR}
 arch=${ARCH}
-init_system=${INIT_SYS}
-display_protocol=${DISP_PROTO}
-desktop_environment=${DESKTOP_ENV}
-display_manager=${DM}
-pool_name=${POOL_NAME}
-audio_subsystem=${AUDIO_SUB}
-primary_user=${PRIMARY_USER}
-hostname=${HOSTNAME}
+init_system=${INIT_PROV}
+package_manager=${PKG_PROV}
+display=${DISP_SRV}
+desktop=${DESK_ENV}
+dm=${DM_GREETER}
+audio=${AUDIO_SUB}
 assembled_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-EOF
+PROF_EOF
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-
 printf '[OK]       illumos distribution synthesized successfully: %s\n' "${SYSROOT}"

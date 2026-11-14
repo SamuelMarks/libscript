@@ -6,14 +6,20 @@
   "type": "object",
   "properties": {
     "SOLO5_VERSION": {
-      "description": "Specific version of solo5 to install.",
       "type": "string",
-      "default": "latest"
+      "default": "0.9.0",
+      "description": "Target Solo5 tender version."
     },
     "SOLO5_INSTALL_METHOD": {
       "type": "string",
       "description": "How to install SOLO5. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
       "default": "system"
+    },
+    "SOLO5_BUILD_FROM_SOURCE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Compile Solo5 tenders (solo5-hvt, solo5-spt) from upstream release tarball."
     }
   }
 }

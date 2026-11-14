@@ -3,7 +3,7 @@
   "name": "openresty",
   "title": "OpenResty",
   "description": "Dynamic web platform based on Nginx and LuaJIT for high-concurrency API gateways and web apps.",
-  "category": "web-server",
+  "category": "web-servers",
   "provides": ["openresty", "web-server", "reverse-proxy"],
   "os_whitelist": ["all"],
   "ports": [80, 443],

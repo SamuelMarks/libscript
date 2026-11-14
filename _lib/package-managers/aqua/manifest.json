@@ -5,7 +5,7 @@
   "os_whitelist": ["linux", "darwin", "windows"],
   "title": "aqua",
   "description": "Bootstrap module for the `aqua` package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["freebsd"],
   "repository": "https://github.com/aquaproj/aqua"
 }

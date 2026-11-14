@@ -3,7 +3,7 @@
   "name": "make",
   "title": "GNU Make",
   "description": "Standard build automation tool generating executables and targets from Makefiles.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["make", "gmake"],
   "os_whitelist": ["all"],
   "repository": "https://savannah.gnu.org/projects/make"

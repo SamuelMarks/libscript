@@ -3,7 +3,7 @@
   "name": "tomcat",
   "title": "Apache Tomcat",
   "description": "Open-source implementation of Jakarta Servlet, Jakarta Server Pages, and WebSocket specifications.",
-  "category": "web-server",
+  "category": "web-servers",
   "provides": ["tomcat", "servlet-container", "web-server"],
   "os_whitelist": ["all"],
   "ports": [8080, 8009],

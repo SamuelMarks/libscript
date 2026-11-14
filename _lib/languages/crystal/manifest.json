@@ -3,7 +3,7 @@
   "name": "crystal",
   "title": "Crystal",
   "description": "Statically type-checked compiled systems programming language with Ruby-inspired syntax.",
-  "category": "language",
+  "category": "languages",
   "provides": ["crystal", "shards"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/crystal-lang/crystal"

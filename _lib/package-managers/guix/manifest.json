@@ -6,6 +6,6 @@
   "os_blacklist": ["darwin", "windows", "freebsd", "alpine"],
   "title": "guix",
   "description": "Bootstrap module for the `guix` (GNU Guix) package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://git.savannah.gnu.org/git/guix.git"
 }

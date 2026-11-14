@@ -3,7 +3,7 @@
   "name": "awscli",
   "provides": ["awscli"],
   "os_whitelist": ["all"],
-  "category": "package-manager",
+  "category": "package-managers",
   "title": "Awscli",
   "description": "Bootstrap module for the `awscli` package manager.",
   "repository": "https://github.com/aws/aws-cli"

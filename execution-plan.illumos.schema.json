@@ -73,7 +73,9 @@
         },
         "services_enabled": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "List of system services to enable at boot"
         }
       }
@@ -190,12 +192,16 @@
           },
           "groups": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Supplementary group memberships"
           },
           "rbac_profiles": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Illumos RBAC execution profile names"
           },
           "sudo": {
@@ -204,7 +210,9 @@
           },
           "ssh_keys": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Public SSH keys installed into authorized_keys"
           }
         }
@@ -229,14 +237,19 @@
         },
         "dns_servers": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Upstream DNS nameservers for resolv.conf"
         }
       }
     },
     "packages": {
       "type": "array",
-      "items": { "type": "string", "description": "IPS or pkgin package name" },
+      "items": {
+        "type": "string",
+        "description": "IPS or pkgin package name"
+      },
       "description": "Explicit list of IPS or pkgin packages to install"
     },
     "traits": {
@@ -276,6 +289,36 @@
             "description": "Virtual host domain name routed via netctl"
           }
         }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Declarative list of Tier 1 LibScript components ({component0, component1, ...}) staged into the image or installer",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component identifier or capability alias"
+      }
+    },
+    "output_formats": {
+      "type": "array",
+      "description": "Target installer or base-image output formats synthesized from this OS specification",
+      "items": {
+        "type": "string",
+        "description": "Target image or installer packaging format identifier",
+        "enum": [
+          "live-iso",
+          "live-usb",
+          "raw",
+          "qcow2",
+          "vmdk",
+          "vhd",
+          "vhdx",
+          "vagrant-box",
+          "zfs-stream",
+          "rootfs-tar",
+          "oci-image",
+          "direct-kernel"
+        ]
       }
     }
   }

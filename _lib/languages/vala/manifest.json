@@ -3,7 +3,7 @@
   "name": "vala",
   "title": "Vala",
   "description": "Object-oriented programming language with a self-hosting compiler (valac) generating C code for GObject.",
-  "category": "language",
+  "category": "languages",
   "provides": ["vala", "valac"],
   "os_whitelist": ["all"],
   "repository": "https://gitlab.gnome.org/GNOME/vala"

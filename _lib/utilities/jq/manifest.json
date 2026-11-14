@@ -3,7 +3,7 @@
   "name": "jq",
   "title": "jq",
   "description": "A lightweight and flexible command-line JSON processor.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["jq"],
   "os_whitelist": ["all"]
 }

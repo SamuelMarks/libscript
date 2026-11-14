@@ -6,6 +6,6 @@
   "os_blacklist": [],
   "title": "go",
   "description": "Bootstrap module for the `go` package manager (enables `go install`).",
-  "category": "package-manager",
+  "category": "package-managers",
   "repository": "https://github.com/golang/go"
 }

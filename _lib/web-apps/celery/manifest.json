@@ -5,5 +5,7 @@
   "title": "celery",
   "description": "celery stack",
   "provides": ["celery"],
-  "runtime_deps": ["python", "redis"]
+  "dependencies": {
+    "runtime_deps": ["python", "redis"]
+  }
 }

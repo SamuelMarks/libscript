@@ -3,7 +3,7 @@
   "name": "mssql",
   "title": "Microsoft SQL Server Tools",
   "description": "Microsoft SQL Server relational database engine and sqlcmd command-line management utility.",
-  "category": "database",
+  "category": "databases",
   "provides": ["mssql", "sqlserver", "sqlcmd", "database"],
   "os_whitelist": ["all"],
   "ports": [1433],

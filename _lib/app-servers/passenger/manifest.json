@@ -3,7 +3,7 @@
   "name": "passenger",
   "title": "Phusion Passenger",
   "description": "Polyglot web and application server supporting Ruby, Node.js, Python, and Meteor workloads.",
-  "category": "app-server",
+  "category": "app-servers",
   "provides": ["passenger", "rack-server", "app-server"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],

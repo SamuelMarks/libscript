@@ -3,7 +3,7 @@
   "name": "azure",
   "provides": ["azure"],
   "os_whitelist": ["all"],
-  "category": "cloud",
+  "category": "cloud-providers",
   "title": "Azure",
   "description": "LibScript component for AZURE"
 }

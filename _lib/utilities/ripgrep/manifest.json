@@ -3,7 +3,7 @@
   "name": "ripgrep",
   "title": "ripgrep",
   "description": "Line-oriented recursive regex search tool (rg) written in Rust respecting gitignore rules.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["ripgrep", "rg", "code-search"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/BurntSushi/ripgrep"

@@ -3,7 +3,7 @@
   "name": "dragonfly",
   "title": "Dragonfly",
   "description": "Modern shared-nothing multithreaded in-memory data store compatible with Redis and Memcached protocols.",
-  "category": "cache",
+  "category": "caches",
   "provides": ["dragonfly", "redis-compatible", "kv-store", "cache"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows", "sunos"],

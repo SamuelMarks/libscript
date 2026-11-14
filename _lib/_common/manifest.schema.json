@@ -6,6 +6,10 @@
   "type": "object",
   "required": ["name", "provides"],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema URI reference validating this component manifest."
+    },
     "name": {
       "type": "string",
       "description": "Unique identifier for the component (e.g. nodejs)"
@@ -420,6 +424,20 @@
           "type": "string",
           "description": "Default HTTP URI path exposed for Prometheus/OpenTelemetry metrics scraping"
         }
+      }
+    },
+    "process_model": {
+      "type": "string",
+      "enum": ["single-process", "multiprocess-fork", "multi-service-stack", "library"],
+      "description": "Runtime process execution model governing single-address-space unikernel compatibility vs multi-process fork/exec requirements."
+    },
+    "unikernel_support": {
+      "type": "array",
+      "description": "List of unikernel frameworks validated or adaptable for running this component directly or inside a decomposed appliance pod.",
+      "items": {
+        "type": "string",
+        "enum": ["unikraft", "nanos", "osv", "rumprun", "mirageos"],
+        "description": "Supported unikernel framework identifier."
       }
     }
   }

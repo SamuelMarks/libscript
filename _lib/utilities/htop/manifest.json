@@ -3,7 +3,7 @@
   "name": "htop",
   "title": "htop",
   "description": "Cross-platform interactive ncurses system process viewer and resource monitor.",
-  "category": "utility",
+  "category": "utilities",
   "provides": ["htop", "process-viewer"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],

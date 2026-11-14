@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "osv",
+  "title": "OSv Unikernel (Capstan)",
+  "description": "OSv cloud unikernel runtime and Capstan image builder with ZFS, ROFS, and unmodified Linux PIE shared-object support.",
+  "category": "orchestration",
+  "provides": ["osv", "capstan", "unikernel-builder"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/cloudius-systems/osv"
+}

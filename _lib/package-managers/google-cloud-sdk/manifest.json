@@ -4,7 +4,7 @@
   "provides": ["google-cloud-sdk"],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "category": "package-manager",
+  "category": "package-managers",
   "title": "Google Cloud Sdk",
   "description": "Bootstrap module for the `google-cloud-sdk` package manager.",
   "repository": "https://github.com/GoogleCloudPlatform/cloud-sdk-docker"

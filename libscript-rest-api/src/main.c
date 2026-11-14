@@ -1,13 +1,14 @@
 /**
  * ## Overview
  * LibScript REST API server entry point and sanitized shell execution wrapper.
- * Routes /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments, and
- * /api/v1/components/{name}/hooks/{hook} to libscript.{sh,cmd} via async jobs.
+ * Routes /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments,
+ * /api/v1/artifacts/generate, and /api/v1/components/{name}/hooks/{hook} to libscript.{sh,cmd}.
  *
  * ## Usage
  * Execute binary directly or launch as a system daemon:
  *   libscript-rest-api [port] [--dispatch <subcmd> <action> <target>]
  *   libscript-rest-api --dispatch-experiment <suite> <step> <host_arch>
+ *   libscript-rest-api --dispatch-artifact <kernel> <format> <components_csv>
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,6 +59,59 @@ static int is_valid_experiment_suite(const char *suite) {
             strcmp(suite, "win_port") == 0 ||
             strcmp(suite, "manifest") == 0 ||
             strcmp(suite, "all") == 0);
+}
+
+/**
+ * @brief Validates that a target kernel family matches the OpenAPI 3.2.0 enum.
+ *
+ * @param kernel Requested kernel or unikernel family identifier.
+ * @return int 1 if valid, 0 otherwise.
+ */
+static int is_valid_kernel_target(const char *kernel) {
+    if (kernel == NULL) {
+        return 0;
+    }
+    return (strcmp(kernel, "linux-glibc") == 0 ||
+            strcmp(kernel, "linux-musl") == 0 ||
+            strcmp(kernel, "freebsd") == 0 ||
+            strcmp(kernel, "illumos") == 0 ||
+            strcmp(kernel, "unikernel-unikraft") == 0 ||
+            strcmp(kernel, "unikernel-nanos") == 0 ||
+            strcmp(kernel, "unikernel-osv") == 0 ||
+            strcmp(kernel, "unikernel-rumprun") == 0 ||
+            strcmp(kernel, "unikernel-mirageos") == 0 ||
+            strcmp(kernel, "microvm-firecracker") == 0);
+}
+
+/**
+ * @brief Validates that an artifact format matches the OpenAPI 3.2.0 enum.
+ *
+ * @param fmt Requested output format identifier.
+ * @return int 1 if valid, 0 otherwise.
+ */
+static int is_valid_artifact_format(const char *fmt) {
+    if (fmt == NULL) {
+        return 0;
+    }
+    return (strcmp(fmt, "live-iso") == 0 ||
+            strcmp(fmt, "live-usb") == 0 ||
+            strcmp(fmt, "raw") == 0 ||
+            strcmp(fmt, "qcow2") == 0 ||
+            strcmp(fmt, "vmdk") == 0 ||
+            strcmp(fmt, "vhd") == 0 ||
+            strcmp(fmt, "vhdx") == 0 ||
+            strcmp(fmt, "vagrant-box") == 0 ||
+            strcmp(fmt, "zfs-stream") == 0 ||
+            strcmp(fmt, "rootfs-tar") == 0 ||
+            strcmp(fmt, "oci-image") == 0 ||
+            strcmp(fmt, "direct-kernel") == 0 ||
+            strcmp(fmt, "unikernel") == 0 ||
+            strcmp(fmt, "docker") == 0 ||
+            strcmp(fmt, "deb") == 0 ||
+            strcmp(fmt, "rpm") == 0 ||
+            strcmp(fmt, "apk") == 0 ||
+            strcmp(fmt, "pkg") == 0 ||
+            strcmp(fmt, "msi") == 0);
 }
 
 /**
@@ -127,6 +181,43 @@ static int dispatch_experiment_job(const char *suite, const char *step, const ch
 }
 
 /**
+ * @brief Dispatches an `/api/v1/artifacts/generate` kernel-abstracted image or installer synthesis job.
+ *
+ * @param kernel Target kernel or unikernel family enum value.
+ * @param fmt Target artifact packaging format enum value.
+ * @param components_csv Comma-separated component identifiers (e.g., `redis,postgres`).
+ * @return int 0 on success, non-zero on validation or execution failure.
+ */
+static int dispatch_artifact_job(const char *kernel, const char *fmt, const char *components_csv) {
+    char kernel_arg[96];
+    char fmt_arg[64];
+    char comps_arg[512];
+    if (!is_valid_kernel_target(kernel) || !is_valid_artifact_format(fmt) || !is_safe_token(components_csv)) {
+        fprintf(stderr, "%s\n", "{'error':'invalid_artifact_request','message':'Invalid kernel, format, or components'}");
+        return 1;
+    }
+    snprintf(kernel_arg, sizeof(kernel_arg), "--kernel=%s", kernel);
+    snprintf(fmt_arg, sizeof(fmt_arg), "--format=%s", fmt);
+    snprintf(comps_arg, sizeof(comps_arg), "--components=%s", components_csv);
+    printf("{'job_id':'00000000-0000-4000-8000-000000000003','endpoint':'/api/v1/artifacts/generate','kernel':'%s','format':'%s','components':'%s'}\n",
+           kernel, fmt, components_csv);
+#if !defined(_WIN32)
+    if (getenv("LIBSCRIPT_REST_EXEC_LIVE") != NULL) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            execl("./libscript.sh", "libscript.sh", "build-image", kernel_arg, fmt_arg, comps_arg, (char *)NULL);
+            _exit(127);
+        } else if (pid > 0) {
+            int status = 0;
+            waitpid(pid, &status, 0);
+            return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+        }
+    }
+#endif
+    return 0;
+}
+
+/**
  * @brief Main entry point for the LibScript REST API daemon.
  *
  * Parses command line options and starts the HTTP service listener or dispatches an API job.
@@ -144,6 +235,9 @@ int main(int argc, char **argv) {
     if (argc >= 5 && strcmp(argv[1], "--dispatch-experiment") == 0) {
         return dispatch_experiment_job(argv[2], argv[3], argv[4]);
     }
+    if (argc >= 5 && strcmp(argv[1], "--dispatch-artifact") == 0) {
+        return dispatch_artifact_job(argv[2], argv[3], argv[4]);
+    }
 
     if (argc > 1) {
         port = atoi(argv[1]);
@@ -153,7 +247,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Starting libscript REST API Server on port %d...\n", port);
-    printf("Registered endpoints: /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments, /api/v1/components/{name}/hooks/{hook}\n");
+    printf("Registered endpoints: /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments, /api/v1/artifacts/generate, /api/v1/components/{name}/hooks/{hook}\n");
     printf("Server running. Press Ctrl+C to stop.\n");
     printf("Server stopped.\n");
     return 0;

@@ -5,7 +5,7 @@
   "os_whitelist": ["linux", "darwin", "windows"],
   "title": "bun-pm",
   "description": "Fast all-in-one JavaScript runtime, bundler, transpiler, and package manager.",
-  "category": "package-manager",
+  "category": "package-managers",
   "os_blacklist": ["freebsd"],
   "repository": "https://github.com/oven-sh/bun"
 }

@@ -9,7 +9,7 @@
   "provides": ["database", "mysql", "rdbms", "sql"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": [],
   "ports": [3306],
   "stateful": true,
   "multitenant": true,
@@ -29,5 +29,7 @@
     "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
-  }
+  },
+  "process_model": "single-process",
+  "unikernel_support": ["osv", "nanos"]
 }

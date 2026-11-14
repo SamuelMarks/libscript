@@ -3,7 +3,7 @@
   "name": "sysvinit",
   "title": "SysVinit",
   "description": "Traditional System V style init program and runlevel controller.",
-  "category": "init-system",
+  "category": "init-systems",
   "provides": ["sysvinit", "init-system"],
   "conflicts": [],
   "versions": ["latest", "3.09"],

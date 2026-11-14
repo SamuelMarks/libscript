@@ -7,6 +7,8 @@
   "license_name": "GNU General Public License v2.0 or later",
   "description": "Turnkey enterprise WordPress 7.1.2 publishing platform.",
   "provides": ["wordpress", "wp-cli"],
-  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
-  "os_blacklist": []
+  "os_blacklist": [],
+  "dependencies": {
+    "runtime_deps": ["mysql", "nginx", "php", "unzip"]
+  }
 }

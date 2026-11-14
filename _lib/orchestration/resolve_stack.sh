@@ -1,10 +1,8 @@
 #!/bin/sh
 # ## Overview
-# A portable dependency resolver and execution plan generator using jq on Unix-like systems.
-# Supports both traditional install.json application stacks and declarative os-config.json profiles.
-# Emits flat, topologically sorted execution-plan.json.
+# Portable dependency resolver and multi-kernel execution plan generator using jq.
 # ## Usage
-# Run `resolve_stack.sh <path_to_config.json> [output_plan.json]` to compute an execution sequence.
+# ./_lib/orchestration/resolve_stack.sh <path_to_config.json> [output_plan.json]
 
 set -feu
 
@@ -62,32 +60,56 @@ if [ ! -f "$CONFIG_FILE" ]; then
   exit 1
 fi
 
-# Determine OS
+# ## ensure_jq_available
+# Ensures jq is available on PATH, bootstrapping _lib/utilities/jq automatically when absent.
+ensure_jq_available() {
+  if command -v jq >/dev/null 2>&1; then
+    return 0
+  fi
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" >/dev/null 2>&1 || true
+    unset SCRIPT_NAME || true
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq latest >/dev/null 2>&1 || true
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1091
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" >/dev/null 2>&1 || true
+      unset SCRIPT_NAME || true
+    fi
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    printf '[ERROR] jq is required and could not be bootstrapped.\n' >&2
+    return 1
+  fi
+  return 0
+}
+
+ensure_jq_available
+
 if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
   OS_NAME="${UNAME_LOWER:-linux}"
   case "$OS_NAME" in
-    linux*) TARGET_OS="linux" ;;
-    darwin*) TARGET_OS="darwin" ;;
-    freebsd*) TARGET_OS="freebsd" ;;
-    msys*|cygwin*|mingw*) TARGET_OS="windows" ;;
+    linux*) TARGET_OS='linux' ;;
+    darwin*) TARGET_OS='darwin' ;;
+    freebsd*) TARGET_OS='freebsd' ;;
+    sunos*|illumos*) TARGET_OS='sunos' ;;
+    msys*|cygwin*|mingw*) TARGET_OS='windows' ;;
     *) TARGET_OS="$OS_NAME" ;;
   esac
 else
   TARGET_OS="$LIBSCRIPT_TARGET_OS"
 fi
 
-if ! command -v jq >/dev/null 2>&1; then
-  printf '[ERROR] jq is required but not installed.\n' >&2
-  exit 1
-fi
-
-# Check if config file is empty or whitespace-only
 if [ ! -s "$CONFIG_FILE" ] || ! jq -e '.' "$CONFIG_FILE" >/dev/null 2>&1; then
   if [ -n "$OUTPUT_FILE" ]; then
     OUT_DIR=$(dirname -- "$OUTPUT_FILE")
-    if [ ! -d "$OUT_DIR" ]; then
-      mkdir -p "$OUT_DIR"
-    fi
+    mkdir -p "$OUT_DIR"
     printf '%s\n' '{"selected": [], "conflicts": [], "provided": [], "ports": []}' > "$OUTPUT_FILE"
   else
     printf '%s\n' '{"selected": [], "conflicts": [], "provided": [], "ports": []}'
@@ -95,11 +117,10 @@ if [ ! -s "$CONFIG_FILE" ] || ! jq -e '.' "$CONFIG_FILE" >/dev/null 2>&1; then
   exit 0
 fi
 
-# Stream all manifests within _lib into a cached or temporary JSON array file
 _rs_cache_dir="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
 mkdir -p "$_rs_cache_dir" 2>/dev/null || _rs_cache_dir="${TMPDIR:-/tmp}"
-_rs_catalog="${_rs_cache_dir}/manifests_catalog.json"
-_rs_catalog_meta="${_rs_cache_dir}/manifests_catalog.meta"
+_rs_catalog="${_rs_cache_dir}/manifests_catalog_v2.json"
+_rs_catalog_meta="${_rs_cache_dir}/manifests_catalog_v2.meta"
 _rs_mf_count=$(find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" 2>/dev/null | wc -l | tr -d ' ')
 _rs_use_cache=0
 if [ -s "$_rs_catalog" ] && [ -f "$_rs_catalog_meta" ] && [ "$(cat "$_rs_catalog_meta" 2>/dev/null || true)" = "$_rs_mf_count" ]; then
@@ -108,32 +129,27 @@ if [ -s "$_rs_catalog" ] && [ -f "$_rs_catalog_meta" ] && [ "$(cat "$_rs_catalog
     _rs_use_cache=1
   fi
 fi
+
 if [ "$_rs_use_cache" -eq 1 ]; then
   tmp_manifests="$_rs_catalog"
 else
   tmp_manifests=$(mktemp 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_manifests.$$")
-  find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -exec jq -s '.' {} + 2>/dev/null | jq -s 'add // []' > "$tmp_manifests" 2>/dev/null || printf '[]\n' > "$tmp_manifests"
-  if [ ! -s "$tmp_manifests" ]; then
-    printf '[]\n' > "$tmp_manifests"
-  fi
-  if cp "$tmp_manifests" "$_rs_catalog" 2>/dev/null; then
+  find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -exec jq '{ _manifest_dir: (input_filename | sub("^.*[/\\\\]_lib[/\\\\]"; "_lib/") | gsub("\\\\"; "/") | sub("/manifest\\.json$"; "")) } + .' {} + 2>/dev/null | jq -s '.' > "$tmp_manifests" 2>/dev/null || printf '[]\n' > "$tmp_manifests"
+  if mv -f "$tmp_manifests" "$_rs_catalog" 2>/dev/null; then
     printf '%s\n' "$_rs_mf_count" > "$_rs_catalog_meta" 2>/dev/null || true
-    rm -f "$tmp_manifests"
     tmp_manifests="$_rs_catalog"
   fi
 fi
 
-# Execute resolution
 if [ -n "$OUTPUT_FILE" ]; then
   OUT_DIR=$(dirname -- "$OUTPUT_FILE")
-  if [ ! -d "$OUT_DIR" ]; then
-    mkdir -p "$OUT_DIR"
-  fi
-  jq --arg target_os "$TARGET_OS" --slurpfile manifests "$tmp_manifests" -n '{config: input, manifests: ($manifests[0] // [])}' "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq" > "$OUTPUT_FILE"
+  mkdir -p "$OUT_DIR"
+  jq -s '{config: .[1], manifests: .[0]}' "$tmp_manifests" "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -f "${SCRIPT_DIR}/resolve_stack.jq" > "$OUTPUT_FILE"
   printf '[INFO] Execution plan generated at %s\n' "$OUTPUT_FILE"
 else
-  jq --arg target_os "$TARGET_OS" --slurpfile manifests "$tmp_manifests" -n '{config: input, manifests: ($manifests[0] // [])}' "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
+  jq -s '{config: .[1], manifests: .[0]}' "$tmp_manifests" "$CONFIG_FILE" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
 fi
+
 if [ "$tmp_manifests" != "$_rs_catalog" ]; then
   rm -f "$tmp_manifests"
 fi

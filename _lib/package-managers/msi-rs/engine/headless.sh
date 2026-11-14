@@ -199,16 +199,40 @@ else
    log_msg "[WARN] No MSI package specified or msi-rs binary not found. Skipping extraction."
 fi
 
-# Step 3: Base OS & Workload (Mock logic replaced with simple placeholders for now)
-log_msg "[STAGE 3/4] Staging preloaded workload (${WORKLOAD})..."
-if [ "$WORKLOAD" != "none" ]; then
-  log_msg "[INFO] Deploying $WORKLOAD..."
-  # Further integration with real workloads would go here
+# Step 3: Base OS & Workload deployment via distro_installers and workloads
+TARGET_MNT="${MSI_TARGET_DIR:-/mnt/target}"
+log_msg "[STAGE 3/4] Deploying base OS (${OS_NAME}) and workload (${WORKLOAD}) into ${TARGET_MNT}..."
+if [ "$OS_NAME" = "Linux" ]; then
+  STACK='' "${SCRIPT_DIR}/../distro_installers/install_linux.sh" "debian" "$TARGET_DISK" "$TARGET_MNT"
+elif [ "$OS_NAME" = "FreeBSD" ]; then
+  STACK='' "${SCRIPT_DIR}/../distro_installers/install_freebsd.sh" "zfs" "$TARGET_DISK" "$TARGET_MNT"
+elif [ "$OS_NAME" = "SunOS" ]; then
+  STACK='' "${SCRIPT_DIR}/../distro_installers/install_illumos.sh" "$TARGET_DISK" "$TARGET_MNT"
 fi
 
-# Step 4: Finalize
-log_msg "[STAGE 4/4] Finalizing bootloader deployment..."
-# Actual GRUB/loader deployment logic would go here based on OS_NAME
+if [ "$WORKLOAD" = "openedx" ] && [ -x "${SCRIPT_DIR}/../workloads/openedx.sh" ]; then
+  STACK='' "${SCRIPT_DIR}/../workloads/openedx.sh" "$TARGET_MNT"
+elif [ "$WORKLOAD" = "wordpress" ] && [ -x "${SCRIPT_DIR}/../workloads/wordpress.sh" ]; then
+  STACK='' "${SCRIPT_DIR}/../workloads/wordpress.sh" "$TARGET_MNT"
+elif [ "$WORKLOAD" != "none" ]; then
+  STACK='' "${SCRIPT_DIR}/../workloads/components.sh" "$TARGET_MNT" "$WORKLOAD"
+fi
+
+if [ -n "${MSI_RS_COMPONENTS:-}" ]; then
+  STACK='' "${SCRIPT_DIR}/../workloads/components.sh" "$TARGET_MNT" "$MSI_RS_COMPONENTS"
+fi
+
+# Step 4: Finalize target bootloader deployment
+log_msg "[STAGE 4/4] Finalizing bootloader deployment for ${OS_NAME}..."
+if [ "$OS_NAME" = "Linux" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/bootloaders/setup.sh" ]; then
+  STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/bootloaders/setup.sh" compile "$TARGET_MNT" grub2-efi uefi || true
+elif [ "$OS_NAME" = "FreeBSD" ] && [ -f "$TARGET_MNT/boot/loader.efi" ]; then
+  mkdir -p "$TARGET_MNT/boot/efi/EFI/BOOT"
+  cp -f "$TARGET_MNT/boot/loader.efi" "$TARGET_MNT/boot/efi/EFI/BOOT/BOOTX64.EFI" || true
+elif [ "$OS_NAME" = "SunOS" ] && command -v bootadm >/dev/null 2>&1; then
+  bootadm update-archive -R "$TARGET_MNT" 2>/dev/null || true
+  bootadm install-bootloader -P rpool -R "$TARGET_MNT" 2>/dev/null || true
+fi
 
 log_msg "[SUCCESS] Headless deployment completed successfully."
 exit 0

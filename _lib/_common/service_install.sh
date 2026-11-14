@@ -228,7 +228,24 @@ libscript_install_service() {
   fi
 
   _runner_script=$(libscript_write_service_runner "$_service_name" "$_exec_start" "$_working_dir" "$_env" "$_svc_user" "$_env_files")
+  _guest_runner="$_runner_script"
+  _is_sysroot_build=0
+  if [ "${LIBSCRIPT_IMAGE_BUILD:-0}" = "1" ] || { [ -n "${LIBSCRIPT_TARGET_SYSROOT:-}" ] && [ "${LIBSCRIPT_TARGET_SYSROOT}" != "/" ]; }; then
+    _is_sysroot_build=1
+    if [ -n "${LIBSCRIPT_TARGET_SYSROOT:-}" ] && [ "${LIBSCRIPT_TARGET_SYSROOT}" != "/" ]; then
+      _sys_trim="${LIBSCRIPT_TARGET_SYSROOT%/}"
+      _guest_runner="${_runner_script#"${_sys_trim}"}"
+    fi
+  fi
   _init_sys=$(libscript_detect_init_system)
+  if [ "$_is_sysroot_build" -eq 1 ] && [ -z "${LIBSCRIPT_INIT_SYSTEM:-}" ]; then
+    case "${LIBSCRIPT_TARGET_OS:-}" in
+      freebsd) _init_sys='bsd_rc' ;;
+      sunos)   _init_sys='smf' ;;
+      unikraft|nanos|osv|rumprun|mirageos) _init_sys='none' ;;
+      linux)   _init_sys='systemd' ;;
+    esac
+  fi
   _svc_data="${LIBSCRIPT_DATA_DIR:-${TMP_DATA_DIR:-${TMPDIR:-/tmp}/data}}/${_service_name}"
   _si_etc="${LIBSCRIPT_ETC_DIR:-/etc}"
   _si_sys_dir="${LIBSCRIPT_SYSTEMD_DIR:-${_si_etc}/systemd/system}"
@@ -236,6 +253,95 @@ libscript_install_service() {
   _si_run_dir="${LIBSCRIPT_RUN_DIR:-/var/run}"
   _si_log_dir="${LIBSCRIPT_LOG_DIR:-/var/log}"
   _si_freebsd_rcd="${LIBSCRIPT_FREEBSD_RCD_DIR:-/usr/local/etc/rc.d}"
+
+  if [ "$_is_sysroot_build" -eq 1 ]; then
+    case "$_init_sys" in
+      systemd)
+        mkdir -p "${_si_sys_dir}/multi-user.target.wants"
+        cat << SYSROOT_SD > "${_si_sys_dir}/${_service_name}.service"
+[Unit]
+Description=${_description}
+After=network.target
+
+[Service]
+WorkingDirectory=/
+ExecStart=/bin/sh "${_guest_runner}"
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+SYSROOT_SD
+        ln -sf "../${_service_name}.service" "${_si_sys_dir}/multi-user.target.wants/${_service_name}.service"
+        log_info "[SYSROOT] Staged systemd unit and .wants symlink for '${_service_name}' in ${_si_sys_dir}"
+        return 0
+        ;;
+      openrc)
+        mkdir -p "${_si_initd_dir}" "${_si_etc}/runlevels/default"
+        cat << SYSROOT_ORC > "${_si_initd_dir}/${_service_name}"
+#!/sbin/openrc-run
+name="${_service_name}"
+description="${_description}"
+command="/bin/sh"
+command_args="${_guest_runner}"
+command_background="yes"
+pidfile="/var/run/${_service_name}.pid"
+SYSROOT_ORC
+        chmod 0755 "${_si_initd_dir}/${_service_name}"
+        ln -sf "/etc/init.d/${_service_name}" "${_si_etc}/runlevels/default/${_service_name}"
+        log_info "[SYSROOT] Staged OpenRC script and default runlevel symlink for '${_service_name}'"
+        return 0
+        ;;
+      smf)
+        _smf_site_dir="${LIBSCRIPT_TARGET_SYSROOT:-}/var/svc/manifest/site"
+        mkdir -p "$_smf_site_dir"
+        _xml_exec_sr=$(printf '/bin/sh %s' "$_guest_runner" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        cat << SYSROOT_SMF > "${_smf_site_dir}/${_service_name}.xml"
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<service_bundle type='manifest' name='libscript:${_service_name}'>
+  <service name='application/libscript/${_service_name}' type='service' version='1'>
+    <create_default_instance enabled='true' />
+    <single_instance />
+    <exec_method type='method' name='start' exec='${_xml_exec_sr}' timeout_seconds='60' />
+    <exec_method type='method' name='stop' exec=':kill' timeout_seconds='60' />
+    <property_group name='startd' type='framework'>
+      <propval name='duration' type='astring' value='child' />
+    </property_group>
+  </service>
+</service_bundle>
+SYSROOT_SMF
+        log_info "[SYSROOT] Staged illumos SMF manifest at ${_smf_site_dir}/${_service_name}.xml"
+        return 0
+        ;;
+      bsd_rc)
+        mkdir -p "${_si_freebsd_rcd}" "${_si_etc}/rc.conf.d"
+        cat << SYSROOT_BSD > "${_si_freebsd_rcd}/${_rc_name}"
+#!/bin/sh
+# PROVIDE: ${_rc_name}
+# REQUIRE: networking
+# KEYWORD: shutdown
+. /etc/rc.subr
+name="${_rc_name}"
+rcvar="\${name}_enable"
+pidfile="/var/run/\${name}.pid"
+command="/usr/sbin/daemon"
+command_args="-P \${pidfile} -r -f -o /var/log/\${name}.log /bin/sh ${_guest_runner}"
+load_rc_config \$name
+: \${${_rc_name}_enable:="NO"}
+run_rc_command "\$1"
+SYSROOT_BSD
+        chmod 0755 "${_si_freebsd_rcd}/${_rc_name}"
+        printf '%s_enable="YES"\n' "$_rc_name" > "${_si_etc}/rc.conf.d/${_rc_name}"
+        log_info "[SYSROOT] Staged FreeBSD rc.d script and rc.conf.d/${_rc_name}"
+        return 0
+        ;;
+      *)
+        log_info "[SYSROOT] Staged service runner '${_guest_runner}' (init=${_init_sys})"
+        return 0
+        ;;
+    esac
+  fi
 
   case "$_init_sys" in
     systemd)

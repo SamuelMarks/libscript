@@ -3,7 +3,7 @@
   "name": "ccache",
   "title": "ccache",
   "description": "A fast C and C++ compiler cache.",
-  "category": "toolchain",
+  "category": "toolchains",
   "provides": ["ccache", "compiler-cache"],
   "os_whitelist": ["all"],
   "repository": "https://github.com/ccache/ccache"

@@ -3,7 +3,7 @@
   "name": "activemq",
   "title": "Apache ActiveMQ",
   "description": "Multi-protocol Java message broker supporting JMS, AMQP, STOMP, MQTT, and OpenWire.",
-  "category": "message-broker",
+  "category": "message-brokers",
   "provides": ["activemq", "message-broker", "amqp", "jms"],
   "os_whitelist": ["all"],
   "ports": [61616, 8161],
