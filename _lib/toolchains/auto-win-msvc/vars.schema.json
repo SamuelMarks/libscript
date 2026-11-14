@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/auto-win-msvc/vars.schema.json",
+  "title": "auto-win-msvc variables",
+  "description": "Configuration variables for auto-win-msvc",
+  "type": "object",
+  "properties": {
+    "AUTO_WIN_MSVC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install auto-win-msvc. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "from-source"
+    },
+    "AUTO_WIN_MSVC_VERSION": {
+      "description": "Specific version of auto-win-msvc to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "AUTO_WIN_MSVC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading auto-win-msvc binary or archive artifacts."
+    },
+    "AUTO_WIN_MSVC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying auto-win-msvc available remote releases."
+    },
+    "AUTO_WIN_MSVC_REPO_DIR": {
+      "type": "string",
+      "description": "Optional local checkout path for auto-win-msvc.",
+      "default": ""
+    },
+    "AUTO_WIN_MSVC_USE_CDD_C": {
+      "type": "string",
+      "description": "CMake toggle wiring cdd-c-transform into AutoWinMsvcTransform.cmake.",
+      "default": "ON"
+    }
+  }
+}

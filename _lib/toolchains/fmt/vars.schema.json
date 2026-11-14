@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/fmt/vars.schema.json",
+  "title": "fmt variables",
+  "description": "Configuration variables for fmt",
+  "type": "object",
+  "properties": {
+    "FMT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install fmt. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "from-source"
+    },
+    "FMT_VERSION": {
+      "description": "Specific version of fmt to install.",
+      "type": "string",
+      "default": "11.0.2",
+      "version_aliases": ["latest", "lts"]
+    },
+    "FMT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading fmt binary or archive artifacts."
+    },
+    "FMT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying fmt available remote releases."
+    },
+    "FMT_RUN_TESTS": {
+      "type": "boolean",
+      "description": "Whether to build and execute the upstream {fmt} CTest suite during source builds.",
+      "default": false
+    },
+    "FMT_SOURCE_DIR": {
+      "type": "string",
+      "description": "Extracted {fmt} source directory containing include/fmt/format-inl.h and src/format.cc for single-TU benchmarks."
+    }
+  }
+}

@@ -518,7 +518,124 @@ run_kbuild_or_synthesis() {
 ' "${COMPILER_ID}" "${STAMP_FILE}"
 }
 
+# ## run_kernel_compile_commands_sweep
+# Executes an authentic Linux-host Kbuild `defconfig` + `make prepare scripts` + `compile_commands.json` per-TU sweep across `LINUX_SWEEP_SUBDIRS` (`init/ kernel/ mm/ fs/`) (`EXPERIMENTS.md` §10.2).
+run_kernel_compile_commands_sweep() {
+  if [ "${UNAME:-}" != "Linux" ]; then
+    printf '[ERROR] [KERNEL-SWEEP] Authentic Linux kernel Kbuild sweep requires a native Linux host (detected %s); refusing to fake Kbuild headers.\n' "${UNAME:-unknown}" >&2
+    return 1
+  fi
+  _ksrc="${LINUX_SOURCE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/downloads/linux/linux-${LINUX_VERSION}}"
+  if [ ! -d "${_ksrc}" ] || [ ! -f "${_ksrc}/Makefile" ]; then
+    printf '[ERROR] [KERNEL-SWEEP] Missing extracted Linux %s source tree at %s.\n' "${LINUX_VERSION}" "${_ksrc}" >&2
+    return 1
+  fi
+  _subdirs="${LINUX_SWEEP_SUBDIRS:-init/ kernel/ mm/ fs/}"
+  _out_json="${LINUX_SWEEP_OUT_JSON:-${KERNEL_BUILD_DIR}/compile_commands_sweep.json}"
+  mkdir -p "${KERNEL_BUILD_DIR}" "$(dirname -- "${_out_json}")"
+
+  _hostcc="${LINUX_HOSTCC:-$(command -v gcc 2>/dev/null || command -v cc 2>/dev/null || printf 'gcc')}"
+  make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" defconfig
+  make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" prepare scripts
+
+  _ccdb="${KERNEL_BUILD_DIR}/compile_commands.json"
+  if [ ! -s "${_ccdb}" ] || [ "${FORCE_REBUILD:-0}" = "1" ]; then
+    libscript_detect_hardware
+    if command -v bear >/dev/null 2>&1; then
+      # shellcheck disable=SC2086
+      bear --output "${_ccdb}" -- make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" -j"${LIBSCRIPT_HW_CORES:-2}" ${_subdirs}
+    else
+      # shellcheck disable=SC2086
+      make -C "${_ksrc}" O="${KERNEL_BUILD_DIR}" HOSTCC="${_hostcc}" -j"${LIBSCRIPT_HW_CORES:-2}" ${_subdirs}
+      if [ -f "${_ksrc}/scripts/clang-tools/gen_compile_commands.py" ] && command -v python3 >/dev/null 2>&1; then
+        python3 "${_ksrc}/scripts/clang-tools/gen_compile_commands.py" -d "${KERNEL_BUILD_DIR}" -o "${_ccdb}"
+      else
+        find "${KERNEL_BUILD_DIR}" -name '.*.o.cmd' -type f | awk -v bdir="${KERNEL_BUILD_DIR}" '
+          BEGIN { printf "[\n"; first = 1 }
+          {
+            cmdfile = $0
+            while ((getline line < cmdfile) > 0) {
+              if (line ~ /^(saved)?cmd_.*:=/) {
+                sub(/^[^:]*:=[[:space:]]*/, "", line)
+                gsub(/\\/, "\\\\", line); gsub(/"/, "\\\"", line)
+                if (!first) printf ",\n"
+                first = 0
+                printf "  {\"directory\":\"%s\",\"command\":\"%s\"}", bdir, line
+                break
+              }
+            }
+            close(cmdfile)
+          }
+          END { printf "\n]\n" }
+        ' > "${_ccdb}"
+      fi
+    fi
+  fi
+
+  _drv_log="${KERNEL_BUILD_DIR}/edg_sweep_${COMPILER_ID}.jsonl"
+  : > "${_drv_log}"
+  export EDG_DRIVER_LOG="${_drv_log}"
+  _tus_total=0
+  _tus_ok=0
+  _loc_total=0
+  _cmds_txt="${KERNEL_BUILD_DIR}/replay_cmds.txt"
+  awk -F'"command"[[:space:]]*:[[:space:]]*"' 'NF > 1 { s = $2; sub(/",[[:space:]]*$/, "", s); sub(/"\}[[:space:]]*,?$/, "", s); gsub(/\\"/, "\"", s); gsub(/\\\\/, "\\", s); print s }' "${_ccdb}" > "${_cmds_txt}"
+
+  while IFS= read -r _raw_cmd; do
+    [ -n "${_raw_cmd}" ] || continue
+    _tus_total=$((_tus_total + 1))
+    _filtered_args=$(printf '%s\n' "${_raw_cmd}" | awk '{
+      for (i = 2; i <= NF; i++) {
+        a = $i
+        if (a ~ /^-fplugin=/ || a ~ /^-fconserve-stack$/ || a ~ /^-mindirect-branch/ || a ~ /^-mfunction-return/) continue
+        printf "%s ", a
+      }
+      printf "\n"
+    }')
+    _tu_src=$(printf '%s\n' "${_raw_cmd}" | awk '{for (i=NF; i>=1; i--) if ($i ~ /\.c$/) {print $i; exit}}')
+    if [ -n "${_tu_src}" ] && [ -f "${_ksrc}/${_tu_src}" ]; then
+      _c_loc=$(grep -cve '^[[:space:]]*$' "${_ksrc}/${_tu_src}" 2>/dev/null || printf '0')
+      _loc_total=$((_loc_total + _c_loc))
+    fi
+    _rc=0
+    (cd "${KERNEL_BUILD_DIR}" && /bin/sh -c "\"${COMPILER_BIN}\" ${_filtered_args}") >/dev/null 2>&1 || _rc=$?
+    [ "${_rc}" -eq 0 ] && _tus_ok=$((_tus_ok + 1))
+  done < "${_cmds_txt}"
+
+  _rss_stats=$(awk '
+    match($0, /"peak_rss_mb"[[:space:]]*:[[:space:]]*[0-9.]+/) {
+      s = substr($0, RSTART, RLENGTH); sub(/^.*:/, "", s); v = s + 0
+      vals[++n] = v; if (v > maxv) maxv = v
+    }
+    END {
+      if (n == 0) { print "0.00|0.00"; exit }
+      for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++) if (vals[j] < vals[i]) { t = vals[i]; vals[i] = vals[j]; vals[j] = t }
+      med = vals[int((n + 1) / 2)]
+      printf "%.2f|%.2f\n", med, maxv
+    }
+  ' "${_drv_log}" 2>/dev/null || printf '0.00|0.00')
+  _med_rss="${_rss_stats%%|*}"
+  _max_rss="${_rss_stats#*|}"
+
+  cat <<SWEEP_EOF > "${_out_json}.tmp"
+{
+  "kernel_version": "${LINUX_VERSION}",
+  "c_dialect": "${LINUX_C_DIALECT}",
+  "compiler_id": "${COMPILER_ID}",
+  "tus_ok": ${_tus_ok},
+  "tus_total": ${_tus_total},
+  "non_blank_loc": ${_loc_total},
+  "median_rss_mb": ${_med_rss},
+  "max_rss_mb": ${_max_rss}
+}
+SWEEP_EOF
+  mv -f "${_out_json}.tmp" "${_out_json}"
+}
+
 case "${ACTION}" in
+  compile-commands-sweep)
+    run_kernel_compile_commands_sweep
+    ;;
   ls)
     ls -1 "${LIBSCRIPT_ROOT_DIR}/build/kernel/" 2>/dev/null || true
     ;;

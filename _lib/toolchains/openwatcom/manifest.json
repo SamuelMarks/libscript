@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openwatcom",
+  "title": "OpenWatcom v2 C/C++ Cross-Compiler",
+  "description": "OpenWatcom v2 16/32-bit C/C++ cross-compiler (wcl386, wlink, wstrip, DOS32A.EXE) targeting MS-DOS LE and Win32.",
+  "category": "toolchain",
+  "provides": ["openwatcom", "wcl386", "wlink", "wstrip"],
+  "os_whitelist": ["linux", "darwin", "windows", "freebsd"],
+  "repository": "https://github.com/open-watcom/open-watcom-v2"
+}

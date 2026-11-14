@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "libarchive",
+  "title": "libarchive (bsdtar)",
+  "description": "Multi-format streaming archive library and bsdtar command-line utility.",
+  "category": "utility",
+  "provides": ["libarchive", "bsdtar"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/libarchive/libarchive"
+}

@@ -103,11 +103,18 @@ case "$ACTION" in
   install)
     if [ "${LUA_INSTALL_METHOD}" = "from-source" ]; then
       resolve_exact_version
+      [ "${EXACT_VERSION}" = "1.0.0" ] && EXACT_VERSION='5.4.7'
       TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/lua/${EXACT_VERSION}"
       _def_src_url='https://www.lua.org/ftp/lua-{VERSION}.tar.gz'
       SRC_URL="${LUA_DOWNLOAD_URL:-${_def_src_url}}"
       SRC_URL=$(printf '%s\n' "$SRC_URL" | sed "s/{VERSION}/${EXACT_VERSION}/g")
       libscript_build_component_from_source 'lua' "$EXACT_VERSION" 'lua' 'c' 'make' "$SRC_URL"
+      if [ "${LUA_RUN_TESTS:-false}" = "true" ] || [ "${LUA_RUN_TESTS:-0}" = "1" ]; then
+        _t_url="${LUA_TESTS_URL:-https://www.lua.org/tests/lua-${EXACT_VERSION}-tests.tar.gz}"
+        libscript_fetch_and_extract_source 'lua-tests' "${_t_url}"
+        (cd "${LIBSCRIPT_EXTRACTED_SRC_DIR}" && "${TARGET_DIR}/bin/lua" -e '_U=true' all.lua)
+        rm -rf "${LIBSCRIPT_SOURCE_WORKDIR:-}" 2>/dev/null || true
+      fi
       libscript_symlink_alias 'lua' "${VERSION}" "${EXACT_VERSION}"
       exit 0
     elif [ "${LUA_INSTALL_METHOD}" = "system" ]; then

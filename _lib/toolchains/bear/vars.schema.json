@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/bear/vars.schema.json",
+  "title": "bear variables",
+  "description": "Configuration variables for bear",
+  "type": "object",
+  "properties": {
+    "BEAR_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install bear. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "BEAR_VERSION": {
+      "description": "Specific version of bear to install.",
+      "type": "string",
+      "default": "3.1.5",
+      "version_aliases": ["latest", "lts"]
+    },
+    "BEAR_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading bear binary or archive artifacts."
+    },
+    "BEAR_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying bear available remote releases."
+    }
+  }
+}

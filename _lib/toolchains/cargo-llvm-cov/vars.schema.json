@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/cargo-llvm-cov/vars.schema.json",
+  "title": "cargo-llvm-cov variables",
+  "description": "Configuration variables for cargo-llvm-cov",
+  "type": "object",
+  "properties": {
+    "CARGO_LLVM_COV_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install cargo-llvm-cov. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "CARGO_LLVM_COV_VERSION": {
+      "description": "Specific version of cargo-llvm-cov to install.",
+      "type": "string",
+      "default": "0.6.16",
+      "version_aliases": ["latest", "lts"]
+    },
+    "CARGO_LLVM_COV_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading cargo-llvm-cov binary or archive artifacts."
+    },
+    "CARGO_LLVM_COV_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying cargo-llvm-cov available remote releases."
+    }
+  }
+}

@@ -208,5 +208,74 @@ EOF
   rm -rf "${_tmp_dir}"
 }
 
+# ## verify_multibackend_cli_trap_and_depfiles
+# Verifies that `edgcpp_wrapper.sh` under `EDG_BACKEND=llvm` passes `--gnu_version=130200` and `--backend=llvm` without `--gcc`, emits `-MMD` `.d` depfiles, auto-links `libedg.a` for C++ under `EDG_BACKEND=gcc`, and appends `EDG_DRIVER_LOG` JSONL.
+verify_multibackend_cli_trap_and_depfiles() {
+  _mb_dir="${TMPDIR:-/tmp}/libscript_edg_mb_test_$$"
+  mkdir -p "${_mb_dir}"
+  _mock_cpfe="${_mb_dir}/mock_cpfe"
+  _args_log="${_mb_dir}/cpfe_args.log"
+  cat <<'MOCK_EOF' > "${_mock_cpfe}"
+#!/bin/sh
+if [ "${1:-}" = "--help" ]; then
+  printf 'Options: --backend=llvm --backend=gcc --emit-obj=<file> --timing\n'
+  exit 0
+fi
+printf '%s\n' "$*" > "${MOCK_CPFE_ARGS_LOG}"
+for a in "$@"; do
+  case "$a" in
+    --gcc)
+      printf 'TRAP_ERROR: --gcc passed alongside --backend!\n' >&2
+      exit 99
+      ;;
+    --emit-obj=*)
+      _out="${a#--emit-obj=}"
+      printf 'OBJ' > "${_out}"
+      ;;
+  esac
+done
+printf 'Front-end time: 0.0120\nBack-end time: 0.0340\n' >&2
+exit 0
+MOCK_EOF
+  chmod +x "${_mock_cpfe}"
+
+  cat <<'SRC_EOF' > "${_mb_dir}/sample.cpp"
+#include <stdint.h>
+int add_v(int x) { return x + 1; }
+SRC_EOF
+
+  _drv_log="${_mb_dir}/driver.jsonl"
+  MOCK_CPFE_ARGS_LOG="${_args_log}" CPFE_BIN="${_mock_cpfe}" EDG_CPFE_CLI_STYLE="multibackend" EDG_BACKEND="llvm" EDG_DRIVER_LOG="${_drv_log}" "${SCRIPT_DIR}/edgcpp_wrapper.sh" -std=c++20 -O2 -MMD -MF "${_mb_dir}/sample.d" -c "${_mb_dir}/sample.cpp" -o "${_mb_dir}/sample.o"
+
+  [ -s "${_mb_dir}/sample.o" ]
+  [ -s "${_mb_dir}/sample.d" ]
+  [ -s "${_drv_log}" ]
+  grep -q -- '--gnu_version=130200' "${_args_log}"
+  grep -q -- '--backend=llvm' "${_args_log}"
+  grep -q -- '--c++20' "${_args_log}"
+  grep -q -- '-O2' "${_args_log}"
+  if grep -q -- '--gcc' "${_args_log}"; then
+    return 1
+  fi
+  grep -q '"backend":"llvm"' "${_drv_log}"
+  grep -q '"opt":"-O2"' "${_drv_log}"
+
+  # Verify C++ link-only invocation under EDG_BACKEND=gcc appends EDG_RT_LIB (libedg.a)
+  _mock_cxx="${_mb_dir}/mock_cxx"
+  _lnk_log="${_mb_dir}/link_args.log"
+  printf 'AR' > "${_mb_dir}/libedg.a"
+  cat <<'LNK_EOF' > "${_mock_cxx}"
+#!/bin/sh
+printf '%s\n' "$*" > "${MOCK_LINK_ARGS_LOG}"
+exit 0
+LNK_EOF
+  chmod +x "${_mock_cxx}"
+  MOCK_LINK_ARGS_LOG="${_lnk_log}" EDG_HOST_CXX="${_mock_cxx}" EDG_BACKEND="gcc" EDG_RT_LIB="${_mb_dir}/libedg.a" EDGCPP_DRIVER_LANG="c++" "${SCRIPT_DIR}/edgcpp_wrapper.sh" "${_mb_dir}/sample.o" -o "${_mb_dir}/sample_bin"
+  grep -q "${_mb_dir}/libedg.a" "${_lnk_log}"
+
+  rm -rf "${_mb_dir}"
+}
+
 verify_edgcpp_binaries_and_headers
 verify_c_and_cxx_conformance
+verify_multibackend_cli_trap_and_depfiles

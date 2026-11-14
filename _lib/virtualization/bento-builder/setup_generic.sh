@@ -94,6 +94,12 @@ configure_bento_repo() {
       (cd "$b_dir/packer_templates" && packer init pkr-plugins.pkr.hcl) || log_warn 'Packer plugin init failed.'
     fi
 
+    if [ "${BENTO_BUILDER_INSTALL_MSDOS_PLUGIN:-1}" = "1" ] && [ -d "$b_dir/vagrant-msdos" ] && command -v vagrant >/dev/null 2>&1 && command -v gem >/dev/null 2>&1; then
+      if ! vagrant plugin list 2>/dev/null | grep -q 'vagrant-msdos'; then
+        log_info 'Building and registering vagrant-msdos plugin for AnonDosVM MS-DOS guests...'
+        (cd "$b_dir/vagrant-msdos" && gem build vagrant-msdos.gemspec && vagrant plugin install vagrant-msdos-*.gem) || log_warn 'vagrant-msdos plugin install skipped.'
+      fi
+    fi
     if [ -f "$b_dir/Gemfile" ] && command -v bundle >/dev/null 2>&1; then
       log_info 'Installing Bento Ruby bundle dependencies...'
       (cd "$b_dir" && bundle install) || log_warn 'Bundle install failed.'

@@ -66,6 +66,8 @@ else
 fi
 
 export HOSTCC="${CC}"
+export CLANG_MATCHED="${CLANG_MATCHED:-${CC}}"
+export CLANGXX_MATCHED="${CLANGXX_MATCHED:-${CXX}}"
 export CC_BACKEND='clang'
 export CFLAGS="${CLANG_CFLAGS:--O2}"
 STACK="${STACK%"${THIS_FILE}":}"

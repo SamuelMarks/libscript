@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/gawk/vars.schema.json",
+  "title": "gawk variables",
+  "description": "Configuration variables for gawk",
+  "type": "object",
+  "properties": {
+    "GAWK_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install gawk. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "GAWK_VERSION": {
+      "description": "Specific version of gawk to install.",
+      "type": "string",
+      "default": "5.3.1",
+      "version_aliases": ["latest", "lts"]
+    },
+    "GAWK_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading gawk binary or archive artifacts."
+    },
+    "GAWK_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying gawk available remote releases."
+    }
+  }
+}

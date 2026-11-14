@@ -142,7 +142,7 @@
     "CORE_EXPERIMENT_TARGET_OS": {
       "type": "string",
       "default": "alpine-3.24",
-      "description": "Target OS (or comma-separated list of target OSs) to deploy and test as Vagrant boxes (e.g., 'alpine-3.24', 'debian-13', 'rockylinux-10.2', 'freebsd-15.1', 'omnios', 'windows-11', 'macos-14-arm64')."
+      "description": "Target OS (or comma-separated list of target OSs) to deploy and test as Vagrant boxes (e.g., 'alpine-3.24', 'debian-13', 'rockylinux-10.2', 'freebsd-15.1', 'omnios', 'windows-11', 'macos-14-arm64', 'msdos-1.25', 'msdos-2.0', 'msdos-4.0', 'freedos-1.4')."
     },
     "CORE_EXPERIMENT_SNAPSHOT_NAME": {
       "type": "string",
@@ -182,7 +182,7 @@
     "CORE_EXPERIMENT_SUITE": {
       "type": "string",
       "default": "all",
-      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', 'libtpu', 'manifest', or 'all')."
+      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', 'edgcpp_backends', 'libtpu', 'win_port', 'manifest', or 'all')."
     },
     "CORE_EXPERIMENT_SUITE_MANIFEST": {
       "type": "string",
@@ -209,10 +209,20 @@
       "default": "",
       "description": "Local filesystem path to the target research repository (e.g., ../libtpu-rs) synced to the remote cloud node."
     },
+    "CORE_EXPERIMENT_ECOSYSTEM_DIR": {
+      "type": "string",
+      "default": "",
+      "description": "Local parent directory containing multi-repository ecosystem checkouts (e.g., 14 win_port repositories) synced for benchmark evaluation."
+    },
     "CORE_EXPERIMENT_PAPER_DIR": {
       "type": "string",
       "default": "",
-      "description": "Local filesystem path to the paper manuscript directory (e.g., ../new_research/libtpu_paper) synced for LaTeX emission and PDF verification."
+      "description": "Local filesystem path to the paper manuscript directory (e.g., ../new_research/libtpu_paper or ../new_research/win_port) synced for LaTeX emission and PDF verification."
+    },
+    "CORE_EXPERIMENT_APPENDIX_TEX": {
+      "type": "string",
+      "default": "",
+      "description": "Optional companion appendix LaTeX filename (e.g., win_port_appendix.tex) audited and compiled alongside the main manuscript."
     },
     "CORE_EXPERIMENT_CARGO_PROFILE": {
       "type": "string",
@@ -227,7 +237,7 @@
     "CORE_EXPERIMENT_HOST_ARCH": {
       "type": "string",
       "default": "linux_x64",
-      "description": "Canonical OS/ISA identifier ('linux_x64' or 'macos_arm64') tagged onto multi-host benchmark artifacts."
+      "description": "Canonical OS/ISA identifier ('linux_x64', 'macos_arm64', 'windows_x64', 'freebsd_x64', 'freebsd_arm64', 'illumos_x64', or 'dos32_le') tagged onto multi-host benchmark artifacts."
     },
     "CORE_EXPERIMENT_BUILD_PDF": {
       "type": "string",

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/csmith/vars.schema.json",
+  "title": "csmith variables",
+  "description": "Configuration variables for csmith",
+  "type": "object",
+  "properties": {
+    "CSMITH_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install csmith. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "from-source"
+    },
+    "CSMITH_VERSION": {
+      "description": "Specific version of csmith to install.",
+      "type": "string",
+      "default": "2.3.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "CSMITH_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading csmith binary or archive artifacts."
+    },
+    "CSMITH_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying csmith available remote releases."
+    },
+    "CSMITH_HOME": {
+      "type": "string",
+      "description": "Installation prefix containing bin/csmith and include/csmith.h runtime checksum headers."
+    }
+  }
+}

@@ -1,0 +1,462 @@
+{
+  "$schema": "../../../experiment-suite.schema.json",
+  "id": "edgcpp_backends",
+  "title": "EDG C/C++ v7.0.1 Multi-Backend Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)",
+  "protocol_version": "PLDI-2027-v1",
+  "manuscript_dir": "../new_research/edgcpp_backends",
+  "manuscript_files": ["edgecpp_backends.tex"],
+  "results_dir": "build/edgcpp_backends_results",
+  "execution_modes": [
+    "native_only",
+    "qemu_user_x86_64",
+    "qemu_user_aarch64",
+    "qemu_user_riscv64",
+    "qemu_user_s390x",
+    "qemu_user_powerpc64le",
+    "qemu_user_armhf"
+  ],
+  "host_constraints": {
+    "required_native_isas": ["macos_arm64", "linux_x64", "linux_arm64", "windows_x64"],
+    "forbid_binary_translation": true,
+    "prepare_host": true,
+    "require_ac_power": false,
+    "serialize_single_tu": true,
+    "drop_caches_on_cold": true,
+    "cloud_sku_by_arch": {
+      "macos_arm64": "mac2.metal",
+      "linux_x64": "Standard_D160ads_v7",
+      "linux_arm64": "c7g.metal",
+      "windows_x64": "Standard_D32s_v5"
+    }
+  },
+  "trial_policy": {
+    "warmup_runs": 1,
+    "measured_trials": 11,
+    "quantiles": [0.25, 0.5, 0.75, 0.99],
+    "dispersion_metric": "median_and_stddev",
+    "serialize_single_tu": true,
+    "prng_seed": 2027
+  },
+  "compiler_pipelines": [
+    {
+      "id": "EDG-FE-ONLY",
+      "manuscript_label": "cpfe Front-End Only (--no_code_gen)",
+      "backend_mode": "fe_only",
+      "stages": 1,
+      "dialect_flags": ["--gnu_version=130200"]
+    },
+    {
+      "id": "EDG-LLVM",
+      "manuscript_label": "cpfe + llvm_gen_be",
+      "backend_mode": "llvm",
+      "stages": 1,
+      "dialect_flags": ["--gnu_version=130200"],
+      "matched_baseline_id": "NATIVE-CLANG",
+      "required_env_vars": ["LLVM_PREFIX", "CLANG_MATCHED"]
+    },
+    {
+      "id": "EDG-GCC",
+      "manuscript_label": "cpfe + gcc_gen_be",
+      "backend_mode": "gcc",
+      "stages": 1,
+      "dialect_flags": ["--gnu_version=130200"],
+      "matched_baseline_id": "NATIVE-GCC",
+      "runtime_libs": ["libedg.a"],
+      "required_env_vars": ["GCC_PREFIX", "EDG_LIBGCCJIT_PATH", "GCC_MATCHED"]
+    },
+    {
+      "id": "EDG-C-LEGACY",
+      "manuscript_label": "Legacy c_gen_be (.int.c) + Clang",
+      "backend_mode": "legacy_c",
+      "stages": 2,
+      "dialect_flags": ["--gnu_version=130200"],
+      "matched_baseline_id": "NATIVE-CLANG",
+      "runtime_libs": ["libedg.a"]
+    },
+    {
+      "id": "EDG-CPP-LEGACY",
+      "manuscript_label": "Legacy cp_gen_be (.int.cpp) + Clang++",
+      "backend_mode": "legacy_cpp",
+      "stages": 2,
+      "dialect_flags": ["--gnu_version=130200"],
+      "matched_baseline_id": "NATIVE-CLANG"
+    },
+    {
+      "id": "NATIVE-CLANG",
+      "manuscript_label": "Native Clang / Clang++",
+      "backend_mode": "native_clang",
+      "stages": 1
+    },
+    {
+      "id": "NATIVE-GCC",
+      "manuscript_label": "Native GCC / g++",
+      "backend_mode": "native_gcc",
+      "stages": 1
+    }
+  ],
+  "integrity_guards": {
+    "enforce_matched_opt_flags": true,
+    "require_same_llvm_baseline": true,
+    "require_same_gcc_libgccjit_baseline": true,
+    "separate_two_stage_legacy_accounting": true,
+    "require_anti_dce_checksum": true
+  },
+  "corpus_inputs": [
+    {
+      "id": "sqlite3",
+      "version": "3.46.1",
+      "url": "https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip",
+      "sha256": "67d3fe6d268e6eaddcae3727fce58fcc8e9c53869bdd07a0c61e38ddf2965071",
+      "libscript_component": "sqlite",
+      "loc_mode": "raw_wc_l"
+    },
+    {
+      "id": "lua",
+      "version": "5.4.7",
+      "url": "https://www.lua.org/ftp/lua-5.4.7.tar.gz",
+      "sha256": "9fbf5e28ef86c69858f6d3d34eccc32e911c1a28b4120ff3e84aaa70cfbf1e30",
+      "libscript_component": "lua",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "lz4",
+      "version": "1.10.0",
+      "url": "https://github.com/lz4/lz4/releases/download/v1.10.0/lz4-1.10.0.tar.gz",
+      "sha256": "537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b",
+      "libscript_component": "lz4",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "zlib",
+      "version": "1.3.1",
+      "url": "https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "libscript_component": "zlib",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "dash",
+      "version": "0.5.12",
+      "url": "http://gondor.apana.org.au/~herbert/dash/files/dash-0.5.12.tar.gz",
+      "sha256": "6a474ac46e8b0b32916c4c60df694c82058d3297d86dd85b8f643ac51b6a8f2b",
+      "libscript_component": "dash",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "jq",
+      "version": "1.7.1",
+      "url": "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-1.7.1.tar.gz",
+      "sha256": "478c9ca129fd2e3443fe27314b455e211e0d8c60bc8ff7df703873deeee580c2",
+      "libscript_component": "jq",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "fmt",
+      "version": "11.0.2",
+      "url": "https://github.com/fmtlib/fmt/releases/download/11.0.2/fmt-11.0.2.zip",
+      "sha256": "40fc58bebcf38c759e11a7bd8fdc163507d2423ef5058bba7f26280c5b9c5465",
+      "libscript_component": "fmt",
+      "loc_mode": "preprocessed_wc_l"
+    },
+    {
+      "id": "catch2",
+      "version": "3.7.1",
+      "url": "https://github.com/catchorg/Catch2/archive/refs/tags/v3.7.1.tar.gz",
+      "sha256": "b9cde52c79a6b31eccb42fb46781f9fe8fe2f890e7eed3a91ed37f1f89c52b2a",
+      "libscript_component": "catch2",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "linux_5_15",
+      "version": "5.15.167",
+      "url": "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz",
+      "libscript_component": "linux",
+      "loc_mode": "non_blank_tu_sum"
+    },
+    {
+      "id": "linux_6_6",
+      "version": "6.6.52",
+      "url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.52.tar.xz",
+      "libscript_component": "linux",
+      "loc_mode": "non_blank_tu_sum"
+    }
+  ],
+  "prereq_checks": [
+    {
+      "id": "gate_vmi_rtti_flags",
+      "suites": ["E0", "E3"],
+      "kind": "grep_absent",
+      "target": "lib_src/gcc_be_eh_rt.c",
+      "pattern": "base_count[[:space:]]*<=[[:space:]]*16",
+      "description": "Verifies Itanium 2.9.5 __vmi_class_type_info::__flags bitmask support and removal of fixed base_count <= 16 cap."
+    },
+    {
+      "id": "gate_deterministic_coro_frame",
+      "suites": ["E0", "E4"],
+      "kind": "grep_absent",
+      "target": "src/gcc_gen_be_stmt.c",
+      "pattern": "_Z_coro_frame_%p",
+      "description": "Verifies deterministic _Z_coro_frame_%lu_%s naming without ASLR-sensitive pointer formatting and HALO stack soundness."
+    },
+    {
+      "id": "gate_darwin_datalayout",
+      "suites": ["E0", "E1", "E5"],
+      "kind": "grep_present",
+      "target": "src/llvm_gen_be_codegen.cpp",
+      "pattern": "createDataLayout",
+      "description": "Verifies clean target DataLayout emission without leaked x86/MSVC p270/p271/p272 address spaces."
+    },
+    {
+      "id": "gate_external_declare_abi",
+      "suites": ["E0", "E5"],
+      "kind": "grep_present",
+      "target": "src/llvm_gen_be_decl.cpp",
+      "pattern": "llvm_compute_function_abi_info",
+      "description": "Verifies AAPCS64/Darwin ARM64 >16B composite ABI classification on uncalled external declare prototypes."
+    },
+    {
+      "id": "gate_o0_bool_lowering",
+      "suites": ["E0", "E1"],
+      "kind": "file_exists",
+      "target": "src/llvm_gen_be_expr.cpp",
+      "description": "Verifies streamlined -O0 i1 boolean branch lowering without redundant zext/icmp chains."
+    },
+    {
+      "id": "gate_dynamic_deferred_structs",
+      "suites": ["E0", "E5", "E6"],
+      "kind": "grep_absent",
+      "target": "src/gcc_gen_be_type.c",
+      "pattern": "deferred_structs\\[4096\\]",
+      "description": "Verifies realloc-grown deferred_structs array and full-width/big-endian/volatile bitfield RMW lowering."
+    }
+  ],
+  "placeholder_registry": {
+    "total_placeholders": 60,
+    "placeholder_patterns": ["\\\\tbd", "\\?\\?\\?"],
+    "sections": [
+      {
+        "id": "abstract_and_sec9_1_coverage",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "l. 87, l. 670",
+        "count": 4,
+        "backing_artifacts": ["raw/exp0_coverage.json"],
+        "metrics": ["gcc_be.func_pct", "gcc_be.line_pct", "gcc_be.branch_pct"]
+      },
+      {
+        "id": "sec8_2_bug4_array_decay",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "l. 656",
+        "count": 2,
+        "backing_artifacts": ["raw/exp0_bug4_ablation.json"],
+        "metrics": ["be_cpu_s_before", "be_cpu_s_after"]
+      },
+      {
+        "id": "sec9_1_experimental_setup",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "l. 675",
+        "count": 4,
+        "backing_artifacts": ["raw/metadata.json"],
+        "metrics": ["cpu_model", "ram_gib", "compilers.llvm_version", "compilers.gcc_matched"]
+      },
+      {
+        "id": "tab_compile_perf",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 681-718, ll. 823-824",
+        "count": 16,
+        "backing_artifacts": ["raw/exp1_compile_perf.json"],
+        "metrics": [
+          "workloads",
+          "fe_cpu_s",
+          "be_cpu_s",
+          "wall_s",
+          "peak_rss_mb",
+          "hw_instructions",
+          "matched_o2_speedups"
+        ]
+      },
+      {
+        "id": "fig_sqlite_results",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 725-785, l. 825",
+        "count": 10,
+        "backing_artifacts": ["raw/exp2_sqlite_runtime.json"],
+        "metrics": ["speedtest1_ms", "olap_groupby_ms", "btree_scan_ms", "section_text_mb"]
+      },
+      {
+        "id": "tab5_midend_ablation",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 809-810",
+        "count": 4,
+        "backing_artifacts": ["raw/exp2_ablation.json"],
+        "metrics": ["no_tbaa_ms", "tbaa_ms", "thinlto_ms", "ir_pgo_ms"]
+      },
+      {
+        "id": "tab5_eh_unwinding",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 799-801, l. 826",
+        "count": 5,
+        "backing_artifacts": ["raw/exp3_eh.json"],
+        "metrics": ["raii_fast_path_ms", "single_inherit_throw_ms", "virtual_diamond_throw_ms"]
+      },
+      {
+        "id": "tab5_coroutines",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 804-806",
+        "count": 5,
+        "backing_artifacts": ["raw/exp4_coro.json"],
+        "metrics": [
+          "generator_50m_ms",
+          "halo_allocs_o0",
+          "halo_allocs_o2",
+          "task_1m_hops_ms",
+          "asan_status"
+        ]
+      },
+      {
+        "id": "tab5_abi_and_fuzz",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 813-815",
+        "count": 4,
+        "backing_artifacts": [
+          "raw/exp5_abi_fuzz.json",
+          "raw/exp5_gcc_torture.json",
+          "raw/exp5_diff_fuzz.json"
+        ],
+        "metrics": ["abi_passed_of_1000", "torture_o0_o2", "csmith_yarpgen_agreement_pct"]
+      },
+      {
+        "id": "tab6_corpus_and_kernel",
+        "tex_file": "edgecpp_backends.tex",
+        "line_range": "ll. 833-856",
+        "count": 6,
+        "backing_artifacts": ["raw/exp6_projects.json", "raw/exp6_kernel.json"],
+        "metrics": ["projects", "linux_5_15_gnu89", "linux_6_6_gnu11"]
+      }
+    ]
+  },
+  "subsuites": [
+    {
+      "id": "E0",
+      "title": "Phase 0 Codebase Gates, 4-Mode Matrix, llvm-cov/gcov Coverage & Bug #4 Array-Decay Ablation",
+      "depends_on_suites": [],
+      "libscript_deps": ["edgcpp", "cmake", "ninja", "llvm", "gcc", "lcov", "sqlite"],
+      "entrypoint": "suites/e0_phase0_gates",
+      "require_native_isa": false,
+      "trial_policy": {
+        "warmup_runs": 0,
+        "measured_trials": 3,
+        "timeout_ms": 120000
+      },
+      "outputs": ["raw/metadata.json", "raw/exp0_coverage.json", "raw/exp0_bug4_ablation.json"]
+    },
+    {
+      "id": "E1",
+      "title": "Matched-Optimization Compilation Latency, Phase Split, Peak RSS & HW Counters (Table 4)",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["edgcpp", "clang", "gcc", "sqlite", "fmt"],
+      "entrypoint": "suites/e1_compile_perf",
+      "require_native_isa": true,
+      "trial_policy": {
+        "warmup_runs": 1,
+        "measured_trials": 11,
+        "dispersion_metric": "median_and_stddev",
+        "serialize_single_tu": true
+      },
+      "outputs": ["raw/exp1_compile_perf.json"]
+    },
+    {
+      "id": "E2",
+      "title": "SQLite Runtime Quality, Code Section Size & TBAA/ThinLTO/IR-PGO Mid-End Ablation (Figure 3 & Table 5)",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["edgcpp", "clang", "gcc", "llvm", "sqlite"],
+      "entrypoint": "suites/e2_sqlite_ablation",
+      "require_native_isa": true,
+      "trial_policy": {
+        "warmup_runs": 1,
+        "measured_trials": 11,
+        "dispersion_metric": "median_and_stddev"
+      },
+      "outputs": ["raw/exp2_sqlite_runtime.json", "raw/exp2_ablation.json"]
+    },
+    {
+      "id": "E3",
+      "title": "C++ Exception Unwinding: Zero-Cost DWARF vs. Mode B SJLJ+RTTI vs. Legacy SJLJ (Table 5 EH Rows)",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["edgcpp", "clang", "gcc"],
+      "entrypoint": "suites/e3_eh_unwinding",
+      "require_native_isa": true,
+      "trial_policy": {
+        "warmup_runs": 1,
+        "measured_trials": 11,
+        "dispersion_metric": "median_and_stddev"
+      },
+      "outputs": ["raw/exp3_eh.json"]
+    },
+    {
+      "id": "E4",
+      "title": "C++20 Coroutines: Mid-End CoroSplit vs. Explicit _Z_coro_frame + HALO & ASan Gate (Table 5 Coro Rows)",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["edgcpp", "clang", "gcc"],
+      "entrypoint": "suites/e4_coroutines",
+      "require_native_isa": true,
+      "trial_policy": {
+        "warmup_runs": 1,
+        "measured_trials": 11,
+        "dispersion_metric": "median_and_stddev"
+      },
+      "outputs": ["raw/exp4_coro.json"]
+    },
+    {
+      "id": "E5",
+      "title": "1,000-Signature Split-TU psABI Fuzzing, GCC C Torture & Csmith/YARPGen Differential Campaign (Table 5)",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["edgcpp", "clang", "gcc", "gcc-torture", "csmith", "yarpgen", "qemu"],
+      "entrypoint": "suites/e5_abi_and_fuzz",
+      "require_native_isa": false,
+      "trial_policy": {
+        "prng_seed": 2027,
+        "timeout_ms": 5000
+      },
+      "emulation_baselines": [
+        "native_only",
+        "qemu_user_x86_64",
+        "qemu_user_aarch64",
+        "qemu_user_riscv64",
+        "qemu_user_s390x",
+        "qemu_user_powerpc64le",
+        "qemu_user_armhf"
+      ],
+      "outputs": ["raw/exp5_abi_fuzz.json", "raw/exp5_gcc_torture.json", "raw/exp5_diff_fuzz.json"]
+    },
+    {
+      "id": "E6",
+      "title": "Multi-TU Open-Source Corpus Builds & Authentic Linux Kernel compile_commands.json Sweep (Table 6)",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": [
+        "edgcpp",
+        "sqlite",
+        "lua",
+        "lz4",
+        "zlib",
+        "dash",
+        "jq",
+        "fmt",
+        "catch2",
+        "linux",
+        "bear"
+      ],
+      "entrypoint": "suites/e6_corpus_and_kernel",
+      "require_native_isa": false,
+      "outputs": ["raw/exp6_projects.json", "raw/exp6_kernel.json"]
+    },
+    {
+      "id": "E7",
+      "title": "Zero-Hallucination 60-Placeholder LaTeX Synthesis, Overfull Audit & PDF Verification",
+      "depends_on_suites": ["E0", "E1", "E2", "E3", "E4", "E5", "E6"],
+      "libscript_deps": ["texlive"],
+      "entrypoint": "suites/e7_latex_verify",
+      "require_native_isa": false,
+      "outputs": ["generated_metrics.tex"]
+    }
+  ]
+}

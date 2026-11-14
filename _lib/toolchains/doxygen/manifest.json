@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "doxygen",
+  "title": "Doxygen Documentation Generator",
+  "description": "Doxygen documentation analyzer and XML symbol extractor for auditing C89 docstring coverage.",
+  "category": "toolchain",
+  "provides": ["doxygen"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/doxygen/doxygen"
+}

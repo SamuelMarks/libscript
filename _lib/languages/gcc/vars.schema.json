@@ -43,6 +43,14 @@
     "GCC_BUILD_TARGET": {
       "description": "Specific GCC subsystem target to build when benchmarking ('gcc-core' for C front-end or 'g++' for C++ front-end).",
       "type": "string"
+    },
+    "GCC_PREFIX": {
+      "description": "Installation prefix of the matched GCC and libgccjit installation.",
+      "type": "string"
+    },
+    "GCC_MATCHED": {
+      "description": "Exact gcc executable matching the version of EDG_LIBGCCJIT_PATH.",
+      "type": "string"
     }
   }
 }

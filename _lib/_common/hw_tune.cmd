@@ -112,10 +112,32 @@ if not exist "!_HT_DIR!" mkdir "!_HT_DIR!"
 ) > "!_HT_DIR!\hardware-tuning.conf"
 exit /b 0
 
+:: ## libscript_detect_ac_power
+:: Detects AC mains vs. battery status on Windows (`true`, `false`, or `unknown`).
+:libscript_detect_ac_power
+set "_AC_STATE=unknown"
+for /f "tokens=2 delims==" %%B in ('wmic path Win32_Battery get BatteryStatus /value 2^>nul ^| findstr "="') do (
+    if "%%B"=="2" set "_AC_STATE=true"
+    if "%%B"=="1" set "_AC_STATE=false"
+)
+if not defined LIBSCRIPT_HW_AC_POWER set "LIBSCRIPT_HW_AC_POWER=!_AC_STATE!"
+exit /b 0
+
 :: ## libscript_prepare_benchmark_host
 :: Standardizes the Windows host environment for reproducible compiler benchmarking.
 :libscript_prepare_benchmark_host
 call :libscript_detect_hardware
+call :libscript_detect_ac_power
+if "%LIBSCRIPT_BENCH_REQUIRE_AC_POWER%"=="1" (
+    if /I "%LIBSCRIPT_HW_AC_POWER%"=="false" (
+        echo [ERROR] [HW-TUNE] Host is running on battery power; AC power is required. 1>&2
+        exit /b 1
+    )
+)
+if "%LIBSCRIPT_BENCH_SERIAL_SINGLE_TU%"=="1" (
+    set "MAKEFLAGS=-j1"
+    set "CMAKE_BUILD_PARALLEL_LEVEL=1"
+)
 exit /b 0
 
 :: ## libscript_drop_benchmark_caches
@@ -130,6 +152,7 @@ set "_EHM_OUT=%~1"
 set "_EHM_PY=%~2"
 if "!_EHM_PY!"=="" set "_EHM_PY=python"
 call :libscript_detect_hardware
+call :libscript_detect_ac_power
 for %%D in ("!_EHM_OUT!") do set "_EHM_DIR=%%~dpD"
 if not "!_EHM_DIR!"=="" (
     if not exist "!_EHM_DIR!" mkdir "!_EHM_DIR!"
@@ -141,12 +164,33 @@ if not errorlevel 1 (
     for /f "delims=" %%R in ('rustc -V 2^>nul') do set "_RUSTC_VER=%%R"
 )
 set "_CLANG_VER=unavailable"
-where clang >nul 2>&1
+set "_CAND_CLANG=%CLANG_MATCHED%"
+if "!_CAND_CLANG!"=="" set "_CAND_CLANG=clang"
+where "!_CAND_CLANG!" >nul 2>&1
 if not errorlevel 1 (
-    for /f "delims=" %%C in ('clang --version 2^>nul') do (
+    for /f "delims=" %%C in ('"!_CAND_CLANG!" --version 2^>nul') do (
         if "!_CLANG_VER!"=="unavailable" set "_CLANG_VER=%%C"
     )
 )
+set "_GCC_VER=unavailable"
+set "_CAND_GCC=%GCC_MATCHED%"
+if "!_CAND_GCC!"=="" set "_CAND_GCC=gcc"
+where "!_CAND_GCC!" >nul 2>&1
+if not errorlevel 1 (
+    for /f "delims=" %%G in ('"!_CAND_GCC!" --version 2^>nul') do (
+        if "!_GCC_VER!"=="unavailable" set "_GCC_VER=%%G"
+    )
+)
+set "_LLVM_VER=unavailable"
+where llvm-config >nul 2>&1
+if not errorlevel 1 (
+    for /f "delims=" %%L in ('llvm-config --version 2^>nul') do (
+        if "!_LLVM_VER!"=="unavailable" set "_LLVM_VER=%%L"
+    )
+)
+set "_JIT_PATH=%EDG_LIBGCCJIT_PATH%"
+if "!_JIT_PATH!"=="" set "_JIT_PATH=unavailable"
+set "_JIT_JSON=!_JIT_PATH:\=\\!"
 set "_PY_VER=unavailable"
 where "!_EHM_PY!" >nul 2>&1
 if not errorlevel 1 (
@@ -166,9 +210,13 @@ if not errorlevel 1 (
     echo   "numa_nodes": 1,
     echo   "ram_mib": %LIBSCRIPT_HW_MEM_MB%,
     echo   "ram_gib": !_RAM_GIB!,
+    echo   "ac_power": "%LIBSCRIPT_HW_AC_POWER%",
     echo   "toolchains": {
     echo     "rustc": "!_RUSTC_VER!",
     echo     "clang": "!_CLANG_VER!",
+    echo     "gcc": "!_GCC_VER!",
+    echo     "llvm": "!_LLVM_VER!",
+    echo     "libgccjit": "!_JIT_JSON!",
     echo     "python3": "!_PY_VER!",
     echo     "jax": "unavailable",
     echo     "jaxlib": "unavailable"

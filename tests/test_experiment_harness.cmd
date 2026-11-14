@@ -53,6 +53,14 @@ if not errorlevel 1 exit /b 1
 set "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA=0"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_assert_native_isa
 if errorlevel 1 exit /b 1
+echo   DLL Name: KERNEL32.dll> "!_W!\pe.txt"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_audit_pe_dependents "--from-text" "!_W!\pe.txt" "!_W!\pe.json" || exit /b 1
+findstr /C:"\"pure_win32_subsystem\": true" "!_W!\pe.json" >nul 2>&1 || exit /b 1
+echo   DLL Name: KERNEL32.dll> "!_W!\pe.txt"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_audit_pe_dependents "--from-text" "!_W!\pe.txt" "!_W!\pe.json" || exit /b 1
+findstr /C:"\"pure_win32_subsystem\": true" "!_W!\pe.json" >nul 2>&1 || exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_compute_median_stddev "!_W!\s.txt" "!_W!\bad_opt.json" "50" "-O0" "-O2" >nul 2>&1
+if not errorlevel 1 exit /b 1
 rmdir /s /q "!_W!" >nul 2>&1
 echo [PASS] Windows SIGPLAN RULE-1..RULE-7 harness tests succeeded!
 exit /b 0

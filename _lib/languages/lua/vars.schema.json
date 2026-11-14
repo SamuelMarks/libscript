@@ -24,6 +24,15 @@
     "LUA_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying lua available remote releases."
+    },
+    "LUA_RUN_TESTS": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to fetch and execute the official upstream lua-X.Y.Z-tests suite (all.lua) after building Lua from source."
+    },
+    "LUA_TESTS_URL": {
+      "type": "string",
+      "description": "Optional explicit URL for the official Lua test suite archive (defaults to https://www.lua.org/tests/lua-{VERSION}-tests.tar.gz)."
     }
   }
 }

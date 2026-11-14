@@ -70,6 +70,10 @@ if exist "%BUILD_COMPLETE%\macos-27.2-aarch64.utm.box" (
     call :register_box "bento/macos-14-arm64" "%BUILD_COMPLETE%\macos-14-aarch64.utm.box" "utm"
 )
 call :register_box "bento/windows-11" "%BUILD_COMPLETE%\windows-11-aarch64.qemu.box" "qemu"
+call :register_box "anondos/msdos-1.25" "%BUILD_COMPLETE%\msdos-1.25-i386.qemu.box" "qemu"
+call :register_box "anondos/msdos-2.0" "%BUILD_COMPLETE%\msdos-2.0-i386.qemu.box" "qemu"
+call :register_box "anondos/msdos-4.0" "%BUILD_COMPLETE%\msdos-4.0-i386.qemu.box" "qemu"
+call :register_box "anondos/freedos-1.4" "%BUILD_COMPLETE%\freedos-1.4-i386.qemu.box" "qemu"
 
 echo === Host Vagrant Box Inventory ===
 vagrant box list

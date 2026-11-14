@@ -60,6 +60,8 @@ endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "CC=clang"
     set "CXX=clang++"
+    set "CLANG_MATCHED=clang"
+    set "CLANGXX_MATCHED=clang++"
     set "HOSTCC=clang"
     set "CC_BACKEND=clang"
     set "CFLAGS=%CLANG_CFLAGS%"

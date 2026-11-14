@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zlib",
+  "title": "zlib Compression Library",
+  "description": "Standalone version manager and custom-compiler source builder for zlib (pinned default 1.3.1) with upstream make test / CTest verification.",
+  "category": "utility",
+  "provides": ["zlib"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/madler/zlib"
+}

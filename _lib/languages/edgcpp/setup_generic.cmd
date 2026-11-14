@@ -75,6 +75,9 @@ if /i "%ACTION%"=="ls" goto :action_ls
 if /i "%ACTION%"=="ls-remote" goto :action_ls_remote
 if /i "%ACTION%"=="use" goto :action_use
 if /i "%ACTION%"=="download" goto :action_download
+if /i "%ACTION%"=="verify-modes" goto :action_verify_modes
+if /i "%ACTION%"=="build-coverage" goto :action_build_coverage
+if /i "%ACTION%"=="build-bug4-ablation" goto :action_build_bug4
 if /i "%ACTION%"=="uninstall" goto :action_uninstall
 goto :action_install
 
@@ -168,6 +171,8 @@ if exist "!_dl_zip!" (
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-cc.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-c-be.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-cp-be.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-fe-only.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-legacy.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-gcc-be.cmd" >nul
 copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp-llvm-be.cmd" >nul
@@ -220,6 +225,39 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_VERSION%" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%-%EDGCPP_FLAVOR%"
 exit /b 0
+
+:: ## action_verify_modes
+:: Builds all 4 backend configurations of edgcpp-compiler-multibackend on Windows via CMake.
+:action_verify_modes
+set "_src_repo=%EDGCPP_SOURCE_DIR%"
+if "!_src_repo!"=="" set "_src_repo=%EDG_REPO%"
+if not exist "!_src_repo!\CMakeLists.txt" exit /b 1
+cmake -S "!_src_repo!" -B "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-modes\both" -DCMAKE_BUILD_TYPE=Release -DEDG_ENABLE_LLVM_BACKEND=ON -DEDG_ENABLE_GCC_BACKEND=ON -DBUILD_TESTING=ON
+if errorlevel 1 exit /b 1
+cmake --build "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-modes\both"
+exit /b !errorlevel!
+
+:: ## action_build_coverage
+:: Builds coverage-instrumented edgcpp-compiler-multibackend binaries on Windows.
+:action_build_coverage
+set "_src_repo=%EDGCPP_SOURCE_DIR%"
+if "!_src_repo!"=="" set "_src_repo=%EDG_REPO%"
+if not exist "!_src_repo!\CMakeLists.txt" exit /b 1
+cmake -S "!_src_repo!" -B "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-llvm-cov" -DCMAKE_BUILD_TYPE=Debug -DEDG_ENABLE_LLVM_BACKEND=ON -DBUILD_TESTING=ON
+if errorlevel 1 exit /b 1
+cmake --build "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-llvm-cov"
+exit /b !errorlevel!
+
+:: ## action_build_bug4
+:: Builds isolated Bug #4 legacy array-decay ablation binary on Windows.
+:action_build_bug4
+set "_src_repo=%EDGCPP_SOURCE_DIR%"
+if "!_src_repo!"=="" set "_src_repo=%EDG_REPO%"
+if not exist "!_src_repo!\CMakeLists.txt" exit /b 1
+cmake -S "!_src_repo!" -B "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-bug4-legacy" -DCMAKE_BUILD_TYPE=Release -DEDG_ENABLE_LLVM_BACKEND=ON -DCMAKE_C_FLAGS="-DEDG_BENCH_LEGACY_ARRAY_DECAY_LOAD=1" -DCMAKE_CXX_FLAGS="-DEDG_BENCH_LEGACY_ARRAY_DECAY_LOAD=1"
+if errorlevel 1 exit /b 1
+cmake --build "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-bug4-legacy"
+exit /b !errorlevel!
 
 :: ## action_uninstall
 :: Removes the installed edgcpp version directory.

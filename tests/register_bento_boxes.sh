@@ -134,6 +134,10 @@ else
   register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-14-aarch64.utm.box" "$EXISTING_BOXES" "utm"
 fi
 register_box_if_needed "bento/windows-11" "${BUILD_COMPLETE}/windows-11-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "anondos/msdos-1.25" "${BUILD_COMPLETE}/msdos-1.25-i386.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "anondos/msdos-2.0" "${BUILD_COMPLETE}/msdos-2.0-i386.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "anondos/msdos-4.0" "${BUILD_COMPLETE}/msdos-4.0-i386.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "anondos/freedos-1.4" "${BUILD_COMPLETE}/freedos-1.4-i386.qemu.box" "$EXISTING_BOXES" "qemu"
 
 printf '=== Host Vagrant Box Inventory ===
 '

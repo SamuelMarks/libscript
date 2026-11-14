@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "hyperfine",
+  "title": "hyperfine CLI Benchmarker",
+  "description": "Command-line statistical benchmarking tool supporting warmup runs, prepare hooks, and JSON sample export.",
+  "category": "utility",
+  "provides": ["hyperfine"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/sharkdp/hyperfine"
+}

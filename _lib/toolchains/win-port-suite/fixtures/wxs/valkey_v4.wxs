@@ -1,0 +1,9 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="valkey-win64" Version="9.0.0.0" Manufacturer="LibScript" UpgradeCode="87654321-4321-4321-4321-ba0987654321">
+    <MajorUpgrade DowngradeErrorMessage="Newer version already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="valkey" />
+    </StandardDirectory>
+  </Package>
+</Wix>

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/win-port-suite/vars.schema.json",
+  "title": "win-port-suite variables",
+  "description": "Configuration variables for win-port-suite empirical benchmark orchestrator.",
+  "type": "object",
+  "properties": {
+    "WIN_PORT_SUITE_VERSION": {
+      "type": "string",
+      "default": "1.0.0",
+      "description": "Specific version of win-port-suite to install ('1.0.0' or 'latest')."
+    },
+    "WIN_PORT_SUITE_INSTALL_METHOD": {
+      "type": "string",
+      "default": "libscript_native",
+      "description": "Installation method for win-port-suite ('libscript_native' or 'system')."
+    },
+    "WIN_PORT_SUITE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading win-port-suite artifacts."
+    },
+    "WIN_PORT_SUITE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying win-port-suite releases."
+    },
+    "WIN_PORT_SUITE_SUBSUITES": {
+      "type": "string",
+      "default": "E0,E1,E2,E3,E4,E5,E6,E7",
+      "description": "Comma-separated win_port empirical sub-suites to run (E0 through E7)."
+    },
+    "WIN_PORT_SUITE_RESULTS_DIR": {
+      "type": "string",
+      "default": "",
+      "description": "Directory where raw win_port JSON/CSV artifacts (raw/*.json) and generated_metrics.tex are written."
+    },
+    "WIN_PORT_SUITE_ECOSYSTEM_DIR": {
+      "type": "string",
+      "default": "",
+      "description": "Parent directory containing the 14 win_port repositories and freebsd-src."
+    },
+    "WIN_PORT_SUITE_PAPER_DIR": {
+      "type": "string",
+      "default": "",
+      "description": "Path to ../new_research/win_port containing win_port_paper.tex and win_port_appendix.tex."
+    },
+    "WIN_PORT_SUITE_HOST_ARCH": {
+      "type": "string",
+      "default": "",
+      "description": "Canonical host OS/ISA identifier ('macos_arm64', 'linux_x64', 'windows_x64', 'freebsd_x64', 'illumos_x64', or 'dos32_le')."
+    },
+    "WIN_PORT_SUITE_SYNTHETIC": {
+      "type": "string",
+      "default": "0",
+      "description": "Flag (0 or 1) enabling offline deterministic synthetic fixtures for CI self-testing."
+    },
+    "WIN_PORT_SUITE_DRY_RUN": {
+      "type": "string",
+      "default": "0",
+      "description": "Flag (0 or 1) enabling dry-run execution of external VM/host commands."
+    },
+    "WIN_PORT_SUITE_ALLOW_DIRTY": {
+      "type": "string",
+      "default": "0",
+      "description": "Flag (0 or 1) permitting dirty git worktrees during local iterative development."
+    },
+    "WIN_PORT_SUITE_BUILD_PDF": {
+      "type": "string",
+      "default": "0",
+      "description": "Flag (0 or 1) enabling pdflatex + bibtex compilation of win_port_paper.pdf and win_port_appendix.pdf in E7."
+    }
+  }
+}

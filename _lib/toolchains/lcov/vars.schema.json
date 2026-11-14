@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/lcov/vars.schema.json",
+  "title": "lcov variables",
+  "description": "Configuration variables for lcov",
+  "type": "object",
+  "properties": {
+    "LCOV_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install lcov. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "LCOV_VERSION": {
+      "description": "Specific version of lcov to install.",
+      "type": "string",
+      "default": "2.1",
+      "version_aliases": ["latest", "lts"]
+    },
+    "LCOV_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading lcov binary or archive artifacts."
+    },
+    "LCOV_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying lcov available remote releases."
+    }
+  }
+}

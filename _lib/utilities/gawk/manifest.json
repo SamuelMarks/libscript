@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gawk",
+  "title": "GNU Awk (gawk)",
+  "description": "Standalone GNU Awk 5.4+ pattern scanning and processing language with dynamic C extension support.",
+  "category": "utility",
+  "provides": ["gawk"],
+  "os_whitelist": ["all"],
+  "repository": "https://git.savannah.gnu.org/git/gawk.git"
+}

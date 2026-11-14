@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Environment configuration for msvc.
+# Environment configuration for msvc, exporting MSVC_ARCH, MSVC_CRT, and MSVC_DARICE_CUB_PATH.
 #
 # ## Usage
 # Source this script to configure environment variables.
@@ -26,6 +26,10 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+export MSVC_ARCH="${MSVC_ARCH:-x64}"
+export MSVC_CRT="${MSVC_CRT:-MD}"
+export MSVC_DARICE_CUB_PATH="${MSVC_DARICE_CUB_PATH:-}"
 
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/env_base.sh"
 export SCRIPT_NAME

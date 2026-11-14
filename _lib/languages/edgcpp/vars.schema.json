@@ -160,6 +160,10 @@
       "type": "string",
       "description": "Resolved path to the cpfe-cp C++-generating backend executable."
     },
+    "EDGCPP_RESOLVED_CPFE": {
+      "type": "string",
+      "description": "Resolved path to the primary cpfe front-end and multi-backend executable."
+    },
     "EDGCPP_PHASE_TIMING": {
       "type": "string",
       "description": "Whether to record detailed 4-phase compilation latency breakdown (fe_ms, lower_il_ms, be_ms, codegen_ms) in compile_events.jsonl."
@@ -171,6 +175,27 @@
     "EDGCPP_BENCH_RUNS": {
       "type": "string",
       "description": "Number of compilation benchmark runs per workload/compiler configuration (defaults to 5: 1 cold run + 4 warm runs averaged)."
+    },
+    "EDGCPP_GNU_VERSION": {
+      "type": "string",
+      "default": "130200",
+      "description": "GNU C/C++ compatibility version passed via --gnu_version=<ver> to cpfe without triggering the --gcc libgccjit backend switch."
+    },
+    "EDGCPP_SOURCE_DIR": {
+      "type": "string",
+      "description": "Local filesystem checkout path of edgcpp-compiler-multibackend used for Release, 4-mode matrix, coverage, and Bug #4 ablation builds."
+    },
+    "EDGCPP_REQUIRE_CLEAN_GIT": {
+      "type": "string",
+      "description": "When set to '1', requires EDGCPP_SOURCE_DIR to be a clean, non-dirty git worktree before building benchmark binaries."
+    },
+    "EDGCPP_BUILD_MODE": {
+      "type": "string",
+      "description": "CMake build profile for edgcpp source builds ('release', 'llvm-cov', 'gcov', 'bug4-legacy', or 'all-modes')."
+    },
+    "EDGCPP_RT_LIB": {
+      "type": "string",
+      "description": "Filesystem path to libedg.a (containing gcc_be_eh_rt.o) automatically linked for C++ targets under EDG_BACKEND=gcc or EDG_BACKEND=c."
     }
   }
 }

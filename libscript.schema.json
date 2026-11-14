@@ -559,7 +559,7 @@
     },
     "experiments": {
       "type": ["object", "array"],
-      "description": "Declarative empirical benchmark suite specification(s) conforming to experiment-suite.schema.json.",
+      "description": "Declarative empirical benchmark suite specification(s) conforming to experiment-suite.schema.json (e.g., libtpu, edgcpp, edgcpp_backends, win_port, or libscript).",
       "items": {
         "$ref": "./experiment-suite.schema.json",
         "description": "Single empirical experiment suite manifest."

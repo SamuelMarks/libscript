@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/edgcpp-backends-suite/vars.schema.json",
+  "title": "edgcpp-backends-suite variables",
+  "description": "Configuration variables for edgcpp-backends-suite",
+  "type": "object",
+  "properties": {
+    "EDGCPP_BACKENDS_SUITE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install edgcpp-backends-suite. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "EDGCPP_BACKENDS_SUITE_VERSION": {
+      "description": "Specific version of edgcpp-backends-suite to install.",
+      "type": "string",
+      "default": "1.0.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "EDGCPP_BACKENDS_SUITE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading edgcpp-backends-suite binary or archive artifacts."
+    },
+    "EDGCPP_BACKENDS_SUITE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying edgcpp-backends-suite available remote releases."
+    },
+    "EDGCPP_BACKENDS_SUITE_REPO": {
+      "type": "string",
+      "description": "Pinned filesystem checkout of edgcpp-compiler-multibackend evaluated by E0-E7."
+    },
+    "EDGCPP_BACKENDS_SUITE_PAPER_DIR": {
+      "type": "string",
+      "description": "Manuscript directory containing edgecpp_backends.tex and scripts/render_tex_tables.py."
+    },
+    "EDGCPP_BACKENDS_SUITE_RESULTS_DIR": {
+      "type": "string",
+      "description": "Output directory receiving results/raw/*.json and generated_metrics.tex."
+    },
+    "EDGCPP_BACKENDS_SUITE_SYNTHETIC": {
+      "type": "boolean",
+      "description": "When true, executes deterministic synthetic fixture mode for fast offline CI and self-test verification.",
+      "default": false
+    },
+    "EDGCPP_BACKENDS_SUITE_TRIALS": {
+      "type": "integer",
+      "description": "Number of timed benchmark iterations per compiler pipeline cell (after 1 untimed warmup run).",
+      "default": 11
+    },
+    "EDGCPP_BACKENDS_SUITE_WARMUPS": {
+      "type": "integer",
+      "description": "Number of untimed warmup runs executed prior to recorded timed iterations.",
+      "default": 1
+    },
+    "EDGCPP_BACKENDS_SUITE_SUBSUITES": {
+      "type": "string",
+      "description": "Comma-separated list of sub-suites to run (default 'E0,E1,E2,E3,E4,E5,E6,E7')."
+    },
+    "EDGCPP_BACKENDS_SUITE_HOST_ARCH": {
+      "type": "string",
+      "description": "Canonical host OS/ISA identifier recorded in benchmark outputs (e.g., macos_arm64, linux_x64, windows_x64)."
+    },
+    "EDGCPP_BACKENDS_SUITE_BUILD_PDF": {
+      "type": "string",
+      "description": "When set to '1', compiles edgecpp_backends.tex via texlive and verifies zero Overfull boxes and <= 20 main-text pages."
+    },
+    "EDGCPP_BACKENDS_SUITE_CROSS_ISA_QEMU": {
+      "type": "string",
+      "description": "When set to '1' on Linux, runs the optional 6-architecture Cross-ISA qemu-user-static psABI interop fuzz sweep in E5."
+    },
+    "EDGCPP_BACKENDS_SUITE_ALLOW_DIRTY": {
+      "type": "string",
+      "description": "Override flag ('1') allowing local development runs on uncommitted repositories without failing RULE-1."
+    },
+    "EDGCPP_BACKENDS_SUITE_DRY_RUN": {
+      "type": "string",
+      "description": "When set to '1', validates manifests and command routing without executing long compiler sweeps."
+    }
+  }
+}

@@ -231,9 +231,76 @@ verify_libtpu_dual_isa_and_tpu_vm_campaign() {
   rm -rf "${_t_dir}"
 }
 
+# ## verify_win_port_multi_host_campaign
+# Verifies `--suite=win_port` (`win_port_campaign`) multi-host artifact consolidation, raw/*.json preservation, 285-macro LaTeX emission, and 2x idempotency.
+verify_win_port_multi_host_campaign() {
+  _t_dir="${TMPDIR:-/tmp}/test_cloud_win_port_$$"
+  _st_lin="${_t_dir}/state_lin.json"
+  _st_win="${_t_dir}/state_win.json"
+  _loc_dir="${_t_dir}/win_port_consolidated"
+  rm -rf "${_t_dir}"
+  mkdir -p "${_t_dir}"
+
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment win_port_campaign \
+    --suite='win_port' \
+    --host-arch='linux_x64' \
+    --subsuites='E0,E1,E2,E3,E4,E5,E6,E7' \
+    --state-file="${_st_lin}" \
+    --local-dir="${_loc_dir}"
+  [ -s "${_loc_dir}/results/raw/e4b_wine_warm_Linux_x86_64.json" ]
+  [ -s "${_loc_dir}/results/generated_metrics.tex" ]
+
+  # 2x idempotent rerun on same state file
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment win_port_campaign \
+    --suite='win_port' \
+    --host-arch='linux_x64' \
+    --state-file="${_st_lin}" \
+    --local-dir="${_loc_dir}"
+
+  # Second host (windows_x64) merges without clobbering Linux WINE artifacts
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment win_port_campaign \
+    --suite='win_port' \
+    --host-arch='windows_x64' \
+    --subsuites='E0,E3,E7' \
+    --state-file="${_st_win}" \
+    --local-dir="${_loc_dir}"
+  [ -s "${_loc_dir}/results/raw/e4b_wine_warm_Linux_x86_64.json" ]
+  [ -s "${_loc_dir}/results/raw/e3a_win64_servers.json" ]
+  rm -rf "${_t_dir}"
+}
+
+# ## verify_edgcpp_backends_multi_host_campaign
+# Verifies `--suite=edgcpp_backends` (`edgcpp_backends_campaign`) artifact consolidation, raw/*.json preservation, 60-macro LaTeX emission, and 2x idempotency.
+verify_edgcpp_backends_multi_host_campaign() {
+  _t_dir="${TMPDIR:-/tmp}/test_cloud_edg_be_$$"
+  _st_mac="${_t_dir}/state_mac.json"
+  _loc_dir="${_t_dir}/edg_be_consolidated"
+  rm -rf "${_t_dir}"
+  mkdir -p "${_t_dir}"
+
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment edgcpp_backends_campaign \
+    --suite='edgcpp_backends' \
+    --host-arch='macos_arm64' \
+    --subsuites='E0,E1,E2,E3,E4,E5,E6,E7' \
+    --state-file="${_st_mac}" \
+    --local-dir="${_loc_dir}"
+  [ -s "${_loc_dir}/results/raw/exp1_compile_perf.json" ]
+  [ -s "${_loc_dir}/results/generated_metrics.tex" ]
+
+  # 2x idempotent rerun on same state file
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment edgcpp_backends_campaign \
+    --suite='edgcpp_backends' \
+    --host-arch='macos_arm64' \
+    --state-file="${_st_mac}" \
+    --local-dir="${_loc_dir}"
+  rm -rf "${_t_dir}"
+}
+
 verify_step_by_step_execution
 verify_bento_multi_os_experiment_runner
 verify_single_component_version_pkg_mgr_execution
 verify_combined_all_steps_execution
 verify_libtpu_dual_isa_and_tpu_vm_campaign
+verify_win_port_multi_host_campaign
+verify_edgcpp_backends_multi_host_campaign
 printf '[PASS] Named rapid cloud experimentation lifecycle tests succeeded!\n'

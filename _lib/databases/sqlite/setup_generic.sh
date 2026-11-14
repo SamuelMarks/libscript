@@ -176,7 +176,64 @@ build_sqlite_from_source() {
   fi
 }
 
+# ## run_sqlite_relational_regression
+# Executes the Experiment 2 relational SQL integrity script (`CREATE TABLE`, `INDEX`, `TRIGGER`, `VIEW`, `ROLLBACK`, window functions, JSON functions) against `$1`.
+run_sqlite_relational_regression() {
+  _sq_bin="${1:-sqlite3}"
+  "${_sq_bin}" ':memory:' <<'SQL_EOF'
+PRAGMA foreign_keys = ON;
+CREATE TABLE dept (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
+CREATE TABLE emp (id INTEGER PRIMARY KEY, dept_id INTEGER REFERENCES dept(id), salary INT, meta TEXT);
+CREATE TABLE audit_log (evt TEXT);
+CREATE INDEX idx_emp_dept ON emp(dept_id, salary);
+CREATE TRIGGER trg_emp_ins AFTER INSERT ON emp BEGIN
+  INSERT INTO audit_log(evt) VALUES ('ins:' || NEW.id || ':' || NEW.salary);
+END;
+INSERT INTO dept VALUES (1, 'compiler'), (2, 'runtime');
+INSERT INTO emp VALUES (10, 1, 120, '{"tier":1}'), (11, 1, 150, '{"tier":2}'), (12, 2, 130, '{"tier":1}');
+SAVEPOINT sp1;
+INSERT INTO emp VALUES (99, 2, 999, '{"tier":9}');
+ROLLBACK TO sp1;
+RELEASE sp1;
+CREATE VIEW v_dept_rank AS
+  SELECT d.name AS dname, e.id AS eid, e.salary AS sal,
+         RANK() OVER (PARTITION BY e.dept_id ORDER BY e.salary DESC) AS rnk,
+         json_extract(e.meta, '$.tier') AS tier
+  FROM emp e JOIN dept d ON d.id = e.dept_id;
+SELECT dname || '|' || eid || '|' || sal || '|' || rnk || '|' || tier FROM v_dept_rank ORDER BY eid;
+SELECT COUNT(*) || '|' || GROUP_CONCAT(evt, ',') FROM audit_log;
+SQL_EOF
+}
+
 case "$ACTION" in
+  stage-benchmark-inputs)
+    resolve_exact_version
+    _st_dir="${SQLITE_STAGE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache/benchmarks/sqlite-${EXACT_VERSION}}"
+    mkdir -p "${_st_dir}"
+    if [ ! -f "${_st_dir}/sqlite3.c" ] || [ ! -f "${_st_dir}/shell.c" ]; then
+      _amal_url="$(resolve_sqlite_amalgamation_url)"
+      libscript_fetch_and_extract_source "sqlite" "${_amal_url}"
+      for _f in sqlite3.c shell.c sqlite3.h sqlite3ext.h; do
+        [ -f "${LIBSCRIPT_EXTRACTED_SRC_DIR}/${_f}" ] && cp "${LIBSCRIPT_EXTRACTED_SRC_DIR}/${_f}" "${_st_dir}/${_f}"
+      done
+      rm -rf "${LIBSCRIPT_SOURCE_WORKDIR:-}" 2>/dev/null || true
+    fi
+    if [ ! -f "${_st_dir}/speedtest1.c" ] && [ -n "${SQLITE_SRC_URL:-}" ]; then
+      libscript_fetch_and_extract_source "sqlite-src" "${SQLITE_SRC_URL}"
+      [ -f "${LIBSCRIPT_EXTRACTED_SRC_DIR}/test/speedtest1.c" ] && cp "${LIBSCRIPT_EXTRACTED_SRC_DIR}/test/speedtest1.c" "${_st_dir}/speedtest1.c"
+      rm -rf "${LIBSCRIPT_SOURCE_WORKDIR:-}" 2>/dev/null || true
+    fi
+    _loc_sq=0
+    _loc_sh=0
+    [ -f "${_st_dir}/sqlite3.c" ] && _loc_sq=$(wc -l < "${_st_dir}/sqlite3.c" | awk '{print $1+0}')
+    [ -f "${_st_dir}/shell.c" ] && _loc_sh=$(wc -l < "${_st_dir}/shell.c" | awk '{print $1+0}')
+    printf '{"version":"%s","stage_dir":"%s","sqlite3_loc":%s,"shell_loc":%s}\n' "${EXACT_VERSION}" "${_st_dir}" "${_loc_sq}" "${_loc_sh}"
+    exit 0
+    ;;
+  run-sql-regression)
+    run_sqlite_relational_regression "${SQLITE_BIN:-sqlite3}"
+    exit 0
+    ;;
   ls)
     ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/" 2>/dev/null || true
     exit 0

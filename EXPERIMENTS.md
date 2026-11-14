@@ -217,3 +217,83 @@ invariants (`RULE-1` through `RULE-7`):
 .\libscript.cmd experiment libtpu_campaign --suite=libtpu --host-arch=linux_x64 --warmup=10 --trials=200
 .\libscript.cmd libtpu-rs experiments --subsuites=E0,E1,E2,E5,E6,E7,E8 --results-dir=.\build\libtpu_results
 ```
+
+---
+
+## 5. `win_port` 14-Repository Ecosystem, 5-OS + MS-DOS Matrix & 285-Macro Protocol (`--suite=win_port`)
+
+LibScript natively orchestrates the 14-repository `win_port` empirical campaign (`E0`–`E7`, governed
+by `_lib/toolchains/win-port-suite/win_port.suite.json`), enforcing:
+
+- **Phase 0 Remediation & Pinned Lockfiles (`E0`):** Verifies `manifests/c_upstreams.lock.json` (9 C
+  codebases including `jq 1.8.2` + extracted `Oniguruma 6.9.9`) and the 82-repository
+  `manifests/batch_wild_corpus.lock.json`, plus `cdd-c` strict C89 prologue hoisting,
+  `AUTO_WIN_MSVC_USE_CDD_C`, `win-cmd-rs` Packrat `PegRuleKey` memoization, and `msi-rs` affine
+  `Drop` rollback guards.
+- **Unconfounded Emulation & Validation Parity (`E3` & `E4`):** Separates `msi-rs light` (105 ICEs),
+  `light -sval` (0 ICEs matched to `wixl`), standalone `smoke` (105 ICEs), `.NET 8 wix`, and
+  `darice.cub` validation; measures warm persistent `wineserver -p` vs. cold `wineserver -k` on both
+  `Linux_x86_64` and `Darwin_arm64`; separates WSL2 in-VM loopback from cross-boundary TCP and
+  `wsl.exe` spawn latency; and runs 32-bit MS-DOS (`msdos-1.25`, `msdos-2.0`, `msdos-4.0`,
+  `freedos-1.4`) `CTest` suites over Vagrant `COM1` (`DOS32A.EXE` + OpenWatcom `wcl386`).
+- **285-Placeholder Dual-Manuscript Synthesis (`E7`):** Emits `generated_metrics.tex` and verifies
+  **0** remaining `\tbd{???}` placeholders across both `win_port_paper.tex` (`283` sites, $\le 20$
+  pages) and `win_port_appendix.tex` (`2` sites).
+
+```sh
+# POSIX /bin/sh: Local or multi-host win_port campaign + dual-PDF verification
+./libscript.sh win-port-suite experiments --subsuites=E0,E1,E2,E4,E5,E6,E7 \
+  --host-arch=macos_arm64 --ecosystem-dir=.. --paper-dir=../new_research/win_port --build-pdf
+
+./libscript.sh experiment win_port_campaign --suite=win_port --host-arch=windows_x64 \
+  --subsuites=E1B,E3,E4A,E4C,E5B --ecosystem-dir=.. --paper-dir=../new_research/win_port
+```
+
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd win-port-suite experiments --subsuites=E1B,E3,E4A,E4C,E5B --host-arch=windows_x64
+.\libscript.cmd experiment win_port_campaign --suite=win_port --host-arch=windows_x64
+```
+
+---
+
+## 6. EDG C/C++ v7.0.1 Multi-Backend Evaluation & 60-Placeholder Protocol (`--suite=edgcpp_backends`)
+
+LibScript natively orchestrates the zero-hallucination **EDG C/C++ Multi-Backend Protocol**
+(`E0`–`E7`, governed by `_lib/toolchains/edgcpp-backends-suite/edgcpp_backends.suite.json`),
+evaluating `EDG-FE-ONLY`, `EDG-LLVM` (`llvm_gen_be`), `EDG-GCC` (`gcc_gen_be` / `libgccjit`),
+`EDG-C-LEGACY` (`c_gen_be`), `EDG-CPP-LEGACY` (`cp_gen_be`), `NATIVE-CLANG`, and `NATIVE-GCC`:
+
+- **Phase 0 Gates, Coverage & Bug #4 Ablation (`E0`):** Verifies all 6 pre-benchmark fixes in
+  `edgcpp-compiler-multibackend` (Itanium §2.9.5 `__vmi_class_type_info::__flags`, deterministic
+  `_Z_coro_frame_%lu_%s` + HALO soundness, clean `aarch64-apple-darwin` `DataLayout`, external
+  `> 16B` AAPCS64 `declare` lowering, `-O0` `i1` branch lowering, and dynamic `realloc`
+  `deferred_structs` + bitfield RMW), runs CTest & 4-mode CMake builds, extracts disaggregated
+  `llvm-cov` and `gcov`/`lcov` coverage (`exp0_coverage.json`), and times the `sqlite3.c`
+  array-decay pathology fix (`exp0_bug4_ablation.json`).
+- **Matched-Opt Compile/Runtime, EH, Coroutines, psABI/Differential Fuzzing & Kernel Sweep
+  (`E1`–`E6`):** Enforces matched optimization flags (`-O0` vs. `-O0`, `-O2` vs. `-O2`),
+  same-LLVM/same-GCC baseline alignment, two-stage `.int.c`/`.int.cpp` accounting, 15-way SQLite
+  SHA-256 SQL correctness + TBAA/ThinLTO/IR-PGO ablations (`E2`), DCE-proof C++ EH unwinding (`E3`)
+  and C++20 coroutine HALO/ASan gates (`E4`), 1,000-signature Split-TU psABI + GCC Torture +
+  Csmith/YARPGen differential campaigns (`E5`), and multi-TU open-source + authentic Linux kernel
+  `compile_commands.json` sweeps (`E6`).
+- **60-Placeholder Automated LaTeX Synthesis (`E7`):** Verifies single-SHA provenance across all 13
+  `results/raw/*.json` files, emits `generated_metrics.tex`, asserts zero remaining `\tbd` or `???`
+  tokens in `edgecpp_backends.tex`, and audits PDF compilation via `_lib/toolchains/texlive`.
+
+```sh
+# POSIX /bin/sh: Local or multi-host edgcpp_backends campaign + PDF verification
+./libscript.sh edgcpp-backends-suite experiments --subsuites=E0,E1,E2,E3,E4,E5,E6,E7 \
+  --repo=/Volumes/external_repos/edgcpp-compiler-multibackend \
+  --paper-dir=../new_research/edgcpp_backends --build-pdf
+
+./libscript.sh experiment edgcpp_backends_campaign --suite=edgcpp_backends \
+  --host-arch=linux_x64 --subsuites=E0,E5,E6,E7 --paper-dir=../new_research/edgcpp_backends
+```
+
+```cmd
+:: Windows Batch equivalent
+.\libscript.cmd edgcpp-backends-suite experiments --subsuites=E0,E1,E2,E3,E4,E5 --host-arch=windows_x64
+.\libscript.cmd experiment edgcpp_backends_campaign --suite=edgcpp_backends --host-arch=windows_x64
+```

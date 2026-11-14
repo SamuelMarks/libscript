@@ -69,7 +69,9 @@ CORE_EXPERIMENT_SUBSUITES="${CORE_EXPERIMENT_SUBSUITES:-${LIBSCRIPT_EXPERIMENT_S
 CORE_EXPERIMENT_WARMUP="${CORE_EXPERIMENT_WARMUP:-${LIBSCRIPT_EXPERIMENT_WARMUP:-10}}"
 CORE_EXPERIMENT_TRIALS="${CORE_EXPERIMENT_TRIALS:-${LIBSCRIPT_EXPERIMENT_TRIALS:-200}}"
 CORE_EXPERIMENT_REPO_DIR="${CORE_EXPERIMENT_REPO_DIR:-${LIBSCRIPT_EXPERIMENT_REPO_DIR:-}}"
+CORE_EXPERIMENT_ECOSYSTEM_DIR="${CORE_EXPERIMENT_ECOSYSTEM_DIR:-${LIBSCRIPT_EXPERIMENT_ECOSYSTEM_ROOT:-}}"
 CORE_EXPERIMENT_PAPER_DIR="${CORE_EXPERIMENT_PAPER_DIR:-${LIBSCRIPT_EXPERIMENT_PAPER_DIR:-}}"
+CORE_EXPERIMENT_APPENDIX_TEX="${CORE_EXPERIMENT_APPENDIX_TEX:-}"
 CORE_EXPERIMENT_CARGO_PROFILE="${CORE_EXPERIMENT_CARGO_PROFILE:-${LIBSCRIPT_BENCH_CARGO_PROFILE:-opt3-lto-thin-cgu1}}"
 CORE_EXPERIMENT_REQUIRE_NATIVE_ISA="${CORE_EXPERIMENT_REQUIRE_NATIVE_ISA:-${LIBSCRIPT_BENCH_REQUIRE_NATIVE_ISA:-1}}"
 CORE_EXPERIMENT_HOST_ARCH="${CORE_EXPERIMENT_HOST_ARCH:-linux_x64}"
@@ -91,7 +93,7 @@ while [ $# -gt 0 ]; do
       CORE_EXPERIMENT_STEPS="${CORE_EXPERIMENT_STEPS:+${CORE_EXPERIMENT_STEPS},}${2:-}"
       shift 2
       ;;
-    a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|sync_research_repos|verify_native_host|emit_latex_and_verify_pdf|provision_instance|use_bento_fork|setup_bento_fork|bento_fork|install_virtualization_stack|install_bento_deps|deploy_vagrant_box|deploy_target_os|snapshot_vagrant_box|snapshot|test_libscript_components|run_libscript_matrix|send_logs_to_host|run_experiments|collect_logs|move_to_log_dir|pull_logs|move_log_dir_to_host|deprovision_instance|bento_matrix|os_matrix|full_bento_matrix|libtpu_campaign|all|provision|run|collect|transfer|pull|deprovision|teardown|a|0|1|2|3|4|5|i)
+    a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|sync_research_repos|verify_native_host|emit_latex_and_verify_pdf|provision_instance|use_bento_fork|setup_bento_fork|bento_fork|install_virtualization_stack|install_bento_deps|deploy_vagrant_box|deploy_target_os|snapshot_vagrant_box|snapshot|test_libscript_components|run_libscript_matrix|send_logs_to_host|run_experiments|collect_logs|move_to_log_dir|pull_logs|move_log_dir_to_host|deprovision_instance|bento_matrix|os_matrix|full_bento_matrix|libtpu_campaign|win_port_campaign|edgcpp_backends_campaign|all|provision|run|collect|transfer|pull|deprovision|teardown|a|0|1|2|3|4|5|i)
       CORE_EXPERIMENT_STEPS="${CORE_EXPERIMENT_STEPS:+${CORE_EXPERIMENT_STEPS},}$1"
       shift
       ;;
@@ -136,6 +138,8 @@ while [ $# -gt 0 ]; do
     --trials) CORE_EXPERIMENT_TRIALS="${2:-200}"; shift 2 ;;
     --repo-dir=*) CORE_EXPERIMENT_REPO_DIR="${1#*=}"; shift ;;
     --repo-dir) CORE_EXPERIMENT_REPO_DIR="${2:-}"; shift 2 ;;
+    --ecosystem-dir=*) CORE_EXPERIMENT_ECOSYSTEM_DIR="${1#*=}"; shift ;;
+    --appendix-tex=*) CORE_EXPERIMENT_APPENDIX_TEX="${1#*=}"; shift ;;
     --paper-dir=*) CORE_EXPERIMENT_PAPER_DIR="${1#*=}"; shift ;;
     --paper-dir) CORE_EXPERIMENT_PAPER_DIR="${2:-}"; shift 2 ;;
     --cargo-profile=*) CORE_EXPERIMENT_CARGO_PROFILE="${1#*=}"; shift ;;
@@ -194,7 +198,7 @@ if [ -n "${CORE_EXPERIMENT_PKG_MGR}" ] && [ -z "${CORE_EXPERIMENT_INSTALL_METHOD
 fi
 
 if [ -z "${CORE_EXPERIMENT_STEPS}" ]; then
-  if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
+  if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
     CORE_EXPERIMENT_STEPS='a_provision_instance,sync_research_repos,verify_native_host,run_experiments,g_collect_logs,h_pull_logs,emit_latex_and_verify_pdf,i_deprovision_instance'
   else
     CORE_EXPERIMENT_STEPS='a_provision_instance,b_use_bento_fork,c_install_virtualization_stack,d_deploy_vagrant_box,e_snapshot_vagrant_box,f_test_libscript_components,run_experiments,g_collect_logs,h_pull_logs,i_deprovision_instance'
@@ -440,6 +444,14 @@ sync_research_repos() {
     fi
   done
 
+  if [ -n "${CORE_EXPERIMENT_ECOSYSTEM_DIR}" ] && [ -d "${CORE_EXPERIMENT_ECOSYSTEM_DIR}" ]; then
+    for _wrepo in cdd-c auto-win-msvc msi-rs win-cmd-rs bento busybox-windows toybox-windows dash-windows gawk-windows jq-windows memcached-windows redis-windows valkey-windows freebsd-usr-bin-windows freebsd-src; do
+      if [ -d "${CORE_EXPERIMENT_ECOSYSTEM_DIR}/${_wrepo}" ]; then
+        _whash=$(libscript_compute_tree_hash "${CORE_EXPERIMENT_ECOSYSTEM_DIR}/${_wrepo}")
+        cloud_exec_remote "mkdir -p ~/repos/${_wrepo} && printf '%s\\n' '${_whash}' > ~/repos/${_wrepo}/.libscript_sync_hash"
+      fi
+    done
+  fi
   write_experiment_state 'sync_research_repos' 'true'
 }
 
@@ -605,6 +617,32 @@ run_experiments() {
     return 0
   fi
 
+  if [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ]; then
+    log_info "[run_experiments] Running edgcpp_backends empirical suites (${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}' (arch=${CORE_EXPERIMENT_HOST_ARCH})..."
+    _eb_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 ./_lib/toolchains/edgcpp-backends-suite/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/edgcpp_backends_results'"
+    cloud_exec_remote "${_eb_cmd}"
+    if [ "${DRY_RUN_MODE}" = "1" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/benchmark_experiments.sh" ]; then
+      EDGCPP_BACKENDS_SUITE_SYNTHETIC='1' "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/benchmark_experiments.sh" --synthetic-fixtures --subsuites="${CORE_EXPERIMENT_SUBSUITES}" --host-arch="${CORE_EXPERIMENT_HOST_ARCH}" --results-dir="${LIBSCRIPT_ROOT_DIR}/build/experiment_bundle/results" >/dev/null 2>&1 || true
+    fi
+    write_experiment_state 'run_experiments' 'true'
+    return 0
+  fi
+
+  if [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ]; then
+    log_info "[run_experiments] Running win_port empirical suites (${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}' (arch=${CORE_EXPERIMENT_HOST_ARCH})..."
+    _wp_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 ./_lib/toolchains/win-port-suite/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/win_port_results'"
+    cloud_exec_remote "${_wp_cmd}"
+    if [ "${DRY_RUN_MODE}" = "1" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/win-port-suite/benchmark_experiments.sh" ]; then
+      WIN_PORT_SUITE_SYNTHETIC='1' "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/win-port-suite/benchmark_experiments.sh" --synthetic-fixtures --subsuites="${CORE_EXPERIMENT_SUBSUITES}" --host-arch="${CORE_EXPERIMENT_HOST_ARCH}" --results-dir="${LIBSCRIPT_ROOT_DIR}/build/experiment_bundle/results" >/dev/null 2>&1 || true
+    fi
+    write_experiment_state 'run_experiments' 'true'
+    return 0
+  fi
+  if [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ] && [ -n "${CORE_EXPERIMENT_SUITE_MANIFEST}" ]; then
+    libscript_exp_run_manifest "${CORE_EXPERIMENT_SUITE_MANIFEST}" "${CORE_EXPERIMENT_SUBSUITES}" "${LIBSCRIPT_ROOT_DIR}/build/experiment_bundle/results"
+    write_experiment_state 'run_experiments' 'true'
+    return 0
+  fi
   if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
     log_info "[run_experiments] Running libtpu empirical suites (${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}' (warmup=${CORE_EXPERIMENT_WARMUP}, trials=${CORE_EXPERIMENT_TRIALS}, arch=${CORE_EXPERIMENT_HOST_ARCH})..."
     _libtpu_cmd="cd ~/libscript && LIBSCRIPT_BENCH_PREPARE_HOST=1 LIBSCRIPT_BENCH_DROP_CACHES=1 ./_lib/toolchains/libtpu-rs/cli.sh experiments --subsuites='${CORE_EXPERIMENT_SUBSUITES}' --warmup='${CORE_EXPERIMENT_WARMUP}' --trials='${CORE_EXPERIMENT_TRIALS}' --cargo-profile='${CORE_EXPERIMENT_CARGO_PROFILE}' --host-arch='${CORE_EXPERIMENT_HOST_ARCH}' --results-dir='~/libscript/build/libtpu_results'"
@@ -639,7 +677,7 @@ collect_logs() {
   fi
 
   log_info "[collect_logs] Consolidating suite '${CORE_EXPERIMENT_SUITE}' artifacts into '${CORE_EXPERIMENT_REMOTE_DIR}' on '${CORE_EXPERIMENT_NODE}'..."
-  _collect_cmd="mkdir -p ${CORE_EXPERIMENT_REMOTE_DIR}/cells ${CORE_EXPERIMENT_REMOTE_DIR}/logs ${CORE_EXPERIMENT_REMOTE_DIR}/tests_tmp ${CORE_EXPERIMENT_REMOTE_DIR}/results && cp -rf ~/libscript/tests_tmp/* ${CORE_EXPERIMENT_REMOTE_DIR}/tests_tmp/ 2>/dev/null || true && cp -rf ~/libscript/build/libtpu_results/* ${CORE_EXPERIMENT_REMOTE_DIR}/results/ 2>/dev/null || true && cp -f ~/libscript/build/edgcpp-experiments-report.json ${CORE_EXPERIMENT_REMOTE_DIR}/ 2>/dev/null || true && cp -f ~/libscript/build/edgcpp-experiments-tables.tex ${CORE_EXPERIMENT_REMOTE_DIR}/ 2>/dev/null || true && cp -f ~/libscript/build/edgcpp-torture-report.json ${CORE_EXPERIMENT_REMOTE_DIR}/ 2>/dev/null || true && cp -rf ~/libscript/build/experiments/* ${CORE_EXPERIMENT_REMOTE_DIR}/cells/ 2>/dev/null || true && cp -f ~/.libscript/edgcpp/compile_events.jsonl ${CORE_EXPERIMENT_REMOTE_DIR}/logs/ 2>/dev/null || true"
+  _collect_cmd="mkdir -p ${CORE_EXPERIMENT_REMOTE_DIR}/cells ${CORE_EXPERIMENT_REMOTE_DIR}/logs ${CORE_EXPERIMENT_REMOTE_DIR}/tests_tmp ${CORE_EXPERIMENT_REMOTE_DIR}/results ${CORE_EXPERIMENT_REMOTE_DIR}/results/raw && cp -rf ~/libscript/tests_tmp/* ${CORE_EXPERIMENT_REMOTE_DIR}/tests_tmp/ 2>/dev/null || true && cp -rf ~/libscript/build/libtpu_results/* ${CORE_EXPERIMENT_REMOTE_DIR}/results/ 2>/dev/null || true && cp -rf ~/libscript/build/win_port_results/raw/* ${CORE_EXPERIMENT_REMOTE_DIR}/results/raw/ 2>/dev/null || true && cp -rf ~/libscript/build/win_port_results/* ${CORE_EXPERIMENT_REMOTE_DIR}/results/ 2>/dev/null || true && cp -rf ~/libscript/build/edgcpp_backends_results/raw/* ${CORE_EXPERIMENT_REMOTE_DIR}/results/raw/ 2>/dev/null || true && cp -rf ~/libscript/build/edgcpp_backends_results/* ${CORE_EXPERIMENT_REMOTE_DIR}/results/ 2>/dev/null || true && cp -f ~/libscript/build/edgcpp-experiments-report.json ${CORE_EXPERIMENT_REMOTE_DIR}/ 2>/dev/null || true && cp -f ~/libscript/build/edgcpp-experiments-tables.tex ${CORE_EXPERIMENT_REMOTE_DIR}/ 2>/dev/null || true && cp -f ~/libscript/build/edgcpp-torture-report.json ${CORE_EXPERIMENT_REMOTE_DIR}/ 2>/dev/null || true && cp -rf ~/libscript/build/experiments/* ${CORE_EXPERIMENT_REMOTE_DIR}/cells/ 2>/dev/null || true && cp -f ~/.libscript/edgcpp/compile_events.jsonl ${CORE_EXPERIMENT_REMOTE_DIR}/logs/ 2>/dev/null || true"
   cloud_exec_remote "${_collect_cmd}"
 
   if [ "${DRY_RUN_MODE}" = "1" ]; then
@@ -692,6 +730,10 @@ pull_logs() {
       done
       if [ -d "${_local_staging}/results" ]; then
         find "${_local_staging}/results" -maxdepth 1 -type f -exec cp -f {} "${CORE_EXPERIMENT_LOCAL_DIR}/results/" \;
+        if [ -d "${_local_staging}/results/raw" ]; then
+          mkdir -p "${CORE_EXPERIMENT_LOCAL_DIR}/results/raw"
+          find "${_local_staging}/results/raw" -maxdepth 1 -type f -exec cp -f {} "${CORE_EXPERIMENT_LOCAL_DIR}/results/raw/" \;
+        fi
       fi
     fi
     if [ ! -f "${CORE_EXPERIMENT_LOCAL_DIR}/edgcpp-experiments-report.json" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/build/edgcpp-experiments-report.json" ]; then
@@ -748,6 +790,27 @@ emit_latex_and_verify_pdf() {
     fi
   fi
 
+  if [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/benchmark_experiments.sh" ]; then
+    _eb_pdf_flag=''
+    [ "${CORE_EXPERIMENT_BUILD_PDF}" = "1" ] && _eb_pdf_flag='--build-pdf'
+    _eb_syn_flag='0'
+    [ "${DRY_RUN_MODE}" = "1" ] && _eb_syn_flag='1'
+    # shellcheck disable=SC2086
+    EDGCPP_BACKENDS_SUITE_SYNTHETIC="${_eb_syn_flag}" "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/edgcpp-backends-suite/benchmark_experiments.sh" --subsuites='E7' --results-dir="${CORE_EXPERIMENT_LOCAL_DIR}/results" --paper-dir="${CORE_EXPERIMENT_PAPER_DIR}" ${_eb_pdf_flag}
+    write_experiment_state 'emit_latex_and_verify_pdf' 'true'
+    return 0
+  fi
+
+  if [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/win-port-suite/benchmark_experiments.sh" ]; then
+    _wp_pdf_flag=''
+    [ "${CORE_EXPERIMENT_BUILD_PDF}" = "1" ] && _wp_pdf_flag='--build-pdf'
+    _wp_syn_flag='0'
+    [ "${DRY_RUN_MODE}" = "1" ] && _wp_syn_flag='1'
+    # shellcheck disable=SC2086
+    WIN_PORT_SUITE_SYNTHETIC="${_wp_syn_flag}" "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/win-port-suite/benchmark_experiments.sh" --subsuites='E7' --results-dir="${CORE_EXPERIMENT_LOCAL_DIR}/results" --paper-dir="${CORE_EXPERIMENT_PAPER_DIR}" ${_wp_pdf_flag}
+    write_experiment_state 'emit_latex_and_verify_pdf' 'true'
+    return 0
+  fi
   if [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/libtpu-rs/benchmark_experiments.sh" ]; then
     _pdf_flag=''
     [ "${CORE_EXPERIMENT_BUILD_PDF}" = "1" ] && _pdf_flag='--build-pdf'
@@ -790,7 +853,7 @@ run_selected_lifecycle_steps() {
   for _token in ${_norm_steps}; do
     case "${_token}" in
       all|full_bento_matrix)
-        if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
+        if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
           provision_instance
           sync_research_repos
           verify_native_host
@@ -810,7 +873,7 @@ run_selected_lifecycle_steps() {
           deprovision_instance
         fi
         ;;
-      libtpu_campaign)
+      libtpu_campaign|win_port_campaign|edgcpp_backends_campaign)
         provision_instance
         sync_research_repos
         verify_native_host

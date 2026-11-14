@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "win-port-suite",
+  "title": "win_port Empirical Benchmark Suite Orchestrator",
+  "description": "Declarative empirical evaluation orchestrator (E0-E7) for the 14-repository win_port ecosystem and 285-placeholder LaTeX synthesis protocol.",
+  "category": "toolchain",
+  "provides": ["win-port-suite", "win-port-experiments"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/SamuelMarks/libscript"
+}

@@ -102,6 +102,10 @@ call "%LIBSCRIPT_ROOT_DIR%\tests\test_experiment_harness.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_libtpu_experiments.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_port_experiments.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_edgcpp_backends_experiments.cmd"
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_languages_and_package_managers.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_data_and_server_components.cmd"

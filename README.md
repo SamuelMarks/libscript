@@ -783,11 +783,13 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `aqua`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `aria2`                               | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `asdf`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
+| `auto-win-msvc`                       | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `autoconf`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `automake`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `awscli`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `azure-cli`                           | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `bazel`                               | `toolchains`       | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `bear`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `bootstrap`                           | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `brew`                                | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
 | `buck2`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -800,9 +802,12 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `caddy`                               | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `cargo`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `cargo-binstall`                      | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `cargo-llvm-cov`                      | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `cassandra`                           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `catch2`                              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `cc`                                  | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `ccache`                              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `cdd-c`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `celery`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `ceph`                                | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
 | `certbot`                             | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -823,6 +828,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `crowdsec`                            | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `crystal`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `csharp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `csmith`                              | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `curl`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `custom-cc`                           | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `cygwin`                              | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
@@ -831,10 +837,12 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `deno`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno-pm`                             | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `dnf`                                 | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
+| `doxygen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `dragonfly`                           | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `drupal`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `duckdb`                              | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `edgcpp-backends-suite`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `elasticsearch`                       | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `elixir`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `emerge`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
@@ -852,12 +860,15 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `firecrawl`                           | `web-apps`         | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
 | `flatpak`                             | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `fluentbit`                           | `logging`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `fmt`                                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `fnm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `forgejo`                             | `git-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `fortran`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `fzf`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `garage`                              | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `gawk`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gcc`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `gcc-torture`                         | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gcsfuse`                             | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `gem`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `gettext`                             | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -886,6 +897,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `htop`                                | `utilities`        | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `httpd`                               | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `huggingface-cli`                     | `toolchains`       | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `hyperfine`                           | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `iis`                                 | `web-servers`      | -           | -           | -           | ✅      | -     | -       | -     |
 | `imagemagick`                         | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `influxdb`                            | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -904,7 +916,9 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `keydb`                               | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `kotlin`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `krew`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `lcov`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lfs-toolchain`                       | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `libarchive`                          | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `libtool`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `libtpu`                              | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `libtpu-rs`                           | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -915,6 +929,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `lua`                                 | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `luarocks`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `lynx`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `lz4`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `macports`                            | `package-managers` | -           | -           | -           | -       | -     | -       | ✅    |
 | `magento`                             | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `make`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -925,6 +940,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `maven-wrapper`                       | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `meilisearch`                         | `search`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `memcached`                           | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `memtier-benchmark`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
 | `meson`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `minio`                               | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `mise`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
@@ -933,6 +949,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `mosquitto`                           | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `msbuild`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `msi-rs`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `msitools`                            | `toolchains`       | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `mssql`                               | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `msvc`                                | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
 | `msys2`                               | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
@@ -962,6 +979,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `openresty`                           | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `opensearch`                          | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `openssl`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `openwatcom`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
 | `otel-collector`                      | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `pacman`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
 | `pandoc`                              | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1078,6 +1096,8 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `wasmtime`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wget`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `wildfly`                             | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `win-cmd-rs`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `win-port-suite`                      | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `winget`                              | `package-managers` | -           | -           | -           | ✅      | -     | -       | -     |
 | `wireguard`                           | `security`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wix`                                 | `toolchains`       | -           | -           | -           | ✅      | -     | -       | -     |
@@ -1089,6 +1109,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `xpk`                                 | `toolchains`       | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `xz`                                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `yarn`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `yarpgen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `yasm`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `yay`                                 | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
 | `yq`                                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1097,6 +1118,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `zfs`                                 | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `zig`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `zip`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `zlib`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `zookeeper`                           | `databases`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `zstd`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `zypper`                              | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
@@ -1205,22 +1227,23 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `bootloaders/setup`      | `bootloaders`    | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
 | `distro`                 | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `freebsd/distro`         | `freebsd`        | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `grub`                   | `bootloaders`    | ❓          | ❓          | ❓          | -       | ❓    | ❓      | -     |
+| `grub`                   | `bootloaders`    | ✅          | ❓          | ❓          | -       | ❓    | ❓      | -     |
 | `illumos/distro`         | `illumos`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | -     |
 | `initramfs`              | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `lima`                   | `virtualization` | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
-| `limine`                 | `bootloaders`    | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
+| `limine`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `linux`                  | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `multipass`              | `virtualization` | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
 | `packagers`              | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `refind`                 | `bootloaders`    | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
+| `refind`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `repogen`                | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `runner`                 | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `solo5`                  | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `storage/provision_disk` | `storage`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `systemd-boot`           | `bootloaders`    | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `systemd-boot`           | `bootloaders`    | ✅          | ❓          | ❓          | -       | -     | -       | -     |
 | `utm`                    | `virtualization` | -           | -           | -           | -       | -     | -       | ❓    |
 | `vfs`                    | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `wine`                   | `virtualization` | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `wsl`                    | `virtualization` | -           | -           | -           | ❓      | -     | -       | -     |
 
 ### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners

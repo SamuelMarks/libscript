@@ -264,14 +264,14 @@ if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     echo Building msi-rs ^(msi-cli and msi-gui^) from local checkout at !LIBSCRIPT_ROOT_DIR!\..\msi-rs...
     pushd "!LIBSCRIPT_ROOT_DIR!\..\msi-rs"
-    cargo build --release -p msi-cli -p msi-gui
+    set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --workspace --bins --release
     call :install_binaries "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\target\release"
     popd
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 ) else if exist "C:\msi-rs\Cargo.toml" (
     echo Building msi-rs ^(msi-cli and msi-gui^) from local checkout at C:\msi-rs...
     pushd "C:\msi-rs"
-    cargo build --release -p msi-cli -p msi-gui
+    set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --workspace --bins --release
     call :install_binaries "C:\msi-rs\target\release"
     popd
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
@@ -279,7 +279,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     echo Extracting msi-rs from cached zip...
     tar -xf "%CACHE_ZIP%" -C "%BUILD_DIR%" --strip-components=1
     cd /d "%BUILD_DIR%"
-    cargo build --release -p msi-cli -p msi-gui
+    set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --workspace --bins --release
     call :install_binaries "%BUILD_DIR%\target\release"
     cd /d "%~dp0"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
@@ -297,7 +297,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     cd /d "%BUILD_DIR%"
     git checkout %EXACT_VERSION%
     cd /d "%BUILD_DIR%"
-    cargo build --release -p msi-cli -p msi-gui
+    set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --workspace --bins --release
     call :install_binaries "%BUILD_DIR%\target\release"
     cd /d "%~dp0"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
@@ -322,7 +322,7 @@ exit /b 0
 :: Copies built binaries to the destination bin directory and creates drop-in aliases.
 :install_binaries
 set "RELEASE_DIR=%~1"
-for %%B in (msi-cli candle light wix dark heat torch pyro lit smoke msiinfo msibuild msidump msidiff msiextract msi-gui) do (
+for %%B in (msi-cli msiexec candle light wix dark heat torch pyro lit smoke msiinfo msibuild msidump msidiff msiextract msidb msimsp msizap msi-gui) do (
     if exist "%RELEASE_DIR%\%%B.exe" (
         copy /y "%RELEASE_DIR%\%%B.exe" "%TARGET_DIR%\bin\" >nul
     )

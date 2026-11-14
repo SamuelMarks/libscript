@@ -114,7 +114,9 @@ case "$ACTION" in
   install)
     if [ "${DASH_INSTALL_METHOD}" = "from-source" ]; then
       resolve_exact_version
-      libscript_build_component_from_source "dash" "${EXACT_VERSION}" "dash" "c" "autotools" "${DASH_DOWNLOAD_URL:-}"
+      [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION='0.5.12'
+      _dash_src_url="${DASH_DOWNLOAD_URL:-http://gondor.apana.org.au/~herbert/dash/files/dash-${EXACT_VERSION}.tar.gz}"
+      libscript_build_component_from_source "dash" "${EXACT_VERSION}" "dash" "c" "autotools" "${_dash_src_url}"
       exit 0
     fi
     if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/dash/${VERSION:-latest}/bin/dash" ]; then

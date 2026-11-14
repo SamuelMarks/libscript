@@ -2,11 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/msvc/vars.schema.json",
   "title": "MSVC Build Tools variables",
-  "description": "Configuration variables for Microsoft Visual C++ (MSVC) Build Tools.",
+  "description": "Configuration variables for Microsoft Visual C++ (MSVC) Build Tools and Windows SDK.",
   "type": "object",
   "properties": {
     "MSVC_VERSION": {
-      "description": "Specific version of MSVC Build Tools to install (e.g., '2022' or 'latest').",
+      "description": "Specific version of MSVC Build Tools to install (e.g., '2022', '2026', or 'latest').",
       "type": "string",
       "default": "latest"
     },
@@ -14,6 +14,21 @@
       "description": "How to install MSVC ('libscript_native' or 'system').",
       "type": "string",
       "default": "system"
+    },
+    "MSVC_ARCH": {
+      "description": "Target CPU architecture configured for cl.exe and dumpbin.exe ('x64', 'x86', or 'arm64').",
+      "type": "string",
+      "default": "x64"
+    },
+    "MSVC_CRT": {
+      "description": "MSVC C Runtime linkage flag ('MT' for static CRT or 'MD' for dynamic CRT).",
+      "type": "string",
+      "default": "MD"
+    },
+    "MSVC_DARICE_CUB_PATH": {
+      "description": "Filesystem path to Microsoft Windows SDK darice.cub 105-ICE validation oracle table.",
+      "type": "string",
+      "default": ""
     }
   }
 }

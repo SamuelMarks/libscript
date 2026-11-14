@@ -97,6 +97,15 @@
     "LINUX_COMPARE_DISTROS": {
       "type": "string",
       "description": "Space-separated list of Vagrant Linux distributions ('debian-13 rockylinux-10.2 alpine-3.24') to evaluate in the Vagrant kernel compiler matrix."
+    },
+    "LINUX_SWEEP_SUBDIRS": {
+      "type": "string",
+      "default": "init/ kernel/ mm/ fs/",
+      "description": "Space-separated Kbuild subdirectories included in the Experiment 6B compile_commands.json per-TU replay sweep."
+    },
+    "LINUX_SWEEP_OUT_JSON": {
+      "type": "string",
+      "description": "Output JSON path written by the compile-commands-sweep action recording tus_ok, tus_total, loc, median/max RSS, and failure categories."
     }
   }
 }

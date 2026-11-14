@@ -2038,14 +2038,14 @@ components:
       properties:
         suite:
           type: string
-          enum: [libscript, edgcpp, libtpu, manifest, all]
+          enum: [libscript, edgcpp, edgcpp_backends, libtpu, win_port, manifest, all]
           description: Experiment suite identifier to execute
         step:
           type: string
           default: all
           description:
-            Named lifecycle step or campaign alias (e.g., libtpu_campaign, bento_matrix,
-            run_experiments)
+            Named lifecycle step or campaign alias (e.g., libtpu_campaign, win_port_campaign,
+            edgcpp_backends_campaign, bento_matrix, run_experiments)
         subsuites:
           type: string
           default: E0,E1,E2,E3,E4,E5,E6,E7,E8
@@ -2062,5 +2062,26 @@ components:
           description: Number of recorded fresh trials per benchmark cell
         host_arch:
           type: string
+          enum:
+            [linux_x64, macos_arm64, windows_x64, freebsd_x64, freebsd_arm64, illumos_x64, dos32_le]
           default: linux_x64
-          description: Canonical OS/ISA target tag (linux_x64 or macos_arm64)
+          description: Canonical OS/ISA target tag across the 5-OS and MS-DOS host matrix
+        emulation_mode:
+          type: string
+          enum:
+            [
+              native_only,
+              wine_warm,
+              wine_cold,
+              wsl2_loopback,
+              wsl2_cross_boundary,
+              wsl2_cli_spawn,
+              cygwin,
+              msys2,
+              dos32_vagrant_com1,
+            ]
+          default: native_only
+          description: Optional controlled emulation or virtualization baseline mode
+        ecosystem_dir:
+          type: string
+          description: Optional parent directory containing multi-repository ecosystem checkouts

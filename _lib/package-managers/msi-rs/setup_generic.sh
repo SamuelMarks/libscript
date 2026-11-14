@@ -110,7 +110,7 @@ install_binaries_from_dir() {
   dest_bin="${TARGET_DIR}/bin"
   mkdir -p "${dest_bin}"
 
-  for bin_name in msi-cli candle light wix dark heat lit torch pyro smoke msiinfo msibuild msidump msidiff msiextract msi-gui; do
+  for bin_name in msi-cli msiexec candle light wix dark heat lit torch pyro smoke msiinfo msibuild msidump msidiff msiextract msidb msimsp msizap msi-gui; do
     if [ -f "${src_dir}/${bin_name}" ]; then
       cp "${src_dir}/${bin_name}" "${dest_bin}/${bin_name}"
       chmod +x "${dest_bin}/${bin_name}"
@@ -320,14 +320,14 @@ case "$ACTION" in
 
       if [ -n "$local_repo_dir" ]; then
         log_info "Building msi-rs (msi-cli and msi-gui) from local checkout at ${local_repo_dir}..."
-        (cd "${local_repo_dir}" && cargo build --release -p msi-cli -p msi-gui)
+        (cd "${local_repo_dir}" && CARGO_PROFILE_RELEASE_OPT_LEVEL=3 cargo build --workspace --bins --release)
         install_binaries_from_dir "${local_repo_dir}/target/release"
       elif [ -f "$cache_tarball" ]; then
         log_info 'Extracting from download cache...'
         mkdir -p "${build_stage_dir}"
         tar -xzf "$cache_tarball" -C "${build_stage_dir}" --strip-components=1 || true
         if [ -f "${build_stage_dir}/Cargo.toml" ]; then
-          (cd "${build_stage_dir}" && cargo build --release -p msi-cli -p msi-gui)
+          (cd "${build_stage_dir}" && CARGO_PROFILE_RELEASE_OPT_LEVEL=3 cargo build --workspace --bins --release)
           install_binaries_from_dir "${build_stage_dir}/target/release"
           rm -rf "${build_stage_dir}"
         fi
@@ -342,7 +342,7 @@ case "$ACTION" in
         rm -rf "${build_stage_dir}"
         mkdir -p "${build_stage_dir}"
         git clone "${REPO_URL}" "${build_stage_dir}"
-        (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && cargo build --release -p msi-cli -p msi-gui)
+        (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && CARGO_PROFILE_RELEASE_OPT_LEVEL=3 cargo build --workspace --bins --release)
         install_binaries_from_dir "${build_stage_dir}/target/release"
         rm -rf "${build_stage_dir}"
       fi

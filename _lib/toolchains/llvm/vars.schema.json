@@ -24,6 +24,10 @@
     "LLVM_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying llvm available remote releases."
+    },
+    "LLVM_PREFIX": {
+      "type": "string",
+      "description": "Resolved LLVM installation prefix containing bin/clang, bin/llvm-cov, bin/llvm-profdata, and bin/llvm-size."
     }
   }
 }

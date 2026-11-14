@@ -68,6 +68,10 @@ set "COMPILER_ID=!RAW_COMPILER_ID::=-!"
 if /i "!RAW_COMPILER_ID!"=="edgcpp+llvm+gcc:gcc" set "COMPILER_ID=edgcpp+llvm+gcc-gcc_be"
 if /i "!RAW_COMPILER_ID!"=="edgcpp+llvm+gcc:llvm" set "COMPILER_ID=edgcpp+llvm+gcc-llvm_be"
 
+if /i "!ACTION!"=="compile-commands-sweep" (
+    echo [ERROR] [KERNEL-SWEEP] Authentic Linux kernel Kbuild compile_commands.json sweep requires a native Linux host; refusing to fake Kbuild on Windows. 1>&2
+    exit /b 1
+)
 if /i "!ACTION!"=="ls" (
     if exist "!LIBSCRIPT_ROOT_DIR!\build\kernel" dir /b "!LIBSCRIPT_ROOT_DIR!\build\kernel"
     exit /b 0

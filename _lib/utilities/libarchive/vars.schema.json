@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/libarchive/vars.schema.json",
+  "title": "libarchive variables",
+  "description": "Configuration variables for libarchive",
+  "type": "object",
+  "properties": {
+    "LIBARCHIVE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install libarchive. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "LIBARCHIVE_VERSION": {
+      "description": "Specific version of libarchive to install.",
+      "type": "string",
+      "default": "3.7.7",
+      "version_aliases": ["latest", "lts"]
+    },
+    "LIBARCHIVE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading libarchive binary or archive artifacts."
+    },
+    "LIBARCHIVE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying libarchive available remote releases."
+    }
+  }
+}

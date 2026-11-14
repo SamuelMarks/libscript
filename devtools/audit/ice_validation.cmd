@@ -1,12 +1,11 @@
 @echo off
 :: # ice_validation.cmd
 :: ## Overview
-:: Validates Internal Configuration Engine (ICE) structural integrity.
+:: Validates 105-ICE structural integrity of an `.msi` package on Windows via `msival2.exe` + `darice.cub`, `msiexec.exe /a`, and `msi-rs smoke`.
 :: ## Usage
-:: call devtools\audit\ice_validation.cmd [msi_file]
+:: call devtools\audit\ice_validation.cmd <msi_file> [--darice-cub=<path>]
 
 setlocal EnableDelayedExpansion
-set "THIS_DIR=%~dp0"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -50,5 +49,33 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo [PASS] ICE validation is primarily evaluated via POSIX scripts on CI.
+set "MSI_FILE=%~1"
+if "!MSI_FILE!"=="" (
+    echo [PASS] No MSI path supplied; skipping live darice.cub check.
+    exit /b 0
+)
+if not exist "!MSI_FILE!" (
+    echo [FAIL] MSI file not found: !MSI_FILE! 1>&2
+    exit /b 1
+)
+
+call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\msvc\env.cmd"
+where smoke.exe >nul 2>&1
+if not errorlevel 1 (
+    smoke.exe "!MSI_FILE!"
+    if errorlevel 1 exit /b 1
+    echo [PASS] msi-rs smoke 105-ICE validation passed.
+)
+where msival2.exe >nul 2>&1
+if not errorlevel 1 if not "!MSVC_DARICE_CUB_PATH!"=="" if exist "!MSVC_DARICE_CUB_PATH!" (
+    msival2.exe "!MSI_FILE!" "!MSVC_DARICE_CUB_PATH!" -f
+    if errorlevel 1 exit /b 1
+    echo [PASS] msival2.exe darice.cub 105-ICE oracle validation passed.
+)
+set "_EXT_DIR=%TEMP%\libscript_ice_ext_%RANDOM%"
+msiexec.exe /a "!MSI_FILE!" /qn TARGETDIR="!_EXT_DIR!"
+set "_MSI_RC=!errorlevel!"
+if exist "!_EXT_DIR!" rmdir /s /q "!_EXT_DIR!" >nul 2>&1
+if not "!_MSI_RC!"=="0" exit /b !_MSI_RC!
+echo [PASS] Windows ICE and msiexec administrative extraction passed.
 exit /b 0

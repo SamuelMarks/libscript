@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bear",
+  "title": "Bear Compilation Database Generator (compile_commands.json)",
+  "description": "Standalone version manager and installer for Build EAR (bear), generating Clang JSON compilation databases (compile_commands.json) for Make and Kbuild projects.",
+  "category": "toolchain",
+  "provides": ["bear", "compilation-database"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/rizsotto/Bear"
+}

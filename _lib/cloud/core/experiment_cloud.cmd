@@ -75,7 +75,9 @@ if "%CORE_EXPERIMENT_SUBSUITES%"=="" set "CORE_EXPERIMENT_SUBSUITES=E0,E1,E2,E3,
 if "%CORE_EXPERIMENT_WARMUP%"=="" set "CORE_EXPERIMENT_WARMUP=10"
 if "%CORE_EXPERIMENT_TRIALS%"=="" set "CORE_EXPERIMENT_TRIALS=200"
 if "%CORE_EXPERIMENT_REPO_DIR%"=="" set "CORE_EXPERIMENT_REPO_DIR="
+if "%CORE_EXPERIMENT_ECOSYSTEM_DIR%"=="" set "CORE_EXPERIMENT_ECOSYSTEM_DIR="
 if "%CORE_EXPERIMENT_PAPER_DIR%"=="" set "CORE_EXPERIMENT_PAPER_DIR="
+if "%CORE_EXPERIMENT_APPENDIX_TEX%"=="" set "CORE_EXPERIMENT_APPENDIX_TEX="
 if "%CORE_EXPERIMENT_CARGO_PROFILE%"=="" set "CORE_EXPERIMENT_CARGO_PROFILE=opt3-lto-thin-cgu1"
 if "%CORE_EXPERIMENT_REQUIRE_NATIVE_ISA%"=="" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1"
 if "%CORE_EXPERIMENT_HOST_ARCH%"=="" set "CORE_EXPERIMENT_HOST_ARCH=linux_x64"
@@ -116,6 +118,8 @@ for %%A in (%*) do (
     if "!_arg:~0,9!"=="--warmup=" set "CORE_EXPERIMENT_WARMUP=!_arg:~9!"
     if "!_arg:~0,9!"=="--trials=" set "CORE_EXPERIMENT_TRIALS=!_arg:~9!"
     if "!_arg:~0,11!"=="--repo-dir=" set "CORE_EXPERIMENT_REPO_DIR=!_arg:~11!"
+    if "!_arg:~0,16!"=="--ecosystem-dir=" set "CORE_EXPERIMENT_ECOSYSTEM_DIR=!_arg:~16!"
+    if "!_arg:~0,15!"=="--appendix-tex=" set "CORE_EXPERIMENT_APPENDIX_TEX=!_arg:~15!"
     if "!_arg:~0,12!"=="--paper-dir=" set "CORE_EXPERIMENT_PAPER_DIR=!_arg:~12!"
     if "!_arg:~0,16!"=="--cargo-profile=" set "CORE_EXPERIMENT_CARGO_PROFILE=!_arg:~16!"
     if /i "!_arg!"=="--require-native-isa" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1"
@@ -160,6 +164,8 @@ for %%A in (%*) do (
     if /i "!_arg!"=="os_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! bento_matrix"
     if /i "!_arg!"=="full_bento_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! all"
     if /i "!_arg!"=="libtpu_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! libtpu_campaign"
+    if /i "!_arg!"=="win_port_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! win_port_campaign"
+    if /i "!_arg!"=="edgcpp_backends_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! edgcpp_backends_campaign"
     if /i "!_arg!"=="all" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! all"
     if /i "!_arg!"=="a" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
     if /i "!_arg!"=="0" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
@@ -341,8 +347,36 @@ if /i "!CORE_EXPERIMENT_SUITE!"=="libscript" (
     call :write_experiment_state
     exit /b 0
 )
+if /i "!CORE_EXPERIMENT_SUITE!"=="edgcpp_backends" (
+    echo [INFO] [run_experiments] Running edgcpp_backends suites ^(!CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\benchmark_experiments.cmd" (
+        set "EDGCPP_BACKENDS_SUITE_SYNTHETIC=1"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\benchmark_experiments.cmd" "--synthetic-fixtures" "--subsuites=!CORE_EXPERIMENT_SUBSUITES!" "--host-arch=!CORE_EXPERIMENT_HOST_ARCH!" "--results-dir=!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results"
+    )
+    set "RUN_DONE=true"
+    call :write_experiment_state
+    exit /b 0
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
+    echo [INFO] [run_experiments] Running win_port suites ^(!CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" (
+        set "WIN_PORT_SUITE_SYNTHETIC=1"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" "--synthetic-fixtures" "--subsuites=!CORE_EXPERIMENT_SUBSUITES!" "--host-arch=!CORE_EXPERIMENT_HOST_ARCH!" "--results-dir=!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results"
+    )
+    set "RUN_DONE=true"
+    call :write_experiment_state
+    exit /b 0
+)
 if /i "!CORE_EXPERIMENT_SUITE!"=="libtpu" (
     echo [INFO] [run_experiments] Running libtpu suites ^(!CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
+if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" "--subsuites=E7" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\results"
+    )
+    set "LATEX_DONE=true"
+    call :write_experiment_state
+    exit /b 0
+)
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" (
         set "LIBTPU_RS_SYNTHETIC_FIXTURES=1"
         set "LIBTPU_RS_DRY_RUN=1"
@@ -373,6 +407,10 @@ if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\results" mkdir "!CORE_EXPERIMENT_LOCAL
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
 if exist "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\*" copy /y "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\*" "!CORE_EXPERIMENT_LOCAL_DIR!\results\" >nul 2>&1
+if exist "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\raw\*" (
+    if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\results\raw" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\results\raw"
+    copy /y "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\raw\*" "!CORE_EXPERIMENT_LOCAL_DIR!\results\raw\" >nul 2>&1
+)
 (
     echo {
     echo   "provider": "!CORE_EXPERIMENT_PROVIDER!",
@@ -413,6 +451,22 @@ exit /b 0
 :emit_latex_and_verify_pdf
 if not "%FORCE_REBUILD%"=="1" if "!LATEX_DONE!"=="true" (
     echo [INFO] [emit_latex_and_verify_pdf] LaTeX macro emission already completed.
+    exit /b 0
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="edgcpp_backends" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\benchmark_experiments.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\benchmark_experiments.cmd" "--subsuites=E7" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\results"
+    )
+    set "LATEX_DONE=true"
+    call :write_experiment_state
+    exit /b 0
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" "--subsuites=E7" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\results"
+    )
+    set "LATEX_DONE=true"
+    call :write_experiment_state
     exit /b 0
 )
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" (
@@ -500,7 +554,15 @@ set "_steps=!CORE_EXPERIMENT_STEPS:,= !"
 set "_steps=!_steps:;= !"
 for %%T in (!_steps!) do (
     if /i "%%T"=="all" (
-        if /i "!CORE_EXPERIMENT_SUITE!"=="libtpu" (
+        if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
+            call :provision_instance
+            call :sync_research_repos
+            call :verify_native_host
+            call :run_experiments
+            call :send_logs_to_host
+            call :emit_latex_and_verify_pdf
+            call :deprovision_instance
+        ) else if /i "!CORE_EXPERIMENT_SUITE!"=="libtpu" (
             call :provision_instance
             call :sync_research_repos
             call :verify_native_host
@@ -519,6 +581,22 @@ for %%T in (!_steps!) do (
             call :send_logs_to_host
             call :deprovision_instance
         )
+    ) else if /i "%%T"=="win_port_campaign" (
+        call :provision_instance
+        call :sync_research_repos
+        call :verify_native_host
+        call :run_experiments
+        call :send_logs_to_host
+        call :emit_latex_and_verify_pdf
+        call :deprovision_instance
+    ) else if /i "%%T"=="edgcpp_backends_campaign" (
+        call :provision_instance
+        call :sync_research_repos
+        call :verify_native_host
+        call :run_experiments
+        call :send_logs_to_host
+        call :emit_latex_and_verify_pdf
+        call :deprovision_instance
     ) else if /i "%%T"=="libtpu_campaign" (
         call :provision_instance
         call :sync_research_repos

@@ -324,6 +324,7 @@ packaging/assets/*.bmp
 
 # Generated installer build artifacts
 *.wxs
+!_lib/toolchains/win-port-suite/fixtures/wxs/*.wxs
 *.wixobj
 *.msi
 packaging/*.msi

@@ -5,6 +5,7 @@
     "msi-rs",
     "msi",
     "msi-cli",
+    "msiexec",
     "candle",
     "light",
     "wix",
@@ -19,9 +20,13 @@
     "msidump",
     "msidiff",
     "msiextract",
+    "msidb",
+    "msimsp",
+    "msizap",
+    "msi-gui",
     "package-manager"
   ],
-  "os_whitelist": ["linux", "darwin", "windows", "freebsd"],
+  "os_whitelist": ["linux", "darwin", "windows", "freebsd", "sunos", "illumos"],
   "title": "msi-rs",
   "description": "Bootstrap module for the `msi-rs` package manager and WiX/msitools/msiexec replacement toolchain.",
   "category": "package-managers"

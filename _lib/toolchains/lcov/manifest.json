@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lcov",
+  "title": "LCOV Code Coverage Tooling (lcov / geninfo / genhtml)",
+  "description": "Standalone version manager and installer for LCOV (lcov, geninfo, genhtml), extracting function, line, and branch gcov coverage metrics.",
+  "category": "toolchain",
+  "provides": ["lcov", "geninfo", "genhtml"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/linux-test-project/lcov"
+}

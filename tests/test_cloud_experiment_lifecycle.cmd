@@ -64,6 +64,12 @@ if errorlevel 1 exit /b 1
 call :verify_libtpu_dual_isa_and_tpu_vm_campaign
 if errorlevel 1 exit /b 1
 
+call :verify_win_port_multi_host_campaign
+if errorlevel 1 exit /b 1
+
+call :verify_edgcpp_backends_multi_host_campaign
+if errorlevel 1 exit /b 1
+
 echo [PASS] Named rapid cloud experimentation lifecycle tests succeeded on Windows!
 exit /b 0
 
@@ -141,4 +147,29 @@ if not exist "!_loc_dir!\results\e2_startup_macos_arm64.json" exit /b 1
 if not exist "!_loc_dir!\results\generated_metrics.tex" exit /b 1
 del /f /q "!_st_x64!" "!_st_tpu!" >nul 2>&1
 rmdir /s /q "!_loc_dir!" >nul 2>&1
+exit /b 0
+
+:: ## verify_win_port_multi_host_campaign
+:: Verifies `--suite=win_port` (`win_port_campaign`) multi-host artifact consolidation and 285-macro LaTeX emission on Windows.
+:verify_win_port_multi_host_campaign
+set "_st_wp=%TEMP%\cloud_wp_%RANDOM%.json"
+set "_loc_wp=%TEMP%\cloud_wp_res_%RANDOM%"
+set "WIN_PORT_SUITE_ALLOW_DIRTY=1"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment win_port_campaign --suite=win_port --host-arch=windows_x64 --subsuites=E0,E1,E2,E3,E4,E5,E6,E7 --dry-run "--state-file=!_st_wp!" "--local-dir=!_loc_wp!"
+if errorlevel 1 exit /b 1
+if not exist "!_loc_wp!\results\generated_metrics.tex" exit /b 1
+del /f /q "!_st_wp!" >nul 2>&1
+rmdir /s /q "!_loc_wp!" >nul 2>&1
+exit /b 0
+
+:: ## verify_edgcpp_backends_multi_host_campaign
+:: Verifies `--suite=edgcpp_backends` (`edgcpp_backends_campaign`) artifact consolidation and 60-macro LaTeX emission on Windows.
+:verify_edgcpp_backends_multi_host_campaign
+set "_st_eb=%TEMP%\cloud_eb_%RANDOM%.json"
+set "_loc_eb=%TEMP%\cloud_eb_res_%RANDOM%"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment edgcpp_backends_campaign --suite=edgcpp_backends --host-arch=windows_x64 --subsuites=E0,E1,E2,E3,E4,E5,E6,E7 --dry-run "--state-file=!_st_eb!" "--local-dir=!_loc_eb!"
+if errorlevel 1 exit /b 1
+if not exist "!_loc_eb!\results\generated_metrics.tex" exit /b 1
+del /f /q "!_st_eb!" >nul 2>&1
+rmdir /s /q "!_loc_eb!" >nul 2>&1
 exit /b 0

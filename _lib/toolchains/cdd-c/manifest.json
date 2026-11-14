@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cdd-c",
+  "title": "cdd-c C89 CST Transformer",
+  "description": "Lossless C89 Concrete Syntax Tree (CST) parser and 4-pass lowering transformer (cdd-c-transform).",
+  "category": "toolchain",
+  "provides": ["cdd-c", "cdd-c-transform"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/offscale/cdd-c"
+}

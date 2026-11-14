@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Environment configuration script for llvm.
+# Environment configuration script for llvm, exposing llvm-cov, llvm-profdata, llvm-strip, and llvm-objdump.
 #
 # ## Usage
-# Source this script to prepend the isolated llvm bin directory to PATH.
+# Source this script to prepend the isolated llvm bin directory (and system LLVM bin fallback) to PATH.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -40,6 +40,19 @@ else
   EXACT_VERSION="${LLVM_VERSION}"
 fi
 
-libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/llvm/${EXACT_VERSION}/bin"
+for _llvm_sys in '/opt/homebrew/opt/llvm/bin' '/usr/local/opt/llvm/bin'; do
+  if [ -d "${_llvm_sys}" ]; then
+    libscript_path_prepend "${_llvm_sys}"
+  fi
+done
+_llvm_iso="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/llvm/${EXACT_VERSION}"
+if [ -d "${_llvm_iso}/bin" ]; then
+  export LLVM_PREFIX="${LLVM_PREFIX:-${_llvm_iso}}"
+elif [ -d '/opt/homebrew/opt/llvm/bin' ]; then
+  export LLVM_PREFIX="${LLVM_PREFIX:-/opt/homebrew/opt/llvm}"
+elif [ -d '/usr/local/opt/llvm/bin' ]; then
+  export LLVM_PREFIX="${LLVM_PREFIX:-/usr/local/opt/llvm}"
+fi
+libscript_path_prepend "${_llvm_iso}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

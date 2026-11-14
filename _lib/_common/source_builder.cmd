@@ -113,9 +113,33 @@ if /i "!_tc_spec!"=="default" (
     if /i "!_tc_spec!"=="BASE-GCC" (
         set "_base_cc_pkg=gcc"
         set "LIBSCRIPT_RESOLVED_CC_ID=BASE-GCC"
+    ) else if /i "!_tc_spec!"=="NATIVE-GCC" (
+        set "_base_cc_pkg=gcc"
+        set "LIBSCRIPT_RESOLVED_CC_ID=NATIVE-GCC"
     ) else if /i "!_tc_spec!"=="BASE-CLANG" (
         set "_base_cc_pkg=clang"
         set "LIBSCRIPT_RESOLVED_CC_ID=BASE-CLANG"
+    ) else if /i "!_tc_spec!"=="NATIVE-CLANG" (
+        set "_base_cc_pkg=clang"
+        set "LIBSCRIPT_RESOLVED_CC_ID=NATIVE-CLANG"
+    ) else if /i "!_tc_spec!"=="EDG-FE-ONLY" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=EDG-FE-ONLY"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=fe_only"
+        set "EDG_BACKEND=fe-only"
+    ) else if /i "!_tc_spec!"=="EDG-C-LEGACY" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=EDG-C-LEGACY"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=c_backend"
+        set "EDG_BACKEND=c"
+    ) else if /i "!_tc_spec!"=="EDG-CPP-LEGACY" (
+        set "_base_cc_pkg=edgcpp"
+        set "LIBSCRIPT_RESOLVED_CC_ID=EDG-CPP-LEGACY"
+        set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+        set "EDGCPP_BACKEND_MODE=cpp_backend"
+        set "EDG_BACKEND=cpp"
     ) else if /i "!_tc_spec!"=="EDG-LEGACY" (
         set "_base_cc_pkg=edgcpp"
         set "LIBSCRIPT_RESOLVED_CC_ID=EDG-LEGACY"

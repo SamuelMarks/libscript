@@ -64,7 +64,7 @@ if "!_FOUND_CLI!"=="0" (
     exit /b 1
 )
 
-for %%T in (candle light msi-gui msiinfo) do (
+for %%T in (candle light smoke dark msiexec msi-gui msiinfo) do (
     where %%T.exe >nul 2>&1
     if not errorlevel 1 (
         %%T.exe --version >nul 2>&1

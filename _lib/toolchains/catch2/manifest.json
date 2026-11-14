@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "catch2",
+  "title": "Catch2 v3 C++17 Unit Testing Framework",
+  "description": "Standalone version manager and CMake multi-TU source builder for Catch2 (pinned default 3.7.1) with upstream CTest verification.",
+  "category": "toolchain",
+  "provides": ["catch2"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/catchorg/Catch2"
+}

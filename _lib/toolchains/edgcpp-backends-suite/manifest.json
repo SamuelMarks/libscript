@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "edgcpp-backends-suite",
+  "title": "EDG C/C++ Multi-Backend Empirical Evaluation Suite (E0-E7)",
+  "description": "Declarative zero-hallucination benchmarking suite (E0-E7) evaluating EDG C/C++ v7.0.1 LLVM, GCC/libgccjit, and legacy backends across latency, SQLite ablations, EH, C++20 coroutines, psABI/Csmith/YARPGen fuzzing, open-source/Linux kernel corpora, and 60-placeholder LaTeX synthesis.",
+  "category": "toolchain",
+  "provides": ["edgcpp-backends-suite", "edgcpp-backends"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/SamuelMarks/edgcpp-compiler"
+}

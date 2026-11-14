@@ -114,31 +114,51 @@ libscript_resolve_build_toolchain() {
     LIBSCRIPT_RESOLVED_CC_ID="$(printf '%s' "${_tc_spec}" | tr ':' '-')"
     _base_cc_pkg="${_tc_spec}"
     case "${_tc_spec}" in
-      BASE-GCC)
+      BASE-GCC|NATIVE-GCC)
         _base_cc_pkg='gcc'
-        LIBSCRIPT_RESOLVED_CC_ID='BASE-GCC'
+        LIBSCRIPT_RESOLVED_CC_ID="${_tc_spec}"
         ;;
-      BASE-CLANG)
+      BASE-CLANG|NATIVE-CLANG)
         _base_cc_pkg='clang'
-        LIBSCRIPT_RESOLVED_CC_ID='BASE-CLANG'
+        LIBSCRIPT_RESOLVED_CC_ID="${_tc_spec}"
         ;;
-      EDG-LEGACY|edgcpp+c|edgcpp-c-be|edgcpp-legacy|edgcpp+llvm+gcc:c|edgcpp+llvm+gcc-c_be)
+      EDG-FE-ONLY|edgcpp-fe-only)
         _base_cc_pkg='edgcpp'
-        [ "${_tc_spec}" = "EDG-LEGACY" ] && LIBSCRIPT_RESOLVED_CC_ID='EDG-LEGACY' || LIBSCRIPT_RESOLVED_CC_ID='edgcpp-c-be'
+        LIBSCRIPT_RESOLVED_CC_ID='EDG-FE-ONLY'
+        export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
+        export EDGCPP_BACKEND_MODE='fe_only'
+        export EDG_BACKEND='fe-only'
+        ;;
+      EDG-C-LEGACY|EDG-LEGACY|edgcpp+c|edgcpp-c-be|edgcpp-legacy|edgcpp+llvm+gcc:c|edgcpp+llvm+gcc-c_be)
+        _base_cc_pkg='edgcpp'
+        case "${_tc_spec}" in
+          EDG-C-LEGACY|EDG-LEGACY) LIBSCRIPT_RESOLVED_CC_ID="${_tc_spec}" ;;
+          *) LIBSCRIPT_RESOLVED_CC_ID='edgcpp-c-be' ;;
+        esac
         export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
         export EDGCPP_BACKEND_MODE='c_backend'
+        export EDG_BACKEND='c'
+        ;;
+      EDG-CPP-LEGACY|edgcpp-cp-be)
+        _base_cc_pkg='edgcpp'
+        LIBSCRIPT_RESOLVED_CC_ID='EDG-CPP-LEGACY'
+        export EDGCPP_FLAVOR='edgcpp+llvm+gcc'
+        export EDGCPP_BACKEND_MODE='cpp_backend'
+        export EDG_BACKEND='cpp'
         ;;
       edgcpp+gcc|EDG-GCC)
         _base_cc_pkg='edgcpp'
         [ "${_tc_spec}" = "EDG-GCC" ] && LIBSCRIPT_RESOLVED_CC_ID='EDG-GCC'
         export EDGCPP_FLAVOR='edgcpp+gcc'
         export EDGCPP_BACKEND_MODE='gcc_backend'
+        export EDG_BACKEND='gcc'
         ;;
       edgcpp+llvm|EDG-LLVM)
         _base_cc_pkg='edgcpp'
         [ "${_tc_spec}" = "EDG-LLVM" ] && LIBSCRIPT_RESOLVED_CC_ID='EDG-LLVM'
         export EDGCPP_FLAVOR='edgcpp+llvm'
         export EDGCPP_BACKEND_MODE='llvm_backend'
+        export EDG_BACKEND='llvm'
         ;;
       edgcpp+llvm+gcc:gcc|edgcpp+llvm+gcc-gcc_be|edgcpp-gcc-be)
         _base_cc_pkg='edgcpp'
@@ -181,8 +201,10 @@ libscript_resolve_build_toolchain() {
     fi
 
     case "${_tc_spec}" in
-      gcc|BASE-GCC)
-        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
+      gcc|BASE-GCC|NATIVE-GCC)
+        if [ -n "${GCC_MATCHED:-}" ] && [ -x "${GCC_MATCHED}" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${GCC_MATCHED}"
+        elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gcc/default/bin/gcc"
         else
           _cand_gcc="$(command -v gcc 2>/dev/null || true)"
@@ -199,8 +221,10 @@ libscript_resolve_build_toolchain() {
           LIBSCRIPT_RESOLVED_CC_BIN="${_cand_gcc:-${CC:-gcc}}"
         fi
         ;;
-      clang|BASE-CLANG)
-        if [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang" ]; then
+      clang|BASE-CLANG|NATIVE-CLANG)
+        if [ -n "${CLANG_MATCHED:-}" ] && [ -x "${CLANG_MATCHED}" ]; then
+          LIBSCRIPT_RESOLVED_CC_BIN="${CLANG_MATCHED}"
+        elif [ -x "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang" ]; then
           LIBSCRIPT_RESOLVED_CC_BIN="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/clang/default/bin/clang"
         elif command -v clang >/dev/null 2>&1; then
           LIBSCRIPT_RESOLVED_CC_BIN="$(command -v clang)"
@@ -487,16 +511,37 @@ libscript_emit_build_metrics() {
     fi
   fi
 
-  _peak_rss="${LIBSCRIPT_LAST_PEAK_RSS_KB:-42000}"
+  _peak_rss="${LIBSCRIPT_LAST_PEAK_RSS_KB:-0}"
   _compile_ms="${LIBSCRIPT_LAST_COMPILE_TIME_MS:-0}"
-  _fe_ms=$((_compile_ms * 30 / 100))
-  [ "${_fe_ms}" -lt 1 ] && _fe_ms=1
-  _il_ms=$((_compile_ms * 15 / 100))
-  [ "${_il_ms}" -lt 1 ] && _il_ms=1
-  _be_ms=$((_compile_ms * 25 / 100))
-  [ "${_be_ms}" -lt 1 ] && _be_ms=1
-  _cg_ms=$((_compile_ms - _fe_ms - _il_ms - _be_ms))
-  [ "${_cg_ms}" -lt 1 ] && _cg_ms=1
+  _fe_ms="${LIBSCRIPT_LAST_FE_MS:-0}"
+  _il_ms="${LIBSCRIPT_LAST_LOWER_IL_MS:-0}"
+  _be_ms="${LIBSCRIPT_LAST_BE_MS:-0}"
+  _cg_ms="${LIBSCRIPT_LAST_CODEGEN_MS:-0}"
+  _tel_src='wall_only'
+  if [ -n "${EDG_DRIVER_LOG:-}" ] && [ -s "${EDG_DRIVER_LOG}" ]; then
+    _agg_line=$(awk '
+      {
+        if (match($0, /"fe_cpu_s"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+          s = substr($0, RSTART, RLENGTH); sub(/^.*:/, "", s); fe += (s + 0) * 1000.0
+        }
+        if (match($0, /"be_cpu_s"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+          s = substr($0, RSTART, RLENGTH); sub(/^.*:/, "", s); be += (s + 0) * 1000.0
+        }
+        if (match($0, /"peak_rss_mb"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+          s = substr($0, RSTART, RLENGTH); sub(/^.*:/, "", s); r = (s + 0) * 1024.0; if (r > maxr) maxr = r
+        }
+      }
+      END { printf "%.0f|%.0f|%.0f\n", fe, be, maxr }
+    ' "${EDG_DRIVER_LOG}" 2>/dev/null || printf '0|0|0')
+    _fe_ms="${_agg_line%%|*}"
+    _rem="${_agg_line#*|}"
+    _be_ms="${_rem%%|*}"
+    _agg_rss="${_rem#*|}"
+    [ "${_agg_rss:-0}" -gt "${_peak_rss:-0}" ] 2>/dev/null && _peak_rss="${_agg_rss}"
+    _tel_src='edg_driver_log'
+  elif [ "${_fe_ms}" -gt 0 ] 2>/dev/null || [ "${_be_ms}" -gt 0 ] 2>/dev/null; then
+    _tel_src='measured_env'
+  fi
 
   _safe_cc_ver=$(printf '%s' "${LIBSCRIPT_RESOLVED_CC_VERSION:-unknown}" | tr '"' "'" | tr -d '
 
@@ -524,6 +569,7 @@ libscript_emit_build_metrics() {
   "be_ms": ${_be_ms},
   "codegen_ms": ${_cg_ms},
   "peak_rss_kb": ${_peak_rss},
+  "telemetry_source": "${_tel_src}",
   "binary_path": "${_bm_bin_path}",
   "binary_size_bytes": ${_bin_bytes},
   "stripped_size_bytes": ${_stripped_bytes},

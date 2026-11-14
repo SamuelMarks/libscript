@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/gcc-torture/vars.schema.json",
+  "title": "gcc-torture variables",
+  "description": "Configuration variables for gcc-torture",
+  "type": "object",
+  "properties": {
+    "GCC_TORTURE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install gcc-torture. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "GCC_TORTURE_VERSION": {
+      "description": "Specific version of gcc-torture to install.",
+      "type": "string",
+      "default": "14.2.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "GCC_TORTURE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading gcc-torture binary or archive artifacts."
+    },
+    "GCC_TORTURE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying gcc-torture available remote releases."
+    },
+    "GCC_TORTURE_DIR": {
+      "type": "string",
+      "description": "Filesystem directory containing extracted gcc.c-torture/execute/*.c test cases."
+    },
+    "GCC_TORTURE_SKIP_NESTED_FUNCTIONS": {
+      "type": "boolean",
+      "description": "Whether tests relying on non-standard GNU nested functions or DejaGnu target-skip .x directives are filtered out.",
+      "default": true
+    }
+  }
+}

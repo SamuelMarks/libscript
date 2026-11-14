@@ -125,6 +125,14 @@
     "SQLITE_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying sqlite available remote releases."
+    },
+    "SQLITE_SRC_URL": {
+      "type": "string",
+      "description": "Upstream sqlite-src archive URL providing test/speedtest1.c alongside the amalgamation."
+    },
+    "SQLITE_STAGE_DIR": {
+      "type": "string",
+      "description": "Destination directory where stage-benchmark-inputs extracts sqlite3.c, shell.c, sqlite3.h, and speedtest1.c."
     }
   }
 }

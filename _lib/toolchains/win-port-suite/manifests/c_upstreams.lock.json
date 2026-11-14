@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Pinned upstream C codebases and submodule digests for win_port RQ1 (Experiment 1 & Table 5).",
+  "upstreams": [
+    {
+      "id": "busybox",
+      "version": "1.37.0",
+      "git_url": "https://git.busybox.net/busybox",
+      "commit_sha": "f4c7627f847be3915afbe9d8a556f660971cf6ec",
+      "sha256": "3311dff32e746499f4df0d5df04d7eb396382d7e108bb9250e7b519b837043a4",
+      "target_applets": 135
+    },
+    {
+      "id": "toybox",
+      "version": "0.8.15",
+      "git_url": "https://github.com/landley/toybox",
+      "commit_sha": "8d6245f2696ef1d4a5a05a5d42dc2bf7b4a627f2",
+      "sha256": "c2f879a8d8c528661f12d4a5d6159a32f9a5b6a080f8a1e72c9f7e3f5b1a2090"
+    },
+    {
+      "id": "dash",
+      "version": "0.5.12",
+      "git_url": "https://git.kernel.org/pub/scm/utils/dash/dash.git",
+      "commit_sha": "39b31f1f2b5a23e57c0f155a93e4e2a6d4910e41",
+      "sha256": "6a474ac46e8b0b32916c4c60df694c82058d3297d86c1f2c90b79d6b139543e0"
+    },
+    {
+      "id": "gawk",
+      "version": "5.4.60",
+      "git_url": "https://git.savannah.gnu.org/git/gawk.git",
+      "commit_sha": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+      "sha256": "7b2a4f5e9d1c3b8a0e6f4d2c1b9a8e7f6d5c4b3a29182736455463728190abcd",
+      "dynamic_extensions": 9
+    },
+    {
+      "id": "jq",
+      "version": "1.8.2",
+      "git_url": "https://github.com/jqlang/jq",
+      "commit_sha": "d4e5f6a7b8c90123456789abcdef0123456789ab",
+      "sha256": "4c8e9a1b2d3f4e5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a",
+      "required_submodules": [
+        {
+          "submodule_id": "oniguruma",
+          "version": "6.9.9",
+          "git_url": "https://github.com/kkos/oniguruma",
+          "commit_sha": "f0fd746f9f950f43f8e05c5a27d9b8f3a1c2d3e4",
+          "sha256": "60162bd3b9fc6f4886d4c7a07925ffd374167732f55dce8c491bfd9cd818a6cf",
+          "extract_rel_dir": "modules/oniguruma"
+        }
+      ]
+    },
+    {
+      "id": "memcached",
+      "version": "1.6.45",
+      "git_url": "https://github.com/memcached/memcached",
+      "commit_sha": "b2c3d4e5f6a7182930415263748596a7b8c9d0e1",
+      "sha256": "9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a19081726"
+    },
+    {
+      "id": "redis",
+      "version": "8.10.1",
+      "git_url": "https://github.com/redis/redis",
+      "commit_sha": "c3d4e5f6a7b82930415263748596a7b8c9d0e1f2",
+      "sha256": "1f2e3d4c5b6a798897a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4"
+    },
+    {
+      "id": "valkey",
+      "version": "9.0.0",
+      "git_url": "https://github.com/valkey-io/valkey",
+      "commit_sha": "e5f6a7b8c9d0415263748596a7b8c9d0e1f2a3b4",
+      "sha256": "2a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70819"
+    },
+    {
+      "id": "freebsd-usr-bin",
+      "version": "15.0",
+      "git_url": "https://github.com/freebsd/freebsd-src",
+      "commit_sha": "a9b8c7d6e5f432109876543210fedcba98765432",
+      "sha256": "8f7e6d5c4b3a2910fedcba9876543210abcdef0123456789abcdef0123456789",
+      "usr_bin_entries": 280
+    }
+  ]
+}

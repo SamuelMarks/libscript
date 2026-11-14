@@ -66,6 +66,17 @@ else
 fi
 
 export HOSTCC="${CC}"
+export GCC_PREFIX="${GCC_PREFIX:-${_gcc_prefix}}"
+export GCC_MATCHED="${GCC_MATCHED:-${CC}}"
+export GXX_MATCHED="${GXX_MATCHED:-${CXX}}"
+if [ -z "${EDG_LIBGCCJIT_PATH:-}" ]; then
+  for _jit_cand in "${_gcc_prefix}/lib/libgccjit.so.0" "${_gcc_prefix}/lib/libgccjit.0.dylib" '/opt/homebrew/opt/gcc/lib/gcc/current/libgccjit.0.dylib' '/usr/lib/x86_64-linux-gnu/libgccjit.so.0' '/usr/lib/aarch64-linux-gnu/libgccjit.so.0' '/usr/lib64/libgccjit.so.0'; do
+    if [ -f "${_jit_cand}" ]; then
+      export EDG_LIBGCCJIT_PATH="${_jit_cand}"
+      break
+    fi
+  done
+fi
 export CC_BACKEND='gcc'
 export CFLAGS="${GCC_CFLAGS:--O2}"
 STACK="${STACK%"${THIS_FILE}":}"

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cargo-llvm-cov",
+  "title": "cargo-llvm-cov Rust Coverage Subcommand",
+  "description": "Cargo subcommand for LLVM source-based line, region, and branch code coverage JSON extraction.",
+  "category": "toolchain",
+  "provides": ["cargo-llvm-cov"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/taiki-e/cargo-llvm-cov"
+}

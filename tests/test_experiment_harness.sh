@@ -165,10 +165,75 @@ test_rule6_and_rule7_profile_and_prereqs() {
   libscript_exp_check_prereqs 'E4' "${_bad_repo}" "${WORK_DIR}/prereq_ok.json"
 }
 
+# ## test_win_port_5os_rss_lockfile_patch_and_pe_audits
+# Verifies 5-OS RSS normalization, C11 bench probe, lockfile SHA-256 tamper rejection, zero-fork patch hunk splitting, and PE64 DLL purity.
+test_win_port_5os_rss_lockfile_patch_and_pe_audits() {
+  _fbsd_b=$(libscript_exp_normalize_rss_bytes '2048' 'FreeBSD')
+  _win_b=$(libscript_exp_normalize_rss_bytes '2097152' 'Windows_NT')
+  _sun_b=$(libscript_exp_normalize_rss_bytes '2097152' 'SunOS_bytes')
+  [ "${_fbsd_b}" = "2097152" ]
+  [ "${_win_b}" = "2097152" ]
+  [ "${_sun_b}" = "2097152" ]
+  libscript_exp_ensure_bench_probe
+  [ -x "${LIBSCRIPT_BENCH_PROBE_BIN}" ]
+
+  mkdir -p "${WORK_DIR}/cache_lk"
+  printf 'hello_lockfile\n' > "${WORK_DIR}/cache_lk/sample.txt"
+  _real_h=$(libscript_exp_sha256_file "${WORK_DIR}/cache_lk/sample.txt")
+  printf '{\n  "id": "t1",\n  "local_rel_path": "sample.txt",\n  "sha256": "%s"\n}\n' "${_real_h}" > "${WORK_DIR}/good.lock.json"
+  libscript_exp_verify_lockfile "${WORK_DIR}/good.lock.json" 1 "${WORK_DIR}/cache_lk"
+  printf 'tampered\n' > "${WORK_DIR}/cache_lk/sample.txt"
+  if libscript_exp_verify_lockfile "${WORK_DIR}/good.lock.json" 1 "${WORK_DIR}/cache_lk" 2>/dev/null; then
+    printf '%s\n' '[FAIL] Lockfile verifier accepted tampered SHA-256 file!' >&2
+    exit 1
+  fi
+
+  mkdir -p "${WORK_DIR}/zf_up" "${WORK_DIR}/zf_har/patches" "${WORK_DIR}/zf_har/tests"
+  printf 'int main(void){return 0;}\n' > "${WORK_DIR}/zf_har/tests/t.c"
+  printf -- '--- a/foo.c\n+++ b/foo.c\n+int x;\n-int y;\n--- a/CMakeLists.txt\n+++ b/CMakeLists.txt\n+project(p C)\n' > "${WORK_DIR}/zf_har/patches/01.patch"
+  libscript_exp_audit_zero_fork_repo "${WORK_DIR}/zf_up" "${WORK_DIR}/zf_har" "${WORK_DIR}/zf.json"
+  grep -q '"in_repo_polyfill_c_h": 0' "${WORK_DIR}/zf.json"
+  grep -q '"standalone_test_runner_c_h": 1' "${WORK_DIR}/zf.json"
+  grep -q '"staged_patch_c_h_loc": 2' "${WORK_DIR}/zf.json"
+  grep -q '"staged_patch_build_loc": 1' "${WORK_DIR}/zf.json"
+
+  printf '  DLL Name: KERNEL32.dll\n  DLL Name: WS2_32.dll\n' > "${WORK_DIR}/pe_pure.txt"
+  libscript_exp_audit_pe_dependents '--from-text' "${WORK_DIR}/pe_pure.txt" "${WORK_DIR}/pe_pure.json"
+  grep -q '"pure_win32_subsystem": true' "${WORK_DIR}/pe_pure.json"
+  printf '  DLL Name: cygwin1.dll\n' > "${WORK_DIR}/pe_cyg.txt"
+  libscript_exp_audit_pe_dependents '--from-text' "${WORK_DIR}/pe_cyg.txt" "${WORK_DIR}/pe_cyg.json"
+  grep -q '"pure_win32_subsystem": false' "${WORK_DIR}/pe_cyg.json"
+}
+
+# ## test_edgcpp_probe_timeout_two_stage_and_codesize
+# Verifies `libscript_bench_probe` CPU/RSS/HW-counter telemetry, `--timeout-ms` termination, two-stage legacy pipeline accounting, and binary code section size extraction.
+test_edgcpp_probe_timeout_two_stage_and_codesize() {
+  libscript_exp_ensure_bench_probe
+  "${LIBSCRIPT_BENCH_PROBE_BIN}" --json-out "${WORK_DIR}/prb_ok.json" --stdout-file "${WORK_DIR}/prb.out" --exec /bin/sh -c 'printf "ok\n"'
+  grep -q '"user_cpu_s":' "${WORK_DIR}/prb_ok.json"
+  grep -q '"peak_rss_mb":' "${WORK_DIR}/prb_ok.json"
+  grep -q '"hw_instructions":' "${WORK_DIR}/prb_ok.json"
+
+  _trc=0
+  "${LIBSCRIPT_BENCH_PROBE_BIN}" --json-out "${WORK_DIR}/prb_to.json" --timeout-ms 40 --exec /bin/sleep 2 || _trc=$?
+  [ "${_trc}" -eq 124 ]
+  grep -q '"timed_out": true' "${WORK_DIR}/prb_to.json"
+
+  printf 'int main(void) { return 0; }\n' > "${WORK_DIR}/two.c"
+  libscript_exp_run_two_stage_pipeline "${WORK_DIR}/two_stage.json" "${WORK_DIR}/two.int.c" "cp \"${WORK_DIR}/two.c\" \"${WORK_DIR}/two.int.c\"" "cc -O2 \"${WORK_DIR}/two.int.c\" -o \"${WORK_DIR}/two_bin\""
+  grep -q '"intermediate_bytes":' "${WORK_DIR}/two_stage.json"
+  grep -q '"total_wall_s":' "${WORK_DIR}/two_stage.json"
+
+  libscript_exp_measure_code_size "${WORK_DIR}/two_bin" "${WORK_DIR}/two_size.json"
+  grep -q '"section_text_mb":' "${WORK_DIR}/two_size.json"
+}
+
 test_rule1_provenance_envelope
 test_rule2_native_isa_guard
 test_rule3_and_rule4_trials_and_quantiles
 test_rule5_rss_normalization
 test_rule6_and_rule7_profile_and_prereqs
+test_win_port_5os_rss_lockfile_patch_and_pe_audits
+test_edgcpp_probe_timeout_two_stage_and_codesize
 rm -rf "${WORK_DIR}"
 printf '[PASS] All SIGPLAN RULE-1..RULE-7 experiment harness unit tests succeeded!\n'

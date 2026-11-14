@@ -1,0 +1,18 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# ## Overview
+# 32-bit Protected-Mode MS-DOS / FreeDOS (`anondos/msdos-1.25`) Vagrant configuration using `COM1` serial communicator and `DOS32A.EXE` for `win_port` E3C CTest verification.
+# ## Usage
+# cd vagrant/msdos-1.25 && vagrant up
+
+Vagrant.configure("2") do |config|
+  config.vm.define "msdos-1.25-ctest" do |dos|
+    dos.vm.box = "anondos/msdos-1.25"
+    dos.vm.communicator = :msdos_com1 if Vagrant.has_plugin?("vagrant-msdos")
+    dos.vm.synced_folder ".", "/vagrant", disabled: true
+    dos.vm.provider "qemu" do |qe|
+      qe.arch = "i386" if qe.respond_to?(:arch=)
+      qe.qemu_args = %w(-cpu 486 -m 64M -nographic -serial stdio)
+    end
+  end
+end

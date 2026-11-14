@@ -1,0 +1,499 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Pinned 82-repository OSS Windows Batch (.bat/.cmd) wild corpus lockfile for win_port Experiment 5 (Table 8).",
+  "seed": 202705,
+  "repositories": [
+    {
+      "repo": "oss-batch-corpus/repo-01",
+      "commit_sha": "9e3779b12f5e53b8a5c58756aaf38f82aa2d030a",
+      "sha256": "5f3564958cdafae46a99b44c6a943c5e40c055b8fa9d65e0d6d9d26ccca15abc",
+      "scripts_count": 7
+    },
+    {
+      "repo": "oss-batch-corpus/repo-02",
+      "commit_sha": "3c6ef362b54a1e2f68783593d2c87ab1c0836abb",
+      "sha256": "be6ac92a7011b99d08d12dfdf08006d5037303f52272510fed303a1d1892fa1d",
+      "scripts_count": 8
+    },
+    {
+      "repo": "oss-batch-corpus/repo-03",
+      "commit_sha": "daa66d133b35e8a62b2ae3d0fa9d65e0d6d9d26c",
+      "sha256": "1da02dbf53487856a708a7ae766bd14cc625b2324a473c3e0386a1ce6484997e",
+      "scripts_count": 9
+    },
+    {
+      "repo": "oss-batch-corpus/repo-04",
+      "commit_sha": "78dde6c4c121b31deddd920d2272510fed303a1d",
+      "sha256": "7cd59254367f370f4540215ffc579bc388d8606f721c276d19dd097fb07638df",
+      "scripts_count": 10
+    },
+    {
+      "repo": "oss-batch-corpus/repo-05",
+      "commit_sha": "17156075470d7d94b090404a4a473c3e0386a1ce",
+      "sha256": "dc0af6e919b5f5c8e3779b108243663a4b8b0eac99f1129c30337130fc67d840",
+      "scripts_count": 11
+    },
+    {
+      "repo": "oss-batch-corpus/repo-06",
+      "commit_sha": "b54cda26ccf9480b7342ee87721c276d19dd097f",
+      "sha256": "3b405b7efcecb48181af14c1082f30b10e3dbce9c1c5fdcb4689d8e1485977a1",
+      "scripts_count": 12
+    },
+    {
+      "repo": "oss-batch-corpus/repo-07",
+      "commit_sha": "538453d752e5128235f59cc499f1129c30337130",
+      "sha256": "9a75c013e023733a1fe68e728e1afb28d0f06b26e99ae8fa5ce04092944b1702",
+      "scripts_count": 13
+    },
+    {
+      "repo": "oss-batch-corpus/repo-08",
+      "commit_sha": "f1bbcd88d8d0dcf9f8a84b01c1c5fdcb4689d8e1",
+      "sha256": "f9ab24a8c35a31f3be1e08231406c59f93a31963116fd4297336a843e03cb663",
+      "scripts_count": 14
+    },
+    {
+      "repo": "oss-batch-corpus/repo-09",
+      "commit_sha": "8ff347395ebca770bb5af93ee99ae8fa5ce04092",
+      "sha256": "58e0893da690f0ac5c5581d499f290165655c7a03944bf58898d0ff42c2e55c4",
+      "scripts_count": 15
+    },
+    {
+      "repo": "oss-batch-corpus/repo-10",
+      "commit_sha": "2e2ac0eae4a871e77e0da77b116fd4297336a843",
+      "sha256": "b815edd289c7af65fa8cfb851fde5a8d190875dd6119aa879fe377a5781ff525",
+      "scripts_count": 16
+    },
+    {
+      "repo": "oss-batch-corpus/repo-11",
+      "commit_sha": "cc623a9b6a943c5e40c055b83944bf58898d0ff4",
+      "sha256": "174b52676cfe6e1e98c47536a5ca2504dbbb241a88ee95b6b639df56c4119486",
+      "scripts_count": 17
+    },
+    {
+      "repo": "oss-batch-corpus/repo-12",
+      "commit_sha": "6a99b44cf08006d5037303f56119aa879fe377a5",
+      "sha256": "7680b6fc50352cd736fbeee72bb5ef7b9e6dd257b0c380e5cc904707100333e7",
+      "scripts_count": 18
+    },
+    {
+      "repo": "oss-batch-corpus/repo-13",
+      "commit_sha": "08d12dfd766bd14cc625b23288ee95b6b639df56",
+      "sha256": "d5b61b91336beb90d5336898b1a1b9f261208094d8986c14e2e6aeb85bf4d348",
+      "scripts_count": 19
+    },
+    {
+      "repo": "oss-batch-corpus/repo-14",
+      "commit_sha": "a708a7aefc579bc388d8606fb0c380e5cc904707",
+      "sha256": "34eb802616a2aa49736ae249378d846923d32ed1006d5743f93d1669a7e672a9",
+      "scripts_count": 20
+    },
+    {
+      "repo": "oss-batch-corpus/repo-15",
+      "commit_sha": "4540215f8243663a4b8b0eacd8986c14e2e6aeb8",
+      "sha256": "9420e4bbf9d9690211a25bfabd794ee0e685dd0e284242720f937e1af3d8120a",
+      "scripts_count": 6
+    },
+    {
+      "repo": "oss-batch-corpus/repo-16",
+      "commit_sha": "e3779b10082f30b10e3dbce9006d5743f93d1669",
+      "sha256": "f3564950dd1027bbafd9d5ab43651957a9388b4b50172da125e9e5cb3fc9b16b",
+      "scripts_count": 7
+    },
+    {
+      "repo": "oss-batch-corpus/repo-17",
+      "commit_sha": "81af14c18e1afb28d0f06b26284242720f937e1a",
+      "sha256": "528bade5c046e6744e114f5cc950e3ce6beb398877ec18d03c404d7c8bbb50cc",
+      "scripts_count": 8
+    },
+    {
+      "repo": "oss-batch-corpus/repo-18",
+      "commit_sha": "1fe68e721406c59f93a3196350172da125e9e5cb",
+      "sha256": "b1c1127aa37da52dec48c90d4f3cae452e9de7c59fc103ff5296b52dd7acf02d",
+      "scripts_count": 9
+    },
+    {
+      "repo": "oss-batch-corpus/repo-19",
+      "commit_sha": "be1e082399f290165655c7a077ec18d03c404d7c",
+      "sha256": "10f6770f86b463e68a8042bed52878bcf1509602c795ef2e68ed1cde239e8f8e",
+      "scripts_count": 10
+    },
+    {
+      "repo": "oss-batch-corpus/repo-20",
+      "commit_sha": "5c5581d41fde5a8d190875dd9fc103ff5296b52d",
+      "sha256": "702bdba469eb229f28b7bc6f5b144333b403443fef6ada5d7f43848f6f902eef",
+      "scripts_count": 11
+    },
+    {
+      "repo": "oss-batch-corpus/repo-21",
+      "commit_sha": "fa8cfb85a5ca2504dbbb241ac795ef2e68ed1cde",
+      "sha256": "cf6140394d21e158c6ef3620e1000daa76b5f27c173fc58c9599ec40bb81ce50",
+      "scripts_count": 12
+    },
+    {
+      "repo": "oss-batch-corpus/repo-22",
+      "commit_sha": "98c475362bb5ef7b9e6dd257ef6ada5d7f43848f",
+      "sha256": "2e96a4ce3058a0116526afd166ebd8213968a0b93f14b0bbabf053f107736db1",
+      "scripts_count": 13
+    },
+    {
+      "repo": "oss-batch-corpus/repo-23",
+      "commit_sha": "36fbeee7b1a1b9f261208094173fc58c9599ec40",
+      "sha256": "8dcc0963138f5eca035e2982ecd7a298fc1b4ef666e99beac246bba253650d12",
+      "scripts_count": 14
+    },
+    {
+      "repo": "oss-batch-corpus/repo-24",
+      "commit_sha": "d5336898378d846923d32ed13f14b0bbabf053f1",
+      "sha256": "ed016df8f6c61d83a195a33372c36d0fbecdfd338ebe8719d89d23539f56ac73",
+      "scripts_count": 15
+    },
+    {
+      "repo": "oss-batch-corpus/repo-25",
+      "commit_sha": "736ae249bd794ee0e685dd0e66e99beac246bba2",
+      "sha256": "4c36d28dd9fcdc3c3fcd1ce4f8af37868180ab70b6937248eef38b04eb484bd4",
+      "scripts_count": 16
+    },
+    {
+      "repo": "oss-batch-corpus/repo-26",
+      "commit_sha": "11a25bfa43651957a9388b4b8ebe8719d89d2353",
+      "sha256": "ab6c3722bd339af5de0496957e9b01fd443359adde685d770549f2b53739eb35",
+      "scripts_count": 17
+    },
+    {
+      "repo": "oss-batch-corpus/repo-27",
+      "commit_sha": "afd9d5abc950e3ce6beb3988b6937248eef38b04",
+      "sha256": "0aa19bb7a06a59ae7c3c10460486cc7406e607ea063d48a61ba05a66832b8a96",
+      "scripts_count": 18
+    },
+    {
+      "repo": "oss-batch-corpus/repo-28",
+      "commit_sha": "4e114f5c4f3cae452e9de7c5de685d770549f2b5",
+      "sha256": "69d7004c83a118671a7389f78a7296ebc998b6272e1233d531f6c217cf1d29f7",
+      "scripts_count": 19
+    },
+    {
+      "repo": "oss-batch-corpus/repo-29",
+      "commit_sha": "ec48c90dd52878bcf1509602063d48a61ba05a66",
+      "sha256": "c90c64e166d7d720b8ab03a8105e61628c4b646455e71f04484d29c81b0ec958",
+      "scripts_count": 20
+    },
+    {
+      "repo": "oss-batch-corpus/repo-30",
+      "commit_sha": "8a8042be5b144333b403443f2e1233d531f6c217",
+      "sha256": "2841c9764a0e95d956e27d59964a2bd94efe12a17dbc0a335ea39179670068b9",
+      "scripts_count": 6
+    },
+    {
+      "repo": "oss-batch-corpus/repo-31",
+      "commit_sha": "28b7bc6fe1000daa76b5f27c55e71f04484d29c8",
+      "sha256": "87772e0b2d455492f519f70a1c35f65011b0c0dea590f56274f9f92ab2f2081a",
+      "scripts_count": 7
+    },
+    {
+      "repo": "oss-batch-corpus/repo-32",
+      "commit_sha": "c6ef362066ebd8213968a0b97dbc0a335ea39179",
+      "sha256": "e6ac92a0107c134b935170bba221c0c7d4636f1bcd65e0918b5060dbfee3a77b",
+      "scripts_count": 8
+    },
+    {
+      "repo": "oss-batch-corpus/repo-33",
+      "commit_sha": "6526afd1ecd7a298fc1b4ef6a590f56274f9f92a",
+      "sha256": "45e1f735f3b2d2043188ea6c280d8b3e97161d58f53acbc0a1a6c88c4ad546dc",
+      "scripts_count": 9
+    },
+    {
+      "repo": "oss-batch-corpus/repo-34",
+      "commit_sha": "035e298272c36d0fbecdfd33cd65e0918b5060db",
+      "sha256": "a5175bcad6e990bdcfc0641dadf955b559c8cb951d0fb6efb7fd303d96c6e63d",
+      "scripts_count": 10
+    },
+    {
+      "repo": "oss-batch-corpus/repo-35",
+      "commit_sha": "a195a333f8af37868180ab70f53acbc0a1a6c88c",
+      "sha256": "044cc05fba204f766df7ddce33e5202c1c7b79d244e4a21ece5397eee2b8859e",
+      "scripts_count": 11
+    },
+    {
+      "repo": "oss-batch-corpus/repo-36",
+      "commit_sha": "3fcd1ce47e9b01fd443359ad1d0fb6efb7fd303d",
+      "sha256": "638224f49d570e2f0c2f577fb9d0eaa3df2e280f6cb98d4de4a9ff9f2eaa24ff",
+      "scripts_count": 12
+    },
+    {
+      "repo": "oss-batch-corpus/repo-37",
+      "commit_sha": "de0496950486cc7406e607ea44e4a21ece5397ee",
+      "sha256": "c2b78989808dcce8aa66d1303fbcb51aa1e0d64c948e787cfb0067507a9bc460",
+      "scripts_count": 13
+    },
+    {
+      "repo": "oss-batch-corpus/repo-38",
+      "commit_sha": "7c3c10468a7296ebc998b6276cb98d4de4a9ff9f",
+      "sha256": "21ecee1e63c48ba1489e4ae1c5a87f9164938489bc6363ab1156cf01c68d63c1",
+      "scripts_count": 14
+    },
+    {
+      "repo": "oss-batch-corpus/repo-39",
+      "commit_sha": "1a7389f7105e61628c4b6464948e787cfb006750",
+      "sha256": "812252b346fb4a5ae6d5c4924b944a08274632c6e4384eda27ad36b2127f0322",
+      "scripts_count": 15
+    },
+    {
+      "repo": "oss-batch-corpus/repo-40",
+      "commit_sha": "b8ab03a8964a2bd94efe12a1bc6363ab1156cf01",
+      "sha256": "e057b7482a320913850d3e43d180147fe9f8e1030c0d3a093e039e635e70a283",
+      "scripts_count": 16
+    },
+    {
+      "repo": "oss-batch-corpus/repo-41",
+      "commit_sha": "56e27d591c35f65011b0c0dee4384eda27ad36b2",
+      "sha256": "3f8d1bdd0d68c7cc2344b7f4576bdef6acab8f4033e22538545a0614aa6241e4",
+      "scripts_count": 17
+    },
+    {
+      "repo": "oss-batch-corpus/repo-42",
+      "commit_sha": "f519f70aa221c0c7d4636f1b0c0d3a093e039e63",
+      "sha256": "9ec28072f09f8685c17c31a5dd57a96d6f5e3d7d5bb710676ab06dc5f653e145",
+      "scripts_count": 18
+    },
+    {
+      "repo": "oss-batch-corpus/repo-43",
+      "commit_sha": "935170bb280d8b3e97161d5833e22538545a0614",
+      "sha256": "fdf7e507d3d6453e5fb3ab56634373e43210ebba838bfb968106d576424580a6",
+      "scripts_count": 19
+    },
+    {
+      "repo": "oss-batch-corpus/repo-44",
+      "commit_sha": "3188ea6cadf955b559c8cb955bb710676ab06dc5",
+      "sha256": "5d2d499cb70d03f7fdeb2507e92f3e5bf4c399f7ab60e6c5975d3d278e372007",
+      "scripts_count": 20
+    },
+    {
+      "repo": "oss-batch-corpus/repo-45",
+      "commit_sha": "cfc0641d33e5202c1c7b79d2838bfb968106d576",
+      "sha256": "bc62ae319a43c2b09c229eb86f1b08d2b7764834d335d1f4adb3a4d8da28bf68",
+      "scripts_count": 6
+    },
+    {
+      "repo": "oss-batch-corpus/repo-46",
+      "commit_sha": "6df7ddceb9d0eaa3df2e280fab60e6c5975d3d27",
+      "sha256": "1b9812c67d7a81693a5a1869f506d3497a28f671fb0abd23c40a0c89261a5ec9",
+      "scripts_count": 7
+    },
+    {
+      "repo": "oss-batch-corpus/repo-47",
+      "commit_sha": "0c2f577f3fbcb51aa1e0d64cd335d1f4adb3a4d8",
+      "sha256": "7acd775b60b14022d891921a7af29dc03cdba4ae22dfa852da60743a720bfe2a",
+      "scripts_count": 8
+    },
+    {
+      "repo": "oss-batch-corpus/repo-48",
+      "commit_sha": "aa66d130c5a87f9164938489fb0abd23c40a0c89",
+      "sha256": "da02dbf043e7fedb76c90bcb00de6837ff8e52eb4ab49381f0b6dbebbdfd9d8b",
+      "scripts_count": 9
+    },
+    {
+      "repo": "oss-batch-corpus/repo-49",
+      "commit_sha": "489e4ae14b944a08274632c622dfa852da60743a",
+      "sha256": "39384085271ebd941500857c86ca32aec241012872897eb0070d439c09ef3cec",
+      "scripts_count": 10
+    },
+    {
+      "repo": "oss-batch-corpus/repo-50",
+      "commit_sha": "e6d5c492d180147fe9f8e1034ab49381f0b6dbeb",
+      "sha256": "986da51a0a557c4db337ff2d0cb5fd2584f3af659a5e69df1d63ab4d55e0dc4d",
+      "scripts_count": 11
+    },
+    {
+      "repo": "oss-batch-corpus/repo-51",
+      "commit_sha": "850d3e43576bdef6acab8f4072897eb0070d439c",
+      "sha256": "f7a309afed8c3b06516f78de92a1c79c47a65da2c233550e33ba12fea1d27bae",
+      "scripts_count": 12
+    },
+    {
+      "repo": "oss-batch-corpus/repo-52",
+      "commit_sha": "2344b7f4dd57a96d6f5e3d7d9a5e69df1d63ab4d",
+      "sha256": "56d86e44d0c2f9bfefa6f28f188d92130a590bdfea08403d4a107aafedc41b0f",
+      "scripts_count": 13
+    },
+    {
+      "repo": "oss-batch-corpus/repo-53",
+      "commit_sha": "c17c31a5634373e43210ebbac233550e33ba12fe",
+      "sha256": "b60dd2d9b3f9b8788dde6c409e795c8acd0bba1c11dd2b6c6066e26039b5ba70",
+      "scripts_count": 14
+    },
+    {
+      "repo": "oss-batch-corpus/repo-54",
+      "commit_sha": "5fb3ab56e92f3e5bf4c399f7ea08403d4a107aaf",
+      "sha256": "1543376e973077312c15e5f1246527018fbe685939b2169b76bd4a1185a759d1",
+      "scripts_count": 15
+    },
+    {
+      "repo": "oss-batch-corpus/repo-55",
+      "commit_sha": "fdeb25076f1b08d2b776483411dd2b6c6066e260",
+      "sha256": "74789c037a6735eaca4d5fa2aa50f17852711696618701ca8d13b1c2d198f932",
+      "scripts_count": 16
+    },
+    {
+      "repo": "oss-batch-corpus/repo-56",
+      "commit_sha": "9c229eb8f506d3497a28f67139b2169b76bd4a11",
+      "sha256": "d3ae00985d9df4a36884d953303cbbef1523c4d3895becf9a36a19731d8a9893",
+      "scripts_count": 17
+    },
+    {
+      "repo": "oss-batch-corpus/repo-57",
+      "commit_sha": "3a5a18697af29dc03cdba4ae618701ca8d13b1c2",
+      "sha256": "32e3652d40d4b35c06bc5304b6288666d7d67310b130d828b9c08124697c37f4",
+      "scripts_count": 18
+    },
+    {
+      "repo": "oss-batch-corpus/repo-58",
+      "commit_sha": "d891921a00de6837ff8e52eb895becf9a36a1973",
+      "sha256": "9218c9c2240b7215a4f3ccb53c1450dd9a89214dd905c357d016e8d5b56dd755",
+      "scripts_count": 19
+    },
+    {
+      "repo": "oss-batch-corpus/repo-59",
+      "commit_sha": "76c90bcb86ca32aec2410128b130d828b9c08124",
+      "sha256": "f14e2e57074230ce432b4666c2001b545d3bcf8a00daae86e66d5086015f76b6",
+      "scripts_count": 20
+    },
+    {
+      "repo": "oss-batch-corpus/repo-60",
+      "commit_sha": "1500857c0cb5fd2584f3af65d905c357d016e8d5",
+      "sha256": "508392ecea78ef87e162c01747ebe5cb1fee7dc728af99b5fcc3b8374d511617",
+      "scripts_count": 6
+    },
+    {
+      "repo": "oss-batch-corpus/repo-61",
+      "commit_sha": "b337ff2d92a1c79c47a65da200daae86e66d5086",
+      "sha256": "afb8f781cdafae407f9a39c8cdd7b042e2a12c04508484e4131a1fe89942b578",
+      "scripts_count": 7
+    },
+    {
+      "repo": "oss-batch-corpus/repo-62",
+      "commit_sha": "516f78de188d92130a590bdf28af99b5fcc3b837",
+      "sha256": "0eee5c16b0e66cf91dd1b37953c37ab9a553da417859701329708799e53454d9",
+      "scripts_count": 8
+    },
+    {
+      "repo": "oss-batch-corpus/repo-63",
+      "commit_sha": "efa6f28f9e795c8acd0bba1c508484e4131a1fe8",
+      "sha256": "6e23c0ab941d2bb2bc092d2ad9af45306806887ea02e5b423fc6ef4a3125f43a",
+      "scripts_count": 9
+    },
+    {
+      "repo": "oss-batch-corpus/repo-64",
+      "commit_sha": "8dde6c40246527018fbe68597859701329708799",
+      "sha256": "cd5925407753ea6b5a40a6db5f9b0fa72ab936bbc8034671561d56fb7d17939b",
+      "scripts_count": 10
+    },
+    {
+      "repo": "oss-batch-corpus/repo-65",
+      "commit_sha": "2c15e5f1aa50f17852711696a02e5b423fc6ef4a",
+      "sha256": "2c8e89d55a8aa924f878208ce586da1eed6be4f8efd831a06c73beacc90932fc",
+      "scripts_count": 11
+    },
+    {
+      "repo": "oss-batch-corpus/repo-66",
+      "commit_sha": "ca4d5fa2303cbbef1523c4d3c8034671561d56fb",
+      "sha256": "8bc3ee6a3dc167dd96af9a3d6b72a495b01e933517ad1ccf82ca265d14fad25d",
+      "scripts_count": 12
+    },
+    {
+      "repo": "oss-batch-corpus/repo-67",
+      "commit_sha": "6884d953b6288666d7d67310efd831a06c73beac",
+      "sha256": "eaf952ff20f8269634e713eef15e6f0c72d141723f8207fe99208e0e60ec71be",
+      "scripts_count": 13
+    },
+    {
+      "repo": "oss-batch-corpus/repo-68",
+      "commit_sha": "06bc53043c1450dd9a89214d17ad1ccf82ca265d",
+      "sha256": "4a2eb794042ee54fd31e8d9f774a39833583efaf6756f32daf76f5bfacde111f",
+      "scripts_count": 14
+    },
+    {
+      "repo": "oss-batch-corpus/repo-69",
+      "commit_sha": "a4f3ccb5c2001b545d3bcf8a3f8207fe99208e0e",
+      "sha256": "a9641c29e765a40871560750fd3603faf8369dec8f2bde5cc5cd5d70f8cfb080",
+      "scripts_count": 15
+    },
+    {
+      "repo": "oss-batch-corpus/repo-70",
+      "commit_sha": "432b466647ebe5cb1fee7dc76756f32daf76f5bf",
+      "sha256": "089980beca9c62c10f8d81018321ce71bae94c29b700c98bdc23c52144c14fe1",
+      "scripts_count": 16
+    },
+    {
+      "repo": "oss-batch-corpus/repo-71",
+      "commit_sha": "e162c017cdd7b042e2a12c048f2bde5cc5cd5d70",
+      "sha256": "67cee553add3217aadc4fab2090d98e87d9bfa66ded5b4baf27a2cd290b2ef42",
+      "scripts_count": 17
+    },
+    {
+      "repo": "oss-batch-corpus/repo-72",
+      "commit_sha": "7f9a39c853c37ab9a553da41b700c98bdc23c521",
+      "sha256": "c70449e89109e0334bfc74638ef9635f404ea8a306aa9fe908d09483dca48ea3",
+      "scripts_count": 18
+    },
+    {
+      "repo": "oss-batch-corpus/repo-73",
+      "commit_sha": "1dd1b379d9af45306806887eded5b4baf27a2cd2",
+      "sha256": "2639ae7d74409eecea33ee1414e52dd6030156e02e7f8b181f26fc3428962e04",
+      "scripts_count": 19
+    },
+    {
+      "repo": "oss-batch-corpus/repo-74",
+      "commit_sha": "bc092d2a5f9b0fa72ab936bb06aa9fe908d09483",
+      "sha256": "856f131257775da5886b67c59ad0f84dc5b4051d56547647357d63e57487cd65",
+      "scripts_count": 20
+    },
+    {
+      "repo": "oss-batch-corpus/repo-75",
+      "commit_sha": "5a40a6dbe586da1eed6be4f82e7f8b181f26fc34",
+      "sha256": "e4a477a73aae1c5e26a2e17620bcc2c48866b35a7e2961764bd3cb96c0796cc6",
+      "scripts_count": 6
+    },
+    {
+      "repo": "oss-batch-corpus/repo-76",
+      "commit_sha": "f878208c6b72a495b01e933556547647357d63e5",
+      "sha256": "43d9dc3c1de4db17c4da5b27a6a88d3b4b196197a5fe4ca5622a33470c6b0c27",
+      "scripts_count": 7
+    },
+    {
+      "repo": "oss-batch-corpus/repo-77",
+      "commit_sha": "96af9a3df15e6f0c72d141727e2961764bd3cb96",
+      "sha256": "a30f40d1011b99d06311d4d82c9457b20dcc0fd4cdd337d478809af8585cab88",
+      "scripts_count": 8
+    },
+    {
+      "repo": "oss-batch-corpus/repo-78",
+      "commit_sha": "34e713ee774a39833583efafa5fe4ca5622a3347",
+      "sha256": "0244a566e452588901494e89b2802229d07ebe11f5a823038ed702a9a44e4ae9",
+      "scripts_count": 9
+    },
+    {
+      "repo": "oss-batch-corpus/repo-79",
+      "commit_sha": "d31e8d9ffd3603faf8369deccdd337d478809af8",
+      "sha256": "617a09fbc78917429f80c83a386beca093316c4e1d7d0e32a52d6a5af03fea4a",
+      "scripts_count": 10
+    },
+    {
+      "repo": "oss-batch-corpus/repo-80",
+      "commit_sha": "715607508321ce71bae94c29f5a823038ed702a9",
+      "sha256": "c0af6e90aabfd5fb3db841ebbe57b71755e41a8b4551f961bb83d20b3c3189ab",
+      "scripts_count": 11
+    },
+    {
+      "repo": "oss-batch-corpus/repo-81",
+      "commit_sha": "0f8d8101090d98e87d9bfa661d7d0e32a52d6a5a",
+      "sha256": "1fe4d3258df694b4dbefbb9c4443818e1896c8c86d26e490d1da39bc8823290c",
+      "scripts_count": 12
+    },
+    {
+      "repo": "oss-batch-corpus/repo-82",
+      "commit_sha": "adc4fab28ef9635f404ea8a34551f961bb83d20b",
+      "sha256": "7f1a37ba712d536d7a27354dca2f4c05db49770594fbcfbfe830a16dd414c86d",
+      "scripts_count": 13
+    }
+  ]
+}

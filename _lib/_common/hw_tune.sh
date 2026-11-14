@@ -224,10 +224,45 @@ EOF
   esac
 }
 
+# ## libscript_detect_ac_power
+# Detects whether the host is running on AC mains power (`true`, `false`, or `unknown`) and exports `LIBSCRIPT_HW_AC_POWER`.
+libscript_detect_ac_power() {
+  _ac_state='unknown'
+  if [ "${UNAME:-}" = "Darwin" ] && command -v pmset >/dev/null 2>&1; then
+    _pm_out=$(pmset -g batt 2>/dev/null || true)
+    case "${_pm_out}" in
+      *'AC Power'*) _ac_state='true' ;;
+      *'Battery Power'*) _ac_state='false' ;;
+    esac
+  elif [ "${UNAME:-}" = "Linux" ] && [ -d /sys/class/power_supply ]; then
+    for _ps in /sys/class/power_supply/*/online; do
+      if [ -r "${_ps}" ]; then
+        _val=$(head -n 1 "${_ps}" 2>/dev/null || printf '')
+        if [ "${_val}" = "1" ]; then
+          _ac_state='true'
+          break
+        elif [ "${_val}" = "0" ] && [ "${_ac_state}" = "unknown" ]; then
+          _ac_state='false'
+        fi
+      fi
+    done
+  fi
+  export LIBSCRIPT_HW_AC_POWER="${LIBSCRIPT_HW_AC_POWER:-${_ac_state}}"
+}
+
 # ## libscript_prepare_benchmark_host
-# Standardizes the host OS and CPU environment for reproducible compiler benchmarking (locks CPU frequency governor to performance, disables ASLR for deterministic RSS, and disables swap when LIBSCRIPT_BENCH_PREPARE_HOST=1).
+# Standardizes the host OS and CPU environment for reproducible compiler benchmarking (verifies AC power, pins single-TU parallelism to -j1, locks CPU governor, disables ASLR, and disables swap when LIBSCRIPT_BENCH_PREPARE_HOST=1).
 libscript_prepare_benchmark_host() {
   libscript_detect_hardware
+  libscript_detect_ac_power
+  if [ "${LIBSCRIPT_BENCH_REQUIRE_AC_POWER:-0}" = "1" ] && [ "${LIBSCRIPT_HW_AC_POWER}" = "false" ]; then
+    printf '[ERROR] [HW-TUNE] Host is running on battery power; AC power is required for thermal stability.\n' >&2
+    return 1
+  fi
+  if [ "${LIBSCRIPT_BENCH_SERIAL_SINGLE_TU:-0}" = "1" ]; then
+    export MAKEFLAGS='-j1'
+    export CMAKE_BUILD_PARALLEL_LEVEL='1'
+  fi
   if [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ] || [ "${LIBSCRIPT_BENCH_PREPARE_HOST:-0}" != "1" ]; then
     return 0
   fi
@@ -279,11 +314,12 @@ libscript_drop_benchmark_caches() {
 }
 
 # ## libscript_emit_hw_manifest_json
-# Emits a deterministic host hardware and toolchain JSON manifest (CPU/SoC, core counts, RAM GiB, OS/kernel, rustc, clang, python3, jax/jaxlib) to the specified output file.
+# Emits a deterministic host hardware and toolchain JSON manifest (CPU/SoC, core counts, RAM GiB, AC power, OS/kernel, rustc, clang, gcc, llvm, libgccjit, python3, jax/jaxlib) to the specified output file.
 libscript_emit_hw_manifest_json() {
   _ehm_out="${1}"
   _ehm_py="${2:-python3}"
   libscript_detect_hardware
+  libscript_detect_ac_power
   mkdir -p "$(dirname -- "$_ehm_out")"
 
   _ehm_ram_gib=$(awk -v m="${LIBSCRIPT_HW_MEM_MB}" 'BEGIN { printf "%.2f", m / 1024.0 }')
@@ -292,9 +328,22 @@ libscript_emit_hw_manifest_json() {
     _ehm_rustc=$(rustc -vV 2>/dev/null | awk 'NR==1 {printf "%s", $0}; /^host:/ {printf " (%s)", $2}; /^LLVM version:/ {printf " [LLVM %s]", $3}' || printf 'unavailable')
   fi
   _ehm_clang='unavailable'
-  if command -v clang >/dev/null 2>&1; then
-    _ehm_clang=$(clang --version 2>/dev/null | head -n 1 | tr -d '\r' || printf 'unavailable')
+  _cand_clang="${CLANG_MATCHED:-clang}"
+  if command -v "${_cand_clang}" >/dev/null 2>&1 || [ -x "${_cand_clang}" ]; then
+    _ehm_clang=$("${_cand_clang}" --version 2>/dev/null | head -n 1 | tr -d '\r' || printf 'unavailable')
   fi
+  _ehm_gcc='unavailable'
+  _cand_gcc="${GCC_MATCHED:-gcc}"
+  if command -v "${_cand_gcc}" >/dev/null 2>&1 || [ -x "${_cand_gcc}" ]; then
+    _ehm_gcc=$("${_cand_gcc}" --version 2>/dev/null | head -n 1 | tr -d '\r' || printf 'unavailable')
+  fi
+  _ehm_llvm='unavailable'
+  if [ -n "${LLVM_PREFIX:-}" ] && [ -x "${LLVM_PREFIX}/bin/llvm-config" ]; then
+    _ehm_llvm=$("${LLVM_PREFIX}/bin/llvm-config" --version 2>/dev/null | head -n 1 | tr -d '\r' || printf 'unavailable')
+  elif command -v llvm-config >/dev/null 2>&1; then
+    _ehm_llvm=$(llvm-config --version 2>/dev/null | head -n 1 | tr -d '\r' || printf 'unavailable')
+  fi
+  _ehm_libgccjit="${EDG_LIBGCCJIT_PATH:-unavailable}"
   _ehm_pyver='unavailable'
   _ehm_jax='unavailable'
   _ehm_jaxlib='unavailable'
@@ -316,6 +365,9 @@ libscript_emit_hw_manifest_json() {
   _ehm_esc_cpu=$(printf '%s' "${LIBSCRIPT_HW_CPU_MODEL}" | sed 's/\\/\\\\/g; s/"/\\"/g')
   _ehm_esc_rustc=$(printf '%s' "${_ehm_rustc}" | sed 's/\\/\\\\/g; s/"/\\"/g')
   _ehm_esc_clang=$(printf '%s' "${_ehm_clang}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _ehm_esc_gcc=$(printf '%s' "${_ehm_gcc}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _ehm_esc_llvm=$(printf '%s' "${_ehm_llvm}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  _ehm_esc_jit=$(printf '%s' "${_ehm_libgccjit}" | sed 's/\\/\\\\/g; s/"/\\"/g')
   _ehm_esc_py=$(printf '%s' "${_ehm_pyver}" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
   cat <<EOF > "${_ehm_out}.tmp"
@@ -332,6 +384,7 @@ libscript_emit_hw_manifest_json() {
   "numa_nodes": ${LIBSCRIPT_HW_NUMA_NODES},
   "ram_mib": ${LIBSCRIPT_HW_MEM_MB},
   "ram_gib": ${_ehm_ram_gib},
+  "ac_power": "${LIBSCRIPT_HW_AC_POWER}",
   "simd": "${LIBSCRIPT_HW_SIMD}",
   "nvme": ${LIBSCRIPT_HW_NVME},
   "cpu_governor": "${_ehm_gov}",
@@ -339,6 +392,9 @@ libscript_emit_hw_manifest_json() {
   "toolchains": {
     "rustc": "${_ehm_esc_rustc}",
     "clang": "${_ehm_esc_clang}",
+    "gcc": "${_ehm_esc_gcc}",
+    "llvm": "${_ehm_esc_llvm}",
+    "libgccjit": "${_ehm_esc_jit}",
     "python3": "${_ehm_esc_py}",
     "jax": "${_ehm_jax}",
     "jaxlib": "${_ehm_jaxlib}"

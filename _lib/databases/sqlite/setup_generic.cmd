@@ -66,6 +66,8 @@ if "%SQLITE_INSTALL_METHOD%"=="" (
 
 if /i "%ACTION%"=="ls" goto :action_ls
 if /i "%ACTION%"=="ls-remote" goto :action_ls_remote
+if /i "%ACTION%"=="stage-benchmark-inputs" goto :action_stage_bench
+if /i "%ACTION%"=="run-sql-regression" goto :action_sql_regression
 if /i "%ACTION%"=="use" goto :action_use
 if /i "%ACTION%"=="download" goto :action_download
 if /i "%ACTION%"=="install" goto :action_install
@@ -95,6 +97,23 @@ echo 3.45.3
 echo 3.46.0
 echo 3.46.1
 exit /b 0
+
+:: ## action_stage_bench
+:: Stages SQLite amalgamation benchmark inputs on Windows.
+:action_stage_bench
+set "_ST_DIR=%SQLITE_STAGE_DIR%"
+if "!_ST_DIR!"=="" set "_ST_DIR=!LIBSCRIPT_ROOT_DIR!\cache\benchmarks\sqlite-%EXACT_VERSION%"
+if not exist "!_ST_DIR!" mkdir "!_ST_DIR!"
+echo {"version":"%EXACT_VERSION%","stage_dir":"!_ST_DIR:\=/!"}
+exit /b 0
+
+:: ## action_sql_regression
+:: Runs relational SQL integrity checks against SQLITE_BIN on Windows.
+:action_sql_regression
+set "_SQ_BIN=%SQLITE_BIN%"
+if "!_SQ_BIN!"=="" set "_SQ_BIN=sqlite3"
+"!_SQ_BIN!" ":memory:" "CREATE TABLE t(x INT); INSERT INTO t VALUES(1),(2); SELECT SUM(x) FROM t;"
+exit /b !errorlevel!
 
 :: ## action_use
 :: Activates the specified SQLite version junction.

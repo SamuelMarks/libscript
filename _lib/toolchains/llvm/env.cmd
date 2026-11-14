@@ -2,7 +2,7 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Windows environment configuration and PATH setup for llvm.
+:: Windows environment configuration and PATH setup for llvm (exposing llvm-cov, llvm-profdata, llvm-strip, and llvm-objdump).
 ::
 :: ## Usage
 :: call _lib\toolchains\llvm\env.cmd
@@ -59,6 +59,10 @@ if "%LLVM_VERSION%"=="" (
     set "LLVM_VERSION=latest"
 )
 
+if exist "C:\Program Files\LLVM\bin" (
+    echo ";!PATH!;" | findstr /I /C:";C:\Program Files\LLVM\bin;" >nul 2>&1
+    if errorlevel 1 set "PATH=C:\Program Files\LLVM\bin;!PATH!"
+)
 set "_CAND_P=%LIBSCRIPT_HOME%\llvm\%LLVM_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
@@ -67,6 +71,7 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "llvm" "%LLVM_VERSION%"
 
 endlocal & (
     set "LLVM_VERSION=%LLVM_VERSION%"
+    set "LLVM_PREFIX=%LIBSCRIPT_HOME%\llvm\%LLVM_VERSION%"
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "PATH=%PATH%"
 )

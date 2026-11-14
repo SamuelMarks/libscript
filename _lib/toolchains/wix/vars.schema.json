@@ -2,18 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/wix/vars.schema.json",
   "title": "WiX Toolset variables",
-  "description": "Configuration variables for the WiX Toolset.",
+  "description": "Configuration variables for the cross-platform .NET 8 WiX v4/v5 and Windows WiX v3.14 Toolset.",
   "type": "object",
   "properties": {
     "WIX_VERSION": {
-      "description": "Specific version of the WiX Toolset to install (e.g., '3.14' or 'latest').",
+      "description": "Specific version of the WiX Toolset to install (e.g., 'latest', '5.0.2', '4.0.5', or '3.14').",
       "type": "string",
-      "default": "3.14"
+      "default": "5.0.2"
     },
     "WIX_INSTALL_METHOD": {
-      "description": "How to install WIX ('libscript_native' or 'system').",
+      "description": "How to install WIX ('libscript_native' via isolated dotnet tool / zip or 'system').",
       "type": "string",
       "default": "libscript_native"
+    },
+    "WIX_DOWNLOAD_URL": {
+      "description": "Optional override URL for downloading WiX binary archive.",
+      "type": "string",
+      "default": ""
+    },
+    "WIX_RELEASES_URL": {
+      "description": "Optional override URL for querying WiX release versions.",
+      "type": "string",
+      "default": ""
     }
   }
 }

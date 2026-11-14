@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wine",
+  "title": "WINE Win32 Compatibility Layer",
+  "description": "WINE 9+ Win32 runtime and wineserver daemon for unconfounded warm and cold baseline evaluations.",
+  "category": "virtualization",
+  "provides": ["wine", "wineserver"],
+  "os_whitelist": ["linux", "darwin", "freebsd"],
+  "repository": "https://gitlab.winehq.org/wine/wine"
+}

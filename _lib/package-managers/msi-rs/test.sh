@@ -58,7 +58,7 @@ else
   exit 1
 fi
 
-for _tool in candle light msi-gui msiinfo; do
+for _tool in candle light smoke dark msiexec msi-gui msiinfo; do
   if command -v "$_tool" >/dev/null 2>&1; then
     "$_tool" --version >/dev/null 2>&1 || "$_tool" --help >/dev/null 2>&1 || true
     printf '[PASS] %s is operational\n' "$_tool"

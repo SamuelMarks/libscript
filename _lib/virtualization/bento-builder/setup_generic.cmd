@@ -93,6 +93,16 @@ if "%ACTION%"=="install" (
             git -C "!BENTO_DIR!" checkout "!BENTO_BRANCH!" 2>nul
         )
     )
+    if "%BENTO_BUILDER_INSTALL_MSDOS_PLUGIN%"=="" set "BENTO_BUILDER_INSTALL_MSDOS_PLUGIN=1"
+    if "!BENTO_BUILDER_INSTALL_MSDOS_PLUGIN!"=="1" if defined BENTO_DIR if exist "!BENTO_DIR!\vagrant-msdos\vagrant-msdos.gemspec" (
+        vagrant plugin list 2>nul | findstr /I /C:"vagrant-msdos" >nul 2>&1
+        if errorlevel 1 (
+            pushd "!BENTO_DIR!\vagrant-msdos"
+            call gem build vagrant-msdos.gemspec 2>nul
+            for %%G in (vagrant-msdos-*.gem) do call vagrant plugin install "%%~fG" 2>nul
+            popd
+        )
+    )
     if not exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%" mkdir "%LIBSCRIPT_HOME%\bento-builder\%VERSION%"
     echo installed > "%LIBSCRIPT_HOME%\bento-builder\%VERSION%\.installed"
     echo Bento Builder environment provisioned on Windows.

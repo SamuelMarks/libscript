@@ -118,7 +118,8 @@ case "$ACTION" in
     if [ "${JQ_INSTALL_METHOD}" = "from-source" ]; then
       EXACT_VERSION="${JQ_VERSION:-1.7.1}"
       [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="1.7.1"
-      libscript_build_component_from_source "jq" "${EXACT_VERSION}" "jq" "c" "autotools" "${JQ_DOWNLOAD_URL:-}"
+      _jq_src_url="${JQ_DOWNLOAD_URL:-https://github.com/jqlang/jq/releases/download/jq-${EXACT_VERSION}/jq-${EXACT_VERSION}.tar.gz}"
+      libscript_build_component_from_source "jq" "${EXACT_VERSION}" "jq" "c" "autotools" "${_jq_src_url}"
       exit 0
     fi
     if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/jq/${VERSION:-latest}/bin/jq" ]; then

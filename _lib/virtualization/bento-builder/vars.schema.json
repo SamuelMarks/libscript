@@ -30,6 +30,11 @@
       "description": "Component-prefixed Git branch to checkout in the Bento repository (default: multi-os-qemu-aarch64)",
       "default": "multi-os-qemu-aarch64"
     },
+    "BENTO_BUILDER_INSTALL_MSDOS_PLUGIN": {
+      "type": "string",
+      "description": "Flag (1 or 0) to build and register the local vagrant-msdos plugin for AnonDosVM MS-DOS 1.25/2.0/4.0 and FreeDOS 1.4 guests.",
+      "default": "1"
+    },
     "INSTALL_QEMU": {
       "type": "string",
       "description": "Install QEMU/KVM virtualization (1 or 0)",

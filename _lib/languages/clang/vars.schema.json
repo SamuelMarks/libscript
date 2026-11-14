@@ -43,6 +43,10 @@
     "CLANG_BUILD_TARGET": {
       "description": "Specific LLVM/Clang target to build when benchmarking ('llvm-core' for opt/llc/llvm-core, 'clang' for C/C++ frontend, or 'clang++' for full C++ toolchain).",
       "type": "string"
+    },
+    "CLANG_MATCHED": {
+      "description": "Exact clang executable matching the LLVM version linked into cpfe.",
+      "type": "string"
     }
   }
 }

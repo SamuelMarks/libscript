@@ -459,6 +459,18 @@
       "type": "string",
       "description": "Local or synced remote filesystem path to the paper manuscript directory receiving generated LaTeX metrics."
     },
+    "LIBSCRIPT_EXPERIMENT_ECOSYSTEM_ROOT": {
+      "type": "string",
+      "description": "Root directory containing multi-repository subject checkouts evaluated across ecosystem benchmarks."
+    },
+    "LIBSCRIPT_EXPERIMENT_LOCKFILE_DIR": {
+      "type": "string",
+      "description": "Directory containing pinned provenance lockfiles (e.g., c_upstreams.lock.json and batch_wild_corpus.lock.json)."
+    },
+    "LIBSCRIPT_EXPERIMENT_EMULATION_MODE": {
+      "type": "string",
+      "description": "Controlled execution or baseline isolation mode ('native_only', 'wine_warm', 'wine_cold', 'wsl2_loopback', 'wsl2_cross_boundary', 'wsl2_cli_spawn', 'cygwin', 'msys2', or 'dos32_vagrant_com1')."
+    },
     "LIBSCRIPT_BENCH_REQUIRE_NATIVE_ISA": {
       "type": "string",
       "description": "Flag (0 or 1) enforcing native hardware ISA execution and rejecting Rosetta 2, QEMU, or WoW64 binary translation."
@@ -467,6 +479,14 @@
       "type": "string",
       "description": "Pinned Cargo release profile specification ('opt3-lto-thin-cgu1' or custom key=value list) enforced across Rust benchmarks."
     },
+    "LIBSCRIPT_BENCH_MSVC_CRT": {
+      "type": "string",
+      "description": "MSVC C Runtime linkage variant ('MT' for static CRT or 'MD' for dynamic CRT) applied during Windows benchmark builds."
+    },
+    "LIBSCRIPT_BENCH_WINE_MODE": {
+      "type": "string",
+      "description": "WINE baseline execution policy ('warm' for persistent wineserver -p or 'cold' for per-trial wineserver -k)."
+    },
     "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA": {
       "type": "string",
       "description": "Internal test override flag (0 or 1) simulating Rosetta/QEMU binary translation to test RULE-2 failure handling."
@@ -474,6 +494,10 @@
     "LIBSCRIPT_BENCH_CLOCK_NS_BIN": {
       "type": "string",
       "description": "Cached path to the compiled C11 monotonic nanosecond clock helper executable."
+    },
+    "LIBSCRIPT_BENCH_PROBE_BIN": {
+      "type": "string",
+      "description": "Cached path to the compiled C11 cross-OS subprocess timing and PeakWorkingSetSize/ru_maxrss measurement probe."
     },
     "LIBSCRIPT_HW_CPU_MODEL": {
       "type": "string",

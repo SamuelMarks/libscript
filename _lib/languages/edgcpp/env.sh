@@ -57,6 +57,13 @@ fi
 if [ -x "${_edg_prefix}/bin/cpfe" ]; then
   export CPFE_BIN="${_edg_prefix}/bin/cpfe"
 fi
+if [ -x "${_edg_prefix}/bin/cpfe-cp" ]; then
+  export CPFE_CP_BIN="${_edg_prefix}/bin/cpfe-cp"
+fi
+if [ -f "${_edg_prefix}/lib/libedg.a" ]; then
+  export EDG_RT_LIB="${_edg_prefix}/lib/libedg.a"
+  export EDGCPP_RT_LIB="${_edg_prefix}/lib/libedg.a"
+fi
 
 if [ -x "${_edg_prefix}/bin/edgcpp" ]; then
   export CC="${_edg_prefix}/bin/edgcpp"

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/yarpgen/vars.schema.json",
+  "title": "yarpgen variables",
+  "description": "Configuration variables for yarpgen",
+  "type": "object",
+  "properties": {
+    "YARPGEN_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install yarpgen. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "from-source"
+    },
+    "YARPGEN_VERSION": {
+      "description": "Specific version of yarpgen to install.",
+      "type": "string",
+      "default": "2.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "YARPGEN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading yarpgen binary or archive artifacts."
+    },
+    "YARPGEN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying yarpgen available remote releases."
+    }
+  }
+}

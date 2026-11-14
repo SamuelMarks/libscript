@@ -1,0 +1,428 @@
+{
+  "$schema": "../../../experiment-suite.schema.json",
+  "id": "win_port",
+  "title": "win_port 14-Repository Empirical Evaluation & Zero-Hallucination Benchmarking Protocol (E0-E7)",
+  "protocol_version": "PLDI-2027-win-port-v1",
+  "manuscript_dir": "../new_research/win_port",
+  "manuscript_tex": "win_port_paper.tex",
+  "manuscript_files": [
+    {
+      "tex_path": "win_port_paper.tex",
+      "expected_tbd_count": 283,
+      "max_pages": 20,
+      "check_double_blind": true
+    },
+    {
+      "tex_path": "win_port_appendix.tex",
+      "expected_tbd_count": 2,
+      "check_double_blind": true
+    }
+  ],
+  "target_repo_dir": "../cdd-c",
+  "ecosystem_repos": [
+    { "id": "cdd-c", "path": "../cdd-c", "language": "c89", "role": "core_compiler" },
+    {
+      "id": "auto-win-msvc",
+      "path": "../auto-win-msvc",
+      "language": "c89",
+      "exclude_globs": ["rewritten_src"],
+      "role": "compat_layer"
+    },
+    { "id": "msi-rs", "path": "../msi-rs", "language": "rust", "role": "packager" },
+    { "id": "win-cmd-rs", "path": "../win-cmd-rs", "language": "rust", "role": "linter" },
+    { "id": "bento", "path": "../bento", "language": "ruby", "role": "vm_substrate" },
+    {
+      "id": "busybox-windows",
+      "path": "../busybox-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    {
+      "id": "toybox-windows",
+      "path": "../toybox-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    {
+      "id": "dash-windows",
+      "path": "../dash-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    {
+      "id": "gawk-windows",
+      "path": "../gawk-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    { "id": "jq-windows", "path": "../jq-windows", "language": "python", "role": "port_harness" },
+    {
+      "id": "memcached-windows",
+      "path": "../memcached-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    {
+      "id": "redis-windows",
+      "path": "../redis-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    {
+      "id": "valkey-windows",
+      "path": "../valkey-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    {
+      "id": "freebsd-usr-bin-windows",
+      "path": "../freebsd-usr-bin-windows",
+      "language": "python",
+      "role": "port_harness"
+    },
+    { "id": "freebsd-src", "path": "../freebsd-src", "language": "c89", "role": "upstream_ref" }
+  ],
+  "lockfiles": [
+    {
+      "id": "c_upstreams",
+      "path": "manifests/c_upstreams.lock.json",
+      "kind": "c_upstreams",
+      "required_entries": 9
+    },
+    {
+      "id": "batch_wild_corpus",
+      "path": "manifests/batch_wild_corpus.lock.json",
+      "kind": "batch_corpus",
+      "required_entries": 82
+    }
+  ],
+  "results_dir": "build/win_port_results",
+  "generated_tex_path": "build/win_port_results/generated_metrics.tex",
+  "execution_modes": [
+    "native_only",
+    "wine_warm",
+    "wine_cold",
+    "wsl2_loopback",
+    "wsl2_cross_boundary",
+    "wsl2_cli_spawn",
+    "cygwin",
+    "msys2",
+    "dos32_vagrant_com1"
+  ],
+  "host_constraints": {
+    "required_native_isas": [
+      "macos_arm64",
+      "linux_x64",
+      "windows_x64",
+      "freebsd_x64",
+      "illumos_x64",
+      "dos32_le"
+    ],
+    "forbid_binary_translation": true,
+    "prepare_host": true,
+    "drop_caches_on_cold": true,
+    "cloud_sku_by_arch": {
+      "linux_x64": "Standard_D160ads_v7",
+      "macos_arm64": "mac2.metal",
+      "windows_x64": "Standard_D32s_v5",
+      "freebsd_x64": "bento/freebsd-15.1",
+      "illumos_x64": "bento/omnios",
+      "dos32_le": "anondos/msdos-4.0"
+    }
+  },
+  "trial_policy": {
+    "warmup_runs": 5,
+    "measured_trials": 30,
+    "quantiles": [0.25, 0.5, 0.75, 0.99],
+    "dispersion_metric": "iqr_and_p99",
+    "prng_seed": 202705
+  },
+  "build_profile": {
+    "cargo_profile_flags": {
+      "CARGO_PROFILE_RELEASE_OPT_LEVEL": "3",
+      "CARGO_PROFILE_RELEASE_LTO": "thin",
+      "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "1"
+    },
+    "cargo_forbid_unsafe": true,
+    "workspace_bins": [
+      "cdd-c-transform",
+      "wincmd",
+      "wincheck",
+      "msi-cli",
+      "msiexec",
+      "candle",
+      "light",
+      "wix",
+      "dark",
+      "smoke"
+    ],
+    "c_compiler_flags": ["-std=c11", "-O3"],
+    "c89_strict_flags": [
+      "-std=c89",
+      "-Wdeclaration-after-statement",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Werror"
+    ],
+    "posix_opt_flags": ["-O3", "-DNDEBUG"],
+    "msvc_flags": ["/O2", "/DNDEBUG", "/W4"],
+    "msvc_crt_variants": ["MT", "MD"],
+    "openwatcom_dos32_flags": ["-bt=dos", "-mf", "-3r", "-ox"],
+    "msi_validation_modes": [
+      "ice_105_default",
+      "sval_0_ice",
+      "smoke_standalone_105",
+      "darice_cub_oracle"
+    ],
+    "strip_mode": "strip-unneeded"
+  },
+  "prereq_checks": [
+    {
+      "id": "awm_use_cdd_c",
+      "repo_id": "auto-win-msvc",
+      "suites": ["E1", "E2"],
+      "kind": "grep_present",
+      "target": "cmake/AutoWinMsvcTransform.cmake",
+      "pattern": "AUTO_WIN_MSVC_USE_CDD_C",
+      "description": "Ensure AutoWinMsvcTransform.cmake invokes cdd-c-transform."
+    },
+    {
+      "id": "wincmd_packrat_keys",
+      "repo_id": "win-cmd-rs",
+      "suites": ["E5"],
+      "kind": "grep_present",
+      "target": "src/parser/peg.rs",
+      "pattern": "CompoundBlock|IfStmt|ForStmt",
+      "description": "Ensure PegRuleKey memoizes nested block nonterminals for linear O(n) Packrat parsing."
+    },
+    {
+      "id": "msi_affine_drop_guard",
+      "repo_id": "msi-rs",
+      "suites": ["E4"],
+      "kind": "grep_present",
+      "target": "crates/msi/src/execution/transaction/mod.rs",
+      "pattern": "armed",
+      "description": "Ensure Transaction<Executed> enforces affine Drop and worker-EOF LIFO rollback."
+    }
+  ],
+  "placeholder_registry": {
+    "total_placeholders": 285,
+    "sections": [
+      {
+        "id": "abstract",
+        "tex_file": "win_port_paper.tex",
+        "count": 18,
+        "backing_artifacts": [
+          "raw/e1_cdd_transform.json",
+          "raw/e2_port_audit.json",
+          "raw/e4b_wine_warm_Linux_x86_64.json",
+          "raw/e5a_wincheck_corpus.json",
+          "raw/e6_ecosystem_rigor.json"
+        ]
+      },
+      {
+        "id": "sec1_contributions",
+        "tex_file": "win_port_paper.tex",
+        "count": 18,
+        "backing_artifacts": [
+          "raw/e1_cdd_transform.json",
+          "raw/e2_port_audit.json",
+          "raw/e4b_wine_warm_Linux_x86_64.json",
+          "raw/e5b_cmd_oracle_comparison.json",
+          "raw/e6_ecosystem_rigor.json"
+        ]
+      },
+      {
+        "id": "sec3_cdd_prose",
+        "tex_file": "win_port_paper.tex",
+        "count": 2,
+        "backing_artifacts": ["raw/e1_cdd_transform.json", "raw/e6_ecosystem_rigor.json"]
+      },
+      {
+        "id": "tab:awm_modules",
+        "tex_file": "win_port_paper.tex",
+        "count": 14,
+        "backing_artifacts": ["raw/e2_port_audit.json"]
+      },
+      {
+        "id": "tab:freebsd_usr_bin",
+        "tex_file": "win_port_paper.tex",
+        "count": 4,
+        "backing_artifacts": ["raw/e2_port_audit.json"]
+      },
+      {
+        "id": "sec6_7_prose",
+        "tex_file": "win_port_paper.tex",
+        "count": 2,
+        "backing_artifacts": ["raw/e6_ecosystem_rigor.json"]
+      },
+      {
+        "id": "tab:transform_eval",
+        "tex_file": "win_port_paper.tex",
+        "count": 75,
+        "backing_artifacts": [
+          "raw/e1_cdd_transform.json",
+          "raw/e1b_downstream_compile_ctest.json",
+          "raw/e2_port_audit.json"
+        ]
+      },
+      {
+        "id": "tab:win64_dos_eval",
+        "tex_file": "win_port_paper.tex",
+        "count": 36,
+        "backing_artifacts": [
+          "raw/e3a_win64_servers.json",
+          "raw/e3b_win64_cli.json",
+          "raw/e3c_dos_matrix.json"
+        ]
+      },
+      {
+        "id": "tab:msi_eval",
+        "tex_file": "win_port_paper.tex",
+        "count": 47,
+        "backing_artifacts": [
+          "raw/e4a_msi_authoring.json",
+          "raw/e4b_wine_warm_Linux_x86_64.json",
+          "raw/e4b_wine_warm_Darwin_arm64.json",
+          "raw/e4c_msi_rollback.json"
+        ]
+      },
+      {
+        "id": "tab:wincheck_eval",
+        "tex_file": "win_port_paper.tex",
+        "count": 33,
+        "backing_artifacts": [
+          "raw/e5a_wincheck_corpus.json",
+          "raw/e5b_cmd_oracle_comparison.json",
+          "raw/e5c_precision_summary.json"
+        ]
+      },
+      {
+        "id": "tab:rigor",
+        "tex_file": "win_port_paper.tex",
+        "count": 32,
+        "backing_artifacts": ["raw/e6_ecosystem_rigor.json"]
+      },
+      {
+        "id": "sec9_limitations",
+        "tex_file": "win_port_paper.tex",
+        "count": 2,
+        "backing_artifacts": ["raw/e1_cdd_transform.json", "raw/e2_port_audit.json"]
+      },
+      {
+        "id": "appendix_a_bento",
+        "tex_file": "win_port_appendix.tex",
+        "count": 2,
+        "backing_artifacts": ["raw/e6_ecosystem_rigor.json"]
+      }
+    ]
+  },
+  "subsuites": [
+    {
+      "id": "E0",
+      "title": "Phase 0 Static/Unit Remediation Gates & Pinned Lockfile Provenance",
+      "libscript_deps": ["cdd-c", "auto-win-msvc", "win-cmd-rs", "msi-rs", "tokei"],
+      "entrypoint": "suites/e0_phase0_gates",
+      "require_native_isa": false,
+      "outputs": ["raw/metadata.json", "raw/e0_phase0_gates.json"]
+    },
+    {
+      "id": "E1",
+      "title": "cdd-c-transform CST Round-Trip, 4-Pass Lowering & cl.exe/wcl386 Compilation",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["cdd-c", "auto-win-msvc", "msvc", "openwatcom"],
+      "entrypoint": "suites/e1a_cdd_eval",
+      "require_native_isa": true,
+      "outputs": ["raw/e1_cdd_transform.json", "raw/e1b_downstream_compile_ctest.json"]
+    },
+    {
+      "id": "E2",
+      "title": "auto-win-msvc 91-Module Inventory, Zero-Fork Patch Audit & FreeBSD usr.bin Matrix",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["tokei"],
+      "entrypoint": "suites/e2_port_audit",
+      "require_native_isa": false,
+      "outputs": ["raw/e2_port_audit.json"]
+    },
+    {
+      "id": "E3",
+      "title": "Native Windows 11 x86_64 Server/CLI Benchmarks & 32-Bit MS-DOS Vagrant CI",
+      "depends_on_suites": ["E0", "E1"],
+      "libscript_deps": [
+        "msvc",
+        "cygwin",
+        "msys2",
+        "wsl",
+        "hyperfine",
+        "memtier-benchmark",
+        "gawk",
+        "libarchive",
+        "openwatcom",
+        "bento-builder"
+      ],
+      "entrypoint": "suites/e3a_win64_servers",
+      "require_native_isa": true,
+      "emulation_baselines": [
+        "native_only",
+        "cygwin",
+        "msys2",
+        "wsl2_loopback",
+        "wsl2_cross_boundary",
+        "wsl2_cli_spawn",
+        "dos32_vagrant_com1"
+      ],
+      "outputs": ["raw/e3a_win64_servers.json", "raw/e3b_win64_cli.json", "raw/e3c_dos_matrix.json"]
+    },
+    {
+      "id": "E4",
+      "title": "msi-rs vs. .NET 8 WiX v4/v5, wixl, Unconfounded Warm/Cold WINE & 5-OS Rollback",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["msi-rs", "wix", "msitools", "wine", "hyperfine"],
+      "entrypoint": "suites/e4a_msi_authoring",
+      "require_native_isa": true,
+      "emulation_baselines": ["native_only", "wine_warm", "wine_cold"],
+      "outputs": [
+        "raw/e4a_msi_authoring.json",
+        "raw/e4b_wine_warm_Linux_x86_64.json",
+        "raw/e4b_wine_cold_Linux_x86_64.json",
+        "raw/e4b_wine_warm_Darwin_arm64.json",
+        "raw/e4b_wine_cold_Darwin_arm64.json",
+        "raw/e4c_msi_rollback.json"
+      ]
+    },
+    {
+      "id": "E5",
+      "title": "win-cmd-rs Linear Packrat Wild Corpus, Win11 cmd.exe Oracle & 120-Sample Precision Audit",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["win-cmd-rs", "hyperfine"],
+      "entrypoint": "suites/e5a_wincheck_corpus",
+      "require_native_isa": true,
+      "outputs": [
+        "raw/e5a_wincheck_corpus.json",
+        "raw/e5b_win11_ground_truth.json",
+        "raw/e5b_cmd_oracle_comparison.json",
+        "raw/e5c_precision_sample.csv",
+        "raw/e5c_precision_summary.json"
+      ]
+    },
+    {
+      "id": "E6",
+      "title": "14-Repository Hand-Written LoC, Automated Test Counts & Disaggregated Coverage Sweep",
+      "depends_on_suites": ["E0"],
+      "libscript_deps": ["tokei", "llvm", "cargo-llvm-cov", "doxygen"],
+      "entrypoint": "suites/e6_ecosystem_rigor",
+      "require_native_isa": false,
+      "outputs": ["raw/e6_ecosystem_rigor.json"]
+    },
+    {
+      "id": "E7",
+      "title": "285-Placeholder LaTeX Macro Synthesis & Dual-PDF Verification",
+      "depends_on_suites": ["E0", "E1", "E2", "E3", "E4", "E5", "E6"],
+      "libscript_deps": ["texlive"],
+      "entrypoint": "suites/e7_latex_verify",
+      "require_native_isa": false,
+      "outputs": ["generated_metrics.tex"]
+    }
+  ]
+}

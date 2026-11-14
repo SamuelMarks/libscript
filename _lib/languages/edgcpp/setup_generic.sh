@@ -171,13 +171,18 @@ stage_edgcpp_wrappers() {
     fi
   done
 
-  if command -v install_name_tool >/dev/null 2>&1 && [ -f "/opt/homebrew/opt/z3/lib/libz3.dylib" ]; then
+  if command -v install_name_tool >/dev/null 2>&1 && command -v otool >/dev/null 2>&1 && [ -f "/opt/homebrew/opt/z3/lib/libz3.dylib" ]; then
     for _macho_bin in cpfe cpfe-cp; do
       if [ -f "${_target_dir}/bin/${_macho_bin}" ]; then
-        install_name_tool -change "/opt/homebrew/opt/z3/lib/libz3.5.1.dylib" "/opt/homebrew/opt/z3/lib/libz3.dylib" "${_target_dir}/bin/${_macho_bin}" 2>/dev/null || true
-        if command -v codesign >/dev/null 2>&1; then
-          codesign -f -s - "${_target_dir}/bin/${_macho_bin}" >/dev/null 2>&1 || true
-        fi
+        _stale_z3=$(otool -L "${_target_dir}/bin/${_macho_bin}" 2>/dev/null | awk '/libz3\.[0-9.]+\.dylib/ {print $1}' || true)
+        for _z3_dep in ${_stale_z3}; do
+          if [ ! -f "${_z3_dep}" ]; then
+            install_name_tool -change "${_z3_dep}" "/opt/homebrew/opt/z3/lib/libz3.dylib" "${_target_dir}/bin/${_macho_bin}" 2>/dev/null || true
+            if command -v codesign >/dev/null 2>&1; then
+              codesign -f -s - "${_target_dir}/bin/${_macho_bin}" >/dev/null 2>&1 || true
+            fi
+          fi
+        done
       fi
     done
   fi
@@ -391,6 +396,7 @@ EDGCPP_HOME="${_target_dir}"
 EDGCPP_INSTALLED_FLAVOR="${EDGCPP_FLAVOR}"
 CPFE_BIN="${_target_dir}/bin/cpfe"
 CPFE_CP_BIN="${_target_dir}/bin/cpfe-cp"
+EDG_RT_LIB="${_target_dir}/lib/libedg.a"
 EDGCPP_WRAPPER_SCRIPT="${DIR}/edgcpp_wrapper.sh"
 EOF
 
@@ -463,6 +469,38 @@ EOF
   mv -f "${_target_dir}/bin/edgcpp-c-be.tmp" "${_target_dir}/bin/edgcpp-c-be"
   ln -sf "${_target_dir}/bin/edgcpp-c-be" "${_target_dir}/bin/edgcpp-legacy"
 
+  cat <<'EOF' > "${_target_dir}/bin/edgcpp-cp-be.tmp"
+#!/bin/sh
+_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "${_self_dir}/edgcpp.env" ]; then
+  # shellcheck disable=SC1091
+  . "${_self_dir}/edgcpp.env"
+fi
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN EDG_RT_LIB
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+llvm+gcc}}"
+export EDGCPP_BACKEND_MODE="cpp_backend"
+export EDGCPP_DRIVER_LANG="c++"
+exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
+EOF
+  chmod +x "${_target_dir}/bin/edgcpp-cp-be.tmp"
+  mv -f "${_target_dir}/bin/edgcpp-cp-be.tmp" "${_target_dir}/bin/edgcpp-cp-be"
+
+  cat <<'EOF' > "${_target_dir}/bin/edgcpp-fe-only.tmp"
+#!/bin/sh
+_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ -f "${_self_dir}/edgcpp.env" ]; then
+  # shellcheck disable=SC1091
+  . "${_self_dir}/edgcpp.env"
+fi
+export EDGCPP_HOME EDGCPP_INSTALLED_FLAVOR CPFE_BIN CPFE_CP_BIN EDG_RT_LIB
+export EDGCPP_FLAVOR="${EDGCPP_FLAVOR:-${EDGCPP_INSTALLED_FLAVOR:-edgcpp+llvm+gcc}}"
+export EDGCPP_BACKEND_MODE="fe_only"
+export EDGCPP_DRIVER_LANG="${EDGCPP_DRIVER_LANG:-c}"
+exec "${EDGCPP_WRAPPER_SCRIPT}" "$@"
+EOF
+  chmod +x "${_target_dir}/bin/edgcpp-fe-only.tmp"
+  mv -f "${_target_dir}/bin/edgcpp-fe-only.tmp" "${_target_dir}/bin/edgcpp-fe-only"
+
   cat <<'EOF' > "${_target_dir}/bin/edg-c++.tmp"
 #!/bin/sh
 _self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
@@ -528,6 +566,84 @@ extract_edgcpp_archive() {
   rm -rf "${_tmp_extract}"
 }
 
+# ## build_edgcpp_multibackend_from_source
+# Builds `edgcpp-compiler-multibackend` from a local git checkout (`EDGCPP_SOURCE_DIR` or `EDG_REPO`) in `release`, `llvm-cov`, `gcov`, `bug4-legacy`, or `all-modes` configuration via Tier 1 `cmake` + `ninja`.
+build_edgcpp_multibackend_from_source() {
+  _src_repo="${EDGCPP_SOURCE_DIR:-${EDG_REPO:-}}"
+  _dest_prefix="${1}"
+  _mode="${2:-${EDGCPP_BUILD_MODE:-release}}"
+
+  if [ -z "${_src_repo}" ] || [ ! -d "${_src_repo}" ]; then
+    log_error "EDGCPP_SOURCE_DIR / EDG_REPO ('${_src_repo}') does not exist."
+    return 1
+  fi
+  if [ "${EDGCPP_REQUIRE_CLEAN_GIT:-0}" = "1" ] && command -v git >/dev/null 2>&1 && [ -d "${_src_repo}/.git" ]; then
+    if [ -n "$(git -C "${_src_repo}" status --porcelain 2>/dev/null || true)" ]; then
+      log_error "Dirty git worktree in '${_src_repo}' rejected (EDGCPP_REQUIRE_CLEAN_GIT=1)."
+      return 1
+    fi
+  fi
+
+  if ! command -v cmake >/dev/null 2>&1; then
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
+  fi
+  _gen_args=""
+  if command -v ninja >/dev/null 2>&1; then
+    _gen_args="-G Ninja"
+  fi
+
+  case "${_mode}" in
+    all-modes)
+      _work_root="${LIBSCRIPT_ROOT_DIR}/build/edgcpp-modes"
+      mkdir -p "${_work_root}"
+      for _m_spec in "both:ON:ON" "llvm_only:ON:OFF" "gcc_only:OFF:ON" "legacy_only:OFF:OFF"; do
+        _m_name="${_m_spec%%:*}"
+        _m_r="${_m_spec#*:}"
+        _m_llvm="${_m_r%%:*}"
+        _m_gcc="${_m_r#*:}"
+        # shellcheck disable=SC2086
+        cmake -S "${_src_repo}" -B "${_work_root}/${_m_name}" ${_gen_args} -DCMAKE_BUILD_TYPE=Release "-DEDG_ENABLE_LLVM_BACKEND=${_m_llvm}" "-DEDG_ENABLE_GCC_BACKEND=${_m_gcc}" -DBUILD_TESTING=ON
+        cmake --build "${_work_root}/${_m_name}"
+      done
+      return 0
+      ;;
+    bug4-legacy)
+      _bdir="${LIBSCRIPT_ROOT_DIR}/build/edgcpp-bug4-legacy"
+      # shellcheck disable=SC2086
+      cmake -S "${_src_repo}" -B "${_bdir}" ${_gen_args} -DCMAKE_BUILD_TYPE=Release -DEDG_ENABLE_LLVM_BACKEND=ON -DEDG_ENABLE_GCC_BACKEND=OFF -DCMAKE_C_FLAGS="-DEDG_BENCH_LEGACY_ARRAY_DECAY_LOAD=1" -DCMAKE_CXX_FLAGS="-DEDG_BENCH_LEGACY_ARRAY_DECAY_LOAD=1"
+      cmake --build "${_bdir}"
+      mkdir -p "${_dest_prefix}/bin"
+      [ -x "${_bdir}/src/cpfe" ] && cp "${_bdir}/src/cpfe" "${_dest_prefix}/bin/cpfe-bug4-legacy"
+      return 0
+      ;;
+    llvm-cov)
+      _bdir="${LIBSCRIPT_ROOT_DIR}/build/edgcpp-llvm-cov"
+      # shellcheck disable=SC2086
+      cmake -S "${_src_repo}" -B "${_bdir}" ${_gen_args} -DCMAKE_BUILD_TYPE=Debug -DEDG_ENABLE_LLVM_BACKEND=ON -DEDG_ENABLE_GCC_BACKEND=OFF -DBUILD_TESTING=ON -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping"
+      cmake --build "${_bdir}"
+      return 0
+      ;;
+    gcov)
+      _bdir="${LIBSCRIPT_ROOT_DIR}/build/edgcpp-gcov"
+      # shellcheck disable=SC2086
+      cmake -S "${_src_repo}" -B "${_bdir}" ${_gen_args} -DCMAKE_BUILD_TYPE=Debug -DEDG_ENABLE_LLVM_BACKEND=OFF -DEDG_ENABLE_GCC_BACKEND=ON -DBUILD_TESTING=ON -DCMAKE_C_FLAGS="--coverage"
+      cmake --build "${_bdir}"
+      return 0
+      ;;
+    release|*)
+      _bdir="${_src_repo}/build-rel"
+      # shellcheck disable=SC2086
+      cmake -S "${_src_repo}" -B "${_bdir}" ${_gen_args} -DCMAKE_BUILD_TYPE=Release -DEDG_ENABLE_LLVM_BACKEND=ON -DEDG_ENABLE_GCC_BACKEND=ON -DBUILD_TESTING=ON
+      cmake --build "${_bdir}"
+      mkdir -p "${_dest_prefix}/bin" "${_dest_prefix}/lib"
+      [ -x "${_bdir}/src/cpfe" ] && cp "${_bdir}/src/cpfe" "${_dest_prefix}/bin/cpfe"
+      [ -x "${_bdir}/src/cmake/cpfe-cp/cpfe-cp" ] && cp "${_bdir}/src/cmake/cpfe-cp/cpfe-cp" "${_dest_prefix}/bin/cpfe-cp"
+      [ -f "${_bdir}/lib_src/libedg.a" ] && cp "${_bdir}/lib_src/libedg.a" "${_dest_prefix}/lib/libedg.a"
+      return 0
+      ;;
+  esac
+}
+
 # ## install_edgcpp_component
 # Installs or builds edgcpp according to EDGCPP_INSTALL_METHOD and stages its binaries and wrappers under LIBSCRIPT_HOME.
 install_edgcpp_component() {
@@ -560,7 +676,12 @@ install_edgcpp_component() {
         return 0
       fi
       _src_url="${EDGCPP_DOWNLOAD_URL:-${EDGCPP_GIT_URL:-}}"
-      if [ -n "${_src_url}" ] && [ "${EDGCPP_BUILD_FROM_GIT:-0}" = "1" ]; then
+      if [ -n "${EDGCPP_SOURCE_DIR:-${EDG_REPO:-}}" ] && [ -d "${EDGCPP_SOURCE_DIR:-${EDG_REPO:-}}" ]; then
+        _t_s0=$(date +%s)
+        build_edgcpp_multibackend_from_source "${LIBSCRIPT_BUILD_TARGET_DIR}" "${EDGCPP_BUILD_MODE:-release}"
+        _t_s1=$(date +%s)
+        export LIBSCRIPT_LAST_COMPILE_TIME_MS=$(( (_t_s1 - _t_s0) * 1000 + 1 ))
+      elif [ -n "${_src_url}" ] && [ "${EDGCPP_BUILD_FROM_GIT:-0}" = "1" ]; then
         libscript_fetch_and_extract_source "edgcpp" "${_src_url}"
         libscript_execute_source_build "cmake" "${LIBSCRIPT_EXTRACTED_SRC_DIR}"
       else
@@ -636,6 +757,18 @@ case "${ACTION}" in
     ;;
   install)
     install_edgcpp_component
+    ;;
+  verify-modes)
+    resolve_exact_version
+    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}" "all-modes"
+    ;;
+  build-coverage)
+    resolve_exact_version
+    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}" "${EDGCPP_BUILD_MODE:-llvm-cov}"
+    ;;
+  build-bug4-ablation)
+    resolve_exact_version
+    build_edgcpp_multibackend_from_source "${LIBSCRIPT_HOME:-$HOME/.libscript}/edgcpp/${EXACT_VERSION}" "bug4-legacy"
     ;;
   uninstall)
     resolve_exact_version

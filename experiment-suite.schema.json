@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/experiment-suite.schema.json",
   "title": "LibScript Empirical Experiment Suite Manifest",
-  "description": "Declarative specification for reproducible, multi-ISA empirical benchmark suites, SIGPLAN statistical policies, provenance envelopes, prerequisite gates, and LaTeX macro emission.",
+  "description": "Declarative specification for reproducible, multi-ISA empirical benchmark suites, SIGPLAN statistical policies, provenance envelopes, lockfiles, prerequisite gates, and LaTeX macro emission.",
   "type": "object",
   "required": ["id", "title", "protocol_version", "subsuites"],
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9_-]*$",
-      "description": "Unique lowercase identifier for the experiment suite (e.g., libtpu, edgcpp, libscript)."
+      "description": "Unique lowercase identifier for the experiment suite (e.g., libtpu, edgcpp, win_port, libscript)."
     },
     "title": {
       "type": "string",
@@ -25,11 +25,105 @@
     },
     "manuscript_tex": {
       "type": "string",
-      "description": "Primary LaTeX manuscript filename relative to manuscript_dir (e.g., libtpu_paper.tex)."
+      "description": "Primary LaTeX manuscript filename relative to manuscript_dir (e.g., libtpu_paper.tex or win_port_paper.tex)."
+    },
+    "manuscript_files": {
+      "type": "array",
+      "description": "List of LaTeX manuscript files (e.g., main paper and appendix) verified for zero unresolved placeholders, page budgets, and double-blind hygiene.",
+      "items": {
+        "type": "object",
+        "description": "Verification policy for an individual LaTeX manuscript target.",
+        "required": ["tex_path"],
+        "properties": {
+          "tex_path": {
+            "type": "string",
+            "description": "Filename or path of the LaTeX document relative to manuscript_dir."
+          },
+          "expected_tbd_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of sanitized \\tbd{???} placeholder sites governed in this LaTeX file."
+          },
+          "max_pages": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional maximum compiled PDF page budget enforced when PDF compilation is enabled."
+          },
+          "check_double_blind": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether compiled PDF metadata and text streams are audited against double-blind author or path leaks."
+          }
+        }
+      }
     },
     "target_repo_dir": {
       "type": "string",
-      "description": "Relative or absolute path to the subject source repository under empirical evaluation."
+      "description": "Relative or absolute path to the primary subject source repository under empirical evaluation."
+    },
+    "ecosystem_repos": {
+      "type": "array",
+      "description": "Multi-repository inventory for ecosystem-scale evaluations (e.g., 14 win_port repositories plus upstream source trees).",
+      "items": {
+        "type": "object",
+        "description": "Metadata and exclusion policy for a single evaluated repository.",
+        "required": ["id", "path"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Short canonical repository identifier (e.g., cdd-c, auto-win-msvc, msi-rs, win-cmd-rs)."
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative or absolute filesystem path to the repository checkout."
+          },
+          "language": {
+            "type": "string",
+            "description": "Primary implementation language used to select LoC and disaggregated coverage tools (e.g., c89, rust, python, ruby)."
+          },
+          "exclude_globs": {
+            "type": "array",
+            "description": "Generated or cached directory globs excluded from hand-written LoC accounting (e.g., rewritten_src).",
+            "items": {
+              "type": "string",
+              "description": "Directory or glob pattern excluded from hand-written source counts."
+            }
+          },
+          "role": {
+            "type": "string",
+            "description": "Architectural role in the evaluation (e.g., core_compiler, compat_layer, packager, linter, port_harness, vm_substrate, upstream_ref)."
+          }
+        }
+      }
+    },
+    "lockfiles": {
+      "type": "array",
+      "description": "Pinned provenance lockfiles recording exact upstream git commit SHAs, release tags, and SHA-256 artifact digests.",
+      "items": {
+        "type": "object",
+        "description": "Specification of a single provenance lockfile verified prior to benchmark sweeps.",
+        "required": ["id", "path", "kind"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the lockfile (e.g., c_upstreams, batch_wild_corpus)."
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path to the JSON lockfile."
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["c_upstreams", "batch_corpus", "generic_sha256"],
+            "description": "Lockfile schema category determining SHA-256 archive and git commit verification rules."
+          },
+          "required_entries": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Minimum number of pinned upstream entries or repositories required in the lockfile."
+          }
+        }
+      }
     },
     "results_dir": {
       "type": "string",
@@ -39,13 +133,38 @@
       "type": "string",
       "description": "Output path for generated single-source LaTeX metric macros and tables."
     },
+    "execution_modes": {
+      "type": "array",
+      "description": "Supported host execution and unconfounded emulation or virtualization baseline modes across the campaign.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "native_only",
+          "wine_warm",
+          "wine_cold",
+          "wsl2_loopback",
+          "wsl2_cross_boundary",
+          "wsl2_cli_spawn",
+          "cygwin",
+          "msys2",
+          "dos32_vagrant_com1",
+          "qemu_user_x86_64",
+          "qemu_user_aarch64",
+          "qemu_user_riscv64",
+          "qemu_user_s390x",
+          "qemu_user_powerpc64le",
+          "qemu_user_armhf"
+        ],
+        "description": "Named execution or baseline isolation mode."
+      }
+    },
     "host_constraints": {
       "type": "object",
       "description": "Host ISA, binary translation prohibition, and OS preparation constraints (RULE-2, RULE-3).",
       "properties": {
         "required_native_isas": {
           "type": "array",
-          "description": "List of native OS/ISA targets required across the evaluation campaign (e.g., linux_x64, macos_arm64).",
+          "description": "List of native OS/ISA targets required across the evaluation campaign (e.g., macos_arm64, linux_x64, windows_x64, freebsd_x64, freebsd_arm64, illumos_x64, dos32_le).",
           "items": {
             "type": "string",
             "description": "Canonical OS/ISA target identifier."
@@ -54,25 +173,35 @@
         "forbid_binary_translation": {
           "type": "boolean",
           "default": true,
-          "description": "Whether execution under Rosetta 2, QEMU user/TCG, binfmt_misc, or WoW64 emulation must fail hard."
+          "description": "Whether native benchmark cells fail hard under Rosetta 2, QEMU user/TCG, binfmt_misc, or WoW64 emulation."
         },
         "prepare_host": {
           "type": "boolean",
           "default": true,
           "description": "Whether CPU performance governor locking, ASLR disablement, and swapoff are requested when privileged."
         },
+        "require_ac_power": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether benchmark host preparation verifies AC mains power status to prevent battery thermal throttling."
+        },
+        "serialize_single_tu": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether parallel build jobs are pinned to -j1 during single-TU compilation latency and peak RSS measurements."
+        },
         "drop_caches_on_cold": {
           "type": "boolean",
           "default": true,
-          "description": "Whether cold subprocess measurements drop kernel page caches (or use cold binary copy fallback)."
+          "description": "Whether cold subprocess measurements drop kernel page caches (or use cold binary copy / wineserver -k reset)."
         },
         "cloud_sku_by_arch": {
           "type": "object",
-          "description": "Recommended bare-metal or dedicated-core cloud VM SKUs keyed by OS/ISA target.",
+          "description": "Recommended bare-metal, dedicated-core, or Vagrant guest SKUs keyed by OS/ISA target.",
           "patternProperties": {
             "^[a-z0-9_-]+$": {
               "type": "string",
-              "description": "Cloud instance SKU identifier for the target architecture."
+              "description": "Cloud instance SKU or Vagrant box identifier for the target architecture."
             }
           }
         }
@@ -80,19 +209,19 @@
     },
     "trial_policy": {
       "type": "object",
-      "description": "Non-parametric trial, warmup, quantile, and PRNG seed policy (RULE-3, RULE-4).",
+      "description": "Non-parametric and matched-optimization trial, warmup, quantile, timeout, and PRNG seed policy (RULE-3, RULE-4).",
       "properties": {
         "warmup_runs": {
           "type": "integer",
           "minimum": 0,
           "default": 10,
-          "description": "Number of unrecorded warmup runs executed prior to timed trials."
+          "description": "Number of unrecorded warmup runs executed prior to timed trials (e.g., 1 untimed warmup for N=11 compiler latency runs)."
         },
         "measured_trials": {
           "type": "integer",
           "minimum": 1,
           "default": 200,
-          "description": "Number of recorded fresh trials captured into samples_ns."
+          "description": "Number of recorded fresh trials captured into samples_ns (e.g., 11 timed iterations per compiler pipeline cell)."
         },
         "quantiles": {
           "type": "array",
@@ -104,20 +233,30 @@
         },
         "dispersion_metric": {
           "type": "string",
-          "enum": ["iqr_and_p99", "iqr", "mad"],
+          "enum": ["iqr_and_p99", "median_and_stddev", "mean_stddev", "iqr", "mad"],
           "default": "iqr_and_p99",
-          "description": "Primary non-parametric dispersion estimator used for tables and PGFPlots error bars."
+          "description": "Primary dispersion estimator used for tables and PGFPlots error bars (e.g., median_and_stddev for 1 warmup + N=11 median +/- sigma)."
+        },
+        "serialize_single_tu": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether single-TU timed iterations force -j1 single-process execution to eliminate cache and memory-bus contention."
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional hard per-invocation subprocess deadline in milliseconds enforced via process group or Win32 Job Object termination."
         },
         "prng_seed": {
           "type": "integer",
           "default": 42,
-          "description": "Deterministic PRNG seed shared across reference and target workload runs."
+          "description": "Deterministic PRNG seed shared across reference, fuzzing, sampling, and target workload runs."
         }
       }
     },
     "build_profile": {
       "type": "object",
-      "description": "Pinned release compiler and post-link stripping configuration (RULE-6).",
+      "description": "Pinned cross-compiler optimization, CRT linking, validation parity, and stripping configuration (RULE-6).",
       "properties": {
         "cargo_profile_flags": {
           "type": "object",
@@ -129,12 +268,75 @@
             }
           }
         },
+        "cargo_forbid_unsafe": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether Rust subject crates must enforce #![forbid(unsafe_code)] statically."
+        },
+        "workspace_bins": {
+          "type": "array",
+          "description": "Expected release binary names built across the Rust or C workspace.",
+          "items": {
+            "type": "string",
+            "description": "Release executable stem."
+          }
+        },
         "c_compiler_flags": {
           "type": "array",
           "description": "Pinned C11 benchmark harness compiler flags (e.g., ['-std=c11', '-O3']).",
           "items": {
             "type": "string",
             "description": "Single C compiler command-line flag."
+          }
+        },
+        "c89_strict_flags": {
+          "type": "array",
+          "description": "Strict ISO C89/C90 pedantic syntax and prologue-declaration verification flags.",
+          "items": {
+            "type": "string",
+            "description": "Single strict C89/C90 compiler flag."
+          }
+        },
+        "posix_opt_flags": {
+          "type": "array",
+          "description": "Matched GCC/Clang optimization flags for POSIX or Cygwin baselines (e.g., ['-O3', '-DNDEBUG']).",
+          "items": {
+            "type": "string",
+            "description": "Single GCC/Clang optimization flag."
+          }
+        },
+        "msvc_flags": {
+          "type": "array",
+          "description": "Matched MSVC cl.exe release and warning flags (e.g., ['/O2', '/DNDEBUG', '/W4']).",
+          "items": {
+            "type": "string",
+            "description": "Single MSVC cl.exe compiler flag."
+          }
+        },
+        "msvc_crt_variants": {
+          "type": "array",
+          "description": "MSVC C Runtime linkage modes measured separately (e.g., ['MT', 'MD']).",
+          "items": {
+            "type": "string",
+            "enum": ["MT", "MD"],
+            "description": "MSVC static (MT) or dynamic (MD) CRT linkage identifier."
+          }
+        },
+        "openwatcom_dos32_flags": {
+          "type": "array",
+          "description": "Pinned OpenWatcom v2 wcl386 flags for 32-bit DOS LE protected-mode targets (e.g., ['-bt=dos', '-mf', '-3r', '-ox']).",
+          "items": {
+            "type": "string",
+            "description": "Single OpenWatcom wcl386 command-line flag."
+          }
+        },
+        "msi_validation_modes": {
+          "type": "array",
+          "description": "MSI validation parity modes separating CFB/CAB synthesis from 105-ICE SQL evaluation.",
+          "items": {
+            "type": "string",
+            "enum": ["ice_105_default", "sval_0_ice", "smoke_standalone_105", "darice_cub_oracle"],
+            "description": "MSI validation parity mode identifier."
           }
         },
         "strip_mode": {
@@ -145,10 +347,146 @@
         },
         "feature_variants": {
           "type": "array",
-          "description": "Named Cargo feature configurations built and measured (e.g., full vs. slim).",
+          "description": "Named Cargo or CMake feature configurations built and measured (e.g., full vs. slim).",
           "items": {
             "type": "string",
             "description": "Feature configuration identifier."
+          }
+        }
+      }
+    },
+    "compiler_pipelines": {
+      "type": "array",
+      "description": "Declarative single-stage and two-stage compiler pipeline specifications (e.g., EDG-FE-ONLY, EDG-LLVM, EDG-GCC, EDG-C-LEGACY, EDG-CPP-LEGACY, NATIVE-CLANG, NATIVE-GCC).",
+      "items": {
+        "type": "object",
+        "description": "Single evaluated or baseline compiler pipeline configuration.",
+        "required": ["id", "manuscript_label", "backend_mode"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Canonical pipeline identifier (e.g., EDG-LLVM, EDG-GCC, EDG-C-LEGACY, NATIVE-CLANG)."
+          },
+          "manuscript_label": {
+            "type": "string",
+            "description": "Human-readable pipeline label rendered in LaTeX tables and figures."
+          },
+          "backend_mode": {
+            "type": "string",
+            "enum": [
+              "fe_only",
+              "llvm",
+              "gcc",
+              "legacy_c",
+              "legacy_cpp",
+              "native_clang",
+              "native_gcc",
+              "native_msvc"
+            ],
+            "description": "Code generation backend family invoked by this pipeline."
+          },
+          "stages": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2,
+            "default": 1,
+            "description": "Number of compilation stages (1 for direct IR/object backends; 2 for legacy .int.c or .int.cpp lowering)."
+          },
+          "dialect_flags": {
+            "type": "array",
+            "description": "Front-end dialect and GNU compatibility flags (e.g., ['--gnu_version=130200']).",
+            "items": {
+              "type": "string",
+              "description": "Single front-end dialect flag."
+            }
+          },
+          "matched_baseline_id": {
+            "type": "string",
+            "description": "Reference native compiler pipeline ID sharing the exact same LLVM or GCC/libgccjit optimizer version."
+          },
+          "runtime_libs": {
+            "type": "array",
+            "description": "Additional runtime archives linked for C++ EH or coroutine support (e.g., ['libedg.a']).",
+            "items": {
+              "type": "string",
+              "description": "Runtime library filename or linker flag."
+            }
+          },
+          "required_env_vars": {
+            "type": "array",
+            "description": "Environment variables required by this pipeline (e.g., ['EDG_LIBGCCJIT_PATH', 'SDKROOT']).",
+            "items": {
+              "type": "string",
+              "description": "Environment variable name."
+            }
+          }
+        }
+      }
+    },
+    "integrity_guards": {
+      "type": "object",
+      "description": "Non-negotiable experimental integrity invariants enforced across all benchmark sub-suites.",
+      "properties": {
+        "enforce_matched_opt_flags": {
+          "type": "boolean",
+          "default": true,
+          "description": "Forbids cross-optimization-level ratio comparisons (requires -O0 vs -O0, -O2 vs -O2, -O3 vs -O3, -O2 -g vs -O2 -g)."
+        },
+        "require_same_llvm_baseline": {
+          "type": "boolean",
+          "default": false,
+          "description": "Requires CLANG_MATCHED to match the exact LLVM version linked into cpfe."
+        },
+        "require_same_gcc_libgccjit_baseline": {
+          "type": "boolean",
+          "default": false,
+          "description": "Requires GCC_MATCHED and GXX_MATCHED to match the exact GCC version providing EDG_LIBGCCJIT_PATH."
+        },
+        "separate_two_stage_legacy_accounting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Requires Stage 1, intermediate .int.c/.int.cpp byte size, and Stage 2 to be logged separately with total = Stage1 + Stage2 and RSS = max(Stage1, Stage2)."
+        },
+        "require_anti_dce_checksum": {
+          "type": "boolean",
+          "default": true,
+          "description": "Requires microbenchmarks to feed runtime inputs through compiler memory barriers and verify output checksums."
+        }
+      }
+    },
+    "corpus_inputs": {
+      "type": "array",
+      "description": "SHA-256-pinned single-TU benchmark inputs and multi-TU open-source release tarballs with deterministic LoC accounting.",
+      "items": {
+        "type": "object",
+        "description": "Single pinned benchmark input or upstream project corpus entry.",
+        "required": ["id", "version", "libscript_component"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique workload or project identifier (e.g., sqlite3, lua, lz4, zlib, dash, jq, fmt, catch2, linux_5_15, linux_6_6)."
+          },
+          "version": {
+            "type": "string",
+            "description": "Pinned upstream release version string."
+          },
+          "url": {
+            "type": "string",
+            "description": "Canonical upstream release archive download URL."
+          },
+          "sha256": {
+            "type": "string",
+            "description": "Expected 64-character lowercase hexadecimal SHA-256 digest of the upstream archive."
+          },
+          "libscript_component": {
+            "type": "string",
+            "description": "Reusable Tier 1 component in _lib/ responsible for staging or building this input."
+          },
+          "loc_mode": {
+            "type": "string",
+            "enum": ["raw_wc_l", "preprocessed_wc_l", "non_blank_tu_sum"],
+            "default": "raw_wc_l",
+            "description": "Line-of-code counting methodology reported in manuscript tables."
           }
         }
       }
@@ -165,9 +503,13 @@
             "type": "string",
             "description": "Unique identifier for the prerequisite gate."
           },
+          "repo_id": {
+            "type": "string",
+            "description": "Optional repository identifier in ecosystem_repos against which target is resolved."
+          },
           "suites": {
             "type": "array",
-            "description": "Sub-suite identifiers gated by this check (e.g., ['E4', 'E6']).",
+            "description": "Sub-suite identifiers gated by this check (e.g., ['E1', 'E4']).",
             "items": {
               "type": "string",
               "description": "Sub-suite identifier."
@@ -175,12 +517,26 @@
           },
           "kind": {
             "type": "string",
-            "enum": ["file_exists", "grep_present", "grep_absent", "command_zero"],
+            "enum": [
+              "file_exists",
+              "grep_present",
+              "grep_absent",
+              "command_zero",
+              "ctest_pass",
+              "cmake_ctest_pass",
+              "backend_mode_matrix",
+              "coverage_report",
+              "doc_coverage_gate",
+              "ablation_compile_guard",
+              "cargo_test_pass",
+              "cargo_clippy_clean",
+              "c89_compile_clean"
+            ],
             "description": "Verification predicate type evaluated against the target repository."
           },
           "target": {
             "type": "string",
-            "description": "Relative file path or command inspected by the prerequisite gate."
+            "description": "Relative file path, build directory, or command inspected by the prerequisite gate."
           },
           "pattern": {
             "type": "string",
@@ -189,6 +545,69 @@
           "description": {
             "type": "string",
             "description": "Human-readable explanation of what codebase milestone this gate verifies."
+          }
+        }
+      }
+    },
+    "placeholder_registry": {
+      "type": "object",
+      "description": "Deterministic mapping between sanitized manuscript placeholder counts (e.g., tbd or ???) and backing raw JSON/CSV artifacts.",
+      "properties": {
+        "total_placeholders": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of empirical placeholder slots across all manuscript_files (e.g., 60 or 285)."
+        },
+        "placeholder_patterns": {
+          "type": "array",
+          "description": "Extended regular expressions identifying unresolved placeholders that must be absent from final LaTeX sources (e.g., ['\\\\\\\\tbd', '\\\\?\\\\?\\\\?']).",
+          "items": {
+            "type": "string",
+            "description": "Single unresolved placeholder regex pattern."
+          }
+        },
+        "sections": {
+          "type": "array",
+          "description": "Per-section or per-table placeholder breakdown.",
+          "items": {
+            "type": "object",
+            "description": "Single manuscript section or table entry in the placeholder registry.",
+            "required": ["id", "tex_file", "count", "backing_artifacts"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Section or table label (e.g., abstract, tab:compile_perf, fig:sqlite_results, tab:corpus_matrix)."
+              },
+              "tex_file": {
+                "type": "string",
+                "description": "Target LaTeX filename containing these placeholders."
+              },
+              "line_range": {
+                "type": "string",
+                "description": "Optional manuscript line number or span reference (e.g., 'll. 681-718')."
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Exact placeholder count populated in this section or table."
+              },
+              "backing_artifacts": {
+                "type": "array",
+                "description": "Raw JSON or CSV artifacts in results_dir supplying these metrics.",
+                "items": {
+                  "type": "string",
+                  "description": "Relative artifact path under results_dir."
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "description": "Optional list of JSON field paths populated into this manuscript location.",
+                "items": {
+                  "type": "string",
+                  "description": "Metric key or JSON path extracted from backing_artifacts."
+                }
+              }
+            }
           }
         }
       }
@@ -232,11 +651,70 @@
           "require_native_isa": {
             "type": "boolean",
             "default": false,
-            "description": "Whether this sub-suite enforces native non-translated ISA execution (RULE-2)."
+            "description": "Whether this sub-suite enforces native non-translated ISA execution on primary cells (RULE-2)."
+          },
+          "trial_policy": {
+            "type": "object",
+            "description": "Optional sub-suite-specific warmup, trial count, dispersion, seed, or timeout override.",
+            "properties": {
+              "warmup_runs": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Sub-suite override for unrecorded warmup iterations."
+              },
+              "measured_trials": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sub-suite override for recorded timed iterations."
+              },
+              "dispersion_metric": {
+                "type": "string",
+                "enum": ["iqr_and_p99", "median_and_stddev", "mean_stddev", "iqr", "mad"],
+                "description": "Sub-suite override for statistical dispersion estimator."
+              },
+              "serialize_single_tu": {
+                "type": "boolean",
+                "description": "Sub-suite override enforcing -j1 single-TU serialization."
+              },
+              "timeout_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sub-suite override for hard per-invocation subprocess timeout in milliseconds."
+              },
+              "prng_seed": {
+                "type": "integer",
+                "description": "Sub-suite override for deterministic PRNG seed."
+              }
+            }
+          },
+          "emulation_baselines": {
+            "type": "array",
+            "description": "Optional controlled emulation or virtualization baselines evaluated alongside native cells in this sub-suite.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "native_only",
+                "wine_warm",
+                "wine_cold",
+                "wsl2_loopback",
+                "wsl2_cross_boundary",
+                "wsl2_cli_spawn",
+                "cygwin",
+                "msys2",
+                "dos32_vagrant_com1",
+                "qemu_user_x86_64",
+                "qemu_user_aarch64",
+                "qemu_user_riscv64",
+                "qemu_user_s390x",
+                "qemu_user_powerpc64le",
+                "qemu_user_armhf"
+              ],
+              "description": "Controlled baseline mode identifier."
+            }
           },
           "outputs": {
             "type": "array",
-            "description": "Expected JSON or LaTeX output artifact paths relative to results_dir.",
+            "description": "Expected JSON, CSV, or LaTeX output artifact paths relative to results_dir.",
             "items": {
               "type": "string",
               "description": "Relative artifact filename or pattern."

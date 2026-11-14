@@ -2,7 +2,7 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Environment variable definitions for the msvc component.
+:: Environment variable definitions for the msvc component, resolving cl.exe, dumpbin.exe, msival2.exe, and darice.cub.
 ::
 :: ## Usage
 :: Source this script to configure environment variables.
@@ -50,10 +50,21 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if "%MSVC_ARCH%"=="" set "MSVC_ARCH=x64"
+if "%MSVC_CRT%"=="" set "MSVC_CRT=MD"
+if "%MSVC_DARICE_CUB_PATH%"=="" (
+    for %%K in ("C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\darice.cub" "C:\Program Files (x86)\Windows Kits\10\bin\x64\darice.cub") do (
+        if exist "%%~fK" set "MSVC_DARICE_CUB_PATH=%%~fK"
+    )
+)
+
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "msvc"
 
 endlocal & (
     set "PATH=%PATH%"
+    set "MSVC_ARCH=%MSVC_ARCH%"
+    set "MSVC_CRT=%MSVC_CRT%"
+    set "MSVC_DARICE_CUB_PATH=%MSVC_DARICE_CUB_PATH%"
 )
 exit /b 0
