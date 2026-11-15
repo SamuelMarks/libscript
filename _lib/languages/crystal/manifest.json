@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["crystal", "shards"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/crystal-lang/crystal"
+  "repository": "https://github.com/crystal-lang/crystal",
+  "capabilities": ["versioned-artifact"]
 }

@@ -27,6 +27,8 @@
         "sentinel",
         "cluster-gossip",
         "erasure-coded",
+        "stateless-pod",
+        "external-managed",
         "none"
       ],
       "description": "Distributed consensus and quorum formation strategy used by the cluster"
@@ -76,6 +78,31 @@
             "type": "string",
             "enum": ["leader", "follower", "arbiter", "worker"],
             "description": "Consensus and operational role assigned to nodes in this group"
+          },
+          "image_profile": {
+            "type": "string",
+            "description": "Relative repository path to a single-image os-config.schema.json profile synthesized for nodes in this group."
+          },
+          "vmm": {
+            "type": "string",
+            "enum": [
+              "cloud-iaas",
+              "firecracker",
+              "cloud-hypervisor",
+              "qemu",
+              "bhyve",
+              "xen",
+              "solo5"
+            ],
+            "description": "Virtual machine monitor or cloud hypervisor runtime booting the node group image."
+          },
+          "component_env": {
+            "type": "object",
+            "description": "Role-specific environment variables passed during Tier 2 image staging or node initialization.",
+            "additionalProperties": {
+              "type": "string",
+              "description": "Environment variable string value."
+            }
           },
           "components": {
             "type": "array",

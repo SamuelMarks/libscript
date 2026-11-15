@@ -167,7 +167,6 @@ if /i "%cmd%"=="list" ( call "!SCRIPT_DIR!\cli\commands\core\list.cmd" %* & exit
 if /i "%cmd%"=="search" ( call "!SCRIPT_DIR!\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="provision" ( call "!SCRIPT_DIR!\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deprovision" ( call "!SCRIPT_DIR!\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="rapid-experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="backup" ( call "!SCRIPT_DIR!\cli\commands\cloud\backup.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="export-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\backup.cmd" %* & exit /b !errorlevel! )
@@ -194,6 +193,10 @@ if /i "%cmd%"=="distro" ( call "!SCRIPT_DIR!\_lib\orchestration\distro\distro.cm
 if /i "%cmd%"=="payload" ( call "!SCRIPT_DIR!\payloads\engine.cmd" !_REST_ARGS! & exit /b !errorlevel! )
 if /i "%cmd%"=="topology" ( call "!SCRIPT_DIR!\topologies\engine.cmd" !_REST_ARGS! & exit /b !errorlevel! )
 if /i "%cmd%"=="trait" ( call "!SCRIPT_DIR!\traits\engine.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="experiment" ( call "!SCRIPT_DIR!\cli\commands\experiment\cli.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="experiments" ( call "!SCRIPT_DIR!\cli\commands\experiment\cli.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="resolve-env" ( call "!SCRIPT_DIR!\cli\commands\resolve_env.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="publish-marketplace" ( call "!SCRIPT_DIR!\cli\commands\marketplace\publish.cmd" !_REST_ARGS! & exit /b !errorlevel! )
 if /i "%cmd%"=="cloud" ( call "!SCRIPT_DIR!\_lib\cloud\core\cli.cmd" !_REST_ARGS! & exit /b !errorlevel! )
 if /i "%cmd%"=="train" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="infer" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
@@ -265,6 +268,11 @@ if /i "%cmd%"=="serve" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="route" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="ls" set "is_action=1"
 if /i "%cmd%"=="ls-remote" set "is_action=1"
+if /i "%cmd%"=="target-add" set "is_action=1"
+if /i "%cmd%"=="target-rm" set "is_action=1"
+if /i "%cmd%"=="target-ls" set "is_action=1"
+if /i "%cmd%"=="component-add" set "is_action=1"
+if /i "%cmd%"=="component-ls" set "is_action=1"
 if /i "%cmd%"=="list-managed" ( set "action_pkg=cloud" & goto match_component )
 if /i "%cmd%"=="backup" ( set "action_pkg=cloud" & goto match_component )
 if /i "%cmd%"=="restore" ( set "action_pkg=cloud" & goto match_component )
@@ -310,15 +318,17 @@ if /i "!action_pkg_norm!"=="cloud/cdn" set "action_pkg_norm=_lib/cloud/cdn"
 if /i "!action_pkg_norm!"=="cloud/cert" set "action_pkg_norm=_lib/cloud/cert"
 if /i "!action_pkg_norm!"=="cloud/volume" set "action_pkg_norm=_lib/cloud/volume"
 if /i "!action_pkg_norm!"=="cloud/cloudinit" set "action_pkg_norm=_lib/cloud/cloudinit"
-if /i "!action_pkg_norm!"=="stacks/ml-training/tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training"
-if /i "!action_pkg_norm!"=="ml-training/tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training"
-if /i "!action_pkg_norm!"=="tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training"
-if /i "!action_pkg_norm!"=="stacks/ml-training/gke-xpk-training" set "action_pkg_norm=_lib/orchestration/gke-xpk-training"
-if /i "!action_pkg_norm!"=="ml-training/gke-xpk-training" set "action_pkg_norm=_lib/orchestration/gke-xpk-training"
-if /i "!action_pkg_norm!"=="gke-xpk-training" set "action_pkg_norm=_lib/orchestration/gke-xpk-training"
-if /i "!action_pkg_norm!"=="stacks/ai-serving/tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving"
-if /i "!action_pkg_norm!"=="ai-serving/tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving"
-if /i "!action_pkg_norm!"=="tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving"
+if /i "!action_pkg_norm!"=="stacks/ml-training/tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training/tpu-trainer"
+if /i "!action_pkg_norm!"=="ml-training/tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training/tpu-trainer"
+if /i "!action_pkg_norm!"=="tpu-vm-eval-node" set "action_pkg_norm=_lib/ml-training/tpu-trainer"
+if /i "!action_pkg_norm!"=="ml-training" set "action_pkg_norm=_lib/ml-training/tpu-trainer"
+if /i "!action_pkg_norm!"=="stacks/ml-training/gke-xpk-training" set "action_pkg_norm=topologies/gke-tpu-cluster"
+if /i "!action_pkg_norm!"=="ml-training/gke-xpk-training" set "action_pkg_norm=topologies/gke-tpu-cluster"
+if /i "!action_pkg_norm!"=="gke-xpk-training" set "action_pkg_norm=topologies/gke-tpu-cluster"
+if /i "!action_pkg_norm!"=="stacks/ai-serving/tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving/inference-router"
+if /i "!action_pkg_norm!"=="ai-serving/tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving/inference-router"
+if /i "!action_pkg_norm!"=="tpu-vm-vllm" set "action_pkg_norm=_lib/ai-serving/inference-router"
+if /i "!action_pkg_norm!"=="ai-serving" set "action_pkg_norm=_lib/ai-serving/inference-router"
 if /i "!action_pkg_norm!"=="stacks/ai-serving/gke-xpk-inference" set "action_pkg_norm=_lib/ai-serving/gke-xpk-inference"
 if /i "!action_pkg_norm!"=="ai-serving/gke-xpk-inference" set "action_pkg_norm=_lib/ai-serving/gke-xpk-inference"
 if /i "!action_pkg_norm!"=="gke-xpk-inference" set "action_pkg_norm=_lib/ai-serving/gke-xpk-inference"
@@ -340,6 +350,9 @@ if /i "!action_pkg_norm!"=="stacks/task-queues/celery" set "action_pkg_norm=_lib
 if /i "!action_pkg_norm!"=="stacks/virtualization/bento-builder" set "action_pkg_norm=_lib/virtualization/bento-builder"
 if /i "!action_pkg_norm!"=="ai-tools/ollama" set "action_pkg_norm=_lib/app-servers/ollama"
 if /i "!action_pkg_norm!"=="_lib/ai-tools/ollama" set "action_pkg_norm=_lib/app-servers/ollama"
+if /i "!action_pkg_norm!"=="toolchains/gemma-tpu-suite" set "action_pkg_norm=_lib/toolchains/gemma-tpu-suite"
+if /i "!action_pkg_norm!"=="gemma_tpu_suite" set "action_pkg_norm=_lib/toolchains/gemma-tpu-suite"
+if /i "!action_pkg_norm!"=="gemma-tpu-suite" set "action_pkg_norm=_lib/toolchains/gemma-tpu-suite"
 
 set "action_pkg=!action_pkg_norm:/=\!"
 if /i "!action_pkg!"=="cloud" (

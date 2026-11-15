@@ -6,5 +6,6 @@
   "category": "audio",
   "provides": ["jack", "jack2", "jackd"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/jackaudio/jack2"
+  "repository": "https://github.com/jackaudio/jack2",
+  "capabilities": ["versioned-artifact"]
 }

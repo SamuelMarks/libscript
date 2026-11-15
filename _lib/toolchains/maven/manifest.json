@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["maven", "mvn", "build-system"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "capabilities": ["versioned-artifact"]
 }

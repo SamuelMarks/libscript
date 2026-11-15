@@ -7,5 +7,6 @@
   "title": "yarn",
   "description": "Bootstrap module for the `yarn` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/yarnpkg/berry"
+  "repository": "https://github.com/yarnpkg/berry",
+  "capabilities": ["versioned-artifact"]
 }

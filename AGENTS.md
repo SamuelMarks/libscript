@@ -59,19 +59,27 @@ together).
 - Compositions must happen dynamically via `manifest.json` dependencies or Tier 2 execution plans,
   never by piling logic into a single Tier 1 setup script.
 
-### 📜 The Strict Version Manager Contract
+### 📜 The Capability-Typed Version Manager Contract
 
-Every software recipe in `_lib/` acts as an autonomous version manager and MUST expose the standard
-entry points, adhering completely to the lifecycle capabilities defined in
+Every software recipe in `_lib/` declares explicit `"capabilities"` in `manifest.json`
+(`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`, `"cloud-operator"`,
+`"os-synthesizer"`) and exposes entry points matching its declared capabilities per
 `WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md`:
 
-- `cli.sh` / `cli.cmd`: The primary router supporting mandatory verbs: `download`, `install`, `ls`,
-  `ls-remote`, `use`, `start`, `stop`, `install-service`, `uninstall-service`, and `uninstall`.
-- `setup.sh` / `setup.cmd`: Installation entry point, managing offline caching and delegating to
-  `_lib/_common/setup_base.*`.
-- `env.sh` / `env.cmd`: Exports strictly isolated paths without polluting global shell profiles.
-- `service.sh` / `service.cmd`: Service daemon management (systemd, launchd, Windows Service).
+- `cli.sh` / `cli.cmd`: The primary router supporting mandatory verbs (`download`, `install`, `ls`,
+  `ls-remote`, `use`, `uninstall`, plus `target-add`/`component-add` for cross-compilers, and
+  `start`, `stop`, `install-service`, `uninstall-service` strictly when `"service-daemon"` is
+  declared).
+- `setup.sh` / `setup.cmd`: Installation entry point for `"versioned-artifact"` recipes, managing
+  offline caching and delegating to `_lib/_common/setup_base.*`.
+- `env.sh` / `env.cmd`: Exports strictly isolated paths without polluting global shell profiles,
+  while `use` atomically updates `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` switching).
+- `service.sh` / `service.cmd`: Service daemon management (systemd, launchd, Windows Service),
+  required strictly when `"service-daemon"` is declared in `manifest.json` (never add no-op
+  `service.*` stubs to pure compilers or CLI tools).
 - `test.sh` / `test.cmd`: Component-specific smoke tests and binary verification.
+- Empirical paper campaigns belong strictly in `experiments/<suite-id>/`
+  (`./libscript.sh experiment scaffold <suite-id>`), never inside `_lib/toolchains/*-suite/`.
 
 To rapidly scaffold a new Tier 1 component directory that satisfies all Version Manager Contract,
 `THIS_FILE`, `.cmd` parity, and schema invariants out-of-the-box, use:

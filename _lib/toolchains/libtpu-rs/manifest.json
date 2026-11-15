@@ -12,5 +12,6 @@
     "build_deps": ["c"],
     "runtime_deps": ["python", "libtpu"],
     "tier": "optional"
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

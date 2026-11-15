@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["pandoc", "document-converter"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/jgm/pandoc"
+  "repository": "https://github.com/jgm/pandoc",
+  "capabilities": ["versioned-artifact"]
 }

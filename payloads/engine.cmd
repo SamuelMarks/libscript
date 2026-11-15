@@ -56,9 +56,30 @@ set "ACTION=%~1"
 set "TARGET=%~2"
 set "SCHEDULER=%LIBSCRIPT_SCHEDULER%"
 if "%SCHEDULER%"=="" set "SCHEDULER=kubernetes"
-if "%~3"=="--scheduler" set "SCHEDULER=%~4"
+shift
+shift
+set "_EXTRA_ARGS="
 
-call "%SCRIPT_DIR%\schedulers\%SCHEDULER%.cmd" "%ACTION%" "%TARGET%"
+:: ## parse_eng_args
+:: Parses --scheduler and extra arguments for payloads\engine.cmd.
+:parse_eng_args
+if "%~1"=="" goto :eng_args_done
+set "_ea=%~1"
+if /i "!_ea!"=="--scheduler" ( set "SCHEDULER=%~2" & shift & shift & goto :parse_eng_args )
+if /i "!_ea:~0,12!"=="--scheduler=" ( set "SCHEDULER=!_ea:~12!" & shift & goto :parse_eng_args )
+set "_EXTRA_ARGS=!_EXTRA_ARGS! %1"
+shift
+goto :parse_eng_args
+
+:: ## eng_args_done
+:: Normalizes scheduler alias and dispatches to the target scheduler script.
+:eng_args_done
+if /i "!SCHEDULER!"=="tpu-vm" set "SCHEDULER=tpu_vm"
+if /i "!SCHEDULER!"=="gcp-tpu-vm" set "SCHEDULER=tpu_vm"
+if /i "!SCHEDULER!"=="gke-xpk" set "SCHEDULER=xpk"
+if /i "!SCHEDULER!"=="local" set "SCHEDULER=native"
+
+call "%SCRIPT_DIR%\schedulers\!SCHEDULER!.cmd" "!ACTION!" "!TARGET!" !_EXTRA_ARGS!
 exit /b %errorlevel%
 
 :: ## help

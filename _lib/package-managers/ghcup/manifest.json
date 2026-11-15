@@ -7,5 +7,6 @@
   "title": "ghcup",
   "description": "Bootstrap script for [GHCup](https://www.haskell.org/ghcup/), the main installer for the Haskell language toolchain (including `cabal` and `stack`).",
   "category": "package-managers",
-  "repository": "https://gitlab.haskell.org/haskell/ghcup-hs"
+  "repository": "https://gitlab.haskell.org/haskell/ghcup-hs",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["perl"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/Perl/perl5"
+  "repository": "https://github.com/Perl/perl5",
+  "capabilities": ["versioned-artifact"]
 }

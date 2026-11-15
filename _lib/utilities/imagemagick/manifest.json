@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["imagemagick", "magick", "image-converter"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/ImageMagick/ImageMagick"
+  "repository": "https://github.com/ImageMagick/ImageMagick",
+  "capabilities": ["versioned-artifact"]
 }

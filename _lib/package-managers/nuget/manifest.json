@@ -7,5 +7,6 @@
   "title": "nuget",
   "description": "Bootstrap module for the `nuget` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/NuGet/NuGet.Client"
+  "repository": "https://github.com/NuGet/NuGet.Client",
+  "capabilities": ["versioned-artifact"]
 }

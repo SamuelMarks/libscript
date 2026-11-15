@@ -10,5 +10,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [25, 587]
+  "ports": [25, 587],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

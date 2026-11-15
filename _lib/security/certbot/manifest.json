@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "ports": [],
-  "repository": "https://github.com/certbot/certbot"
+  "repository": "https://github.com/certbot/certbot",
+  "capabilities": ["versioned-artifact"]
 }

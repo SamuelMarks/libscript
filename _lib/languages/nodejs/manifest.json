@@ -10,5 +10,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

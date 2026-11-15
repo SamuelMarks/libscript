@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Multi-Unikernel Pod Composer decomposing multi-daemon component sets ({c0, c1, ...})
-# into isolated single-process unikernel appliances wired over virtual bridge networking.
+# Multi-Unikernel Pod & Constellation Composer decomposing multi-daemon topologies (`topology.json`)
+# or component lists into isolated single-process unikernel appliances with bridge/vsock networking.
 # ## Usage
-# ./_lib/orchestration/unikernel_pod/setup.sh [install|assemble|clean] [--framework=<fw>] [--components=<c0,c1,...>]
+# ./_lib/orchestration/unikernel_pod/setup_generic.sh [install|assemble|clean] [--topology=<topology.json>] [--framework=<fw>] [--vmm=<vmm>]
 
 set -feu
 
@@ -20,163 +20,178 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export LIBSCRIPT_ROOT_DIR
 
-ACTION="${1:-assemble}"
-case "$ACTION" in
-  install|assemble|compile|bootstrap|clean|ls|ls-remote|status) shift || true ;;
-  *) ACTION='assemble' ;;
-esac
-
+ACTION='install'
 FRAMEWORK="${LIBSCRIPT_UNIKERNEL_FRAMEWORK:-unikraft}"
-DAEMONS_CSV="${UNIKERNEL_POD_DAEMONS:-${LIBSCRIPT_POD_DAEMONS:-redis}}"
 VMM="${UNIKERNEL_POD_VMM:-qemu}"
-SUBNET_PREFIX="${UNIKERNEL_POD_SUBNET:-172.30.0}"
+DAEMONS_CSV="${UNIKERNEL_POD_DAEMONS:-${LIBSCRIPT_POD_DAEMONS:-redis}}"
+TOPOLOGY_FILE="${UNIKERNEL_POD_TOPOLOGY:-}"
+POD_SUBNET="${UNIKERNEL_POD_SUBNET:-172.30.0}"
+ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
+CLOUD_BOOT='none'
+TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
+POD_DIR="${UNIKERNEL_POD_OUT_DIR:-${TARGET_SYSROOT}/unikernel-pod}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    install|assemble|clean|ls|ls-remote|use|download|status|uninstall) ACTION="$1"; shift ;;
+    --topology=*) TOPOLOGY_FILE="${1#*=}"; shift ;;
     --framework=*) FRAMEWORK="${1#*=}"; shift ;;
-    --components=*) DAEMONS_CSV="${1#*=}"; shift ;;
     --vmm=*) VMM="${1#*=}"; shift ;;
+    --components=*|--daemons=*) DAEMONS_CSV="${1#*=}"; shift ;;
+    --subnet=*) POD_SUBNET="${1#*=}"; shift ;;
+    --out-dir=*) POD_DIR="${1#*=}"; shift ;;
+    --cloud-boot=*) CLOUD_BOOT="${1#*=}"; shift ;;
+    --allow-stub|--allow-stub-sdk) ALLOW_STUB=1; shift ;;
     *) shift ;;
   esac
 done
 
-TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
-POD_DIR="${UNIKERNEL_POD_OUT_DIR:-${TARGET_SYSROOT}/unikernel-pod}"
-
-if [ "$ACTION" = "ls" ] || [ "$ACTION" = "ls-remote" ]; then
-  printf '1.0.0\n'
-  exit 0
-fi
-
-if [ "$ACTION" = "clean" ]; then
-  rm -rf "$POD_DIR"
-  exit 0
-fi
-
-mkdir -p "$POD_DIR"
-POD_ENV="${POD_DIR}/pod.discovery.env"
-POD_MANIFEST="${POD_DIR}/pod-manifest.json"
-LAUNCH_SH="${POD_DIR}/launch_pod.sh"
-TEARDOWN_SH="${POD_DIR}/teardown_pod.sh"
-LAUNCH_CMD="${POD_DIR}/launch_pod.cmd"
-
-: > "$POD_ENV"
-IDX=10
-APPLIANCES_JSON='['
-FIRST_ITEM=1
-
-_old_ifs="$IFS"
-IFS=','
-for _comp in $DAEMONS_CSV; do
-  [ -n "$_comp" ] || continue
-  _ip="${SUBNET_PREFIX}.${IDX}"
-  _mac_hex=$(printf '%02x' "$IDX")
-  _mac="52:54:00:30:00:${_mac_hex}"
-  _up=$(printf '%s' "$_comp" | tr '[:lower:]-' '[:upper:]_')
-  printf '%s_HOST=%s\n' "$_up" "$_ip" >> "$POD_ENV"
-  IDX=$((IDX + 1))
-done
-IFS="$_old_ifs"
-
-IDX=10
-IFS=','
-for _comp in $DAEMONS_CSV; do
-  [ -n "$_comp" ] || continue
-  _ip="${SUBNET_PREFIX}.${IDX}"
-  _mac_hex=$(printf '%02x' "$IDX")
-  _mac="52:54:00:30:00:${_mac_hex}"
-  _app_dir="${POD_DIR}/appliances/${_comp}"
-  mkdir -p "${_app_dir}/rootfs/etc" "${_app_dir}/images"
-  cp -f "$POD_ENV" "${_app_dir}/rootfs/etc/pod.discovery.env"
-
-  # Invoke component-specific unikernel adapter if available, then package image
-  for _cat_cand in "${LIBSCRIPT_ROOT_DIR}"/_lib/*/"${_comp}"; do
-    if [ -x "${_cat_cand}/unikernel_build.sh" ]; then
-      STACK='' LIBSCRIPT_UNIKERNEL_FRAMEWORK="$FRAMEWORK" "${_cat_cand}/unikernel_build.sh" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img" "$_ip" || true
-    fi
-  done
-
-  if [ ! -s "${_app_dir}/images/${_comp}.${FRAMEWORK}.img" ]; then
-    if [ "$FRAMEWORK" = "zephyr" ] || [ "$FRAMEWORK" = "freertos" ]; then
-      if [ "$_comp" = "mosquitto" ] || [ "$_comp" = "redis" ] || [ "$_comp" = "postgres" ]; then
-        STACK='' LIBSCRIPT_UNIKERNEL_FRAMEWORK='unikraft' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --framework='unikraft' --vmm="$VMM" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
-      else
-        STACK='' LIBSCRIPT_TARGET_OS="$FRAMEWORK" "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/firmware.sh" --format=firmware-elf --kernel="$FRAMEWORK" --board="${LIBSCRIPT_RTOS_BOARD:-qemu_x86_64}" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
-      fi
+case "$ACTION" in
+  ls) printf '1.0.0\n'; exit 0 ;;
+  ls-remote) printf '1.0.0\n'; exit 0 ;;
+  use|download) exit 0 ;;
+  clean|uninstall)
+    rm -rf "$POD_DIR"
+    exit 0
+    ;;
+  status)
+    if [ -f "${POD_DIR}/pod-manifest.json" ]; then
+      cat "${POD_DIR}/pod-manifest.json"
     else
-      STACK='' LIBSCRIPT_UNIKERNEL_FRAMEWORK="$FRAMEWORK" "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --framework="$FRAMEWORK" --vmm="$VMM" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
+      printf '[STATUS] unikernel_pod not assembled at %s\n' "$POD_DIR"
     fi
-  fi
+    exit 0
+    ;;
+esac
 
-  if [ "$FIRST_ITEM" -eq 1 ]; then
-    FIRST_ITEM=0
-  else
-    APPLIANCES_JSON="${APPLIANCES_JSON},"
-  fi
-  APPLIANCES_JSON="${APPLIANCES_JSON}{\"component\":\"${_comp}\",\"framework\":\"${FRAMEWORK}\",\"vmm\":\"${VMM}\",\"ipv4\":\"${_ip}\",\"mac\":\"${_mac}\",\"image\":\"appliances/${_comp}/images/${_comp}.${FRAMEWORK}.img\"}"
-  IDX=$((IDX + 1))
-done
-IFS="$_old_ifs"
-APPLIANCES_JSON="${APPLIANCES_JSON}]"
+mkdir -p "${POD_DIR}/appliances" "${POD_DIR}/net"
+BRIDGE_NAME='lsbr0'
 
-printf '{\n  "pod_version": "1.0.0",\n  "framework": "%s",\n  "vmm": "%s",\n  "bridge": "lsbr0",\n  "gateway": "%s.1",\n  "appliances": %s\n}\n' \
-  "$FRAMEWORK" "$VMM" "$SUBNET_PREFIX" "$APPLIANCES_JSON" > "$POD_MANIFEST"
-
-cat << 'LSH_EOF' > "$LAUNCH_SH"
+cat << NET_EOF > "${POD_DIR}/net/setup-bridge.sh"
 #!/bin/sh
-set -feu
-POD_ROOT=$(cd -- "$(dirname -- "$0")" && pwd)
-mkdir -p "${POD_ROOT}/pids"
-for _app in "${POD_ROOT}"/appliances/*; do
-  [ -d "$_app" ] || continue
-  _name=$(basename "$_app")
-  _img=$(find "${_app}/images" -type f | head -n 1 || true)
-  [ -n "$_img" ] || continue
-  if command -v qemu-system-x86_64 >/dev/null 2>&1; then
-    qemu-system-x86_64 -m 256M -nographic -kernel "$_img" -daemonize -pidfile "${POD_ROOT}/pids/${_name}.pid" 2>/dev/null || true
-  fi
-  printf '[POD] Appliance %s staged (%s)\n' "$_name" "$_img"
-done
-LSH_EOF
-chmod +x "$LAUNCH_SH"
+set -eu
+ip link show ${BRIDGE_NAME} >/dev/null 2>&1 || ip link add name ${BRIDGE_NAME} type bridge
+ip addr show dev ${BRIDGE_NAME} | grep -q '${POD_SUBNET}.1/' || ip addr add ${POD_SUBNET}.1/24 dev ${BRIDGE_NAME}
+ip link set ${BRIDGE_NAME} up
+NET_EOF
+chmod 755 "${POD_DIR}/net/setup-bridge.sh"
 
-cat << 'TSH_EOF' > "$TEARDOWN_SH"
-#!/bin/sh
-set -feu
-POD_ROOT=$(cd -- "$(dirname -- "$0")" && pwd)
-if [ -d "${POD_ROOT}/pids" ]; then
-  for _pf in "${POD_ROOT}"/pids/*.pid; do
-    [ -f "$_pf" ] || continue
-    kill "$(cat "$_pf")" 2>/dev/null || true
-    rm -f "$_pf"
+IDX=10
+APPLIANCE_JSON_LIST=''
+STUB_FLAG=''
+if [ "$ALLOW_STUB" = "1" ]; then
+  STUB_FLAG='--allow-stub-sdk'
+fi
+
+if [ -n "$TOPOLOGY_FILE" ] && [ -f "$TOPOLOGY_FILE" ]; then
+  _groups=$(jq -c '.node_groups[]' "$TOPOLOGY_FILE")
+  while IFS= read -r _grp; do
+    [ -z "$_grp" ] && continue
+    _grp_name=$(printf '%s' "$_grp" | jq -r '.name')
+    _grp_prof=$(printf '%s' "$_grp" | jq -r '.image_profile // empty')
+    _grp_vmm=$(printf '%s' "$_grp" | jq -r '.vmm // "qemu"')
+    _grp_comp=$(printf '%s' "$_grp" | jq -r '.components[0] // "app"')
+    _grp_role=$(printf '%s' "$_grp" | jq -r '.component_env.OPENEDX_ROLE // empty')
+    _app_root="${POD_DIR}/appliances/${_grp_name}"
+    _app_sys="${_app_root}/rootfs"
+    _app_img="${_app_root}/${_grp_name}.unikernel.elf"
+    _app_ip="${POD_SUBNET}.${IDX}"
+    _tap_dev="lstap${IDX}"
+    mkdir -p "$_app_sys"
+
+    _prof_fw="$FRAMEWORK"
+    if [ -n "$_grp_prof" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/${_grp_prof}" ]; then
+      _prof_os=$(jq -r '.target.os_family // "unikernel-unikraft"' "${LIBSCRIPT_ROOT_DIR}/${_grp_prof}")
+      _prof_fw="${_prof_os#unikernel-}"
+    fi
+
+    if [ "$_grp_comp" = "openedx" ] && [ -n "$_grp_role" ]; then
+      STACK='' TARGET_ROOT="$_app_sys" OPENEDX_ROLE="$_grp_role" \
+        sh "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/setup_generic.sh" install --offline --role="$_grp_role" >/dev/null
+    fi
+
+    # shellcheck disable=SC2086
+    STACK='' LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" \
+      sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" \
+      --framework="$_prof_fw" --vmm="$_grp_vmm" --cloud-boot="$CLOUD_BOOT" $STUB_FLAG "$_app_sys" "$_app_img" >/dev/null
+
+    _entry="{\"name\":\"${_grp_name}\",\"component\":\"${_grp_comp}\",\"profile\":\"${_grp_prof}\",\"framework\":\"${_prof_fw}\",\"vmm\":\"${_grp_vmm}\",\"ip\":\"${_app_ip}\",\"tap\":\"${_tap_dev}\",\"image\":\"${_app_img}\"}"
+    if [ -z "$APPLIANCE_JSON_LIST" ]; then
+      APPLIANCE_JSON_LIST="$_entry"
+    else
+      APPLIANCE_JSON_LIST="${APPLIANCE_JSON_LIST},${_entry}"
+    fi
+    IDX=$((IDX + 1))
+  done << EOF
+${_groups}
+EOF
+else
+  OLD_IFS="$IFS"
+  IFS=','
+  # shellcheck disable=SC2086
+  set -- $DAEMONS_CSV
+  IFS="$OLD_IFS"
+
+  for _comp in "$@"; do
+    [ -z "$_comp" ] && continue
+    _app_root="${POD_DIR}/appliances/${_comp}"
+    _app_sys="${_app_root}/rootfs"
+    _app_img="${_app_root}/${_comp}.unikernel.elf"
+    _app_ip="${POD_SUBNET}.${IDX}"
+    _tap_dev="lstap${IDX}"
+    mkdir -p "${_app_sys}/etc" "${_app_sys}/var/lib/${_comp}"
+    printf '127.0.0.1 localhost\n%s %s.pod.local %s\n' "$_app_ip" "$_comp" "$_comp" > "${_app_sys}/etc/hosts"
+
+    # shellcheck disable=SC2086
+    STACK='' LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" \
+      sh "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" \
+      --framework="$FRAMEWORK" --vmm="$VMM" --cloud-boot="$CLOUD_BOOT" $STUB_FLAG "$_app_sys" "$_app_img" >/dev/null
+
+    _entry="{\"component\":\"${_comp}\",\"framework\":\"${FRAMEWORK}\",\"vmm\":\"${VMM}\",\"ip\":\"${_app_ip}\",\"tap\":\"${_tap_dev}\",\"image\":\"${_app_img}\"}"
+    if [ -z "$APPLIANCE_JSON_LIST" ]; then
+      APPLIANCE_JSON_LIST="$_entry"
+    else
+      APPLIANCE_JSON_LIST="${APPLIANCE_JSON_LIST},${_entry}"
+    fi
+    IDX=$((IDX + 1))
   done
 fi
-printf '[POD] All unikernel pod appliances stopped.\n'
-TSH_EOF
-chmod +x "$TEARDOWN_SH"
 
-cat << 'LCMD_EOF' > "$LAUNCH_CMD"
-@echo off
-setlocal EnableDelayedExpansion
-set "POD_ROOT=%~dp0"
-for /D %%A in ("%POD_ROOT%appliances\*") do (
-    echo [POD] Unikernel appliance ready: %%~nxA
-)
-exit /b 0
-LCMD_EOF
-awk '{ sub(/\r$/, ""); printf "%s\r\n", $0 }' "$LAUNCH_CMD" > "${LAUNCH_CMD}.tmp" && mv "${LAUNCH_CMD}.tmp" "$LAUNCH_CMD"
+cat << POD_JSON > "${POD_DIR}/pod-manifest.json.tmp"
+{
+  "pod_version": "2.0.0",
+  "topology": "${TOPOLOGY_FILE}",
+  "bridge": "${BRIDGE_NAME}",
+  "subnet": "${POD_SUBNET}.0/24",
+  "gateway": "${POD_SUBNET}.1",
+  "appliances": [${APPLIANCE_JSON_LIST}]
+}
+POD_JSON
+mv "${POD_DIR}/pod-manifest.json.tmp" "${POD_DIR}/pod-manifest.json"
+
+cat << 'LAUNCH_EOF' > "${POD_DIR}/launch-pod.sh"
+#!/bin/sh
+set -eu
+POD_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+sh "${POD_ROOT}/net/setup-bridge.sh"
+jq -r '.appliances[].image' "${POD_ROOT}/pod-manifest.json" | while IFS= read -r _img; do
+  printf '[POD] Verified unikernel image ready: %s\n' "$_img"
+done
+LAUNCH_EOF
+chmod 755 "${POD_DIR}/launch-pod.sh"
 
 BIN_INSTALL="${LIBSCRIPT_HOME:-${HOME:-/tmp}/.libscript}/unikernel_pod/1.0.0/bin"
 mkdir -p "$BIN_INSTALL"
 ln -sf "$THIS_FILE" "${BIN_INSTALL}/unikernel-pod"
 
-printf '[OK] Synthesized multi-unikernel pod (%s, vmm=%s) at %s\n' "$FRAMEWORK" "$VMM" "$POD_DIR"
+printf '[OK] Synthesized multi-unikernel pod at %s\n' "$POD_DIR"
 exit 0

@@ -220,6 +220,19 @@ function Test-ManifestJson {
         [Console]::Error.WriteLine("[STANDARDS VIOLATION] [MANIFEST_SCHEMA] ${relDir}/manifest.json: category `"$($m.category)`" not in manifest.schema.json enum")
         $script:errorsCount++
     }
+    $allowedCaps = @($ManifestSchema.properties.capabilities.items.enum)
+    $capsList = @($m.capabilities)
+    if ($capsList.Count -eq 0) {
+        [Console]::Error.WriteLine("[STANDARDS VIOLATION] [MANIFEST_SCHEMA] ${relDir}/manifest.json: capabilities must be a non-empty array")
+        $script:errorsCount++
+    } else {
+        foreach ($capItem in $capsList) {
+            if ($allowedCaps.Count -gt 0 -and $allowedCaps -notcontains [string]$capItem) {
+                [Console]::Error.WriteLine("[STANDARDS VIOLATION] [MANIFEST_SCHEMA] ${relDir}/manifest.json: capability `"$capItem`" not in manifest.schema.json enum")
+                $script:errorsCount++
+            }
+        }
+    }
     $allowedTop = @($ManifestSchema.properties.PSObject.Properties.Name)
     foreach ($k in $props) {
         if ($allowedTop -notcontains $k) {

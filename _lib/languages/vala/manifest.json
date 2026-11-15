@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["vala", "valac"],
   "os_whitelist": ["all"],
-  "repository": "https://gitlab.gnome.org/GNOME/vala"
+  "repository": "https://gitlab.gnome.org/GNOME/vala",
+  "capabilities": ["versioned-artifact"]
 }

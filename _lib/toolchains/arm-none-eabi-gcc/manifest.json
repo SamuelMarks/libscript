@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["arm-none-eabi-gcc", "arm-none-eabi-objcopy"],
   "os_whitelist": ["all"],
-  "repository": "https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain"
+  "repository": "https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain",
+  "capabilities": ["versioned-artifact"]
 }

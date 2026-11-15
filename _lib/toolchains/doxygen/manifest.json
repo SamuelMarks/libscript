@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["doxygen"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/doxygen/doxygen"
+  "repository": "https://github.com/doxygen/doxygen",
+  "capabilities": ["versioned-artifact"]
 }

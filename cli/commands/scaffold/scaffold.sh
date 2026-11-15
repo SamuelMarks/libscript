@@ -109,6 +109,7 @@ SCAF_OS_BLACKLIST=''
 SCAF_ARCH_WHITELIST='all'
 SCAF_ARCH_BLACKLIST=''
 SCAF_OS_SCRIPTS=''
+SCAF_CAPABILITIES=''
 SCAF_IS_SERVICE='false'
 SCAF_PORTS=''
 SCAF_ENABLE_HOOKS='false'
@@ -291,7 +292,11 @@ parse_json_spec() {
   SCAF_ARCH_WHITELIST=$(json_extract_csv "$_spec_file" 'arch_whitelist' "$SCAF_ARCH_WHITELIST")
   SCAF_ARCH_BLACKLIST=$(json_extract_csv "$_spec_file" 'arch_blacklist' "$SCAF_ARCH_BLACKLIST")
   SCAF_OS_SCRIPTS=$(json_extract_csv "$_spec_file" 'os_specific_scripts' "$SCAF_OS_SCRIPTS")
+  SCAF_CAPABILITIES=$(json_extract_csv "$_spec_file" 'capabilities' "$SCAF_CAPABILITIES")
   SCAF_IS_SERVICE=$(json_extract_scalar "$_spec_file" 'is_service' "$SCAF_IS_SERVICE")
+  case ",${SCAF_CAPABILITIES}," in
+    *,service-daemon,*) SCAF_IS_SERVICE='true' ;;
+  esac
   SCAF_PORTS=$(json_extract_csv "$_spec_file" 'ports' "$SCAF_PORTS")
   SCAF_ENABLE_HOOKS=$(json_extract_scalar "$_spec_file" 'enable_hooks' "$SCAF_ENABLE_HOOKS")
   SCAF_MULTITENANT=$(json_extract_scalar "$_spec_file" 'multitenant' "$SCAF_MULTITENANT")
@@ -697,23 +702,9 @@ write_component_file() {
 }
 
 # ## map_category_manifest_type
-# Maps a _lib/<category> directory name to the singular category string used in manifest.json.
+# Maps a _lib/<category> directory name to the canonical category enum string used in manifest.json.
 map_category_manifest_type() {
-  _c="$1"
-  case "$_c" in
-    utilities) printf '%s\n' 'utility' ;;
-    databases) printf '%s\n' 'database' ;;
-    languages) printf '%s\n' 'language' ;;
-    web-servers) printf '%s\n' 'web-server' ;;
-    app-servers) printf '%s\n' 'app-server' ;;
-    caches) printf '%s\n' 'cache' ;;
-    toolchains) printf '%s\n' 'toolchain' ;;
-    runtimes) printf '%s\n' 'runtime' ;;
-    message-brokers) printf '%s\n' 'message-broker' ;;
-    package-managers) printf '%s\n' 'package-manager' ;;
-    web-apps) printf '%s\n' 'web-app' ;;
-    *) printf '%s\n' "$_c" ;;
-  esac
+  printf '%s\n' "$1"
 }
 
 # ## synthesize_manifest_json
@@ -723,6 +714,14 @@ synthesize_manifest_json() {
   _m_cat=$(map_category_manifest_type "$SCAF_CATEGORY")
   _prov_arr=$(csv_to_json_string_array "${SCAF_PROVIDES:-$SCAF_NAME}")
   _os_w_arr=$(csv_to_json_string_array "${SCAF_OS_WHITELIST:-all}")
+  _caps_csv="${SCAF_CAPABILITIES:-versioned-artifact}"
+  if [ "$SCAF_IS_SERVICE" = 'true' ]; then
+    case ",${_caps_csv}," in
+      *,service-daemon,*) ;;
+      *) _caps_csv="${_caps_csv},service-daemon" ;;
+    esac
+  fi
+  _caps_arr=$(csv_to_json_string_array "$_caps_csv")
   _extra_fields=''
 
   if [ -n "$SCAF_CONFLICTS" ]; then
@@ -799,6 +798,7 @@ synthesize_manifest_json() {
   "description": "${SCAF_DESCRIPTION}",
   "category": "${_m_cat}",
   "provides": ${_prov_arr},
+  "capabilities": ${_caps_arr},
   "os_whitelist": ${_os_w_arr}${_extra_fields}
 }
 EOF
@@ -1723,11 +1723,12 @@ EOF
 }
 
 # ## synthesize_lifecycle_scripts
-# Generates service, status, logs, uninstall, uninstall_generic, and test scripts (.sh and .cmd).
+# Generates service (when service-daemon), status, logs, uninstall, uninstall_generic, and test scripts (.sh and .cmd).
 synthesize_lifecycle_scripts() {
   _comp_dir="$1"
 
-  write_component_file "${_comp_dir}/service.sh" 1 0 << 'EOF'
+  if [ "$SCAF_IS_SERVICE" = 'true' ]; then
+    write_component_file "${_comp_dir}/service.sh" 1 0 << 'EOF'
 #!/bin/sh
 # ## Overview
 # Manages background service lifecycle operations (start, stop, status) for the __SCAF_NAME__ component.
@@ -1761,7 +1762,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 exit 0
 EOF
 
-  write_component_file "${_comp_dir}/service.cmd" 0 1 << 'EOF'
+    write_component_file "${_comp_dir}/service.cmd" 0 1 << 'EOF'
 @echo off
 :: # service.cmd
 ::
@@ -1817,6 +1818,7 @@ goto :find_root
 
 exit /b 0
 EOF
+  fi
 
   write_component_file "${_comp_dir}/status.sh" 1 0 << 'EOF'
 #!/bin/sh
@@ -2377,7 +2379,42 @@ synthesize_optional_os_scripts() {
   for _os_target in $SCAF_OS_SCRIPTS; do
     _os_clean=$(printf '%s' "$_os_target" | tr -d '[:space:]')
     [ -z "$_os_clean" ] && continue
-    write_component_file "${_comp_dir}/setup_${_os_clean}.sh" 1 0 '__OS_TARGET__' "$_os_clean" << 'EOF'
+    if [ "$_os_clean" = 'windows' ]; then
+      write_component_file "${_comp_dir}/setup_${_os_clean}.sh" 1 0 '__OS_TARGET__' "$_os_clean" << 'EOF'
+#!/bin/sh
+# ## Overview
+# Proforma POSIX companion script for Windows-only setup (__OS_TARGET__) of __SCAF_NAME__.
+#
+# ## Usage
+# Exits with Option A unsupported-platform code 86 on POSIX hosts.
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+printf '[ERROR] setup_windows.sh is unsupported on POSIX hosts (Option A).\n' >&2
+exit 86
+EOF
+    else
+      write_component_file "${_comp_dir}/setup_${_os_clean}.sh" 1 0 '__OS_TARGET__' "$_os_clean" << 'EOF'
 #!/bin/sh
 # ## Overview
 # OS-specific installation script (__OS_TARGET__) for the __SCAF_NAME__ component.
@@ -2412,8 +2449,10 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 EOF
+    fi
 
-    write_component_file "${_comp_dir}/setup_${_os_clean}.cmd" 0 1 '__OS_TARGET__' "$_os_clean" << 'EOF'
+    if [ "$_os_clean" = 'windows' ]; then
+      write_component_file "${_comp_dir}/setup_${_os_clean}.cmd" 0 1 '__OS_TARGET__' "$_os_clean" << 'EOF'
 @echo off
 :: # setup___OS_TARGET__.cmd
 ::
@@ -2470,6 +2509,65 @@ goto :find_root
 call "!SCRIPT_DIR!\setup_generic.cmd" %*
 exit /b !errorlevel!
 EOF
+    else
+      write_component_file "${_comp_dir}/setup_${_os_clean}.cmd" 0 1 '__OS_TARGET__' "$_os_clean" << 'EOF'
+@echo off
+:: # setup___OS_TARGET__.cmd
+::
+:: ## Overview
+:: Proforma Windows companion script for POSIX OS setup (__OS_TARGET__) of __SCAF_NAME__.
+::
+:: ## Usage
+:: Exits with Option A unsupported-platform code 86 on Windows hosts.
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+echo [ERROR] setup___OS_TARGET__.cmd is unsupported on Windows hosts ^(Option A^). >&2
+exit /b 86
+EOF
+    fi
   done
   IFS="$_oifs"
 }
@@ -2710,8 +2808,19 @@ while [ $# -gt 0 ]; do
       SCAF_ARCH_WHITELIST="${1#*=}"
       shift
       ;;
+    --capabilities=*)
+      SCAF_CAPABILITIES="${1#*=}"
+      case ",${SCAF_CAPABILITIES}," in
+        *,service-daemon,*) SCAF_IS_SERVICE='true' ;;
+      esac
+      shift
+      ;;
     --service)
       SCAF_IS_SERVICE='true'
+      shift
+      ;;
+    --service=*)
+      SCAF_IS_SERVICE="${1#*=}"
       shift
       ;;
     --ports=*)

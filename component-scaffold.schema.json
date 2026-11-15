@@ -68,6 +68,24 @@
       },
       "description": "List of capabilities or command aliases provided by this component (defaults to [name])."
     },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "default": ["versioned-artifact"],
+      "description": "Explicit component lifecycle capabilities emitted into manifest.json and used to gate generated contract scripts.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "versioned-artifact",
+          "service-daemon",
+          "sysroot-library",
+          "cloud-operator",
+          "os-synthesizer"
+        ],
+        "description": "Canonical component capability identifier."
+      }
+    },
     "conflicts": {
       "type": "array",
       "items": {

@@ -1664,7 +1664,86 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /api/v1/components/{name}/capabilities:
+    get:
+      tags:
+        - Components
+      summary: Query declared lifecycle capabilities of a Tier 1 _lib component
+      operationId: getComponentCapabilities
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Component capabilities array from manifest.json
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [component, capabilities]
+                properties:
+                  component:
+                    type: string
+                  capabilities:
+                    type: array
+                    items:
+                      type: string
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/marketplace/publish:
+    post:
+      tags:
+        - Jobs
+      summary: Synthesize and stage or publish a multicloud marketplace offer (AWS, Azure, GCP)
+      operationId: publishMarketplaceOffer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [offer]
+              properties:
+                offer:
+                  type: string
+                  description: Relative repository path to offer.json
+                clouds:
+                  type: string
+                  default: aws,azure,gcp
+                  description: Comma-separated target cloud marketplaces
+      responses:
+        "202":
+          description: Marketplace offer publication job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
   /api/v1/experiments:
+    get:
+      tags:
+        - Jobs
+      summary: List auto-discovered Open/Closed experiment plugins under experiments/
+      operationId: listExperimentSuites
+      responses:
+        "200":
+          description: Discovered experiment plugin identifiers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [suites]
+                properties:
+                  suites:
+                    type: array
+                    items:
+                      type: string
     post:
       tags:
         - Jobs
@@ -2042,6 +2121,13 @@ components:
           type: string
         manifest_path:
           type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum:
+              [versioned-artifact, service-daemon, sysroot-library, cloud-operator, os-synthesizer]
+          description: Lifecycle capabilities declared in manifest.json
         versions:
           type: array
           items:
@@ -2103,8 +2189,9 @@ components:
       properties:
         suite:
           type: string
-          enum: [libscript, edgcpp, edgcpp_backends, libtpu, win_port, gemma_tpu, manifest, all]
-          description: Experiment suite identifier to execute
+          pattern: "^[a-zA-Z0-9_-]+$"
+          description:
+            Open/Closed experiment plugin identifier under experiments/<suite-id>/ (or legacy alias)
         step:
           type: string
           default: all

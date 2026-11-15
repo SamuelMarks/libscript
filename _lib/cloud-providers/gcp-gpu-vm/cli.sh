@@ -75,9 +75,9 @@ case "$ACTION" in
     . "${SCRIPT_NAME}"
     exit 0
     ;;
-  logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
-    printf '%s\n' 'Action not applicable for this provisioning module.'
-    exit 0
+  logs|status|use|env|ls|ls-remote|download|uninstall|install-service|uninstall-service|which|exec|run)
+    printf '[ERROR] Action '\''%s'\'' requires capability '\''versioned-artifact'\'' or '\''service-daemon'\'' (gcp-gpu-vm capabilities: ["cloud-operator"]).\n' "${1}" >&2
+    exit 1
     ;;
 esac
 

@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["xz", "lzma"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/tukaani-project/xz"
+  "repository": "https://github.com/tukaani-project/xz",
+  "capabilities": ["versioned-artifact"]
 }

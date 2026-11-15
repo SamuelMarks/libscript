@@ -5,5 +5,6 @@
   "description": "Portable Info-ZIP extraction and integrity testing utility for PKZIP (.zip) archives.",
   "category": "utilities",
   "provides": ["unzip", "zip-extractor"],
-  "os_whitelist": ["all"]
+  "os_whitelist": ["all"],
+  "capabilities": ["versioned-artifact"]
 }

@@ -9,5 +9,6 @@
   "repository": "https://github.com/koalaman/shellcheck",
   "license": "GPL-3.0-or-later",
   "license_name": "GNU General Public License v3.0 or later",
-  "license_url": "https://github.com/koalaman/shellcheck/blob/master/LICENSE"
+  "license_url": "https://github.com/koalaman/shellcheck/blob/master/LICENSE",
+  "capabilities": ["versioned-artifact"]
 }

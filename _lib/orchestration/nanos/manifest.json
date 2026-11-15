@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["nanos", "ops", "unikernel-builder"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/nanovms/ops"
+  "repository": "https://github.com/nanovms/ops",
+  "capabilities": ["versioned-artifact"]
 }

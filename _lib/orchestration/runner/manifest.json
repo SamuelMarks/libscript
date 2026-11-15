@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["runner"],
   "os_whitelist": ["linux"],
-  "os_blacklist": ["windows"]
+  "os_blacklist": ["windows"],
+  "capabilities": ["versioned-artifact"]
 }

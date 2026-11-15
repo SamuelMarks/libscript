@@ -59,5 +59,6 @@
       "engine": "redis",
       "default_db_name": "0"
     }
-  ]
+  ],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

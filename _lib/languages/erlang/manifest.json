@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["erlang", "erl", "erlc", "beam"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/erlang/otp"
+  "repository": "https://github.com/erlang/otp",
+  "capabilities": ["versioned-artifact"]
 }

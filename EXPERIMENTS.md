@@ -1,9 +1,26 @@
 # Rapid Cloud & Bento Multi-OS Vagrant Experimentation Guide (`EXPERIMENTS.md`)
 
-LibScript provides a unified, idempotent **Experiment-Runner Abstraction**
-(`./libscript.sh experiment` on POSIX `/bin/sh` and `.\libscript.cmd experiment` on Windows Batch)
-that links cloud compute provisioning with the multi-OS Bento Vagrant component matrix and compiler
-benchmark suites.
+LibScript provides an **Open/Closed Experiment Plugin Architecture** (`experiments/<suite-id>/`,
+routed via `./libscript.sh experiment <verb> <suite-id>` and
+`.\libscript.cmd experiment <verb> <suite-id>`) alongside rapid cloud & Bento Vagrant host lifecycle
+automation (`./libscript.sh rapid-experiment`).
+
+### Open/Closed `experiments/<suite-id>/` Plugin Workflow
+
+Every empirical campaign lives in a self-contained `experiments/<suite-id>/` directory
+(`suite.json`, `vars.schema.json`, `run.sh`, `run.cmd`, `test.sh`, `test.cmd`, `README.md`)
+auto-discovered without modifying core CLI routers:
+
+```sh
+./libscript.sh experiment list
+./libscript.sh experiment scaffold my-new-paper --substrate=local-native
+./libscript.sh experiment validate edgcpp-backends
+./libscript.sh experiment run os-component-matrix
+```
+
+Built-in plugins include `edgcpp-backends`, `win-port`, `libtpu-pjrt`, `gemma-tpu`, and
+`os-component-matrix` (emitting provenance-stamped `matrix_results.json` and deterministically
+regenerating the 7-OS Supported Components tables in `README.md`).
 
 By decoupling **`a_provision_instance`** (`provision_instance`) from **`i_deprovision_instance`**
 (`deprovision_instance`), you can provision a high-core-count experiment host once, run experiments
@@ -52,7 +69,7 @@ name (`provision_instance`):
                                              v
      +---------------------------------------+---------------------------------------+
      | [i_deprovision_instance] (deprovision_instance)                               |
-     |     - Tears down compute node, VNet, and NSG (_lib/cloud/core/teardown)       |
+     |     - Tears down compute node, VNet, and NSG (cli/commands/cloud/deprovision) |
      |     - Preserves all transferred host logs and transfer-manifest.json          |
      +-------------------------------------------------------------------------------+
 ```
@@ -177,8 +194,8 @@ Every step can be executed individually by its lexicographical step name or unpr
 ## 4. Multi-Suite SIGPLAN Empirical Evaluation (`--suite=libtpu|edgcpp|manifest`)
 
 Beyond Bento Vagrant OS matrices, LibScript's experiment runner provides a zero-dependency
-statistical, provenance, and LaTeX macro synthesis substrate
-(`_lib/toolchains/_common/experiment_harness.sh` and `.cmd`, governed by
+statistical, provenance, and LaTeX macro synthesis substrate (`_lib/_common/experiment/harness.sh`
+and `.cmd`, plus `_lib/_common/experiment/c_probes/libscript_bench_probe.c`, governed by
 `experiment-suite.schema.json`) enforcing SIGPLAN empirical evaluation invariants (`RULE-1` through
 `RULE-7`):
 
@@ -201,13 +218,13 @@ statistical, provenance, and LaTeX macro synthesis substrate
 
 ```sh
 # 1. Remote bare-metal/dedicated Linux x86_64 campaign (E0-E8) + host pull
-./libscript.sh experiment libtpu_campaign --suite=libtpu --host-arch=linux_x64 \
+./libscript.sh experiment libtpu_campaign --suite=libtpu-pjrt --host-arch=linux_x64 \
   --provider=azure --size="160-vCPU Standard_D160ads_v7" \
   --subsuites=E0,E1,E2,E3,E4,E5,E6,E7,E8 --warmup=10 --trials=200 \
   --repo-dir=../libtpu-rs --paper-dir=../new_research/libtpu_paper
 
-# 2. Local native macOS arm64 execution into consolidated results directory + PDF audit
-./libscript.sh libtpu-rs experiments --host-arch=macos_arm64 \
+# 2. Local native macOS arm64 execution via experiments/libtpu-pjrt plugin + PDF audit
+./libscript.sh experiment run libtpu-pjrt --host-arch=macos_arm64 \
   --subsuites=E0,E2,E4,E8 --warmup=10 --trials=200 \
   --results-dir=./build/experiment_results/results \
   --paper-dir=../new_research/libtpu_paper --build-pdf
@@ -215,16 +232,16 @@ statistical, provenance, and LaTeX macro synthesis substrate
 
 ```cmd
 :: Windows Batch equivalent
-.\libscript.cmd experiment libtpu_campaign --suite=libtpu --host-arch=linux_x64 --warmup=10 --trials=200
-.\libscript.cmd libtpu-rs experiments --subsuites=E0,E1,E2,E5,E6,E7,E8 --results-dir=.\build\libtpu_results
+.\libscript.cmd experiment libtpu_campaign --suite=libtpu-pjrt --host-arch=linux_x64 --warmup=10 --trials=200
+.\libscript.cmd experiment run libtpu-pjrt --subsuites=E0,E1,E2,E5,E6,E7,E8 --results-dir=.\build\libtpu_results
 ```
 
 ---
 
-## 5. `win_port` 14-Repository Ecosystem, 5-OS + MS-DOS Matrix & 285-Macro Protocol (`--suite=win_port`)
+## 5. `win-port` 14-Repository Ecosystem, 5-OS + MS-DOS Matrix & 285-Macro Protocol (`experiments/win-port/`)
 
-LibScript natively orchestrates the 14-repository `win_port` empirical campaign (`E0`–`E7`, governed
-by `_lib/toolchains/win-port-suite/win_port.suite.json`), enforcing:
+LibScript natively orchestrates the 14-repository `win-port` empirical campaign (`E0`–`E7`, governed
+by `experiments/win-port/suite.json`), enforcing:
 
 - **Phase 0 Remediation & Pinned Lockfiles (`E0`):** Verifies `manifests/c_upstreams.lock.json` (9 C
   codebases including `jq 1.8.2` + extracted `Oniguruma 6.9.9`) and the 82-repository
@@ -242,28 +259,28 @@ by `_lib/toolchains/win-port-suite/win_port.suite.json`), enforcing:
   pages) and `win_port_appendix.tex` (`2` sites).
 
 ```sh
-# POSIX /bin/sh: Local or multi-host win_port campaign + dual-PDF verification
-./libscript.sh win-port-suite experiments --subsuites=E0,E1,E2,E4,E5,E6,E7 \
+# POSIX /bin/sh: Local or multi-host win-port campaign + dual-PDF verification
+./libscript.sh experiment run win-port --subsuites=E0,E1,E2,E4,E5,E6,E7 \
   --host-arch=macos_arm64 --ecosystem-dir=.. --paper-dir=../new_research/win_port --build-pdf
 
-./libscript.sh experiment win_port_campaign --suite=win_port --host-arch=windows_x64 \
+./libscript.sh experiment win_port_campaign --suite=win-port --host-arch=windows_x64 \
   --subsuites=E1B,E3,E4A,E4C,E5B --ecosystem-dir=.. --paper-dir=../new_research/win_port
 ```
 
 ```cmd
 :: Windows Batch equivalent
-.\libscript.cmd win-port-suite experiments --subsuites=E1B,E3,E4A,E4C,E5B --host-arch=windows_x64
-.\libscript.cmd experiment win_port_campaign --suite=win_port --host-arch=windows_x64
+.\libscript.cmd experiment run win-port --subsuites=E1B,E3,E4A,E4C,E5B --host-arch=windows_x64
+.\libscript.cmd experiment win_port_campaign --suite=win-port --host-arch=windows_x64
 ```
 
 ---
 
-## 6. EDG C/C++ v7.0.1 Multi-Backend Evaluation & 60-Placeholder Protocol (`--suite=edgcpp_backends`)
+## 6. EDG C/C++ v7.0.1 Multi-Backend Evaluation & 60-Placeholder Protocol (`experiments/edgcpp-backends/`)
 
 LibScript natively orchestrates the zero-hallucination **EDG C/C++ Multi-Backend Protocol**
-(`E0`–`E7`, governed by `_lib/toolchains/edgcpp-backends-suite/edgcpp_backends.suite.json`),
-evaluating `EDG-FE-ONLY`, `EDG-LLVM` (`llvm_gen_be`), `EDG-GCC` (`gcc_gen_be` / `libgccjit`),
-`EDG-C-LEGACY` (`c_gen_be`), `EDG-CPP-LEGACY` (`cp_gen_be`), `NATIVE-CLANG`, and `NATIVE-GCC`:
+(`E0`–`E7`, governed by `experiments/edgcpp-backends/suite.json`), evaluating `EDG-FE-ONLY`,
+`EDG-LLVM` (`llvm_gen_be`), `EDG-GCC` (`gcc_gen_be` / `libgccjit`), `EDG-C-LEGACY` (`c_gen_be`),
+`EDG-CPP-LEGACY` (`cp_gen_be`), `NATIVE-CLANG`, and `NATIVE-GCC`:
 
 - **Phase 0 Gates, Coverage & Bug #4 Ablation (`E0`):** Verifies all 6 pre-benchmark fixes in
   `edgcpp-compiler-multibackend` (Itanium §2.9.5 `__vmi_class_type_info::__flags`, deterministic
@@ -284,19 +301,19 @@ evaluating `EDG-FE-ONLY`, `EDG-LLVM` (`llvm_gen_be`), `EDG-GCC` (`gcc_gen_be` / 
   tokens in `edgecpp_backends.tex`, and audits PDF compilation via `_lib/toolchains/texlive`.
 
 ```sh
-# POSIX /bin/sh: Local or multi-host edgcpp_backends campaign + PDF verification
-./libscript.sh edgcpp-backends-suite experiments --subsuites=E0,E1,E2,E3,E4,E5,E6,E7 \
+# POSIX /bin/sh: Local or multi-host edgcpp-backends campaign + PDF verification
+./libscript.sh experiment run edgcpp-backends --subsuites=E0,E1,E2,E3,E4,E5,E6,E7 \
   --repo=/Volumes/external_repos/edgcpp-compiler-multibackend \
   --paper-dir=../new_research/edgcpp_backends --build-pdf
 
-./libscript.sh experiment edgcpp_backends_campaign --suite=edgcpp_backends \
+./libscript.sh experiment edgcpp_backends_campaign --suite=edgcpp-backends \
   --host-arch=linux_x64 --subsuites=E0,E5,E6,E7 --paper-dir=../new_research/edgcpp_backends
 ```
 
 ```cmd
 :: Windows Batch equivalent
-.\libscript.cmd edgcpp-backends-suite experiments --subsuites=E0,E1,E2,E3,E4,E5 --host-arch=windows_x64
-.\libscript.cmd experiment edgcpp_backends_campaign --suite=edgcpp_backends --host-arch=windows_x64
+.\libscript.cmd experiment run edgcpp-backends --subsuites=E0,E1,E2,E3,E4,E5 --host-arch=windows_x64
+.\libscript.cmd experiment edgcpp_backends_campaign --suite=edgcpp-backends --host-arch=windows_x64
 ```
 
 ---

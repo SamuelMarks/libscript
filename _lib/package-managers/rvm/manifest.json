@@ -7,5 +7,6 @@
   "title": "rvm",
   "description": "Bootstrap module for the `rvm` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/rvm/rvm"
+  "repository": "https://github.com/rvm/rvm",
+  "capabilities": ["versioned-artifact"]
 }

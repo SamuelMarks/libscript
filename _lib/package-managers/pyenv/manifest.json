@@ -6,5 +6,6 @@
   "title": "pyenv",
   "description": "Bootstrap module for `pyenv` (Python Version Manager).",
   "category": "package-managers",
-  "repository": "https://github.com/pyenv/pyenv"
+  "repository": "https://github.com/pyenv/pyenv",
+  "capabilities": ["versioned-artifact"]
 }

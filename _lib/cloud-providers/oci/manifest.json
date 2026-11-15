@@ -6,5 +6,6 @@
   "category": "cloud-providers",
   "provides": ["oci", "oci-cli"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/oracle/oci-cli"
+  "repository": "https://github.com/oracle/oci-cli",
+  "capabilities": ["versioned-artifact", "cloud-operator"]
 }

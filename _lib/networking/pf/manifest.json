@@ -11,5 +11,6 @@
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "os_whitelist": ["freebsd", "bsd", "darwin"]
+  "os_whitelist": ["freebsd", "bsd", "darwin"],
+  "capabilities": ["versioned-artifact"]
 }

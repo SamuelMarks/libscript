@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["osv", "capstan", "unikernel-builder"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/cloudius-systems/osv"
+  "repository": "https://github.com/cloudius-systems/osv",
+  "capabilities": ["versioned-artifact"]
 }

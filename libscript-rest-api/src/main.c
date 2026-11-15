@@ -101,6 +101,51 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
         return;
     }
 
+    if (strcmp(method, "GET") == 0 && strcmp(path, "/api/v1/experiments") == 0) {
+        (void)rest_list_experiments(root_dir, json_out, sizeof(json_out));
+        send_json_response(client, 200, "OK", json_out);
+        return;
+    }
+
+    if (strcmp(method, "POST") == 0 && strcmp(path, "/api/v1/marketplace/publish") == 0) {
+        char offer[256], clouds[128];
+        const char *clouds_ptr = NULL;
+        if (rest_json_get_string(body, "offer", offer, sizeof(offer)) != 0) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"missing_fields\",\"message\":\"offer required\"}");
+            return;
+        }
+        if (rest_json_get_string(body, "clouds", clouds, sizeof(clouds)) == 0 && clouds[0] != '\0') {
+            clouds_ptr = clouds;
+        }
+        if (rest_dispatch_marketplace_publish(root_dir, offer, clouds_ptr, 0, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 202, "Accepted", json_out);
+        } else {
+            send_json_response(client, 400, "Bad Request", json_out);
+        }
+        return;
+    }
+
+    if (strcmp(method, "GET") == 0 && strncmp(path, "/api/v1/components/", 19) == 0) {
+        const char *rest = path + 19;
+        const char *cap_sfx = strstr(rest, "/capabilities");
+        if (cap_sfx != NULL && strcmp(cap_sfx, "/capabilities") == 0) {
+            char cname[128];
+            size_t clen = (size_t)(cap_sfx - rest);
+            if (clen > 0u && clen < sizeof(cname)) {
+                memcpy(cname, rest, clen);
+                cname[clen] = '\0';
+                if (rest_query_component_capabilities(root_dir, cname, json_out, sizeof(json_out)) == 0) {
+                    send_json_response(client, 200, "OK", json_out);
+                    return;
+                }
+            }
+            send_json_response(client, 404, "Not Found",
+                               "{\"error\":\"component_not_found\",\"message\":\"Unknown component\"}");
+            return;
+        }
+    }
+
     if (strcmp(method, "POST") == 0 && strcmp(path, "/api/v1/experiments") == 0) {
         char suite[64], step[64], host_arch[64];
         if (rest_json_get_string(body, "suite", suite, sizeof(suite)) != 0 ||

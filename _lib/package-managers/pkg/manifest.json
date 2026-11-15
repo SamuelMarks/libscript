@@ -7,5 +7,6 @@
   "title": "pkg",
   "description": "Bootstrap module for the FreeBSD `pkg` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/freebsd/pkg"
+  "repository": "https://github.com/freebsd/pkg",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["ffmpeg", "ffprobe", "media-converter"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/FFmpeg/FFmpeg"
+  "repository": "https://github.com/FFmpeg/FFmpeg",
+  "capabilities": ["versioned-artifact"]
 }

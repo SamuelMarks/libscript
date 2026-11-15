@@ -68,8 +68,8 @@ if /i "%~1"=="test" (
 )
 for %%V in (logs use env ls ls-remote download uninstall install-service uninstall-service which exec run) do (
     if /i "%~1"=="%%V" (
-        echo Action not applicable for this provisioning module.
-        exit /b 0
+        echo [ERROR] Action '%%V' requires capability 'versioned-artifact' or 'service-daemon' ^(gcp-tpu-vm capabilities: ["cloud-operator"]^). >&2
+        exit /b 1
     )
 )
 

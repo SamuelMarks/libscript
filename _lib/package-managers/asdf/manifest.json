@@ -7,5 +7,6 @@
   "title": "asdf",
   "description": "Bootstrap module for the `asdf` universal version manager.",
   "category": "package-managers",
-  "repository": "https://github.com/asdf-vm/asdf"
+  "repository": "https://github.com/asdf-vm/asdf",
+  "capabilities": ["versioned-artifact"]
 }

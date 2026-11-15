@@ -7,5 +7,6 @@
   "description": "This document describes the **apk** (Alpine Package Keeper) bootstrap component for the LibScript ecosystem. It handles the integration and management of the Alpine Linux package manager.",
   "category": "package-managers",
   "os_blacklist": ["freebsd", "windows"],
-  "repository": "https://gitlab.alpinelinux.org/alpine/apk-tools"
+  "repository": "https://gitlab.alpinelinux.org/alpine/apk-tools",
+  "capabilities": ["versioned-artifact"]
 }

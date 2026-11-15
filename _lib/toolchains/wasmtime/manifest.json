@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["wasmtime", "wasm-runtime"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/bytecodealliance/wasmtime"
+  "repository": "https://github.com/bytecodealliance/wasmtime",
+  "capabilities": ["versioned-artifact"]
 }

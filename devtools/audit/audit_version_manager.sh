@@ -55,29 +55,59 @@ audit_component_dir() {
   _rel_dir="${_comp_dir#"${LIBSCRIPT_ROOT_DIR}"/}"
   AUDITED=$((AUDITED + 1))
 
-  # 1. Mandatory contract files
-  for _req in cli.sh cli.cmd setup.sh setup.cmd env.sh env.cmd service.sh service.cmd test.sh test.cmd uninstall.sh uninstall.cmd manifest.json vars.schema.json README.md; do
+  # 1. Mandatory contract files gated by manifest capabilities
+  for _req in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
     if [ ! -f "${_comp_dir}/${_req}" ]; then
-      log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required Version Manager file '${_req}'."
+      log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required component contract file '${_req}'."
     fi
   done
 
-  # 2. Verify cli.sh and cli.cmd route via component_core or implement mandatory verbs
-  case "$_rel_dir" in
-    _lib/cloud/*|_lib/cloud-providers/*|_lib/orchestration/*|_lib/ai-serving/*|_lib/ml-training/*|_lib/freebsd/*|_lib/illumos/*|_lib/virtualization/*)
-      # Tier 2/3/4 operators and synthesizers may expose custom operator verbs alongside install/test
+  _caps_space=''
+  if [ -f "${_comp_dir}/manifest.json" ] && command -v jq >/dev/null 2>&1; then
+    _caps_space=" $(jq -r '.capabilities[]? // empty' "${_comp_dir}/manifest.json" 2>/dev/null | tr '\n' ' ') "
+  else
+    _caps_space=' versioned-artifact '
+  fi
+
+  case "$_caps_space" in
+    *' versioned-artifact '*)
+      for _req in setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd; do
+        if [ ! -f "${_comp_dir}/${_req}" ]; then
+          log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required versioned-artifact file '${_req}'."
+        fi
+      done
       ;;
-    *)
-      if [ -f "${_comp_dir}/cli.sh" ]; then
-        if ! grep -q "component_core.sh" "${_comp_dir}/cli.sh" && ! grep -q "ls-remote" "${_comp_dir}/cli.sh"; then
-          log_vm_violation "${_rel_dir}/cli.sh" "CLI_ROUTER" "Must delegate to _lib/_common/component_core.sh or expose mandatory version manager verbs."
+  esac
+
+  case "$_caps_space" in
+    *' service-daemon '*)
+      for _req in service.sh service.cmd; do
+        if [ ! -f "${_comp_dir}/${_req}" ]; then
+          log_vm_violation "$_rel_dir" "MISSING_CONTRACT_FILE" "Missing required service-daemon file '${_req}'."
         fi
-      fi
-      if [ -f "${_comp_dir}/cli.cmd" ]; then
-        if ! grep -qi "component_core.cmd" "${_comp_dir}/cli.cmd" && ! grep -qi "ls-remote" "${_comp_dir}/cli.cmd"; then
-          log_vm_violation "${_rel_dir}/cli.cmd" "CLI_ROUTER_WIN" "Must delegate to _lib/_common/component_core.cmd or expose mandatory version manager verbs."
-        fi
-      fi
+      done
+      ;;
+  esac
+
+  # 2. Verify cli.sh and cli.cmd route via component_core or implement mandatory verbs
+  case "$_caps_space" in
+    *' versioned-artifact '*)
+      case "$_rel_dir" in
+        _lib/cloud/*|_lib/cloud-providers/*|_lib/orchestration/*|_lib/ai-serving/*|_lib/ml-training/*|_lib/freebsd/*|_lib/illumos/*|_lib/virtualization/*)
+          ;;
+        *)
+          if [ -f "${_comp_dir}/cli.sh" ]; then
+            if ! grep -q "component_core.sh" "${_comp_dir}/cli.sh" && ! grep -q "ls-remote" "${_comp_dir}/cli.sh"; then
+              log_vm_violation "${_rel_dir}/cli.sh" "CLI_ROUTER" "Must delegate to _lib/_common/component_core.sh or expose mandatory version manager verbs."
+            fi
+          fi
+          if [ -f "${_comp_dir}/cli.cmd" ]; then
+            if ! grep -qi "component_core.cmd" "${_comp_dir}/cli.cmd" && ! grep -qi "ls-remote" "${_comp_dir}/cli.cmd"; then
+              log_vm_violation "${_rel_dir}/cli.cmd" "CLI_ROUTER_WIN" "Must delegate to _lib/_common/component_core.cmd or expose mandatory version manager verbs."
+            fi
+          fi
+          ;;
+      esac
       ;;
   esac
 

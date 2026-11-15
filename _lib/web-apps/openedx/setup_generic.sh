@@ -68,6 +68,7 @@ DIR="${OPENEDX_DIR}"
 export DIR
 
 ACTION="${ACTION:-install}"
+OPENEDX_ROLE="${OPENEDX_ROLE:-all}"
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/openedx}"
 LMS_PORT="${LMS_PORT:-8000}"
 CMS_PORT="${CMS_PORT:-8001}"
@@ -121,6 +122,14 @@ while [ $# -gt 0 ]; do
     --offline|-o)
       is_offline=1
       shift
+      ;;
+    --role=*)
+      OPENEDX_ROLE="${1#*=}"
+      shift
+      ;;
+    --role)
+      OPENEDX_ROLE="${2:-all}"
+      shift 2
       ;;
     --online)
       is_offline=0
@@ -348,6 +357,57 @@ MYSQL_PORT="${MYSQL_PORT:-3306}"
 MYSQL_DATABASE="${MYSQL_DATABASE:-openedx}"
 MYSQL_USER="${MYSQL_USER:-openedx}"
 OPENEDX_DATABASE_PASSWORD="${OPENEDX_DATABASE_PASSWORD:-openedx_password}"
+
+# Tier 2 single-process unikernel / appliance sysroot role staging
+_stage_sysroot="${TARGET_ROOT:-${LIBSCRIPT_TARGET_SYSROOT:-}}"
+if [ "$ACTION" = "install" ] && [ "$OPENEDX_ROLE" != "all" ] && [ -n "$_stage_sysroot" ]; then
+  _role_root="${_stage_sysroot}/opt/openedx/${OPENEDX_ROLE}"
+  _role_stamp="${_role_root}/.libscript_role_stamp"
+  if [ -f "$_role_stamp" ]; then
+    log_info "[REUSE] Open edX single-process role '${OPENEDX_ROLE}' already staged at ${_role_root}."
+    exit 0
+  fi
+  mkdir -p "${_role_root}/bin" "${_role_root}/etc" "${_stage_sysroot}/usr/local/bin"
+  case "$OPENEDX_ROLE" in
+    lms)
+      _entry_cmd="gunicorn lms.wsgi:application --bind 0.0.0.0:${LMS_PORT} --workers 2"
+      ;;
+    cms)
+      _entry_cmd="gunicorn cms.wsgi:application --bind 0.0.0.0:${CMS_PORT} --workers 2"
+      ;;
+    celery)
+      _entry_cmd='celery -A lms.celery worker --loglevel=info --concurrency=2'
+      ;;
+    mfe-static)
+      _entry_cmd='caddy file-server --root /opt/openedx/mfe-static/dist --listen :8080'
+      mkdir -p "${_role_root}/dist"
+      printf '<!doctype html><title>Open edX MFE Appliance</title>\n' > "${_role_root}/dist/index.html"
+      ;;
+    *)
+      log_error "Unsupported OPENEDX_ROLE: ${OPENEDX_ROLE}"
+      exit 1
+      ;;
+  esac
+  cat > "${_role_root}/bin/openedx-${OPENEDX_ROLE}" << EOF
+#!/bin/sh
+set -eu
+export SERVICE_VARIANT="${OPENEDX_ROLE}"
+exec ${_entry_cmd}
+EOF
+  chmod 755 "${_role_root}/bin/openedx-${OPENEDX_ROLE}"
+  ln -sf "../../opt/openedx/${OPENEDX_ROLE}/bin/openedx-${OPENEDX_ROLE}" "${_stage_sysroot}/usr/local/bin/openedx-entrypoint"
+  cat > "${_role_root}/etc/role-manifest.json" << EOF
+{
+  "component": "openedx",
+  "role": "${OPENEDX_ROLE}",
+  "release": "${BRANCH}",
+  "entrypoint": "/opt/openedx/${OPENEDX_ROLE}/bin/openedx-${OPENEDX_ROLE}"
+}
+EOF
+  printf '%s\n' "${OPENEDX_ROLE}:${BRANCH}" > "${_role_stamp}"
+  log_info "Staged Open edX single-process role '${OPENEDX_ROLE}' into ${_role_root}."
+  exit 0
+fi
 
 if [ -n "${MYSQL_URL}" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" ]; then
   _parsed_mysql=$("${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" "${MYSQL_URL}" --env 2>/dev/null || true)

@@ -7,5 +7,6 @@
   "title": "luarocks",
   "description": "Bootstrap script for [LuaRocks](https://luarocks.org/), the package manager for Lua modules.",
   "category": "package-managers",
-  "repository": "https://github.com/luarocks/luarocks"
+  "repository": "https://github.com/luarocks/luarocks",
+  "capabilities": ["versioned-artifact"]
 }

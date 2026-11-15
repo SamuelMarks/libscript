@@ -82,6 +82,7 @@ running the setup script.
 | `UNIKERNEL_POD_SUBNET`          | IPv4 /24 prefix assigned deterministically across decomposed unikernel pod appliances.                                                                         | `172.30.0`         |                         |
 | `UNIKERNEL_POD_OUT_DIR`         | Output directory where decomposed unikernel appliance images and launch scripts are written.                                                                   | `none`             |                         |
 | `UNIKERNEL_POD_DAEMONS`         | Comma-separated daemon component names decomposed into isolated single-process unikernel appliances.                                                           | `none`             | LIBSCRIPT_POD_DAEMONS   |
+| `UNIKERNEL_POD_TOPOLOGY`        | Path to a topology.schema.json constellation manifest decomposing node groups into single-image unikernel profiles.                                            | `none`             |                         |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.

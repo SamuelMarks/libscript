@@ -29,5 +29,6 @@
     "metrics_scrape_path": "/metrics"
   },
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k"
+  "memory_footprint_class": "mcu-sram-64k",
+  "capabilities": ["versioned-artifact", "sysroot-library"]
 }

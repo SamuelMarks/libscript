@@ -7,5 +7,6 @@
   "provides": ["htop", "process-viewer"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],
-  "repository": "https://github.com/htop-dev/htop"
+  "repository": "https://github.com/htop-dev/htop",
+  "capabilities": ["versioned-artifact"]
 }

@@ -7,5 +7,6 @@
   "title": "guix",
   "description": "Bootstrap module for the `guix` (GNU Guix) package manager.",
   "category": "package-managers",
-  "repository": "https://git.savannah.gnu.org/git/guix.git"
+  "repository": "https://git.savannah.gnu.org/git/guix.git",
+  "capabilities": ["versioned-artifact"]
 }

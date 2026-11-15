@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos", "freebsd"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

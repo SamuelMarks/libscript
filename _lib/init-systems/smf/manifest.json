@@ -6,5 +6,6 @@
   "category": "init-systems",
   "provides": ["smf", "svcadm", "svccfg"],
   "os_whitelist": ["sunos", "illumos", "solaris"],
-  "repository": "https://github.com/illumos/illumos-gate"
+  "repository": "https://github.com/illumos/illumos-gate",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

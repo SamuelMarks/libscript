@@ -9,5 +9,6 @@
   "versions": ["latest", "5.0.2", "4.0.5", "3.14"],
   "os_whitelist": ["windows", "linux", "darwin"],
   "os_blacklist": [],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

@@ -66,6 +66,7 @@ if not "!INSTALLFOLDER!"=="" (
     if "!INSTALLFOLDER:~-1!"=="\" set "INSTALLFOLDER=!INSTALLFOLDER:~0,-1!"
 )
 if "!ACTION!"=="" set "ACTION=install"
+if "%OPENEDX_ROLE%"=="" set "OPENEDX_ROLE=all"
 if /I "!install_dir!"=="true" set "install_dir="
 if not "!install_dir!"=="" set "OPENEDX_INSTALL_DIR=!install_dir!"
 if "!OPENEDX_INSTALL_DIR!"=="" (
@@ -166,6 +167,9 @@ if /I "%~1"=="--offline" (
 )
 if /I "%~1"=="--offline=1" ( set "IS_OFFLINE=1" & shift & goto parse_args )
 if /I "%~1"=="--offline=0" ( set "IS_OFFLINE=0" & shift & goto parse_args )
+if /I "%~1"=="--role" ( set "OPENEDX_ROLE=%~2" & shift & shift & goto parse_args )
+set "_opt_arg=%~1"
+if /I "!_opt_arg:~0,7!"=="--role=" ( set "OPENEDX_ROLE=!_opt_arg:~7!" & shift & goto parse_args )
 if /I "%~1"=="-o" ( set "IS_OFFLINE=1" & shift & goto parse_args )
 if /I "%~1"=="--online" ( set "IS_OFFLINE=0" & shift & goto parse_args )
 if /I "%~1"=="--cache-dir" ( set "OFFLINE_CACHE_DIR=%~2" & shift & shift & goto parse_args )
@@ -224,6 +228,27 @@ goto parse_args
 :: ## after_args
 :: Dispatches actions after command-line argument processing.
 :after_args
+set "_STAGE_SYSROOT=%TARGET_ROOT%"
+if "!_STAGE_SYSROOT!"=="" set "_STAGE_SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
+if /I "!ACTION!"=="install" if /I not "!OPENEDX_ROLE!"=="all" if not "!_STAGE_SYSROOT!"=="" (
+    set "_ROLE_ROOT=!_STAGE_SYSROOT!\opt\openedx\!OPENEDX_ROLE!"
+    if exist "!_ROLE_ROOT!\.libscript_role_stamp" (
+        echo [INFO] [REUSE] Open edX single-process role '!OPENEDX_ROLE!' already staged at !_ROLE_ROOT!.
+        exit /b 0
+    )
+    if not exist "!_ROLE_ROOT!\bin" mkdir "!_ROLE_ROOT!\bin"
+    if not exist "!_ROLE_ROOT!\etc" mkdir "!_ROLE_ROOT!\etc"
+    if /I "!OPENEDX_ROLE!"=="mfe-static" (
+        if not exist "!_ROLE_ROOT!\dist" mkdir "!_ROLE_ROOT!\dist"
+        echo ^<!doctype html^>^<title^>Open edX MFE Appliance^</title^>> "!_ROLE_ROOT!\dist\index.html"
+    )
+    (
+        echo {"component":"openedx","role":"!OPENEDX_ROLE!","release":"!BRANCH!","entrypoint":"/opt/openedx/!OPENEDX_ROLE!/bin/openedx-!OPENEDX_ROLE!"}
+    ) > "!_ROLE_ROOT!\etc\role-manifest.json"
+    echo !OPENEDX_ROLE!:!BRANCH!> "!_ROLE_ROOT!\.libscript_role_stamp"
+    echo [INFO] Staged Open edX single-process role '!OPENEDX_ROLE!' into !_ROLE_ROOT!.
+    exit /b 0
+)
 if "!OPENEDX_INSTALL_DIR:~-1!"==" " set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DIR:~0,-1!"
 if "!OPENEDX_INSTALL_DIR:~-1!"=="\" set "OPENEDX_INSTALL_DIR=!OPENEDX_INSTALL_DIR:~0,-1!"
 if not "!OPENEDX_DATA_DIR!"=="" (

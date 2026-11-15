@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["ocaml", "ocamlc", "ocamlopt"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/ocaml/ocaml"
+  "repository": "https://github.com/ocaml/ocaml",
+  "capabilities": ["versioned-artifact"]
 }

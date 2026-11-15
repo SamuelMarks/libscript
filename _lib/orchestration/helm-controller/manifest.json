@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["helm-controller"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/k3s-io/helm-controller"
+  "repository": "https://github.com/k3s-io/helm-controller",
+  "capabilities": ["versioned-artifact"]
 }

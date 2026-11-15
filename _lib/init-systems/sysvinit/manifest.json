@@ -9,5 +9,6 @@
   "versions": ["latest", "3.09"],
   "os_whitelist": ["linux"],
   "os_blacklist": ["windows"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

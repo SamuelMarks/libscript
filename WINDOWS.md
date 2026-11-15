@@ -100,12 +100,18 @@ exit /b 86
 
 ### Scope of Option A Scripts
 
-The following scripts implement Option A on Windows:
+Representative Unix-kernel and distro-specific scripts implementing Option A (`exit /b 86`) on
+Windows include:
 
 - `_lib/orchestration/vfs/mount_target_vfs.cmd` / `.ps1`
 - `_lib/orchestration/vfs/umount_target_vfs.cmd` / `.ps1`
 - `_lib/orchestration/runner/runner.cmd` / `.ps1`
-- `_lib/storage/provision_disk.cmd` / `.ps1`
+- `_lib/storage/provision_disk.cmd` / `.ps1` & `_lib/storage/format_fs.cmd` / `.ps1`
+- `_lib/base-system/lfs-chroot.cmd`, `_lib/base-system/lfs-mount-vfs.cmd`,
+  `_lib/base-system/{lfs-base,lfs-temp-tools}/setup_generic.cmd`, and
+  `_lib/toolchains/lfs-toolchain/setup_generic.cmd`
+- `cli/commands/package_as/{disk_builder,vagrant_box}.cmd` and Unix-distro-specific
+  `setup_{alpine,debian,freebsd,macos,rhel}.{cmd,ps1}` shims
 
 ---
 

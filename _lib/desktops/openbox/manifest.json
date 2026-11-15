@@ -9,5 +9,6 @@
   "versions": ["latest", "3.6.1"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
   "os_blacklist": ["windows"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

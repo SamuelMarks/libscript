@@ -28,5 +28,6 @@
     "logical": [],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/v1/metrics"
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

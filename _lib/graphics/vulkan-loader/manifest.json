@@ -11,5 +11,6 @@
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "os_blacklist": ["sunos", "darwin"]
+  "os_blacklist": ["sunos", "darwin"],
+  "capabilities": ["versioned-artifact", "sysroot-library"]
 }

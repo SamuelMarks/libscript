@@ -5,5 +5,6 @@
   "os_whitelist": ["all"],
   "category": "cloud-providers",
   "title": "Gcp",
-  "description": "LibScript component for GCP"
+  "description": "LibScript component for GCP",
+  "capabilities": ["versioned-artifact", "cloud-operator"]
 }

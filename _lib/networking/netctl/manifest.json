@@ -9,5 +9,6 @@
   "versions": ["latest", "1.0.0"],
   "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

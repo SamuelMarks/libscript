@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["west"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/zephyrproject-rtos/west"
+  "repository": "https://github.com/zephyrproject-rtos/west",
+  "capabilities": ["versioned-artifact"]
 }

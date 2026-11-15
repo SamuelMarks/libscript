@@ -9,5 +9,6 @@
   "repository": "https://github.com/mirage/mirage",
   "dependencies": {
     "runtime_deps": ["ocaml", "opam", "solo5"]
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

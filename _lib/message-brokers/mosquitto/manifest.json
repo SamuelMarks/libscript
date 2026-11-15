@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": ["1883", "8883"],
-  "repository": "https://github.com/eclipse-mosquitto/mosquitto"
+  "repository": "https://github.com/eclipse-mosquitto/mosquitto",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

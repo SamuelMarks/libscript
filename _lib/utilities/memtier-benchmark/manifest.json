@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["memtier-benchmark", "memtier_benchmark"],
   "os_whitelist": ["linux", "darwin", "freebsd", "windows"],
-  "repository": "https://github.com/RedisLabs/memtier_benchmark"
+  "repository": "https://github.com/RedisLabs/memtier_benchmark",
+  "capabilities": ["versioned-artifact"]
 }

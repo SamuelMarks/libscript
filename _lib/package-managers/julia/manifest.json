@@ -7,5 +7,6 @@
   "title": "julia",
   "description": "Bootstrap module for the `julia` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/JuliaLang/julia"
+  "repository": "https://github.com/JuliaLang/julia",
+  "capabilities": ["versioned-artifact"]
 }

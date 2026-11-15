@@ -7,5 +7,6 @@
   "title": "helm",
   "description": "Bootstrap module for the `helm` Kubernetes package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/helm/helm"
+  "repository": "https://github.com/helm/helm",
+  "capabilities": ["versioned-artifact"]
 }

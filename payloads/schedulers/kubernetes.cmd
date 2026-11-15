@@ -55,15 +55,37 @@ if "%~1"=="-h" goto :help
 set "ACTION=%~1"
 set "TARGET=%~2"
 if "%ACTION%"=="" set "ACTION=compile"
+set "LIVE_K8S=0"
+if "%LIBSCRIPT_SCHEDULER_LIVE%"=="1" set "LIVE_K8S=1"
+if /i "%~3"=="--live" set "LIVE_K8S=1"
 
 if "%ACTION%"=="compile" (
     call :compile_k8s_yaml "%TARGET%"
     exit /b !errorlevel!
 )
 if "%ACTION%"=="submit" (
-    if exist "%TARGET%" call :compile_k8s_yaml "%TARGET%" >nul
+    if exist "%TARGET%" (
+        set "_K8S_MAN=%TEMP%\libscript_k8s_%RANDOM%.json"
+        call :compile_k8s_yaml "%TARGET%" > "!_K8S_MAN!"
+        if "!LIVE_K8S!"=="1" (
+            where kubectl >nul 2>&1
+            if not errorlevel 1 jq "del(.marathon_equivalent)" "!_K8S_MAN!" | kubectl apply -f - 1>&2
+        )
+        del /f /q "!_K8S_MAN!" >nul 2>&1
+    )
     echo {"scheduler":"kubernetes","controller":"marathon-equivalent","action":"submit","workload":"%TARGET%","status":"applied"}
     exit /b 0
+)
+if "%ACTION%"=="destroy" (
+    if "!LIVE_K8S!"=="1" if exist "%TARGET%" (
+        where kubectl >nul 2>&1
+        if not errorlevel 1 (
+            set "_K8S_MAN=%TEMP%\libscript_k8s_%RANDOM%.json"
+            call :compile_k8s_yaml "%TARGET%" > "!_K8S_MAN!"
+            jq "del(.marathon_equivalent)" "!_K8S_MAN!" | kubectl delete --ignore-not-found -f - 1>&2
+            del /f /q "!_K8S_MAN!" >nul 2>&1
+        )
+    )
 )
 echo {"scheduler":"kubernetes","controller":"marathon-equivalent","action":"%ACTION%","workload":"%TARGET%","status":"ok"}
 exit /b 0

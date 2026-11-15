@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/elixir-lang/elixir"
+  "repository": "https://github.com/elixir-lang/elixir",
+  "capabilities": ["versioned-artifact"]
 }

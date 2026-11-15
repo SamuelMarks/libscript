@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["riscv64-unknown-elf-gcc", "riscv-none-elf-gcc"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack"
+  "repository": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack",
+  "capabilities": ["versioned-artifact"]
 }

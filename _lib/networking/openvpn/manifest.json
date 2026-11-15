@@ -8,5 +8,6 @@
   "os_blacklist": ["sunos", "darwin"],
   "dependencies": {
     "runtime_deps": ["openvpn"]
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

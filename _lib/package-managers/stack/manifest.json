@@ -6,5 +6,6 @@
   "title": "stack",
   "description": "Bootstrap module for the `stack` package manager.",
   "category": "package-managers",
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "capabilities": ["versioned-artifact"]
 }

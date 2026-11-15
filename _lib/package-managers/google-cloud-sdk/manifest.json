@@ -7,5 +7,6 @@
   "category": "package-managers",
   "title": "Google Cloud Sdk",
   "description": "Bootstrap module for the `google-cloud-sdk` package manager.",
-  "repository": "https://github.com/GoogleCloudPlatform/cloud-sdk-docker"
+  "repository": "https://github.com/GoogleCloudPlatform/cloud-sdk-docker",
+  "capabilities": ["versioned-artifact"]
 }

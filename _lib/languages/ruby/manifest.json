@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/ruby/ruby"
+  "repository": "https://github.com/ruby/ruby",
+  "capabilities": ["versioned-artifact"]
 }

@@ -5,5 +5,6 @@
   "description": "ISO-9660 and Rock Ridge filesystem image manipulation, El Torito bootable ISO creation, and burning tool.",
   "category": "utilities",
   "provides": ["xorriso", "iso-builder"],
-  "os_whitelist": ["all"]
+  "os_whitelist": ["all"],
+  "capabilities": ["versioned-artifact"]
 }

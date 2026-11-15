@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/dotnet/sdk"
+  "repository": "https://github.com/dotnet/sdk",
+  "capabilities": ["versioned-artifact"]
 }

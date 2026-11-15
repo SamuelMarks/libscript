@@ -6,5 +6,6 @@
   "category": "databases",
   "provides": ["rocksdb", "ldb", "kv-store"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/facebook/rocksdb"
+  "repository": "https://github.com/facebook/rocksdb",
+  "capabilities": ["versioned-artifact", "sysroot-library"]
 }

@@ -7,5 +7,6 @@
   "provides": ["sndio", "sndiod", "aucat"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
   "os_blacklist": ["windows"],
-  "repository": "https://sndio.org/"
+  "repository": "https://sndio.org/",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "title": "rustup",
   "description": "Bootstrap module for `rustup` (Rust toolchain installer).",
   "category": "package-managers",
-  "repository": "https://github.com/rust-lang/rustup"
+  "repository": "https://github.com/rust-lang/rustup",
+  "capabilities": ["versioned-artifact"]
 }

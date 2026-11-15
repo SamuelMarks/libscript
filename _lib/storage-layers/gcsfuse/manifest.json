@@ -9,5 +9,6 @@
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": ["freebsd", "windows", "sunos"],
   "ports": [],
-  "repository": "https://github.com/GoogleCloudPlatform/gcsfuse"
+  "repository": "https://github.com/GoogleCloudPlatform/gcsfuse",
+  "capabilities": ["versioned-artifact"]
 }

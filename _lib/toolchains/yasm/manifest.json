@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["yasm", "assembler"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/yasm/yasm"
+  "repository": "https://github.com/yasm/yasm",
+  "capabilities": ["versioned-artifact"]
 }

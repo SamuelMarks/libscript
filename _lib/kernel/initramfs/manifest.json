@@ -6,5 +6,6 @@
   "category": "kernel",
   "provides": ["initramfs"],
   "os_whitelist": ["linux"],
-  "os_blacklist": ["windows"]
+  "os_blacklist": ["windows"],
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

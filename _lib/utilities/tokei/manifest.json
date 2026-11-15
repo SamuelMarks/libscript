@@ -10,5 +10,6 @@
   "dependencies": {
     "host_tools": ["rust"],
     "tier": "optional"
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

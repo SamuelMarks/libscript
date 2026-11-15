@@ -6,5 +6,6 @@
   "category": "package-managers",
   "title": "Awscli",
   "description": "Bootstrap module for the `awscli` package manager.",
-  "repository": "https://github.com/aws/aws-cli"
+  "repository": "https://github.com/aws/aws-cli",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["groovy", "groovyc"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/apache/groovy"
+  "repository": "https://github.com/apache/groovy",
+  "capabilities": ["versioned-artifact"]
 }

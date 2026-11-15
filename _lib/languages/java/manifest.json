@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/adoptium/temurin21-binaries"
+  "repository": "https://github.com/adoptium/temurin21-binaries",
+  "capabilities": ["versioned-artifact"]
 }

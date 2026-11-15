@@ -149,9 +149,9 @@ normalize_component_alias() {
     cloud/cert) printf '%s\n' "_lib/cloud/cert" ;;
     cloud/volume) printf '%s\n' "_lib/cloud/volume" ;;
     cloud/cloudinit) printf '%s\n' "_lib/cloud/cloudinit" ;;
-    stacks/ml-training/tpu-vm-eval-node|ml-training/tpu-vm-eval-node|tpu-vm-eval-node) printf '%s\n' "_lib/ml-training" ;;
-    stacks/ml-training/gke-xpk-training|ml-training/gke-xpk-training|gke-xpk-training) printf '%s\n' "_lib/orchestration/gke-xpk-training" ;;
-    stacks/ai-serving/tpu-vm-vllm|ai-serving/tpu-vm-vllm|tpu-vm-vllm) printf '%s\n' "_lib/ai-serving" ;;
+    stacks/ml-training/tpu-vm-eval-node|ml-training/tpu-vm-eval-node|tpu-vm-eval-node|ml-training) printf '%s\n' "_lib/ml-training/tpu-trainer" ;;
+    stacks/ml-training/gke-xpk-training|ml-training/gke-xpk-training|gke-xpk-training) printf '%s\n' "topologies/gke-tpu-cluster" ;;
+    stacks/ai-serving/tpu-vm-vllm|ai-serving/tpu-vm-vllm|tpu-vm-vllm|ai-serving) printf '%s\n' "_lib/ai-serving/inference-router" ;;
     stacks/ai-serving/gke-xpk-inference|ai-serving/gke-xpk-inference|gke-xpk-inference) printf '%s\n' "_lib/ai-serving/gke-xpk-inference" ;;
     stacks/cms/openedx) printf '%s\n' "_lib/web-apps/openedx" ;;
     stacks/cms/wordpress) printf '%s\n' "_lib/web-apps/wordpress" ;;
@@ -314,7 +314,7 @@ case "$CMD" in
   process-downloads) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" "$@" ;;
   provision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" "$@" ;;
   deprovision) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" "$@" ;;
-  experiment|rapid-experiment) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/experiment.sh" "$@" ;;
+  rapid-experiment) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/experiment.sh" "$@" ;;
   deploy) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy.sh" "$@" ;;
   deploy-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" "$@" ;;
   backup|export-remote) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/backup.sh" "$@" ;;
@@ -340,6 +340,9 @@ case "$CMD" in
   payload) exec "$LIBSCRIPT_ROOT_DIR/payloads/engine.sh" "$@" ;;
   topology) exec "$LIBSCRIPT_ROOT_DIR/topologies/engine.sh" "$@" ;;
   trait) exec "$LIBSCRIPT_ROOT_DIR/traits/engine.sh" "$@" ;;
+  experiment|experiments) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/experiment/cli.sh" "$@" ;;
+  resolve-env) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/resolve_env.sh" "$@" ;;
+  publish-marketplace) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/marketplace/publish.sh" "$@" ;;
   train|infer|serve-ml|eval-ml|benchmark-ml) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/ml/actions.sh" "$CMD" "$@" ;;
   env)
     if [ "${1:-}" = "--manifest" ] || [ -z "${1:-}" ] || [ -f "${1:-}" ]; then
@@ -376,7 +379,7 @@ export REQ_VERSION=0
 case "$CMD" in
   install|install-service|uninstall-service|use|download)
     IS_ACTION=1; export REQ_VERSION=1 ;;
-  remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down)
+  remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down|target-add|target-rm|target-ls|component-add|component-ls)
     IS_ACTION=1 ;;
   run|which|exec|env|serve|route|info)
     IS_ACTION=1; export REQ_VERSION=1 ;;

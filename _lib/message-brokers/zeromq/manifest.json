@@ -6,5 +6,6 @@
   "category": "message-brokers",
   "provides": ["zeromq", "libzmq", "zmq"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/zeromq/libzmq"
+  "repository": "https://github.com/zeromq/libzmq",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "High-availability Kubernetes + k8s-marathon PaaS application controller topology with netctl ingress routing.",
   "quorum_strategy": "raft",
+  "fencing_policy": "cloud-api-poweroff",
   "node_groups": [
     {
       "name": "k8s-control-plane",

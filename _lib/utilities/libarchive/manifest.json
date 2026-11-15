@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["libarchive", "bsdtar"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/libarchive/libarchive"
+  "repository": "https://github.com/libarchive/libarchive",
+  "capabilities": ["versioned-artifact"]
 }

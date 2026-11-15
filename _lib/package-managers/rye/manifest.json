@@ -7,5 +7,6 @@
   "title": "rye",
   "description": "Bootstrap module for the `rye` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/astral-sh/rye"
+  "repository": "https://github.com/astral-sh/rye",
+  "capabilities": ["versioned-artifact"]
 }

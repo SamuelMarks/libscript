@@ -8,5 +8,6 @@
   "os_whitelist": ["all"],
   "repository": "https://github.com/FreeRTOS/coreMQTT",
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k"
+  "memory_footprint_class": "mcu-sram-64k",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

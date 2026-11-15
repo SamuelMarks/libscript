@@ -6,5 +6,6 @@
   "category": "package-managers",
   "provides": ["pkgsrc", "pkgin", "bmake"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/NetBSD/pkgsrc"
+  "repository": "https://github.com/NetBSD/pkgsrc",
+  "capabilities": ["versioned-artifact"]
 }

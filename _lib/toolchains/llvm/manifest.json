@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["llvm", "llvm-config", "llc", "opt"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/llvm/llvm-project"
+  "repository": "https://github.com/llvm/llvm-project",
+  "capabilities": ["versioned-artifact"]
 }

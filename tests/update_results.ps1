@@ -32,12 +32,15 @@ function Show-Help {
 $repoRoot = ""
 $outputFile = ""
 $jsonFile = ""
+$syncPlans = ($env:LIBSCRIPT_SYNC_PLAN_CHECKBOXES -eq "1")
 
 for ($i = 0; $i -lt $args.Count; $i++) {
     $arg = [string]$args[$i]
     if ($arg -eq "--help" -or $arg -eq "-h" -or $arg -eq "/?" -or $arg -eq "-?") {
         Show-Help
         exit 0
+    } elseif ($arg -eq "--sync-plan-checkboxes") {
+        $syncPlans = $true
     } elseif ($arg -eq "--output") {
         if ($i + 1 -lt $args.Count) {
             $outputFile = [string]$args[++$i]
@@ -638,7 +641,6 @@ function Update-TodoPlan {
                 elseif ($compRef -eq "_lib/illumos/distro") { $readmeKey = "illumos/distro" }
                 elseif ($compRef -eq "_lib/storage") { $readmeKey = "storage/provision_disk" }
                 elseif ($compRef -eq "_lib/runtimes/provision_isolated_runtime") { $readmeKey = "runtimes/provision_isolated_runtime" }
-                elseif ($compRef -eq "_lib/ml-training") { $readmeKey = "ml-training" }
                 elseif (($compRef -like "topologies/*") -or ($compRef -like "payloads/*") -or ($compRef -like "traits/*")) { $readmeKey = $compRef }
 
                 $rEntry = $null
@@ -685,4 +687,6 @@ function Update-TodoPlan {
 }
 
 Update-SupportedComponents -RootPath $repoRoot -TargetReadme $outputFile -ExportJson $jsonFile
-Update-TodoPlan -RootPath $repoRoot -TargetReadme $outputFile
+if ($syncPlans) {
+    Update-TodoPlan -RootPath $repoRoot -TargetReadme $outputFile
+}

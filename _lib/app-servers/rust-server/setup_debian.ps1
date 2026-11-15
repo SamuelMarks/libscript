@@ -91,6 +91,6 @@ switch ($Action) {
     }
     default {
         Write-Host "PowerShell native installation not implemented."
-        exit 1
+        exit 86
     }
 }

@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["tcl", "tclsh", "tk"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/tcltk/tcl"
+  "repository": "https://github.com/tcltk/tcl",
+  "capabilities": ["versioned-artifact"]
 }

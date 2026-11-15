@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/marketplace-offer.schema.json",
+  "title": "LibScript Multicloud Marketplace Offer Specification",
+  "description": "Declarative specification for single-image and multi-unikernel constellation Cloud Marketplace offers across AWS Marketplace, Microsoft Azure Marketplace, and Google Cloud Marketplace.",
+  "type": "object",
+  "required": [
+    "offer_id",
+    "publisher",
+    "product_title",
+    "version",
+    "summary",
+    "eula_uri",
+    "pricing",
+    "architectures",
+    "appliance_images",
+    "exposed_endpoints",
+    "targets"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema URI validating this marketplace offer document."
+    },
+    "offer_id": {
+      "type": "string",
+      "description": "Globally unique alphanumeric offer slug (e.g. openedx-unikernel-appliance)."
+    },
+    "publisher": {
+      "type": "string",
+      "description": "Registered seller or publisher organization identifier across cloud marketplaces."
+    },
+    "product_title": {
+      "type": "string",
+      "description": "Public commercial listing title displayed in marketplace catalogs."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic release version of the marketplace appliance offer."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Concise catalog summary describing the appliance capabilities and architecture."
+    },
+    "eula_uri": {
+      "type": "string",
+      "description": "HTTPS URI or repository path to the End-User License Agreement (EULA) bundle."
+    },
+    "sbom_path": {
+      "type": "string",
+      "description": "Relative output path where the deterministic SPDX/JSON SBOM is generated and verified."
+    },
+    "pricing": {
+      "type": "object",
+      "description": "Commercial pricing and licensing dimension model for the offer.",
+      "required": ["model"],
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": ["free", "byol", "usage-hourly", "contract-annual"],
+          "description": "Marketplace billing model applied to the listing."
+        },
+        "currency": {
+          "type": "string",
+          "default": "USD",
+          "description": "ISO 4217 3-letter currency code for usage or contract rates."
+        },
+        "hourly_rate": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional hourly usage rate when model is usage-hourly."
+        }
+      }
+    },
+    "architectures": {
+      "type": "array",
+      "minItems": 1,
+      "description": "CPU instruction set architectures supported by the published cloud images.",
+      "items": {
+        "type": "string",
+        "enum": ["x86_64", "arm64"],
+        "description": "Target CPU architecture identifier."
+      }
+    },
+    "topology_ref": {
+      "type": "string",
+      "description": "Optional repository path to a topology.schema.json constellation blueprint for multi-VM/multi-unikernel appliances."
+    },
+    "appliance_images": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Bootable single-role OS or UEFI-wrapped unikernel images registered for this offer.",
+      "items": {
+        "type": "object",
+        "description": "Specification for an individual role image within the marketplace offer.",
+        "required": ["role", "os_profile", "cloud_boot"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Logical role identifier within the constellation (e.g. lms-wsgi, ingress-mfe)."
+          },
+          "os_profile": {
+            "type": "string",
+            "description": "Repository path to the single-image os-config.schema.json profile."
+          },
+          "cloud_boot": {
+            "type": "string",
+            "enum": ["uefi-gpt", "hybrid-uefi-bios"],
+            "description": "Cloud firmware boot mode synthesized for hyperscaler VMM compatibility."
+          },
+          "default_instance_types": {
+            "type": "object",
+            "description": "Recommended cloud instance machine types per target cloud.",
+            "properties": {
+              "aws": {
+                "type": "string",
+                "description": "Default AWS Nitro EC2 instance type (e.g. m7i.large)."
+              },
+              "azure": {
+                "type": "string",
+                "description": "Default Azure Gen2 VM SKU (e.g. Standard_D2s_v5)."
+              },
+              "gcp": {
+                "type": "string",
+                "description": "Default GCP Shielded VM machine type (e.g. n2-standard-2)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "exposed_endpoints": {
+      "type": "array",
+      "description": "Whitelisted public network ports permitted through marketplace security groups and firewall rules.",
+      "items": {
+        "type": "object",
+        "description": "Publicly exposed endpoint specification.",
+        "required": ["name", "port", "protocol"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Logical endpoint name (e.g. https-ingress)."
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "TCP or UDP port number permitted on external ingress."
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["tcp", "udp"],
+            "description": "Transport layer protocol."
+          },
+          "health_path": {
+            "type": "string",
+            "description": "Optional HTTP health probe path validated by marketplace deployment templates."
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "description": "Per-cloud marketplace catalog, storage staging, and offer identifiers.",
+      "properties": {
+        "aws_marketplace": {
+          "type": "object",
+          "description": "AWS Marketplace Catalog API and S3 AMI import settings.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether AWS Marketplace publishing is enabled for this offer."
+            },
+            "s3_staging_bucket": {
+              "type": "string",
+              "description": "S3 bucket name used for aws ec2 import-snapshot staging."
+            },
+            "region": {
+              "type": "string",
+              "description": "Primary AWS region for AMI registration and Marketplace Catalog API calls."
+            },
+            "product_type": {
+              "type": "string",
+              "enum": ["AmiProduct", "CloudFormationProduct"],
+              "description": "AWS Marketplace Catalog entity type."
+            }
+          }
+        },
+        "azure_marketplace": {
+          "type": "object",
+          "description": "Microsoft Partner Center and Azure Compute Gallery settings.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether Microsoft Azure Marketplace publishing is enabled."
+            },
+            "resource_group": {
+              "type": "string",
+              "description": "Azure resource group hosting the Compute Gallery."
+            },
+            "storage_account": {
+              "type": "string",
+              "description": "Azure Blob storage account staging page-blob VHDs."
+            },
+            "compute_gallery": {
+              "type": "string",
+              "description": "Azure Compute Gallery (Shared Image Gallery) name."
+            },
+            "plan_id": {
+              "type": "string",
+              "description": "Partner Center Managed Application or VM offer plan identifier."
+            }
+          }
+        },
+        "gcp_marketplace": {
+          "type": "object",
+          "description": "Google Cloud Producer Portal and GCS image import settings.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether Google Cloud Marketplace publishing is enabled."
+            },
+            "project_id": {
+              "type": "string",
+              "description": "GCP Producer project ID hosting public GCE unikernel images."
+            },
+            "gcs_staging_bucket": {
+              "type": "string",
+              "description": "GCS bucket staging disk.raw.tar.gz image archives."
+            },
+            "solution_id": {
+              "type": "string",
+              "description": "GCP Producer Portal VM/Terraform solution identifier."
+            }
+          }
+        }
+      }
+    }
+  }
+}

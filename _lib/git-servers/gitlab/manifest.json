@@ -9,5 +9,6 @@
   "title": "Gitlab",
   "description": "LibScript component for GITLAB",
   "category": "git-servers",
-  "repository": "https://gitlab.com/gitlab-org/gitlab"
+  "repository": "https://gitlab.com/gitlab-org/gitlab",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

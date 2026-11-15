@@ -7,5 +7,6 @@
   "description": "Fast, disk space efficient package manager",
   "category": "package-managers",
   "os_blacklist": ["sunos"],
-  "repository": "https://github.com/pnpm/pnpm"
+  "repository": "https://github.com/pnpm/pnpm",
+  "capabilities": ["versioned-artifact"]
 }

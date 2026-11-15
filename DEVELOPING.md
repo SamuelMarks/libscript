@@ -15,59 +15,67 @@ under its relevant functional category (e.g., `_lib/languages/`, `_lib/databases
 
 ### Standard Component Directory Layout
 
-When creating or modifying a component in `_lib/<category>/<component>/`, provide the following
-standard files:
+When creating or modifying a component in `_lib/<category>/<component>/`, provide the
+capability-typed entry points matching its declared `"capabilities"` in `manifest.json`
+(`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`, `"cloud-operator"`,
+`"os-synthesizer"`):
 
 ```text
 _lib/<category>/<component>/
-├── manifest.json            # Strictly typed metadata (manifest.schema.json)
+├── manifest.json            # Capability-typed metadata (manifest.schema.json)
 ├── vars.schema.json         # Component configuration variable schema
 ├── README.md                # Component documentation and auto-generated tables
-├── cli.sh                   # POSIX entry point implementing standard verbs
+├── cli.sh                   # POSIX entry point implementing capability verbs
 ├── cli.cmd                  # Windows batch entry point with matching verbs
-├── setup.sh                 # POSIX installation and build logic
-├── setup.cmd                # Windows batch installation logic
-├── service.sh               # POSIX daemon management (systemd, launchd, openrc, smf)
-├── service.cmd              # Windows service management (sc.exe, PowerShell)
-├── env.sh                   # POSIX environment activation (PATH injection)
-├── env.cmd                  # Windows environment activation (PATH injection)
+├── setup.sh                 # POSIX installation/build logic ("versioned-artifact")
+├── setup.cmd                # Windows batch installation logic ("versioned-artifact")
+├── uninstall.sh             # POSIX uninstallation & active-bin pruning ("versioned-artifact")
+├── uninstall.cmd            # Windows uninstallation & active-bin pruning ("versioned-artifact")
+├── env.sh                   # POSIX environment activation ("versioned-artifact")
+├── env.cmd                  # Windows environment activation ("versioned-artifact")
+├── service.sh               # POSIX daemon management (strictly when "service-daemon" is declared)
+├── service.cmd              # Windows service management (strictly when "service-daemon" is declared)
 ├── test.sh                  # POSIX health and smoke test script
 ├── test.cmd                 # Windows health and smoke test script
 └── hooks/                   # Optional dual-layer lifecycle hooks (configure, probe,
                              # announce, backup, restore, upgrade, rollback, provision_tenant)
 ```
 
+> **Note:** Never add no-op `service.sh` / `service.cmd` (`exit 0`) stubs to pure libraries,
+> compilers, or CLI utilities (`devtools/audit/audit_standards.sh` enforces `EMPTY_SERVICE_STUB`).
+
 ```mermaid
 flowchart TD
     subgraph ComponentAnatomy[_lib/<category>/<component>/]
-        Manifest["manifest.json & vars.schema.json<br/>(Variants, Dependencies, Ports, Config)"]
+        Manifest["manifest.json & vars.schema.json<br/>(Capabilities, Variants, Dependencies, Ports, Config)"]
         CLI["cli.sh / cli.cmd<br/>(Universal Router Interface)"]
         Setup["setup.sh / setup.cmd<br/>(Download, Compile, Stage)"]
-        Env["env.sh / env.cmd<br/>(Session PATH Injection)"]
-        Service["service.sh / service.cmd<br/>(Daemonize with OS Init)"]
+        Env["env.sh / env.cmd<br/>(Session PATH & O(1) Active Bin Sync)"]
+        Service["service.sh / service.cmd<br/>(Optional: service-daemon Only)"]
         Hooks["hooks/*.{sh,cmd}<br/>(backup/restore, upgrade/rollback, probe, tenant)"]
         Test["test.sh / test.cmd<br/>(Verification Harness)"]
     end
 
     CLI --> Setup
     CLI --> Env
-    CLI --> Service
+    CLI -.->|"service-daemon"| Service
     CLI --> Hooks
     CLI --> Test
-    Manifest -.->|Metadata & Dependencies| CLI
+    Manifest -.->|Capabilities & Dependencies| CLI
 ```
 
 ### Automated Component-Package-Manager Scaffolder (`scaffold` / `new-component`)
 
-Rather than creating all 23+ POSIX `.sh`, Windows `.cmd`, JSON schema, and documentation files by
-hand, maintainers and automated workflows can use the built-in component scaffolder
-(`cli/commands/scaffold/scaffold.{sh,cmd}`):
+Rather than creating all required capability-typed POSIX `.sh`, Windows `.cmd`, JSON schema, and
+documentation files by hand, maintainers and automated workflows can use the built-in component
+scaffolder (`cli/commands/scaffold/scaffold.{sh,cmd}`, supporting
+`--capabilities=versioned-artifact[,service-daemon,...]`):
 
 1. **Interactive Prompter Mode (`--interactive` / default)**: Walks a human maintainer step-by-step
-   through component name, category, description, installation method, upstream version discovery
-   (`github-release`, `semver`, `git-tags`, `custom-url`), download URL templates, archive formats,
-   OS/architecture whitelists, and daemon/multitenant lifecycle hooks, optionally exporting the
-   collected answers to a JSON file via `--export-json=<file>`:
+   through component name, category, description, capabilities, installation method, upstream
+   version discovery (`github-release`, `semver`, `git-tags`, `custom-url`), download URL templates,
+   archive formats, OS/architecture whitelists, and daemon/multitenant lifecycle hooks, optionally
+   exporting the collected answers to a JSON file via `--export-json=<file>`:
    ```sh
    ./libscript.sh scaffold --interactive --export-json=ripgrep.scaffold.json
    # Windows:
@@ -103,7 +111,7 @@ All installations must be isolated inside `${LIBSCRIPT_HOME}/<component>/<exact_
 
 ### 2. Mandatory Lifecycle Verbs
 
-Every toolchain component's `cli.sh` and `cli.cmd` must implement:
+Every `"versioned-artifact"` toolchain component's `cli.sh` and `cli.cmd` must implement:
 
 - **`ls-remote`**: Queries the official upstream release index or API and prints available versions.
 - **`install <version>`**:
@@ -112,10 +120,16 @@ Every toolchain component's `cli.sh` and `cli.cmd` must implement:
   - Compiles or extracts artifacts into the exact version directory.
   - Updates symlink aliases (e.g., `lts` $\rightarrow$ `22.14.0`).
 - **`ls`**: Lists installed versions in `${LIBSCRIPT_HOME}/<component>/`.
-- **`use <version>`**: Emits shell instructions or prepends
-  `${LIBSCRIPT_HOME}/<component>/<version>/bin` to the active shell's `PATH`. Never modify global
-  profiles (`~/.bashrc`, `/etc/profile`).
-- **`uninstall <version>`**: Removes the isolated version folder.
+- **`use <version>`**: Atomically updates the `default` alias and synchronizes executable symlinks
+  in `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` lookup via `libscript_sync_active_bins`, backed by
+  `${LIBSCRIPT_HOME}/owners/<component>.list`) or emits session `PATH` exports via `env` /
+  `resolve-env` (`.libscript-version`, `.nvmrc`, `.python-version`, `rust-toolchain.toml`). Never
+  modify global profiles (`~/.bashrc`, `/etc/profile`).
+- **`uninstall <version>`**: Removes the isolated version folder and prunes orphaned symlinks from
+  `${LIBSCRIPT_HOME}/bin` (`libscript_prune_active_bins`).
+- **Cross-Compiler Sub-Artifacts (Optional)**: Toolchains supporting multi-target sysroots (such as
+  `_lib/languages/rust`) additionally implement `target-add`, `target-rm`, `target-ls`,
+  `component-add`, and `component-ls`.
 
 ```mermaid
 sequenceDiagram
@@ -124,7 +138,7 @@ sequenceDiagram
     participant CLI as _lib/languages/<tool>/cli.sh
     participant Cache as cache/ (LIBSCRIPT_CACHE_DIR)
     participant Target as ~/.libscript/<tool>/<version>/
-    participant Shell as Active Shell Session
+    participant BinFarm as ~/.libscript/bin (O(1) Active Bin)
 
     Dev->>CLI: ls-remote
     CLI-->>Dev: Print upstream versions (semantic sort)
@@ -132,8 +146,8 @@ sequenceDiagram
     CLI->>Cache: Fetch & verify payload
     CLI->>Target: Unpack / compile into isolated sandbox
     Dev->>CLI: use 1.2.3
-    CLI-->>Shell: Prepend ~/.libscript/<tool>/1.2.3/bin to PATH
-    Note over Shell: Isolated to subshell; zero global side-effects
+    CLI->>BinFarm: Sync default symlink & ~/.libscript/bin/* shims
+    Note over BinFarm: O(1) lookup + per-shell env/resolve-env overrides; zero global side-effects
 ```
 
 ---

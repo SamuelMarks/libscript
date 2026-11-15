@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["scala", "scalac"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/scala/scala3"
+  "repository": "https://github.com/scala/scala3",
+  "capabilities": ["versioned-artifact"]
 }

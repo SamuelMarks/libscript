@@ -3,7 +3,7 @@
 LibScript aims to become the universal substrate for software delivery, independent of cloud vendor
 or operating system.
 
-## Phase 12: Observability Control Plane & Transactional OS Updates (Next)
+## Phase 13: Observability Control Plane & Transactional OS Updates (Next)
 
 - [ ] Lightweight, decentralized Web Dashboard / Control Plane for real-time cluster visualization,
       topology state inspection, and multi-node log streaming on top of `libscript-rest-api`.
@@ -17,7 +17,33 @@ or operating system.
 
 ---
 
-## Completed Phases (Phases 3–11)
+## Completed Phases (Phases 3–12)
+
+### Phase 12: Capability-Typed `O(1)` Version Managers, `experiments/` Plugin Engine, Multicloud Unikernel Marketplace & TPU/GKE/GCS ML Stack (Completed)
+
+- [x] Capability-typed `manifest.json` contract (`versioned-artifact`, `service-daemon`,
+      `sysroot-library`, `cloud-operator`, `os-synthesizer`) across all `554` `_lib/` descriptors,
+      removing `760` dead `service.{sh,cmd}` stubs and enforcing `EMPTY_SERVICE_STUB` in
+      `devtools/audit/audit_standards.{sh,ps1}`.
+- [x] Zero-shim `O(1)` `${LIBSCRIPT_HOME}/bin` symlink farm (`_lib/_common/versioning.{sh,cmd}`),
+      `.libscript-version` workspace pin resolution (`libscript resolve-env`), and native
+      replacement upgrades for `nodejs` (`.nvmrc`/`.node-version`/`corepack`), `python`
+      (`.python-version`/`pyproject.toml`/`3.13t` free-threaded), and `rust` (`rust-toolchain.toml`,
+      `target-add`/`component-add`).
+- [x] Open/Closed top-level `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`)
+      and shared `_lib/_common/experiment/` C11/POSIX/Batch benchmark substrate covering
+      `edgcpp-backends`, `gemma-tpu`, `libtpu-pjrt`, `os-component-matrix`, and `win-port`.
+- [x] UEFI/GPT (`--cloud-boot=uefi-gpt|efi-stub`) and 1 MiB-aligned Hyper-V Gen2 VHD
+      (`--cloud-boot=azure-vhd`) unikernel disk image synthesis, `_lib/cloud/image-import`, the
+      8-appliance Open edX unikernel constellation (`profiles/openedx-unikernel/*.json` +
+      `topologies/openedx-unikernel-pod/`), and SPDX 2.3 compliance-gated AWS/Azure/GCP Marketplace
+      publishing (`libscript publish-marketplace`).
+- [x] 4-role regional GCS ML storage trait (`traits/storage/gcs_ml.{sh,cmd}`,
+      `schemas/gcs-ml-storage.schema.json`), `_lib/ml-training/tpu-trainer`,
+      `_lib/ai-serving/inference-router`, `payloads/schedulers/tpu_vm.{sh,cmd}`, zero-cost TFRC
+      guardrails (`schemas/tfrc-policy.schema.json`), and OpenAPI 3.2.0 endpoints
+      (`/api/v1/experiments`, `/api/v1/marketplace/publish`,
+      `/api/v1/components/{name}/capabilities`).
 
 ### Phase 3: Advanced PaaS & Cluster Mesh (Completed)
 

@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["msitools", "wixl"],
   "os_whitelist": ["linux", "darwin", "freebsd"],
-  "repository": "https://gitlab.gnome.org/GNOME/msitools"
+  "repository": "https://gitlab.gnome.org/GNOME/msitools",
+  "capabilities": ["versioned-artifact"]
 }

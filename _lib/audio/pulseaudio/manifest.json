@@ -11,5 +11,6 @@
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "capabilities": ["versioned-artifact"]
 }

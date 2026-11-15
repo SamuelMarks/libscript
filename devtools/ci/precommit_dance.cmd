@@ -68,7 +68,7 @@ exit /b 0
 echo ^>^>^> RUNNING PRE-COMMIT DANCE ^<^<^<
 
 :: Ensure we run from the git repository root
-cd /d "%~dp0\..\.."
+cd /d "%LIBSCRIPT_ROOT_DIR%"
 
 :: Stage all tracked files so the pre-commit hook thinks they are staged
 git add -u

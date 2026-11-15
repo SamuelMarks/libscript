@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["win-port-suite", "win-port-experiments"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/SamuelMarks/libscript"
+  "repository": "https://github.com/SamuelMarks/libscript",
+  "capabilities": ["versioned-artifact"]
 }

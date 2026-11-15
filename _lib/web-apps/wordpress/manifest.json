@@ -10,5 +10,6 @@
   "os_blacklist": [],
   "dependencies": {
     "runtime_deps": ["mysql", "nginx", "php", "unzip"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

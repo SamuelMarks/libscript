@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/ml-training/tpu-trainer/vars.schema.json",
+  "title": "TPU Trainer Variables",
+  "description": "Configuration variables for multi-worker Cloud TPU VM training execution.",
+  "type": "object",
+  "properties": {
+    "TPU_TRAINER_BACKEND": {
+      "type": "string",
+      "default": "jax_native",
+      "description": "ML backend framework initialized in /dev/shm uv virtualenvs across TPU slice workers."
+    },
+    "ML_SCRIPT": {
+      "type": "string",
+      "default": "python train.py",
+      "description": "Training command executed in lockstep across all TPU slice workers."
+    }
+  }
+}

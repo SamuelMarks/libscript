@@ -7,5 +7,6 @@
   "provides": ["i3", "i3wm", "i3-msg"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
   "os_blacklist": ["windows", "macos"],
-  "repository": "https://github.com/i3/i3"
+  "repository": "https://github.com/i3/i3",
+  "capabilities": ["versioned-artifact"]
 }

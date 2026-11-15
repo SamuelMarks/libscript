@@ -76,6 +76,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+case "$SCHEDULER" in
+  tpu-vm|gcp-tpu-vm) SCHEDULER='tpu_vm' ;;
+  gke-xpk) SCHEDULER='xpk' ;;
+  local) SCHEDULER='native' ;;
+esac
+
 SCHED_SCRIPT="${SCRIPT_DIR}/schedulers/${SCHEDULER}.sh"
 if [ ! -f "$SCHED_SCRIPT" ]; then
   printf '[ERROR] Unknown scheduler driver: %s\n' "$SCHEDULER" >&2

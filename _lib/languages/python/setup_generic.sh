@@ -67,7 +67,7 @@ if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${PIP_NO_INDEX:-0}" = "1" ]; then
 fi
 
 # ## find_existing_python
-# Searches LIBSCRIPT_HOME, system PATH, and uv python directories for a Python interpreter matching PYTHON_VERSION.
+# Searches LIBSCRIPT_HOME and uv isolated stores for a Python interpreter strictly matching PYTHON_VERSION.
 find_existing_python() {
   _fep_req=$(printf '%s' "$PYTHON_VERSION" | cut -d. -f1,2)
   [ "$_fep_req" = "latest" ] && _fep_req="3.12"
@@ -76,35 +76,47 @@ find_existing_python() {
     printf '%s\n' "${_fep_home}/python/${PYTHON_VERSION}/bin/python3"
     return 0
   fi
-  if command -v "python${_fep_req}" >/dev/null 2>&1; then
-    command -v "python${_fep_req}"
-    return 0
+  if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+    if command -v "python${_fep_req}" >/dev/null 2>&1; then
+      command -v "python${_fep_req}"
+      return 0
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+      _sys_pyv=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2 || true)
+      if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ]; then
+        command -v python3
+        return 0
+      fi
+    fi
   fi
-  for _fep_uv_dir in "${UV_PYTHON_INSTALL_DIR:-}" "${REMOTE_HOME:-$HOME}/.local/share/uv/python" "${HOME}/.local/share/uv/python" "/root/.local/share/uv/python"; do
+  _fep_has_patch=0
+  case "$PYTHON_VERSION" in
+    *.*.*) _fep_has_patch=1 ;;
+  esac
+  for _fep_uv_dir in "${_fep_home}/python/_uv_store" "${UV_PYTHON_INSTALL_DIR:-}"; do
     if [ -z "$_fep_uv_dir" ] || [ ! -d "$_fep_uv_dir" ]; then
       continue
     fi
-    for _fep_cand in "$_fep_uv_dir"/cpython-"${_fep_req}"*/bin/python3; do
-      if [ -x "$_fep_cand" ]; then
-        printf '%s\n' "$_fep_cand"
-        return 0
-      fi
-    done
+    set +f
+    if [ "$_fep_has_patch" -eq 1 ]; then
+      for _fep_cand in "$_fep_uv_dir"/cpython-"${PYTHON_VERSION}"-*/bin/python3 "$_fep_uv_dir"/cpython-"${PYTHON_VERSION}"/bin/python3; do
+        if [ -x "$_fep_cand" ]; then
+          set -f
+          printf '%s\n' "$_fep_cand"
+          return 0
+        fi
+      done
+    else
+      for _fep_cand in "$_fep_uv_dir"/cpython-"${_fep_req}".*/bin/python3; do
+        if [ -x "$_fep_cand" ]; then
+          set -f
+          printf '%s\n' "$_fep_cand"
+          return 0
+        fi
+      done
+    fi
+    set -f
   done
-  if command -v uv >/dev/null 2>&1; then
-    _uv_found=$(uv python find "$_fep_req" 2>/dev/null || true)
-    if [ -n "$_uv_found" ] && [ -x "$_uv_found" ]; then
-      printf '%s\n' "$_uv_found"
-      return 0
-    fi
-  fi
-  if command -v python3 >/dev/null 2>&1; then
-    _sys_pyv=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2 || true)
-    if [ "$_sys_pyv" = "$_fep_req" ] || [ "$PYTHON_VERSION" = "latest" ] || [ "${_PY_VERSION_UNPINNED:-0}" = "1" ] || [ "${VERSION:-latest}" = "latest" ] || [ -f /etc/debian_version ] || [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; then
-      command -v python3
-      return 0
-    fi
-  fi
   return 1
 }
 
@@ -290,8 +302,32 @@ case "$ACTION" in
       if (return 0 2>/dev/null); then return 0; else exit 0; fi
     fi
 
-    # Fast native Python installation via uv python install before falling back to system package manager
+    # Fast native Python installation from cached standalone archive or uv isolated python store
     if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
+      resolve_exact_version
+      _py_dest=$(libscript_get_version_dir "python" "${EXACT_VERSION}")
+      _py_dl="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python"
+      _py_cached_arc=""
+      for _py_arc_cand in "${_py_dl}/python-${EXACT_VERSION}.tar.gz" "${_py_dl}/python-${PYTHON_VERSION}.tar.gz" "${_py_dl}/cpython-${EXACT_VERSION}.tar.gz"; do
+        if [ -f "$_py_arc_cand" ]; then
+          _py_cached_arc="$_py_arc_cand"
+          break
+        fi
+      done
+      if [ -n "$_py_cached_arc" ]; then
+        mkdir -p "${_py_dest}"
+        tar -xzf "$_py_cached_arc" -C "${_py_dest}" --strip-components=1 2>/dev/null || tar -xzf "$_py_cached_arc" -C "${_py_dest}"
+        if [ -x "${_py_dest}/bin/python3" ] && [ ! -e "${_py_dest}/bin/python" ]; then
+          ln -sf "python3" "${_py_dest}/bin/python"
+        fi
+        libscript_symlink_alias "python" "${PYTHON_VERSION}" "${EXACT_VERSION}"
+        if [ "${LIBSCRIPT_AUTO_USE:-0}" = "1" ] || [ ! -e "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/default" ]; then
+          libscript_symlink_alias "python" "default" "${EXACT_VERSION}"
+        fi
+        setup_python_venv_if_requested
+        if (return 0 2>/dev/null); then return 0; else exit 0; fi
+      fi
+
       if ! command -v uv >/dev/null 2>&1 && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/cli.sh" install latest >/dev/null 2>&1 || true
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/uv/env.sh" ]; then
@@ -307,10 +343,12 @@ case "$ACTION" in
         fi
       fi
       if command -v uv >/dev/null 2>&1; then
-        _req_py=$(printf '%s' "$PYTHON_VERSION" | cut -d. -f1,2)
+        _req_py="${PYTHON_VERSION}"
         [ "$_req_py" = "latest" ] && _req_py="3.12"
-        log_info "[CREATE] Installing Python ${_req_py} via uv..."
-        if uv python install "$_req_py" >/dev/null 2>&1; then
+        _uv_store="${LIBSCRIPT_HOME:-$HOME/.libscript}/python/_uv_store"
+        mkdir -p "${_uv_store}"
+        log_info "[CREATE] Installing isolated CPython ${_req_py} via uv into ${_uv_store}..."
+        if UV_PYTHON_INSTALL_DIR="${_uv_store}" uv python install "$_req_py" >/dev/null 2>&1; then
           if _uv_py=$(find_existing_python 2>/dev/null); then
             link_python_into_libscript_home "$_uv_py"
             setup_python_venv_if_requested

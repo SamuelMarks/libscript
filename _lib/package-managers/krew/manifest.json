@@ -7,5 +7,6 @@
   "title": "krew",
   "description": "Bootstrap script for [Krew](https://krew.sigs.k8s.io/), the plugin manager for `kubectl` command-line tool.",
   "category": "package-managers",
-  "repository": "https://github.com/kubernetes-sigs/krew"
+  "repository": "https://github.com/kubernetes-sigs/krew",
+  "capabilities": ["versioned-artifact"]
 }

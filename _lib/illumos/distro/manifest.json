@@ -9,5 +9,6 @@
   "versions": ["latest", "r151050"],
   "os_whitelist": ["sunos", "linux", "freebsd"],
   "os_blacklist": ["windows", "darwin"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

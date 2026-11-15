@@ -7,5 +7,6 @@
   "title": "fnm",
   "description": "Bootstrap script for [fnm](https://github.com/Schniz/fnm), a fast and simple Node.js version manager.",
   "category": "package-managers",
-  "repository": "https://github.com/Schniz/fnm"
+  "repository": "https://github.com/Schniz/fnm",
+  "capabilities": ["versioned-artifact"]
 }

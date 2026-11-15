@@ -56,12 +56,23 @@ flowchart TD
   ETL, database migrations, and frontend builds.
 - **Flexible Deployment Targets:** Stacks can be deployed as native system services, generated into
   `docker-compose` manifests, or bundled into standalone native installers.
-- **Machine Learning Primitives:** Out-of-the-box infrastructure definitions for AI Serving and ML
-  Training, including TPU/GPU VM lifecycles, GKE integration (via XPK), and automated data ingestion
-  workflows using `gcsfuse` and `tmux`.
+- **Machine Learning, TPU Slices & 4-Role GCS Coordination:** Unified scheduling across `tpu_vm`,
+  `xpk` (GKE TPU slices), and `kubernetes` via `payloads/engine.{sh,cmd}`, paired with
+  `schemas/gcs-ml-storage.schema.json` and `traits/storage/gcs_ml.{sh,cmd}` separating native
+  `gs://` streaming datasets, Orbax/PyTorch multi-host checkpoints, persistent
+  `JAX_COMPILATION_CACHE_DIR`, and GKE `gke-gcsfuse-csi-driver` / Workload Identity mounts under
+  TFRC zero-cost regionality guards.
+- **Unikernel Constellations & Cloud Marketplace Publishing:** Decomposes multi-service stacks such
+  as Open edX (`profiles/openedx-unikernel/*.json` +
+  `topologies/openedx-unikernel-pod/topology.json`) into single-process UEFI/GPT unikernel images
+  (`--cloud-boot=uefi-gpt`) and publishes compliance-gated SPDX 2.3 SBOM + CloudFormation, Azure
+  Managed Application, and GCP Terraform Marketplace offers via
+  `./libscript.sh publish-marketplace`.
 - **Programmatic REST API & OpenAPI Engine:** The native C11 HTTP daemon (`libscript-rest-api`,
-  built on `c-rest-framework`) provides an HTTP API conforming to OpenAPI 3.2.0 for remote
-  provisioning, continuous deployment, and fleet management.
+  built on `c-rest-framework`) provides an HTTP API conforming to OpenAPI 3.2.0 (including
+  `/api/v1/experiments`, `/api/v1/marketplace/publish`, and
+  `/api/v1/components/{name}/capabilities`) for remote provisioning, continuous deployment, and
+  fleet management.
 
 ## Roadmap to Maturity
 

@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["fzf", "fuzzy-finder"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/junegunn/fzf"
+  "repository": "https://github.com/junegunn/fzf",
+  "capabilities": ["versioned-artifact"]
 }

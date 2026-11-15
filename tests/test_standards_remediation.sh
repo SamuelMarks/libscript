@@ -110,6 +110,55 @@ if [ "$_opt_a_bad" -eq 0 ]; then
   pass_check "All 17 Unix-specific .cmd proforma scripts enforce Option A exit /b 86"
 fi
 
+_opt_a_ps1_bad=0
+set +f
+for _oa_ps1 in "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/kubernetes-thw/alpine-systemctl.ps1" \
+               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_debian.ps1 \
+               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_alpine.ps1 \
+               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_freebsd.ps1 \
+               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_macos.ps1 \
+               "${LIBSCRIPT_ROOT_DIR}"/_lib/*/*/setup_rhel.ps1; do
+  [ -f "$_oa_ps1" ] || continue
+  if ! grep -q 'exit 86' "$_oa_ps1"; then
+    fail_check "Option A PowerShell script missing exit 86: $_oa_ps1"
+    _opt_a_ps1_bad=1
+  fi
+done
+set -f
+if [ "$_opt_a_ps1_bad" -eq 0 ]; then
+  pass_check "All 16 Unix-specific .ps1 proforma scripts enforce Option A exit 86"
+fi
+
+_oa_bad_dir="${TEST_TMP}/_lib/demo/comp"
+mkdir -p "$_oa_bad_dir"
+printf '#!/bin/sh\n# ## Overview\n# Test fixture.\n# ## Usage\n# setup_debian.sh\nexit 0\n' > "${_oa_bad_dir}/setup_debian.sh"
+printf '@echo off\r\n:: # setup_debian.cmd\r\n:: ## Overview\r\n:: Test fixture.\r\n:: ## Usage\r\n:: setup_debian.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nexit /b 86\r\n' > "${_oa_bad_dir}/setup_debian.cmd"
+printf '# ## Overview\n# Test fixture.\n# ## Usage\n# setup_debian.ps1\nWrite-Host "stub"\nexit 1\n' > "${_oa_bad_dir}/setup_debian.ps1"
+_oa_ps1_out=$(cd "$TEST_TMP" && STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "_lib/demo/comp/setup_debian.ps1" 2>&1 || true)
+if printf '%s\n' "$_oa_ps1_out" | grep -q 'OPTION_A_PROFORMA'; then
+  pass_check "audit_standards.sh detects missing exit 86 in setup_debian.ps1 (OPTION_A_PROFORMA)"
+else
+  fail_check "audit_standards.sh failed to flag setup_debian.ps1 missing exit 86: $_oa_ps1_out"
+fi
+
+_double_cr_dir="${TEST_TMP}/double_cr_case"
+mkdir -p "$_double_cr_dir"
+printf '#!/bin/sh\n# ## Overview\n# Test fixture.\n# ## Usage\n# sample.sh\nexit 0\n' > "${_double_cr_dir}/sample.sh"
+printf '@echo off\r\n:: # sample.cmd\r\n:: ## Overview\r\n:: Test fixture.\r\n:: ## Usage\r\n:: sample.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\necho broken\r\r\nexit /b 0\r\n' > "${_double_cr_dir}/sample.cmd"
+_double_cr_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "${_double_cr_dir}/sample.cmd" 2>&1 || true)
+if printf '%s\n' "$_double_cr_out" | grep -q 'BATCH_EOL_CRLF'; then
+  pass_check "audit_standards.sh detects double-CR (\\r\\r\\n) corruption via BATCH_EOL_CRLF"
+else
+  fail_check "audit_standards.sh failed to flag double-CR corruption: $_double_cr_out"
+fi
+
+_w_text_hits=$(git -C "${LIBSCRIPT_ROOT_DIR}" ls-files --eol "*.sh" "*.ps1" "*.cmd" "*.bat" ".githooks/pre-commit" | awk '$2 == "w/-text" { print }')
+if [ -z "$_w_text_hits" ]; then
+  pass_check "Zero tracked scripts exhibit w/-text lone-CR corruption in git ls-files --eol"
+else
+  fail_check "Found w/-text lone-CR corruption in tracked scripts: $_w_text_hits"
+fi
+
 _bad_cmd="${TEST_TMP}/setup_debian.cmd"
 printf '@echo off\r\n:: # setup_debian.cmd\r\n:: ## Overview\r\n:: Test fixture.\r\n:: ## Usage\r\n:: setup_debian.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nif "%%ACTION%%"=="ls-remote" (\r\nif exist "%%LIBSCRIPT_HOME%%\\foo\\1.0" (\r\n    exit /b 0\r\n)\r\n    exit /b 0\r\n)\r\nexit /b 1\r\n' > "$_bad_cmd"
 _bad_out=$(STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_standards.sh" "$_bad_cmd" 2>&1 || true)

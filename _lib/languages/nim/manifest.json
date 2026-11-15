@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["nim"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/nim-lang/Nim"
+  "repository": "https://github.com/nim-lang/Nim",
+  "capabilities": ["versioned-artifact"]
 }

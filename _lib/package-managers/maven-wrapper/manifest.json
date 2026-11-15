@@ -6,5 +6,6 @@
   "category": "package-managers",
   "provides": ["maven-wrapper", "mvnw"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/apache/maven-wrapper"
+  "repository": "https://github.com/apache/maven-wrapper",
+  "capabilities": ["versioned-artifact"]
 }

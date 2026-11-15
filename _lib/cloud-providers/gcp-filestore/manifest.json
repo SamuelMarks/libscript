@@ -10,5 +10,6 @@
   "os_blacklist": [],
   "dependencies": {
     "runtime_deps": ["gcp-cli"]
-  }
+  },
+  "capabilities": ["cloud-operator"]
 }

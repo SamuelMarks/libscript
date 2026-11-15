@@ -131,8 +131,8 @@ case "${1:-}" in
     exit 0
     ;;
   logs|use|env|ls|ls-remote|download|uninstall|install-service|uninstall-service|which|exec|run)
-    printf '%s\n' 'Action not applicable for this provisioning module.'
-    exit 0
+    printf '[ERROR] Action '\''%s'\'' requires capability '\''versioned-artifact'\'' or '\''service-daemon'\'' (gcp-tpu-vm capabilities: ["cloud-operator"]).\n' "${1}" >&2
+    exit 1
     ;;
 esac
 

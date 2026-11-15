@@ -6,5 +6,6 @@
   "category": "bootloaders",
   "provides": ["mcuboot", "imgtool"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/mcu-tools/mcuboot"
+  "repository": "https://github.com/mcu-tools/mcuboot",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

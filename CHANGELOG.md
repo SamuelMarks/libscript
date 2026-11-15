@@ -61,9 +61,11 @@ All notable changes to the LibScript framework are documented here.
     - Multicloud VM and resource lifecycle management for AWS EC2, GCP Compute Engine, Azure
       Compute, Proxmox VE, Hetzner Cloud, and Vagrant.
     - MicroVM and unikernel execution drivers for Firecracker, Cloud-Hypervisor, and Solo5.
-    - AI and hardware acceleration infrastructure: TPU VM automation (`ml-eval-node`) with GCS FUSE
-      and TensorBoard, distributed TPU training via GKE + XPK, and high-throughput LLM inference
-      deployments (`vLLM`, `JetStream`, `Ollama`).
+    - AI and hardware acceleration infrastructure: TPU VM multi-worker lockstep training
+      (`_lib/ml-training/tpu-trainer`) with 4-role regional GCS ML buckets
+      (`traits/storage/gcs_ml.{sh,cmd}`), GCS FUSE, and TensorBoard, distributed TPU training via
+      GKE + XPK, and unified LLM inference routing (`_lib/ai-serving/inference-router`: `vLLM`,
+      `JetStream`, MaxEngine, Triton, `Ollama`).
     - Built-in PaaS & universal reverse proxying via `netctl` for Nginx, Caddy, Apache, and Windows
       IIS with automated Let's Encrypt TLS and OS init supervision (`systemd`, `launchd`, Windows
       Services).
@@ -120,6 +122,39 @@ All notable changes to the LibScript framework are documented here.
   `libscript_native` -> `mise` -> `asdf` -> `pkgx` -> `vfox` -> `system`.
 
 ### Completed Initiatives
+
+#### Phase 12: Capability-Typed `O(1)` Version Managers, `experiments/` Plugin Engine, Multicloud Unikernel Marketplace, TPU/GCS ML Stack & RTOS Synthesis
+
+- **Capability-Typed Manifests & `O(1)` Version Management**:
+  - Extended `_lib/_common/manifest.schema.json` with `capabilities`, `adapter_only`, and
+    `replaces_version_managers` across all `554` `_lib/` manifests, removing `760` dead no-op
+    `service.{sh,cmd}` stubs and enforcing `EMPTY_SERVICE_STUB` in
+    `devtools/audit/audit_standards.{sh,ps1}`.
+  - Added zero-shim `O(1)` `${LIBSCRIPT_HOME}/bin` symlink synchronization and pruning
+    (`_lib/_common/versioning.{sh,cmd}`), workspace pin walking
+    (`cli/commands/resolve_env.{sh,cmd}`), and full native version-manager parity in `nodejs`
+    (`.nvmrc`/`.node-version`/`corepack`), `python` (`.python-version`/`pyproject.toml`/`3.13t` PEP
+    703 free-threaded), and `rust` (`rust-toolchain.toml`, `target-add`/`component-add`).
+- **Open/Closed `experiments/` Plugin Architecture**:
+  - Relocated the shared empirical benchmark harness and C11 `libscript_bench_probe.c` probe to
+    `_lib/_common/experiment/` and added `experiments/engine.{sh,cmd}` covering `edgcpp-backends`,
+    `gemma-tpu`, `libtpu-pjrt`, `os-component-matrix`, and `win-port`.
+- **UEFI Cloud-Boot Unikernels, Open edX 8-Appliance Constellation & `publish-marketplace`**:
+  - Extended `package-as unikernel` with `--cloud-boot=uefi-gpt|efi-stub|azure-vhd` (hybrid GPT +
+    FAT32 ESP raw disks and 1 MiB-aligned Hyper-V Gen2 `.vhd` trailers) and added
+    `_lib/cloud/image-import`.
+  - Added 8 single-process Open edX unikernel profiles (`profiles/openedx-unikernel/*.json`),
+    `topologies/openedx-unikernel-pod/`, `schemas/marketplace-offer.schema.json`, and
+    `libscript publish-marketplace` (SPDX 2.3 SBOM + AWS/Azure/GCP Marketplace bundle synthesis).
+- **Cloud TPU / GKE JobSet+Kueue / 4-Role GCS ML Stack & RTOS Synthesis**:
+  - Added `traits/storage/gcs_ml.{sh,cmd}` (`schemas/gcs-ml-storage.schema.json`),
+    `_lib/ml-training/tpu-trainer`, `_lib/ai-serving/inference-router`,
+    `payloads/schedulers/tpu_vm`, zero-cost TFRC guardrails (`schemas/tfrc-policy.schema.json`), and
+    OpenAPI 3.2.0 endpoints (`/api/v1/experiments`, `/api/v1/marketplace/publish`,
+    `/api/v1/components/{name}/capabilities`).
+  - Added Zephyr RTOS (`_lib/kernel/zephyr`), FreeRTOS (`_lib/kernel/freertos`), MCUboot
+    (`_lib/bootloaders/mcuboot`), `execution-plan.rtos.schema.json`, `package-as firmware`, and
+    `payloads/schedulers/rtos_firmware`.
 
 #### Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks
 

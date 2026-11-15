@@ -247,6 +247,23 @@ if /i "!arg!"=="--cache-dir" (
     shift & shift
     goto :parse_loop
 )
+if /i "!arg!"=="--use" (
+    set "LIBSCRIPT_AUTO_USE=1"
+    shift
+    goto :parse_loop
+)
+if "!arg:~0,10!"=="--targets=" (
+    set "SUB_TARGETS=!arg:~10!"
+    if not "!pkg_up!"=="" set "!pkg_up!_TARGETS=!arg:~10!"
+    shift
+    goto :parse_loop
+)
+if "!arg:~0,13!"=="--components=" (
+    set "SUB_COMPONENTS=!arg:~13!"
+    if not "!pkg_up!"=="" set "!pkg_up!_COMPONENTS=!arg:~13!"
+    shift
+    goto :parse_loop
+)
 if "!arg:~0,15!"=="--download-dir=" (
     set "DOWNLOAD_DIR=!arg:~15!"
     set "LIBSCRIPT_DOWNLOAD_DIR=!arg:~15!"
@@ -407,6 +424,8 @@ if /i "!ACTION!"=="ls-remote" (
 
 if /i "!ACTION!"=="use" (
     if exist "!INSTALLED_DIR!\bin" (
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "!PACKAGE_NAME!" "default" "!VERSION!"
         set "PATH=!INSTALLED_DIR!\bin;!PATH!"
         echo Using !PACKAGE_NAME! !VERSION! at !INSTALLED_DIR!
         exit /b 0
@@ -562,6 +581,17 @@ goto :default_action
 :: ## service_action
 :: Routes service daemon verbs (start, stop, status, logs, install-service) to component scripts.
 :service_action
+for %%D in (start stop restart install-service uninstall-service) do (
+    if /i "!ACTION!"=="%%D" (
+        if exist "!COMP_DIR!\manifest.json" (
+            findstr /I /C:"service-daemon" "!COMP_DIR!\manifest.json" >nul 2>&1
+            if errorlevel 1 (
+                echo [ERROR] Action '!ACTION!' requires capability 'service-daemon' ^(!PACKAGE_NAME! is not a service daemon^). >&2
+                exit /b 1
+            )
+        )
+    )
+)
 if exist "!COMP_DIR!\!ACTION!.cmd" (
     call "!COMP_DIR!\!ACTION!.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!

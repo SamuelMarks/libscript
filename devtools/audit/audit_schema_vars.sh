@@ -202,6 +202,7 @@ audit_manifest_json() {
       . as $doc
       | ($ms[0].required // []) as $req
       | ($ms[0].properties.category.enum // []) as $cats
+      | ($ms[0].properties.capabilities.items.enum // []) as $caps
       | ($ms[0].properties | keys) as $allowed
       | [
           ($req[] as $r | select(($doc | has($r)) | not) | "missing required field: \($r)"),
@@ -209,6 +210,8 @@ audit_manifest_json() {
           (if ((.title // "") | length) == 0 then "title must be non-empty" else empty end),
           (if ((.description // "") | length) == 0 then "description must be non-empty" else empty end),
           (if ($cats | length) > 0 and ((.category // "") as $c | ($cats | index($c)) == null) then "category \"\(.category // "")\" not in manifest.schema.json enum" else empty end),
+          (if ((.capabilities // null) | type) != "array" or ((.capabilities // []) | length) == 0 then "capabilities must be a non-empty array" else empty end),
+          (if ((.capabilities // null) | type) == "array" then (.capabilities[] | select(. as $cap | ($caps | index($cap)) == null) | "capability \"\(.)\" not in manifest.schema.json enum") else empty end),
           (keys[] | select(. as $k | ($allowed | index($k)) == null) | "undeclared top-level property: \(.)")
         ]
       | .[]
@@ -351,6 +354,52 @@ audit_root_schemas_and_profiles() {
       done
       ERRORS=$((ERRORS + 1))
     fi
+  done
+
+  # Validate higher-tier schemas (descriptions) and declarative instances (STD-03)
+  for _hts in "${LIBSCRIPT_ROOT_DIR}/experiment-suite.schema.json" "${LIBSCRIPT_ROOT_DIR}/topologies/topology.schema.json" "${LIBSCRIPT_ROOT_DIR}/payloads/payload.schema.json" "${LIBSCRIPT_ROOT_DIR}/traits/trait.schema.json" "${LIBSCRIPT_ROOT_DIR}/schemas"/*.schema.json; do
+    if [ -f "$_hts" ]; then
+      check_schema_descriptions "$_hts" || true
+    fi
+  done
+
+  for _pair in \
+    "TOPOLOGY_SCHEMA|${LIBSCRIPT_ROOT_DIR}/topologies/topology.schema.json|topologies/*/topology.json" \
+    "PAYLOAD_SCHEMA|${LIBSCRIPT_ROOT_DIR}/payloads/payload.schema.json|payloads/*/*/payload.json" \
+    "TRAIT_SCHEMA|${LIBSCRIPT_ROOT_DIR}/traits/trait.schema.json|traits/*/trait.json" \
+    "EXPERIMENT_SCHEMA|${LIBSCRIPT_ROOT_DIR}/experiment-suite.schema.json|experiments/*/suite.json" \
+    "MARKETPLACE_SCHEMA|${LIBSCRIPT_ROOT_DIR}/schemas/marketplace-offer.schema.json|marketplace/*/offer.json"; do
+    _tag="${_pair%%|*}"
+    _rest="${_pair#*|}"
+    _sch="${_rest%%|*}"
+    _glob="${_rest#*|}"
+    [ -f "$_sch" ] || continue
+    for _inst in "${LIBSCRIPT_ROOT_DIR}"/$_glob; do
+      [ -f "$_inst" ] || continue
+      _rel_inst="${_inst#"${LIBSCRIPT_ROOT_DIR}"/}"
+      if ! jq empty "$_inst" >/dev/null 2>&1; then
+        printf '[STANDARDS VIOLATION] [INVALID_JSON] %s: Instance is not valid JSON.\n' "$_rel_inst" >&2
+        ERRORS=$((ERRORS + 1))
+        continue
+      fi
+      _i_err=$(jq -r --slurpfile s "$_sch" '
+        . as $doc
+        | ($s[0].required // []) as $req
+        | (($s[0].properties // {} | keys) + ["$schema"]) as $allowed
+        | [
+            ($req[] as $r | select(($doc | has($r)) | not) | "missing required field: \($r)"),
+            (keys[] | select(. as $k | ($allowed | index($k)) == null) | "undeclared top-level property: \(.)")
+          ]
+        | .[]
+      ' "$_inst" 2>/dev/null || true)
+      if [ -n "$_i_err" ]; then
+        printf '%s\n' "$_i_err" | while IFS= read -r _il; do
+          [ -n "$_il" ] || continue
+          printf '[STANDARDS VIOLATION] [%s] %s: %s\n' "$_tag" "$_rel_inst" "$_il" >&2
+        done
+        ERRORS=$((ERRORS + 1))
+      fi
+    done
   done
   set -f
 }

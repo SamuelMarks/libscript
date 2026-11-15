@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["solo5"],
   "os_whitelist": ["linux"],
-  "os_blacklist": ["windows"]
+  "os_blacklist": ["windows"],
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["cdd-c", "cdd-c-transform"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/offscale/cdd-c"
+  "repository": "https://github.com/offscale/cdd-c",
+  "capabilities": ["versioned-artifact"]
 }

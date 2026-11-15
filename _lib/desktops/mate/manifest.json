@@ -7,5 +7,6 @@
   "provides": ["mate", "mate-desktop", "mate-session"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
   "os_blacklist": ["windows", "macos"],
-  "repository": "https://github.com/mate-desktop/mate-session-manager"
+  "repository": "https://github.com/mate-desktop/mate-session-manager",
+  "capabilities": ["versioned-artifact"]
 }

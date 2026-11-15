@@ -7,5 +7,6 @@
   "provides": ["limine"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
   "os_blacklist": ["windows"],
-  "repository": "https://github.com/limine-bootloader/limine"
+  "repository": "https://github.com/limine-bootloader/limine",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

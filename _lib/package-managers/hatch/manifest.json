@@ -6,5 +6,6 @@
   "title": "hatch",
   "description": "Bootstrap module for `hatch` (Modern Python project manager).",
   "category": "package-managers",
-  "repository": "https://github.com/pypa/hatch"
+  "repository": "https://github.com/pypa/hatch",
+  "capabilities": ["versioned-artifact"]
 }

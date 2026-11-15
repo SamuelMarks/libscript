@@ -7,5 +7,6 @@
   "provides": ["skopeo"],
   "os_whitelist": ["linux", "macos", "freebsd", "openbsd", "netbsd"],
   "os_blacklist": ["windows"],
-  "repository": "https://github.com/containers/skopeo"
+  "repository": "https://github.com/containers/skopeo",
+  "capabilities": ["versioned-artifact"]
 }

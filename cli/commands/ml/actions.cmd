@@ -204,32 +204,42 @@ if /i "!ML_TARGET!"=="local" (
     popd
     exit /b !_lrc!
 )
-if /i "!ML_TARGET!"=="gcp-tpu-vm" (
-    set "APP_DIR=!MANIFEST_DIR!"
-    set "ML_SCRIPT=!EXEC_CMD!"
-    set "WORKLOAD_CMD=!EXEC_CMD!"
-    if /i "!ACTION!"=="train" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\deploy.cmd"
-    ) else (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\ai-serving\deploy.cmd"
-    )
-    exit /b !errorlevel!
-)
+if /i "!ML_TARGET!"=="gcp-tpu-vm" goto :run_tpu_vm
+if /i "!ML_TARGET!"=="tpu-vm" goto :run_tpu_vm
 if /i "!ML_TARGET!"=="gcp-gpu-vm" (
     set "APP_DIR=!MANIFEST_DIR!"
     set "WORKLOAD_CMD=!EXEC_CMD!"
     call "!LIBSCRIPT_ROOT_DIR!\payloads\ai\gcp-gpu-vm\deploy.cmd"
     exit /b !errorlevel!
 )
-if /i "!ML_TARGET!"=="gke-xpk" (
-    set "TRAIN_SCRIPT=!EXEC_CMD!"
+if /i "!ML_TARGET!"=="gke-xpk" goto :run_xpk
+if /i "!ML_TARGET!"=="xpk" goto :run_xpk
+if /i "!ML_TARGET!"=="kubernetes" (
     set "WORKLOAD_CMD=!EXEC_CMD!"
-    if /i "!ACTION!"=="train" (
-        call "!LIBSCRIPT_ROOT_DIR!\payloads\ai\gke-xpk-training\deploy.cmd"
-    ) else (
-        call "!LIBSCRIPT_ROOT_DIR!\payloads\ai\gke-xpk-inference\deploy.cmd"
-    )
+    call "!LIBSCRIPT_ROOT_DIR!\payloads\engine.cmd" submit "!LIBSCRIPT_ROOT_DIR!\payloads\ai\vllm\payload.json" --scheduler=kubernetes
     exit /b !errorlevel!
 )
 echo [ERROR] Unknown ML target: !ML_TARGET! >&2
 exit /b 1
+
+:: ## run_tpu_vm
+:: Dispatches TPU VM workload submission through payloads\engine.cmd.
+:run_tpu_vm
+set "APP_DIR=!MANIFEST_DIR!"
+set "ML_SCRIPT=!EXEC_CMD!"
+set "WORKLOAD_CMD=!EXEC_CMD!"
+set "TPU_BACKEND=!ML_BACKEND!"
+call "!LIBSCRIPT_ROOT_DIR!\payloads\engine.cmd" submit "!LIBSCRIPT_ROOT_DIR!\payloads\ai\gcp-tpu-vm\payload.json" --scheduler=tpu_vm
+exit /b !errorlevel!
+
+:: ## run_xpk
+:: Dispatches XPK workload submission through payloads\engine.cmd.
+:run_xpk
+set "TRAIN_SCRIPT=!EXEC_CMD!"
+set "WORKLOAD_CMD=!EXEC_CMD!"
+if /i "!ACTION!"=="train" (
+    call "!LIBSCRIPT_ROOT_DIR!\payloads\engine.cmd" submit "!LIBSCRIPT_ROOT_DIR!\payloads\ai\gke-xpk-training\payload.json" --scheduler=xpk
+) else (
+    call "!LIBSCRIPT_ROOT_DIR!\payloads\engine.cmd" submit "!LIBSCRIPT_ROOT_DIR!\payloads\ai\gke-xpk-inference\payload.json" --scheduler=xpk
+)
+exit /b !errorlevel!

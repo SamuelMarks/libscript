@@ -7,5 +7,6 @@
   "description": "Bootstrap module for `mix` (Elixir package manager and build tool).",
   "category": "package-managers",
   "os_blacklist": ["sunos"],
-  "repository": "https://github.com/elixir-lang/elixir"
+  "repository": "https://github.com/elixir-lang/elixir",
+  "capabilities": ["versioned-artifact"]
 }

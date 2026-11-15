@@ -1,70 +1,140 @@
 {
   "$schema": "../topology.schema.json",
   "name": "openedx-unikernel-pod",
-  "version": "1.0.0",
-  "description": "Decomposed Open edX multi-unikernel and microVM appliance pod isolating Caddy+MFE static ingress, Unikraft/Rumprun Redis cache, Nanos/OSv Gunicorn LMS/CMS/Celery workers, and OSv/ZFS FerretDB+PostgreSQL and MySQL datastores.",
-  "scheduler": "microvm",
-  "tiers": [
+  "version": "2.0.0",
+  "description": "Decomposed Open edX multi-unikernel appliance constellation isolating Caddy+MFE ingress, Gunicorn LMS/CMS, Celery worker, Valkey cache, PostgreSQL/FerretDB, MySQL, and Meilisearch into single-process unikernel images.",
+  "quorum_strategy": "stateless-pod",
+  "fencing_policy": "cloud-api-poweroff",
+  "node_groups": [
     {
       "name": "ingress-mfe",
-      "component": "caddy",
-      "replicas": 1,
-      "role": "ingress",
-      "traits": ["tls", "ingress", "firewall"]
-    },
-    {
-      "name": "cache-kv",
-      "component": "redis",
-      "replicas": 1,
-      "role": "cache",
-      "traits": ["discovery", "metrics"]
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "c7i.large",
+      "count": 2,
+      "role": "worker",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/caddy-mfe-unikraft.json",
+      "component_env": { "OPENEDX_ROLE": "mfe-static" },
+      "components": ["caddy", "openedx"],
+      "traits": ["tls", "ingress", "firewall", "discovery"]
     },
     {
       "name": "lms-wsgi",
-      "component": "openedx",
-      "replicas": 2,
-      "role": "app",
-      "traits": ["secrets", "discovery", "logging"]
-    },
-    {
-      "name": "cms-studio",
-      "component": "openedx",
-      "replicas": 1,
-      "role": "app",
-      "traits": ["secrets", "discovery", "logging"]
-    },
-    {
-      "name": "celery-workers",
-      "component": "celery",
-      "replicas": 2,
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m7i.large",
+      "count": 2,
       "role": "worker",
-      "traits": ["secrets", "discovery", "logging"]
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/lms-nanos.json",
+      "component_env": { "OPENEDX_ROLE": "lms" },
+      "components": ["openedx"],
+      "traits": ["secrets", "mesh", "discovery", "metrics"]
     },
     {
-      "name": "modulestore-docdb",
-      "component": "ferretdb",
-      "replicas": 1,
-      "role": "database",
-      "traits": ["storage", "backup", "discovery"]
+      "name": "cms-wsgi",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m7i.large",
+      "count": 1,
+      "role": "worker",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/cms-nanos.json",
+      "component_env": { "OPENEDX_ROLE": "cms" },
+      "components": ["openedx"],
+      "traits": ["secrets", "mesh", "discovery", "metrics"]
     },
     {
-      "name": "relational-db",
-      "component": "mysql",
-      "replicas": 1,
-      "role": "database",
-      "traits": ["storage", "backup", "discovery"]
+      "name": "celery-worker",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m7i.large",
+      "count": 2,
+      "role": "worker",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/celery-nanos.json",
+      "component_env": { "OPENEDX_ROLE": "celery" },
+      "components": ["openedx"],
+      "traits": ["secrets", "mesh", "logging"]
+    },
+    {
+      "name": "cache-broker",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "r7i.large",
+      "count": 1,
+      "role": "leader",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/valkey-unikraft.json",
+      "components": ["valkey"],
+      "traits": ["mesh", "discovery"]
+    },
+    {
+      "name": "datastore-sql",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "r7i.xlarge",
+      "count": 1,
+      "role": "leader",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/mysql-osv.json",
+      "components": ["mysql"],
+      "traits": ["storage", "backup", "secrets", "discovery"],
+      "disks": [
+        {
+          "name": "mysql-data",
+          "size_gb": 50,
+          "filesystem": "xfs",
+          "mount_point": "/var/lib/mysql"
+        }
+      ]
+    },
+    {
+      "name": "datastore-doc",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "r7i.large",
+      "count": 1,
+      "role": "leader",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/ferretdb-osv.json",
+      "components": ["postgres"],
+      "traits": ["storage", "backup", "secrets", "discovery"],
+      "disks": [
+        {
+          "name": "ferretdb-pgdata",
+          "size_gb": 40,
+          "filesystem": "ext4",
+          "mount_point": "/var/lib/postgresql/data"
+        }
+      ]
     },
     {
       "name": "search-index",
-      "component": "meilisearch",
-      "replicas": 1,
-      "role": "search",
-      "traits": ["storage", "discovery"]
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m7i.large",
+      "count": 1,
+      "role": "worker",
+      "vmm": "cloud-iaas",
+      "image_profile": "profiles/openedx-unikernel/meilisearch-osv.json",
+      "components": ["meilisearch"],
+      "traits": ["storage", "discovery"],
+      "disks": [
+        {
+          "name": "meilisearch-idx",
+          "size_gb": 20,
+          "filesystem": "ext4",
+          "mount_point": "/var/lib/meilisearch"
+        }
+      ]
     }
   ],
   "network": {
     "vpc_cidr": "172.30.0.0/24",
     "mesh_overlay": "wireguard",
-    "internal_domain": "openedx-pod.internal"
+    "internal_domain": "openedx-pod.internal",
+    "public_ports": [80, 443]
   }
 }

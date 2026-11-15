@@ -7,5 +7,6 @@
   "provides": ["locales", "localedef", "locale-gen"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos", "macos"],
   "os_blacklist": ["windows"],
-  "repository": "https://sourceware.org/git/glibc.git"
+  "repository": "https://sourceware.org/git/glibc.git",
+  "capabilities": ["versioned-artifact"]
 }

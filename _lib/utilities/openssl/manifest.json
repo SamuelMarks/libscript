@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["openssl", "tls-toolkit"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/openssl/openssl"
+  "repository": "https://github.com/openssl/openssl",
+  "capabilities": ["versioned-artifact"]
 }

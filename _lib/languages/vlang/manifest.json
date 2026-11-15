@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["vlang", "v"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/vlang/v"
+  "repository": "https://github.com/vlang/v",
+  "capabilities": ["versioned-artifact"]
 }

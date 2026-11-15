@@ -10,12 +10,16 @@ The architecture follows two foundational design patterns:
 1. **Decentralized Routing**: The global CLI (`libscript.sh` / `libscript.cmd`) acts as a
    high-speed, zero-dependency router that delegates to autonomous, component-specific package
    managers in `_lib/`.
-2. **Five-Tier Architectural Division of Concerns**: A strict separation of responsibilities between
-   leaf recipes & base userland (Tier 1 & Tier 1.5), system synthesizers & kernel/unikernel image
-   builders (Tier 2), multicloud IaaS operators (Tier 3), consensus & high-availability topologies
-   (Tier 3.5), declarative payloads & multi-node cluster schedulers (Tier 4), and the cross-cutting
-   Unified Traits Subsystem (`traits/`) to prevent combinatorial explosion, cross-layer leakage, and
-   host contamination.
+2. **Six-Domain Architectural Division of Concerns**: A strict separation of responsibilities
+   between capability-typed leaf recipes (`"versioned-artifact"`, `"service-daemon"`,
+   `"sysroot-library"`) & `O(1)` `${LIBSCRIPT_HOME}/bin` version switching (Tier 1 & Tier 1.5),
+   single-address-space OS & UEFI/GPT unikernel image synthesizers (`--cloud-boot=uefi-gpt`, Tier
+   2), multicloud IaaS & `publish-marketplace` AWS/Azure/GCP Marketplace publishers (Tier 3),
+   consensus & multi-unikernel constellation topologies (`topologies/`, Tier 3.5), declarative
+   payloads & cluster schedulers including `tpu_vm` and `xpk` (`payloads/`, Tier 4), the
+   cross-cutting Unified Traits Subsystem including 4-role GCS ML storage
+   (`traits/storage/gcs_ml.{sh,cmd}`), and the Open/Closed `experiments/<suite-id>/` empirical
+   research plugin domain.
 
 ---
 
@@ -27,7 +31,7 @@ orchestrators, multi-node cluster schedulers, and high-availability topologies.
 
 ```mermaid
 flowchart TD
-    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>320+ Isolated Recipes"]
+    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>360+ Isolated Recipes / 542+ Components"]
 
     PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso, uf2, hex"]
 
@@ -75,7 +79,7 @@ flowchart TD
     subgraph Tier3[Tier 3: Operators & Multicloud IaaS Deployers]
         CloudOps[Cloud Provisioning: AWS, Azure, GCP, Proxmox, Hetzner, Vagrant]
         AccelIaaS[Accelerator Hardware IaaS: GCP TPU VMs, GPU VMs, Cloud Block/Filestore]
-        PaaSOps[Built-in PaaS & Control Plane: libscript-rest-api OpenAPI 3.0]
+        PaaSOps[Built-in PaaS & Control Plane: libscript-rest-api OpenAPI 3.2.0]
     end
 
     subgraph Tier2[Tier 2: Synthesizers, Assemblers & Image Builders]
@@ -119,9 +123,12 @@ Unlike monolithic configuration management tools that require massive language r
 Ruby, or Go) and centralized state engines, LibScript treats every component (Postgres, Nginx,
 Python, Mesa, Wayland) as a first-class, standalone package manager:
 
-- **Autonomy**: Each directory in `_lib/` contains its own CLI (`cli.sh`, `cli.cmd`), installation
-  logic (`setup.sh`, `setup.cmd`), service integration (`service.sh`, `service.cmd`), and
-  environment printer (`env.sh`, `env.cmd`).
+- **Capability-Typed Autonomy**: Each directory in `_lib/` declares its `capabilities` in
+  `manifest.json` (`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`,
+  `"cloud-operator"`, `"os-synthesizer"`) and exposes its own CLI (`cli.sh`, `cli.cmd`),
+  installation logic (`setup.sh`, `setup.cmd`), environment printer (`env.sh`, `env.cmd`),
+  and—strictly when `"service-daemon"` is declared—service supervision (`service.sh`,
+  `service.cmd`).
 - **Decoupled Execution**: Components never query other components directly. All dependency
   relationships are declared in `manifest.json` and resolved upstream by the Tier 2 solver.
 - **Dual Invocation**: Any component can be executed via the global router
@@ -134,14 +141,14 @@ flowchart LR
     Router -->|Routes Action| CompCLI[_lib/databases/postgres/cli.sh]
     CompCLI --> Setup[setup.sh / setup.cmd]
     CompCLI --> Env[env.sh / env.cmd]
-    CompCLI --> Service[service.sh / service.cmd]
+    CompCLI -.->|"service-daemon"| Service[service.sh / service.cmd]
     CompCLI --> Test[test.sh / test.cmd]
 ```
 
 ### 2. Universal Toolchain Version Management
 
 LibScript serves as a native, zero-dependency replacement for toolchain-specific managers such as
-`nvm`, `fnm`, `pyenv`, `rustup`, `rvm`, and `sdkman`.
+`nvm`, `fnm`, `volta`, `pyenv`, `uv`, `rustup`, `rvm`, and `sdkman`.
 
 ```mermaid
 sequenceDiagram
@@ -151,7 +158,7 @@ sequenceDiagram
     participant Component as Component CLI (_lib/languages/<tool>/cli.sh)
     participant Upstream as Official Upstream Release API
     participant Disk as Sandbox (${LIBSCRIPT_HOME}/<tool>/)
-    participant ShellEnv as Active Shell Environment
+    participant BinFarm as ${LIBSCRIPT_HOME}/bin (O(1) Symlinks)
 
     Dev->>Router: ./libscript.sh ls-remote <tool>
     Router->>Component: ls-remote
@@ -164,35 +171,44 @@ sequenceDiagram
     Component->>Disk: Create / update alias symlink (e.g., lts -> <version>)
 
     Dev->>Router: ./libscript.sh use <tool> <version>
-    Router->>Component: env <version>
-    Component-->>ShellEnv: Inject ${LIBSCRIPT_HOME}/<tool>/<version>/bin into PATH
-    Note over ShellEnv: Isolated to current shell; zero global profile mutation
+    Router->>Component: use <version>
+    Component->>BinFarm: Sync default alias & ${LIBSCRIPT_HOME}/bin/* symlinks
+    Note over BinFarm: O(1) lookup + per-shell env / resolve-env; zero global profile mutation
 
     Dev->>Router: ./libscript.sh uninstall <tool> <version>
     Router->>Component: uninstall <version>
-    Component->>Disk: Idempotently remove <version>/ directory
+    Component->>Disk: Remove <version>/ & prune ${LIBSCRIPT_HOME}/bin/* via owners/<tool>.list
 ```
 
 #### Architectural Contract for Version Managers
 
-1. **Isolated Sandboxing**: Every installed version is isolated in a non-destructive directory
-   structure governed by `LIBSCRIPT_HOME` (default: `~/.libscript/`):
+1. **Isolated Sandboxing & `O(1)` Active Bin Farm**: Every installed version is isolated in a
+   non-destructive directory structure governed by `LIBSCRIPT_HOME` (default: `~/.libscript/`), with
+   active executables symlinked into `${LIBSCRIPT_HOME}/bin` and tracked in
+   `${LIBSCRIPT_HOME}/owners/<component>.list`:
    ```text
-   ${LIBSCRIPT_HOME}/<component>/<exact_version>/
-   ├── bin/
-   ├── lib/
-   └── share/
+   ${LIBSCRIPT_HOME}/
+   ├── bin/                       # Single PATH entry (${LIBSCRIPT_HOME}/bin) — zero wrapper shims
+   ├── owners/<component>.list    # Tracks owned symlinks for clean pruning
+   └── <component>/<exact_version>/
+       ├── bin/
+       ├── lib/
+       └── share/
    ```
-2. **Universal Lifecycle Verbs**: Every toolchain component strictly implements five canonical
-   operations:
+2. **Universal Lifecycle Verbs**: Every `"versioned-artifact"` component strictly implements five
+   canonical operations (plus cross-compiler sub-artifact verbs `target-add`, `target-rm`,
+   `target-ls`, `component-add`, `component-ls` where applicable):
    - `ls-remote`: Queries official upstream APIs or release indexes without requiring third-party
      tools.
    - `install <version>`: Downloads, verifies checksums, compiles or unpacks the binary, and
-     symlinks aliases (e.g., `lts`, `latest`).
+     symlinks aliases (e.g., `lts`, `stable`, `latest`).
    - `ls`: Inspects locally installed versions in `${LIBSCRIPT_HOME}/<component>/`.
-   - `use <version>`: Prepends `${LIBSCRIPT_HOME}/<component>/<version>/bin` to the active shell
-     session's `PATH` without mutating global system profiles (`/etc/profile`, `~/.bashrc`).
-   - `uninstall <version>`: Idempotently cleans up the version directory.
+   - `use <version>`: Updates `default` and synchronizes `${LIBSCRIPT_HOME}/bin` symlinks (`O(1)`
+     lookup), complemented by `libscript resolve-env` / `env` walking upward for
+     `.libscript-version`, `.nvmrc`, `.node-version`, `.python-version`, `pyproject.toml`, and
+     `rust-toolchain.toml` without mutating global system profiles (`/etc/profile`, `~/.bashrc`).
+   - `uninstall <version>`: Idempotently removes the version directory and prunes orphaned links in
+     `${LIBSCRIPT_HOME}/bin`.
 3. **No Sudo, No Global Pollution**: Standard version operations run unprivileged, guaranteeing that
    multiple shell sessions or CI workers can run different versions concurrently on the same host.
 
@@ -441,8 +457,11 @@ distributable deployment formats:
   (`docker import`) or container/jail roots.
 - **`bsd-img` / `illumos-distro`**: Bootable FreeBSD images (UFS/ZFS) and illumos / SunOS images
   with ZFS root pools (`rpool`) and SMF init.
-- **`unikernel`**: Direct-kernel boot images (`vmlinux` / `unikraft.bin`) optimized for Firecracker
-  and Cloud-Hypervisor microVMs.
+- **`unikernel`**: Direct-kernel boot images (`vmlinux` / `unikraft.bin`) for Firecracker and
+  Cloud-Hypervisor microVMs, plus `--cloud-boot=uefi-gpt|efi-stub|azure-vhd` wrapping ELF unikernels
+  into hybrid GPT + FAT32 ESP raw disk images and 1 MiB-aligned Hyper-V Gen2 `.vhd` appliances.
+- **`firmware` / `uf2` / `hex`**: Signed MCUboot (`_lib/bootloaders/mcuboot/`) Zephyr RTOS and
+  FreeRTOS microcontroller firmware images (`execution-plan.rtos.schema.json`).
 - **Native Installers & Packages**:
   - Windows: `.msi` (WiX / `msi-rs`), Inno Setup (`.exe`), NSIS (`.exe`).
   - macOS: Flat installer packages (`.pkg`) and disk images (`.dmg`).
@@ -500,31 +519,40 @@ flowchart LR
     GPUCluster --> Serving
 ```
 
-### 1. Multicloud Lifecycle Operators (`_lib/cloud-providers/`)
+### 1. Multicloud Lifecycle Operators & Marketplace Publishing (`_lib/cloud-providers/`, `_lib/cloud/image-import/`, `cli/commands/marketplace/`)
 
 LibScript avoids vendor lock-in by providing a unified, idempotent operational grammar (`provision`,
-`deprovision`, `cloud <provider> <resource>`):
+`deprovision`, `cloud <provider> <resource>`, `publish-marketplace`):
 
 - Wraps native cloud CLIs (`aws`, `az`, `gcloud`, `hcloud`, `pvesh`), securely leveraging the
   operator's local credentials (`~/.aws/credentials`, `gcloud auth`).
 - Manages complete lifecycle for virtual machines, VPCs, subnets, firewalls, and block storage
   across AWS, Azure, GCP, Proxmox VE, Hetzner, and Vagrant.
+- **Unikernel & OS Image Import (`_lib/cloud/image-import/`)**: Digest-guarded registration of
+  UEFI/ENA AMIs on AWS EC2, 1 MiB-aligned Hyper-V Gen2 Compute Gallery images on Azure, and Shielded
+  GCE (`UEFI_COMPATIBLE`, `GVNIC`) images on Google Cloud.
+- **Multicloud Marketplace Publisher (`cli/commands/marketplace/publish.{sh,cmd}`)**: Audits staged
+  appliances (`verify_compliance.{sh,cmd}` for EULA presence, zero leaked SSH/API secrets, no public
+  admin/datastore ports, and SPDX 2.3 `sbom.spdx.json` generation) before emitting AWS
+  CloudFormation + Marketplace Catalog `StartChangeSet` payloads, Azure Managed Application ARM
+  archives, and GCP Producer Portal Terraform Blueprints (`schemas/marketplace-offer.schema.json`).
 
-### 2. Distributed AI & Hardware Acceleration
+### 2. Distributed AI & Hardware Acceleration (`_lib/ml-training/tpu-trainer/`, `_lib/ai-serving/inference-router/`)
 
-LibScript integrates directly with AI accelerators:
+LibScript integrates directly with AI accelerators under optional zero-cost TFRC guardrails
+(`schemas/tfrc-policy.schema.json`):
 
-- **TPU VM Provisioning**: Provisions single-node and multi-node Google Cloud TPUs, auto-mounting
-  [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) for fast dataset streaming and wiring
-  [TensorBoard](https://www.tensorflow.org/tensorboard) telemetry.
+- **TPU VM & Multi-Worker Lockstep Training (`_lib/ml-training/tpu-trainer/`,
+  `_lib/cloud-providers/gcp-tpu-vm/`)**: Coordinates JAX SPMD (`JAX_COORDINATOR_ADDRESS`,
+  `PJRT_DEVICE=TPU`) and PyTorch/XLA lockstep SSH execution, Orbax async checkpointing, `SIGUSR1`
+  preemption hooks, and 4-role regional GCS ML buckets (`traits/storage/gcs_ml.{sh,cmd}`).
 - **Large-Scale Training via XPK & GKE**: Seamless integration with Google's Accelerated Processing
-  Kit ([`xpk`](https://github.com/google/xpk)) to schedule and monitor distributed training
-  workloads across massive TPU Pod slices (`v4-128`, `v5p-2048`).
-- **Accelerated Inference Serving**: Automated deployment blueprints for:
-  - [`vLLM`](https://github.com/vllm-project/vllm): High-throughput PagedAttention LLM inference.
-  - [`JetStream`](https://github.com/google/JetStream): Memory-optimized inference server for Google
-    TPUs.
-  - [`Ollama`](https://ollama.com/): Standalone local LLM orchestration.
+  Kit ([`xpk`](https://github.com/google/xpk)) and Kubernetes `JobSet` + Kueue manifests to schedule
+  distributed training workloads across TPU Pod slices (`v4-128`, `v5p-2048`).
+- **Accelerated Inference Routing (`_lib/ai-serving/inference-router/`)**: Unified `serve`,
+  `health`, and `route` dispatcher across [`vLLM`](https://github.com/vllm-project/vllm)
+  (`vllm-tpu`), [`JetStream`](https://github.com/google/JetStream), MaxEngine, Triton, and
+  [`Ollama`](https://ollama.com/).
 
 ### 3. Built-in PaaS & Universal Routing (`netctl`)
 
@@ -545,10 +573,12 @@ REST API daemon (`c-rest-framework`) located in `libscript-rest-api/`:
 
 - **OpenAPI 3.2.0 Conformance**: Fully typed API contract defined in `openapi.yaml`.
 - **Remote Lifecycle Control**: Endpoints for health/status (`GET /api/v1/status`), component
-  installations (`POST /api/v1/installations`), stack provisioning, packaging jobs, topologies
-  (`/api/v1/topologies`), payloads (`/api/v1/payloads`), traits (`/api/v1/traits`), and component
-  lifecycle hooks (`/api/v1/components/{name}/hooks/{hook}`), plus real-time log streaming over
-  HTTP.
+  installations (`POST /api/v1/installations`), capability introspection
+  (`GET /api/v1/components/{name}/capabilities`), stack provisioning, cloud-boot artifact synthesis
+  (`POST /api/v1/artifacts/generate`), marketplace publishing (`POST /api/v1/marketplace/publish`),
+  experiment plugin execution (`POST /api/v1/experiments`), topologies (`/api/v1/topologies`),
+  payloads (`/api/v1/payloads`), traits (`/api/v1/traits`), and component lifecycle hooks
+  (`/api/v1/components/{name}/hooks/{hook}`), plus real-time log streaming over HTTP.
 - **Embedded Lightweight Server**: Zero heavy dependencies, compilable via CMake
   (`build/bin/libscript-rest-api`), with system service integration scripts.
 
@@ -616,7 +646,9 @@ capabilities by orchestrating existing `_lib/` components in a deterministic pri
      proxies zero-downtime on active nodes.
 2. **Core Traits Composition**:
    - **Storage (`traits/storage/`)**: Delegates to `_lib/storage/disk_discovery` and `format_fs`,
-     plus NFS (`nfs.{sh,cmd}`), SMB (`smb.{sh,cmd}`), and `gcsfuse` (`gcsfuse.{sh,cmd}`).
+     plus NFS (`nfs.{sh,cmd}`), SMB (`smb.{sh,cmd}`), `gcsfuse` (`gcsfuse.{sh,cmd}`), and 4-role
+     regional GCS ML bucket coordination (`gcs_ml.{sh,cmd}`: `datasets`, `checkpoints`, `models`,
+     `logs` with `hierarchicalNamespace` and `gke-gcsfuse-csi-patch.json`).
    - **Secrets (`traits/secrets/`)**: Delegates template rendering to `_lib/_common/envsubst_safe`
      and secret retrieval to `_lib/security/openbao/`, SOPS, and `.env` files. Enforces a
      **Zero-Env-Leak Guarantee** (`exec_with_secrets.{sh,cmd}`) using RAM-backed FIFOs (`0600`) or
@@ -654,9 +686,11 @@ stateful clusters (`topologies/engine.sh` and `topologies/engine.cmd`):
   leader failover or rolling upgrades by demoting and firewall-isolating the former leader, or
   invoking Tier 3 Cloud IaaS APIs (NIC/volume detach or instance power-off) if the node is
   unreachable over both private VPC and WireGuard mesh networks.
-- **Production HA Blueprints**: Turnkey topologies for `postgres-ha` (Patroni + etcd + PgBouncer +
-  `netctl`), `valkey-cluster`, `redis-cluster`, `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`,
-  `minio-distributed`, `openedx-ha`, `gke-tpu-cluster`, and RabbitMQ HA quorum clustering.
+- **Production HA & Constellation Blueprints**: Turnkey topologies for `postgres-ha` (Patroni + etcd
+  - PgBouncer + `netctl`), `valkey-cluster`, `redis-cluster`, `mesos-marathon-ha`,
+    `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, `openedx-ha`, `openedx-unikernel-pod`
+    (8-appliance NanoVMs/OSv/Unikraft constellation), `iot-mqtt-edge-pod`, `gke-tpu-cluster`, and
+    RabbitMQ HA quorum clustering.
 
 ---
 
@@ -667,7 +701,8 @@ underlying execution runtime via pluggable translation drivers in `payloads/sche
 
 - **Container & Cluster Orchestrators**:
   - `kubernetes.{sh,cmd}`: Compiles `payload.json` into Kubernetes `Deployment`, `StatefulSet`,
-    `Job`, `Service`, `PVC`, and `Ingress` manifests applied via `kubectl`.
+    `Job`, `JobSet`, Kueue `ResourceFlavor`/`ClusterQueue`, `Service`, `PVC`, and `Ingress`
+    manifests applied via `kubectl`.
   - `nomad.{sh,cmd}`: Translates payloads into HashiCorp Nomad job specifications.
   - `mesos.{sh,cmd}`: Translates payloads into Apache Mesos / Marathon application definitions.
 - **Universal Native Init Scheduler (`native.{sh,cmd}`)**: Delegates to
@@ -675,11 +710,13 @@ underlying execution runtime via pluggable translation drivers in `payloads/sche
   units across all 8+ supported init supervisors (`systemd`, `openrc`, `runit`, `s6`, `dinit`,
   `sysvinit`, FreeBSD `bsd-rc`, illumos `smf`, macOS `launchd`, and Windows `sc.exe`), supporting
   both live runtime execution and Tier 2 offline sysroot image baking.
-- **MicroVM & Unikernel Scheduler (`microvm.{sh,cmd}`)**: Compiles workloads into Firecracker,
-  Cloud-Hypervisor, or Solo5 microVM/unikernel execution specs.
-- **AI/HPC Gang Schedulers (`xpk.{sh,cmd}`, `slurm_ray.{sh,cmd}`)**: Translates distributed AI
-  training and inference workloads (`payloads/ai/gke-xpk-training`, `gke-xpk-inference`, `vllm`,
-  `jetstream`, `ollama`) into Google Cloud `xpk` TPU slice jobs, Ray jobs, or Slurm `sbatch`
+- **MicroVM, Unikernel & RTOS Schedulers (`microvm.{sh,cmd}`, `rtos_firmware.{sh,cmd}`)**: Compiles
+  workloads into Firecracker, Cloud-Hypervisor, or Solo5 microVM/unikernel execution specs, or
+  dispatches Zephyr/FreeRTOS firmware images onto QEMU/Renode/OpenOCD targets.
+- **AI/HPC Gang & TPU VM Schedulers (`xpk.{sh,cmd}`, `tpu_vm.{sh,cmd}`, `slurm_ray.{sh,cmd}`)**:
+  Translates distributed AI training and inference workloads (`payloads/ai/gke-xpk-training`,
+  `gke-xpk-inference`, `gcp-tpu-vm`, `vllm`, `jetstream`, `ollama`) into Google Cloud `xpk` TPU
+  slice jobs, direct multi-worker Cloud TPU VM lockstep runs, Ray jobs, or Slurm `sbatch`
   allocations.
 
 ---
@@ -694,8 +731,9 @@ LibScript incorporates a pure POSIX + `jq` dependency and constraint solver
 LibScript defines a strongly typed contract hierarchy:
 
 - **Manifest Schemas (`_lib/_common/manifest.schema.json`, `vars.schema.json`)**: Declare component
-  capabilities, versions, platform blacklists/whitelists, build scripts, service configurations, and
-  fine-grained USE variants:
+  `capabilities` (`versioned-artifact`, `service-daemon`, `sysroot-library`, `cloud-operator`,
+  `os-synthesizer`), `replaces_version_managers`, versions, platform blacklists/whitelists, build
+  scripts, service configurations, and fine-grained USE variants:
   - **USE Variants (`variants`)**: Feature flags (e.g., `wayland`, `x11`, `pipewire`, `lto`,
     `static`) that conditionally inject compilation flags (`configure_args`, `meson_args`,
     `cmake_args`, `cflags`, `ldflags`).
@@ -704,7 +742,7 @@ LibScript defines a strongly typed contract hierarchy:
     - `build_deps`: Headers and libraries required in `LIBSCRIPT_TARGET_SYSROOT`.
     - `runtime_deps`: Daemons and programs required in the target rootfs at runtime.
     - `tier`: Criticality tier (`required`, `recommended`, `optional`).
-- **OS Configuration & Execution Plan Schemas**:
+- **OS Configuration, Domain & Execution Plan Schemas**:
   - `os-config.schema.json`: Declarative profile specifications for synthesized operating systems.
   - `execution-plan.schema.json`: Solved, topologically sorted execution graph for system synthesis.
   - `execution-plan.freebsd.schema.json`: Modular FreeBSD kernel, world, and userland execution
@@ -712,9 +750,11 @@ LibScript defines a strongly typed contract hierarchy:
   - `execution-plan.illumos.schema.json`: Modular illumos/SunOS kernel, SMF, and desktop execution
     spec.
   - `execution-plan.live.schema.json`: Specification for multiboot live installation media.
-- **Packaging & Offline Schemas (`packaging/*.schema.json`)**:
-  - `installer.schema.json`, `packaging.schema.json`, `offline.schema.json`, and
-    `guid_registry.schema.json`.
+  - `execution-plan.rtos.schema.json`: Zephyr RTOS, FreeRTOS, and MCUboot firmware execution spec.
+  - `experiment-suite.schema.json` & `component-scaffold.schema.json`: Empirical `experiments/`
+    plugin contracts and automated `_lib/` scaffolder specs.
+  - `schemas/{marketplace-offer,ml-workload,gcs-ml-storage,tfrc-policy,tpu-matrix,os-matrix-results}.schema.json`:
+    Multicloud Marketplace offers, TPU/GKE ML workloads, 4-role GCS storage, and TFRC guardrails.
 
 ### 2. Tarjan's Strongly Connected Components (SCC) Cycle Breaking
 

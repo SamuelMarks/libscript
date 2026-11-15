@@ -6,5 +6,6 @@
   "title": "cargo-binstall",
   "description": "Bootstrap module for the `cargo-binstall` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/cargo-bins/cargo-binstall"
+  "repository": "https://github.com/cargo-bins/cargo-binstall",
+  "capabilities": ["versioned-artifact"]
 }

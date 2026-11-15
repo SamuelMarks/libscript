@@ -10,5 +10,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "ports": [11211]
+  "ports": [11211],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

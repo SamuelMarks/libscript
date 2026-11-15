@@ -6,5 +6,6 @@
   "title": "pacman",
   "description": "Bootstrap module for the `pacman` package manager.",
   "category": "package-managers",
-  "repository": "https://gitlab.archlinux.org/pacman/pacman"
+  "repository": "https://gitlab.archlinux.org/pacman/pacman",
+  "capabilities": ["versioned-artifact"]
 }

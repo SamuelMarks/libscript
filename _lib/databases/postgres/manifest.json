@@ -32,5 +32,6 @@
   },
   "repository": "https://github.com/postgres/postgres",
   "process_model": "multiprocess-fork",
-  "unikernel_support": ["osv", "nanos"]
+  "unikernel_support": ["osv", "nanos"],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

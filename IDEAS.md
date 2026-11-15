@@ -5,11 +5,14 @@ architecture beyond what has already graduated into core tiers.
 
 ## Bare-Metal Accelerator Driver & Runtime Auto-Tuning (Partially Implemented)
 
-Google Cloud TPU/GPU VM lifecycles (`payloads/ai/gcp-tpu-vm/`, `gcp-gpu-vm/`), GKE XPK training and
-inference (`payloads/ai/gke-xpk-*`), and local/cluster AI serving recipes (`_lib/app-servers/vllm/`,
-`_lib/app-servers/ollama/`, `_lib/ai-serving/jetstream/`) have graduated into core. Active research
-focuses on zero-reboot bare-metal kernel driver staging (NVIDIA open kernel modules, AMD ROCm, and
-VFIO IOMMU passthrough) with automatic CPU socket and PCIe topology pinning.
+Google Cloud TPU/GPU VM lifecycles (`payloads/ai/gcp-tpu-vm/`, `gcp-gpu-vm/`), GKE XPK & TPU VM
+scheduling (`payloads/ai/gke-xpk-*`, `payloads/schedulers/tpu_vm.{sh,cmd}`), multi-worker lockstep
+training (`_lib/ml-training/tpu-trainer/`), 4-role GCS ML storage
+(`traits/storage/gcs_ml.{sh,cmd}`), and local/cluster AI serving recipes
+(`_lib/ai-serving/inference-router/`, `_lib/app-servers/vllm/`, `_lib/app-servers/ollama/`,
+`_lib/app-servers/jetstream/`) have graduated into core. Active research focuses on zero-reboot
+bare-metal kernel driver staging (NVIDIA open kernel modules, AMD ROCm, and VFIO IOMMU passthrough)
+with automatic CPU socket and PCIe topology pinning.
 
 ## Transactional A/B Immutable OS Updates (Partially Implemented)
 

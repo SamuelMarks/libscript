@@ -25,7 +25,7 @@ the entire lifecycle through a single, idempotent interface.
 flowchart TD
     subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["320+ Recipes..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["360+ Recipes..."]
     end
 
     subgraph T1["1. Native Installers & Container Packages (package-as)"]
@@ -38,9 +38,9 @@ flowchart TD
         v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi"] ~~~ v4["iso / vagrant-box"] ~~~ v5["bsd-img"] ~~~ v6["..."]
     end
 
-    subgraph T3["3. Kernel & Unikernel OS Bakery"]
+    subgraph T3["3. Kernel, Unikernel & RTOS OS Bakery"]
         direction LR
-        k1["Unikernels (OSv, MirageOS)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD Kernel & World"] ~~~ k4["illumos Kernel & IPS"]
+        k1["Unikernels (OSv, MirageOS, Unikraft)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD & illumos"] ~~~ k4["RTOS (Zephyr & FreeRTOS)"]
     end
 
     subgraph T4["4. Multicloud & Hardware Accelerator Deployment"]
@@ -99,35 +99,35 @@ everything from **Node.js**, **Python**, **Rust**, and **Ruby** to **PostgreSQL*
 
 ### ⚡ Why Drop Third-Party Version Managers?
 
-| Capability               | Traditional Managers (`nvm`, `pyenv`, `rustup`)              | LibScript                                                         |
-| :----------------------- | :----------------------------------------------------------- | :---------------------------------------------------------------- |
-| **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch) |
-| **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`) and PowerShell (`.ps1`)**    |
-| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 320+ tools & 520+ subsystems**    |
-| **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**   |
-| **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **Per-shell dynamic path injection via `use` or `env`**           |
+| Capability               | Traditional Managers (`nvm`, `pyenv`, `rustup`)              | LibScript                                                                    |
+| :----------------------- | :----------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch)            |
+| **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`) and PowerShell (`.ps1`)**               |
+| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 360+ recipes & 542+ documented subsystems**  |
+| **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**              |
+| **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **`O(1)` `${LIBSCRIPT_HOME}/bin` symlinks + `resolve-env` pin-file walking** |
 
-### 🛠️ Universal Workflow (`ls-remote`, `install`, `ls`, `use`, `uninstall`)
+### 🛠️ Universal Workflow (`ls-remote`, `install`, `ls`, `use`, `resolve-env`, `uninstall`)
 
-Manage any language, runtime, database, or cluster orchestrator with the exact same five commands:
+Manage any language, runtime, database, or cluster orchestrator with the exact same universal verbs:
 
 ```mermaid
 flowchart LR
-    subgraph DevShell[Active Shell Session]
+    subgraph DevShell[Active Shell / Workspace]
         CMD["./libscript.sh use nodejs 22.14.0"]
-        PathEnv["PATH: ~/.libscript/nodejs/22.14.0/bin:$PATH"]
+        BinFarm["O(1) Active Bin: ~/.libscript/bin"]
     end
 
     subgraph Sandbox["Isolated LIBSCRIPT_HOME (~/.libscript)"]
         Node20["nodejs/20.0.0/bin/node"]
         Node22["nodejs/22.14.0/bin/node"]
-        Py312["python/3.12.3/bin/python"]
+        Py313["python/3.13t/bin/python3"]
         Rust185["rust/1.85.0/bin/rustc"]
         Pg16["postgres/16/bin/postgres"]
     end
 
-    CMD -->|Activates & Prepends| Node22
-    Node22 -->|Active in Current Shell| PathEnv
+    CMD -->|Syncs Symlinks| Node22
+    Node22 -->|Zero-Shim O(1) Lookup| BinFarm
 ```
 
 ```sh
@@ -336,12 +336,15 @@ partitioning, **LUKS2** full-disk encryption (`argon2id`), and **Ext4**, **Btrfs
 LibScript embeds staged applications directly into specialized unikernels and custom-compiled
 operating system kernels:
 
-- **Unikernels (`OSv`, `MirageOS`, `Unikraft`, `Solo5`)**:
-  - Compiles single-address-space unikernel images (`./libscript.sh package-as unikernel`) and Solo5
-    tenders (`_lib/orchestration/solo5/`) for sub-15ms boot on Firecracker, Cloud-Hypervisor, and
-    KVM.
+- **Unikernels (`OSv`, `MirageOS`, `Unikraft`, `Solo5`, `NanoVMs`) & RTOS (`Zephyr`, `FreeRTOS`)**:
+  - Compiles single-address-space unikernel images (`./libscript.sh package-as unikernel`), UEFI/GPT
+    & Hyper-V Gen2 VHD cloud-boot disks (`--cloud-boot=uefi-gpt|azure-vhd`), Solo5 tenders
+    (`_lib/orchestration/solo5/`), and MCUboot-signed microcontroller firmware
+    (`./libscript.sh package-as firmware`).
   - Ships curated profiles including `profiles/osv-cloud-runtime.json`,
-    `profiles/unikraft-nginx-redis.json`, and `profiles/firecracker-microvm-appliance.json`.
+    `profiles/unikraft-nginx-redis.json`, `profiles/firecracker-microvm-appliance.json`, the
+    8-appliance `profiles/openedx-unikernel/*.json` constellation, and
+    `profiles/{zephyr,freertos}-*.json`.
 - **Linux Kernel Engine (`_lib/kernel/linux/` & `_lib/kernel/initramfs/`)**:
   - Cryptographically verifies kernel sources, merges modular `.cfg` fragments (`virtio.cfg`,
     `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs` across selectable
@@ -383,9 +386,10 @@ Cloud**, **Proxmox VE**, and local hypervisors.
 ./libscript.sh provision azure prod-cluster rg-east eastus ./ ~/app
 ./libscript.sh cloud azure node deploy worker-node-01 rg-east ./src ~/app
 
-# Git-driven deployment & multi-app remote host deployment
+# Git-driven deployment, Marketplace offer publishing & multi-app remote host deployment
 ./libscript.sh deploy ./
 ./libscript.sh deploy-remote deploy@prod.example.com ./
+./libscript.sh publish-marketplace marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
 
 # Clean multicloud teardown
 ./libscript.sh deprovision aws prod-cluster vpc-main us-east-1
@@ -463,10 +467,11 @@ Schedule one-shot or recurring batch, AI training, and indexing jobs (`"type": "
 Google Cloud TPU Pods (`xpk`):
 
 - **Distributed ML Training & Inference**:
-  - Orchestrates multi-slice TPU Pod training (`v4-128`, `v5p-2048`) via GKE + `xpk` and multi-node
-    GPU training with gang scheduling (`payloads/ai/gke-xpk-training/payload.json`,
-    `_lib/ml-training/`).
-  - Pre-wires [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) dataset streaming,
+  - Orchestrates multi-slice TPU Pod and multi-worker lockstep training (`v4-128`, `v5p-2048`) via
+    GKE + `xpk` and `tpu_vm` (`payloads/ai/gke-xpk-training/payload.json`,
+    `_lib/ml-training/tpu-trainer/`, `_lib/ai-serving/inference-router/`).
+  - Pre-wires 4-role regional GCS ML buckets (`traits/storage/gcs_ml.{sh,cmd}`),
+    [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) dataset streaming,
     [TensorBoard](https://www.tensorflow.org/tensorboard) telemetry, and high-throughput serving via
     [`vLLM`](https://github.com/vllm-project/vllm),
     [`JetStream`](https://github.com/google/JetStream), and [`Ollama`](https://ollama.com/).
@@ -562,9 +567,10 @@ split-brain fencing (`cloud-api-poweroff`, `cloud-api-detach-nic`, `firewall-iso
 - **RabbitMQ HA (`_lib/message-brokers/rabbitmq/` + HA Topologies)**: Multi-node Erlang cookie
   clustering, Raft-backed **Quorum Queues**, mirrored exchanges, and `netctl` AMQP load balancing.
 - **Distributed Storage, Enterprise Web & Compute Topologies**: Turnkey blueprints for `openedx-ha`
-  (multi-node Open edX LMS/CMS + Celery + MariaDB/MongoDB/Redis/Meilisearch HA), `minio-distributed`
-  (erasure-coded object storage), `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, and
-  `gke-tpu-cluster`.
+  (multi-node Open edX LMS/CMS + Celery + MariaDB/MongoDB/Redis/Meilisearch HA),
+  `openedx-unikernel-pod` (8-appliance NanoVMs/OSv/Unikraft constellation), `iot-mqtt-edge-pod`,
+  `minio-distributed` (erasure-coded object storage), `mesos-marathon-ha`, `k8s-marathon-paas`,
+  `k0s-ha`, and `gke-tpu-cluster`.
 
 ```sh
 # Provision High-Availability PostgreSQL, Redis, Valkey, and Open edX clusters
@@ -737,9 +743,10 @@ cd libscript
 - [PAAS.md](PAAS.md): Universal PaaS orchestration, reverse proxy (`netctl`), and daemon
   supervision.
 - [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and Tarjan SCC solver mechanics.
-- [TEST.md](TEST.md), [VAGRANT.md](VAGRANT.md) & [EXPERIMENTS.md](EXPERIMENTS.md): Multi-OS testing
-  architecture, QEMU boot harnesses, Vagrant verification matrix, and cloud Bento experimentation
-  runner.
+- [TEST.md](TEST.md), [VAGRANT.md](VAGRANT.md), [EXPERIMENTS.md](EXPERIMENTS.md) &
+  [experiments/README.md](experiments/README.md): Multi-OS testing architecture, QEMU boot
+  harnesses, Vagrant verification matrix, Open/Closed `experiments/` plugin suites, and cloud Bento
+  experimentation runner.
 - [ROADMAP.md](ROADMAP.md), [DOCS_ROADMAP.md](DOCS_ROADMAP.md), [CHANGELOG.md](CHANGELOG.md) &
   [IDEAS.md](IDEAS.md): Master development/documentation roadmaps, release history, and future
   research directions.
@@ -1290,6 +1297,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `gcp-tpu-vm`            | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `helm-controller`       | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `hetzner`               | `cloud-providers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `image-import`          | `cloud`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `k3s`                   | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | -       | -     |
 | `k8s-marathon`          | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `kubeadm`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
@@ -1332,38 +1340,39 @@ Components are organized into LibScript's 5 architectural tiers (see
 
 ### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
 
-| Component                           | Category        | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ----------------------------------- | --------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `gke-xpk-inference`                 | `ai-serving`    | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `gke-xpk-training`                  | `orchestration` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `ml-training`                       | `ml-training`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `payloads/schedulers/kubernetes`    | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/mesos`         | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/microvm`       | `payloads`      | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `payloads/schedulers/native`        | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/nomad`         | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/rtos_firmware` | `payloads`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `payloads/schedulers/slurm_ray`     | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/xpk`           | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/gke-tpu-cluster`        | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/iot-mqtt-edge-pod`      | `topologies`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `topologies/k0s-ha`                 | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/k8s-marathon-paas`      | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/mesos-marathon-ha`      | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/minio-distributed`      | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/openedx-ha`             | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/openedx-unikernel-pod`  | `topologies`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `topologies/postgres-ha`            | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/redis-cluster`          | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/valkey-cluster`         | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/backup`                     | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/discovery`                  | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/firewall`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/ingress`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/logging`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/maintenance`                | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/mesh`                       | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/metrics`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/secrets`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/storage`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/tls`                        | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| Component                           | Category      | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| ----------------------------------- | ------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `gke-xpk-inference`                 | `ai-serving`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `inference-router`                  | `ai-serving`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `payloads/schedulers/kubernetes`    | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/mesos`         | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/microvm`       | `payloads`    | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
+| `payloads/schedulers/native`        | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/nomad`         | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/rtos_firmware` | `payloads`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `payloads/schedulers/slurm_ray`     | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/tpu_vm`        | `payloads`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `payloads/schedulers/xpk`           | `payloads`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/gke-tpu-cluster`        | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/iot-mqtt-edge-pod`      | `topologies`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `topologies/k0s-ha`                 | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/k8s-marathon-paas`      | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/mesos-marathon-ha`      | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/minio-distributed`      | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/openedx-ha`             | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/openedx-unikernel-pod`  | `topologies`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `topologies/postgres-ha`            | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/redis-cluster`          | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/valkey-cluster`         | `topologies`  | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `tpu-trainer`                       | `ml-training` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `traits/backup`                     | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/discovery`                  | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/firewall`                   | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/ingress`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/logging`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/maintenance`                | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/mesh`                       | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/metrics`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/secrets`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/storage`                    | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/tls`                        | `traits`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

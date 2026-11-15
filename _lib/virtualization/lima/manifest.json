@@ -7,5 +7,6 @@
   "provides": ["lima", "limactl", "nerdctl.lima"],
   "os_whitelist": ["macos", "linux", "freebsd", "netbsd"],
   "os_blacklist": ["windows"],
-  "repository": "https://github.com/lima-vm/lima"
+  "repository": "https://github.com/lima-vm/lima",
+  "capabilities": ["versioned-artifact"]
 }

@@ -7,5 +7,6 @@
   "title": "opam",
   "description": "Bootstrap script for [opam](https://opam.ocaml.org/), the source-based package manager for OCaml.",
   "category": "package-managers",
-  "repository": "https://github.com/ocaml/opam"
+  "repository": "https://github.com/ocaml/opam",
+  "capabilities": ["versioned-artifact"]
 }

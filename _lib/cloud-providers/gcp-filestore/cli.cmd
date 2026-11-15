@@ -81,10 +81,10 @@ if "%ACTION%"=="test" (
     call "%~dp0test.cmd" %*
     exit /b !errorlevel!
 )
-for %%V in (logs status use env ls ls-remote download uninstall which exec run) do (
+for %%V in (logs status use env ls ls-remote download uninstall install-service uninstall-service which exec run) do (
     if /i "%ACTION%"=="%%V" (
-        echo Action not applicable for this provisioning module.
-        exit /b 0
+        echo [ERROR] Action '%%V' requires capability 'versioned-artifact' or 'service-daemon' ^(gcp-filestore capabilities: ["cloud-operator"]^). >&2
+        exit /b 1
     )
 )
 if "%ACTION%"=="create" goto :create

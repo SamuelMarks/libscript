@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["fmt", "libfmt"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/fmtlib/fmt"
+  "repository": "https://github.com/fmtlib/fmt",
+  "capabilities": ["versioned-artifact"]
 }

@@ -61,7 +61,38 @@ fi
 
 case "$ACTION" in
   compile) compile_microvm_spec "$TARGET" "$VMM" ;;
-  submit|status|logs|stop|destroy)
+  submit)
+    _mvm_dir="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript-state}/schedulers/microvm"
+    mkdir -p "$_mvm_dir"
+    _mvm_id=$(basename -- "$TARGET" .json)
+    [ -f "$TARGET" ] && _mvm_id=$(jq -r '.name // "microvm"' "$TARGET")
+    compile_microvm_spec "$TARGET" "$VMM" > "${_mvm_dir}/${_mvm_id}.spec.json"
+    if [ "${LIBSCRIPT_SCHEDULER_LIVE:-0}" = "1" ] && command -v "$VMM" >/dev/null 2>&1; then
+      case "$VMM" in
+        firecracker)
+          rm -f "${_mvm_dir}/${_mvm_id}.sock"
+          firecracker --api-sock "${_mvm_dir}/${_mvm_id}.sock" --config-file "${_mvm_dir}/${_mvm_id}.spec.json" > "${_mvm_dir}/${_mvm_id}.log" 2>&1 &
+          printf '%s\n' "$!" > "${_mvm_dir}/${_mvm_id}.pid"
+          ;;
+        cloud-hypervisor)
+          cloud-hypervisor --api-socket "${_mvm_dir}/${_mvm_id}.sock" > "${_mvm_dir}/${_mvm_id}.log" 2>&1 &
+          printf '%s\n' "$!" > "${_mvm_dir}/${_mvm_id}.pid"
+          ;;
+      esac
+    fi
+    printf '{"scheduler":"microvm","vmm":"%s","action":"submit","workload":"%s","state":"RUNNING","status":"ok"}\n' "$VMM" "$TARGET" | tee "${_mvm_dir}/${_mvm_id}.state.json"
+    ;;
+  status|logs|stop|destroy)
+    _mvm_dir="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript-state}/schedulers/microvm"
+    _mvm_id=$(basename -- "$TARGET" .json)
+    [ -f "$TARGET" ] && _mvm_id=$(jq -r '.name // "microvm"' "$TARGET")
+    if [ "$ACTION" = "stop" ] || [ "$ACTION" = "destroy" ]; then
+      if [ -f "${_mvm_dir}/${_mvm_id}.pid" ]; then
+        kill "$(cat "${_mvm_dir}/${_mvm_id}.pid")" 2>/dev/null || true
+        rm -f "${_mvm_dir}/${_mvm_id}.pid" "${_mvm_dir}/${_mvm_id}.sock"
+      fi
+      [ "$ACTION" = "destroy" ] && rm -f "${_mvm_dir}/${_mvm_id}.state.json" "${_mvm_dir}/${_mvm_id}.spec.json"
+    fi
     printf '{"scheduler":"microvm","vmm":"%s","action":"%s","workload":"%s","status":"ok"}\n' "$VMM" "$ACTION" "$TARGET"
     ;;
   *) exit 1 ;;

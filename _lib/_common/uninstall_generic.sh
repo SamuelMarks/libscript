@@ -36,6 +36,12 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
 COMPONENT_NAME="${PACKAGE_NAME:-$(basename "${DIR}")}"
 COMPONENT_UPPER="$(printf '%s\n' "$COMPONENT_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
 INSTALL_METHOD="$(printenv "${COMPONENT_UPPER}_INSTALL_METHOD" 2>/dev/null || true)"
@@ -66,6 +72,7 @@ else
         log_info "Removing all native installations of ${COMPONENT_NAME}..."
         rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${COMPONENT_NAME}"
     fi
+    libscript_cleanup_active_bin "${COMPONENT_NAME}"
 fi
 
 STACK="${STACK%"${THIS_FILE}":}"

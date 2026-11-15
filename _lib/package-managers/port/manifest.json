@@ -6,5 +6,6 @@
   "category": "package-managers",
   "provides": ["port", "bsd-ports"],
   "os_whitelist": ["darwin", "freebsd", "openbsd", "netbsd"],
-  "repository": "https://github.com/macports/macports-base"
+  "repository": "https://github.com/macports/macports-base",
+  "capabilities": ["versioned-artifact"]
 }

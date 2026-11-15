@@ -8,5 +8,6 @@
   "conflicts": [],
   "versions": ["latest", "2.24"],
   "os_whitelist": ["all"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

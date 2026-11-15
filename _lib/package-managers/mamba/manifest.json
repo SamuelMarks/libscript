@@ -7,5 +7,6 @@
   "description": "Bootstrap module for the `mamba` package manager.",
   "category": "package-managers",
   "os_blacklist": ["freebsd", "alpine"],
-  "repository": "https://github.com/mamba-org/mamba"
+  "repository": "https://github.com/mamba-org/mamba",
+  "capabilities": ["versioned-artifact"]
 }

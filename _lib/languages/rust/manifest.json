@@ -11,5 +11,30 @@
   "ports": [],
   "repository": "https://github.com/rust-lang/rust",
   "rtos_support": ["zephyr", "freertos"],
-  "memory_footprint_class": "mcu-sram-64k"
+  "memory_footprint_class": "mcu-sram-64k",
+  "capabilities": ["versioned-artifact"],
+  "sub_artifacts": {
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "aarch64-unknown-none",
+      "x86_64-pc-windows-msvc",
+      "x86_64-pc-windows-gnu",
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "wasm32-unknown-unknown",
+      "wasm32-wasip1"
+    ],
+    "components": [
+      "cargo",
+      "clippy",
+      "rustfmt",
+      "rust-std",
+      "rust-src",
+      "llvm-tools-preview",
+      "rust-analyzer"
+    ]
+  }
 }

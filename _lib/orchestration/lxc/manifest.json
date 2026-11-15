@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["lxc", "lxc-ls", "lxc-create"],
   "os_whitelist": ["linux"],
-  "repository": "https://github.com/lxc/lxc"
+  "repository": "https://github.com/lxc/lxc",
+  "capabilities": ["versioned-artifact"]
 }

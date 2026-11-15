@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": ["freebsd"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

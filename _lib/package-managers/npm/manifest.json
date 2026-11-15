@@ -7,5 +7,6 @@
   "description": "Bootstrap module for the `npm` package manager.",
   "category": "package-managers",
   "os_blacklist": ["sunos"],
-  "repository": "https://github.com/npm/cli"
+  "repository": "https://github.com/npm/cli",
+  "capabilities": ["versioned-artifact"]
 }

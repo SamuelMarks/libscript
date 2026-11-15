@@ -1,0 +1,21 @@
+{
+  "$schema": "../../experiment-suite.schema.json",
+  "id": "os-component-matrix",
+  "title": "7-OS Component Compatibility & 2x-Idempotency Matrix",
+  "protocol_version": "1.0.0",
+  "substrate": "vagrant-os-matrix",
+  "os_matrix": ["alpine", "debian", "rockylinux", "freebsd", "omnios", "macos", "windows"],
+  "required_components": ["jq"],
+  "vars_schema_ref": "./vars.schema.json",
+  "outputs": {
+    "metrics_json": "matrix_results.json",
+    "readme_matrix": "../../README.md"
+  },
+  "subsuites": [
+    {
+      "id": "M0",
+      "title": "Multi-OS Component Smoke & 2x-Rerun Idempotency Aggregation",
+      "outputs": ["matrix_results.json"]
+    }
+  ]
+}

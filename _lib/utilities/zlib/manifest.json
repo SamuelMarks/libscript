@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["zlib"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/madler/zlib"
+  "repository": "https://github.com/madler/zlib",
+  "capabilities": ["versioned-artifact"]
 }

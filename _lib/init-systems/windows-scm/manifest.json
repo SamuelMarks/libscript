@@ -6,5 +6,6 @@
   "category": "init-systems",
   "provides": ["windows-scm", "sc", "sc.exe"],
   "os_whitelist": ["windows"],
-  "repository": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sc-create"
+  "repository": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sc-create",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

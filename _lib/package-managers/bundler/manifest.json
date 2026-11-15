@@ -7,5 +7,6 @@
   "title": "bundler",
   "description": "Bootstrap module for the `bundler` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/rubygems/rubygems"
+  "repository": "https://github.com/rubygems/rubygems",
+  "capabilities": ["versioned-artifact"]
 }

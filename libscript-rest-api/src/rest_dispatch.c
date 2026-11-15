@@ -23,6 +23,7 @@
 #include <bcrypt.h>
 #include <direct.h>
 #else
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -86,20 +87,10 @@ int rest_is_safe_segment(const char *seg) {
 }
 
 /**
- * @brief Validates an experiment suite name against the OpenAPI 3.2.0 enum.
+ * @brief Validates an Open/Closed experiment plugin identifier segment.
  */
 int rest_is_valid_experiment_suite(const char *suite) {
-    if (suite == NULL) {
-        return 0;
-    }
-    return (strcmp(suite, "libscript") == 0 ||
-            strcmp(suite, "edgcpp") == 0 ||
-            strcmp(suite, "edgcpp_backends") == 0 ||
-            strcmp(suite, "libtpu") == 0 ||
-            strcmp(suite, "win_port") == 0 ||
-            strcmp(suite, "gemma_tpu") == 0 ||
-            strcmp(suite, "manifest") == 0 ||
-            strcmp(suite, "all") == 0);
+    return rest_is_safe_segment(suite);
 }
 
 /**
@@ -527,6 +518,158 @@ int rest_dispatch_artifact(const char *root_dir, const char *kernel, const char 
                  job_id, kernel, fmt, esc_comps, job_id);
     }
     return exit_code;
+}
+
+/**
+ * @brief Dispatches an /api/v1/marketplace/publish job across AWS, Azure, and GCP Marketplaces.
+ */
+int rest_dispatch_marketplace_publish(const char *root_dir, const char *offer_path,
+                                      const char *clouds_csv, int wait_sync,
+                                      char *json_out, size_t json_cap) {
+    char clouds_arg[128];
+    char job_id[37];
+    char esc_offer[512], esc_clouds[128];
+    const char *eff_clouds = (clouds_csv != NULL && clouds_csv[0] != '\0') ? clouds_csv : "aws,azure,gcp";
+    int exit_code = 0;
+    char *argv_exec[6];
+
+    if (!rest_is_safe_token(offer_path) || !rest_is_safe_token(eff_clouds)) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"invalid_marketplace_request\",\"message\":\"Invalid offer path or clouds list\"}");
+        return 1;
+    }
+
+    snprintf(clouds_arg, sizeof(clouds_arg), "--clouds=%s", eff_clouds);
+    argv_exec[0] = "libscript.sh";
+    argv_exec[1] = "publish-marketplace";
+    argv_exec[2] = (char *)offer_path;
+    argv_exec[3] = clouds_arg;
+    argv_exec[4] = "--dry-run";
+    argv_exec[5] = NULL;
+
+    if (spawn_or_queue_job(root_dir, "/api/v1/marketplace/publish", argv_exec, wait_sync, job_id, &exit_code) != 0) {
+        snprintf(json_out, json_cap,
+                 "{\"error\":\"dispatch_failed\",\"message\":\"Unable to allocate or spawn marketplace job\"}");
+        return 1;
+    }
+
+    rest_json_escape(offer_path, esc_offer, sizeof(esc_offer));
+    rest_json_escape(eff_clouds, esc_clouds, sizeof(esc_clouds));
+    snprintf(json_out, json_cap,
+             "{\"job_id\":\"%s\",\"endpoint\":\"/api/v1/marketplace/publish\",\"offer\":\"%s\",\"clouds\":\"%s\",\"status_url\":\"/api/v1/jobs/%s\"}",
+             job_id, esc_offer, esc_clouds, job_id);
+    return exit_code;
+}
+
+/**
+ * @brief Lists auto-discovered Open/Closed experiment plugins under experiments/<suite-id>/suite.json.
+ */
+int rest_list_experiments(const char *root_dir, char *json_out, size_t json_cap) {
+    size_t pos = 0;
+    int first = 1;
+    pos += (size_t)snprintf(json_out, json_cap, "{\"suites\":[");
+#if !defined(_WIN32)
+    {
+        char exp_dir[1024];
+        DIR *dp;
+        snprintf(exp_dir, sizeof(exp_dir), "%s/experiments", root_dir);
+        dp = opendir(exp_dir);
+        if (dp != NULL) {
+            struct dirent *de;
+            while ((de = readdir(dp)) != NULL) {
+                char probe[1280];
+                FILE *fp;
+                if (de->d_name[0] == '.') {
+                    continue;
+                }
+                snprintf(probe, sizeof(probe), "%s/%s/suite.json", exp_dir, de->d_name);
+                fp = fopen(probe, "rb");
+                if (fp != NULL) {
+                    char esc[128];
+                    fclose(fp);
+                    rest_json_escape(de->d_name, esc, sizeof(esc));
+                    if (pos + strlen(esc) + 6u < json_cap) {
+                        pos += (size_t)snprintf(json_out + pos, json_cap - pos, "%s\"%s\"", first ? "" : ",", esc);
+                        first = 0;
+                    }
+                }
+            }
+            closedir(dp);
+        }
+    }
+#else
+    (void)root_dir;
+    (void)first;
+#endif
+    if (pos + 3u < json_cap) {
+        (void)snprintf(json_out + pos, json_cap - pos, "]}");
+    }
+    return 0;
+}
+
+/**
+ * @brief Queries declared capabilities from _lib/<category>/<name>/manifest.json.
+ */
+int rest_query_component_capabilities(const char *root_dir, const char *comp_name,
+                                      char *json_out, size_t json_cap) {
+    if (!rest_is_safe_segment(comp_name)) {
+        return -1;
+    }
+#if !defined(_WIN32)
+    {
+        char lib_dir[1024];
+        DIR *dp;
+        snprintf(lib_dir, sizeof(lib_dir), "%s/_lib", root_dir);
+        dp = opendir(lib_dir);
+        if (dp != NULL) {
+            struct dirent *de;
+            while ((de = readdir(dp)) != NULL) {
+                char mf_path[1280];
+                FILE *fp;
+                if (de->d_name[0] == '.' || strcmp(de->d_name, "_common") == 0) {
+                    continue;
+                }
+                snprintf(mf_path, sizeof(mf_path), "%s/%s/%s/manifest.json", lib_dir, de->d_name, comp_name);
+                fp = fopen(mf_path, "rb");
+                if (fp != NULL) {
+                    char buf[4096];
+                    size_t nread = fread(buf, 1u, sizeof(buf) - 1u, fp);
+                    const char *cap_key;
+                    fclose(fp);
+                    buf[nread] = '\0';
+                    cap_key = strstr(buf, "\"capabilities\"");
+                    if (cap_key != NULL) {
+                        const char *lb = strchr(cap_key, '[');
+                        const char *rb = (lb != NULL) ? strchr(lb, ']') : NULL;
+                        if (lb != NULL && rb != NULL && rb >= lb) {
+                            size_t arr_len = (size_t)(rb - lb + 1);
+                            char arr_buf[512];
+                            if (arr_len >= sizeof(arr_buf)) {
+                                arr_len = sizeof(arr_buf) - 1u;
+                            }
+                            memcpy(arr_buf, lb, arr_len);
+                            arr_buf[arr_len] = '\0';
+                            closedir(dp);
+                            snprintf(json_out, json_cap,
+                                     "{\"component\":\"%s\",\"category\":\"%s\",\"capabilities\":%s}",
+                                     comp_name, de->d_name, arr_buf);
+                            return 0;
+                        }
+                    }
+                    closedir(dp);
+                    snprintf(json_out, json_cap,
+                             "{\"component\":\"%s\",\"category\":\"%s\",\"capabilities\":[\"versioned-artifact\"]}",
+                             comp_name, de->d_name);
+                    return 0;
+                }
+            }
+            closedir(dp);
+        }
+    }
+#else
+    (void)root_dir;
+#endif
+    return -1;
 }
 
 /**

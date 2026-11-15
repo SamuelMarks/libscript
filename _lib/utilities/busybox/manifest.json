@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["busybox"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos"],
+  "capabilities": ["versioned-artifact"]
 }

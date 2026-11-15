@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["emscripten", "emcc"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/emscripten-core/emsdk"
+  "repository": "https://github.com/emscripten-core/emsdk",
+  "capabilities": ["versioned-artifact"]
 }

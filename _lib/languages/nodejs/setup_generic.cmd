@@ -313,8 +313,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\nodejs\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
-    if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%" 2>nul
-    mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "nodejs" "default" "%NODEJS_VERSION%"
 )
 exit /b 0
 

@@ -6,5 +6,6 @@
   "category": "kernel",
   "provides": ["freertos-kernel", "freertos-lts", "freertos-mainline"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel"
+  "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["cilium", "cilium-cli"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/cilium/cilium-cli"
+  "repository": "https://github.com/cilium/cilium-cli",
+  "capabilities": ["versioned-artifact"]
 }

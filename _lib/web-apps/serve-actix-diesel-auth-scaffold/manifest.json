@@ -8,5 +8,6 @@
   "os_blacklist": ["sunos"],
   "dependencies": {
     "runtime_deps": ["caddy", "postgres", "redis", "rust"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

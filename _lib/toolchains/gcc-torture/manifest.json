@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["gcc-torture"],
   "os_whitelist": ["all"],
-  "repository": "https://gcc.gnu.org/git/gcc.git"
+  "repository": "https://gcc.gnu.org/git/gcc.git",
+  "capabilities": ["versioned-artifact"]
 }

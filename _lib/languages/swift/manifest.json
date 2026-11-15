@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["alpine", "sunos"],
   "ports": [],
-  "repository": "https://github.com/swiftlang/swift"
+  "repository": "https://github.com/swiftlang/swift",
+  "capabilities": ["versioned-artifact"]
 }

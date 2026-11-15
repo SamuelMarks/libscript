@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["tree", "directory-lister"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/Old-Man-Programmer/tree"
+  "repository": "https://github.com/Old-Man-Programmer/tree",
+  "capabilities": ["versioned-artifact"]
 }

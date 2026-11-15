@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["dtc", "fdtget", "fdtput"],
   "os_whitelist": ["all"],
-  "repository": "https://git.kernel.org/pub/scm/utils/dtc/dtc.git"
+  "repository": "https://git.kernel.org/pub/scm/utils/dtc/dtc.git",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["qmake"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/qt/qtbase"
+  "repository": "https://github.com/qt/qtbase",
+  "capabilities": ["versioned-artifact"]
 }

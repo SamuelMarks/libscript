@@ -6,5 +6,6 @@
   "title": "cargo",
   "description": "Bootstrap module for the `cargo` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/rust-lang/cargo"
+  "repository": "https://github.com/rust-lang/cargo",
+  "capabilities": ["versioned-artifact"]
 }

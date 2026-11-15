@@ -4,5 +4,6 @@
   "title": "Hetzner Cloud & Bare-Metal Provider",
   "description": "Deployment engine and CLI for Hetzner Cloud and Bare-Metal servers",
   "category": "cloud-providers",
-  "provides": ["hetzner", "hcloud"]
+  "provides": ["hetzner", "hcloud"],
+  "capabilities": ["versioned-artifact", "cloud-operator"]
 }

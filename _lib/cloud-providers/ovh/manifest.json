@@ -6,5 +6,6 @@
   "category": "cloud-providers",
   "provides": ["ovh", "ovhcloud"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/ovh/ovhcloud-cli"
+  "repository": "https://github.com/ovh/ovhcloud-cli",
+  "capabilities": ["versioned-artifact", "cloud-operator"]
 }

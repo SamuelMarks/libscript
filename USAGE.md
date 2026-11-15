@@ -9,9 +9,9 @@ maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and 
 
 ## 1. Native Toolchain Version Management (Tier 1)
 
-LibScript natively replaces external version managers like `nvm`, `fnm`, `pyenv`, `rustup`, `rvm`,
-and `sdkman`. It provides five universal lifecycle operations across all 320+ supported tools,
-runtimes, and databases.
+LibScript natively replaces external version managers like `nvm`, `fnm`, `volta`, `pyenv`, `uv`,
+`rustup`, `rvm`, and `sdkman`. It provides universal capability-typed lifecycle operations across
+all 360+ Tier 1 recipes and 542+ documented subsystems.
 
 ### The Universal Lifecycle Verbs
 
@@ -24,7 +24,7 @@ runtimes, and databases.
 
 # 2. Install specific versions side-by-side into ~/.libscript/<tool>/<version>/
 ./libscript.sh install nodejs 22.14.0
-./libscript.sh install python 3.12.3
+./libscript.sh install python 3.13t
 ./libscript.sh install rust 1.85.0
 ./libscript.sh install postgres 16.2
 
@@ -32,11 +32,16 @@ runtimes, and databases.
 ./libscript.sh ls nodejs
 ./libscript.sh ls python
 
-# 4. Activate a specific version in the active shell (prepends isolated bin/ to PATH)
+# 4. Activate a version via O(1) ~/.libscript/bin symlinks or resolve workspace pin files
 ./libscript.sh use nodejs 22.14.0
-./libscript.sh use python 3.12.3
+./libscript.sh use python 3.13t
+./libscript.sh resolve-env --format=sh
 
-# 5. Cleanly uninstall a version
+# 5. Manage cross-compilation targets and toolchain components (Rust, etc.)
+./libscript.sh target-add rust wasm32-unknown-unknown
+./libscript.sh component-add rust clippy
+
+# 6. Cleanly uninstall a version (pruning orphaned ~/.libscript/bin symlinks)
 ./libscript.sh uninstall nodejs 20.0.0
 ```
 
@@ -92,7 +97,7 @@ Override globally or per component via CLI flags or environment variables:
 ./tests/test_edgcpp_corpus_matrix.sh
 ```
 
-### Inspecting Component Environment (`info` & `env`)
+### Inspecting Component & Workspace Environment (`info`, `env` & `resolve-env`)
 
 ```sh
 # View installation paths, status, and ports
@@ -100,12 +105,16 @@ Override globally or per component via CLI flags or environment variables:
 
 # Export environment variables in standard formats (json, docker, cmd, powershell)
 FORMAT=json ./libscript.sh env postgres 16
+
+# Resolve workspace pins (.libscript-version, .nvmrc, .python-version, rust-toolchain.toml) without eval
+./libscript.sh resolve-env --dir=. --format=json
 ```
 
 ### Scaffolding New Component-Package-Managers (`scaffold` / `new-component`)
 
 Create a new Tier 1 component-package-manager directory under `_lib/<category>/<component>/` with
-all 23+ required POSIX `.sh`, Windows `.cmd`, schema, and documentation files:
+capability-typed POSIX `.sh`, Windows `.cmd`, schema, and documentation files (`service.{sh,cmd}`
+generated strictly when `service-daemon` is included in `--capabilities`):
 
 ```sh
 # 1. Interactive prompter wizard (optionally exporting answers to a reusable JSON spec)
@@ -121,6 +130,7 @@ libscript.cmd scaffold --from-json=my-tool.scaffold.json
   --non-interactive \
   --name=zoxide \
   --category=utilities \
+  --capabilities=versioned-artifact \
   --description="A smarter cd command inspired by z and autojump." \
   --github-repo=ajeetdsouza/zoxide \
   --version-scheme=github-release \
@@ -180,9 +190,16 @@ Available curated profiles include:
 - **illumos & SunOS Syntheses (`profiles/illumos/`)**: `minimal-server.json`, `cde-retro-x11.json`,
   `desktop-mate-x11.json`, `desktop-xfce-x11.json`, `hardened-runit.json`, `pkgsrc-developer.json`,
   `zfs-cloud.json`
-- **Cloud & MicroVM Appliances**: `cloud-aws-ami-base.json`, `cloud-azure-vhd-base.json`,
-  `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`, `hypervisor-proxmox-template.json`,
-  `firecracker-microvm-appliance.json`, `unikraft-nginx-redis.json`, `osv-cloud-runtime.json`
+- **Cloud, MicroVM & Open edX Unikernel Constellation Appliances**: `cloud-aws-ami-base.json`,
+  `cloud-azure-vhd-base.json`, `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`,
+  `hypervisor-proxmox-template.json`, `firecracker-microvm-appliance.json`,
+  `unikraft-nginx-redis.json`, `osv-cloud-runtime.json`, and the 8-profile
+  `profiles/openedx-unikernel/{lms-nanos,cms-nanos,celery-nanos,caddy-mfe-unikraft,mysql-osv,ferretdb-osv,valkey-unikraft,meilisearch-osv}.json`
+  suite
+- **RTOS & Embedded Microcontroller Profiles**: `zephyr-qemu-x86_64-minimal.json`,
+  `zephyr-cortex-m3-mcuboot-signed.json`, `zephyr-riscv64-mqtt-sqlite.json`,
+  `zephyr-wamr-edge-appliance.json`, `freertos-cortex-m3-mps2-minimal.json`,
+  `freertos-mqtt-littlefs-sensor.json`, `freertos-native-sim-ci.json`
 - **Multi-Compiler Linux Kernel Profiles**: `linux-kernel-gcc-tiny.json`,
   `linux-kernel-clang-tiny.json`, `linux-kernel-tcc-tiny.json`, `linux-kernel-edgcpp-tiny.json`,
   `linux-kernel-custom-cc-tiny.json`, `linux-kernel-gcc-defconfig.json`,
@@ -221,10 +238,15 @@ into deployable media:
 ./libscript.sh package-as bsd-img          # FreeBSD UFS/ZFS image
 ./libscript.sh package-as illumos-distro   # illumos / SunOS ZFS root pool image
 
-# 6. Direct-kernel boot image for microVMs (Firecracker / Cloud-Hypervisor)
+# 6. Unikernel images (direct ELF for Firecracker/QEMU or UEFI/GPT & Azure VHD cloud-boot disks)
 ./libscript.sh package-as unikernel
+./libscript.sh package-as unikernel --cloud-boot=uefi-gpt
+./libscript.sh package-as unikernel --cloud-boot=azure-vhd
 
-# 7. Clean rootfs archives for OCI containers, LXC, or FreeBSD Jails
+# 7. Signed MCUboot Zephyr / FreeRTOS microcontroller firmware (bin, hex, uf2)
+./libscript.sh package-as firmware
+
+# 8. Clean rootfs archives for OCI containers, LXC, or FreeBSD Jails
 ./libscript.sh package-as rootfs-tar
 ./libscript.sh package-as docker
 ```
@@ -344,6 +366,21 @@ Deploy stacks and custom synthesized OS images across public clouds, hypervisors
 ./libscript.sh deprovision aws prod-node vpc-main us-east-1
 ```
 
+### Multicloud Marketplace Publishing (`publish-marketplace`)
+
+Stage UEFI/GPT & Hyper-V Gen2 VHD unikernel constellations, audit compliance (EULA, zero leaked
+secrets, no public admin/datastore ports, SPDX 2.3 SBOM), and emit AWS Marketplace Catalog
+`StartChangeSet` payloads, Azure Managed Application ARM packages, and GCP Producer Portal Terraform
+Blueprints (`schemas/marketplace-offer.schema.json`):
+
+```sh
+# Stage and validate the 8-appliance Open edX unikernel marketplace offer across AWS, Azure, and GCP
+./libscript.sh publish-marketplace marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
+
+# Windows Batch equivalent
+libscript.cmd publish-marketplace marketplace\openedx-unikernel\offer.json --clouds=aws,azure,gcp --stage-only
+```
+
 ### Hardware-Accelerated AI & TPU Workloads
 
 ```sh
@@ -351,8 +388,9 @@ Deploy stacks and custom synthesized OS images across public clouds, hypervisors
 ./payloads/ai/gcp-tpu-vm/deploy.sh
 ./payloads/ai/gcp-gpu-vm/deploy.sh
 
-# Launch distributed training or serving across TPU Pod slices via GKE and XPK
+# Launch distributed training or serving across TPU Pod slices via GKE/XPK or direct TPU VM lockstep
 ./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler xpk
+./libscript.sh payload submit payloads/ai/gcp-tpu-vm/payload.json --scheduler tpu_vm
 ./libscript.sh payload submit payloads/ai/gke-xpk-inference/payload.json --scheduler xpk
 ./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler kubernetes
 ```
@@ -433,6 +471,8 @@ and automated split-brain fencing (`topologies/`):
 ./libscript.sh topology up topologies/k8s-marathon-paas/topology.json
 ./libscript.sh topology up topologies/k0s-ha/topology.json
 ./libscript.sh topology up topologies/minio-distributed/topology.json
+./libscript.sh topology up topologies/openedx-unikernel-pod/topology.json
+./libscript.sh topology up topologies/iot-mqtt-edge-pod/topology.json
 
 # Inspect cluster quorum and node state (.topology_state.json)
 ./libscript.sh topology status topologies/postgres-ha/topology.json
@@ -521,11 +561,25 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 
 ---
 
-## 11. Rapid Cloud & Bento Multi-OS Vagrant Experimentation (`experiment`)
+## 11. Empirical Experiment Plugins & Bento Multi-OS Vagrant Matrix (`experiment`)
 
-The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) links
-cloud instance provisioning with the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant
-test matrix across all 320+ Tier 1 tools and 520+ total subsystems.
+The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) combines
+the Open/Closed `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`) with cloud
+instance provisioning and the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant test
+matrix across all 360+ Tier 1 recipes and 542+ documented subsystems.
+
+### Open/Closed Experiment Plugin Verbs (`experiments/<suite-id>/`)
+
+```sh
+# List discovered experiment plugins, validate suite.json schemas, or scaffold a new plugin
+./libscript.sh experiment list
+./libscript.sh experiment validate
+./libscript.sh experiment scaffold my-new-study
+
+# Run or test self-contained plugins (edgcpp-backends, gemma-tpu, libtpu-pjrt, os-component-matrix, win-port)
+./libscript.sh experiment test libtpu-pjrt
+./libscript.sh experiment run os-component-matrix --update-readme
+```
 
 ### Lifecycle Steps (`a_provision_instance` .. `i_deprovision_instance`)
 

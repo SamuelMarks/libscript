@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["odin"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/odin-lang/Odin"
+  "repository": "https://github.com/odin-lang/Odin",
+  "capabilities": ["versioned-artifact"]
 }

@@ -58,10 +58,14 @@ architectural invariants:
 
 1. **`POSIX_SHEBANG`**: Strict `#!/bin/sh` on line 1; bans non-POSIX shells (`bash`, `zsh`, `ksh`)
    and non-portable bashisms (`[[ ... ]]`, `source`, `type`).
-2. **`THIS_FILE_DANCE`**: Canonical `THIS_FILE=` path resolution within the first 35 lines.
+2. **`THIS_FILE_DANCE` & `SOURCE_CONTEXT_SAFETY`**: Canonical `THIS_FILE=` path resolution within
+   the first 35 lines, plus caller `THIS_FILE`/`SCRIPT_DIR` preservation in sourced `_lib/_common/`
+   libraries.
 3. **`RECURSION_GUARD`**: Re-entrant `STACK` recursion guard (`*':'"${THIS_FILE}"':'*` in POSIX,
    `:!THIS_FILE!:` `findstr` in Batch within the first 25 lines).
-4. **`WINDOWS_PARITY`**: Exact paired `.cmd` companion for every single `.sh` script.
+4. **`WINDOWS_PARITY` & `CLI_VERB_PARITY`**: Exact paired `.cmd` companion for every `.sh` script
+   and matching CLI verb sets across domain engines (`topologies`, `payloads`, `traits`,
+   `experiments`).
 5. **`BATCH_THIS_FILE`**: Canonical `set "THIS_FILE=%~f0"` and delayed expansion within the first 25
    lines of `.cmd` files.
 6. **`IDEMPOTENCY`**: Banned unguarded `mkdir` (requires `mkdir -p` or `if not exist ... mkdir`);
@@ -69,6 +73,30 @@ architectural invariants:
 7. **`BAN_EVAL`**: Absolute ban on dynamic string evaluation (`eval` and `Invoke-Expression`).
 8. **`DOC_OVERVIEW` & `DOC_USAGE`**: 100% documentation coverage with structured `## Overview` and
    `## Usage` headers in the first 30 lines.
+9. **`VERSION_MANAGER_CONTRACT` & `EMPTY_SERVICE_STUB`**: Enforces capability-typed files per
+   `manifest.json` (`service.{sh,cmd}` strictly when `"service-daemon"` is declared; rejects no-op
+   `exit 0` service stubs).
+10. **`SILENT_CURL_NET`, `RAW_GCLOUD_TPU` & `EXP_IN_LIB`**: Bans unguarded `curl -s` without `-f` or
+    `libscript_download`, requires Cloud TPU operations to route through TFRC-guarded providers, and
+    keeps empirical paper campaigns inside `experiments/<suite-id>/`.
+
+### Domain & Subsystem Hermetic Test Suites (`tests/test_*.{sh,cmd}`)
+
+In addition to component-level `test.{sh,cmd}` harnesses, dedicated subsystem suites verify new
+architectural contracts across POSIX and Windows Batch:
+
+- `tests/test_vm_replacements.{sh,cmd}`: Capability-typed manifests, `O(1)` `${LIBSCRIPT_HOME}/bin`
+  symlink sync/prune, `resolve-env` pin walking, and `nodejs`/`python`/`rust` version manager
+  parity.
+- `tests/test_experiment_plugins.{sh,cmd}`: Open/Closed `experiments/` discovery, scaffolding, JSON
+  schema validation, and 2x `.suite_stamp` idempotency.
+- `tests/test_unikernel_marketplace.{sh,cmd}`: UEFI/GPT & Azure VHD unikernel wrapping, Open edX
+  8-appliance constellation staging, and `publish-marketplace` SPDX/secret/port compliance gates.
+- `tests/test_tpu_k8s_gcs_stack.{sh,cmd}`: 4-role GCS ML storage synthesis, `tpu-trainer`,
+  `inference-router`, and `tpu_vm` / `kubernetes` JobSet+Kueue scheduling.
+- `tests/test_rtos_idempotency.{sh,cmd}`, `tests/zephyr_boot_test.{sh,cmd}` &
+  `tests/freertos_boot_test.{sh,cmd}`: Zephyr, FreeRTOS, MCUboot signing, UF2/HEX firmware export,
+  and QEMU/Renode emulation.
 
 ---
 

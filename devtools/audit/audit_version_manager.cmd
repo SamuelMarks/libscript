@@ -54,60 +54,118 @@ echo === LibScript Version Manager Contract Audit (Win32) ===
 set /a ERRORS=0
 set /a AUDITED=0
 
+if not "%~1"=="" (
+    call :audit_loop_args %*
+    goto :finish_audit
+)
+
 for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
     set "CAT_NAME=%%~nxC"
-    if not "!CAT_NAME!"=="_common" (
+    if /i not "!CAT_NAME!"=="_common" (
         for /d %%D in ("%%C\*") do (
-          if /i not "%%~nxD"=="_common" (
-            set /a AUDITED+=1
-            for %%F in (cli.sh cli.cmd setup.sh setup.cmd env.sh env.cmd service.sh service.cmd test.sh test.cmd uninstall.sh uninstall.cmd manifest.json vars.schema.json README.md) do (
-                if not exist "%%D\%%F" (
-                    echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] %%D: Missing required file %%F >&2
-                    set /a ERRORS+=1
-                )
+            if /i not "%%~nxD"=="_common" (
+                call :audit_single_comp "%%~fD" "!CAT_NAME!"
             )
-            set "COMP_NAME=%%~nxD"
-            if exist "%%D\setup.cmd" (
-                findstr /I /R /C:"setup_base\.cmd" /C:"setup_generic\.cmd" "%%D\setup.cmd" >nul 2>&1
-                if errorlevel 1 (
-                    echo [VM CONTRACT VIOLATION] [SETUP_DELEGATION_WIN] %%D\setup.cmd: Must call or delegate to setup_base.cmd or setup_generic.cmd >&2
-                    set /a ERRORS+=1
-                )
-            )
-            if exist "%%D\env.cmd" (
-                findstr /I /R /C:"^[ ]*set PATH=.*;%%PATH%%" "%%D\env.cmd" >nul 2>&1
-                if not errorlevel 1 (
-                    echo [VM CONTRACT VIOLATION] [NON_IDEMPOTENT_PATH_CMD] %%D\env.cmd: Unconditional PATH prepend in env.cmd >&2
-                    set /a ERRORS+=1
-                )
-            )
-            if /i not "!CAT_NAME!"=="package-managers" (
-                for %%S in ("%%D\setup*.cmd" "%%D\uninstall*.cmd") do (
-                    findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" /C:"^[ ]*scoop[ ]*install" /C:"winget[ ]*uninstall" /C:"choco[ ]*uninstall" /C:"scoop[ ]*uninstall" /C:"curl[ ]*-s" /C:"curl\.exe[ ]*-s" /C:"Invoke-WebRequest" /C:"Invoke-RestMethod" "%%S" >nul 2>&1
-                    if not errorlevel 1 (
-                        echo [VM CONTRACT VIOLATION] [RAW_PKG_MGR_OR_FETCH_IN_RECIPE] %%S: Direct package manager or network fetch call in recipe .cmd >&2
-                        set /a ERRORS+=1
-                    )
-                    findstr /I /R /C:"python[0-9.]*[ ]*-m[ ]*venv" /C:"python\.exe.*-m[ ]*venv" /C:"uv[ ]*venv" "%%S" >nul 2>&1
-                    if not errorlevel 1 (
-                        echo [VM CONTRACT VIOLATION] [RAW_PYTHON_VENV] %%S: Explicit Python venv creation in recipe .cmd; delegate to _lib\_common\python_env.cmd >&2
-                        set /a ERRORS+=1
-                    )
-                )
-            )
-            if /i not "!CAT_NAME!"=="init-systems" (
-                for %%S in ("%%D\setup*.cmd" "%%D\service*.cmd" "%%D\uninstall*.cmd" "%%D\test*.cmd") do (
-                    findstr /I /R /C:"sc\.exe[ ]*start" /C:"sc\.exe[ ]*stop" /C:"sc\.exe[ ]*query" /C:"sc[ ]*start" /C:"sc[ ]*stop" /C:"sc[ ]*query" /C:"net[ ]*start" /C:"net[ ]*stop" "%%S" >nul 2>&1
-                    if not errorlevel 1 (
-                        echo [VM CONTRACT VIOLATION] [RAW_DAEMON_MANAGER] %%S: Direct sc/net daemon call in component .cmd; delegate to _lib\_common\service.cmd >&2
-                        set /a ERRORS+=1
-                    )
-                )
-            )
-          )
         )
     )
 )
+goto :finish_audit
+
+:: ## audit_loop_args
+:: Audits explicit component directories passed on the command line.
+:audit_loop_args
+if "%~1"=="" exit /b 0
+for %%A in ("%~1") do (
+    for %%P in ("%%~dpA.") do set "_ARG_CAT=%%~nxP"
+    call :audit_single_comp "%%~fA" "!_ARG_CAT!"
+)
+shift
+goto :audit_loop_args
+
+:: ## audit_single_comp
+:: Audits a single component directory against capability-typed Version Manager Contract rules.
+:audit_single_comp
+set "_CD=%~1"
+set "CAT_NAME=%~2"
+if not exist "!_CD!\" exit /b 0
+set /a AUDITED+=1
+
+for %%F in (cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md) do (
+    if not exist "!_CD!\%%F" (
+        echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] !_CD!: Missing required file %%F >&2
+        set /a ERRORS+=1
+    )
+)
+
+set "_HAS_VER_ART=0"
+set "_HAS_SVC_DAEMON=0"
+if exist "!_CD!\manifest.json" (
+    findstr /I /C:"versioned-artifact" "!_CD!\manifest.json" >nul 2>&1 && set "_HAS_VER_ART=1"
+    findstr /I /C:"service-daemon" "!_CD!\manifest.json" >nul 2>&1 && set "_HAS_SVC_DAEMON=1"
+) else (
+    set "_HAS_VER_ART=1"
+)
+
+if "!_HAS_VER_ART!"=="1" (
+    for %%F in (setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd) do (
+        if not exist "!_CD!\%%F" (
+            echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] !_CD!: Missing required versioned-artifact file %%F >&2
+            set /a ERRORS+=1
+        )
+    )
+)
+
+if "!_HAS_SVC_DAEMON!"=="1" (
+    for %%F in (service.sh service.cmd) do (
+        if not exist "!_CD!\%%F" (
+            echo [VM CONTRACT VIOLATION] [MISSING_CONTRACT_FILE] !_CD!: Missing required service-daemon file %%F >&2
+            set /a ERRORS+=1
+        )
+    )
+)
+
+if exist "!_CD!\setup.cmd" (
+    findstr /I /R /C:"setup_base\.cmd" /C:"setup_generic\.cmd" "!_CD!\setup.cmd" >nul 2>&1
+    if errorlevel 1 (
+        echo [VM CONTRACT VIOLATION] [SETUP_DELEGATION_WIN] !_CD!\setup.cmd: Must call or delegate to setup_base.cmd or setup_generic.cmd >&2
+        set /a ERRORS+=1
+    )
+)
+if exist "!_CD!\env.cmd" (
+    findstr /I /R /C:"^[ ]*set PATH=.*;%%PATH%%" "!_CD!\env.cmd" >nul 2>&1
+    if not errorlevel 1 (
+        echo [VM CONTRACT VIOLATION] [NON_IDEMPOTENT_PATH_CMD] !_CD!\env.cmd: Unconditional PATH prepend in env.cmd >&2
+        set /a ERRORS+=1
+    )
+)
+if /i not "!CAT_NAME!"=="package-managers" (
+    for %%S in ("!_CD!\setup*.cmd" "!_CD!\uninstall*.cmd") do (
+        findstr /I /R /C:"^[ ]*winget[ ]*install" /C:"^[ ]*choco[ ]*install" /C:"^[ ]*scoop[ ]*install" /C:"winget[ ]*uninstall" /C:"choco[ ]*uninstall" /C:"scoop[ ]*uninstall" /C:"curl[ ]*-s" /C:"curl\.exe[ ]*-s" /C:"Invoke-WebRequest" /C:"Invoke-RestMethod" "%%S" >nul 2>&1
+        if not errorlevel 1 (
+            echo [VM CONTRACT VIOLATION] [RAW_PKG_MGR_OR_FETCH_IN_RECIPE] %%S: Direct package manager or network fetch call in recipe .cmd >&2
+            set /a ERRORS+=1
+        )
+        findstr /I /R /C:"python[0-9.]*[ ]*-m[ ]*venv" /C:"python\.exe.*-m[ ]*venv" /C:"uv[ ]*venv" "%%S" >nul 2>&1
+        if not errorlevel 1 (
+            echo [VM CONTRACT VIOLATION] [RAW_PYTHON_VENV] %%S: Explicit Python venv creation in recipe .cmd; delegate to _lib\_common\python_env.cmd >&2
+            set /a ERRORS+=1
+        )
+    )
+)
+if /i not "!CAT_NAME!"=="init-systems" (
+    for %%S in ("!_CD!\setup*.cmd" "!_CD!\service*.cmd" "!_CD!\uninstall*.cmd" "!_CD!\test*.cmd") do (
+        findstr /I /R /C:"sc\.exe[ ]*start" /C:"sc\.exe[ ]*stop" /C:"sc\.exe[ ]*query" /C:"sc[ ]*start" /C:"sc[ ]*stop" /C:"sc[ ]*query" /C:"net[ ]*start" /C:"net[ ]*stop" "%%S" >nul 2>&1
+        if not errorlevel 1 (
+            echo [VM CONTRACT VIOLATION] [RAW_DAEMON_MANAGER] %%S: Direct sc/net daemon call in component .cmd; delegate to _lib\_common\service.cmd >&2
+            set /a ERRORS+=1
+        )
+    )
+)
+exit /b 0
+
+:: ## finish_audit
+:: Summarizes audit errors and exits with appropriate status code.
+:finish_audit
 
 if !ERRORS! GTR 0 (
     echo [FAIL] Version Manager Contract Audit failed with !ERRORS! violation^(s^) across !AUDITED! components. >&2

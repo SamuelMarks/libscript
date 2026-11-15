@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["renode"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/renode/renode"
+  "repository": "https://github.com/renode/renode",
+  "capabilities": ["versioned-artifact"]
 }

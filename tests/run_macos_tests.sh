@@ -370,8 +370,8 @@ while true; do
             MANIFEST_PATH="$REPO_ROOT/_lib/illumos/distro/manifest.json"
         elif [ "$target" = "distro" ] && [ -f "$REPO_ROOT/_lib/orchestration/distro/manifest.json" ]; then
             MANIFEST_PATH="$REPO_ROOT/_lib/orchestration/distro/manifest.json"
-        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/manifest.json"
+        elif [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json"
         else
             for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
                 if [ -f "$_m" ]; then
@@ -482,7 +482,7 @@ while true; do
                 test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt && sh $_exec_root/_lib/runtimes/provision_isolated_runtime.sh --runtime python --path ${_rtmp}/test-rt"
                 ;;
             ml-training)
-                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/ml-training/cli.sh install latest && sh $_exec_root/_lib/ml-training/cli.sh test && sh $_exec_root/_lib/ml-training/cli.sh install latest && sh $_exec_root/_lib/ml-training/cli.sh test"
+                test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh install latest && sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh test && sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh install latest && sh $_exec_root/_lib/ml-training/tpu-trainer/cli.sh test"
                 ;;
             freebsd/distro)
                 test_cmd="export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:\$PATH LIBSCRIPT_ROOT_DIR=$_exec_root; sh $_exec_root/_lib/freebsd/distro/cli.sh install latest && sh $_exec_root/_lib/freebsd/distro/cli.sh test && sh $_exec_root/_lib/freebsd/distro/cli.sh install latest && sh $_exec_root/_lib/freebsd/distro/cli.sh test"

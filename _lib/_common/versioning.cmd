@@ -108,7 +108,143 @@ if exist "%alias_path%" (
     )
 )
 if not exist "%alias_path%" mklink /J "%alias_path%" "%exact_path%" >nul
+if /i "%alias_name%"=="default" call :libscript_sync_active_bin "%component%"
 goto :eof
+
+:: ## libscript_sync_active_bin
+:: Synchronizes .cmd shim dispatchers in LIBSCRIPT_HOME\bin for a component's active default version.
+:libscript_sync_active_bin
+set "_sab_comp=%~1"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "_sab_home=%USERPROFILE%\.libscript"
+) else (
+    set "_sab_home=%LIBSCRIPT_HOME%"
+)
+set "_sab_bin=!_sab_home!\bin"
+set "_sab_owners=!_sab_home!\.bin_owners"
+set "_sab_owner_file=!_sab_owners!\!_sab_comp!.list"
+if not exist "!_sab_bin!" mkdir "!_sab_bin!"
+if not exist "!_sab_owners!" mkdir "!_sab_owners!"
+
+if exist "!_sab_owner_file!" (
+    for /f "usebackq delims=" %%O in ("!_sab_owner_file!") do (
+        if not exist "!_sab_home!\!_sab_comp!\default\bin\%%O.exe" if not exist "!_sab_home!\!_sab_comp!\default\bin\%%O.cmd" if not exist "!_sab_home!\!_sab_comp!\default\%%O.exe" (
+            if exist "!_sab_bin!\%%O.cmd" del /f /q "!_sab_bin!\%%O.cmd" >nul 2>&1
+        )
+    )
+)
+type nul > "!_sab_owner_file!.tmp"
+for %%D in ("!_sab_home!\!_sab_comp!\default\bin" "!_sab_home!\!_sab_comp!\default") do (
+    if exist "%%~fD" (
+        for %%E in ("%%~fD\*.exe" "%%~fD\*.cmd" "%%~fD\*.bat") do (
+            set "_shim_name=%%~nE"
+            set "_shim_target=%%~fE"
+            (
+                echo @echo off
+                echo "!_shim_target!" %%*
+                echo exit /b %%ERRORLEVEL%%
+            ) > "!_sab_bin!\!_shim_name!.cmd"
+            echo !_shim_name!>> "!_sab_owner_file!.tmp"
+        )
+    )
+)
+move /y "!_sab_owner_file!.tmp" "!_sab_owner_file!" >nul 2>&1
+exit /b 0
+
+:: ## libscript_cleanup_active_bin
+:: Redirects active bin shims to a remaining installed version or deletes stale shims on uninstall.
+:libscript_cleanup_active_bin
+set "_cab_comp=%~1"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "_cab_home=%USERPROFILE%\.libscript"
+) else (
+    set "_cab_home=%LIBSCRIPT_HOME%"
+)
+set "_cab_dir=!_cab_home!\!_cab_comp!"
+set "_cab_owner=!_cab_home!\.bin_owners\!_cab_comp!.list"
+if exist "!_cab_dir!\default" (
+    dir "!_cab_dir!\default" >nul 2>&1
+    if errorlevel 1 rmdir "!_cab_dir!\default" >nul 2>&1
+)
+if exist "!_cab_dir!\default" (
+    call :libscript_sync_active_bin "!_cab_comp!"
+    exit /b 0
+)
+set "_cab_fallback="
+if exist "!_cab_dir!" (
+    for /d %%V in ("!_cab_dir!\*") do (
+        set "_vn=%%~nxV"
+        if /i not "!_vn!"=="default" if /i not "!_vn!"=="latest" if /i not "!_vn!"=="lts" if /i not "!_vn!"=="stable" (
+            set "_cab_fallback=!_vn!"
+        )
+    )
+)
+if not "!_cab_fallback!"=="" (
+    call :libscript_symlink_alias "!_cab_comp!" "default" "!_cab_fallback!"
+    exit /b 0
+)
+if exist "!_cab_owner!" (
+    for /f "usebackq delims=" %%O in ("!_cab_owner!") do (
+        if exist "!_cab_home!\bin\%%O.cmd" del /f /q "!_cab_home!\bin\%%O.cmd" >nul 2>&1
+    )
+    del /f /q "!_cab_owner!" >nul 2>&1
+)
+exit /b 0
+
+:: ## libscript_resolve_workspace_version
+:: Ascends from a directory looking for .libscript-version or libscript.json workspace pins.
+:libscript_resolve_workspace_version
+set "_rwv_comp=%~1"
+set "_rwv_dir=%~2"
+if "!_rwv_dir!"=="" set "_rwv_dir=%CD%"
+if "!_rwv_dir:~-1!"=="\" set "_rwv_dir=!_rwv_dir:~0,-1!"
+
+:: ## rwv_ascend
+:: Internal loop ascending parent directories for workspace version resolution.
+:rwv_ascend
+set "_rwv_found="
+if exist "!_rwv_dir!\.libscript-version" (
+    set "_rwv_single="
+    set /a _rwv_cnt=0
+    for /f "usebackq tokens=1,* delims==:" %%A in ("!_rwv_dir!\.libscript-version") do (
+        set "_k=%%A"
+        set "_v=%%B"
+        if not "!_k:~0,1!"=="#" (
+            for /f "tokens=* delims= " %%K in ("!_k!") do set "_k=%%K"
+            if not "!_v!"=="" (
+                for /f "tokens=* delims= " %%W in ("!_v!") do set "_v=%%W"
+                if /i "!_k!"=="!_rwv_comp!" if "!_rwv_found!"=="" set "_rwv_found=!_v!"
+            ) else (
+                set "_rwv_single=!_k!"
+                set /a _rwv_cnt+=1
+            )
+        )
+    )
+    if "!_rwv_found!"=="" if !_rwv_cnt! EQU 1 if not "!_rwv_single!"=="" set "_rwv_found=!_rwv_single!"
+)
+if not "!_rwv_found!"=="" goto :rwv_emit
+if exist "!_rwv_dir!\libscript.json" (
+    where jq >nul 2>&1
+    if not errorlevel 1 (
+        for /f "usebackq delims=" %%J in (`jq -r --arg c "!_rwv_comp!" "(.deps[$c] // .dependencies[$c] // .[$c] // empty) | if type == \"object\" then (.version // empty) elif type == \"string\" then . else empty end" "!_rwv_dir!\libscript.json" 2^>nul`) do (
+            if not "%%J"=="" if not "%%J"=="null" if "!_rwv_found!"=="" set "_rwv_found=%%J"
+        )
+    )
+)
+if not "!_rwv_found!"=="" goto :rwv_emit
+for %%P in ("!_rwv_dir!") do set "_rwv_parent=%%~dpP"
+set "_rwv_next=!_rwv_parent:~0,-1!"
+if "!_rwv_next!"=="" exit /b 1
+if /i "!_rwv_next!"=="!_rwv_dir!" exit /b 1
+set "_rwv_dir=!_rwv_next!"
+goto :rwv_ascend
+
+:: ## rwv_emit
+:: Prints the resolved workspace version and exports LIBSCRIPT_WORKSPACE_VERSION across endlocal.
+:rwv_emit
+echo !_rwv_found!
+endlocal & set "LIBSCRIPT_WORKSPACE_VERSION=%_rwv_found%"
+exit /b 0
 
 :: ## libscript_check_installed_version
 :: Checks whether a component satisfying the requested version is already installed in LIBSCRIPT_HOME or system PATH on Windows.
@@ -328,6 +464,7 @@ if /i "!_hga_act!"=="uninstall" (
         if exist "!_hga_home!\!_hga_comp!\!_hga_ver!" (
             rmdir /s /q "!_hga_home!\!_hga_comp!\!_hga_ver!" 2>nul
         )
+        call :libscript_cleanup_active_bin "!_hga_comp!"
     ) else (
         echo Uninstall not implemented or supported for !_hga_method!.
     )

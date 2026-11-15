@@ -6,5 +6,6 @@
   "category": "kernel",
   "provides": ["zephyr-kernel", "zephyr-lts", "zephyr-mainline"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/zephyrproject-rtos/zephyr"
+  "repository": "https://github.com/zephyrproject-rtos/zephyr",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

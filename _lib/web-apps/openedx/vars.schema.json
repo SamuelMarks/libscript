@@ -11,6 +11,12 @@
       "default": "minimal",
       "description": "Deployment mode for the Open edX installation (minimal, production, dev, or offline)."
     },
+    "OPENEDX_ROLE": {
+      "type": "string",
+      "enum": ["all", "lms", "cms", "celery", "mfe-static"],
+      "default": "all",
+      "description": "Single-process workload role staged into a Tier 2 unikernel or appliance sysroot (all, lms, cms, celery, or mfe-static)."
+    },
     "OPENEDX_RELEASE": {
       "type": "string",
       "default": "release/verawood.1",

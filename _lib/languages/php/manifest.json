@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/php/php-src"
+  "repository": "https://github.com/php/php-src",
+  "capabilities": ["versioned-artifact"]
 }

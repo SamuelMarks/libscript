@@ -12,5 +12,6 @@
   "os_blacklist": ["alpine"],
   "repository": "https://github.com/mongodb/mongo",
   "process_model": "single-process",
-  "unikernel_support": ["osv", "nanos"]
+  "unikernel_support": ["osv", "nanos"],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

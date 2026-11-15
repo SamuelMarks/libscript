@@ -6,5 +6,6 @@
   "title": "nvm",
   "description": "Bootstrap module for `nvm` (Node Version Manager).",
   "category": "package-managers",
-  "repository": "https://github.com/nvm-sh/nvm"
+  "repository": "https://github.com/nvm-sh/nvm",
+  "capabilities": ["versioned-artifact"]
 }

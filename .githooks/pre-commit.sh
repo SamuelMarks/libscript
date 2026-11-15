@@ -140,8 +140,22 @@ else
             printf '%s\n' "$file" >> "$_tmp_fmt"
         fi
     done
-    if [ -s "$_tmp_crlf" ] && command -v unix2dos >/dev/null 2>&1; then
-        xargs -n 100 unix2dos -q < "$_tmp_crlf" 2>/dev/null || true
+    if [ -s "$_tmp_crlf" ]; then
+        if command -v dos2unix >/dev/null 2>&1 && command -v unix2dos >/dev/null 2>&1; then
+            xargs -n 100 dos2unix -q < "$_tmp_crlf" 2>/dev/null || true
+            xargs -n 100 unix2dos -q < "$_tmp_crlf" 2>/dev/null || true
+        else
+            while IFS= read -r _cf; do
+                [ -f "$_cf" ] || continue
+                _cf_tmp=$(mktemp)
+                if tr -d '\r' < "$_cf" | awk '{ printf "%s\r\n", $0 }' > "$_cf_tmp"; then
+                    if ! cmp -s "$_cf_tmp" "$_cf"; then
+                        cat "$_cf_tmp" > "$_cf"
+                    fi
+                fi
+                rm -f "$_cf_tmp"
+            done < "$_tmp_crlf"
+        fi
     fi
     if [ -s "$_tmp_lf" ] && command -v dos2unix >/dev/null 2>&1; then
         xargs -n 100 dos2unix -q < "$_tmp_lf" 2>/dev/null || true

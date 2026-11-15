@@ -1,25 +1,23 @@
 #!/bin/sh
 # ## Overview
 # Pre-flight checker to verify native cloud CLI (aws, gcloud, az) installations and authentication status.
-#
 # ## Usage
 # Source and execute `libscript_check_preflight "aws"`
-
 set -feu
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+_pf_caller_this="${THIS_FILE-}"; _pf_caller_dir="${SCRIPT_DIR-}"
+if [ "${SCRIPT_NAME-}" ]; then THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
+else THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    [ -n "${_pf_caller_this}" ] && THIS_FILE="${_pf_caller_this}"
+    [ -n "${_pf_caller_dir}" ] && SCRIPT_DIR="${_pf_caller_dir}"
+    unset _pf_caller_this _pf_caller_dir || true
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
@@ -126,3 +124,9 @@ libscript_check_preflight() {
   
   return 0
 }
+
+STACK="${STACK%"${THIS_FILE}":}"
+export STACK
+[ -n "${_pf_caller_this}" ] && THIS_FILE="${_pf_caller_this}"
+[ -n "${_pf_caller_dir}" ] && SCRIPT_DIR="${_pf_caller_dir}"
+unset SCRIPT_NAME _pf_caller_this _pf_caller_dir || true

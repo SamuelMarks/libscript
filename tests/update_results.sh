@@ -214,10 +214,6 @@ discover_all_entries() {
   if [ -d "${_repo_root}/_lib/runtimes" ]; then
     printf '1|runtimes|runtimes/provision_isolated_runtime|\n' >>"${_raw_list}"
   fi
-  if [ -d "${_repo_root}/_lib/ml-training" ]; then
-    printf '4|ml-training|ml-training|
-' >>"${_raw_list}"
-  fi
   if [ -d "${_repo_root}/topologies" ]; then
     for _tdir in "${_repo_root}/topologies"/*; do
       [ -d "${_tdir}" ] || continue
@@ -724,7 +720,6 @@ update_testing_todo_plan() {
           _lib/illumos/distro) _readme_key="illumos/distro" ;;
           _lib/storage) _readme_key="storage/provision_disk" ;;
           _lib/runtimes/provision_isolated_runtime) _readme_key="runtimes/provision_isolated_runtime" ;;
-          _lib/ml-training) _readme_key="ml-training" ;;
           topologies/*|payloads/*|traits/*) _readme_key="${_comp_ref}" ;;
         esac
 
@@ -1051,6 +1046,7 @@ main() {
   _repo="${REPO_ROOT}"
   _output=""
   _json=""
+  _sync_plans="${LIBSCRIPT_SYNC_PLAN_CHECKBOXES:-0}"
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -1058,9 +1054,21 @@ main() {
         show_help
         exit 0
         ;;
+      --sync-plan-checkboxes)
+        _sync_plans=1
+        shift
+        ;;
+      --output=*)
+        _output="${1#*=}"
+        shift
+        ;;
       --output)
         _output="$2"
         shift 2
+        ;;
+      --json=*)
+        _json="${1#*=}"
+        shift
         ;;
       --json)
         if [ $# -gt 1 ] && [ "$(printf '%s' "$2" | cut -c1-2)" != "--" ]; then
@@ -1085,9 +1093,11 @@ main() {
   fi
 
   update_supported_components "${_repo}" "${_output}" "${_json}"
-  update_todo_plan "${_repo}" "${_output}"
-  update_testing_todo_plan "${_repo}" "${_output}"
-  update_retest_plan "${_repo}" "${_output}"
+  if [ "${_sync_plans}" = "1" ]; then
+    update_todo_plan "${_repo}" "${_output}"
+    update_testing_todo_plan "${_repo}" "${_output}"
+    update_retest_plan "${_repo}" "${_output}"
+  fi
 }
 
 main "$@"

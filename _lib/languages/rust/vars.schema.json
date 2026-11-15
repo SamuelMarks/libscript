@@ -38,6 +38,14 @@
       "type": "string",
       "default": "thumbv7m-none-eabi,riscv32imac-unknown-none-elf,riscv64imac-unknown-none-elf,x86_64-unknown-none",
       "description": "Comma-separated Rust no_std bare-metal targets registered via rustup target add for Zephyr and FreeRTOS."
+    },
+    "RUST_TARGETS": {
+      "type": "string",
+      "description": "Comma-separated cross-compilation target triples (e.g. wasm32-unknown-unknown,aarch64-unknown-none) installed into the isolated Rust toolchain."
+    },
+    "RUST_COMPONENTS": {
+      "type": "string",
+      "description": "Comma-separated optional Rust toolchain components (e.g. clippy,rustfmt,llvm-tools-preview,rust-src) installed into the isolated Rust toolchain."
     }
   }
 }

@@ -5,5 +5,6 @@
   "title": "Cloud CDN & Distribution",
   "description": "Multicloud interface for managing content delivery networks and edge caching. Adapter-only component without binary installer lifecycle.",
   "provides": ["cloud-cdn"],
-  "adapter_only": true
+  "adapter_only": true,
+  "capabilities": ["cloud-operator"]
 }

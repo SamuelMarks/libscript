@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["zstd", "compressor"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/facebook/zstd"
+  "repository": "https://github.com/facebook/zstd",
+  "capabilities": ["versioned-artifact"]
 }

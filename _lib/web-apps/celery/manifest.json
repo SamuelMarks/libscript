@@ -7,5 +7,6 @@
   "provides": ["celery"],
   "dependencies": {
     "runtime_deps": ["python", "redis"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

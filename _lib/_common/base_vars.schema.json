@@ -82,6 +82,12 @@
       "default": "0",
       "description": "Flag (0 or 1) to simulate lifecycle and service operations without executing mutating commands."
     },
+    "LIBSCRIPT_AUTO_USE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) automatically activating an installed component version in LIBSCRIPT_HOME/bin upon installation."
+    },
     "LIBSCRIPT_DRY_RUN_PKG_MGR": {
       "type": "string",
       "enum": ["0", "1"],

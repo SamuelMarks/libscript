@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "ports": [2020]
+  "ports": [2020],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

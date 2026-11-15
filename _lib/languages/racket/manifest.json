@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["racket", "raco"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/racket/racket"
+  "repository": "https://github.com/racket/racket",
+  "capabilities": ["versioned-artifact"]
 }

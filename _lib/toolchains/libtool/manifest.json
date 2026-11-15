@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["libtool"],
   "os_whitelist": ["all"],
-  "repository": "https://savannah.gnu.org/projects/libtool"
+  "repository": "https://savannah.gnu.org/projects/libtool",
+  "capabilities": ["versioned-artifact"]
 }

@@ -12,5 +12,6 @@
     "tier": "recommended"
   },
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
-  "arch_whitelist": ["x86_64", "amd64"]
+  "arch_whitelist": ["x86_64", "amd64"],
+  "capabilities": ["versioned-artifact", "sysroot-library"]
 }

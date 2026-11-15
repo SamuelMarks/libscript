@@ -117,6 +117,10 @@ fi
 
 ACTION="${1:-compile}"
 TARGET="${2:-}"
+LIVE_K8S="${LIBSCRIPT_SCHEDULER_LIVE:-0}"
+for _ka in "$@"; do
+  [ "$_ka" = '--live' ] && LIVE_K8S=1
+done
 
 case "$ACTION" in
   compile)
@@ -133,15 +137,18 @@ case "$ACTION" in
       KIND='Deployment'
       REPLICAS=1
     fi
-    printf '{"id":"/%s","kind":"%s","instances":%s,"tasksRunning":%s,"state":"TASK_RUNNING","k8sReconciled":true}
-' "$WID" "$KIND" "$REPLICAS" "$REPLICAS" > "${STATE_DIR}/v2/apps/${WID}.json"
-    printf '[INFO] Reconciled /%s as Kubernetes %s (%s replicas)
-' "$WID" "$KIND" "$REPLICAS" > "${STATE_DIR}/logs/${WID}.log"
-    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"submit","workload":"%s","id":"/%s","kind":"%s","state":"TASK_RUNNING","status":"applied"}
-' "$TARGET" "$WID" "$KIND"
+    if [ "$LIVE_K8S" = "1" ] && command -v kubectl >/dev/null 2>&1 && [ -f "${STATE_DIR}/manifests/${WID}.json" ]; then
+      jq 'del(.marathon_equivalent)' "${STATE_DIR}/manifests/${WID}.json" | kubectl apply -f - >&2
+    fi
+    printf '{"id":"/%s","kind":"%s","instances":%s,"tasksRunning":%s,"state":"TASK_RUNNING","k8sReconciled":true}\n' "$WID" "$KIND" "$REPLICAS" "$REPLICAS" > "${STATE_DIR}/v2/apps/${WID}.json"
+    printf '[INFO] Reconciled /%s as Kubernetes %s (%s replicas)\n' "$WID" "$KIND" "$REPLICAS" > "${STATE_DIR}/logs/${WID}.log"
+    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"submit","workload":"%s","id":"/%s","kind":"%s","state":"TASK_RUNNING","status":"applied"}\n' "$TARGET" "$WID" "$KIND"
     ;;
   status)
     WID="$(resolve_workload_id "$TARGET")"
+    if [ "$LIVE_K8S" = "1" ] && command -v kubectl >/dev/null 2>&1; then
+      kubectl get deploy,statefulset,job -l "app.kubernetes.io/name=${WID}" -o json >&2 || true
+    fi
     if [ -f "${STATE_DIR}/v2/apps/${WID}.json" ]; then
       STATE_VAL="$(jq -r '.state // "TASK_RUNNING"' "${STATE_DIR}/v2/apps/${WID}.json")"
       INST_VAL="$(jq -r '.instances // 1' "${STATE_DIR}/v2/apps/${WID}.json")"
@@ -151,33 +158,40 @@ case "$ACTION" in
       INST_VAL=1
       KIND_VAL='Deployment'
     fi
-    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"status","workload":"%s","id":"/%s","kind":"%s","instances":%s,"state":"%s","status":"ok"}
-' "$TARGET" "$WID" "$KIND_VAL" "$INST_VAL" "$STATE_VAL"
+    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"status","workload":"%s","id":"/%s","kind":"%s","instances":%s,"state":"%s","status":"ok"}\n' "$TARGET" "$WID" "$KIND_VAL" "$INST_VAL" "$STATE_VAL"
     ;;
   logs)
     WID="$(resolve_workload_id "$TARGET")"
-    if [ -f "${STATE_DIR}/logs/${WID}.log" ]; then
-      LOG_MSG="$(head -n 1 "${STATE_DIR}/logs/${WID}.log" | tr -d '
-')"
+    if [ "$LIVE_K8S" = "1" ] && command -v kubectl >/dev/null 2>&1; then
+      LOG_MSG="$(kubectl logs -l "app.kubernetes.io/name=${WID}" --tail=1 2>/dev/null | tr -d '\n' || true)"
+      [ -n "$LOG_MSG" ] || LOG_MSG='[INFO] Kubernetes pod logs ready'
+    elif [ -f "${STATE_DIR}/logs/${WID}.log" ]; then
+      LOG_MSG="$(head -n 1 "${STATE_DIR}/logs/${WID}.log" | tr -d '\n')"
     else
-      LOG_MSG="[INFO] Kubernetes pod logs ready"
+      LOG_MSG='[INFO] Kubernetes pod logs ready'
     fi
-    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"logs","workload":"%s","id":"/%s","log":"%s","status":"ok"}
-' "$TARGET" "$WID" "$LOG_MSG"
+    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"logs","workload":"%s","id":"/%s","log":"%s","status":"ok"}\n' "$TARGET" "$WID" "$LOG_MSG"
     ;;
   stop)
     mkdir -p "${STATE_DIR}/v2/apps"
     WID="$(resolve_workload_id "$TARGET")"
-    printf '{"id":"/%s","instances":0,"tasksRunning":0,"state":"TASK_KILLED","k8sReconciled":true}
-' "$WID" > "${STATE_DIR}/v2/apps/${WID}.json"
-    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"stop","workload":"%s","id":"/%s","instances":0,"state":"TASK_KILLED","status":"ok"}
-' "$TARGET" "$WID"
+    if [ "$LIVE_K8S" = "1" ] && command -v kubectl >/dev/null 2>&1; then
+      kubectl scale deploy "$WID" --replicas=0 >&2 2>/dev/null || true
+    fi
+    printf '{"id":"/%s","instances":0,"tasksRunning":0,"state":"TASK_KILLED","k8sReconciled":true}\n' "$WID" > "${STATE_DIR}/v2/apps/${WID}.json"
+    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"stop","workload":"%s","id":"/%s","instances":0,"state":"TASK_KILLED","status":"ok"}\n' "$TARGET" "$WID"
     ;;
   destroy)
     WID="$(resolve_workload_id "$TARGET")"
+    if [ "$LIVE_K8S" = "1" ] && command -v kubectl >/dev/null 2>&1; then
+      if [ -f "${STATE_DIR}/manifests/${WID}.json" ]; then
+        jq 'del(.marathon_equivalent)' "${STATE_DIR}/manifests/${WID}.json" | kubectl delete --ignore-not-found -f - >&2 || true
+      else
+        kubectl delete deploy,statefulset,job -l "app.kubernetes.io/name=${WID}" --ignore-not-found >&2 || true
+      fi
+    fi
     rm -f "${STATE_DIR}/v2/apps/${WID}.json" "${STATE_DIR}/manifests/${WID}.json" "${STATE_DIR}/logs/${WID}.log"
-    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"destroy","workload":"%s","id":"/%s","status":"ok"}
-' "$TARGET" "$WID"
+    printf '{"scheduler":"kubernetes","controller":"marathon-equivalent","action":"destroy","workload":"%s","id":"/%s","status":"ok"}\n' "$TARGET" "$WID"
     ;;
   *)
     printf '[ERROR] Unknown kubernetes scheduler action: %s

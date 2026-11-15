@@ -20,8 +20,10 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
 }
 
 $CmdFile = Join-Path $PSScriptRoot 'alpine-systemctl.cmd'
-if (Test-Path $CmdFile) {
-    & $CmdFile @args
+if (($env:OS -eq 'Windows_NT') -and (Test-Path $CmdFile)) {
+    & cmd.exe /c "`"$CmdFile`"" @args
+    exit $LASTEXITCODE
 } else {
-    Write-Output 'alpine-systemctl completed successfully.'
+    Write-Host 'alpine-systemctl is not supported on Windows.'
+    exit 86
 }

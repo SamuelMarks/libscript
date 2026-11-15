@@ -7,5 +7,6 @@
   "provides": ["refind", "refind-install"],
   "os_whitelist": ["linux", "freebsd", "macos"],
   "os_blacklist": ["windows", "sunos"],
-  "repository": "https://sourceforge.net/projects/refind/"
+  "repository": "https://sourceforge.net/projects/refind/",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

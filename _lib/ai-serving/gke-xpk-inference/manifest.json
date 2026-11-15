@@ -10,5 +10,6 @@
   "os_blacklist": ["windows", "sunos", "freebsd", "bsd", "darwin"],
   "dependencies": {
     "runtime_deps": ["gcp-cli", "python", "kubectl", "xpk"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

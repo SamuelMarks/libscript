@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["gleam"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/gleam-lang/gleam"
+  "repository": "https://github.com/gleam-lang/gleam",
+  "capabilities": ["versioned-artifact"]
 }

@@ -355,8 +355,8 @@ while true; do
 
         # Check manifest for OS and architecture support
         MANIFEST_PATH=""
-        if [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/manifest.json" ]; then
-            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/manifest.json"
+        if [ "$target" = "ml-training" ] && [ -f "$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json" ]; then
+            MANIFEST_PATH="$REPO_ROOT/_lib/ml-training/tpu-trainer/manifest.json"
         else
             for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/topologies/$_short_target/topology.json" "$REPO_ROOT/payloads"/*/"$_short_target/payload.json"; do
                 if [ -f "$_m" ]; then

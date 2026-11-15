@@ -557,9 +557,15 @@ audit_single_file() {
         raw_fetch_hits = ""; raw_pkg_hits = ""; raw_daemon_hits = "";
         raw_sync_hits = ""; raw_venv_hits = ""; raw_uuid_hits = "";
         allow_sync_next = 0; allow_venv_next = 0; allow_uuid_next = 0;
-        in_endlocal = 0; in_ls_remote = 0; spliced_guard_hits = "";
+        in_endlocal = 0; in_ls_remote = 0; spliced_guard_hits = ""; lone_cr_hits = "";
       }
-      { sub(/\r$/, "", $0) }
+      {
+        sub(/\r$/, "", $0)
+        if (index($0, "\r") > 0) {
+          sub(/\r+$/, "", $0)
+          lone_cr_hits = (lone_cr_hits ? lone_cr_hits "; " : "") "line " NR
+        }
+      }
       NR == 1 {
         if (tolower($0) == "@echo off") has_echo_off = 1
       }
@@ -740,6 +746,7 @@ audit_single_file() {
         if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation in batch script (delegate to _lib\\_common\\python_env.cmd): " raw_venv_hits
         if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic Guid::NewGuid() in batch script (delegate to _lib\\_common\\uuid_gen.cmd): " raw_uuid_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
+        if (lone_cr_hits != "") print "BATCH_EOL_CRLF|Double CR (\\r\\r\\n) or lone CR byte found in batch script: " lone_cr_hits
         if (spliced_guard_hits != "") print "BATCH_SPLICED_GUARD|Corrupted if exist guard spliced inside ls-remote block: " spliced_guard_hits
         if (dup_label_hits != "") print "BATCH_DUPLICATE_LABEL|Duplicate label definition(s) in batch script: " dup_label_hits
         if (missing_lbl_hits != "") print "BATCH_MISSING_LABEL|Undefined batch label target: " missing_lbl_hits
@@ -800,12 +807,12 @@ audit_single_file() {
 
   # 6. Option A Hard Fail Proforma check (Exit code 86)
   case "$file" in
-    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd|*/alpine-systemctl.cmd|_lib/*/*/setup_debian.cmd|_lib/*/*/setup_alpine.cmd|_lib/*/*/setup_freebsd.cmd|_lib/*/*/setup_macos.cmd|_lib/*/*/setup_rhel.cmd|_lib/*/*/setup_illumos.cmd|_lib/*/*/setup_linux.cmd)
+    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd|*/alpine-systemctl.cmd|*/setup_debian.cmd|*/setup_alpine.cmd|*/setup_freebsd.cmd|*/setup_macos.cmd|*/setup_rhel.cmd|*/setup_illumos.cmd|*/setup_linux.cmd)
       if ! grep -q 'exit /b 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
       ;;
-    */mount_target_vfs.ps1|*/umount_target_vfs.ps1|*/runner.ps1|*/provision_disk.ps1|*/format_fs.ps1)
+    */mount_target_vfs.ps1|*/umount_target_vfs.ps1|*/runner.ps1|*/provision_disk.ps1|*/format_fs.ps1|*/live_freebsd.ps1|*/live_illumos.ps1|*/live_linux.ps1|*/coinstall_dual_os.ps1|*/install_freebsd.ps1|*/install_illumos.ps1|*/install_linux.ps1|*/multiboot_orchestrator.ps1|*/grub_multiboot.ps1|*/alpine-systemctl.ps1|*/setup_debian.ps1|*/setup_alpine.ps1|*/setup_freebsd.ps1|*/setup_macos.ps1|*/setup_rhel.ps1|*/setup_illumos.ps1|*/setup_linux.ps1)
       if ! grep -q 'exit 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
@@ -972,7 +979,7 @@ audit_single_file() {
 }
 
 # ## audit_gitattributes_eol
-# Verifies via git check-attr that all tracked POSIX/PowerShell scripts resolve to eol=lf and Batch scripts resolve to eol=crlf.
+# Verifies via git check-attr and git ls-files --eol that tracked scripts resolve to expected line endings without index/worktree CR corruption.
 audit_gitattributes_eol() {
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     return 0
@@ -1008,6 +1015,38 @@ audit_gitattributes_eol() {
     done
     IFS="$OIFS_E"
   fi
+  _idx_eol_hits=$(
+    git ls-files --eol "*.sh" "*.ps1" "*.cmd" "*.bat" ".githooks/pre-commit" 2>/dev/null \
+      | awk -F'\t' '
+        NF == 2 {
+          meta = $1
+          path = $2
+          split(meta, m, /[[:space:]]+/)
+          i_eol = m[1]
+          w_eol = m[2]
+          if (w_eol == "w/-text") {
+            print path "|w_text|Working-tree script contains lone CR or binary bytes (w/-text)"
+          } else if (i_eol == "i/mixed" || i_eol == "i/crlf") {
+            print path "|idx_mixed|Git index blob has unnormalized line endings (" i_eol "); renormalize to i/lf"
+          }
+        }
+      ' || true
+  )
+  if [ -n "$_idx_eol_hits" ]; then
+    OIFS_E="$IFS"
+    IFS='
+'
+    for _ih in $_idx_eol_hits; do
+      _ip="${_ih%%|*}"
+      _i_rest="${_ih#*|}"
+      _i_kind="${_i_rest%%|*}"
+      _i_msg="${_i_rest#*|}"
+      if [ "$_i_kind" = "w_text" ] || git diff --quiet -- "$_ip" 2>/dev/null; then
+        log_failure "$_ip" "GITATTRIBUTES_EOL" "$_i_msg"
+      fi
+    done
+    IFS="$OIFS_E"
+  fi
 }
 
 # Execute audit based on arguments
@@ -1022,16 +1061,61 @@ if [ "${1:-}" = "--all" ]; then
     fi
   fi
   rm -f "$_all_candidates"
+  # Enforce SOURCE_CONTEXT_SAFETY on sourced _common/*.sh libraries
+  for _src_lib in _lib/_common/*.sh _lib/*/_common/*.sh _lib/_common/experiment/*.sh; do
+    [ -f "$_src_lib" ] || continue
+    case "$_src_lib" in
+      */daemon_launcher.sh|*/component_core.sh|*/envsubst_safe_exec.sh|*/find_replace_exec.sh|*/test_matrix_driver.sh|*/upgrade_engine.sh) continue ;;
+    esac
+    if ! grep -qE 'THIS_FILE="\$\{?_[A-Za-z0-9_]+' "$_src_lib"; then
+      log_failure "$_src_lib" "SOURCE_CONTEXT_SAFETY" "Sourced _common library must save and restore caller THIS_FILE / SCRIPT_DIR."
+    fi
+  done
+  # Enforce .sh <-> .cmd verb parity across domain engines
+  for _eng_pair in "topologies/engine:up status scale destroy" "payloads/engine:compile submit status logs stop destroy" "traits/engine:list enable disable apply verify teardown" "experiments/engine:list scaffold validate run render-latex update-readme"; do
+    _ep_base="${_eng_pair%%:*}"
+    _ep_verbs="${_eng_pair#*:}"
+    if [ -f "${_ep_base}.sh" ] && [ -f "${_ep_base}.cmd" ]; then
+      for _v in $_ep_verbs; do
+        if ! grep -qi "$_v" "${_ep_base}.cmd"; then
+          log_failure "${_ep_base}.cmd" "CLI_VERB_PARITY" "Missing subcommand '${_v}' present in ${_ep_base}.sh."
+        fi
+      done
+    fi
+  done
   for cat_dir in _lib/*; do
     [ -d "$cat_dir" ] || continue
     [ "$(basename "$cat_dir")" = "_common" ] && continue
     for comp_dir in "$cat_dir"/*; do
       [ -d "$comp_dir" ] || continue
-      for req_file in cli.sh cli.cmd setup.sh setup.cmd env.sh env.cmd service.sh service.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
+      [ "$(basename "$comp_dir")" = "_common" ] && continue
+      for req_file in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
         if [ ! -f "$comp_dir/$req_file" ]; then
           log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required Version Manager Contract file: $req_file"
         fi
       done
+      _as_caps=' versioned-artifact '
+      if [ -f "$comp_dir/manifest.json" ] && command -v jq >/dev/null 2>&1; then
+        _as_caps=" $(jq -r '.capabilities[]? // empty' "$comp_dir/manifest.json" 2>/dev/null | tr '\n' ' ') "
+      fi
+      case "$_as_caps" in
+        *' versioned-artifact '*)
+          for req_file in setup.sh setup.cmd env.sh env.cmd uninstall.sh uninstall.cmd; do
+            if [ ! -f "$comp_dir/$req_file" ]; then
+              log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required versioned-artifact file: $req_file"
+            fi
+          done
+          ;;
+      esac
+      case "$_as_caps" in
+        *' service-daemon '*)
+          for req_file in service.sh service.cmd; do
+            if [ ! -f "$comp_dir/$req_file" ]; then
+              log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required service-daemon file: $req_file"
+            fi
+          done
+          ;;
+      esac
     done
   done
 elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then

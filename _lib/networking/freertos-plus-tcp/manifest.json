@@ -8,5 +8,6 @@
   "os_whitelist": ["all"],
   "repository": "https://github.com/FreeRTOS/FreeRTOS-Plus-TCP",
   "rtos_support": ["freertos"],
-  "memory_footprint_class": "mcu-sram-64k"
+  "memory_footprint_class": "mcu-sram-64k",
+  "capabilities": ["versioned-artifact"]
 }

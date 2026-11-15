@@ -82,5 +82,7 @@ if not "%VERSION%"=="" (
     echo Removing all native installations of %COMPONENT_NAME%...
     if exist "!TARGET_DIR!" rmdir /s /q "!TARGET_DIR!"
 )
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_cleanup_active_bin "%COMPONENT_NAME%"
 
 endlocal

@@ -245,7 +245,7 @@ case "${1:-}" in
     ACTION="${1:-}"
     shift
     ;;
-  ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down|setup|deploy)
+  ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down|setup|deploy|target-add|target-rm|target-ls|component-add|component-ls)
     ACTION="${1:-}"
     if [ -n "${3:-}" ] && ! printf '%s\n' "${3:-}" | grep -q '^-'; then
       PACKAGE_NAME="${2:-}"
@@ -307,10 +307,24 @@ fi
 # Argument parsing loop
 while [ $# -gt 0 ]; do
   # These actions stop parsing and pass remaining args to sub-scripts
-  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "auth" ] || [ "$ACTION" = "location" ] || [ "$ACTION" = "group" ] || [ "$ACTION" = "project" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "dashboard" ] || [ "$ACTION" = "cost" ] || [ "$ACTION" = "usage" ] || [ "$ACTION" = "logs-aggregate" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ] || [ "$ACTION" = "hetzner" ] || [ "$ACTION" = "proxmox" ] || [ "$ACTION" = "digitalocean" ] || [ "$ACTION" = "linode" ] || [ "$ACTION" = "vultr" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "target-add" ] || [ "$ACTION" = "target-rm" ] || [ "$ACTION" = "target-ls" ] || [ "$ACTION" = "component-add" ] || [ "$ACTION" = "component-ls" ] || [ "$ACTION" = "auth" ] || [ "$ACTION" = "location" ] || [ "$ACTION" = "group" ] || [ "$ACTION" = "project" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "dashboard" ] || [ "$ACTION" = "cost" ] || [ "$ACTION" = "usage" ] || [ "$ACTION" = "logs-aggregate" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ] || [ "$ACTION" = "hetzner" ] || [ "$ACTION" = "proxmox" ] || [ "$ACTION" = "digitalocean" ] || [ "$ACTION" = "linode" ] || [ "$ACTION" = "vultr" ]; then
     break
   fi
   case "$1" in
+    --use)
+      export LIBSCRIPT_AUTO_USE=1
+      shift
+      ;;
+    --targets=*)
+      export SUB_TARGETS="${1#*=}"
+      if [ -n "${pkg_upper:-}" ]; then export "${pkg_upper}_TARGETS=${1#*=}"; fi
+      shift
+      ;;
+    --components=*)
+      export SUB_COMPONENTS="${1#*=}"
+      if [ -n "${pkg_upper:-}" ]; then export "${pkg_upper}_COMPONENTS=${1#*=}"; fi
+      shift
+      ;;
     --offline|-o)
       export LIBSCRIPT_OFFLINE=1
       shift
@@ -515,6 +529,19 @@ if [ "${LIBSCRIPT_SKIP_DEPENDENCIES:-}" != "1" ] && { [ "$ACTION" = "install" ] 
   fi
 fi
 
+# Enforce capability contract for daemon-only lifecycle verbs
+case "$ACTION" in
+  start|stop|restart|install-service|uninstall-service)
+    if [ -f "$COMP_DIR/manifest.json" ] && command -v jq >/dev/null 2>&1; then
+      if ! jq -e '(.capabilities // []) | index("service-daemon") != null' "$COMP_DIR/manifest.json" >/dev/null 2>&1; then
+        _cc_caps=$(jq -c '.capabilities // []' "$COMP_DIR/manifest.json" 2>/dev/null || printf '[]')
+        log_error "Action '$ACTION' requires capability 'service-daemon' ($PACKAGE_NAME capabilities: ${_cc_caps})."
+        exit 1
+      fi
+    fi
+    ;;
+esac
+
 # Lifecycle routing
 if [ "$ACTION" = "test" ]; then
   if [ -x "$COMP_DIR/test.sh" ]; then
@@ -604,7 +631,7 @@ elif [ "$ACTION" = "exec" ]; then
 fi
 
 # Execute the requested action script
-if [ -n "$ACTION" ] && [ "$ACTION" != "install" ] && [ "$ACTION" != "setup" ] && [ "$ACTION" != "ls" ] && [ "$ACTION" != "ls-remote" ] && [ "$ACTION" != "use" ] && [ "$ACTION" != "download" ] && [ "$ACTION" != "install-service" ] && [ "$ACTION" != "uninstall-service" ] && [ "$ACTION" != "test" ] && [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ] && [ "$ACTION" != "restart" ] && [ "$ACTION" != "status" ] && [ "$ACTION" != "health" ] && [ "$ACTION" != "logs" ] && [ "$ACTION" != "up" ] && [ "$ACTION" != "down" ]; then
+if [ -n "$ACTION" ] && [ "$ACTION" != "install" ] && [ "$ACTION" != "setup" ] && [ "$ACTION" != "ls" ] && [ "$ACTION" != "ls-remote" ] && [ "$ACTION" != "use" ] && [ "$ACTION" != "download" ] && [ "$ACTION" != "target-add" ] && [ "$ACTION" != "target-rm" ] && [ "$ACTION" != "target-ls" ] && [ "$ACTION" != "component-add" ] && [ "$ACTION" != "component-ls" ] && [ "$ACTION" != "install-service" ] && [ "$ACTION" != "uninstall-service" ] && [ "$ACTION" != "test" ] && [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ] && [ "$ACTION" != "restart" ] && [ "$ACTION" != "status" ] && [ "$ACTION" != "health" ] && [ "$ACTION" != "logs" ] && [ "$ACTION" != "up" ] && [ "$ACTION" != "down" ]; then
   if [ -x "$COMP_DIR/${ACTION}.sh" ]; then
     unset SCRIPT_NAME || true
     exec "$COMP_DIR/${ACTION}.sh" "$@"

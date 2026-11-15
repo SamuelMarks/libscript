@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["fortran", "gfortran", "f95"],
   "os_whitelist": ["all"],
-  "repository": "https://gcc.gnu.org/fortran/"
+  "repository": "https://gcc.gnu.org/fortran/",
+  "capabilities": ["versioned-artifact"]
 }

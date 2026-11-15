@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["curl"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/curl/curl"
+  "repository": "https://github.com/curl/curl",
+  "capabilities": ["versioned-artifact"]
 }

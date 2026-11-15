@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "openedx-celery-nanos",
+  "description": "Single-address-space Open edX celery unikernel appliance (unikernel-nanos / nanos-kernel).",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "unikernel-nanos",
+    "libc": "glibc",
+    "platform": "aws"
+  },
+  "kernel": {
+    "provider": "nanos-kernel",
+    "config_method": "tinyconfig",
+    "cmdline": "celery -A lms.celery worker --loglevel=info"
+  },
+  "init_system": {
+    "provider": "unikernel-entrypoint"
+  },
+  "storage": {
+    "disk_size_gib": 10,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "unikernel-direct"
+  },
+  "output_formats": ["direct-kernel", "qcow2", "aws-ami", "azure-vhd", "gcp-image"],
+  "components": ["openedx"]
+}

@@ -9,5 +9,6 @@
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": ["sunos"],
   "ports": ["9092"],
-  "repository": "https://github.com/apache/kafka"
+  "repository": "https://github.com/apache/kafka",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

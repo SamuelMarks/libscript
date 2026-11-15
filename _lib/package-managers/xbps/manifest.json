@@ -7,5 +7,6 @@
   "title": "xbps",
   "description": "Bootstrap module for the Void Linux `xbps` package manager.",
   "category": "package-managers",
-  "repository": "https://github.com/void-linux/xbps"
+  "repository": "https://github.com/void-linux/xbps",
+  "capabilities": ["versioned-artifact"]
 }

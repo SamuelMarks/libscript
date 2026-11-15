@@ -12,5 +12,6 @@
   "os_blacklist": [],
   "ports": [7700],
   "process_model": "single-process",
-  "unikernel_support": ["nanos", "osv"]
+  "unikernel_support": ["nanos", "osv"],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

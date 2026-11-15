@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["cloud", "nocloud-iso"],
   "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["windows", "sunos"]
+  "os_blacklist": ["windows", "sunos"],
+  "capabilities": ["versioned-artifact"]
 }

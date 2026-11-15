@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["texlive", "pdflatex", "bibtex", "latex"],
   "os_whitelist": ["all"],
-  "repository": "https://tug.org/texlive/"
+  "repository": "https://tug.org/texlive/",
+  "capabilities": ["versioned-artifact"]
 }

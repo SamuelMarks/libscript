@@ -39,6 +39,171 @@ libscript_get_version_dir() {
   printf '%s\n' "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${component}/${version}"
 }
 
+# ## libscript_sync_active_bin
+# Atomically synchronizes executable symlinks in LIBSCRIPT_HOME/bin for a component's active default version.
+libscript_sync_active_bin() {
+  _sab_comp="$1"
+  _sab_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  _sab_def_bin="${_sab_home}/${_sab_comp}/default/bin"
+  _sab_bin_dir="${_sab_home}/bin"
+  _sab_owners_dir="${_sab_home}/.bin_owners"
+  _sab_owner_file="${_sab_owners_dir}/${_sab_comp}.list"
+
+  mkdir -p "${_sab_bin_dir}" "${_sab_owners_dir}"
+
+  if [ -f "${_sab_owner_file}" ]; then
+    while IFS= read -r _sab_old_name || [ -n "${_sab_old_name}" ]; do
+      [ -z "${_sab_old_name}" ] && continue
+      if [ -L "${_sab_bin_dir}/${_sab_old_name}" ] && [ ! -x "${_sab_def_bin}/${_sab_old_name}" ]; then
+        rm -f "${_sab_bin_dir}/${_sab_old_name}"
+      fi
+    done < "${_sab_owner_file}"
+  fi
+
+  : > "${_sab_owner_file}.tmp"
+  if [ -d "${_sab_def_bin}" ]; then
+    set +f
+    for _sab_entry in "${_sab_def_bin}"/*; do
+      [ -e "${_sab_entry}" ] || continue
+      if [ -x "${_sab_entry}" ] && [ ! -d "${_sab_entry}" ]; then
+        _sab_bname=$(basename -- "${_sab_entry}")
+        ln -sf "../${_sab_comp}/default/bin/${_sab_bname}" "${_sab_bin_dir}/${_sab_bname}"
+        printf '%s\n' "${_sab_bname}" >> "${_sab_owner_file}.tmp"
+      fi
+    done
+    set -f
+  fi
+  mv "${_sab_owner_file}.tmp" "${_sab_owner_file}"
+}
+
+# ## libscript_cleanup_active_bin
+# Cleans dangling version aliases for a component and redirects LIBSCRIPT_HOME/bin shims to a remaining installed version or removes them.
+libscript_cleanup_active_bin() {
+  _cab_comp="$1"
+  _cab_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  _cab_comp_dir="${_cab_home}/${_cab_comp}"
+  _cab_bin_dir="${_cab_home}/bin"
+  _cab_owner_file="${_cab_home}/.bin_owners/${_cab_comp}.list"
+
+  if [ -d "${_cab_comp_dir}" ]; then
+    set +f
+    for _cab_item in "${_cab_comp_dir}"/*; do
+      if [ -L "${_cab_item}" ] && [ ! -e "${_cab_item}" ]; then
+        rm -f "${_cab_item}"
+      fi
+    done
+    set -f
+  fi
+
+  if [ -d "${_cab_comp_dir}/default/bin" ]; then
+    libscript_sync_active_bin "${_cab_comp}"
+    return 0
+  fi
+
+  _cab_fallback=""
+  if [ -d "${_cab_comp_dir}" ]; then
+    _cab_candidates=""
+    set +f
+    for _cab_d in "${_cab_comp_dir}"/*; do
+      if [ -d "${_cab_d}" ] && [ ! -L "${_cab_d}" ]; then
+        _cab_dn=$(basename -- "${_cab_d}")
+        _cab_candidates="${_cab_candidates}${_cab_candidates:+
+}${_cab_dn}"
+      fi
+    done
+    set -f
+    if [ -n "${_cab_candidates}" ]; then
+      _cab_fallback=$(printf '%s\n' "${_cab_candidates}" | libscript_sort_versions | tail -n 1)
+    fi
+  fi
+
+  if [ -n "${_cab_fallback}" ]; then
+    libscript_symlink_alias "${_cab_comp}" "default" "${_cab_fallback}"
+    return 0
+  fi
+
+  if [ -f "${_cab_owner_file}" ]; then
+    while IFS= read -r _cab_name || [ -n "${_cab_name}" ]; do
+      [ -z "${_cab_name}" ] && continue
+      if [ -L "${_cab_bin_dir}/${_cab_name}" ]; then
+        rm -f "${_cab_bin_dir}/${_cab_name}"
+      fi
+    done < "${_cab_owner_file}"
+    rm -f "${_cab_owner_file}"
+  fi
+  if [ -d "${_cab_bin_dir}" ]; then
+    set +f
+    for _cab_link in "${_cab_bin_dir}"/*; do
+      if [ -L "${_cab_link}" ] && [ ! -e "${_cab_link}" ]; then
+        rm -f "${_cab_link}"
+      fi
+    done
+    set -f
+  fi
+}
+
+# ## libscript_resolve_workspace_version
+# Ascends from a starting directory looking for .libscript-version (multi-tool key=value or single-version) or libscript.json pins.
+libscript_resolve_workspace_version() {
+  _rwv_comp="$1"
+  _rwv_dir="${2:-${PWD}}"
+  [ -d "${_rwv_dir}" ] || return 1
+  _rwv_dir=$(cd -- "${_rwv_dir}" && pwd)
+
+  while :; do
+    if [ -f "${_rwv_dir}/.libscript-version" ]; then
+      _rwv_val=$(awk -v pkg="${_rwv_comp}" '
+        {
+          line = $0
+          sub(/#.*/, "", line)
+          gsub(/^[ \t\r]+|[ \t\r]+$/, "", line)
+          if (line == "") next
+          if (index(line, "=") > 0) {
+            eq = index(line, "=")
+            k = substr(line, 1, eq - 1)
+            v = substr(line, eq + 1)
+            gsub(/^[ \t]+|[ \t]+$/, "", k)
+            gsub(/^[ \t"'\'']+|[ \t"'\'']+$/, "", v)
+            if (tolower(k) == tolower(pkg)) { print v; found = 1; exit }
+          } else if (index(line, ":") > 0) {
+            co = index(line, ":")
+            k = substr(line, 1, co - 1)
+            v = substr(line, co + 1)
+            gsub(/^[ \t]+|[ \t]+$/, "", k)
+            gsub(/^[ \t"'\'']+|[ \t"'\'']+$/, "", v)
+            if (tolower(k) == tolower(pkg)) { print v; found = 1; exit }
+          } else {
+            single = line
+            non_kv++
+          }
+        }
+        END {
+          if (!found && non_kv == 1 && single != "") print single
+        }
+      ' "${_rwv_dir}/.libscript-version" 2>/dev/null || true)
+      if [ -n "${_rwv_val}" ]; then
+        printf '%s\n' "${_rwv_val}"
+        return 0
+      fi
+    fi
+    if [ -f "${_rwv_dir}/libscript.json" ] && command -v jq >/dev/null 2>&1; then
+      _rwv_jval=$(jq -r --arg c "${_rwv_comp}" '
+        (.deps[$c] // .dependencies[$c] // .[$c] // empty)
+        | if type == "object" then (.version // empty) elif type == "string" then . else empty end
+      ' "${_rwv_dir}/libscript.json" 2>/dev/null || true)
+      if [ -n "${_rwv_jval}" ] && [ "${_rwv_jval}" != "null" ]; then
+        printf '%s\n' "${_rwv_jval}"
+        return 0
+      fi
+    fi
+    _rwv_parent="${_rwv_dir%/*}"
+    [ -z "${_rwv_parent}" ] && _rwv_parent="/"
+    [ "${_rwv_dir}" = "${_rwv_parent}" ] && break
+    _rwv_dir="${_rwv_parent}"
+  done
+  return 1
+}
+
 # ## libscript_symlink_alias
 # Updates the default or named version symlink/junction to point to the target version.
 libscript_symlink_alias() {
@@ -58,6 +223,9 @@ libscript_symlink_alias() {
     if ! (cd "${base_dir}" && ln -sfn "${exact_version}" "${alias_name}" 2>/dev/null); then
       (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}")
     fi
+  fi
+  if [ "${alias_name}" = "default" ]; then
+    libscript_sync_active_bin "${component}"
   fi
 }
 
@@ -371,6 +539,7 @@ libscript_handle_generic_action() {
         log_info "Uninstalling ${_hga_comp} ${_hga_ver}..."
         rm -rf "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_hga_comp}/${EXACT_VERSION}"
         rm -f "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${_hga_comp}/${_hga_ver}"
+        libscript_cleanup_active_bin "${_hga_comp}"
       else
         log_info "Uninstall not implemented or supported for $_hga_method."
       fi

@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["vim", "editor"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/vim/vim"
+  "repository": "https://github.com/vim/vim",
+  "capabilities": ["versioned-artifact"]
 }

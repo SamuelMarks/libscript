@@ -9,5 +9,6 @@
   "versions": ["latest", "2.12.0.4"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
   "os_blacklist": ["windows"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

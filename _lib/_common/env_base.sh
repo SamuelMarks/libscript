@@ -89,7 +89,21 @@ if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]
   elif [ -n "${LIBSCRIPT_VERSION:-}" ] && { [ -z "${PACKAGE_NAME:-}" ] || [ "${PACKAGE_NAME:-}" = "$_eb_pkg" ]; }; then
     _eb_ver="${LIBSCRIPT_VERSION}"
   else
-    _eb_ver='latest'
+    if ! type libscript_resolve_workspace_version >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh" ]; then
+      _eb_vr_this="${THIS_FILE}"; _eb_vr_dir="${SCRIPT_DIR}"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090,SC1091
+      . "${SCRIPT_NAME}"
+      unset SCRIPT_NAME || true
+      THIS_FILE="${_eb_vr_this}"; SCRIPT_DIR="${_eb_vr_dir}"
+      unset _eb_vr_this _eb_vr_dir || true
+    fi
+    if type libscript_resolve_workspace_version >/dev/null 2>&1 && _eb_ws_ver=$(libscript_resolve_workspace_version "$_eb_pkg" "${PWD}" 2>/dev/null); then
+      _eb_ver="$_eb_ws_ver"
+    else
+      _eb_ver='latest'
+    fi
   fi
   if [ "$_eb_pkg_up" = "BUNDLER" ] && [ "$_eb_ver" = "latest" ]; then
     unset BUNDLER_VERSION || true

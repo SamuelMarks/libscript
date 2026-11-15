@@ -7,5 +7,6 @@
   "provides": ["buildah"],
   "os_whitelist": ["linux", "freebsd"],
   "os_blacklist": ["windows"],
-  "repository": "https://github.com/containers/buildah"
+  "repository": "https://github.com/containers/buildah",
+  "capabilities": ["versioned-artifact"]
 }

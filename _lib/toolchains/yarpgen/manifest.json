@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["yarpgen"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/intel/yarpgen"
+  "repository": "https://github.com/intel/yarpgen",
+  "capabilities": ["versioned-artifact"]
 }

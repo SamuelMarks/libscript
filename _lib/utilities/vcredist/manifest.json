@@ -9,5 +9,6 @@
   "versions": ["latest", "14"],
   "os_whitelist": ["windows"],
   "os_blacklist": [],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["tofu", "opentofu"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/opentofu/opentofu"
+  "repository": "https://github.com/opentofu/opentofu",
+  "capabilities": ["versioned-artifact"]
 }

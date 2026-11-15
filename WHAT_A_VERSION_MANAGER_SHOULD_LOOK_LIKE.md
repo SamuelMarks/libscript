@@ -36,9 +36,23 @@ _Example for Python (assuming default `LIBSCRIPT_HOME`):_
 - `~/.libscript/python/3.11.9/bin/python`
 - `~/.libscript/python/3.12.0/bin/python`
 
-**Aliases via Symlinks:** When a user requests an alias (like `lts`, `latest`, `stable`, or `beta`),
-the setup script must resolve the exact version, install it to its exact version directory, and then
-create a symlink for the alias pointing to that directory.
+**Aliases via Symlinks & `O(1)` Active Bin Farm:** When a user requests an alias (like `lts`,
+`latest`, `stable`, or `beta`), the setup script resolves the exact version, installs it to its
+exact version directory, and creates a symlink/junction for the alias. When `default` is updated via
+`libscript use <pkg> <ver>` (or `install --use`), `_lib/_common/versioning.{sh,cmd}` atomically
+synchronizes executable shims in `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` entry) and redirects or
+prunes stale shims on `uninstall`.
+
+**Multi-Tool Workspace Pins (`.libscript-version`):** Workspaces may pin multiple toolchains in a
+single `.libscript-version` file (`rust=1.85.0`, `nodejs=22.14.0`, `python=3.12.8`). Running
+`./libscript.sh resolve-env --write=<file>` walks upward from `$PWD` and emits a deterministic
+sourced activation file without `eval`.
+
+**Capability-Typed Manifests & Toolchain Sub-Artifacts:** Every `manifest.json` declares its
+`"capabilities"` (`"versioned-artifact"`, `"service-daemon"`, `"sysroot-library"`,
+`"cloud-operator"`, `"os-synthesizer"`). Daemon-only verbs (`start`, `stop`, `install-service`) fail
+fast with a non-zero semantic error on non-daemons, while cross-compiling toolchains expose
+`target-add`, `target-rm`, `target-ls`, `component-add`, and `component-ls`.
 
 _Example:_ `${LIBSCRIPT_HOME}/nodejs/lts` -> `${LIBSCRIPT_HOME}/nodejs/v22.14.0`
 
@@ -107,21 +121,23 @@ dynamically branch to delegate the lifecycle command to that specific package/ve
 - **`ls-remote`**: Queries the official upstream API or release index to list available versions
   that can be downloaded and installed. For delegates, it calls commands like `mise ls-remote` or
   `vfox ls-remote`.
-- **`use`**: Activates a specific version for the environment. This may involve updating a global
-  `default` symlink or writing to a `.libscript-version` file to ensure the shell picks up the
-  requested version across sessions.
-- **`start`**: Executes the component. For services, this runs the daemon process; for languages, it
-  might start a REPL or a development server if applicable.
-- **`stop`**: Safely terminates the running instance of the component.
-- **`status`**: Checks the health and current state of the running component (e.g., active,
-  inactive, failed).
-- **`logs`**: Outputs or tails the recent logs of the component's background daemon or service.
-- **`install-service`**: Registers the component as a persistent background service using the
-  OS-native init system (e.g., `systemd`, `launchd`, or Windows Services).
-- **`uninstall-service`**: Stops the daemon if running and safely unregisters/removes it from the
-  host OS.
-- **`uninstall`**: Completely removes the installed version. For `libscript_native`, it removes the
-  isolated directory (`${LIBSCRIPT_HOME}/<component>/<exact_version>`) and associated symlinks.
+- **`use`**: Activates a specific version by updating the `default` symlink and atomically
+  synchronizing executable links in `${LIBSCRIPT_HOME}/bin` (`O(1)` lookup via
+  `libscript_sync_active_bins`) or resolving workspace pins (`.libscript-version`, `.nvmrc`,
+  `.python-version`, `rust-toolchain.toml` via `libscript resolve-env`).
+- **`status`**: Checks installation state (and daemon health when `"service-daemon"` is declared).
+- **`uninstall`**: Completely removes the installed version
+  (`${LIBSCRIPT_HOME}/<component>/<exact_version>`) and prunes orphaned shims from
+  `${LIBSCRIPT_HOME}/bin` (`libscript_prune_active_bins`).
+- **Cross-Toolchain Sub-Artifacts (`target-add`, `target-rm`, `target-ls`, `component-add`,
+  `component-ls`)**: Supported on multi-target compiler toolchains (such as `_lib/languages/rust`)
+  to manage cross-compilation sysroots and tooling components inside the active version prefix.
+- **Daemon Verbs (`start`, `stop`, `restart`, `logs`, `install-service`, `uninstall-service` —
+  `"service-daemon"` Only)**: Components declaring `"service-daemon"` in `manifest.json` implement
+  service supervision (`systemd`, `launchd`, `openrc`, `smf`, Windows Services) via
+  `service.{sh,cmd}`. Pure libraries, compilers, and CLI tools MUST NOT include no-op
+  `service.{sh,cmd}` stubs and fail fast with exit code `69` (`EX_UNAVAILABLE`) if daemon verbs are
+  invoked.
 
 ## 5. Alternative Installation Methods & Overrides
 

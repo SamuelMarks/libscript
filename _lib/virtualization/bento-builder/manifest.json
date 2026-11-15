@@ -11,5 +11,6 @@
   "ports": [],
   "dependencies": {
     "build_deps": ["packer", "qemu", "ruby", "vagrant", "virtualbox"]
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

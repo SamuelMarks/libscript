@@ -9,5 +9,6 @@
   "os_whitelist": ["linux"],
   "os_blacklist": ["windows", "freebsd", "sunos", "alpine", "darwin"],
   "arch_blacklist": ["aarch64", "arm64"],
-  "ports": []
+  "ports": [],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

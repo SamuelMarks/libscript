@@ -7,5 +7,6 @@
   "provides": ["sysctl", "sysctl-d"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "macos"],
   "os_blacklist": ["windows", "sunos"],
-  "repository": "https://gitlab.com/procps-ng/procps"
+  "repository": "https://gitlab.com/procps-ng/procps",
+  "capabilities": ["versioned-artifact"]
 }

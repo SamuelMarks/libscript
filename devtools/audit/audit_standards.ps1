@@ -305,6 +305,10 @@ function Audit-File {
         if (-not (Test-Path $shFile)) {
             Log-Violation -File $FilePath -Rule "POSIX_PARITY" -Details "Missing POSIX shell equivalent file ('$shFile')."
         }
+        $rawBatchBytes = [System.IO.File]::ReadAllText((Resolve-Path -LiteralPath $FilePath).Path)
+        if ($rawBatchBytes -match "`r(?!`n)") {
+            Log-Violation -File $FilePath -Rule "BATCH_EOL_CRLF" -Details "Double CR (\r\r\n) or lone CR byte found in batch script."
+        }
         if ($lines[0].Trim() -notmatch '^@echo off$') {
             Log-Violation -File $FilePath -Rule "BATCH_ECHO_OFF" -Details "Missing '@echo off' on line 1."
         }
@@ -606,7 +610,7 @@ function Audit-File {
 }
 
 # ## Test-GitAttributesEol
-# Verifies via git check-attr that all tracked POSIX/PowerShell scripts resolve to eol=lf and Batch scripts resolve to eol=crlf.
+# Verifies via git check-attr and git ls-files --eol that tracked scripts resolve to expected line endings without index/worktree CR corruption.
 function Test-GitAttributesEol {
     $insideGit = git rev-parse --is-inside-work-tree 2>$null
     if ($LASTEXITCODE -ne 0 -or $insideGit -ne "true") {
@@ -628,6 +632,26 @@ function Test-GitAttributesEol {
             } else {
                 if ($v -ne "lf") {
                     Log-Violation -File $p -Rule "GITATTRIBUTES_EOL" -Details "Expected git attribute eol=lf for script, found eol=$v"
+                }
+            }
+        }
+    }
+    $eolOut = @(git ls-files --eol "*.sh" "*.ps1" "*.cmd" "*.bat" ".githooks/pre-commit" 2>$null)
+    foreach ($eLine in $eolOut) {
+        $parts = $eLine -split "`t", 2
+        if ($parts.Count -eq 2) {
+            $meta = ($parts[0].Trim() -split '\s+')
+            $p = $parts[1]
+            if ($meta.Count -ge 2) {
+                $iEol = $meta[0]
+                $wEol = $meta[1]
+                if ($wEol -eq "w/-text") {
+                    Log-Violation -File $p -Rule "GITATTRIBUTES_EOL" -Details "Working-tree script contains lone CR or binary bytes (w/-text)"
+                } elseif ($iEol -eq "i/mixed" -or $iEol -eq "i/crlf") {
+                    git diff --quiet -- $p 2>$null
+                    if ($LASTEXITCODE -eq 0) {
+                        Log-Violation -File $p -Rule "GITATTRIBUTES_EOL" -Details "Git index blob has unnormalized line endings ($iEol); renormalize to i/lf"
+                    }
                 }
             }
         }

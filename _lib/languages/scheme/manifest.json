@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["scheme", "guile", "chez"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/cisco/ChezScheme"
+  "repository": "https://github.com/cisco/ChezScheme",
+  "capabilities": ["versioned-artifact"]
 }

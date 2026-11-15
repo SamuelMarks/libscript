@@ -6,5 +6,6 @@
   "category": "package-managers",
   "provides": ["yum"],
   "os_whitelist": ["rhel", "fedora", "centos", "rocky", "almalinux", "linux"],
-  "repository": "https://github.com/rpm-software-management/yum"
+  "repository": "https://github.com/rpm-software-management/yum",
+  "capabilities": ["versioned-artifact"]
 }

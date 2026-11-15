@@ -8,5 +8,6 @@
   "os_blacklist": ["sunos", "windows"],
   "dependencies": {
     "runtime_deps": ["caddy", "nodejs"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

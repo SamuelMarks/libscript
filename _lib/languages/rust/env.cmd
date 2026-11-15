@@ -59,8 +59,20 @@ if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
 
-if "%CARGO_HOME%"=="" set "CARGO_HOME=%USERPROFILE%\.cargo"
-if "%RUSTUP_HOME%"=="" set "RUSTUP_HOME=%USERPROFILE%\.rustup"
+if "%CARGO_HOME%"=="" (
+    if exist "%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%" (
+        set "CARGO_HOME=%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\cargo"
+    ) else (
+        set "CARGO_HOME=%USERPROFILE%\.cargo"
+    )
+)
+if "%RUSTUP_HOME%"=="" (
+    if exist "%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%" (
+        set "RUSTUP_HOME=%LIBSCRIPT_BASE_DIR%\rust\%RUST_VERSION%\rustup"
+    ) else (
+        set "RUSTUP_HOME=%USERPROFILE%\.rustup"
+    )
+)
 
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "rust" "%RUST_VERSION%"

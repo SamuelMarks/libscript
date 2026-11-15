@@ -234,8 +234,8 @@ Install pure vanilla OS base without preloading any LibScript components:
 
 ### Option B: Scrollable Dynamic Component Selection
 
-Select any combination of components from the 320+ package catalog (520+ total subsystems, e.g.,
-`nginx`, `wordpress`, `odoo`, `openedx`):
+Select any combination of components from the 360+ Tier 1 package catalog (542+ documented
+subsystems, e.g., `nginx`, `wordpress`, `odoo`, `openedx`):
 
 ```sh
 # Query dynamic catalog via CLI

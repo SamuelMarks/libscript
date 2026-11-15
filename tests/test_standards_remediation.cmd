@@ -103,6 +103,31 @@ if "!ERRORLEVEL!"=="86" (
     call :fail_check "alpine-systemctl.cmd did not return exit code 86"
 )
 
+where powershell >nul 2>&1
+if not errorlevel 1 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\kubernetes-thw\alpine-systemctl.ps1" >nul 2>&1
+    if "!ERRORLEVEL!"=="86" (
+        call :pass_check "alpine-systemctl.ps1 returned Option A exit code 86"
+    ) else (
+        call :fail_check "alpine-systemctl.ps1 did not return exit code 86"
+    )
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\_lib\app-servers\nodejs-server\setup_debian.ps1" >nul 2>&1
+    if "!ERRORLEVEL!"=="86" (
+        call :pass_check "nodejs-server\setup_debian.ps1 returned Option A exit code 86"
+    ) else (
+        call :fail_check "nodejs-server\setup_debian.ps1 did not return exit code 86"
+    )
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$d = '!TEST_WS!\double_cr'; New-Item -ItemType Directory -Force -Path $d | Out-Null; $lf = [string][char]10; $crlf = [string][char]13 + $lf; [IO.File]::WriteAllText(\"$d\sample.sh\", (@('#!/bin/sh', '# ## Overview', '# Fixture.', '# ## Usage', '# sample.sh', 'exit 0', '') -join $lf)); [IO.File]::WriteAllText(\"$d\sample.cmd\", (@('@echo off', ':: # sample.cmd', ':: ## Overview', ':: Fixture.', ':: ## Usage', ':: sample.cmd', 'setlocal EnableDelayedExpansion', 'set \"THIS_FILE=%~f0\"', 'if defined STACK (', '    echo \"!STACK!\" | findstr /I /C:\":!THIS_FILE!:\" >nul 2>&1', '    if not errorlevel 1 exit /b 0', ')', 'set \"STACK=%STACK%:!THIS_FILE!:\"', ('echo bad' + [char]13), 'exit /b 0', '') -join $crlf))" >nul 2>&1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_standards.cmd" "!TEST_WS!\double_cr\sample.cmd" > "!TEST_WS!\double_cr_audit.txt" 2>&1
+    findstr /C:"BATCH_EOL_CRLF" "!TEST_WS!\double_cr_audit.txt" >nul 2>&1
+    if errorlevel 1 (
+        call :fail_check "audit_standards.cmd failed to flag BATCH_EOL_CRLF on double-CR fixture"
+    ) else (
+        call :pass_check "audit_standards.cmd flagged BATCH_EOL_CRLF on double-CR fixture"
+    )
+)
+
 echo === 4. Verifying os_info.cmd Variable Tunneling ===
 set "INIT_SYS="
 set "TARGET_OS="

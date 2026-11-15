@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/experiments/os-component-matrix/vars.schema.json",
+  "title": "7-OS Component Matrix Variables",
+  "description": "Configuration variables for the 7-OS Vagrant/cloud compatibility matrix experiment.",
+  "type": "object",
+  "properties": {
+    "OS_FILTER": {
+      "type": "string",
+      "default": "all",
+      "description": "Comma-separated subset of OS targets to execute (alpine,debian,rockylinux,freebsd,omnios,macos,windows, or all)."
+    },
+    "README_OUT": {
+      "type": "string",
+      "description": "Optional path to the Markdown file updated with the 5-tier, 7-OS Supported Components tables."
+    }
+  }
+}

@@ -6,5 +6,6 @@
   "title": "mise",
   "description": "mise-en-place",
   "category": "package-managers",
-  "repository": "https://github.com/jdx/mise"
+  "repository": "https://github.com/jdx/mise",
+  "capabilities": ["versioned-artifact"]
 }

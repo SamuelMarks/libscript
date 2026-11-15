@@ -80,6 +80,7 @@ set "SCAF_SRC_FALLBACK_VER=1.0.0"
 set "SCAF_OS_WHITELIST=all"
 set "SCAF_OS_BLACKLIST="
 set "SCAF_ARCH_WHITELIST=all"
+set "SCAF_CAPABILITIES=versioned-artifact"
 set "SCAF_IS_SERVICE=false"
 set "SCAF_PORTS="
 set "SCAF_ENABLE_HOOKS=false"
@@ -143,6 +144,16 @@ if /i "!arg:~0,13!"=="--tag-prefix=" ( set "SCAF_TAG_PREFIX=!arg:~13!" & shift &
 if /i "!arg:~0,6!"=="--url=" ( set "SCAF_URL_UNIX=!arg:~6!" & shift & goto :parse_args )
 if /i "!arg:~0,10!"=="--win-url=" ( set "SCAF_URL_WINDOWS=!arg:~10!" & shift & goto :parse_args )
 if /i "!arg:~0,15!"=="--releases-url=" ( set "SCAF_RELEASES_URL=!arg:~15!" & shift & goto :parse_args )
+if /i "!arg:~0,15!"=="--capabilities=" (
+    set "SCAF_CAPABILITIES=!arg:~15!"
+    echo ,!SCAF_CAPABILITIES!, | findstr /I /C:",service-daemon," >nul 2>&1 && set "SCAF_IS_SERVICE=true"
+    shift
+    goto :parse_args
+)
+if /i "!arg:~0,10!"=="--service=" ( set "SCAF_IS_SERVICE=!arg:~10!" & shift & goto :parse_args )
+if /i "!arg:~0,9!"=="--binary=" ( set "SCAF_BINARY_NAME=!arg:~9!" & shift & goto :parse_args )
+if /i "!arg:~0,18!"=="--default-version=" ( set "SCAF_DEFAULT_VERSION=!arg:~18!" & shift & goto :parse_args )
+if /i "!arg:~0,15!"=="--default-port=" ( set "SCAF_PORTS=!arg:~15!" & shift & goto :parse_args )
 if /i "!arg:~0,5!"=="--os=" ( set "SCAF_OS_WHITELIST=!arg:~5!" & shift & goto :parse_args )
 if /i "!arg:~0,7!"=="--arch=" ( set "SCAF_ARCH_WHITELIST=!arg:~7!" & shift & goto :parse_args )
 if /i "!arg:~0,8!"=="--ports=" ( set "SCAF_PORTS=!arg:~8!" & shift & goto :parse_args )
@@ -170,6 +181,9 @@ if "!SCAF_CATEGORY!"=="" set "SCAF_CATEGORY=utilities"
 if "!SCAF_TITLE!"=="" set "SCAF_TITLE=!SCAF_NAME!"
 if "!SCAF_DESCRIPTION!"=="" set "SCAF_DESCRIPTION=Installs and manages !SCAF_TITLE! across supported platforms."
 if "!SCAF_BINARY_NAME!"=="" set "SCAF_BINARY_NAME=!SCAF_NAME!"
+if /i "!SCAF_IS_SERVICE!"=="true" (
+    echo ,!SCAF_CAPABILITIES!, | findstr /I /C:",service-daemon," >nul 2>&1 || set "SCAF_CAPABILITIES=!SCAF_CAPABILITIES!,service-daemon"
+)
 if not "!SCAF_GITHUB_REPO!"=="" (
     if "!SCAF_REPOSITORY!"=="" set "SCAF_REPOSITORY=https://github.com/!SCAF_GITHUB_REPO!"
     if "!SCAF_RELEASES_URL!"=="" set "SCAF_RELEASES_URL=https://api.github.com/repos/!SCAF_GITHUB_REPO!/releases/latest"
@@ -187,8 +201,9 @@ if not errorlevel 1 (
     if /i "!SCAF_MODE!"=="json" (
         set "_SH_ARGS=--from-json=!SCAF_FROM_JSON!"
     ) else (
-        set "_SH_ARGS=--non-interactive --name=!SCAF_NAME! --category=!SCAF_CATEGORY! --title=!SCAF_TITLE! --binary-name=!SCAF_BINARY_NAME! --install-method=!SCAF_INSTALL_METHOD! --version-scheme=!SCAF_VERSION_SCHEME! --os=!SCAF_OS_WHITELIST!"
+        set "_SH_ARGS=--non-interactive --name=!SCAF_NAME! --category=!SCAF_CATEGORY! --title=!SCAF_TITLE! --binary-name=!SCAF_BINARY_NAME! --install-method=!SCAF_INSTALL_METHOD! --version-scheme=!SCAF_VERSION_SCHEME! --os=!SCAF_OS_WHITELIST! --capabilities=!SCAF_CAPABILITIES! --service=!SCAF_IS_SERVICE!"
         if not "!SCAF_GITHUB_REPO!"=="" set "_SH_ARGS=!_SH_ARGS! --github-repo=!SCAF_GITHUB_REPO!"
+        if not "!SCAF_PORTS!"=="" set "_SH_ARGS=!_SH_ARGS! --ports=!SCAF_PORTS!"
     )
     if "!SCAF_FORCE!"=="1" set "_SH_ARGS=!_SH_ARGS! --force"
     if "!SCAF_DRY_RUN!"=="1" set "_SH_ARGS=!_SH_ARGS! --dry-run"
@@ -294,6 +309,8 @@ exit /b 0
 :synthesize_component_batch
 set "_CDIR=%~1"
 for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "('!SCAF_NAME!'.ToUpper() -replace '[^A-Z0-9]', '_')"`) do set "COMP_PREFIX=%%P"
+set "_CAPS_JSON=[\"versioned-artifact\"]"
+if /i "!SCAF_IS_SERVICE!"=="true" set "_CAPS_JSON=[\"versioned-artifact\", \"service-daemon\"]"
 if not exist "!_CDIR!\manifest.json" (
     (
         echo {
@@ -303,6 +320,7 @@ if not exist "!_CDIR!\manifest.json" (
         echo   "description": "!SCAF_DESCRIPTION!",
         echo   "category": "!SCAF_CATEGORY!",
         echo   "provides": ["!SCAF_NAME!"],
+        echo   "capabilities": !_CAPS_JSON!,
         echo   "os_whitelist": ["all"]
         echo }
     ) > "!_CDIR!\manifest.json"
@@ -399,6 +417,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$matches = [regex]::Matches($content, 'write_component_file\s+\"\$\{_comp_dir\}/([^\"]+)\"\s+(\d+)\s+(\d+)\s+<<\s+''EOF''\r?\n([\s\S]*?)\r?\nEOF'); " ^
     "foreach ($m in $matches) { " ^
     "  $fname = $m.Groups[1].Value; $isCrlf = ($m.Groups[3].Value -eq '1'); $body = $m.Groups[4].Value; " ^
+    "  if (($fname -eq 'service.sh' -or $fname -eq 'service.cmd') -and '!SCAF_IS_SERVICE!' -ne 'true') { continue }; " ^
     "  foreach ($k in $map.Keys) { $body = $body.Replace($k, $map[$k]) }; " ^
     "  $outPath = Join-Path $cdir $fname; " ^
     "  if (-not (Test-Path $outPath) -or '!SCAF_FORCE!' -eq '1') { " ^

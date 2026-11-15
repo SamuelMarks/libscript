@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "High-availability Apache Mesos + Marathon cluster topology with ZooKeeper quorum leader election, Mesos agent fleet, and netctl service discovery / ingress bridge.",
   "quorum_strategy": "raft",
+  "fencing_policy": "cloud-api-poweroff",
   "node_groups": [
     {
       "name": "zk-ensemble",

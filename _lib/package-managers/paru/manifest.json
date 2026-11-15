@@ -7,5 +7,6 @@
   "description": "Bootstrap module for the `paru` package manager.",
   "category": "package-managers",
   "os_blacklist": ["freebsd"],
-  "repository": "https://github.com/Morganamilo/paru"
+  "repository": "https://github.com/Morganamilo/paru",
+  "capabilities": ["versioned-artifact"]
 }

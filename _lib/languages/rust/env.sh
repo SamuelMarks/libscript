@@ -36,8 +36,19 @@ unset SCRIPT_NAME || true
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 RUST_VERSION="${RUST_VERSION:-latest}"
 if [ "${RUST_VERSION}" = "latest" ]; then
-  RUST_VERSION='stable'
+  if [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rust/default" ]; then
+    RUST_VERSION='default'
+  else
+    RUST_VERSION='stable'
+  fi
 fi
-libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rust/${RUST_VERSION}/bin" "/opt/ooce/rust/bin" "/opt/ooce/bin"
+_rust_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/rust/${RUST_VERSION}"
+if [ -d "${_rust_dir}" ]; then
+  export CARGO_HOME="${CARGO_HOME:-${_rust_dir}/cargo}"
+  export RUSTUP_HOME="${RUSTUP_HOME:-${_rust_dir}/rustup}"
+  libscript_path_prepend "${CARGO_HOME}/bin" "${_rust_dir}/bin"
+else
+  libscript_path_prepend "${_rust_dir}/bin" "/opt/ooce/rust/bin" "/opt/ooce/bin"
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

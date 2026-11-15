@@ -116,9 +116,9 @@ case "$ACTION" in
       log_info "Filestore '$INSTANCE_NAME' already deleted or not found."
     fi
     ;;
-  logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
-    printf '%s\n' 'Action not applicable for this provisioning module.'
-    exit 0
+  logs|status|use|env|ls|ls-remote|download|uninstall|install-service|uninstall-service|which|exec|run)
+    printf '[ERROR] Action '\''%s'\'' requires capability '\''versioned-artifact'\'' or '\''service-daemon'\'' (gcp-filestore capabilities: ["cloud-operator"]).\n' "${ACTION}" >&2
+    exit 1
     ;;
   *)
     log_error "Unknown action: $ACTION"

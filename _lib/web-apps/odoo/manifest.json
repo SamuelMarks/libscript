@@ -8,5 +8,6 @@
   "os_blacklist": ["sunos"],
   "dependencies": {
     "runtime_deps": ["nginx", "postgres", "python"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

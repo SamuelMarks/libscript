@@ -236,13 +236,10 @@ case "${ML_TARGET}" in
     export APP_DIR="${MANIFEST_DIR}"
     export ML_SCRIPT="${EXEC_CMD}"
     export WORKLOAD_CMD="${EXEC_CMD}"
+    export TPU_BACKEND="${ML_BACKEND}"
     STACK="${STACK%"${THIS_FILE}":}"
     export STACK
-    if [ "${ACTION}" = 'train' ] || [ "${ACTION}" = 'eval-ml' ]; then
-      exec "${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/deploy.sh"
-    else
-      exec "${LIBSCRIPT_ROOT_DIR}/_lib/ai-serving/deploy.sh"
-    fi
+    exec "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" submit "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gcp-tpu-vm/payload.json" --scheduler=tpu_vm
     ;;
   gcp-gpu-vm|gpu-vm|gpu)
     export APP_DIR="${MANIFEST_DIR}"
@@ -257,10 +254,16 @@ case "${ML_TARGET}" in
     STACK="${STACK%"${THIS_FILE}":}"
     export STACK
     if [ "${ACTION}" = 'train' ] || [ "${ACTION}" = 'eval-ml' ]; then
-      exec "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-training/deploy.sh"
+      exec "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" submit "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-training/payload.json" --scheduler=xpk
     else
-      exec "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-inference/deploy.sh"
+      exec "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" submit "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-inference/payload.json" --scheduler=xpk
     fi
+    ;;
+  kubernetes|k8s)
+    export WORKLOAD_CMD="${EXEC_CMD}"
+    STACK="${STACK%"${THIS_FILE}":}"
+    export STACK
+    exec "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" submit "${LIBSCRIPT_ROOT_DIR}/payloads/ai/vllm/payload.json" --scheduler=kubernetes
     ;;
   *)
     log_error "Unknown ML target: ${ML_TARGET}"

@@ -44,6 +44,10 @@
       "type": "string",
       "description": "Comma-separated daemon component names decomposed into isolated single-process unikernel appliances.",
       "deprecated_aliases": ["LIBSCRIPT_POD_DAEMONS"]
+    },
+    "UNIKERNEL_POD_TOPOLOGY": {
+      "type": "string",
+      "description": "Path to a topology.schema.json constellation manifest decomposing node groups into single-image unikernel profiles."
     }
   }
 }

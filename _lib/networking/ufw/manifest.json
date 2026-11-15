@@ -6,5 +6,6 @@
   "category": "networking",
   "provides": ["ufw"],
   "os_whitelist": ["linux"],
-  "repository": "https://git.launchpad.net/ufw"
+  "repository": "https://git.launchpad.net/ufw",
+  "capabilities": ["versioned-artifact"]
 }

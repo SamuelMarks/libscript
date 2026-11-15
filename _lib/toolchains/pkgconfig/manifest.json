@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["pkgconfig", "pkg-config", "pkgconf"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/pkgconf/pkgconf"
+  "repository": "https://github.com/pkgconf/pkgconf",
+  "capabilities": ["versioned-artifact"]
 }

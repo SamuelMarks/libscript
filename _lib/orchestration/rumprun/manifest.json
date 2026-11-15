@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["rumprun", "rumpbake", "unikernel-builder"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/rumpkernel/rumprun"
+  "repository": "https://github.com/rumpkernel/rumprun",
+  "capabilities": ["versioned-artifact"]
 }

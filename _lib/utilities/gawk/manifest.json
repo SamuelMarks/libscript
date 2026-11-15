@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["gawk"],
   "os_whitelist": ["all"],
-  "repository": "https://git.savannah.gnu.org/git/gawk.git"
+  "repository": "https://git.savannah.gnu.org/git/gawk.git",
+  "capabilities": ["versioned-artifact"]
 }

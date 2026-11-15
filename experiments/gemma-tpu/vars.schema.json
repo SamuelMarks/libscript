@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/gemma-tpu-suite/vars.schema.json",
+  "title": "gemma-tpu-suite variables",
+  "description": "Configuration variables for the gemma-tpu-suite 7-backend TFRC TPU benchmark component.",
+  "type": "object",
+  "properties": {
+    "GEMMA_TPU_SUITE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Installation strategy for gemma-tpu-suite ('libscript_native', 'system', or 'from-source').",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "GEMMA_TPU_SUITE_VERSION": {
+      "type": "string",
+      "description": "Version tag of gemma-tpu-suite to install.",
+      "default": "1.0.0",
+      "version_aliases": ["latest", "stable"]
+    },
+    "GEMMA_TPU_SUITE_REPO_DIR": {
+      "type": "string",
+      "description": "Filesystem path to the target ML workspace repository (e.g. gemma-4-sql)."
+    },
+    "GEMMA_TPU_SUITE_RESULTS_DIR": {
+      "type": "string",
+      "description": "Local directory where per-cell E0-E4 JSON artifacts and comparison summaries are written."
+    },
+    "GEMMA_TPU_SUITE_MODEL": {
+      "type": "string",
+      "description": "Model identifier passed to Gemma 4 workloads.",
+      "default": "google/gemma-4-E4B"
+    },
+    "GEMMA_TPU_SUITE_BACKENDS": {
+      "type": "string",
+      "description": "Comma-separated list of backends to evaluate across the TPU matrix.",
+      "default": "hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native"
+    },
+    "GEMMA_TPU_SUITE_SUBSUITES": {
+      "type": "string",
+      "description": "Comma-separated list of sub-suites (E0,E1,E2,E3,E4) to execute.",
+      "default": "E0,E1,E2,E3,E4"
+    },
+    "GEMMA_TPU_SUITE_WARMUP": {
+      "type": "string",
+      "description": "Number of untimed XLA compilation warm-up runs before timed trials.",
+      "default": "2"
+    },
+    "GEMMA_TPU_SUITE_TRIALS": {
+      "type": "string",
+      "description": "Number of measured steady-state trials per workload cell.",
+      "default": "5"
+    },
+    "GEMMA_TPU_SUITE_COMMAND_TEMPLATE": {
+      "type": "string",
+      "description": "Optional custom templated command executed across every selected backend in Suite E4."
+    },
+    "GEMMA_TPU_SUITE_REQUIRE_HBM": {
+      "type": "string",
+      "description": "Flag (0 or 1) enforcing fail-fast exit 65 when active TPU HBM or /dev/accel* activity is absent.",
+      "default": "1"
+    },
+    "GEMMA_TPU_SUITE_RESUME": {
+      "type": "string",
+      "description": "Flag (0 or 1) skipping already-completed valid cells matching the current workspace tree digest.",
+      "default": "1"
+    },
+    "GEMMA_TPU_SUITE_LOCAL_EXEC": {
+      "type": "string",
+      "description": "Flag (0 or 1) executing suite workloads in local/worker mode rather than dispatching over gcloud SSH.",
+      "default": "0"
+    },
+    "GEMMA_TPU_SUITE_SHM_ROOT": {
+      "type": "string",
+      "description": "Root tmpfs directory used for isolated per-backend uv virtualenvs and shared model caches.",
+      "default": "/dev/shm/libscript-tpu"
+    },
+    "GEMMA_TPU_SUITE_SYNTHETIC_FIXTURES": {
+      "type": "string",
+      "description": "Internal CI flag (0 or 1) enabling hermetic synthetic probe/telemetry fixtures during offline testing.",
+      "default": "0"
+    },
+    "GEMMA_TPU_SUITE_DRY_RUN": {
+      "type": "string",
+      "description": "Flag (0 or 1) validating configuration and logging planned actions without running workloads.",
+      "default": "0"
+    },
+    "GEMMA_TPU_SUITE_SKIP_CUSTOM_EXEC": {
+      "type": "string",
+      "description": "Internal flag (0 or 1) synthesizing comparison_summary artifacts without re-executing custom E4 templates locally after remote execution.",
+      "default": "0"
+    },
+    "GEMMA_TPU_SUITE_ENABLED": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating whether gemma-tpu-suite is enabled in an execution plan."
+    }
+  },
+  "x-libscript-var-packs": ["experiment", "tfrc", "tpu"]
+}

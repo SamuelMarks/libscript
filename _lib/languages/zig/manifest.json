@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/ziglang/zig"
+  "repository": "https://github.com/ziglang/zig",
+  "capabilities": ["versioned-artifact"]
 }

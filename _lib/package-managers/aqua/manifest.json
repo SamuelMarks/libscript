@@ -7,5 +7,6 @@
   "description": "Bootstrap module for the `aqua` package manager.",
   "category": "package-managers",
   "os_blacklist": ["freebsd"],
-  "repository": "https://github.com/aquaproj/aqua"
+  "repository": "https://github.com/aquaproj/aqua",
+  "capabilities": ["versioned-artifact"]
 }

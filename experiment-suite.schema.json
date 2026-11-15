@@ -19,6 +19,51 @@
       "type": "string",
       "description": "Semantic version or conference protocol tag for the evaluation specification."
     },
+    "substrate": {
+      "type": "string",
+      "enum": ["local-native", "vagrant-os-matrix", "cloud-vm", "tpu-slice", "gke-xpk"],
+      "default": "local-native",
+      "description": "Execution substrate orchestrating hardware or OS environments for this experiment plugin."
+    },
+    "required_components": {
+      "type": "array",
+      "description": "Tier 1 _lib/<category>/<component> software packages automatically provisioned before benchmark execution.",
+      "items": {
+        "type": "string",
+        "description": "Canonical LibScript component name (e.g. edgcpp, rust, libtpu-rs, sqlite)."
+      }
+    },
+    "os_matrix": {
+      "type": "array",
+      "description": "Target operating systems evaluated when substrate is vagrant-os-matrix or cloud-vm.",
+      "items": {
+        "type": "string",
+        "enum": ["alpine", "debian", "rockylinux", "freebsd", "omnios", "macos", "windows"],
+        "description": "Target OS family identifier."
+      }
+    },
+    "vars_schema_ref": {
+      "type": "string",
+      "description": "Relative path to the suite-specific vars.schema.json validating CLI --key=value overrides."
+    },
+    "outputs": {
+      "type": "object",
+      "description": "Canonical empirical output artifact paths produced by the suite.",
+      "properties": {
+        "metrics_json": {
+          "type": "string",
+          "description": "Relative path to the aggregated statistical metrics JSON artifact."
+        },
+        "latex_macros_tex": {
+          "type": "string",
+          "description": "Relative path to generated LaTeX macro definitions consumed by the manuscript."
+        },
+        "readme_matrix": {
+          "type": "string",
+          "description": "Optional Markdown table target updated from OS matrix evaluation results."
+        }
+      }
+    },
     "manuscript_dir": {
       "type": "string",
       "description": "Relative or absolute path to the manuscript directory containing the target LaTeX source."
@@ -724,124 +769,8 @@
       }
     },
     "tpu_matrix": {
-      "type": "object",
-      "description": "Optional multi-backend Google Cloud TPU / TFRC isolation, telemetry, and workload matrix specification.",
-      "properties": {
-        "tfrc_policy_path": {
-          "type": "string",
-          "description": "Default relative or absolute path to tfrc.policy.json validated against schemas/tfrc-policy.schema.json."
-        },
-        "fresh_vm_per_backend": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether to cycle a fresh Cloud TPU VM between isolated backend evaluations."
-        },
-        "require_tpu_hbm_activity": {
-          "type": "boolean",
-          "default": true,
-          "description": "Fail-fast assertion requiring observed /dev/accel* or /dev/vfio/* activity and non-zero TPU HBM allocation."
-        },
-        "backends": {
-          "type": "array",
-          "description": "Isolated ML framework/backend runtime specifications evaluated across the TPU matrix.",
-          "items": {
-            "type": "object",
-            "description": "Single ML backend virtualenv, TPU wheel index, and runtime environment configuration.",
-            "required": ["id", "label", "venv_group", "cli_backend"],
-            "properties": {
-              "id": {
-                "type": "string",
-                "description": "Canonical matrix backend identifier (e.g., hf_transformers, pytorch_native, keras_jax, keras_tensorflow, keras_pytorch, maxtext, jax_native)."
-              },
-              "label": {
-                "type": "string",
-                "description": "Human-readable framework/backend label."
-              },
-              "venv_group": {
-                "type": "string",
-                "description": "Shared or dedicated /dev/shm/libscript-tpu/venvs/<venv_group> directory name."
-              },
-              "cli_backend": {
-                "type": "string",
-                "description": "Target application --backend CLI argument value (e.g., pytorch_hf, pytorch_native, keras, maxtext, jax)."
-              },
-              "keras_backend": {
-                "type": "string",
-                "description": "Optional KERAS_BACKEND value ('jax', 'tensorflow', or 'torch') when cli_backend is 'keras'."
-              },
-              "tpu_runtime_version": {
-                "type": "string",
-                "description": "Optional TPU VM OS runtime version override (e.g., auto, v2-alpha-tpuv6e, tpu-vm-tf-2.16.1-pjrt)."
-              },
-              "pip_find_links": {
-                "type": "array",
-                "description": "Optional wheel index URLs passed via -f / --find-links to uv pip install.",
-                "items": {
-                  "type": "string",
-                  "description": "Wheel release index URL."
-                }
-              },
-              "pip_packages": {
-                "type": "array",
-                "description": "Backend-specific Python TPU packages installed into the isolated /dev/shm virtualenv.",
-                "items": {
-                  "type": "string",
-                  "description": "PEP 508 package requirement specifier."
-                }
-              },
-              "env": {
-                "type": "object",
-                "description": "Backend-specific environment variables exported prior to Stage A probe and workload runs.",
-                "additionalProperties": {
-                  "type": "string",
-                  "description": "Environment variable value."
-                }
-              }
-            }
-          }
-        },
-        "workloads": {
-          "type": "array",
-          "description": "Standardized benchmark and evaluation workloads executed per backend.",
-          "items": {
-            "type": "object",
-            "description": "Single workload template and trial repetition specification.",
-            "required": ["id", "category", "command_template"],
-            "properties": {
-              "id": {
-                "type": "string",
-                "description": "Unique workload identifier within the TPU matrix."
-              },
-              "category": {
-                "type": "string",
-                "enum": ["inference", "sql_eval", "training", "custom"],
-                "description": "Workload evaluation category."
-              },
-              "command_template": {
-                "type": "string",
-                "description": "Command template supporting {backend_id}, {cli_backend}, {keras_backend}, {model}, {batch_size}, {output_json}, and {repo_dir}."
-              },
-              "output_format": {
-                "type": "string",
-                "default": "json",
-                "description": "Serialized output format emitted by the workload."
-              },
-              "warmup_runs": {
-                "type": "integer",
-                "minimum": 0,
-                "default": 2,
-                "description": "Untimed XLA compilation and cache warm-up runs before timed trials."
-              },
-              "measured_trials": {
-                "type": "integer",
-                "minimum": 1,
-                "default": 10,
-                "description": "Timed steady-state trials recorded after warm-up."
-              }
-            }
-          }
-        }
-      }
+      "$ref": "./schemas/tpu-matrix.schema.json",
+      "description": "Optional multi-backend Google Cloud TPU / TFRC isolation, telemetry, and workload matrix specification."
     }
   }
 }

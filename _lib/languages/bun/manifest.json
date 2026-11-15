@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["linux", "darwin", "windows"],
   "os_blacklist": ["freebsd"],
-  "repository": "https://github.com/oven-sh/bun"
+  "repository": "https://github.com/oven-sh/bun",
+  "capabilities": ["versioned-artifact"]
 }

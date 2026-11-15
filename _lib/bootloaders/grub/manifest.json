@@ -7,5 +7,6 @@
   "provides": ["grub", "grub2", "grub-install", "grub-mkconfig"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "sunos"],
   "os_blacklist": ["windows"],
-  "repository": "https://git.savannah.gnu.org/git/grub.git"
+  "repository": "https://git.savannah.gnu.org/git/grub.git",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

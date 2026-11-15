@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["prolog", "swipl"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/SWI-Prolog/swipl-devel"
+  "repository": "https://github.com/SWI-Prolog/swipl-devel",
+  "capabilities": ["versioned-artifact"]
 }

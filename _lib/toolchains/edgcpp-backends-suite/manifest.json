@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["edgcpp-backends-suite", "edgcpp-backends"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/SamuelMarks/edgcpp-compiler"
+  "repository": "https://github.com/SamuelMarks/edgcpp-compiler",
+  "capabilities": ["versioned-artifact"]
 }

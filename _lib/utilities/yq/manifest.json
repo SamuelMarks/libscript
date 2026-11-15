@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["yq", "yaml-processor"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/mikefarah/yq"
+  "repository": "https://github.com/mikefarah/yq",
+  "capabilities": ["versioned-artifact"]
 }

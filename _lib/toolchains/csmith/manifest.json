@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["csmith"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/csmith-project/csmith"
+  "repository": "https://github.com/csmith-project/csmith",
+  "capabilities": ["versioned-artifact"]
 }

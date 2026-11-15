@@ -6,5 +6,6 @@
   "category": "bootloaders",
   "provides": ["systemd-boot", "bootctl", "gummiboot"],
   "os_whitelist": ["linux"],
-  "repository": "https://github.com/systemd/systemd"
+  "repository": "https://github.com/systemd/systemd",
+  "capabilities": ["versioned-artifact", "os-synthesizer"]
 }

@@ -7,5 +7,6 @@
   "title": "nimble",
   "description": "Bootstrap script for [Nimble](https://github.com/nim-lang/nimble), the package manager for the Nim programming language. Typically installed via `choosenim`.",
   "category": "package-managers",
-  "repository": "https://github.com/nim-lang/nimble"
+  "repository": "https://github.com/nim-lang/nimble",
+  "capabilities": ["versioned-artifact"]
 }

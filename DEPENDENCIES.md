@@ -116,18 +116,26 @@ options) allowing components to be built with fine-grained modular features:
 - **`conflicts_variants`**: Identifies mutually exclusive configurations (e.g., `static` vs.
   `shared`, or `wayland` vs. `headless`).
 
-### 3. Target Platform Compatibility Filters
+### 3. Capability-Typed Component Classification & Platform Filters
 
-Components define platform and architecture whitelists/blacklists:
+Components declare explicit operational capabilities alongside platform and architecture
+whitelists/blacklists:
 
 ```json
 {
-  "os_whitelist": ["linux", "freebsd"],
-  "os_blacklist": ["windows"],
+  "capabilities": ["versioned-artifact"],
+  "replaces_version_managers": ["nvm", "fnm", "volta"],
+  "os_whitelist": ["linux", "freebsd", "darwin", "windows"],
   "arch_whitelist": ["x86_64", "aarch64", "riscv64"],
   "arch_blacklist": ["i686"]
 }
 ```
+
+- **`capabilities`**: Selects required contract surfaces (`"versioned-artifact"`,
+  `"service-daemon"`, `"sysroot-library"`, `"cloud-operator"`, `"os-synthesizer"`). Only
+  `"service-daemon"` components ship `service.{sh,cmd}`.
+- **`adapter_only`** / **`replaces_version_managers`**: Identifies pure delegation shims and
+  declares legacy version managers natively superseded by the recipe.
 
 ---
 
@@ -229,6 +237,8 @@ schemas:
 - **`execution-plan.illumos.schema.json`**: illumos/SunOS kernel, SMF init, ZFS `rpool`, and desktop
   plan.
 - **`execution-plan.live.schema.json`**: Live multiboot ISO/USB installer execution graph.
+- **`execution-plan.rtos.schema.json`**: Zephyr RTOS, FreeRTOS, MCUboot slot layout, and static
+  ROM/RAM budget execution plan.
 
 ---
 
@@ -257,8 +267,8 @@ flowchart TD
         BuildOut["Target OS Image / Application"]
 
         AirGapCache --> AirGapBuild
-        AirGapBuild --> VerifyCheck
         VerifyCheck --> BuildOut
+        AirGapBuild --> VerifyCheck
     end
 ```
 
@@ -280,8 +290,10 @@ For developer toolchains managed at Tier 1 (Node.js, Python, Rust, Ruby, Go, Jav
 
 1. **Non-Destructive Coexistence**: Multiple versions of the same tool coexist under
    `${LIBSCRIPT_HOME}/<tool>/<version>`.
-2. **Session-Scoped Activation**: Running `./libscript.sh use <tool> <version>` prepends the version
-   path to the active subshell's `PATH`. No global environment or shell profile (`~/.bashrc`,
-   `/etc/profile`) is mutated.
-3. **Zero Inter-Tool Conflicts**: Python 3.10 and Python 3.12, or Node 20 and Node 22, can run
+2. **`O(1)` Active Bin & Workspace Pin Activation**: `./libscript.sh use <tool> <version>`
+   atomically updates `${LIBSCRIPT_HOME}/<tool>/default` and executable symlinks inside
+   `${LIBSCRIPT_HOME}/bin` (`libscript_sync_active_bins`), while `./libscript.sh resolve-env` and
+   `env` resolve project pin files (`.libscript-version`, `.nvmrc`, `.python-version`,
+   `rust-toolchain.toml`) without mutating global shell profiles (`~/.bashrc`, `/etc/profile`).
+3. **Zero Inter-Tool Conflicts**: Python 3.10 and Python 3.13t, or Node 20 and Node 22, can run
    concurrently in adjacent terminal windows on the same host without collisions.

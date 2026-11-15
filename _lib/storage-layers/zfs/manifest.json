@@ -7,5 +7,6 @@
   "provides": ["zfs", "zpool", "openzfs"],
   "os_whitelist": ["all"],
   "os_blacklist": ["windows"],
-  "repository": "https://github.com/openzfs/zfs"
+  "repository": "https://github.com/openzfs/zfs",
+  "capabilities": ["versioned-artifact"]
 }

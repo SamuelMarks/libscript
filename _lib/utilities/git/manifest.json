@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["git", "vcs"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/git/git"
+  "repository": "https://github.com/git/git",
+  "capabilities": ["versioned-artifact"]
 }

@@ -7,5 +7,6 @@
   "provides": ["ollama"],
   "conflicts": [],
   "os_whitelist": ["linux", "darwin", "windows"],
-  "os_blacklist": ["freebsd"]
+  "os_blacklist": ["freebsd"],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

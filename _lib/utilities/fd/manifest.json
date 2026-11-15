@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["fd", "file-finder"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/sharkdp/fd"
+  "repository": "https://github.com/sharkdp/fd",
+  "capabilities": ["versioned-artifact"]
 }

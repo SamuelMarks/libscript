@@ -4,7 +4,7 @@
   "title": "LibScript Component Manifest",
   "description": "Static metadata for a LibScript component",
   "type": "object",
-  "required": ["name", "provides"],
+  "required": ["name", "provides", "capabilities"],
   "properties": {
     "$schema": {
       "type": "string",
@@ -33,6 +33,45 @@
         "description": "Provided capability or alias identifier"
       },
       "description": "Capabilities or aliases provided by this component"
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Explicit lifecycle and architectural capability facets implemented by this component.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "versioned-artifact",
+          "service-daemon",
+          "sysroot-library",
+          "cloud-operator",
+          "os-synthesizer"
+        ],
+        "description": "Canonical component capability identifier."
+      }
+    },
+    "sub_artifacts": {
+      "type": "object",
+      "description": "Optional sub-artifact facets such as cross-compilation target standard libraries or toolchain extensions managed per installed version.",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "description": "Supported cross-compilation target triples installable via target-add.",
+          "items": {
+            "type": "string",
+            "description": "Canonical target triple identifier (e.g. wasm32-unknown-unknown, aarch64-unknown-none)."
+          }
+        },
+        "components": {
+          "type": "array",
+          "description": "Supported optional toolchain sub-components installable via component-add.",
+          "items": {
+            "type": "string",
+            "description": "Toolchain sub-component identifier (e.g. clippy, rustfmt, llvm-tools-preview)."
+          }
+        }
+      }
     },
     "conflicts": {
       "type": "array",

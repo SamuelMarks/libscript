@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["autoconf"],
   "os_whitelist": ["all"],
-  "repository": "https://savannah.gnu.org/projects/autoconf"
+  "repository": "https://savannah.gnu.org/projects/autoconf",
+  "capabilities": ["versioned-artifact"]
 }

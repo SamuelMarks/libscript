@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["rsync", "file-sync"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/RsyncProject/rsync"
+  "repository": "https://github.com/RsyncProject/rsync",
+  "capabilities": ["versioned-artifact"]
 }

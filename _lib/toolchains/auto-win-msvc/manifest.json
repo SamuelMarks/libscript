@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["auto-win-msvc"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/SamuelMarks/auto-win-msvc"
+  "repository": "https://github.com/SamuelMarks/auto-win-msvc",
+  "capabilities": ["versioned-artifact"]
 }

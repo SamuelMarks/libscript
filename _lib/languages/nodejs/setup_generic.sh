@@ -108,6 +108,15 @@ resolve_exact_version() {
     return 0
   fi
   clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed -e 's/^v//' -e 's/\.x$//' -e 's/\.\*$//')
+  if printf '%s\n' "${clean_version}" | grep -q '\.'; then
+    EXACT_VERSION="${clean_version}"
+    if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+      NODEJS_BASE_URL="file://${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/runtimes"
+    else
+      NODEJS_BASE_URL="https://nodejs.org/dist/v${clean_version}"
+    fi
+    return 0
+  fi
   if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
     EXACT_VERSION='20.17.0'
     NODEJS_BASE_URL="file://${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/runtimes"
@@ -194,7 +203,15 @@ case "$ACTION" in
       log_info "[REUSE] nodejs ${NODEJS_VERSION} (v${EXACT_VERSION}) is already installed."
       exit 0
     fi
-    if [ "$NODEJS_INSTALL_METHOD" = "system" ] || [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; then
+    _nodejs_has_cache=0
+    if [ -d "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs" ]; then
+      set +f
+      for _nc_f in "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs/node-v"*".tar.gz"; do
+        if [ -f "$_nc_f" ]; then _nodejs_has_cache=1; break; fi
+      done
+      set -f
+    fi
+    if [ "$NODEJS_INSTALL_METHOD" = "system" ] || { [ "$_nodejs_has_cache" -eq 0 ] && { [ -f /etc/alpine-release ] || [ "${UNAME:-}" = "FreeBSD" ] || [ "${UNAME:-}" = "SunOS" ]; }; }; then
       libscript_depends 'nodejs' 'npm'
       if command -v node >/dev/null 2>&1; then
         _sys_node_ver=$(node -v 2>/dev/null | sed 's/^v//' || printf '%s' "${NODEJS_VERSION}")

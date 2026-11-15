@@ -92,12 +92,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
-for %%F in (manifest.json vars.schema.json README.md cli.sh cli.cmd setup.sh setup.cmd setup_generic.sh setup_generic.cmd env.sh env.cmd service.sh service.cmd status.sh status.cmd logs.sh logs.cmd uninstall.sh uninstall.cmd uninstall_generic.sh uninstall_generic.cmd test.sh test.cmd) do (
+for %%F in (manifest.json vars.schema.json README.md cli.sh cli.cmd setup.sh setup.cmd setup_generic.sh setup_generic.cmd env.sh env.cmd status.sh status.cmd logs.sh logs.cmd uninstall.sh uninstall.cmd uninstall_generic.sh uninstall_generic.cmd test.sh test.cmd) do (
     if not exist "!COMP_A_DIR!\%%F" (
         echo [FAIL] Missing expected scaffolded file: !COMP_A_DIR!\%%F >&2
         call :cleanup
         exit /b 1
     )
+)
+if exist "!COMP_A_DIR!\service.sh" (
+    echo [FAIL] Non-daemon component should not generate boilerplate service.sh: !COMP_A_DIR!\service.sh >&2
+    call :cleanup
+    exit /b 1
 )
 
 echo --- Test 2: Idempotency check (re-running without --force) ---

@@ -115,6 +115,40 @@ int rest_dispatch_artifact(const char *root_dir, const char *kernel, const char 
                            char *json_out, size_t json_cap);
 
 /**
+ * @brief Dispatches an /api/v1/marketplace/publish job across AWS, Azure, and GCP Marketplaces.
+ * @param root_dir Resolved LibScript root directory.
+ * @param offer_path Relative path to offer.json.
+ * @param clouds_csv Comma-separated target clouds (e.g. aws,azure,gcp).
+ * @param wait_sync If non-zero, waits synchronously when LIBSCRIPT_REST_EXEC_LIVE is set.
+ * @param json_out Output buffer receiving RFC 8259 JSON response.
+ * @param json_cap Capacity of json_out.
+ * @return 0 on accepted/succeeded, non-zero on validation or execution error.
+ */
+int rest_dispatch_marketplace_publish(const char *root_dir, const char *offer_path,
+                                      const char *clouds_csv, int wait_sync,
+                                      char *json_out, size_t json_cap);
+
+/**
+ * @brief Lists auto-discovered Open/Closed experiment plugins under experiments/<suite-id>/suite.json.
+ * @param root_dir Resolved LibScript root directory.
+ * @param json_out Output buffer receiving RFC 8259 JSON response.
+ * @param json_cap Capacity of json_out.
+ * @return 0 on success.
+ */
+int rest_list_experiments(const char *root_dir, char *json_out, size_t json_cap);
+
+/**
+ * @brief Queries declared capabilities from _lib/<category>/<name>/manifest.json.
+ * @param root_dir Resolved LibScript root directory.
+ * @param comp_name Sanitized component segment identifier.
+ * @param json_out Output buffer receiving RFC 8259 JSON response.
+ * @param json_cap Capacity of json_out.
+ * @return 0 if component manifest found, -1 if not found or invalid.
+ */
+int rest_query_component_capabilities(const char *root_dir, const char *comp_name,
+                                      char *json_out, size_t json_cap);
+
+/**
  * @brief Queries non-blocking status of a previously dispatched job by UUID.
  * @param job_id 36-character UUIDv4 identifier.
  * @param json_out Output buffer receiving RFC 8259 JSON response.

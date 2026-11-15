@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/golang/go"
+  "repository": "https://github.com/golang/go",
+  "capabilities": ["versioned-artifact"]
 }

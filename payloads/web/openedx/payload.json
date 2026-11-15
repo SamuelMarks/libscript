@@ -2,29 +2,26 @@
   "$schema": "../../payload.schema.json",
   "name": "openedx",
   "version": "22.1.0",
-  "description": "Docker-free Open edX LMS, Studio/CMS, and Celery worker enterprise learning workload.",
-  "type": "service",
-  "execution": {
-    "component": "openedx",
-    "command": "./_lib/web-apps/openedx/service.sh",
-    "args": ["start"],
+  "description": "Single-process or constellation-deployable Open edX LMS, Studio/CMS, and Celery learning workload.",
+  "type": "unikernel",
+  "artifact": {
+    "format": "unikernel-binary",
+    "kernel_path": "profiles/openedx-unikernel/lms-nanos.json",
+    "entrypoint": ["/opt/openedx/lms/bin/openedx-lms"],
     "env": {
+      "OPENEDX_ROLE": "lms",
+      "OPENEDX_RELEASE": "release/verawood.1",
       "LMS_PORT": "8000",
-      "CMS_PORT": "8001",
-      "OPENEDX_INSTALL_MODE": "minimal"
+      "CMS_PORT": "8001"
     }
   },
   "resources": {
     "cpu_cores": 4,
-    "memory_mb": 8192,
-    "disk_gb": 40
+    "memory_mb": 8192
   },
   "scaling": {
     "replicas": 2,
-    "min_replicas": 1,
-    "max_replicas": 10,
-    "rollout_strategy": "RollingUpdate",
-    "gang_scheduling": false,
+    "strategy": "RollingUpdate",
     "restart_policy": "Always"
   },
   "ports": [
@@ -40,5 +37,15 @@
       "protocol": "http",
       "visibility": "public"
     }
-  ]
+  ],
+  "tenant_bindings": {
+    "tenant_id": "openedx-default",
+    "volumes": [
+      {
+        "name": "openedx-media",
+        "mount_path": "/var/openedx/media",
+        "size_gb": 50
+      }
+    ]
+  }
 }

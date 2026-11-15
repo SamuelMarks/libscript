@@ -6,5 +6,6 @@
   "category": "init-systems",
   "provides": ["launchd", "launchctl"],
   "os_whitelist": ["macos", "darwin"],
-  "repository": "https://github.com/apple-oss-distributions/xnu"
+  "repository": "https://github.com/apple-oss-distributions/xnu",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

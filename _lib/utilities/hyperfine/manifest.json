@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["hyperfine"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/sharkdp/hyperfine"
+  "repository": "https://github.com/sharkdp/hyperfine",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["ripgrep", "rg", "code-search"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/BurntSushi/ripgrep"
+  "repository": "https://github.com/BurntSushi/ripgrep",
+  "capabilities": ["versioned-artifact"]
 }

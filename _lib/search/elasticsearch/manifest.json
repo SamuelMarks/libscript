@@ -13,5 +13,6 @@
   "ports": [9200, 9300],
   "dependencies": {
     "runtime_deps": ["java"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

@@ -9,5 +9,6 @@
   "title": "Gitea",
   "description": "LibScript component for GITEA",
   "category": "git-servers",
-  "repository": "https://github.com/go-gitea/gitea"
+  "repository": "https://github.com/go-gitea/gitea",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

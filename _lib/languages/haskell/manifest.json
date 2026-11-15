@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["haskell", "ghc", "ghci", "runghc"],
   "os_whitelist": ["all"],
-  "repository": "https://gitlab.haskell.org/ghc/ghc"
+  "repository": "https://gitlab.haskell.org/ghc/ghc",
+  "capabilities": ["versioned-artifact"]
 }

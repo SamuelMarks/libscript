@@ -7,5 +7,6 @@
   "provides": ["ly", "display-manager"],
   "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
   "os_blacklist": ["windows", "macos"],
-  "repository": "https://github.com/fairyglade/ly"
+  "repository": "https://github.com/fairyglade/ly",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

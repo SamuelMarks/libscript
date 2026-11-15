@@ -10,5 +10,6 @@
   "dependencies": {
     "host_tools": ["unzip", "curl"],
     "tier": "optional"
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "cloud-providers",
   "provides": ["proxmox"],
   "os_whitelist": ["linux"],
-  "os_blacklist": ["windows"]
+  "os_blacklist": ["windows"],
+  "capabilities": ["versioned-artifact", "cloud-operator"]
 }

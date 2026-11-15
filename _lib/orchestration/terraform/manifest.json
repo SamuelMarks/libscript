@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["terraform"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/hashicorp/terraform"
+  "repository": "https://github.com/hashicorp/terraform",
+  "capabilities": ["versioned-artifact"]
 }

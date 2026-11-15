@@ -6,5 +6,6 @@
   "category": "utilities",
   "provides": ["lz4"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/lz4/lz4"
+  "repository": "https://github.com/lz4/lz4",
+  "capabilities": ["versioned-artifact"]
 }

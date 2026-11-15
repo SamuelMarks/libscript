@@ -6,5 +6,6 @@
   "category": "virtualization",
   "provides": ["utm", "utmctl"],
   "os_whitelist": ["macos", "darwin"],
-  "repository": "https://github.com/utmapp/UTM"
+  "repository": "https://github.com/utmapp/UTM",
+  "capabilities": ["versioned-artifact"]
 }

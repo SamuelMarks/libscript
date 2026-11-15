@@ -6,5 +6,6 @@
   "category": "virtualization",
   "provides": ["wsl", "wsl.exe"],
   "os_whitelist": ["windows"],
-  "repository": "https://github.com/microsoft/WSL"
+  "repository": "https://github.com/microsoft/WSL",
+  "capabilities": ["versioned-artifact"]
 }

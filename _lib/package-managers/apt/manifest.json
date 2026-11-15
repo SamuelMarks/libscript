@@ -6,5 +6,6 @@
   "title": "apt",
   "description": "Bootstrap module for the `apt` package manager.",
   "category": "package-managers",
-  "repository": "https://salsa.debian.org/apt-team/apt"
+  "repository": "https://salsa.debian.org/apt-team/apt",
+  "capabilities": ["versioned-artifact"]
 }

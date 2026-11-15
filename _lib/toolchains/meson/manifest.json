@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["meson", "build-system"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/mesonbuild/meson"
+  "repository": "https://github.com/mesonbuild/meson",
+  "capabilities": ["versioned-artifact"]
 }

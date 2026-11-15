@@ -32,5 +32,6 @@
   "unikernel_support": ["unikraft", "nanos", "osv"],
   "dependencies": {
     "runtime_deps": ["postgres"]
-  }
+  },
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

@@ -7,5 +7,6 @@
   "provides": ["timescaledb", "tsdb", "postgres-extension"],
   "os_whitelist": ["all"],
   "ports": [5432],
-  "repository": "https://github.com/timescale/timescaledb"
+  "repository": "https://github.com/timescale/timescaledb",
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

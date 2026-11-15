@@ -5,5 +5,6 @@
   "description": "A handy way to save and run project-specific commands.",
   "category": "toolchains",
   "provides": ["just", "task-runner"],
-  "os_whitelist": ["linux", "darwin", "windows"]
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "capabilities": ["versioned-artifact"]
 }

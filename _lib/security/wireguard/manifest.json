@@ -6,5 +6,6 @@
   "category": "security",
   "provides": ["wireguard", "wg", "vpn"],
   "os_whitelist": ["all"],
-  "ports": [51820]
+  "ports": [51820],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

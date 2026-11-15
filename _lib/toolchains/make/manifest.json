@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["make", "gmake"],
   "os_whitelist": ["all"],
-  "repository": "https://savannah.gnu.org/projects/make"
+  "repository": "https://savannah.gnu.org/projects/make",
+  "capabilities": ["versioned-artifact"]
 }

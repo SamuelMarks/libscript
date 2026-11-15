@@ -6,5 +6,6 @@
   "category": "languages",
   "provides": ["clojure", "clj"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/clojure/brew-install"
+  "repository": "https://github.com/clojure/brew-install",
+  "capabilities": ["versioned-artifact"]
 }

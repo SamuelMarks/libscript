@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["unikraft", "kraft", "unikernel-builder"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/unikraft/kraftkit"
+  "repository": "https://github.com/unikraft/kraftkit",
+  "capabilities": ["versioned-artifact"]
 }

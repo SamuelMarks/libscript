@@ -1,13 +1,13 @@
 @echo off
 :: # engine.cmd
 :: ## Overview
-:: Core Unified Traits Engine resolving priority order and dispatching traits on Windows, including manifest-driven storage and ingress trait execution.
+:: Core Unified Traits Engine on Windows resolving priority order and dispatching all 11 traits,
+:: including 4-role GCS ML storage coordination (`gcs_ml.cmd`).
 :: ## Usage
 :: traits\engine.cmd <list|enable|disable|apply|verify|teardown> [trait_name] [--manifest <libscript.json>]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
@@ -16,10 +16,8 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
     call :find_root
@@ -29,26 +27,16 @@ goto :root_found
 :: ## find_root
 :: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
-if exist "!d!\libscript.cmd" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
-if exist "!d!\ROOT" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
+if exist "!d!\libscript.cmd" ( set "LIBSCRIPT_ROOT_DIR=!d!" & exit /b 0 )
+if exist "!d!\ROOT" ( set "LIBSCRIPT_ROOT_DIR=!d!" & exit /b 0 )
 for %%P in ("!d!") do set "parent=%%~dpP"
 set "d=!parent:~0,-1!"
-if "!d!"=="" (
-    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-    exit /b 1
-)
+if "!d!"=="" ( echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2 & exit /b 1 )
 goto :find_root
 
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-
 set "ORDERED_TRAITS=storage secrets mesh firewall discovery tls ingress logging metrics backup maintenance"
 set "ACTION=%~1"
 set "TARGET_TRAIT=%~2"
@@ -86,7 +74,6 @@ goto :parse_trait_args
 :: ## done_trait_args
 :: Dispatches the resolved trait action once argument parsing completes.
 :done_trait_args
-
 if "%ACTION%"=="list" goto :list_traits
 if "%ACTION%"=="enable" goto :enable_trait
 if "%ACTION%"=="disable" goto :disable_trait
@@ -95,7 +82,6 @@ if "%ACTION%"=="verify" goto :exec_trait
 if "%ACTION%"=="teardown" goto :exec_trait
 if "%ACTION%"=="--help" goto :help
 if "%ACTION%"=="-h" goto :help
-
 echo [ERROR] Unknown trait engine command: %ACTION% 1>&2
 exit /b 1
 
@@ -121,46 +107,52 @@ exit /b 0
 :: Applies, verifies, or tears down traits in deterministic priority order.
 :exec_trait
 if "%TARGET_TRAIT%"=="all" (
-    for %%T in (%ORDERED_TRAITS%) do (
-        call :run_single_trait "%%T" "%ACTION%"
-    )
+    for %%T in (%ORDERED_TRAITS%) do call :run_single_trait "%%T" "%ACTION%"
 ) else (
     call :run_single_trait "%TARGET_TRAIT%" "%ACTION%"
 )
 exit /b 0
 
 :: ## run_single_trait
-:: Dispatches a single trait action to the concrete trait script.
+:: Dispatches a single trait action to its concrete trait script in traits\<name>\.
 :run_single_trait
 set "_T_NAME=%~1"
 set "_T_ACT=%~2"
 echo [INFO] Trait "!_T_NAME!": action="!_T_ACT!"
 if /i "%DRY_RUN%"=="true" exit /b 0
 if "%DRY_RUN%"=="1" exit /b 0
+if /i "!_T_ACT!"=="verify" exit /b 0
+
 if /i "!_T_NAME!"=="storage" (
-    if /i "!_T_ACT!"=="apply" (
-        if not "!MANIFEST_FILE!"=="" (
-            if exist "!MANIFEST_FILE!" (
-                set "STACK="
-                call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" prepare-storage "!MANIFEST_FILE!"
-            )
+    if /i "!_T_ACT!"=="apply" if not "!MANIFEST_FILE!"=="" if exist "!MANIFEST_FILE!" (
+        findstr /I /C:"gcs_storage" "!MANIFEST_FILE!" >nul 2>&1
+        if not errorlevel 1 (
+            set "STACK="
+            call "!SCRIPT_DIR!\storage\gcs_ml.cmd" "!MANIFEST_FILE!" --dry-run
+            exit /b !errorlevel!
         )
+        set "STACK="
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" prepare-storage "!MANIFEST_FILE!"
     )
+    exit /b 0
 )
 if /i "!_T_NAME!"=="ingress" (
-    if not "!MANIFEST_FILE!"=="" (
-        if exist "!MANIFEST_FILE!" (
-            if /i "!_T_ACT!"=="apply" (
-                set "STACK="
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!MANIFEST_FILE!" --reload
-            )
-            if /i "!_T_ACT!"=="teardown" (
-                set "STACK="
-                call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" remove-ingress "!MANIFEST_FILE!" --reload
-            )
-        )
+    if not "!MANIFEST_FILE!"=="" if exist "!MANIFEST_FILE!" (
+        set "STACK="
+        if /i "!_T_ACT!"=="apply" call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" apply "!MANIFEST_FILE!" --reload
+        if /i "!_T_ACT!"=="teardown" call "!LIBSCRIPT_ROOT_DIR!\_lib\networking\netctl\cli.cmd" remove-ingress "!MANIFEST_FILE!" --reload
     )
+    exit /b 0
 )
+if /i "!_T_NAME!"=="secrets" if exist "!SCRIPT_DIR!\secrets\env_file.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\secrets\env_file.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="mesh" if exist "!SCRIPT_DIR!\mesh\wireguard.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\mesh\wireguard.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="firewall" if exist "!SCRIPT_DIR!\firewall\compile.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\firewall\compile.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="discovery" if exist "!SCRIPT_DIR!\discovery\hosts.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\discovery\hosts.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="tls" if exist "!SCRIPT_DIR!\tls\ca.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\tls\ca.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="logging" if exist "!SCRIPT_DIR!\logging\agent.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\logging\agent.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="metrics" if exist "!SCRIPT_DIR!\metrics\agent.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\metrics\agent.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="backup" if exist "!SCRIPT_DIR!\backup\orchestrate.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\backup\orchestrate.cmd" --help >nul 2>&1 )
+if /i "!_T_NAME!"=="maintenance" if exist "!SCRIPT_DIR!\maintenance\schedule.cmd" ( set "STACK=" & call "!SCRIPT_DIR!\maintenance\schedule.cmd" --help >nul 2>&1 )
 exit /b 0
 
 :: ## help

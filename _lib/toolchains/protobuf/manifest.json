@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["protobuf", "protoc"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/protocolbuffers/protobuf"
+  "repository": "https://github.com/protocolbuffers/protobuf",
+  "capabilities": ["versioned-artifact"]
 }

@@ -29,5 +29,6 @@
     "metrics_scrape_path": "/metrics"
   },
   "process_model": "single-process",
-  "unikernel_support": ["unikraft", "nanos", "osv"]
+  "unikernel_support": ["unikraft", "nanos", "osv"],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

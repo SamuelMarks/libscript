@@ -120,26 +120,22 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 
 :: ## find_existing_python
-:: Checks LIBSCRIPT_HOME, uv python directory, and system PATH for a matching Python installation on Windows.
+:: Checks LIBSCRIPT_HOME and uv isolated python directory for a strictly matching Python installation on Windows.
 :find_existing_python
 if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\bin\python.exe" exit /b 0
 if exist "%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%\python.exe" exit /b 0
-for /f "delims=" %%P in ('where python 2^>nul') do (
-    echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
-    if errorlevel 1 (
-        if /i "%PYTHON_VERSION%"=="latest" exit /b 0
-        if "%_PY_VERSION_UNPINNED%"=="1" exit /b 0
-        for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
-            echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
-            if not errorlevel 1 exit /b 0
-            if "%%V"=="%PYTHON_VERSION%" exit /b 0
+if /i "%PYTHON_INSTALL_METHOD%"=="system" (
+    for /f "delims=" %%P in ('where python 2^>nul') do (
+        echo "%%~fP" | findstr /i "WindowsApps" >nul 2>&1
+        if errorlevel 1 (
+            if /i "%PYTHON_VERSION%"=="latest" exit /b 0
+            for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
+                echo %%V | findstr /b /c:"%PYTHON_VERSION%." >nul 2>&1
+                if not errorlevel 1 exit /b 0
+                if "%%V"=="%PYTHON_VERSION%" exit /b 0
+            )
         )
     )
-)
-where uv >nul 2>&1
-if not errorlevel 1 (
-    uv python find "%PYTHON_VERSION%" >nul 2>&1
-    if not errorlevel 1 exit /b 0
 )
 exit /b 1
 
@@ -320,8 +316,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\python\default"
 if not "%TARGET_DIR%"=="%DEFAULT_DIR%" (
-    if exist "%DEFAULT_DIR%" rmdir "%DEFAULT_DIR%" 2>nul
-    mklink /J "%DEFAULT_DIR%" "%TARGET_DIR%" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "python" "default" "%PYTHON_VERSION%"
 )
 exit /b 0
 

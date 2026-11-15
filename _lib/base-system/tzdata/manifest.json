@@ -6,5 +6,6 @@
   "category": "base-system",
   "provides": ["tzdata", "zdump", "zic"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/eggert/tz"
+  "repository": "https://github.com/eggert/tz",
+  "capabilities": ["versioned-artifact"]
 }

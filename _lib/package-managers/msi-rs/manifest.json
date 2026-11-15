@@ -29,5 +29,6 @@
   "os_whitelist": ["linux", "darwin", "windows", "freebsd", "sunos", "illumos"],
   "title": "msi-rs",
   "description": "Bootstrap module for the `msi-rs` package manager and WiX/msitools/msiexec replacement toolchain.",
-  "category": "package-managers"
+  "category": "package-managers",
+  "capabilities": ["versioned-artifact"]
 }

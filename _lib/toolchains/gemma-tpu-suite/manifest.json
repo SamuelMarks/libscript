@@ -12,5 +12,6 @@
     "build_deps": [],
     "runtime_deps": ["python", "uv", "gcp-cli", "gcp-tpu-vm"],
     "tier": "optional"
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

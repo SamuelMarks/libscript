@@ -12,5 +12,6 @@
   "dependencies": {
     "runtime_deps": ["python", "google-cloud-sdk"],
     "tier": "optional"
-  }
+  },
+  "capabilities": ["versioned-artifact"]
 }

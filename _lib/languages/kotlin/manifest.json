@@ -9,5 +9,6 @@
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
   "ports": [],
-  "repository": "https://github.com/JetBrains/kotlin"
+  "repository": "https://github.com/JetBrains/kotlin",
+  "capabilities": ["versioned-artifact"]
 }

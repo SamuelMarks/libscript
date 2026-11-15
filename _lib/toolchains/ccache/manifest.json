@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["ccache", "compiler-cache"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/ccache/ccache"
+  "repository": "https://github.com/ccache/ccache",
+  "capabilities": ["versioned-artifact"]
 }

@@ -6,5 +6,6 @@
   "category": "orchestration",
   "provides": ["pulumi"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/pulumi/pulumi"
+  "repository": "https://github.com/pulumi/pulumi",
+  "capabilities": ["versioned-artifact"]
 }

@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
-  "ports": ["80", "443", "8080"]
+  "ports": ["80", "443", "8080"],
+  "capabilities": ["versioned-artifact", "service-daemon"]
 }

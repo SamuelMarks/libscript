@@ -6,5 +6,6 @@
   "category": "toolchains",
   "provides": ["zephyr-sdk", "zephyr-toolchain"],
   "os_whitelist": ["all"],
-  "repository": "https://github.com/zephyrproject-rtos/sdk-ng"
+  "repository": "https://github.com/zephyrproject-rtos/sdk-ng",
+  "capabilities": ["versioned-artifact"]
 }

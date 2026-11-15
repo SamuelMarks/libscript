@@ -1,9 +1,10 @@
 #!/bin/sh
 # ## Overview
 # Kernel-dispatching unikernel packager supporting Unikraft, Nanos/Ops, OSv, Rumprun,
-# and MirageOS across QEMU, Firecracker, Cloud-Hypervisor, bhyve, Xen, and Solo5.
+# and MirageOS across QEMU, Firecracker, Cloud-Hypervisor, bhyve, Xen, Solo5, and
+# `--cloud-boot=uefi-gpt` cloud hypervisor images (AWS Nitro, Azure Gen2, GCP Shielded VM).
 # ## Usage
-# ./cli/commands/package_as/unikernel.sh [--framework=<fw>] [--vmm=<vmm>] [--strict | --allow-stub] [app_dir] [output_image]
+# ./cli/commands/package_as/unikernel.sh [--framework=<fw>] [--vmm=<vmm>] [--cloud-boot=uefi-gpt] [--allow-stub-sdk] [app_dir] [output_image]
 
 set -feu
 
@@ -31,19 +32,21 @@ export LIBSCRIPT_ROOT_DIR
 
 FRAMEWORK="${LIBSCRIPT_UNIKERNEL_FRAMEWORK:-unikraft}"
 VMM='qemu'
-STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-0}"
+CLOUD_BOOT='none'
+STRICT_BUILD="${LIBSCRIPT_STRICT_IMAGE_BUILD:-1}"
 ALLOW_STUB="${LIBSCRIPT_ALLOW_STUB:-0}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h)
-      printf 'Usage: %s [--framework=unikraft|nanos|osv|rumprun|mirageos] [--vmm=qemu|firecracker|cloud-hypervisor|bhyve|xen|solo5-hvt|solo5-spt] [--strict | --allow-stub] [app_dir] [output_image]\n' "$(basename "$THIS_FILE")"
+      printf 'Usage: %s [--framework=unikraft|nanos|osv|rumprun|mirageos] [--vmm=qemu|firecracker|cloud-hypervisor|bhyve|xen|solo5-hvt|solo5-spt] [--cloud-boot=uefi-gpt|none] [--strict | --allow-stub | --allow-stub-sdk] [app_dir] [output_image]\n' "$(basename "$THIS_FILE")"
       exit 0
       ;;
     --framework=*) FRAMEWORK="${1#*=}"; shift ;;
     --vmm=*) VMM="${1#*=}"; shift ;;
-    --strict) STRICT_BUILD=1; shift ;;
-    --allow-stub) ALLOW_STUB=1; shift ;;
+    --cloud-boot=*) CLOUD_BOOT="${1#*=}"; shift ;;
+    --strict) STRICT_BUILD=1; ALLOW_STUB=0; shift ;;
+    --allow-stub|--allow-stub-sdk) ALLOW_STUB=1; shift ;;
     *) break ;;
   esac
 done
@@ -70,9 +73,32 @@ has_unikernel_sdk() {
   esac
 }
 
+# ## wrap_uefi_gpt_cloud_boot
+# Wraps a synthesized unikernel kernel/ELF and sysroot into a UEFI/GPT bootable cloud staging layout.
+wrap_uefi_gpt_cloud_boot() {
+  _w_kernel="$1"
+  _w_sysroot="$2"
+  _w_out="$3"
+  _w_esp="${_w_out}.uefi_esp"
+  mkdir -p "${_w_esp}/EFI/BOOT" "${_w_esp}/EFI/LIBSCRIPT" "${_w_sysroot}/boot/efi/EFI/BOOT"
+  cp -f "${_w_kernel}" "${_w_esp}/EFI/BOOT/BOOTX64.EFI"
+  cp -f "${_w_kernel}" "${_w_sysroot}/boot/efi/EFI/BOOT/BOOTX64.EFI"
+  cat > "${_w_esp}/EFI/LIBSCRIPT/boot-manifest.json" << EOF
+{
+  "boot_mode": "uefi-gpt",
+  "partition_table": "gpt",
+  "efi_binary": "/EFI/BOOT/BOOTX64.EFI",
+  "framework": "${FRAMEWORK}",
+  "vmm": "${VMM}"
+}
+EOF
+  cp -f "${_w_esp}/EFI/LIBSCRIPT/boot-manifest.json" "${_w_out}.uefi-gpt.json"
+  rm -rf "${_w_esp}"
+}
+
 if [ -f "$STAMP_FILE" ] && [ -s "$OUT_ELF" ]; then
   if grep -q '^mode=stub$' "$STAMP_FILE" 2>/dev/null; then
-    if [ "$STRICT_BUILD" = "1" ] || has_unikernel_sdk; then
+    if { [ "$STRICT_BUILD" = "1" ] && [ "$ALLOW_STUB" != "1" ]; } || has_unikernel_sdk; then
       rm -f "$STAMP_FILE"
     else
       printf '[SKIP] Unikernel image already synthesized (stub): %s\n' "$OUT_ELF"
@@ -87,9 +113,8 @@ fi
 mkdir -p "$(dirname "$OUT_ELF")" "$APP_DIR"
 WORK_UK="${LIBSCRIPT_ROOT_DIR}/build/unikernel_stage_$$"
 mkdir -p "$WORK_UK"
-trap 'rm -rf "$WORK_UK"' EXIT INT TERM HUP
 
-printf '[PACKAGE] Synthesizing %s unikernel image (vmm=%s) -> %s...\n' "$FRAMEWORK" "$VMM" "$OUT_ELF"
+printf '[PACKAGE] Synthesizing %s unikernel image (vmm=%s, cloud_boot=%s) -> %s...\n' "$FRAMEWORK" "$VMM" "$CLOUD_BOOT" "$OUT_ELF"
 BUILT_NATIVE=0
 
 case "$FRAMEWORK" in
@@ -124,16 +149,21 @@ KRAFT_EOF
 
   nanos|ops)
     _elf_target=''
-    for _cand in "${APP_DIR}"/opt/libscript/*/*/bin/* "${APP_DIR}"/usr/local/bin/* "${APP_DIR}"/usr/bin/*; do
+    set +f
+    for _cand in "${APP_DIR}"/opt/openedx/*/bin/* "${APP_DIR}"/opt/libscript/*/*/bin/* "${APP_DIR}"/usr/local/bin/* "${APP_DIR}"/usr/bin/*; do
       if [ -f "$_cand" ] && [ -x "$_cand" ]; then
         _elf_target="$_cand"
         break
       fi
     done
+    set -f
     cat << OPS_EOF > "${WORK_UK}/ops.config.json"
 {
   "Dirs": ["${APP_DIR}"],
   "MapDirs": {"${APP_DIR}/*": "/*"},
+  "CloudConfig": {
+    "BootType": "${CLOUD_BOOT}"
+  },
   "RunConfig": {
     "Memory": "512M"
   }
@@ -203,24 +233,31 @@ OSV_EOF
 esac
 
 cp -f "${WORK_UK}"/* "$(dirname "$OUT_ELF")/" 2>/dev/null || true
+rm -rf "$WORK_UK"
 
 if [ "$BUILT_NATIVE" -eq 1 ]; then
   chmod +x "$OUT_ELF" 2>/dev/null || true
-  printf 'mode=native\nframework=%s\nvmm=%s\ntimestamp=%s\n' "$FRAMEWORK" "$VMM" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
+  if [ "$CLOUD_BOOT" = "uefi-gpt" ]; then
+    wrap_uefi_gpt_cloud_boot "$OUT_ELF" "$APP_DIR" "$OUT_ELF"
+  fi
+  printf 'mode=native\nframework=%s\nvmm=%s\ncloud_boot=%s\ntimestamp=%s\n' "$FRAMEWORK" "$VMM" "$CLOUD_BOOT" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
   mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
   printf '[OK] Synthesized %s unikernel image (%s): %s\n' "$FRAMEWORK" "$VMM" "$OUT_ELF"
   exit 0
 fi
 
-if [ "$STRICT_BUILD" = "1" ] && [ "$ALLOW_STUB" != "1" ]; then
-  printf '[ERROR] Strict %s unikernel build failed: install SDK via ./libscript.sh install %s.\n' "$FRAMEWORK" "$FRAMEWORK" >&2
+if [ "$ALLOW_STUB" != "1" ]; then
+  printf '[ERROR] %s unikernel SDK not found on host (pass --allow-stub-sdk only for offline descriptor tests, or install SDK via ./libscript.sh install %s).\n' "$FRAMEWORK" "$FRAMEWORK" >&2
   rm -f "$OUT_ELF" "$STAMP_FILE"
   exit 1
 fi
 
-printf 'LibScript Unikernel (%s/%s) Stub\n' "$FRAMEWORK" "$VMM" > "$OUT_ELF"
+printf 'LibScript Unikernel (%s/%s/%s) Stub\n' "$FRAMEWORK" "$VMM" "$CLOUD_BOOT" > "$OUT_ELF"
 chmod +x "$OUT_ELF" 2>/dev/null || true
-printf 'mode=stub\nframework=%s\nvmm=%s\ntimestamp=%s\n' "$FRAMEWORK" "$VMM" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
+if [ "$CLOUD_BOOT" = "uefi-gpt" ]; then
+  wrap_uefi_gpt_cloud_boot "$OUT_ELF" "$APP_DIR" "$OUT_ELF"
+fi
+printf 'mode=stub\nframework=%s\nvmm=%s\ncloud_boot=%s\ntimestamp=%s\n' "$FRAMEWORK" "$VMM" "$CLOUD_BOOT" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
 printf '[WARN] %s SDK not on host; emitted unikernel descriptor and stub: %s\n' "$FRAMEWORK" "$OUT_ELF"
 exit 0

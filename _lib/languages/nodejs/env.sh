@@ -37,9 +37,11 @@ NODEJS_VERSION="${NODEJS_VERSION:-latest}"
 export NODEJS_VERSION
 _nodejs_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nodejs"
 _nodejs_added=0
+_nodejs_active_dir=""
 for _nodejs_cand in "${_nodejs_home}/${NODEJS_VERSION}/bin" "${_nodejs_home}/v${NODEJS_VERSION#v}/bin" "${_nodejs_home}/default/bin" "${_nodejs_home}/latest/bin"; do
   if [ -d "$_nodejs_cand" ]; then
     libscript_path_prepend "$_nodejs_cand"
+    _nodejs_active_dir="${_nodejs_cand%/bin}"
     _nodejs_added=1
     break
   fi
@@ -51,6 +53,7 @@ if [ "$_nodejs_added" -eq 0 ] && [ -d "$_nodejs_home" ]; then
   for _nodejs_match in "${_nodejs_home}/v${_nodejs_major}."*/bin "${_nodejs_home}/"*/bin; do
     if [ -d "$_nodejs_match" ]; then
       libscript_path_prepend "$_nodejs_match"
+      _nodejs_active_dir="${_nodejs_match%/bin}"
       _nodejs_added=1
       break
     fi
@@ -58,7 +61,12 @@ if [ "$_nodejs_added" -eq 0 ] && [ -d "$_nodejs_home" ]; then
   set -f
 fi
 if [ "$_nodejs_added" -eq 0 ]; then
-  libscript_path_prepend "${_nodejs_home}/${NODEJS_VERSION}/bin"
+  _nodejs_active_dir="${_nodejs_home}/${NODEJS_VERSION}"
+  libscript_path_prepend "${_nodejs_active_dir}/bin"
+fi
+if [ -n "$_nodejs_active_dir" ]; then
+  export NPM_CONFIG_PREFIX="${NPM_CONFIG_PREFIX:-${_nodejs_active_dir}}"
+  export COREPACK_HOME="${COREPACK_HOME:-${_nodejs_active_dir}/corepack}"
 fi
 export PATH
 STACK="${STACK%"${THIS_FILE}":}"
