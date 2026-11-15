@@ -72,29 +72,29 @@ echo.
 set /p "CHOICE=Enter your choice [0-12]: "
 
 if "%CHOICE%"=="1" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" user %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" user %*
 ) else if "%CHOICE%"=="2" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" demo %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" demo %*
 ) else if "%CHOICE%"=="3" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" dbshell %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" dbshell %*
 ) else if "%CHOICE%"=="4" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" healthcheck %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" healthcheck %*
 ) else if "%CHOICE%"=="5" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" config %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" config %*
 ) else if "%CHOICE%"=="6" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" backup %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" backup %*
 ) else if "%CHOICE%"=="7" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" restore %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" restore %*
 ) else if "%CHOICE%"=="8" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" workers %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" workers %*
 ) else if "%CHOICE%"=="9" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" theme %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" theme %*
 ) else if "%CHOICE%"=="10" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" xblock %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" xblock %*
 ) else if "%CHOICE%"=="11" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" upgrade %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" upgrade %*
 ) else if "%CHOICE%"=="12" (
-    call "%~dp0..\..\..\..\stacks\cms\openedx\cli.cmd" mfe %*
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\cli.cmd" mfe %*
 ) else if "%CHOICE%"=="0" (
     echo Exiting.
     exit /b 0

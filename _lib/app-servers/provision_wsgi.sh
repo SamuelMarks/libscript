@@ -73,7 +73,8 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh" ]; then
   . "${SCRIPT_NAME}"
   unset SCRIPT_NAME || true
   libscript_python_sync_deps "$app_dir" "$python_version"
-  if [ -d "$app_dir/.venv" ] && [ ! -e "$app_dir/venv" ]; then
+  if [ -d "$app_dir/.venv" ] && [ ! -d "$app_dir/venv" ]; then
+    rm -f "$app_dir/venv" 2>/dev/null || true
     ln -sf ".venv" "$app_dir/venv" 2>/dev/null || true
   fi
 fi

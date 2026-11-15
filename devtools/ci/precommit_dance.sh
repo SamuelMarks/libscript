@@ -30,12 +30,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
-  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Usage: $(basename -- "${THIS_FILE}")"
   printf '%s\n' 'Runs the pre-commit hook dance in CI to ensure code quality.'
   exit 0
 fi
 
-cd "${SCRIPT_DIR}/../.." || exit 1
+cd "${LIBSCRIPT_ROOT_DIR}" || exit 1
 
 printf '%s\n' '>>> RUNNING PRE-COMMIT DANCE <<<'
 

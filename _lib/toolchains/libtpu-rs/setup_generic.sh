@@ -66,6 +66,7 @@ resolve_repo_dir() {
   if [ -n "${LIBTPU_RS_GIT_URL:-}" ]; then
     _clone_dst="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/src/libtpu-rs"
     if [ ! -d "${_clone_dst}/.git" ]; then
+      rm -rf "${_clone_dst}"
       mkdir -p "$(dirname -- "${_clone_dst}")"
       git clone --depth 1 "${LIBTPU_RS_GIT_URL}" "${_clone_dst}"
     fi

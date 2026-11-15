@@ -283,8 +283,19 @@ CSRC
                 mv "${TARGET_DIR}/bin/ollama" "${TARGET_DIR}/bin/ollama.bin"
                 cat << 'SHIM' > "${TARGET_DIR}/bin/ollama"
 #!/bin/sh
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_shim_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LD_PRELOAD="/usr/local/lib/libollama_shim.so:/lib/libgcompat.so.0:${LD_PRELOAD:-}"
-exec "$(dirname "$0")/ollama.bin" "$@"
+exec "${_shim_dir}/ollama.bin" "$@"
 SHIM
                 chmod +x "${TARGET_DIR}/bin/ollama"
               fi

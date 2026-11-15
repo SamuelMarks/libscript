@@ -105,19 +105,21 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
     V_PORT=$(awk '/Port/ {print $2}' "$_vssh_cfg")
     KEY_PATH=$(awk '/IdentityFile/ {print $2}' "$_vssh_cfg" | head -n 1)
     
-    mkdir -p ~/.ssh
-    touch ~/.ssh/known_hosts
+    _ssh_dir="${HOME:-/root}/.ssh"
+    mkdir -p "$_ssh_dir"
+    touch "$_ssh_dir/known_hosts"
     ssh-keygen -R "[$V_HOST]:$V_PORT" 2>/dev/null || true
     ssh-keygen -R "$V_HOST" 2>/dev/null || true
-    if ! ssh-keygen -F "[$V_HOST]:$V_PORT" -f ~/.ssh/known_hosts >/dev/null 2>&1; then
-      ssh-keyscan -p "$V_PORT" -H "$V_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+    if ! ssh-keygen -F "[$V_HOST]:$V_PORT" -f "$_ssh_dir/known_hosts" >/dev/null 2>&1 && \
+       ! { [ "$V_PORT" = "22" ] && ssh-keygen -F "$V_HOST" -f "$_ssh_dir/known_hosts" >/dev/null 2>&1; }; then
+      ssh-keyscan -p "$V_PORT" -H "$V_HOST" >> "$_ssh_dir/known_hosts" 2>/dev/null || true
     fi
     
-    touch ~/.ssh/config
-    if sed "/^Host $HOST$/,/^$/d" ~/.ssh/config > ~/.ssh/config.tmp 2>/dev/null; then
-      mv ~/.ssh/config.tmp ~/.ssh/config
+    touch "$_ssh_dir/config"
+    if sed "/^Host $HOST$/,/^$/d" "$_ssh_dir/config" > "$_ssh_dir/config.tmp" 2>/dev/null; then
+      mv "$_ssh_dir/config.tmp" "$_ssh_dir/config"
     else
-      rm -f ~/.ssh/config.tmp
+      rm -f "$_ssh_dir/config.tmp"
     fi
     printf 'Host %s
   HostName %s
@@ -126,7 +128,7 @@ if [ "${VAGRANT_MULTI_NODE:-0}" = "1" ]; then
   IdentityFile %s
   StrictHostKeyChecking no
 
-' "$HOST" "$V_HOST" "$V_PORT" "$KEY_PATH" >> ~/.ssh/config
+' "$HOST" "$V_HOST" "$V_PORT" "$KEY_PATH" >> "$_ssh_dir/config"
     
     (
       cd "${LIBSCRIPT_ROOT_DIR}/vagrant/${VAGRANT_IMAGE_DIR}" || exit 1

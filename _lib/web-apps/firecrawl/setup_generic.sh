@@ -102,27 +102,33 @@ if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
 fi
 
 if [ -d '/etc/systemd/system' ] && command -v pnpm >/dev/null 2>&1; then
-  name_file="$(mktemp)"
-  trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
+  _fc_workers_tmp="$(mktemp)"
+  _fc_serve_tmp="$(mktemp)"
+  trap 'rm -f -- "${_fc_workers_tmp}" "${_fc_serve_tmp}"' EXIT HUP INT QUIT TERM
+
   service_name='firecrawl_workers'
   DESCRIPTION='Firecrawl workers' \
   ENV="${ENV}" \
   WORKING_DIR="${DEST}"'/apps/api' \
   EXEC_START="$(command -v pnpm)"' run workers' \
-    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
-  priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  libscript_service daemon-reload "${service_name}" || true
-  libscript_service reload-or-restart "${service_name}" || true
+    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${_fc_workers_tmp}"
+  if ! cmp -s "${_fc_workers_tmp}" '/etc/systemd/system/'"${service_name}"'.service' 2>/dev/null; then
+    priv install -m 0644 -o 'root' -- "${_fc_workers_tmp}" '/etc/systemd/system/'"${service_name}"'.service'
+    libscript_service daemon-reload "${service_name}" || true
+    libscript_service reload-or-restart "${service_name}" || true
+  fi
 
-  name_file="$(mktemp)"
-  trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   service_name='firecrawl_serve'
   DESCRIPTION='Firecrawl serve' \
   ENV="${ENV}" \
   WORKING_DIR="${DEST}"'/apps/api' \
   EXEC_START="$(command -v pnpm)"' run start' \
-    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
-  priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  libscript_service daemon-reload "${service_name}" || true
-  libscript_service reload-or-restart "${service_name}" || true
+    envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${_fc_serve_tmp}"
+  if ! cmp -s "${_fc_serve_tmp}" '/etc/systemd/system/'"${service_name}"'.service' 2>/dev/null; then
+    priv install -m 0644 -o 'root' -- "${_fc_serve_tmp}" '/etc/systemd/system/'"${service_name}"'.service'
+    libscript_service daemon-reload "${service_name}" || true
+    libscript_service reload-or-restart "${service_name}" || true
+  fi
+  rm -f -- "${_fc_workers_tmp}" "${_fc_serve_tmp}"
+  trap - EXIT HUP INT QUIT TERM
 fi

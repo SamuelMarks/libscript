@@ -65,4 +65,4 @@ if "%ACTION%"=="use" (
 )
 
 echo Windows native installation not implemented.
-exit /b 1
+exit /b 86

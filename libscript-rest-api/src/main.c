@@ -22,6 +22,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 typedef SOCKET rest_sock_t;
+typedef int rest_sock_io_len_t;
 #define REST_INVALID_SOCK INVALID_SOCKET
 #define rest_close_sock closesocket
 #else
@@ -30,6 +31,7 @@ typedef SOCKET rest_sock_t;
 #include <sys/socket.h>
 #include <unistd.h>
 typedef int rest_sock_t;
+typedef size_t rest_sock_io_len_t;
 #define REST_INVALID_SOCK (-1)
 #define rest_close_sock close
 #endif
@@ -50,8 +52,8 @@ static void send_json_response(rest_sock_t client, int status_code, const char *
                      "%s",
                      status_code, status_text, body_len, json_body);
     if (n > 0) {
-        size_t total = (size_t)n < sizeof(resp) ? (size_t)n : sizeof(resp) - 1;
-        (void)send(client, resp, (int)total, 0);
+        size_t total = (size_t)n < sizeof(resp) ? (size_t)n : sizeof(resp) - 1u;
+        (void)send(client, resp, (rest_sock_io_len_t)total, 0);
     }
 }
 
@@ -65,7 +67,7 @@ static void handle_http_client(rest_sock_t client, const char *root_dir) {
     char json_out[2048];
     const char *body = "";
     const char *hdr_end;
-    int recvd = (int)recv(client, req, (int)sizeof(req) - 1, 0);
+    int recvd = (int)recv(client, req, (rest_sock_io_len_t)(sizeof(req) - 1u), 0);
     if (recvd <= 0) {
         return;
     }

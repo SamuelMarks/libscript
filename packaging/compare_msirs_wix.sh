@@ -38,7 +38,7 @@ WITH_WINDOWS_VAGRANT=0
 # Prints command-line usage instructions for compare_msirs_wix.sh.
 show_help() {
   printf 'Usage: %s [--target <dir>] [--variant <online|offline>] [--out-dir <dir>] [--with-windows-vagrant]
-' "$0"
+' "${THIS_FILE}"
   printf 'Builds target MSI with msi-rs and optionally compares against Windows-only WiX.
 '
 }

@@ -4,11 +4,13 @@ repos:
       - id: libscript-cspell
         name: LibScript Spellcheck Audit (cspell)
         entry: |
-          /bin/sh -c 'if [ -x "node_modules/.bin/cspell" ]; then
-            git ls-files --cached --others --exclude-standard | node_modules/.bin/cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ -x "$ROOT_DIR/node_modules/.bin/cspell" ]; then
+            git ls-files --cached --others --exclude-standard | "$ROOT_DIR/node_modules/.bin/cspell" lint --no-progress --no-summary --no-must-find-files --file-list stdin
           elif command -v cspell >/dev/null 2>&1; then
             git ls-files --cached --others --exclude-standard | cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin
-          elif command -v npx >/dev/null 2>&1; then
+          elif [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v npx >/dev/null 2>&1; then
             git ls-files --cached --others --exclude-standard | npx --yes cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin
           fi'
         language: system
@@ -16,47 +18,57 @@ repos:
       - id: libscript-audit-standards
         name: LibScript Engineering Standards Audit
         entry: |
-          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\audit_standards.cmd --staged"
           else
-            ./devtools/audit/audit_standards.sh --staged
+            "$ROOT_DIR/devtools/audit/audit_standards.sh" --staged
           fi'
         language: system
         pass_filenames: false
       - id: libscript-audit-posix
         name: LibScript POSIX & Companion Parity Audit
         entry: |
-          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\audit_posix.cmd --staged"
           else
-            ./devtools/audit/audit_posix.sh --staged
+            "$ROOT_DIR/devtools/audit/audit_posix.sh" --staged
           fi'
         language: system
         pass_filenames: false
       - id: libscript-audit-version-manager
         name: LibScript Version Manager Contract Audit
         entry: |
-          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\audit_version_manager.cmd"
           else
-            ./devtools/audit/audit_version_manager.sh
+            "$ROOT_DIR/devtools/audit/audit_version_manager.sh"
           fi'
         language: system
         pass_filenames: false
       - id: libscript-audit-schema-vars
         name: LibScript Schema Variable Coverage Audit
         entry: |
-          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\audit_schema_vars.cmd"
           else
-            ./devtools/audit/audit_schema_vars.sh
+            "$ROOT_DIR/devtools/audit/audit_schema_vars.sh"
           fi'
         language: system
         pass_filenames: false
       - id: libscript-shellcheck
         name: LibScript ShellCheck Audit
         entry: |
-          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "if exist _lib\toolchains\shellcheck\env.cmd call _lib\toolchains\shellcheck\env.cmd >nul 2>&1 & where shellcheck >nul 2>&1 || (set LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 && call libscript.cmd install shellcheck latest && call _lib\toolchains\shellcheck\env.cmd >nul 2>&1)"
             if ! command -v shellcheck >/dev/null 2>&1; then
               _win_ls_home="${LIBSCRIPT_HOME:-${USERPROFILE:-${HOME:-}}/.libscript}"
@@ -66,17 +78,17 @@ repos:
               done
             fi
           else
-            if [ -f "./_lib/toolchains/shellcheck/env.sh" ]; then
-              SCRIPT_NAME="./_lib/toolchains/shellcheck/env.sh"
+            if [ -f "$ROOT_DIR/_lib/toolchains/shellcheck/env.sh" ]; then
+              SCRIPT_NAME="$ROOT_DIR/_lib/toolchains/shellcheck/env.sh"
               export SCRIPT_NAME
-              . "./_lib/toolchains/shellcheck/env.sh" >/dev/null 2>&1 || true
+              . "$ROOT_DIR/_lib/toolchains/shellcheck/env.sh" >/dev/null 2>&1 || true
               unset SCRIPT_NAME || true
             fi
             if ! command -v shellcheck >/dev/null 2>&1; then
-              LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 STACK="" ./libscript.sh install shellcheck "${SHELLCHECK_VERSION:-latest}"
-              SCRIPT_NAME="./_lib/toolchains/shellcheck/env.sh"
+              LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 STACK="" "$ROOT_DIR/libscript.sh" install shellcheck "${SHELLCHECK_VERSION:-latest}"
+              SCRIPT_NAME="$ROOT_DIR/_lib/toolchains/shellcheck/env.sh"
               export SCRIPT_NAME
-              . "./_lib/toolchains/shellcheck/env.sh" >/dev/null 2>&1 || true
+              . "$ROOT_DIR/_lib/toolchains/shellcheck/env.sh" >/dev/null 2>&1 || true
               unset SCRIPT_NAME || true
             fi
           fi
@@ -90,10 +102,12 @@ repos:
       - id: libscript-doc-coverage
         name: LibScript 100% Documentation Coverage Audit
         entry: |
-          /bin/sh -c 'if [ "${OS:-}" = "Windows_NT" ]; then
+          /bin/sh -c 'ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+          cd "$ROOT_DIR" || exit 1
+          if [ "${OS:-}" = "Windows_NT" ]; then
             cmd.exe /c "devtools\audit\doc_coverage.cmd"
           else
-            ./devtools/audit/doc_coverage.sh
+            "$ROOT_DIR/devtools/audit/doc_coverage.sh"
           fi'
         language: system
         pass_filenames: false

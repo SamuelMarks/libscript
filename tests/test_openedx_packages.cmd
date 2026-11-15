@@ -123,7 +123,7 @@ echo !TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     echo [INFO] Building .msi package natively on host...
     cd /d "!LIBSCRIPT_ROOT_DIR!"
-    call libscript.cmd package-as msi _lib/web-apps/openedx
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" package-as msi _lib/web-apps/openedx
     if not exist "build" mkdir "build"
     if exist "build\packages\msi\openedx-x64-verawood.1-online.msi" (
         copy /y "build\packages\msi\openedx-x64-verawood.1-online.msi" "build\OpenEdX-Setup.msi" >nul 2>&1

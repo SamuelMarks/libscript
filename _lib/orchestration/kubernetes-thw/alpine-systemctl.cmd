@@ -50,4 +50,4 @@ goto :find_root
 :root_found
 
 echo alpine-systemctl is not supported on Windows.
-exit /b 1
+exit /b 86

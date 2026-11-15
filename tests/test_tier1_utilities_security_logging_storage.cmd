@@ -105,7 +105,7 @@ for %%G in (cgit forgejo) do (
 
 echo === 2. Verifying Windows Package Mapper Resolution ===
 set "PKG_MGR=winget"
-call "_lib\_common\pkg_mapper.cmd" :map_package ripgrep
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package ripgrep
 if "!MAPPED_PKG!"=="BurntSushi.ripgrep.MSVC" (
     call :pass_check "pkg_mapper.cmd maps ripgrep -> BurntSushi.ripgrep.MSVC on winget"
 ) else (
@@ -113,7 +113,7 @@ if "!MAPPED_PKG!"=="BurntSushi.ripgrep.MSVC" (
 )
 
 set "PKG_MGR=winget"
-call "_lib\_common\pkg_mapper.cmd" :map_package vault
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package vault
 if "!MAPPED_PKG!"=="Hashicorp.Vault" (
     call :pass_check "pkg_mapper.cmd maps vault -> Hashicorp.Vault on winget"
 ) else (

@@ -173,7 +173,18 @@ if [ "${1:-}" = "--version" ] || [ "${1:-}" = "version" ]; then
   printf 'imgtool (LibScript MCUboot v2 C11 signer)\n'
   exit 0
 fi
-exec "$(dirname "$0")/mcuboot_c_signer" "$@"
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_wrap_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+exec "${_wrap_dir}/mcuboot_c_signer" "$@"
 WRAP
       chmod +x "${TARGET_DIR}/bin/imgtool"
     fi

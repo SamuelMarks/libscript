@@ -111,11 +111,22 @@ resolve_requested_pkg_mgr() {
   _pm_bin="${_req_pm}"
   [ "${_req_pm}" = "xbps" ] && _pm_bin="xbps-install"
 
-  if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ] && ! libscript_cmd_avail "${_pm_bin}"; then
+  if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ] && [ "${_LIBSCRIPT_BOOTSTRAPPING_PKG_MGR:-0}" != "1" ] && ! libscript_cmd_avail "${_pm_bin}"; then
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/${_req_pm}/setup.sh" ]; then
       log_info "Auto-bootstrapping requested package manager '${_req_pm}'..."
-      unset SCRIPT_NAME || true
-      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_req_pm}" latest || true
+      (
+        unset SCRIPT_NAME || true
+        _LIBSCRIPT_BOOTSTRAPPING_PKG_MGR=1 \
+        STACK="" \
+        "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_req_pm}" latest
+      ) || true
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/${_req_pm}/env.sh" ]; then
+        SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/${_req_pm}/env.sh"
+        export SCRIPT_NAME
+        # shellcheck disable=SC1090
+        . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+        unset SCRIPT_NAME || true
+      fi
     fi
   fi
 
@@ -174,20 +185,60 @@ detect_pkg_mgr() {
     PKG_MGR='pkgx'
   else
     if [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "darwin" ]; then
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
-        if libscript_cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return; fi
+      for _brew_dir in "/opt/homebrew/bin" "/usr/local/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/brew/latest/bin" "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/brew/default/bin"; do
+        if [ -x "${_brew_dir}/brew" ]; then
+          case ":${PATH}:" in
+            *":${_brew_dir}:"*) ;;
+            *) PATH="${_brew_dir}:${PATH}"; export PATH ;;
+          esac
+          PKG_MGR='brew'
+          export PKG_MGR
+          return 0
+        fi
+      done
+      if [ "${_LIBSCRIPT_BOOTSTRAPPING_PKG_MGR:-0}" != "1" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh" ]; then
+        (
+          unset SCRIPT_NAME || true
+          _LIBSCRIPT_BOOTSTRAPPING_PKG_MGR=1 \
+          STACK="" \
+          "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
+        ) || true
+        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/env.sh" ]; then
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/env.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090
+          . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+          unset SCRIPT_NAME || true
+        fi
+        if libscript_cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return 0; fi
       fi
     elif [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd"
-        if libscript_cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return; fi
+      if [ "${_LIBSCRIPT_BOOTSTRAPPING_PKG_MGR:-0}" != "1" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" ]; then
+        _LIBSCRIPT_BOOTSTRAPPING_PKG_MGR=1 "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" || true
+        if libscript_cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return 0; fi
       fi
     else
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh"
-        if libscript_cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return; fi
+      if [ "${_LIBSCRIPT_BOOTSTRAPPING_PKG_MGR:-0}" != "1" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh" ]; then
+        (
+          unset SCRIPT_NAME || true
+          _LIBSCRIPT_BOOTSTRAPPING_PKG_MGR=1 \
+          STACK="" \
+          "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh"
+        ) || true
+        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/env.sh" ]; then
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/env.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090
+          . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+          unset SCRIPT_NAME || true
+        fi
+        if libscript_cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return 0; fi
       fi
+    fi
+    if [ "${_LIBSCRIPT_BOOTSTRAPPING_PKG_MGR:-0}" = "1" ]; then
+      PKG_MGR=''
+      export PKG_MGR
+      return 0
     fi
     log_error 'No supported package manager found'
     exit 1
@@ -273,7 +324,7 @@ libscript_depends() {
     log_info 'Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1'
     return 0
   fi
-  if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ]; then
+  if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ] || ! libscript_cmd_avail "${PKG_MGR}"; then
     detect_pkg_mgr "${1:-}"
   fi
   pkgs_to_install=''
@@ -474,10 +525,6 @@ libscript_depends() {
     fi
   fi
 }
-
-if [ "${PKG_MGR-}" ]; then
-  detect_pkg_mgr ""
-fi
 
 # ## libscript_download
 # Unified Caching Downloader for remote artifacts.

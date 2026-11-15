@@ -347,7 +347,12 @@ libscript_fetch_and_extract_source() {
   case "${_src_url}" in
     *.git|git://*)
       if command -v git >/dev/null 2>&1; then
-        git clone --depth 1 "${_src_url}" "${LIBSCRIPT_SOURCE_WORKDIR}/src"
+        if [ -d "${LIBSCRIPT_SOURCE_WORKDIR}/src/.git" ]; then
+          git -C "${LIBSCRIPT_SOURCE_WORKDIR}/src" fetch --depth 1 origin >/dev/null 2>&1 || true
+        else
+          rm -rf "${LIBSCRIPT_SOURCE_WORKDIR}/src"
+          git clone --depth 1 "${_src_url}" "${LIBSCRIPT_SOURCE_WORKDIR}/src"
+        fi
         LIBSCRIPT_EXTRACTED_SRC_DIR="${LIBSCRIPT_SOURCE_WORKDIR}/src"
         export LIBSCRIPT_SOURCE_WORKDIR
         export LIBSCRIPT_EXTRACTED_SRC_DIR

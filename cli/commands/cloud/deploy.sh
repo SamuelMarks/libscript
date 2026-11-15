@@ -148,6 +148,7 @@ case "$REPO_SOURCE" in
       if [ -d "${WORK_DIR}/.git" ]; then
         git -C "$WORK_DIR" fetch --all --prune
       else
+        rm -rf "$WORK_DIR"
         git clone "$REPO_SOURCE" "$WORK_DIR"
       fi
       if [ -n "$GIT_REF" ]; then

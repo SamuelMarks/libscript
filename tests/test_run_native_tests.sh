@@ -91,7 +91,7 @@ EOF_README
   # Test 1: Dry run with Alpine OS
   (
     cd "${_test_tmp}"
-    "./tests/run_native_tests.sh" --dry-run --os alpine compA
+    "${_test_tmp}/tests/run_native_tests.sh" --dry-run --os alpine compA
   )
 
   if [ ! -f "${_test_tmp}/tests_tmp/compA.linux.alpine.success" ]; then
@@ -103,7 +103,7 @@ EOF_README
   # Test 2: Dry run with FreeBSD OS on blacklisted compB
   (
     cd "${_test_tmp}"
-    "./tests/run_native_tests.sh" --dry-run --os freebsd compB
+    "${_test_tmp}/tests/run_native_tests.sh" --dry-run --os freebsd compB
   )
 
   if [ -f "${_test_tmp}/tests_tmp/compB.freebsd.success" ]; then
@@ -115,7 +115,7 @@ EOF_README
   # Test 3: Dry run with category flag
   (
     cd "${_test_tmp}"
-    "./tests/run_native_tests.sh" --dry-run --os debian --category catA
+    "${_test_tmp}/tests/run_native_tests.sh" --dry-run --os debian --category catA
   )
 
   if [ ! -f "${_test_tmp}/tests_tmp/compA.linux.debian.success" ]; then
@@ -127,7 +127,7 @@ EOF_README
   # Test 4: Dry run with Rocky Linux
   (
     cd "${_test_tmp}"
-    "./tests/run_native_tests.sh" --dry-run --os rockylinux compA
+    "${_test_tmp}/tests/run_native_tests.sh" --dry-run --os rockylinux compA
   )
 
   if [ ! -f "${_test_tmp}/tests_tmp/compA.linux.rhel.success" ]; then

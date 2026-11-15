@@ -91,4 +91,18 @@ if not errorlevel 1 (
     )
 )
 
+endlocal & (
+    set "OS=%OS%"
+    set "TARGET_OS=%TARGET_OS%"
+    set "UNAME=%UNAME%"
+    set "UNAME_LOWER=%UNAME_LOWER%"
+    set "INIT_SYS=%INIT_SYS%"
+    set "KERNEL_RELEASE=%KERNEL_RELEASE%"
+    set "UNAME_A=%UNAME_A%"
+    set "ARCH=%ARCH%"
+    set "ARCH_ALT=%ARCH_ALT%"
+    set "PKG_MGR=%PKG_MGR%"
+    set "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR%"
+    set "STACK=%STACK%"
+)
 exit /b 0

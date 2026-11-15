@@ -296,10 +296,18 @@ jobs:
             } elseif (Get-Command wix.exe -ErrorAction SilentlyContinue) {
               Write-Host "wix.exe is already available in PATH."
             } else {
-              Write-Host "WiX Toolset compiler not found in PATH. Installing via Chocolatey..."
-              choco install wixtoolset -y --no-progress
-              if (Test-Path "$wixV3\candle.exe") {
-                Add-Content -Path $env:GITHUB_PATH -Value $wixV3
+              Write-Host "WiX Toolset compiler not found in PATH. Installing via LibScript wix component..."
+              cmd.exe /c "call .\libscript.cmd install wix latest"
+              $lsWixDirs = @(
+                "$HOME\.libscript\wix\latest\bin",
+                "$HOME\.libscript\wix\default\bin",
+                "$wixV3"
+              )
+              foreach ($cand in $lsWixDirs) {
+                if ((Test-Path "$cand\candle.exe") -or (Test-Path "$cand\wix.exe")) {
+                  Add-Content -Path $env:GITHUB_PATH -Value $cand
+                  break
+                }
               }
             }
           }
@@ -518,11 +526,13 @@ jobs:
           merge-multiple: true
 
       - name: Display Release Assets
+        shell: sh
         run: |
           echo "=== Downloaded Artifacts ==="
           ls -lah dist/
 
       - name: Generate Consolidated SHA256SUMS
+        shell: sh
         run: |
           cd dist
           rm -f SHA256SUMS.txt
@@ -539,6 +549,7 @@ jobs:
 
       - name: Resolve Release Tag & Title
         id: release_info
+        shell: sh
         run: |
           if [ -n "${{ github.event.inputs.tag_name }}" ]; then
             TAG="${{ github.event.inputs.tag_name }}"
@@ -555,6 +566,7 @@ jobs:
           echo "Release tag: $TAG"
 
       - name: Publish Assets to GitHub Release
+        shell: sh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.release_info.outputs.tag }}

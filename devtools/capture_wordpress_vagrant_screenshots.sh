@@ -103,7 +103,15 @@ capture_screen() {
   fi
   sleep 1.2
   if [ -S "${MONITOR_SOCK}" ]; then
-    python3 -c 'import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall((f"screendump {sys.argv[2]}" + chr(10)).encode()); time.sleep(0.3); s.close()' "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
+    if command -v socat >/dev/null 2>&1; then
+      printf 'screendump %s\n' "${_ppm}" | socat - "UNIX-CONNECT:${MONITOR_SOCK}" >/dev/null 2>&1 || true
+      sleep 0.3
+    elif command -v nc >/dev/null 2>&1 && printf '' | nc -U -w 1 "${MONITOR_SOCK}" >/dev/null 2>&1; then
+      printf 'screendump %s\n' "${_ppm}" | nc -U -w 2 "${MONITOR_SOCK}" >/dev/null 2>&1 || true
+      sleep 0.3
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 -c 'import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall((f"screendump {sys.argv[2]}" + chr(10)).encode()); time.sleep(0.3); s.close()' "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
+    fi
     if command -v sips >/dev/null 2>&1; then
       sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
     elif command -v magick >/dev/null 2>&1; then
@@ -112,7 +120,13 @@ capture_screen() {
     rm -f "$_ppm"
   fi
   if [ -f "$_png" ] && [ -n "$_bounds" ] && [ "$_crop_mode" != "FULL" ]; then
-    python3 -c '
+    if command -v magick >/dev/null 2>&1; then
+      _crop_geom=$(printf '%s' "$_bounds" | awk -F',' 'NF >= 4 { printf "%dx%d+%d+%d", $3, $4, $1, $2 }')
+      if [ -n "$_crop_geom" ]; then
+        magick "$_png" -crop "$_crop_geom" +repage "$_png" >/dev/null 2>&1 || true
+      fi
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 -c '
 import sys, subprocess
 png_path, bounds = sys.argv[1], sys.argv[2]
 parts = [int(x) for x in bounds.split(",")]
@@ -133,6 +147,7 @@ if len(parts) >= 6:
     except ImportError:
         subprocess.run(["magick", png_path, "-crop", f"{w}x{h}+{x}+{y}", "+repage", png_path], check=False)
 ' "$_png" "$_bounds"
+    fi
   fi
   if [ -f "$_png" ]; then
     cp -f "$_png" "${CC0_SCREENSHOTS_DIR}/${_name}.png"

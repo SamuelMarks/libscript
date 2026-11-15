@@ -361,8 +361,19 @@ case "$ACTION" in
                   mv "${TARGET_DIR}/bin/duckdb" "${TARGET_DIR}/bin/duckdb.bin"
                   cat << 'SHIM' > "${TARGET_DIR}/bin/duckdb"
 #!/bin/sh
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_shim_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LD_PRELOAD="/usr/local/lib/libglibc_shim.so:/lib/libgcompat.so.0:${LD_PRELOAD:-}"
-exec "$(dirname "$0")/duckdb.bin" "$@"
+exec "${_shim_dir}/duckdb.bin" "$@"
 SHIM
                   chmod +x "${TARGET_DIR}/bin/duckdb"
                 fi

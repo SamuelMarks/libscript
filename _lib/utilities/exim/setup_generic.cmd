@@ -1,11 +1,11 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup script for Exim / local SMTP relay.
-
+:: Windows setup script for Exim / local SMTP relay, delegating to hMailServer on Windows.
 ::
 :: ## Usage
 :: Call this script to trigger setup for exim on Windows.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -51,17 +51,19 @@ goto :find_root
 :root_found
 
 if "%ACTION%"=="" set "ACTION=install"
+if "%VERSION%"=="" set "VERSION=latest"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if "%ACTION%"=="install" (
+    if exist "%LIBSCRIPT_HOME%\exim\%VERSION%" (
+        echo [INFO] exim %VERSION% is already installed.
+        exit /b 0
+    )
     echo [INFO] Exim is POSIX-specific. Routing to hMailServer for native Windows SMTP relay...
-    call "%~dp0\..\hmailserver\setup.cmd" install
-    exit /b 0
+    call "!SCRIPT_DIR!\..\hmailserver\setup.cmd" install
+    exit /b %ERRORLEVEL%
 ) else if "%ACTION%"=="test" (
-    call "%~dp0\..\hmailserver\test.cmd"
-if exist "%LIBSCRIPT_HOME%\exim\%VERSION%" (
-    echo [INFO] exim %VERSION% is already installed.
-    exit /b 0
-)
+    call "!SCRIPT_DIR!\..\hmailserver\test.cmd"
     exit /b %ERRORLEVEL%
 )
 

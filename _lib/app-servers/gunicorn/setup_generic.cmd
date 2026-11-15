@@ -1,10 +1,11 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup script for Gunicorn.
+:: Windows setup script for Gunicorn, routing WSGI/ASGI execution to Waitress and Uvicorn on Windows.
 ::
 :: ## Usage
 :: Called internally by setup.cmd / cli.cmd.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -51,16 +52,17 @@ goto :find_root
 
 if "%ACTION%"=="" set "ACTION=install"
 if "%GUNICORN_VERSION%"=="" set "GUNICORN_VERSION=latest"
+if "%VERSION%"=="" set "VERSION=%GUNICORN_VERSION%"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if "%ACTION%"=="install" (
+    if exist "%LIBSCRIPT_HOME%\gunicorn\%VERSION%" (
+        echo [INFO] gunicorn %VERSION% is already installed.
+        exit /b 0
+    )
     echo [INFO] Gunicorn uses POSIX fork^(^). On Windows, installing Waitress and Uvicorn for native WSGI/ASGI execution...
-    call "%~dp0\..\waitress\setup.cmd" install
-    call "%~dp0\..\uvicorn\setup.cmd" install
-if exist "%LIBSCRIPT_HOME%\gunicorn\%VERSION%" (
-    echo [INFO] gunicorn %VERSION% is already installed.
-    exit /b 0
-)
+    call "!SCRIPT_DIR!\..\waitress\setup.cmd" install
+    call "!SCRIPT_DIR!\..\uvicorn\setup.cmd" install
     where gunicorn >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] gunicorn is also installed on the system.

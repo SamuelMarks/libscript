@@ -115,7 +115,7 @@ for %%A in (glassfish jboss jetty passenger payara php-fpm pm2 puma triton unico
 
 echo === 2. Verifying Windows Package Mapper Resolution ===
 set "PKG_MGR=winget"
-call "_lib\_common\pkg_mapper.cmd" :map_package surrealdb
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package surrealdb
 if "!MAPPED_PKG!"=="SurrealDB.SurrealDB" (
     call :pass_check "pkg_mapper.cmd maps surrealdb -> SurrealDB.SurrealDB on winget"
 ) else (
@@ -123,7 +123,7 @@ if "!MAPPED_PKG!"=="SurrealDB.SurrealDB" (
 )
 
 set "PKG_MGR=winget"
-call "_lib\_common\pkg_mapper.cmd" :map_package traefik
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package traefik
 if "!MAPPED_PKG!"=="TraefikLabs.Traefik" (
     call :pass_check "pkg_mapper.cmd maps traefik -> TraefikLabs.Traefik on winget"
 ) else (

@@ -86,13 +86,55 @@ call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_version_manager.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_schema_vars.cmd" --all
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\doc_coverage.cmd" --strict
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_doc_coverage.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_vm_contract.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_global_var_hygiene.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_var_aliases_and_env_printer.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_os_info_matrix.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_pkg_mapper_parity.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_cli_arg_forwarding.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_rest_api.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_shellcheck_vm_and_hooks.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_cloud_experiment_lifecycle.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_experiment_harness.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_libtpu_experiments.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_port_experiments.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_edgcpp_backends_experiments.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tfrc_guard.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_gcp_tpu_vm_qr_multihost.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_gemma_tpu_matrix.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_languages_and_package_managers.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_data_and_server_components.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_utilities_security_logging_storage.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier15_2_3_system_orchestration_cloud.cmd"
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_standards_remediation.cmd"
 exit /b %ERRORLEVEL%
 
 :: ## update_results
@@ -127,7 +169,7 @@ exit /b %ERRORLEVEL%
 :: ## local_tests_all
 :: Executes all local component tests via run_local_tests.cmd.
 :local_tests_all
-call tests\run_local_tests.cmd all
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" all
 exit /b
 
 :: ## test_component
@@ -137,23 +179,29 @@ if "%~2"=="" (
     echo Usage: make.bat test_component ^<component_name^> >&2
     exit /b 1
 )
-call tests\run_local_tests.cmd %2
-exit /b
+if "%LIBSCRIPT_USE_VAGRANT%"=="1" (
+    call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" %2
+    exit /b !ERRORLEVEL!
+)
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install %2 latest
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" test %2
+exit /b !ERRORLEVEL!
 
 :: ## local_tests_toolchain
 :: Executes local tests for all toolchain components.
 :local_tests_toolchain
-call tests\run_local_tests.cmd toolchains
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" toolchains
 exit /b
 
 :: ## local_tests_languages
 :: Executes local tests for all programming language components.
 :local_tests_languages
-call tests\run_local_tests.cmd languages
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" languages
 exit /b
 
 :: ## local_tests_databases
 :: Executes local tests for all database components.
 :local_tests_databases
-call tests\run_local_tests.cmd databases
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" databases
 exit /b

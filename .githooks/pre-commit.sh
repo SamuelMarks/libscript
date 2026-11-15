@@ -47,6 +47,22 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   unset _pc_saved_this _pc_saved_dir _pc_saved_stack || true
 fi
 
+if ! command -v jq >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh" ]; then
+  _pc_saved_this="${THIS_FILE:-}"
+  _pc_saved_dir="${SCRIPT_DIR:-}"
+  _pc_saved_stack="${STACK:-}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/jq/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+  unset SCRIPT_NAME || true
+  THIS_FILE="$_pc_saved_this"
+  SCRIPT_DIR="$_pc_saved_dir"
+  STACK="$_pc_saved_stack"
+  export STACK
+  unset _pc_saved_this _pc_saved_dir _pc_saved_stack || true
+fi
+
 # ## load_shellcheck_env
 # Sources the isolated ShellCheck version manager environment while preserving caller path and recursion state.
 load_shellcheck_env() {
@@ -117,7 +133,7 @@ else
         filename=$(basename "$file")
         if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
             printf '%s\n' "$file" >> "$_tmp_crlf"
-        elif [ "$file" = ".githooks/pre-commit" ] || [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "awk" ] || [ "$ext" = "jq" ] || [ "$ext" = "conf" ] || [ "$ext" = "service" ] || [ "$ext" = "tpl" ] || [ "$ext" = "txt" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || printf '%s\n' "$filename" | grep -q "Dockerfile" || [ "$filename" = "Makefile" ] || [ "$filename" = ".prettierrc" ] || [ "$filename" = "Vagrantfile" ] || [ "$filename" = "celery_env" ] || [ "$filename" = "ssh_config" ] || [ "$filename" = "ROOT" ] || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
+        elif [ "$file" = ".githooks/pre-commit" ] || [ "$ext" = "sh" ] || [ "$ext" = "awk" ] || [ "$ext" = "jq" ] || [ "$ext" = "conf" ] || [ "$ext" = "service" ] || [ "$ext" = "tpl" ] || [ "$ext" = "txt" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || printf '%s\n' "$filename" | grep -q "Dockerfile" || [ "$filename" = "Makefile" ] || [ "$filename" = ".prettierrc" ] || [ "$filename" = "Vagrantfile" ] || [ "$filename" = "celery_env" ] || [ "$filename" = "ssh_config" ] || [ "$filename" = "ROOT" ] || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
             printf '%s\n' "$file" >> "$_tmp_lf"
         fi
         if [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "md" ]; then
@@ -133,9 +149,9 @@ else
     if [ -s "$_tmp_fmt" ]; then
         if command -v prettier >/dev/null 2>&1; then
             xargs -n 100 prettier --write < "$_tmp_fmt" >/dev/null 2>&1 || true
-        elif [ -x "node_modules/.bin/prettier" ]; then
-            xargs -n 100 node_modules/.bin/prettier --write < "$_tmp_fmt" >/dev/null 2>&1 || true
-        elif command -v npx >/dev/null 2>&1; then
+        elif [ -x "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/prettier" ]; then
+            xargs -n 100 "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/prettier" --write < "$_tmp_fmt" >/dev/null 2>&1 || true
+        elif [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v npx >/dev/null 2>&1; then
             xargs -n 100 npx --yes prettier --write < "$_tmp_fmt" >/dev/null 2>&1 || true
         fi
     fi
@@ -149,9 +165,9 @@ if [ -n "$CHECK_FILES" ]; then
     _cspell_cmd=""
     if command -v cspell >/dev/null 2>&1; then
         _cspell_cmd='cspell'
-    elif [ -x "node_modules/.bin/cspell" ]; then
-        _cspell_cmd='node_modules/.bin/cspell'
-    elif command -v npx >/dev/null 2>&1; then
+    elif [ -x "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/cspell" ]; then
+        _cspell_cmd="${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/cspell"
+    elif [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v npx >/dev/null 2>&1; then
         _cspell_cmd="npx --yes --quiet cspell"
     fi
     if [ -n "$_cspell_cmd" ]; then
@@ -178,24 +194,25 @@ if [ -n "$CHECK_FILES" ]; then
 fi
 
 # 3. LibScript Standards Audit
+HOOK_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || printf '%s\n' "$LIBSCRIPT_ROOT_DIR")
 printf '%s\n' 'Running LibScript engineering standards audit...'
-if [ -x "devtools/audit/audit_standards.sh" ]; then
-    ./devtools/audit/audit_standards.sh "$AUDIT_MODE"
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_standards.sh" ]; then
+    "${HOOK_REPO_ROOT}/devtools/audit/audit_standards.sh" "$AUDIT_MODE"
 fi
 
-if [ -x "devtools/audit/audit_posix.sh" ]; then
-    ./devtools/audit/audit_posix.sh "$AUDIT_MODE"
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_posix.sh" ]; then
+    "${HOOK_REPO_ROOT}/devtools/audit/audit_posix.sh" "$AUDIT_MODE"
 fi
 
-if [ -x "devtools/audit/audit_version_manager.sh" ]; then
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_version_manager.sh" ]; then
     if [ "$AUDIT_MODE" = "--all" ] || printf '%s\n' "$CHECK_FILES" | grep -q '^_lib/'; then
-        ./devtools/audit/audit_version_manager.sh
+        "${HOOK_REPO_ROOT}/devtools/audit/audit_version_manager.sh"
     fi
 fi
 
-if [ -x "devtools/audit/audit_schema_vars.sh" ]; then
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/audit_schema_vars.sh" ]; then
     if [ "$AUDIT_MODE" = "--all" ] || printf '%s\n' "$CHECK_FILES" | grep -qE '^(_lib/|.*\.schema\.json$)'; then
-        ./devtools/audit/audit_schema_vars.sh "$AUDIT_MODE"
+        "${HOOK_REPO_ROOT}/devtools/audit/audit_schema_vars.sh" "$AUDIT_MODE"
     fi
 fi
 
@@ -213,8 +230,8 @@ fi
 
 # 5. Regenerate Markdown Readmes
 printf '%s\n' 'Regenerating markdown readme files interpolating the json...'
-if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
-    ./devtools/docs-gen/generate_markdown_docs.sh
+if [ -x "${HOOK_REPO_ROOT}/devtools/docs-gen/generate_markdown_docs.sh" ]; then
+    "${HOOK_REPO_ROOT}/devtools/docs-gen/generate_markdown_docs.sh"
     # Re-add any modified README.md files
     _mod_readmes=$(git ls-files -m | grep "README.md$" || true)
     if [ -n "$_mod_readmes" ]; then
@@ -227,13 +244,13 @@ if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
 fi
 
 printf '%s\n' 'Updating Supported Components in README.md...'
-if [ -x "tests/update_results.sh" ]; then
-    ./tests/update_results.sh
+if [ -x "${HOOK_REPO_ROOT}/tests/update_results.sh" ]; then
+    "${HOOK_REPO_ROOT}/tests/update_results.sh"
 fi
 
 printf '%s\n' 'Updating Doc Coverage shield in README.md...'
-if [ -x "devtools/audit/doc_coverage.sh" ]; then
-    ./devtools/audit/doc_coverage.sh --update-readme
+if [ -x "${HOOK_REPO_ROOT}/devtools/audit/doc_coverage.sh" ]; then
+    "${HOOK_REPO_ROOT}/devtools/audit/doc_coverage.sh" --update-readme
 fi
 
 if ! git diff --quiet -- README.md 2>/dev/null; then
@@ -242,9 +259,9 @@ if ! git diff --quiet -- README.md 2>/dev/null; then
     fi
     if command -v prettier >/dev/null 2>&1; then
         prettier --write README.md >/dev/null 2>&1 || true
-    elif [ -x "node_modules/.bin/prettier" ]; then
-        node_modules/.bin/prettier --write README.md >/dev/null 2>&1 || true
-    elif command -v npx >/dev/null 2>&1; then
+    elif [ -x "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/prettier" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/node_modules/.bin/prettier" --write README.md >/dev/null 2>&1 || true
+    elif [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && command -v npx >/dev/null 2>&1; then
         npx --yes prettier --write README.md >/dev/null 2>&1 || true
     fi
 

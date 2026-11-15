@@ -97,7 +97,8 @@ register_box_if_needed() {
   fi
 
   _vslash_name=$(printf '%s' "$_box_name" | sed 's|/|-VAGRANTSLASH-|g')
-  if [ -d "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/qemu" ] && [ ! -e "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt" ]; then
+  if [ -d "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/qemu" ] && [ ! -d "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt" ]; then
+    rm -f "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt" 2>/dev/null || true
     ln -sf "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/qemu" "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt"
   fi
 }

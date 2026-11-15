@@ -32,7 +32,7 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 set +f
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
-  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Usage: $(basename -- "${THIS_FILE}")"
   printf '%s\n' 'Audits all LibScript components on the Windows 11 Vagrant VM to determine'
   printf '%s\n' 'exact failures, missing download URLs, broken test commands, and unsupported tools.'
   printf '%s\n' 'Outputs JSON and Markdown summaries.'

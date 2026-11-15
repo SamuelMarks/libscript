@@ -30,15 +30,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
-  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Usage: $(basename -- "${THIS_FILE}")"
   printf '%s\n' 'Generates markdown documentation for the libscript codebase.'
   printf '\n'
   printf '%s\n' 'Options:'
   printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
 fi
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${ROOT_DIR:=$(cd "${SCRIPT_DIR}/../.." && pwd)}"
+: "${ROOT_DIR:=${LIBSCRIPT_ROOT_DIR}}"
 
 if [ -f "${ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   _gmd_saved_this="${THIS_FILE:-}"
@@ -51,6 +50,11 @@ if [ -f "${ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   THIS_FILE="$_gmd_saved_this"
   SCRIPT_DIR="$_gmd_saved_dir"
   unset _gmd_saved_this _gmd_saved_dir || true
+fi
+
+if ! command -v jq >/dev/null 2>&1 || [ "$(printf '{"ok":1}' | jq -r '.ok' 2>/dev/null || true)" != "1" ]; then
+  printf '[WARN] Functional jq binary not found on PATH; skipping README.md table regeneration.\n' >&2
+  exit 0
 fi
 
 # ## normalize_markdown_section

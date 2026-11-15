@@ -198,7 +198,10 @@ case "$ACTION" in
     TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/shellcheck/${EXACT_VERSION}"
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
-      ACTION='install' "$0"
+      (
+        unset SCRIPT_NAME || true
+        STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install shellcheck "${EXACT_VERSION}"
+      )
     fi
     libscript_symlink_alias 'shellcheck' "${VERSION#v}" "${EXACT_VERSION}"
     libscript_symlink_alias 'shellcheck' 'default' "${EXACT_VERSION}"

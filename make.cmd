@@ -133,6 +133,8 @@ if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier15_2_3_system_orchestration_cloud.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_standards_remediation.cmd"
 exit /b %ERRORLEVEL%
 
 :: ## update_results
@@ -167,7 +169,7 @@ exit /b %ERRORLEVEL%
 :: ## local_tests_all
 :: Executes all local component tests via run_local_tests.cmd.
 :local_tests_all
-call tests\run_local_tests.cmd all
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" all
 exit /b
 
 :: ## test_component
@@ -177,23 +179,29 @@ if "%~2"=="" (
     echo Usage: make.cmd test_component ^<component_name^> >&2
     exit /b 1
 )
-call tests\run_local_tests.cmd %2
-exit /b
+if "%LIBSCRIPT_USE_VAGRANT%"=="1" (
+    call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" %2
+    exit /b !ERRORLEVEL!
+)
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install %2 latest
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" test %2
+exit /b !ERRORLEVEL!
 
 :: ## local_tests_toolchain
 :: Executes local tests for all toolchain components.
 :local_tests_toolchain
-call tests\run_local_tests.cmd toolchains
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" toolchains
 exit /b
 
 :: ## local_tests_languages
 :: Executes local tests for all programming language components.
 :local_tests_languages
-call tests\run_local_tests.cmd languages
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" languages
 exit /b
 
 :: ## local_tests_databases
 :: Executes local tests for all database components.
 :local_tests_databases
-call tests\run_local_tests.cmd databases
+call "%LIBSCRIPT_ROOT_DIR%\tests\run_local_tests.cmd" databases
 exit /b

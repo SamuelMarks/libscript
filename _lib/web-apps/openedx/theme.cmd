@@ -129,6 +129,7 @@ if not errorlevel 1 (
         git pull 2>nul
         popd
     ) else (
+        if exist "%DEST_DIR%" rmdir /s /q "%DEST_DIR%" >nul 2>&1
         git clone --depth 1 --branch "%BRANCH%" "%GIT_URL%" "%DEST_DIR%" 2>nul
     )
 ) else (

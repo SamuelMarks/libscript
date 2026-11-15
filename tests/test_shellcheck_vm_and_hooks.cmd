@@ -58,7 +58,7 @@ set "FAILURES=0"
 set "CHECKS=0"
 
 echo === 1. Auditing _lib\toolchains\shellcheck Standards ^& Companion Parity ===
-call "devtools\audit\audit_version_manager.cmd" "_lib\toolchains\shellcheck" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_version_manager.cmd" "_lib\toolchains\shellcheck" >nul 2>&1
 if errorlevel 1 (
     call :fail_check "_lib\toolchains\shellcheck failed Version Manager Contract audit"
 ) else (

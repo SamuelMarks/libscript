@@ -52,8 +52,17 @@ goto :find_root
 cd /d "%LIBSCRIPT_ROOT_DIR%"
 
 if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
+    set "_PC_SAVED_ST=!STACK!"
     set "STACK="
     call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" >nul 2>&1
+    set "STACK=!_PC_SAVED_ST!"
+)
+where jq >nul 2>&1
+if errorlevel 1 if exist "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\jq\env.cmd" (
+    set "_PC_SAVED_ST=!STACK!"
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\utilities\jq\env.cmd" >nul 2>&1
+    set "STACK=!_PC_SAVED_ST!"
 )
 
 echo Running pre-commit hooks...
@@ -67,7 +76,7 @@ if /i "%~1"=="--all" (
 
 :: 1. Enforce line endings and indent via Prettier where applicable
 where npx >nul 2>&1
-if not errorlevel 1 (
+if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     if /i not "%AUDIT_MODE%"=="--all" (
         for /f "tokens=*" %%F in ('git diff --no-ext-diff --cached --name-only --diff-filter=ACM 2^>nul') do (
             if exist "%%F" (
@@ -92,7 +101,7 @@ if not errorlevel 1 (
 
 :: 2. Spellcheck
 where npx >nul 2>&1
-if not errorlevel 1 (
+if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     echo Running spellcheck...
     set "TMP_SPELL=%TEMP%\staged_spell_%RANDOM%.txt"
     !GIT_FILE_CMD! > "!TMP_SPELL!" 2>nul
@@ -110,36 +119,38 @@ if not errorlevel 1 (
 )
 
 :: 3. LibScript Standards Audit
-if exist "devtools\audit\audit_standards.cmd" (
+set "HOOK_REPO_ROOT=%LIBSCRIPT_ROOT_DIR%"
+for /f "delims=" %%R in ('git rev-parse --show-toplevel 2^>nul') do set "HOOK_REPO_ROOT=%%~fR"
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_standards.cmd" (
     echo Running LibScript engineering standards audit...
-    call "devtools\audit\audit_standards.cmd" !AUDIT_MODE!
+    call "!HOOK_REPO_ROOT!\devtools\audit\audit_standards.cmd" !AUDIT_MODE!
     if errorlevel 1 (
         echo [ERROR] Standards audit failed. Please fix violations before committing.
         exit /b 1
     )
 )
 
-if exist "devtools\audit\audit_posix.cmd" (
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" (
     echo Running POSIX and companion parity audit...
-    call "devtools\audit\audit_posix.cmd" !AUDIT_MODE!
+    call "!HOOK_REPO_ROOT!\devtools\audit\audit_posix.cmd" !AUDIT_MODE!
     if errorlevel 1 (
         echo [ERROR] POSIX and companion parity audit failed.
         exit /b 1
     )
 )
 
-if exist "devtools\audit\audit_version_manager.cmd" (
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd" (
     echo Running Version Manager Contract audit...
-    call "devtools\audit\audit_version_manager.cmd"
+    call "!HOOK_REPO_ROOT!\devtools\audit\audit_version_manager.cmd"
     if errorlevel 1 (
         echo [ERROR] Version Manager Contract audit failed.
         exit /b 1
     )
 )
 
-if exist "devtools\audit\audit_schema_vars.cmd" (
+if exist "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" (
     echo Running Schema Variable Coverage audit...
-    call "devtools\audit\audit_schema_vars.cmd" !AUDIT_MODE!
+    call "!HOOK_REPO_ROOT!\devtools\audit\audit_schema_vars.cmd" !AUDIT_MODE!
     if errorlevel 1 (
         echo [ERROR] Schema Variable Coverage audit failed.
         exit /b 1
@@ -159,9 +170,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
+if exist "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd" (
     echo Regenerating markdown readme files interpolating the json...
-    call "devtools\docs-gen\generate_markdown_docs.cmd"
+    call "!HOOK_REPO_ROOT!\devtools\docs-gen\generate_markdown_docs.cmd"
     if errorlevel 1 (
         echo [ERROR] generate_markdown_docs.cmd failed.
         exit /b 1
@@ -169,7 +180,7 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     for /f "delims=" %%F in ('git ls-files -m 2^>nul') do (
         if /i "%%~nxF"=="README.md" (
             where npx >nul 2>&1
-            if not errorlevel 1 (
+            if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
                 call npx --yes prettier --write "%%F" >nul 2>&1
             )
             git add "%%F"
@@ -177,18 +188,18 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     )
 )
 
-if exist "tests\update_results.cmd" (
+if exist "!HOOK_REPO_ROOT!\tests\update_results.cmd" (
     echo Updating Supported Components in README.md...
-    call "tests\update_results.cmd"
+    call "!HOOK_REPO_ROOT!\tests\update_results.cmd"
     if errorlevel 1 (
         echo [ERROR] update_results.cmd failed.
         exit /b 1
     )
 )
 
-if exist "devtools\audit\doc_coverage.cmd" (
+if exist "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" (
     echo Updating Doc Coverage shield in README.md...
-    call "devtools\audit\doc_coverage.cmd" --update-readme
+    call "!HOOK_REPO_ROOT!\devtools\audit\doc_coverage.cmd" --update-readme
     if errorlevel 1 (
         echo [ERROR] Documentation coverage audit failed. Please fix missing documentation before committing.
         exit /b 1
@@ -198,7 +209,7 @@ if exist "devtools\audit\doc_coverage.cmd" (
 git diff --quiet -- README.md >nul 2>&1
 if errorlevel 1 (
     where npx >nul 2>&1
-    if not errorlevel 1 (
+    if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
         call npx --yes prettier --write README.md >nul 2>&1
     )
     git add README.md

@@ -14,7 +14,7 @@ add_executable(libscript-rest-api ${SOURCES})
 if(MSVC)
     target_compile_options(libscript-rest-api PRIVATE /W4 /WX)
 else()
-    target_compile_options(libscript-rest-api PRIVATE -Wall -Wextra -Werror -pedantic)
+    target_compile_options(libscript-rest-api PRIVATE -Wall -Wextra -Wconversion -Wsign-conversion -Werror -pedantic)
 endif()
 
 if(TARGET c-rest-framework)

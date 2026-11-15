@@ -29,6 +29,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
     cat << 'EOF'
 #!/bin/sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else printf '%s\n' "Error: dialog or whiptail required." >&2; exit 1; fi
 EOF
     printf '%s\n' "SELECTED=\$(\$DIALOG --title \"LibScript Installer\" --checklist \"Select components to install:\" 20 60 10 \\"
@@ -85,7 +98,7 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
       "mfe" "Build & deploy Micro-Frontends" \
       3>&1 1>&2 2>&3)
     if [ -n "$sub_act" ]; then
-      ./_lib/web-apps/openedx/cli.sh "$sub_act"
+      "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/cli.sh" "$sub_act"
     fi
   elif [ -n "$action" ]; then
     offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; printf '%s\n' $?)
@@ -110,11 +123,12 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
 
     if [ "$action" = "install" ]; then
       for item in $(printf '%s\n' "$SELECTED" | tr -d '"'); do
-        ./libscript.sh install "$item" latest
+        "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "$item" latest
       done
     else
       if [ "$action" = "dockerfile" ]; then action="docker"; fi
-      ./libscript.sh package-as "$action" $items $extra_args
+      # shellcheck disable=SC2086
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as "$action" $items $extra_args
     fi
   else
     printf '%s\n' "Cancelled."

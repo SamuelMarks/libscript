@@ -95,7 +95,7 @@ case "${TARGET_OS}" in
   windows-*)
     printf '[INFO] Building .msi package natively on host...\n'
     cd "${LIBSCRIPT_ROOT_DIR}"
-    ./libscript.sh package-as msi _lib/web-apps/openedx
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" package-as msi _lib/web-apps/openedx
     mkdir -p build
     if [ -f build/packages/msi/openedx-x64-verawood.1-online.msi ]; then
       cp build/packages/msi/openedx-x64-verawood.1-online.msi build/OpenEdX-Setup.msi || true

@@ -1,12 +1,13 @@
 @echo off
 :: # envsubst_safe_exec.cmd
 :: ## Overview
-:: Windows Batch shim for the executable `envsubst_safe` wrapper. This acts as a stub for the safe string substitution executable logic, which is currently implemented natively only in POSIX shell (via `awk`).
+:: Executable wrapper for the `envsubst_safe` utility on Windows, delegating directly to `envsubst_safe.cmd` so safe `${VAR}` / `$VAR` interpolation can be invoked as a standalone command.
 :: ## Usage
-:: See `envsubst_safe_exec.sh` for the cross-platform string variable substitution tool. Shim for envsubst_safe_exec Native Windows implementation pending or handled internally by core modules.
+:: call _lib\_common\envsubst_safe_exec.cmd <input_file_or_string> [output_file]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
@@ -48,4 +49,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-exit /b 0
+call "!SCRIPT_DIR!\envsubst_safe.cmd" :envsubst_safe %*
+exit /b %ERRORLEVEL%

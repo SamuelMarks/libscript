@@ -211,7 +211,7 @@ if not "!_IS_ARCHIVE!"=="0" (
             if "!_DO_FLAT!"=="1" (
                 move /y "%%~fD" "!TARGET_DIR!_flat" >nul
                 xcopy /E /I /Y "!TARGET_DIR!_flat\*" "!TARGET_DIR!\" >nul
-                rmdir /s /q "!TARGET_DIR!_flat"
+                if exist "!TARGET_DIR!_flat" rmdir /s /q "!TARGET_DIR!_flat" >nul 2>&1
             )
         )
     )

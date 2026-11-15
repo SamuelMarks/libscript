@@ -210,6 +210,7 @@ if "!_IS_REMOTE_GIT!"=="1" (
         if exist "!WORK_DIR!\.git" (
             git -C "!WORK_DIR!" fetch --all --prune
         ) else (
+            if exist "!WORK_DIR!" rmdir /s /q "!WORK_DIR!" >nul 2>&1
             git clone "!REPO_SOURCE!" "!WORK_DIR!"
         )
         if not "!GIT_REF!"=="" (

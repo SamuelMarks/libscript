@@ -123,43 +123,66 @@ is_internal_runtime_var() {
 # Verifies that all file-based $ref links across *.schema.json files resolve to existing files on disk.
 audit_schema_refs() {
   _tmp_refs=$(mktemp)
-  find "${LIBSCRIPT_ROOT_DIR}" -name '*.schema.json' -not -path '*/node_modules/*' -not -path '*/.git/*' > "$_tmp_refs"
-  while IFS= read -r _sf; do
-    [ -f "$_sf" ] || continue
-    _sf_rel="${_sf#"${LIBSCRIPT_ROOT_DIR}"/}"
-    _sf_dir=$(dirname -- "$_sf")
-    _refs=$(jq -r '.. | objects | select(has("$ref")) | ."$ref"' "$_sf" 2>/dev/null || true)
-    [ -n "$_refs" ] || continue
-    for _r in $_refs; do
-      case "$_r" in
-        '#'*|http://*|https://*) continue ;;
-      esac
-      _target_rel="${_r%%#*}"
-      [ -n "$_target_rel" ] || continue
-      if [ ! -f "${_sf_dir}/${_target_rel}" ]; then
-        printf '[STANDARDS VIOLATION] [SCHEMA_BROKEN_REF] %s: %s "%s" does not resolve to an existing file.\n' "$_sf_rel" "\$ref" "$_r" >&2
-        ERRORS=$((ERRORS + 1))
-      fi
-    done
+  # shellcheck disable=SC2016
+  find "${LIBSCRIPT_ROOT_DIR}" -name '*.schema.json' -not -path '*/node_modules/*' -not -path '*/.git/*' -print0 \
+    | xargs -0 jq -rn 'inputs | (input_filename) as $f | (.. | objects | select(has("$ref")) | ."$ref" | "\($f)\t\(.)")' > "$_tmp_refs" 2>/dev/null || true
+  while IFS='	' read -r _sf _r; do
+    [ -n "$_sf" ] && [ -n "$_r" ] || continue
+    case "$_r" in
+      '#'*|http://*|https://*) continue ;;
+    esac
+    _target_rel="${_r%%#*}"
+    [ -n "$_target_rel" ] || continue
+    _sf_dir="${_sf%/*}"
+    if [ ! -f "${_sf_dir}/${_target_rel}" ]; then
+      _sf_rel="${_sf#"${LIBSCRIPT_ROOT_DIR}"/}"
+      printf '[STANDARDS VIOLATION] [SCHEMA_BROKEN_REF] %s: %s "%s" does not resolve to an existing file.\n' "$_sf_rel" "\$ref" "$_r" >&2
+      ERRORS=$((ERRORS + 1))
+    fi
   done < "$_tmp_refs"
   rm -f "$_tmp_refs"
+}
+
+PACK_CACHE_FILE=$(mktemp)
+trap 'rm -f "$PACK_CACHE_FILE" 2>/dev/null || true' EXIT INT TERM HUP
+if [ -d "$VARS_PACK_DIR" ]; then
+  set +f
+  for _pack_file in "${VARS_PACK_DIR}"/*.schema.json; do
+    [ -f "$_pack_file" ] || continue
+    _pack_name="${_pack_file##*/}"
+    _pack_name="${_pack_name%.schema.json}"
+    _pack_keys=$(extract_schema_keys "$_pack_file" | tr '\n' ' ')
+    printf '%s\t%s\n' "$_pack_name" "$_pack_keys" >> "$PACK_CACHE_FILE"
+  done
+  set -f
+fi
+
+# ## lookup_cached_pack_keys
+# Prints space-separated keys for a pre-cached variable pack name, or returns 1 if unknown.
+lookup_cached_pack_keys() {
+  _want_pack="$1"
+  awk -F '\t' -v p="$_want_pack" '$1 == p { print $2; found=1; exit } END { exit(found ? 0 : 1) }' "$PACK_CACHE_FILE"
 }
 
 # ## resolve_component_pack_keys
 # Resolves property keys and deprecated_aliases from any x-libscript-var-packs declared in a component schema.
 resolve_component_pack_keys() {
   _comp_schema="$1"
+  _packs_csv="${2:-}"
   _comp_rel="${_comp_schema#"${LIBSCRIPT_ROOT_DIR}"/}"
-  _packs=$(jq -r '."x-libscript-var-packs"[]? // empty' "$_comp_schema" 2>/dev/null || true)
+  if [ -z "$_packs_csv" ]; then
+    _packs=$(jq -r '."x-libscript-var-packs"[]? // empty' "$_comp_schema" 2>/dev/null || true)
+  else
+    _packs=$(printf '%s' "$_packs_csv" | tr ',' ' ')
+  fi
   [ -n "$_packs" ] || return 0
   for _p in $_packs; do
-    _pack_file="${VARS_PACK_DIR}/${_p}.schema.json"
-    if [ ! -f "$_pack_file" ]; then
+    if _cached=$(lookup_cached_pack_keys "$_p"); then
+      printf '%s\n' "$_cached"
+    else
       printf '[STANDARDS VIOLATION] [UNKNOWN_VAR_PACK] %s: Declared x-libscript-var-packs entry "%s" has no %s.\n' "$_comp_rel" "$_p" "schemas/vars/${_p}.schema.json" >&2
       ERRORS=$((ERRORS + 1))
-      continue
     fi
-    extract_schema_keys "$_pack_file"
   done
 }
 
@@ -174,18 +197,14 @@ audit_manifest_json() {
     ERRORS=$((ERRORS + 1))
     return 0
   fi
-  if ! jq empty "$_manifest" >/dev/null 2>&1; then
-    printf '[STANDARDS VIOLATION] [INVALID_JSON] %s/manifest.json: File is not valid JSON.\n' "$_rel_dir" >&2
-    ERRORS=$((ERRORS + 1))
-    return 0
-  fi
   if [ -f "$MANIFEST_SCHEMA" ]; then
-    _m_err=$(jq -r --slurpfile ms "$MANIFEST_SCHEMA" '
-      ($ms[0].required // []) as $req
+    if ! _m_err=$(jq -r --slurpfile ms "$MANIFEST_SCHEMA" '
+      . as $doc
+      | ($ms[0].required // []) as $req
       | ($ms[0].properties.category.enum // []) as $cats
       | ($ms[0].properties | keys) as $allowed
       | [
-          ($req[] | select(has(.) | not) | "missing required field: \(.)"),
+          ($req[] as $r | select(($doc | has($r)) | not) | "missing required field: \($r)"),
           (if (.name // "") | test("^[a-z0-9_-]+$") | not then "name \"\(.name // "")\" does not match ^[a-z0-9_-]+$" else empty end),
           (if ((.title // "") | length) == 0 then "title must be non-empty" else empty end),
           (if ((.description // "") | length) == 0 then "description must be non-empty" else empty end),
@@ -193,7 +212,11 @@ audit_manifest_json() {
           (keys[] | select(. as $k | ($allowed | index($k)) == null) | "undeclared top-level property: \(.)")
         ]
       | .[]
-    ' "$_manifest" 2>/dev/null || true)
+    ' "$_manifest" 2>/dev/null); then
+      printf '[STANDARDS VIOLATION] [INVALID_JSON] %s/manifest.json: File is not valid JSON.\n' "$_rel_dir" >&2
+      ERRORS=$((ERRORS + 1))
+      return 0
+    fi
     if [ -n "$_m_err" ]; then
       printf '%s\n' "$_m_err" | while IFS= read -r _line; do
         [ -n "$_line" ] || continue
@@ -201,6 +224,9 @@ audit_manifest_json() {
       done
       ERRORS=$((ERRORS + 1))
     fi
+  elif ! jq empty "$_manifest" >/dev/null 2>&1; then
+    printf '[STANDARDS VIOLATION] [INVALID_JSON] %s/manifest.json: File is not valid JSON.\n' "$_rel_dir" >&2
+    ERRORS=$((ERRORS + 1))
   fi
 }
 
@@ -269,16 +295,18 @@ audit_root_schemas_and_profiles() {
       freebsd)
         if [ -f "$FREEBSD_SCHEMA" ]; then
           _pf_err=$(jq -r --slurpfile fs "$FREEBSD_SCHEMA" '
-            ($fs[0].required // []) as $req
-            | [ ($req[] | select(has(.) | not) | "missing required FreeBSD field: \(.)") ] | .[]
+            . as $doc
+            | ($fs[0].required // []) as $req
+            | [ ($req[] as $r | select(($doc | has($r)) | not) | "missing required FreeBSD field: \($r)") ] | .[]
           ' "$_pf" 2>/dev/null || true)
         fi
         ;;
       illumos)
         if [ -f "$ILLUMOS_SCHEMA" ]; then
           _pf_err=$(jq -r --slurpfile is "$ILLUMOS_SCHEMA" '
-            ($is[0].required // []) as $req
-            | [ ($req[] | select(has(.) | not) | "missing required illumos field: \(.)") ] | .[]
+            . as $doc
+            | ($is[0].required // []) as $req
+            | [ ($req[] as $r | select(($doc | has($r)) | not) | "missing required illumos field: \($r)") ] | .[]
           ' "$_pf" 2>/dev/null || true)
         fi
         ;;
@@ -303,13 +331,14 @@ audit_root_schemas_and_profiles() {
       *)
         if [ -f "$OS_CONFIG_SCHEMA" ]; then
           _pf_err=$(jq -r --slurpfile os "$OS_CONFIG_SCHEMA" '
-            ($os[0].required // []) as $req
+            . as $doc
+            | ($os[0].required // []) as $req
             | ($os[0].properties.target.properties.arch.enum // []) as $archs
             | ($os[0].properties.target.properties.libc.enum // []) as $libcs
             | [
-                ($req[] | select(has(.) | not) | "missing required field: \(.)"),
+                ($req[] as $r | select(($doc | has($r)) | not) | "missing required field: \($r)"),
                 (if ((.target.arch // "") as $a | ($archs | index($a)) == null) then "target.arch \"\(.target.arch // "")\" not in os-config.schema.json enum" else empty end),
-                (if ((.target.libc // "") as $l | ($libcs | index($l)) == null) then "target.libc \"\(.target.libc // "")" not in os-config.schema.json enum" else empty end)
+                (if ((.target.libc // "") as $l | ($libcs | index($l)) == null) then "target.libc \"\(.target.libc // "")\" not in os-config.schema.json enum" else empty end)
               ] | .[]
           ' "$_pf" 2>/dev/null || true)
         fi
@@ -340,7 +369,8 @@ audit_component_vars() {
   [ -f "$_comp_dir/manifest.json" ] || [ -f "$_comp_dir/cli.sh" ] || [ -f "$_comp_dir/setup.sh" ] || return 0
 
   AUDITED=$((AUDITED + 1))
-  _comp_name=$(basename "$_comp_dir")
+  _comp_trimmed="${_comp_dir%/}"
+  _comp_name="${_comp_trimmed##*/}"
   _prefix=$(printf '%s' "$_comp_name" | tr '[:lower:]-' '[:upper:]_')
   _local_schema="${_comp_dir}/vars.schema.json"
   _rel_dir="${_comp_dir#"${LIBSCRIPT_ROOT_DIR}"/}"
@@ -353,9 +383,47 @@ audit_component_vars() {
     return 0
   fi
 
-  check_schema_descriptions "$_local_schema" || return 0
+  _rel_schema="${_local_schema#"${LIBSCRIPT_ROOT_DIR}"/}"
+  if ! _schema_info=$(jq -r '
+    def check_props($prefix):
+      to_entries[]
+      | (($prefix + .key) as $p |
+         (if ((.value.description // "") | gsub("^\\s+|\\s+$"; "") | length) == 0 then $p else empty end),
+         (if (.value | type) == "object" and (.value.properties | type) == "object" then (.value.properties | check_props($p + ".")) else empty end),
+         (if (.value | type) == "object" and (.value.items | type) == "object" and (.value.items.properties | type) == "object" then (.value.items.properties | check_props($p + "[].")) else empty end)
+        );
+    [
+      ([((.properties // {}) | check_props("")), ((."$defs" // {}) | check_props("$defs."))] | join(" ")),
+      ([.properties // {} | to_entries[] | select((.value.description // "") | test("^Variable [A-Za-z0-9_]+\\.?$")) | .key] | join(" ")),
+      ([.properties // {} | keys[]] | join(" ")),
+      ([((.properties // {} | keys[]), (.properties // {} | to_entries[] | .value.deprecated_aliases[]?))] | unique | join(" ")),
+      ([."x-libscript-var-packs"[]? // empty] | join(","))
+    ] | @tsv
+  ' "$_local_schema" 2>/dev/null); then
+    printf '[STANDARDS VIOLATION] [INVALID_JSON] %s: Schema is not valid JSON.\n' "$_rel_schema" >&2
+    ERRORS=$((ERRORS + 1))
+    return 0
+  fi
 
-  _local_raw_keys=$(jq -r '.properties // {} | keys[]' "$_local_schema" 2>/dev/null || true)
+  _missing=$(printf '%s\n' "$_schema_info" | cut -f1)
+  _placeholders=$(printf '%s\n' "$_schema_info" | cut -f2)
+  _local_raw_keys=$(printf '%s\n' "$_schema_info" | cut -f3)
+  _local_keys=$(printf '%s\n' "$_schema_info" | cut -f4)
+  _packs_csv=$(printf '%s\n' "$_schema_info" | cut -f5)
+
+  if [ -n "$_missing" ]; then
+    for _k in $_missing; do
+      printf '[STANDARDS VIOLATION] [MISSING_SCHEMA_DESC] %s: Property "%s" is missing a non-empty description.\n' "$_rel_schema" "$_k" >&2
+      ERRORS=$((ERRORS + 1))
+    done
+  fi
+  if [ -n "$_placeholders" ]; then
+    for _pk in $_placeholders; do
+      printf '[STANDARDS VIOLATION] [SCHEMA_PLACEHOLDER_DESC] %s: Property "%s" uses placeholder description "Variable ...".\n' "$_rel_schema" "$_pk" >&2
+      ERRORS=$((ERRORS + 1))
+    done
+  fi
+
   for _lk in $_local_raw_keys; do
     case "$_lk" in
       LIBSCRIPT_LISTEN_ADDRESS|LIBSCRIPT_LISTEN_PORT|LIBSCRIPT_LISTEN_SOCKET) continue ;;
@@ -368,8 +436,10 @@ audit_component_vars() {
     esac
   done
 
-  _local_keys=$(extract_schema_keys "$_local_schema" | tr '\n' ' ')
-  _pack_keys=$(resolve_component_pack_keys "$_local_schema" | tr '\n' ' ')
+  _pack_keys=""
+  if [ -n "$_packs_csv" ]; then
+    _pack_keys=$(resolve_component_pack_keys "$_local_schema" "$_packs_csv" | tr '\n' ' ')
+  fi
   _allowed=" ${GLOBAL_KEYS} ${_pack_keys} ${_local_keys} "
 
   _had_noglob=0
@@ -378,7 +448,7 @@ audit_component_vars() {
   _scripts=''
   for _s in "$_comp_dir"/*.sh "$_comp_dir"/*.cmd "$_comp_dir"/*.bat "$_comp_dir"/*.ps1; do
     [ -f "$_s" ] || continue
-    case "$(basename "$_s")" in
+    case "${_s##*/}" in
       test.sh|test.cmd|test.ps1|test_*.sh|test_*.cmd) continue ;;
     esac
     _scripts="${_scripts} ${_s}"

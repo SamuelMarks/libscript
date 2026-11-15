@@ -340,7 +340,7 @@ case "$ACTION" in
       else
         log_info "Cloning upstream repository from ${REPO_URL} at ${EXACT_VERSION}..."
         rm -rf "${build_stage_dir}"
-        mkdir -p "${build_stage_dir}"
+        mkdir -p "$(dirname -- "${build_stage_dir}")"
         git clone "${REPO_URL}" "${build_stage_dir}"
         (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && CARGO_PROFILE_RELEASE_OPT_LEVEL=3 cargo build --workspace --bins --release)
         install_binaries_from_dir "${build_stage_dir}/target/release"

@@ -104,17 +104,20 @@ EOF
 populate_restricted_bin_without_shellcheck() {
   _dest_bin="$1"
   mkdir -p "$_dest_bin"
-  printf '%s\n' "$PATH" | tr ':' '\n' | while IFS= read -r _path_dir; do
+  _rev_dirs=""
+  _old_ifs="$IFS"
+  IFS=':'
+  for _path_dir in $PATH; do
     [ -n "$_path_dir" ] && [ -d "$_path_dir" ] || continue
-    find "$_path_dir" -maxdepth 1 \( -type f -o -type l \) 2>/dev/null | while IFS= read -r _exe; do
-      [ -n "$_exe" ] || continue
-      _exe_name=$(basename "$_exe")
-      [ "$_exe_name" = "shellcheck" ] && continue
-      if [ -x "$_exe" ] && [ ! -e "$_dest_bin/$_exe_name" ]; then
-        ln -sf "$_exe" "$_dest_bin/$_exe_name" 2>/dev/null || true
-      fi
-    done
+    _rev_dirs="${_path_dir}:${_rev_dirs}"
   done
+  set +f
+  for _path_dir in $_rev_dirs; do
+    [ -n "$_path_dir" ] && [ -d "$_path_dir" ] || continue
+    ln -sf "$_path_dir"/* "$_dest_bin/" 2>/dev/null || true
+  done
+  set -f
+  IFS="$_old_ifs"
   rm -f "$_dest_bin/shellcheck"
 }
 
@@ -122,20 +125,20 @@ TEST_WS=$(mktemp -d "${TMPDIR:-/tmp}/libscript_sc_vm_test.XXXXXX")
 trap 'rm -rf "$TEST_WS" 2>/dev/null || true' EXIT INT TERM HUP
 
 printf '=== 1. Auditing _lib/toolchains/shellcheck Standards & Parity ===\n'
-if ./devtools/audit/audit_version_manager.sh _lib/toolchains/shellcheck >/dev/null 2>&1; then
+if "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_version_manager.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/shellcheck" >/dev/null 2>&1; then
   pass_check "_lib/toolchains/shellcheck satisfies Version Manager Contract audit"
 else
   fail_check "_lib/toolchains/shellcheck failed Version Manager Contract audit"
 fi
 
-if ./devtools/audit/audit_schema_vars.sh >/dev/null 2>&1; then
+if "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_schema_vars.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/shellcheck" >/dev/null 2>&1; then
   pass_check "_lib/toolchains/shellcheck satisfies Schema Variable Coverage audit"
 else
   fail_check "_lib/toolchains/shellcheck failed Schema Variable Coverage audit"
 fi
 
 _missing_cmd=0
-for _sh_f in $(find _lib/toolchains/shellcheck -maxdepth 1 -name '*.sh' | sort); do
+for _sh_f in $(find "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/shellcheck" -maxdepth 1 -name '*.sh' | sort); do
   _cmd_f="${_sh_f%.sh}.cmd"
   if [ ! -f "$_cmd_f" ]; then
     fail_check "Missing Windows Batch companion: $_cmd_f"
@@ -175,7 +178,7 @@ cp -f "${UPSTREAM_DIR}/shellcheck-v0.11.0.tar.gz" "${DL_CACHE}/shellcheck/shellc
   LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
   SHELLCHECK_DOWNLOAD_URL="https://example.invalid/shellcheck-v{VERSION}.tar.gz" \
   STACK="" \
-  ./libscript.sh install shellcheck 0.11.0 >/dev/null
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install shellcheck 0.11.0 >/dev/null
 )
 
 if [ -x "${FAKE_LS_HOME}/shellcheck/0.11.0/bin/shellcheck" ] && [ -f "${FAKE_LS_HOME}/shellcheck/0.11.0/LICENSE.txt" ]; then
@@ -194,7 +197,7 @@ IDEMP_OUT=$(
   LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
   SHELLCHECK_DOWNLOAD_URL="https://example.invalid/shellcheck-v{VERSION}.tar.gz" \
   STACK="" \
-  ./libscript.sh install shellcheck 0.11.0 2>&1
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install shellcheck 0.11.0 2>&1
 )
 if printf '%s\n' "$IDEMP_OUT" | grep -q "already installed"; then
   pass_check "Second install of shellcheck 0.11.0 exited idempotently ('already installed')"
@@ -212,18 +215,18 @@ fi
   LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
   SHELLCHECK_DOWNLOAD_URL="https://example.invalid/shellcheck-v{VERSION}.tar.gz" \
   STACK="" \
-  ./libscript.sh install shellcheck 0.10.0 >/dev/null
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install shellcheck 0.10.0 >/dev/null
 )
 
-OUT_010=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" ./libscript.sh run shellcheck 0.10.0 --version 2>/dev/null || true)
-OUT_011=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" ./libscript.sh run shellcheck 0.11.0 --version 2>/dev/null || true)
+OUT_010=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" run shellcheck 0.10.0 --version 2>/dev/null || true)
+OUT_011=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" run shellcheck 0.11.0 --version 2>/dev/null || true)
 if printf '%s\n' "$OUT_010" | grep -q "0.10.0" && printf '%s\n' "$OUT_011" | grep -q "0.11.0"; then
   pass_check "Side-by-side coexistence verified for shellcheck 0.10.0 and 0.11.0 via 'run'"
 else
   fail_check "Side-by-side 'run' output mismatch: 0.10.0='$OUT_010', 0.11.0='$OUT_011'"
 fi
 
-WHICH_011=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" ./libscript.sh which shellcheck 0.11.0 2>&1 || true)
+WHICH_011=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" which shellcheck 0.11.0 2>&1 || true)
 if printf '%s\n' "$WHICH_011" | grep -q "${FAKE_LS_HOME}/shellcheck/0.11.0/bin/shellcheck"; then
   pass_check "'which shellcheck 0.11.0' resolved exact isolated binary path"
 else
@@ -231,7 +234,7 @@ else
 fi
 
 for _fmt in sh cmd ps1 fish json; do
-  _env_out=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" ./libscript.sh env shellcheck 0.11.0 "--format=${_fmt}" 2>/dev/null || true)
+  _env_out=$(LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" env shellcheck 0.11.0 "--format=${_fmt}" 2>/dev/null || true)
   if printf '%s\n' "$_env_out" | grep -q "0.11.0"; then
     pass_check "'env shellcheck 0.11.0 --format=${_fmt}' emitted isolated bin path"
   else
@@ -247,7 +250,7 @@ else
   fail_check "Global shell profile files were modified!"
 fi
 
-LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" ./libscript.sh uninstall shellcheck 0.10.0 >/dev/null 2>&1
+LIBSCRIPT_HOME="$FAKE_LS_HOME" STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" uninstall shellcheck 0.10.0 >/dev/null 2>&1
 if [ ! -d "${FAKE_LS_HOME}/shellcheck/0.10.0" ] && [ -x "${FAKE_LS_HOME}/shellcheck/0.11.0/bin/shellcheck" ]; then
   pass_check "Uninstalling shellcheck 0.10.0 preserved 0.11.0 side-by-side installation"
 else

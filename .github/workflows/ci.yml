@@ -44,6 +44,7 @@ jobs:
 
       - name: Run Pre-commit Dance (Unix)
         if: runner.os != 'Windows'
+        shell: sh
         run: ./devtools/ci/precommit_dance.sh
 
       - name: Run Pre-commit Dance (Windows)

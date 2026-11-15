@@ -402,7 +402,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edgcpp.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
@@ -420,7 +430,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edgcpp-gcc-be.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
@@ -437,7 +457,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edgcpp-llvm-be.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
@@ -454,7 +484,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edgcpp-c-be.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
@@ -471,7 +511,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edgcpp-cp-be.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
@@ -487,7 +537,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edgcpp-fe-only.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"
@@ -503,7 +563,17 @@ EOF
 
   cat <<'EOF' > "${_target_dir}/bin/edg-c++.tmp"
 #!/bin/sh
-_self_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+_self_dir=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${_self_dir}/edgcpp.env" ]; then
   # shellcheck disable=SC1091
   . "${_self_dir}/edgcpp.env"

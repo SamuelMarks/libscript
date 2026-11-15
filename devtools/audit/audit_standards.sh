@@ -557,7 +557,7 @@ audit_single_file() {
         raw_fetch_hits = ""; raw_pkg_hits = ""; raw_daemon_hits = "";
         raw_sync_hits = ""; raw_venv_hits = ""; raw_uuid_hits = "";
         allow_sync_next = 0; allow_venv_next = 0; allow_uuid_next = 0;
-        in_endlocal = 0;
+        in_endlocal = 0; in_ls_remote = 0; spliced_guard_hits = "";
       }
       { sub(/\r$/, "", $0) }
       NR == 1 {
@@ -581,6 +581,13 @@ audit_single_file() {
         }
         if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
           git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
+        }
+        if (tolower($0) ~ /^if[[:space:]]+"%action%"=="ls-remote"[[:space:]]*\($/) {
+          in_ls_remote = 1
+        } else if (in_ls_remote && $0 ~ /^\)[[:space:]]*$/) {
+          in_ls_remote = 0
+        } else if (in_ls_remote && tolower($0) ~ /^if[[:space:]]+exist[[:space:]]+"%libscript_home%/) {
+          spliced_guard_hits = (spliced_guard_hits ? spliced_guard_hits "; " : "") NR ":" $0
         }
         if (tolower($0) ~ /^[[:space:]]*exit[[:space:]]+[0-9]+[[:space:]]*$/) {
           bare_exit_hits = (bare_exit_hits ? bare_exit_hits "; " : "") NR ":" $0
@@ -733,6 +740,7 @@ audit_single_file() {
         if (raw_venv_hits != "") print "RAW_PYTHON_VENV|Explicit Python venv creation in batch script (delegate to _lib\\_common\\python_env.cmd): " raw_venv_hits
         if (raw_uuid_hits != "") print "RAW_UUID_GEN|Non-deterministic Guid::NewGuid() in batch script (delegate to _lib\\_common\\uuid_gen.cmd): " raw_uuid_hits
         if (bare_exit_hits != "") print "BATCH_HYGIENE|Bare exit without /b found in batch script: " bare_exit_hits
+        if (spliced_guard_hits != "") print "BATCH_SPLICED_GUARD|Corrupted if exist guard spliced inside ls-remote block: " spliced_guard_hits
         if (dup_label_hits != "") print "BATCH_DUPLICATE_LABEL|Duplicate label definition(s) in batch script: " dup_label_hits
         if (missing_lbl_hits != "") print "BATCH_MISSING_LABEL|Undefined batch label target: " missing_lbl_hits
       }
@@ -792,7 +800,7 @@ audit_single_file() {
 
   # 6. Option A Hard Fail Proforma check (Exit code 86)
   case "$file" in
-    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd)
+    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd|*/alpine-systemctl.cmd|_lib/*/*/setup_debian.cmd|_lib/*/*/setup_alpine.cmd|_lib/*/*/setup_freebsd.cmd|_lib/*/*/setup_macos.cmd|_lib/*/*/setup_rhel.cmd|_lib/*/*/setup_illumos.cmd|_lib/*/*/setup_linux.cmd)
       if ! grep -q 'exit /b 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
@@ -826,11 +834,11 @@ audit_single_file() {
       ;;
   esac
 
-  # 8b. Verify _lib/*/*/env.cmd exports across endlocal boundary and idempotent PATH updates
+  # 8b. Verify _lib/*/*/env.cmd and _lib/_common/os_info.cmd export across endlocal boundary and idempotent PATH updates
   case "$file" in
-    _lib/*/env.cmd)
+    _lib/*/env.cmd|_lib/_common/os_info.cmd)
       if grep -qi "setlocal" "$file" && ! grep -qi "endlocal" "$file"; then
-        log_failure "$file" "ENV_CMD_ENDLOCAL" "env.cmd uses setlocal without endlocal; PATH and variable updates will be lost on return."
+        log_failure "$file" "ENV_CMD_ENDLOCAL" "$(basename -- "$file") uses setlocal without endlocal; PATH and variable updates will be lost on return."
       fi
       unguarded_cmd_path=$(grep -niE '^[[:space:]]*(endlocal[[:space:]]*&[[:space:]]*)?set[[:space:]]+"PATH=[^"]+;%PATH%"' "$file" 2>/dev/null || true)
       if [ -n "$unguarded_cmd_path" ]; then

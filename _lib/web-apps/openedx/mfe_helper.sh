@@ -75,6 +75,7 @@ do_build() {
   _repo_url="https://github.com/openedx/frontend-app-${_mfe_name}.git"
 
   if [ ! -f "${_dist_dir}/index.html" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ ! -d "${_target_dir}/.git" ]; then
+    rm -rf "${_target_dir}"
     git clone --depth 1 --branch "${_version}" "${_repo_url}" "${_target_dir}" 2>/dev/null || mkdir -p "${_target_dir}"
   fi
 

@@ -88,6 +88,7 @@ if "%ACTION%"=="install" (
     )
     if defined BENTO_DIR (
         if not exist "!BENTO_DIR!\.git" (
+            if exist "!BENTO_DIR!" rmdir /s /q "!BENTO_DIR!" >nul 2>&1
             git clone --branch "!BENTO_BRANCH!" "!BENTO_REPO_URL!" "!BENTO_DIR!" 2>nul
         ) else (
             git -C "!BENTO_DIR!" checkout "!BENTO_BRANCH!" 2>nul

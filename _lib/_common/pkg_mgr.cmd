@@ -391,7 +391,7 @@ if "!download_needed!"=="1" (
         for %%A in ("!cache_file!") do set size=%%~zA
         if "!size!"=="0" (
                 call "!LOG_CMD!" :log_error "Downloaded file is empty"
-                del "!cache_file!"
+                if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
                 exit /b 1
         )
 )
@@ -407,7 +407,7 @@ if not "!expected_checksum!"=="" (
                 )
                 if /i not "!actual_checksum!"=="!clean_expected!" (
                         call "!LOG_CMD!" :log_error "Checksum mismatch for !cache_file!. Expected: !clean_expected!, Got: !actual_checksum!"
-                        del "!cache_file!"
+                        if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
                         exit /b 1
                 )
         )

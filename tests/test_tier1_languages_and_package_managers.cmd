@@ -82,7 +82,7 @@ for %%P in (maven-wrapper pkgsrc port yum) do (
 
 echo === 2. Verifying Windows Package Mapper Resolution ===
 set "PKG_MGR=winget"
-call "_lib\_common\pkg_mapper.cmd" :map_package dart
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package dart
 if "!MAPPED_PKG!"=="Google.DartSDK" (
     call :pass_check "pkg_mapper.cmd maps dart -> Google.DartSDK on winget"
 ) else (
@@ -90,7 +90,7 @@ if "!MAPPED_PKG!"=="Google.DartSDK" (
 )
 
 set "PKG_MGR=choco"
-call "_lib\_common\pkg_mapper.cmd" :map_package scheme
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd" :map_package scheme
 if "!MAPPED_PKG!"=="chezscheme" (
     call :pass_check "pkg_mapper.cmd maps scheme -> chezscheme on choco"
 ) else (

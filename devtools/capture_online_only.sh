@@ -102,7 +102,15 @@ capture_screen() {
   _png="${TEMP_DIR}/${_name}.png"
   sleep 1.5
   if [ -n "${MONITOR_SOCK}" ] && [ -S "${MONITOR_SOCK}" ]; then
-    python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}\n'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
+    if command -v socat >/dev/null 2>&1; then
+      printf 'screendump %s\n' "${_ppm}" | socat - "UNIX-CONNECT:${MONITOR_SOCK}" >/dev/null 2>&1 || true
+      sleep 0.3
+    elif command -v nc >/dev/null 2>&1 && printf '' | nc -U -w 1 "${MONITOR_SOCK}" >/dev/null 2>&1; then
+      printf 'screendump %s\n' "${_ppm}" | nc -U -w 2 "${MONITOR_SOCK}" >/dev/null 2>&1 || true
+      sleep 0.3
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}\n'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
+    fi
     if command -v sips >/dev/null 2>&1; then
       sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
     elif command -v magick >/dev/null 2>&1; then

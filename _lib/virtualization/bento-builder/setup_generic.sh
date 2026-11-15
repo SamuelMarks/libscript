@@ -70,6 +70,7 @@ ensure_bento_fork_checkout() {
   if [ ! -d "$_b_target/.git" ]; then
     if [ -n "$BENTO_DIR" ] && command -v git >/dev/null 2>&1 && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
       log_info "Cloning Bento fork ${BENTO_REPO_URL} (branch ${BENTO_BRANCH}) into ${_b_target}..."
+      rm -rf "$_b_target"
       mkdir -p "$(dirname "$_b_target")"
       git clone --branch "$BENTO_BRANCH" "$BENTO_REPO_URL" "$_b_target" || log_warn "Could not clone ${BENTO_REPO_URL}."
     fi

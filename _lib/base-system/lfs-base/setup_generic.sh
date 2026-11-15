@@ -123,7 +123,10 @@ mkdir -p "${ROOTFS}/var/spool"
 mkdir -p "${ROOTFS}/var/tmp"
 
 # FHS symlinks
-ln -sf usr/bin "${ROOTFS}/bin_link" 2>/dev/null || true
+if [ ! -d "${ROOTFS}/bin_link" ] || [ -L "${ROOTFS}/bin_link" ]; then
+  rm -f "${ROOTFS}/bin_link" 2>/dev/null || true
+  ln -sf usr/bin "${ROOTFS}/bin_link" 2>/dev/null || true
+fi
 chmod 1777 "${ROOTFS}/tmp" "${ROOTFS}/var/tmp" 2>/dev/null || true
 
 # 2. Deploy Essential Identity & Authentication Files

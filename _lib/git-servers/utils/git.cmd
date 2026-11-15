@@ -72,7 +72,8 @@ if exist "%GIT_DIR_%" (
         git --git-dir="%GIT_DIR_%" --work-tree="%target%" pull --ff-only
     )
 ) else (
-    if not exist "%target%" mkdir "%target%"
+    if exist "%target%" rmdir /s /q "%target%" >nul 2>&1
+    for %%P in ("%target%") do if not exist "%%~dpP" mkdir "%%~dpP"
     if not "%branch%"=="" (
         git clone --depth=1 --single-branch --branch "%branch%" "%repo%" "%target%"
     ) else (

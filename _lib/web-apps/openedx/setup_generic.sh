@@ -476,7 +476,12 @@ case "$ACTION" in
         libscript_depends 'git' || true
       fi
       if command -v git >/dev/null 2>&1; then
-        git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || true
+        if [ -d "${OPENEDX_INSTALL_DIR}/codebase/.git" ]; then
+          git -C "${OPENEDX_INSTALL_DIR}/codebase" fetch --depth 1 origin "${BRANCH}" >/dev/null 2>&1 || true
+        else
+          rm -rf "${OPENEDX_INSTALL_DIR}/codebase"
+          git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || true
+        fi
       fi
     fi
 

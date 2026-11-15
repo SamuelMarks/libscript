@@ -1,9 +1,9 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Provides fallback setup logic for components on Windows. Resolves package dependencies via pkg_mgr or winget.
+:: Provides fallback setup logic for components on Windows. Resolves package dependencies via pkg_mgr or setup_base.
 :: ## Usage
-:: Typically called internally when attempting setup on Windows without a specific installer.
+:: Typically called internally when attempting setup on Windows.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -11,7 +11,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -48,29 +48,6 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-
-if "%ACTION%"=="" set ACTION=install
-
-if "%ACTION%"=="ls" (
-    echo [ls] Windows list support not implemented natively for this component.
-    exit /b 0
-)
-if "%ACTION%"=="ls-remote" (
-    echo [ls-remote] Windows ls-remote support not implemented natively for this component.
-if exist "%LIBSCRIPT_HOME%\_common\%VERSION%" (
-    echo [INFO] _common %VERSION% is already installed.
-    exit /b 0
-)
-    exit /b 0
-)
-if "%ACTION%"=="use" (
-    echo [use] Windows use support not implemented natively for this component.
-    exit /b 0
-)
-
-if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    set "LIBSCRIPT_ROOT_DIR=%~dp0..\.."
-)
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%

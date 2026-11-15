@@ -289,6 +289,13 @@ elif [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
 else
   _all_sh=$(mktemp)
   _all_scripts=$(mktemp)
+  _bash_ext=$(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.bash" || true)
+  if [ -n "$_bash_ext" ]; then
+    printf '%s\n' "$_bash_ext" | while IFS= read -r _bf; do
+      [ -n "$_bf" ] && printf '[FAIL] [%s] Banned .bash file extension; all shell scripts must use POSIX /bin/sh (.sh)\n' "$_bf" >&2
+    done
+    ERRORS=$((ERRORS + 1))
+  fi
   (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" ".githooks/pre-commit" | while IFS= read -r _p; do [ -f "$_p" ] && printf '%s/%s\n' "$LIBSCRIPT_ROOT_DIR" "$_p"; done) > "$_all_sh"
   (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" | while IFS= read -r _p; do [ -f "$_p" ] && printf '%s\n' "$_p"; done) > "$_all_scripts"
   audit_batch < "$_all_sh"
