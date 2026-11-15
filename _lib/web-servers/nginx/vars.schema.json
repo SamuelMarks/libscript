@@ -24,6 +24,10 @@
       "type": "string",
       "default": "80"
     },
+    "NGINX_SERVERS_ROOT": {
+      "description": "Directory containing per-site Nginx virtual host configuration files.",
+      "type": "string"
+    },
     "LIBSCRIPT_LISTEN_PORT_SECURE": {
       "type": ["string", "integer"],
       "description": "Global secure port to listen on"

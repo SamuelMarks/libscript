@@ -71,5 +71,6 @@
       "type": "string",
       "description": "Configuration variable CUSTOM_CC_REAL_BIN for custom-cc."
     }
-  }
+  },
+  "x-libscript-var-packs": ["source_toolchain"]
 }

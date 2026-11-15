@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zephyr-wamr-edge-appliance",
+  "description": "Zephyr RTOS polyglot WebAssembly edge appliance hosting the Bytecode Alliance WebAssembly Micro Runtime (WAMR).",
+  "target": {
+    "arch": "aarch64",
+    "os_family": "rtos-zephyr",
+    "libc": "picolibc",
+    "platform": "qemu-cortex-a53"
+  },
+  "kernel": {
+    "provider": "zephyr-lts",
+    "version": "3.7.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "zephyr-sys-init"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "qemu_cortex_a53",
+    "kconfig_fragments": ["minimal_footprint.conf", "picolibc.conf", "posix_api.conf"]
+  },
+  "output_formats": ["firmware-elf", "renode-resc"],
+  "components": ["wamr"]
+}

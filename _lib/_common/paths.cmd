@@ -11,7 +11,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -63,7 +63,9 @@ if "!LIBSCRIPT_ROOT_DIR!"=="" (
 )
 
 if "%LIBSCRIPT_CACHE_DIR%"=="" set "LIBSCRIPT_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
-if "%DOWNLOAD_DIR%"=="" set "DOWNLOAD_DIR=%LIBSCRIPT_CACHE_DIR%\downloads\%PACKAGE_NAME%"
+if "%LIBSCRIPT_DOWNLOAD_DIR%"=="" if not "%DOWNLOAD_DIR%"=="" set "LIBSCRIPT_DOWNLOAD_DIR=%DOWNLOAD_DIR%"
+if "%LIBSCRIPT_DOWNLOAD_DIR%"=="" set "LIBSCRIPT_DOWNLOAD_DIR=%LIBSCRIPT_CACHE_DIR%\downloads"
+if "%DOWNLOAD_DIR%"=="" set "DOWNLOAD_DIR=%LIBSCRIPT_DOWNLOAD_DIR%\%PACKAGE_NAME%"
 
 if "%LIBSCRIPT_DATA_DIR%"=="" (
     if not "%TEMP%"=="" (
@@ -75,14 +77,16 @@ if "%LIBSCRIPT_DATA_DIR%"=="" (
 if "%DATA_DIR%"=="" set "DATA_DIR=%LIBSCRIPT_DATA_DIR%\%PACKAGE_NAME%"
 if "%BIN_DIR%"=="" set "BIN_DIR=%DATA_DIR%\bin"
 
-if "%LIBSCRIPT_LOGS_DIR%"=="" (
+if "%LIBSCRIPT_LOG_DIR%"=="" if not "%LIBSCRIPT_LOGS_DIR%"=="" set "LIBSCRIPT_LOG_DIR=%LIBSCRIPT_LOGS_DIR%"
+if "%LIBSCRIPT_LOG_DIR%"=="" (
     if not "%TEMP%"=="" (
-        set "LIBSCRIPT_LOGS_DIR=%TEMP%\libscript_logs"
+        set "LIBSCRIPT_LOG_DIR=%TEMP%\libscript_logs"
     ) else (
-        set "LIBSCRIPT_LOGS_DIR=%TMP%\libscript_logs"
+        set "LIBSCRIPT_LOG_DIR=%TMP%\libscript_logs"
     )
 )
-if "%LOGS_DIR%"=="" set "LOGS_DIR=%LIBSCRIPT_LOGS_DIR%\%PACKAGE_NAME%"
+set "LIBSCRIPT_LOGS_DIR=%LIBSCRIPT_LOG_DIR%"
+if "%LOGS_DIR%"=="" set "LOGS_DIR=%LIBSCRIPT_LOG_DIR%\%PACKAGE_NAME%"
 
 if not exist "%DOWNLOAD_DIR%" mkdir "%DOWNLOAD_DIR%" >nul 2>&1
 if not exist "%DATA_DIR%" mkdir "%DATA_DIR%" >nul 2>&1

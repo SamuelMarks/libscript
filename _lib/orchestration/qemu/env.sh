@@ -36,7 +36,17 @@ unset SCRIPT_NAME || true
 
 export QEMU_INSTALL_METHOD="${QEMU_INSTALL_METHOD:-system}"
 QEMU_VERSION="${QEMU_VERSION:-latest}"
-libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/qemu/${QEMU_VERSION}/bin"
+export QEMU_TARGET_ARCHS="${QEMU_TARGET_ARCHS:-arm,aarch64,riscv32,riscv64,x86_64}"
+for _qdir in \
+  "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/qemu/${QEMU_VERSION}/bin" \
+  "/opt/homebrew/bin" \
+  "/usr/local/bin" \
+  "/opt/ooce/bin"; do
+  if [ -d "$_qdir" ] && [ -x "${_qdir}/qemu-system-x86_64" ]; then
+    libscript_path_prepend "$_qdir"
+  fi
+done
+unset _qdir || true
 export LIBVIRT_DEFAULT_URI="${LIBVIRT_DEFAULT_URI:-qemu:///system}"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

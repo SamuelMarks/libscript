@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freertos-edgcpp-tiny",
+  "description": "FreeRTOS C11 simulator appliance compiled via the EDG C/C++ Frontend (edgcpp) for multi-compiler verification.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "rtos-freertos",
+    "libc": "newlib",
+    "platform": "posix-sim"
+  },
+  "kernel": {
+    "provider": "freertos-mainline",
+    "version": "11.1.0",
+    "compiler": "edgcpp",
+    "config_method": "tinyconfig"
+  },
+  "init_system": {
+    "provider": "freertos-scheduler"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "posix_gcc",
+    "heap_implementation": "heap_4"
+  },
+  "output_formats": ["firmware-elf"],
+  "components": ["sqlite"]
+}

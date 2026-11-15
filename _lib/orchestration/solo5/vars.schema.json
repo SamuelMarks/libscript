@@ -21,5 +21,6 @@
       "default": "0",
       "description": "Compile Solo5 tenders (solo5-hvt, solo5-spt) from upstream release tarball."
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth"]
 }

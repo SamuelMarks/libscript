@@ -4,6 +4,7 @@
   "title": "Linux Kernel variables",
   "description": "Configuration variables for the Linux Kernel multi-toolchain Kbuild engine",
   "type": "object",
+  "x-libscript-var-packs": ["source_toolchain"],
   "properties": {
     "LINUX_VERSION": {
       "description": "Specific version of the Linux kernel to install or compile (e.g., '6.6.52' or 'latest').",
@@ -106,6 +107,13 @@
     "LINUX_SWEEP_OUT_JSON": {
       "type": "string",
       "description": "Output JSON path written by the compile-commands-sweep action recording tus_ok, tus_total, loc, median/max RSS, and failure categories."
+    },
+    "LINUX_BUILD_KERNEL_FROM_SOURCE": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) instructing kernel synthesis to compile the Linux kernel from source when no prebuilt kernel exists.",
+      "deprecated_aliases": ["LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE"]
     }
   }
 }

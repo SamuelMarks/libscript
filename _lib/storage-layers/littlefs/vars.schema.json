@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/storage-layers/littlefs/vars.schema.json",
+  "title": "littlefs variables",
+  "description": "Configuration variables for littlefs",
+  "type": "object",
+  "properties": {
+    "LITTLEFS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install littlefs. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "LITTLEFS_VERSION": {
+      "description": "Specific version of littlefs to install.",
+      "type": "string",
+      "default": "2.9.3",
+      "version_aliases": ["latest", "lts"]
+    },
+    "LITTLEFS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading littlefs binary or archive artifacts."
+    },
+    "LITTLEFS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying littlefs available remote releases."
+    }
+  },
+  "x-libscript-var-packs": ["image_synth"]
+}

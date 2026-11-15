@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "dtc",
+  "title": "Device Tree Compiler (dtc)",
+  "description": "Device Tree Compiler (dtc) and libfdt utilities for compiling and overlaying Zephyr and embedded hardware Devicetrees.",
+  "category": "toolchains",
+  "provides": ["dtc", "fdtget", "fdtput"],
+  "os_whitelist": ["all"],
+  "repository": "https://git.kernel.org/pub/scm/utils/dtc/dtc.git"
+}

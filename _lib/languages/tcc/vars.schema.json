@@ -40,5 +40,6 @@
       "type": "string",
       "default": "-O2"
     }
-  }
+  },
+  "x-libscript-var-packs": ["source_toolchain"]
 }

@@ -152,6 +152,20 @@ case "$ACTION" in
       libscript_symlink_alias "rust" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  rtos-targets)
+    RUST_RTOS_TARGETS="${RUST_RTOS_TARGETS:-thumbv7m-none-eabi,riscv32imac-unknown-none-elf,riscv64imac-unknown-none-elf,x86_64-unknown-none}"
+    if command -v rustup >/dev/null 2>&1 && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+      _old_ifs="$IFS"
+      IFS=','
+      for _rt in $RUST_RTOS_TARGETS; do
+        if [ -n "$_rt" ]; then
+          rustup target add "$_rt" 2>/dev/null || true
+        fi
+      done
+      IFS="$_old_ifs"
+    fi
+    exit 0
+    ;;
   start|stop|restart|status|health|logs|up|down|install-service|uninstall-service|uninstall)
     libscript_handle_generic_action "rust" "$ACTION" "$VERSION" "${RUST_INSTALL_METHOD}" "" "" "" "$@"
     ;;

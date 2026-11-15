@@ -16,7 +16,7 @@ def intersects(a; b):
   end;
 
 def effective_check_os(os):
-  if os == "unikraft" or os == "nanos" or os == "osv" or os == "rumprun" or os == "mirageos" then "linux"
+  if os == "unikraft" or os == "nanos" or os == "osv" or os == "rumprun" or os == "mirageos" or os == "zephyr" or os == "freertos" then "linux"
   else os
   end;
 
@@ -29,6 +29,8 @@ def map_os_family_to_target(os_fam; fallback_os):
   if os_fam == null or os_fam == "" then fallback_os
   elif (os_fam | startswith("freebsd")) then "freebsd"
   elif (os_fam == "illumos" or os_fam == "sunos") then "sunos"
+  elif (os_fam == "rtos-zephyr" or (os_fam | startswith("zephyr"))) then "zephyr"
+  elif (os_fam == "rtos-freertos" or (os_fam | startswith("freertos"))) then "freertos"
   elif (os_fam == "unikernel-unikraft" or (os_fam | startswith("unikraft"))) then "unikraft"
   elif (os_fam == "unikernel-nanos" or (os_fam | startswith("nanos"))) then "nanos"
   elif (os_fam == "unikernel-osv" or (os_fam | startswith("osv"))) then "osv"
@@ -43,6 +45,9 @@ def is_single_process_unikernel(os):
 
 def is_unikernel_os(os):
   is_single_process_unikernel(os) or os == "osv";
+
+def is_rtos_os(os):
+  os == "zephyr" or os == "freertos";
 
 def normalize_os_pkg_alias(name; os; libc):
   (name | tostring) as $raw |
@@ -162,6 +167,8 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   ($cfg.target.libc // (
     if $resolved_os == "freebsd" then "bsd-libc"
     elif $resolved_os == "sunos" then "illumos-libc"
+    elif $resolved_os == "zephyr" then "picolibc"
+    elif $resolved_os == "freertos" then "newlib"
     elif $resolved_os == "rumprun" then "rump-libc"
     elif $resolved_os == "mirageos" then "mirage-ocaml"
     elif $os_fam == "linux-musl" then "musl"
@@ -169,10 +176,13 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   )) as $libc |
   ($cfg.profile_name // "custom") as $profile |
   ($cfg.kernel.compiler // "default") as $kcompiler |
-  ($cfg.kernel.version // "6.6.52") as $kversion |
+  ($cfg.kernel.version // (if $resolved_os == "zephyr" then "3.7.0" elif $resolved_os == "freertos" then "11.1.0" else "6.6.52" end)) as $kversion |
   ($cfg.kernel.config_method // "defconfig") as $kconfig |
   ($cfg.kernel.kcflags // "-O2") as $kkcflags |
   ($cfg.kernel.custom_cc_bin // "") as $kcustom_bin |
+  ($cfg.rtos?.board // (if $resolved_os == "zephyr" then "qemu_x86_64" elif $resolved_os == "freertos" then "mps2_an385" else "" end)) as $rtos_board |
+  ($cfg.rtos?.hybrid_pod == true) as $rtos_hybrid_pod |
+  ($cfg.rtos?.mcuboot?.enabled == true or $cfg.storage?.bootloader == "mcuboot") as $rtos_mcuboot |
   ($root.manifests // []) as $manifests |
 
   [
@@ -188,7 +198,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   (($cfg.packages // []) + ($cfg.components // [])) as $raw_user_pkgs |
   ([ $raw_user_pkgs[] | normalize_os_pkg_alias(.; $resolved_os; $libc) ]) as $user_pkgs |
 
-  # Validate OS blacklist & unikernel process_model compatibility on explicitly requested components
+  # Validate OS blacklist, unikernel process_model, & RTOS bare-metal compatibility on explicitly requested components
   (
     reduce $user_pkgs[] as $upkg (
       [];
@@ -198,6 +208,19 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
           error("OS_UNSUPPORTED: Component '" + $upkg + "' is not supported on target OS '" + $resolved_os + "'.")
         elif is_unikernel_os($resolved_os) and ($um.process_model == "multiprocess-fork") and (($um.unikernel_support // ["osv", "nanos"]) | index($resolved_os) == null) then
           error("UNIKERNEL_INCOMPATIBLE: Component '" + $upkg + "' requires multiprocess fork() which is unsupported on '" + $resolved_os + "'. Choose osv/nanos or a hybrid multi-VM topology.")
+        elif is_rtos_os($resolved_os) and ($rtos_hybrid_pod | not) and (
+          ($um.process_model == "multiprocess-fork") or
+          ($um.process_model == "multi-service-stack") or
+          ($um.memory_footprint_class == "mmu-posix") or
+          (
+            (($um.rtos_support // []) | index($resolved_os) == null) and
+            (["web-servers", "app-servers", "web-apps", "desktops", "display-servers", "display-managers", "git-servers", "search"] | index($um.category // "") != null)
+          ) or
+          (
+            ($um.category == "databases") and ($um.name != "sqlite") and (($um.rtos_support // []) | index($resolved_os) == null)
+          )
+        ) then
+          error("RTOS_INCOMPATIBLE_FORK: Component '" + $upkg + "' requires MMU/multiprocess fork() which is unsupported on single bare-metal RTOS '" + $resolved_os + "'. Enable hybrid multi-node pod mode or choose an RTOS-supported library/runtime.")
         else . end
       else . end
     )
@@ -206,14 +229,30 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   ([
     (if $resolved_os == "linux" then (if $libc == "musl" then "musl" else "glibc" end) else empty end),
     (if $resolved_os == "linux" and $cfg.kernel?.provider and $cfg.kernel.provider != "none" then $cfg.kernel.provider else empty end),
-    (if ($resolved_os == "linux" or $resolved_os == "freebsd" or $resolved_os == "sunos") and $cfg.init_system?.provider and $cfg.init_system.provider != "none" and $cfg.init_system.provider != "unikernel-entrypoint" then $cfg.init_system.provider else empty end),
+    (if ($resolved_os == "linux" or $resolved_os == "freebsd" or $resolved_os == "sunos") and $cfg.init_system?.provider and $cfg.init_system.provider != "none" and $cfg.init_system.provider != "unikernel-entrypoint" and $cfg.init_system.provider != "zephyr-sys-init" and $cfg.init_system.provider != "freertos-scheduler" then $cfg.init_system.provider else empty end),
     (if $resolved_os == "linux" and $cfg.storage?.bootloader and $cfg.storage.bootloader != "none" then $cfg.storage.bootloader else empty end),
-    (if $cfg.display?.compositor and $cfg.display.compositor != "none" then $cfg.display.compositor else empty end),
-    (if $cfg.desktop?.desktop_suite and $cfg.desktop.desktop_suite != "none" then $cfg.desktop.desktop_suite else empty end),
-    (if $cfg.desktop?.greeter and $cfg.desktop.greeter != "none" then $cfg.desktop.greeter else empty end)
+    (if (is_rtos_os($resolved_os) | not) and $cfg.display?.compositor and $cfg.display.compositor != "none" then $cfg.display.compositor else empty end),
+    (if (is_rtos_os($resolved_os) | not) and $cfg.desktop?.desktop_suite and $cfg.desktop.desktop_suite != "none" then $cfg.desktop.desktop_suite else empty end),
+    (if (is_rtos_os($resolved_os) | not) and $cfg.desktop?.greeter and $cfg.desktop.greeter != "none" then $cfg.desktop.greeter else empty end)
   ] + $user_pkgs) | unique as $seed_components |
 
-  expand_os_graph($seed_components; {}; $manifests; $resolved_os; $libc) as $dep_graph |
+  (if is_rtos_os($resolved_os) then
+    # On RTOS targets, only expand transitive deps that also support RTOS or are freestanding libraries/toolchains
+    (reduce $seed_components[] as $sc ({}; . + { ($sc): (
+      (lookup_manifest($manifests; $sc; $resolved_os; $libc)) as $sm |
+      if $sm != null then
+        [ (($sm.dependencies?.build_deps // []) + ($sm.dependencies?.runtime_deps // []))[]?
+          | normalize_os_pkg_alias(.; $resolved_os; $libc)
+          | . as $dn
+          | (lookup_manifest($manifests; $dn; $resolved_os; $libc)) as $dm
+          | select($dm != null and ((($dm.rtos_support // []) | index($resolved_os) != null) or ($dm.category == "toolchains")))
+          | $dm.name
+        ] | unique
+      else [] end
+    )}))
+  else
+    expand_os_graph($seed_components; {}; $manifests; $resolved_os; $libc)
+  end) as $dep_graph |
 
   (tarjan_scc($dep_graph) | map(select(length > 1))) as $cycles |
   [
@@ -226,32 +265,41 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   # Reverse topo_visit post-order so dependencies execute BEFORE dependents!
   (topological_sort($dep_graph; $cyclic_edges) | reverse) as $sorted_packages |
 
-  # Count daemon/service components to determine single-unikernel vs multi-unikernel pod synthesis
+  # Count daemon/service components to determine single-unikernel vs multi-unikernel/RTOS pod synthesis
   ([
     $sorted_packages[] |
     . as $p |
     lookup_manifest($manifests; $p; $resolved_os; $libc) as $pm |
-    select($pm != null and (($pm.ports // [] | length > 0) or ($pm.stateful == true) or ($pm.category == "web-servers" or $pm.category == "app-servers" or $pm.category == "databases" or $pm.category == "caches" or $pm.category == "search" or $pm.category == "web-apps"))) |
+    select($pm != null and (($pm.ports // [] | length > 0) or ($pm.stateful == true) or ($pm.category == "web-servers" or $pm.category == "app-servers" or $pm.category == "databases" or $pm.category == "caches" or $pm.category == "search" or $pm.category == "web-apps" or $pm.category == "message-brokers"))) |
     $p
   ] | unique) as $daemon_packages |
 
   (is_single_process_unikernel($resolved_os) and (($daemon_packages | length) > 1)) as $needs_unikernel_pod |
+  (is_rtos_os($resolved_os) and ($rtos_hybrid_pod or (($daemon_packages | map(select(. != "sqlite" and . != "coremqtt")) | length) > 0))) as $needs_rtos_pod |
 
   {
     "plan_version": "1.0.0",
     "profile_name": $profile,
     "execution_mode": (
-      if $needs_unikernel_pod then "multi-unikernel-pod"
+      if $needs_rtos_pod then "multi-rtos-pod"
+      elif is_rtos_os($resolved_os) then (
+        if ($rtos_board == "native_sim" or $rtos_board == "native_sim_64" or $rtos_board == "posix_gcc" or $rtos_board == "win32_sim" or $rtos_board == "msvc_ming_win32") then "rtos-simulator"
+        else "rtos-firmware" end
+      )
+      elif $needs_unikernel_pod then "multi-unikernel-pod"
       elif is_unikernel_os($resolved_os) then "single-unikernel"
       else "sysroot-image" end
     ),
-    "target": {
-      "arch": $arch,
-      "libc": $libc,
-      "os": $resolved_os,
-      "os_family": $os_fam,
-      "compiler": $kcompiler
-    },
+    "target": (
+      {
+        "arch": $arch,
+        "libc": $libc,
+        "os": $resolved_os,
+        "os_family": $os_fam,
+        "compiler": $kcompiler
+      }
+      + (if is_rtos_os($resolved_os) then { "board": $rtos_board } else {} end)
+    ),
     "stages": (
       if $resolved_os == "linux" then
         [
@@ -346,6 +394,81 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
             ]
           }
         ]
+      elif $resolved_os == "zephyr" then
+        [
+          {
+            "stage": "stage0-rtos-sdk",
+            "description": "Zephyr SDK, CMake/Ninja, DTC, and Zephyr RTOS kernel source bootstrap",
+            "tasks": [
+              {
+                "name": "zephyr-sdk-bootstrap",
+                "component": "_lib/toolchains/zephyr-sdk",
+                "action": "bootstrap",
+                "stamp": ".stamp.stage0_zephyr_sdk",
+                "variants": [],
+                "env": {
+                  "LIBSCRIPT_STAGE": "stage0",
+                  "LIBSCRIPT_TARGET_ARCH": $arch,
+                  "LIBSCRIPT_RTOS_BOARD": $rtos_board
+                }
+              },
+              {
+                "name": "zephyr-kernel-source",
+                "component": "_lib/kernel/zephyr",
+                "action": "bootstrap",
+                "stamp": (".stamp.stage0_zephyr_src_" + $kversion),
+                "variants": [],
+                "env": {
+                  "LIBSCRIPT_STAGE": "stage0",
+                  "ZEPHYR_VERSION": $kversion,
+                  "LIBSCRIPT_RTOS_BOARD": $rtos_board
+                }
+              }
+            ]
+          }
+        ]
+      elif $resolved_os == "freertos" then
+        [
+          {
+            "stage": "stage0-rtos-sdk",
+            "description": "Bare-metal cross-toolchain, CMake/Ninja, and FreeRTOS-Kernel source bootstrap",
+            "tasks": [
+              {
+                "name": (
+                  if ($arch == "arm" or $arch == "armv7m" or $arch == "armv8m") then "arm-none-eabi-gcc"
+                  elif ($arch == "riscv32" or $arch == "riscv64") then "riscv-none-elf-gcc"
+                  else "host-c-toolchain" end
+                ),
+                "component": (
+                  if ($arch == "arm" or $arch == "armv7m" or $arch == "armv8m") then "_lib/toolchains/arm-none-eabi-gcc"
+                  elif ($arch == "riscv32" or $arch == "riscv64") then "_lib/toolchains/riscv-none-elf-gcc"
+                  elif $kcompiler != "default" then ("_lib/languages/" + $kcompiler)
+                  else "_lib/languages/c" end
+                ),
+                "action": "bootstrap",
+                "stamp": (".stamp.stage0_freertos_cc_" + $arch),
+                "variants": [],
+                "env": {
+                  "LIBSCRIPT_STAGE": "stage0",
+                  "LIBSCRIPT_TARGET_ARCH": $arch,
+                  "LIBSCRIPT_RTOS_BOARD": $rtos_board
+                }
+              },
+              {
+                "name": "freertos-kernel-source",
+                "component": "_lib/kernel/freertos",
+                "action": "bootstrap",
+                "stamp": (".stamp.stage0_freertos_src_" + $kversion),
+                "variants": [],
+                "env": {
+                  "LIBSCRIPT_STAGE": "stage0",
+                  "FREERTOS_VERSION": $kversion,
+                  "LIBSCRIPT_RTOS_BOARD": $rtos_board
+                }
+              }
+            ]
+          }
+        ]
       else
         [
           {
@@ -386,13 +509,16 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
               "action": "compile",
               "stamp": (".stamp." + ($manifest.name // $pkg)),
               "variants": $pkg_variants,
-              "env": {
-                "LIBSCRIPT_STAGE": "stage2",
-                "LIBSCRIPT_TARGET_ARCH": $arch,
-                "LIBSCRIPT_TARGET_LIBC": $libc,
-                "LIBSCRIPT_TARGET_OS": $resolved_os,
-                "LIBSCRIPT_IMAGE_BUILD": "1"
-              }
+              "env": (
+                {
+                  "LIBSCRIPT_STAGE": "stage2",
+                  "LIBSCRIPT_TARGET_ARCH": $arch,
+                  "LIBSCRIPT_TARGET_LIBC": $libc,
+                  "LIBSCRIPT_TARGET_OS": $resolved_os,
+                  "LIBSCRIPT_IMAGE_BUILD": "1"
+                }
+                + (if is_rtos_os($resolved_os) then { "LIBSCRIPT_RTOS_BOARD": $rtos_board } else {} end)
+              )
             }
           ]
         },
@@ -473,6 +599,84 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
                   "env": { "LIBSCRIPT_STAGE": "stage3", "LIBSCRIPT_TARGET_OS": "sunos" }
                 }
               ]
+            }
+          elif $needs_rtos_pod then
+            {
+              "stage": "stage3-rtos-pod",
+              "description": ("Hybrid multi-node RTOS + cloud/unikernel simulation pod synthesis for " + $resolved_os),
+              "tasks": [
+                {
+                  "name": ($resolved_os + "-firmware-build"),
+                  "component": ("_lib/kernel/" + $resolved_os),
+                  "action": "assemble",
+                  "stamp": (".stamp.stage3_rtos_" + $resolved_os + "_" + $rtos_board),
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage3",
+                    "LIBSCRIPT_TARGET_OS": $resolved_os,
+                    "LIBSCRIPT_TARGET_ARCH": $arch,
+                    "LIBSCRIPT_RTOS_BOARD": $rtos_board
+                  }
+                },
+                {
+                  "name": "rtos-edge-pod-assembly",
+                  "component": "_lib/orchestration/unikernel_pod",
+                  "action": "assemble",
+                  "stamp": (".stamp.stage3_rtos_pod_" + $resolved_os),
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage3",
+                    "LIBSCRIPT_UNIKERNEL_FRAMEWORK": $resolved_os,
+                    "LIBSCRIPT_RTOS_BOARD": $rtos_board,
+                    "LIBSCRIPT_RTOS_HYBRID_POD": "1",
+                    "LIBSCRIPT_POD_DAEMONS": ($daemon_packages | join(","))
+                  }
+                }
+              ]
+            }
+          elif is_rtos_os($resolved_os) then
+            {
+              "stage": "stage3-rtos-firmware",
+              "description": ("Single-address-space " + $resolved_os + " firmware and simulator image linkage for board " + $rtos_board),
+              "tasks": (
+                [
+                  {
+                    "name": ($resolved_os + "-firmware-build"),
+                    "component": ("_lib/kernel/" + $resolved_os),
+                    "action": "assemble",
+                    "stamp": (".stamp.stage3_rtos_" + $resolved_os + "_" + $rtos_board + "_" + $kcompiler),
+                    "variants": [],
+                    "env": {
+                      "LIBSCRIPT_STAGE": "stage3",
+                      "LIBSCRIPT_TARGET_OS": $resolved_os,
+                      "LIBSCRIPT_TARGET_ARCH": $arch,
+                      "LIBSCRIPT_TARGET_LIBC": $libc,
+                      "LIBSCRIPT_RTOS_BOARD": $rtos_board,
+                      "CC_BACKEND": $kcompiler,
+                      "CUSTOM_CC_BIN": $kcustom_bin
+                    }
+                  }
+                ]
+                + (
+                  if $rtos_mcuboot then
+                    [
+                      {
+                        "name": "mcuboot-firmware-sign",
+                        "component": "_lib/bootloaders/mcuboot",
+                        "action": "sign",
+                        "stamp": (".stamp.stage3_mcuboot_sign_" + $resolved_os + "_" + $rtos_board),
+                        "variants": [],
+                        "env": {
+                          "LIBSCRIPT_STAGE": "stage3",
+                          "LIBSCRIPT_TARGET_OS": $resolved_os,
+                          "LIBSCRIPT_RTOS_BOARD": $rtos_board,
+                          "LIBSCRIPT_RTOS_MCUBOOT": "1"
+                        }
+                      }
+                    ]
+                  else [] end
+                )
+              )
             }
           elif $needs_unikernel_pod then
             {

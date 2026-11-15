@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "west",
+  "title": "Zephyr West Meta-Tool",
+  "description": "Zephyr RTOS multi-repository manifest, build, flash, and debug meta-tool isolated in a component-managed virtual environment.",
+  "category": "toolchains",
+  "provides": ["west"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/zephyrproject-rtos/west"
+}

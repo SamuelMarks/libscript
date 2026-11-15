@@ -14,17 +14,20 @@ Execute this script to install and configure vllm on the local system.
 
 $ErrorActionPreference = "Stop"
 
-$VllmVersion = $env:VLLM_VERSION
-if ([string]::IsNullOrEmpty($VllmVersion)) {
-    $VllmVersion = "latest"
-}
+$Action = if ($env:ACTION) { $env:ACTION } elseif ($args.Count -gt 0 -and $args[0] -notlike "-*") { $args[0] } else { "install" }
+$VllmVersion = if ($env:VLLM_VERSION) { $env:VLLM_VERSION } elseif ($env:VERSION) { $env:VERSION } else { "latest" }
+$CompVersion = $VllmVersion
+$InstallMethod = if ($env:VLLM_INSTALL_METHOD) { $env:VLLM_INSTALL_METHOD } elseif ($env:LIBSCRIPT_DEFAULT_INSTALL_METHOD) { $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD } elseif ($env:LIBSCRIPT_GLOBAL_INSTALL_METHOD) { $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD } else { "libscript_native" }
+$LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
+$LibscriptHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $HOME ".libscript" }
+$DownloadDir = if ($env:LIBSCRIPT_DOWNLOAD_DIR) { $env:LIBSCRIPT_DOWNLOAD_DIR } elseif ($env:DOWNLOAD_DIR) { $env:DOWNLOAD_DIR } else { Join-Path $LibscriptRootDir "cache\downloads" }
 
 $Prefix = $env:PREFIX
 if ([string]::IsNullOrEmpty($Prefix)) {
-    $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-    $Prefix = "$LibscriptRootDir\installed\vllm"
+    $Prefix = Join-Path (Join-Path $LibscriptHome "vllm") $VllmVersion
 }
 
+if ($Action -eq "install") {
 $BinDir = "$Prefix\bin"
 if (-not (Test-Path -Path $BinDir)) {
     New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
@@ -55,8 +58,10 @@ if (-not (Test-Path -Path $ExePath)) {
 setlocal
 set "VENV_DIR=%~dp0..\venv"
 set "MODEL=%~1"
-if "%MODEL%"=="" set "MODEL=your-org/your-model-name"
-set "TPS=%TPU_TENSOR_PARALLEL_SIZE%"
+if "%MODEL%"=="" set "MODEL=%LIBSCRIPT_MODEL_NAME%"
+if "%MODEL%"=="" set "MODEL=google/gemma-2-2b"
+set "TPS=%LIBSCRIPT_TPU_TENSOR_PARALLEL_SIZE%"
+if "%TPS%"=="" set "TPS=%TPU_TENSOR_PARALLEL_SIZE%"
 if "%TPS%"=="" set "TPS=1"
 
 shift
@@ -75,6 +80,8 @@ goto loop
     Write-Host "vLLM wrapper installed to $ExePath"
 } else {
     Write-Host "vLLM wrapper already installed at $ExePath"
+}
+exit 0
 }
 
 if ($Action -eq "ls") {

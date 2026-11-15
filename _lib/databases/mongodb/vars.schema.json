@@ -66,5 +66,6 @@
       "type": "string",
       "description": "Override URL for querying mongodb available remote releases."
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth"]
 }

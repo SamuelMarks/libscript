@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mcuboot",
+  "title": "MCUboot Secure Bootloader & imgtool",
+  "description": "Cryptographic A/B dual-slot microcontroller and RTOS bootloader with imgtool RSA/ECDSA/Ed25519 firmware signing.",
+  "category": "bootloaders",
+  "provides": ["mcuboot", "imgtool"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/mcu-tools/mcuboot"
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freertos-riscv64-static-safety",
+  "description": "Deterministic zero-malloc (static_only) RISC-V 64 FreeRTOS safety-critical appliance profile for QEMU virt.",
+  "target": {
+    "arch": "riscv64",
+    "os_family": "rtos-freertos",
+    "libc": "picolibc",
+    "platform": "qemu-riscv-virt"
+  },
+  "kernel": {
+    "provider": "freertos-mainline",
+    "version": "11.1.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "freertos-scheduler"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "riscv_virt",
+    "heap_implementation": "static_only",
+    "tick_rate_hz": 1000,
+    "total_heap_bytes": 0,
+    "minimal_stack_words": 256,
+    "max_priorities": 8
+  },
+  "output_formats": ["firmware-elf", "firmware-bin"],
+  "components": ["sqlite"]
+}

@@ -17,11 +17,11 @@ else
 fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "$_pmgr_caller_this" ] && THIS_FILE="$_pmgr_caller_this"
     [ -n "$_pmgr_caller_dir" ] && SCRIPT_DIR="$_pmgr_caller_dir"
     unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -43,7 +43,7 @@ export PKG_MGR_UPDATE_REGISTRY
 libscript_resolve_install_method() {
   comp_method_var="${1}_INSTALL_METHOD"
   requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
-  : "${requested:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
+  : "${requested:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-}}}"
 
   case "${requested}" in
     pkg_mgr:*)

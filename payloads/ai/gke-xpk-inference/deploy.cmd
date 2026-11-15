@@ -55,6 +55,20 @@ set "EXTRA_ENV_FLAGS="
 :: Parses command-line flags for GKE XPK workload submission.
 :parse_args
 if "%~1"=="" goto :run_deploy
+if "%TFRC_STRICT%"=="1" goto :tfrc_block_gke
+if "%LIBSCRIPT_TFRC_STRICT%"=="1" goto :tfrc_block_gke
+if not "%TFRC_CONFIG%"=="" goto :tfrc_block_gke
+if not "%LIBSCRIPT_TFRC_CONFIG%"=="" goto :tfrc_block_gke
+goto :after_tfrc_gke
+:: ## tfrc_block_gke
+:: Rejects GKE cluster and XPK operations under zero-cost TFRC enforcement.
+:tfrc_block_gke
+set "ML_TARGET=gke-xpk"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
+exit /b !ERRORLEVEL!
+:: ## after_tfrc_gke
+:: Continues execution when TFRC zero-cost enforcement is inactive.
+:after_tfrc_gke
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 if "%~1"=="--command" (

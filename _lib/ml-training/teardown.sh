@@ -30,4 +30,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 TPU_NAME="${1:-${TPU_NAME:-ml-eval-node}}"
 printf 'Tearing down TPU VM %s...
 ' "$TPU_NAME"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tfrc_guard.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" delete "$TPU_NAME"
+if libscript_tfrc_is_enabled && [ -n "${TPU_ZONE:-}" ]; then
+  libscript_tfrc_postflight_audit "${GCP_PROJECT_ID:-}" "${TPU_ZONE}" "$TPU_NAME"
+fi

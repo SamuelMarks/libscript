@@ -51,6 +51,27 @@ goto :find_root
 
 
 
+IF /I "%LIBSCRIPT_TARGET_OS%"=="zephyr" (
+    set "STACK="
+    call "%SCRIPT_DIR%\zephyr\build_firmware.cmd"
+    exit /b !ERRORLEVEL!
+)
+IF /I "%LIBSCRIPT_TARGET_OS%"=="rtos-zephyr" (
+    set "STACK="
+    call "%SCRIPT_DIR%\zephyr\build_firmware.cmd"
+    exit /b !ERRORLEVEL!
+)
+IF /I "%LIBSCRIPT_TARGET_OS%"=="freertos" (
+    set "STACK="
+    call "%SCRIPT_DIR%\freertos\build_firmware.cmd"
+    exit /b !ERRORLEVEL!
+)
+IF /I "%LIBSCRIPT_TARGET_OS%"=="rtos-freertos" (
+    set "STACK="
+    call "%SCRIPT_DIR%\freertos\build_firmware.cmd"
+    exit /b !ERRORLEVEL!
+)
+
 IF "%~1"=="status" (
     echo === LFS Kernel Status (Win32) ===
     echo Kernel compilation and module generation execute inside Linux container or VM builder.

@@ -12,6 +12,11 @@ param(
     [Parameter(Position=0)]
     [string]$Subcommand = "os",
     [string]$Profile = "",
+    [string]$Kernel = "",
+    [string]$Board = "",
+    [string]$Libc = "",
+    [string]$Heap = "",
+    [switch]$Mcuboot,
     [string]$Export = "",
     [string]$Validate = ""
 )
@@ -26,14 +31,18 @@ if ($Validate) {
     }
     try {
         $content = Get-Content -Path $Validate -Raw | ConvertFrom-Json
-        $requiredFields = @("schema_version", "target", "kernel", "init_system", "storage")
+        $requiredFields = if ($content.plan_version -and ($content.target.os -eq "zephyr" -or $content.target.os -eq "freertos")) {
+            @("plan_version", "profile_name", "execution_mode", "target", "stages")
+        } else {
+            @("schema_version", "target", "kernel", "init_system", "storage")
+        }
         foreach ($field in $requiredFields) {
             if (-not $content.$field) {
                 Write-Error "[VALIDATION ERROR] Missing required field: $field"
                 exit 1
             }
         }
-        Write-Host "[INFO] Schema validation successful: $Validate conforms to os-config.schema.json"
+        Write-Host "[INFO] Schema validation successful: $Validate conforms to schema"
         exit 0
     } catch {
         Write-Error "[VALIDATION ERROR] Failed to parse JSON: $_"
@@ -55,6 +64,19 @@ if ($Profile) {
 } else {
     $defaultProfile = Join-Path $rootDir "profiles\linux-standard-server-glibc.json"
     $chosenConfig = Get-Content -Path $defaultProfile -Raw
+}
+
+if ($Kernel -or $Board -or $Libc -or $Heap -or $Mcuboot) {
+    $obj = $chosenConfig | ConvertFrom-Json
+    if ($Kernel) { $obj.target.os_family = $Kernel }
+    if ($Libc) { $obj.target.libc = $Libc }
+    if (-not $obj.PSObject.Properties["rtos"]) {
+        $obj | Add-Member -NotePropertyName "rtos" -NotePropertyValue ([PSCustomObject]@{})
+    }
+    if ($Board) { $obj.rtos | Add-Member -NotePropertyName "board" -NotePropertyValue $Board -Force }
+    if ($Heap) { $obj.rtos | Add-Member -NotePropertyName "heap_implementation" -NotePropertyValue $Heap -Force }
+    if ($Mcuboot) { $obj.rtos | Add-Member -NotePropertyName "mcuboot" -NotePropertyValue ([PSCustomObject]@{ enabled = $true }) -Force }
+    $chosenConfig = $obj | ConvertTo-Json -Depth 10
 }
 
 if ($Export) {

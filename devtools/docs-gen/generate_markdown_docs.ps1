@@ -126,14 +126,28 @@ foreach ($readme in $readmes) {
         "|---|---|---|---|"
     )
 
-    if ($dir.Contains('_lib') -and $baseVarRows.Count -gt 0) {
-        $varsLines += $baseVarRows
+    $json = [System.IO.File]::ReadAllText($schema, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+    if ($null -ne $json.'x-libscript-var-packs') {
+        foreach ($pk in @($json.'x-libscript-var-packs')) {
+            $pkFile = Join-Path $rootDir "schemas\vars\$pk.schema.json"
+            if (Test-Path -LiteralPath $pkFile) {
+                $pkJson = [System.IO.File]::ReadAllText($pkFile, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+                $pkRows = Convert-SchemaPropertiesToRows -SchemaObj $pkJson
+                if ($pkRows.Count -gt 0) {
+                    $varsLines += $pkRows
+                }
+            }
+        }
     }
 
-    $json = [System.IO.File]::ReadAllText($schema, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
     $compRows = Convert-SchemaPropertiesToRows -SchemaObj $json
     if ($compRows.Count -gt 0) {
         $varsLines += $compRows
+    }
+
+    if ($dir.Contains('_lib')) {
+        $varsLines += ""
+        $varsLines += "Global framework variables (such as ``LIBSCRIPT_HOME``, ``LIBSCRIPT_CACHE_DIR``, ``LIBSCRIPT_OFFLINE``, and ``LIBSCRIPT_DEFAULT_INSTALL_METHOD``) are documented in ``_lib/_common/README.md``."
     }
 
     $varsBlock = ($varsLines -join "`n") + "`n"

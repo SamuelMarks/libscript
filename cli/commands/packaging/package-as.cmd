@@ -10,7 +10,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -113,9 +113,21 @@ if /i "%PKG_TYPE%"=="zfs-stream" goto do_zfs_stream
 if /i "%PKG_TYPE%"=="zfs_stream" goto do_zfs_stream
 if /i "%PKG_TYPE%"=="direct-kernel" goto do_direct_kernel
 if /i "%PKG_TYPE%"=="direct_kernel" goto do_direct_kernel
+if /i "%PKG_TYPE%"=="firmware-elf" goto do_firmware
+if /i "%PKG_TYPE%"=="firmware-bin" goto do_firmware
+if /i "%PKG_TYPE%"=="firmware-hex" goto do_firmware
+if /i "%PKG_TYPE%"=="firmware-uf2" goto do_firmware
+if /i "%PKG_TYPE%"=="mcuboot-signed" goto do_firmware
+if /i "%PKG_TYPE%"=="renode-resc" goto do_firmware
 
 echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
+
+:: ## do_firmware
+:: Packages Zephyr or FreeRTOS sysroot into ELF, BIN, HEX, UF2, MCUboot signed, or Renode bundle.
+:do_firmware
+call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\firmware.cmd" "--format=%PKG_TYPE%" %*
+exit /b %ERRORLEVEL%
 
 :: ## do_zfs_stream
 :: Exports target sysroot into a compressed ZFS replication stream.

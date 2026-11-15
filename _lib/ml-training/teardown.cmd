@@ -54,4 +54,13 @@ if not "%~1"=="" set "TPU_NAME=%~1"
 if "%TPU_NAME%"=="" set "TPU_NAME=ml-eval-node"
 echo Tearing down TPU VM !TPU_NAME!...
 call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" delete "!TPU_NAME!"
-exit /b %ERRORLEVEL%
+set "_TD_RC=!ERRORLEVEL!"
+if "%TFRC_STRICT%"=="1" set "_ML_TFRC=1"
+if "%LIBSCRIPT_TFRC_STRICT%"=="1" set "_ML_TFRC=1"
+if not "%TFRC_CONFIG%"=="" set "_ML_TFRC=1"
+if not "%LIBSCRIPT_TFRC_CONFIG%"=="" set "_ML_TFRC=1"
+if "!_ML_TFRC!"=="1" if not "%TPU_ZONE%"=="" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "%GCP_PROJECT_ID%" "%TPU_ZONE%" "!TPU_NAME!"
+    if errorlevel 1 exit /b !errorlevel!
+)
+exit /b !_TD_RC!

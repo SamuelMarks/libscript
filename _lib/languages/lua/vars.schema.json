@@ -34,5 +34,6 @@
       "type": "string",
       "description": "Optional explicit URL for the official Lua test suite archive (defaults to https://www.lua.org/tests/lua-{VERSION}-tests.tar.gz)."
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth", "source_toolchain"]
 }

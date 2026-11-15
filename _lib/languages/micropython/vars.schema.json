@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/micropython/vars.schema.json",
+  "title": "micropython variables",
+  "description": "Configuration variables for micropython",
+  "type": "object",
+  "properties": {
+    "MICROPYTHON_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install micropython. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "MICROPYTHON_VERSION": {
+      "description": "Specific version of micropython to install.",
+      "type": "string",
+      "default": "1.24.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "MICROPYTHON_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading micropython binary or archive artifacts."
+    },
+    "MICROPYTHON_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying micropython available remote releases."
+    }
+  },
+  "x-libscript-var-packs": ["image_synth"]
+}

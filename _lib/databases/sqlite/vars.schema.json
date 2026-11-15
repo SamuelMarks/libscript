@@ -134,5 +134,6 @@
       "type": "string",
       "description": "Destination directory where stage-benchmark-inputs extracts sqlite3.c, shell.c, sqlite3.h, and speedtest1.c."
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth", "source_toolchain"]
 }

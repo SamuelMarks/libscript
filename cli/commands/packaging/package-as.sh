@@ -20,9 +20,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -192,6 +192,8 @@ if [ "$CMD" = "package-as" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/zfs_stream.sh" "$@"
   elif [ "${pkg_type:-}" = "direct-kernel" ] || [ "${pkg_type:-}" = "direct_kernel" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/direct_kernel.sh" "$@"
+  elif [ "${pkg_type:-}" = "firmware-elf" ] || [ "${pkg_type:-}" = "firmware-bin" ] || [ "${pkg_type:-}" = "firmware-hex" ] || [ "${pkg_type:-}" = "firmware-uf2" ] || [ "${pkg_type:-}" = "mcuboot-signed" ] || [ "${pkg_type:-}" = "renode-resc" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/firmware.sh" --format="$pkg_type" "$@"
   elif [ "${pkg_type:-}" = "cloud-img" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/cloud_img.sh" "$@"
   else

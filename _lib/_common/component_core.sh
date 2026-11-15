@@ -17,11 +17,11 @@ else
 fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "$_component_core_caller_this" ] && THIS_FILE="$_component_core_caller_this"
     [ -n "$_component_core_caller_dir" ] && SCRIPT_DIR="$_component_core_caller_dir"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 # Identify directories
@@ -45,102 +45,68 @@ SCRIPT_DIR="${COMP_DIR}"
 SCHEMA_FILE="$COMP_DIR/vars.schema.json"
 MANIFEST_FILE="$COMP_DIR/manifest.json"
 BASE_SCHEMA_FILE="$LIBSCRIPT_ROOT_DIR/_lib/_common/base_vars.schema.json"
+VARS_PACK_DIR="$LIBSCRIPT_ROOT_DIR/schemas/vars"
+
+# ## get_component_help_properties
+# Resolves component-specific and opted-in domain pack properties without merging global base_vars.schema.json.
+get_component_help_properties() {
+  if [ -f "$SCHEMA_FILE" ]; then
+    _pack_files=""
+    _packs=$(jq -r '."x-libscript-var-packs"[]? // empty' "$SCHEMA_FILE" 2>/dev/null || true)
+    for _p in $_packs; do
+      if [ -f "${VARS_PACK_DIR}/${_p}.schema.json" ]; then
+        _pack_files="${_pack_files} ${VARS_PACK_DIR}/${_p}.schema.json"
+      fi
+    done
+    # shellcheck disable=SC2086
+    jq -s 'reduce .[] as $item ({}; . * ($item.properties // {}))' $_pack_files "$SCHEMA_FILE"
+  else
+    printf '{}\n'
+  fi
+}
 
 # ## get_merged_properties
-# Utility function to get the merged schema properties
+# Resolves merged schema properties across base_vars.schema.json, opted-in variable packs, and component vars.schema.json via file-based jq -s.
 get_merged_properties() {
-  if [ -f "$SCHEMA_FILE" ] && [ -f "$BASE_SCHEMA_FILE" ]; then
-    jq -n --argjson base "$(cat "$BASE_SCHEMA_FILE")" --argjson comp "$(cat "$SCHEMA_FILE")" '
-      $base.properties * $comp.properties
-    '
-  elif [ -f "$SCHEMA_FILE" ]; then
-    jq -r '.properties' "$SCHEMA_FILE"
-  elif [ -f "$BASE_SCHEMA_FILE" ]; then
-    jq -r '.properties' "$BASE_SCHEMA_FILE"
+  _merge_files=""
+  [ -f "$BASE_SCHEMA_FILE" ] && _merge_files="$BASE_SCHEMA_FILE"
+  if [ -f "$SCHEMA_FILE" ]; then
+    _packs=$(jq -r '."x-libscript-var-packs"[]? // empty' "$SCHEMA_FILE" 2>/dev/null || true)
+    for _p in $_packs; do
+      if [ -f "${VARS_PACK_DIR}/${_p}.schema.json" ]; then
+        _merge_files="${_merge_files} ${VARS_PACK_DIR}/${_p}.schema.json"
+      fi
+    done
+    _merge_files="${_merge_files} ${SCHEMA_FILE}"
+  fi
+  if [ -n "$_merge_files" ]; then
+    # shellcheck disable=SC2086
+    jq -s 'reduce .[] as $item ({}; . * ($item.properties // {}))' $_merge_files
   else
     log_info '{}'
   fi
 }
 
 # ## libscript_Synchronize_Ingress
-# Extracts .ingress.proxy_connect_timeout, .ingress.proxy_send_timeout, .ingress.proxy_read_timeout, and .ingress.proxy_buffering from libscript.json, normalizes numeric seconds to '<N>s', exports NETCTL_PROXY_*, and invokes netctl with the corresponding --proxy-* flags.
+# Delegates declarative .ingress proxy synchronization to _lib/networking/netctl/lib/ingress_sync.sh.
 libscript_Synchronize_Ingress() {
-  _lsi_json="${1:-libscript.json}"
-  shift || true
-  if [ ! -f "$_lsi_json" ]; then
-    return 0
-  fi
-  if command -v jq >/dev/null 2>&1; then
-    if ! jq -e '.ingress != null' "$_lsi_json" >/dev/null 2>&1; then
-      return 0
-    fi
-    _lsi_conn=$(jq -r '.ingress.proxy_connect_timeout // empty' "$_lsi_json" 2>/dev/null || true)
-    _lsi_send=$(jq -r '.ingress.proxy_send_timeout // empty' "$_lsi_json" 2>/dev/null || true)
-    _lsi_read=$(jq -r '.ingress.proxy_read_timeout // empty' "$_lsi_json" 2>/dev/null || true)
-    _lsi_buf=$(jq -r '.ingress.proxy_buffering // empty' "$_lsi_json" 2>/dev/null || true)
-  else
-    _lsi_conn=""
-    _lsi_send=""
-    _lsi_read=""
-    _lsi_buf=""
-  fi
-  [ -z "$_lsi_conn" ] || [ "$_lsi_conn" = "null" ] && _lsi_conn="${NETCTL_PROXY_CONNECT_TIMEOUT:-60s}"
-  case "$_lsi_conn" in *[0-9]) _lsi_conn="${_lsi_conn}s" ;; esac
-  [ -z "$_lsi_send" ] || [ "$_lsi_send" = "null" ] && _lsi_send="${NETCTL_PROXY_SEND_TIMEOUT:-300s}"
-  case "$_lsi_send" in *[0-9]) _lsi_send="${_lsi_send}s" ;; esac
-  [ -z "$_lsi_read" ] || [ "$_lsi_read" = "null" ] && _lsi_read="${NETCTL_PROXY_READ_TIMEOUT:-300s}"
-  case "$_lsi_read" in *[0-9]) _lsi_read="${_lsi_read}s" ;; esac
-  [ -z "$_lsi_buf" ] || [ "$_lsi_buf" = "null" ] && _lsi_buf="${NETCTL_PROXY_BUFFERING:-off}"
-  case "$_lsi_buf" in
-    true|1|on) _lsi_buf="on" ;;
-    false|0|off) _lsi_buf="off" ;;
-  esac
-  NETCTL_PROXY_CONNECT_TIMEOUT="$_lsi_conn"
-  NETCTL_PROXY_SEND_TIMEOUT="$_lsi_send"
-  NETCTL_PROXY_READ_TIMEOUT="$_lsi_read"
-  NETCTL_PROXY_BUFFERING="$_lsi_buf"
-  export NETCTL_PROXY_CONNECT_TIMEOUT NETCTL_PROXY_SEND_TIMEOUT NETCTL_PROXY_READ_TIMEOUT NETCTL_PROXY_BUFFERING
-  if [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ] && [ $# -eq 0 ]; then
-    return 0
-  fi
-  _lsi_netctl="${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/netctl.sh"
-  if [ ! -x "$_lsi_netctl" ]; then
-    _lsi_netctl="${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh"
-  fi
-  if [ $# -eq 0 ]; then
-    set -- --reload
-  fi
-  (
-    unset SCRIPT_NAME || true
-    env STACK="" "$_lsi_netctl" apply "$_lsi_json" \
-      --proxy-connect-timeout "$NETCTL_PROXY_CONNECT_TIMEOUT" \
-      --proxy-send-timeout "$NETCTL_PROXY_SEND_TIMEOUT" \
-      --proxy-read-timeout "$NETCTL_PROXY_READ_TIMEOUT" \
-      --proxy-buffering "$NETCTL_PROXY_BUFFERING" \
-      "$@"
-  )
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/lib/ingress_sync.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  netctl_synchronize_ingress "$@"
 }
 
 # ## libscript_Warmup_Ollama
-# Pre-warms gemma:2b in Ollama with keep_alive: "30m" and OLLAMA_NUM_GPU=0 so the first user query does not suffer a cold-load penalty on CPU.
+# Delegates Ollama model pre-warming to _lib/app-servers/ollama/warmup.sh.
 libscript_Warmup_Ollama() {
-  _lwo_model="${1:-${OLLAMA_DEFAULT_MODEL:-gemma:2b}}"
-  _lwo_ka="${OLLAMA_KEEP_ALIVE:-30m}"
-  export OLLAMA_KEEP_ALIVE="$_lwo_ka"
-  export OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-0}"
-  if [ "${LIBSCRIPT_MOCK_SYSTEMD:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
-    return 0
-  fi
-  command -v curl >/dev/null 2>&1 || return 0
-  _lwo_host="${OLLAMA_HOST:-http://127.0.0.1:11434}"
-  case "$_lwo_host" in
-    http://*|https://*) _lwo_url="${_lwo_host%/}" ;;
-    *) _lwo_url="http://${_lwo_host%/}" ;;
-  esac
-  _lwo_url="${_lwo_url%/v1}"
-  _lwo_payload="{\"model\":\"${_lwo_model}\",\"prompt\":\"warmup\",\"stream\":false,\"keep_alive\":\"${_lwo_ka}\",\"options\":{\"num_predict\":1,\"num_ctx\":512,\"num_gpu\":0}}"
-  curl -sS --connect-timeout 5 --max-time 120 -H "Content-Type: application/json" -d "$_lwo_payload" "${_lwo_url}/api/generate" >/dev/null 2>&1 || true
-  return 0
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/app-servers/ollama/warmup.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  ollama_warmup_model "$@"
 }
 
 if [ "${1:-}" = "--synchronize-ingress" ] || [ "${1:-}" = "synchronize-ingress" ]; then
@@ -211,9 +177,9 @@ show_help() {
     [ -n "$VERSIONS" ] && printf '%s\n' "  Supported Versions: $VERSIONS"
   fi
   log_info ""
-  log_info 'Available Options:'
+  log_info 'Component Options:'
   if command -v jq >/dev/null 2>&1; then
-    _props=$(get_merged_properties)
+    _props=$(get_component_help_properties)
     printf '%s\n' "$_props" | jq -r '
       to_entries[] |
       def aliases: if .value.version_aliases then " [aliases: " + (.value.version_aliases | join(", ")) + "]" else "" end;
@@ -224,6 +190,13 @@ show_help() {
       to_entries[] | select(.value.is_libscript_dependency == true) |
       "--\(.key)_STRATEGY=VALUE|Strategy for \(.key) (reuse, install-alongside, upgrade, downgrade, overwrite) [default: reuse]"
     ' | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
+    log_info ""
+    log_info 'Global Framework Flags:'
+    log_info '  --offline, -o                       Use local cache only without network requests'
+    log_info '  --cache-dir=DIR                     Override LIBSCRIPT_CACHE_DIR'
+    log_info '  --prefix=DIR                        Override installation prefix'
+    log_info '  --service-name=NAME                 Override service unit name'
+    log_info '  (See _lib/_common/base_vars.schema.json for all core LIBSCRIPT_* variables)'
   else
     log_info '  (jq is required to parse vars.schema.json for dynamic options)'
     log_info "  See $SCHEMA_FILE for available variables."
@@ -428,16 +401,9 @@ while [ $# -gt 0 ]; do
       export LIBSCRIPT_SERVICE_NAME="${1#*=}"
       shift
       ;;
-    --log-driver=*)
-      export LIBSCRIPT_LOG_DRIVER="${1#*=}"
-      shift
-      ;;
-    --log-host=*)
-      export LIBSCRIPT_LOG_HOST="${1#*=}"
-      shift
-      ;;
-    --log-port=*)
-      export LIBSCRIPT_LOG_PORT="${1#*=}"
+    --output-format=*|--format=*)
+      export LIBSCRIPT_OUTPUT_FORMAT="${1#*=}"
+      export FORMAT="${1#*=}"
       shift
       ;;
     --log-cmd=*)
@@ -574,7 +540,7 @@ elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then
   fi
 elif [ "$ACTION" = "env" ]; then
   INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"
-  libscript_print_env "${FORMAT:-${format:-sh}}" "$INSTALLED_DIR"
+  libscript_print_env "${LIBSCRIPT_OUTPUT_FORMAT:-${FORMAT:-${format:-sh}}}" "$INSTALLED_DIR"
   exit 0
 elif [ "$ACTION" = "run" ]; then
   INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/$PACKAGE_NAME/$VERSION}"

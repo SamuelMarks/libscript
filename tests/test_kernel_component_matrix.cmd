@@ -60,6 +60,15 @@ for %%K in (linux-glibc linux-musl freebsd illumos osv nanos) do (
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" build-image --kernel=unikraft --format=direct-kernel --components=redis --dry-run >nul || exit /b 1
 
+for %%R in (rtos-zephyr rtos-freertos) do (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" build-image --kernel=%%R --format=firmware-elf --components=sqlite,lua --dry-run >nul || exit /b 1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" build-image --kernel=%%R --format=firmware-elf --components=coremqtt,littlefs --dry-run >nul || exit /b 1
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" build-image --kernel=%%R --hybrid-pod --format=firmware-elf --components=mosquitto,postgres,sqlite --dry-run >nul || exit /b 1
+)
+
 echo [PASS] Kernel x Component x Format Matrix PASSED on Windows!
 exit /b 0
 

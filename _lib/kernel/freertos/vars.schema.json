@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/kernel/freertos/vars.schema.json",
+  "title": "freertos variables",
+  "description": "Configuration variables for freertos",
+  "type": "object",
+  "properties": {
+    "FREERTOS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install freertos. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "FREERTOS_VERSION": {
+      "description": "Specific version of freertos to install.",
+      "type": "string",
+      "default": "11.1.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "FREERTOS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading freertos binary or archive artifacts."
+    },
+    "FREERTOS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying freertos available remote releases."
+    },
+    "FREERTOS_PORT": {
+      "type": "string",
+      "description": "Target FreeRTOS port/BSP identifier (mps2_an385, riscv_virt, qemu_cortex_a53, posix_gcc, win32_sim).",
+      "default": "mps2_an385"
+    },
+    "FREERTOS_HEAP_IMPL": {
+      "type": "string",
+      "description": "FreeRTOS dynamic memory allocator scheme (heap_1, heap_2, heap_3, heap_4, heap_5, static_only).",
+      "default": "heap_4"
+    },
+    "FREERTOS_TICK_RATE_HZ": {
+      "type": "string",
+      "description": "FreeRTOS scheduler tick interrupt frequency in Hz (configTICK_RATE_HZ).",
+      "default": "1000"
+    },
+    "FREERTOS_TOTAL_HEAP_BYTES": {
+      "type": "string",
+      "description": "FreeRTOS heap pool capacity in bytes (configTOTAL_HEAP_SIZE).",
+      "default": "32768"
+    },
+    "FREERTOS_MAX_PRIORITIES": {
+      "type": "string",
+      "description": "Maximum number of preemptive FreeRTOS task priorities (configMAX_PRIORITIES).",
+      "default": "8"
+    },
+    "FREERTOS_MINIMAL_STACK_WORDS": {
+      "type": "string",
+      "description": "Minimal per-task stack depth in machine words (configMINIMAL_STACK_SIZE).",
+      "default": "128"
+    },
+    "FREERTOS_USE_PREEMPTION": {
+      "type": "string",
+      "description": "Enable preemptive scheduling (1) or cooperative scheduling (0).",
+      "default": "1"
+    },
+    "FREERTOS_USE_TICKLESS_IDLE": {
+      "type": "string",
+      "description": "Enable low-power tickless idle mode (configUSE_TICKLESS_IDLE).",
+      "default": "0"
+    },
+    "FREERTOS_NUMBER_OF_CORES": {
+      "type": "string",
+      "description": "SMP core count configured via configNUMBER_OF_CORES.",
+      "default": "1"
+    },
+    "FREERTOS_ENABLE_MPU": {
+      "type": "string",
+      "description": "Enable Memory Protection Unit wrappers (configENABLE_MPU).",
+      "default": "0"
+    },
+    "FREERTOS_COMPILER": {
+      "type": "string",
+      "description": "Compiler backend selector (default, gcc, clang, tcc, edgcpp, msvc, custom-cc).",
+      "default": "default"
+    },
+    "FREERTOS_COMPARE_COMPILERS": {
+      "type": "string",
+      "description": "Compilers evaluated by _lib/kernel/freertos/compare_compilers.{sh,cmd}.",
+      "default": "default gcc clang edgcpp custom-cc"
+    },
+    "FREERTOS_KERNEL_PATH": {
+      "type": "string",
+      "description": "Active FreeRTOS-Kernel source directory exported by env.{sh,cmd}.",
+      "default": ""
+    },
+    "FREERTOS_FETCH_FULL_SOURCE": {
+      "type": "string",
+      "description": "When set to 1, downloads and extracts the upstream FreeRTOS-Kernel release archive.",
+      "default": "0"
+    }
+  },
+  "x-libscript-var-packs": ["image_synth", "rtos"]
+}

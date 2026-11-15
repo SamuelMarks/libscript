@@ -77,5 +77,6 @@
       "type": "string",
       "description": "Override URL for querying valkey available remote releases."
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth"]
 }

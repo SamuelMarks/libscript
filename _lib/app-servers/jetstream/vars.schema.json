@@ -1,9 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/huggingface_hub/vars.schema.json",
-  "title": "jetstream variables",
-  "description": "Configuration variables for jetstream",
+  "$id": "/_lib/app-servers/jetstream/vars.schema.json",
+  "title": "JetStream TPU Serving Variables",
+  "description": "Configuration variables for Google Cloud TPU JetStream inference servers.",
   "type": "object",
+  "x-libscript-var-packs": ["tpu"],
   "properties": {
     "JETSTREAM_VERSION": {
       "description": "Specific version of jetstream to install. Can be a numeric version or an alias.",
@@ -16,6 +17,15 @@
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"
+    },
+    "JETSTREAM_IMAGE": {
+      "type": "string",
+      "description": "Container image URI used when serving JetStream TPU inference workloads.",
+      "default": "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-pytorch-tpu:latest"
+    },
+    "JETSTREAM_REMOTE_TPU_HOST": {
+      "type": "string",
+      "description": "Optional SSH host/alias of a Linux Cloud TPU VM to forward JetStream launch commands to when invoked from non-TPU hosts."
     },
     "LIBSCRIPT_LISTEN_PORT": {
       "type": ["string", "integer"],

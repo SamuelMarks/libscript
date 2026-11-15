@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "arm-none-eabi-gcc",
+  "title": "ARM Bare-Metal GNU Toolchain",
+  "description": "Bare-metal ARM Cortex-M/Cortex-R GNU embedded C/C++ cross-toolchain (arm-none-eabi-gcc, objcopy, gdb, newlib, picolibc).",
+  "category": "toolchains",
+  "provides": ["arm-none-eabi-gcc", "arm-none-eabi-objcopy"],
+  "os_whitelist": ["all"],
+  "repository": "https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain"
+}

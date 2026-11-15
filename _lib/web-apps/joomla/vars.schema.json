@@ -1,49 +1,49 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/joomla/vars.schema.json",
-  "title": "joomla vars",
-  "description": "Variables for joomla vars",
+  "title": "Joomla Variables",
+  "description": "Configuration variables for deploying and serving the Joomla CMS web application.",
   "type": "object",
   "properties": {
     "JOOMLA_VERSION": {
       "type": "string",
-      "description": "Variable JOOMLA_VERSION."
+      "description": "Target Joomla CMS release version or semantic alias (e.g., latest) to install."
     },
     "JOOMLA_DB_PASS": {
       "type": "string",
-      "description": "Variable JOOMLA_DB_PASS."
+      "description": "Database password used by Joomla to authenticate against its relational database."
     },
     "JOOMLA_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
+      "description": "PHP-FPM upstream FastCGI socket path or host:port endpoint serving Joomla requests."
     },
     "JOOMLA_LISTEN": {
       "type": "string",
-      "description": "Variable JOOMLA_LISTEN."
+      "description": "HTTP bind address:port or UNIX socket endpoint exposed by the Joomla web server."
     },
     "JOOMLA_DB_TYPE": {
       "type": "string",
-      "description": "Variable JOOMLA_DB_TYPE."
+      "description": "Database driver backend for Joomla (e.g., mysqli, pgsql, mysql)."
     },
     "JOOMLA_WEBSERVER": {
       "type": "string",
-      "description": "Variable JOOMLA_WEBSERVER."
+      "description": "Frontend web server component fronting Joomla (e.g., nginx, caddy, httpd)."
     },
     "JOOMLA_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem document root directory where Joomla source files are deployed."
     },
     "JOOMLA_DB_USER": {
       "type": "string",
-      "description": "Variable JOOMLA_DB_USER."
+      "description": "Database role or username granted ownership of the Joomla schema."
     },
     "JOOMLA_SERVER_NAME": {
       "type": "string",
-      "description": "Variable JOOMLA_SERVER_NAME."
+      "description": "Virtual host domain or server_name configured for Joomla HTTP/TLS routing."
     },
     "JOOMLA_DB_NAME": {
       "type": "string",
-      "description": "Variable JOOMLA_DB_NAME."
+      "description": "Relational database name provisioned for Joomla content and metadata."
     }
   }
 }

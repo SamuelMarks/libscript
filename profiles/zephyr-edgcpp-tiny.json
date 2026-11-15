@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zephyr-edgcpp-tiny",
+  "description": "Minimal Zephyr RTOS simulator appliance compiled with the EDG C/C++ Frontend (edgcpp) for multi-compiler differential verification.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "rtos-zephyr",
+    "libc": "picolibc",
+    "platform": "posix-sim"
+  },
+  "kernel": {
+    "provider": "zephyr-lts",
+    "version": "3.7.0",
+    "compiler": "edgcpp",
+    "config_method": "tinyconfig"
+  },
+  "init_system": {
+    "provider": "zephyr-sys-init"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "native_sim",
+    "kconfig_fragments": ["minimal_footprint.conf", "picolibc.conf"]
+  },
+  "output_formats": ["firmware-elf"],
+  "components": ["sqlite"]
+}

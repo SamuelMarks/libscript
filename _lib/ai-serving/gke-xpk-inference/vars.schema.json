@@ -40,5 +40,6 @@
       "description": "Inference server port exposed by the service",
       "default": "8000"
     }
-  }
+  },
+  "x-libscript-var-packs": ["tpu"]
 }

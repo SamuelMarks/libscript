@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/execution-plan-common.schema.json",
+  "title": "LibScript Execution Plan Shared Definitions",
+  "description": "Shared stage, task, and target schema definitions composed across LibScript execution-plan*.schema.json specifications.",
+  "$defs": {
+    "semver_string": {
+      "type": "string",
+      "description": "Semantic version identifier for the execution plan or profile specification (e.g., 1.0.0)."
+    },
+    "profile_identifier": {
+      "type": "string",
+      "description": "Unique lowercase profile or execution plan identifier."
+    },
+    "service_list": {
+      "type": "array",
+      "description": "Ordered list of system daemon or service identifiers enabled in the target image.",
+      "items": {
+        "type": "string",
+        "description": "Service unit or daemon name."
+      }
+    },
+    "stage_task": {
+      "type": "object",
+      "description": "Atomic component action executed within an execution plan stage.",
+      "required": ["component", "action"],
+      "properties": {
+        "component": {
+          "type": "string",
+          "description": "Target LibScript component identifier or category/component path."
+        },
+        "action": {
+          "type": "string",
+          "description": "Lifecycle verb invoked on the component (e.g., download, install, configure, start)."
+        },
+        "version": {
+          "type": "string",
+          "description": "Requested component version string or alias."
+        },
+        "env": {
+          "type": "object",
+          "description": "Key-value environment variable overrides scoped to this task execution.",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Environment variable string value."
+          }
+        }
+      }
+    }
+  }
+}

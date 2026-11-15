@@ -11,7 +11,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -58,7 +58,11 @@ IF NOT DEFINED LIBSCRIPT_BUILD_DIR (
     SET "LIBSCRIPT_BUILD_DIR=%TEMP%\libscript_build"
 )
 IF NOT DEFINED LIBSCRIPT_TARGET_SYSROOT (
-    SET "LIBSCRIPT_TARGET_SYSROOT=%LIBSCRIPT_BUILD_DIR%\sysroot"
+    IF DEFINED LIBSCRIPT_TARGET_ROOTFS (
+        SET "LIBSCRIPT_TARGET_SYSROOT=%LIBSCRIPT_TARGET_ROOTFS%"
+    ) ELSE (
+        SET "LIBSCRIPT_TARGET_SYSROOT=%LIBSCRIPT_BUILD_DIR%\sysroot"
+    )
 )
 IF NOT DEFINED LIBSCRIPT_HOST_ROOT (
     SET "LIBSCRIPT_HOST_ROOT=/tools"

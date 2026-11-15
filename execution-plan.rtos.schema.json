@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/execution-plan.rtos.schema.json",
+  "title": "LibScript RTOS & Embedded Firmware Execution Plan Schema",
+  "description": "Declarative execution plan schema codifying the solved build graph for Zephyr RTOS and FreeRTOS firmware, simulator binaries, Devicetree/Kconfig merges, MCUboot signing stages, and multi-node Renode/QEMU edge pods.",
+  "type": "object",
+  "required": ["plan_version", "profile_name", "execution_mode", "target", "stages"],
+  "properties": {
+    "plan_version": {
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/semver_string",
+      "default": "1.0.0",
+      "description": "Semantic version identifier of the RTOS execution plan format"
+    },
+    "profile_name": {
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/profile_identifier",
+      "description": "Identifier of the synthesized RTOS profile or appliance configuration"
+    },
+    "execution_mode": {
+      "type": "string",
+      "enum": ["rtos-firmware", "rtos-simulator", "multi-rtos-pod"],
+      "description": "Execution mode distinguishing standalone RTOS firmware, host simulator binaries, and multi-node edge/cloud simulation pods"
+    },
+    "target": {
+      "type": "object",
+      "required": ["arch", "libc", "os", "os_family"],
+      "description": "Resolved target hardware architecture, C runtime, RTOS kernel, and board specification",
+      "properties": {
+        "arch": {
+          "type": "string",
+          "enum": [
+            "x86_64",
+            "amd64",
+            "aarch64",
+            "arm64",
+            "riscv64",
+            "armv7l",
+            "i686",
+            "arm",
+            "armv7m",
+            "armv8m",
+            "riscv32",
+            "xtensa"
+          ],
+          "description": "Target CPU or MCU instruction set architecture"
+        },
+        "libc": {
+          "type": "string",
+          "enum": [
+            "picolibc",
+            "newlib",
+            "zephyr-minimal",
+            "freertos-none",
+            "nolibc",
+            "glibc",
+            "musl"
+          ],
+          "description": "Resolved C library or freestanding runtime selected for firmware linkage"
+        },
+        "os": {
+          "type": "string",
+          "enum": ["zephyr", "freertos"],
+          "description": "Canonical RTOS kernel target identifier"
+        },
+        "os_family": {
+          "type": "string",
+          "enum": ["rtos-zephyr", "rtos-freertos"],
+          "description": "Declarative OS family identifier from os-config.schema.json"
+        },
+        "board": {
+          "type": "string",
+          "description": "Target Zephyr board name or FreeRTOS BSP/simulator port"
+        },
+        "compiler": {
+          "type": "string",
+          "default": "default",
+          "description": "Selected C/C++ compiler backend (default, gcc, clang, tcc, edgcpp, msvc, custom-cc)"
+        }
+      }
+    },
+    "rtos_build": {
+      "type": "object",
+      "description": "Resolved RTOS configuration synthesis, heap allocation, and cryptographic signing parameters",
+      "properties": {
+        "dts_overlays": {
+          "type": "array",
+          "description": "Ordered Devicetree overlay files merged into the target board DTS",
+          "items": {
+            "type": "string",
+            "description": "Devicetree overlay path"
+          }
+        },
+        "kconfig_fragments": {
+          "type": "array",
+          "description": "Ordered Kconfig or FreeRTOSConfig.h override fragments",
+          "items": {
+            "type": "string",
+            "description": "Configuration fragment identifier or path"
+          }
+        },
+        "heap_implementation": {
+          "type": "string",
+          "enum": ["heap_1", "heap_2", "heap_3", "heap_4", "heap_5", "static_only"],
+          "description": "FreeRTOS heap allocator scheme or static-only allocation policy"
+        },
+        "mcuboot_signed": {
+          "type": "boolean",
+          "description": "Indicates whether stage3 signs the synthesized binary for MCUboot A/B slots"
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "description": "Ordered list of deterministic RTOS toolchain, static payload, firmware linkage, and signing stages",
+      "items": {
+        "type": "object",
+        "required": ["stage", "description", "tasks"],
+        "description": "Single build stage within the RTOS synthesis DAG",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "description": "Canonical stage identifier (e.g. stage0-rtos-sdk, stage2-target-sysroot, stage3-rtos-firmware, stage3-rtos-pod)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable explanation of the build stage"
+          },
+          "tasks": {
+            "type": "array",
+            "description": "Ordered atomic component execution tasks within this stage",
+            "items": {
+              "type": "object",
+              "required": ["name", "component", "action", "stamp"],
+              "description": "Atomic component build, configuration merge, or packaging task",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Unique task name within the execution plan"
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Relative repository path to the Tier 1 or Tier 2 LibScript component"
+                },
+                "action": {
+                  "type": "string",
+                  "enum": ["bootstrap", "compile", "assemble", "sign"],
+                  "description": "Lifecycle action verb executed for the component"
+                },
+                "stamp": {
+                  "type": "string",
+                  "description": "Idempotency completion stamp filename written atomically upon verification"
+                },
+                "variants": {
+                  "type": "array",
+                  "description": "Active variant flags enabled for this component task",
+                  "items": {
+                    "type": "string",
+                    "description": "Variant identifier"
+                  }
+                },
+                "env": {
+                  "type": "object",
+                  "description": "Scoped environment variables passed to the component task",
+                  "additionalProperties": {
+                    "type": "string",
+                    "description": "Environment variable string value"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

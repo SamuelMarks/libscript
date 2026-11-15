@@ -7,11 +7,11 @@
   "required": ["plan_version", "target", "stages"],
   "properties": {
     "plan_version": {
-      "type": "string",
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/semver_string",
       "description": "Semantic version of execution plan schema format"
     },
     "profile_name": {
-      "type": "string",
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/profile_identifier",
       "description": "Identifier of the originating profile configuration"
     },
     "target": {

@@ -12,7 +12,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -159,19 +159,22 @@ for %%Q in (ls-remote ls which env info search db-search list semver) do (
     if /i "%cmd%"=="%%Q" set "STACK="
 )
 
+set "_REST_ARGS="
+for /f "tokens=1* delims= " %%I in ("%*") do set "_REST_ARGS=%%J"
+
 :: Delegate commands to sub-scripts
 if /i "%cmd%"=="list" ( call "!SCRIPT_DIR!\cli\commands\core\list.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="search" ( call "!SCRIPT_DIR!\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="provision" ( call "!SCRIPT_DIR!\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deprovision" ( call "!SCRIPT_DIR!\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="rapid-experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="rapid-experiment" ( call "!SCRIPT_DIR!\cli\commands\cloud\experiment.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="backup" ( call "!SCRIPT_DIR!\cli\commands\cloud\backup.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="export-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\backup.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="restore" ( call "!SCRIPT_DIR!\cli\commands\cloud\restore.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="import-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\restore.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="netctl" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" !_REST_ARGS!
     exit /b !errorlevel!
 )
 if /i "%cmd%"=="deploy" ( call "!SCRIPT_DIR!\cli\commands\cloud\deploy.cmd" %* & exit /b !errorlevel! )
@@ -188,14 +191,15 @@ if /i "%cmd%"=="new-component" ( call "!SCRIPT_DIR!\cli\commands\scaffold\scaffo
 if /i "%cmd%"=="config" ( call "!SCRIPT_DIR!\cli\commands\config\config.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="repogen" ( call "!SCRIPT_DIR!\_lib\orchestration\repogen\repogen.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="distro" ( call "!SCRIPT_DIR!\_lib\orchestration\distro\distro.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="payload" ( call "!SCRIPT_DIR!\payloads\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="topology" ( call "!SCRIPT_DIR!\topologies\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="trait" ( call "!SCRIPT_DIR!\traits\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="cloud" ( call "!SCRIPT_DIR!\_lib\cloud\core\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="payload" ( call "!SCRIPT_DIR!\payloads\engine.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="topology" ( call "!SCRIPT_DIR!\topologies\engine.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="trait" ( call "!SCRIPT_DIR!\traits\engine.cmd" !_REST_ARGS! & exit /b !errorlevel! )
+if /i "%cmd%"=="cloud" ( call "!SCRIPT_DIR!\_lib\cloud\core\cli.cmd" !_REST_ARGS! & exit /b !errorlevel! )
 if /i "%cmd%"=="train" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="infer" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="serve-ml" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="eval-ml" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="benchmark-ml" ( call "!SCRIPT_DIR!\cli\commands\ml\actions.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="env" (
     if /i "%~2"=="--manifest" (
         set "_env_manifest=%~3"
@@ -465,6 +469,7 @@ echo   provision ^<provider^> ...                  Provision a cloud environment
 echo   deprovision ^<provider^> ...                Deprovision a cloud environment
 echo   deploy [repo_or_path] ...                 Git-driven application and cloud deployment workflow
 echo   deploy-remote ^<user@host^>                 Idempotently deploy multiple apps to a remote host
+echo   benchmark-ml [options...]                 Run TFRC zero-cost or local multi-backend ML benchmarks
 echo   remove ^<package_name^> [version]
 echo   uninstall ^<package_name^> [version]
 echo   install-service ^<package_name^> ^<version^>

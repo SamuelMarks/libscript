@@ -431,9 +431,18 @@ function Audit-File {
         }
     }
 
-    # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/)
+    # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/) and RTOS kernel recipes
     $normPath = $FilePath.Replace([char]92, [char]47)
-    if ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers|kernel|bootloaders)/') {
+    if ($normPath -match '^_lib/kernel/(zephyr|freertos)/.+\.sh$') {
+        $boundaryMatch = Select-String -Path $FilePath -Pattern '^\s*(sudo\s+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)\s' -Quiet
+        if ($boundaryMatch) {
+            Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "RTOS kernel recipe directly invokes host mount/partition primitive."
+        }
+        $venvLeakMatch = Select-String -Path $FilePath -Pattern 'python3?\s+-m\s+venv\s+(/tmp|~/|\$HOME/|\./\.venv)' -Quiet
+        if ($venvLeakMatch) {
+            Log-Violation -File $FilePath -Rule "RTOS_VENV_LEAK" -Details "RTOS kernel recipe creates Python venv outside LIBSCRIPT_HOME."
+        }
+    } elseif ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers|kernel|bootloaders)/') {
         $boundaryMatch = Select-String -Path $FilePath -Pattern '^\s*(sudo\s+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)\s' -Quiet
         if ($boundaryMatch) {
             Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "Tier 1 leaf recipe directly invokes kernel/storage primitive."

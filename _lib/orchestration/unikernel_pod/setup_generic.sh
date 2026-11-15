@@ -35,7 +35,7 @@ case "$ACTION" in
 esac
 
 FRAMEWORK="${LIBSCRIPT_UNIKERNEL_FRAMEWORK:-unikraft}"
-DAEMONS_CSV="${LIBSCRIPT_POD_DAEMONS:-redis}"
+DAEMONS_CSV="${UNIKERNEL_POD_DAEMONS:-${LIBSCRIPT_POD_DAEMONS:-redis}}"
 VMM="${UNIKERNEL_POD_VMM:-qemu}"
 SUBNET_PREFIX="${UNIKERNEL_POD_SUBNET:-172.30.0}"
 
@@ -105,7 +105,15 @@ for _comp in $DAEMONS_CSV; do
   done
 
   if [ ! -s "${_app_dir}/images/${_comp}.${FRAMEWORK}.img" ]; then
-    STACK='' LIBSCRIPT_UNIKERNEL_FRAMEWORK="$FRAMEWORK" "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --framework="$FRAMEWORK" --vmm="$VMM" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
+    if [ "$FRAMEWORK" = "zephyr" ] || [ "$FRAMEWORK" = "freertos" ]; then
+      if [ "$_comp" = "mosquitto" ] || [ "$_comp" = "redis" ] || [ "$_comp" = "postgres" ]; then
+        STACK='' LIBSCRIPT_UNIKERNEL_FRAMEWORK='unikraft' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --framework='unikraft' --vmm="$VMM" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
+      else
+        STACK='' LIBSCRIPT_TARGET_OS="$FRAMEWORK" "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/firmware.sh" --format=firmware-elf --kernel="$FRAMEWORK" --board="${LIBSCRIPT_RTOS_BOARD:-qemu_x86_64}" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
+      fi
+    else
+      STACK='' LIBSCRIPT_UNIKERNEL_FRAMEWORK="$FRAMEWORK" "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" --framework="$FRAMEWORK" --vmm="$VMM" "${_app_dir}/rootfs" "${_app_dir}/images/${_comp}.${FRAMEWORK}.img"
+    fi
   fi
 
   if [ "$FIRST_ITEM" -eq 1 ]; then

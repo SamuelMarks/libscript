@@ -4,6 +4,7 @@
   "title": "unikernel_pod variables",
   "description": "Configuration variables for unikernel_pod",
   "type": "object",
+  "x-libscript-var-packs": ["image_synth", "rtos"],
   "properties": {
     "UNIKERNEL_POD_INSTALL_METHOD": {
       "type": "string",
@@ -38,6 +39,11 @@
     "UNIKERNEL_POD_OUT_DIR": {
       "type": "string",
       "description": "Output directory where decomposed unikernel appliance images and launch scripts are written."
+    },
+    "UNIKERNEL_POD_DAEMONS": {
+      "type": "string",
+      "description": "Comma-separated daemon component names decomposed into isolated single-process unikernel appliances.",
+      "deprecated_aliases": ["LIBSCRIPT_POD_DAEMONS"]
     }
   }
 }

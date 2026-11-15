@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/vars/rtos.schema.json",
+  "title": "LibScript Embedded & RTOS Synthesis Variables",
+  "description": "Domain-scoped configuration variables for Zephyr, FreeRTOS, MCUboot signing, and hardware/emulator firmware runners.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_RTOS_BOARD": {
+      "type": "string",
+      "description": "Target Zephyr board or FreeRTOS BSP/simulator port identifier (e.g., qemu_x86_64, qemu_cortex_m3, qemu_riscv64, mps2_an385, riscv_virt, posix_gcc, win32_sim)."
+    },
+    "LIBSCRIPT_RTOS_HYBRID_POD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enabling hybrid multi-node cloud/unikernel + RTOS edge pod decomposition when multi-process services accompany RTOS targets."
+    },
+    "LIBSCRIPT_RTOS_MCUBOOT": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enabling MCUboot slot offset compilation and cryptographic imgtool firmware signing."
+    },
+    "LIBSCRIPT_RTOS_RUNNER": {
+      "type": "string",
+      "enum": ["qemu", "renode", "openocd"],
+      "default": "qemu",
+      "description": "Target runner selected by payloads/schedulers/rtos_firmware.{sh,cmd} (qemu, renode, or openocd)."
+    }
+  }
+}

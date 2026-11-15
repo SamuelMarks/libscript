@@ -17,5 +17,6 @@
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"
     }
-  }
+  },
+  "x-libscript-var-packs": ["tpu"]
 }

@@ -27,5 +27,7 @@
     "logical": [],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/metrics"
-  }
+  },
+  "rtos_support": ["zephyr", "freertos"],
+  "memory_footprint_class": "mcu-sram-64k"
 }

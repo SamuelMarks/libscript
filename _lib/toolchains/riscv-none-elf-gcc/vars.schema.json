@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/riscv-none-elf-gcc/vars.schema.json",
+  "title": "riscv-none-elf-gcc variables",
+  "description": "Configuration variables for riscv-none-elf-gcc",
+  "type": "object",
+  "properties": {
+    "RISCV_NONE_ELF_GCC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install riscv-none-elf-gcc. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "RISCV_NONE_ELF_GCC_VERSION": {
+      "description": "Specific version of riscv-none-elf-gcc to install.",
+      "type": "string",
+      "default": "13.2.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "RISCV_NONE_ELF_GCC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading riscv-none-elf-gcc binary or archive artifacts."
+    },
+    "RISCV_NONE_ELF_GCC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying riscv-none-elf-gcc available remote releases."
+    }
+  }
+}

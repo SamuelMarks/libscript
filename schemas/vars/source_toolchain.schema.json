@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/vars/source_toolchain.schema.json",
+  "title": "LibScript Source Compilation & Hardware Auto-Tuning Variables",
+  "description": "Domain-scoped configuration variables for selecting custom C/C++ compilers, passing extra compiler/linker flags, and overriding hardware auto-tuning knobs.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_BUILD_TOOLCHAIN": {
+      "description": "Toolchain selector used when building components from source ('default' uses the platform default C/C++ compiler via _lib/languages/c, whereas 'gcc', 'clang', 'tcc', 'custom-cc', or an explicit binary path compiles the component with that specific toolchain).",
+      "type": "string",
+      "default": "default"
+    },
+    "LIBSCRIPT_CUSTOM_CC_BIN": {
+      "description": "Optional filesystem path to a custom C compiler binary when LIBSCRIPT_BUILD_TOOLCHAIN='custom-cc'.",
+      "type": "string"
+    },
+    "LIBSCRIPT_BUILD_CFLAGS": {
+      "description": "Extra CFLAGS passed to source builds for components compiling native C/C++ sources.",
+      "type": "string"
+    },
+    "LIBSCRIPT_BUILD_LDFLAGS": {
+      "description": "Extra LDFLAGS passed to source builds for components compiling native C/C++ sources.",
+      "type": "string"
+    },
+    "LIBSCRIPT_SOURCE_WORKDIR": {
+      "type": "string",
+      "description": "Working directory used for extracting and compiling source tarballs."
+    },
+    "LIBSCRIPT_HW_CORES": {
+      "type": "string",
+      "description": "Detected or overridden CPU core count for auto-tuning services and parallel builds."
+    },
+    "LIBSCRIPT_HW_MEM_MB": {
+      "type": "string",
+      "description": "Detected or overridden system memory in MiB for auto-tuning service buffer pools."
+    },
+    "LIBSCRIPT_HW_NVME": {
+      "type": "string",
+      "description": "Detected or overridden NVMe storage presence flag for I/O scheduler and database tuning."
+    },
+    "LIBSCRIPT_HW_SIMD": {
+      "type": "string",
+      "description": "Detected or overridden CPU SIMD instruction set capabilities (e.g., avx2, avx512, neon)."
+    }
+  }
+}

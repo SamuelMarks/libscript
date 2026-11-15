@@ -4,10 +4,12 @@
   "title": "Azure Cloud Provider",
   "description": "Azure Cloud Provider management tools",
   "type": "object",
+  "x-libscript-var-packs": ["cloud_tags"],
   "properties": {
     "AZURE_RESOURCE_GROUP": {
       "type": "string",
-      "description": "Azure Resource Group"
+      "description": "Default Azure Resource Group name for cloud provisioning operations.",
+      "deprecated_aliases": ["LIBSCRIPT_AZURE_RESOURCE_GROUP"]
     },
     "AZURE_LOCATION": {
       "type": "string",
@@ -22,7 +24,7 @@
     },
     "AZURE_CONTAINER": {
       "type": "string",
-      "description": "Configuration variable AZURE_CONTAINER for azure."
+      "description": "Azure Blob Storage container name used for cloud artifact transfers."
     },
     "AZURE_DOWNLOAD_URL": {
       "type": "string",
@@ -30,7 +32,7 @@
     },
     "AZURE_IMAGE_NAME": {
       "type": "string",
-      "description": "Configuration variable AZURE_IMAGE_NAME for azure."
+      "description": "Azure VM image URN or gallery image identifier used when provisioning compute instances."
     },
     "AZURE_RELEASES_URL": {
       "type": "string",
@@ -38,7 +40,7 @@
     },
     "AZURE_STORAGE_ACCOUNT": {
       "type": "string",
-      "description": "Configuration variable AZURE_STORAGE_ACCOUNT for azure."
+      "description": "Azure Storage Account name associated with cloud state or blob artifacts."
     },
     "AZURE_VERSION": {
       "type": "string",

@@ -804,9 +804,19 @@ audit_single_file() {
       ;;
   esac
 
-  # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/)
+  # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/) and RTOS kernel recipes
   case "$file" in
-    _lib/orchestration/*|_lib/storage/*|_lib/_common/*|_lib/cloud/*|_lib/cloud-providers/*|_lib/kernel/*|_lib/bootloaders/*)
+    _lib/kernel/zephyr/*.sh|_lib/kernel/freertos/*.sh)
+      boundary_hits=$(grep -nE '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$file" 2>/dev/null || true)
+      if [ -n "$boundary_hits" ]; then
+        log_failure "$file" "RECIPE_BOUNDARY" "RTOS kernel recipe directly invokes host mount/partition primitive: $boundary_hits"
+      fi
+      venv_leak_hits=$(grep -nE 'python3?[[:space:]]+-m[[:space:]]+venv[[:space:]]+(/tmp|~/|[$]HOME/|\./\.venv)' "$file" 2>/dev/null || true)
+      if [ -n "$venv_leak_hits" ]; then
+        log_failure "$file" "RTOS_VENV_LEAK" "RTOS kernel recipe creates Python venv outside LIBSCRIPT_HOME: $venv_leak_hits"
+      fi
+      ;;
+    _lib/orchestration/*|_lib/storage/*|_lib/_common/*|_lib/*/_common/*|_lib/cloud/*|_lib/cloud-providers/*|_lib/kernel/*|_lib/bootloaders/*)
       ;;
     _lib/*/*/*.sh)
       boundary_hits=$(grep -nE '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$file" 2>/dev/null || true)
@@ -835,9 +845,9 @@ audit_single_file() {
       ;;
   esac
 
-  # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, _lib/orchestration/, _lib/init-systems/, _lib/databases/, _lib/cloud/core/, cli/)
+  # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, _lib/*/_common/, _lib/orchestration/, _lib/init-systems/, _lib/databases/, _lib/cloud/core/, cli/)
   case "$file" in
-    _lib/_common/*.sh|_lib/orchestration/*.sh|_lib/init-systems/*.sh|_lib/databases/*.sh|_lib/cloud/core/*.sh|cli/*.sh)
+    _lib/_common/*.sh|_lib/*/_common/*.sh|_lib/orchestration/*.sh|_lib/init-systems/*.sh|_lib/databases/*.sh|_lib/cloud/core/*.sh|cli/*.sh)
       interp_hits=$(grep -nE '(^[[:space:]]*|\$\()(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]|libscript-allow-interp' "$file" 2>/dev/null || true)
       if [ -n "$interp_hits" ]; then
         log_failure "$file" "ZERO_DEP_SUBSTRATE" "Core orchestration script invokes external interpreter inline: $interp_hits"

@@ -1,10 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud/volume/vars.schema.json",
+  "title": "Cloud Volume variables",
+  "description": "Configuration variables for Cloud Volume",
   "type": "object",
+  "x-libscript-var-packs": ["cloud_tags"],
   "properties": {
     "LIBSCRIPT_CLOUD": {
       "type": "string",
       "description": "Cloud provider (aws, gcp, azure)."
+    },
+    "LIBSCRIPT_VOLUME_NAME": {
+      "type": "string",
+      "description": "Logical storage volume name for persistent data mounts."
     },
     "LIBSCRIPT_VOLUME_SIZE": {
       "type": "integer",
@@ -29,8 +37,10 @@
     "LIBSCRIPT_VOLUME_ID": {
       "type": "string",
       "description": "Volume ID for operations like delete, attach, detach."
+    },
+    "LIBSCRIPT_AZURE_RESOURCE_GROUP": {
+      "type": "string",
+      "description": "Azure Resource Group hosting managed disks when LIBSCRIPT_CLOUD='azure'."
     }
-  },
-  "title": "Cloud Volume variables",
-  "description": "Configuration variables for Cloud Volume"
+  }
 }

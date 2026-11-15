@@ -51,5 +51,6 @@
       "description": "Optional Hugging Face authentication token injected into the workload.",
       "type": "string"
     }
-  }
+  },
+  "x-libscript-var-packs": ["tfrc", "tpu"]
 }

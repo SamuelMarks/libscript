@@ -14,57 +14,16 @@ Execute this script to install and configure jetstream on the local system.
 
 $ErrorActionPreference = "Stop"
 
+$Action = if ($env:ACTION) { $env:ACTION } elseif ($args.Count -gt 0 -and $args[0] -notlike "-*") { $args[0] } else { "install" }
+$CompVersion = if ($env:JETSTREAM_VERSION) { $env:JETSTREAM_VERSION } elseif ($env:VERSION) { $env:VERSION } else { "latest" }
+$InstallMethod = if ($env:JETSTREAM_INSTALL_METHOD) { $env:JETSTREAM_INSTALL_METHOD } elseif ($env:LIBSCRIPT_DEFAULT_INSTALL_METHOD) { $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD } elseif ($env:LIBSCRIPT_GLOBAL_INSTALL_METHOD) { $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD } else { "libscript_native" }
+$LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
+$LibscriptHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $HOME ".libscript" }
+$DownloadDir = if ($env:LIBSCRIPT_DOWNLOAD_DIR) { $env:LIBSCRIPT_DOWNLOAD_DIR } elseif ($env:DOWNLOAD_DIR) { $env:DOWNLOAD_DIR } else { Join-Path $LibscriptRootDir "cache\downloads" }
+
 $Prefix = $env:PREFIX
 if ([string]::IsNullOrEmpty($Prefix)) {
-    $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-    $Prefix = "$LibscriptRootDir\installed\jetstream"
-}
-
-$BinDir = "$Prefix\bin"
-if (-not (Test-Path -Path $BinDir)) {
-    New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
-}
-
-$ExePath = "$BinDir\jetstream-serve.cmd"
-
-if (-not (Test-Path -Path $ExePath)) {
-    Write-Host "Setting up JetStream wrapper at $Prefix ..."
-    
-    if (-not (Get-Command "docker" -ErrorAction SilentlyContinue)) {
-        Write-Host "Docker not found. Please install Docker."
-        exit 1
-    }
-
-    $CmdContent = @"
-@echo off
-setlocal
-set "MODEL=%~1"
-if "%MODEL%"=="" set "MODEL=your-org/your-model-name"
-
-set "MODEL_DIR=%MODEL_DIR%"
-if "%MODEL_DIR%"=="" set "MODEL_DIR=%USERPROFILE%\.cache\models"
-if not exist "%MODEL_DIR%" mkdir "%MODEL_DIR%"
-
-set "JETSTREAM_IMAGE=%JETSTREAM_IMAGE%"
-if "%JETSTREAM_IMAGE%"=="" set "JETSTREAM_IMAGE=us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-pytorch-tpu:latest"
-
-shift
-set "REST_ARGS="
-:loop
-if "%~1"=="" goto run
-set "REST_ARGS=%REST_ARGS% %1"
-shift
-goto loop
-
-:run
-echo Launching JetStream for %MODEL%...
-docker run --rm -it --privileged --network host -v /dev:/dev -v "%MODEL_DIR%:/models" "%JETSTREAM_IMAGE%" --model_id "%MODEL%" --model_path "/models/%MODEL%" %REST_ARGS%
-"@
-    Set-Content -Path $ExePath -Value $CmdContent
-
-    Write-Host "JetStream wrapper installed to $ExePath"
-} else {
-    Write-Host "JetStream wrapper already installed at $ExePath"
+    $Prefix = Join-Path (Join-Path $LibscriptHome "jetstream") $CompVersion
 }
 
 if ($Action -eq "ls") {
@@ -75,7 +34,7 @@ if ($Action -eq "ls") {
 }
 
 if ($Action -eq "ls-remote") {
-    Write-Output "ls-remote not fully implemented natively yet."
+    Write-Output "latest"
     exit 0
 }
 
@@ -87,7 +46,7 @@ if ($Action -eq "use") {
 
 if ($Action -eq "download") {
     if ($InstallMethod -eq "libscript_native") {
-        Write-Output "Downloading jetstream to $DownloadDir\jetstream..."
+        Write-Output "Downloading jetstream metadata to $DownloadDir\jetstream..."
     }
     exit 0
 }
@@ -149,11 +108,37 @@ if ($Action -eq "uninstall-service") {
 if ($Action -eq "uninstall") {
     if ($InstallMethod -eq "libscript_native") {
         Write-Output "Uninstalling jetstream $CompVersion..."
-        if (-not $LibscriptHome) { $LibscriptHome = Join-Path $HOME ".libscript" }
         $TargetDir = Join-Path (Join-Path $LibscriptHome "jetstream") $CompVersion
         if (Test-Path $TargetDir) { Remove-Item -Recurse -Force $TargetDir }
     } else {
         Write-Output "Uninstall not natively implemented for `$InstallMethod."
     }
     exit 0
+}
+
+$BinDir = "$Prefix\bin"
+if (-not (Test-Path -Path $BinDir)) {
+    New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
+}
+
+$ExePath = "$BinDir\jetstream-serve.cmd"
+
+if (-not (Test-Path -Path $ExePath)) {
+    Write-Host "Setting up JetStream remote TPU launcher at $Prefix ..."
+    $CmdContent = @"
+@echo off
+setlocal
+if "%JETSTREAM_REMOTE_TPU_HOST%"=="" (
+    echo [ERROR] Cloud TPU JetStream requires a Linux Cloud TPU VM ^(local Windows hosts have no /dev/accel TPU device^). 1>&2
+    echo [ERROR] Provision a TPU VM via libscript.cmd gcp-tpu-vm or set JETSTREAM_REMOTE_TPU_HOST. 1>&2
+    exit /b 86
+)
+echo Forwarding JetStream launch to remote TPU host %JETSTREAM_REMOTE_TPU_HOST%...
+ssh "%JETSTREAM_REMOTE_TPU_HOST%" "jetstream-serve %*"
+exit /b %ERRORLEVEL%
+"@
+    Set-Content -Path $ExePath -Value $CmdContent
+    Write-Host "JetStream launcher installed to $ExePath"
+} else {
+    Write-Host "JetStream launcher already installed at $ExePath"
 }

@@ -63,11 +63,26 @@ if "%TPU_NAME%"=="" set "TPU_NAME=ml-eval-node"
 if "%ML_SCRIPT%"=="" set "ML_SCRIPT=%TRAIN_CMD%"
 if "%ML_SCRIPT%"=="" set "ML_SCRIPT=%TRAIN_SCRIPT%"
 if "%ML_SCRIPT%"=="" set "ML_SCRIPT=python train.py"
+if "%TFRC_STRICT%"=="1" set "_ML_TFRC=1"
+if "%LIBSCRIPT_TFRC_STRICT%"=="1" set "_ML_TFRC=1"
+if not "%TFRC_CONFIG%"=="" set "_ML_TFRC=1"
+if not "%LIBSCRIPT_TFRC_CONFIG%"=="" set "_ML_TFRC=1"
+if "!_ML_TFRC!"=="1" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
+    if errorlevel 1 exit /b !errorlevel!
+    if not "!BUCKET_NAME!!GCS_BUCKET!"=="" (
+        set "_CAND_BKT=!BUCKET_NAME!"
+        if "!_CAND_BKT!"=="" set "_CAND_BKT=!GCS_BUCKET!"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "!_CAND_BKT!" "%TPU_ZONE%"
+        if errorlevel 1 exit /b !errorlevel!
+    )
+) else (
+    if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=%DISK_SIZE_GB%"
+    if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=200"
+    if "%DISK_NAME%"=="" set "DISK_NAME=%TPU_NAME%-data"
+)
 if "%BUCKET_NAME%"=="" set "BUCKET_NAME=%GCS_BUCKET%"
 if /i "!BUCKET_NAME:~0,5!"=="gs://" set "BUCKET_NAME=!BUCKET_NAME:~5!"
-if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=%DISK_SIZE_GB%"
-if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=200"
-if "%DISK_NAME%"=="" set "DISK_NAME=%TPU_NAME%-data"
 if "%APP_DIR%"=="" set "APP_DIR=%REPO_DIR%"
 if "!APP_DIR!"=="" (
     if exist ".\libscript.json" set "APP_DIR=%CD%"

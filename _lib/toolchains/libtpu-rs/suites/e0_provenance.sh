@@ -25,7 +25,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-for _s_lib in '_lib/_common/experiment_harness.sh' '_lib/runtimes/libtpu/env.sh' '_lib/utilities/tokei/env.sh'; do
+for _s_lib in '_lib/toolchains/_common/experiment_harness.sh' '_lib/runtimes/libtpu/env.sh' '_lib/utilities/tokei/env.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_s_lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

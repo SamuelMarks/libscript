@@ -42,7 +42,7 @@ set "HOST_ARCH=%~3"
 if "!HOST_ARCH!"=="" set "HOST_ARCH=windows_x64"
 if not exist "!RESULTS_DIR!" mkdir "!RESULTS_DIR!"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\hw_tune.cmd" :libscript_emit_hw_manifest_json "!RESULTS_DIR!\e0_env_!HOST_ARCH!.json"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_capture_provenance "!REPO_DIR!" "!RESULTS_DIR!\.e0_prov.json" "e0_provenance" "e0_env_!HOST_ARCH!.json"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_capture_provenance "!REPO_DIR!" "!RESULTS_DIR!\.e0_prov.json" "e0_provenance" "e0_env_!HOST_ARCH!.json"
 set "_SHA=1111111111111111111111111111111111111111"
 for /f "tokens=2 delims=:," %%H in ('findstr /I /C:"git_commit_sha" "!RESULTS_DIR!\.e0_prov.json"') do (
     set "_TMPH=%%~H"

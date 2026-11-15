@@ -1,49 +1,49 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/phpbb/vars.schema.json",
-  "title": "phpbb vars",
-  "description": "Variables for phpbb vars",
+  "title": "phpBB Variables",
+  "description": "Configuration variables for deploying and serving the phpBB forum web application.",
   "type": "object",
   "properties": {
     "PHPBB_LISTEN": {
       "type": "string",
-      "description": "Variable PHPBB_LISTEN."
+      "description": "HTTP bind address:port or UNIX socket endpoint configured for phpBB."
     },
     "PHPBB_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
+      "description": "PHP-FPM FastCGI upstream socket or host:port endpoint executing phpBB scripts."
     },
     "PHPBB_SERVER_NAME": {
       "type": "string",
-      "description": "Variable PHPBB_SERVER_NAME."
+      "description": "Virtual host domain or hostname serving the phpBB forum."
     },
     "PHPBB_WEBSERVER": {
       "type": "string",
-      "description": "Variable PHPBB_WEBSERVER."
+      "description": "Frontend web server component fronting phpBB (e.g., nginx, caddy, httpd)."
     },
     "PHPBB_VERSION": {
       "type": "string",
-      "description": "Variable PHPBB_VERSION."
+      "description": "Target phpBB release version or alias (e.g., latest) to install."
     },
     "PHPBB_DB_PASS": {
       "type": "string",
-      "description": "Variable PHPBB_DB_PASS."
+      "description": "Database password authenticating the phpBB database account."
     },
     "PHPBB_DB_TYPE": {
       "type": "string",
-      "description": "Variable PHPBB_DB_TYPE."
+      "description": "Database driver backend for phpBB (e.g., postgres, mysql, mariadb, sqlite3)."
     },
     "PHPBB_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem document root directory containing the unpacked phpBB installation."
     },
     "PHPBB_DB_NAME": {
       "type": "string",
-      "description": "Variable PHPBB_DB_NAME."
+      "description": "Database name storing phpBB forum topics, users, and configuration."
     },
     "PHPBB_DB_USER": {
       "type": "string",
-      "description": "Variable PHPBB_DB_USER."
+      "description": "Database username used by phpBB to connect to its database."
     }
   }
 }

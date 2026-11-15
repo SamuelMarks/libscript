@@ -41,7 +41,7 @@ set "RESULTS_DIR=%~2"
 set "HOST_ARCH=%~3"
 if "!HOST_ARCH!"=="" set "HOST_ARCH=windows_x64"
 if not exist "!RESULTS_DIR!" mkdir "!RESULTS_DIR!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_capture_provenance "!REPO_DIR!" "!RESULTS_DIR!\.e5_prov.json" "e5_memory_studies" "e0_env_!HOST_ARCH!.json"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_capture_provenance "!REPO_DIR!" "!RESULTS_DIR!\.e5_prov.json" "e5_memory_studies" "e0_env_!HOST_ARCH!.json"
 set "_SHA=1111111111111111111111111111111111111111"
 for /f "tokens=2 delims=:," %%H in ('findstr /I /C:"git_commit_sha" "!RESULTS_DIR!\.e5_prov.json"') do (
     set "_TMPH=%%~H"

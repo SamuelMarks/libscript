@@ -20,9 +20,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -126,6 +126,18 @@ case "$KERNEL_KIND" in
     if [ ! -s "$INITRD_ARTIFACT" ]; then
       printf 'LibScript Unikernel Initrd Volume\n' > "$INITRD_ARTIFACT"
     fi
+    ;;
+  zephyr*|rtos-zephyr)
+    CMDLINE='console=ttyS0'
+    LIBSCRIPT_TARGET_OS='zephyr' STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/setup.sh" install "$TARGET_SYSROOT" >/dev/null 2>&1 || true
+    cp -f "${TARGET_SYSROOT}/boot/zephyr.elf" "$KERNEL_ARTIFACT"
+    cp -f "${TARGET_SYSROOT}/boot/zephyr.dts" "$INITRD_ARTIFACT" 2>/dev/null || printf 'Zephyr Direct-Boot DTS\n' > "$INITRD_ARTIFACT"
+    ;;
+  freertos*|rtos-freertos)
+    CMDLINE='console=ttyS0'
+    LIBSCRIPT_TARGET_OS='freertos' STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/setup.sh" install "$TARGET_SYSROOT" >/dev/null 2>&1 || true
+    cp -f "${TARGET_SYSROOT}/boot/freertos.elf" "$KERNEL_ARTIFACT"
+    cp -f "${TARGET_SYSROOT}/boot/FreeRTOSConfig.h" "$INITRD_ARTIFACT" 2>/dev/null || printf 'FreeRTOS Direct-Boot Config\n' > "$INITRD_ARTIFACT"
     ;;
   *)
     STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/kernel/setup.sh" install "$TARGET_SYSROOT" >/dev/null 2>&1 || true

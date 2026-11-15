@@ -28,5 +28,6 @@
     }
   },
   "title": "Cloud CDN variables",
-  "description": "Configuration variables for Cloud CDN"
+  "description": "Configuration variables for Cloud CDN",
+  "x-libscript-var-packs": ["cloud_tags"]
 }

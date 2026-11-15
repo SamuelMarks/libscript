@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/tfrc-policy.schema.json",
+  "title": "LibScript TFRC Zero-Cost Policy Schema",
+  "description": "Explicit user-supplied TPU Research Cloud (TFRC) quota and zero-cost guardrail policy required before any Cloud TPU provisioning.",
+  "type": "object",
+  "required": ["schema_version", "gcp_project_id", "strict_zero_cost", "grants"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema URI referencing schemas/tfrc-policy.schema.json."
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version tag for the TFRC policy contract (must be '1.0')."
+    },
+    "gcp_project_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exact Google Cloud Project ID approved for the TFRC research grant."
+    },
+    "strict_zero_cost": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enforces $0.00 non-TFRC GCP spend by blocking GKE, Persistent Disks, static IPs, Artifact Registry, and cross-region GCS."
+    },
+    "forbid_gke": {
+      "type": "boolean",
+      "default": true,
+      "description": "Blocks GKE cluster and XPK CPU node-pool creation (which incur non-TFRC charges)."
+    },
+    "forbid_persistent_disks": {
+      "type": "boolean",
+      "default": true,
+      "description": "Blocks extra Compute Engine Persistent Disk creation and strips DISK_SIZE_GB / TPU_DATA_DISK_SIZE."
+    },
+    "forbid_external_static_ip": {
+      "type": "boolean",
+      "default": true,
+      "description": "Blocks reservation of billable static external IP addresses."
+    },
+    "forbid_artifact_registry": {
+      "type": "boolean",
+      "default": true,
+      "description": "Blocks pushing container images to billable Artifact Registry repositories."
+    },
+    "storage_mode": {
+      "type": "string",
+      "enum": ["ssh", "same_region_gcs"],
+      "default": "ssh",
+      "description": "Default artifact/code sync mode ('ssh' zero-bucket stream, or 'same_region_gcs' verified regional bucket)."
+    },
+    "allowed_gcs_buckets": {
+      "type": "array",
+      "description": "Optional allowlist of gs:// bucket URIs permitted when storage_mode is 'same_region_gcs'.",
+      "items": {
+        "type": "string",
+        "pattern": "^gs://[a-z0-9][a-z0-9._-]*$",
+        "description": "Allowlisted Google Cloud Storage gs:// bucket URI."
+      }
+    },
+    "max_ttl_minutes": {
+      "type": "integer",
+      "minimum": 15,
+      "maximum": 1440,
+      "default": 180,
+      "description": "Maximum time-to-live in minutes armed via the remote TPU VM dead-man's switch timer."
+    },
+    "shm_min_free_gb": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 32,
+      "description": "Minimum free /dev/shm host RAM tmpfs space in GiB before evicting completed backend virtualenvs."
+    },
+    "grants": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Non-empty list of TFRC zone, SKU, scheduling tier, and capacity grants.",
+      "items": {
+        "type": "object",
+        "description": "Single regional/zonal TFRC grant specification.",
+        "required": [
+          "zone",
+          "accelerator_types",
+          "scheduling_tiers",
+          "max_chips",
+          "max_concurrent_nodes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "zone": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Approved Google Cloud zone for TFRC TPU VMs (e.g., 'us-central2-b', 'us-central1-a', 'europe-west4-a')."
+          },
+          "accelerator_types": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Approved TPU accelerator topologies in this zone (e.g., 'v4-8', 'v4-32', 'v5litepod-8', 'v6e-8').",
+            "items": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Approved TPU accelerator type identifier."
+            }
+          },
+          "scheduling_tiers": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Approved scheduling tiers for this grant ('spot', 'preemptible', or 'on-demand').",
+            "items": {
+              "type": "string",
+              "enum": ["spot", "preemptible", "on-demand"],
+              "description": "Approved TPU VM scheduling tier."
+            }
+          },
+          "max_chips": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum total TPU chips permitted by this grant across single-host or multi-host slices."
+          },
+          "max_hosts": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Maximum TPU VM worker hosts permitted in a multi-host pod slice."
+          },
+          "max_concurrent_nodes": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Maximum concurrent TPU VM nodes or Queued Resources permitted in this zone."
+          },
+          "expires_on": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "Optional UTC expiration date (YYYY-MM-DD) from the TFRC grant notification email."
+          }
+        }
+      }
+    }
+  }
+}

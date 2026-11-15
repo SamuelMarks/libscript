@@ -12,7 +12,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -73,6 +73,7 @@ goto :eof
 set "_comp_up=%~1"
 set "_req=!%_comp_up%_INSTALL_METHOD!"
 if "!_req!"=="" set "_req=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+if "!_req!"=="" set "_req=%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"
 if "!_req:~0,8!"=="pkg_mgr:" (
     set "LIBSCRIPT_PKG_MGR=!_req:~8!"
     set "_req=system"

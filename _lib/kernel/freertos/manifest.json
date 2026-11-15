@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "freertos",
+  "title": "FreeRTOS Real-Time Kernel",
+  "description": "FreeRTOS C11 real-time kernel source manager, FreeRTOSConfig.h synthesizer, and multi-architecture firmware/simulator builder.",
+  "category": "kernel",
+  "provides": ["freertos-kernel", "freertos-lts", "freertos-mainline"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel"
+}

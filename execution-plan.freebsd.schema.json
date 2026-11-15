@@ -15,12 +15,12 @@
   ],
   "properties": {
     "schema_version": {
-      "type": "string",
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/semver_string",
       "description": "Semantic version of execution plan schema format",
       "default": "1.0.0"
     },
     "profile_name": {
-      "type": "string",
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/profile_identifier",
       "description": "Unique identifier of the FreeBSD distribution profile"
     },
     "description": {

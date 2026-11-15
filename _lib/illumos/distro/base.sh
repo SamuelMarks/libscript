@@ -53,7 +53,7 @@ for dir in bin boot/forth boot/solaris dev devices etc/default etc/inet etc/svc/
 done
 chmod 1777 "${SYSROOT}/tmp" 2>/dev/null || true
 
-if [ "${LIBSCRIPT_FETCH_ILLUMOS_BASE:-0}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+if [ "${ILLUMOS_DISTRO_FETCH_BASE:-${LIBSCRIPT_FETCH_ILLUMOS_BASE:-0}}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
   case "$FLAVOR" in
     openindiana)
       if command -v pkg >/dev/null 2>&1; then

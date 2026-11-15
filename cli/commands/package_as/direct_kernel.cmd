@@ -11,7 +11,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -73,8 +73,37 @@ if /I "!_ARG!"=="--allow-stub" (
 goto :dk_opts_done
 
 :: ## dk_opts_done
-:: Emits direct-kernel bundle or delegates to vm_builder.cmd.
+:: Emits direct-kernel bundle natively for RTOS or delegates to vm_builder.cmd.
 :dk_opts_done
+if /I "!KERNEL_KIND!"=="zephyr" goto :rtos_direct_kernel
+if /I "!KERNEL_KIND!"=="rtos-zephyr" goto :rtos_direct_kernel
+if /I "!KERNEL_KIND!"=="freertos" goto :rtos_direct_kernel
+if /I "!KERNEL_KIND!"=="rtos-freertos" goto :rtos_direct_kernel
+goto :non_rtos_dk
+
+:: ## rtos_direct_kernel
+:: Synthesizes a direct-kernel RTOS bundle natively on Windows.
+:rtos_direct_kernel
+set "TARGET_SYSROOT=%~1"
+if "!TARGET_SYSROOT!"=="" set "TARGET_SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
+if "!TARGET_SYSROOT!"=="" set "TARGET_SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\target-sysroot"
+set "OUT_DIR=%~2"
+if "!OUT_DIR!"=="" set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\build\images\direct-kernel"
+if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
+set "LIBSCRIPT_TARGET_OS=!KERNEL_KIND!"
+set "LIBSCRIPT_TARGET_SYSROOT=!TARGET_SYSROOT!"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\kernel\setup.cmd" install || exit /b 1
+if exist "!TARGET_SYSROOT!\boot\zephyr.elf" copy /y "!TARGET_SYSROOT!\boot\zephyr.elf" "!OUT_DIR!\kernel.bin" >nul
+if exist "!TARGET_SYSROOT!\boot\freertos.elf" copy /y "!TARGET_SYSROOT!\boot\freertos.elf" "!OUT_DIR!\kernel.bin" >nul
+> "!OUT_DIR!\initrd.img" echo RTOS Direct-Boot Descriptor
+> "!OUT_DIR!\boot-manifest.json" echo {"kernel_family":"!KERNEL_KIND!","kernel_image":"kernel.bin","initrd_image":"initrd.img","mode":"native"}
+> "!OUT_DIR!\.stamp.direct_kernel" echo mode=native
+exit /b 0
+
+:: ## non_rtos_dk
+:: Handles stub or VM-delegated direct-kernel synthesis for POSIX OS kernels.
+:non_rtos_dk
 if "%LIBSCRIPT_ALLOW_STUB%"=="1" (
     set "OUT_DIR=%~2"
     if "!OUT_DIR!"=="" set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\build\images\direct-kernel"

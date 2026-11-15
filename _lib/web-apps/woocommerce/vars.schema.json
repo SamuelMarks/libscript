@@ -1,25 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/woocommerce/vars.schema.json",
-  "title": "woocommerce vars",
-  "description": "Variables for woocommerce vars",
+  "title": "WooCommerce Variables",
+  "description": "Configuration variables for deploying WooCommerce atop a WordPress storefront.",
   "type": "object",
   "properties": {
     "WOOCOMMERCE_SERVER_NAME": {
       "type": "string",
-      "description": "Variable SERVER_NAME."
+      "description": "Public virtual host domain name configured for the WooCommerce storefront."
     },
     "WOOCOMMERCE_LISTEN": {
       "type": "string",
-      "description": "Variable WOOCOMMERCE_LISTEN."
+      "description": "HTTP bind address:port or UNIX socket exposed for the WooCommerce site."
     },
     "WOOCOMMERCE_VERSION": {
       "type": "string",
-      "description": "Variable WOOCOMMERCE_VERSION."
+      "description": "Target WooCommerce plugin release version or alias (e.g., latest) to install."
     },
     "WOOCOMMERCE_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem WordPress document root into which the WooCommerce plugin is installed."
     }
   }
 }

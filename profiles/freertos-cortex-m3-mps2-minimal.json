@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freertos-cortex-m3-mps2-minimal",
+  "description": "Minimal ARM Cortex-M3 FreeRTOS V11.1.0 firmware targeting Arm MPS2-AN385 with heap_4 dynamic memory management.",
+  "target": {
+    "arch": "armv7m",
+    "os_family": "rtos-freertos",
+    "libc": "newlib",
+    "platform": "qemu-mps2"
+  },
+  "kernel": {
+    "provider": "freertos-mainline",
+    "version": "11.1.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "freertos-scheduler"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "mps2_an385",
+    "heap_implementation": "heap_4",
+    "tick_rate_hz": 1000,
+    "total_heap_bytes": 32768,
+    "minimal_stack_words": 128,
+    "max_priorities": 8
+  },
+  "output_formats": ["firmware-elf", "firmware-uf2"],
+  "components": ["lua"]
+}

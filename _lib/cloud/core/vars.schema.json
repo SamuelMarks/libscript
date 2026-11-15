@@ -4,7 +4,12 @@
   "title": "Cloud Wrapper",
   "description": "Unified multicloud wrapper for AWS, Azure, and GCP",
   "type": "object",
+  "x-libscript-var-packs": ["cloud_tags", "experiment", "source_toolchain"],
   "properties": {
+    "LIBSCRIPT_DASHBOARD_DIR": {
+      "type": "string",
+      "description": "Output directory path for generated cloud monitoring and observability dashboards."
+    },
     "LIBSCRIPT_DEFAULT_CLOUD": {
       "type": "string",
       "enum": ["aws", "azure", "gcp"],
@@ -182,7 +187,32 @@
     "CORE_EXPERIMENT_SUITE": {
       "type": "string",
       "default": "all",
-      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', 'edgcpp_backends', 'libtpu', 'win_port', 'manifest', or 'all')."
+      "description": "Experiment runner suite abstraction to execute ('libscript', 'edgcpp', 'edgcpp_backends', 'libtpu', 'win_port', 'gemma_tpu', 'manifest', or 'all')."
+    },
+    "CORE_EXPERIMENT_MODEL": {
+      "type": "string",
+      "default": "google/gemma-4-E4B",
+      "description": "Target model identifier evaluated during gemma_tpu / tpu_matrix experiment runs."
+    },
+    "CORE_EXPERIMENT_BACKENDS": {
+      "type": "string",
+      "default": "hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native",
+      "description": "Comma-separated list of ML backends evaluated in the gemma_tpu / tpu_matrix campaign."
+    },
+    "CORE_EXPERIMENT_COMMAND_TEMPLATE": {
+      "type": "string",
+      "default": "",
+      "description": "Optional custom workload command template evaluated across every selected backend in Suite E4."
+    },
+    "CORE_EXPERIMENT_RESUME": {
+      "type": "string",
+      "default": "1",
+      "description": "Flag (0 or 1) skipping already-completed valid cells on Spot-preemption campaign retries."
+    },
+    "CORE_EXPERIMENT_FRESH_VM_PER_BACKEND": {
+      "type": "string",
+      "default": "0",
+      "description": "Flag (0 or 1) reprovisioning a fresh Cloud TPU VM between isolated backend evaluations."
     },
     "CORE_EXPERIMENT_SUITE_MANIFEST": {
       "type": "string",

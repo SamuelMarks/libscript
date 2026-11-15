@@ -20,9 +20,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -30,8 +30,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 KERNEL='linux-glibc'
 OS_FLAVOR=''
-TARGET_ARCH='x86_64'
-FORMAT='qcow2'
+TARGET_ARCH=''
+RTOS_BOARD="${LIBSCRIPT_RTOS_BOARD:-}"
+HYBRID_POD="${LIBSCRIPT_RTOS_HYBRID_POD:-0}"
+MCUBOOT_ENABLED="${LIBSCRIPT_RTOS_MCUBOOT:-0}"
+FORMAT=''
 COMPONENTS_CSV=''
 PROFILE_JSON=''
 OUT_PATH=''
@@ -46,14 +49,20 @@ show_help() {
   printf 'Usage: libscript build-image | build-installer [OPTIONS]\n\n'
   printf 'Options:\n'
   printf '  --kernel=<kernel>        Target kernel: linux, linux-glibc, linux-musl, freebsd, illumos,\n'
-  printf '                           unikraft, nanos, osv, rumprun, mirageos, firecracker\n'
+  printf '                           unikraft, nanos, osv, rumprun, mirageos, firecracker,\n'
+  printf '                           zephyr, rtos-zephyr, freertos, rtos-freertos\n'
+  printf '  --board=<board>          RTOS board/port: qemu_x86_64, qemu_cortex_m3, qemu_riscv64, native_sim,\n'
+  printf '                           mps2_an385, riscv_virt, posix_gcc, win32_sim\n'
   printf '  --os-flavor=<flavor>     Optional flavor: debian, alpine, rocky, lfs, omnios, openindiana, tribblix, smartos\n'
-  printf '  --arch=<arch>            Target ISA: x86_64, aarch64, amd64, arm64 (default: x86_64)\n'
+  printf '  --arch=<arch>            Target ISA: x86_64, aarch64, arm, armv7m, armv8m, riscv32, riscv64, xtensa\n'
   printf '  --format=<format>        Output format: live-iso, live-usb, raw, qcow2, vmdk, vhd, vhdx,\n'
-  printf '                           vagrant-box, zfs-stream, rootfs-tar, oci-image, direct-kernel, unikernel\n'
-  printf '  --components=<c0,c1,...> Comma-separated Tier 1 components (e.g. redis,postgres,openedx)\n'
+  printf '                           vagrant-box, zfs-stream, rootfs-tar, oci-image, direct-kernel, unikernel,\n'
+  printf '                           firmware-elf, firmware-bin, firmware-hex, firmware-uf2, mcuboot-signed, renode-resc\n'
+  printf '  --components=<c0,c1,...> Comma-separated Tier 1 components (e.g. sqlite,lua,redis,postgres)\n'
   printf '  --profile=<file.json>    Optional base OS profile JSON to merge\n'
   printf '  --out=<path>             Output artifact file or directory path\n'
+  printf '  --hybrid-pod             Decompose multi-process services into a companion node alongside RTOS nodes\n'
+  printf '  --mcuboot                Enable MCUboot A/B slot offset and imgtool cryptographic firmware signing\n'
   printf '  --offline                Build strictly using local cache without network access\n'
   printf '  --dry-run                Resolve execution plan and validate compatibility without mutating disk images\n'
   printf '  --strict                 Fail if native hypervisor/filesystem tools are missing\n'
@@ -66,9 +75,11 @@ while [ $# -gt 0 ]; do
     --help|-h|/\?|-\?) show_help; exit 0 ;;
     --kernel=*) KERNEL="${1#*=}"; shift ;;
     --kernel) KERNEL="$2"; shift 2 ;;
+    --board=*) RTOS_BOARD="${1#*=}"; shift ;;
+    --board) RTOS_BOARD="$2"; shift 2 ;;
     --os-flavor=*) OS_FLAVOR="${1#*=}"; shift ;;
     --os-flavor) OS_FLAVOR="$2"; shift 2 ;;
-    --arch=*) TARGET_ARCH="$2_unused"; TARGET_ARCH="${1#*=}"; shift ;;
+    --arch=*) TARGET_ARCH="${1#*=}"; shift ;;
     --arch) TARGET_ARCH="$2"; shift 2 ;;
     --format=*) FORMAT="${1#*=}"; shift ;;
     --format) FORMAT="$2"; shift 2 ;;
@@ -92,6 +103,8 @@ while [ $# -gt 0 ]; do
     --profile) PROFILE_JSON="$2"; shift 2 ;;
     --out=*) OUT_PATH="${1#*=}"; shift ;;
     --out) OUT_PATH="$2"; shift 2 ;;
+    --hybrid-pod) HYBRID_POD=1; shift ;;
+    --mcuboot) MCUBOOT_ENABLED=1; shift ;;
     --offline) OFFLINE_MODE=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --strict) STRICT_BUILD=1; shift ;;
@@ -184,11 +197,39 @@ case "$KERNEL" in
     BOOTLOADER='none'
     RESOLVE_OS='linux'
     ;;
+  zephyr|rtos-zephyr)
+    OS_FAMILY='rtos-zephyr'
+    LIBC='picolibc'
+    KPROVIDER='zephyr-lts'
+    INIT_PROV='zephyr-sys-init'
+    BOOTLOADER='unikernel-direct'
+    RESOLVE_OS='zephyr'
+    [ -n "$RTOS_BOARD" ] || RTOS_BOARD='qemu_x86_64'
+    [ -n "$FORMAT" ] || FORMAT='firmware-elf'
+    ;;
+  freertos|rtos-freertos)
+    OS_FAMILY='rtos-freertos'
+    LIBC='newlib'
+    KPROVIDER='freertos-lts'
+    INIT_PROV='freertos-scheduler'
+    BOOTLOADER='unikernel-direct'
+    RESOLVE_OS='freertos'
+    [ -n "$RTOS_BOARD" ] || RTOS_BOARD='mps2_an385'
+    [ -n "$TARGET_ARCH" ] || TARGET_ARCH='armv7m'
+    [ -n "$FORMAT" ] || FORMAT='firmware-elf'
+    ;;
   *)
     printf '[ERROR] Unsupported --kernel value: %s\n' "$KERNEL" >&2
     exit 1
     ;;
 esac
+
+[ -n "$TARGET_ARCH" ] || TARGET_ARCH='x86_64'
+[ -n "$FORMAT" ] || FORMAT='qcow2'
+if [ "$MCUBOOT_ENABLED" = "1" ] || [ "$FORMAT" = "mcuboot-signed" ]; then
+  BOOTLOADER='mcuboot'
+  MCUBOOT_ENABLED='1'
+fi
 
 if [ -z "$OUT_PATH" ]; then
   case "$FORMAT" in
@@ -202,6 +243,12 @@ if [ -z "$OUT_PATH" ]; then
     rootfs-tar|oci-image) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.rootfs.tar.gz" ;;
     direct-kernel) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-direct" ;;
     unikernel) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}.unikernel.elf" ;;
+    firmware-elf) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.elf" ;;
+    firmware-bin) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.bin" ;;
+    firmware-hex) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.hex" ;;
+    firmware-uf2) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.uf2" ;;
+    mcuboot-signed) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.signed.bin" ;;
+    renode-resc) OUT_PATH="${LIBSCRIPT_ROOT_DIR}/build/synthesis/${OS_FAMILY}-${RTOS_BOARD:-default}.resc" ;;
     *)
       printf '[ERROR] Unsupported --format value: %s\n' "$FORMAT" >&2
       exit 1
@@ -209,7 +256,7 @@ if [ -z "$OUT_PATH" ]; then
   esac
 fi
 
-WORK_BASE="${LIBSCRIPT_BUILD_DIR:-${LIBSCRIPT_ROOT_DIR}/build/synthesis}/.work-${OS_FAMILY}-${TARGET_ARCH}"
+WORK_BASE="${LIBSCRIPT_BUILD_DIR:-${LIBSCRIPT_ROOT_DIR}/build/synthesis}/.work-${OS_FAMILY}-${TARGET_ARCH}${RTOS_BOARD:+-$RTOS_BOARD}"
 SYSROOT_DIR="${LIBSCRIPT_TARGET_SYSROOT:-${WORK_BASE}/sysroot}"
 mkdir -p "$WORK_BASE" "$SYSROOT_DIR" "$(dirname "$OUT_PATH")"
 
@@ -249,14 +296,18 @@ if [ -n "$PROFILE_JSON" ] && [ -f "$PROFILE_JSON" ]; then
      --arg iprov "$INIT_PROV" \
      --arg bl "$BOOTLOADER" \
      --arg fmt "$NORM_FMT" \
+     --arg board "$RTOS_BOARD" \
+     --arg hpod "$HYBRID_POD" \
+     --arg mcub "$MCUBOOT_ENABLED" \
      --argjson comps "$COMP_JSON" '
-    .target.os_family = $os_fam
-    | .target.arch = $arch
+    .target.os_family = (.target.os_family // $os_fam)
+    | .target.arch = (.target.arch // $arch)
     | .target.libc = (.target.libc // $libc)
     | (if $flavor != "" then .target.flavor = $flavor else . end)
     | .kernel = ((.kernel // {"config_method": "defconfig"}) | .provider = (.provider // $kprov))
     | .init_system = ((.init_system // {}) | .provider = (.provider // $iprov))
-    | .storage = ((.storage // {"disk_size_gib": 16, "partition_table": "gpt", "boot_mode": "uefi"}) | .bootloader = (.bootloader // $bl))
+    | .storage = ((.storage // {"disk_size_gib": 1, "partition_table": "none", "boot_mode": "direct-kernel"}) | .bootloader = (.bootloader // $bl))
+    | (if $board != "" then .rtos = ((.rtos // {}) | .board = (.board // $board) | (if $hpod == "1" then .hybrid_pod = true else . end) | (if $mcub == "1" then .mcuboot = ((.mcuboot // {}) | .enabled = true) else . end)) else . end)
     | .output_formats = [$fmt]
     | .components = (((.components // []) + $comps) | unique)
   ' "$PROFILE_JSON" > "$GEN_OS_CONFIG"
@@ -269,6 +320,9 @@ else
         --arg iprov "$INIT_PROV" \
         --arg bl "$BOOTLOADER" \
         --arg fmt "$NORM_FMT" \
+        --arg board "$RTOS_BOARD" \
+        --arg hpod "$HYBRID_POD" \
+        --arg mcub "$MCUBOOT_ENABLED" \
         --arg offline "$OFFLINE_MODE" \
         --argjson comps "$COMP_JSON" '
     {
@@ -282,19 +336,29 @@ else
       kernel: { provider: $kprov, config_method: "defconfig" },
       init_system: { provider: $iprov },
       storage: {
-        disk_size_gib: 16,
-        partition_table: "gpt",
-        boot_mode: (if $bl == "unikernel-direct" then "direct-kernel" else "uefi" end),
+        disk_size_gib: (if ($os_fam | startswith("rtos-")) then 1 else 16 end),
+        partition_table: (if ($os_fam | startswith("rtos-")) then "none" else "gpt" end),
+        boot_mode: (if ($bl == "unikernel-direct" or $bl == "mcuboot") then "direct-kernel" else "uefi" end),
         bootloader: $bl
       },
       offline: { enabled: ($offline == "1") },
       output_formats: [$fmt],
       components: $comps
     }
+    + (if $board != "" then {
+        rtos: (
+          { board: $board }
+          + (if $hpod == "1" then { hybrid_pod: true } else {} end)
+          + (if $mcub == "1" then { mcuboot: { enabled: true, signing_key_type: "rsa-2048", slot_size_kib: 256, upgrade_strategy: "swap-move" } } else {} end)
+        )
+      } else {} end)
   ' > "$GEN_OS_CONFIG"
 fi
 
 LIBSCRIPT_TARGET_OS="$RESOLVE_OS" \
+  LIBSCRIPT_RTOS_BOARD="$RTOS_BOARD" \
+  LIBSCRIPT_RTOS_HYBRID_POD="$HYBRID_POD" \
+  LIBSCRIPT_RTOS_MCUBOOT="$MCUBOOT_ENABLED" \
   STACK='' "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.sh" "$GEN_OS_CONFIG" "$GEN_PLAN"
 
 if [ "$DRY_RUN" = "1" ]; then
@@ -306,6 +370,10 @@ fi
 
 LIBSCRIPT_TARGET_SYSROOT="$SYSROOT_DIR" \
   LIBSCRIPT_TARGET_OS="$RESOLVE_OS" \
+  LIBSCRIPT_TARGET_ARCH="$TARGET_ARCH" \
+  LIBSCRIPT_RTOS_BOARD="$RTOS_BOARD" \
+  LIBSCRIPT_RTOS_HYBRID_POD="$HYBRID_POD" \
+  LIBSCRIPT_RTOS_MCUBOOT="$MCUBOOT_ENABLED" \
   LIBSCRIPT_IMAGE_BUILD='1' \
   LIBSCRIPT_OFFLINE="$OFFLINE_MODE" \
   LIBSCRIPT_STRICT_IMAGE_BUILD="$STRICT_BUILD" \
@@ -314,6 +382,10 @@ LIBSCRIPT_TARGET_SYSROOT="$SYSROOT_DIR" \
 
 export LIBSCRIPT_TARGET_SYSROOT="$SYSROOT_DIR"
 export LIBSCRIPT_TARGET_OS="$RESOLVE_OS"
+export LIBSCRIPT_TARGET_ARCH="$TARGET_ARCH"
+export LIBSCRIPT_RTOS_BOARD="$RTOS_BOARD"
+export LIBSCRIPT_RTOS_HYBRID_POD="$HYBRID_POD"
+export LIBSCRIPT_RTOS_MCUBOOT="$MCUBOOT_ENABLED"
 export LIBSCRIPT_UNIKERNEL_FRAMEWORK="$RESOLVE_OS"
 export LIBSCRIPT_STRICT_IMAGE_BUILD="$STRICT_BUILD"
 export LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB"
@@ -366,6 +438,9 @@ case "$FORMAT" in
     ;;
   unikernel)
     STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/unikernel.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    ;;
+  firmware-elf|firmware-bin|firmware-hex|firmware-uf2|mcuboot-signed|renode-resc)
+    STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/firmware.sh" --format="$FORMAT" --kernel="$RESOLVE_OS" --board="${RTOS_BOARD:-default}" "$SYSROOT_DIR" "$OUT_PATH"
     ;;
 esac
 

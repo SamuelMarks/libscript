@@ -35,5 +35,6 @@
       "description": "Directory where Meilisearch index database is stored.",
       "type": "string"
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth"]
 }

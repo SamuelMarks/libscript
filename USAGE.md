@@ -586,3 +586,19 @@ libscript.cmd experiment bento_matrix --target-os=debian-13 --component=postgres
 ```
 
 For the complete parameter reference and architecture diagram, see [EXPERIMENTS.md](EXPERIMENTS.md).
+
+### Zero-Cost TFRC 7-Backend Cloud TPU Matrix (`tpu_matrix` / `benchmark-ml`)
+
+```sh
+# Run the 7-backend Gemma 4 TPU matrix from an external ML repository under strict TFRC guardrails
+../libscript/libscript.sh experiment tpu_matrix --tfrc-config=./tfrc.policy.json --repo-dir=. \
+  --model=google/gemma-4-E4B --backends=all --subsuites=E0,E1,E2,E3,E4
+
+# Or via the unified ML CLI verb
+../libscript/libscript.sh benchmark-ml --tfrc-only --tfrc-config=./tfrc.policy.json --backends=all
+```
+
+```cmd
+:: Windows Batch equivalent
+call ..\libscript\libscript.cmd experiment tpu_matrix "--tfrc-config=tfrc.policy.json" "--repo-dir=." "--model=google/gemma-4-E4B" "--backends=all" "--subsuites=E0,E1,E2,E3,E4"
+```

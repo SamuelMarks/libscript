@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "micropython",
+  "title": "MicroPython Runtime",
+  "description": "Lean and efficient Python 3 implementation for microcontrollers, Zephyr RTOS, FreeRTOS, and constrained edge systems.",
+  "category": "languages",
+  "provides": ["micropython"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/micropython/micropython",
+  "rtos_support": ["zephyr", "freertos"],
+  "memory_footprint_class": "mcu-sram-64k"
+}

@@ -88,7 +88,7 @@ if exist "!TARGET_DIR!\bin\libtpu-rs-env.cmd" (
 )
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 if not exist "!TARGET_DIR!\lib" mkdir "!TARGET_DIR!\lib"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_pin_cargo_release "%LIBTPU_RS_CARGO_PROFILE%" "!TARGET_DIR!\cargo_profile.json"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_pin_cargo_release "%LIBTPU_RS_CARGO_PROFILE%" "!TARGET_DIR!\cargo_profile.json"
 
 set "_SRC_REPO=%LIBTPU_RS_REPO_DIR%"
 if "!_SRC_REPO!"=="" (
@@ -103,14 +103,14 @@ if not "!_SRC_REPO!"=="" (
         popd
         if exist "!_SRC_REPO!\target\release\libtpu_c_api.dll" (
             copy /y "!_SRC_REPO!\target\release\libtpu_c_api.dll" "!TARGET_DIR!\lib\libtpu_c_api.unstripped.dll" >nul
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_strip_shared_lib "!_SRC_REPO!\target\release\libtpu_c_api.dll" "!TARGET_DIR!\lib\libtpu_c_api.dll"
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_strip_shared_lib "!_SRC_REPO!\target\release\libtpu_c_api.dll" "!TARGET_DIR!\lib\libtpu_c_api.dll"
         )
         pushd "!_SRC_REPO!"
         cargo build --release -p libtpu-c-api --target-dir "!_SRC_REPO!\target\release-slim" %LIBTPU_RS_SLIM_FEATURES%
         popd
         if exist "!_SRC_REPO!\target\release-slim\release\libtpu_c_api.dll" (
             copy /y "!_SRC_REPO!\target\release-slim\release\libtpu_c_api.dll" "!TARGET_DIR!\lib\libtpu_c_api_slim.unstripped.dll" >nul
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_strip_shared_lib "!_SRC_REPO!\target\release-slim\release\libtpu_c_api.dll" "!TARGET_DIR!\lib\libtpu_c_api_slim.dll"
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_strip_shared_lib "!_SRC_REPO!\target\release-slim\release\libtpu_c_api.dll" "!TARGET_DIR!\lib\libtpu_c_api_slim.dll"
         )
     )
 )

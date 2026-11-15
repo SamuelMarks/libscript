@@ -46,6 +46,26 @@ QEMU_INSTALL_METHOD="$(libscript_resolve_install_method "QEMU")"
 ACTION="${ACTION:-install}"
 QEMU_SETUP_KVM_GROUPS="${QEMU_SETUP_KVM_GROUPS:-1}"
 QEMU_SETUP_UEFI_FIRMWARE="${QEMU_SETUP_UEFI_FIRMWARE:-1}"
+QEMU_TARGET_ARCHS="${QEMU_TARGET_ARCHS:-arm,aarch64,riscv32,riscv64,x86_64}"
+
+# ## verify_qemu_rtos_emulators
+# Verifies multi-ISA QEMU system emulators (arm, aarch64, riscv32, riscv64, x86_64) for RTOS targets.
+verify_qemu_rtos_emulators() {
+  if [ "$QEMU_INSTALL_METHOD" = "system" ]; then
+    if ! command -v qemu-system-arm >/dev/null 2>&1 || ! command -v qemu-system-riscv64 >/dev/null 2>&1; then
+      libscript_depends 'qemu-system-extra' || true
+    fi
+  fi
+  _old_ifs="$IFS"
+  IFS=','
+  for _qa in $QEMU_TARGET_ARCHS; do
+    [ -n "$_qa" ] || continue
+    if command -v "qemu-system-${_qa}" >/dev/null 2>&1; then
+      log_info "Verified qemu-system-${_qa}: $(command -v "qemu-system-${_qa}")"
+    fi
+  done
+  IFS="$_old_ifs"
+}
 
 # ## setup_uefi_symlinks
 # Configures standard UEFI firmware symlinks for QEMU/KVM.
@@ -185,6 +205,7 @@ case "$ACTION" in
     elif [ "$QEMU_INSTALL_METHOD" = "brew" ]; then
       libscript_depends_via brew qemu
     fi
+    verify_qemu_rtos_emulators
 
     case "${TARGET_OS:-}${UNAME:-}" in
       *[Dd]arwin*|*[Mm]ac[Oo][Ss]*) ;;

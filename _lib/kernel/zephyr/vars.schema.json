@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/kernel/zephyr/vars.schema.json",
+  "title": "zephyr variables",
+  "description": "Configuration variables for zephyr",
+  "type": "object",
+  "properties": {
+    "ZEPHYR_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install zephyr. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ZEPHYR_VERSION": {
+      "description": "Specific version of zephyr to install.",
+      "type": "string",
+      "default": "3.7.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ZEPHYR_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading zephyr binary or archive artifacts."
+    },
+    "ZEPHYR_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying zephyr available remote releases."
+    },
+    "ZEPHYR_BOARD": {
+      "type": "string",
+      "description": "Target Zephyr board identifier (qemu_x86_64, qemu_cortex_a53, qemu_cortex_m3, qemu_riscv32, qemu_riscv64, native_sim, native_sim_64).",
+      "default": "qemu_x86_64"
+    },
+    "ZEPHYR_KCONFIG_FRAGMENTS": {
+      "type": "string",
+      "description": "Comma-separated Kconfig fragment filenames or paths merged into prj.conf/.config.",
+      "default": "minimal_footprint.conf,picolibc.conf"
+    },
+    "ZEPHYR_DTS_OVERLAYS": {
+      "type": "string",
+      "description": "Comma-separated Devicetree .overlay paths merged during firmware synthesis.",
+      "default": ""
+    },
+    "ZEPHYR_TOOLCHAIN_VARIANT": {
+      "type": "string",
+      "description": "Zephyr CMake toolchain variant (zephyr, llvm, gnuarmemb, cross-compile, host).",
+      "default": "zephyr"
+    },
+    "ZEPHYR_COMPILER": {
+      "type": "string",
+      "description": "LibScript compiler backend selector (default, gcc, clang, edgcpp, custom-cc).",
+      "default": "default"
+    },
+    "ZEPHYR_USE_WEST": {
+      "type": "string",
+      "description": "When set to 1, invokes west build instead of direct rootless CMake + Ninja.",
+      "default": "0"
+    },
+    "ZEPHYR_COMPARE_COMPILERS": {
+      "type": "string",
+      "description": "Space- or comma-separated list of compilers evaluated by compare_compilers.{sh,cmd}.",
+      "default": "default gcc clang edgcpp custom-cc"
+    },
+    "ZEPHYR_BASE": {
+      "type": "string",
+      "description": "Root path of the active Zephyr RTOS source tree exported by env.{sh,cmd}."
+    },
+    "ZEPHYR_SDK_INSTALL_DIR": {
+      "type": "string",
+      "description": "Isolated Zephyr SDK directory path exported to CMake."
+    },
+    "ZEPHYR_FETCH_FULL_SOURCE": {
+      "type": "string",
+      "description": "When set to 1, downloads and extracts the full upstream Zephyr source tarball during install.",
+      "default": "0"
+    }
+  },
+  "x-libscript-var-packs": ["image_synth", "rtos"]
+}

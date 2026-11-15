@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zephyr",
+  "title": "Zephyr RTOS Kernel",
+  "description": "Zephyr Real-Time Operating System kernel source manager, Kconfig/Devicetree synthesizer, and multi-board firmware builder.",
+  "category": "kernel",
+  "provides": ["zephyr-kernel", "zephyr-lts", "zephyr-mainline"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/zephyrproject-rtos/zephyr"
+}

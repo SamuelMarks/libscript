@@ -19,6 +19,7 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
 $CmdFile = Join-Path $PSScriptRoot 'deploy.cmd'
 if (Test-Path $CmdFile) {
     & $CmdFile @args
+    exit $LASTEXITCODE
 } else {
     Write-Output 'deploy completed for tpu-vm-eval-node.'
 }

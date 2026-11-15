@@ -49,7 +49,7 @@ if "!RESULTS_DIR!"=="" set "RESULTS_DIR=%LIBSCRIPT_ROOT_DIR%\build\edgcpp_backen
 if not exist "!RESULTS_DIR!\raw" mkdir "!RESULTS_DIR!\raw"
 if not "%FORCE_REBUILD%"=="1" if exist "!RESULTS_DIR!\raw\exp0_coverage.json" exit /b 0
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_capture_compiler_metadata "!EDG_REPO_DIR!" "!RESULTS_DIR!\raw\metadata.json"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_capture_compiler_metadata "!EDG_REPO_DIR!" "!RESULTS_DIR!\raw\metadata.json"
 set "_SHA=1111111111111111111111111111111111111111"
 for /f "delims=" %%H in ('git -C "%LIBSCRIPT_ROOT_DIR%" rev-parse HEAD 2^>nul') do set "_SHA=%%H"
 (

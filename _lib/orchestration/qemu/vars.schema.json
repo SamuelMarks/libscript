@@ -34,6 +34,11 @@
       "type": "string",
       "description": "Comma-separated PCI vendor:device IDs (e.g. 10de:2684,10de:22ba) to bind to vfio-pci",
       "default": ""
+    },
+    "QEMU_TARGET_ARCHS": {
+      "type": "string",
+      "description": "Comma-separated QEMU system emulator target architectures verified/installed (arm,aarch64,riscv32,riscv64,x86_64)",
+      "default": "arm,aarch64,riscv32,riscv64,x86_64"
     }
   }
 }

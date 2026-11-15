@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zephyr-sdk",
+  "title": "Zephyr SDK",
+  "description": "Official Zephyr RTOS cross-compilation SDK bundling bare-metal GCC/LLVM toolchains and host utilities across Linux, macOS, and Windows.",
+  "category": "toolchains",
+  "provides": ["zephyr-sdk", "zephyr-toolchain"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/zephyrproject-rtos/sdk-ng"
+}

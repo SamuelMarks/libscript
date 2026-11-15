@@ -30,12 +30,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
+for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh _lib/ml-training/_common/tfrc_guard.sh; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
 # ## print_usage
 # Prints usage instructions for gke-xpk-inference deploy.sh.
@@ -57,6 +58,12 @@ while [ $# -gt 0 ]; do
     *) shift ;;
   esac
 done
+
+if libscript_tfrc_is_enabled; then
+  ML_TARGET='gke-xpk'
+  export ML_TARGET
+  libscript_tfrc_enforce_zero_cost_env
+fi
 
 CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 MODEL_NAME="${MODEL_NAME:-your-org/your-model-name}"

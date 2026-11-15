@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zephyr-riscv64-mqtt-sqlite",
+  "description": "64-bit RISC-V Zephyr RTOS edge telemetry appliance bundling IPv4/IPv6 networking, coreMQTT, and embedded SQLite.",
+  "target": {
+    "arch": "riscv64",
+    "os_family": "rtos-zephyr",
+    "libc": "picolibc",
+    "platform": "qemu-riscv-virt"
+  },
+  "kernel": {
+    "provider": "zephyr-lts",
+    "version": "3.7.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "zephyr-sys-init"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "qemu_riscv64",
+    "kconfig_fragments": [
+      "minimal_footprint.conf",
+      "picolibc.conf",
+      "networking_ipv4_ipv6.conf",
+      "littlefs_storage.conf"
+    ]
+  },
+  "output_formats": ["firmware-elf", "firmware-bin"],
+  "components": ["coremqtt", "sqlite", "littlefs"]
+}

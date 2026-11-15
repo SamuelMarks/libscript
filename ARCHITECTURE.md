@@ -29,9 +29,9 @@ orchestrators, multi-node cluster schedulers, and high-availability topologies.
 flowchart TD
     VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>320+ Isolated Recipes"]
 
-    PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso"]
+    PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso, uf2, hex"]
 
-    OS["<b>3. KERNEL & UNIKERNEL BAKERY</b><hr/>Unikernels (OSv, MirageOS, Unikraft)<hr/>Linux (Kernel + UKI)<hr/>FreeBSD (World + ZFS) & illumos (SMF + rpool)"]
+    OS["<b>3. KERNEL, UNIKERNEL & RTOS BAKERY</b><hr/>Unikernels (OSv, MirageOS, Unikraft)<hr/>RTOS (Zephyr RTOS, FreeRTOS + MCUboot)<hr/>Linux (Kernel + UKI), FreeBSD & illumos"]
 
     CLOUD["<b>4. MULTICLOUD & AI FLEETS</b><hr/>Google Cloud (GCP), AWS & Azure<hr/>Hetzner, Proxmox VE & Vagrant<hr/>TPU Pods & GPU Clusters"]
 
@@ -201,16 +201,16 @@ sequenceDiagram
 When Tier 1 leaf recipes are invoked during full operating system synthesis (Tier 2), they
 communicate with the orchestration layer exclusively via standard environment variables:
 
-| Environment Variable       | Description                                                                                | Default Fallback                               |
-| :------------------------- | :----------------------------------------------------------------------------------------- | :--------------------------------------------- |
-| `LIBSCRIPT_TARGET_SYSROOT` | Target installation prefix (equivalent to `DESTDIR`). Recipes must install artifacts here. | `${LIBSCRIPT_ROOT_DIR}/build/target-sysroot`   |
-| `LIBSCRIPT_HOST_ROOT`      | Host-side cross-toolchain prefix.                                                          | `${LIBSCRIPT_ROOT_DIR}/build/tools` (`/tools`) |
-| `LIBSCRIPT_OFFLINE`        | Boolean (`0` or `1`). If `1`, recipes are strictly forbidden from making network calls.    | `0`                                            |
-| `LIBSCRIPT_CACHE_DIR`      | Directory containing pre-hydrated tarballs, packages, and sources.                         | `${LIBSCRIPT_ROOT_DIR}/cache`                  |
-| `LIBSCRIPT_TARGET_ARCH`    | Target processor architecture (`x86_64`, `aarch64`, `riscv64`, `i686`).                    | Auto-detected host arch                        |
-| `LIBSCRIPT_TARGET_LIBC`    | Target standard C library runtime (`glibc`, `musl`, `bsd-libc`, `nolibc`).                 | `glibc`                                        |
-| `LIBSCRIPT_TARGET_OS`      | Target operating system family (`linux`, `freebsd`, `unikraft`).                           | `linux`                                        |
-| `LIBSCRIPT_TARGET_TRIPLET` | Standardized GNU/LLVM triplet (e.g., `x86_64-libscript-linux-gnu`).                        | Resolved via `triplets.sh`                     |
+| Environment Variable       | Description                                                                                | Default Fallback                                                                   |
+| :------------------------- | :----------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| `LIBSCRIPT_TARGET_SYSROOT` | Target installation prefix (equivalent to `DESTDIR`). Recipes must install artifacts here. | `${LIBSCRIPT_BUILD_DIR}/sysroot` (`build/target-sysroot` under `synthesize-image`) |
+| `LIBSCRIPT_HOST_ROOT`      | Host-side cross-toolchain prefix.                                                          | `/tools` (`${LIBSCRIPT_ROOT_DIR}/build/tools` during cross-bootstrap)              |
+| `LIBSCRIPT_OFFLINE`        | Boolean (`0` or `1`). If `1`, recipes are strictly forbidden from making network calls.    | `0`                                                                                |
+| `LIBSCRIPT_CACHE_DIR`      | Directory containing pre-hydrated tarballs, packages, and sources.                         | `${LIBSCRIPT_ROOT_DIR}/cache`                                                      |
+| `LIBSCRIPT_TARGET_ARCH`    | Target processor architecture (`x86_64`, `aarch64`, `riscv64`, `i686`).                    | Auto-detected host arch                                                            |
+| `LIBSCRIPT_TARGET_LIBC`    | Target standard C library runtime (`glibc`, `musl`, `bsd-libc`, `nolibc`).                 | `glibc`                                                                            |
+| `LIBSCRIPT_TARGET_OS`      | Target operating system family (`linux`, `freebsd`, `unikraft`).                           | `linux`                                                                            |
+| `LIBSCRIPT_TARGET_TRIPLET` | Standardized GNU/LLVM triplet (e.g., `x86_64-libscript-linux-gnu`).                        | Resolved via `triplets.sh`                                                         |
 
 ```mermaid
 flowchart TD

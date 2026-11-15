@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freertos-native-sim-ci",
+  "description": "Cross-platform POSIX and Win32 native FreeRTOS simulator profile for deterministic sub-second CI verification.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "rtos-freertos",
+    "libc": "newlib",
+    "platform": "posix-sim"
+  },
+  "kernel": {
+    "provider": "freertos-mainline",
+    "version": "11.1.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "freertos-scheduler"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "posix_gcc",
+    "heap_implementation": "heap_4",
+    "tick_rate_hz": 1000,
+    "total_heap_bytes": 32768
+  },
+  "output_formats": ["firmware-elf"],
+  "components": ["sqlite", "lua"]
+}

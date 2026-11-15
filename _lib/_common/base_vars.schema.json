@@ -2,9 +2,92 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/_common/base_vars.schema.json",
   "title": "LibScript Base Component Variables",
-  "description": "Common variables shared by all LibScript components",
+  "description": "Core framework-wide configuration variables shared across all LibScript components.",
   "type": "object",
   "properties": {
+    "LIBSCRIPT_HOME": {
+      "type": "string",
+      "description": "Base installation prefix where LibScript installs isolated component versions.",
+      "deprecated_aliases": ["PREFIX"]
+    },
+    "LIBSCRIPT_DATA_DIR": {
+      "type": "string",
+      "description": "Base data directory for runtime component state, databases, and service configurations."
+    },
+    "LIBSCRIPT_CACHE_DIR": {
+      "type": "string",
+      "description": "Directory where cached release metadata and build artifacts are stored."
+    },
+    "LIBSCRIPT_BUILD_DIR": {
+      "type": "string",
+      "description": "Scratch build directory used when compiling components from source."
+    },
+    "LIBSCRIPT_DOWNLOAD_DIR": {
+      "type": "string",
+      "description": "Staging directory where downloaded component archives and binaries are cached.",
+      "deprecated_aliases": ["DOWNLOAD_DIR"]
+    },
+    "LIBSCRIPT_LOG_DIR": {
+      "type": "string",
+      "description": "Base directory where component and lifecycle log files are written.",
+      "deprecated_aliases": ["LOGS_DIR", "LIBSCRIPT_LOGS_DIR"]
+    },
+    "LIBSCRIPT_LOG_FILE": {
+      "type": "string",
+      "description": "Explicit file path to append structured or text logs to in addition to standard output."
+    },
+    "LIBSCRIPT_LOG_LEVEL": {
+      "type": "string",
+      "description": "Minimum logging severity level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR).",
+      "default": "1"
+    },
+    "LIBSCRIPT_LOG_FORMAT": {
+      "type": "string",
+      "description": "Output serialization format for lifecycle log messages (text or json).",
+      "enum": ["text", "json"],
+      "default": "text"
+    },
+    "LIBSCRIPT_OUTPUT_FORMAT": {
+      "type": "string",
+      "description": "Shell or data output format emitted by env and status commands (sh, cmd, ps1, dotenv, json, text).",
+      "deprecated_aliases": ["FORMAT"]
+    },
+    "LIBSCRIPT_DEBUG": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enabling verbose debug and STACK recursion trace output across LibScript."
+    },
+    "LIBSCRIPT_OFFLINE": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating offline execution mode using pre-hydrated local caches.",
+      "enum": ["0", "1"],
+      "default": "0"
+    },
+    "LIBSCRIPT_FORCE_OFFLINE": {
+      "type": "string",
+      "description": "Strict air-gapped flag (0 or 1) that immediately aborts execution if any network call is attempted.",
+      "enum": ["0", "1"],
+      "default": "0"
+    },
+    "LIBSCRIPT_FORCE_FETCH": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) forcing remote artifact re-fetching even when present in the local download cache."
+    },
+    "LIBSCRIPT_DRY_RUN": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) to simulate lifecycle and service operations without executing mutating commands."
+    },
+    "LIBSCRIPT_DRY_RUN_PKG_MGR": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) to simulate OS package manager invocations without mutating the host system."
+    },
     "LIBSCRIPT_DEFAULT_INSTALL_METHOD": {
       "description": "Global override for how software should be installed ('libscript_native' prebuilt binary, 'from-source' compiled from source code, or 'system' via OS/selected package manager).",
       "type": "string",
@@ -22,557 +105,73 @@
         "choco",
         "scoop"
       ],
-      "default": "libscript_native"
+      "default": "libscript_native",
+      "deprecated_aliases": ["LIBSCRIPT_GLOBAL_INSTALL_METHOD"]
     },
     "LIBSCRIPT_PKG_MGR": {
-      "description": "Explicit package manager override for 'system' or package-manager-driven installations (e.g., 'apt-get', 'apk', 'dnf', 'yum', 'zypper', 'pacman', 'brew', 'port', 'pkg', 'xbps', 'emerge', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan'). When set, overrides auto-detection in detect_pkg_mgr.",
-      "type": "string"
-    },
-    "LIBSCRIPT_BUILD_TOOLCHAIN": {
-      "description": "Toolchain selector used when building components from source ('default' uses the platform default C/C++ compiler via _lib/languages/c, whereas 'gcc', 'clang', 'tcc', 'custom-cc', or an explicit binary path compiles the component with that specific toolchain).",
-      "type": "string",
-      "default": "default"
-    },
-    "LIBSCRIPT_CUSTOM_CC_BIN": {
-      "description": "Optional filesystem path to a custom C compiler binary when LIBSCRIPT_BUILD_TOOLCHAIN='custom-cc'.",
-      "type": "string"
-    },
-    "LIBSCRIPT_BUILD_CFLAGS": {
-      "description": "Global extra CFLAGS passed to source builds across components.",
-      "type": "string"
-    },
-    "LIBSCRIPT_BUILD_LDFLAGS": {
-      "description": "Global extra LDFLAGS passed to source builds across components.",
+      "description": "Explicit package manager override for 'system' or package-manager-driven installations (e.g., 'apt-get', 'apk', 'dnf', 'yum', 'zypper', 'pacman', 'brew', 'port', 'pkg', 'xbps', 'emerge', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan').",
       "type": "string"
     },
     "LIBSCRIPT_WINDOWS_PKG_MGR": {
-      "description": "Global package manager override for Windows (winget, choco, scoop, vcpkg).",
+      "description": "Global package manager override on Windows hosts (winget, choco, scoop, vcpkg).",
       "type": "string",
       "enum": ["winget", "choco", "scoop", "vcpkg"],
       "default": "winget"
     },
-    "LIBSCRIPT_LOG_LEVEL": {
+    "LIBSCRIPT_SKIP_SYSTEM_DEPS": {
       "type": "string",
-      "description": "Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR).",
-      "default": "1"
-    },
-    "LIBSCRIPT_LOG_FORMAT": {
-      "type": "string",
-      "description": "Output format for logs (text, json).",
-      "enum": ["text", "json"],
-      "default": "text"
-    },
-    "LIBSCRIPT_LOG_FILE": {
-      "type": "string",
-      "description": "File to write logs to (in addition to standard output)."
-    },
-    "LIBSCRIPT_SERVICE_NAME": {
-      "type": "string",
-      "description": "Overrides the default service name."
-    },
-    "DOWNLOAD_DIR": {
-      "type": "string",
-      "description": "Directory where downloads are stored."
-    },
-    "FORMAT": {
-      "type": "string",
-      "description": "Output format (e.g., json, text)."
-    },
-    "LIBSCRIPT_CACHE_DIR": {
-      "type": "string",
-      "description": "Directory where cached files are stored."
-    },
-    "LIBSCRIPT_OFFLINE": {
-      "type": "string",
-      "description": "Flag (0 or 1) indicating whether offline mode is active, prohibiting outgoing network calls.",
       "enum": ["0", "1"],
-      "default": "0"
+      "default": "0",
+      "description": "Flag (0 or 1) to skip OS-level system dependency installation during component setup."
     },
-    "LIBSCRIPT_FORCE_OFFLINE": {
+    "LIBSCRIPT_PROFILE": {
       "type": "string",
-      "description": "Strict offline flag (0 or 1) that immediately aborts execution if network calls are attempted.",
-      "enum": ["0", "1"],
-      "default": "0"
-    },
-    "LIBSCRIPT_DOWNLOAD_DIR": {
-      "type": "string",
-      "description": "Staging directory for temporary download artifacts."
-    },
-    "LIBSCRIPT_LOG_DRIVER": {
-      "type": "string",
-      "description": "Logging driver to use (e.g., fluentd)."
-    },
-    "LOGS_DIR": {
-      "type": "string",
-      "description": "Directory where logs should be stored."
-    },
-    "VAULT_TOKEN": {
-      "type": "string",
-      "description": "Token for HashiCorp Vault authentication."
-    },
-    "PREFIX": {
-      "type": "string",
-      "description": "Installation prefix."
-    },
-    "SERVE_FROM": {
-      "type": "string",
-      "description": "Base directory or context path for the service."
-    },
-    "LIBSCRIPT_LOG_HOST": {
-      "type": "string",
-      "description": "Host for remote logging."
+      "description": "Active configuration profile identifier (e.g., dev, prod, minimal, hpc)."
     },
     "LIBSCRIPT_VERSION": {
       "type": "string",
-      "description": "Specifies the version of the package to use."
+      "description": "Requested target package version override when not specified via <COMP>_VERSION."
     },
-    "LIBSCRIPT_LOG_PORT": {
+    "LIBSCRIPT_SERVICE_NAME": {
       "type": "string",
-      "description": "Port for remote logging."
+      "description": "Explicit service unit identifier overriding the default libscript_<component> service name."
     },
-    "TPU_ZONE": {
+    "LIBSCRIPT_SERVICE_RUN_AS_USER": {
       "type": "string",
-      "description": "GCP Zone for TPU provisioning",
-      "default": "us-central2-b"
-    },
-    "TPU_ACCELERATOR_TYPE": {
-      "type": "string",
-      "description": "Type of TPU accelerator (e.g. v4-8)",
-      "default": "v4-8"
-    },
-    "TPU_VERSION": {
-      "type": "string",
-      "description": "TPU VM OS version",
-      "default": "tpu-ubuntu2204-base"
-    },
-    "GCP_PROJECT_ID": {
-      "type": "string",
-      "description": "GCP Project ID"
-    },
-    "XPK_CLUSTER_NAME": {
-      "type": "string",
-      "description": "Name for the XPK GKE cluster"
-    },
-    "TPU_TENSOR_PARALLEL_SIZE": {
-      "type": "string",
-      "description": "Tensor parallel size for TPU serving",
-      "default": "1"
-    },
-    "MODEL_NAME": {
-      "type": "string",
-      "description": "HuggingFace model string to serve",
-      "default": "your-org/your-model-name"
-    },
-    "WORKLOAD_NAME": {
-      "type": "string",
-      "description": "Name of the XPK workload"
-    },
-    "JETSTREAM_IMAGE": {
-      "type": "string",
-      "description": "Docker image for JetStream TPU inference"
-    },
-    "LIBSCRIPT_HOME": {
-      "type": "string",
-      "description": "Base installation prefix where LibScript installs isolated component versions."
-    },
-    "LIBSCRIPT_DATA_DIR": {
-      "type": "string",
-      "description": "Base data directory for runtime component state, databases, and service configurations."
-    },
-    "LIBSCRIPT_BUILD_DIR": {
-      "type": "string",
-      "description": "Scratch build directory used when compiling components from source."
-    },
-    "LIBSCRIPT_TARGET_SYSROOT": {
-      "type": "string",
-      "description": "Optional target root filesystem path when provisioning chroots or OS images."
-    },
-    "LIBSCRIPT_SKIP_SYSTEM_DEPS": {
-      "type": "string",
-      "description": "Flag (0 or 1) to skip OS-level system dependency installation during setup."
-    },
-    "LIBSCRIPT_DRY_RUN_PKG_MGR": {
-      "type": "string",
-      "description": "Flag (0 or 1) to simulate package manager operations without mutating the system."
-    },
-    "LIBSCRIPT_DRY_RUN": {
-      "type": "string",
-      "description": "Flag (0 or 1) to simulate lifecycle and service operations without executing mutating commands."
-    },
-    "LIBSCRIPT_MOCK_SYSTEMD": {
-      "type": "string",
-      "description": "Flag (0 or 1) to mock systemd service management calls during testing."
-    },
-    "LIBSCRIPT_SYSTEMD_DIR": {
-      "type": "string",
-      "description": "Override directory for systemd unit and drop-in override files (defaults to /etc/systemd/system)."
-    },
-    "LIBSCRIPT_ETC_DIR": {
-      "type": "string",
-      "description": "Override root configuration directory for system service config files (defaults to /etc)."
-    },
-    "LIBSCRIPT_OVERRIDE_CHANGED": {
-      "type": "string",
-      "description": "Internal flag (0 or 1) set by libscript_override_service_env when a service environment file was modified."
-    },
-    "LIBSCRIPT_ARIA2_EXPORT_FILE": {
-      "type": "string",
-      "description": "File path to export aria2-compatible download URLs instead of downloading immediately."
-    },
-    "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB": {
-      "type": "string",
-      "description": "Flag (0 or 1) to prevent auto-fetching remote SHA-256 checksums when missing from checksums.txt."
-    },
-    "LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE": {
-      "type": "string",
-      "description": "Flag (0 or 1) to prevent appending newly discovered SHA-256 hashes to _lib/checksums.txt."
-    },
-    "LIBSCRIPT_LISTEN_PORT": {
-      "type": "string",
-      "description": "Global fallback TCP port for network-listening components."
+      "description": "System user account under which daemonized component services execute."
     },
     "LIBSCRIPT_LISTEN_ADDRESS": {
       "type": "string",
       "description": "Global fallback bind address for network-listening components."
     },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": "string",
+      "description": "Global fallback TCP port for network-listening components."
+    },
     "LIBSCRIPT_LISTEN_SOCKET": {
       "type": "string",
       "description": "Global fallback UNIX domain socket path for listening components."
     },
-    "LIBSCRIPT_SERVICE_RUN_AS_USER": {
+    "LIBSCRIPT_TARGET_SYSROOT": {
       "type": "string",
-      "description": "System user account under which daemonized services should execute."
+      "description": "Optional target root filesystem path when staging components into chroots or OS images.",
+      "deprecated_aliases": ["LIBSCRIPT_TARGET_ROOTFS"]
     },
-    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+    "LIBSCRIPT_ARIA2_EXPORT_FILE": {
       "type": "string",
-      "description": "Global installation strategy override applied across all components."
+      "description": "File path to export aria2-compatible download manifests instead of downloading immediately."
     },
     "FORCE_REINSTALL": {
       "type": "string",
-      "description": "Flag (0 or 1) to force re-downloading and reinstalling a component even if already present."
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) forcing re-downloading and reinstalling a component even when already present."
     },
     "FORCE_REBUILD": {
       "type": "string",
-      "description": "Flag (0 or 1) to force rebuilding a component or service unit from scratch."
-    },
-    "LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION": {
-      "type": "string",
-      "description": "Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters."
-    },
-    "LIBSCRIPT_AZURE_RESOURCE_GROUP": {
-      "type": "string",
-      "description": "Default Azure Resource Group name for cloud provisioning operations."
-    },
-    "LIBSCRIPT_DASHBOARD_DIR": {
-      "type": "string",
-      "description": "Directory path for generated monitoring and observability dashboards."
-    },
-    "LIBSCRIPT_DEBUG": {
-      "type": "string",
-      "description": "Flag (0 or 1) enabling verbose debug tracing across LibScript lifecycle actions."
-    },
-    "LIBSCRIPT_FORCE_FETCH": {
-      "type": "string",
-      "description": "Flag (0 or 1) forcing remote artifact re-fetching even when present in local cache."
-    },
-    "LIBSCRIPT_HOST_ROOT": {
-      "type": "string",
-      "description": "Host root directory mount point when executing inside a container or chroot."
-    },
-    "LIBSCRIPT_HW_CORES": {
-      "type": "string",
-      "description": "Detected or overridden CPU core count for auto-tuning services and parallel builds."
-    },
-    "LIBSCRIPT_HW_MEM_MB": {
-      "type": "string",
-      "description": "Detected or overridden system memory in MiB for auto-tuning service buffer pools."
-    },
-    "LIBSCRIPT_HW_NVME": {
-      "type": "string",
-      "description": "Detected or overridden NVMe storage presence flag for I/O scheduler and database tuning."
-    },
-    "LIBSCRIPT_HW_SIMD": {
-      "type": "string",
-      "description": "Detected or overridden CPU SIMD instruction set capabilities (e.g., avx2, avx512, neon)."
-    },
-    "LIBSCRIPT_PROFILE": {
-      "type": "string",
-      "description": "Active configuration profile name (e.g., dev, prod, minimal, hpc)."
-    },
-    "LIBSCRIPT_RESOLVED_CC_BIN": {
-      "type": "string",
-      "description": "Resolved path to the active C compiler binary for source builds."
-    },
-    "LIBSCRIPT_RESOLVED_CC_ID": {
-      "type": "string",
-      "description": "Resolved compiler identifier (gcc, clang, tcc, msvc) for source builds."
-    },
-    "LIBSCRIPT_RESOLVED_CC_VERSION": {
-      "type": "string",
-      "description": "Resolved version string of the active C compiler."
-    },
-    "LIBSCRIPT_SOURCE_WORKDIR": {
-      "type": "string",
-      "description": "Working directory used for extracting and compiling source tarballs."
-    },
-    "LIBSCRIPT_TAG_ENABLE": {
-      "type": "string",
-      "description": "Flag (0 or 1) enabling resource tagging on cloud provider assets."
-    },
-    "LIBSCRIPT_TAG_KEY": {
-      "type": "string",
-      "description": "Tag key applied to provisioned cloud provider resources."
-    },
-    "LIBSCRIPT_TAG_VALUE": {
-      "type": "string",
-      "description": "Tag value applied to provisioned cloud provider resources."
-    },
-    "LIBSCRIPT_TARGET_ARCH": {
-      "type": "string",
-      "description": "Target CPU architecture when cross-compiling or building OS images."
-    },
-    "LIBSCRIPT_TARGET_LIBC": {
-      "type": "string",
-      "description": "Target C standard library implementation (glibc, musl, uclibc, msvcrt)."
-    },
-    "LIBSCRIPT_TARGET_OS": {
-      "type": "string",
-      "description": "Target operating system identifier when provisioning or cross-compiling."
-    },
-    "LIBSCRIPT_TARGET_ROOTFS": {
-      "type": "string",
-      "description": "Filesystem path to the target rootfs directory for image synthesis."
-    },
-    "LIBSCRIPT_VOLUME_NAME": {
-      "type": "string",
-      "description": "Logical storage volume name for persistent data mounts."
-    },
-    "LIBSCRIPT_LIB_SYSTEMD_DIR": {
-      "type": "string",
-      "description": "Override directory for vendor systemd unit files (defaults to /lib/systemd/system)."
-    },
-    "LIBSCRIPT_EXPORT_STAGE_DIR": {
-      "type": "string",
-      "description": "Staging directory used when exporting application and database state archives."
-    },
-    "LIBSCRIPT_IMPORT_STAGE_DIR": {
-      "type": "string",
-      "description": "Staging directory used when importing application and database state archives."
-    },
-    "LIBSCRIPT_HOME_BASE": {
-      "type": "string",
-      "description": "Base parent directory for user home directories (defaults to /home)."
-    },
-    "LIBSCRIPT_LOG_DIR": {
-      "type": "string",
-      "description": "System log directory override (defaults to /var/log)."
-    },
-    "LIBSCRIPT_ROOT_HOME": {
-      "type": "string",
-      "description": "Root user home directory override (defaults to /root)."
-    },
-    "LIBSCRIPT_USR_LOCAL_BIN": {
-      "type": "string",
-      "description": "Override directory for locally installed system binaries (defaults to /usr/local/bin)."
-    },
-    "LIBSCRIPT_USR_LOCAL_ETC": {
-      "type": "string",
-      "description": "Override directory for locally installed system configuration files (defaults to /usr/local/etc)."
-    },
-    "LIBSCRIPT_FREEBSD_RCD_DIR": {
-      "type": "string",
-      "description": "Override directory for FreeBSD rc.d service scripts (defaults to /usr/local/etc/rc.d)."
-    },
-    "LIBSCRIPT_INITD_DIR": {
-      "type": "string",
-      "description": "Override directory for SysV/OpenRC init.d scripts (defaults to /etc/init.d)."
-    },
-    "LIBSCRIPT_RUN_DIR": {
-      "type": "string",
-      "description": "Override runtime PID/socket directory (defaults to /var/run)."
-    },
-    "LIBSCRIPT_BENCH_PREPARE_HOST": {
-      "type": "string",
-      "description": "Flag (0 or 1) to lock CPU frequency scaling governor to performance, disable ASLR, and disable swap before running compiler benchmarks."
-    },
-    "LIBSCRIPT_BENCH_DROP_CACHES": {
-      "type": "string",
-      "description": "Flag (0 or 1) to flush filesystem buffers and drop OS page caches before each compiler benchmark run."
-    },
-    "LIBSCRIPT_RESOLVED_CXX_BIN": {
-      "type": "string",
-      "description": "Resolved path to the active C++ compiler driver executable (e.g. g++, clang++, edg-c++) selected by libscript_resolve_build_toolchain."
-    },
-    "LIBSCRIPT_LAST_PEAK_RSS_KB": {
-      "type": "string",
-      "description": "Peak resident set size (in kilobytes) recorded during the most recent source build invocation."
-    },
-    "LIBSCRIPT_EXPERIMENT_PROVIDER": {
-      "type": "string",
-      "description": "Default cloud vendor for rapid experimentation (defaults to 'azure')."
-    },
-    "LIBSCRIPT_EXPERIMENT_SIZE": {
-      "type": "string",
-      "description": "Default instance size for rapid experimentation (defaults to '160-vCPU Standard_D160ads_v7')."
-    },
-    "LIBSCRIPT_EXPERIMENT_NODE": {
-      "type": "string",
-      "description": "Default compute node name for rapid cloud experimentation."
-    },
-    "LIBSCRIPT_EXPERIMENT_RG": {
-      "type": "string",
-      "description": "Default resource group for rapid cloud experimentation."
-    },
-    "LIBSCRIPT_EXPERIMENT_LOCATION": {
-      "type": "string",
-      "description": "Default cloud location/region for rapid cloud experimentation."
-    },
-    "LIBSCRIPT_EXPERIMENT_OS": {
-      "type": "string",
-      "description": "Default VM operating system image for rapid cloud experimentation."
-    },
-    "LIBSCRIPT_EXPERIMENT_SUITE_MANIFEST": {
-      "type": "string",
-      "description": "Path to a declarative experiment-suite.schema.json manifest file executed by the experiment runner."
-    },
-    "LIBSCRIPT_EXPERIMENT_WARMUP": {
-      "type": "string",
-      "description": "Default number of unrecorded warmup runs executed before recorded benchmark trials (defaults to '10')."
-    },
-    "LIBSCRIPT_EXPERIMENT_TRIALS": {
-      "type": "string",
-      "description": "Default number of recorded fresh trials captured per benchmark cell (defaults to '200')."
-    },
-    "LIBSCRIPT_EXPERIMENT_SUBSUITES": {
-      "type": "string",
-      "description": "Comma- or space-separated list of sub-suite identifiers to execute (e.g., 'E0,E1,E2,E3,E4,E5,E6,E7,E8')."
-    },
-    "LIBSCRIPT_EXPERIMENT_OUT_DIR": {
-      "type": "string",
-      "description": "Output directory for mechanical experiment JSON results and generated LaTeX macros."
-    },
-    "LIBSCRIPT_EXPERIMENT_REPO_DIR": {
-      "type": "string",
-      "description": "Local or synced remote filesystem path to the target repository under benchmark evaluation."
-    },
-    "LIBSCRIPT_EXPERIMENT_PAPER_DIR": {
-      "type": "string",
-      "description": "Local or synced remote filesystem path to the paper manuscript directory receiving generated LaTeX metrics."
-    },
-    "LIBSCRIPT_EXPERIMENT_ECOSYSTEM_ROOT": {
-      "type": "string",
-      "description": "Root directory containing multi-repository subject checkouts evaluated across ecosystem benchmarks."
-    },
-    "LIBSCRIPT_EXPERIMENT_LOCKFILE_DIR": {
-      "type": "string",
-      "description": "Directory containing pinned provenance lockfiles (e.g., c_upstreams.lock.json and batch_wild_corpus.lock.json)."
-    },
-    "LIBSCRIPT_EXPERIMENT_EMULATION_MODE": {
-      "type": "string",
-      "description": "Controlled execution or baseline isolation mode ('native_only', 'wine_warm', 'wine_cold', 'wsl2_loopback', 'wsl2_cross_boundary', 'wsl2_cli_spawn', 'cygwin', 'msys2', or 'dos32_vagrant_com1')."
-    },
-    "LIBSCRIPT_BENCH_REQUIRE_NATIVE_ISA": {
-      "type": "string",
-      "description": "Flag (0 or 1) enforcing native hardware ISA execution and rejecting Rosetta 2, QEMU, or WoW64 binary translation."
-    },
-    "LIBSCRIPT_BENCH_CARGO_PROFILE": {
-      "type": "string",
-      "description": "Pinned Cargo release profile specification ('opt3-lto-thin-cgu1' or custom key=value list) enforced across Rust benchmarks."
-    },
-    "LIBSCRIPT_BENCH_MSVC_CRT": {
-      "type": "string",
-      "description": "MSVC C Runtime linkage variant ('MT' for static CRT or 'MD' for dynamic CRT) applied during Windows benchmark builds."
-    },
-    "LIBSCRIPT_BENCH_WINE_MODE": {
-      "type": "string",
-      "description": "WINE baseline execution policy ('warm' for persistent wineserver -p or 'cold' for per-trial wineserver -k)."
-    },
-    "LIBSCRIPT_BENCH_FAKE_TRANSLATED_ISA": {
-      "type": "string",
-      "description": "Internal test override flag (0 or 1) simulating Rosetta/QEMU binary translation to test RULE-2 failure handling."
-    },
-    "LIBSCRIPT_BENCH_CLOCK_NS_BIN": {
-      "type": "string",
-      "description": "Cached path to the compiled C11 monotonic nanosecond clock helper executable."
-    },
-    "LIBSCRIPT_BENCH_PROBE_BIN": {
-      "type": "string",
-      "description": "Cached path to the compiled C11 cross-OS subprocess timing and PeakWorkingSetSize/ru_maxrss measurement probe."
-    },
-    "LIBSCRIPT_HW_CPU_MODEL": {
-      "type": "string",
-      "description": "Detected host CPU or SoC model string exported by libscript_detect_hardware."
-    },
-    "LIBSCRIPT_HW_PHYS_CORES": {
-      "type": "string",
-      "description": "Detected host physical CPU core count exported by libscript_detect_hardware."
-    },
-    "LIBSCRIPT_HW_PERF_CORES": {
-      "type": "string",
-      "description": "Detected host performance CPU core count exported by libscript_detect_hardware."
-    },
-    "LIBSCRIPT_HW_NUMA_NODES": {
-      "type": "string",
-      "description": "Detected host NUMA node count exported by libscript_detect_hardware."
-    },
-    "LIBSCRIPT_STRICT_IMAGE_BUILD": {
-      "type": "string",
       "enum": ["0", "1"],
       "default": "0",
-      "description": "Flag (0 or 1) enforcing strict native image synthesis and rejecting missing-tool stub fallbacks without writing completion stamps."
-    },
-    "LIBSCRIPT_ALLOW_STUB": {
-      "type": "string",
-      "enum": ["0", "1"],
-      "default": "0",
-      "description": "Flag (0 or 1) explicitly permitting structural stub artifacts during unit and dry-run testing when hypervisor or mkfs tools are absent."
-    },
-    "LIBSCRIPT_IMAGE_BUILD": {
-      "type": "string",
-      "enum": ["0", "1"],
-      "default": "0",
-      "description": "Flag (0 or 1) indicating offline sysroot/image synthesis mode so service installers stage unit files without starting host daemons."
-    },
-    "LIBSCRIPT_VM_WORKER": {
-      "type": "string",
-      "description": "Virtualization worker backend override (docker, wsl2, qemu, bhyve, omnios-vm) for cross-OS disk and filesystem synthesis."
-    },
-    "LIBSCRIPT_UNIKERNEL_FRAMEWORK": {
-      "type": "string",
-      "description": "Target unikernel build framework (unikraft, nanos, osv, rumprun, mirageos) when synthesizing unikernel appliances."
-    },
-    "LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE": {
-      "type": "string",
-      "enum": ["0", "1"],
-      "default": "0",
-      "description": "Flag (0 or 1) instructing _lib/kernel/setup.sh to compile the Linux kernel from source via _lib/kernel/linux when no prebuilt kernel exists."
-    },
-    "LIBSCRIPT_FREEBSD_BUILDWORLD": {
-      "type": "string",
-      "enum": ["0", "1"],
-      "default": "0",
-      "description": "Flag (0 or 1) instructing _lib/freebsd/setup.sh to execute buildworld and buildkernel from FREEBSD_SRC_DIR."
-    },
-    "LIBSCRIPT_FETCH_FREEBSD_BASE": {
-      "type": "string",
-      "enum": ["0", "1"],
-      "default": "0",
-      "description": "Flag (0 or 1) instructing _lib/freebsd/setup.sh to download and extract official FreeBSD base.txz and kernel.txz archives."
-    },
-    "LIBSCRIPT_RELEASEVER": {
-      "type": "string",
-      "default": "9",
-      "description": "Target Enterprise Linux major release version passed to dnf --releasever when staging into LIBSCRIPT_TARGET_SYSROOT."
-    },
-    "LIBSCRIPT_POD_DAEMONS": {
-      "type": "string",
-      "description": "Comma-separated daemon component names decomposed into isolated single-process unikernel appliances by unikernel_pod."
-    },
-    "LIBSCRIPT_FETCH_ILLUMOS_BASE": {
-      "type": "string",
-      "enum": ["0", "1"],
-      "default": "0",
-      "description": "Flag (0 or 1) instructing _lib/illumos/distro/base.sh to fetch and extract upstream OmniOS, OpenIndiana, Tribblix, or SmartOS base archives."
+      "description": "Flag (0 or 1) forcing recompilation or service unit regeneration from scratch."
     }
   }
 }

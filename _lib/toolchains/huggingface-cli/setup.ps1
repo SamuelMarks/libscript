@@ -14,17 +14,20 @@ Execute this script to install and configure huggingface-cli on the local system
 
 $ErrorActionPreference = "Stop"
 
-$HuggingFaceCliVersion = $env:HUGGINGFACE_CLI_VERSION
-if ([string]::IsNullOrEmpty($HuggingFaceCliVersion)) {
-    $HuggingFaceCliVersion = "latest"
-}
+$Action = if ($env:ACTION) { $env:ACTION } elseif ($args.Count -gt 0 -and $args[0] -notlike "-*") { $args[0] } else { "install" }
+$HuggingFaceCliVersion = if ($env:HUGGINGFACE_CLI_VERSION) { $env:HUGGINGFACE_CLI_VERSION } elseif ($env:VERSION) { $env:VERSION } else { "latest" }
+$CompVersion = $HuggingFaceCliVersion
+$InstallMethod = if ($env:HUGGINGFACE_CLI_INSTALL_METHOD) { $env:HUGGINGFACE_CLI_INSTALL_METHOD } elseif ($env:LIBSCRIPT_DEFAULT_INSTALL_METHOD) { $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD } elseif ($env:LIBSCRIPT_GLOBAL_INSTALL_METHOD) { $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD } else { "libscript_native" }
+$LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
+$LibscriptHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $HOME ".libscript" }
+$DownloadDir = if ($env:LIBSCRIPT_DOWNLOAD_DIR) { $env:LIBSCRIPT_DOWNLOAD_DIR } elseif ($env:DOWNLOAD_DIR) { $env:DOWNLOAD_DIR } else { Join-Path $LibscriptRootDir "cache\downloads" }
 
 $Prefix = $env:PREFIX
 if ([string]::IsNullOrEmpty($Prefix)) {
-    $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-    $Prefix = "$LibscriptRootDir\installed\huggingface_hub"
+    $Prefix = Join-Path (Join-Path $LibscriptHome "huggingface-cli") $HuggingFaceCliVersion
 }
 
+if ($Action -eq "install") {
 $BinDir = "$Prefix\bin"
 if (-not (Test-Path -Path $BinDir)) {
     New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
@@ -60,6 +63,8 @@ set "VENV_DIR=%~dp0..\venv"
     Write-Host "huggingface-cli installed to $ExePath"
 } else {
     Write-Host "huggingface-cli already installed at $ExePath"
+}
+exit 0
 }
 
 if ($Action -eq "ls") {

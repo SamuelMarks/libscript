@@ -7,7 +7,7 @@
   "required": ["plan_version", "target_disk", "distribution", "mode"],
   "properties": {
     "plan_version": {
-      "type": "string",
+      "$ref": "./schemas/execution-plan-common.schema.json#/$defs/semver_string",
       "description": "Semantic version of the live installer plan format"
     },
     "target_disk": {

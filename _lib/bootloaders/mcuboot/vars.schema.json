@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/bootloaders/mcuboot/vars.schema.json",
+  "title": "mcuboot variables",
+  "description": "Configuration variables for mcuboot",
+  "type": "object",
+  "properties": {
+    "MCUBOOT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install mcuboot. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "MCUBOOT_VERSION": {
+      "description": "Specific version of mcuboot to install.",
+      "type": "string",
+      "default": "2.1.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "MCUBOOT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading mcuboot binary or archive artifacts."
+    },
+    "MCUBOOT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying mcuboot available remote releases."
+    },
+    "MCUBOOT_KEY_TYPE": {
+      "type": "string",
+      "description": "Cryptographic key algorithm used by imgtool firmware signing (rsa-2048, rsa-3072, ecdsa-p256, ed25519).",
+      "default": "rsa-2048"
+    },
+    "MCUBOOT_KEY_FILE": {
+      "type": "string",
+      "description": "Optional PEM signing key path managed via traits/secrets for deterministic firmware signing.",
+      "default": ""
+    },
+    "MCUBOOT_SLOT_SIZE": {
+      "type": "string",
+      "description": "Hexadecimal or byte flash partition slot size passed to imgtool sign --slot-size.",
+      "default": "0x40000"
+    },
+    "MCUBOOT_HEADER_SIZE": {
+      "type": "string",
+      "description": "MCUboot image header byte offset passed to imgtool sign --header-size.",
+      "default": "0x200"
+    }
+  },
+  "x-libscript-var-packs": ["image_synth", "rtos"]
+}

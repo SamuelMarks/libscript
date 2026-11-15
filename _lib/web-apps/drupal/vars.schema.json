@@ -1,55 +1,55 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/drupal/vars.schema.json",
-  "title": "drupal vars",
-  "description": "Variables for drupal vars",
+  "title": "Drupal Variables",
+  "description": "Configuration variables for deploying and serving the Drupal CMS web application.",
   "type": "object",
   "properties": {
     "DRUPAL_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
+      "description": "PHP-FPM FastCGI socket path or host:port endpoint executing Drupal PHP requests."
     },
     "DRUPAL_DB_TYPE": {
       "type": "string",
-      "description": "Variable DRUPAL_DB_TYPE."
+      "description": "Database backend driver for Drupal (e.g., mysql, pgsql, sqlite)."
     },
     "DRUPAL_DB_NAME": {
       "type": "string",
-      "description": "Variable DRUPAL_DB_NAME."
+      "description": "Database schema name provisioned for the Drupal site."
     },
     "DRUPAL_DB_USER": {
       "type": "string",
-      "description": "Variable DRUPAL_DB_USER."
+      "description": "Database username used by Drupal for database connections."
     },
     "DRUPAL_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem webroot directory where Drupal core and modules are installed."
     },
     "DRUPAL_SERVER_NAME": {
       "type": "string",
-      "description": "Variable DRUPAL_SERVER_NAME."
+      "description": "Virtual host domain name configured for the Drupal web server."
     },
     "DRUPAL_VERSION": {
       "type": "string",
-      "description": "Variable DRUPAL_VERSION."
+      "description": "Target Drupal core version or semantic alias (e.g., latest) to deploy."
     },
     "DRUPAL_DB_PASS": {
       "type": "string",
-      "description": "Variable DRUPAL_DB_PASS."
+      "description": "Password authenticating the Drupal database user."
     },
     "DRUPAL_WEBSERVER": {
       "type": "string",
-      "description": "Variable DRUPAL_WEBSERVER."
+      "description": "Frontend web server fronting Drupal (e.g., nginx, caddy, httpd)."
     },
     "DRUPAL_LISTEN": {
       "type": "string",
-      "description": "Variable DRUPAL_LISTEN."
+      "description": "HTTP listen address:port or UNIX socket exposed by the Drupal web server."
     },
     "db_strategy": {
       "type": "string",
       "enum": ["local", "remote"],
       "default": "local",
-      "description": "Database provisioning strategy (e.g. relational vs nosql)."
+      "description": "Database provisioning strategy (local managed instance vs remote server)."
     },
     "db_host": {
       "type": "string",

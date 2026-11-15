@@ -88,6 +88,20 @@ if "!TARGET_OS!"=="" (
     )
 )
 
+set "RTOS_BOARD=%LIBSCRIPT_RTOS_BOARD%"
+set "_IS_FREESTANDING=0"
+
+if /I "!RTOS_BOARD!"=="native_sim" goto :sim_triplet
+if /I "!RTOS_BOARD!"=="native_sim_64" goto :sim_triplet
+if /I "!RTOS_BOARD!"=="posix_gcc" goto :sim_triplet
+if /I "!RTOS_BOARD!"=="win32_sim" goto :sim_triplet
+if /I "!RTOS_BOARD!"=="msvc_ming_win32" goto :sim_triplet
+
+if /I "!TARGET_OS!"=="zephyr" goto :zephyr_triplet
+if /I "!TARGET_OS!"=="rtos-zephyr" goto :zephyr_triplet
+if /I "!TARGET_OS!"=="freertos" goto :freertos_triplet
+if /I "!TARGET_OS!"=="rtos-freertos" goto :freertos_triplet
+
 if "!TARGET_OS!"=="freebsd" (
     set "LIBSCRIPT_TARGET_TRIPLET=!TARGET_ARCH!-unknown-freebsd14.0"
 ) else if "!TARGET_OS!"=="unikraft" (
@@ -99,9 +113,61 @@ if "!TARGET_OS!"=="freebsd" (
         set "LIBSCRIPT_TARGET_TRIPLET=!TARGET_ARCH!-libscript-linux-gnu"
     )
 )
+goto :triplet_done
 
-set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -fPIC -fstack-protector-strong -D_FORTIFY_SOURCE=2"
-set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,-z,relro -Wl,-z,now"
+:: ## sim_triplet
+:: Assigns host native Windows simulator triplet for RTOS simulator targets.
+:sim_triplet
+set "LIBSCRIPT_TARGET_TRIPLET=x86_64-pc-windows-msvc"
+set "_IS_FREESTANDING=0"
+goto :triplet_done
+
+:: ## zephyr_triplet
+:: Resolves canonical Zephyr SDK bare-metal target triplet.
+:zephyr_triplet
+set "_IS_FREESTANDING=1"
+set "LIBSCRIPT_TARGET_TRIPLET=x86_64-zephyr-elf"
+if /I "!TARGET_ARCH!"=="arm" set "LIBSCRIPT_TARGET_TRIPLET=arm-zephyr-eabi"
+if /I "!TARGET_ARCH!"=="armv7m" set "LIBSCRIPT_TARGET_TRIPLET=arm-zephyr-eabi"
+if /I "!TARGET_ARCH!"=="armv8m" set "LIBSCRIPT_TARGET_TRIPLET=arm-zephyr-eabi"
+if /I "!TARGET_ARCH!"=="armv7l" set "LIBSCRIPT_TARGET_TRIPLET=arm-zephyr-eabi"
+if /I "!TARGET_ARCH!"=="aarch64" set "LIBSCRIPT_TARGET_TRIPLET=aarch64-zephyr-elf"
+if /I "!TARGET_ARCH!"=="arm64" set "LIBSCRIPT_TARGET_TRIPLET=aarch64-zephyr-elf"
+if /I "!TARGET_ARCH!"=="riscv32" set "LIBSCRIPT_TARGET_TRIPLET=riscv32-zephyr-elf"
+if /I "!TARGET_ARCH!"=="riscv64" set "LIBSCRIPT_TARGET_TRIPLET=riscv64-zephyr-elf"
+if /I "!TARGET_ARCH!"=="xtensa" set "LIBSCRIPT_TARGET_TRIPLET=xtensa-zephyr-elf"
+goto :triplet_done
+
+:: ## freertos_triplet
+:: Resolves canonical FreeRTOS bare-metal ELF target triplet.
+:freertos_triplet
+set "_IS_FREESTANDING=1"
+set "LIBSCRIPT_TARGET_TRIPLET=x86_64-unknown-elf"
+if /I "!TARGET_ARCH!"=="arm" set "LIBSCRIPT_TARGET_TRIPLET=arm-none-eabi"
+if /I "!TARGET_ARCH!"=="armv7m" set "LIBSCRIPT_TARGET_TRIPLET=arm-none-eabi"
+if /I "!TARGET_ARCH!"=="armv8m" set "LIBSCRIPT_TARGET_TRIPLET=arm-none-eabi"
+if /I "!TARGET_ARCH!"=="armv7l" set "LIBSCRIPT_TARGET_TRIPLET=arm-none-eabi"
+if /I "!TARGET_ARCH!"=="aarch64" set "LIBSCRIPT_TARGET_TRIPLET=aarch64-none-elf"
+if /I "!TARGET_ARCH!"=="arm64" set "LIBSCRIPT_TARGET_TRIPLET=aarch64-none-elf"
+if /I "!TARGET_ARCH!"=="riscv32" set "LIBSCRIPT_TARGET_TRIPLET=riscv32-unknown-elf"
+if /I "!TARGET_ARCH!"=="riscv64" set "LIBSCRIPT_TARGET_TRIPLET=riscv64-unknown-elf"
+
+:: ## triplet_done
+:: Applies freestanding or hosted compiler security flags once target triplet is resolved.
+:triplet_done
+if /I "!TARGET_LIBC!"=="newlib" set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="picolibc" set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="nolibc" set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="zephyr-minimal" set "_IS_FREESTANDING=1"
+if /I "!TARGET_LIBC!"=="freertos-none" set "_IS_FREESTANDING=1"
+
+if "!_IS_FREESTANDING!"=="1" (
+    set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -ffreestanding -fdata-sections -ffunction-sections"
+    set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,--gc-sections"
+) else (
+    set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -fPIC -fstack-protector-strong -D_FORTIFY_SOURCE=2"
+    set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,-z,relro -Wl,-z,now"
+)
 if not defined SOURCE_DATE_EPOCH set "SOURCE_DATE_EPOCH=1700000000"
 
 call :resolve_compiler_flags "%CC_BACKEND%"
@@ -138,6 +204,11 @@ if /i "!_cc_id!"=="custom-cc" (
 )
 if /i "!_cc_id!"=="edgcpp" (
     set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="msvc" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=/O2"
     set "LIBSCRIPT_COMPILER_LDFLAGS="
     exit /b 0
 )

@@ -1,9 +1,9 @@
 @echo off
 :: # experiment_cloud.cmd
 :: ## Overview
-:: Unified rapid cloud, Dual-ISA native benchmark (`--suite=libtpu|edgcpp|manifest`), and Bento multi-OS Vagrant matrix experimentation lifecycle orchestrator for LibScript on Windows.
+:: Unified rapid cloud, TFRC 7-backend Google Cloud TPU (`--suite=gemma_tpu` / `tpu_matrix`), Dual-ISA native benchmark (`--suite=libtpu|edgcpp|manifest`), and Bento multi-OS Vagrant matrix experimentation lifecycle orchestrator for LibScript on Windows.
 :: ## Usage
-:: _lib\cloud\core\experiment_cloud.cmd [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|bento_matrix|all] [--suite=libtpu|edgcpp|libscript|manifest|all]
+:: _lib\cloud\core\experiment_cloud.cmd [a_provision_instance|sync_research_repos|verify_native_host|run_experiments|g_collect_logs|h_pull_logs|emit_latex_and_verify_pdf|i_deprovision_instance|tpu_matrix|gemma_tpu_campaign|bento_matrix|all] [--suite=gemma_tpu|libtpu|edgcpp|libscript|manifest|all]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -82,99 +82,134 @@ if "%CORE_EXPERIMENT_CARGO_PROFILE%"=="" set "CORE_EXPERIMENT_CARGO_PROFILE=opt3
 if "%CORE_EXPERIMENT_REQUIRE_NATIVE_ISA%"=="" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1"
 if "%CORE_EXPERIMENT_HOST_ARCH%"=="" set "CORE_EXPERIMENT_HOST_ARCH=linux_x64"
 if "%CORE_EXPERIMENT_BUILD_PDF%"=="" set "CORE_EXPERIMENT_BUILD_PDF=0"
+if "%CORE_EXPERIMENT_MODEL%"=="" set "CORE_EXPERIMENT_MODEL=google/gemma-4-E4B"
+if "%CORE_EXPERIMENT_BACKENDS%"=="" set "CORE_EXPERIMENT_BACKENDS=hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native"
+if "%CORE_EXPERIMENT_COMMAND_TEMPLATE%"=="" set "CORE_EXPERIMENT_COMMAND_TEMPLATE="
+if "%CORE_EXPERIMENT_RESUME%"=="" set "CORE_EXPERIMENT_RESUME=1"
+if "%CORE_EXPERIMENT_FRESH_VM_PER_BACKEND%"=="" set "CORE_EXPERIMENT_FRESH_VM_PER_BACKEND=0"
 set "CORE_EXPERIMENT_STEPS="
+set "_SUBSUITES_EXPLICIT=0"
+set "_TPU_PROV_STARTED=0"
 
-for %%A in (%*) do (
-    set "_arg=%%~A"
-    if "!_arg:~0,8!"=="--steps=" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! !_arg:~8!"
-    if "!_arg:~0,7!"=="--step=" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! !_arg:~7!"
-    if "!_arg:~0,11!"=="--provider=" set "CORE_EXPERIMENT_PROVIDER=!_arg:~11!"
-    if "!_arg:~0,7!"=="--size=" set "CORE_EXPERIMENT_SIZE=!_arg:~7!"
-    if "!_arg:~0,10!"=="--vm-size=" set "CORE_EXPERIMENT_SIZE=!_arg:~10!"
-    if "!_arg:~0,7!"=="--node=" set "CORE_EXPERIMENT_NODE=!_arg:~7!"
-    if "!_arg:~0,5!"=="--rg=" set "CORE_EXPERIMENT_RG=!_arg:~5!"
-    if "!_arg:~0,11!"=="--location=" set "CORE_EXPERIMENT_LOCATION=!_arg:~11!"
-    if "!_arg:~0,12!"=="--target-os=" set "CORE_EXPERIMENT_TARGET_OS=!_arg:~12!"
-    if "!_arg:~0,13!"=="--bento-repo=" set "CORE_EXPERIMENT_BENTO_REPO=!_arg:~13!"
-    if "!_arg:~0,15!"=="--bento-branch=" set "CORE_EXPERIMENT_BENTO_BRANCH=!_arg:~15!"
-    if "!_arg:~0,12!"=="--bento-dir=" set "CORE_EXPERIMENT_BENTO_DIR=!_arg:~12!"
-    if "!_arg:~0,11!"=="--snapshot=" set "CORE_EXPERIMENT_SNAPSHOT_NAME=!_arg:~11!"
-    if "!_arg:~0,13!"=="--components=" set "CORE_EXPERIMENT_COMPONENTS=!_arg:~13!"
-    if "!_arg:~0,12!"=="--component=" set "CORE_EXPERIMENT_COMPONENTS=!_arg:~12!"
-    if "!_arg:~0,10!"=="--version=" set "CORE_EXPERIMENT_COMPONENT_VERSION=!_arg:~10!"
-    if "!_arg:~0,20!"=="--component-version=" set "CORE_EXPERIMENT_COMPONENT_VERSION=!_arg:~20!"
-    if "!_arg:~0,10!"=="--pkg-mgr=" set "CORE_EXPERIMENT_PKG_MGR=!_arg:~10!"
-    if "!_arg:~0,18!"=="--package-manager=" set "CORE_EXPERIMENT_PKG_MGR=!_arg:~18!"
-    if "!_arg:~0,17!"=="--install-method=" set "CORE_EXPERIMENT_INSTALL_METHOD=!_arg:~17!"
-    if /i "!_arg!"=="--from-source" set "CORE_EXPERIMENT_INSTALL_METHOD=from-source"
-    if "!_arg:~0,12!"=="--toolchain=" set "CORE_EXPERIMENT_TOOLCHAIN=!_arg:~12!"
-    if "!_arg:~0,19!"=="--idempotency-runs=" set "CORE_EXPERIMENT_IDEMPOTENCY_RUNS=!_arg:~19!"
-    if "!_arg:~0,8!"=="--suite=" set "CORE_EXPERIMENT_SUITE=!_arg:~8!"
-    if "!_arg:~0,17!"=="--suite-manifest=" (
-        set "CORE_EXPERIMENT_SUITE_MANIFEST=!_arg:~17!"
-        set "CORE_EXPERIMENT_SUITE=manifest"
+:: ## parse_args
+:: Parses arbitrary-length CLI options via shift without truncating at %9 or splitting quoted '=' / ',' values.
+:parse_args
+if "%~1"=="" goto :after_parse_args
+set "_arg=%~1"
+if /i "!_arg!"=="experiment" ( shift & goto :parse_args )
+if /i "!_arg!"=="rapid-experiment" ( shift & goto :parse_args )
+if /i "!_arg!"=="cloud-experiments" ( shift & goto :parse_args )
+if "!_arg:~0,8!"=="--steps=" ( set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! !_arg:~8!" & shift & goto :parse_args )
+if "!_arg:~0,7!"=="--step=" ( set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! !_arg:~7!" & shift & goto :parse_args )
+if "!_arg:~0,11!"=="--provider=" ( set "CORE_EXPERIMENT_PROVIDER=!_arg:~11!" & shift & goto :parse_args )
+if /i "!_arg!"=="--provider" ( set "CORE_EXPERIMENT_PROVIDER=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,7!"=="--size=" ( set "CORE_EXPERIMENT_SIZE=!_arg:~7!" & shift & goto :parse_args )
+if "!_arg:~0,10!"=="--vm-size=" ( set "CORE_EXPERIMENT_SIZE=!_arg:~10!" & shift & goto :parse_args )
+if "!_arg:~0,11!"=="--tpu-type=" ( set "CORE_EXPERIMENT_SIZE=!_arg:~11!" & set "TPU_ACCELERATOR_TYPE=!_arg:~11!" & shift & goto :parse_args )
+if "!_arg:~0,7!"=="--node=" ( set "CORE_EXPERIMENT_NODE=!_arg:~7!" & shift & goto :parse_args )
+if "!_arg:~0,5!"=="--rg=" ( set "CORE_EXPERIMENT_RG=!_arg:~5!" & shift & goto :parse_args )
+if "!_arg:~0,10!"=="--project=" ( set "CORE_EXPERIMENT_RG=!_arg:~10!" & set "GCP_PROJECT_ID=!_arg:~10!" & shift & goto :parse_args )
+if "!_arg:~0,11!"=="--location=" ( set "CORE_EXPERIMENT_LOCATION=!_arg:~11!" & shift & goto :parse_args )
+if "!_arg:~0,7!"=="--zone=" ( set "CORE_EXPERIMENT_LOCATION=!_arg:~7!" & set "TPU_ZONE=!_arg:~7!" & shift & goto :parse_args )
+if "!_arg:~0,18!"=="--scheduling-type=" ( set "TPU_SCHEDULING_TYPE=!_arg:~18!" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--target-os=" ( set "CORE_EXPERIMENT_TARGET_OS=!_arg:~12!" & shift & goto :parse_args )
+if "!_arg:~0,13!"=="--bento-repo=" ( set "CORE_EXPERIMENT_BENTO_REPO=!_arg:~13!" & shift & goto :parse_args )
+if "!_arg:~0,15!"=="--bento-branch=" ( set "CORE_EXPERIMENT_BENTO_BRANCH=!_arg:~15!" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--bento-dir=" ( set "CORE_EXPERIMENT_BENTO_DIR=!_arg:~12!" & shift & goto :parse_args )
+if "!_arg:~0,11!"=="--snapshot=" ( set "CORE_EXPERIMENT_SNAPSHOT_NAME=!_arg:~11!" & shift & goto :parse_args )
+if "!_arg:~0,13!"=="--components=" ( set "CORE_EXPERIMENT_COMPONENTS=!_arg:~13!" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--component=" ( set "CORE_EXPERIMENT_COMPONENTS=!_arg:~12!" & shift & goto :parse_args )
+if "!_arg:~0,10!"=="--version=" ( set "CORE_EXPERIMENT_COMPONENT_VERSION=!_arg:~10!" & shift & goto :parse_args )
+if "!_arg:~0,20!"=="--component-version=" ( set "CORE_EXPERIMENT_COMPONENT_VERSION=!_arg:~20!" & shift & goto :parse_args )
+if "!_arg:~0,10!"=="--pkg-mgr=" ( set "CORE_EXPERIMENT_PKG_MGR=!_arg:~10!" & shift & goto :parse_args )
+if "!_arg:~0,18!"=="--package-manager=" ( set "CORE_EXPERIMENT_PKG_MGR=!_arg:~18!" & shift & goto :parse_args )
+if "!_arg:~0,17!"=="--install-method=" ( set "CORE_EXPERIMENT_INSTALL_METHOD=!_arg:~17!" & shift & goto :parse_args )
+if /i "!_arg!"=="--from-source" ( set "CORE_EXPERIMENT_INSTALL_METHOD=from-source" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--toolchain=" ( set "CORE_EXPERIMENT_TOOLCHAIN=!_arg:~12!" & shift & goto :parse_args )
+if "!_arg:~0,19!"=="--idempotency-runs=" ( set "CORE_EXPERIMENT_IDEMPOTENCY_RUNS=!_arg:~19!" & shift & goto :parse_args )
+if "!_arg:~0,8!"=="--suite=" ( set "CORE_EXPERIMENT_SUITE=!_arg:~8!" & shift & goto :parse_args )
+if /i "!_arg!"=="--suite" ( set "CORE_EXPERIMENT_SUITE=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,17!"=="--suite-manifest=" ( set "CORE_EXPERIMENT_SUITE_MANIFEST=!_arg:~17!" & set "CORE_EXPERIMENT_SUITE=manifest" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--subsuites=" ( set "CORE_EXPERIMENT_SUBSUITES=!_arg:~12!" & set "_SUBSUITES_EXPLICIT=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--subsuites" ( set "CORE_EXPERIMENT_SUBSUITES=%~2" & set "_SUBSUITES_EXPLICIT=1" & shift & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--workloads=" ( set "CORE_EXPERIMENT_SUBSUITES=!_arg:~12!" & set "_SUBSUITES_EXPLICIT=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--workloads" ( set "CORE_EXPERIMENT_SUBSUITES=%~2" & set "_SUBSUITES_EXPLICIT=1" & shift & shift & goto :parse_args )
+if "!_arg:~0,9!"=="--warmup=" ( set "CORE_EXPERIMENT_WARMUP=!_arg:~9!" & shift & goto :parse_args )
+if "!_arg:~0,9!"=="--trials=" ( set "CORE_EXPERIMENT_TRIALS=!_arg:~9!" & shift & goto :parse_args )
+if "!_arg:~0,11!"=="--repo-dir=" ( set "CORE_EXPERIMENT_REPO_DIR=!_arg:~11!" & shift & goto :parse_args )
+if /i "!_arg!"=="--repo-dir" ( set "CORE_EXPERIMENT_REPO_DIR=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,16!"=="--ecosystem-dir=" ( set "CORE_EXPERIMENT_ECOSYSTEM_DIR=!_arg:~16!" & shift & goto :parse_args )
+if "!_arg:~0,15!"=="--appendix-tex=" ( set "CORE_EXPERIMENT_APPENDIX_TEX=!_arg:~15!" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--paper-dir=" ( set "CORE_EXPERIMENT_PAPER_DIR=!_arg:~12!" & shift & goto :parse_args )
+if "!_arg:~0,16!"=="--cargo-profile=" ( set "CORE_EXPERIMENT_CARGO_PROFILE=!_arg:~16!" & shift & goto :parse_args )
+if /i "!_arg!"=="--require-native-isa" ( set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--no-require-native-isa" ( set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=0" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--host-arch=" ( set "CORE_EXPERIMENT_HOST_ARCH=!_arg:~12!" & shift & goto :parse_args )
+if /i "!_arg!"=="--build-pdf" ( set "CORE_EXPERIMENT_BUILD_PDF=1" & shift & goto :parse_args )
+if "!_arg:~0,12!"=="--local-dir=" ( set "CORE_EXPERIMENT_LOCAL_DIR=!_arg:~12!" & shift & goto :parse_args )
+if "!_arg:~0,13!"=="--output-dir=" ( set "CORE_EXPERIMENT_LOCAL_DIR=!_arg:~13!" & shift & goto :parse_args )
+if "!_arg:~0,13!"=="--state-file=" ( set "CORE_EXPERIMENT_STATE_FILE=!_arg:~13!" & shift & goto :parse_args )
+if "!_arg:~0,14!"=="--tfrc-config=" ( set "TFRC_CONFIG=!_arg:~14!" & set "TFRC_STRICT=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--tfrc-config" ( set "TFRC_CONFIG=%~2" & set "TFRC_STRICT=1" & shift & shift & goto :parse_args )
+if /i "!_arg!"=="--tfrc-only" ( set "TFRC_STRICT=1" & shift & goto :parse_args )
+if "!_arg:~0,8!"=="--model=" ( set "CORE_EXPERIMENT_MODEL=!_arg:~8!" & shift & goto :parse_args )
+if /i "!_arg!"=="--model" ( set "CORE_EXPERIMENT_MODEL=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,11!"=="--backends=" ( set "CORE_EXPERIMENT_BACKENDS=!_arg:~11!" & shift & goto :parse_args )
+if /i "!_arg!"=="--backends" ( set "CORE_EXPERIMENT_BACKENDS=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,19!"=="--command-template=" ( set "CORE_EXPERIMENT_COMMAND_TEMPLATE=!_arg:~19!" & shift & goto :parse_args )
+if /i "!_arg!"=="--command-template" ( set "CORE_EXPERIMENT_COMMAND_TEMPLATE=%~2" & shift & shift & goto :parse_args )
+if /i "!_arg!"=="--fresh-vm-per-backend" ( set "CORE_EXPERIMENT_FRESH_VM_PER_BACKEND=1" & set "TPU_FRESH_VM_PER_BACKEND=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--resume" ( set "CORE_EXPERIMENT_RESUME=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--no-resume" ( set "CORE_EXPERIMENT_RESUME=0" & shift & goto :parse_args )
+if /i "!_arg!"=="--force" ( set "FORCE_REBUILD=1" & shift & goto :parse_args )
+if "!_arg:~0,18!"=="--max-ttl-minutes=" ( set "TFRC_MAX_TTL_MINUTES=!_arg:~18!" & shift & goto :parse_args )
+if /i "!_arg!"=="--max-ttl-minutes" ( set "TFRC_MAX_TTL_MINUTES=%~2" & shift & shift & goto :parse_args )
+if "!_arg:~0,13!"=="--gcs-bucket=" ( set "GCS_BUCKET=!_arg:~13!" & set "TFRC_STORAGE_MODE=same_region_gcs" & set "TFRC_EXPLICIT_GCS_BUCKET=1" & shift & goto :parse_args )
+if /i "!_arg!"=="--gcs-bucket" ( set "GCS_BUCKET=%~2" & set "TFRC_STORAGE_MODE=same_region_gcs" & set "TFRC_EXPLICIT_GCS_BUCKET=1" & shift & shift & goto :parse_args )
+if /i "!_arg!"=="--dry-run" ( set "DRY_RUN=true" & shift & goto :parse_args )
+for %%S in (a_provision_instance sync_research_repos verify_native_host b_use_bento_fork c_install_virtualization_stack d_deploy_vagrant_box e_snapshot_vagrant_box f_test_libscript_components g_collect_logs h_pull_logs emit_latex_and_verify_pdf i_deprovision_instance provision_instance use_bento_fork setup_bento_fork bento_fork install_virtualization_stack install_bento_deps deploy_vagrant_box deploy_target_os snapshot_vagrant_box snapshot test_libscript_components run_libscript_matrix send_logs_to_host run_experiments collect_logs move_to_log_dir pull_logs move_log_dir_to_host deprovision_instance bento_matrix os_matrix full_bento_matrix libtpu_campaign win_port_campaign edgcpp_backends_campaign gemma_tpu_campaign tpu_matrix all a 0 1 2 3 4 5 i) do (
+    if /i "!_arg!"=="%%S" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! !_arg!"
+)
+shift
+goto :parse_args
+
+:: ## after_parse_args
+:: Finalizes suite defaults and TFRC zero-cost configuration after argument parsing.
+:after_parse_args
+if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
+echo !CORE_EXPERIMENT_STEPS! | findstr /I "tpu_matrix gemma_tpu_campaign" >nul 2>&1
+if not errorlevel 1 (
+    set "CORE_EXPERIMENT_SUITE=gemma_tpu"
+    if /i "!CORE_EXPERIMENT_PROVIDER!"=="azure" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+    if /i "!CORE_EXPERIMENT_PROVIDER!"=="azure" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
+    if "!_SUBSUITES_EXPLICIT!"=="0" set "CORE_EXPERIMENT_SUBSUITES=E0,E1,E2,E3,E4"
+    if "!CORE_EXPERIMENT_REPO_DIR!"=="" set "CORE_EXPERIMENT_REPO_DIR=%CD%"
+    if "!CORE_EXPERIMENT_NODE!"=="edg-exp-node" set "CORE_EXPERIMENT_NODE=gemma-tfrc-node"
+)
+if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
+    if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_require_config "!CORE_EXPERIMENT_REPO_DIR!"
+        if errorlevel 1 exit /b !errorlevel!
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
+        if errorlevel 1 exit /b !errorlevel!
+        if "!CORE_EXPERIMENT_RG!"=="edg-experiments-rg" for /f "usebackq delims=" %%P in (`jq -r ".gcp_project_id" "!TFRC_CONFIG!"`) do set "CORE_EXPERIMENT_RG=%%P"
+        if "!CORE_EXPERIMENT_LOCATION!"=="eastus2" for /f "usebackq delims=" %%Z in (`jq -r ".grants[0].zone" "!TFRC_CONFIG!"`) do set "CORE_EXPERIMENT_LOCATION=%%Z"
+        if "!CORE_EXPERIMENT_SIZE:~0,17!"=="160-vCPU Standard" (
+            for /f "usebackq delims=" %%A in (`jq -r ".grants[0].accelerator_types[0]" "!TFRC_CONFIG!"`) do set "CORE_EXPERIMENT_SIZE=%%A"
+        )
+        if "!TPU_SCHEDULING_TYPE!"=="" (
+            for /f "usebackq delims=" %%S in (`jq -r ".grants[0].scheduling_tiers[0] // \"spot\"" "!TFRC_CONFIG!"`) do set "TPU_SCHEDULING_TYPE=%%S"
+        )
+        set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
+        set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
+        set "TPU_ACCELERATOR_TYPE=!CORE_EXPERIMENT_SIZE!"
+        if not "!GCS_BUCKET!"=="" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_verify_gcs_bucket "!GCS_BUCKET!" "!TPU_ZONE!"
+            if errorlevel 1 exit /b !errorlevel!
+        )
     )
-    if "!_arg:~0,12!"=="--subsuites=" set "CORE_EXPERIMENT_SUBSUITES=!_arg:~12!"
-    if "!_arg:~0,9!"=="--warmup=" set "CORE_EXPERIMENT_WARMUP=!_arg:~9!"
-    if "!_arg:~0,9!"=="--trials=" set "CORE_EXPERIMENT_TRIALS=!_arg:~9!"
-    if "!_arg:~0,11!"=="--repo-dir=" set "CORE_EXPERIMENT_REPO_DIR=!_arg:~11!"
-    if "!_arg:~0,16!"=="--ecosystem-dir=" set "CORE_EXPERIMENT_ECOSYSTEM_DIR=!_arg:~16!"
-    if "!_arg:~0,15!"=="--appendix-tex=" set "CORE_EXPERIMENT_APPENDIX_TEX=!_arg:~15!"
-    if "!_arg:~0,12!"=="--paper-dir=" set "CORE_EXPERIMENT_PAPER_DIR=!_arg:~12!"
-    if "!_arg:~0,16!"=="--cargo-profile=" set "CORE_EXPERIMENT_CARGO_PROFILE=!_arg:~16!"
-    if /i "!_arg!"=="--require-native-isa" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=1"
-    if /i "!_arg!"=="--no-require-native-isa" set "CORE_EXPERIMENT_REQUIRE_NATIVE_ISA=0"
-    if "!_arg:~0,12!"=="--host-arch=" set "CORE_EXPERIMENT_HOST_ARCH=!_arg:~12!"
-    if /i "!_arg!"=="--build-pdf" set "CORE_EXPERIMENT_BUILD_PDF=1"
-    if "!_arg:~0,12!"=="--local-dir=" set "CORE_EXPERIMENT_LOCAL_DIR=!_arg:~12!"
-    if "!_arg:~0,13!"=="--state-file=" set "CORE_EXPERIMENT_STATE_FILE=!_arg:~13!"
-    if /i "!_arg!"=="--dry-run" set "DRY_RUN=true"
-    if /i "!_arg!"=="a_provision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
-    if /i "!_arg!"=="sync_research_repos" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! sync_research_repos"
-    if /i "!_arg!"=="verify_native_host" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! verify_native_host"
-    if /i "!_arg!"=="b_use_bento_fork" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
-    if /i "!_arg!"=="c_install_virtualization_stack" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! install_virtualization_stack"
-    if /i "!_arg!"=="d_deploy_vagrant_box" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deploy_vagrant_box"
-    if /i "!_arg!"=="e_snapshot_vagrant_box" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! snapshot_vagrant_box"
-    if /i "!_arg!"=="f_test_libscript_components" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! test_libscript_components"
-    if /i "!_arg!"=="g_collect_logs" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! collect_logs"
-    if /i "!_arg!"=="h_pull_logs" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! send_logs_to_host"
-    if /i "!_arg!"=="emit_latex_and_verify_pdf" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! emit_latex_and_verify_pdf"
-    if /i "!_arg!"=="i_deprovision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deprovision_instance"
-    if /i "!_arg!"=="provision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
-    if /i "!_arg!"=="use_bento_fork" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
-    if /i "!_arg!"=="setup_bento_fork" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
-    if /i "!_arg!"=="bento_fork" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
-    if /i "!_arg!"=="install_virtualization_stack" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! install_virtualization_stack"
-    if /i "!_arg!"=="install_bento_deps" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! install_virtualization_stack"
-    if /i "!_arg!"=="deploy_vagrant_box" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deploy_vagrant_box"
-    if /i "!_arg!"=="deploy_target_os" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deploy_vagrant_box"
-    if /i "!_arg!"=="snapshot_vagrant_box" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! snapshot_vagrant_box"
-    if /i "!_arg!"=="snapshot" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! snapshot_vagrant_box"
-    if /i "!_arg!"=="test_libscript_components" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! test_libscript_components"
-    if /i "!_arg!"=="run_libscript_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! test_libscript_components"
-    if /i "!_arg!"=="send_logs_to_host" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! send_logs_to_host"
-    if /i "!_arg!"=="run_experiments" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! run_experiments"
-    if /i "!_arg!"=="collect_logs" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! collect_logs"
-    if /i "!_arg!"=="move_to_log_dir" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! collect_logs"
-    if /i "!_arg!"=="pull_logs" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! pull_logs"
-    if /i "!_arg!"=="move_log_dir_to_host" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! pull_logs"
-    if /i "!_arg!"=="deprovision_instance" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deprovision_instance"
-    if /i "!_arg!"=="bento_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! bento_matrix"
-    if /i "!_arg!"=="os_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! bento_matrix"
-    if /i "!_arg!"=="full_bento_matrix" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! all"
-    if /i "!_arg!"=="libtpu_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! libtpu_campaign"
-    if /i "!_arg!"=="win_port_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! win_port_campaign"
-    if /i "!_arg!"=="edgcpp_backends_campaign" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! edgcpp_backends_campaign"
-    if /i "!_arg!"=="all" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! all"
-    if /i "!_arg!"=="a" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! provision_instance"
-    if /i "!_arg!"=="0" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! use_bento_fork"
-    if /i "!_arg!"=="1" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! install_virtualization_stack"
-    if /i "!_arg!"=="2" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deploy_vagrant_box"
-    if /i "!_arg!"=="3" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! snapshot_vagrant_box"
-    if /i "!_arg!"=="4" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! test_libscript_components"
-    if /i "!_arg!"=="5" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! send_logs_to_host"
-    if /i "!_arg!"=="i" set "CORE_EXPERIMENT_STEPS=!CORE_EXPERIMENT_STEPS! deprovision_instance"
 )
 
 for /f "tokens=1,2 delims=@" %%I in ("!CORE_EXPERIMENT_COMPONENTS!") do (
@@ -250,13 +285,42 @@ if exist "!CORE_EXPERIMENT_STATE_FILE!" (
 exit /b 0
 
 :: ## provision_instance
-:: Step a_provision_instance: Provisions the cloud VM or GCP TPU VM instance idempotently.
+:: Step a_provision_instance: Provisions the cloud VM or GCP TPU VM slice idempotently, arms auto-TTL, and syncs repos.
 :provision_instance
 if not "%FORCE_REBUILD%"=="1" if "!PROV_DONE!"=="true" (
     echo [INFO] [provision_instance] Cloud instance '!CORE_EXPERIMENT_NODE!' ^(!RESOLVED_VM_SKU!^) already provisioned.
     exit /b 0
 )
 echo [INFO] [provision_instance] Provisioning '!CORE_EXPERIMENT_NODE!' ^(!RESOLVED_VM_SKU!^) on !CORE_EXPERIMENT_PROVIDER!...
+if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
+    set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
+    set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
+    set "TPU_ACCELERATOR_TYPE=!RESOLVED_VM_SKU!"
+    set "TPU_NAME=!CORE_EXPERIMENT_NODE!"
+    if "!TPU_SCHEDULING_TYPE!"=="" set "TPU_SCHEDULING_TYPE=spot"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
+    if not errorlevel 1 (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_validate_request "!GCP_PROJECT_ID!" "!TPU_ZONE!" "!TPU_ACCELERATOR_TYPE!" "!TPU_SCHEDULING_TYPE!" "1"
+        if errorlevel 1 exit /b !errorlevel!
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_preflight_audit "!GCP_PROJECT_ID!" "!TPU_ZONE!" "!TPU_NAME!"
+        if errorlevel 1 exit /b !errorlevel!
+    )
+    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+        set "_TPU_PROV_STARTED=1"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" create "!TPU_NAME!"
+        if errorlevel 1 exit /b !errorlevel!
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" wait-ready "!TPU_NAME!"
+        if errorlevel 1 exit /b !errorlevel!
+        set "_ttl=%TFRC_MAX_TTL_MINUTES%"
+        if "!_ttl!"=="" set "_ttl=180"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" arm-ttl "!TPU_NAME!" --minutes "!_ttl!"
+        if errorlevel 1 exit /b !errorlevel!
+        if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tpu_matrix.cmd" :libscript_tpu_bootstrap_remote "!TPU_NAME!" "!CORE_EXPERIMENT_REPO_DIR!"
+            if errorlevel 1 exit /b !errorlevel!
+        )
+    )
+)
 set "PROV_DONE=true"
 set "DEPROV_DONE=false"
 call :write_experiment_state
@@ -335,10 +399,27 @@ call :write_experiment_state
 exit /b 0
 
 :: ## run_experiments
-:: Executes the requested benchmark suite (`libscript`, `libtpu`, `manifest`, or `edgcpp`) on the target host.
+:: Executes the requested benchmark suite (`gemma_tpu`, `libscript`, `libtpu`, `win_port`, `edgcpp_backends`, or `edgcpp`) on the target host.
 :run_experiments
-if not "%FORCE_REBUILD%"=="1" if "!RUN_DONE!"=="true" (
+if not "%FORCE_REBUILD%"=="1" if "!RUN_DONE!"=="true" if /i not "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
     echo [INFO] [run_experiments] Experiments already completed on '!CORE_EXPERIMENT_NODE!'.
+    exit /b 0
+)
+if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+    echo [INFO] [run_experiments] Running gemma_tpu 7-backend matrix ^(!CORE_EXPERIMENT_BACKENDS! / !CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
+    set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
+    set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
+    set "TPU_ACCELERATOR_TYPE=!RESOLVED_VM_SKU!"
+    set "TPU_NAME=!CORE_EXPERIMENT_NODE!"
+    set "_gt_extra="
+    if /i "!DRY_RUN!"=="true" set "_gt_extra=!_gt_extra! --dry-run"
+    if "!CORE_EXPERIMENT_FRESH_VM_PER_BACKEND!"=="1" set "_gt_extra=!_gt_extra! --fresh-vm-per-backend"
+    if "!CORE_EXPERIMENT_RESUME!"=="0" set "_gt_extra=!_gt_extra! --no-resume"
+    if not "!CORE_EXPERIMENT_COMMAND_TEMPLATE!"=="" set "_gt_extra=!_gt_extra! \"--command-template=!CORE_EXPERIMENT_COMMAND_TEMPLATE!\""
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\gemma-tpu-suite\benchmark_experiments.cmd" "--repo-dir=!CORE_EXPERIMENT_REPO_DIR!" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu" "--model=!CORE_EXPERIMENT_MODEL!" "--backends=!CORE_EXPERIMENT_BACKENDS!" "--subsuites=!CORE_EXPERIMENT_SUBSUITES!" !_gt_extra!
+    if errorlevel 1 exit /b !errorlevel!
+    set "RUN_DONE=true"
+    call :write_experiment_state
     exit /b 0
 )
 if /i "!CORE_EXPERIMENT_SUITE!"=="libscript" (
@@ -369,14 +450,6 @@ if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
 )
 if /i "!CORE_EXPERIMENT_SUITE!"=="libtpu" (
     echo [INFO] [run_experiments] Running libtpu suites ^(!CORE_EXPERIMENT_SUBSUITES!^) on '!CORE_EXPERIMENT_NODE!'...
-if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\win-port-suite\benchmark_experiments.cmd" "--subsuites=E7" "--results-dir=!CORE_EXPERIMENT_LOCAL_DIR!\results"
-    )
-    set "LATEX_DONE=true"
-    call :write_experiment_state
-    exit /b 0
-)
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\libtpu-rs\benchmark_experiments.cmd" (
         set "LIBTPU_RS_SYNTHETIC_FIXTURES=1"
         set "LIBTPU_RS_DRY_RUN=1"
@@ -401,9 +474,17 @@ call :write_experiment_state
 exit /b 0
 
 :: ## pull_logs
-:: Step h_pull_logs: Transfers the consolidated experimental and Vagrant component results directory to the current host.
+:: Step h_pull_logs: Transfers the consolidated experimental and TPU/Vagrant results directory to the current host.
 :pull_logs
 if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\results" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\results"
+if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+        if not exist "!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu" mkdir "!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu"
+        set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
+        set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" scp-from "!CORE_EXPERIMENT_NODE!" "!CORE_EXPERIMENT_NODE!:~/results/*" "!CORE_EXPERIMENT_LOCAL_DIR!\gemma_tpu" --recurse --worker=0 >nul 2>&1 || rem
+    )
+)
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-report.json" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
 if exist "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" copy /y "!LIBSCRIPT_ROOT_DIR!\build\edgcpp-experiments-tables.tex" "!CORE_EXPERIMENT_LOCAL_DIR!" >nul
 if exist "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\*" copy /y "!LIBSCRIPT_ROOT_DIR!\build\experiment_bundle\results\*" "!CORE_EXPERIMENT_LOCAL_DIR!\results\" >nul 2>&1
@@ -477,17 +558,60 @@ call :write_experiment_state
 exit /b 0
 
 :: ## deprovision_instance
-:: Step i_deprovision_instance: Deprovisions the cloud host idempotently.
+:: Step i_deprovision_instance: Idempotently deletes Cloud TPU VMs + Queued Resources and runs postflight orphan verification.
 :deprovision_instance
 if not "%FORCE_REBUILD%"=="1" if "!DEPROV_DONE!"=="true" (
     echo [INFO] [deprovision_instance] Cloud host '!CORE_EXPERIMENT_NODE!' is already deprovisioned.
     exit /b 0
 )
 echo [INFO] [deprovision_instance] Deprovisioning cloud host '!CORE_EXPERIMENT_NODE!'...
+set "_dep_rc=0"
+if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu-vm" (
+    set "GCP_PROJECT_ID=!CORE_EXPERIMENT_RG!"
+    set "TPU_ZONE=!CORE_EXPERIMENT_LOCATION!"
+    set "TPU_NAME=!CORE_EXPERIMENT_NODE!"
+    if /i not "!DRY_RUN!"=="true" if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" delete "!TPU_NAME!"
+    )
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_is_enabled
+    if not errorlevel 1 if not "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="1" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_postflight_audit "!GCP_PROJECT_ID!" "!TPU_ZONE!" "!TPU_NAME!"
+        if errorlevel 1 set "_dep_rc=!errorlevel!"
+    )
+)
 set "DEPROV_DONE=true"
 set "PROV_DONE=false"
 call :write_experiment_state
-exit /b 0
+exit /b !_dep_rc!
+
+:: ## run_tpu_campaign_with_teardown
+:: Runs provision -> run_experiments -> send_logs -> deprovision with guaranteed :cleanup_teardown on failure.
+:run_tpu_campaign_with_teardown
+set "_camp_rc=0"
+call :provision_instance
+if errorlevel 1 (
+    set "_camp_rc=!errorlevel!"
+    goto :cleanup_teardown
+)
+call :run_experiments
+if errorlevel 1 (
+    set "_camp_rc=!errorlevel!"
+    goto :cleanup_teardown
+)
+call :send_logs_to_host
+
+:: ## cleanup_teardown
+:: Guaranteed teardown handler ensuring TPU VM and Queued Resource deletion plus postflight audit even on benchmark failure.
+:cleanup_teardown
+if not "!_camp_rc!"=="0" if not "!_camp_rc!"=="78" (
+    call :send_logs_to_host >nul 2>&1 || rem
+)
+if "!_camp_rc!"=="78" if "!_TPU_PROV_STARTED!"=="0" exit /b 78
+set "FORCE_REBUILD=1"
+call :deprovision_instance
+set "_td_rc=!errorlevel!"
+if not "!_camp_rc!"=="0" exit /b !_camp_rc!
+exit /b !_td_rc!
 
 :: ## write_experiment_state
 :: Writes the JSON state file tracking completed lifecycle steps on Windows.
@@ -554,7 +678,10 @@ set "_steps=!CORE_EXPERIMENT_STEPS:,= !"
 set "_steps=!_steps:;= !"
 for %%T in (!_steps!) do (
     if /i "%%T"=="all" (
-        if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
+        if /i "!CORE_EXPERIMENT_SUITE!"=="gemma_tpu" (
+            call :run_tpu_campaign_with_teardown
+            if errorlevel 1 exit /b !errorlevel!
+        ) else if /i "!CORE_EXPERIMENT_SUITE!"=="win_port" (
             call :provision_instance
             call :sync_research_repos
             call :verify_native_host
@@ -597,6 +724,12 @@ for %%T in (!_steps!) do (
         call :send_logs_to_host
         call :emit_latex_and_verify_pdf
         call :deprovision_instance
+    ) else if /i "%%T"=="tpu_matrix" (
+        call :run_tpu_campaign_with_teardown
+        if errorlevel 1 exit /b !errorlevel!
+    ) else if /i "%%T"=="gemma_tpu_campaign" (
+        call :run_tpu_campaign_with_teardown
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="libtpu_campaign" (
         call :provision_instance
         call :sync_research_repos
@@ -614,8 +747,10 @@ for %%T in (!_steps!) do (
         call :send_logs_to_host
     ) else if /i "%%T"=="a_provision_instance" (
         call :provision_instance
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="provision_instance" (
         call :provision_instance
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="sync_research_repos" (
         call :sync_research_repos
     ) else if /i "%%T"=="verify_native_host" (
@@ -658,12 +793,16 @@ for %%T in (!_steps!) do (
         call :emit_latex_and_verify_pdf
     ) else if /i "%%T"=="run_experiments" (
         call :run_experiments
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="i_deprovision_instance" (
         call :deprovision_instance
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="deprovision_instance" (
         call :deprovision_instance
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="a" (
         call :provision_instance
+        if errorlevel 1 exit /b !errorlevel!
     ) else if /i "%%T"=="0" (
         call :use_bento_fork
     ) else if /i "%%T"=="1" (
@@ -678,6 +817,7 @@ for %%T in (!_steps!) do (
         call :send_logs_to_host
     ) else if /i "%%T"=="i" (
         call :deprovision_instance
+        if errorlevel 1 exit /b !errorlevel!
     )
 )
 exit /b 0

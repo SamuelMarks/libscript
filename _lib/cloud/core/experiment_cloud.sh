@@ -28,7 +28,7 @@ unset SCRIPT_NAME || true
 
 _EXP_SCRIPT_DIR="${SCRIPT_DIR}"
 _EXP_THIS_FILE="${THIS_FILE}"
-for LIB in '_lib/_common/log.sh' '_lib/_common/remote_sync.sh' '_lib/_common/experiment_harness.sh'; do
+for LIB in '_lib/_common/log.sh' '_lib/_common/remote_sync.sh' '_lib/toolchains/_common/experiment_harness.sh' '_lib/ml-training/_common/tfrc_guard.sh' '_lib/ml-training/_common/tpu_matrix.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -76,6 +76,12 @@ CORE_EXPERIMENT_CARGO_PROFILE="${CORE_EXPERIMENT_CARGO_PROFILE:-${LIBSCRIPT_BENC
 CORE_EXPERIMENT_REQUIRE_NATIVE_ISA="${CORE_EXPERIMENT_REQUIRE_NATIVE_ISA:-${LIBSCRIPT_BENCH_REQUIRE_NATIVE_ISA:-1}}"
 CORE_EXPERIMENT_HOST_ARCH="${CORE_EXPERIMENT_HOST_ARCH:-linux_x64}"
 CORE_EXPERIMENT_BUILD_PDF="${CORE_EXPERIMENT_BUILD_PDF:-0}"
+CORE_EXPERIMENT_MODEL="${CORE_EXPERIMENT_MODEL:-google/gemma-4-E4B}"
+CORE_EXPERIMENT_BACKENDS="${CORE_EXPERIMENT_BACKENDS:-${TPU_ALL_BACKENDS}}"
+CORE_EXPERIMENT_COMMAND_TEMPLATE="${CORE_EXPERIMENT_COMMAND_TEMPLATE:-}"
+CORE_EXPERIMENT_RESUME="${CORE_EXPERIMENT_RESUME:-1}"
+CORE_EXPERIMENT_FRESH_VM_PER_BACKEND="${CORE_EXPERIMENT_FRESH_VM_PER_BACKEND:-0}"
+_SUBSUITES_EXPLICIT='0'
 
 DRY_RUN_MODE=0
 if [ "${DRY_RUN:-false}" = "true" ] || [ "${DRY_RUN:-0}" = "1" ] || [ "${LIBSCRIPT_DRY_RUN:-0}" = "1" ]; then
@@ -93,7 +99,7 @@ while [ $# -gt 0 ]; do
       CORE_EXPERIMENT_STEPS="${CORE_EXPERIMENT_STEPS:+${CORE_EXPERIMENT_STEPS},}${2:-}"
       shift 2
       ;;
-    a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|sync_research_repos|verify_native_host|emit_latex_and_verify_pdf|provision_instance|use_bento_fork|setup_bento_fork|bento_fork|install_virtualization_stack|install_bento_deps|deploy_vagrant_box|deploy_target_os|snapshot_vagrant_box|snapshot|test_libscript_components|run_libscript_matrix|send_logs_to_host|run_experiments|collect_logs|move_to_log_dir|pull_logs|move_log_dir_to_host|deprovision_instance|bento_matrix|os_matrix|full_bento_matrix|libtpu_campaign|win_port_campaign|edgcpp_backends_campaign|all|provision|run|collect|transfer|pull|deprovision|teardown|a|0|1|2|3|4|5|i)
+    a_provision_instance|b_use_bento_fork|c_install_virtualization_stack|d_deploy_vagrant_box|e_snapshot_vagrant_box|f_test_libscript_components|g_collect_logs|h_pull_logs|i_deprovision_instance|sync_research_repos|verify_native_host|emit_latex_and_verify_pdf|provision_instance|use_bento_fork|setup_bento_fork|bento_fork|install_virtualization_stack|install_bento_deps|deploy_vagrant_box|deploy_target_os|snapshot_vagrant_box|snapshot|test_libscript_components|run_libscript_matrix|send_logs_to_host|run_experiments|collect_logs|move_to_log_dir|pull_logs|move_log_dir_to_host|deprovision_instance|bento_matrix|os_matrix|full_bento_matrix|libtpu_campaign|win_port_campaign|edgcpp_backends_campaign|gemma_tpu_campaign|tpu_matrix|all|provision|run|collect|transfer|pull|deprovision|teardown|a|0|1|2|3|4|5|i)
       CORE_EXPERIMENT_STEPS="${CORE_EXPERIMENT_STEPS:+${CORE_EXPERIMENT_STEPS},}$1"
       shift
       ;;
@@ -130,8 +136,24 @@ while [ $# -gt 0 ]; do
     --suite) CORE_EXPERIMENT_SUITE="${2:-all}"; shift 2 ;;
     --suite-manifest=*) CORE_EXPERIMENT_SUITE_MANIFEST="${1#*=}"; CORE_EXPERIMENT_SUITE='manifest'; shift ;;
     --suite-manifest) CORE_EXPERIMENT_SUITE_MANIFEST="${2:-}"; CORE_EXPERIMENT_SUITE='manifest'; shift 2 ;;
-    --subsuites=*) CORE_EXPERIMENT_SUBSUITES="${1#*=}"; shift ;;
-    --subsuites) CORE_EXPERIMENT_SUBSUITES="${2:-}"; shift 2 ;;
+    --subsuites=*) CORE_EXPERIMENT_SUBSUITES="${1#*=}"; _SUBSUITES_EXPLICIT='1'; shift ;;
+    --subsuites) CORE_EXPERIMENT_SUBSUITES="${2:-}"; _SUBSUITES_EXPLICIT='1'; shift 2 ;;
+    --tfrc-config=*) TFRC_CONFIG="${1#*=}"; export TFRC_CONFIG; TFRC_STRICT='1'; export TFRC_STRICT; shift ;;
+    --tfrc-config) TFRC_CONFIG="${2:-}"; export TFRC_CONFIG; TFRC_STRICT='1'; export TFRC_STRICT; shift 2 ;;
+    --tfrc-only) TFRC_STRICT='1'; export TFRC_STRICT; shift ;;
+    --model=*) CORE_EXPERIMENT_MODEL="${1#*=}"; shift ;;
+    --model) CORE_EXPERIMENT_MODEL="${2:-}"; shift 2 ;;
+    --backends=*) CORE_EXPERIMENT_BACKENDS="${1#*=}"; shift ;;
+    --backends) CORE_EXPERIMENT_BACKENDS="${2:-}"; shift 2 ;;
+    --command-template=*) CORE_EXPERIMENT_COMMAND_TEMPLATE="${1#*=}"; shift ;;
+    --command-template) CORE_EXPERIMENT_COMMAND_TEMPLATE="${2:-}"; shift 2 ;;
+    --fresh-vm-per-backend) CORE_EXPERIMENT_FRESH_VM_PER_BACKEND='1'; TPU_FRESH_VM_PER_BACKEND='1'; export TPU_FRESH_VM_PER_BACKEND; shift ;;
+    --resume) CORE_EXPERIMENT_RESUME='1'; shift ;;
+    --no-resume) CORE_EXPERIMENT_RESUME='0'; shift ;;
+    --max-ttl-minutes=*) TFRC_MAX_TTL_MINUTES="${1#*=}"; export TFRC_MAX_TTL_MINUTES; shift ;;
+    --max-ttl-minutes) TFRC_MAX_TTL_MINUTES="${2:-180}"; export TFRC_MAX_TTL_MINUTES; shift 2 ;;
+    --gcs-bucket=*) GCS_BUCKET="${1#*=}"; BUCKET_NAME="${GCS_BUCKET#gs://}"; TFRC_STORAGE_MODE='same_region_gcs'; TFRC_EXPLICIT_GCS_BUCKET='1'; export GCS_BUCKET BUCKET_NAME TFRC_STORAGE_MODE TFRC_EXPLICIT_GCS_BUCKET; shift ;;
+    --gcs-bucket) GCS_BUCKET="${2:-}"; BUCKET_NAME="${GCS_BUCKET#gs://}"; TFRC_STORAGE_MODE='same_region_gcs'; TFRC_EXPLICIT_GCS_BUCKET='1'; export GCS_BUCKET BUCKET_NAME TFRC_STORAGE_MODE TFRC_EXPLICIT_GCS_BUCKET; shift 2 ;;
     --warmup=*) CORE_EXPERIMENT_WARMUP="${1#*=}"; shift ;;
     --warmup) CORE_EXPERIMENT_WARMUP="${2:-10}"; shift 2 ;;
     --trials=*) CORE_EXPERIMENT_TRIALS="${1#*=}"; shift ;;
@@ -197,8 +219,49 @@ if [ -n "${CORE_EXPERIMENT_PKG_MGR}" ] && [ -z "${CORE_EXPERIMENT_INSTALL_METHOD
   esac
 fi
 
+if [ "${CORE_EXPERIMENT_PROVIDER}" = "gcp-tpu" ]; then
+  CORE_EXPERIMENT_PROVIDER='gcp-tpu-vm'
+fi
+case ",${CORE_EXPERIMENT_STEPS}," in
+  *,tpu_matrix,*|*,gemma_tpu_campaign,*)
+    CORE_EXPERIMENT_SUITE='gemma_tpu'
+    if [ "${CORE_EXPERIMENT_PROVIDER}" = "azure" ]; then
+      CORE_EXPERIMENT_PROVIDER='gcp-tpu-vm'
+    fi
+    ;;
+esac
+if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+  if [ "${_SUBSUITES_EXPLICIT}" = '0' ]; then
+    CORE_EXPERIMENT_SUBSUITES='E0,E1,E2,E3,E4'
+  fi
+  if [ -z "${CORE_EXPERIMENT_REPO_DIR}" ]; then
+    CORE_EXPERIMENT_REPO_DIR="$(pwd)"
+  fi
+  if [ "${CORE_EXPERIMENT_NODE}" = "edg-exp-node" ]; then
+    CORE_EXPERIMENT_NODE="${TPU_NAME:-gemma-tfrc-node}"
+  fi
+  if libscript_tfrc_is_enabled; then
+    libscript_tfrc_require_config "${CORE_EXPERIMENT_REPO_DIR}"
+    libscript_tfrc_enforce_zero_cost_env
+    if [ "${CORE_EXPERIMENT_RG}" = "edg-experiments-rg" ]; then
+      CORE_EXPERIMENT_RG=$(jq -r '.gcp_project_id' "${TFRC_CONFIG}")
+    fi
+    if [ "${CORE_EXPERIMENT_LOCATION}" = "eastus2" ]; then
+      CORE_EXPERIMENT_LOCATION="${TPU_ZONE:-$(jq -r '.grants[0].zone' "${TFRC_CONFIG}")}"
+    fi
+    if printf '%s' "${CORE_EXPERIMENT_SIZE}" | grep -q 'Standard_'; then
+      CORE_EXPERIMENT_SIZE="${TPU_ACCELERATOR_TYPE:-$(jq -r '.grants[0].accelerator_types[0]' "${TFRC_CONFIG}")}"
+      TPU_SCHEDULING_TYPE="${TPU_SCHEDULING_TYPE:-$(jq -r '.grants[0].scheduling_tiers[0]' "${TFRC_CONFIG}")}"
+      export TPU_SCHEDULING_TYPE
+    fi
+    if [ -n "${GCS_BUCKET:-}" ]; then
+      libscript_tfrc_verify_gcs_bucket "${GCS_BUCKET}" "${CORE_EXPERIMENT_LOCATION}"
+    fi
+  fi
+fi
+
 if [ -z "${CORE_EXPERIMENT_STEPS}" ]; then
-  if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
+  if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
     CORE_EXPERIMENT_STEPS='a_provision_instance,sync_research_repos,verify_native_host,run_experiments,g_collect_logs,h_pull_logs,emit_latex_and_verify_pdf,i_deprovision_instance'
   else
     CORE_EXPERIMENT_STEPS='a_provision_instance,b_use_bento_fork,c_install_virtualization_stack,d_deploy_vagrant_box,e_snapshot_vagrant_box,f_test_libscript_components,run_experiments,g_collect_logs,h_pull_logs,i_deprovision_instance'
@@ -392,10 +455,19 @@ provision_instance() {
   fi
 
   if [ "${CORE_EXPERIMENT_PROVIDER}" = "gcp-tpu-vm" ]; then
+    if libscript_tfrc_is_enabled; then
+      libscript_tfrc_validate_request "${CORE_EXPERIMENT_RG}" "${CORE_EXPERIMENT_LOCATION}" "${RESOLVED_VM_SKU}" "${TPU_SCHEDULING_TYPE:-spot}" '1'
+      libscript_tfrc_preflight_audit "${CORE_EXPERIMENT_RG}" "${CORE_EXPERIMENT_LOCATION}" "${CORE_EXPERIMENT_NODE}"
+    fi
     log_info "[provision_instance] Provisioning GCP TPU VM '${CORE_EXPERIMENT_NODE}' (accelerator=${RESOLVED_VM_SKU}, zone=${CORE_EXPERIMENT_LOCATION})..."
     if [ "${DRY_RUN_MODE}" != "1" ]; then
       _tpu_cli="$(resolve_provider_cli)"
       TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}" "${_tpu_cli}" create "${CORE_EXPERIMENT_NODE}"
+      TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}" "${_tpu_cli}" wait-ready "${CORE_EXPERIMENT_NODE}"
+      TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" "${_tpu_cli}" arm-ttl "${CORE_EXPERIMENT_NODE}" --minutes "${TFRC_MAX_TTL_MINUTES:-180}"
+      if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+        TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" libscript_tpu_bootstrap_remote "${CORE_EXPERIMENT_NODE}" "${CORE_EXPERIMENT_REPO_DIR}"
+      fi
     fi
     write_experiment_state 'provision_instance' 'true'
     return 0
@@ -467,7 +539,7 @@ verify_native_host() {
 
   if [ "${CORE_EXPERIMENT_REQUIRE_NATIVE_ISA}" = "1" ]; then
     log_info "[verify_native_host] Enforcing RULE-2 native ISA guard (${CORE_EXPERIMENT_HOST_ARCH}) and host preparation on '${CORE_EXPERIMENT_NODE}'..."
-    _v_cmd="cd ~/libscript && SCRIPT_NAME=./_lib/_common/experiment_harness.sh . ./_lib/_common/experiment_harness.sh && libscript_exp_assert_native_isa '${CORE_EXPERIMENT_HOST_ARCH}' && libscript_prepare_benchmark_host"
+    _v_cmd="cd ~/libscript && SCRIPT_NAME=./_lib/toolchains/_common/experiment_harness.sh . ./_lib/toolchains/_common/experiment_harness.sh && libscript_exp_assert_native_isa '${CORE_EXPERIMENT_HOST_ARCH}' && libscript_prepare_benchmark_host"
     cloud_exec_remote "${_v_cmd}"
   fi
 
@@ -613,6 +685,24 @@ run_experiments() {
 
   if [ "${CORE_EXPERIMENT_SUITE}" = "libscript" ]; then
     test_libscript_components
+    write_experiment_state 'run_experiments' 'true'
+    return 0
+  fi
+
+  if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+    log_info "[run_experiments] Running gemma_tpu 7-backend matrix (${CORE_EXPERIMENT_BACKENDS} / ${CORE_EXPERIMENT_SUBSUITES}) on '${CORE_EXPERIMENT_NODE}'..."
+    _gt_res_dir="${CORE_EXPERIMENT_LOCAL_DIR}/gemma_tpu"
+    mkdir -p "${_gt_res_dir}"
+    _gt_fresh_flag=''
+    if [ "${CORE_EXPERIMENT_FRESH_VM_PER_BACKEND}" = '1' ] || [ "${TPU_FRESH_VM_PER_BACKEND:-0}" = '1' ]; then
+      _gt_fresh_flag='--fresh-vm-per-backend'
+    fi
+    _gt_dry_flag=''
+    if [ "${DRY_RUN_MODE}" = '1' ]; then
+      _gt_dry_flag='--dry-run'
+    fi
+    # shellcheck disable=SC2086
+    TPU_NAME="${CORE_EXPERIMENT_NODE}" TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" TPU_ACCELERATOR_TYPE="${RESOLVED_VM_SKU}"       "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/gemma-tpu-suite/benchmark_experiments.sh"       --repo-dir="${CORE_EXPERIMENT_REPO_DIR}"       --results-dir="${_gt_res_dir}"       --model="${CORE_EXPERIMENT_MODEL}"       --backends="${CORE_EXPERIMENT_BACKENDS}"       --subsuites="${CORE_EXPERIMENT_SUBSUITES}"       --command-template="${CORE_EXPERIMENT_COMMAND_TEMPLATE}"       ${_gt_fresh_flag} ${_gt_dry_flag}
     write_experiment_state 'run_experiments' 'true'
     return 0
   fi
@@ -838,12 +928,24 @@ deprovision_instance() {
     if [ "${DRY_RUN_MODE}" != "1" ]; then
       _tpu_cli="$(resolve_provider_cli)"
       TPU_ZONE="${CORE_EXPERIMENT_LOCATION}" GCP_PROJECT_ID="${CORE_EXPERIMENT_RG}" "${_tpu_cli}" delete "${CORE_EXPERIMENT_NODE}"
+      if libscript_tfrc_is_enabled; then
+        libscript_tfrc_postflight_audit "${CORE_EXPERIMENT_RG}" "${CORE_EXPERIMENT_LOCATION}" "${CORE_EXPERIMENT_NODE}"
+      fi
     fi
   else
     "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/teardown_cloud.sh" --provider "${CORE_EXPERIMENT_PROVIDER}" --node "${CORE_EXPERIMENT_NODE}" --rg "${CORE_EXPERIMENT_RG}" --location "${CORE_EXPERIMENT_LOCATION}" --purge-data
   fi
   write_experiment_state 'deprovision_instance' 'true'
   log_info "[deprovision_instance] Cloud host '${CORE_EXPERIMENT_NODE}' deprovisioned."
+}
+
+# ## cleanup_tpu_campaign
+# Trap handler guaranteeing TPU VM and Queued Resource teardown and postflight audit on exit or signal.
+cleanup_tpu_campaign() {
+  _tpu_rc=$?
+  trap - EXIT INT TERM HUP
+  FORCE_REBUILD='1' deprovision_instance || true
+  exit "${_tpu_rc}"
 }
 
 # ## run_selected_lifecycle_steps
@@ -853,7 +955,14 @@ run_selected_lifecycle_steps() {
   for _token in ${_norm_steps}; do
     case "${_token}" in
       all|full_bento_matrix)
-        if [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
+        if [ "${CORE_EXPERIMENT_SUITE}" = "gemma_tpu" ]; then
+          trap cleanup_tpu_campaign EXIT INT TERM HUP
+          provision_instance
+          run_experiments
+          send_logs_to_host
+          deprovision_instance
+          trap - EXIT INT TERM HUP
+        elif [ "${CORE_EXPERIMENT_SUITE}" = "libtpu" ] || [ "${CORE_EXPERIMENT_SUITE}" = "win_port" ] || [ "${CORE_EXPERIMENT_SUITE}" = "edgcpp_backends" ] || [ "${CORE_EXPERIMENT_SUITE}" = "manifest" ]; then
           provision_instance
           sync_research_repos
           verify_native_host
@@ -881,6 +990,14 @@ run_selected_lifecycle_steps() {
         send_logs_to_host
         emit_latex_and_verify_pdf
         deprovision_instance
+        ;;
+      gemma_tpu_campaign|tpu_matrix)
+        trap cleanup_tpu_campaign EXIT INT TERM HUP
+        provision_instance
+        run_experiments
+        send_logs_to_host
+        deprovision_instance
+        trap - EXIT INT TERM HUP
         ;;
       bento_matrix|os_matrix)
         use_bento_fork

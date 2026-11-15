@@ -32,32 +32,81 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 TARGET_ARCH="${1:-${LIBSCRIPT_TARGET_ARCH:-x86_64}}"
 TARGET_LIBC="${2:-${LIBSCRIPT_TARGET_LIBC:-glibc}}"
 TARGET_OS="${3:-${LIBSCRIPT_TARGET_OS:-linux}}"
+RTOS_BOARD="${LIBSCRIPT_RTOS_BOARD:-}"
 
-case "$TARGET_OS" in
-  freebsd*)
-    LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unknown-freebsd14.0"
+case "$RTOS_BOARD" in
+  native_sim*|posix_gcc|win32_sim|msvc_ming_win32)
+    _host_m=$(uname -m 2>/dev/null || printf 'x86_64')
+    _host_s=$(uname -s 2>/dev/null || printf 'Linux')
+    case "$_host_s" in
+      Darwin*) LIBSCRIPT_TARGET_TRIPLET="${_host_m}-apple-darwin" ;;
+      FreeBSD*) LIBSCRIPT_TARGET_TRIPLET="${_host_m}-unknown-freebsd" ;;
+      MINGW*|MSYS*|CYGWIN*|Windows_NT) LIBSCRIPT_TARGET_TRIPLET="${_host_m}-pc-windows-gnu" ;;
+      *) LIBSCRIPT_TARGET_TRIPLET="${_host_m}-pc-linux-gnu" ;;
+    esac
+    _IS_FREESTANDING=0
     ;;
-  unikraft*)
-    LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unikraft-elf"
-    ;;
-  linux*)
-    case "$TARGET_LIBC" in
-      musl)
-        LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-libscript-linux-musl"
+  *)
+    _IS_FREESTANDING=0
+    case "$TARGET_OS" in
+      zephyr*|rtos-zephyr)
+        _IS_FREESTANDING=1
+        case "$TARGET_ARCH" in
+          arm|armv7m|armv8m|armv7l) LIBSCRIPT_TARGET_TRIPLET='arm-zephyr-eabi' ;;
+          aarch64|arm64) LIBSCRIPT_TARGET_TRIPLET='aarch64-zephyr-elf' ;;
+          riscv32) LIBSCRIPT_TARGET_TRIPLET='riscv32-zephyr-elf' ;;
+          riscv64) LIBSCRIPT_TARGET_TRIPLET='riscv64-zephyr-elf' ;;
+          xtensa) LIBSCRIPT_TARGET_TRIPLET='xtensa-zephyr-elf' ;;
+          x86_64|amd64|i686|*) LIBSCRIPT_TARGET_TRIPLET='x86_64-zephyr-elf' ;;
+        esac
         ;;
-      glibc|*)
-        LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-libscript-linux-gnu"
+      freertos*|rtos-freertos)
+        _IS_FREESTANDING=1
+        case "$TARGET_ARCH" in
+          arm|armv7m|armv8m|armv7l) LIBSCRIPT_TARGET_TRIPLET='arm-none-eabi' ;;
+          aarch64|arm64) LIBSCRIPT_TARGET_TRIPLET='aarch64-none-elf' ;;
+          riscv32) LIBSCRIPT_TARGET_TRIPLET='riscv32-unknown-elf' ;;
+          riscv64) LIBSCRIPT_TARGET_TRIPLET='riscv64-unknown-elf' ;;
+          x86_64|amd64|i686|*) LIBSCRIPT_TARGET_TRIPLET='x86_64-unknown-elf' ;;
+        esac
+        ;;
+      freebsd*)
+        LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unknown-freebsd14.0"
+        ;;
+      unikraft*)
+        LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unikraft-elf"
+        ;;
+      linux*)
+        case "$TARGET_LIBC" in
+          musl)
+            LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-libscript-linux-musl"
+            ;;
+          glibc|*)
+            LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-libscript-linux-gnu"
+            ;;
+        esac
+        ;;
+      *)
+        LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-libscript-${TARGET_OS}-gnu"
         ;;
     esac
     ;;
-  *)
-    LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-libscript-${TARGET_OS}-gnu"
+esac
+
+case "$TARGET_LIBC" in
+  newlib|picolibc|nolibc|zephyr-minimal|freertos-none)
+    _IS_FREESTANDING=1
     ;;
 esac
 
 # Standard reproducible and security compiler flags
-LIBSCRIPT_SECURITY_CFLAGS="-fno-common -fPIC -fstack-protector-strong -D_FORTIFY_SOURCE=2"
-LIBSCRIPT_SECURITY_LDFLAGS="-Wl,-z,relro -Wl,-z,now"
+if [ "$_IS_FREESTANDING" = "1" ]; then
+  LIBSCRIPT_SECURITY_CFLAGS='-fno-common -ffreestanding -fdata-sections -ffunction-sections'
+  LIBSCRIPT_SECURITY_LDFLAGS='-Wl,--gc-sections'
+else
+  LIBSCRIPT_SECURITY_CFLAGS="-fno-common -fPIC -fstack-protector-strong -D_FORTIFY_SOURCE=2"
+  LIBSCRIPT_SECURITY_LDFLAGS="-Wl,-z,relro -Wl,-z,now"
+fi
 : "${SOURCE_DATE_EPOCH:=1700000000}"
 
 # ## resolve_compiler_flags
@@ -65,7 +114,7 @@ LIBSCRIPT_SECURITY_LDFLAGS="-Wl,-z,relro -Wl,-z,now"
 resolve_compiler_flags() {
   _cc_id="${1:-${CC_BACKEND:-default}}"
   case "${_cc_id}" in
-    tcc|custom-cc|edgcpp|edgcpp*)
+    tcc|custom-cc|edgcpp|edgcpp*|msvc)
       LIBSCRIPT_COMPILER_CFLAGS='-O2'
       LIBSCRIPT_COMPILER_LDFLAGS=""
       ;;

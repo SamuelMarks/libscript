@@ -48,6 +48,9 @@ or operating system.
 - [x] GKE integration for distributed AI workloads via XPK (`payloads/ai/gke-xpk-training/`,
       `gke-xpk-inference/`, `topologies/gke-tpu-cluster/`).
 - [x] Automation for inference engines (`vLLM`, `JetStream`, `Ollama`).
+- [x] Real-Time Operating System (RTOS) & MCU Firmware Synthesis (`_lib/kernel/zephyr/`,
+      `_lib/kernel/freertos/`, `_lib/bootloaders/mcuboot/`, `cli/commands/package_as/firmware`,
+      `topologies/iot-mqtt-edge-pod/`, and `payloads/schedulers/rtos_firmware`).
 - [x] Bare-metal generic GPU passthrough setup for local development.
 
 ### Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix (Completed)

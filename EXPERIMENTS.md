@@ -177,9 +177,10 @@ Every step can be executed individually by its lexicographical step name or unpr
 ## 4. Multi-Suite SIGPLAN Empirical Evaluation (`--suite=libtpu|edgcpp|manifest`)
 
 Beyond Bento Vagrant OS matrices, LibScript's experiment runner provides a zero-dependency
-statistical, provenance, and LaTeX macro synthesis substrate (`_lib/_common/experiment_harness.sh`
-and `.cmd`, governed by `experiment-suite.schema.json`) enforcing SIGPLAN empirical evaluation
-invariants (`RULE-1` through `RULE-7`):
+statistical, provenance, and LaTeX macro synthesis substrate
+(`_lib/toolchains/_common/experiment_harness.sh` and `.cmd`, governed by
+`experiment-suite.schema.json`) enforcing SIGPLAN empirical evaluation invariants (`RULE-1` through
+`RULE-7`):
 
 - **`RULE-1` (Single-Source Provenance & LaTeX Emission):** Every `results/*.json` records exact
   40-hex `git_commit_sha`, clean worktree verification, and `host_manifest_ref`; Suite `E8`
@@ -296,4 +297,38 @@ evaluating `EDG-FE-ONLY`, `EDG-LLVM` (`llvm_gen_be`), `EDG-GCC` (`gcc_gen_be` / 
 :: Windows Batch equivalent
 .\libscript.cmd edgcpp-backends-suite experiments --subsuites=E0,E1,E2,E3,E4,E5 --host-arch=windows_x64
 .\libscript.cmd experiment edgcpp_backends_campaign --suite=edgcpp_backends --host-arch=windows_x64
+```
+
+---
+
+## 7. Zero-Cost TFRC 7-Backend Gemma 4 Cloud TPU Matrix (`--suite=gemma_tpu` / `tpu_matrix`)
+
+LibScript orchestrates reproducible single-host and multi-host Google Cloud TPU benchmarks under
+strict `$0.00` TPU Research Cloud (TFRC) guardrails (`schemas/tfrc-policy.schema.json`,
+`_lib/ml-training/_common/tfrc_guard.{sh,cmd}`, `_lib/ml-training/_common/tpu_matrix.{sh,cmd}`, and
+`_lib/toolchains/gemma-tpu-suite/`) across all seven Gemma 4 ML framework configurations
+(`hf_transformers`, `pytorch_native`, `keras_jax`, `keras_tensorflow`, `keras_pytorch`, `maxtext`,
+and `jax_native`):
+
+- **Zero-Cost TFRC Policy Guardrails:** Requires an explicit `tfrc.policy.json`, blocks GKE/XPK,
+  strips `DISK_SIZE_GB` / `TPU_DATA_DISK_SIZE`, enforces same-region GCS parity when `--gcs-bucket`
+  is requested, arms a remote boot-time auto-TTL dead-man's switch (`arm-ttl`), and audits zero
+  surviving resources post-teardown.
+- **Isolated `/dev/shm` `uv` Virtualenvs & Stage A/B HBM Telemetry:** Provisions per-backend `uv`
+  virtualenvs inside `/dev/shm/libscript-tpu/venvs/<group>` with `--no-deps -e` target installs,
+  shared `/dev/shm/libscript-tpu/cache/{hf,keras}` weight caches, and fail-fast exit `65`
+  (`status: "failed_cpu_fallback"`) if active TPU HBM or `/dev/accel*` / `/dev/vfio/*` usage is
+  zero.
+
+```sh
+# POSIX /bin/sh: Full 7-backend TFRC experiment lifecycle from an external ML repo (e.g. gemma-4-sql)
+../libscript/libscript.sh experiment tpu_matrix --tfrc-config=./tfrc.policy.json --repo-dir=. \
+  --model=google/gemma-4-E4B \
+  --backends=hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native \
+  --subsuites=E0,E1,E2,E3,E4
+```
+
+```cmd
+:: Windows Batch equivalent (quote '=' and ',' flags for cmd.exe)
+call ..\libscript\libscript.cmd experiment tpu_matrix "--tfrc-config=tfrc.policy.json" "--repo-dir=." "--model=google/gemma-4-E4B" "--backends=hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native" "--subsuites=E0,E1,E2,E3,E4"
 ```

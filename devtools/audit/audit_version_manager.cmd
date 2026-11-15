@@ -58,6 +58,7 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
     set "CAT_NAME=%%~nxC"
     if not "!CAT_NAME!"=="_common" (
         for /d %%D in ("%%C\*") do (
+          if /i not "%%~nxD"=="_common" (
             set /a AUDITED+=1
             for %%F in (cli.sh cli.cmd setup.sh setup.cmd env.sh env.cmd service.sh service.cmd test.sh test.cmd uninstall.sh uninstall.cmd manifest.json vars.schema.json README.md) do (
                 if not exist "%%D\%%F" (
@@ -103,6 +104,7 @@ for /d %%C in ("%LIBSCRIPT_ROOT_DIR%\_lib\*") do (
                     )
                 )
             )
+          )
         )
     )
 )

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "freertos-plus-tcp",
+  "title": "FreeRTOS-Plus-TCP Embedded IPv4/IPv6 Stack",
+  "description": "Thread-safe embedded IPv4/IPv6 TCP/UDP/DNS/DHCP networking stack for FreeRTOS bare-metal appliances.",
+  "category": "networking",
+  "provides": ["freertos-plus-tcp"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/FreeRTOS/FreeRTOS-Plus-TCP",
+  "rtos_support": ["freertos"],
+  "memory_footprint_class": "mcu-sram-64k"
+}

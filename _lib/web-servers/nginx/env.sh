@@ -40,6 +40,15 @@ else
   EXACT_VERSION="${NGINX_VERSION}"
 fi
 
+if [ -z "${NGINX_SERVERS_ROOT:-}" ]; then
+  if [ "${UNAME:-}" = 'Darwin' ]; then
+    NGINX_SERVERS_ROOT='/opt/homebrew/etc/nginx/servers'
+  else
+    NGINX_SERVERS_ROOT='/etc/nginx/conf.d/sites-available'
+  fi
+fi
+export NGINX_SERVERS_ROOT
+
 libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/nginx/${EXACT_VERSION}/bin"
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/arm-none-eabi-gcc/vars.schema.json",
+  "title": "arm-none-eabi-gcc variables",
+  "description": "Configuration variables for arm-none-eabi-gcc",
+  "type": "object",
+  "properties": {
+    "ARM_NONE_EABI_GCC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install arm-none-eabi-gcc. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "ARM_NONE_EABI_GCC_VERSION": {
+      "description": "Specific version of arm-none-eabi-gcc to install.",
+      "type": "string",
+      "default": "13.3.1",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ARM_NONE_EABI_GCC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading arm-none-eabi-gcc binary or archive artifacts."
+    },
+    "ARM_NONE_EABI_GCC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying arm-none-eabi-gcc available remote releases."
+    }
+  }
+}

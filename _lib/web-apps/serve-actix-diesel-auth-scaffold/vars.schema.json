@@ -1,25 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/serve-actix-diesel-auth-scaffold/vars.schema.json",
-  "title": "serve-actix-diesel-auth-scaffold vars",
-  "description": "Variables for serve-actix-diesel-auth-scaffold vars",
+  "title": "Actix Diesel Auth Scaffold Variables",
+  "description": "Configuration variables for building and serving the Rust Actix-Web + Diesel authentication scaffold.",
   "type": "object",
   "properties": {
     "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR": {
       "type": "string",
-      "description": "Variable SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR."
+      "description": "Cargo target build directory used when compiling the Actix-Web + Diesel service."
     },
     "BUILD_DIR": {
       "type": "string",
-      "description": "Variable BUILD_DIR."
+      "description": "Fallback Cargo build directory when SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR is unset."
     },
     "REPOS_DIR": {
       "type": "string",
-      "description": "Variable REPOS_DIR."
+      "description": "Parent directory containing cloned application source repositories."
     },
     "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST": {
       "type": "string",
-      "description": "Variable SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST."
+      "description": "Destination checkout path for the serve-actix-diesel-auth-scaffold source tree."
     }
   }
 }

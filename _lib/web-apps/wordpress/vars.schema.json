@@ -224,5 +224,6 @@
       "type": "string",
       "description": "Override UNIX socket path for PHP-FPM."
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth"]
 }

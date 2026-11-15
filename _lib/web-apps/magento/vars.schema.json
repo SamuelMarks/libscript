@@ -1,53 +1,53 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/magento/vars.schema.json",
-  "title": "magento vars",
-  "description": "Variables for magento vars",
+  "title": "Magento Variables",
+  "description": "Configuration variables for deploying and serving the Magento / Adobe Commerce platform.",
   "type": "object",
   "properties": {
     "MAGENTO_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
+      "description": "PHP-FPM FastCGI socket path or host:port endpoint serving Magento PHP workers."
     },
     "MAGENTO_DB_HOST": {
       "type": "string",
-      "description": "Variable MAGENTO_DB_HOST."
+      "description": "Hostname or IP address of the MySQL/MariaDB server backing Magento."
     },
     "MAGENTO_WEBSERVER": {
       "type": "string",
-      "description": "Variable MAGENTO_WEBSERVER."
+      "description": "Frontend web server component fronting Magento (e.g., nginx, caddy, httpd)."
     },
     "MAGENTO_VERSION": {
       "type": "string",
-      "description": "Variable MAGENTO_VERSION."
+      "description": "Target Magento open-source release version or alias (e.g., latest) to install."
     },
     "MAGENTO_SERVER_NAME": {
       "type": "string",
-      "description": "Variable MAGENTO_SERVER_NAME."
+      "description": "Public virtual host domain name configured for the Magento storefront."
     },
     "MAGENTO_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem root directory where the Magento application tree is deployed."
     },
     "MAGENTO_DB_PASS": {
       "type": "string",
-      "description": "Variable MAGENTO_DB_PASS."
+      "description": "Password authenticating the Magento database user."
     },
     "MAGENTO_DB_DRIVER": {
       "type": "string",
-      "description": "Variable MAGENTO_DB_DRIVER."
+      "description": "Database driver backend used by Magento (e.g., mysql, mariadb)."
     },
     "MAGENTO_LISTEN": {
       "type": "string",
-      "description": "Variable MAGENTO_LISTEN."
+      "description": "HTTP bind address:port or UNIX socket configured on the Magento web server."
     },
     "MAGENTO_DB_USER": {
       "type": "string",
-      "description": "Variable MAGENTO_DB_USER."
+      "description": "Database username granted privileges on the Magento schema."
     },
     "MAGENTO_DB_NAME": {
       "type": "string",
-      "description": "Variable MAGENTO_DB_NAME."
+      "description": "Database name provisioned for Magento catalog, order, and customer data."
     }
   }
 }

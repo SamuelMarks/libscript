@@ -87,7 +87,32 @@ if LIBSCRIPT_BUILD_DIR="${TMP_MAT}/bad_mir_pg" STACK='' "${LIBSCRIPT_ROOT_DIR}/l
   fail_test 'Expected postgres on mirageos to be rejected with UNIKERNEL_INCOMPATIBLE'
 fi
 
-printf '[PASS] All kernel x component dependency plans & unikernel constraints verified.\n'
+# Verify RTOS matrix ({rtos-zephyr, rtos-freertos}) across valid embedded component sets
+for _rkern in rtos-zephyr rtos-freertos; do
+  for _rcset in "sqlite" "lua" "wamr" "sqlite,lua" "coremqtt,littlefs"; do
+    LIBSCRIPT_BUILD_DIR="${TMP_MAT}/plan_${_rkern}_$(printf '%s' "$_rcset" | tr ',' '_')" \
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" build-image \
+        --kernel="$_rkern" \
+        --format=firmware-elf \
+        --components="$_rcset" \
+        --dry-run >/dev/null
+  done
+  # Negative validation: postgres and openedx MUST be rejected on single bare-metal RTOS targets with RTOS_INCOMPATIBLE_FORK
+  for _badc in postgres openedx; do
+    _err_out=$(LIBSCRIPT_BUILD_DIR="${TMP_MAT}/bad_${_rkern}_${_badc}" STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" build-image --kernel="$_rkern" --format=firmware-elf --components="$_badc" --dry-run 2>&1 || true)
+    printf '%s\n' "$_err_out" | grep -q 'RTOS_INCOMPATIBLE_FORK' || fail_test "Expected ${_badc} on ${_rkern} to fail with RTOS_INCOMPATIBLE_FORK"
+  done
+  # Hybrid multi-node pod mode MUST succeed when --hybrid-pod is enabled
+  LIBSCRIPT_BUILD_DIR="${TMP_MAT}/pod_${_rkern}_pg" \
+    STACK='' "${LIBSCRIPT_ROOT_DIR}/libscript.sh" build-image \
+      --kernel="$_rkern" \
+      --hybrid-pod \
+      --format=firmware-elf \
+      --components="mosquitto,postgres,sqlite" \
+      --dry-run >/dev/null
+done
+
+printf '[PASS] All kernel x component dependency plans & unikernel/RTOS constraints verified.\n'
 
 printf '=== [2/4] Verifying 2-Pass Consecutive Idempotency Across Formats ===\n'
 SYS_STUB="${TMP_MAT}/sample_sysroot"

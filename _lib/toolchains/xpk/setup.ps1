@@ -14,17 +14,20 @@ Execute this script to install and configure xpk on the local system.
 
 $ErrorActionPreference = "Stop"
 
-$XpkVersion = $env:XPK_VERSION
-if ([string]::IsNullOrEmpty($XpkVersion)) {
-    $XpkVersion = "latest"
-}
+$Action = if ($env:ACTION) { $env:ACTION } elseif ($args.Count -gt 0 -and $args[0] -notlike "-*") { $args[0] } else { "install" }
+$XpkVersion = if ($env:XPK_VERSION) { $env:XPK_VERSION } elseif ($env:VERSION) { $env:VERSION } else { "latest" }
+$CompVersion = $XpkVersion
+$InstallMethod = if ($env:XPK_INSTALL_METHOD) { $env:XPK_INSTALL_METHOD } elseif ($env:LIBSCRIPT_DEFAULT_INSTALL_METHOD) { $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD } elseif ($env:LIBSCRIPT_GLOBAL_INSTALL_METHOD) { $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD } else { "libscript_native" }
+$LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
+$LibscriptHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $HOME ".libscript" }
+$DownloadDir = if ($env:LIBSCRIPT_DOWNLOAD_DIR) { $env:LIBSCRIPT_DOWNLOAD_DIR } elseif ($env:DOWNLOAD_DIR) { $env:DOWNLOAD_DIR } else { Join-Path $LibscriptRootDir "cache\downloads" }
 
 $Prefix = $env:PREFIX
 if ([string]::IsNullOrEmpty($Prefix)) {
-    $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-    $Prefix = "$LibscriptRootDir\installed\xpk"
+    $Prefix = Join-Path (Join-Path $LibscriptHome "xpk") $XpkVersion
 }
 
+if ($Action -eq "install") {
 $BinDir = "$Prefix\bin"
 if (-not (Test-Path -Path $BinDir)) {
     New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
@@ -62,14 +65,18 @@ set "VENV_DIR=%~dp0..\venv"
     Write-Host "xpk already installed at $ExePath"
 }
 
-if (-not ([string]::IsNullOrEmpty($env:GCP_PROJECT_ID))) {
-    & $ExePath config set project $env:GCP_PROJECT_ID
+$GcpProj = if ($env:LIBSCRIPT_GCP_PROJECT_ID) { $env:LIBSCRIPT_GCP_PROJECT_ID } else { $env:GCP_PROJECT_ID }
+if (-not ([string]::IsNullOrEmpty($GcpProj))) {
+    & $ExePath config set project $GcpProj
 }
 if (-not ([string]::IsNullOrEmpty($env:GCP_ZONE))) {
     & $ExePath config set zone $env:GCP_ZONE
 }
-if (-not ([string]::IsNullOrEmpty($env:XPK_CLUSTER_NAME))) {
-    & $ExePath config set cluster $env:XPK_CLUSTER_NAME
+$XpkCluster = if ($env:LIBSCRIPT_XPK_CLUSTER_NAME) { $env:LIBSCRIPT_XPK_CLUSTER_NAME } else { $env:XPK_CLUSTER_NAME }
+if (-not ([string]::IsNullOrEmpty($XpkCluster))) {
+    & $ExePath config set cluster $XpkCluster
+}
+exit 0
 }
 
 if ($Action -eq "ls") {

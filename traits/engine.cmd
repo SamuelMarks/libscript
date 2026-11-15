@@ -55,16 +55,37 @@ set "TARGET_TRAIT=%~2"
 set "MANIFEST_FILE="
 if "%ACTION%"=="" set "ACTION=list"
 if "%TARGET_TRAIT%"=="" set "TARGET_TRAIT=all"
+if /i "%TARGET_TRAIT:~0,2%"=="--" set "TARGET_TRAIT=all"
 
-for %%A in (%2 %3 %4 %5 %6) do (
-    set "_ta=%%~A"
-    if /i "!_ta:~0,11!"=="--manifest=" set "MANIFEST_FILE=!_ta:~11!"
+shift
+goto :parse_trait_args
+
+:: ## parse_trait_args
+:: Iterates all remaining CLI arguments via shift without %2..%6 truncation.
+:parse_trait_args
+if "%~1"=="" goto :done_trait_args
+set "_ta=%~1"
+if /i "!_ta:~0,11!"=="--manifest=" (
+    set "MANIFEST_FILE=!_ta:~11!"
+    shift
+    goto :parse_trait_args
 )
-if /i "%~2"=="--manifest" (
-    set "TARGET_TRAIT=all"
-    set "MANIFEST_FILE=%~3"
+if /i "!_ta!"=="--manifest" (
+    if "%~2"=="!_ta:~11!" (
+        shift
+    ) else if not "%~2"=="" (
+        set "MANIFEST_FILE=%~2"
+        shift
+    )
+    shift
+    goto :parse_trait_args
 )
-if /i "%~3"=="--manifest" set "MANIFEST_FILE=%~4"
+shift
+goto :parse_trait_args
+
+:: ## done_trait_args
+:: Dispatches the resolved trait action once argument parsing completes.
+:done_trait_args
 
 if "%ACTION%"=="list" goto :list_traits
 if "%ACTION%"=="enable" goto :enable_trait

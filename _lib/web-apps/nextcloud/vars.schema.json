@@ -1,49 +1,49 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/nextcloud/vars.schema.json",
-  "title": "nextcloud vars",
-  "description": "Variables for nextcloud vars",
+  "title": "Nextcloud Variables",
+  "description": "Configuration variables for deploying and serving the Nextcloud collaboration and file-sync platform.",
   "type": "object",
   "properties": {
     "NEXTCLOUD_VERSION": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_VERSION."
+      "description": "Target Nextcloud server release version or alias (e.g., latest) to deploy."
     },
     "NEXTCLOUD_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
+      "description": "PHP-FPM FastCGI socket path or host:port endpoint executing Nextcloud PHP workers."
     },
     "NEXTCLOUD_SERVER_NAME": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_SERVER_NAME."
+      "description": "Trusted domain and virtual host server_name configured for Nextcloud."
     },
     "NEXTCLOUD_DB_PASS": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_DB_PASS."
+      "description": "Password authenticating the Nextcloud database user."
     },
     "NEXTCLOUD_DB_USER": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_DB_USER."
+      "description": "Database username used by Nextcloud to connect to its backing store."
     },
     "NEXTCLOUD_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem webroot directory containing the Nextcloud server installation."
     },
     "NEXTCLOUD_DB_NAME": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_DB_NAME."
+      "description": "Database schema name storing Nextcloud metadata, shares, and user accounts."
     },
     "NEXTCLOUD_DB_TYPE": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_DB_TYPE."
+      "description": "Database driver backend for Nextcloud (e.g., pgsql, mysql, sqlite)."
     },
     "NEXTCLOUD_WEBSERVER": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_WEBSERVER."
+      "description": "Frontend web server component fronting Nextcloud (e.g., nginx, caddy, httpd)."
     },
     "NEXTCLOUD_LISTEN": {
       "type": "string",
-      "description": "Variable NEXTCLOUD_LISTEN."
+      "description": "HTTP bind address:port or UNIX socket exposed by the Nextcloud web server."
     }
   }
 }

@@ -65,7 +65,7 @@ $libDir = Join-Path $repoRoot "_lib"
 if (Test-Path -LiteralPath $libDir) {
     $catDirs = Get-ChildItem -LiteralPath $libDir -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "_common" }
     foreach ($cat in $catDirs) {
-        $compDirs = Get-ChildItem -LiteralPath $cat.FullName -Directory -ErrorAction SilentlyContinue
+        $compDirs = Get-ChildItem -LiteralPath $cat.FullName -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "_common" }
         foreach ($comp in $compDirs) {
             $totalComps++
             $compReadme = Join-Path $comp.FullName "README.md"
@@ -86,7 +86,7 @@ Push-Location $repoRoot
 try {
     $trackedScripts = $null
     if (Test-Path -LiteralPath (Join-Path $repoRoot ".git")) {
-        $trackedScripts = git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" 2>$null
+        $trackedScripts = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" 2>$null
     }
     if (-not $trackedScripts) {
         $trackedScripts = Get-ChildItem -Path $repoRoot -Include "*.sh", "*.cmd", "*.bat", "*.ps1" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
@@ -120,6 +120,9 @@ Get-ChildItem -Path $repoRoot -Filter "*.schema.json" -Recurse -File -ErrorActio
     $c = Get-Content -LiteralPath $_.FullName -Raw -ErrorAction SilentlyContinue
     if ($c -match '"type":' -and $c -notmatch '"description":') {
         Write-Warning "Schema file $($_.FullName) might be missing descriptions."
+        $missingSchema++
+    } elseif ($c -match '"description"\s*:\s*"Variable [A-Za-z0-9_]+\.?"') {
+        Write-Warning "Schema file $($_.FullName) contains placeholder 'Variable <NAME>.' description(s)."
         $missingSchema++
     }
 }

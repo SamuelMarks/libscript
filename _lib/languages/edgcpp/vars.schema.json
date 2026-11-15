@@ -197,5 +197,6 @@
       "type": "string",
       "description": "Filesystem path to libedg.a (containing gcc_be_eh_rt.o) automatically linked for C++ targets under EDG_BACKEND=gcc or EDG_BACKEND=c."
     }
-  }
+  },
+  "x-libscript-var-packs": ["source_toolchain"]
 }

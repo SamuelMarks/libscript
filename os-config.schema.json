@@ -25,8 +25,21 @@
       "properties": {
         "arch": {
           "type": "string",
-          "description": "Target processor architecture instruction set",
-          "enum": ["x86_64", "amd64", "aarch64", "arm64", "riscv64", "armv7l", "i686"]
+          "description": "Target processor architecture instruction set (including 64-bit server and 32-bit embedded MCU ISAs)",
+          "enum": [
+            "x86_64",
+            "amd64",
+            "aarch64",
+            "arm64",
+            "riscv64",
+            "armv7l",
+            "i686",
+            "arm",
+            "armv7m",
+            "armv8m",
+            "riscv32",
+            "xtensa"
+          ]
         },
         "os_family": {
           "type": "string",
@@ -41,7 +54,9 @@
             "unikernel-osv",
             "unikernel-rumprun",
             "unikernel-mirageos",
-            "microvm-firecracker"
+            "microvm-firecracker",
+            "rtos-zephyr",
+            "rtos-freertos"
           ]
         },
         "libc": {
@@ -54,6 +69,9 @@
             "illumos-libc",
             "sunos-libc",
             "newlib",
+            "picolibc",
+            "zephyr-minimal",
+            "freertos-none",
             "nolibc",
             "rump-libc",
             "mirage-ocaml"
@@ -73,7 +91,7 @@
         },
         "platform": {
           "type": "string",
-          "description": "Target deployment platform or appliance hypervisor runtime",
+          "description": "Target deployment platform, simulator, MCU board class, or appliance hypervisor runtime",
           "enum": [
             "aws",
             "azure",
@@ -85,12 +103,19 @@
             "gcp",
             "hyper-v",
             "kvm",
+            "mcu-baremetal",
+            "posix-sim",
             "proxmox",
             "qemu",
+            "qemu-cortex-a53",
+            "qemu-mps2",
+            "qemu-riscv-virt",
+            "renode",
             "solo5-hvt",
             "solo5-spt",
             "virtualbox",
             "vmware",
+            "win32-sim",
             "xen"
           ]
         },
@@ -126,6 +151,10 @@
             "rumprun-xen",
             "mirage-solo5-hvt",
             "mirage-solo5-spt",
+            "zephyr-lts",
+            "zephyr-mainline",
+            "freertos-lts",
+            "freertos-mainline",
             "none"
           ]
         },
@@ -185,6 +214,8 @@
             "bsd-rc",
             "smf",
             "unikernel-entrypoint",
+            "zephyr-sys-init",
+            "freertos-scheduler",
             "none"
           ]
         },
@@ -267,6 +298,8 @@
             "illumos-loader",
             "unikernel-direct",
             "multiboot2",
+            "mcuboot",
+            "uf2-rom",
             "none"
           ]
         },
@@ -295,6 +328,9 @@
                   "cpio",
                   "erofs",
                   "ext4",
+                  "fatfs",
+                  "littlefs",
+                  "nvs",
                   "rofs",
                   "squashfs",
                   "stubfs",
@@ -719,12 +755,88 @@
         }
       }
     },
+    "rtos": {
+      "type": "object",
+      "description": "Declarative real-time operating system (Zephyr RTOS and FreeRTOS) board, Kconfig, Devicetree, heap, scheduler, and MCUboot configuration",
+      "properties": {
+        "board": {
+          "type": "string",
+          "description": "Target Zephyr board or FreeRTOS BSP/port identifier (e.g. qemu_x86_64, qemu_cortex_m3, qemu_riscv64, native_sim, mps2_an385, riscv_virt, posix_gcc, win32_sim)"
+        },
+        "dts_overlays": {
+          "type": "array",
+          "description": "Ordered list of Devicetree (.overlay) file paths merged during Zephyr firmware compilation",
+          "items": {
+            "type": "string",
+            "description": "Relative or absolute path to a Devicetree overlay file"
+          }
+        },
+        "kconfig_fragments": {
+          "type": "array",
+          "description": "Ordered list of Zephyr Kconfig (.conf) fragments or FreeRTOSConfig.h macro override fragments",
+          "items": {
+            "type": "string",
+            "description": "Kconfig fragment name or path"
+          }
+        },
+        "heap_implementation": {
+          "type": "string",
+          "description": "FreeRTOS dynamic memory allocator implementation or static-only zero-malloc safety mode",
+          "enum": ["heap_1", "heap_2", "heap_3", "heap_4", "heap_5", "static_only"]
+        },
+        "tick_rate_hz": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "RTOS system tick interrupt frequency in Hertz (e.g. 1000)"
+        },
+        "total_heap_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total RTOS heap pool size in bytes (configTOTAL_HEAP_SIZE or CONFIG_HEAP_MEM_POOL_SIZE)"
+        },
+        "minimal_stack_words": {
+          "type": "integer",
+          "minimum": 32,
+          "description": "Minimal per-task stack allocation in machine words (configMINIMAL_STACK_SIZE)"
+        },
+        "max_priorities": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of preemptive RTOS task priority levels"
+        },
+        "mcuboot": {
+          "type": "object",
+          "description": "MCUboot cryptographic A/B firmware slot signing and upgrade policy",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether to link for MCUboot flash slot offsets and sign output firmware with imgtool"
+            },
+            "signing_key_type": {
+              "type": "string",
+              "description": "Cryptographic signature algorithm used by MCUboot imgtool",
+              "enum": ["rsa-2048", "rsa-3072", "ecdsa-p256", "ed25519"]
+            },
+            "slot_size_kib": {
+              "type": "integer",
+              "minimum": 16,
+              "description": "Flash partition slot size in KiB passed to imgtool sign --slot-size"
+            },
+            "upgrade_strategy": {
+              "type": "string",
+              "description": "MCUboot dual-slot image swap or overwrite strategy",
+              "enum": ["swap-scratch", "swap-move", "overwrite-only", "direct-xip"]
+            }
+          }
+        }
+      }
+    },
     "output_formats": {
       "type": "array",
-      "description": "Target installer or base-image output formats synthesized from this OS specification",
+      "description": "Target installer, VM image, or RTOS firmware output formats synthesized from this OS specification",
       "items": {
         "type": "string",
-        "description": "Target image or installer packaging format identifier",
+        "description": "Target image, installer, or firmware packaging format identifier",
         "enum": [
           "live-iso",
           "live-usb",
@@ -737,7 +849,13 @@
           "zfs-stream",
           "rootfs-tar",
           "oci-image",
-          "direct-kernel"
+          "direct-kernel",
+          "firmware-elf",
+          "firmware-bin",
+          "firmware-hex",
+          "firmware-uf2",
+          "mcuboot-signed",
+          "renode-resc"
         ]
       }
     },

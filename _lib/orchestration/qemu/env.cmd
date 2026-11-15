@@ -49,15 +49,24 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "C:\Program Files\qemu" (
-    set "_CAND_P=C:\Program Files\qemu"
-    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
-    set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "qemu"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%QEMU_TARGET_ARCHS%"=="" set "QEMU_TARGET_ARCHS=arm,aarch64,riscv32,riscv64,x86_64"
+
+for %%Q in (
+    "C:\Program Files\qemu"
+    "%USERPROFILE%\scoop\apps\qemu\current"
+    "%LIBSCRIPT_HOME%\qemu\latest\bin"
+) do (
+    if exist "%%~Q" (
+        echo ";!PATH!;" | findstr /I /C:";%%~Q;" >nul 2>&1
+        if errorlevel 1 set "PATH=%%~Q;!PATH!"
+    )
 )
+set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "qemu"
 
 endlocal & (
+    set "QEMU_TARGET_ARCHS=%QEMU_TARGET_ARCHS%"
     set "PATH=%PATH%"
 )
 exit /b 0

@@ -26,8 +26,8 @@ flowchart TD
         VagrantTests["run_local_tests.sh / .cmd<br/>(Alpine, Debian, FreeBSD, Windows 11 VMs)"]
     end
 
-    subgraph Layer4[4. Synthesized OS & Hypervisor Verification]
-        BootTest["Multi-OS Boot Tests (os_boot_test.sh, freebsd_boot_test.sh, illumos_boot_test.sh)<br/>(Headless QEMU: Kernel Banner, Init Supervisor, Login Prompt)"]
+    subgraph Layer4[4. Synthesized OS, Unikernel & RTOS Verification]
+        BootTest["Multi-OS & RTOS Boot Tests (os_boot_test.sh, freebsd_boot_test.sh, illumos_boot_test.sh, zephyr_boot_test.sh, freertos_boot_test.sh)<br/>(Headless QEMU & Simulators: Kernel Banner, Scheduler Self-Test, Login/Ready Marker)"]
         GUISmoke["os_gui_smoke_test.sh / .cmd<br/>(virtio-gpu: Wayland Socket, X11, PipeWire)"]
         AirGap["test_airgap_boot.sh / .cmd<br/>(Strict LIBSCRIPT_OFFLINE=1 Network Inhibition)"]
         LiveMatrix["test_live_installer_matrix.sh / .cmd<br/>(msi-rs Multiboot Live-CD / USB Verification & Screenshot Capture)"]

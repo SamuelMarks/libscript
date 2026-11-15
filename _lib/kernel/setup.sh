@@ -57,6 +57,31 @@ ACTION="${1:-install}"
 ROOTFS="${2:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/lfs/rootfs}}"
 STAMPS_DIR="${LIBSCRIPT_ROOT_DIR}/build/stamps"
 
+case "${LIBSCRIPT_TARGET_OS:-linux}" in
+  zephyr|rtos-zephyr)
+    if [ "$ACTION" = "clean" ]; then
+      rm -rf "${ROOTFS}/boot/.stamp.zephyr_"*
+      exit 0
+    elif [ "$ACTION" = "status" ]; then
+      ls -l "${ROOTFS}/boot/zephyr.elf" 2>/dev/null || printf '[INFO] Zephyr firmware not yet staged in %s/boot\n' "$ROOTFS"
+      exit 0
+    fi
+    LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${SCRIPT_DIR}/zephyr/build_firmware.sh" --sysroot="$ROOTFS"
+    exit 0
+    ;;
+  freertos|rtos-freertos)
+    if [ "$ACTION" = "clean" ]; then
+      rm -rf "${ROOTFS}/boot/.stamp.freertos_"*
+      exit 0
+    elif [ "$ACTION" = "status" ]; then
+      ls -l "${ROOTFS}/boot/freertos.elf" 2>/dev/null || printf '[INFO] FreeRTOS firmware not yet staged in %s/boot\n' "$ROOTFS"
+      exit 0
+    fi
+    LIBSCRIPT_ALLOW_STUB="$ALLOW_STUB" STACK='' "${SCRIPT_DIR}/freertos/build_firmware.sh" --sysroot="$ROOTFS"
+    exit 0
+    ;;
+esac
+
 mkdir -p "$STAMPS_DIR"
 STAMP_KERNEL="${STAMPS_DIR}/.stamp.lfs_kernel"
 
@@ -150,7 +175,7 @@ FOUND_K=""
 if FOUND_K=$(locate_real_vmlinuz); then
   printf '[STAGE] Staging real kernel image from %s...\n' "$FOUND_K"
   cp -f "$FOUND_K" "${ROOTFS}/boot/vmlinuz"
-elif [ "${LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE:-0}" = "1" ] && [ -x "${SCRIPT_DIR}/linux/setup.sh" ]; then
+elif [ "${LINUX_BUILD_KERNEL_FROM_SOURCE:-${LIBSCRIPT_BUILD_KERNEL_FROM_SOURCE:-0}}" = "1" ] && [ -x "${SCRIPT_DIR}/linux/setup.sh" ]; then
   printf '[STAGE] Compiling Linux kernel via _lib/kernel/linux/setup.sh...\n'
   STACK="" "${SCRIPT_DIR}/linux/setup.sh"
   if FOUND_K=$(locate_real_vmlinuz); then

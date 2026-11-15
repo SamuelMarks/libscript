@@ -56,6 +56,9 @@ if "%LIBSCRIPT_HOME%"=="" (
 if "%NGINX_VERSION%"=="" (
     set "NGINX_VERSION=latest"
 )
+if "%NGINX_SERVERS_ROOT%"=="" (
+    set "NGINX_SERVERS_ROOT=%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%\conf\servers"
+)
 
 set "_CAND_P=%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%\bin"
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
@@ -66,6 +69,7 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "nginx" "%NGINX_VERSION%"
 endlocal & (
     set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
     set "NGINX_VERSION=%NGINX_VERSION%"
+    set "NGINX_SERVERS_ROOT=%NGINX_SERVERS_ROOT%"
     set "PATH=%PATH%"
 )
 exit /b 0

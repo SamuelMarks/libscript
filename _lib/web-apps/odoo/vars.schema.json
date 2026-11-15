@@ -1,63 +1,64 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/odoo/vars.schema.json",
-  "title": "odoo vars",
-  "description": "Variables for odoo vars",
+  "title": "Odoo Variables",
+  "description": "Configuration variables for deploying and serving the Odoo ERP web application.",
   "type": "object",
+  "x-libscript-var-packs": ["image_synth"],
   "properties": {
     "ODOO_DB_TYPE": {
       "type": "string",
-      "description": "Variable ODOO_DB_TYPE."
+      "description": "Database backend engine for Odoo (defaults to postgres)."
     },
     "ODOO_LISTEN": {
       "type": "string",
-      "description": "Variable ODOO_LISTEN."
+      "description": "HTTP bind address:port or socket exposed by the Odoo reverse proxy."
     },
     "ODOO_VERSION": {
       "type": "string",
-      "description": "Variable ODOO_VERSION."
+      "description": "Target Odoo release branch or version (e.g., 17.0, 18.0, latest) to install."
     },
     "ODOO_DB_USER": {
       "type": "string",
-      "description": "Variable ODOO_DB_USER."
+      "description": "PostgreSQL role used by Odoo to manage ERP databases."
     },
     "ODOO_DB_HOST": {
       "type": "string",
-      "description": "Variable ODOO_DB_HOST."
+      "description": "Hostname or socket directory of the PostgreSQL server backing Odoo."
     },
     "ODOO_WEBSERVER": {
       "type": "string",
-      "description": "Variable ODOO_WEBSERVER."
+      "description": "Reverse-proxy web server fronting Odoo HTTP and longpolling ports (e.g., nginx, caddy)."
     },
     "ODOO_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem installation and addons directory for the Odoo application."
     },
     "ODOO_SERVER_NAME": {
       "type": "string",
-      "description": "Variable ODOO_SERVER_NAME."
+      "description": "Public virtual host domain name configured for Odoo."
     },
     "ODOO_DB_NAME": {
       "type": "string",
-      "description": "Variable ODOO_DB_NAME."
+      "description": "Default PostgreSQL database name initialized for Odoo."
     },
     "ODOO_DB_PASS": {
       "type": "string",
-      "description": "Variable ODOO_DB_PASS."
+      "description": "Password authenticating the Odoo PostgreSQL database role."
     },
     "ODOO_DB_PORT": {
       "type": "string",
-      "description": "Variable ODOO_DB_PORT."
+      "description": "TCP port of the PostgreSQL server backing Odoo (defaults to 5432)."
     },
     "ODOO_PORT": {
       "type": "string",
-      "description": "Variable ODOO_PORT."
+      "description": "Internal HTTP service port bound by the Odoo server daemon (defaults to 8069)."
     },
     "db_strategy": {
       "type": "string",
       "enum": ["local", "remote"],
       "default": "local",
-      "description": "Database provisioning strategy (e.g. relational vs nosql)."
+      "description": "Database provisioning strategy (local managed PostgreSQL vs remote connection)."
     },
     "db_host": {
       "type": "string",
@@ -75,7 +76,7 @@
     },
     "ODOO_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Listen endpoint (address:port or socket) for odoo."
+      "description": "Optional upstream FastCGI/proxy listen endpoint associated with Odoo auxiliary routes."
     }
   }
 }

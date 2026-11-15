@@ -160,6 +160,7 @@ if [ -d "${TARGET_ROOT}/_lib" ]; then
     [ "$(basename "$_cat_dir")" = "_common" ] && continue
     for _comp_dir in "$_cat_dir"/*; do
       [ -d "$_comp_dir" ] || continue
+      [ "$(basename "$_comp_dir")" = "_common" ] && continue
       TOTAL_COMPS=$((TOTAL_COMPS + 1))
       if [ ! -f "${_comp_dir}/README.md" ]; then
         printf '[WARN] Component %s is missing README.md\n' "${_comp_dir#"${TARGET_ROOT}"/}"
@@ -175,7 +176,9 @@ TOTAL_SCRIPTS=0
 MISSING_SCRIPT_HEADERS=0
 tmp_scripts=$(mktemp)
 if [ -d "${TARGET_ROOT}/.git" ] && git -C "${TARGET_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git -C "${TARGET_ROOT}" ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' > "$tmp_scripts" || true
+  git -C "${TARGET_ROOT}" ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" | grep -vE '^(\.git|gen|cache|tmp|tests_tmp|node_modules|vagrant)/' | while IFS= read -r _rel_s; do
+    [ -f "${TARGET_ROOT}/${_rel_s}" ] && printf '%s\n' "$_rel_s"
+  done > "$tmp_scripts" || true
 else
   (cd "${TARGET_ROOT}" && find . -maxdepth 2 \( -name "*.sh" -o -name "*.cmd" -o -name "*.bat" -o -name "*.ps1" \) -type f | grep -vE '^\./(\.git|creds|node_modules|\.venv|logs|test)/' | sed 's|^\./||') > "$tmp_scripts" || true
 fi
@@ -220,6 +223,9 @@ if [ -d "${TARGET_ROOT}/_lib" ]; then find "${TARGET_ROOT}" -name "*.schema.json
 while IFS= read -r schema_file; do
   if grep -q '"type":' "$schema_file" && ! grep -q '"description":' "$schema_file"; then
     printf '[WARN] Schema file %s might be missing descriptions.\n' "${schema_file#"${TARGET_ROOT}"/}"
+    MISSING_SCHEMA_DOCS=$((MISSING_SCHEMA_DOCS + 1))
+  elif grep -Eq '"description":[[:space:]]*"Variable [A-Za-z0-9_]+\.?"' "$schema_file"; then
+    printf '[WARN] Schema file %s contains placeholder "Variable <NAME>." description(s).\n' "${schema_file#"${TARGET_ROOT}"/}"
     MISSING_SCHEMA_DOCS=$((MISSING_SCHEMA_DOCS + 1))
   fi
 done < "$tmp_schemas"

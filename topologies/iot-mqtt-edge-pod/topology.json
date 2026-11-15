@@ -1,0 +1,51 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "iot-mqtt-edge-pod",
+  "version": "1.0.0",
+  "description": "Hybrid edge-to-cloud IoT topology pairing Zephyr RTOS and FreeRTOS sensor/actuator firmware nodes with a Mosquitto MQTT broker and PostgreSQL/TimescaleDB telemetry store.",
+  "quorum_strategy": "none",
+  "fencing_policy": "watchdog-reset",
+  "node_groups": [
+    {
+      "name": "cloud-mqtt-ingestion",
+      "provider": "local",
+      "region": "edge-zone-a",
+      "size": "microvm-512m",
+      "count": 1,
+      "role": "leader",
+      "components": ["mosquitto", "postgres", "timescaledb"],
+      "traits": ["tls", "secrets", "metrics", "storage", "backup"]
+    },
+    {
+      "name": "zephyr-riscv-telemetry-nodes",
+      "provider": "local",
+      "region": "edge-zone-a",
+      "size": "qemu-riscv64-64m",
+      "count": 2,
+      "role": "worker",
+      "components": ["zephyr", "coremqtt", "sqlite", "littlefs"],
+      "traits": ["tls", "secrets", "metrics"]
+    },
+    {
+      "name": "freertos-cortexm-actuator-nodes",
+      "provider": "local",
+      "region": "edge-zone-a",
+      "size": "mps2-an385-64k",
+      "count": 2,
+      "role": "worker",
+      "components": ["freertos", "freertos-plus-tcp", "coremqtt", "littlefs"],
+      "traits": ["secrets", "metrics"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "172.31.0.0/24",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "iot-edge.internal"
+  },
+  "choreography": {
+    "substrate_prep": ["traits/secrets", "traits/tls", "traits/metrics"],
+    "leader_bootstrap": ["mosquitto start", "postgres start"],
+    "follower_join": ["zephyr boot", "freertos boot"],
+    "post_cluster": ["verify mqtt telemetryloop"]
+  }
+}

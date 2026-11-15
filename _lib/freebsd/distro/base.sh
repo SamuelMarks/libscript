@@ -61,7 +61,7 @@ MIRROR="${FREEBSD_MIRROR:-https://download.freebsd.org/releases}"
 CACHE_FB="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}/freebsd/${VERSION}/${ARCH}"
 mkdir -p "$CACHE_FB"
 
-if [ "${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+if [ "${FREEBSD_DISTRO_FETCH_BASE:-${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}}" = "1" ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

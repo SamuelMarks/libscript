@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/freertos-plus-tcp/vars.schema.json",
+  "title": "freertos-plus-tcp variables",
+  "description": "Configuration variables for freertos-plus-tcp",
+  "type": "object",
+  "properties": {
+    "FREERTOS_PLUS_TCP_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install freertos-plus-tcp. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "FREERTOS_PLUS_TCP_VERSION": {
+      "description": "Specific version of freertos-plus-tcp to install.",
+      "type": "string",
+      "default": "4.2.2",
+      "version_aliases": ["latest", "lts"]
+    },
+    "FREERTOS_PLUS_TCP_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading freertos-plus-tcp binary or archive artifacts."
+    },
+    "FREERTOS_PLUS_TCP_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying freertos-plus-tcp available remote releases."
+    }
+  },
+  "x-libscript-var-packs": ["image_synth"]
+}

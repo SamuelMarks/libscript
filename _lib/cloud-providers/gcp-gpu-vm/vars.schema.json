@@ -45,5 +45,6 @@
       "type": "string",
       "description": "Flag (0 or 1) indicating whether gcp-gpu-vm is enabled in the execution plan."
     }
-  }
+  },
+  "x-libscript-var-packs": ["cloud_tags"]
 }

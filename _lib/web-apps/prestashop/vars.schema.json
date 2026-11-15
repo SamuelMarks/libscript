@@ -1,49 +1,49 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/prestashop/vars.schema.json",
-  "title": "prestashop vars",
-  "description": "Variables for prestashop vars",
+  "title": "PrestaShop Variables",
+  "description": "Configuration variables for deploying and serving the PrestaShop e-commerce web application.",
   "type": "object",
   "properties": {
     "PRESTASHOP_PHP_FPM_LISTEN": {
       "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
+      "description": "PHP-FPM upstream FastCGI socket path or host:port endpoint serving PrestaShop."
     },
     "PRESTASHOP_DB_TYPE": {
       "type": "string",
-      "description": "Variable PRESTASHOP_DB_TYPE."
+      "description": "Relational database engine type used by PrestaShop (e.g., mysql, mariadb)."
     },
     "PRESTASHOP_WEBSERVER": {
       "type": "string",
-      "description": "Variable PRESTASHOP_WEBSERVER."
+      "description": "Frontend web server component fronting PrestaShop (e.g., nginx, caddy, httpd)."
     },
     "PRESTASHOP_DB_USER": {
       "type": "string",
-      "description": "Variable PRESTASHOP_DB_USER."
+      "description": "Database username used by PrestaShop to connect to its backing store."
     },
     "PRESTASHOP_WWWROOT": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Filesystem document root directory where PrestaShop application files are staged."
     },
     "PRESTASHOP_VERSION": {
       "type": "string",
-      "description": "Variable PRESTASHOP_VERSION."
+      "description": "Target PrestaShop release version or alias (e.g., latest) to deploy."
     },
     "PRESTASHOP_LISTEN": {
       "type": "string",
-      "description": "Variable PRESTASHOP_LISTEN."
+      "description": "HTTP listen address:port or UNIX socket endpoint configured for PrestaShop."
     },
     "PRESTASHOP_SERVER_NAME": {
       "type": "string",
-      "description": "Variable PRESTASHOP_SERVER_NAME."
+      "description": "Public virtual host domain name configured for the PrestaShop storefront."
     },
     "PRESTASHOP_DB_NAME": {
       "type": "string",
-      "description": "Variable PRESTASHOP_DB_NAME."
+      "description": "Database schema name created for PrestaShop e-commerce tables."
     },
     "PRESTASHOP_DB_PASS": {
       "type": "string",
-      "description": "Variable PRESTASHOP_DB_PASS."
+      "description": "Database password authenticating the PrestaShop database user."
     }
   }
 }

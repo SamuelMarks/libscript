@@ -50,7 +50,7 @@ set "_CHECKED=0"
 for %%J in ("!RESULTS_DIR!\raw\*.json") do (
     set "_JN=%%~nxJ"
     if /I not "!_JN:~-8!"==".hw.json" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_verify_json_provenance "%%~fJ" 1 || exit /b 1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_verify_json_provenance "%%~fJ" 1 || exit /b 1
         set /a "_CHECKED+=1"
     )
 )

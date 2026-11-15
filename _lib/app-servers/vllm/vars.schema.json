@@ -57,5 +57,6 @@
       "type": "string",
       "description": "Temporary directory used when building vLLM wheels from source."
     }
-  }
+  },
+  "x-libscript-var-packs": ["tpu"]
 }

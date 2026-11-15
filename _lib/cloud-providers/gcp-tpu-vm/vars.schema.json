@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/cloud-providers/gcp-tpu-vm/vars.schema.json",
   "title": "GCP Cloud TPU VM variables",
-  "description": "Configuration variables for GCP Cloud TPU VMs",
+  "description": "Configuration variables for GCP Cloud TPU VMs and Queued Resources",
   "type": "object",
   "properties": {
     "TPU_VM_VERSION": {
@@ -11,8 +11,19 @@
       "default": "latest",
       "version_aliases": ["latest", "stable"]
     },
+    "GCP_TPU_VM_VERSION": {
+      "description": "Version alias for the gcp-tpu-vm component.",
+      "type": "string",
+      "default": "latest"
+    },
     "TPU_VM_INSTALL_METHOD": {
-      "description": "How to install TPU-VM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
+      "description": "How to install TPU-VM ('libscript_native' or 'system').",
+      "type": "string",
+      "enum": ["libscript_native", "system"],
+      "default": "libscript_native"
+    },
+    "GCP_TPU_VM_INSTALL_METHOD": {
+      "description": "Installation strategy override for the gcp-tpu-vm component.",
       "type": "string",
       "enum": ["libscript_native", "system"],
       "default": "libscript_native"
@@ -24,30 +35,35 @@
       "default": "on-demand"
     },
     "TPU_ACCELERATOR_TYPE": {
-      "description": "Type of TPU accelerator (e.g., v2-8, v3-8, v4-8, v3-32). Defines the hardware topology.",
+      "description": "Type of TPU accelerator (e.g., v4-8, v4-32, v5litepod-8, v6e-8). Defines the hardware topology.",
       "type": "string"
     },
     "TPU_ZONE": {
-      "description": "GCP Zone for TPU provisioning. Must match the specific TFRC granted zone if using TFRC.",
+      "description": "GCP Zone for TPU provisioning. Must match an approved grant zone in tfrc.policy.json when TFRC is active.",
       "type": "string"
     },
     "TPU_VERSION": {
-      "description": "TPU VM OS version (e.g., tpu-ubuntu2204-base). Ensure compatibility with TPU_ACCELERATOR_TYPE.",
+      "description": "TPU VM OS runtime version ('auto' resolves v2/v3/v4 -> tpu-ubuntu2204-base, v5litepod/v5e -> v2-alpha-tpuv5-lite, v5p -> v2-alpha-tpuv5, v6e -> v2-alpha-tpuv6e).",
       "type": "string",
-      "default": "tpu-ubuntu2204-base"
+      "default": "auto"
     },
     "TPU_COUNT": {
-      "description": "Number of independent TPU VMs to provision. Useful for multi-node provisioning.",
+      "description": "Number of independent TPU VMs or pod slices to provision.",
       "type": "integer",
       "default": 1
     },
     "TPU_USE_QUEUED_RESOURCE": {
-      "description": "Whether to use the Queued Resources API for provisioning to better handle capacity errors.",
+      "description": "Whether to use the GCP Queued Resources API for provisioning single-host and multi-host slices.",
       "type": "boolean",
       "default": false
     },
+    "TPU_NO_QUEUED_RESOURCE": {
+      "description": "Flag (0 or 1) opting out of Queued Resources when direct tpu-vm creation is explicitly permitted.",
+      "type": "string",
+      "default": "0"
+    },
     "TPU_DATA_DISK_SIZE": {
-      "description": "Size of the persistent data disk in GB (optional).",
+      "description": "Size of the persistent data disk in GB (optional; stripped to empty in TFRC zero-cost mode).",
       "type": "integer"
     },
     "TPU_DATA_DISK_TYPE": {
@@ -55,9 +71,33 @@
       "type": "string",
       "default": "pd-balanced"
     },
+    "TPU_NETWORK": {
+      "description": "Optional VPC network name for TPU VM provisioning.",
+      "type": "string"
+    },
+    "TPU_SUBNETWORK": {
+      "description": "Optional VPC subnetwork name for TPU VM provisioning.",
+      "type": "string"
+    },
+    "TPU_PROFILE_LOGDIR": {
+      "description": "Remote directory on TPU VM workers where capture_tpu_profile writes profile traces.",
+      "type": "string",
+      "default": "/tmp/tpu_profile"
+    },
+    "TPU_WAIT_TIMEOUT_SEC": {
+      "description": "Maximum timeout in seconds for wait-ready polling of Queued Resources and multi-worker SSH.",
+      "type": "integer",
+      "default": 1800
+    },
+    "TPU_WAIT_POLL_SEC": {
+      "description": "Polling interval in seconds for wait-ready status checks.",
+      "type": "integer",
+      "default": 15
+    },
     "GCP_TPU_VM_ENABLED": {
       "type": "string",
       "description": "Flag (0 or 1) indicating whether gcp-tpu-vm is enabled in the execution plan."
     }
-  }
+  },
+  "x-libscript-var-packs": ["tfrc", "tpu"]
 }

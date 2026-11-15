@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wamr",
+  "title": "WebAssembly Micro Runtime (WAMR)",
+  "description": "Bytecode Alliance WebAssembly Micro Runtime (iwasm and embeddable libiwasm) for Linux, BSD, Zephyr RTOS, and FreeRTOS.",
+  "category": "runtimes",
+  "provides": ["wamr", "iwasm"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/bytecodealliance/wasm-micro-runtime",
+  "rtos_support": ["zephyr", "freertos"],
+  "memory_footprint_class": "mcu-sram-64k"
+}

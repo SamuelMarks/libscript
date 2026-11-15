@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zephyr-cortex-m3-mcuboot-signed",
+  "description": "ARMv7-M Cortex-M3 Zephyr RTOS firmware with picolibc, LittleFS flash storage, and MCUboot RSA-2048 A/B slot signing.",
+  "target": {
+    "arch": "armv7m",
+    "os_family": "rtos-zephyr",
+    "libc": "picolibc",
+    "platform": "qemu-mps2"
+  },
+  "kernel": {
+    "provider": "zephyr-lts",
+    "version": "3.7.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "zephyr-sys-init"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "mcuboot"
+  },
+  "rtos": {
+    "board": "qemu_cortex_m3",
+    "kconfig_fragments": [
+      "minimal_footprint.conf",
+      "picolibc.conf",
+      "littlefs_storage.conf",
+      "mcuboot_slot.conf",
+      "hardened.conf"
+    ],
+    "mcuboot": {
+      "enabled": true,
+      "signing_key_type": "rsa-2048",
+      "slot_size_kib": 256,
+      "upgrade_strategy": "swap-move"
+    }
+  },
+  "output_formats": ["mcuboot-signed", "firmware-uf2"],
+  "components": ["littlefs"]
+}

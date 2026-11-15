@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/vars/image_synth.schema.json",
+  "title": "LibScript Tier 2 Image, Sysroot & Unikernel Synthesis Variables",
+  "description": "Domain-scoped configuration variables for cross-sysroot staging, offline OS image synthesis, service unit path overrides, and unikernel targets.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_TARGET_SYSROOT": {
+      "type": "string",
+      "description": "Target root filesystem staging path when provisioning chroots or OS images.",
+      "deprecated_aliases": ["LIBSCRIPT_TARGET_ROOTFS"]
+    },
+    "LIBSCRIPT_TARGET_ARCH": {
+      "type": "string",
+      "description": "Target CPU architecture when cross-compiling or building OS images."
+    },
+    "LIBSCRIPT_TARGET_LIBC": {
+      "type": "string",
+      "description": "Target C standard library implementation (glibc, musl, uclibc, picolibc, nolibc, msvcrt)."
+    },
+    "LIBSCRIPT_TARGET_OS": {
+      "type": "string",
+      "description": "Target operating system identifier when provisioning or cross-compiling."
+    },
+    "LIBSCRIPT_HOST_ROOT": {
+      "type": "string",
+      "description": "Isolated cross-toolchain host directory prefix when bootstrapping or executing inside a container/chroot."
+    },
+    "LIBSCRIPT_STAGE": {
+      "type": "string",
+      "description": "Active multi-stage Tier 2 execution plan stage identifier (e.g., stage0, stage1, stage2, stage3)."
+    },
+    "LIBSCRIPT_IMAGE_BUILD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) indicating offline sysroot/image synthesis mode so service installers stage unit files without starting host daemons."
+    },
+    "LIBSCRIPT_STRICT_IMAGE_BUILD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enforcing strict native image synthesis and rejecting missing-tool stub fallbacks without writing completion stamps."
+    },
+    "LIBSCRIPT_ALLOW_STUB": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) explicitly permitting structural stub artifacts during unit and dry-run testing when hypervisor or mkfs tools are absent."
+    },
+    "LIBSCRIPT_VM_WORKER": {
+      "type": "string",
+      "description": "Virtualization worker backend override (docker, wsl2, qemu, bhyve, omnios-vm) for cross-OS disk and filesystem synthesis."
+    },
+    "LIBSCRIPT_UNIKERNEL_FRAMEWORK": {
+      "type": "string",
+      "description": "Target unikernel build framework (unikraft, nanos, osv, rumprun, mirageos) when synthesizing unikernel appliances."
+    },
+    "LIBSCRIPT_RELEASEVER": {
+      "type": "string",
+      "default": "9",
+      "description": "Target Enterprise Linux major release version passed to dnf --releasever when staging into LIBSCRIPT_TARGET_SYSROOT."
+    },
+    "LIBSCRIPT_SYSTEMD_DIR": {
+      "type": "string",
+      "description": "Override directory for systemd unit and drop-in override files (defaults to /etc/systemd/system)."
+    },
+    "LIBSCRIPT_LIB_SYSTEMD_DIR": {
+      "type": "string",
+      "description": "Override directory for vendor systemd unit files (defaults to /lib/systemd/system)."
+    },
+    "LIBSCRIPT_ETC_DIR": {
+      "type": "string",
+      "description": "Override root configuration directory for system service config files (defaults to /etc)."
+    },
+    "LIBSCRIPT_INITD_DIR": {
+      "type": "string",
+      "description": "Override directory for SysV/OpenRC init.d scripts (defaults to /etc/init.d)."
+    },
+    "LIBSCRIPT_FREEBSD_RCD_DIR": {
+      "type": "string",
+      "description": "Override directory for FreeBSD rc.d service scripts (defaults to /usr/local/etc/rc.d)."
+    },
+    "LIBSCRIPT_RUN_DIR": {
+      "type": "string",
+      "description": "Override runtime PID/socket directory (defaults to /var/run)."
+    },
+    "LIBSCRIPT_USR_LOCAL_BIN": {
+      "type": "string",
+      "description": "Override directory for locally installed system binaries (defaults to /usr/local/bin)."
+    },
+    "LIBSCRIPT_USR_LOCAL_ETC": {
+      "type": "string",
+      "description": "Override directory for locally installed system configuration files (defaults to /usr/local/etc)."
+    },
+    "LIBSCRIPT_HOME_BASE": {
+      "type": "string",
+      "description": "Base parent directory for user home directories (defaults to /home)."
+    },
+    "LIBSCRIPT_ROOT_HOME": {
+      "type": "string",
+      "description": "Root user home directory override (defaults to /root)."
+    }
+  }
+}

@@ -33,3 +33,6 @@ Every scheduler driver (`<scheduler>.sh` and `<scheduler>.cmd`) implements six c
 - **`xpk.{sh,cmd}`**: Schedules multi-slice TPU gang workloads via Google Cloud `xpk`.
 - **`slurm_ray.{sh,cmd}`**: Compiles HPC and distributed AI workloads into Slurm `sbatch` scripts or
   Ray job submissions.
+- **`rtos_firmware.{sh,cmd}`**: Translates declarative RTOS/embedded payloads into QEMU headless
+  emulation, Renode (`.resc`) multi-node simulation scripts, or `openocd` SWD/JTAG hardware flash
+  actions for Zephyr RTOS and FreeRTOS appliances.

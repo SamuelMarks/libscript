@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/message-brokers/coremqtt/vars.schema.json",
+  "title": "coremqtt variables",
+  "description": "Configuration variables for coremqtt",
+  "type": "object",
+  "properties": {
+    "COREMQTT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install coremqtt. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "COREMQTT_VERSION": {
+      "description": "Specific version of coremqtt to install.",
+      "type": "string",
+      "default": "2.3.1",
+      "version_aliases": ["latest", "lts"]
+    },
+    "COREMQTT_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading coremqtt binary or archive artifacts."
+    },
+    "COREMQTT_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying coremqtt available remote releases."
+    }
+  },
+  "x-libscript-var-packs": ["image_synth"]
+}

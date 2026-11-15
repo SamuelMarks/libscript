@@ -782,6 +782,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `apt`                                 | `package-managers` | -           | ✅          | -           | -       | -     | -       | -     |
 | `aqua`                                | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `aria2`                               | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `arm-none-eabi-gcc`                   | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `asdf`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `auto-win-msvc`                       | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `autoconf`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -821,6 +822,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `composer`                            | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `conan`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `conda`                               | `package-managers` | -           | ✅          | ✅          | -       | -     | -       | ✅    |
+| `coremqtt`                            | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `couchdb`                             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `coursier`                            | `toolchains`       | -           | ✅          | ✅          | -       | -     | -       | ✅    |
 | `cpanm`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -840,6 +842,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `doxygen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `dragonfly`                           | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `drupal`                              | `web-apps`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `dtc`                                 | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `duckdb`                              | `databases`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `edgcpp`                              | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `edgcpp-backends-suite`               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -871,6 +874,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `gcc-torture`                         | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gcsfuse`                             | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `gem`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `gemma-tpu-suite`                     | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gettext`                             | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `ghcup`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `git`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -923,6 +927,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `libtpu`                              | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `libtpu-rs`                           | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lighttpd`                            | `web-servers`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `littlefs`                            | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `llvm`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lmdb`                                | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `loki`                                | `logging`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -942,6 +947,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `memcached`                           | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `memtier-benchmark`                   | `utilities`        | ❓          | ❓          | ❓          | ❓      | -     | ❓      | ❓    |
 | `meson`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `micropython`                         | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `minio`                               | `storage-layers`   | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `mise`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `mix`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -976,6 +982,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `opam`                                | `package-managers` | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `openbao`                             | `security`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `openedx`                             | `web-apps`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `openocd`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `openresty`                           | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `opensearch`                          | `search`           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `openssl`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1026,6 +1033,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `redpanda`                            | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rethinkdb`                           | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `ripgrep`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `riscv-none-elf-gcc`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rocksdb`                             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rsync`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `ruby`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -1093,7 +1101,9 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `vllm`                                | `app-servers`      | -           | -           | -           | -       | -     | -       | -     |
 | `wait4x`                              | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `waitress`                            | `app-servers`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `wamr`                                | `runtimes`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wasmtime`                            | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `west`                                | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `wget`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `wildfly`                             | `app-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `win-cmd-rs`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1114,6 +1124,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `yay`                                 | `package-managers` | -           | -           | -           | -       | -     | -       | -     |
 | `yq`                                  | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `yum`                                 | `package-managers` | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `zephyr-sdk`                          | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `zeromq`                              | `message-brokers`  | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `zfs`                                 | `storage-layers`   | ❓          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `zig`                                 | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -1144,6 +1155,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `e2fsprogs`          | `base-system`      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `eudev`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `firewalld`          | `networking`       | ❓          | ❓          | ❓          | -       | -     | -       | -     |
+| `freertos-plus-tcp`  | `networking`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `frr`                | `networking`       | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
 | `gdm`                | `display-managers` | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `glibc`              | `base-system`      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -1227,12 +1239,14 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `bootloaders/setup`      | `bootloaders`    | ❓          | ❓          | ❓          | -       | -     | ❓      | -     |
 | `distro`                 | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `freebsd/distro`         | `freebsd`        | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `freertos`               | `kernel`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `grub`                   | `bootloaders`    | ✅          | ❓          | ❓          | -       | ❓    | ❓      | -     |
 | `illumos/distro`         | `illumos`        | ✅          | ✅          | ✅          | -       | ✅    | ✅      | -     |
 | `initramfs`              | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `lima`                   | `virtualization` | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `limine`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | ❓    | ❓      | ❓    |
 | `linux`                  | `kernel`         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `mcuboot`                | `bootloaders`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `multipass`              | `virtualization` | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
 | `packagers`              | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `refind`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | -     | ❓      | ❓    |
@@ -1245,6 +1259,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `vfs`                    | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `wine`                   | `virtualization` | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `wsl`                    | `virtualization` | -           | -           | -           | ❓      | -     | -       | -     |
+| `zephyr`                 | `kernel`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 
 ### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners
 
@@ -1301,6 +1316,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `pulumi`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `qemu`                  | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rancher`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `renode`                | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rumprun`               | `orchestration`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `skopeo`                | `orchestration`   | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `slurm`                 | `orchestration`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -1316,36 +1332,38 @@ Components are organized into LibScript's 5 architectural tiers (see
 
 ### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
 
-| Component                          | Category        | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ---------------------------------- | --------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `gke-xpk-inference`                | `ai-serving`    | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `gke-xpk-training`                 | `orchestration` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `ml-training`                      | `ml-training`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `payloads/schedulers/kubernetes`   | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/mesos`        | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/microvm`      | `payloads`      | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `payloads/schedulers/native`       | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/nomad`        | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/slurm_ray`    | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `payloads/schedulers/xpk`          | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/gke-tpu-cluster`       | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/k0s-ha`                | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/k8s-marathon-paas`     | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/mesos-marathon-ha`     | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/minio-distributed`     | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/openedx-ha`            | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/openedx-unikernel-pod` | `topologies`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `topologies/postgres-ha`           | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/redis-cluster`         | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `topologies/valkey-cluster`        | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/backup`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/discovery`                 | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/firewall`                  | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/ingress`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/logging`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/maintenance`               | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/mesh`                      | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/metrics`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/secrets`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/storage`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `traits/tls`                       | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| Component                           | Category        | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+| ----------------------------------- | --------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
+| `gke-xpk-inference`                 | `ai-serving`    | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `gke-xpk-training`                  | `orchestration` | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `ml-training`                       | `ml-training`   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `payloads/schedulers/kubernetes`    | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/mesos`         | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/microvm`       | `payloads`      | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
+| `payloads/schedulers/native`        | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/nomad`         | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/rtos_firmware` | `payloads`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `payloads/schedulers/slurm_ray`     | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `payloads/schedulers/xpk`           | `payloads`      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/gke-tpu-cluster`        | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/iot-mqtt-edge-pod`      | `topologies`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `topologies/k0s-ha`                 | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/k8s-marathon-paas`      | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/mesos-marathon-ha`      | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/minio-distributed`      | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/openedx-ha`             | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/openedx-unikernel-pod`  | `topologies`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `topologies/postgres-ha`            | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/redis-cluster`          | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `topologies/valkey-cluster`         | `topologies`    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/backup`                     | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/discovery`                  | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/firewall`                   | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/ingress`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/logging`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/maintenance`                | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/mesh`                       | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/metrics`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/secrets`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/storage`                    | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
+| `traits/tls`                        | `traits`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

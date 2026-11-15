@@ -78,7 +78,7 @@ printf '[RECIPE] Staging %s into %s (action: %s)\n' "FreeBSD System Engine" "$TA
 mkdir -p "$TARGET_SYSROOT/boot/kernel" "$TARGET_SYSROOT/etc" "$TARGET_SYSROOT/etc/rc.conf.d"
 
 STAMP_MODE='native'
-if [ -d "${FREEBSD_SRC_DIR:-/usr/src}" ] && [ -f "${FREEBSD_SRC_DIR:-/usr/src}/Makefile.inc1" ] && [ "${ACTION}" = "compile" ] && [ "${LIBSCRIPT_FREEBSD_BUILDWORLD:-0}" = "1" ]; then
+if [ -d "${FREEBSD_SRC_DIR:-/usr/src}" ] && [ -f "${FREEBSD_SRC_DIR:-/usr/src}/Makefile.inc1" ] && [ "${ACTION}" = "compile" ] && [ "${FREEBSD_DISTRO_BUILDWORLD:-${LIBSCRIPT_FREEBSD_BUILDWORLD:-0}}" = "1" ]; then
   MAKEOBJDIRPREFIX="${LIBSCRIPT_BUILD_DIR:-${LIBSCRIPT_ROOT_DIR}/build/freebsd-obj}"
   mkdir -p "$MAKEOBJDIRPREFIX"
   export MAKEOBJDIRPREFIX
@@ -89,7 +89,7 @@ if [ -d "${FREEBSD_SRC_DIR:-/usr/src}" ] && [ -f "${FREEBSD_SRC_DIR:-/usr/src}/M
     make -C "${FREEBSD_SRC_DIR:-/usr/src}" buildworld buildkernel
     make -C "${FREEBSD_SRC_DIR:-/usr/src}" installworld installkernel DESTDIR="$TARGET_SYSROOT"
   fi
-elif [ -x "${SCRIPT_DIR}/distro/base.sh" ] && [ "${LIBSCRIPT_OFFLINE:-0}" = "0" ] && [ "${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}" = "1" ]; then
+elif [ -x "${SCRIPT_DIR}/distro/base.sh" ] && [ "${LIBSCRIPT_OFFLINE:-0}" = "0" ] && [ "${FREEBSD_DISTRO_FETCH_BASE:-${LIBSCRIPT_FETCH_FREEBSD_BASE:-0}}" = "1" ]; then
   STACK="" "${SCRIPT_DIR}/distro/base.sh" "$TARGET_SYSROOT" "${FREEBSD_VERSION:-14.1-RELEASE}" "${LIBSCRIPT_TARGET_ARCH:-amd64}"
 fi
 

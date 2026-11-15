@@ -19,11 +19,11 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "$_paths_caller_this" ] && THIS_FILE="$_paths_caller_this"
     [ -n "$_paths_caller_dir" ] && SCRIPT_DIR="$_paths_caller_dir"
     unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -47,7 +47,11 @@ resolve_component_paths() {
   # 1. Base Cache & Download Directory
   # Default: <root>/cache/downloads/<package_name>
   _base_cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}"
-  DOWNLOAD_DIR="${DOWNLOAD_DIR:-$_base_cache_dir/downloads/$PACKAGE_NAME}"
+  if [ -z "${LIBSCRIPT_DOWNLOAD_DIR:-}" ] && [ -n "${DOWNLOAD_DIR:-}" ]; then
+    LIBSCRIPT_DOWNLOAD_DIR="$DOWNLOAD_DIR"
+  fi
+  : "${LIBSCRIPT_DOWNLOAD_DIR:=$_base_cache_dir/downloads}"
+  DOWNLOAD_DIR="${DOWNLOAD_DIR:-$LIBSCRIPT_DOWNLOAD_DIR/$PACKAGE_NAME}"
 
   # 2. Local Data Directory (for binaries, etc.)
   # Default: /tmp/libscript_data/<package_name> (or via LIBSCRIPT_DATA_DIR)
@@ -56,11 +60,13 @@ resolve_component_paths() {
   BIN_DIR="${BIN_DIR:-$DATA_DIR/bin}"
 
   # 3. Logs Directory
-  # Default: /tmp/libscript_logs/<package_name> (or via LIBSCRIPT_LOGS_DIR)
-  _global_logs_dir="${LIBSCRIPT_LOGS_DIR:-${TMPDIR:-/tmp}/libscript_logs}"
+  # Default: /tmp/libscript_logs/<package_name> (or via LIBSCRIPT_LOG_DIR / legacy LIBSCRIPT_LOGS_DIR)
+  _global_logs_dir="${LIBSCRIPT_LOG_DIR:-${LIBSCRIPT_LOGS_DIR:-${TMPDIR:-/tmp}/libscript_logs}}"
+  LIBSCRIPT_LOG_DIR="$_global_logs_dir"
+  LIBSCRIPT_LOGS_DIR="$_global_logs_dir"
   LOGS_DIR="${LOGS_DIR:-$_global_logs_dir/$PACKAGE_NAME}"
 
-  export DOWNLOAD_DIR DATA_DIR BIN_DIR LOGS_DIR
+  export LIBSCRIPT_DOWNLOAD_DIR DOWNLOAD_DIR DATA_DIR BIN_DIR LIBSCRIPT_LOG_DIR LIBSCRIPT_LOGS_DIR LOGS_DIR
 
   # Ensure directories exist
   mkdir -p -- "$DOWNLOAD_DIR" "$DATA_DIR" "$BIN_DIR" "$LOGS_DIR"

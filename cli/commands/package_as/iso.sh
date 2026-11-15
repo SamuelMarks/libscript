@@ -21,9 +21,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -107,6 +107,23 @@ if [ -f "$TARGET_SYSROOT/boot/initramfs.img" ]; then
   cp -f "$TARGET_SYSROOT/boot/initramfs.img" "$ISO_STAGING/boot/initramfs.img"
 fi
 
+if [ -f "$TARGET_SYSROOT/boot/zephyr.elf" ]; then
+  cp -f "$TARGET_SYSROOT/boot/zephyr.elf" "$ISO_STAGING/boot/zephyr.elf"
+  cat <<'GRUB_ZEPHYR_EOF' > "$ISO_STAGING/boot/grub/grub.cfg"
+set default="0"
+set timeout=1
+menuentry "LibScript Zephyr RTOS" {
+    multiboot /boot/zephyr.elf
+    boot
+}
+GRUB_ZEPHYR_EOF
+  cat <<'LIMINE_ZEPHYR_EOF' > "$ISO_STAGING/boot/limine.cfg"
+TIMEOUT=1
+:LibScript Zephyr RTOS
+    PROTOCOL=multiboot1
+    KERNEL_PATH=boot:///boot/zephyr.elf
+LIMINE_ZEPHYR_EOF
+else
 cat <<'GRUB_ISO_EOF' > "$ISO_STAGING/boot/grub/grub.cfg"
 set default="0"
 set timeout=5
@@ -115,6 +132,7 @@ menuentry "LibScript Live OS" {
     initrd /boot/initramfs.img
 }
 GRUB_ISO_EOF
+fi
 
 BUILT_NATIVE=0
 rm -f "$OUT_ISO"

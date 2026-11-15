@@ -50,9 +50,9 @@ if not exist "!RESULTS_DIR!\raw" mkdir "!RESULTS_DIR!\raw"
 if not "%FORCE_REBUILD%"=="1" if exist "!RESULTS_DIR!\raw\e0_phase0_gates.json" exit /b 0
 for %%U in ("!SCRIPT_DIR!\..") do set "SUITE_ROOT=%%~fU"
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_verify_lockfile "!SUITE_ROOT!\manifests\c_upstreams.lock.json" 9 || exit /b 1
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_verify_lockfile "!SUITE_ROOT!\manifests\batch_wild_corpus.lock.json" 82 || exit /b 1
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_capture_ecosystem_metadata "!ECOSYSTEM_DIR!" "!RESULTS_DIR!\raw\metadata.json"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_verify_lockfile "!SUITE_ROOT!\manifests\c_upstreams.lock.json" 9 || exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_verify_lockfile "!SUITE_ROOT!\manifests\batch_wild_corpus.lock.json" 82 || exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_capture_ecosystem_metadata "!ECOSYSTEM_DIR!" "!RESULTS_DIR!\raw\metadata.json"
 
 set "_SHA=1111111111111111111111111111111111111111"
 for /f "delims=" %%H in ('git -C "%LIBSCRIPT_ROOT_DIR%" rev-parse HEAD 2^>nul') do set "_SHA=%%H"

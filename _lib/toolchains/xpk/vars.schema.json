@@ -49,5 +49,6 @@
       "type": "string",
       "description": "Override URL for querying xpk available remote releases."
     }
-  }
+  },
+  "x-libscript-var-packs": ["tpu"]
 }

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/vars/tpu.schema.json",
+  "title": "LibScript TPU & XPK Accelerator Variables",
+  "description": "Domain-scoped configuration variables for Google Cloud TPU VMs, XPK GKE clusters, and ML inference/training workloads.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_TPU_ZONE": {
+      "type": "string",
+      "description": "GCP compute zone for TPU VM or XPK cluster provisioning.",
+      "default": "us-central2-b",
+      "deprecated_aliases": ["TPU_ZONE"]
+    },
+    "LIBSCRIPT_TPU_ACCELERATOR_TYPE": {
+      "type": "string",
+      "description": "Cloud TPU accelerator topology SKU (e.g., v4-8, v5litepod-4, v6e-1).",
+      "default": "v4-8",
+      "deprecated_aliases": ["TPU_ACCELERATOR_TYPE"]
+    },
+    "LIBSCRIPT_TPU_VERSION": {
+      "type": "string",
+      "description": "Cloud TPU runtime OS image version (e.g., tpu-ubuntu2204-base, v2-alpha-tpuv5-lite, v2-alpha-tpuv6e).",
+      "default": "tpu-ubuntu2204-base",
+      "deprecated_aliases": ["TPU_VERSION"]
+    },
+    "LIBSCRIPT_TPU_TENSOR_PARALLEL_SIZE": {
+      "type": "string",
+      "description": "Tensor parallelism degree across TPU cores for model serving.",
+      "default": "1",
+      "deprecated_aliases": ["TPU_TENSOR_PARALLEL_SIZE"]
+    },
+    "LIBSCRIPT_GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "Google Cloud Project ID used for TPU VM or XPK cluster operations.",
+      "deprecated_aliases": ["GCP_PROJECT_ID"]
+    },
+    "LIBSCRIPT_XPK_CLUSTER_NAME": {
+      "type": "string",
+      "description": "Target GKE cluster name managed via XPK.",
+      "deprecated_aliases": ["XPK_CLUSTER_NAME"]
+    },
+    "LIBSCRIPT_MODEL_NAME": {
+      "type": "string",
+      "description": "Model repository identifier (e.g., HuggingFace repo ID) served or benchmarked on accelerators.",
+      "default": "google/gemma-2-2b",
+      "deprecated_aliases": ["MODEL_NAME"]
+    },
+    "LIBSCRIPT_WORKLOAD_NAME": {
+      "type": "string",
+      "description": "Scheduled XPK or batch training workload identifier.",
+      "deprecated_aliases": ["WORKLOAD_NAME"]
+    }
+  }
+}

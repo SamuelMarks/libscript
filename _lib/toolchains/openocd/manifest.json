@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openocd",
+  "title": "OpenOCD On-Chip Debugger",
+  "description": "Open On-Chip Debugger providing SWD/JTAG hardware flashing and GDB remote server support for ARM, RISC-V, and Xtensa targets.",
+  "category": "toolchains",
+  "provides": ["openocd"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/openocd-org/openocd"
+}

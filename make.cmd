@@ -94,6 +94,18 @@ call "%LIBSCRIPT_ROOT_DIR%\tests\test_doc_coverage.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_vm_contract.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_global_var_hygiene.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_var_aliases_and_env_printer.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_os_info_matrix.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_pkg_mapper_parity.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_cli_arg_forwarding.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_rest_api.cmd"
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_shellcheck_vm_and_hooks.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_cloud_experiment_lifecycle.cmd"
@@ -105,6 +117,12 @@ if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_port_experiments.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_edgcpp_backends_experiments.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_tfrc_guard.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_gcp_tpu_vm_qr_multihost.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_gemma_tpu_matrix.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_tier1_languages_and_package_managers.cmd"
 if errorlevel 1 exit /b 1

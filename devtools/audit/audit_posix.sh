@@ -218,7 +218,7 @@ audit_companions() {
   rm -f "$_comp_err"
 
   _cmd_hdr_err=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.cmd" "*.bat") | (
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.cmd" "*.bat" | while IFS= read -r _p; do [ -f "$_p" ] && printf '%s\n' "$_p"; done) | (
     # shellcheck disable=SC2016
     cd "$LIBSCRIPT_ROOT_DIR" && xargs awk '
       function check_cmd() {
@@ -289,8 +289,8 @@ elif [ $# -gt 0 ] && [ "${1:-}" != "--all" ]; then
 else
   _all_sh=$(mktemp)
   _all_scripts=$(mktemp)
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" ".githooks/pre-commit" | sed "s|^|${LIBSCRIPT_ROOT_DIR}/|") > "$_all_sh"
-  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat") > "$_all_scripts"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" ".githooks/pre-commit" | while IFS= read -r _p; do [ -f "$_p" ] && printf '%s/%s\n' "$LIBSCRIPT_ROOT_DIR" "$_p"; done) > "$_all_sh"
+  (cd "$LIBSCRIPT_ROOT_DIR" && git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" | while IFS= read -r _p; do [ -f "$_p" ] && printf '%s\n' "$_p"; done) > "$_all_scripts"
   audit_batch < "$_all_sh"
   audit_companions < "$_all_scripts"
   rm -f "$_all_sh" "$_all_scripts"

@@ -11,7 +11,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -56,6 +56,7 @@ set "OS=Windows_NT"
 set "TARGET_OS=windows"
 set "UNAME=Windows_NT"
 set "UNAME_LOWER=windows"
+set "INIT_SYS=windows-scm"
 set "KERNEL_RELEASE=10.0"
 set "UNAME_A=Windows_NT 10.0 %PROCESSOR_ARCHITECTURE%"
 

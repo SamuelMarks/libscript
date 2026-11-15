@@ -19,9 +19,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_ENTRY_FILE="${THIS_FILE}"
@@ -69,6 +69,7 @@ show_help() {
   printf '%s\n' '  deprovision <provider> ...  Deprovision a cloud environment'
   printf '%s\n' '  deploy [repo_or_path] ...   Git-driven application and cloud deployment workflow'
   printf '%s\n' '  deploy-remote <user@host>   Idempotently deploy multiple apps to a remote host'
+  printf '%s\n' '  benchmark-ml [options...]   Run TFRC zero-cost or local multi-backend ML benchmarks'
   printf '%s\n' '  <component> [OPTIONS...]    Invoke the CLI for a specific component'
   printf '%s\n' ""
   printf '%s\n' 'Options:'
@@ -168,6 +169,7 @@ normalize_component_alias() {
     stacks/scaffolds/serve-actix-diesel-auth-scaffold) printf '%s\n' "_lib/web-apps/serve-actix-diesel-auth-scaffold" ;;
     stacks/task-queues/celery) printf '%s\n' "_lib/web-apps/celery" ;;
     stacks/virtualization/bento-builder) printf '%s\n' "_lib/virtualization/bento-builder" ;;
+    toolchains/gemma-tpu-suite|gemma_tpu_suite|gemma-tpu-suite) printf '%s\n' "_lib/toolchains/gemma-tpu-suite" ;;
     ai-tools/ollama|_lib/ai-tools/ollama) printf '%s\n' "_lib/app-servers/ollama" ;;
     *) printf '%s\n' "${1:-}" ;;
   esac
@@ -338,7 +340,7 @@ case "$CMD" in
   payload) exec "$LIBSCRIPT_ROOT_DIR/payloads/engine.sh" "$@" ;;
   topology) exec "$LIBSCRIPT_ROOT_DIR/topologies/engine.sh" "$@" ;;
   trait) exec "$LIBSCRIPT_ROOT_DIR/traits/engine.sh" "$@" ;;
-  train|infer|serve-ml|eval-ml) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/ml/actions.sh" "$CMD" "$@" ;;
+  train|infer|serve-ml|eval-ml|benchmark-ml) exec "$LIBSCRIPT_ROOT_DIR/cli/commands/ml/actions.sh" "$CMD" "$@" ;;
   env)
     if [ "${1:-}" = "--manifest" ] || [ -z "${1:-}" ] || [ -f "${1:-}" ]; then
       _env_manifest='libscript.json'
@@ -387,10 +389,6 @@ if [ "$IS_ACTION" = "1" ]; then
     printf '%s\n' "Error: package_name is required for $CMD" >&2
     exit 1
   fi
-  # We do not shift here because the local cli.sh expects the action as $1
-  # But we need to pass "$CMD" "$ACTION_PKG" "$@" to local cli.sh
-  # Oh wait, we already shifted. So $1 is ACTION_PKG.
-  # Let's restore "$CMD" for the local cli.sh.
   set -- "$CMD" "$@"
 fi
 
@@ -437,22 +435,11 @@ else
   fi
 fi
 
-if [ "$IS_ACTION" = "1" ]; then
-  if [ -x "$TARGET/cli.sh" ]; then
-    exec "$TARGET/cli.sh" "$@"
-  elif [ -f "$TARGET/cli.sh" ]; then
-    exec sh "$TARGET/cli.sh" "$@"
-  else
-    printf '%s\n' "Error: Local CLI not found in $TARGET" >&2
-    exit 1
-  fi
+if [ -x "$TARGET/cli.sh" ]; then
+  exec "$TARGET/cli.sh" "$@"
+elif [ -f "$TARGET/cli.sh" ]; then
+  exec sh "$TARGET/cli.sh" "$@"
 else
-  if [ -x "$TARGET/cli.sh" ]; then
-    exec "$TARGET/cli.sh" "$@"
-  elif [ -f "$TARGET/cli.sh" ]; then
-    exec sh "$TARGET/cli.sh" "$@"
-  else
-    printf '%s\n' "Error: Local CLI not found in $TARGET" >&2
-    exit 1
-  fi
+  printf '%s\n' "Error: Local CLI not found in $TARGET" >&2
+  exit 1
 fi

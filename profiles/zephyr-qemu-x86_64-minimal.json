@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zephyr-qemu-x86_64-minimal",
+  "description": "Minimal single-address-space Zephyr RTOS x86_64 SMP appliance with picolibc and POSIX API enabled for QEMU.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "rtos-zephyr",
+    "libc": "picolibc",
+    "platform": "qemu"
+  },
+  "kernel": {
+    "provider": "zephyr-lts",
+    "version": "3.7.0",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "zephyr-sys-init"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "unikernel-direct"
+  },
+  "rtos": {
+    "board": "qemu_x86_64",
+    "kconfig_fragments": ["minimal_footprint.conf", "picolibc.conf", "posix_api.conf"],
+    "tick_rate_hz": 1000,
+    "total_heap_bytes": 65536
+  },
+  "output_formats": ["firmware-elf", "direct-kernel"],
+  "components": ["lua"]
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/dtc/vars.schema.json",
+  "title": "dtc variables",
+  "description": "Configuration variables for dtc",
+  "type": "object",
+  "properties": {
+    "DTC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install dtc. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "system"
+    },
+    "DTC_VERSION": {
+      "description": "Specific version of dtc to install.",
+      "type": "string",
+      "default": "1.7.1",
+      "version_aliases": ["latest", "lts"]
+    },
+    "DTC_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading dtc binary or archive artifacts."
+    },
+    "DTC_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying dtc available remote releases."
+    }
+  }
+}

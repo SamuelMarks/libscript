@@ -76,5 +76,6 @@
       "type": "string",
       "description": "When set to '1', validates manifests and command routing without executing long compiler sweeps."
     }
-  }
+  },
+  "x-libscript-var-packs": ["experiment"]
 }

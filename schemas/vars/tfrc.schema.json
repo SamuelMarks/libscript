@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/vars/tfrc.schema.json",
+  "title": "LibScript TFRC Zero-Cost Policy Variables",
+  "description": "Domain-scoped configuration variables governing TPU Research Cloud (TFRC) zero-cost billing guardrails and ephemeral VM TTLs.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_TFRC_CONFIG": {
+      "type": "string",
+      "description": "Explicit filesystem path to the user-supplied TFRC zero-cost policy JSON file validated against schemas/tfrc-policy.schema.json."
+    },
+    "LIBSCRIPT_TFRC_STRICT": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Flag (0 or 1) enforcing zero-cost TFRC guardrails (blocking GKE, Persistent Disks, static IPs, and non-matching GCS regions)."
+    },
+    "LIBSCRIPT_TFRC_STORAGE_MODE": {
+      "type": "string",
+      "enum": ["ssh", "same_region_gcs"],
+      "default": "ssh",
+      "description": "Artifact and code transfer transport mode under TFRC enforcement (ssh default, or verified same_region_gcs)."
+    },
+    "LIBSCRIPT_TFRC_MAX_TTL_MINUTES": {
+      "type": "string",
+      "default": "180",
+      "description": "Maximum time-to-live in minutes armed on provisioned TPU VM workers via the dead-man's switch timer."
+    },
+    "LIBSCRIPT_TFRC_SHM_MIN_FREE_GB": {
+      "type": "string",
+      "default": "32",
+      "description": "Minimum free /dev/shm tmpfs capacity in GiB preserved before evicting completed per-backend virtual environments."
+    }
+  }
+}

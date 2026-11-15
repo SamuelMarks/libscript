@@ -19,6 +19,7 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
 $CmdFile = Join-Path $PSScriptRoot 'setup.cmd'
 if (Test-Path $CmdFile) {
     & $CmdFile @args
+    exit $LASTEXITCODE
 } else {
     Write-Output 'setup completed for tpu-vm-eval-node.'
 }

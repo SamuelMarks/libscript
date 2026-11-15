@@ -68,5 +68,6 @@
       "default": "0",
       "description": "Flag (0 or 1) enabling pdflatex + bibtex compilation of win_port_paper.pdf and win_port_appendix.pdf in E7."
     }
-  }
+  },
+  "x-libscript-var-packs": ["experiment"]
 }

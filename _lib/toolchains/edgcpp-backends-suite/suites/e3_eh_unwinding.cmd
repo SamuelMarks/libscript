@@ -46,7 +46,7 @@ set "RESULTS_DIR=%~2"
 set "HOST_ARCH=%~3"
 if not exist "!RESULTS_DIR!\raw" mkdir "!RESULTS_DIR!\raw"
 if not "%FORCE_REBUILD%"=="1" if exist "!RESULTS_DIR!\raw\exp3_eh.json" exit /b 0
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_assert_native_isa || exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_assert_native_isa || exit /b 1
 set "_SHA=1111111111111111111111111111111111111111"
 for /f "delims=" %%H in ('git -C "%LIBSCRIPT_ROOT_DIR%" rev-parse HEAD 2^>nul') do set "_SHA=%%H"
 (

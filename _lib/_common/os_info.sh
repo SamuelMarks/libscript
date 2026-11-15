@@ -17,11 +17,11 @@ else
 fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     [ -n "$_oi_caller_this" ] && THIS_FILE="$_oi_caller_this"
     [ -n "$_oi_caller_dir" ] && SCRIPT_DIR="$_oi_caller_dir"
     unset SCRIPT_NAME || true; if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -63,43 +63,56 @@ if [ -z "${UNAME+x}" ]; then
       'Darwin')
         export PKG_MGR='brew'
         export HOMEBREW_INSTALL="${HOMEBREW_INSTALL:-1}"
-        export NGINX_SERVERS_ROOT='/opt/homebrew/etc/nginx/servers'
-        if [ ! -f '/opt/homebrew/bin/brew' ] && [ ! -f '/usr/local/bin/brew' ]; then
-          "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
-        fi
         TARGET_OS='darwin'
-        TARGET_OS_NAME="$(sw_vers --productName)"
+        TARGET_OS_NAME="$(sw_vers --productName 2>/dev/null || printf 'macOS')"
         export TARGET_OS_NAME
         ;;
       'Linux')
-        # shellcheck disable=SC1091
-        ID="$(. /etc/os-release; printf '%s' "${ID}")"
-        # shellcheck disable=SC1091
-        ID_LIKE="$(. /etc/os-release; printf '%s' "${ID_LIKE-}")"
-        export NGINX_SERVERS_ROOT='/etc/nginx/conf.d/sites-available'
+        _oi_os_rel="${LIBSCRIPT_OS_RELEASE_FILE:-/etc/os-release}"
+        if [ -f "$_oi_os_rel" ]; then
+          # shellcheck disable=SC1090,SC1091
+          ID="$(. "$_oi_os_rel"; printf '%s' "${ID:-linux}")"
+          # shellcheck disable=SC1090,SC1091
+          ID_LIKE="$(. "$_oi_os_rel"; printf '%s' "${ID_LIKE-}")"
+        else
+          ID='linux'
+          ID_LIKE=''
+        fi
+        unset _oi_os_rel || true
         case "${ID}" in
           'alpine') export PKG_MGR='apk' ;;
-          'arch') export PKG_MGR='pacman' ;;
-          'debian') export PKG_MGR='apt-get' ;;
-          'opensuse') export PKG_MGR='zypper' ;;
-          'rhel'|'rocky'|'rockylinux'|'almalinux'|'centos'|'fedora') export PKG_MGR='dnf' ;;
+          'arch'|'manjaro'|'endeavouros') export PKG_MGR='pacman' ;;
+          'debian'|'ubuntu'|'linuxmint'|'pop') export PKG_MGR='apt-get' ;;
+          'opensuse'*|'sles') export PKG_MGR='zypper' ;;
+          'void') export PKG_MGR='xbps-install' ;;
+          'gentoo') export PKG_MGR='emerge' ;;
+          'solus') export PKG_MGR='eopkg' ;;
+          'rhel'|'rocky'|'rockylinux'|'almalinux'|'centos'|'fedora'|'amzn'|'ol') export PKG_MGR='dnf' ;;
           *)
             case "${ID_LIKE}" in
-              'arch') export PKG_MGR='pacman' ;;
-              *'debian'*) export PKG_MGR='apt-get' ;;
+              *'arch'*) export PKG_MGR='pacman' ;;
+              *'debian'*|*'ubuntu'*) export PKG_MGR='apt-get' ;;
               *'rhel'*|*'fedora'*|*'centos'*) export PKG_MGR='dnf' ;;
               *'suse'*) export PKG_MGR='zypper' ;;
+              *'void'*) export PKG_MGR='xbps-install' ;;
+              *'gentoo'*) export PKG_MGR='emerge' ;;
               *) ;;
             esac
           ;;
         esac
 
-        case "${PKG_MGR}" in
+        TARGET_OS="${ID:-linux}"
+        case "${PKG_MGR:-}" in
           'apk') TARGET_OS='alpine' ;;
           'apt-get')
             TARGET_OS='debian'
             export DEBIAN_FRONTEND='noninteractive' ;;
-          'dnf') TARGET_OS='rhel' ;;
+          'dnf'|'yum') TARGET_OS='rhel' ;;
+          'pacman') TARGET_OS='arch' ;;
+          'zypper') TARGET_OS='opensuse' ;;
+          'xbps-install') TARGET_OS='void' ;;
+          'emerge') TARGET_OS='gentoo' ;;
+          'eopkg') TARGET_OS='solus' ;;
           *)
             >&2 printf 'Unimplemented, package manager for %s\n' "${TARGET_OS}"
             exit 3
@@ -162,10 +175,10 @@ _fallback() {
 }
 
 if [ -z "${INIT_SYS+x}" ]; then
-  if [ -f '/bin/launchctl' ]; then
+  if [ "${UNAME}" = 'Darwin' ]; then
     # https://en.wikipedia.org/wiki/Launchd
     export INIT_SYS='launchd'
-  elif [ -f '/sbin/openrc-run' ]; then
+  elif [ "${UNAME}" = 'Linux' ] && [ -f '/sbin/openrc-run' ]; then
     # https://en.wikipedia.org/wiki/OpenRC
     export INIT_SYS='openrc'
   else
@@ -201,16 +214,13 @@ if [ -z "${INIT_SYS+x}" ]; then
           ;;
 
       'CYGWIN_NT'*)
-        export PKG_MGR='apt-cyg'
-        TARGET_OS='cygwin'
+        export INIT_SYS='windows-scm'
         ;;
       'MINGW'* | 'MSYS'*)
-        export PKG_MGR='pacman'
-        TARGET_OS='mingw'
+        export INIT_SYS='windows-scm'
         ;;
       'Windows_NT')
-        export PKG_MGR="${LIBSCRIPT_WINDOWS_PKG_MGR:-winget}"
-        TARGET_OS='windows'
+        export INIT_SYS='windows-scm'
         ;;
       'FreeBSD')
           if [ -d '/etc/inittab' ]; then

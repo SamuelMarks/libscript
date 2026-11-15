@@ -1,9 +1,9 @@
 @echo off
 :: # experiment.cmd
 :: ## Overview
-:: CLI command wrapper for the unified rapid cloud and Bento multi-OS Vagrant matrix experimentation lifecycle (`a` / `provision_instance`, `0` / `use_bento_fork`, `1` / `install_virtualization_stack`, `2` / `deploy_vagrant_box`, `3` / `snapshot_vagrant_box`, `4` / `test_libscript_components`, `5` / `send_logs_to_host`, `i` / `deprovision_instance`) on Windows.
+:: CLI command wrapper for the unified rapid cloud, TFRC 7-backend TPU matrix, and Bento multi-OS Vagrant experimentation lifecycle (`a_provision_instance` .. `i_deprovision_instance`, `tpu_matrix`, `gemma_tpu_campaign`, `all`).
 :: ## Usage
-:: libscript.cmd experiment [a|0|1|2|3|4|5|i|provision_instance|use_bento_fork|install_virtualization_stack|deploy_vagrant_box|snapshot_vagrant_box|test_libscript_components|send_logs_to_host|deprovision_instance|bento_matrix|all] [--target-os=alpine-3.24]
+:: libscript.cmd experiment [tpu_matrix|gemma_tpu_campaign|bento_matrix|all|<step>] ["--tfrc-config=<path>"] ["--backends=<csv|all>"] [flags...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -11,7 +11,7 @@ set "THIS_FILE=%~f0"
 if defined STACK (
     echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "!THIS_FILE!" >&2
+        if "%LIBSCRIPT_DEBUG%"=="1" echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
@@ -46,8 +46,26 @@ if "!d!"=="" (
 goto :find_root
 
 :: ## root_found
-:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:: Strips any leading experiment / rapid-experiment verb forwarded via %* and dispatches to experiment_cloud.cmd.
 :root_found
+if /i "%~1"=="experiment" shift
+if /i "%~1"=="rapid-experiment" shift
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" %*
+set "_FWD_ARGS="
+:: ## build_fwd_args
+:: Reconstructs quoted arguments after optional verb shift so arbitrary >9 token lists with '=' and ',' are preserved.
+:build_fwd_args
+if "%~1"=="" goto :exec_cloud
+if "!_FWD_ARGS!"=="" (
+    set "_FWD_ARGS="%~1""
+) else (
+    set "_FWD_ARGS=!_FWD_ARGS! "%~1""
+)
+shift
+goto :build_fwd_args
+
+:: ## exec_cloud
+:: Invokes experiment_cloud.cmd with all preserved arguments.
+:exec_cloud
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\experiment_cloud.cmd" !_FWD_ARGS!
 exit /b !errorlevel!

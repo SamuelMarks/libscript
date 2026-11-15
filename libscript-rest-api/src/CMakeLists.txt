@@ -1,24 +1,28 @@
 # ## Overview
-# Configuration and definition file for CMakeLists.txt.
+# CMake build definition for the native C11 libscript-rest-api executable.
 #
 # ## Usage
-# Processed automatically during build or runtime.
+# Included via add_subdirectory(src) from libscript-rest-api/CMakeLists.txt.
 
 set(SOURCES
     main.c
+    rest_dispatch.c
 )
 
 add_executable(libscript-rest-api ${SOURCES})
 
-# If c-rest-framework defines a target (e.g. c-rest-framework or crf), link it here.
-# Assuming it defines a library target named `c-rest-framework`
+if(MSVC)
+    target_compile_options(libscript-rest-api PRIVATE /W4 /WX)
+else()
+    target_compile_options(libscript-rest-api PRIVATE -Wall -Wextra -Werror -pedantic)
+endif()
+
 if(TARGET c-rest-framework)
     target_link_libraries(libscript-rest-api PRIVATE c-rest-framework)
 endif()
 
-# System specific libraries
 if(WIN32)
-    target_link_libraries(libscript-rest-api PRIVATE ws2_32)
+    target_link_libraries(libscript-rest-api PRIVATE ws2_32 bcrypt)
 elseif(UNIX AND NOT APPLE)
     target_link_libraries(libscript-rest-api PRIVATE pthread m)
 endif()

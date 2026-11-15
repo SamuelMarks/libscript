@@ -45,5 +45,6 @@
       "type": "string",
       "description": "Specific version of gcp to install (e.g., latest, lts, or exact version)."
     }
-  }
+  },
+  "x-libscript-var-packs": ["cloud_tags"]
 }

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/vars/cloud_tags.schema.json",
+  "title": "LibScript Cloud Resource Tagging & State Staging Variables",
+  "description": "Domain-scoped configuration variables for cloud provider asset tagging, teardown tag guards, and state archive import/export staging.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_TAG_ENABLE": {
+      "type": "string",
+      "description": "Flag (0 or 1) enabling resource tagging on cloud provider assets."
+    },
+    "LIBSCRIPT_TAG_KEY": {
+      "type": "string",
+      "description": "Tag key applied to provisioned cloud provider resources."
+    },
+    "LIBSCRIPT_TAG_VALUE": {
+      "type": "string",
+      "description": "Tag value applied to provisioned cloud provider resources."
+    },
+    "LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION": {
+      "type": "string",
+      "description": "Flag (0 or 1) allowing cloud provider teardown operations to modify resources without matching tag filters."
+    },
+    "LIBSCRIPT_EXPORT_STAGE_DIR": {
+      "type": "string",
+      "description": "Staging directory used when exporting application and database state archives."
+    },
+    "LIBSCRIPT_IMPORT_STAGE_DIR": {
+      "type": "string",
+      "description": "Staging directory used when importing application and database state archives."
+    }
+  }
+}

@@ -27,7 +27,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for _ltr_lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/versioning.sh' '_lib/_common/python_env.sh' '_lib/_common/experiment_harness.sh'; do
+for _ltr_lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/versioning.sh' '_lib/_common/python_env.sh' '_lib/toolchains/_common/experiment_harness.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${_ltr_lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

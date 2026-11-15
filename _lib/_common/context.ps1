@@ -13,7 +13,7 @@ param()
 
 $rootDir = if ($env:LIBSCRIPT_ROOT_DIR) { $env:LIBSCRIPT_ROOT_DIR } else { (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 $buildDir = if ($env:LIBSCRIPT_BUILD_DIR) { $env:LIBSCRIPT_BUILD_DIR } else { Join-Path $env:TEMP "libscript_build" }
-$sysrootDir = if ($env:LIBSCRIPT_TARGET_SYSROOT) { $env:LIBSCRIPT_TARGET_SYSROOT } else { Join-Path $buildDir "sysroot" }
+$sysrootDir = if ($env:LIBSCRIPT_TARGET_SYSROOT) { $env:LIBSCRIPT_TARGET_SYSROOT } elseif ($env:LIBSCRIPT_TARGET_ROOTFS) { $env:LIBSCRIPT_TARGET_ROOTFS } else { Join-Path $buildDir "sysroot" }
 $hostRoot = if ($env:LIBSCRIPT_HOST_ROOT) { $env:LIBSCRIPT_HOST_ROOT } else { "/tools" }
 $stage = if ($env:LIBSCRIPT_STAGE) { $env:LIBSCRIPT_STAGE } else { "stage0" }
 $targetArch = if ($env:LIBSCRIPT_TARGET_ARCH) { $env:LIBSCRIPT_TARGET_ARCH } else { "x86_64" }

@@ -50,7 +50,7 @@ for %%J in (metadata.json exp0_coverage.json exp0_bug4_ablation.json exp1_compil
         exit /b 1
     )
     if /I not "%%J"=="metadata.json" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment_harness.cmd" :libscript_exp_verify_json_provenance "!RESULTS_DIR!\raw\%%J" "%EDGCPP_BACKENDS_SUITE_ALLOW_DIRTY%" || exit /b 1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_verify_json_provenance "!RESULTS_DIR!\raw\%%J" "%EDGCPP_BACKENDS_SUITE_ALLOW_DIRTY%" || exit /b 1
     )
 )
 if not "!PAPER_DIR!"=="" if exist "!PAPER_DIR!\edgecpp_backends.tex" (

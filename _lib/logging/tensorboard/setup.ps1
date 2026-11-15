@@ -14,17 +14,20 @@ Execute this script to install and configure tensorboard on the local system.
 
 $ErrorActionPreference = "Stop"
 
-$TensorboardVersion = $env:TENSORBOARD_VERSION
-if ([string]::IsNullOrEmpty($TensorboardVersion)) {
-    $TensorboardVersion = "latest"
-}
+$Action = if ($env:ACTION) { $env:ACTION } elseif ($args.Count -gt 0 -and $args[0] -notlike "-*") { $args[0] } else { "install" }
+$TensorboardVersion = if ($env:TENSORBOARD_VERSION) { $env:TENSORBOARD_VERSION } elseif ($env:VERSION) { $env:VERSION } else { "latest" }
+$CompVersion = $TensorboardVersion
+$InstallMethod = if ($env:TENSORBOARD_INSTALL_METHOD) { $env:TENSORBOARD_INSTALL_METHOD } elseif ($env:LIBSCRIPT_DEFAULT_INSTALL_METHOD) { $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD } elseif ($env:LIBSCRIPT_GLOBAL_INSTALL_METHOD) { $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD } else { "libscript_native" }
+$LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path } else { $env:LIBSCRIPT_ROOT_DIR }
+$LibscriptHome = if ($env:LIBSCRIPT_HOME) { $env:LIBSCRIPT_HOME } else { Join-Path $HOME ".libscript" }
+$DownloadDir = if ($env:LIBSCRIPT_DOWNLOAD_DIR) { $env:LIBSCRIPT_DOWNLOAD_DIR } elseif ($env:DOWNLOAD_DIR) { $env:DOWNLOAD_DIR } else { Join-Path $LibscriptRootDir "cache\downloads" }
 
 $Prefix = $env:PREFIX
 if ([string]::IsNullOrEmpty($Prefix)) {
-    $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-    $Prefix = "$LibscriptRootDir\installed\tensorboard"
+    $Prefix = Join-Path (Join-Path $LibscriptHome "tensorboard") $TensorboardVersion
 }
 
+if ($Action -eq "install") {
 $BinDir = "$Prefix\bin"
 if (-not (Test-Path -Path $BinDir)) {
     New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
@@ -60,6 +63,8 @@ set "VENV_DIR=%~dp0..\venv"
     Write-Host "tensorboard installed to $ExePath"
 } else {
     Write-Host "tensorboard already installed at $ExePath"
+}
+exit 0
 }
 
 if ($Action -eq "ls") {

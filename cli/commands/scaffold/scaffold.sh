@@ -21,9 +21,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -1119,7 +1119,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-__COMP_PREFIX___INSTALL_METHOD="${__COMP_PREFIX___INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-__SCAF_INSTALL_METHOD__}}"
+__COMP_PREFIX___INSTALL_METHOD="${__COMP_PREFIX___INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-__SCAF_INSTALL_METHOD__}}}"
 ACTION="${ACTION:-install}"
 VERSION="${__COMP_PREFIX___VERSION:-__SCAF_DEFAULT_VERSION__}"
 
@@ -1378,7 +1378,9 @@ goto :find_root
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%__COMP_PREFIX___INSTALL_METHOD%"=="" (
-    if not "%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"=="" (
+    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
+        set "__COMP_PREFIX___INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+    ) else if not "%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"=="" (
         set "__COMP_PREFIX___INSTALL_METHOD=%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"
     ) else (
         set "__COMP_PREFIX___INSTALL_METHOD=__SCAF_INSTALL_METHOD__"

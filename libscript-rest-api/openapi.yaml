@@ -990,10 +990,18 @@ paths:
                     - unikernel-rumprun
                     - unikernel-mirageos
                     - microvm-firecracker
+                    - rtos-zephyr
+                    - rtos-freertos
+                board:
+                  type: string
+                  description:
+                    Optional Zephyr board or FreeRTOS BSP/simulator port identifier (e.g.
+                    qemu_x86_64, qemu_cortex_m3, qemu_riscv64, mps2_an385, riscv_virt, posix_gcc).
                 format:
                   type: string
                   description:
-                    Target installer, VM disk image, ZFS archive, or direct-boot kernel format.
+                    Target installer, VM disk image, ZFS archive, RTOS firmware, or direct-boot
+                    kernel format.
                   enum:
                     - docker
                     - docker_compose
@@ -1020,6 +1028,12 @@ paths:
                     - oci-image
                     - direct-kernel
                     - unikernel
+                    - firmware-elf
+                    - firmware-bin
+                    - firmware-hex
+                    - firmware-uf2
+                    - mcuboot-signed
+                    - renode-resc
                 components:
                   type: array
                   description:
@@ -2089,14 +2103,14 @@ components:
       properties:
         suite:
           type: string
-          enum: [libscript, edgcpp, edgcpp_backends, libtpu, win_port, manifest, all]
+          enum: [libscript, edgcpp, edgcpp_backends, libtpu, win_port, gemma_tpu, manifest, all]
           description: Experiment suite identifier to execute
         step:
           type: string
           default: all
           description:
             Named lifecycle step or campaign alias (e.g., libtpu_campaign, win_port_campaign,
-            edgcpp_backends_campaign, bento_matrix, run_experiments)
+            edgcpp_backends_campaign, gemma_tpu_campaign, tpu_matrix, bento_matrix, run_experiments)
         subsuites:
           type: string
           default: E0,E1,E2,E3,E4,E5,E6,E7,E8

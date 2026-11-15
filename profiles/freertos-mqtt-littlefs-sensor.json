@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freertos-mqtt-littlefs-sensor",
+  "description": "Connected FreeRTOS IoT sensor firmware bundling FreeRTOS-Plus-TCP, coreMQTT, LittleFS, and MCUboot signing.",
+  "target": {
+    "arch": "armv7m",
+    "os_family": "rtos-freertos",
+    "libc": "newlib",
+    "platform": "mcu-baremetal"
+  },
+  "kernel": {
+    "provider": "freertos-lts",
+    "version": "10.5.1",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "freertos-scheduler"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "direct-kernel",
+    "bootloader": "mcuboot"
+  },
+  "rtos": {
+    "board": "mps2_an385",
+    "heap_implementation": "heap_4",
+    "total_heap_bytes": 49152,
+    "mcuboot": {
+      "enabled": true,
+      "signing_key_type": "ecdsa-p256",
+      "slot_size_kib": 256,
+      "upgrade_strategy": "swap-move"
+    }
+  },
+  "output_formats": ["mcuboot-signed", "firmware-hex"],
+  "components": ["freertos-plus-tcp", "coremqtt", "littlefs"]
+}

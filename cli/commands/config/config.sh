@@ -21,9 +21,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -46,6 +46,11 @@ SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/os-config.schema.json"
 TARGET_PROFILE=""
 EXPORT_FILE=""
 VALIDATE_FILE=""
+OVERRIDE_KERNEL=""
+OVERRIDE_BOARD=""
+OVERRIDE_LIBC=""
+OVERRIDE_HEAP=""
+OVERRIDE_MCUBOOT='0'
 
 # Parse subcommands and arguments
 if [ $# -gt 0 ] && [ "$1" = "os" ]; then
@@ -61,6 +66,26 @@ while [ $# -gt 0 ]; do
     --profile)
       TARGET_PROFILE="${2:-}"
       shift 2 || shift
+      ;;
+    --kernel=*)
+      OVERRIDE_KERNEL="${1#*=}"
+      shift
+      ;;
+    --board=*)
+      OVERRIDE_BOARD="${1#*=}"
+      shift
+      ;;
+    --libc=*)
+      OVERRIDE_LIBC="${1#*=}"
+      shift
+      ;;
+    --heap=*)
+      OVERRIDE_HEAP="${1#*=}"
+      shift
+      ;;
+    --mcuboot)
+      OVERRIDE_MCUBOOT='1'
+      shift
       ;;
     --export=*)
       EXPORT_FILE="${1#*=}"
@@ -79,7 +104,7 @@ while [ $# -gt 0 ]; do
       shift 2 || shift
       ;;
     --help|-h|/\?|-\?)
-      printf 'Usage: %s config os [--profile=<name>] [--export=<out.json>] [--validate=<file.json>]\n' "libscript"
+      printf 'Usage: %s config os [--profile=<name>] [--kernel=<rtos-zephyr|rtos-freertos|...>] [--board=<board>] [--libc=<picolibc|newlib>] [--heap=<heap_4|static_only>] [--mcuboot] [--export=<out.json>] [--validate=<file.json>]\n' "libscript"
       exit 0
       ;;
     *)
@@ -96,9 +121,11 @@ if [ -n "$VALIDATE_FILE" ]; then
   fi
   if command -v jq >/dev/null 2>&1; then
     active_schema="$SCHEMA_FILE"
-    if jq -e '.freebsd_version != null or (.target.os_family == "freebsd" and .init_system != null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
+    if jq -e '.plan_version != null and (.target.os == "zephyr" or .target.os == "freertos")' "$VALIDATE_FILE" >/dev/null 2>&1; then
+      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.rtos.schema.json"
+    elif jq -e '.freebsd_version != null or (.target.os_family == "freebsd" and .init_system != null and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
       active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.freebsd.schema.json"
-    elif jq -e '.illumos_version != null or (.target.os_family == "illumos" or .target.os_family == "sunos")' "$VALIDATE_FILE" >/dev/null 2>&1; then
+    elif jq -e '.illumos_version != null or ((.target.os_family == "illumos" or .target.os_family == "sunos") and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
       active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.illumos.schema.json"
     fi
     # Check top-level required fields
@@ -129,18 +156,22 @@ if [ -n "$TARGET_PROFILE" ]; then
 else
   # Interactive TUI selection
   tui_msgbox "LibScript OS Synthesis" "Welcome to the LibScript OS Configuration Engine."
-  selected=$(tui_menu "OS Profiles" "Select a base profile to configure:" 
-    "1" "linux-minimal-headless-musl" 
-    "2" "linux-standard-server-glibc" 
-    "3" "freebsd-server-standard" 
-    "4" "firecracker-microvm-appliance" 
-    "5" "unikraft-nginx-redis" 
-    "6" "osv-cloud-runtime" 
-    "7" "linux-desktop-sway-wayland" 
-    "8" "linux-desktop-hyprland" 
-    "9" "linux-desktop-kde-plasma" 
-    "10" "linux-desktop-xfce-x11" 
-    "11" "freebsd-desktop-xfce")
+  selected=$(tui_menu "OS Profiles" "Select a base profile to configure:" \
+    "1" "linux-minimal-headless-musl" \
+    "2" "linux-standard-server-glibc" \
+    "3" "freebsd-server-standard" \
+    "4" "firecracker-microvm-appliance" \
+    "5" "unikraft-nginx-redis" \
+    "6" "osv-cloud-runtime" \
+    "7" "linux-desktop-sway-wayland" \
+    "8" "linux-desktop-hyprland" \
+    "9" "linux-desktop-kde-plasma" \
+    "10" "linux-desktop-xfce-x11" \
+    "11" "freebsd-desktop-xfce" \
+    "12" "zephyr-qemu-x86_64-minimal" \
+    "13" "zephyr-cortex-m3-mcuboot-signed" \
+    "14" "freertos-cortex-m3-mps2-minimal" \
+    "15" "freertos-riscv64-static-safety")
 
   case "$selected" in
     1) TARGET_PROFILE="linux-minimal-headless-musl" ;;
@@ -154,10 +185,29 @@ else
     9) TARGET_PROFILE="linux-desktop-kde-plasma" ;;
     10) TARGET_PROFILE="linux-desktop-xfce-x11" ;;
     11) TARGET_PROFILE="freebsd-desktop-xfce" ;;
+    12) TARGET_PROFILE="zephyr-qemu-x86_64-minimal" ;;
+    13) TARGET_PROFILE="zephyr-cortex-m3-mcuboot-signed" ;;
+    14) TARGET_PROFILE="freertos-cortex-m3-mps2-minimal" ;;
+    15) TARGET_PROFILE="freertos-riscv64-static-safety" ;;
     *) TARGET_PROFILE="linux-standard-server-glibc" ;;
   esac
   profile_path="${LIBSCRIPT_ROOT_DIR}/profiles/${TARGET_PROFILE}.json"
   CHOSEN_CONFIG=$(cat "$profile_path")
+fi
+
+if command -v jq >/dev/null 2>&1 && { [ -n "$OVERRIDE_KERNEL" ] || [ -n "$OVERRIDE_BOARD" ] || [ -n "$OVERRIDE_LIBC" ] || [ -n "$OVERRIDE_HEAP" ] || [ "$OVERRIDE_MCUBOOT" = "1" ]; }; then
+  CHOSEN_CONFIG=$(printf '%s\n' "$CHOSEN_CONFIG" | jq \
+    --arg krn "$OVERRIDE_KERNEL" \
+    --arg brd "$OVERRIDE_BOARD" \
+    --arg lbc "$OVERRIDE_LIBC" \
+    --arg hp "$OVERRIDE_HEAP" \
+    --arg mcb "$OVERRIDE_MCUBOOT" '
+      (if $krn != "" then .target.os_family = $krn else . end)
+      | (if $lbc != "" then .target.libc = $lbc else . end)
+      | (if $brd != "" then .rtos = ((.rtos // {}) | .board = $brd) else . end)
+      | (if $hp != "" then .rtos = ((.rtos // {}) | .heap_implementation = $hp) else . end)
+      | (if $mcb == "1" then .rtos = ((.rtos // {}) | .mcuboot = ((.mcuboot // {}) | .enabled = true)) else . end)
+    ')
 fi
 
 # Mode 3: Export or display configuration

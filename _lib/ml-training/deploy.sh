@@ -39,12 +39,25 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tfrc_guard.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
 TPU_NAME="${TPU_NAME:-ml-eval-node}"
+if libscript_tfrc_is_enabled; then
+  libscript_tfrc_enforce_zero_cost_env
+  if [ -n "${BUCKET_NAME:-${GCS_BUCKET:-}}" ]; then
+    libscript_tfrc_verify_gcs_bucket "${BUCKET_NAME:-${GCS_BUCKET:-}}" "${TPU_ZONE:-}"
+  fi
+else
+  TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-${DISK_SIZE_GB:-200}}"
+  DISK_NAME="${DISK_NAME:-${TPU_NAME}-data}"
+fi
 BUCKET_NAME="${BUCKET_NAME:-${GCS_BUCKET:-}}"
 BUCKET_NAME="${BUCKET_NAME#gs://}"
 ML_SCRIPT="${ML_SCRIPT:-${TRAIN_CMD:-${TRAIN_SCRIPT:-python train.py}}}"
-TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-${DISK_SIZE_GB:-200}}"
-DISK_NAME="${DISK_NAME:-${TPU_NAME}-data}"
 APP_DIR="${APP_DIR:-${REPO_DIR:-}}"
 if [ -z "$APP_DIR" ]; then
   if [ -f "./libscript.json" ] || [ -f "./pyproject.toml" ] || [ -f "./requirements.txt" ]; then

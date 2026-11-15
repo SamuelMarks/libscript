@@ -6,5 +6,7 @@
   "category": "languages",
   "provides": ["lua", "luac"],
   "os_whitelist": ["all"],
-  "repository": "https://www.lua.org/"
+  "repository": "https://www.lua.org/",
+  "rtos_support": ["zephyr", "freertos"],
+  "memory_footprint_class": "mcu-sram-64k"
 }

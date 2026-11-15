@@ -95,5 +95,6 @@
       "description": "Flag (0 or 1) permitting exploratory local development runs on dirty git worktrees prior to final RULE-1 locking.",
       "default": "0"
     }
-  }
+  },
+  "x-libscript-var-packs": ["experiment"]
 }

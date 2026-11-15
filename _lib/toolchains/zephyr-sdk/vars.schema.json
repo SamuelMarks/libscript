@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/zephyr-sdk/vars.schema.json",
+  "title": "zephyr-sdk variables",
+  "description": "Configuration variables for zephyr-sdk",
+  "type": "object",
+  "properties": {
+    "ZEPHYR_SDK_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install zephyr-sdk. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ZEPHYR_SDK_VERSION": {
+      "description": "Specific version of zephyr-sdk to install.",
+      "type": "string",
+      "default": "0.17.0",
+      "version_aliases": ["latest", "lts"]
+    },
+    "ZEPHYR_SDK_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading zephyr-sdk binary or archive artifacts."
+    },
+    "ZEPHYR_SDK_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying zephyr-sdk available remote releases."
+    },
+    "ZEPHYR_SDK_ARCHS": {
+      "type": "string",
+      "description": "Comma-separated target architectures registered inside the isolated Zephyr SDK installation.",
+      "default": "arm,aarch64,x86_64,riscv64"
+    },
+    "ZEPHYR_SDK_INSTALL_DIR": {
+      "type": "string",
+      "description": "Isolated Zephyr SDK directory path exported to CMake without mutating ~/.cmake/packages.",
+      "default": ""
+    }
+  },
+  "x-libscript-var-packs": ["image_synth"]
+}

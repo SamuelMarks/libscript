@@ -21,9 +21,9 @@ else
 fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2; fi
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) if [ "${LIBSCRIPT_DEBUG:-0}" = '1' ]; then printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2; fi ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -260,7 +260,36 @@ libscript_print_env() {
         *) _lpe_base_path="${_jq_dir}:${_lpe_base_path}" ;;
       esac
     fi
-    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" REMOTE_HOME="${REMOTE_HOME:-}" DATA_DISK_MOUNT="${DATA_DISK_MOUNT:-}" DATA_MOUNT_DIR="${DATA_MOUNT_DIR:-}" OLLAMA_MODELS_DIR="${OLLAMA_MODELS_DIR:-}" OLLAMA_MODELS="${OLLAMA_MODELS:-}" OLLAMA_MODEL_LIST="${OLLAMA_MODEL_LIST:-}" OLLAMA_HOST="${OLLAMA_HOST:-}" OLLAMA_NUM_PARALLEL="${OLLAMA_NUM_PARALLEL:-}" OLLAMA_MAX_LOADED_MODELS="${OLLAMA_MAX_LOADED_MODELS:-}" OLLAMA_FLASH_ATTENTION="${OLLAMA_FLASH_ATTENTION:-}" OLLAMA_KV_CACHE_TYPE="${OLLAMA_KV_CACHE_TYPE:-}" OLLAMA_CONTEXT_LENGTH="${OLLAMA_CONTEXT_LENGTH:-}" OLLAMA_MAX_QUEUE="${OLLAMA_MAX_QUEUE:-}" OLLAMA_KEEP_ALIVE="${OLLAMA_KEEP_ALIVE:-}" OLLAMA_LLM_LIBRARY="${OLLAMA_LLM_LIBRARY:-}" OLLAMA_NUM_GPU="${OLLAMA_NUM_GPU:-}" PYTHON_VENV="${PYTHON_VENV:-}" VIRTUAL_ENV="${VIRTUAL_ENV:-}" UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-}" UV_CACHE_DIR="${UV_CACHE_DIR:-}" POSTGRES_USER="${POSTGRES_USER:-}" POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}" POSTGRES_HOST="${POSTGRES_HOST:-}" POSTGRES_PORT="${POSTGRES_PORT:-}" POSTGRES_DB="${POSTGRES_DB:-}" POSTGRES_URL="${POSTGRES_URL:-}" POSTGRES_DATA_DIR="${POSTGRES_DATA_DIR:-}" PGDATA="${PGDATA:-}" DATABASE_URL="${DATABASE_URL:-}" REDIS_URL="${REDIS_URL:-}" VALKEY_URL="${VALKEY_URL:-}" VALKEY_DATA_DIR="${VALKEY_DATA_DIR:-}" REDIS_DATA_DIR="${REDIS_DATA_DIR:-}" DUCKDB_PATH="${DUCKDB_PATH:-}" SQLITE_PATH="${SQLITE_PATH:-}" sh << 'EOF_SH'
+    _lpe_pass_env=$(mktemp "${TMPDIR:-/tmp}/libscript_lpe_pass.XXXXXX" 2>/dev/null || printf '%s' "${TMPDIR:-/tmp}/libscript_lpe_pass.$$")
+    : > "$_lpe_pass_env"
+    _lpe_keys='PYTHON_VENV VIRTUAL_ENV DATABASE_URL PGDATA REDIS_URL VALKEY_URL DUCKDB_PATH SQLITE_PATH UV_PYTHON_INSTALL_DIR UV_CACHE_DIR'
+    if command -v jq >/dev/null 2>&1 && [ -f "$_comp_dir/vars.schema.json" ]; then
+      _lpe_schema_keys=$(jq -r '((.properties // {} | keys[]), (.properties // {} | to_entries[] | .value.deprecated_aliases[]?))' "$_comp_dir/vars.schema.json" 2>/dev/null || true)
+      _lpe_packs=$(jq -r '."x-libscript-var-packs"[]? // empty' "$_comp_dir/vars.schema.json" 2>/dev/null || true)
+      for _lp in $_lpe_packs; do
+        _lpf="${LIBSCRIPT_ROOT_DIR}/schemas/vars/${_lp}.schema.json"
+        if [ -f "$_lpf" ]; then
+          _lpe_schema_keys="${_lpe_schema_keys} $(jq -r '((.properties // {} | keys[]), (.properties // {} | to_entries[] | .value.deprecated_aliases[]?))' "$_lpf" 2>/dev/null || true)"
+        fi
+      done
+      _lpe_keys="${_lpe_keys} ${_lpe_schema_keys}"
+    fi
+    for _lk in $_lpe_keys; do
+      case "$_lk" in
+        [A-Za-z_][A-Za-z0-9_]*)
+          if _lv=$(printenv "$_lk" 2>/dev/null); then
+            _lv_esc=$(printf '%s' "$_lv" | sed "s/'/'\\\\''/g")
+            printf "export %s='%s'\n" "$_lk" "$_lv_esc" >> "$_lpe_pass_env"
+          fi
+          ;;
+      esac
+    done
+    env -i PATH="$_lpe_base_path" BASE_PATH="$_lpe_base_path" _JQ_BIN="$_lpe_jq_bin" _LPE_PASS_ENV="$_lpe_pass_env" FORMAT="$_format" COMP_DIR="$_comp_dir" PREFIX="$_prefix_path" "${_comp_up}_VERSION=${_comp_ver:-latest}" LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" LIBSCRIPT_HOME="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}" LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" HOME="${HOME:-/root}" USER="${USER:-root}" REMOTE_HOME="${REMOTE_HOME:-}" DATA_DISK_MOUNT="${DATA_DISK_MOUNT:-}" DATA_MOUNT_DIR="${DATA_MOUNT_DIR:-}" sh << 'EOF_SH'
+            if [ -n "${_LPE_PASS_ENV:-}" ] && [ -f "$_LPE_PASS_ENV" ]; then
+              # shellcheck disable=SC1090
+              . "$_LPE_PASS_ENV" 2>/dev/null || true
+            fi
+            unset _LPE_PASS_ENV || true
             SCRIPT_NAME="$COMP_DIR/env.sh"
             export SCRIPT_NAME
             # shellcheck disable=SC1090
@@ -335,6 +364,8 @@ libscript_print_env() {
                 ;;
             esac
 EOF_SH
+    rm -f "$_lpe_pass_env"
+    unset _lpe_pass_env _lpe_keys _lpe_schema_keys _lpe_packs _lp _lpf _lk _lv _lv_esc || true
   elif [ "$_format" = "json" ] && [ -n "$_prefix_path" ]; then
     printf '{"PATH":"%s/bin"}\n' "$_prefix_path"
   fi

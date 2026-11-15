@@ -42,7 +42,7 @@ if not exist "!RESULTS_DIR!" exit /b 1
 set "_VERIFIED=0"
 for %%J in ("!RESULTS_DIR!\e0_tcb.json" "!RESULTS_DIR!\e1_abi_parity.json") do (
     if exist "%%~J" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\experiment_harness.cmd" :libscript_exp_verify_json_provenance "%%~J" "%LIBTPU_RS_ALLOW_DIRTY%"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_verify_json_provenance "%%~J" "%LIBTPU_RS_ALLOW_DIRTY%"
         if errorlevel 1 exit /b 1
         set /a "_VERIFIED+=1"
     )

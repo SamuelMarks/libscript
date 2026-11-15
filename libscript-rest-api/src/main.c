@@ -1,254 +1,330 @@
 /**
  * ## Overview
- * LibScript REST API server entry point and sanitized shell execution wrapper.
- * Routes /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments,
- * /api/v1/artifacts/generate, and /api/v1/components/{name}/hooks/{hook} to libscript.{sh,cmd}.
+ * LibScript C11 REST API HTTP/1.1 daemon and CLI job dispatcher conforming to openapi.yaml (3.2.0).
  *
  * ## Usage
- * Execute binary directly or launch as a system daemon:
- *   libscript-rest-api [port] [--dispatch <subcmd> <action> <target>]
+ *   libscript-rest-api [--port <port>] [--bind <addr>] [--max-requests <N>] [--port-file <path>]
+ *   libscript-rest-api --dispatch <subcmd> <action> <target>
  *   libscript-rest-api --dispatch-experiment <suite> <step> <host_arch>
- *   libscript-rest-api --dispatch-artifact <kernel> <format> <components_csv>
+ *   libscript-rest-api --dispatch-artifact <kernel> <format> <components_csv> [board]
  */
+#if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+#include "rest_api.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(_WIN32)
-#include <sys/types.h>
-#include <sys/wait.h>
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+typedef SOCKET rest_sock_t;
+#define REST_INVALID_SOCK INVALID_SOCKET
+#define rest_close_sock closesocket
+#else
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <unistd.h>
+typedef int rest_sock_t;
+#define REST_INVALID_SOCK (-1)
+#define rest_close_sock close
 #endif
 
 /**
- * @brief Validates that an identifier token contains only safe characters.
- *
- * @param token Input string to validate.
- * @return int 1 if safe, 0 if invalid characters are present.
+ * @brief Sends a complete HTTP/1.1 JSON response over a connected client socket.
  */
-static int is_safe_token(const char *token) {
-    size_t i;
-    if (token == NULL || token[0] == '\0') {
-        return 0;
+static void send_json_response(rest_sock_t client, int status_code, const char *status_text,
+                               const char *json_body) {
+    char resp[4096];
+    size_t body_len = strlen(json_body);
+    int n = snprintf(resp, sizeof(resp),
+                     "HTTP/1.1 %d %s\r\n"
+                     "Content-Type: application/json; charset=utf-8\r\n"
+                     "Content-Length: %zu\r\n"
+                     "Connection: close\r\n"
+                     "\r\n"
+                     "%s",
+                     status_code, status_text, body_len, json_body);
+    if (n > 0) {
+        size_t total = (size_t)n < sizeof(resp) ? (size_t)n : sizeof(resp) - 1;
+        (void)send(client, resp, (int)total, 0);
     }
-    for (i = 0; token[i] != '\0'; ++i) {
-        char c = token[i];
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-              (c >= '0' && c <= '9') || c == '-' || c == '_' ||
-              c == '.' || c == '/' || c == ',')) {
-            return 0;
+}
+
+/**
+ * @brief Handles a single HTTP/1.1 request and writes an OpenAPI-compliant JSON response.
+ */
+static void handle_http_client(rest_sock_t client, const char *root_dir) {
+    char req[8192];
+    char method[16];
+    char path[512];
+    char json_out[2048];
+    const char *body = "";
+    const char *hdr_end;
+    int recvd = (int)recv(client, req, (int)sizeof(req) - 1, 0);
+    if (recvd <= 0) {
+        return;
+    }
+    req[recvd] = '\0';
+
+    if (sscanf(req, "%15s %511s", method, path) != 2) {
+        send_json_response(client, 400, "Bad Request",
+                           "{\"error\":\"malformed_request\",\"message\":\"Invalid HTTP request line\"}");
+        return;
+    }
+
+    hdr_end = strstr(req, "\r\n\r\n");
+    if (hdr_end != NULL) {
+        body = hdr_end + 4;
+    }
+
+    if (strcmp(method, "GET") == 0 && strcmp(path, "/api/v1/health") == 0) {
+        send_json_response(client, 200, "OK",
+                           "{\"status\":\"ok\",\"service\":\"libscript-rest-api\",\"openapi\":\"3.2.0\"}");
+        return;
+    }
+
+    if (strcmp(method, "GET") == 0 && strncmp(path, "/api/v1/jobs/", 13) == 0) {
+        const char *job_id = path + 13;
+        if (rest_query_job(job_id, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 200, "OK", json_out);
+        } else {
+            send_json_response(client, 404, "Not Found",
+                               "{\"error\":\"job_not_found\",\"message\":\"Unknown job_id\"}");
         }
+        return;
     }
-    return 1;
+
+    if (strcmp(method, "POST") == 0 && strcmp(path, "/api/v1/experiments") == 0) {
+        char suite[64], step[64], host_arch[64];
+        if (rest_json_get_string(body, "suite", suite, sizeof(suite)) != 0 ||
+            rest_json_get_string(body, "step", step, sizeof(step)) != 0 ||
+            rest_json_get_string(body, "host_arch", host_arch, sizeof(host_arch)) != 0) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"missing_fields\",\"message\":\"suite, step, and host_arch required\"}");
+            return;
+        }
+        if (rest_dispatch_experiment(root_dir, suite, step, host_arch, 0, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 202, "Accepted", json_out);
+        } else {
+            send_json_response(client, 400, "Bad Request", json_out);
+        }
+        return;
+    }
+
+    if (strcmp(method, "POST") == 0 && strcmp(path, "/api/v1/artifacts/generate") == 0) {
+        char kernel[64], fmt[64], comps[256], board[64];
+        const char *board_ptr = NULL;
+        if (rest_json_get_string(body, "kernel", kernel, sizeof(kernel)) != 0 ||
+            rest_json_get_string(body, "format", fmt, sizeof(fmt)) != 0 ||
+            rest_json_get_string(body, "components", comps, sizeof(comps)) != 0) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"missing_fields\",\"message\":\"kernel, format, and components required\"}");
+            return;
+        }
+        if (rest_json_get_string(body, "board", board, sizeof(board)) == 0 && board[0] != '\0') {
+            board_ptr = board;
+        }
+        if (rest_dispatch_artifact(root_dir, kernel, fmt, comps, board_ptr, 0, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 202, "Accepted", json_out);
+        } else {
+            send_json_response(client, 400, "Bad Request", json_out);
+        }
+        return;
+    }
+
+    if (strcmp(method, "POST") == 0 &&
+        (strcmp(path, "/api/v1/topologies") == 0 ||
+         strcmp(path, "/api/v1/payloads") == 0 ||
+         strcmp(path, "/api/v1/traits") == 0)) {
+        char action[64], target[256];
+        const char *subcmd = "topology";
+        if (strcmp(path, "/api/v1/payloads") == 0) {
+            subcmd = "payload";
+        } else if (strcmp(path, "/api/v1/traits") == 0) {
+            subcmd = "trait";
+        }
+        if (rest_json_get_string(body, "action", action, sizeof(action)) != 0 ||
+            rest_json_get_string(body, "target", target, sizeof(target)) != 0) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"missing_fields\",\"message\":\"action and target required\"}");
+            return;
+        }
+        if (rest_dispatch_job(root_dir, subcmd, action, target, 0, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 202, "Accepted", json_out);
+        } else {
+            send_json_response(client, 400, "Bad Request", json_out);
+        }
+        return;
+    }
+
+    if (strcmp(method, "POST") == 0 && strncmp(path, "/api/v1/components/", 19) == 0) {
+        const char *rest = path + 19;
+        const char *hooks_sep = strstr(rest, "/hooks/");
+        char comp_name[128];
+        char hook_name[128];
+        size_t comp_len;
+        if (hooks_sep == NULL) {
+            send_json_response(client, 404, "Not Found",
+                               "{\"error\":\"not_found\",\"message\":\"Expected /api/v1/components/{name}/hooks/{hook}\"}");
+            return;
+        }
+        comp_len = (size_t)(hooks_sep - rest);
+        if (comp_len == 0 || comp_len >= sizeof(comp_name)) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"invalid_component\",\"message\":\"Invalid component identifier\"}");
+            return;
+        }
+        memcpy(comp_name, rest, comp_len);
+        comp_name[comp_len] = '\0';
+        snprintf(hook_name, sizeof(hook_name), "%s", hooks_sep + 7);
+        if (!rest_is_safe_segment(comp_name) || !rest_is_safe_segment(hook_name)) {
+            send_json_response(client, 400, "Bad Request",
+                               "{\"error\":\"invalid_token\",\"message\":\"Unsafe component or hook segment rejected\"}");
+            return;
+        }
+        if (rest_dispatch_job(root_dir, hook_name, hook_name, comp_name, 0, json_out, sizeof(json_out)) == 0) {
+            send_json_response(client, 202, "Accepted", json_out);
+        } else {
+            send_json_response(client, 400, "Bad Request", json_out);
+        }
+        return;
+    }
+
+    send_json_response(client, 404, "Not Found",
+                       "{\"error\":\"not_found\",\"message\":\"Unknown API endpoint\"}");
 }
 
 /**
- * @brief Validates that an experiment suite name matches the OpenAPI 3.2.0 enum.
- *
- * @param suite Requested experiment suite identifier.
- * @return int 1 if valid, 0 otherwise.
+ * @brief Runs the blocking C11 HTTP/1.1 TCP listener loop.
  */
-static int is_valid_experiment_suite(const char *suite) {
-    if (suite == NULL) {
-        return 0;
-    }
-    return (strcmp(suite, "libscript") == 0 ||
-            strcmp(suite, "edgcpp") == 0 ||
-            strcmp(suite, "edgcpp_backends") == 0 ||
-            strcmp(suite, "libtpu") == 0 ||
-            strcmp(suite, "win_port") == 0 ||
-            strcmp(suite, "manifest") == 0 ||
-            strcmp(suite, "all") == 0);
-}
+static int serve_http_loop(const char *bind_ip, int port, int max_requests,
+                           const char *port_file, const char *root_dir) {
+    rest_sock_t srv;
+    struct sockaddr_in addr;
+    int opt = 1;
+    int handled = 0;
 
-/**
- * @brief Validates that a target kernel family matches the OpenAPI 3.2.0 enum.
- *
- * @param kernel Requested kernel or unikernel family identifier.
- * @return int 1 if valid, 0 otherwise.
- */
-static int is_valid_kernel_target(const char *kernel) {
-    if (kernel == NULL) {
-        return 0;
-    }
-    return (strcmp(kernel, "linux-glibc") == 0 ||
-            strcmp(kernel, "linux-musl") == 0 ||
-            strcmp(kernel, "freebsd") == 0 ||
-            strcmp(kernel, "illumos") == 0 ||
-            strcmp(kernel, "unikernel-unikraft") == 0 ||
-            strcmp(kernel, "unikernel-nanos") == 0 ||
-            strcmp(kernel, "unikernel-osv") == 0 ||
-            strcmp(kernel, "unikernel-rumprun") == 0 ||
-            strcmp(kernel, "unikernel-mirageos") == 0 ||
-            strcmp(kernel, "microvm-firecracker") == 0);
-}
-
-/**
- * @brief Validates that an artifact format matches the OpenAPI 3.2.0 enum.
- *
- * @param fmt Requested output format identifier.
- * @return int 1 if valid, 0 otherwise.
- */
-static int is_valid_artifact_format(const char *fmt) {
-    if (fmt == NULL) {
-        return 0;
-    }
-    return (strcmp(fmt, "live-iso") == 0 ||
-            strcmp(fmt, "live-usb") == 0 ||
-            strcmp(fmt, "raw") == 0 ||
-            strcmp(fmt, "qcow2") == 0 ||
-            strcmp(fmt, "vmdk") == 0 ||
-            strcmp(fmt, "vhd") == 0 ||
-            strcmp(fmt, "vhdx") == 0 ||
-            strcmp(fmt, "vagrant-box") == 0 ||
-            strcmp(fmt, "zfs-stream") == 0 ||
-            strcmp(fmt, "rootfs-tar") == 0 ||
-            strcmp(fmt, "oci-image") == 0 ||
-            strcmp(fmt, "direct-kernel") == 0 ||
-            strcmp(fmt, "unikernel") == 0 ||
-            strcmp(fmt, "docker") == 0 ||
-            strcmp(fmt, "deb") == 0 ||
-            strcmp(fmt, "rpm") == 0 ||
-            strcmp(fmt, "apk") == 0 ||
-            strcmp(fmt, "pkg") == 0 ||
-            strcmp(fmt, "msi") == 0);
-}
-
-/**
- * @brief Dispatches a sanitized topology, payload, trait, or hook job via fork/exec.
- *
- * @param subcmd Subsystem command (topology, payload, trait, hook).
- * @param action Action verb.
- * @param target Target identifier or path.
- * @return int Exit status code of the dispatched command.
- */
-static int dispatch_async_job(const char *subcmd, const char *action, const char *target) {
-    if (!is_safe_token(subcmd) || !is_safe_token(action) || !is_safe_token(target)) {
-        fprintf(stderr, "%s\n", "{'error':'invalid_token','message':'Unsafe parameter rejected'}");
+#if defined(_WIN32)
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+        fprintf(stderr, "{\"error\":\"winsock_init_failed\"}\n");
         return 1;
     }
-    printf("{'job_id':'00000000-0000-4000-8000-000000000001','subcmd':'%s','action':'%s','target':'%s','status_url':'/api/v1/jobs/00000000-0000-4000-8000-000000000001'}\n",
-           subcmd, action, target);
-#if !defined(_WIN32)
-    if (getenv("LIBSCRIPT_REST_EXEC_LIVE") != NULL) {
-        pid_t pid = fork();
-        if (pid == 0) {
-            execl("./libscript.sh", "libscript.sh", subcmd, action, target, (char *)NULL);
-            _exit(127);
-        } else if (pid > 0) {
-            int status = 0;
-            waitpid(pid, &status, 0);
-            return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+#endif
+
+    srv = socket(AF_INET, SOCK_STREAM, 0);
+    if (srv == REST_INVALID_SOCK) {
+        fprintf(stderr, "{\"error\":\"socket_failed\"}\n");
+        return 1;
+    }
+    (void)setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, (socklen_t)sizeof(opt));
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons((unsigned short)port);
+    if (inet_pton(AF_INET, bind_ip, &addr.sin_addr) != 1) {
+        addr.sin_addr.s_addr = htonl(0x7f000001u);
+    }
+
+    if (bind(srv, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)) != 0) {
+        fprintf(stderr, "{\"error\":\"bind_failed\",\"port\":%d}\n", port);
+        rest_close_sock(srv);
+        return 1;
+    }
+    if (listen(srv, 16) != 0) {
+        fprintf(stderr, "{\"error\":\"listen_failed\"}\n");
+        rest_close_sock(srv);
+        return 1;
+    }
+
+    {
+        struct sockaddr_in bound_addr;
+        socklen_t blen = (socklen_t)sizeof(bound_addr);
+        if (getsockname(srv, (struct sockaddr *)&bound_addr, &blen) == 0) {
+            port = (int)ntohs(bound_addr.sin_port);
         }
     }
+
+    if (port_file != NULL && port_file[0] != '\0') {
+        FILE *pf = fopen(port_file, "wb");
+        if (pf != NULL) {
+            fprintf(pf, "%d\n", port);
+            fclose(pf);
+        }
+    }
+
+    printf("{\"event\":\"listening\",\"bind\":\"%s\",\"port\":%d}\n", bind_ip, port);
+    fflush(stdout);
+
+    while (max_requests <= 0 || handled < max_requests) {
+        rest_sock_t client = accept(srv, NULL, NULL);
+        if (client == REST_INVALID_SOCK) {
+            continue;
+        }
+        handle_http_client(client, root_dir);
+        rest_close_sock(client);
+        handled++;
+    }
+
+    rest_close_sock(srv);
+#if defined(_WIN32)
+    WSACleanup();
 #endif
     return 0;
 }
 
 /**
- * @brief Dispatches an `/api/v1/experiments` campaign request (`libtpu`, `win_port`, `edgcpp`, `libscript`, `manifest`).
- *
- * @param suite Experiment suite enum value.
- * @param step Lifecycle step or campaign alias (e.g., `win_port_campaign`).
- * @param host_arch Canonical OS/ISA target tag.
- * @return int 0 on success, non-zero on validation or execution failure.
- */
-static int dispatch_experiment_job(const char *suite, const char *step, const char *host_arch) {
-    char suite_arg[64];
-    char arch_arg[64];
-    if (!is_valid_experiment_suite(suite) || !is_safe_token(step) || !is_safe_token(host_arch)) {
-        fprintf(stderr, "%s\n", "{'error':'invalid_experiment_request','message':'Invalid suite, step, or host_arch'}");
-        return 1;
-    }
-    snprintf(suite_arg, sizeof(suite_arg), "--suite=%s", suite);
-    snprintf(arch_arg, sizeof(arch_arg), "--host-arch=%s", host_arch);
-    printf("{'job_id':'00000000-0000-4000-8000-000000000002','endpoint':'/api/v1/experiments','suite':'%s','step':'%s','host_arch':'%s'}\n",
-           suite, step, host_arch);
-#if !defined(_WIN32)
-    if (getenv("LIBSCRIPT_REST_EXEC_LIVE") != NULL) {
-        pid_t pid = fork();
-        if (pid == 0) {
-            execl("./libscript.sh", "libscript.sh", "experiment", step, suite_arg, arch_arg, (char *)NULL);
-            _exit(127);
-        } else if (pid > 0) {
-            int status = 0;
-            waitpid(pid, &status, 0);
-            return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
-        }
-    }
-#endif
-    return 0;
-}
-
-/**
- * @brief Dispatches an `/api/v1/artifacts/generate` kernel-abstracted image or installer synthesis job.
- *
- * @param kernel Target kernel or unikernel family enum value.
- * @param fmt Target artifact packaging format enum value.
- * @param components_csv Comma-separated component identifiers (e.g., `redis,postgres`).
- * @return int 0 on success, non-zero on validation or execution failure.
- */
-static int dispatch_artifact_job(const char *kernel, const char *fmt, const char *components_csv) {
-    char kernel_arg[96];
-    char fmt_arg[64];
-    char comps_arg[512];
-    if (!is_valid_kernel_target(kernel) || !is_valid_artifact_format(fmt) || !is_safe_token(components_csv)) {
-        fprintf(stderr, "%s\n", "{'error':'invalid_artifact_request','message':'Invalid kernel, format, or components'}");
-        return 1;
-    }
-    snprintf(kernel_arg, sizeof(kernel_arg), "--kernel=%s", kernel);
-    snprintf(fmt_arg, sizeof(fmt_arg), "--format=%s", fmt);
-    snprintf(comps_arg, sizeof(comps_arg), "--components=%s", components_csv);
-    printf("{'job_id':'00000000-0000-4000-8000-000000000003','endpoint':'/api/v1/artifacts/generate','kernel':'%s','format':'%s','components':'%s'}\n",
-           kernel, fmt, components_csv);
-#if !defined(_WIN32)
-    if (getenv("LIBSCRIPT_REST_EXEC_LIVE") != NULL) {
-        pid_t pid = fork();
-        if (pid == 0) {
-            execl("./libscript.sh", "libscript.sh", "build-image", kernel_arg, fmt_arg, comps_arg, (char *)NULL);
-            _exit(127);
-        } else if (pid > 0) {
-            int status = 0;
-            waitpid(pid, &status, 0);
-            return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
-        }
-    }
-#endif
-    return 0;
-}
-
-/**
- * @brief Main entry point for the LibScript REST API daemon.
- *
- * Parses command line options and starts the HTTP service listener or dispatches an API job.
- *
- * @param argc Argument count.
- * @param argv Argument vector.
- * @return int 0 on success, non-zero on failure.
+ * @brief Main entry point for libscript-rest-api.
  */
 int main(int argc, char **argv) {
+    char root_dir[1024];
+    char json_out[2048];
+    const char *bind_ip = "127.0.0.1";
+    const char *port_file = NULL;
     int port = 8080;
+    int max_requests = 0;
+    int i;
+
+    (void)rest_resolve_root_dir((argc > 0) ? argv[0] : NULL, root_dir, sizeof(root_dir));
 
     if (argc >= 5 && strcmp(argv[1], "--dispatch") == 0) {
-        return dispatch_async_job(argv[2], argv[3], argv[4]);
+        int rc = rest_dispatch_job(root_dir, argv[2], argv[3], argv[4], 1, json_out, sizeof(json_out));
+        fprintf(rc == 0 ? stdout : stderr, "%s\n", json_out);
+        return rc;
     }
     if (argc >= 5 && strcmp(argv[1], "--dispatch-experiment") == 0) {
-        return dispatch_experiment_job(argv[2], argv[3], argv[4]);
+        int rc = rest_dispatch_experiment(root_dir, argv[2], argv[3], argv[4], 1, json_out, sizeof(json_out));
+        fprintf(rc == 0 ? stdout : stderr, "%s\n", json_out);
+        return rc;
     }
     if (argc >= 5 && strcmp(argv[1], "--dispatch-artifact") == 0) {
-        return dispatch_artifact_job(argv[2], argv[3], argv[4]);
+        int rc = rest_dispatch_artifact(root_dir, argv[2], argv[3], argv[4],
+                                        (argc >= 6) ? argv[5] : NULL, 1, json_out, sizeof(json_out));
+        fprintf(rc == 0 ? stdout : stderr, "%s\n", json_out);
+        return rc;
     }
 
-    if (argc > 1) {
-        port = atoi(argv[1]);
-        if (port <= 0) {
-            port = 8080;
+    for (i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
+            port = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--bind") == 0 && i + 1 < argc) {
+            bind_ip = argv[++i];
+        } else if (strcmp(argv[i], "--max-requests") == 0 && i + 1 < argc) {
+            max_requests = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--port-file") == 0 && i + 1 < argc) {
+            port_file = argv[++i];
+        } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+            printf("Usage: libscript-rest-api [--port <port>] [--bind <ip>] [--max-requests <N>] [--port-file <path>]\n");
+            return 0;
+        } else if (argv[i][0] >= '0' && argv[i][0] <= '9') {
+            port = atoi(argv[i]);
         }
     }
 
-    printf("Starting libscript REST API Server on port %d...\n", port);
-    printf("Registered endpoints: /api/v1/topologies, /api/v1/payloads, /api/v1/traits, /api/v1/experiments, /api/v1/artifacts/generate, /api/v1/components/{name}/hooks/{hook}\n");
-    printf("Server running. Press Ctrl+C to stop.\n");
-    printf("Server stopped.\n");
-    return 0;
+    return serve_http_loop(bind_ip, port, max_requests, port_file, root_dir);
 }

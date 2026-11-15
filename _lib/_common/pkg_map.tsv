@@ -1,0 +1,1152 @@
+# LibScript Cross-Platform Package Mapping Table (pkg_map.tsv)
+# Columns: generic_pkg<TAB>selector<TAB>native_pkgs_or___UNSUPPORTED__
+7zip	apt-get	p7zip-full
+7zip	dnf	p7zip p7zip-plugins
+7zip	yum	p7zip p7zip-plugins
+7zip	zypper	p7zip p7zip-plugins
+7zip	pacman	p7zip
+7zip	pkg	7-zip
+7zip	pkg:sunos	compress/7zip
+alsa-lib	apt-get	libasound2
+alsa-ucm-conf	dnf	alsa-ucm
+alsa-ucm-conf	yum	alsa-ucm
+ansible	pkg	py311-ansible
+ansible-galaxy	apk	ansible
+ansible-galaxy	apt-get	ansible
+ansible-galaxy	dnf	ansible-core
+ansible-galaxy	yum	ansible-core
+ansible-galaxy	pacman	ansible
+ansible-galaxy	pkg	py312-ansible-core
+apache	dnf	httpd
+apache	yum	httpd
+apache	pacman	httpd
+apache	pkg	apache24
+apache	brew	httpd
+apache	winget	Apache.HTTPD
+apache	choco	apache-httpd
+apache	pkg:sunos	ooce/server/apache-24
+apache	*	apache2
+apache2	dnf	httpd
+apache2	yum	httpd
+apache2	pacman	httpd
+apache2	pkg	apache24
+apache2	brew	httpd
+apache2	winget	Apache.HTTPD
+apache2	choco	apache-httpd
+apache2	pkg:sunos	ooce/server/apache-24
+arm-none-eabi-gcc	apk	gcc-arm-none-eabi
+arm-none-eabi-gcc	apt-get	gcc-arm-none-eabi
+arm-none-eabi-gcc	dnf	arm-none-eabi-gcc-cs arm-none-eabi-newlib
+arm-none-eabi-gcc	winget	Arm.GnuArmEmbeddedToolchain
+arm-none-eabi-gcc	choco	gcc-arm-embedded
+aws	apk	aws-cli
+aws	pkg	py312-awscli
+aws	*	awscli
+awscli	apk	aws-cli
+awscli	pkg	py312-awscli
+azure-cli	apk	__UNSUPPORTED__
+azure-cli	pacman	__UNSUPPORTED__
+azure-cli	pkg	py312-azure-cli
+bao	apk	__UNSUPPORTED__
+bao	apt-get	__UNSUPPORTED__
+bao	dnf	__UNSUPPORTED__
+bao	yum	__UNSUPPORTED__
+bao	zypper	__UNSUPPORTED__
+bao	pacman	__UNSUPPORTED__
+bao	*	openbao
+bind9	apk	bind
+bind9	dnf	bind
+bind9	yum	bind
+bind9	zypper	bind
+bind9	pacman	bind
+bind9	pkg	bind918
+bind9	brew	bind
+binutils	winget	MSYS2.MSYS2
+binutils	choco	mingw
+bison	winget	WinFlexBison.win_flex_bison
+bison	choco	winflexbison3
+bootstrap	apk	gcc musl-dev
+bootstrap	apt-get	gcc build-essential
+bootstrap	*	gcc
+build-essential	apk	build-base
+build-essential	dnf	@development-tools
+build-essential	yum	@development-tools
+build-essential	zypper	-t pattern devel_basis
+build-essential	pacman	base-devel
+bun	apk	bun
+bun	pacman	bun-bin
+bun	brew	oven-sh/bun/bun
+bun	winget	Oven-sh.Bun
+bun	choco	bun
+bun	*	__UNSUPPORTED__
+bun-pm	*	bun
+bundler	apk	ruby-bundler
+bundler	dnf	rubygem-bundler
+bundler	yum	rubygem-bundler
+bundler	pkg	rubygem-bundler
+busybox	apk	busybox
+busybox	apt-get	busybox
+busybox	dnf	busybox
+busybox	yum	busybox
+busybox	zypper	busybox
+busybox	pacman	busybox
+busybox	pkg	shells/busybox
+busybox	brew	busybox
+busybox	*	__UNSUPPORTED__
+c	apk	gcc musl-dev
+c	apt-get	build-essential
+c	winget	MSYS2.MSYS2
+c	choco	mingw
+c	emerge	sys-devel/gcc
+c	eopkg	c-compiler
+c	pkg:sunos	developer/gcc14
+c	*	gcc
+c_compiler	apk	gcc musl-dev
+c_compiler	apt-get	build-essential
+c_compiler	winget	MSYS2.MSYS2
+c_compiler	choco	mingw
+c_compiler	emerge	sys-devel/gcc
+c_compiler	eopkg	c-compiler
+c_compiler	pkg:sunos	developer/gcc14
+c_compiler	*	gcc
+cabal	apt-get	cabal-install
+cabal	dnf	cabal-install
+cabal	yum	cabal-install
+cabal	pkg	hs-cabal-install
+caddy	apt-get	debian-keyring debian-archive-keyring apt-transport-https caddy
+caddy	winget	caddy.caddy
+cargo	pkg	rust
+cargo	pkg:sunos	ooce/developer/rust
+cassandra	pkg	cassandra4
+cassandra	emerge	dev-db/cassandra
+cc	apk	gcc musl-dev
+cc	apt-get	build-essential
+cc	winget	MSYS2.MSYS2
+cc	choco	mingw
+cc	emerge	sys-devel/gcc
+cc	eopkg	c-compiler
+cc	pkg:sunos	developer/gcc14
+cc	*	gcc
+ccache	winget	Ccache.Ccache
+ceph	apt-get	ceph-common
+ceph	dnf	ceph-common
+ceph	yum	ceph-common
+ceph	pkg	ceph18
+certbot	zypper	python3-certbot
+certbot	pkg	py311-certbot
+certbot	winget	EFF.Certbot
+certbot	emerge	app-crypt/certbot
+certbot	pkg:sunos	web/certbot
+cgit	emerge	www-apps/cgit
+chrony	apk	chrony
+chrony	apt-get	chrony
+chrony	dnf	chrony
+chrony	yum	chrony
+chrony	zypper	chrony
+chrony	pacman	chrony
+chrony	pkg	net/chrony
+chrony	brew	chrony
+chrony	*	__UNSUPPORTED__
+cilium	winget	Cilium.CiliumCLI
+cilium	*	cilium-cli
+clang	brew	llvm
+clang	winget	LLVM.LLVM
+clang	choco	llvm
+clang	scoop	llvm
+clickhouse	apt-get	clickhouse-server clickhouse-client
+clickhouse	dnf	clickhouse-server clickhouse-client
+clickhouse	yum	clickhouse-server clickhouse-client
+clojure	brew	clojure/tools/clojure
+cockroachdb	pkg	cockroach
+cockroachdb	brew	cockroachdb/tap/cockroach
+composer	pkg	php84-composer
+consul	winget	HashiCorp.Consul
+coredns	winget	CoreDNS.CoreDNS
+couchdb	pkg	couchdb3
+couchdb	winget	Apache.CouchDB
+couchdb	emerge	dev-db/couchdb
+cpanm	apk	perl-App-cpanminus
+cpanm	dnf	perl-App-cpanminus
+cpanm	yum	perl-App-cpanminus
+cpanm	pkg	p5-App-cpanminus
+cpanm	*	cpanminus
+cpp	apk	g++ musl-dev
+cpp	apt-get	build-essential
+cpp	dnf	gcc-c++
+cpp	yum	gcc-c++
+cpp	zypper	gcc-c++
+cpp	pacman	gcc
+cpp	pkg	gcc
+cpp	brew	gcc
+cpp	winget	MSYS2.MSYS2
+cpp	choco	mingw
+cpp	emerge	sys-devel/gcc
+cpp	eopkg	c-compiler
+cpp	pkg:sunos	developer/gcc14
+cpp	*	g++
+cpp_compiler	apk	g++ musl-dev
+cpp_compiler	apt-get	build-essential
+cpp_compiler	dnf	gcc-c++
+cpp_compiler	yum	gcc-c++
+cpp_compiler	zypper	gcc-c++
+cpp_compiler	pacman	gcc
+cpp_compiler	pkg	gcc
+cpp_compiler	brew	gcc
+cpp_compiler	winget	MSYS2.MSYS2
+cpp_compiler	choco	mingw
+cpp_compiler	emerge	sys-devel/gcc
+cpp_compiler	eopkg	c-compiler
+cpp_compiler	pkg:sunos	developer/gcc14
+cpp_compiler	*	g++
+crowdsec	winget	CrowdSecurity.CrowdSec
+csharp	apk	dotnet8-sdk
+csharp	apt-get	dotnet-sdk-8.0
+csharp	dnf	dotnet-sdk-8.0
+csharp	yum	dotnet-sdk-8.0
+csharp	zypper	dotnet-sdk
+csharp	pacman	dotnet-sdk
+csharp	pkg	dotnet
+csharp	brew	dotnet
+csharp	winget	Microsoft.DotNet.SDK.8
+csharp	choco	dotnet-8.0-sdk
+csharp	*	__UNSUPPORTED__
+curl	winget	cURL.cURL
+dart	brew	dart-sdk
+dart	winget	Google.DartSDK
+dart	choco	dart-sdk
+dbus	dnf	dbus-daemon
+dbus	yum	dbus-daemon
+default-libmysqlclient-dev	apk	mariadb-connector-c-dev mariadb-client
+default-libmysqlclient-dev	apt-get	default-libmysqlclient-dev default-mysql-client
+default-libmysqlclient-dev	dnf	mariadb-connector-c-devel mysql
+default-libmysqlclient-dev	yum	mariadb-connector-c-devel mysql
+default-libmysqlclient-dev	zypper	libmysqlclient-devel mysql-client
+default-libmysqlclient-dev	pacman	mariadb-libs mariadb-clients
+default-libmysqlclient-dev	pkg	databases/mysql84-client
+default-libmysqlclient-dev	winget	Oracle.MySQL
+default-libmysqlclient-dev	pkg:sunos	database/mysql-80/client
+default-libmysqlclient-dev	*	mysql-client
+deno	apk	deno
+deno	pacman	deno
+deno	pkg	deno
+deno	brew	deno
+deno	winget	DenoLand.Deno
+deno	choco	deno
+deno	*	__UNSUPPORTED__
+deno-pm	*	deno
+dhcpcd	apt-get	dhcpcd-base
+dinit	apt-get	sysvinit-utils
+dinit	dnf	procps-ng
+dinit	yum	procps-ng
+doas	apt-get	opendoas
+doas	dnf	opendoas
+doas	yum	opendoas
+docker	apk	docker docker-cli
+docker	apt-get	docker.io docker-compose
+docker	dnf	podman-docker
+docker	yum	podman-docker
+docker	winget	Docker.DockerCli
+dragonfly	brew	dragonflydb/tap/dragonfly
+dtc	apt-get	device-tree-compiler
+duckdb	apk	libstdc++
+dwarves	apt-get	dwarves
+dwarves	dnf	dwarves
+dwarves	yum	dwarves
+dwarves	zypper	dwarves
+dwarves	*	pahole
+elfutils-libelf-devel	apk	elfutils-dev
+elfutils-libelf-devel	dnf	elfutils-libelf-devel
+elfutils-libelf-devel	yum	elfutils-libelf-devel
+elfutils-libelf-devel	zypper	elfutils-libelf-devel
+elfutils-libelf-devel	pacman	libelf
+elfutils-libelf-devel	brew	libelf
+elfutils-libelf-devel	*	libelf-dev
+elixir	pkg	elixir erlang
+elixir	pkg:sunos	ooce/runtime/elixir
+erlang	winget	Erlang.ErlangOTP
+etcd	apt-get	etcd-server etcd-client
+etcd	pkg	coreos-etcd35
+etcd	winget	etcd.etcd
+etcd	emerge	dev-db/etcd
+eudev	apt-get	udev
+eudev	dnf	systemd-udev
+eudev	yum	systemd-udev
+exim	apk	exim
+exim	apt-get	exim4-daemon-light
+exim	dnf	exim
+exim	yum	exim
+exim	zypper	exim
+exim	pacman	exim
+exim	pkg	mail/exim
+exim	brew	exim
+exim	pkg:sunos	service/network/smtp/sendmail
+exim	*	__UNSUPPORTED__
+exim4	apk	exim
+exim4	apt-get	exim4-daemon-light
+exim4	dnf	exim
+exim4	yum	exim
+exim4	zypper	exim
+exim4	pacman	exim
+exim4	pkg	mail/exim
+exim4	brew	exim
+exim4	pkg:sunos	service/network/smtp/sendmail
+exim4	*	__UNSUPPORTED__
+fail2ban	pkg	py311-fail2ban
+fail2ban	emerge	net-analyzer/fail2ban
+fd	apt-get	fd-find
+fd	dnf	fd-find
+fd	yum	fd-find
+fd	zypper	fd-find
+fd	pkg	fd-find
+fd	winget	sharkdp.fd
+fd	emerge	sys-apps/fd
+ferretdb	winget	FerretDB.FerretDB
+ffmpeg	winget	Gyan.FFmpeg
+ffmpeg	emerge	media-video/ffmpeg
+firebird	apt-get	firebird3.0-server firebird3.0-utils
+firebird	dnf	firebird firebird-utils
+firebird	yum	firebird firebird-utils
+firebird	pkg	firebird40-server firebird40-client
+firebird	winget	FirebirdProject.Firebird
+firebird	emerge	dev-db/firebird
+flex	winget	WinFlexBison.win_flex_bison
+flex	choco	winflexbison3
+fluentbit	*	fluent-bit
+fnm	*	__UNSUPPORTED__
+fortran	dnf	gcc-gfortran
+fortran	yum	gcc-gfortran
+fortran	pacman	gcc-fortran
+fortran	pkg	gcc
+fortran	brew	gcc
+fortran	winget	BrechtSanders.WinLibs.POSIX.UCRT
+fortran	choco	mingw
+fortran	scoop	gcc
+fortran	*	gfortran
+frr	pkg	frr10
+fzf	winget	junegunn.fzf
+fzf	emerge	app-shells/fzf
+g++	apk	g++ musl-dev
+g++	apt-get	build-essential
+g++	pkg	gcc
+g++	brew	gcc
+g++	winget	MSYS2.MSYS2
+g++	pkg:sunos	developer/gcc14
+gcc	apk	gcc musl-dev
+gcc	apt-get	build-essential
+gcc	winget	MSYS2.MSYS2
+gcc	pkg:sunos	developer/gcc14
+gdm	apt-get	gdm3
+gem	apk	ruby
+gem	apt-get	ruby
+gem	dnf	rubygems
+gem	yum	rubygems
+gem	zypper	rubygems
+gem	pacman	rubygems
+gem	pkg	ruby
+gem	brew	ruby
+gem	*	__UNSUPPORTED__
+geos	apk	geos-dev
+geos	apt-get	libgeos-dev
+geos	dnf	geos-devel
+geos	yum	geos-devel
+geos	zypper	geos-devel
+geos	pkg	graphics/geos
+geos	winget	OSGeo.GEOS
+geos	pkg:sunos	library/geos
+gettext	apk	gettext gettext-dev
+gettext	dnf	gettext gettext-devel
+gettext	yum	gettext gettext-devel
+gettext	zypper	gettext-tools gettext-runtime
+gettext	pkg	devel/gettext
+gettext	winget	GNU.Gettext
+gettext	pkg:sunos	text/gnu-gettext
+gfortran	dnf	gcc-gfortran
+gfortran	yum	gcc-gfortran
+gfortran	pacman	gcc-fortran
+gfortran	pkg	gcc
+gfortran	brew	gcc
+gfortran	winget	BrechtSanders.WinLibs.POSIX.UCRT
+gfortran	choco	mingw
+gfortran	scoop	gcc
+ghc	winget	Haskell.GHCup
+ghcup	pkg	hs-ghcup
+ghcup	brew	ghcup
+ghcup	*	__UNSUPPORTED__
+git	winget	Git.Git
+gleam	winget	Gleam.Gleam
+glibc	apk	gcompat
+glibc	apt-get	libc6 libc-bin
+glusterfs	apt-get	glusterfs-server
+glusterfs	dnf	glusterfs-server
+glusterfs	yum	glusterfs-server
+gnome	apk	gnome-shell
+gnome	apt-get	gnome-shell-common
+gnome	dnf	gnome-shell
+gnome	yum	gnome-shell
+gnome	pkg	gnome-shell
+gnome	*	__UNSUPPORTED__
+go	apt-get	golang
+go	dnf	golang
+go	yum	golang
+go	winget	GoLang.Go
+go	choco	golang
+go	emerge	dev-lang/go
+go-pm	brew	go-pm
+go-pm	*	__UNSUPPORTED__
+google-cloud-sdk	pkg	google-cloud-sdk
+google-cloud-sdk	brew	google-cloud-sdk
+google-cloud-sdk	*	__UNSUPPORTED__
+grafana	winget	GrafanaLabs.Grafana.OSS
+graphviz	apk	graphviz graphviz-dev
+graphviz	apt-get	graphviz graphviz-dev
+graphviz	dnf	graphviz graphviz-devel
+graphviz	yum	graphviz graphviz-devel
+graphviz	zypper	graphviz graphviz-devel
+graphviz	pkg	graphics/graphviz
+graphviz	winget	Graphviz.Graphviz
+graphviz	pkg:sunos	image/graphviz
+graphviz-dev	apk	graphviz graphviz-dev
+graphviz-dev	apt-get	graphviz graphviz-dev
+graphviz-dev	dnf	graphviz graphviz-devel
+graphviz-dev	yum	graphviz graphviz-devel
+graphviz-dev	zypper	graphviz graphviz-devel
+graphviz-dev	pkg	graphics/graphviz
+graphviz-dev	winget	Graphviz.Graphviz
+graphviz-dev	pkg:sunos	image/graphviz
+graphviz-dev	*	graphviz
+grub	apt-get	grub2-common
+grub	dnf	grub2-tools
+grub	yum	grub2-tools
+grub	zypper	grub2-tools
+grub	pkg	grub2-tools
+guile	apt-get	guile-3.0
+guile	dnf	guile30
+guile	yum	guile30
+guile	pkg	guile3
+guile	winget	Cisco.ChezScheme
+guile	choco	chezscheme
+guile	scoop	chezscheme
+guix	apk	guix
+guix	apt-get	guix
+guix	*	__UNSUPPORTED__
+gunicorn	pkg	py312-gunicorn
+haproxy	emerge	net-proxy/haproxy
+haproxy	pkg:sunos	ooce/network/haproxy
+haskell	winget	Haskell.GHCup
+haskell	*	ghc
+hatch	pkg	py312-hatch
+hatch	brew	hatch
+hatch	*	__UNSUPPORTED__
+hazelcast	brew	hazelcast/hz/hazelcast
+helm	apk	helm
+helm	pkg	helm
+helm	brew	helm
+helm	*	__UNSUPPORTED__
+htop	emerge	sys-process/htop
+htop	pkg:sunos	ooce/system/htop
+httpd	dnf	httpd
+httpd	yum	httpd
+httpd	pacman	httpd
+httpd	pkg	apache24
+httpd	brew	httpd
+httpd	winget	Apache.HTTPD
+httpd	choco	apache-httpd
+httpd	pkg:sunos	ooce/server/apache-24
+httpd	*	apache2
+i3	apt-get	i3-wm
+i3	pacman	i3-wm
+imagemagick	dnf	ImageMagick
+imagemagick	yum	ImageMagick
+imagemagick	zypper	ImageMagick
+imagemagick	pkg	ImageMagick7
+imagemagick	winget	ImageMagick.ImageMagick
+imagemagick	emerge	media-gfx/imagemagick
+influxdb	winget	InfluxData.InfluxDB
+influxdb	emerge	dev-db/influxdb
+intel-media-driver	apt-get	intel-media-va-driver
+jack	apt-get	jackd2
+jack	dnf	jack-audio-connection-kit
+jack	yum	jack-audio-connection-kit
+jack	winget	JACKAudio.JACK2
+jack	*	jack2
+java	apk	openjdk17
+java	apt-get	openjdk-17-jdk
+java	dnf	java-17-openjdk-devel
+java	yum	java-17-openjdk-devel
+java	zypper	java-17-openjdk
+java	pacman	jre-openjdk
+java	pkg	openjdk17
+java	brew	openjdk
+java	winget	Microsoft.OpenJDK.17
+java	choco	openjdk
+java	emerge	virtual/jdk
+java	pkg:sunos	ooce/runtime/java-17
+jboss	*	wildfly
+jetty	apt-get	jetty9
+jetty	pkg	jetty10
+jq	winget	jqlang.jq
+jq	pkg:sunos	ooce/util/jq
+julia	brew	julia
+julia	*	__UNSUPPORTED__
+kde-plasma-6	apt-get	plasma-desktop-data
+kde-plasma-6	pkg	plasma6-plasma-desktop
+kde-plasma-6	*	plasma-desktop
+kotlin	winget	JetBrains.Kotlin
+krew	brew	krew
+krew	*	__UNSUPPORTED__
+kubeadm	dnf	kubernetes-kubeadm
+kubeadm	yum	kubernetes-kubeadm
+kubeadm	winget	Kubernetes.kubeadm
+libdrm	apt-get	libdrm2
+libelf-dev	apk	elfutils-dev
+libelf-dev	dnf	elfutils-libelf-devel
+libelf-dev	yum	elfutils-libelf-devel
+libelf-dev	zypper	elfutils-libelf-devel
+libelf-dev	pacman	libelf
+libelf-dev	brew	libelf
+libgeos	apk	geos-dev
+libgeos	apt-get	libgeos-dev
+libgeos	dnf	geos-devel
+libgeos	yum	geos-devel
+libgeos	zypper	geos-devel
+libgeos	pkg	graphics/geos
+libgeos	winget	OSGeo.GEOS
+libgeos	pkg:sunos	library/geos
+libgeos	*	geos
+libgeos-dev	apk	geos-dev
+libgeos-dev	apt-get	libgeos-dev
+libgeos-dev	dnf	geos-devel
+libgeos-dev	yum	geos-devel
+libgeos-dev	zypper	geos-devel
+libgeos-dev	pkg	graphics/geos
+libgeos-dev	winget	OSGeo.GEOS
+libgeos-dev	pkg:sunos	library/geos
+libgeos-dev	*	geos
+libicu	apk	icu-dev
+libicu	apt-get	libicu-dev
+libicu	dnf	libicu-devel
+libicu	yum	libicu-devel
+libicu	zypper	libicu-devel
+libicu	pacman	icu
+libmysqlclient-dev	apk	mariadb-connector-c-dev mariadb-client
+libmysqlclient-dev	apt-get	default-libmysqlclient-dev default-mysql-client
+libmysqlclient-dev	dnf	mariadb-connector-c-devel mysql
+libmysqlclient-dev	yum	mariadb-connector-c-devel mysql
+libmysqlclient-dev	zypper	libmysqlclient-devel mysql-client
+libmysqlclient-dev	pacman	mariadb-libs mariadb-clients
+libmysqlclient-dev	pkg	databases/mysql84-client
+libmysqlclient-dev	winget	Oracle.MySQL
+libmysqlclient-dev	pkg:sunos	database/mysql-80/client
+libmysqlclient-dev	*	mysql-client
+libpq-dev	dnf	libpq-devel
+libpq-dev	yum	libpq-devel
+libpq-dev	zypper	postgresql-devel
+libpq-dev	pacman	postgresql-libs
+libpq-dev	pkg	postgresql17-client
+libpq-dev	brew	libpq
+libpq-dev	pkg:sunos	database/postgres-16/library
+libseat	apt-get	libseat1
+libseat	pkg	seatd
+libsqlite3-dev	apk	sqlite-dev
+libsqlite3-dev	dnf	sqlite-devel
+libsqlite3-dev	yum	sqlite-devel
+libsqlite3-dev	zypper	sqlite3-devel
+libsqlite3-dev	pacman	sqlite
+libsqlite3-dev	pkg	databases/sqlite3
+libsqlite3-dev	brew	sqlite
+libsqlite3-dev	pkg:sunos	database/sqlite-3
+libtool	apt-get	libtool-bin
+libva	apt-get	libva2
+libvdpau	apt-get	libvdpau1
+libvirt	apt-get	libvirt-clients
+libvirt	dnf	libvirt-client
+libvirt	yum	libvirt-client
+libxkbcommon	apt-get	libxkbcommon0
+libxml2-dev	dnf	libxml2-devel
+libxml2-dev	yum	libxml2-devel
+libxml2-dev	zypper	libxml2-devel
+libxmlsec1	apk	xmlsec-dev libxml2-dev
+libxmlsec1	apt-get	libxmlsec1-dev libxmlsec1-openssl libxml2-dev
+libxmlsec1	dnf	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+libxmlsec1	yum	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+libxmlsec1	zypper	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+libxmlsec1	pacman	xmlsec libxml2
+libxmlsec1	pkg	security/xmlsec1 textproc/libxml2
+libxmlsec1	brew	libxmlsec1 libxml2
+libxmlsec1	pkg:sunos	library/security/xmlsec
+libxmlsec1	*	__UNSUPPORTED__
+libxmlsec1-dev	apk	xmlsec-dev libxml2-dev
+libxmlsec1-dev	apt-get	libxmlsec1-dev libxmlsec1-openssl libxml2-dev
+libxmlsec1-dev	dnf	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+libxmlsec1-dev	yum	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+libxmlsec1-dev	zypper	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+libxmlsec1-dev	pacman	xmlsec libxml2
+libxmlsec1-dev	pkg	security/xmlsec1 textproc/libxml2
+libxmlsec1-dev	brew	libxmlsec1 libxml2
+libxmlsec1-dev	pkg:sunos	library/security/xmlsec
+libxmlsec1-dev	*	__UNSUPPORTED__
+libxslt-dev	apt-get	libxslt1-dev
+libxslt-dev	dnf	libxslt-devel
+libxslt-dev	yum	libxslt-devel
+libxslt-dev	zypper	libxslt-devel
+lld	winget	LLVM.LLVM
+llvm	winget	LLVM.LLVM
+lmdb	apk	lmdb lmdb-tools
+lmdb	apt-get	lmdb-utils liblmdb-dev
+lmdb	dnf	lmdb lmdb-devel
+lmdb	yum	lmdb lmdb-devel
+lmdb	zypper	lmdb liblmdb-devel
+lmdb	emerge	dev-db/lmdb
+locales	apk	musl-locales
+locales	dnf	glibc-langpack-en
+locales	yum	glibc-langpack-en
+locales	zypper	glibc-langpack-en
+locales	pacman	glibc
+lua	apk	lua5.4
+lua	apt-get	lua5.4
+lua	pkg	lua54
+lua	winget	DEVCOM.Lua
+luarocks	apk	luarocks
+luarocks	pkg	lua54-luarocks
+luarocks	brew	luarocks
+luarocks	*	__UNSUPPORTED__
+lxqt	pkg	lxqt
+lxqt	*	lxqt-session
+make	pkg	gmake
+make	winget	GnuWin32.Make
+make	pkg:sunos	developer/build/gnu-make
+mariadb	apk	mariadb mariadb-client
+mariadb	apt-get	mariadb-server
+mariadb	dnf	mariadb-server
+mariadb	yum	mariadb-server
+mariadb	zypper	mariadb-server
+mariadb	pacman	mariadb-server
+mariadb	pkg	mariadb114-server mariadb114-client
+mariadb	winget	MariaDB.MariaDB
+mariadb	pkg:sunos	ooce/database/mariadb-114 ooce/library/mariadb-114
+mate	apk	mate-session-manager
+mate	apt-get	mate-desktop-environment-core
+mate	dnf	mate-session-manager
+mate	yum	mate-session-manager
+mate	pacman	mate-session-manager
+mate	pkg	mate-session-manager
+maven-wrapper	*	maven
+memcached	winget	__UNSUPPORTED__
+memcached	emerge	net-misc/memcached
+mesa	apt-get	libgl1-mesa-dri libglx-mesa0 libgbm1
+mesa	dnf	mesa-libGL mesa-libgbm mesa-dri-drivers
+mesa	yum	mesa-libGL mesa-libgbm mesa-dri-drivers
+mesa	pkg	mesa-libs mesa-dri
+meson	winget	mesonbuild.meson
+mongodb	apt-get	__UNSUPPORTED__
+mongodb	brew	mongodb/brew/mongodb-community
+msbuild	apt-get	mono-devel
+msbuild	dnf	mono-devel
+msbuild	yum	mono-devel
+msbuild	pacman	mono-msbuild
+msbuild	brew	mono
+msbuild	winget	Microsoft.BuildTools
+msbuild	choco	visualstudio2022buildtools
+mssql	brew	sqlcmd
+mssql	winget	Microsoft.Sqlcmd
+mssql	choco	sqlserver-cmdlineutils
+mssql	*	mssql-tools18
+multipass	winget	Canonical.Multipass
+mysql	apk	mysql mysql-client
+mysql	apt-get	default-mysql-server
+mysql	zypper	mysql-community-server
+mysql	pacman	mariadb
+mysql	pkg	databases/mysql84-server
+mysql	brew	mysql
+mysql	winget	Oracle.MySQL
+mysql	choco	mysql
+mysql	pkg:sunos	database/mysql-80
+mysql	*	mysql-server
+mysql-client	apk	mariadb-connector-c-dev mariadb-client
+mysql-client	apt-get	default-libmysqlclient-dev default-mysql-client
+mysql-client	dnf	mariadb-connector-c-devel mysql
+mysql-client	yum	mariadb-connector-c-devel mysql
+mysql-client	zypper	libmysqlclient-devel mysql-client
+mysql-client	pacman	mariadb-libs mariadb-clients
+mysql-client	pkg	databases/mysql84-client
+mysql-client	winget	Oracle.MySQL
+mysql-client	pkg:sunos	database/mysql-80/client
+mysql-server	apk	mysql mysql-client
+mysql-server	apt-get	default-mysql-server
+mysql-server	zypper	mysql-community-server
+mysql-server	pacman	mariadb
+mysql-server	pkg	databases/mysql84-server
+mysql-server	brew	mysql
+mysql-server	winget	Oracle.MySQL
+mysql-server	choco	mysql
+mysql-server	pkg:sunos	database/mysql-80
+mysqlclient	apk	mariadb-connector-c-dev mariadb-client
+mysqlclient	apt-get	default-libmysqlclient-dev default-mysql-client
+mysqlclient	dnf	mariadb-connector-c-devel mysql
+mysqlclient	yum	mariadb-connector-c-devel mysql
+mysqlclient	zypper	libmysqlclient-devel mysql-client
+mysqlclient	pacman	mariadb-libs mariadb-clients
+mysqlclient	pkg	databases/mysql84-client
+mysqlclient	winget	Oracle.MySQL
+mysqlclient	pkg:sunos	database/mysql-80/client
+mysqlclient	*	mysql-client
+nasm	winget	NASM.NASM
+nats	winget	NATS.nats-server
+nats	*	nats-server
+neo4j	winget	Neo4j.Neo4j
+neo4j	choco	neo4j-community
+networkmanager	apt-get	network-manager
+networkmanager	dnf	NetworkManager
+networkmanager	yum	NetworkManager
+nginx	winget	Nginx.Nginx
+nginx	emerge	www-servers/nginx
+nim	winget	NimLang.Nim
+nimble	apk	nimble
+nimble	*	nim
+ninja	apt-get	ninja-build
+ninja	dnf	ninja-build
+ninja	yum	ninja-build
+ninja	winget	Ninja-build.Ninja
+nodejs	apk	nodejs npm
+nodejs	apt-get	nodejs npm
+nodejs	pacman	nodejs npm
+nodejs	pkg	node npm
+nodejs	winget	OpenJS.NodeJS
+nodejs	emerge	net-libs/nodejs
+ntp	apk	openntpd
+nuget	apk	dotnet9-sdk
+ocaml	winget	OCaml.opam
+oci	pkg	py311-oci-cli
+oci	winget	Oracle.OCICLI
+oci	*	oci-cli
+openbao	apk	__UNSUPPORTED__
+openbao	apt-get	__UNSUPPORTED__
+openbao	dnf	__UNSUPPORTED__
+openbao	yum	__UNSUPPORTED__
+openbao	zypper	__UNSUPPORTED__
+openbao	pacman	__UNSUPPORTED__
+openbox	dnf	xorg-x11-server-utils
+openbox	yum	xorg-x11-server-utils
+openocd	winget	xpack-dev-tools.openocd-xpack
+openresty	brew	openresty/brew/openresty
+openssh	apt-get	openssh-client openssh-server
+openssh	dnf	openssh-clients openssh-server
+openssh	yum	openssh-clients openssh-server
+openssl	winget	ShiningLight.OpenSSL.Light
+openssl	emerge	dev-libs/openssl
+otel-collector	scoop	otelcol
+otel-collector	*	opentelemetry-collector
+ovh	*	ovhcloud-cli
+packer	winget	Hashicorp.Packer
+pahole	apt-get	dwarves
+pahole	dnf	dwarves
+pahole	yum	dwarves
+pahole	zypper	dwarves
+pam	apk	linux-pam
+pam	apt-get	libpam0g
+pandoc	pkg	hs-pandoc
+pandoc	winget	JohnMacFarlane.Pandoc
+pandoc	emerge	app-text/pandoc
+passenger	pkg	rubygem-passenger
+pdm	pkg	py312-pdm
+perl	pkg	perl5
+perl	winget	StrawberryPerl.StrawberryPerl
+php	apk	php84 php84-cli
+php	apt-get	php-cli
+php	dnf	php-cli
+php	pkg	php84
+php	winget	PHP.PHP
+php	emerge	dev-lang/php
+php	pkg:sunos	ooce/runtime/php-82
+php-fpm	apk	php83-fpm
+php-fpm	pkg	php84
+php-fpm	brew	php
+pip	apk	py3-pip
+pip	apt-get	python3-pip
+pip	dnf	python3-pip
+pip	yum	python3-pip
+pip	zypper	python3-pip
+pip	pacman	python-pip
+pip	pkg	py312-pip
+pip	pkg:sunos	library/python-3/pip-313
+pipx	pkg	py312-pipx
+pkg-config	apk	pkgconf
+pkg-config	dnf	pkgconf-pkg-config
+pkg-config	yum	pkgconf-pkg-config
+pkg-config	pacman	pkgconf
+pkg-config	pkg	pkgconf
+pkgconfig	apt-get	pkg-config
+pkgconfig	dnf	pkgconf-pkg-config
+pkgconfig	yum	pkgconf-pkg-config
+pkgconfig	zypper	pkg-config
+pkgconfig	choco	pkgconfiglite
+pkgconfig	scoop	pkg-config
+pkgconfig	*	pkgconf
+pkgsrc	*	pkgin
+podman	winget	RedHat.Podman
+podman	choco	podman-cli
+poetry	apt-get	python3-poetry
+poetry	pkg	py312-poetry
+porg	apk	make
+porg	apt-get	make
+porg	dnf	make
+porg	yum	make
+port	*	macports
+postgres	apk	postgresql16 postgresql16-contrib postgresql16-openrc
+postgres	apt-get	postgresql postgresql-contrib
+postgres	dnf	postgresql-server postgresql-contrib
+postgres	yum	postgresql-server postgresql-contrib
+postgres	zypper	postgresql-server
+postgres	pkg	postgresql14-server postgresql14-client
+postgres	brew	postgresql@14
+postgres	winget	PostgreSQL.PostgreSQL
+postgres	emerge	dev-db/postgresql
+postgres	pkg:sunos	ooce/database/postgresql-17 ooce/library/postgresql-17
+postgres	*	postgresql
+postgresql	apk	postgresql16 postgresql16-contrib postgresql16-openrc
+postgresql	apt-get	postgresql postgresql-contrib
+postgresql	dnf	postgresql-server postgresql-contrib
+postgresql	yum	postgresql-server postgresql-contrib
+postgresql	zypper	postgresql-server
+postgresql	pkg	postgresql14-server postgresql14-client
+postgresql	brew	postgresql@14
+postgresql	winget	PostgreSQL.PostgreSQL
+postgresql	emerge	dev-db/postgresql
+postgresql	pkg:sunos	ooce/database/postgresql-17 ooce/library/postgresql-17
+powershell	pacman	powershell-bin
+powershell	winget	Microsoft.PowerShell
+powershell	choco	powershell-core
+prolog	dnf	pl
+prolog	yum	pl
+prolog	winget	SWI-Prolog.SWI-Prolog
+prolog	*	swi-prolog
+prometheus	winget	Prometheus.Prometheus
+protobuf	apk	protoc
+protobuf	apt-get	protobuf-compiler
+protobuf	dnf	protobuf-compiler
+protobuf	yum	protobuf-compiler
+protobuf	zypper	protobuf-devel
+protobuf	winget	Google.Protobuf
+protobuf	choco	protoc
+pulsar	brew	apache-pulsar
+pulumi	winget	Pulumi.Pulumi
+puma	pkg	rubygem-puma
+python	apk	python3 py3-pip
+python	apt-get	python3 python3-pip python3-venv python3-dev python-is-python3
+python	dnf	python3 python3-pip
+python	yum	python3 python3-pip
+python	zypper	python3 python3-pip
+python	pacman	python python-pip
+python	pkg	python3 py312-sqlite3
+python	winget	Python.Python.3.11
+python	emerge	dev-lang/python
+python	pkg:sunos	runtime/python-313
+python	*	python3
+python3	apk	python3 py3-pip
+python3	apt-get	python3 python3-pip python3-venv python3-dev python-is-python3
+python3	dnf	python3 python3-pip
+python3	yum	python3 python3-pip
+python3	zypper	python3 python3-pip
+python3	pacman	python python-pip
+python3	pkg	python3 py312-sqlite3
+python3	winget	Python.Python.3.11
+python3	emerge	dev-lang/python
+python3	pkg:sunos	runtime/python-313
+python3-venv	apk	python3
+python3-venv	dnf	python3
+python3-venv	yum	python3
+python3-venv	zypper	python3
+python3-venv	pacman	python
+python3-venv	pkg	__NONE__
+qemu	apk	qemu-system-aarch64 qemu-system-x86_64 qemu-img
+qemu	apt-get	qemu-system-x86 qemu-system-arm qemu-utils ovmf qemu-efi-aarch64 libvirt-daemon-system libvirt-clients bridge-utils virtinst swtpm swtpm-tools
+qemu	dnf	qemu-kvm qemu-img edk2-ovmf libvirt virt-install swtpm
+qemu	yum	qemu-kvm qemu-img edk2-ovmf libvirt virt-install swtpm
+qemu	pacman	qemu-desktop edk2-ovmf edk2-arm virt-install libvirt swtpm
+qemu	pkg:sunos	ooce/emulator/qemu ooce/util/qemu-img
+qmake	apk	qt6-qtbase-dev
+qmake	apt-get	qt6-base-dev-tools
+qmake	dnf	qt6-qtbase-devel
+qmake	yum	qt6-qtbase-devel
+qmake	zypper	qt6-base-devel
+qmake	brew	qt
+qmake	choco	qt6-base-dev
+qmake	*	qt6-base
+r	apk	R R-dev
+r	apt-get	r-base r-base-dev
+r	dnf	R-core
+r	yum	R-core
+r	zypper	R-core
+r-base	apt-get	r-base
+r-base	dnf	R-core
+r-base	yum	R-core
+r-base	pacman	r
+r-base	pkg	math/R
+r-base	brew	r
+r-base	*	R
+rabbitmq	pkg	rabbitmq
+rabbitmq	brew	rabbitmq
+rabbitmq	winget	RabbitMQ.RabbitMQ
+rabbitmq	emerge	net-misc/rabbitmq-server
+rabbitmq	*	rabbitmq-server
+rabbitmq-server	brew	rabbitmq
+racket	brew	minimal-racket
+racket	winget	Racket.Racket
+rancher	brew	rancher-cli
+rdfind	apt-get	rdfind
+rdfind	dnf	rdfind
+rdfind	yum	rdfind
+rdfind	zypper	rdfind
+rdfind	pacman	rdfind
+rdfind	pkg	sysutils/rdfind
+rdfind	brew	rdfind
+rdfind	pkg:sunos	__UNSUPPORTED__
+rdfind	*	__UNSUPPORTED__
+redpanda	brew	redpanda-data/tap/redpanda
+redpanda	scoop	rpk
+rethinkdb	emerge	dev-db/rethinkdb
+ripgrep	winget	BurntSushi.ripgrep.MSVC
+ripgrep	emerge	sys-apps/ripgrep
+riscv-none-elf-gcc	apk	gcc-riscv-none-elf
+riscv-none-elf-gcc	apt-get	gcc-riscv64-unknown-elf picolibc-riscv64-unknown-elf
+riscv-none-elf-gcc	pacman	riscv64-elf-gcc
+riscv-none-elf-gcc	pkg	riscv64-none-elf-gcc
+riscv-none-elf-gcc	brew	riscv64-elf-gcc
+rocksdb	apt-get	rocksdb-tools librocksdb-dev
+rocksdb	dnf	rocksdb rocksdb-devel
+rocksdb	yum	rocksdb rocksdb-devel
+rocksdb	emerge	dev-libs/rocksdb
+rsync	emerge	net-misc/rsync
+ruby	apt-get	ruby-full
+ruby	winget	RubyInstallerTeam.Ruby
+ruby	emerge	dev-lang/ruby
+runit	dnf	procps-ng
+runit	yum	procps-ng
+rust	apk	rust cargo
+rust	apt-get	rustc cargo
+rust	dnf	rust cargo
+rust	yum	rust cargo
+rust	zypper	rust cargo
+rust	winget	Rustlang.Rustup
+rust	emerge	dev-lang/rust
+rust	pkg:sunos	ooce/developer/rust
+s6	dnf	procps-ng
+s6	yum	procps-ng
+scala	winget	VirtusLab.ScalaCli
+sccache	winget	Mozilla.sccache
+scheme	apt-get	guile-3.0
+scheme	dnf	guile30
+scheme	yum	guile30
+scheme	pkg	guile3
+scheme	winget	Cisco.ChezScheme
+scheme	choco	chezscheme
+scheme	scoop	chezscheme
+scheme	*	guile
+scylladb	*	scylla
+sh	*	bash
+shadow	apt-get	passwd
+shadow	dnf	shadow-utils
+shadow	yum	shadow-utils
+shellcheck	dnf	ShellCheck
+shellcheck	yum	ShellCheck
+shellcheck	zypper	ShellCheck
+shellcheck	pkg	hs-ShellCheck
+shellcheck	winget	koalaman.shellcheck
+shellcheck	emerge	dev-util/shellcheck
+shellcheck	pkg:sunos	ooce/developer/shellcheck
+solr	pkg	apache-solr
+sqlite	apk	sqlite
+sqlite	dnf	sqlite
+sqlite	yum	sqlite
+sqlite	brew	sqlite
+sqlite	winget	SQLite.SQLite
+sqlite	choco	sqlite
+sqlite	scoop	sqlite
+sqlite	emerge	dev-db/sqlite
+sqlite	pkg:sunos	database/sqlite-3
+sqlite	*	sqlite3
+sqlite-dev	apk	sqlite-dev
+sqlite-dev	dnf	sqlite-devel
+sqlite-dev	yum	sqlite-devel
+sqlite-dev	zypper	sqlite3-devel
+sqlite-dev	pacman	sqlite
+sqlite-dev	pkg	databases/sqlite3
+sqlite-dev	brew	sqlite
+sqlite-dev	pkg:sunos	database/sqlite-3
+sqlite-dev	*	libsqlite3-dev
+sqlite-tools	apk	sqlite
+sqlite-tools	dnf	sqlite
+sqlite-tools	yum	sqlite
+sqlite-tools	zypper	sqlite
+sqlite-tools	pacman	sqlite
+sqlite-tools	brew	sqlite
+sqlite-tools	winget	SQLite.SQLite
+sqlite-tools	choco	sqlite
+sqlite-tools	scoop	sqlite
+sqlite-tools	*	sqlite3
+sqlite3	apk	sqlite
+sqlite3	dnf	sqlite
+sqlite3	yum	sqlite
+sqlite3	brew	sqlite
+sqlite3	winget	SQLite.SQLite
+sqlite3	choco	sqlite
+sqlite3	scoop	sqlite
+sqlite3	emerge	dev-db/sqlite
+sqlite3	pkg:sunos	database/sqlite-3
+stack	pkg	hs-stack
+step-ca	pkg	step-certificates
+step-ca	brew	step
+step-ca	winget	Smallstep.step-ca
+supervisord	pkg	py311-supervisor
+supervisord	*	supervisor
+surrealdb	brew	surrealdb/tap/surreal
+surrealdb	winget	SurrealDB.SurrealDB
+surrealdb	choco	surreal
+surrealdb	scoop	surreal
+swift	apt-get	swiftlang
+swift	dnf	swift-lang
+swift	yum	swift-lang
+swift	pacman	swift-language
+swift	pkg	swift510
+swift	brew	swift
+swift	*	__UNSUPPORTED__
+swig	winget	SWIG.SWIG
+swipl	dnf	pl
+swipl	yum	pl
+swipl	winget	SWI-Prolog.SWI-Prolog
+swipl	*	swi-prolog
+swtpm	apt-get	swtpm swtpm-tools
+sysctl	apk	procps-ng
+sysctl	dnf	procps-ng
+sysctl	yum	procps-ng
+sysctl	zypper	procps-ng
+sysctl	pacman	procps-ng
+sysctl	*	procps
+systemd-boot	dnf	systemd-udev
+systemd-boot	yum	systemd-udev
+systemd-networkd	apt-get	systemd
+sysvinit	apk	openrc
+sysvinit	apt-get	sysvinit-utils
+sysvinit	dnf	procps-ng
+sysvinit	yum	procps-ng
+tailscale	winget	Tailscale.Tailscale
+tar	apk	__NONE__
+tar	pkg	__NONE__
+tar	brew	gnu-tar
+tar	winget	GnuWin32.Tar
+tcc	winget	Bellard.TCC
+tcc	emerge	dev-lang/tcc
+tcl	pkg	tcl86
+tcl	brew	tcl-tk
+tclsh	pkg	tcl86
+tclsh	brew	tcl-tk
+tclsh	*	tcl
+tensorboard	*	__UNSUPPORTED__
+terraform	winget	Hashicorp.Terraform
+timescaledb	apk	postgresql-timescaledb
+tinycc	winget	Bellard.TCC
+tinycc	emerge	dev-lang/tcc
+tinycc	*	tcc
+tofu	winget	OpenTofu.tofu
+tofu	*	opentofu
+tomcat	apt-get	tomcat10
+tomcat	pkg	tomcat101
+tomcat	winget	Apache.Tomcat.10
+traefik	winget	TraefikLabs.Traefik
+tree	winget	GnuWin32.Tree
+tree	emerge	app-text/tree
+triton	*	tritonserver
+typesense	brew	typesense/tap/typesense-server
+typesense	*	typesense-server
+unicorn	pkg	rubygem-unicorn
+unzip	winget	Info-ZIP.UnZip
+uvicorn	pkg	py312-uvicorn
+uwsgi	pkg	uwsgi-py312
+vagrant	winget	Hashicorp.Vagrant
+vala	apt-get	valac
+valac	apt-get	valac
+valac	*	vala
+valkey	winget	__UNSUPPORTED__
+valkey	choco	__UNSUPPORTED__
+varnish	pkg	varnish7
+varnish	emerge	www-servers/varnish
+varnish	pkg:sunos	ooce/server/varnish
+vault	winget	Hashicorp.Vault
+vcpkg-tool	*	vcpkg
+vector	brew	vectordotdev/brew/vector
+vector	winget	Datadog.Vector
+vim	dnf	vim-enhanced
+vim	yum	vim-enhanced
+vim	winget	vim.vim
+vim	emerge	app-editors/vim
+virtualbox	apt-get	virtualbox-7.0
+virtualbox	dnf	VirtualBox-7.0
+virtualbox	yum	VirtualBox-7.0
+virtualbox	winget	Oracle.VirtualBox
+vulkan-loader	apt-get	libvulkan1
+wait4x	brew	wait4x
+wait4x	*	__UNSUPPORTED__
+waitress	pkg	py312-waitress
+wasmtime	winget	BytecodeAlliance.Wasmtime
+wayland	apk	wayland-libs-client wayland-dev
+wayland	apt-get	libwayland-client0 libwayland-bin
+wayland	dnf	libwayland-client wayland-devel
+wayland	yum	libwayland-client wayland-devel
+wayland-protocols	dnf	wayland-protocols-devel
+wayland-protocols	yum	wayland-protocols-devel
+wimtools	dnf	wimlib-utils
+wimtools	yum	wimlib-utils
+wimtools	pacman	wimlib
+wimtools	brew	wimlib
+wireguard	winget	WireGuard.WireGuard
+wireguard	emerge	net-vpn/wireguard-tools
+wireguard	*	wireguard-tools
+wlroots	apt-get	libwlroots-0.18
+wlroots	pkg	wlroots020
+wpa_supplicant	apt-get	wpasupplicant
+wsl	winget	Microsoft.WSL
+xfce4	apk	xfce4
+xfce4	pkg	xfce4-wm xfce4-panel xfce4-session
+xfce4	*	xfce4-session xfwm4 xfce4-panel
+xmake	winget	xmake-io.xmake
+xmlsec	apk	xmlsec-dev libxml2-dev
+xmlsec	apt-get	libxmlsec1-dev libxmlsec1-openssl libxml2-dev
+xmlsec	dnf	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+xmlsec	yum	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+xmlsec	zypper	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+xmlsec	pacman	xmlsec libxml2
+xmlsec	pkg	security/xmlsec1 textproc/libxml2
+xmlsec	brew	libxmlsec1 libxml2
+xmlsec	pkg:sunos	library/security/xmlsec
+xmlsec	*	__UNSUPPORTED__
+xmlsec1	apk	xmlsec-dev libxml2-dev
+xmlsec1	apt-get	libxmlsec1-dev libxmlsec1-openssl libxml2-dev
+xmlsec1	dnf	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+xmlsec1	yum	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+xmlsec1	zypper	xmlsec1-devel xmlsec1-openssl-devel libxml2-devel
+xmlsec1	pacman	xmlsec libxml2
+xmlsec1	pkg	security/xmlsec1 textproc/libxml2
+xmlsec1	brew	libxmlsec1 libxml2
+xmlsec1	pkg:sunos	library/security/xmlsec
+xmlsec1	*	__UNSUPPORTED__
+xorg-server	apt-get	xserver-xorg-core
+xorg-server	dnf	xorg-x11-server-Xorg
+xorg-server	yum	xorg-x11-server-Xorg
+xwayland	dnf	xorg-x11-server-Xwayland
+xwayland	yum	xorg-x11-server-Xwayland
+xz	apt-get	xz-utils
+yq	pkg	go-yq
+yq	winget	MikeFarah.yq
+yq	emerge	app-misc/yq-go
+zeromq	apk	zeromq zeromq-dev
+zeromq	apt-get	libzmq3-dev
+zeromq	dnf	zeromq-devel
+zeromq	yum	zeromq-devel
+zeromq	zypper	zeromq-devel
+zeromq	pkg	libzmq4
+zeromq	emerge	net-libs/zeromq
+zfs	apt-get	zfsutils-linux
+zfs	brew	openzfs
+zip	winget	GnuWin32.Zip
+zip	emerge	app-arch/zip
+zstd	winget	Facebook.zstd

@@ -37,8 +37,18 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/ml-training/_common/tfrc_guard.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
+
 TPU_NAME="${TPU_NAME:-ml-eval-node}"
-TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-${DISK_SIZE_GB:-200}}"
+if libscript_tfrc_is_enabled; then
+  libscript_tfrc_enforce_zero_cost_env
+else
+  TPU_DATA_DISK_SIZE="${TPU_DATA_DISK_SIZE:-${DISK_SIZE_GB:-200}}"
+fi
 export TPU_NAME TPU_DATA_DISK_SIZE
 if [ -n "${DISK_NAME:-}" ]; then
   export DISK_NAME

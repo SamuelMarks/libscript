@@ -53,6 +53,11 @@ SQLITE_INSTALL_METHOD="${SQLITE_INSTALL_METHOD:-$(libscript_resolve_install_meth
 ACTION="${ACTION:-install}"
 VERSION="${SQLITE_VERSION:-${VERSION:-latest}}"
 
+if [ "${LIBSCRIPT_IMAGE_BUILD:-0}" = "1" ] && { [ "${LIBSCRIPT_TARGET_OS:-}" = "zephyr" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "freertos" ]; }; then
+  STACK='' "${SCRIPT_DIR}/rtos_build.sh"
+  exit 0
+fi
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'stable') to a concrete SQLite version string.
 resolve_exact_version() {

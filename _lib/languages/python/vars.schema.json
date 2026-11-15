@@ -57,5 +57,6 @@
       "default": "0",
       "description": "When set to 1, exports PYTHONHOME to the base LibScript Python installation directory if no virtualenv is active."
     }
-  }
+  },
+  "x-libscript-var-packs": ["source_toolchain"]
 }

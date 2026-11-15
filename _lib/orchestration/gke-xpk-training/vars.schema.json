@@ -40,5 +40,6 @@
       "description": "Docker container image containing training code and dependencies",
       "default": ""
     }
-  }
+  },
+  "x-libscript-var-packs": ["tpu"]
 }

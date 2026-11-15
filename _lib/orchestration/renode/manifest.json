@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "renode",
+  "title": "Renode Deterministic MCU/SoC Simulator",
+  "description": "Portable headless hardware/MCU/wireless multi-node simulation framework for Zephyr and FreeRTOS across Linux, macOS, and Windows.",
+  "category": "orchestration",
+  "provides": ["renode"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/renode/renode"
+}

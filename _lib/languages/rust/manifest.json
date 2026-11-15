@@ -9,5 +9,7 @@
   "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": [],
-  "repository": "https://github.com/rust-lang/rust"
+  "repository": "https://github.com/rust-lang/rust",
+  "rtos_support": ["zephyr", "freertos"],
+  "memory_footprint_class": "mcu-sram-64k"
 }

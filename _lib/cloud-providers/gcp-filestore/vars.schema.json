@@ -33,5 +33,6 @@
       "description": "Flag (0 or 1) indicating whether gcp-filestore is enabled in the execution plan."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-libscript-var-packs": ["cloud_tags"]
 }

@@ -37,3 +37,18 @@ add_custom_target(run
     COMMENT "Running libscript REST API Server..."
     USES_TERMINAL
 )
+
+enable_testing()
+add_test(
+    NAME dispatch_rtos_zephyr
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact rtos-zephyr firmware-uf2 sqlite qemu_cortex_m3
+)
+add_test(
+    NAME dispatch_rtos_freertos
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact rtos-freertos mcuboot-signed sqlite mps2_an385
+)
+add_test(
+    NAME reject_invalid_kernel
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact invalid-kernel firmware-elf sqlite
+)
+set_tests_properties(reject_invalid_kernel PROPERTIES WILL_FAIL TRUE)

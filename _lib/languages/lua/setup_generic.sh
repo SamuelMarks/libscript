@@ -46,6 +46,11 @@ LUA_INSTALL_METHOD="${LUA_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-sys
 ACTION="${ACTION:-install}"
 VERSION="${LUA_VERSION:-latest}"
 
+if [ "${LIBSCRIPT_IMAGE_BUILD:-0}" = "1" ] && { [ "${LIBSCRIPT_TARGET_OS:-}" = "zephyr" ] || [ "${LIBSCRIPT_TARGET_OS:-}" = "freertos" ]; }; then
+  STACK='' "${SCRIPT_DIR}/rtos_build.sh"
+  exit 0
+fi
+
 # ## resolve_exact_version
 # Resolves dynamic version aliases such as latest or lts into an exact upstream version string.
 resolve_exact_version() {

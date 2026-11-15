@@ -64,9 +64,18 @@ if "%~1"=="-h" (
 set "TPU_NAME=%TPU_NAME%"
 if "%TPU_NAME%"=="" set "TPU_NAME=ml-eval-node"
 
-set "TPU_DATA_DISK_SIZE=%TPU_DATA_DISK_SIZE%"
-if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=%DISK_SIZE_GB%"
-if "%TPU_DATA_DISK_SIZE%"=="" set "TPU_DATA_DISK_SIZE=200"
+if "%TFRC_STRICT%"=="1" set "_ML_TFRC=1"
+if "%LIBSCRIPT_TFRC_STRICT%"=="1" set "_ML_TFRC=1"
+if not "%TFRC_CONFIG%"=="" set "_ML_TFRC=1"
+if not "%LIBSCRIPT_TFRC_CONFIG%"=="" set "_ML_TFRC=1"
+if "!_ML_TFRC!"=="1" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_tfrc_enforce_zero_cost_env
+    if errorlevel 1 exit /b !errorlevel!
+) else (
+    set "TPU_DATA_DISK_SIZE=%TPU_DATA_DISK_SIZE%"
+    if "!TPU_DATA_DISK_SIZE!"=="" set "TPU_DATA_DISK_SIZE=%DISK_SIZE_GB%"
+    if "!TPU_DATA_DISK_SIZE!"=="" set "TPU_DATA_DISK_SIZE=200"
+)
 
 if "%GCP_PROJECT_ID%"=="" (
     echo [INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete.

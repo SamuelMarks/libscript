@@ -97,7 +97,7 @@ printf '%s\n' 'Running pre-commit hooks...'
 AUDIT_MODE='--staged'
 STAGED_FILES=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM)
 if [ "${1:-}" = "--all" ]; then
-    CHECK_FILES=$(git ls-files --cached --others --exclude-standard)
+    CHECK_FILES=$(git ls-files --cached --others --exclude-standard | while IFS= read -r _f; do [ -f "$_f" ] && printf '%s\n' "$_f"; done)
     AUDIT_MODE='--all'
 else
     CHECK_FILES="$STAGED_FILES"
@@ -220,7 +220,9 @@ if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     if [ -n "$_mod_readmes" ]; then
         if command -v dos2unix >/dev/null 2>&1; then printf '%s\n' "$_mod_readmes" | xargs -n 100 dos2unix -q 2>/dev/null || true; fi
         if command -v prettier >/dev/null 2>&1; then printf '%s\n' "$_mod_readmes" | xargs -n 100 prettier --write >/dev/null 2>&1 || true; fi
-        printf '%s\n' "$_mod_readmes" | xargs -n 100 git add -- 2>/dev/null || true
+        if [ -n "$STAGED_FILES" ]; then
+            printf '%s\n' "$_mod_readmes" | xargs -n 100 git add -- 2>/dev/null || true
+        fi
     fi
 fi
 
@@ -246,6 +248,8 @@ if ! git diff --quiet -- README.md 2>/dev/null; then
         npx --yes prettier --write README.md >/dev/null 2>&1 || true
     fi
 
-    git add README.md
+    if [ -n "$STAGED_FILES" ]; then
+        git add README.md
+    fi
 fi
 printf '%s\n' 'Pre-commit hook completed successfully.'

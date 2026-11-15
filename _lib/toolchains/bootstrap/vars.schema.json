@@ -15,5 +15,6 @@
       "description": "How to install BOOTSTRAP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
       "default": "system"
     }
-  }
+  },
+  "x-libscript-var-packs": ["image_synth"]
 }
