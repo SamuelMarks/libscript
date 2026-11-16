@@ -170,6 +170,9 @@ normalize_component_alias() {
     stacks/task-queues/celery) printf '%s\n' "_lib/web-apps/celery" ;;
     stacks/virtualization/bento-builder) printf '%s\n' "_lib/virtualization/bento-builder" ;;
     toolchains/gemma-tpu-suite|gemma_tpu_suite|gemma-tpu-suite) printf '%s\n' "_lib/toolchains/gemma-tpu-suite" ;;
+    freebsd-distro|freebsd_distro) printf '%s\n' '_lib/freebsd/distro' ;;
+    illumos-distro|illumos_distro) printf '%s\n' '_lib/illumos/distro' ;;
+    reactos-distro|reactos_distro) printf '%s\n' '_lib/reactos/distro' ;;
     ai-tools/ollama|_lib/ai-tools/ollama) printf '%s\n' "_lib/app-servers/ollama" ;;
     *) printf '%s\n' "${1:-}" ;;
   esac

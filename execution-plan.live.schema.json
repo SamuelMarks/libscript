@@ -22,7 +22,7 @@
         "scheme": {
           "type": "string",
           "enum": ["gpt", "mbr", "vtoc", "gpt-dual-os", "gpt-multiboot", "mbr-multiboot"],
-          "description": "Partition table format (gpt for modern UEFI, mbr for legacy BIOS, vtoc for illumos, gpt-dual-os for concurrent dual boot, gpt-multiboot / mbr-multiboot for triple-boot Linux + FreeBSD + illumos)"
+          "description": "Partition table format (gpt for modern UEFI, mbr for legacy BIOS, vtoc for illumos, gpt-dual-os for concurrent dual boot, gpt-multiboot / mbr-multiboot for multi-OS Linux + FreeBSD + illumos + ReactOS quad-boot)"
         },
         "wipe_existing": {
           "type": "boolean",
@@ -101,7 +101,7 @@
       "properties": {
         "family": {
           "type": "string",
-          "enum": ["linux", "freebsd", "illumos"],
+          "enum": ["linux", "freebsd", "illumos", "reactos"],
           "description": "Operating system kernel family"
         },
         "flavor": {
@@ -110,7 +110,7 @@
         },
         "filesystem": {
           "type": "string",
-          "enum": ["ext4", "xfs", "btrfs", "ufs2", "zfs", "fat32"],
+          "enum": ["ext4", "xfs", "btrfs", "ufs2", "zfs", "fat32", "ntfs"],
           "description": "Root filesystem formatter or pool type"
         },
         "pool_name": {
@@ -121,7 +121,7 @@
     },
     "concurrent_distributions": {
       "type": "array",
-      "description": "Optional secondary operating systems deployed concurrently onto separate partitions (e.g. Linux + FreeBSD dual-boot)",
+      "description": "Optional secondary operating systems deployed concurrently onto separate partitions (e.g. Linux + FreeBSD + illumos + ReactOS multiboot)",
       "items": {
         "type": "object",
         "description": "Secondary operating system distribution target specification",
@@ -129,7 +129,7 @@
         "properties": {
           "family": {
             "type": "string",
-            "enum": ["linux", "freebsd", "illumos"],
+            "enum": ["linux", "freebsd", "illumos", "reactos"],
             "description": "Kernel family for secondary co-installed OS"
           },
           "flavor": {

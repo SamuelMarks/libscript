@@ -375,6 +375,9 @@ or native Windows) for side-by-side differential comparison (`packaging/compare_
 
 # Run the unified cross-platform msi-rs & ../bento Vagrant test matrix:
 ./tests/test_msi_vagrant_matrix.sh
+
+# Run the declarative Open edX installer-e2e campaign (headless, quick, custom modes on clean vanilla snapshots):
+./libscript.sh experiment run openedx --bento-prefix=bento --target-os=windows-11 --pkg-format=msi --pkg-source=github-release
 ```
 
 ### Multi-OS Window-Cropped Screenshot Archive (`../cc0-assets/libscript`)

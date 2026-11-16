@@ -43,7 +43,7 @@ show_help() {
   printf '
 '
   printf '%s\n' 'Targets:'
-  printf '%s\n' '  --target <linux|freebsd|illumos|all>   Target OS distribution family (default: all)'
+  printf '%s\n' '  --target <linux|freebsd|illumos|reactos|all>  Target OS distribution family (default: all)'
   printf '
 '
   printf '%s\n' 'Modes:'
@@ -136,6 +136,17 @@ build_illumos() {
   "${REPO_ROOT}/_lib/illumos/distro/live_illumos.sh" "$_out" "${REPO_ROOT}/build/live-illumos-stage"
 }
 
+# ## build_reactos
+# Builds live ReactOS media.
+build_reactos() {
+  _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-reactos-live.iso}"
+  printf '[ORCHESTRATE] Building Live ReactOS installer (%s)...\n' "$MODE"
+  if [ -n "$COMPONENTS_CSV" ]; then
+    LIBSCRIPT_TARGET_OS='reactos' STACK='' "${REPO_ROOT}/_lib/package-managers/msi-rs/workloads/components.sh" "${REPO_ROOT}/build/live-reactos-stage/iso_root" "$COMPONENTS_CSV"
+  fi
+  "${REPO_ROOT}/_lib/reactos/distro/live_reactos.sh" "$_out" "${REPO_ROOT}/build/live-reactos-stage"
+}
+
 case "$TARGET_OS" in
   linux)
     build_linux
@@ -146,10 +157,14 @@ case "$TARGET_OS" in
   illumos)
     build_illumos
     ;;
+  reactos)
+    build_reactos
+    ;;
   all)
     build_linux
     build_freebsd
     build_illumos
+    build_reactos
     ;;
   *)
     printf '[ERROR] Unsupported target OS: %s\n' "$TARGET_OS" >&2

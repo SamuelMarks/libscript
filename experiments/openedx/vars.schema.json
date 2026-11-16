@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/experiments/openedx/vars.schema.json",
+  "title": "Open edX Installer Experiment Variables",
+  "description": "Suite-specific CLI and environment overrides for the Open edX Vagrant, installer, and guest UI verification campaign.",
+  "type": "object",
+  "properties": {
+    "TARGET_OS": {
+      "type": "string",
+      "default": "windows-11",
+      "description": "Target guest OS booted via Vagrant from the configured Bento fork (e.g., windows-11, debian-13, rockylinux-10.2, macos-14-arm64)."
+    },
+    "BENTO_PREFIX": {
+      "type": "string",
+      "default": "bento",
+      "description": "Configurable Vagrant box namespace or Bento fork prefix."
+    },
+    "BENTO_DIR": {
+      "type": "string",
+      "description": "Optional path to a local Bento fork checkout containing built .box images."
+    },
+    "PROVIDER": {
+      "type": "string",
+      "enum": ["auto", "virtualbox", "libvirt", "hyperv", "vmware_desktop", "qemu", "utm"],
+      "default": "auto",
+      "description": "Vagrant hypervisor provider used to run guest VMs."
+    },
+    "PKG_FORMAT": {
+      "type": "string",
+      "enum": ["auto", "msi", "exe", "deb", "rpm", "pkg", "dmg"],
+      "default": "msi",
+      "description": "Target native installer format evaluated inside the guest VM."
+    },
+    "PKG_SOURCE": {
+      "type": "string",
+      "enum": ["github-release", "build"],
+      "default": "github-release",
+      "description": "Whether to download the target package from GitHub Releases or build anew on the host."
+    },
+    "RELEASE_REPO": {
+      "type": "string",
+      "default": "SamuelMarks/libscript",
+      "description": "GitHub owner/repository queried when PKG_SOURCE is github-release."
+    },
+    "RELEASE_TAG": {
+      "type": "string",
+      "default": "latest",
+      "description": "GitHub Release tag or latest."
+    },
+    "INSTALL_MODES": {
+      "type": "string",
+      "default": "headless,quick,custom",
+      "description": "Comma-separated installation modes executed individually on clean vanilla VM snapshots."
+    },
+    "FORCE_REBUILD": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Set to 1 to force re-downloading/rebuilding packages and re-running converged install modes."
+    },
+    "DRY_RUN": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Set to 1 to emit the resolved execution plan and ordered verification matrix without starting Vagrant."
+    }
+  }
+}

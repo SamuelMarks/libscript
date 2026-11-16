@@ -984,6 +984,7 @@ paths:
                     - linux-musl
                     - freebsd
                     - illumos
+                    - reactos
                     - unikernel-unikraft
                     - unikernel-nanos
                     - unikernel-osv
@@ -1015,6 +1016,7 @@ paths:
                     - inno
                     - nsis
                     - tui
+                    - iso
                     - live-iso
                     - live-usb
                     - raw

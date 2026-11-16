@@ -14,6 +14,7 @@ $manifestSchemaPath = Join-Path $repoRoot "_lib\_common\manifest.schema.json"
 $osConfigSchemaPath = Join-Path $repoRoot "os-config.schema.json"
 $freebsdSchemaPath = Join-Path $repoRoot "execution-plan.freebsd.schema.json"
 $illumosSchemaPath = Join-Path $repoRoot "execution-plan.illumos.schema.json"
+$reactosSchemaPath = Join-Path $repoRoot "execution-plan.reactos.schema.json"
 $rtosSchemaPath = Join-Path $repoRoot "execution-plan.rtos.schema.json"
 $execCommonSchemaPath = Join-Path $repoRoot "schemas\execution-plan-common.schema.json"
 $rootLibscriptSchemaPath = Join-Path $repoRoot "libscript.schema.json"
@@ -293,6 +294,7 @@ function Test-RootSchemasAndProfiles {
     $osSchema = if (Test-Path -LiteralPath $osConfigSchemaPath) { Get-Content -LiteralPath $osConfigSchemaPath -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
     $fbSchema = if (Test-Path -LiteralPath $freebsdSchemaPath) { Get-Content -LiteralPath $freebsdSchemaPath -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
     $ilSchema = if (Test-Path -LiteralPath $illumosSchemaPath) { Get-Content -LiteralPath $illumosSchemaPath -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
+    $roSchema = if (Test-Path -LiteralPath $reactosSchemaPath) { Get-Content -LiteralPath $reactosSchemaPath -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
 
     Get-ChildItem -LiteralPath $profilesDir -Filter "*.json" -Recurse -File | ForEach-Object {
         $pfPath = $_.FullName
@@ -317,6 +319,13 @@ function Test-RootSchemasAndProfiles {
             foreach ($r in @($ilSchema.required)) {
                 if ($pfProps -notcontains $r) {
                     [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: missing required illumos field: $r")
+                    $script:errorsCount++
+                }
+            }
+        } elseif ($fam -eq "reactos" -and $null -ne $roSchema) {
+            foreach ($r in @($roSchema.required)) {
+                if ($pfProps -notcontains $r) {
+                    [Console]::Error.WriteLine("[STANDARDS VIOLATION] [PROFILE_SCHEMA] ${relPf}: missing required ReactOS field: $r")
                     $script:errorsCount++
                 }
             }

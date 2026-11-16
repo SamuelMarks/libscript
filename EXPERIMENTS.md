@@ -349,3 +349,23 @@ and `jax_native`):
 :: Windows Batch equivalent (quote '=' and ',' flags for cmd.exe)
 call ..\libscript\libscript.cmd experiment tpu_matrix "--tfrc-config=tfrc.policy.json" "--repo-dir=." "--model=google/gemma-4-E4B" "--backends=hf_transformers,pytorch_native,keras_jax,keras_tensorflow,keras_pytorch,maxtext,jax_native" "--subsuites=E0,E1,E2,E3,E4"
 ```
+
+---
+
+## 9. Declarative Cross-OS Installer & Guest-UI Experiment Plugins (`substrate: "installer-e2e"`)
+
+Any stack with a `_lib/<category>/<app>/packaging.json` manifest (`openedx`, `wordpress`, `odoo`,
+etc.) can run end-to-end Vagrant + native package + guest UI/browser login experiments via
+`_lib/_common/experiment/pkg_ui_runner.{sh,cmd}` without writing custom runner logic:
+
+```sh
+# Run Open edX MSI from GitHub Releases across headless, quick, and custom modes on clean vanilla snapshots
+./libscript.sh experiment run openedx --bento-prefix=bento --target-os=windows-11 --pkg-format=msi --pkg-source=github-release
+
+# Build Debian .deb anew on the host and verify inside a Debian 13 Bento VM
+./libscript.sh experiment run openedx --bento-prefix=bento --target-os=debian-13 --pkg-format=deb --pkg-source=build
+
+# Scaffold zero-code installer-e2e suites for Odoo or WordPress
+./libscript.sh experiment scaffold odoo --template=installer-e2e
+./libscript.sh experiment scaffold wordpress --template=installer-e2e
+```

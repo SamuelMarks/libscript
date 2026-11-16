@@ -86,6 +86,7 @@ set "SCAF_PORTS="
 set "SCAF_ENABLE_HOOKS=false"
 set "SCAF_MULTITENANT=false"
 set "SCAF_TEST_CMD="
+set "SCAF_PKG_RAPPS="
 
 :: ## parse_args
 :: Parses CLI flags for the Windows component scaffolder.
@@ -245,6 +246,7 @@ for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Cont
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.download_url_template_unix) { $j.download_url_template_unix }"`) do set "SCAF_URL_UNIX=%%V"
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.download_url_template_windows) { $j.download_url_template_windows }"`) do set "SCAF_URL_WINDOWS=%%V"
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.releases_url) { $j.releases_url }"`) do set "SCAF_RELEASES_URL=%%V"
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.pkg_mappings -and $j.pkg_mappings.rapps) { $j.pkg_mappings.rapps }"`) do set "SCAF_PKG_RAPPS=%%V"
 exit /b 0
 
 :: ## run_interactive_prompter

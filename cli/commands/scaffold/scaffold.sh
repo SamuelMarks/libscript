@@ -124,6 +124,7 @@ SCAF_PKG_BREW=''
 SCAF_PKG_WINGET=''
 SCAF_PKG_CHOCO=''
 SCAF_PKG_SCOOP=''
+SCAF_PKG_RAPPS=''
 SCAF_PKG_FREEBSD=''
 
 # ## compute_comp_prefix
@@ -157,7 +158,7 @@ validate_os_list() {
     _os_trim=$(printf '%s' "$_os_item" | tr -d '[:space:]')
     [ -z "$_os_trim" ] && continue
     case "$_os_trim" in
-      all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)
+      all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|reactos|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)
         ;;
       *)
         IFS="$_oifs"
@@ -175,7 +176,7 @@ validate_os_list() {
 validate_category_name() {
   _cat="$1"
   case "$_cat" in
-    ai-serving|app-servers|audio|base-system|bootloaders|caches|cloud|cloud-providers|databases|desktops|display-managers|display-servers|freebsd|git-servers|graphics|illumos|init-systems|kernel|languages|logging|message-brokers|ml-training|networking|orchestration|package-managers|runtimes|search|security|storage|storage-layers|toolchains|utilities|virtualization|web-apps|web-servers)
+    ai-serving|app-servers|audio|base-system|bootloaders|caches|cloud|cloud-providers|databases|desktops|display-managers|display-servers|freebsd|git-servers|graphics|illumos|init-systems|kernel|languages|logging|message-brokers|ml-training|networking|orchestration|package-managers|reactos|runtimes|search|security|storage|storage-layers|toolchains|utilities|virtualization|web-apps|web-servers)
       return 0
       ;;
     *)
@@ -321,6 +322,7 @@ parse_json_spec() {
     SCAF_PKG_WINGET=$(jq -r '.pkg_mappings["winget"] // empty' "$_spec_file" 2>/dev/null || true)
     SCAF_PKG_CHOCO=$(jq -r '.pkg_mappings["choco"] // empty' "$_spec_file" 2>/dev/null || true)
     SCAF_PKG_SCOOP=$(jq -r '.pkg_mappings["scoop"] // empty' "$_spec_file" 2>/dev/null || true)
+    SCAF_PKG_RAPPS=$(jq -r '.pkg_mappings["rapps"] // empty' "$_spec_file" 2>/dev/null || true)
     SCAF_PKG_FREEBSD=$(jq -r '.pkg_mappings["pkg"] // empty' "$_spec_file" 2>/dev/null || true)
   fi
 }
@@ -2689,7 +2691,7 @@ EOF
 # ## register_pkg_mappings
 # Idempotently checks or logs native OS package mappings in _lib/_common/pkg_mapper.{sh,cmd}.
 register_pkg_mappings() {
-  if [ -z "$SCAF_PKG_APT" ] && [ -z "$SCAF_PKG_APK" ] && [ -z "$SCAF_PKG_DNF" ] && [ -z "$SCAF_PKG_PACMAN" ] && [ -z "$SCAF_PKG_BREW" ] && [ -z "$SCAF_PKG_WINGET" ] && [ -z "$SCAF_PKG_CHOCO" ] && [ -z "$SCAF_PKG_SCOOP" ] && [ -z "$SCAF_PKG_FREEBSD" ]; then
+  if [ -z "$SCAF_PKG_APT" ] && [ -z "$SCAF_PKG_APK" ] && [ -z "$SCAF_PKG_DNF" ] && [ -z "$SCAF_PKG_PACMAN" ] && [ -z "$SCAF_PKG_BREW" ] && [ -z "$SCAF_PKG_WINGET" ] && [ -z "$SCAF_PKG_CHOCO" ] && [ -z "$SCAF_PKG_SCOOP" ] && [ -z "$SCAF_PKG_RAPPS" ] && [ -z "$SCAF_PKG_FREEBSD" ]; then
     return 0
   fi
   _mapper_sh="${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mapper.sh"

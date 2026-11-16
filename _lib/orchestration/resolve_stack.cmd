@@ -74,7 +74,11 @@ if errorlevel 1 (
 )
 
 set "TARGET_OS=windows"
-if not "%LIBSCRIPT_TARGET_OS%"=="" set "TARGET_OS=%LIBSCRIPT_TARGET_OS%"
+if "%IS_REACTOS%"=="1" set "TARGET_OS=reactos"
+if not "%LIBSCRIPT_TARGET_OS%"=="" (
+    set "TARGET_OS=%LIBSCRIPT_TARGET_OS%"
+    if /I "!TARGET_OS:~0,7!"=="reactos" set "TARGET_OS=reactos"
+)
 
 jq -e "." "!CONFIG_FILE!" >nul 2>nul
 if errorlevel 1 (

@@ -1,0 +1,114 @@
+{
+  "$schema": "../../experiment-suite.schema.json",
+  "id": "openedx",
+  "title": "Open edX Multi-OS Vagrant, Native Installer & Guest-UI Verification Suite",
+  "protocol_version": "1.0.0",
+  "substrate": "installer-e2e",
+  "required_components": ["jq"],
+  "vars_schema_ref": "./vars.schema.json",
+  "outputs": {
+    "metrics_json": "metrics.json",
+    "screenshots_dir": "screenshots"
+  },
+  "installer_e2e": {
+    "packaging_manifest": "../../_lib/web-apps/openedx/packaging.json",
+    "vagrant": {
+      "bento_prefix": "bento",
+      "default_target_os": "windows-11",
+      "supported_target_oses": [
+        "windows-11",
+        "debian-13",
+        "rockylinux-10.2",
+        "freebsd-15.1",
+        "macos-14-arm64",
+        "alpine-3.24",
+        "omnios"
+      ],
+      "provider": "auto",
+      "vanilla_snapshot_name": "vanilla",
+      "cpus": 4,
+      "memory_mb": 8192,
+      "clean_state_probes": [
+        {
+          "kind": "path_absent",
+          "target": "C:/Program Files/OpenEdX",
+          "os_family": "windows"
+        },
+        {
+          "kind": "path_absent",
+          "target": "C:/OpenEdXCustom",
+          "os_family": "windows"
+        },
+        {
+          "kind": "path_absent",
+          "target": "/opt/openedx",
+          "os_family": "posix"
+        },
+        {
+          "kind": "port_closed",
+          "target": "8000",
+          "os_family": "any"
+        },
+        {
+          "kind": "port_closed",
+          "target": "8001",
+          "os_family": "any"
+        }
+      ]
+    },
+    "artifact": {
+      "default_format": "msi",
+      "supported_formats": ["msi", "exe", "deb", "rpm", "pkg", "dmg"],
+      "default_source": "github-release",
+      "release_repo": "SamuelMarks/libscript",
+      "release_tag": "latest",
+      "release_asset_patterns": {
+        "msi": "(?i)openedx.*\\.msi$",
+        "exe": "(?i)openedx.*\\.exe$",
+        "deb": "(?i)openedx.*\\.deb$",
+        "rpm": "(?i)openedx.*\\.rpm$",
+        "pkg": "(?i)openedx.*\\.pkg$",
+        "dmg": "(?i)openedx.*\\.dmg$"
+      },
+      "build_variant": "offline"
+    },
+    "install_matrix": {
+      "modes": ["headless", "quick", "custom"],
+      "isolate_each_mode_via_snapshot": true,
+      "capture_wizard_dialogs": true,
+      "custom_mode_overrides": {
+        "install_dir_windows": "C:\\OpenEdXCustom",
+        "install_dir_posix": "/opt/openedx-custom",
+        "enable_features": ["core", "workers", "demo_content"]
+      }
+    },
+    "verification": {
+      "capture_desktop_icons": "if-applicable",
+      "service_ready_timeout_sec": 300,
+      "browser_preference": ["msedge", "chromium", "google-chrome", "firefox"],
+      "inherit_packaging_verification_screenshots": true
+    }
+  },
+  "subsuites": [
+    {
+      "id": "E0",
+      "title": "Bento Fork Vanilla VM Snapshot & Package Resolution (GitHub Release or Host Build)",
+      "outputs": ["metrics.json"]
+    },
+    {
+      "id": "E1",
+      "title": "Headless Clean-Snapshot Install + Desktop, LMS & Studio CMS Login Verification",
+      "outputs": ["metrics.json"]
+    },
+    {
+      "id": "E2",
+      "title": "Quick GUI Clean-Snapshot Install + Desktop, LMS & Studio CMS Login Verification",
+      "outputs": ["metrics.json"]
+    },
+    {
+      "id": "E3",
+      "title": "Custom GUI Clean-Snapshot Install + Desktop, LMS & Studio CMS Login Verification",
+      "outputs": ["metrics.json"]
+    }
+  ]
+}

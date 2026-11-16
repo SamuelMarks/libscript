@@ -104,6 +104,7 @@ int rest_is_valid_kernel_target(const char *kernel) {
             strcmp(kernel, "linux-musl") == 0 ||
             strcmp(kernel, "freebsd") == 0 ||
             strcmp(kernel, "illumos") == 0 ||
+            strcmp(kernel, "reactos") == 0 ||
             strcmp(kernel, "unikernel-unikraft") == 0 ||
             strcmp(kernel, "unikernel-nanos") == 0 ||
             strcmp(kernel, "unikernel-osv") == 0 ||
@@ -121,7 +122,8 @@ int rest_is_valid_artifact_format(const char *fmt) {
     if (fmt == NULL) {
         return 0;
     }
-    return (strcmp(fmt, "live-iso") == 0 ||
+    return (strcmp(fmt, "iso") == 0 ||
+            strcmp(fmt, "live-iso") == 0 ||
             strcmp(fmt, "live-usb") == 0 ||
             strcmp(fmt, "raw") == 0 ||
             strcmp(fmt, "qcow2") == 0 ||

@@ -88,6 +88,8 @@ if /i "%PKG_TYPE%"=="illumos-distro" goto do_illumos_distro
 if /i "%PKG_TYPE%"=="illumos_distro" goto do_illumos_distro
 if /i "%PKG_TYPE%"=="freebsd-distro" goto do_freebsd_distro
 if /i "%PKG_TYPE%"=="freebsd_distro" goto do_freebsd_distro
+if /i "%PKG_TYPE%"=="reactos-distro" goto do_reactos_distro
+if /i "%PKG_TYPE%"=="reactos_distro" goto do_reactos_distro
 if /i "%PKG_TYPE%"=="unikernel" goto do_unikernel
 if /i "%PKG_TYPE%"=="docker-image" goto do_container_base
 if /i "%PKG_TYPE%"=="oci-image" goto do_container_base
@@ -265,6 +267,12 @@ exit /b %ERRORLEVEL%
 :: Synthesizes a FreeBSD distribution sysroot or installer image.
 :do_freebsd_distro
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\freebsd_distro.cmd" %*
+exit /b %ERRORLEVEL%
+
+:: ## do_reactos_distro
+:: Synthesizes a ReactOS distribution sysroot, unattended ISO, or virtual disk image.
+:do_reactos_distro
+call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\reactos_distro.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_unikernel

@@ -1,9 +1,9 @@
 @echo off
 :: # capture_openedx_vagrant_screenshots.cmd
 :: ## Overview
-:: Automates launching Open edX Windows Installer (.msi) wizard inside Vagrant Windows 11, executing offline and online installation workflows, restoring vanilla snapshot checkpoints, stepping through every enumeration (Simple Mode and Advanced Mode flows), capturing pixel-perfect screenshots of every wizard step, desktop icons, and browser validation tabs directly from the live QEMU display framebuffer.
+:: Backward-compatible Windows wrapper delegating Open edX Vagrant MSI screenshot capture to `libscript.cmd experiment run openedx`.
 :: ## Usage
-:: capture_openedx_vagrant_screenshots.cmd devtools/capture_openedx_vagrant_screenshots.cmd
+:: capture_openedx_vagrant_screenshots.cmd [--target-os=windows-11] [--pkg-source=build|github-release] [--dry-run=1]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -15,10 +15,8 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
     call :find_root
@@ -28,73 +26,16 @@ goto :root_found
 :: ## find_root
 :: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
-if exist "!d!\libscript.cmd" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
-if exist "!d!\ROOT" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
+if exist "!d!\libscript.cmd" ( set "LIBSCRIPT_ROOT_DIR=!d!" & exit /b 0 )
+if exist "!d!\ROOT" ( set "LIBSCRIPT_ROOT_DIR=!d!" & exit /b 0 )
 for %%P in ("!d!") do set "parent=%%~dpP"
 set "d=!parent:~0,-1!"
-if "!d!"=="" (
-    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-    exit /b 1
-)
+if "!d!"=="" ( echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2 & exit /b 1 )
 goto :find_root
 
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-
-
-if /i "%~1"=="--help" goto :show_help
-if /i "%~1"=="-h" goto :show_help
-if /i "%~1"=="/?" goto :show_help
-if /i "%~1"=="-?" goto :show_help
-
-goto :parse_args
-
-:: ## show_help
-:: Displays usage and help information for the screenshot capture tool.
-:show_help
-echo Usage: %~nx0 [--help]
-echo.
-echo Automates capturing pixel-perfect screenshots of the Open edX MSI installer
-echo running inside the Vagrant Windows 11 guest VM.
-echo.
-echo Options:
-echo   --help, -h, /?, -?  Show this help message and exit.
-exit /b 0
-
-:: ## parse_args
-:: Parses command-line arguments.
-:parse_args
-goto :main
-
-:: ## main
-:: Executes primary orchestration routine.
-:main
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-
-where sh.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    sh.exe "%SCRIPT_DIR%\capture_openedx_vagrant_screenshots.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
-where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\capture_openedx_vagrant_screenshots.ps1" %*
-    exit /b %ERRORLEVEL%
-)
-
-where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    pwsh -NoProfile -File "%SCRIPT_DIR%\capture_openedx_vagrant_screenshots.ps1" %*
-    exit /b %ERRORLEVEL%
-)
-
-echo [ERROR] POSIX sh or PowerShell interpreter not found to run screenshot automation. >&2
-exit /b 1
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment run openedx "--target-os=windows-11" "--pkg-format=msi" %*
+exit /b !errorlevel!

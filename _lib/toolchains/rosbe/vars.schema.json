@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/rosbe/vars.schema.json",
+  "title": "rosbe variables",
+  "description": "Configuration variables for the ReactOS Build Environment (rosbe) toolchain component",
+  "type": "object",
+  "properties": {
+    "ROSBE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Installation strategy for rosbe ('libscript_native' provisions isolated RosBE directory, 'system' uses host MinGW-w64 + CMake + Ninja).",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "ROSBE_VERSION": {
+      "type": "string",
+      "description": "Specific release version of ReactOS Build Environment to provision.",
+      "default": "2.2.1",
+      "version_aliases": ["latest", "2.2.1"]
+    },
+    "ROSBE_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading the prebuilt RosBE-Unix or RosBE-Windows archive."
+    },
+    "ROSBE_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying available upstream RosBE release versions."
+    },
+    "LIBSCRIPT_ROSBE_VERSION": {
+      "type": "string",
+      "description": "Override version of RosBE used during ReactOS source compilation.",
+      "default": "2.2.1"
+    },
+    "LIBSCRIPT_ROSBE_ARCH": {
+      "type": "string",
+      "description": "Active ReactOS target architecture exposed by RosBE ('i386' for 32-bit i686 or 'amd64' for 64-bit x86_64).",
+      "enum": ["i386", "amd64"],
+      "default": "i386"
+    },
+    "LIBSCRIPT_ROSBE_URL": {
+      "type": "string",
+      "description": "Custom mirror URL for fetching the RosBE cross-compiler bundle."
+    },
+    "LIBSCRIPT_ROSBE_INSTALL_DIR": {
+      "type": "string",
+      "description": "Custom destination directory for isolated RosBE toolchain installation."
+    }
+  }
+}

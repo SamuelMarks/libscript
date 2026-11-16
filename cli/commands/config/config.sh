@@ -127,6 +127,8 @@ if [ -n "$VALIDATE_FILE" ]; then
       active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.freebsd.schema.json"
     elif jq -e '.illumos_version != null or ((.target.os_family == "illumos" or .target.os_family == "sunos") and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
       active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.illumos.schema.json"
+    elif jq -e '.reactos_version != null or (.target.os_family == "reactos" and .kernel == null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
+      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.reactos.schema.json"
     fi
     # Check top-level required fields
     missing_fields=$(jq -r --slurpfile schema "$active_schema" '
@@ -171,7 +173,9 @@ else
     "12" "zephyr-qemu-x86_64-minimal" \
     "13" "zephyr-cortex-m3-mcuboot-signed" \
     "14" "freertos-cortex-m3-mps2-minimal" \
-    "15" "freertos-riscv64-static-safety")
+    "15" "freertos-riscv64-static-safety" \
+    "16" "reactos-desktop-classic-i686" \
+    "17" "reactos-nightly-x86_64")
 
   case "$selected" in
     1) TARGET_PROFILE="linux-minimal-headless-musl" ;;
@@ -189,6 +193,8 @@ else
     13) TARGET_PROFILE="zephyr-cortex-m3-mcuboot-signed" ;;
     14) TARGET_PROFILE="freertos-cortex-m3-mps2-minimal" ;;
     15) TARGET_PROFILE="freertos-riscv64-static-safety" ;;
+    16) TARGET_PROFILE='reactos-desktop-classic-i686' ;;
+    17) TARGET_PROFILE='reactos-nightly-x86_64' ;;
     *) TARGET_PROFILE="linux-standard-server-glibc" ;;
   esac
   profile_path="${LIBSCRIPT_ROOT_DIR}/profiles/${TARGET_PROFILE}.json"

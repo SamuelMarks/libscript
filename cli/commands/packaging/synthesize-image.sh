@@ -48,7 +48,7 @@ OFFLINE_MODE="${LIBSCRIPT_OFFLINE:-0}"
 show_help() {
   printf 'Usage: libscript build-image | build-installer [OPTIONS]\n\n'
   printf 'Options:\n'
-  printf '  --kernel=<kernel>        Target kernel: linux, linux-glibc, linux-musl, freebsd, illumos,\n'
+  printf '  --kernel=<kernel>        Target kernel: linux, linux-glibc, linux-musl, freebsd, illumos, reactos,\n'
   printf '                           unikraft, nanos, osv, rumprun, mirageos, firecracker,\n'
   printf '                           zephyr, rtos-zephyr, freertos, rtos-freertos\n'
   printf '  --board=<board>          RTOS board/port: qemu_x86_64, qemu_cortex_m3, qemu_riscv64, native_sim,\n'
@@ -148,6 +148,16 @@ case "$KERNEL" in
     INIT_PROV='smf'
     BOOTLOADER='illumos-loader'
     RESOLVE_OS='sunos'
+    ;;
+  reactos)
+    OS_FAMILY='reactos'
+    LIBC='msvcrt'
+    KPROVIDER='reactos-ntoskrnl'
+    INIT_PROV='nt-scm'
+    BOOTLOADER='freeldr'
+    RESOLVE_OS='reactos'
+    [ -n "$TARGET_ARCH" ] || TARGET_ARCH='i686'
+    [ -n "$FORMAT" ] || FORMAT='iso'
     ;;
   unikraft|unikernel-unikraft)
     OS_FAMILY='unikernel-unikraft'
@@ -396,6 +406,8 @@ case "$FORMAT" in
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/freebsd_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
     elif [ "$RESOLVE_OS" = "sunos" ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/illumos_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    elif [ "$RESOLVE_OS" = 'reactos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/iso.sh" "$SYSROOT_DIR" "$OUT_PATH"
     fi
@@ -405,6 +417,8 @@ case "$FORMAT" in
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/freebsd_raw.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
     elif [ "$RESOLVE_OS" = "sunos" ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/illumos_raw.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
+    elif [ "$RESOLVE_OS" = 'reactos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_raw.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/raw_img.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
     fi
@@ -414,18 +428,32 @@ case "$FORMAT" in
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/freebsd_qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
     elif [ "$RESOLVE_OS" = "sunos" ]; then
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/illumos_qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" 16
+    elif [ "$RESOLVE_OS" = 'reactos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
     else
       STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" qcow2 16
     fi
     ;;
   vmdk)
-    STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" vmdk 16
+    if [ "$RESOLVE_OS" = 'reactos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_vmdk.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
+    else
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/qcow2.sh" "$SYSROOT_DIR" "$OUT_PATH" vmdk 16
+    fi
     ;;
   vhd|vhdx)
-    STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/hyperv_img.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    if [ "$RESOLVE_OS" = 'reactos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_vhd.sh" "$SYSROOT_DIR" "$OUT_PATH" 8
+    else
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/hyperv_img.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    fi
     ;;
   vagrant-box)
-    STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    if [ "$RESOLVE_OS" = 'reactos' ]; then
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/reactos_vagrant_box.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    else
+      STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh" "$SYSROOT_DIR" "$OUT_PATH"
+    fi
     ;;
   zfs-stream)
     STACK='' "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/zfs_stream.sh" "$SYSROOT_DIR" "$OUT_PATH"

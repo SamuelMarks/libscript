@@ -93,7 +93,7 @@ audit_component_dir() {
   case "$_caps_space" in
     *' versioned-artifact '*)
       case "$_rel_dir" in
-        _lib/cloud/*|_lib/cloud-providers/*|_lib/orchestration/*|_lib/ai-serving/*|_lib/ml-training/*|_lib/freebsd/*|_lib/illumos/*|_lib/virtualization/*)
+        _lib/cloud/*|_lib/cloud-providers/*|_lib/orchestration/*|_lib/ai-serving/*|_lib/ml-training/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*|_lib/virtualization/*)
           ;;
         *)
           if [ -f "${_comp_dir}/cli.sh" ]; then
@@ -145,7 +145,7 @@ audit_component_dir() {
 
   # 4. Verify Tier 1 leaf recipes do not invoke kernel/partitioning primitives
   case "$_rel_dir" in
-    _lib/orchestration/*|_lib/storage/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/base-system/*|_lib/virtualization/*|_lib/cloud/*|_lib/cloud-providers/*)
+    _lib/orchestration/*|_lib/storage/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*|_lib/base-system/*|_lib/virtualization/*|_lib/cloud/*|_lib/cloud-providers/*)
       ;;
     *)
       if [ -f "${_comp_dir}/setup_generic.sh" ]; then

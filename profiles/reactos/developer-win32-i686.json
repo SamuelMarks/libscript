@@ -1,0 +1,66 @@
+{
+  "$schema": "../../execution-plan.reactos.schema.json",
+  "schema_version": "1.0.0",
+  "profile_name": "developer-win32-i686",
+  "description": "ReactOS 0.4.16 Win32 C/scripting workstation on WinBtrfs with Git, CMake, Ninja, SQLite, and the LibScript C11 REST API service.",
+  "reactos_version": "0.4.16",
+  "build_mode": "repack",
+  "target": {
+    "arch": "i686",
+    "os_family": "reactos",
+    "channel": "release",
+    "image_variant": "bootcd",
+    "libc": "msvcrt"
+  },
+  "init_system": {
+    "provider": "nt-scm",
+    "services_enabled": ["dhcp", "eventlog", "rpcss", "umpnpmgr", "libscript-rest-api"]
+  },
+  "display": {
+    "protocol": "win32-gdi",
+    "graphics_driver": "vbemp",
+    "resolution": "1280x800x32"
+  },
+  "desktop": {
+    "shell": "explorer-classic",
+    "theme": "mizu",
+    "autologin_user": "dev"
+  },
+  "audio": {
+    "subsystem": "wdmaud"
+  },
+  "storage": {
+    "filesystem": "btrfs",
+    "bootloader": "freeldr",
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "disk_size_gib": 16,
+    "serial_debug": true
+  },
+  "package_manager": {
+    "provider": "rapps",
+    "offline_prefetch": true
+  },
+  "unattend": {
+    "enabled": true,
+    "computer_name": "REACTOS-DEV",
+    "locale_id": "00000409",
+    "time_zone_index": 85,
+    "disable_gecko_inst": true
+  },
+  "users": [
+    {
+      "username": "dev",
+      "password": "vagrant",
+      "groups": ["Administrators"],
+      "admin": true
+    }
+  ],
+  "network": {
+    "hostname": "reactos-dev",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "rapps_packages": ["7zip", "git", "notepadpp"],
+  "components": ["git", "cmake", "ninja", "sqlite-tools"]
+}

@@ -273,7 +273,8 @@
         "ml-training",
         "storage",
         "freebsd",
-        "illumos"
+        "illumos",
+        "reactos"
       ]
     },
     "license": {

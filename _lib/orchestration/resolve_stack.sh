@@ -99,11 +99,15 @@ if [ -z "${LIBSCRIPT_TARGET_OS:-}" ]; then
     darwin*) TARGET_OS='darwin' ;;
     freebsd*) TARGET_OS='freebsd' ;;
     sunos*|illumos*) TARGET_OS='sunos' ;;
+    reactos*) TARGET_OS='reactos' ;;
     msys*|cygwin*|mingw*) TARGET_OS='windows' ;;
     *) TARGET_OS="$OS_NAME" ;;
   esac
 else
-  TARGET_OS="$LIBSCRIPT_TARGET_OS"
+  case "$LIBSCRIPT_TARGET_OS" in
+    reactos*) TARGET_OS='reactos' ;;
+    *) TARGET_OS="$LIBSCRIPT_TARGET_OS" ;;
+  esac
 fi
 
 if [ ! -s "$CONFIG_FILE" ] || ! jq -e '.' "$CONFIG_FILE" >/dev/null 2>&1; then

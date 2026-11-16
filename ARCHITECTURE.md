@@ -934,10 +934,33 @@ platforms:
     initialization and shell login prompts within a specified timeout.
   - `freebsd_boot_test.sh`: Boot verification of synthesized FreeBSD UFS/ZFS images.
   - `illumos_boot_test.sh`: Automated QEMU boot test for synthesized illumos/SunOS appliances.
+  - `reactos_boot_test.sh`: Automated QEMU `COM1` serial boot test verifying FreeLoader,
+    `ntoskrnl.exe` root volume mount (`FASTFAT` / WinBtrfs / NTFS), NT SCM (`smss.exe` /
+    `services.exe`), and unattended `GuiRunOnce` `firstboot.cmd` completion for synthesized ReactOS
+    images.
 - **GUI & Network Smoke Harnesses**:
   - Headless framebuffer and display server smoke tests (`os_gui_smoke_test.sh`,
-    `freebsd_gui_smoke_test.sh`, `illumos_gui_smoke_test.sh`).
-  - Network stack integration tests validating DHCP, DNS, and SSH connectivity.
+    `freebsd_gui_smoke_test.sh`, `illumos_gui_smoke_test.sh`, `reactos_gui_smoke_test.sh`).
+  - Network stack integration tests validating DHCP, DNS, and service connectivity
+    (`reactos_network_smoke_test.sh`).
+
+### 7. ReactOS Hybrid Distribution Synthesis (`_lib/reactos/` & `_lib/reactos/distro/`)
+
+ReactOS (`os_family: "reactos"`, `execution-plan.reactos.schema.json`) extends LibScript's Tier 2
+substrate to the open-source Win32 NT kernel (`ntoskrnl.exe` + `freeldr.sys`):
+
+- **Hybrid Synthesis Modes**:
+  - **Upstream ISO Repacking (`build_mode: "repack"`, default)**: Fetches and SHA-256 verifies
+    official ReactOS release (`0.4.16` `i686`) or nightly (`i686` / `x86_64`) archives, injects
+    `reactos/unattend.inf` (`[Unattend]` + `[GuiRunOnce]`), stages offline payloads into
+    `/libscript/`, and repacks El Torito BIOS (`loader/isoboot.bin`) + UEFI (`loader/efisys.bin`)
+    ISOs or virtual disks (`raw`, `qcow2`, `vhd`, `vmdk`, `box`).
+  - **RosBE Source Build (`build_mode: "from-source"`)**: Uses `_lib/toolchains/rosbe/`
+    (`i686-w64-mingw32` / `x86_64-w64-mingw32` + CMake + Ninja) and slipstreams files via
+    `modules/optional/libscript/CMakeLists.txt` (`add_cd_file()`).
+- **Strict PE Architecture Guard**: Because 64-bit ReactOS does not implement WoW64,
+  `_lib/reactos/distro/pkg.{sh,cmd}` and `resolve_stack.jq` inspect PE `Machine` headers (`0x014c`
+  `i686` vs. `0x8664` `x86_64`) and reject cross-bitness binaries before image finalization.
 - **Continuous Results Aggregation (`tests/update_results.sh` / `.cmd` / `.ps1`)**:
   - Aggregates atomic test markers (`.success`, `.failure`) across multi-platform CI runs.
   - Idempotently synchronizes the Supported Components compatibility matrix in `README.md` and

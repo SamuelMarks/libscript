@@ -112,6 +112,7 @@ if /I "!KERNEL!"=="linux-musl" ( set "OS_FAMILY=linux-musl" & set "LIBC=musl" & 
 if /I "!KERNEL!"=="freebsd" ( set "OS_FAMILY=freebsd" & set "LIBC=bsd-libc" & set "KPROVIDER=freebsd-kernel" & set "INIT_PROV=bsd-rc" & set "BOOTLOADER=freebsd-loader" & set "RESOLVE_OS=freebsd" )
 if /I "!KERNEL!"=="illumos" ( set "OS_FAMILY=illumos" & set "LIBC=illumos-libc" & set "KPROVIDER=illumos-gate" & set "INIT_PROV=smf" & set "BOOTLOADER=illumos-loader" & set "RESOLVE_OS=sunos" )
 if /I "!KERNEL!"=="sunos" ( set "OS_FAMILY=illumos" & set "LIBC=illumos-libc" & set "KPROVIDER=illumos-gate" & set "INIT_PROV=smf" & set "BOOTLOADER=illumos-loader" & set "RESOLVE_OS=sunos" )
+if /I "!KERNEL!"=="reactos" ( set "OS_FAMILY=reactos" & set "LIBC=msvcrt" & set "KPROVIDER=reactos-ntoskrnl" & set "INIT_PROV=nt-scm" & set "BOOTLOADER=freeldr" & set "RESOLVE_OS=reactos" & if "!TARGET_ARCH!"=="" set "TARGET_ARCH=i686" & if "!FORMAT!"=="" set "FORMAT=iso" )
 if /I "!KERNEL!"=="unikraft" ( set "OS_FAMILY=unikernel-unikraft" & set "LIBC=musl" & set "KPROVIDER=unikraft-core" & set "INIT_PROV=unikernel-entrypoint" & set "BOOTLOADER=unikernel-direct" & set "RESOLVE_OS=unikraft" )
 if /I "!KERNEL!"=="unikernel-unikraft" ( set "OS_FAMILY=unikernel-unikraft" & set "LIBC=musl" & set "KPROVIDER=unikraft-core" & set "INIT_PROV=unikernel-entrypoint" & set "BOOTLOADER=unikernel-direct" & set "RESOLVE_OS=unikraft" )
 if /I "!KERNEL!"=="nanos" ( set "OS_FAMILY=unikernel-nanos" & set "LIBC=glibc" & set "KPROVIDER=nanos-kernel" & set "INIT_PROV=unikernel-entrypoint" & set "BOOTLOADER=unikernel-direct" & set "RESOLVE_OS=nanos" )
@@ -171,6 +172,12 @@ if /I "!FORMAT!"=="firmware-hex" goto :pkg_firmware
 if /I "!FORMAT!"=="firmware-uf2" goto :pkg_firmware
 if /I "!FORMAT!"=="mcuboot-signed" goto :pkg_firmware
 if /I "!FORMAT!"=="renode-resc" goto :pkg_firmware
+if /I "!RESOLVE_OS!"=="reactos" (
+    if /I "!FORMAT!"=="iso" ( call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\reactos_iso.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+    if /I "!FORMAT!"=="live-iso" ( call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\reactos_iso.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" & exit /b !ERRORLEVEL! )
+    if /I "!FORMAT!"=="raw" ( call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\reactos_raw.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" 8 & exit /b !ERRORLEVEL! )
+    if /I "!FORMAT!"=="qcow2" ( call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\reactos_qcow2.cmd" "!SYSROOT_DIR!" "!OUT_PATH!" 8 & exit /b !ERRORLEVEL! )
+)
 
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\cli\commands\packaging\package-as.cmd" "!FORMAT!" "!SYSROOT_DIR!" "!OUT_PATH!"

@@ -70,8 +70,9 @@ echo Options:
 echo   --linux-part ^<dev^>      Dedicated Linux partition path
 echo   --freebsd-part ^<dev^>    Dedicated FreeBSD partition path
 echo   --illumos-part ^<dev^>    Dedicated illumos partition path
+echo   --reactos-part ^<dev^>    Optional dedicated ReactOS partition path
 echo   --esp-part ^<dev^>        Shared EFI System Partition path
-echo   --default-os ^<name^>     Default boot entry: debian, freebsd, omnios (default: debian)
+echo   --default-os ^<name^>     Default boot entry: debian, freebsd, omnios, reactos (default: debian)
 echo   --timeout ^<sec^>         Bootloader menu timeout in seconds (default: 5)
 exit /b 0
 

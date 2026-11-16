@@ -21,7 +21,14 @@
     },
     "substrate": {
       "type": "string",
-      "enum": ["local-native", "vagrant-os-matrix", "cloud-vm", "tpu-slice", "gke-xpk"],
+      "enum": [
+        "local-native",
+        "vagrant-os-matrix",
+        "installer-e2e",
+        "cloud-vm",
+        "tpu-slice",
+        "gke-xpk"
+      ],
       "default": "local-native",
       "description": "Execution substrate orchestrating hardware or OS environments for this experiment plugin."
     },
@@ -61,6 +68,10 @@
         "readme_matrix": {
           "type": "string",
           "description": "Optional Markdown table target updated from OS matrix evaluation results."
+        },
+        "screenshots_dir": {
+          "type": "string",
+          "description": "Relative output directory containing captured guest desktop, installer wizard, and browser verification PNGs."
         }
       }
     },
@@ -771,6 +782,10 @@
     "tpu_matrix": {
       "$ref": "./schemas/tpu-matrix.schema.json",
       "description": "Optional multi-backend Google Cloud TPU / TFRC isolation, telemetry, and workload matrix specification."
+    },
+    "installer_e2e": {
+      "$ref": "./schemas/installer-experiment.schema.json",
+      "description": "Optional generic cross-OS Bento/Vagrant, package artifact, clean-snapshot install mode, and guest UI/browser verification specification."
     }
   }
 }

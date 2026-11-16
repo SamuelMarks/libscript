@@ -49,6 +49,7 @@
             "linux-musl",
             "freebsd",
             "illumos",
+            "reactos",
             "unikernel-unikraft",
             "unikernel-nanos",
             "unikernel-osv",
@@ -68,6 +69,7 @@
             "bsd-libc",
             "illumos-libc",
             "sunos-libc",
+            "msvcrt",
             "newlib",
             "picolibc",
             "zephyr-minimal",
@@ -144,6 +146,7 @@
             "freebsd-kernel",
             "illumos-gate",
             "omnios-kernel",
+            "reactos-ntoskrnl",
             "unikraft-core",
             "nanos-kernel",
             "osv-kernel",
@@ -213,6 +216,7 @@
             "bsd-init",
             "bsd-rc",
             "smf",
+            "nt-scm",
             "unikernel-entrypoint",
             "zephyr-sys-init",
             "freertos-scheduler",
@@ -241,7 +245,7 @@
         "server": {
           "type": "string",
           "description": "Display protocol server implementation",
-          "enum": ["wayland", "x11", "hybrid-xwayland", "headless", "none"]
+          "enum": ["wayland", "x11", "hybrid-xwayland", "win32-gdi", "headless", "none"]
         },
         "compositor": {
           "type": "string",
@@ -257,7 +261,7 @@
         "desktop_suite": {
           "type": "string",
           "description": "Full desktop application suite and shell integration",
-          "enum": ["gnome", "kde-plasma-6", "xfce4", "lxqt", "none"]
+          "enum": ["gnome", "kde-plasma-6", "xfce4", "lxqt", "explorer-classic", "none"]
         },
         "greeter": {
           "type": "string",
@@ -296,6 +300,7 @@
             "freebsd-bootcode",
             "freebsd-loader",
             "illumos-loader",
+            "freeldr",
             "unikernel-direct",
             "multiboot2",
             "mcuboot",
@@ -328,8 +333,10 @@
                   "cpio",
                   "erofs",
                   "ext4",
+                  "fat32",
                   "fatfs",
                   "littlefs",
+                  "ntfs",
                   "nvs",
                   "rofs",
                   "squashfs",

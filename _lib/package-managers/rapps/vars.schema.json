@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/rapps/vars.schema.json",
+  "title": "rapps variables",
+  "description": "Configuration variables for the ReactOS Applications Manager (rapps) component",
+  "type": "object",
+  "properties": {
+    "RAPPS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Installation strategy for rapps ('libscript_native' stages isolated rapps-db catalog and CLI wrapper, 'system' uses native rapps.exe).",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "RAPPS_VERSION": {
+      "type": "string",
+      "description": "Specific version or branch alias of rapps / rapps-db to install.",
+      "default": "0.4.16",
+      "version_aliases": ["latest", "0.4.16"]
+    },
+    "RAPPS_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading the rapps-db package catalog archive."
+    },
+    "RAPPS_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying available rapps / ReactOS release tags."
+    },
+    "RAPPS_FETCH_UPSTREAM_DB": {
+      "type": "string",
+      "description": "Set to '1' to download and overlay the upstream GitHub rapps-db archive during native setup.",
+      "default": "0"
+    },
+    "LIBSCRIPT_RAPPS_VERSION": {
+      "type": "string",
+      "description": "Target rapps catalog version override when invoked from ReactOS distribution profiles.",
+      "default": "0.4.16"
+    },
+    "LIBSCRIPT_RAPPS_DB_URL": {
+      "type": "string",
+      "description": "Upstream archive URL for the ReactOS Applications Manager package database (rapps-db).",
+      "default": "https://github.com/reactos/rapps-db/archive/refs/heads/master.tar.gz"
+    },
+    "LIBSCRIPT_RAPPS_DB_DIR": {
+      "type": "string",
+      "description": "Filesystem directory containing extracted RAPPS .txt INI package definitions."
+    },
+    "LIBSCRIPT_RAPPS_CACHE_DIR": {
+      "type": "string",
+      "description": "Destination directory for pre-fetched and verified RAPPS application installers."
+    },
+    "LIBSCRIPT_RAPPS_ARCH": {
+      "type": "string",
+      "description": "Target PE CPU architecture used when resolving architecture-specific RAPPS sections.",
+      "enum": ["i686", "x86_64"],
+      "default": "i686"
+    }
+  }
+}

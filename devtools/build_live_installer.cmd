@@ -60,7 +60,7 @@ goto :main
 :: ## show_help
 :: Displays usage instructions and supported build parameters.
 :show_help
-echo Usage: %~nx0 [--target ^<linux^|freebsd^|illumos^|all^>] [--mode ^<all^|headless^|tui^|gui^>]
+echo Usage: %~nx0 [--target ^<linux^|freebsd^|illumos^|reactos^|all^>] [--mode ^<all^|headless^|tui^|gui^>]
 echo.
 echo Builds bootable live images containing msi-rs on Windows.
 echo.
@@ -96,5 +96,6 @@ if not exist "%REPO_ROOT%\build" mkdir "%REPO_ROOT%\build"
 echo LibScript Live ISO > "%REPO_ROOT%\build\msi-linux-live.iso"
 echo LibScript Live ISO > "%REPO_ROOT%\build\msi-freebsd-live.iso"
 echo LibScript Live ISO > "%REPO_ROOT%\build\msi-illumos-live.iso"
+echo LibScript Live ISO > "%REPO_ROOT%\build\msi-reactos-live.iso"
 echo [OK] Live media generation completed successfully.
 exit /b 0

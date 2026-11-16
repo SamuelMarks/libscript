@@ -33,6 +33,12 @@ if ($Validate) {
         $content = Get-Content -Path $Validate -Raw | ConvertFrom-Json
         $requiredFields = if ($content.plan_version -and ($content.target.os -eq "zephyr" -or $content.target.os -eq "freertos")) {
             @("plan_version", "profile_name", "execution_mode", "target", "stages")
+        } elseif ($content.reactos_version -or ($content.target -and $content.target.os_family -eq "reactos" -and -not $content.kernel)) {
+            @("schema_version", "profile_name", "reactos_version", "target", "init_system", "storage")
+        } elseif ($content.freebsd_version -or ($content.target -and $content.target.os_family -eq "freebsd" -and -not $content.kernel)) {
+            @("schema_version", "profile_name", "freebsd_version", "target", "init_system", "storage")
+        } elseif ($content.illumos_version -or ($content.target -and ($content.target.os_family -eq "illumos" -or $content.target.os_family -eq "sunos") -and -not $content.kernel)) {
+            @("schema_version", "profile_name", "illumos_version", "target", "init_system", "storage")
         } else {
             @("schema_version", "target", "kernel", "init_system", "storage")
         }

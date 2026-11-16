@@ -55,7 +55,7 @@ libscript_resolve_install_method() {
       printf '%s\n' "$requested"
       return 0
       ;;
-    brew|winget|choco|scoop|nix|guix|spack|vcpkg|conan)
+    brew|winget|choco|scoop|rapps|nix|guix|spack|vcpkg|conan)
       export LIBSCRIPT_PKG_MGR="$requested"
       printf '%s\n' 'system'
       return 0
@@ -84,7 +84,7 @@ resolve_requested_pkg_mgr() {
       _comp_im="$(printenv "${_comp_upper}_INSTALL_METHOD" 2>/dev/null || true)"
       case "${_comp_im}" in
         pkg_mgr:*) _req_pm="${_comp_im#pkg_mgr:}" ;;
-        brew|winget|choco|scoop|nix|guix|spack|vcpkg|conan) _req_pm="${_comp_im}" ;;
+        brew|winget|choco|scoop|rapps|nix|guix|spack|vcpkg|conan) _req_pm="${_comp_im}" ;;
       esac
     fi
   fi
@@ -212,6 +212,10 @@ detect_pkg_mgr() {
         fi
         if libscript_cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return 0; fi
       fi
+    elif [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "reactos" ] || [ "${IS_REACTOS:-0}" = "1" ]; then
+      PKG_MGR='rapps'
+      export PKG_MGR
+      return 0
     elif [ "${TARGET_OS:-${UNAME_LOWER:-}}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
       if [ "${_LIBSCRIPT_BOOTSTRAPPING_PKG_MGR:-0}" != "1" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" ]; then
         _LIBSCRIPT_BOOTSTRAPPING_PKG_MGR=1 "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" || true
@@ -297,6 +301,13 @@ is_installed() {
     'winget')             winget list --id "${pkg}" >/dev/null 2>&1 ;;
     'choco')              choco list --local-only "${pkg}" 2>/dev/null | grep -qi "^${pkg} " ;;
     'scoop')              scoop list "${pkg}" 2>/dev/null | grep -qi "${pkg}" ;;
+    'rapps')
+      if [ -n "$_pm_root" ]; then
+        [ -f "${_pm_root}/libscript/stamps/rapps_${pkg}.stamp" ] || [ -f "${_pm_root}/iso_root/libscript/cache/rapps/${pkg}.stamp" ]
+      else
+        command -v "${pkg}" >/dev/null 2>&1
+      fi
+      ;;
     *)
       log_error "is_installed function not implemented for ${PKG_MGR}"
       exit 1 ;;
@@ -510,6 +521,19 @@ libscript_depends() {
         'winget') winget install --exact --id ${pkgs_to_install} --accept-package-agreements --accept-source-agreements --silent || _install_failed=1 ;;
         'choco')  choco install -y            ${pkgs_to_install} || _install_failed=1 ;;
         'scoop')  scoop install               ${pkgs_to_install} || _install_failed=1 ;;
+        'rapps')
+          for _rpkg in ${pkgs_to_install}; do
+            if [ -n "$_pm_sysroot" ] && [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rapps/cli.sh" ]; then
+              "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rapps/cli.sh" prefetch "${_rpkg}" --dest="${_pm_sysroot}/libscript/cache/rapps" || _install_failed=1
+            elif libscript_cmd_avail rapps.exe; then
+              rapps.exe /install "${_rpkg}" || _install_failed=1
+            elif [ -x "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rapps/cli.sh" ]; then
+              "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/rapps/cli.sh" install "${_rpkg}" || _install_failed=1
+            else
+              _install_failed=1
+            fi
+          done
+          ;;
         *)
           log_error "libscript_depends function not implemented for ${PKG_MGR}"
           exit 1

@@ -807,12 +807,12 @@ audit_single_file() {
 
   # 6. Option A Hard Fail Proforma check (Exit code 86)
   case "$file" in
-    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd|*/alpine-systemctl.cmd|*/setup_debian.cmd|*/setup_alpine.cmd|*/setup_freebsd.cmd|*/setup_macos.cmd|*/setup_rhel.cmd|*/setup_illumos.cmd|*/setup_linux.cmd)
+    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_reactos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_reactos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd|*/alpine-systemctl.cmd|*/setup_debian.cmd|*/setup_alpine.cmd|*/setup_freebsd.cmd|*/setup_macos.cmd|*/setup_rhel.cmd|*/setup_illumos.cmd|*/setup_linux.cmd)
       if ! grep -q 'exit /b 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
       ;;
-    */mount_target_vfs.ps1|*/umount_target_vfs.ps1|*/runner.ps1|*/provision_disk.ps1|*/format_fs.ps1|*/live_freebsd.ps1|*/live_illumos.ps1|*/live_linux.ps1|*/coinstall_dual_os.ps1|*/install_freebsd.ps1|*/install_illumos.ps1|*/install_linux.ps1|*/multiboot_orchestrator.ps1|*/grub_multiboot.ps1|*/alpine-systemctl.ps1|*/setup_debian.ps1|*/setup_alpine.ps1|*/setup_freebsd.ps1|*/setup_macos.ps1|*/setup_rhel.ps1|*/setup_illumos.ps1|*/setup_linux.ps1)
+    */mount_target_vfs.ps1|*/umount_target_vfs.ps1|*/runner.ps1|*/provision_disk.ps1|*/format_fs.ps1|*/live_freebsd.ps1|*/live_illumos.ps1|*/live_reactos.ps1|*/live_linux.ps1|*/coinstall_dual_os.ps1|*/install_freebsd.ps1|*/install_illumos.ps1|*/install_reactos.ps1|*/install_linux.ps1|*/multiboot_orchestrator.ps1|*/grub_multiboot.ps1|*/alpine-systemctl.ps1|*/setup_debian.ps1|*/setup_alpine.ps1|*/setup_freebsd.ps1|*/setup_macos.ps1|*/setup_rhel.ps1|*/setup_illumos.ps1|*/setup_linux.ps1)
       if ! grep -q 'exit 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
@@ -831,7 +831,7 @@ audit_single_file() {
         log_failure "$file" "RTOS_VENV_LEAK" "RTOS kernel recipe creates Python venv outside LIBSCRIPT_HOME: $venv_leak_hits"
       fi
       ;;
-    _lib/orchestration/*|_lib/storage/*|_lib/_common/*|_lib/*/_common/*|_lib/cloud/*|_lib/cloud-providers/*|_lib/kernel/*|_lib/bootloaders/*)
+    _lib/orchestration/*|_lib/storage/*|_lib/_common/*|_lib/*/_common/*|_lib/cloud/*|_lib/cloud-providers/*|_lib/kernel/*|_lib/bootloaders/*|_lib/freebsd/*|_lib/illumos/*|_lib/reactos/*)
       ;;
     _lib/*/*/*.sh)
       boundary_hits=$(grep -nE '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$file" 2>/dev/null || true)
@@ -938,7 +938,7 @@ audit_single_file() {
   case "$file" in
     _lib/*/*/manifest.json)
       if command -v jq >/dev/null 2>&1; then
-        _bad_os=$(jq -r '((.os_whitelist // []) + (.os_blacklist // []))[]' "$file" 2>/dev/null | grep -Ev '^(all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)$' || true)
+        _bad_os=$(jq -r '((.os_whitelist // []) + (.os_blacklist // []))[]' "$file" 2>/dev/null | grep -Ev '^(all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|reactos|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)$' || true)
         if [ -n "$_bad_os" ]; then
           log_failure "$file" "JSON_VALIDITY" "Invalid OS identifier in manifest.json: $_bad_os"
         fi

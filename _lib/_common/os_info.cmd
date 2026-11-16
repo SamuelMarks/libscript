@@ -54,11 +54,33 @@ goto :find_root
 :detect_os_info
 set "OS=Windows_NT"
 set "TARGET_OS=windows"
+set "PKG_OS=windows"
+set "IS_REACTOS=0"
+set "TARGET_OS_FLAVOR=windows"
 set "UNAME=Windows_NT"
 set "UNAME_LOWER=windows"
 set "INIT_SYS=windows-scm"
 set "KERNEL_RELEASE=10.0"
-set "UNAME_A=Windows_NT 10.0 %PROCESSOR_ARCHITECTURE%"
+
+ver 2>nul | findstr /I "ReactOS" >nul 2>&1
+if not errorlevel 1 set "IS_REACTOS=1"
+if "!IS_REACTOS!"=="0" (
+    reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2>nul | findstr /I "ReactOS" >nul 2>&1
+    if not errorlevel 1 set "IS_REACTOS=1"
+)
+if /i "%LIBSCRIPT_TARGET_OS%"=="reactos" set "IS_REACTOS=1"
+
+if "!IS_REACTOS!"=="1" (
+    set "TARGET_OS_FLAVOR=reactos"
+    set "INIT_SYS=nt-scm"
+    set "KERNEL_RELEASE=5.2"
+    set "UNAME=ReactOS"
+    if /i "%LIBSCRIPT_TARGET_OS%"=="reactos" (
+        set "TARGET_OS=reactos"
+        set "UNAME_LOWER=reactos"
+    )
+)
+set "UNAME_A=!UNAME! !KERNEL_RELEASE! %PROCESSOR_ARCHITECTURE%"
 
 if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     set "ARCH=x86_64"
@@ -69,24 +91,50 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
 ) else if /i "%PROCESSOR_ARCHITECTURE%"=="x86" (
     set "ARCH=i686"
     set "ARCH_ALT=386"
+    if "!IS_REACTOS!"=="0" (
+        if /i "%PROCESSOR_ARCHITEW6432%"=="AMD64" (
+            set "ARCH=x86_64"
+            set "ARCH_ALT=amd64"
+        )
+    )
 ) else (
     set "ARCH=%PROCESSOR_ARCHITECTURE%"
     set "ARCH_ALT=%PROCESSOR_ARCHITECTURE%"
 )
+set "TARGET_ARCH=!ARCH!"
+set "LIBSCRIPT_ARCH=!ARCH!"
 
-where winget >nul 2>&1
-if not errorlevel 1 (
-    set "PKG_MGR=winget"
+set "NEW_PATH=!PATH!"
+set "_ROS_SYSDRIVE=%SystemDrive%"
+if "!_ROS_SYSDRIVE!"=="" set "_ROS_SYSDRIVE=C:"
+set "_ROS_BOOT_BIN=!_ROS_SYSDRIVE!\libscript\bootstrap\bin"
+if exist "!_ROS_BOOT_BIN!" (
+    echo ";!NEW_PATH!;" | findstr /I /C:";!_ROS_BOOT_BIN!;" >nul 2>&1
+    if errorlevel 1 set "NEW_PATH=!_ROS_BOOT_BIN!;!NEW_PATH!"
+)
+
+if "!IS_REACTOS!"=="1" (
+    set "PKG_MGR=rapps"
 ) else (
-    where choco >nul 2>&1
+    where rapps.exe >nul 2>&1
     if not errorlevel 1 (
-        set "PKG_MGR=choco"
+        set "PKG_MGR=rapps"
     ) else (
-        where scoop >nul 2>&1
+        where winget >nul 2>&1
         if not errorlevel 1 (
-            set "PKG_MGR=scoop"
+            set "PKG_MGR=winget"
         ) else (
-            set "PKG_MGR="
+            where choco >nul 2>&1
+            if not errorlevel 1 (
+                set "PKG_MGR=choco"
+            ) else (
+                where scoop >nul 2>&1
+                if not errorlevel 1 (
+                    set "PKG_MGR=scoop"
+                ) else (
+                    set "PKG_MGR="
+                )
+            )
         )
     )
 )
@@ -94,6 +142,9 @@ if not errorlevel 1 (
 endlocal & (
     set "OS=%OS%"
     set "TARGET_OS=%TARGET_OS%"
+    set "PKG_OS=%PKG_OS%"
+    set "IS_REACTOS=%IS_REACTOS%"
+    set "TARGET_OS_FLAVOR=%TARGET_OS_FLAVOR%"
     set "UNAME=%UNAME%"
     set "UNAME_LOWER=%UNAME_LOWER%"
     set "INIT_SYS=%INIT_SYS%"
@@ -101,7 +152,10 @@ endlocal & (
     set "UNAME_A=%UNAME_A%"
     set "ARCH=%ARCH%"
     set "ARCH_ALT=%ARCH_ALT%"
+    set "TARGET_ARCH=%TARGET_ARCH%"
+    set "LIBSCRIPT_ARCH=%LIBSCRIPT_ARCH%"
     set "PKG_MGR=%PKG_MGR%"
+    set "PATH=%NEW_PATH%"
     set "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR%"
     set "STACK=%STACK%"
 )

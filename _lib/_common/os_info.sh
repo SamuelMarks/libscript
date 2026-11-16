@@ -51,6 +51,7 @@ if [ -z "${UNAME+x}" ]; then
         darwin|macos) UNAME='Darwin' ;;
         freebsd) UNAME='FreeBSD' ;;
         sunos|illumos|solaris) UNAME='SunOS' ;;
+        reactos) UNAME='ReactOS' ;;
         windows) UNAME='Windows_NT' ;;
         *) UNAME="$(uname 2>/dev/null || printf 'Linux')" ;;
       esac
@@ -131,6 +132,12 @@ if [ -z "${UNAME+x}" ]; then
       'Windows_NT')
         export PKG_MGR="${LIBSCRIPT_WINDOWS_PKG_MGR:-winget}"
         TARGET_OS='windows'
+        ;;
+      'ReactOS')
+        export PKG_MGR="${LIBSCRIPT_REACTOS_PKG_MGR:-rapps}"
+        export IS_REACTOS='1'
+        export TARGET_OS_FLAVOR='reactos'
+        TARGET_OS='reactos'
         ;;
       'FreeBSD')
         export PKG_MGR='pkg'
@@ -221,6 +228,9 @@ if [ -z "${INIT_SYS+x}" ]; then
         ;;
       'Windows_NT')
         export INIT_SYS='windows-scm'
+        ;;
+      'ReactOS')
+        export INIT_SYS='nt-scm'
         ;;
       'FreeBSD')
           if [ -d '/etc/inittab' ]; then

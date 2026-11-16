@@ -68,7 +68,13 @@ endlocal & (
 set "PKG=%~1"
 set "MAPPED_PKG="
 if "%PKG%"=="" exit /b 1
-if "!PKG_MGR!"=="" set "PKG_MGR=winget"
+if "!PKG_MGR!"=="" (
+    if "%IS_REACTOS%"=="1" (
+        set "PKG_MGR=rapps"
+    ) else (
+        set "PKG_MGR=winget"
+    )
+)
 
 set "_TSV=!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_map.tsv"
 if not exist "!_TSV!" (

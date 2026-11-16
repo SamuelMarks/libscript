@@ -1150,3 +1150,17 @@ zfs	brew	openzfs
 zip	winget	GnuWin32.Zip
 zip	emerge	app-arch/zip
 zstd	winget	Facebook.zstd
+7zip	rapps	7zip
+cmake	rapps	cmake
+curl	rapps	curl
+firefox	rapps	firefox
+git	rapps	git
+libreoffice	rapps	libreoffice
+mingw	rapps	rosbe
+ninja	rapps	ninja
+notepadpp	rapps	notepadpp
+python	rapps	python
+sqlite	rapps	sqlite
+sqlite-tools	rapps	sqlite
+sumatrapdf	rapps	sumatrapdf
+vlc	rapps	vlc

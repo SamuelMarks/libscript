@@ -33,15 +33,16 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 # Displays usage instructions and supported parameters.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <disk_dev> [options...]"
-  printf '%s\n' 'Concurrently deploys Linux, FreeBSD, and illumos to separate partitions with master GRUB2.'
+  printf '%s\n' 'Concurrently deploys Linux, FreeBSD, illumos, and ReactOS to separate partitions with master GRUB2.'
   printf '
 '
   printf '%s\n' 'Options:'
   printf '%s\n' '  --linux-part <dev>      Dedicated Linux partition path'
   printf '%s\n' '  --freebsd-part <dev>    Dedicated FreeBSD partition path'
   printf '%s\n' '  --illumos-part <dev>    Dedicated illumos partition path'
+  printf '%s\n' '  --reactos-part <dev>    Optional dedicated ReactOS partition path'
   printf '%s\n' '  --esp-part <dev>        Shared EFI System Partition path'
-  printf '%s\n' '  --default-os <name>     Default boot entry: debian, freebsd, omnios (default: debian)'
+  printf '%s\n' '  --default-os <name>     Default boot entry: debian, freebsd, omnios, reactos (default: debian)'
   printf '%s\n' '  --timeout <sec>         Bootloader menu timeout in seconds (default: 5)'
   printf '%s\n' '  --help, -h, /?, -?      Show this help message and exit.'
 }
@@ -62,6 +63,7 @@ shift
 LINUX_PART=""
 FREEBSD_PART=""
 ILLUMOS_PART=""
+REACTOS_PART=""
 ESP_PART=""
 DEFAULT_OS='debian'
 TIMEOUT_SEC='5'
@@ -72,6 +74,7 @@ while [ $# -gt 0 ]; do
     --linux-part) LINUX_PART="$2"; shift 2 ;;
     --freebsd-part) FREEBSD_PART="$2"; shift 2 ;;
     --illumos-part) ILLUMOS_PART="$2"; shift 2 ;;
+    --reactos-part) REACTOS_PART="$2"; shift 2 ;;
     --esp-part) ESP_PART="$2"; shift 2 ;;
     --default-os) DEFAULT_OS="$2"; shift 2 ;;
     --timeout) TIMEOUT_SEC="$2"; shift 2 ;;
@@ -104,6 +107,7 @@ printf '[MULTIBOOT] Starting Multiboot Orchestration on %s...\n' "$DISK_DEV"
 printf '            Linux Partition:   %s\n' "$LINUX_PART"
 printf '            FreeBSD Partition: %s\n' "$FREEBSD_PART"
 printf '            illumos Partition: %s\n' "$ILLUMOS_PART"
+[ -n "$REACTOS_PART" ] && printf '            ReactOS Partition: %s\n' "$REACTOS_PART"
 printf '            Shared ESP:        %s\n' "$ESP_PART"
 
 # 1. Format target filesystems
@@ -116,6 +120,11 @@ if [ -x "${REPO_ROOT}/_lib/storage/format.sh" ]; then
 
   printf '[MULTIBOOT] Initializing illumos ZFS root pool on %s...\n' "$ILLUMOS_PART"
   "${REPO_ROOT}/_lib/storage/format.sh" "$ILLUMOS_PART" "zfs" "rpool" 2>/dev/null || true
+
+  if [ -n "$REACTOS_PART" ]; then
+    printf '[MULTIBOOT] Formatting ReactOS partition (%s) as FAT32...\n' "$REACTOS_PART"
+    "${REPO_ROOT}/_lib/storage/format.sh" "$REACTOS_PART" 'fat32' 'reactosroot' 2>/dev/null || true
+  fi
 fi
 
 # 2. Stage sysroot directory hierarchy
@@ -123,10 +132,12 @@ TARGET_ESP='/mnt/target/esp'
 TARGET_LINUX='/mnt/target/linux'
 TARGET_FREEBSD='/mnt/target/freebsd'
 TARGET_ILLUMOS='/mnt/target/illumos'
+TARGET_REACTOS='/mnt/target/reactos'
 mkdir -p "$TARGET_ESP" "$TARGET_LINUX" "$TARGET_FREEBSD" "$TARGET_ILLUMOS"
+[ -n "$REACTOS_PART" ] && mkdir -p "$TARGET_REACTOS"
 
 # 3. Concurrent Multi-OS Base Deployment
-printf '[MULTIBOOT] Deploying Linux, FreeBSD, and illumos userlands concurrently...\n'
+printf '[MULTIBOOT] Deploying operating system userlands concurrently...\n'
 
 # Job 1: Linux Userland
 (
@@ -152,16 +163,30 @@ PID_FREEBSD=$!
 ) &
 PID_ILLUMOS=$!
 
+PID_REACTOS=''
+if [ -n "$REACTOS_PART" ]; then
+  (
+    if [ -x "${SCRIPT_DIR}/install_reactos.sh" ]; then
+      "${SCRIPT_DIR}/install_reactos.sh" "$REACTOS_PART" "$TARGET_REACTOS"
+    fi
+  ) &
+  PID_REACTOS=$!
+fi
+
 wait "$PID_LINUX"
 wait "$PID_FREEBSD"
 wait "$PID_ILLUMOS"
-printf '[OK] All 3 target operating systems successfully unpacked and staged.\n'
+if [ -n "$PID_REACTOS" ]; then
+  wait "$PID_REACTOS"
+fi
+printf '[OK] Target operating systems successfully unpacked and staged.\n'
 
 # 4. Shared Bootloader & UEFI ESP Multi-Vendor Staging
 printf '[MULTIBOOT] Configuring Shared EFI System Partition and Master GRUB2...\n'
 mkdir -p "${TARGET_ESP}/EFI/libscript"
 mkdir -p "${TARGET_ESP}/EFI/freebsd"
 mkdir -p "${TARGET_ESP}/EFI/illumos"
+mkdir -p "${TARGET_ESP}/EFI/reactos"
 mkdir -p "${TARGET_ESP}/EFI/BOOT"
 
 # Copy or synthesize EFI binaries
@@ -169,6 +194,7 @@ printf 'GRUB2_MULTIBOOT_EFI_BINARY' > "${TARGET_ESP}/EFI/libscript/grubx64.efi"
 cp -f "${TARGET_ESP}/EFI/libscript/grubx64.efi" "${TARGET_ESP}/EFI/BOOT/BOOTX64.EFI" 2>/dev/null || true
 printf 'FREEBSD_LOADER_EFI_BINARY' > "${TARGET_ESP}/EFI/freebsd/loader.efi"
 printf 'ILLUMOS_LOADER_EFI_BINARY' > "${TARGET_ESP}/EFI/illumos/bootx64.efi"
+printf 'REACTOS_FREELDR_EFI_BINARY' > "${TARGET_ESP}/EFI/reactos/bootx64.efi"
 
 # 5. Synthesize Unified Master GRUB2 Configuration (grub.cfg)
 mkdir -p "${TARGET_LINUX}/boot/grub"
@@ -189,6 +215,8 @@ insmod btrfs
 insmod ufs2
 insmod zfs
 insmod fat
+insmod ntfs
+insmod multiboot
 insmod chain
 
 # 1. Debian GNU/Linux 13 (Direct Kernel Boot)
@@ -218,7 +246,20 @@ menuentry "illumos / OmniOS r151048 (Direct Kernel Multiboot)" --id omnios-direc
     module2 /platform/i86pc/boot_archive /platform/i86pc/boot_archive
 }
 
-# 5. System Utilities
+# 5. ReactOS 0.4.16+ (Multiboot FreeLoader)
+menuentry "ReactOS 0.4.16 (FreeLoader Multiboot)" --id reactos {
+    insmod multiboot
+    search --no-floppy --label --set=root reactosroot
+    multiboot /freeldr.sys
+}
+
+# 6. ReactOS 0.4.16+ (UEFI Chainloader)
+menuentry "ReactOS 0.4.16 (UEFI bootx64.efi)" --id reactos-uefi {
+    search --no-floppy --file --set=root /EFI/reactos/bootx64.efi
+    chainloader /EFI/reactos/bootx64.efi
+}
+
+# 7. System Utilities
 menuentry "UEFI Firmware Settings" {
     fwsetup
 }

@@ -85,7 +85,7 @@ endlocal & set "LIBSCRIPT_PKG_MGR=%LIBSCRIPT_PKG_MGR%" & set "RESOLVED_INSTALL_M
 exit /b 0
 
 :: ## detect_pkg_mgr
-:: Detects or honors an explicitly requested Windows package manager (winget, choco, scoop, vcpkg, conan).
+:: Detects or honors an explicitly requested Windows/ReactOS package manager (rapps, winget, choco, scoop, vcpkg, conan).
 :detect_pkg_mgr
 set "_comp_up=%~1"
 set "_req_pm="
@@ -94,6 +94,15 @@ if "!_req_pm!"=="" if defined LIBSCRIPT_PKG_MGR set "_req_pm=%LIBSCRIPT_PKG_MGR%
 if /i "!_req_pm!"=="chocolatey" set "_req_pm=choco"
 if not "!_req_pm!"=="" (
     set "PKG_MGR=!_req_pm!"
+    exit /b 0
+)
+if "%IS_REACTOS%"=="1" (
+    set "PKG_MGR=rapps"
+    exit /b 0
+)
+where rapps.exe >nul 2>&1
+if !errorlevel! equ 0 (
+    set "PKG_MGR=rapps"
     exit /b 0
 )
 where winget >nul 2>&1
@@ -153,6 +162,13 @@ if /i "!PKG_MGR!"=="scoop" (
 )
 if /i "!PKG_MGR!"=="vcpkg" (
     vcpkg list 2>nul | findstr /I /B /C:"!_chk_pkg!:" >nul 2>&1
+    exit /b !errorlevel!
+)
+if /i "!PKG_MGR!"=="rapps" (
+    set "_ros_sd=%SystemDrive%"
+    if "!_ros_sd!"=="" set "_ros_sd=C:"
+    if exist "!_ros_sd!\libscript\stamps\rapps_!_chk_pkg!.stamp" exit /b 0
+    where "!_chk_pkg!" >nul 2>&1
     exit /b !errorlevel!
 )
 exit /b 1
@@ -219,6 +235,9 @@ if /i "!PKG_MGR!"=="winget" (
     set "_inst_rc=!errorlevel!"
 ) else if /i "!PKG_MGR!"=="conan" (
     conan install --requires="!MAPPED_PKG!" --build=missing
+    set "_inst_rc=!errorlevel!"
+) else if /i "!PKG_MGR!"=="rapps" (
+    call :install_via_rapps "!MAPPED_PKG!"
     set "_inst_rc=!errorlevel!"
 ) else (
     winget install --exact --id "!MAPPED_PKG!" --accept-package-agreements --accept-source-agreements --silent
@@ -357,15 +376,31 @@ if "!download_needed!"=="1" (
     
         set "download_success=0"
     
-        REM Strategy A: curl
+        REM Strategy A: curl (PATH or ReactOS bootstrap bin)
+        set "_curl_bin="
         where curl >nul 2>&1
-        if !errorlevel! equ 0 (
+        if !errorlevel! equ 0 set "_curl_bin=curl"
+        if "!_curl_bin!"=="" (
+                set "_ros_sd=%SystemDrive%"
+                if "!_ros_sd!"=="" set "_ros_sd=C:"
+                if exist "!_ros_sd!\libscript\bootstrap\bin\curl.exe" set "_curl_bin=!_ros_sd!\libscript\bootstrap\bin\curl.exe"
+        )
+        if not "!_curl_bin!"=="" (
                 if not "!auth_header!"=="" (
-                        curl -L -H "!auth_header!" "!url!" -o "!cache_file!"
+                        "!_curl_bin!" -L -H "!auth_header!" "!url!" -o "!cache_file!"
                 ) else (
-                        curl -L "!url!" -o "!cache_file!"
+                        "!_curl_bin!" -L "!url!" -o "!cache_file!"
                 )
                 if !errorlevel! equ 0 set "download_success=1"
+        )
+
+        REM Strategy A2: wget
+        if !download_success! equ 0 (
+                where wget >nul 2>&1
+                if !errorlevel! equ 0 (
+                        wget -q -O "!cache_file!" "!url!"
+                        if !errorlevel! equ 0 set "download_success=1"
+                )
         )
     
         REM Strategy B: powershell
@@ -379,8 +414,11 @@ if "!download_needed!"=="1" (
     
         REM Strategy C: certutil
         if !download_success! equ 0 (
-                certutil -urlcache -split -f "!url!" "!cache_file!" >nul
-                if !errorlevel! equ 0 set "download_success=1"
+                where certutil >nul 2>&1
+                if !errorlevel! equ 0 (
+                        certutil -urlcache -split -f "!url!" "!cache_file!" >nul
+                        if !errorlevel! equ 0 set "download_success=1"
+                )
         )
 
         if !download_success! equ 0 (
@@ -401,10 +439,7 @@ if not "!expected_checksum!"=="" (
         if /i not "!expected_checksum!"=="SKIP" (
                 set "clean_expected=!expected_checksum:sha-256=!"
                 set "actual_checksum="
-                for /f "skip=1 tokens=1" %%a in ('certutil -hashfile "!cache_file!" SHA256 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
-                if "!actual_checksum!"=="" (
-                        for /f "usebackq tokens=*" %%a in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('!cache_file!');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do set "actual_checksum=%%a"
-                )
+                call :compute_sha256 "!cache_file!"
                 if /i not "!actual_checksum!"=="!clean_expected!" (
                         call "!LOG_CMD!" :log_error "Checksum mismatch for !cache_file!. Expected: !clean_expected!, Got: !actual_checksum!"
                         if exist "!cache_file!" del /f /q "!cache_file!" >nul 2>&1
@@ -414,10 +449,7 @@ if not "!expected_checksum!"=="" (
 ) else (
         if not "%LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB%"=="1" (
                 set "actual_checksum="
-                for /f "skip=1 tokens=1" %%a in ('certutil -hashfile "!cache_file!" SHA256 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
-                if "!actual_checksum!"=="" (
-                        for /f "usebackq tokens=*" %%a in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('!cache_file!');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do set "actual_checksum=%%a"
-                )
+                call :compute_sha256 "!cache_file!"
                 if not "!actual_checksum!"=="" (
                         findstr /i /c:"!url! !actual_checksum!" "!checksum_db!" >nul 2>&1 || echo !url! !actual_checksum!>> "!checksum_db!"
                 )
@@ -430,7 +462,10 @@ if not "!dest!"=="" (
                 for %%D in ("!dest!") do if not exist "%%~dpD" mkdir "%%~dpD"
                 copy /y "!cache_file!" "!dest!" >nul 2>&1
                 if not exist "!dest!" (
-                        powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Copy-Item -LiteralPath '!cache_file!' -Destination '!dest!' -Force" >nul 2>&1
+                        where powershell >nul 2>&1
+                        if !errorlevel! equ 0 (
+                                powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Copy-Item -LiteralPath '!cache_file!' -Destination '!dest!' -Force" >nul 2>&1
+                        )
                 )
                 if not exist "!dest!" (
                         call "!LOG_CMD!" :log_error "Failed to place downloaded artifact at !dest!"
@@ -444,6 +479,120 @@ if not "!dest!"=="" (
         )
 )
 exit /b 0
+
+:: ## compute_sha256
+:: Computes the lowercase SHA-256 hex digest of a file into actual_checksum using sha256sum, certutil, or PowerShell.
+:compute_sha256
+set "_cs_file=%~1"
+set "actual_checksum="
+if not exist "!_cs_file!" exit /b 1
+set "_sha_bin="
+where sha256sum >nul 2>&1
+if !errorlevel! equ 0 set "_sha_bin=sha256sum"
+if "!_sha_bin!"=="" (
+    set "_ros_sd=%SystemDrive%"
+    if "!_ros_sd!"=="" set "_ros_sd=C:"
+    if exist "!_ros_sd!\libscript\bootstrap\bin\sha256sum.exe" set "_sha_bin=!_ros_sd!\libscript\bootstrap\bin\sha256sum.exe"
+)
+if not "!_sha_bin!"=="" (
+    for /f "tokens=1" %%a in ('"!_sha_bin!" "!_cs_file!" 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
+)
+if "!actual_checksum!"=="" (
+    where certutil >nul 2>&1
+    if !errorlevel! equ 0 (
+        for /f "skip=1 tokens=1" %%a in ('certutil -hashfile "!_cs_file!" SHA256 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
+    )
+)
+if "!actual_checksum!"=="" (
+    where powershell >nul 2>&1
+    if !errorlevel! equ 0 (
+        for /f "usebackq tokens=*" %%a in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('!_cs_file!');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do set "actual_checksum=%%a"
+    )
+)
+exit /b 0
+
+:: ## install_via_rapps
+:: Installs a package on ReactOS using pre-fetched offline cache installers or rapps.exe /install.
+:install_via_rapps
+set "_rp_id=%~1"
+if "!_rp_id!"=="" exit /b 1
+set "_ros_sd=%SystemDrive%"
+if "!_ros_sd!"=="" set "_ros_sd=C:"
+set "_rp_sub=rapps"
+set "_rp_cache=!_ros_sd!\libscript\cache\!_rp_sub!"
+set "_rp_stamps=!_ros_sd!\libscript\stamps"
+if not exist "!_rp_stamps!" mkdir "!_rp_stamps!"
+if exist "!_rp_cache!\!_rp_id!.msi" (
+    msiexec.exe /i "!_rp_cache!\!_rp_id!.msi" /qn AGREE_ALL_LICENSES=1
+    if !errorlevel! equ 0 (
+        echo installed> "!_rp_stamps!\rapps_!_rp_id!.stamp"
+        exit /b 0
+    )
+)
+if exist "!_rp_cache!\!_rp_id!.exe" (
+    set "_rp_flags=/S"
+    if exist "!_rp_cache!\!_rp_id!.flags" (
+        set /p _rp_flags=<"!_rp_cache!\!_rp_id!.flags"
+    )
+    "!_rp_cache!\!_rp_id!.exe" !_rp_flags!
+    if !errorlevel! equ 0 (
+        echo installed> "!_rp_stamps!\rapps_!_rp_id!.stamp"
+        exit /b 0
+    )
+)
+where rapps.exe >nul 2>&1
+if !errorlevel! equ 0 (
+    if not "%LIBSCRIPT_OFFLINE%"=="1" (
+        rapps.exe /install "!_rp_id!"
+        if !errorlevel! equ 0 (
+            echo installed> "!_rp_stamps!\rapps_!_rp_id!.stamp"
+            exit /b 0
+        )
+    )
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\!_rp_sub!\cli.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\!_rp_sub!\cli.cmd" install "!_rp_id!"
+    exit /b !errorlevel!
+)
+exit /b 1
+
+:: ## libscript_extract_archive
+:: Extracts .zip, .7z, .tar.gz, .tgz, or .tar.xz archives using 7za/7z, tar, unzip, or PowerShell fallback.
+:libscript_extract_archive
+set "_lea_arc=%~1"
+set "_lea_dest=%~2"
+if "!_lea_arc!"=="" exit /b 1
+if "!_lea_dest!"=="" exit /b 1
+if not exist "!_lea_dest!" mkdir "!_lea_dest!"
+set "_7z_bin="
+where 7za >nul 2>&1 && set "_7z_bin=7za"
+if "!_7z_bin!"=="" where 7z >nul 2>&1 && set "_7z_bin=7z"
+if "!_7z_bin!"=="" (
+    set "_ros_sd=%SystemDrive%"
+    if "!_ros_sd!"=="" set "_ros_sd=C:"
+    if exist "!_ros_sd!\libscript\bootstrap\bin\7za.exe" set "_7z_bin=!_ros_sd!\libscript\bootstrap\bin\7za.exe"
+)
+if not "!_7z_bin!"=="" (
+    "!_7z_bin!" x -y -o"!_lea_dest!" "!_lea_arc!" >nul
+    if !errorlevel! equ 0 exit /b 0
+)
+where tar >nul 2>&1
+if !errorlevel! equ 0 (
+    tar -xf "!_lea_arc!" -C "!_lea_dest!" 2>nul
+    if !errorlevel! equ 0 exit /b 0
+)
+where unzip >nul 2>&1
+if !errorlevel! equ 0 (
+    unzip -oq "!_lea_arc!" -d "!_lea_dest!" 2>nul
+    if !errorlevel! equ 0 exit /b 0
+)
+where powershell >nul 2>&1
+if !errorlevel! equ 0 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path '!_lea_arc!' -DestinationPath '!_lea_dest!' -Force" >nul 2>&1
+    exit /b !errorlevel!
+)
+call "!LOG_CMD!" :log_error "No archive extractor (7za, tar, unzip, or powershell) found to unpack !_lea_arc!"
+exit /b 1
 
 :: ## libscript_fetch
 :: Delegates artifact retrieval to libscript_download.
@@ -479,15 +628,36 @@ set "_lrgt_url=%~1"
 if "!_lrgt_url!"=="" exit /b 1
 if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (Invoke-RestMethod -Uri '!_lrgt_url!').tag_name -replace '^v',''" 2>nul
-exit /b !errorlevel!
+where curl >nul 2>&1
+if !errorlevel! equ 0 (
+    where jq >nul 2>&1
+    if !errorlevel! equ 0 (
+        for /f "usebackq delims=" %%T in (`curl -fsSL "!_lrgt_url!" 2^>nul ^| jq -r ".tag_name // empty"`) do (
+            set "_tag_val=%%T"
+            if "!_tag_val:~0,1!"=="v" set "_tag_val=!_tag_val:~1!"
+            echo !_tag_val!
+            exit /b 0
+        )
+    )
+)
+where powershell >nul 2>&1
+if !errorlevel! equ 0 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (Invoke-RestMethod -Uri '!_lrgt_url!').tag_name -replace '^v',''" 2>nul
+    exit /b !errorlevel!
+)
+exit /b 1
 
 :: ## libscript_uninstall_pkg
-:: Uninstalls a package using the active Windows package manager (winget, choco, scoop).
+:: Uninstalls a package using the active Windows/ReactOS package manager (rapps, winget, choco, scoop).
 :libscript_uninstall_pkg
 set "_un_pkg=%~1"
 if "!_un_pkg!"=="" exit /b 0
 if not defined PKG_MGR call :detect_pkg_mgr
+if /i "!PKG_MGR!"=="rapps" (
+    set "_ros_sd=%SystemDrive%"
+    if "!_ros_sd!"=="" set "_ros_sd=C:"
+    if exist "!_ros_sd!\libscript\stamps\rapps_!_un_pkg!.stamp" del /f /q "!_ros_sd!\libscript\stamps\rapps_!_un_pkg!.stamp" >nul 2>&1
+)
 if /i "!PKG_MGR!"=="winget" (
     where winget >nul 2>&1 && winget uninstall --id "!_un_pkg!" --silent --accept-source-agreements >nul 2>&1
 )

@@ -21,14 +21,42 @@ def effective_check_os(os):
   end;
 
 def is_os_supported(m; os):
-  effective_check_os(os) as $chk |
-  (m.os_blacklist // [] | index($chk) == null) and
-  (m.os_whitelist == null or (m.os_whitelist | length == 0) or (m.os_whitelist | index("all")) or (m.os_whitelist | index($chk) != null));
+  if os == "reactos" then
+    ((m.os_blacklist // []) | index("reactos") == null) and
+    (
+      ((m.os_whitelist // []) | index("reactos") != null) or
+      (
+        ((m.os_blacklist // []) | index("windows") == null) and
+        (m.os_whitelist == null or (m.os_whitelist | length == 0) or (m.os_whitelist | index("all") != null) or (m.os_whitelist | index("windows") != null))
+      )
+    )
+  else
+    effective_check_os(os) as $chk |
+    (m.os_blacklist // [] | index($chk) == null) and
+    (m.os_whitelist == null or (m.os_whitelist | length == 0) or (m.os_whitelist | index("all")) or (m.os_whitelist | index($chk) != null))
+  end;
+
+def normalize_arch_token(a):
+  if a == "i386" or a == "x86" or a == "386" then "i686"
+  elif a == "amd64" then "x86_64"
+  elif a == "arm64" then "aarch64"
+  else a
+  end;
+
+def is_arch_supported(m; arch):
+  normalize_arch_token(arch) as $na |
+  (([ (m.arch_blacklist // [])[]? | normalize_arch_token(.) ] | index($na)) == null) and
+  (
+    m.arch_whitelist == null or
+    (m.arch_whitelist | length == 0) or
+    ([ m.arch_whitelist[]? | normalize_arch_token(.) ] | (index("all") != null or index($na) != null))
+  );
 
 def map_os_family_to_target(os_fam; fallback_os):
   if os_fam == null or os_fam == "" then fallback_os
   elif (os_fam | startswith("freebsd")) then "freebsd"
   elif (os_fam == "illumos" or os_fam == "sunos") then "sunos"
+  elif (os_fam == "reactos" or (os_fam | startswith("reactos"))) then "reactos"
   elif (os_fam == "rtos-zephyr" or (os_fam | startswith("zephyr"))) then "zephyr"
   elif (os_fam == "rtos-freertos" or (os_fam | startswith("freertos"))) then "freertos"
   elif (os_fam == "unikernel-unikraft" or (os_fam | startswith("unikraft"))) then "unikraft"
@@ -54,8 +82,8 @@ def normalize_os_pkg_alias(name; os; libc):
   ($raw | ascii_downcase) as $n |
   if $n == "postgresql" then "postgres"
   elif $n == "node" then "nodejs"
-  elif $n == "smtp" then (if os == "windows" then "hmailserver" else "exim" end)
-  elif $n == "wsgi" then (if os == "windows" then "waitress" else "gunicorn" end)
+  elif $n == "smtp" then (if os == "windows" or os == "reactos" then "hmailserver" else "exim" end)
+  elif $n == "wsgi" then (if os == "windows" or os == "reactos" then "waitress" else "gunicorn" end)
   elif $n == "mongodb-compatible" then (if os == "sunos" or libc == "musl" or is_unikernel_os(os) then "ferretdb" else "mongodb" end)
   elif $n == "kv-store" then "redis"
   elif $n == "rdbms" then "mysql"
@@ -161,12 +189,13 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   # ----------------------------------------------------
   # OS-CONFIG.JSON MULTI-KERNEL RESOLUTION MODE
   # ----------------------------------------------------
-  ($cfg.target.arch // "x86_64") as $arch |
   ($cfg.target.os_family // "linux-glibc") as $os_fam |
   map_os_family_to_target($os_fam; ($target_os // "linux")) as $resolved_os |
+  ($cfg.target.arch // (if $resolved_os == "reactos" then "i686" else "x86_64" end)) as $arch |
   ($cfg.target.libc // (
     if $resolved_os == "freebsd" then "bsd-libc"
     elif $resolved_os == "sunos" then "illumos-libc"
+    elif $resolved_os == "reactos" then "msvcrt"
     elif $resolved_os == "zephyr" then "picolibc"
     elif $resolved_os == "freertos" then "newlib"
     elif $resolved_os == "rumprun" then "rump-libc"
@@ -176,7 +205,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   )) as $libc |
   ($cfg.profile_name // "custom") as $profile |
   ($cfg.kernel.compiler // "default") as $kcompiler |
-  ($cfg.kernel.version // (if $resolved_os == "zephyr" then "3.7.0" elif $resolved_os == "freertos" then "11.1.0" else "6.6.52" end)) as $kversion |
+  ($cfg.kernel.version // (if $resolved_os == "zephyr" then "3.7.0" elif $resolved_os == "freertos" then "11.1.0" elif $resolved_os == "reactos" then ($cfg.reactos_version // "0.4.16") else "6.6.52" end)) as $kversion |
   ($cfg.kernel.config_method // "defconfig") as $kconfig |
   ($cfg.kernel.kcflags // "-O2") as $kkcflags |
   ($cfg.kernel.custom_cc_bin // "") as $kcustom_bin |
@@ -204,8 +233,10 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
       [];
       (lookup_manifest($manifests; $upkg; $resolved_os; $libc) // ([ $manifests[]? | select(.name == $upkg) ][0])) as $um |
       if $um != null then
-        if ($resolved_os == "freebsd" or $resolved_os == "sunos" or $resolved_os == "linux") and (is_os_supported($um; $resolved_os) | not) then
+        if ($resolved_os == "freebsd" or $resolved_os == "sunos" or $resolved_os == "linux" or $resolved_os == "reactos") and (is_os_supported($um; $resolved_os) | not) then
           error("OS_UNSUPPORTED: Component '" + $upkg + "' is not supported on target OS '" + $resolved_os + "'.")
+        elif $resolved_os == "reactos" and (is_arch_supported($um; $arch) | not) then
+          error("ARCH_UNSUPPORTED: Component '" + $upkg + "' does not support strict ReactOS PE architecture '" + $arch + "' (no WoW64 layer).")
         elif is_unikernel_os($resolved_os) and ($um.process_model == "multiprocess-fork") and (($um.unikernel_support // ["osv", "nanos"]) | index($resolved_os) == null) then
           error("UNIKERNEL_INCOMPATIBLE: Component '" + $upkg + "' requires multiprocess fork() which is unsupported on '" + $resolved_os + "'. Choose osv/nanos or a hybrid multi-VM topology.")
         elif is_rtos_os($resolved_os) and ($rtos_hybrid_pod | not) and (
@@ -232,7 +263,7 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
     (if ($resolved_os == "linux" or $resolved_os == "freebsd" or $resolved_os == "sunos") and $cfg.init_system?.provider and $cfg.init_system.provider != "none" and $cfg.init_system.provider != "unikernel-entrypoint" and $cfg.init_system.provider != "zephyr-sys-init" and $cfg.init_system.provider != "freertos-scheduler" then $cfg.init_system.provider else empty end),
     (if $resolved_os == "linux" and $cfg.storage?.bootloader and $cfg.storage.bootloader != "none" then $cfg.storage.bootloader else empty end),
     (if (is_rtos_os($resolved_os) | not) and $cfg.display?.compositor and $cfg.display.compositor != "none" then $cfg.display.compositor else empty end),
-    (if (is_rtos_os($resolved_os) | not) and $cfg.desktop?.desktop_suite and $cfg.desktop.desktop_suite != "none" then $cfg.desktop.desktop_suite else empty end),
+    (if (is_rtos_os($resolved_os) | not) and ($resolved_os != "reactos") and $cfg.desktop?.desktop_suite and $cfg.desktop.desktop_suite != "none" and $cfg.desktop.desktop_suite != "explorer-classic" then $cfg.desktop.desktop_suite else empty end),
     (if (is_rtos_os($resolved_os) | not) and $cfg.desktop?.greeter and $cfg.desktop.greeter != "none" then $cfg.desktop.greeter else empty end)
   ] + $user_pkgs) | unique as $seed_components |
 
@@ -392,6 +423,47 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
                 }
               }
             ]
+          }
+        ]
+      elif $resolved_os == "reactos" then
+        [
+          {
+            "stage": "stage1-reactos-base",
+            "description": "ReactOS ntoskrnl/FreeLoader base system, unattend.inf, and RAPPS offline catalog bootstrap",
+            "tasks": (
+              (if ($cfg.build_mode // "repack") == "from-source" then
+                [
+                  {
+                    "name": "rosbe-toolchain",
+                    "component": "_lib/toolchains/rosbe",
+                    "action": "bootstrap",
+                    "stamp": ".stamp.stage0_rosbe",
+                    "variants": [],
+                    "env": {
+                      "LIBSCRIPT_STAGE": "stage0",
+                      "LIBSCRIPT_TARGET_OS": "reactos",
+                      "LIBSCRIPT_TARGET_ARCH": $arch
+                    }
+                  }
+                ]
+              else [] end)
+              +
+              [
+                {
+                  "name": "reactos-base",
+                  "component": "_lib/reactos/distro",
+                  "action": "bootstrap",
+                  "stamp": ".stamp.stage1_reactos_base",
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage1",
+                    "LIBSCRIPT_TARGET_OS": "reactos",
+                    "LIBSCRIPT_TARGET_ARCH": $arch,
+                    "REACTOS_VERSION": $kversion
+                  }
+                }
+              ]
+            )
           }
         ]
       elif $resolved_os == "zephyr" then
@@ -597,6 +669,25 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
                   "stamp": ".stamp.stage3_illumos_archive",
                   "variants": [],
                   "env": { "LIBSCRIPT_STAGE": "stage3", "LIBSCRIPT_TARGET_OS": "sunos" }
+                }
+              ]
+            }
+          elif $resolved_os == "reactos" then
+            {
+              "stage": "stage3-media-packaging",
+              "description": "ReactOS FreeLoader boot media, unattend.inf GuiRunOnce, and El Torito ISO / VM disk synthesis",
+              "tasks": [
+                {
+                  "name": "reactos-boot-media",
+                  "component": "_lib/reactos/distro",
+                  "action": "assemble",
+                  "stamp": ".stamp.stage3_reactos_media",
+                  "variants": [],
+                  "env": {
+                    "LIBSCRIPT_STAGE": "stage3",
+                    "LIBSCRIPT_TARGET_OS": "reactos",
+                    "LIBSCRIPT_TARGET_ARCH": $arch
+                  }
                 }
               ]
             }

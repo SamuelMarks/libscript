@@ -43,6 +43,7 @@
         "networking",
         "orchestration",
         "package-managers",
+        "reactos",
         "runtimes",
         "search",
         "security",
@@ -212,6 +213,7 @@
           "sunos",
           "illumos",
           "solaris",
+          "reactos",
           "alpine",
           "debian",
           "ubuntu",
@@ -255,6 +257,7 @@
           "sunos",
           "illumos",
           "solaris",
+          "reactos",
           "alpine",
           "debian",
           "ubuntu",
@@ -399,6 +402,10 @@
         "scoop": {
           "type": "string",
           "description": "Package identifier on Scoop."
+        },
+        "rapps": {
+          "type": "string",
+          "description": "Package identifier on ReactOS Applications Manager (rapps)."
         },
         "pkg": {
           "type": "string",

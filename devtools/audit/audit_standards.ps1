@@ -418,7 +418,7 @@ function Audit-File {
 
     # 6. Option A Hard Fail Proforma check (Exit code 86)
     $fileName = [System.IO.Path]::GetFileName($FilePath)
-    if ($fileName -match '^(mount_target_vfs|umount_target_vfs|runner|provision_disk|format_fs|live_freebsd|live_illumos|live_linux|coinstall_dual_os|install_freebsd|install_illumos|install_linux|multiboot_orchestrator|grub_multiboot|alpine-systemctl|setup_debian|setup_alpine|setup_freebsd|setup_macos|setup_rhel|setup_illumos|setup_linux)\.(cmd|ps1)$') {
+    if ($fileName -match '^(mount_target_vfs|umount_target_vfs|runner|provision_disk|format_fs|live_freebsd|live_illumos|live_reactos|live_linux|coinstall_dual_os|install_freebsd|install_illumos|install_reactos|install_linux|multiboot_orchestrator|grub_multiboot|alpine-systemctl|setup_debian|setup_alpine|setup_freebsd|setup_macos|setup_rhel|setup_illumos|setup_linux)\.(cmd|ps1)$') {
         $content = Get-Content -Path $FilePath -Raw
         if ($ext -eq "cmd" -and $content -notmatch 'exit /b 86') {
             Log-Violation -File $FilePath -Rule "OPTION_A_PROFORMA" -Details "Option A proforma script must exit with status 86."
@@ -446,7 +446,7 @@ function Audit-File {
         if ($venvLeakMatch) {
             Log-Violation -File $FilePath -Rule "RTOS_VENV_LEAK" -Details "RTOS kernel recipe creates Python venv outside LIBSCRIPT_HOME."
         }
-    } elseif ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers|kernel|bootloaders)/') {
+    } elseif ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers|kernel|bootloaders|freebsd|illumos|reactos)/') {
         $boundaryMatch = Select-String -Path $FilePath -Pattern '^\s*(sudo\s+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)\s' -Quiet
         if ($boundaryMatch) {
             Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "Tier 1 leaf recipe directly invokes kernel/storage primitive."

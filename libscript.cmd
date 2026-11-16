@@ -353,6 +353,9 @@ if /i "!action_pkg_norm!"=="_lib/ai-tools/ollama" set "action_pkg_norm=_lib/app-
 if /i "!action_pkg_norm!"=="toolchains/gemma-tpu-suite" set "action_pkg_norm=_lib/toolchains/gemma-tpu-suite"
 if /i "!action_pkg_norm!"=="gemma_tpu_suite" set "action_pkg_norm=_lib/toolchains/gemma-tpu-suite"
 if /i "!action_pkg_norm!"=="gemma-tpu-suite" set "action_pkg_norm=_lib/toolchains/gemma-tpu-suite"
+if /i "!action_pkg_norm!"=="freebsd-distro" set "action_pkg_norm=_lib/freebsd/distro"
+if /i "!action_pkg_norm!"=="illumos-distro" set "action_pkg_norm=_lib/illumos/distro"
+if /i "!action_pkg_norm!"=="reactos-distro" set "action_pkg_norm=_lib/reactos/distro"
 
 set "action_pkg=!action_pkg_norm:/=\!"
 if /i "!action_pkg!"=="cloud" (

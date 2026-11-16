@@ -250,6 +250,16 @@ Individual platform execution runners:
 - `tests/run_freebsd_distro_on_windows.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_sunos.sh` (`.cmd`)
 
+### ReactOS Distribution `.box` Packaging & Multi-Platform Matrix
+
+```sh
+# Package a ReactOS distribution profile as a QEMU Vagrant .box
+./libscript.sh package-as reactos-distro --format box --profile profiles/reactos/desktop-classic-i686.json
+
+# Execute the 5-platform ReactOS verification matrix
+./tests/run_reactos_distro_matrix.sh
+```
+
 ## 6. Cross-Platform `SamuelMarks/msi-rs` & `../bento` Vagrant Verification Matrix
 
 To verify `.msi` package compilation, `quick-install` (`i_agree -> next -> next -> finish`) and
@@ -298,6 +308,9 @@ automatically via `./libscript.sh experiment` (or `libscript.cmd experiment`):
 ./libscript.sh experiment bento_matrix --target-os=alpine-3.24
 ./libscript.sh experiment bento_matrix --target-os=debian-13
 ./libscript.sh experiment i_deprovision_instance
+
+# Run declarative installer-e2e experiments (headless, quick, custom modes on isolated vanilla snapshots)
+./libscript.sh experiment run openedx --bento-prefix=bento --provider=auto --target-os=windows-11 --pkg-format=msi --pkg-source=github-release
 ```
 
 See [EXPERIMENTS.md](EXPERIMENTS.md) and [USAGE.md](USAGE.md) for the complete parameter reference.

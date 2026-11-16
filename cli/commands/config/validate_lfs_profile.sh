@@ -55,6 +55,9 @@ printf '[INFO] Validating profile: %s\n' "$PROFILE_FILE"
 
 # Top-level required keys check
 if command -v jq >/dev/null 2>&1; then
+  if jq -e '.reactos_version != null or (.target.os_family == "reactos" and .kernel == null)' "$PROFILE_FILE" >/dev/null 2>&1; then
+    SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/execution-plan.reactos.schema.json"
+  fi
   # Check top-level required fields per schema
   missing_fields=$(jq -r --slurpfile schema "$SCHEMA_FILE" '
     $schema[0].required - keys | .[]
@@ -92,7 +95,7 @@ printf '[CHECK] Bootloader:        %s\n' "$BOOTLOADER"
 
 # 1. Validate Init System
 case "$INIT_PROVIDER" in
-  systemd|openrc|sysvinit|runit|s6|dinit|bsd-init|none)
+  systemd|openrc|sysvinit|runit|s6|dinit|bsd-init|bsd-rc|smf|nt-scm|none)
     printf '[PASS] Init system provider valid: %s\n' "$INIT_PROVIDER"
     ;;
   *)
@@ -103,7 +106,7 @@ esac
 
 # 2. Validate Display Server
 case "$DISPLAY_SERVER" in
-  wayland|x11|hybrid-xwayland|headless|none)
+  wayland|x11|hybrid-xwayland|win32-gdi|headless|none)
     printf '[PASS] Display server valid: %s\n' "$DISPLAY_SERVER"
     ;;
   *)
@@ -125,7 +128,7 @@ esac
 
 # 4. Validate Desktop Suite
 case "$DESKTOP_SUITE" in
-  gnome|kde-plasma-6|xfce4|lxqt|none)
+  gnome|kde-plasma-6|xfce4|lxqt|explorer-classic|none)
     printf '[PASS] Desktop suite valid: %s\n' "$DESKTOP_SUITE"
     ;;
   *)
@@ -147,7 +150,7 @@ esac
 
 # 6. Validate Bootloader
 case "$BOOTLOADER" in
-  grub2-efi|grub2-bios|systemd-boot|limine|freebsd-bootcode|none)
+  grub2-efi|grub2-bios|systemd-boot|limine|freebsd-bootcode|freebsd-loader|illumos-loader|freeldr|none)
     printf '[PASS] Bootloader valid: %s\n' "$BOOTLOADER"
     ;;
   *)

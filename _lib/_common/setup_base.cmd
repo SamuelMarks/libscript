@@ -74,11 +74,19 @@ if /i "%TARGET_DIR%"=="!LIBSCRIPT_ROOT_DIR!\_lib\_common" set "TARGET_DIR=%CD%"
 :: Relocate target paths cleanly when staging into LIBSCRIPT_TARGET_SYSROOT
 if defined LIBSCRIPT_TARGET_SYSROOT (
     if not "!LIBSCRIPT_TARGET_SYSROOT!"=="/" if not "!LIBSCRIPT_TARGET_SYSROOT!"=="\" (
-        set "LIBSCRIPT_HOME=!LIBSCRIPT_TARGET_SYSROOT!\opt\libscript"
-        set "LIBSCRIPT_DATA_DIR=!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript"
-        set "LIBSCRIPT_ETC_DIR=!LIBSCRIPT_TARGET_SYSROOT!\etc"
-        set "LIBSCRIPT_LOG_DIR=!LIBSCRIPT_TARGET_SYSROOT!\var\log"
-        set "PREFIX=!LIBSCRIPT_TARGET_SYSROOT!\usr\local\bin"
+        if /i "%LIBSCRIPT_TARGET_OS%"=="reactos" (
+            set "LIBSCRIPT_HOME=!LIBSCRIPT_TARGET_SYSROOT!\libscript"
+            set "LIBSCRIPT_DATA_DIR=!LIBSCRIPT_TARGET_SYSROOT!\libscript\data"
+            set "LIBSCRIPT_ETC_DIR=!LIBSCRIPT_TARGET_SYSROOT!\libscript\etc"
+            set "LIBSCRIPT_LOG_DIR=!LIBSCRIPT_TARGET_SYSROOT!\libscript\logs"
+            set "PREFIX=!LIBSCRIPT_TARGET_SYSROOT!\ReactOS\System32"
+        ) else (
+            set "LIBSCRIPT_HOME=!LIBSCRIPT_TARGET_SYSROOT!\opt\libscript"
+            set "LIBSCRIPT_DATA_DIR=!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript"
+            set "LIBSCRIPT_ETC_DIR=!LIBSCRIPT_TARGET_SYSROOT!\etc"
+            set "LIBSCRIPT_LOG_DIR=!LIBSCRIPT_TARGET_SYSROOT!\var\log"
+            set "PREFIX=!LIBSCRIPT_TARGET_SYSROOT!\usr\local\bin"
+        )
         if not exist "!LIBSCRIPT_HOME!" mkdir "!LIBSCRIPT_HOME!"
         if not exist "!LIBSCRIPT_DATA_DIR!" mkdir "!LIBSCRIPT_DATA_DIR!"
         if not exist "!PREFIX!" mkdir "!PREFIX!"
@@ -105,9 +113,15 @@ if exist "%TARGET_DIR%\setup_windows.cmd" (
     call "%TARGET_DIR%\setup_generic.cmd" %*
     set "SETUP_ERR=!errorlevel!"
 ) else if exist "%TARGET_DIR%\setup.ps1" (
-    set "COMMON_DIR=!LIBSCRIPT_ROOT_DIR!\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; & '%TARGET_DIR%\setup.ps1' }"
-    set "SETUP_ERR=!errorlevel!"
+    where powershell >nul 2>&1
+    if not errorlevel 1 (
+        set "COMMON_DIR=!LIBSCRIPT_ROOT_DIR!\_lib\_common"
+        powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; & '%TARGET_DIR%\setup.ps1' }"
+        set "SETUP_ERR=!errorlevel!"
+    ) else (
+        call "!LOG_CMD!" :log_warn "powershell.exe is not available on this host (ReactOS/minimal Win32); falling back to package manager for %TARGET_DIR%."
+        set "SETUP_ERR=1"
+    )
 ) else (
     call "!LOG_CMD!" :log_error "No setup script found in %TARGET_DIR%"
     exit /b 1

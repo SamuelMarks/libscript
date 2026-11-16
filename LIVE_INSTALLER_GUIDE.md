@@ -1,7 +1,7 @@
 # LibScript `msi-rs` Live-CD / Live-USB Operator Guide
 
 Complete operational guide for deploying, configuring, and executing the universal live-CD and
-live-USB bootable installer powered by `msi-rs` across Linux, FreeBSD, and illumos.
+live-USB bootable installer powered by `msi-rs` across Linux, FreeBSD, illumos, and ReactOS.
 
 ---
 
@@ -12,20 +12,24 @@ bare-metal or virtual hardware. It encapsulates the full `msi-rs` suite (`msi-cl
 tools, and msitools replacements) to perform:
 
 - Storage device discovery, hardware geometry inspection, and safe partitioning (GPT, MBR, VTOC).
-- Root filesystem formatting and ZFS pool provisioning (`ext4`, `xfs`, `btrfs`, `ufs2`, `zfs`).
-- Base operating system installation for Linux (Alpine, Debian, Rocky, LFS), FreeBSD, and illumos.
-- Offline preloading of complex web applications and platforms (Open edX, WordPress).
+- Root filesystem formatting and ZFS pool provisioning (`ext4`, `xfs`, `btrfs`, `ufs2`, `zfs`,
+  `fat32`, `ntfs`).
+- Base operating system installation for Linux (Alpine, Debian, Rocky, LFS), FreeBSD, illumos, and
+  ReactOS.
+- Offline preloading of complex web applications and platforms (Open edX, WordPress) and RAPPS/MSI
+  Win32 apps.
 
 ### Building & Flashing Live Media (`devtools/build_live_installer.*` & `devtools/write_usb.*`)
 
 ```sh
-# Build live installer ISOs (--target linux|freebsd|illumos|all, --mode all|headless|tui|gui)
+# Build live installer ISOs (--target linux|freebsd|illumos|reactos|all, --mode all|headless|tui|gui)
 ./devtools/build_live_installer.sh --target linux --mode all --output build/live-linux.iso
 ./devtools/build_live_installer.sh --target freebsd --mode all --output build/live-freebsd.iso
 ./devtools/build_live_installer.sh --target illumos --mode all --output build/live-illumos.iso
+./devtools/build_live_installer.sh --target reactos --mode all --output build/live-reactos.iso
 
 # Windows Batch equivalent:
-devtools\build_live_installer.cmd --target linux --mode all --output build\live-linux.iso
+devtools\build_live_installer.cmd --target reactos --mode all --output build\live-reactos.iso
 
 # Flash a built hybrid ISO onto USB media
 ./devtools/write_usb.sh build/live-linux.iso /dev/sdX
@@ -49,6 +53,13 @@ The live bootloader provides automated mode selection through kernel command-lin
 - `boot_serial="YES"`: Enables serial console redirection.
 - `comconsole_speed="115200"`: Configures serial baud rate.
 - `boot_multicons="YES"`: Mirrors installer output across both video display and serial ports.
+
+### ReactOS FreeLoader Settings (`freeldr.ini`)
+
+- `DefaultOS=LiveCD`: Boots the RAM-backed ReactOS Live environment without touching local disks.
+- `/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS`: Streams `ntoskrnl.exe` and `firstboot.cmd` logs
+  over `COM1` and enables GRUB2 Multiboot (`multiboot /freeldr.sys`) or UEFI (`bootx64.efi`)
+  quad-boot chainloading via `multiboot_orchestrator.sh --reactos-part <dev>`.
 
 ---
 

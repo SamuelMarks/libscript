@@ -1,9 +1,9 @@
 @echo off
 :: # capture_wordpress_vagrant_screenshots.cmd
 :: ## Overview
-:: Automates launching WordPress Windows Installer (.msi) wizard inside Vagrant Windows 11, stepping through every enumeration (Simple Mode and Advanced Mode flows), executing offline and online installation workflows, restoring vanilla VM snapshots, and capturing pixel-perfect screenshots of wizard steps, desktop icons, and browser views directly from the live QEMU display framebuffer.
+:: Backward-compatible Windows wrapper delegating WordPress Vagrant MSI screenshot capture to `pkg_ui_runner.cmd`.
 :: ## Usage
-:: capture_wordpress_vagrant_screenshots.cmd devtools/capture_wordpress_vagrant_screenshots.cmd
+:: capture_wordpress_vagrant_screenshots.cmd [--target-os=windows-11] [--pkg-source=build|github-release] [--dry-run=1]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -15,10 +15,8 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:!THIS_FILE!:"
-
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
     call :find_root
@@ -28,67 +26,20 @@ goto :root_found
 :: ## find_root
 :: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
-if exist "!d!\libscript.cmd" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
-if exist "!d!\ROOT" (
-    set "LIBSCRIPT_ROOT_DIR=!d!"
-    exit /b 0
-)
+if exist "!d!\libscript.cmd" ( set "LIBSCRIPT_ROOT_DIR=!d!" & exit /b 0 )
+if exist "!d!\ROOT" ( set "LIBSCRIPT_ROOT_DIR=!d!" & exit /b 0 )
 for %%P in ("!d!") do set "parent=%%~dpP"
 set "d=!parent:~0,-1!"
-if "!d!"=="" (
-    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-    exit /b 1
-)
+if "!d!"=="" ( echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2 & exit /b 1 )
 goto :find_root
 
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-
-
-if /i "%~1"=="--help" goto :show_help
-if /i "%~1"=="-h" goto :show_help
-if /i "%~1"=="/?" goto :show_help
-if /i "%~1"=="-?" goto :show_help
-
-goto :parse_args
-
-:: ## show_help
-:: Displays usage and help information for the screenshot capture tool.
-:show_help
-echo Usage: %~nx0 [--help]
-echo.
-echo Automates capturing pixel-perfect screenshots of the WordPress MSI installer
-echo running inside the Vagrant Windows 11 guest VM.
-echo.
-echo Options:
-echo   --help, -h, /?, -?  Show this help message and exit.
-exit /b 0
-
-:: ## parse_args
-:: Parses command-line arguments.
-:parse_args
-goto :main
-
-:: ## main
-:: Executes primary orchestration routine.
-:main
-set "REPO_ROOT=%SCRIPT_DIR%\.."
-
-where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\capture_wordpress_vagrant_screenshots.ps1" %*
-    exit /b %ERRORLEVEL%
-)
-
-where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    pwsh -NoProfile -File "%SCRIPT_DIR%\capture_wordpress_vagrant_screenshots.ps1" %*
-    exit /b %ERRORLEVEL%
-)
-
-echo [ERROR] PowerShell interpreter not found to run screenshot automation. >&2
-exit /b 1
+set "WP_SUITE_ROOT=!LIBSCRIPT_ROOT_DIR!\tests_tmp\experiments\_transient_suites"
+if not exist "!WP_SUITE_ROOT!" mkdir "!WP_SUITE_ROOT!"
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment scaffold wordpress "--template=installer-e2e" "--packaging-manifest=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\wordpress\packaging.json" "--out-root=!WP_SUITE_ROOT!" >nul
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\experiment\pkg_ui_runner.cmd" "--suite-dir=!WP_SUITE_ROOT!\wordpress" "--target-os=windows-11" "--pkg-format=msi" %*
+exit /b !errorlevel!

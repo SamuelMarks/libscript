@@ -6,6 +6,18 @@ All notable changes to the LibScript framework are documented here.
 
 ### Added
 
+- **Built-in ReactOS Modular Distribution Synthesis (`_lib/reactos/`, `rapps`, `rosbe`)**:
+  - Declarative `execution-plan.reactos.schema.json` and 5 curated `i686` / `x86_64` profiles under
+    `profiles/reactos/`, supporting hybrid upstream ISO repacking (`unattend.inf` + `GuiRunOnce`
+    `firstboot.cmd`) and full RosBE CMake/Ninja source compilation (`modules/optional/`).
+  - Standalone Tier 1 `_lib/package-managers/rapps/` (guest `rapps.exe` wrapper + host `rapps-db`
+    INI parser & offline prefetcher) and `_lib/toolchains/rosbe/` (`i686-w64-mingw32` and
+    `x86_64-w64-mingw32` cross-toolchains), plus PowerShell-free `.cmd` fallbacks in
+    `_lib/_common/`.
+  - Strict PE header architecture enforcement (`0x014c` vs. `0x8664`, no WoW64 assumptions),
+    multi-format exporters (`iso`, `raw`, `qcow2`, `vhd`, `vmdk`, `box`), `--target reactos` live
+    installer media, GRUB2 -> FreeLoader multiboot co-installation, and 5-platform verification
+    matrix (`tests/run_reactos_distro_matrix.{sh,cmd}`).
 - **Tiered Architecture & Universal OS Synthesis Framework**:
   - **Tier 1: Leaf Recipes, Cross-Toolchains & Native Version Management (`_lib/`)**:
     - Codified the Standard Context Contract (`LIBSCRIPT_TARGET_SYSROOT`, `LIBSCRIPT_HOST_ROOT`,

@@ -845,6 +845,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `dash`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno-pm`                             | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `distro`                              | `reactos`          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `dnf`                                 | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
 | `doxygen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `dragonfly`                           | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
@@ -1034,6 +1035,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `r`                                   | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `rabbitmq`                            | `message-brokers`  | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `racket`                              | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rapps`                               | `package-managers` | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rbenv`                               | `package-managers` | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rebar3`                              | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `redis`                               | `caches`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -1042,6 +1044,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `ripgrep`                             | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `riscv-none-elf-gcc`                  | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rocksdb`                             | `databases`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `rosbe`                               | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `rsync`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `ruby`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `runtimes/provision_isolated_runtime` | `runtimes`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |

@@ -231,3 +231,24 @@ machines:
     [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64).
   - Supports Apple Silicon (`aarch64`) and Intel/AMD (`x86_64`) hosts.
   - Full instructions are available in [VAGRANT.md](VAGRANT.md).
+
+---
+
+## 🖥️ ReactOS Guest & Built-in Distribution Synthesis (`_lib/reactos/distro/`)
+
+LibScript supports synthesizing redistributable **ReactOS** (`0.4.16+` `i686` and `nightly`
+`x86_64`) distributions with pre-installed default applications (`profiles/reactos/*.json`):
+
+- **PowerShell-Free `.cmd` Execution**: `_lib/_common/os_info.cmd`, `pkg_mgr.cmd`, and
+  `setup_base.cmd` detect ReactOS (`IS_REACTOS=1`, `TARGET_OS_FLAVOR=reactos`), prepend portable
+  Win32 bootstrap tools (`%SystemDrive%\libscript\bootstrap\bin`: `curl.exe`, `7za.exe`, `jq.exe`,
+  `sha256sum.exe`), and avoid `powershell.exe` / `winget` dependencies.
+- **RAPPS & Silent `.msi` Provisioning**: `_lib/package-managers/rapps/` (`PKG_MGR=rapps`) parses
+  upstream `rapps-db` INI definitions on the host to prefetch installers for air-gapped guest
+  installation alongside `msiexec.exe /i <stack>.msi /qn AGREE_ALL_LICENSES=1` via `GuiRunOnce`
+  (`reactos/unattend.inf` -> `%SystemDrive%\libscript\firstboot.cmd`).
+- **Strict `i686` vs. `x86_64` PE Bitness (No WoW64)**: 64-bit ReactOS does not implement WoW64; all
+  staged `.exe`/`.dll`/`.sys` binaries must match the profile's `target.arch` (`0x014c` vs.
+  `0x8664`). Native Win32 C/C++ desktop utilities (`7zip`, `sumatrapdf`, `notepadpp`, `vlc`, `git`,
+  `cmake`, `ninja`, `sqlite-tools`, `libscript-rest-api`) are first-class default workloads, whereas
+  NT8+/NT10-only runtimes or IIS-specific features are excluded.

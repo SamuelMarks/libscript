@@ -102,9 +102,17 @@ if /I "!TARGET_OS!"=="rtos-zephyr" goto :zephyr_triplet
 if /I "!TARGET_OS!"=="freertos" goto :freertos_triplet
 if /I "!TARGET_OS!"=="rtos-freertos" goto :freertos_triplet
 
-if "!TARGET_OS!"=="freebsd" (
+if /I "!TARGET_OS!"=="freebsd" (
     set "LIBSCRIPT_TARGET_TRIPLET=!TARGET_ARCH!-unknown-freebsd14.0"
-) else if "!TARGET_OS!"=="unikraft" (
+) else if /I "!TARGET_OS!"=="reactos" (
+    if /I "!TARGET_ARCH!"=="x86_64" (
+        set "LIBSCRIPT_TARGET_TRIPLET=x86_64-w64-mingw32"
+    ) else if /I "!TARGET_ARCH!"=="amd64" (
+        set "LIBSCRIPT_TARGET_TRIPLET=x86_64-w64-mingw32"
+    ) else (
+        set "LIBSCRIPT_TARGET_TRIPLET=i686-w64-mingw32"
+    )
+) else if /I "!TARGET_OS!"=="unikraft" (
     set "LIBSCRIPT_TARGET_TRIPLET=!TARGET_ARCH!-unikraft-elf"
 ) else (
     if "!TARGET_LIBC!"=="musl" (
@@ -164,6 +172,13 @@ if /I "!TARGET_LIBC!"=="freertos-none" set "_IS_FREESTANDING=1"
 if "!_IS_FREESTANDING!"=="1" (
     set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -ffreestanding -fdata-sections -ffunction-sections"
     set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,--gc-sections"
+) else if /I "!TARGET_OS!"=="reactos" (
+    set "LIBSCRIPT_SECURITY_CFLAGS=-O2 -pipe -fno-common -D_FORTIFY_SOURCE=2"
+    if /I "!LIBSCRIPT_TARGET_TRIPLET!"=="x86_64-w64-mingw32" (
+        set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,--nxcompat -Wl,--dynamicbase -Wl,--high-entropy-va"
+    ) else (
+        set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,--nxcompat -Wl,--dynamicbase"
+    )
 ) else (
     set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -fPIC -fstack-protector-strong -D_FORTIFY_SOURCE=2"
     set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,-z,relro -Wl,-z,now"

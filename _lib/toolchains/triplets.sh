@@ -73,6 +73,13 @@ case "$RTOS_BOARD" in
       freebsd*)
         LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unknown-freebsd14.0"
         ;;
+      reactos*)
+        case "$TARGET_ARCH" in
+          i686|i386|x86) LIBSCRIPT_TARGET_TRIPLET='i686-w64-mingw32' ;;
+          x86_64|amd64) LIBSCRIPT_TARGET_TRIPLET='x86_64-w64-mingw32' ;;
+          *) LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-w64-mingw32" ;;
+        esac
+        ;;
       unikraft*)
         LIBSCRIPT_TARGET_TRIPLET="${TARGET_ARCH}-unikraft-elf"
         ;;
@@ -103,6 +110,12 @@ esac
 if [ "$_IS_FREESTANDING" = "1" ]; then
   LIBSCRIPT_SECURITY_CFLAGS='-fno-common -ffreestanding -fdata-sections -ffunction-sections'
   LIBSCRIPT_SECURITY_LDFLAGS='-Wl,--gc-sections'
+elif [ "$TARGET_OS" = 'reactos' ]; then
+  LIBSCRIPT_SECURITY_CFLAGS='-O2 -pipe -fno-common -D_FORTIFY_SOURCE=2'
+  case "$TARGET_ARCH" in
+    x86_64|amd64) LIBSCRIPT_SECURITY_LDFLAGS='-Wl,--nxcompat -Wl,--dynamicbase -Wl,--high-entropy-va' ;;
+    *) LIBSCRIPT_SECURITY_LDFLAGS='-Wl,--nxcompat -Wl,--dynamicbase' ;;
+  esac
 else
   LIBSCRIPT_SECURITY_CFLAGS="-fno-common -fPIC -fstack-protector-strong -D_FORTIFY_SOURCE=2"
   LIBSCRIPT_SECURITY_LDFLAGS="-Wl,-z,relro -Wl,-z,now"

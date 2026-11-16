@@ -1,0 +1,58 @@
+{
+  "$schema": "../../execution-plan.reactos.schema.json",
+  "schema_version": "1.0.0",
+  "profile_name": "nightly-x86_64",
+  "description": "64-bit ReactOS x86_64 nightly NT6+ target on NTFS with hybrid BIOS/UEFI boot and strict 64-bit PE binary enforcement.",
+  "reactos_version": "nightly",
+  "build_mode": "repack",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "reactos",
+    "channel": "nightly",
+    "image_variant": "bootcd",
+    "libc": "msvcrt"
+  },
+  "init_system": {
+    "provider": "nt-scm",
+    "services_enabled": ["dhcp", "eventlog", "rpcss", "umpnpmgr"]
+  },
+  "display": {
+    "protocol": "win32-gdi",
+    "graphics_driver": "vbemp",
+    "resolution": "1024x768x32"
+  },
+  "desktop": {
+    "shell": "explorer-classic",
+    "theme": "lunar",
+    "autologin_user": "admin"
+  },
+  "audio": {
+    "subsystem": "hdaudio"
+  },
+  "storage": {
+    "filesystem": "ntfs",
+    "bootloader": "freeldr",
+    "partition_table": "gpt",
+    "boot_mode": "hybrid-uefi-bios",
+    "disk_size_gib": 12,
+    "serial_debug": true
+  },
+  "package_manager": {
+    "provider": "rapps",
+    "offline_prefetch": true
+  },
+  "unattend": {
+    "enabled": true,
+    "computer_name": "REACTOS-X64",
+    "locale_id": "00000409",
+    "time_zone_index": 85,
+    "disable_gecko_inst": true
+  },
+  "network": {
+    "hostname": "reactos-x64",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "rapps_packages": ["7zip"],
+  "components": ["7zip", "jq", "curl"]
+}

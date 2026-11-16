@@ -24,8 +24,8 @@ flowchart TD
     end
 
     subgraph Tier2[Tier 2: Synthesizers & Assemblers]
-        OSDeps["Operating System, Unikernel & RTOS Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Unikernels, Zephyr/FreeRTOS/MCUboot, Linux/FreeBSD/illumos, UKI, package-as)"]
-        SolverEngine["Constraint Solver: resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking, RTOS Fork Guard & USE Flag Variant Propagation)"]
+        OSDeps["Operating System, Unikernel & RTOS Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Unikernels, Zephyr/FreeRTOS/MCUboot, Linux/FreeBSD/illumos/ReactOS, RosBE/RAPPS, UKI, package-as)"]
+        SolverEngine["Constraint Solver: resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking, RTOS Fork Guard, ReactOS PE Bitness Guard & USE Flag Variant Propagation)"]
     end
 
     subgraph Tier1[Tier 1 & Tier 1.5: Leaf Recipes, Version Managers & Base Userland]

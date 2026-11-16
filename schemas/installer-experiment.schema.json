@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/schemas/installer-experiment.schema.json",
+  "title": "LibScript Generic Installer & Guest-UI Experiment Specification",
+  "description": "Declarative contract for cross-OS Bento/Vagrant provisioning, GitHub Release or host-built package resolution, snapshot-isolated headless/quick/custom installation modes, and 100% guest-native desktop and browser authentication verification.",
+  "type": "object",
+  "required": ["packaging_manifest"],
+  "properties": {
+    "packaging_manifest": {
+      "type": "string",
+      "description": "Relative path from the suite directory to the target stack packaging.json manifest (e.g., ../../_lib/web-apps/openedx/packaging.json)."
+    },
+    "vagrant": {
+      "type": "object",
+      "description": "Vagrant hypervisor, Bento fork box resolution, and clean vanilla snapshot lifecycle configuration.",
+      "properties": {
+        "bento_prefix": {
+          "type": "string",
+          "default": "bento",
+          "description": "Configurable Vagrant box namespace or Bento fork prefix (e.g., bento or custom fork owner)."
+        },
+        "bento_dir": {
+          "type": "string",
+          "description": "Optional path to a local Bento fork checkout containing built .box artifacts under builds/build_complete."
+        },
+        "box_url_template": {
+          "type": "string",
+          "description": "Optional URL template for downloading prebuilt Bento fork boxes directly when not registered locally."
+        },
+        "default_target_os": {
+          "type": "string",
+          "default": "windows-11",
+          "description": "Default target guest operating system identifier when --target-os is not supplied."
+        },
+        "supported_target_oses": {
+          "type": "array",
+          "description": "Target guest operating systems supported by this installer experiment.",
+          "items": {
+            "type": "string",
+            "description": "Target OS slug (e.g., windows-11, debian-13, rockylinux-10.2, freebsd-15.1, macos-14-arm64, alpine-3.24, omnios)."
+          }
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["auto", "virtualbox", "libvirt", "hyperv", "vmware_desktop", "qemu", "utm"],
+          "default": "auto",
+          "description": "Vagrant hypervisor provider used to run guest virtual machines."
+        },
+        "vanilla_snapshot_name": {
+          "type": "string",
+          "default": "vanilla",
+          "description": "Snapshot identifier saved on a clean vanilla guest VM and restored prior to each installation mode."
+        },
+        "cpus": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 4,
+          "description": "Number of virtual CPUs allocated to the Vagrant guest VM."
+        },
+        "memory_mb": {
+          "type": "integer",
+          "minimum": 512,
+          "default": 8192,
+          "description": "Guest RAM allocation in MiB for the Vagrant VM."
+        },
+        "clean_state_probes": {
+          "type": "array",
+          "description": "Filesystem paths, service names, or TCP ports verified absent after restoring the vanilla snapshot.",
+          "items": {
+            "type": "object",
+            "description": "Single clean-state assertion probe evaluated inside the guest OS.",
+            "required": ["kind", "target"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["path_absent", "port_closed", "service_absent"],
+                "description": "Cleanliness probe predicate kind."
+              },
+              "target": {
+                "type": "string",
+                "description": "Guest filesystem path, TCP port number, or service unit name asserted absent."
+              },
+              "os_family": {
+                "type": "string",
+                "enum": ["any", "windows", "posix", "linux", "macos", "bsd"],
+                "default": "any",
+                "description": "Guest OS family to which this clean-state probe applies."
+              }
+            }
+          }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "description": "Cross-OS target installer artifact format and source resolution policy (GitHub Releases vs host build).",
+      "properties": {
+        "default_format": {
+          "type": "string",
+          "enum": ["auto", "msi", "exe", "deb", "rpm", "pkg", "dmg"],
+          "default": "auto",
+          "description": "Default target package format or auto to infer from the resolved guest OS."
+        },
+        "supported_formats": {
+          "type": "array",
+          "description": "Package formats supported for resolution and guest installation.",
+          "items": {
+            "type": "string",
+            "enum": ["msi", "exe", "deb", "rpm", "pkg", "dmg"],
+            "description": "Supported native installer format."
+          }
+        },
+        "default_source": {
+          "type": "string",
+          "enum": ["github-release", "build"],
+          "default": "github-release",
+          "description": "Default artifact acquisition strategy (fetch from GitHub Releases or build anew on host)."
+        },
+        "release_repo": {
+          "type": "string",
+          "default": "SamuelMarks/libscript",
+          "description": "GitHub owner/repository slug queried when package source is github-release."
+        },
+        "release_tag": {
+          "type": "string",
+          "default": "latest",
+          "description": "GitHub Release tag name or latest."
+        },
+        "release_asset_patterns": {
+          "type": "object",
+          "description": "Map from package format (msi, exe, deb, rpm, pkg, dmg) to expected release asset filename substring or regex.",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Release asset filename pattern for the given package format key."
+          }
+        },
+        "build_variant": {
+          "type": "string",
+          "enum": ["offline", "online"],
+          "default": "offline",
+          "description": "Installer bundle mode passed to host-side LibScript packagers when building anew."
+        }
+      }
+    },
+    "install_matrix": {
+      "type": "object",
+      "description": "Snapshot-isolated installation workflow modes evaluated on clean vanilla VMs.",
+      "properties": {
+        "modes": {
+          "type": "array",
+          "description": "Ordered list of installation modes executed individually from clean vanilla VM snapshots.",
+          "items": {
+            "type": "string",
+            "enum": ["headless", "quick", "custom"],
+            "description": "Installation workflow mode."
+          }
+        },
+        "isolate_each_mode_via_snapshot": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the guest VM is rolled back to the clean vanilla snapshot prior to every install mode."
+        },
+        "capture_wizard_dialogs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether guest-native screenshots of GUI wizard stages are captured during quick and custom installs."
+        },
+        "custom_mode_overrides": {
+          "type": "object",
+          "description": "Non-default directory, port, and feature selections applied during the custom GUI install mode.",
+          "properties": {
+            "install_dir_windows": {
+              "type": "string",
+              "description": "Custom installation root path selected on Windows guests during custom GUI install."
+            },
+            "install_dir_posix": {
+              "type": "string",
+              "description": "Custom installation root path selected on POSIX guests during custom install."
+            },
+            "enable_features": {
+              "type": "array",
+              "description": "Optional feature identifiers toggled on during custom GUI installation.",
+              "items": {
+                "type": "string",
+                "description": "Feature identifier matching packaging.json features[].id."
+              }
+            },
+            "disable_features": {
+              "type": "array",
+              "description": "Optional feature identifiers toggled off during custom GUI installation.",
+              "items": {
+                "type": "string",
+                "description": "Feature identifier matching packaging.json features[].id."
+              }
+            },
+            "custom_env": {
+              "type": "object",
+              "description": "Additional custom key/value parameters supplied to the custom installer flow.",
+              "additionalProperties": {
+                "type": "string",
+                "description": "Custom installer parameter value."
+              }
+            }
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "description": "100% guest-native desktop shortcut and multi-endpoint browser authentication screenshot policy.",
+      "properties": {
+        "capture_desktop_icons": {
+          "type": "string",
+          "enum": ["if-applicable", "always", "never"],
+          "default": "if-applicable",
+          "description": "Policy governing desktop shortcut verification and desktop screenshot capture."
+        },
+        "service_ready_timeout_sec": {
+          "type": "integer",
+          "minimum": 5,
+          "default": 300,
+          "description": "Maximum seconds to poll guest HTTP service health endpoints before failing verification."
+        },
+        "browser_preference": {
+          "type": "array",
+          "description": "Ordered guest browser executable candidates for CDP DOM login and screenshot verification.",
+          "items": {
+            "type": "string",
+            "description": "Browser binary identifier (e.g., chromium, google-chrome, msedge, firefox)."
+          }
+        },
+        "inherit_packaging_verification_screenshots": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically execute all desktop, unauthenticated browser, and authenticated login screenshot steps declared in packaging_manifest."
+        },
+        "extra_verification_steps": {
+          "type": "array",
+          "description": "Optional suite-specific verification screenshot steps appended after packaging_manifest steps.",
+          "items": {
+            "type": "object",
+            "description": "Additional guest desktop or browser verification step.",
+            "required": ["id", "capture_type"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Deterministic output screenshot filename stem."
+              },
+              "capture_type": {
+                "type": "string",
+                "enum": ["desktop", "browser_unauthenticated", "browser_authenticated"],
+                "description": "Guest screenshot capture workflow type."
+              },
+              "service_port": {
+                "type": "integer",
+                "description": "Guest localhost TCP port serving the target web application."
+              },
+              "url_template": {
+                "type": "string",
+                "description": "Target URL opened inside the guest browser."
+              },
+              "healthcheck_path": {
+                "type": "string",
+                "description": "HTTP path polled on service_port prior to opening the browser."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

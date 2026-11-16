@@ -323,6 +323,33 @@ Aggregates structured verification statuses into `tests_tmp/illumos_matrix_summa
 
 ---
 
+## 9B. ReactOS Distribution Verification Suite & 5-Platform Matrix
+
+The ReactOS distribution subsystem (`_lib/reactos/distro/`) includes a dedicated verification suite
+and 5-platform matrix runner across `{macOS, Windows, FreeBSD, SunOS, Linux}`:
+
+- **Headless Serial Boot Smoketest** (`tests/reactos_boot_test.sh` / `.cmd`): Verifies 4 `COM1`
+  milestones: 1) `FreeLoader` bootstrap banner, 2) `ntoskrnl.exe` + `FASTFAT` / `btrfs` / `NTFS`
+  root mount, 3) NT Session Manager & SCM (`smss.exe` / `services.exe`), and 4) Unattended
+  `LIBSCRIPT-FIRSTBOOT-READY` marker.
+- **GUI & RAPPS Default Apps Smoketest** (`tests/reactos_gui_smoke_test.sh` / `.cmd`): Verifies
+  Win32k GDI display configuration, `explorer.exe` shell, `lautus` theme staging, `Winlogon`
+  autologin, and offline RAPPS prefetch stamps (`7zip`, `sumatrapdf`, `notepadpp`, `vlc`).
+- **Network & Service Smoketest** (`tests/reactos_network_smoke_test.sh` / `.cmd`): Verifies DHCP,
+  `unattend.inf` computer name, DNS resolvers, bootstrap `curl.exe`, and `libscript-rest-api` NT SCM
+  registration.
+- **Vagrant Box Verification** (`tests/reactos_vagrant_box_test.sh` / `.cmd`): Validates `.box`
+  archive integrity, `metadata.json`, `Vagrantfile`, `box.img`, and SHA-256 manifest.
+- **2-Pass Idempotency & PE Bitness Guard** (`tests/test_reactos_idempotency.sh` / `.cmd`): Verifies
+  `[SKIP]` idempotency across all 6 export formats (`iso`, `raw`, `qcow2`, `vhd`, `vmdk`, `box`),
+  bidirectional PE `0x014c`/`0x8664` mismatch rejection, and solver `OS_UNSUPPORTED` guards.
+
+```sh
+./tests/run_reactos_distro_matrix.sh
+```
+
+---
+
 ## 10. Live Installer Verification Matrix & Automated Screenshot Harness
 
 The `msi-rs` live installer subsystem (`devtools/build_live_installer.sh`) undergoes automated

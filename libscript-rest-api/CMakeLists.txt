@@ -48,6 +48,10 @@ add_test(
     COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact rtos-freertos mcuboot-signed sqlite mps2_an385
 )
 add_test(
+    NAME dispatch_reactos_iso
+    COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact reactos iso sqlite
+)
+add_test(
     NAME reject_invalid_kernel
     COMMAND $<TARGET_FILE:libscript-rest-api> --dispatch-artifact invalid-kernel firmware-elf sqlite
 )

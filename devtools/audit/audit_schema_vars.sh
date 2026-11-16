@@ -35,6 +35,7 @@ MANIFEST_SCHEMA="${LIBSCRIPT_ROOT_DIR}/_lib/_common/manifest.schema.json"
 OS_CONFIG_SCHEMA="${LIBSCRIPT_ROOT_DIR}/os-config.schema.json"
 FREEBSD_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.freebsd.schema.json"
 ILLUMOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.illumos.schema.json"
+REACTOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.reactos.schema.json"
 RTOS_SCHEMA="${LIBSCRIPT_ROOT_DIR}/execution-plan.rtos.schema.json"
 EXEC_COMMON_SCHEMA="${LIBSCRIPT_ROOT_DIR}/schemas/execution-plan-common.schema.json"
 ROOT_LIBSCRIPT_SCHEMA="${LIBSCRIPT_ROOT_DIR}/libscript.schema.json"
@@ -310,6 +311,15 @@ audit_root_schemas_and_profiles() {
             . as $doc
             | ($is[0].required // []) as $req
             | [ ($req[] as $r | select(($doc | has($r)) | not) | "missing required illumos field: \($r)") ] | .[]
+          ' "$_pf" 2>/dev/null || true)
+        fi
+        ;;
+      reactos)
+        if [ -f "$REACTOS_SCHEMA" ]; then
+          _pf_err=$(jq -r --slurpfile rs "$REACTOS_SCHEMA" '
+            . as $doc
+            | ($rs[0].required // []) as $req
+            | [ ($req[] as $r | select(($doc | has($r)) | not) | "missing required ReactOS field: \($r)") ] | .[]
           ' "$_pf" 2>/dev/null || true)
         fi
         ;;

@@ -150,6 +150,8 @@ if [ "$CMD" = "package-as" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/illumos_distro.sh" "$@"
   elif [ "${pkg_type:-}" = "freebsd-distro" ] || [ "${pkg_type:-}" = "freebsd_distro" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/freebsd_distro.sh" "$@"
+  elif [ "${pkg_type:-}" = 'reactos-distro' ] || [ "${pkg_type:-}" = 'reactos_distro' ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/reactos_distro.sh" "$@"
   elif [ "${pkg_type:-}" = "raw-img" ] || [ "${pkg_type:-}" = "raw_img" ] || [ "${pkg_type:-}" = "img" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/raw_img.sh" "$@"
   elif [ "${pkg_type:-}" = "qcow2" ] || [ "${pkg_type:-}" = "vmdk" ] || [ "${pkg_type:-}" = "vdi" ]; then
