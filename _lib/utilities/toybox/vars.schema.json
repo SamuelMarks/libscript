@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/toybox/vars.schema.json",
+  "title": "toybox variables",
+  "description": "Configuration variables for Toybox across POSIX, Windows native (MSVC), and MS-DOS (dos32).",
+  "type": "object",
+  "properties": {
+    "TOYBOX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install toybox. 'libscript_native' uses isolated version dirs (dos32 on MS-DOS, PE on Windows, static on Linux), 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "TOYBOX_VERSION": {
+      "description": "Specific version of toybox to install (e.g., 0.8.15 on Windows/MS-DOS or latest).",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "TOYBOX_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading toybox binary or archive artifacts."
+    },
+    "TOYBOX_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying toybox available remote releases."
+    }
+  }
+}

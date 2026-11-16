@@ -2,19 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/utilities/gawk/vars.schema.json",
   "title": "gawk variables",
-  "description": "Configuration variables for gawk",
+  "description": "Configuration variables for gawk across POSIX, Windows native (MSVC), and MS-DOS (dos32).",
   "type": "object",
   "properties": {
     "GAWK_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install gawk. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "description": "How to install gawk. 'libscript_native' uses isolated version dirs (dos32 on MS-DOS, PE on Windows), 'system' uses OS package manager, and 'from-source' compiles from source.",
       "enum": ["libscript_native", "system", "from-source"],
-      "default": "system"
+      "default": "libscript_native"
     },
     "GAWK_VERSION": {
-      "description": "Specific version of gawk to install.",
+      "description": "Specific version of gawk to install (e.g., 5.4.60 on Windows/MS-DOS, 5.3.1 on POSIX, or latest).",
       "type": "string",
-      "default": "5.3.1",
+      "default": "latest",
       "version_aliases": ["latest", "lts"]
     },
     "GAWK_DOWNLOAD_URL": {

@@ -1,7 +1,8 @@
 # Cross-Platform Packaging & Branding Customization Guide
 
 LibScript provides a unified packaging architecture to synthesize native, production-grade
-installation artifacts for Windows, macOS, Linux, and Cloud/PaaS targets.
+installation artifacts across Windows, macOS, Linux, FreeBSD, illumos, ReactOS, Unikernel/RTOS
+firmware, and Cloud Marketplace targets.
 
 ## Supported Packaging Targets & Visual Branding Features
 
@@ -129,4 +130,27 @@ to the `495x392` installer window across **Windows**, **Linux**, **macOS**, **Fr
 ```sh
 ./devtools/capture_msi_vagrant_matrix.sh --target all --os all --variant both --flow both
 ./devtools/verify_screenshots.sh --target all
+```
+
+---
+
+## OS Distribution, Unikernel, RTOS Firmware & Cloud Marketplace Packaging
+
+Beyond desktop and server application installers, `package-as` and `publish-marketplace` compile
+bootable operating system images, single-address-space unikernels, signed microcontroller firmware,
+and compliance-gated cloud marketplace bundles:
+
+```sh
+# Modular OS distribution synthesis (FreeBSD, illumos, ReactOS)
+./libscript.sh package-as freebsd-distro
+./libscript.sh package-as illumos-distro
+./libscript.sh package-as reactos-distro
+
+# UEFI/GPT & Hyper-V Gen2 VHD cloud-boot unikernels and MCUboot-signed RTOS firmware
+./libscript.sh package-as unikernel --cloud-boot=uefi-gpt
+./libscript.sh package-as unikernel --cloud-boot=azure-vhd
+./libscript.sh package-as firmware
+
+# SPDX 2.3 SBOM & compliance-gated AWS / Azure / GCP Marketplace bundle synthesis
+./libscript.sh publish-marketplace marketplace/openedx-unikernel/offer.json --clouds=aws,azure,gcp --stage-only
 ```

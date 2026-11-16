@@ -92,8 +92,17 @@ set "_req_pm="
 if not "!_comp_up!"=="" set "_req_pm=!%_comp_up%_PKG_MGR!"
 if "!_req_pm!"=="" if defined LIBSCRIPT_PKG_MGR set "_req_pm=%LIBSCRIPT_PKG_MGR%"
 if /i "!_req_pm!"=="chocolatey" set "_req_pm=choco"
+if /i "!_req_pm!"=="libscript_native" set "_req_pm=libscript"
 if not "!_req_pm!"=="" (
     set "PKG_MGR=!_req_pm!"
+    exit /b 0
+)
+if "%IS_MSDOS%"=="1" (
+    set "PKG_MGR=libscript"
+    exit /b 0
+)
+if /i "%TARGET_OS%"=="msdos" (
+    set "PKG_MGR=libscript"
     exit /b 0
 )
 if "%IS_REACTOS%"=="1" (
@@ -120,7 +129,7 @@ if !errorlevel! equ 0 (
     set "PKG_MGR=scoop"
     exit /b 0
 )
-set "PKG_MGR=winget"
+set "PKG_MGR=libscript"
 exit /b 0
 
 :: ## libscript_depends_via
@@ -136,8 +145,13 @@ set "_rc=!errorlevel!"
 set "LIBSCRIPT_PKG_MGR=%_saved_pm%"
 exit /b !_rc!
 
+:: ## depends
+:: Shorthand alias for libscript_depends resolving system or component-level dependencies.
+:depends
+goto :libscript_depends
+
 :: ## libscript_depends
-:: Resolves and installs system dependencies on Windows via the active package manager.
+:: Resolves and installs system or component-level dependencies on Windows and MS-DOS.
 :libscript_depends
 if "%LIBSCRIPT_SKIP_SYSTEM_DEPS%"=="1" exit /b 0
 if defined LIBSCRIPT_PKG_MGR call :detect_pkg_mgr
@@ -148,6 +162,13 @@ goto :depends_loop
 :: Checks whether a mapped package is already installed under the active Windows package manager.
 :is_installed
 set "_chk_pkg=%~1"
+if /i "!PKG_MGR!"=="libscript" (
+    set "_ls_chk_home=%LIBSCRIPT_HOME%"
+    if "!_ls_chk_home!"=="" set "_ls_chk_home=%USERPROFILE%\.libscript"
+    if exist "!_ls_chk_home!\!_chk_pkg!\default\bin\!_chk_pkg!.exe" exit /b 0
+    if exist "!_ls_chk_home!\!_chk_pkg!\latest\bin\!_chk_pkg!.exe" exit /b 0
+    exit /b 1
+)
 if /i "!PKG_MGR!"=="winget" (
     winget list --exact --id "!_chk_pkg!" >nul 2>&1
     exit /b !errorlevel!
@@ -182,6 +203,21 @@ if "%LIBSCRIPT_IMAGE_BUILD%"=="1" if defined LIBSCRIPT_TARGET_SYSROOT (
     echo [INFO] [SYSROOT] Recording package dependency '!_generic_pkg!' for offline sysroot !LIBSCRIPT_TARGET_SYSROOT!
     if not exist "!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript" mkdir "!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript"
     echo !_generic_pkg!>> "!LIBSCRIPT_TARGET_SYSROOT!\var\lib\libscript\sysroot_deps.list"
+    shift
+    goto :depends_loop
+)
+call :is_native_win_dos_port "!_generic_pkg!"
+set "_is_native_port=!errorlevel!"
+set "_route_comp_pm=0"
+if /i "!PKG_MGR!"=="libscript" set "_route_comp_pm=1"
+if "!_is_native_port!"=="0" (
+    if not "%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"=="1" (
+        if not defined LIBSCRIPT_PKG_MGR set "_route_comp_pm=1"
+    )
+)
+if "!_route_comp_pm!"=="1" (
+    call :libscript_install_component_dep "!_generic_pkg!"
+    if !errorlevel! neq 0 exit /b 1
     shift
     goto :depends_loop
 )
@@ -224,6 +260,10 @@ if /i "!PKG_MGR!"=="winget" (
             set "PKG_MGR=winget"
         )
     )
+    if !_inst_rc! neq 0 (
+        call :libscript_install_component_dep "!_generic_pkg!"
+        set "_inst_rc=!errorlevel!"
+    )
 ) else if /i "!PKG_MGR!"=="choco" (
     choco install -y "!MAPPED_PKG!"
     set "_inst_rc=!errorlevel!"
@@ -240,11 +280,102 @@ if /i "!PKG_MGR!"=="winget" (
     call :install_via_rapps "!MAPPED_PKG!"
     set "_inst_rc=!errorlevel!"
 ) else (
-    winget install --exact --id "!MAPPED_PKG!" --accept-package-agreements --accept-source-agreements --silent
+    call :libscript_install_component_dep "!_generic_pkg!"
     set "_inst_rc=!errorlevel!"
 )
 shift
 goto :depends_loop
+
+:: ## is_native_win_dos_port
+:: Returns 0 if a requested dependency is backed by a dedicated Windows/MS-DOS native component-level package manager.
+:is_native_win_dos_port
+set "_native_pkg=%~1"
+for %%P in (jq jq-windows gawk gawk-windows awk busybox busybox-windows toybox toybox-windows dash dash-windows sh freebsd-usr-bin freebsd-usr-bin-windows sed grep cut tr sort uniq wc head tail xargs find cmp diff patch bmake bsdtar bsdunzip) do (
+    if /i "!_native_pkg!"=="%%P" exit /b 0
+)
+exit /b 1
+
+:: ## libscript_install_component_dep
+:: Installs a dependency via its LibScript component-level package manager on Windows or MS-DOS and updates PATH.
+:libscript_install_component_dep
+set "_lic_req=%~1"
+set "_lic_saved_pm=!PKG_MGR!"
+set "PKG_MGR=libscript"
+call "%MAPPER_CMD%" :map_package "!_lic_req!"
+set "_lic_comp=!MAPPED_PKG!"
+if "!_lic_comp!"=="" set "_lic_comp=!_lic_req!"
+set "PKG_MGR=!_lic_saved_pm!"
+
+set "_lic_applet="
+if /i "!_lic_comp!"=="freebsd-usr-bin" (
+    if /i not "!_lic_req!"=="freebsd-usr-bin" (
+        if /i not "!_lic_req!"=="freebsd-usr-bin-windows" (
+            set "_lic_applet=!_lic_req!"
+        )
+    )
+)
+
+set "_lic_home=%LIBSCRIPT_HOME%"
+if "!_lic_home!"=="" set "_lic_home=%USERPROFILE%\.libscript"
+set "_lic_bin_chk=!_lic_req!"
+if /i "!_lic_req!"=="jq-windows" set "_lic_bin_chk=jq"
+if /i "!_lic_req!"=="gawk-windows" set "_lic_bin_chk=gawk"
+if /i "!_lic_req!"=="busybox-windows" set "_lic_bin_chk=busybox"
+if /i "!_lic_req!"=="toybox-windows" set "_lic_bin_chk=toybox"
+if /i "!_lic_req!"=="dash-windows" set "_lic_bin_chk=dash"
+
+if not "%FORCE_REINSTALL%"=="1" (
+    for %%V in (default latest) do (
+        if exist "!_lic_home!\!_lic_comp!\%%V\bin\!_lic_bin_chk!.exe" (
+            echo ";!PATH!;" | findstr /I /C:";!_lic_home!\!_lic_comp!\%%V\bin;" >nul 2>&1
+            if errorlevel 1 set "PATH=!_lic_home!\!_lic_comp!\%%V\bin;!PATH!"
+            exit /b 0
+        )
+    )
+)
+
+set "_lic_setup="
+for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
+    if /i not "%%~nxC"=="_common" (
+        if exist "%%C\!_lic_comp!\setup.cmd" set "_lic_setup=%%C\!_lic_comp!\setup.cmd"
+    )
+)
+if "!_lic_setup!"=="" (
+    call "!LOG_CMD!" :log_warn "No component-level package manager found for '!_lic_comp!' ^(requested: '!_lic_req!'^)"
+    exit /b 1
+)
+
+if "%LIBSCRIPT_DRY_RUN_PKG_MGR%"=="1" (
+    echo [INFO] [DRY-RUN] ^(libscript:!_lic_comp!^) install !_lic_req! ^(target=!TARGET_OS!^)
+    exit /b 0
+)
+
+set "_lic_saved_def_im=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+set "_lic_saved_app=%FREEBSD_USR_BIN_APPLET%"
+set "LIBSCRIPT_DEFAULT_INSTALL_METHOD=libscript_native"
+set "JQ_INSTALL_METHOD=libscript_native"
+set "GAWK_INSTALL_METHOD=libscript_native"
+set "BUSYBOX_INSTALL_METHOD=libscript_native"
+set "TOYBOX_INSTALL_METHOD=libscript_native"
+set "DASH_INSTALL_METHOD=libscript_native"
+set "FREEBSD_USR_BIN_INSTALL_METHOD=libscript_native"
+if not "!_lic_applet!"=="" set "FREEBSD_USR_BIN_APPLET=!_lic_applet!"
+set "ACTION=install"
+set "STACK="
+call "!_lic_setup!"
+set "_lic_rc=!errorlevel!"
+set "LIBSCRIPT_DEFAULT_INSTALL_METHOD=!_lic_saved_def_im!"
+set "FREEBSD_USR_BIN_APPLET=!_lic_saved_app!"
+if !_lic_rc! neq 0 exit /b !_lic_rc!
+
+for %%V in (default latest) do (
+    if exist "!_lic_home!\!_lic_comp!\%%V\bin" (
+        echo ";!PATH!;" | findstr /I /C:";!_lic_home!\!_lic_comp!\%%V\bin;" >nul 2>&1
+        if errorlevel 1 set "PATH=!_lic_home!\!_lic_comp!\%%V\bin;!PATH!"
+        exit /b 0
+    )
+)
+exit /b 0
 
 :: Unified Caching Downloader (Windows)
 :: ## libscript_download

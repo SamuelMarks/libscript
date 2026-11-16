@@ -12,10 +12,13 @@ curl, jq, 7zip).
 - [busybox](./busybox/README.md)
 - [curl](./curl/README.md)
 - [dash](./dash/README.md)
+- [freebsd-usr-bin](./freebsd-usr-bin/README.md)
+- [gawk](./gawk/README.md)
 - [jq](./jq/README.md)
 - [powershell](./powershell/README.md)
 - [psmux](./psmux/README.md)
 - [tmux](./tmux/README.md)
+- [toybox](./toybox/README.md)
 - [wait4x](./wait4x/README.md)
 - [wget](./wget/README.md)
 

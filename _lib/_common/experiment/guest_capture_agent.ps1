@@ -181,9 +181,7 @@ function Invoke-BrowserVerification {
     Start-Sleep -Seconds 5
 
     try {
-        $wc = New-Object System.Net.WebClient
-        $tabsJson = $wc.DownloadString('http://127.0.0.1:9222/json')
-        $wc.Dispose()
+        $tabsJson = (New-Object System.Net.WebClient).DownloadString('http://127.0.0.1:9222/json')
         $tabs = $tabsJson | ConvertFrom-Json
         $wsUrl = $null
         foreach ($t in $tabs) {

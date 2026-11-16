@@ -1,0 +1,11 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "toybox",
+  "title": "Toybox",
+  "description": "All-in-one BSD-licensed POSIX, Windows native (MSVC), and MS-DOS (dos32) command-line utility suite via SamuelMarks/toybox-windows.",
+  "category": "utilities",
+  "provides": ["toybox", "toybox-windows"],
+  "capabilities": ["versioned-artifact"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/SamuelMarks/toybox-windows"
+}

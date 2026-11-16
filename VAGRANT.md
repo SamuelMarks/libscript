@@ -207,6 +207,8 @@ Ready-to-run `Vagrantfile` environments live directly under `vagrant/`:
 - `vagrant/alpine-3.24/`, `vagrant/debian-13/`, `vagrant/rockylinux-10.2/` (Linux targets)
 - `vagrant/freebsd-15.1/`, `vagrant/omnios/` (BSD & illumos targets)
 - `vagrant/windows-11/`, `vagrant/macos-14-arm64/` (Windows & Apple Silicon macOS targets)
+- `vagrant/freedos-1.4/`, `vagrant/msdos-1.25/`, `vagrant/msdos-2.0/`, `vagrant/msdos-4.0/` (FreeDOS
+  & MS-DOS legacy/`dos32` targets)
 - `vagrant/k8s-thw-alpine/`, `vagrant/k8s-thw-debian/` (Multi-node Kubernetes-The-Hard-Way
   topologies)
 - `vagrant/up_multiple.{sh,cmd}` (Multi-box parallel launcher)

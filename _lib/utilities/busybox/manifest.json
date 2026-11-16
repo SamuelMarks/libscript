@@ -2,10 +2,11 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "busybox",
   "title": "BusyBox",
-  "description": "The Swiss Army Knife of Embedded Linux, combining tiny versions of many common UNIX utilities into a single small executable.",
+  "description": "Multi-call UNIX command suite combining common POSIX utilities with native Windows (MSVC) builds via SamuelMarks/busybox-windows.",
   "category": "utilities",
-  "provides": ["busybox"],
+  "provides": ["busybox", "busybox-windows"],
   "os_whitelist": ["all"],
   "os_blacklist": ["sunos"],
+  "repository": "https://github.com/SamuelMarks/busybox-windows",
   "capabilities": ["versioned-artifact"]
 }

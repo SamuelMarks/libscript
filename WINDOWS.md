@@ -252,3 +252,31 @@ LibScript supports synthesizing redistributable **ReactOS** (`0.4.16+` `i686` an
   `0x8664`). Native Win32 C/C++ desktop utilities (`7zip`, `sumatrapdf`, `notepadpp`, `vlc`, `git`,
   `cmake`, `ninja`, `sqlite-tools`, `libscript-rest-api`) are first-class default workloads, whereas
   NT8+/NT10-only runtimes or IIS-specific features are excluded.
+
+---
+
+## 🧱 Native Windows & MS-DOS (`dos32`) Component-Level Package Managers
+
+LibScript includes dedicated Tier 1 component-level package managers under `_lib/utilities/` for six
+zero-POSIX-emulation MSVC Win32 and OpenWatcom `dos32` port suites:
+
+- **`_lib/utilities/freebsd-usr-bin/`** (`SamuelMarks/freebsd-usr-bin-windows`): ~200 FreeBSD
+  `usr.bin` tools (`sed`, `grep`, `cut`, `tr`, `sort`, `uniq`, `wc`, `head`, `tail`, `xargs`,
+  `find`, `cmp`, `diff`, `patch`, `bmake`, `bsdtar`, `bsdunzip`) supporting both monolithic suite
+  archives and per-applet resolution via `FREEBSD_USR_BIN_APPLET`.
+- **`_lib/utilities/toybox/`** (`SamuelMarks/toybox-windows`): All-in-one BSD-licensed POSIX
+  coreutils (`toybox.exe` for `X64`/`X86`/`ARM64` and `dos32`).
+- **`_lib/utilities/gawk/`** (`SamuelMarks/gawk-windows`): Standalone GNU Awk 5.4+ (`gawk.exe` and
+  `awk.exe` alias).
+- **`_lib/utilities/busybox/`** (`SamuelMarks/busybox-windows`): Multi-call UNIX userland
+  (`busybox.exe`).
+- **`_lib/utilities/jq/`** (`SamuelMarks/jq-windows`): Native JSON processor (`jq.exe`).
+- **`_lib/utilities/dash/`** (`SamuelMarks/dash-windows`): Native `/bin/sh` (`dash.exe` and
+  `sh.exe`).
+
+Invoking `libscript depends <pkg>` (or `depends <pkg>` / `:libscript_depends <pkg>` inside recipes)
+resolves target-specific binaries automatically via `_lib/_common/os_info.{sh,cmd}`,
+`_lib/_common/pkg_mgr.{sh,cmd}`, and `_lib/_common/pkg_map.tsv` (`PKG_MGR=libscript`): on MS-DOS
+(`TARGET_OS=msdos`, `IS_MSDOS=1`), `depends jq` stages the `dos32` `jq.exe` (co-staging `DOS32A.EXE`
+/ `DOS4GW.EXE` when bundled), while on Windows (`TARGET_OS=windows`) it stages the native PE
+executable (`jq-{VER}-{X64|X86|ARM64}.exe`).

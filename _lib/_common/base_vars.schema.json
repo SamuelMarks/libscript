@@ -119,9 +119,9 @@
       "type": "string"
     },
     "LIBSCRIPT_WINDOWS_PKG_MGR": {
-      "description": "Global package manager override on Windows hosts (winget, choco, scoop, vcpkg).",
+      "description": "Global package manager override on Windows and MS-DOS hosts (libscript, winget, choco, scoop, vcpkg, rapps).",
       "type": "string",
-      "enum": ["winget", "choco", "scoop", "vcpkg"],
+      "enum": ["libscript", "winget", "choco", "scoop", "vcpkg", "rapps"],
       "default": "winget"
     },
     "LIBSCRIPT_SKIP_SYSTEM_DEPS": {

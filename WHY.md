@@ -46,7 +46,9 @@ vendor lock-in and operational cognitive load.
 ## Automated Cross-Platform Packaging & OS Synthesis
 
 Creating native installers and bootable OS images for multiple platforms traditionally requires
-learning distinct toolchains (WiX, Inno, DEB/RPM scripts, PKG, GRUB, UKI, ZFS loaders). LibScript
-uses its unified component model to dynamically compile declarative definitions into functional
-installers for Windows, macOS, Linux, and FreeBSD, as well as full bootable OS disk images (raw-img,
-qcow2, ISO, illumos-distro) and multiboot live media.
+learning distinct toolchains (WiX, Inno, DEB/RPM scripts, PKG, GRUB, UKI, FreeLoader, ZFS loaders).
+LibScript uses its unified component model to dynamically compile declarative definitions into
+functional installers for Windows, macOS, Linux, and FreeBSD, as well as full bootable OS disk
+images (`raw-img`, `qcow2`, `ISO`, `freebsd-distro`, `illumos-distro`, `reactos-distro`),
+single-address-space unikernels, signed RTOS firmware (`Zephyr` / `FreeRTOS`), and multiboot live
+media.

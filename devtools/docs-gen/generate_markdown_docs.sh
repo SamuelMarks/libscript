@@ -66,12 +66,17 @@ normalize_markdown_section() {
     line = $0
     sub(/^[ \t]+/, "", line)
     sub(/[ \t]+$/, "", line)
-    if (line == "") next
+    if (line == "") {
+      if (prose != "") { print prose; prose = "" }
+      next
+    }
     if (line ~ /^\|[ \t\-:|]+\|$/) {
+      if (prose != "") { print prose; prose = "" }
       print "|---|---|---|---|"
       next
     }
     if (substr(line, 1, 1) == "|" && substr(line, length(line), 1) == "|") {
+      if (prose != "") { print prose; prose = "" }
       inner = substr(line, 2, length(line) - 2)
       n = split(inner, cells, "|")
       out = "|"
@@ -84,7 +89,15 @@ normalize_markdown_section() {
       print out
       next
     }
-    print line
+    if (line ~ /^[-*#><]/) {
+      if (prose != "") { print prose; prose = "" }
+      print line
+      next
+    }
+    prose = (prose == "" ? line : prose " " line)
+  }
+  END {
+    if (prose != "") { print prose; prose = "" }
   }'
 }
 

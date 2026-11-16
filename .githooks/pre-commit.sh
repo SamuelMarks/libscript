@@ -17,6 +17,7 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
+unset SCRIPT_NAME || true
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)

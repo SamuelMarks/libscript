@@ -18,7 +18,7 @@ auto-discovered without modifying core CLI routers:
 ./libscript.sh experiment run os-component-matrix
 ```
 
-Built-in plugins include `edgcpp-backends`, `win-port`, `libtpu-pjrt`, `gemma-tpu`, and
+Built-in plugins include `edgcpp-backends`, `win-port`, `libtpu-pjrt`, `gemma-tpu`, `openedx`, and
 `os-component-matrix` (emitting provenance-stamped `matrix_results.json` and deterministically
 regenerating the 7-OS Supported Components tables in `README.md`).
 
@@ -321,8 +321,9 @@ LibScript natively orchestrates the zero-hallucination **EDG C/C++ Multi-Backend
 ## 7. Zero-Cost TFRC 7-Backend Gemma 4 Cloud TPU Matrix (`--suite=gemma_tpu` / `tpu_matrix`)
 
 LibScript orchestrates reproducible single-host and multi-host Google Cloud TPU benchmarks under
-strict `$0.00` TPU Research Cloud (TFRC) guardrails (`schemas/tfrc-policy.schema.json`,
-`_lib/ml-training/_common/tfrc_guard.{sh,cmd}`, `_lib/ml-training/_common/tpu_matrix.{sh,cmd}`, and
+strict `$0.00` TPU Research Cloud (TFRC) guardrails (`experiments/gemma-tpu/`,
+`schemas/tfrc-policy.schema.json`, `_lib/ml-training/_common/tfrc_guard.{sh,cmd}`,
+`_lib/ml-training/_common/tpu_matrix.{sh,cmd}`, and legacy wrapper
 `_lib/toolchains/gemma-tpu-suite/`) across all seven Gemma 4 ML framework configurations
 (`hf_transformers`, `pytorch_native`, `keras_jax`, `keras_tensorflow`, `keras_pytorch`, `maxtext`,
 and `jax_native`):
@@ -352,7 +353,7 @@ call ..\libscript\libscript.cmd experiment tpu_matrix "--tfrc-config=tfrc.policy
 
 ---
 
-## 9. Declarative Cross-OS Installer & Guest-UI Experiment Plugins (`substrate: "installer-e2e"`)
+## 8. Declarative Cross-OS Installer & Guest-UI Experiment Plugins (`substrate: "installer-e2e"`)
 
 Any stack with a `_lib/<category>/<app>/packaging.json` manifest (`openedx`, `wordpress`, `odoo`,
 etc.) can run end-to-end Vagrant + native package + guest UI/browser login experiments via

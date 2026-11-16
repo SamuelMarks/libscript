@@ -158,7 +158,7 @@ validate_os_list() {
     _os_trim=$(printf '%s' "$_os_item" | tr -d '[:space:]')
     [ -z "$_os_trim" ] && continue
     case "$_os_trim" in
-      all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|reactos|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)
+      all|linux|macos|darwin|mac|windows|msdos|dos|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|reactos|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)
         ;;
       *)
         IFS="$_oifs"

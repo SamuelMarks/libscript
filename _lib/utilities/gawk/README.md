@@ -45,12 +45,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                   | Default  | Aliases/Examples |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `GAWK_INSTALL_METHOD` | How to install gawk. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source. | `system` |                  |
-| `GAWK_VERSION`        | Specific version of gawk to install.                                                                                                          | `5.3.1`  | latest, lts      |
-| `GAWK_DOWNLOAD_URL`   | Override URL for downloading gawk binary or archive artifacts.                                                                                | `none`   |                  |
-| `GAWK_RELEASES_URL`   | Override URL for querying gawk available remote releases.                                                                                     | `none`   |                  |
+| Variable              | Description                                                                                                                                                                    | Default            | Aliases/Examples |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ---------------- |
+| `GAWK_INSTALL_METHOD` | How to install gawk. 'libscript_native' uses isolated version dirs (dos32 on MS-DOS, PE on Windows), 'system' uses OS package manager, and 'from-source' compiles from source. | `libscript_native` |                  |
+| `GAWK_VERSION`        | Specific version of gawk to install (e.g., 5.4.60 on Windows/MS-DOS, 5.3.1 on POSIX, or latest).                                                                               | `latest`           | latest, lts      |
+| `GAWK_DOWNLOAD_URL`   | Override URL for downloading gawk binary or archive artifacts.                                                                                                                 | `none`             |                  |
+| `GAWK_RELEASES_URL`   | Override URL for querying gawk available remote releases.                                                                                                                      | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.

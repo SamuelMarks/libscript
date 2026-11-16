@@ -25,19 +25,29 @@ if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -
 function Normalize-MarkdownSection {
     param([string]$Block)
     $out = @()
+    $prose = ""
     foreach ($rawLine in ($Block -split "`r?`n")) {
         $line = $rawLine.Trim()
-        if ([string]::IsNullOrEmpty($line)) { continue }
+        if ([string]::IsNullOrEmpty($line)) {
+            if ($prose -ne "") { $out += $prose; $prose = "" }
+            continue
+        }
         if ($line -match '^\|[\s\-:|]+\|$') {
+            if ($prose -ne "") { $out += $prose; $prose = "" }
             $out += '|---|---|---|---|'
         } elseif ($line.StartsWith('|') -and $line.EndsWith('|')) {
+            if ($prose -ne "") { $out += $prose; $prose = "" }
             $inner = $line.Substring(1, $line.Length - 2)
             $cells = ($inner -split '\|') | ForEach-Object { $_.Trim() }
             $out += ('| ' + ($cells -join ' | ') + ' |')
-        } else {
+        } elseif ($line -match '^[-*#><]') {
+            if ($prose -ne "") { $out += $prose; $prose = "" }
             $out += $line
+        } else {
+            $prose = if ($prose -eq "") { $line } else { "$prose $line" }
         }
     }
+    if ($prose -ne "") { $out += $prose }
     return ($out -join "`n")
 }
 
@@ -58,6 +68,7 @@ function Convert-SchemaPropertiesToRows {
                 else { [string]$val.default }
             } else { "none" }
             $aliases = @()
+            if ($val.deprecated_aliases) { $aliases += $val.deprecated_aliases }
             if ($val.version_aliases) { $aliases += $val.version_aliases }
             if ($val.examples) { $aliases += $val.examples }
             $aliasStr = $aliases -join ", "
@@ -84,7 +95,7 @@ $topologiesDir = Join-Path $rootDir 'topologies'
 $payloadsDir = Join-Path $rootDir 'payloads'
 $libReadmes = if (Test-Path -LiteralPath $libDir) {
     Get-ChildItem -Path $libDir -Filter 'README.md' -Recurse -Depth 2 | Where-Object {
-        Test-Path -LiteralPath (Join-Path $_.DirectoryName 'vars.schema.json')
+        ($_.DirectoryName -notmatch '[/\\]_lib[/\\]_common([/\\]|$)') -and (Test-Path -LiteralPath (Join-Path $_.DirectoryName 'vars.schema.json'))
     }
 } else { @() }
 $topoReadmes = if (Test-Path -LiteralPath $topologiesDir) {

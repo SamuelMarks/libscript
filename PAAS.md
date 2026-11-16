@@ -1,8 +1,8 @@
 # Platform-as-a-Service (PaaS) Engine
 
-LibScript is evolving from a provisioning framework into a complete, multicloud
-Platform-as-a-Service (PaaS). It bridges the gap between infrastructure-as-code and application
-deployment through its "Every-Thing-is-a-Package-Manager" philosophy.
+LibScript provides a complete, decentralized multicloud Platform-as-a-Service (PaaS) engine. It
+bridges the gap between infrastructure-as-code and application deployment through its
+"Every-Thing-is-a-Package-Manager" philosophy.
 
 ## Architectural Transition
 
@@ -100,10 +100,11 @@ for orchestrating provisioning, monitoring stack health, and remote execution ac
 
 Compile and schedule declarative workloads (`payloads/payload.schema.json`) onto **Kubernetes**
 (`kubernetes`, `k8s-marathon`, `k0s`), **Apache Mesos & Marathon** (`mesos`, `marathon`),
-**HashiCorp Nomad** (`nomad`), **Slurm/Ray** (`slurm_ray`), **Google XPK** (`xpk`), and **8+ Native
-Init Systems** (`native`), backed by turnkey High-Availability blueprints (`postgres-ha`,
-`redis-cluster`, `valkey-cluster`, `openedx-ha`, `minio-distributed`, `mesos-marathon-ha`,
-`k8s-marathon-paas`, `k0s-ha`).
+**HashiCorp Nomad** (`nomad`), **Slurm/Ray** (`slurm_ray`), **Google XPK & Cloud TPU VMs** (`xpk`,
+`tpu_vm`), **MicroVMs/Unikernels & RTOS** (`microvm`, `rtos_firmware`), and **8+ Native Init
+Systems** (`native`), backed by turnkey High-Availability blueprints (`postgres-ha`,
+`redis-cluster`, `valkey-cluster`, `openedx-ha`, `openedx-unikernel-pod`, `minio-distributed`,
+`mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `gke-tpu-cluster`).
 
 ## Automated Orchestration
 

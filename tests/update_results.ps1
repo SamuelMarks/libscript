@@ -142,7 +142,7 @@ function Get-ComponentTier {
     switch ($Category) {
         { $_ -in 'languages','toolchains','package-managers','utilities','databases','caches','search','security','message-brokers','web-servers','app-servers','logging','storage-layers','git-servers','web-apps','runtimes' } { return '1' }
         { $_ -in 'base-system','init-systems','networking','audio','graphics','display-servers','display-managers','desktops' } { return '1.5' }
-        { $_ -in 'kernel','bootloaders','storage','freebsd','illumos','virtualization' } { return '2' }
+        { $_ -in 'kernel','bootloaders','storage','freebsd','illumos','reactos','virtualization' } { return '2' }
         'orchestration' {
             if ($Component -in 'distro','vfs','runner','packagers','repogen','solo5') { return '2' }
             if ($Component -eq 'gke-xpk-training') { return '4' }
@@ -211,6 +211,7 @@ function Update-SupportedComponents {
             $displayComp = $comp.Name
             if ($cat.Name -eq "freebsd" -and $comp.Name -eq "distro") { $displayComp = "freebsd/distro" }
             elseif ($cat.Name -eq "illumos" -and $comp.Name -eq "distro") { $displayComp = "illumos/distro" }
+            elseif ($cat.Name -eq "reactos" -and $comp.Name -eq "distro") { $displayComp = "reactos/distro" }
             $tier = Get-ComponentTier -Category $cat.Name -Component $comp.Name
             $mCandidate = Join-Path $comp.FullName "manifest.json"
             $mPath = if (Test-Path -LiteralPath $mCandidate) { $mCandidate } else { "" }
@@ -281,7 +282,9 @@ function Update-SupportedComponents {
             $parts = $line -split '\|'
             if ($parts.Count -ge 10 -and $parts[1] -match '`([^`]+)`') {
                 $compKey = $Matches[1].Trim()
-                $existingMap[$compKey] = @{
+                $catKey = if ($parts[2] -match '`([^`]+)`') { $Matches[1].Trim() } else { "" }
+                $rowVal = @{
+                    cat     = $catKey
                     apk     = $parts[3].Trim()
                     deb     = $parts[4].Trim()
                     rpm     = $parts[5].Trim()
@@ -290,6 +293,8 @@ function Update-SupportedComponents {
                     freebsd = $parts[8].Trim()
                     macos   = $parts[9].Trim()
                 }
+                $existingMap[$compKey] = $rowVal
+                if ($catKey) { $existingMap["$catKey/$compKey"] = $rowVal }
             } elseif ($parts.Count -ge 9 -and $parts[1] -match '`([^`]+)`') {
                 $compKey = $Matches[1].Trim()
                 $existingMap[$compKey] = @{
@@ -358,6 +363,7 @@ function Update-SupportedComponents {
             $markerComp = $shortComp
             if ($comp -eq "freebsd/distro") { $markerComp = "freebsd-distro" }
             elseif ($comp -eq "illumos/distro") { $markerComp = "illumos-distro" }
+            elseif ($comp -eq "reactos/distro") { $markerComp = "reactos-distro" }
             elseif ($comp.StartsWith("bootloaders/")) { $markerComp = "bootloaders-$shortComp" }
             elseif ($comp.StartsWith("payloads/schedulers/")) { $markerComp = "scheduler-$shortComp" }
             elseif ($comp.StartsWith("traits/")) { $markerComp = "trait-$shortComp" }
@@ -540,6 +546,9 @@ function Update-TodoPlan {
     if (Test-Path -LiteralPath $todoFile) {
         $symCheck = [string][char]0x2705
         $todoLines = [System.IO.File]::ReadAllLines($todoFile, [System.Text.Encoding]::UTF8)
+        if ($todoLines.Count -gt 0 -and $todoLines[0] -match 'Native Windows & MS-DOS Execution Plan') {
+            return
+        }
         $newLines = @()
         $todoChanged = $false
         foreach ($line in $todoLines) {

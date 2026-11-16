@@ -31,11 +31,11 @@ orchestrators, multi-node cluster schedulers, and high-availability topologies.
 
 ```mermaid
 flowchart TD
-    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>360+ Isolated Recipes / 542+ Components"]
+    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>360+ Recipes / 547+ Components / 580+ Subsystems"]
 
     PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso, uf2, hex"]
 
-    OS["<b>3. KERNEL, UNIKERNEL & RTOS BAKERY</b><hr/>Unikernels (OSv, MirageOS, Unikraft)<hr/>RTOS (Zephyr RTOS, FreeRTOS + MCUboot)<hr/>Linux (Kernel + UKI), FreeBSD & illumos"]
+    OS["<b>3. KERNEL, UNIKERNEL & RTOS BAKERY</b><hr/>Unikernels (OSv, MirageOS, Unikraft)<hr/>RTOS (Zephyr RTOS, FreeRTOS + MCUboot)<hr/>Linux (Kernel + UKI), FreeBSD, illumos & ReactOS"]
 
     CLOUD["<b>4. MULTICLOUD & AI FLEETS</b><hr/>Google Cloud (GCP), AWS & Azure<hr/>Hetzner, Proxmox VE & Vagrant<hr/>TPU Pods & GPU Clusters"]
 
@@ -177,7 +177,7 @@ sequenceDiagram
 
     Dev->>Router: ./libscript.sh uninstall <tool> <version>
     Router->>Component: uninstall <version>
-    Component->>Disk: Remove <version>/ & prune ${LIBSCRIPT_HOME}/bin/* via owners/<tool>.list
+    Component->>Disk: Remove <version>/ & prune ${LIBSCRIPT_HOME}/bin/* via .bin_owners/<tool>.list
 ```
 
 #### Architectural Contract for Version Managers
@@ -185,11 +185,11 @@ sequenceDiagram
 1. **Isolated Sandboxing & `O(1)` Active Bin Farm**: Every installed version is isolated in a
    non-destructive directory structure governed by `LIBSCRIPT_HOME` (default: `~/.libscript/`), with
    active executables symlinked into `${LIBSCRIPT_HOME}/bin` and tracked in
-   `${LIBSCRIPT_HOME}/owners/<component>.list`:
+   `${LIBSCRIPT_HOME}/.bin_owners/<component>.list`:
    ```text
    ${LIBSCRIPT_HOME}/
-   ├── bin/                       # Single PATH entry (${LIBSCRIPT_HOME}/bin) — zero wrapper shims
-   ├── owners/<component>.list    # Tracks owned symlinks for clean pruning
+   ├── bin/                           # Single PATH entry (${LIBSCRIPT_HOME}/bin) — zero wrapper shims
+   ├── .bin_owners/<component>.list   # Tracks owned symlinks for clean pruning
    └── <component>/<exact_version>/
        ├── bin/
        ├── lib/
@@ -494,6 +494,18 @@ operating systems:
 - Multi-platform verification: 5-platform Vagrant matrix spanning
   `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
+#### ReactOS Distribution Substrate (`_lib/reactos/distro/`, `rapps`, `rosbe`)
+
+- Declarative profile schema: `execution-plan.reactos.schema.json` across 5 curated `i686` and
+  `x86_64` profiles (`profiles/reactos/*.json`).
+- Hybrid synthesis modes: Upstream BootCD/LiveCD ISO repacking (`unattend.inf` + `GuiRunOnce`
+  `firstboot.cmd`) and RosBE CMake/Ninja source builds (`_lib/toolchains/rosbe/`).
+- Storage, shell & bootloaders: FreeLoader (`freeldr.sys` / `freeldr.ini`), `fat32`, `btrfs`
+  (WinBtrfs), and `ntfs` filesystems, classic Win32 Explorer (`classic`, `lautus`, `lunar`, `mizu`)
+  or minimal `cmd.exe` shell, and NT Service Control Manager (`nt-scm`).
+- Strict PE bitness verification (`0x014c` `i686` vs. `0x8664` `x86_64`) and multi-format packaging
+  (`cli/commands/package_as/reactos_{distro,iso,vhd,vmdk}.{sh,cmd}`).
+
 ---
 
 ## 🌐 Tier 3: Operators, Multicloud & AI Cluster Deployment
@@ -749,12 +761,16 @@ LibScript defines a strongly typed contract hierarchy:
     spec.
   - `execution-plan.illumos.schema.json`: Modular illumos/SunOS kernel, SMF, and desktop execution
     spec.
+  - `execution-plan.reactos.schema.json`: Modular ReactOS (`i686` / `x86_64`) NT SCM, FreeLoader,
+    and RAPPS/MSI execution spec.
   - `execution-plan.live.schema.json`: Specification for multiboot live installation media.
   - `execution-plan.rtos.schema.json`: Zephyr RTOS, FreeRTOS, and MCUboot firmware execution spec.
   - `experiment-suite.schema.json` & `component-scaffold.schema.json`: Empirical `experiments/`
-    plugin contracts and automated `_lib/` scaffolder specs.
-  - `schemas/{marketplace-offer,ml-workload,gcs-ml-storage,tfrc-policy,tpu-matrix,os-matrix-results}.schema.json`:
-    Multicloud Marketplace offers, TPU/GKE ML workloads, 4-role GCS storage, and TFRC guardrails.
+    plugin contracts (powering the 6 built-in suites: `edgcpp-backends`, `gemma-tpu`, `libtpu-pjrt`,
+    `openedx`, `os-component-matrix`, and `win-port`) and automated `_lib/` scaffolder specs.
+  - `schemas/{marketplace-offer,ml-workload,gcs-ml-storage,tfrc-policy,tpu-matrix,os-matrix-results,installer-experiment}.schema.json`:
+    Multicloud Marketplace offers, TPU/GKE ML workloads, 4-role GCS storage, TFRC guardrails, and
+    declarative `installer-e2e` Vagrant/UI experiment verification.
 
 ### 2. Tarjan's Strongly Connected Components (SCC) Cycle Breaking
 

@@ -56,7 +56,7 @@ if "%LIBSCRIPT_HOME%"=="" (
 )
 
 if "%GAWK_VERSION%"=="" (
-    set "GAWK_VERSION=5.3.1"
+    set "GAWK_VERSION=latest"
 )
 
 set "_CAND_P=%LIBSCRIPT_HOME%\gawk\%GAWK_VERSION%\bin"

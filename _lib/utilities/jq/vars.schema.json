@@ -2,18 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/utilities/jq/vars.schema.json",
   "title": "jq variables",
-  "description": "Configuration variables for jq",
+  "description": "Configuration variables for jq across POSIX, Windows native (MSVC), and MS-DOS (dos32).",
   "type": "object",
   "properties": {
     "JQ_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install JQ. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
-      "default": "system"
+      "description": "How to install jq. 'libscript_native' installs isolated prebuilt binaries (dos32 on MS-DOS, PE on Windows, static/prebuilt on POSIX), 'system' uses the OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
     },
     "JQ_VERSION": {
-      "description": "Specific version of jq to install.",
+      "description": "Specific version of jq to install (e.g., 1.8.2 on Windows/MS-DOS or latest).",
       "type": "string",
-      "default": "latest"
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
     },
     "JQ_DOWNLOAD_URL": {
       "type": "string",

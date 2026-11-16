@@ -85,6 +85,7 @@ case "$target" in
     "$SCRIPT_DIR/tests/test_tier15_2_3_system_orchestration_cloud.sh"
     "$SCRIPT_DIR/tests/test_update_results.sh"
     "$SCRIPT_DIR/tests/test_standards_remediation.sh"
+    "$SCRIPT_DIR/tests/test_win_dos_component_pm.sh"
     ;;
   update_results)
     "$SCRIPT_DIR/tests/update_results.sh" --json

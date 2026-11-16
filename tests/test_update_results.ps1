@@ -28,6 +28,7 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/virtualization/apple_vm") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/utilities/no_darwin") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/init-systems/illumos_init") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/reactos/distro") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "topologies/compS") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/_common/helper") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "tests_tmp") -Force | Out-Null
@@ -108,6 +109,9 @@ MIT
     }
     if ($updatedReadme -notmatch "\|\s*``illumos_init``\s*\|\s*``init-systems``\s*\|\s*-\s*\|\s*-\s*\|\s*-\s*\|\s*-\s*\|\s*$symQuest\s*\|\s*-\s*\|\s*-\s*\|") {
         throw "Error: illumos_init os_whitelist ['illumos'] did not map to sunos column in README.md"
+    }
+    if ($updatedReadme -notmatch "\|\s*``reactos/distro``\s*\|\s*``reactos``\s*\|") {
+        throw "Error: reactos/distro was not disambiguated in README.md"
     }
 
     # Verification 4: TODO_PLAN.md updated completed items

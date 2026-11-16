@@ -106,7 +106,14 @@ resolve_requested_pkg_mgr() {
     macports|port) _req_pm="port" ;;
     chocolatey|choco) _req_pm="choco" ;;
     xbps|xbps-install) _req_pm="xbps" ;;
+    libscript|libscript_native) _req_pm="libscript" ;;
   esac
+
+  if [ "${_req_pm}" = 'libscript' ]; then
+    PKG_MGR='libscript'
+    export PKG_MGR
+    return 0
+  fi
 
   _pm_bin="${_req_pm}"
   [ "${_req_pm}" = "xbps" ] && _pm_bin="xbps-install"
@@ -139,6 +146,24 @@ resolve_requested_pkg_mgr() {
 # Detects the host operating system native package manager and sets PKG_MGR.
 detect_pkg_mgr() {
   if resolve_requested_pkg_mgr "${1:-}"; then
+    return 0
+  fi
+  if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${IS_MSDOS:-0}" = '1' ]; then
+    PKG_MGR='libscript'
+    export PKG_MGR
+    return 0
+  fi
+  if [ "${TARGET_OS:-}" = 'windows' ]; then
+    if libscript_cmd_avail winget; then
+      PKG_MGR='winget'
+    elif libscript_cmd_avail choco; then
+      PKG_MGR='choco'
+    elif libscript_cmd_avail scoop; then
+      PKG_MGR='scoop'
+    else
+      PKG_MGR='libscript'
+    fi
+    export PKG_MGR
     return 0
   fi
   if libscript_cmd_avail apt-get; then
@@ -308,10 +333,123 @@ is_installed() {
         command -v "${pkg}" >/dev/null 2>&1
       fi
       ;;
+    'libscript')
+      _ls_chk_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+      if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
+        if [ -f "${_ls_chk_home}/${pkg}/default/bin/${pkg}.exe" ] || [ -f "${_ls_chk_home}/${pkg}/latest/bin/${pkg}.exe" ]; then
+          return 0
+        fi
+        return 1
+      fi
+      [ -d "${_ls_chk_home}/${pkg}/default/bin" ] || [ -d "${_ls_chk_home}/${pkg}/latest/bin" ] || command -v "${pkg}" >/dev/null 2>&1
+      ;;
     *)
       log_error "is_installed function not implemented for ${PKG_MGR}"
       exit 1 ;;
   esac
+}
+
+# ## libscript_is_native_win_dos_port
+# Returns 0 if a requested dependency is backed by a dedicated Windows/MS-DOS native component-level package manager.
+libscript_is_native_win_dos_port() {
+  case "${1:-}" in
+    jq|jq-windows|gawk|gawk-windows|awk|busybox|busybox-windows|toybox|toybox-windows|dash|dash-windows|sh|freebsd-usr-bin|freebsd-usr-bin-windows|sed|grep|cut|tr|sort|uniq|wc|head|tail|xargs|find|cmp|diff|patch|bmake|bsdtar|bsdunzip)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+# ## libscript_install_component_dep
+# Installs a dependency via its LibScript component-level package manager and prepends its bin directory to PATH.
+libscript_install_component_dep() {
+  _lic_req="$1"
+  _lic_saved_pm="${PKG_MGR:-}"
+  PKG_MGR='libscript'
+  export PKG_MGR
+  _lic_comp=$(map_package "$_lic_req" 2>/dev/null || printf '%s' "$_lic_req")
+  [ -z "$_lic_comp" ] && _lic_comp="$_lic_req"
+  PKG_MGR="$_lic_saved_pm"
+  export PKG_MGR
+
+  _lic_applet=''
+  if [ "$_lic_comp" = 'freebsd-usr-bin' ] && [ "$_lic_req" != 'freebsd-usr-bin' ] && [ "$_lic_req" != 'freebsd-usr-bin-windows' ]; then
+    _lic_applet="$_lic_req"
+  fi
+
+  _lic_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  _lic_bin_check="$_lic_req"
+  [ "$_lic_req" = 'jq-windows' ] && _lic_bin_check='jq'
+  [ "$_lic_req" = 'gawk-windows' ] && _lic_bin_check='gawk'
+  [ "$_lic_req" = 'busybox-windows' ] && _lic_bin_check='busybox'
+  [ "$_lic_req" = 'toybox-windows' ] && _lic_bin_check='toybox'
+  [ "$_lic_req" = 'dash-windows' ] && _lic_bin_check='dash'
+  if [ "${FORCE_REINSTALL:-0}" != '1' ]; then
+    for _lic_vdir in 'default' 'latest'; do
+      if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
+        if [ -f "${_lic_home}/${_lic_comp}/${_lic_vdir}/bin/${_lic_bin_check}.exe" ]; then
+          case ":${PATH}:" in
+            *":${_lic_home}/${_lic_comp}/${_lic_vdir}/bin:"*) ;;
+            *) PATH="${_lic_home}/${_lic_comp}/${_lic_vdir}/bin:${PATH}"; export PATH ;;
+          esac
+          return 0
+        fi
+      elif [ -x "${_lic_home}/${_lic_comp}/${_lic_vdir}/bin/${_lic_bin_check}" ]; then
+        case ":${PATH}:" in
+          *":${_lic_home}/${_lic_comp}/${_lic_vdir}/bin:"*) ;;
+          *) PATH="${_lic_home}/${_lic_comp}/${_lic_vdir}/bin:${PATH}"; export PATH ;;
+        esac
+        return 0
+      fi
+    done
+  fi
+
+  _lic_setup=''
+  set +f
+  for _lic_cat in "${LIBSCRIPT_ROOT_DIR}/_lib"/*; do
+    [ -d "$_lic_cat" ] || continue
+    [ "$(basename "$_lic_cat")" = '_common' ] && continue
+    if [ -f "${_lic_cat}/${_lic_comp}/setup.sh" ]; then
+      _lic_setup="${_lic_cat}/${_lic_comp}/setup.sh"
+      break
+    fi
+  done
+  set -f
+  if [ -z "$_lic_setup" ]; then
+    log_warn "No component-level package manager found for '${_lic_comp}' (requested: '${_lic_req}')"
+    return 1
+  fi
+
+  if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" = '1' ]; then
+    log_info "[DRY-RUN] (libscript:${_lic_comp}) install ${_lic_req} (target=${TARGET_OS:-host})"
+    return 0
+  fi
+
+  _lic_prefix=$(printf '%s' "$_lic_comp" | tr '[:lower:]-' '[:upper:]_')
+  if [ -n "$_lic_applet" ]; then
+    (
+      unset SCRIPT_NAME || true
+      env STACK='' LIBSCRIPT_DEFAULT_INSTALL_METHOD='libscript_native' "${_lic_prefix}_INSTALL_METHOD=libscript_native" FREEBSD_USR_BIN_APPLET="$_lic_applet" ACTION='install' "${_lic_setup}"
+    ) || return 1
+  else
+    (
+      unset SCRIPT_NAME || true
+      env STACK='' LIBSCRIPT_DEFAULT_INSTALL_METHOD='libscript_native' "${_lic_prefix}_INSTALL_METHOD=libscript_native" ACTION='install' "${_lic_setup}"
+    ) || return 1
+  fi
+
+  for _lic_vdir in 'default' 'latest'; do
+    if [ -d "${_lic_home}/${_lic_comp}/${_lic_vdir}/bin" ]; then
+      case ":${PATH}:" in
+        *":${_lic_home}/${_lic_comp}/${_lic_vdir}/bin:"*) ;;
+        *) PATH="${_lic_home}/${_lic_comp}/${_lic_vdir}/bin:${PATH}"; export PATH ;;
+      esac
+      break
+    fi
+  done
+  return 0
 }
 
 # ## libscript_depends_via
@@ -335,11 +473,15 @@ libscript_depends() {
     log_info 'Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1'
     return 0
   fi
-  if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ] || ! libscript_cmd_avail "${PKG_MGR}"; then
+  if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ] || { [ "${PKG_MGR:-}" != 'libscript' ] && ! libscript_cmd_avail "${PKG_MGR}"; }; then
     detect_pkg_mgr "${1:-}"
   fi
   pkgs_to_install=''
   for pkg in "$@"; do
+    if [ "${PKG_MGR:-}" = 'libscript' ] || { { [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; } && [ "${LIBSCRIPT_FORCE_SYSTEM_PKG_MGR:-0}" != '1' ] && [ -z "${LIBSCRIPT_PKG_MGR:-}" ] && libscript_is_native_win_dos_port "${pkg}"; }; then
+      libscript_install_component_dep "${pkg}" || return 1
+      continue
+    fi
     mapped_pkgs="$(map_package "${pkg}")" || {
       log_warn "Package \"${pkg}\" not available via package manager \"${PKG_MGR}\""
       return 1
@@ -534,6 +676,11 @@ libscript_depends() {
             fi
           done
           ;;
+        'libscript')
+          for _ls_pkg in ${pkgs_to_install}; do
+            libscript_install_component_dep "${_ls_pkg}" || _install_failed=1
+          done
+          ;;
         *)
           log_error "libscript_depends function not implemented for ${PKG_MGR}"
           exit 1
@@ -548,6 +695,12 @@ libscript_depends() {
       return 1
     fi
   fi
+}
+
+# ## depends
+# Shorthand alias for libscript_depends resolving system or component-level dependencies.
+depends() {
+  libscript_depends "$@"
 }
 
 # ## libscript_download

@@ -67,12 +67,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable              | Description                                                                                                                                                          | Default  | Aliases/Examples |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `DASH_INSTALL_METHOD` | How to install DASH. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `DASH_VERSION`        | Specific version of dash to install.                                                                                                                                 | `latest` |                  |
-| `DASH_DOWNLOAD_URL`   | Override URL for downloading dash binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `DASH_RELEASES_URL`   | Override URL for querying dash available remote releases.                                                                                                            | `none`   |                  |
+| Variable              | Description                                                                                                                                                                                         | Default            | Aliases/Examples |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `DASH_INSTALL_METHOD` | How to install Dash. 'libscript_native' installs isolated prebuilt binaries (SamuelMarks/dash-windows on Windows/MS-DOS), 'system' uses OS package manager, and 'from-source' compiles from source. | `libscript_native` |                  |
+| `DASH_VERSION`        | Specific version of dash to install (e.g., 0.5.12 or latest).                                                                                                                                       | `latest`           | latest, lts      |
+| `DASH_DOWNLOAD_URL`   | Override URL for downloading dash binary or archive artifacts.                                                                                                                                      | `none`             |                  |
+| `DASH_RELEASES_URL`   | Override URL for querying dash available remote releases.                                                                                                                                           | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.

@@ -58,12 +58,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable            | Description                                                                                                                                                        | Default  | Aliases/Examples |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------- |
-| `JQ_INSTALL_METHOD` | How to install JQ. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `JQ_VERSION`        | Specific version of jq to install.                                                                                                                                 | `latest` |                  |
-| `JQ_DOWNLOAD_URL`   | Override URL for downloading jq binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `JQ_RELEASES_URL`   | Override URL for querying jq available remote releases.                                                                                                            | `none`   |                  |
+| Variable            | Description                                                                                                                                                                                                         | Default            | Aliases/Examples |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `JQ_INSTALL_METHOD` | How to install jq. 'libscript_native' installs isolated prebuilt binaries (dos32 on MS-DOS, PE on Windows, static/prebuilt on POSIX), 'system' uses the OS package manager, and 'from-source' compiles from source. | `libscript_native` |                  |
+| `JQ_VERSION`        | Specific version of jq to install (e.g., 1.8.2 on Windows/MS-DOS or latest).                                                                                                                                        | `latest`           | latest, lts      |
+| `JQ_DOWNLOAD_URL`   | Override URL for downloading jq binary or archive artifacts.                                                                                                                                                        | `none`             |                  |
+| `JQ_RELEASES_URL`   | Override URL for querying jq available remote releases.                                                                                                                                                             | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.

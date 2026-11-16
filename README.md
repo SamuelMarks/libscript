@@ -14,18 +14,18 @@ everyday developer toolchain management and full-system operating system enginee
 Whether you need a lightweight, universal replacement for `nvm`, `pyenv`, `rustup`, and `rvm` (for
 everything from Node.js to PostgreSQL), an automated pipeline to export native installers (`.msi`,
 `.exe`, `.rpm`, `.deb`, `.pkg`, `.dmg`, `.apk`, `Dockerfile`, `docker-compose.yml`) and disk images
-(`qcow2`, `raw-img`) or bake customized Unikernels (`OSv`, `MirageOS`), Linux, FreeBSD, and illumos
-kernels, or a multicloud operator to deploy across Google Cloud, AWS, and Azure, run multi-node
-clusters (Kubernetes, Apache Mesos, HashiCorp Nomad), execute batch jobs (ML training, search-engine
-reindexing), manage stateful lifecycles (backup/restore, zero-downtime upgrade/downgrade), and
-orchestrate high-availability topologies (PostgreSQL HA, Redis HA, RabbitMQ HA), LibScript handles
-the entire lifecycle through a single, idempotent interface.
+(`qcow2`, `raw-img`) or bake customized Unikernels (`OSv`, `MirageOS`), Linux, FreeBSD, illumos,
+ReactOS, and RTOS kernels, or a multicloud operator to deploy across Google Cloud, AWS, and Azure,
+run multi-node clusters (Kubernetes, Apache Mesos, HashiCorp Nomad), execute batch jobs (ML
+training, search-engine reindexing), manage stateful lifecycles (backup/restore, zero-downtime
+upgrade/downgrade), and orchestrate high-availability topologies (PostgreSQL HA, Redis HA, RabbitMQ
+HA), LibScript handles the entire lifecycle through a single, idempotent interface.
 
 ```mermaid
 flowchart TD
     subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["360+ Recipes..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["360+ Recipes / 547+ Components..."]
     end
 
     subgraph T1["1. Native Installers & Container Packages (package-as)"]
@@ -35,12 +35,12 @@ flowchart TD
 
     subgraph T2["2. Virtual Machine & Disk Images (package-as)"]
         direction LR
-        v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi"] ~~~ v4["iso / vagrant-box"] ~~~ v5["bsd-img"] ~~~ v6["..."]
+        v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi"] ~~~ v4["iso / vagrant-box"] ~~~ v5["bsd-img / reactos-distro"] ~~~ v6["..."]
     end
 
     subgraph T3["3. Kernel, Unikernel & RTOS OS Bakery"]
         direction LR
-        k1["Unikernels (OSv, MirageOS, Unikraft)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD & illumos"] ~~~ k4["RTOS (Zephyr & FreeRTOS)"]
+        k1["Unikernels (OSv, MirageOS, Unikraft)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD, illumos & ReactOS"] ~~~ k4["RTOS (Zephyr & FreeRTOS)"]
     end
 
     subgraph T4["4. Multicloud & Hardware Accelerator Deployment"]
@@ -99,13 +99,13 @@ everything from **Node.js**, **Python**, **Rust**, and **Ruby** to **PostgreSQL*
 
 ### ⚡ Why Drop Third-Party Version Managers?
 
-| Capability               | Traditional Managers (`nvm`, `pyenv`, `rustup`)              | LibScript                                                                    |
-| :----------------------- | :----------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch)            |
-| **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`) and PowerShell (`.ps1`)**               |
-| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across all 360+ recipes & 542+ documented subsystems**  |
-| **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**              |
-| **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **`O(1)` `${LIBSCRIPT_HOME}/bin` symlinks + `resolve-env` pin-file walking** |
+| Capability               | Traditional Managers (`nvm`, `pyenv`, `rustup`)              | LibScript                                                                      |
+| :----------------------- | :----------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **Runtime Dependencies** | Requires Node, Python, Ruby, or Curl/Bash hacks              | **Zero external dependencies** (POSIX `/bin/sh` or Windows Batch)              |
+| **Windows Support**      | Often requires WSL, MSYS2, or separate tools (`nvm-windows`) | **100% Native Windows Batch (`.cmd`), PowerShell (`.ps1`) & MS-DOS (`dos32`)** |
+| **Syntax Consistency**   | Every tool uses different flags, paths, and commands         | **Universal workflow across 360+ recipes, 547+ components & 580+ subsystems**  |
+| **Isolation**            | Pollutes `~/.nvm`, `~/.pyenv`, `~/.cargo` separately         | **Standardized sandbox (`${LIBSCRIPT_HOME}/<tool>/<version>`)**                |
+| **State & Cleanliness**  | Mutates global profiles (`~/.bashrc`, `~/.zshrc`)            | **`O(1)` `${LIBSCRIPT_HOME}/bin` symlinks + `resolve-env` pin-file walking**   |
 
 ### 🛠️ Universal Workflow (`ls-remote`, `install`, `ls`, `use`, `resolve-env`, `uninstall`)
 
@@ -269,8 +269,8 @@ flowchart TD
     Solver --> VFS["Isolated VFS Sandbox<br/>(mount_target_vfs.sh)"]
 
     VFS --> Stage1["1. Native Installers & Containers<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Compose)"]
-    VFS --> Stage3["3. Kernel & Unikernel Bakery<br/>(OSv, MirageOS, Linux vmlinuz+UKI, FreeBSD, illumos)"]
-    Stage3 --> Stage2["2. Bootable Disk Images<br/>(qcow2, raw-img, vmdk, vdi, iso, bsd-img)"]
+    VFS --> Stage3["3. Kernel, Unikernel & RTOS Bakery<br/>(OSv, MirageOS, Linux vmlinuz+UKI, FreeBSD, illumos, ReactOS)"]
+    Stage3 --> Stage2["2. Bootable Disk Images<br/>(qcow2, raw-img, vmdk, vdi, iso, bsd-img, reactos-distro)"]
 ```
 
 #### 1. Export to Native Installers & Container Formats (Stage 1)
@@ -325,13 +325,14 @@ system verification via `SamuelMarks/msi-rs` (`./devtools/capture_msi_vagrant_ma
 ./libscript.sh package-as gcp-image        # Google Cloud Platform image
 ./libscript.sh package-as freebsd-distro   # Modular FreeBSD distribution image
 ./libscript.sh package-as illumos-distro   # Modular illumos / SunOS ZFS distribution image
+./libscript.sh package-as reactos-distro   # Modular ReactOS (i686 / x86_64) Win32 NT distribution image
 ```
 
 Automates virtual disk provisioning (`_lib/storage/`) with UEFI (GPT + ESP) or Hybrid BIOS/UEFI
 partitioning, **LUKS2** full-disk encryption (`argon2id`), and **Ext4**, **Btrfs** (`@`, `@home`,
-`@snapshots`), **XFS**, or **ZFS** filesystems.
+`@snapshots`), **XFS**, **FAT32/NTFS**, or **ZFS** filesystems.
 
-#### 3. Embed Into Unikernels, Linux, FreeBSD & illumos Kernels (Stage 3)
+#### 3. Embed Into Unikernels, Linux, FreeBSD, illumos & ReactOS Kernels (Stage 3)
 
 LibScript embeds staged applications directly into specialized unikernels and custom-compiled
 operating system kernels:
@@ -357,12 +358,18 @@ operating system kernels:
 - **illumos Kernel & Distro Engine (`_lib/illumos/distro/`)**:
   - Synthesizes bootable OpenIndiana and OmniOS kernel/userland images with IPS repositories, ZFS
     boot environments, and SMF services (`./libscript.sh package-as illumos-distro`).
+- **ReactOS Kernel & Distro Engine (`_lib/reactos/distro/`, `rapps`, `rosbe`)**:
+  - Synthesizes unattended 32-bit (`i686`) and 64-bit (`x86_64`) Win32 NT images
+    (`profiles/reactos/*.json`, `execution-plan.reactos.schema.json`) via upstream ISO repacking or
+    RosBE source compilation with strict PE header bitness verification
+    (`./libscript.sh package-as reactos-distro`).
 
 ```sh
 # Configure OS profiles interactively or declaratively
 ./libscript.sh config os --profile=osv-cloud-runtime --export=unikernel-os.json
 ./libscript.sh config os --profile=linux-minimal-headless-musl --export=linux-os.json
 ./libscript.sh config os --profile=freebsd-server-standard --export=freebsd-os.json
+./libscript.sh config os --profile=profiles/reactos/desktop-classic-i686.json --export=reactos-os.json
 ```
 
 ---
@@ -738,8 +745,10 @@ cd libscript
   online/offline variants, and automated GUI screenshot verification.
 - [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md): Native GUI Live Installer and multiboot ISO
   architecture.
-- [WINDOWS.md](WINDOWS.md) & [WINDOWS_MSI.md](WINDOWS_MSI.md): Native Windows Batch/PowerShell
-  architecture and modular Windows Installer (`.msi`) generation.
+- [WINDOWS.md](WINDOWS.md), [WINDOWS_MSI.md](WINDOWS_MSI.md) &
+  [TODO_PORT_FOR_WIN.md](TODO_PORT_FOR_WIN.md): Native Windows Batch/PowerShell/MS-DOS (`dos32`)
+  architecture, modular Windows Installer (`.msi`) generation, and zero-emulation binary porting
+  inventory.
 - [PAAS.md](PAAS.md): Universal PaaS orchestration, reverse proxy (`netctl`), and daemon
   supervision.
 - [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and Tarjan SCC solver mechanics.
@@ -845,7 +854,6 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `dash`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno`                                | `languages`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno-pm`                             | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `distro`                              | `reactos`          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `dnf`                                 | `package-managers` | -           | -           | ✅          | -       | -     | -       | -     |
 | `doxygen`                             | `toolchains`       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `dragonfly`                           | `caches`           | ❓          | ❓          | ❓          | -       | -     | ❓      | ❓    |
@@ -875,6 +883,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `fnm`                                 | `package-managers` | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `forgejo`                             | `git-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `fortran`                             | `languages`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `freebsd-usr-bin`                     | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `fzf`                                 | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `garage`                              | `storage-layers`   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `gawk`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
@@ -1087,6 +1096,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `tmux`                                | `utilities`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `tokei`                               | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tomcat`                              | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `toybox`                              | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `traefik`                             | `web-servers`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tree`                                | `utilities`        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `triton`                              | `app-servers`      | ❓          | ❓          | ❓          | ❓      | -     | -       | -     |
@@ -1259,6 +1269,7 @@ Components are organized into LibScript's 5 architectural tiers (see
 | `mcuboot`                | `bootloaders`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `multipass`              | `virtualization` | ❓          | ❓          | ❓          | ❓      | -     | -       | ❓    |
 | `packagers`              | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
+| `reactos/distro`         | `reactos`        | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `refind`                 | `bootloaders`    | ✅          | ❓          | ❓          | -       | -     | ❓      | ❓    |
 | `repogen`                | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `runner`                 | `orchestration`  | ✅          | ✅          | ✅          | -       | -     | -       | -     |

@@ -121,12 +121,12 @@ Every `"versioned-artifact"` toolchain component's `cli.sh` and `cli.cmd` must i
   - Updates symlink aliases (e.g., `lts` $\rightarrow$ `22.14.0`).
 - **`ls`**: Lists installed versions in `${LIBSCRIPT_HOME}/<component>/`.
 - **`use <version>`**: Atomically updates the `default` alias and synchronizes executable symlinks
-  in `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` lookup via `libscript_sync_active_bins`, backed by
-  `${LIBSCRIPT_HOME}/owners/<component>.list`) or emits session `PATH` exports via `env` /
+  in `${LIBSCRIPT_HOME}/bin` (`O(1)` `PATH` lookup via `libscript_sync_active_bin`, backed by
+  `${LIBSCRIPT_HOME}/.bin_owners/<component>.list`) or emits session `PATH` exports via `env` /
   `resolve-env` (`.libscript-version`, `.nvmrc`, `.python-version`, `rust-toolchain.toml`). Never
   modify global profiles (`~/.bashrc`, `/etc/profile`).
 - **`uninstall <version>`**: Removes the isolated version folder and prunes orphaned symlinks from
-  `${LIBSCRIPT_HOME}/bin` (`libscript_prune_active_bins`).
+  `${LIBSCRIPT_HOME}/bin` (`libscript_cleanup_active_bin`).
 - **Cross-Compiler Sub-Artifacts (Optional)**: Toolchains supporting multi-target sysroots (such as
   `_lib/languages/rust`) additionally implement `target-add`, `target-rm`, `target-ls`,
   `component-add`, and `component-ls`.
@@ -407,13 +407,17 @@ Before submitting changes, execute the repository's automated compliance and aud
 ./devtools/audit/audit_schema_vars.sh --all
 ./devtools/audit/doc_coverage.sh --strict
 
-# 2. Run the 2x consecutive idempotency verification test
+# 2. Run the 2x consecutive idempotency & Windows/MS-DOS component PM verification tests
 ./tests/test_idempotency_matrix.sh
+./tests/test_win_dos_component_pm.sh
 
-# 3. Verify headless QEMU boot test for synthesized OS images
+# 3. Verify headless QEMU boot tests for synthesized OS and RTOS images
 ./tests/os_boot_test.sh build/disk.qcow2 60
 ./tests/freebsd_boot_test.sh build/freebsd.qcow2 60
 ./tests/illumos_boot_test.sh build/illumos.qcow2 60
+./tests/reactos_boot_test.sh build/reactos.iso 90
+./tests/zephyr_boot_test.sh build/zephyr.elf 30
+./tests/freertos_boot_test.sh build/freertos.elf 30
 
 # 4. Verify graphical desktop Wayland/PipeWire smoke tests
 ./tests/os_gui_smoke_test.sh build/disk.qcow2

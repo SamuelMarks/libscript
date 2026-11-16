@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/freebsd-usr-bin/vars.schema.json",
+  "title": "freebsd-usr-bin variables",
+  "description": "Configuration variables for FreeBSD usr.bin suite across Windows native (MSVC), MS-DOS (dos32), and POSIX.",
+  "type": "object",
+  "properties": {
+    "FREEBSD_USR_BIN_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install freebsd-usr-bin. 'libscript_native' installs isolated prebuilt binaries (dos32 on MS-DOS, PE on Windows), 'system' uses OS package manager, and 'from-source' compiles via CMake.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
+    },
+    "FREEBSD_USR_BIN_VERSION": {
+      "description": "Specific version of freebsd-usr-bin to install (e.g., 15.0.0 or latest).",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
+    },
+    "FREEBSD_USR_BIN_APPLET": {
+      "type": "string",
+      "description": "Optional single FreeBSD usr.bin utility name (e.g. sed, grep, cut, tr, sort, uniq, wc, head, tail, xargs, find, cmp, diff, patch, bmake) to download and stage instead of the full suite archive."
+    },
+    "FREEBSD_USR_BIN_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Override URL for downloading freebsd-usr-bin binary or archive artifacts."
+    },
+    "FREEBSD_USR_BIN_RELEASES_URL": {
+      "type": "string",
+      "description": "Override URL for querying freebsd-usr-bin available remote releases."
+    }
+  }
+}

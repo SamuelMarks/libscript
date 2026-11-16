@@ -2,18 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/utilities/busybox/vars.schema.json",
   "title": "BusyBox variables",
-  "description": "Configuration variables for BusyBox",
+  "description": "Configuration variables for BusyBox across POSIX, Windows native (MSVC), and MS-DOS.",
   "type": "object",
   "properties": {
     "BUSYBOX_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install BUSYBOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
-      "default": "system"
+      "description": "How to install BusyBox. 'libscript_native' installs isolated prebuilt binaries (SamuelMarks/busybox-windows on Windows/MS-DOS, static musl on Linux), 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
     },
     "BUSYBOX_VERSION": {
-      "description": "Specific version of busybox to install.",
+      "description": "Specific version of busybox to install (e.g., 1.39.0 on Windows or latest).",
       "type": "string",
-      "default": "latest"
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
     },
     "BUSYBOX_DOWNLOAD_URL": {
       "type": "string",

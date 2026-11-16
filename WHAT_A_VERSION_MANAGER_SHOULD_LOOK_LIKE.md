@@ -123,12 +123,13 @@ dynamically branch to delegate the lifecycle command to that specific package/ve
   `vfox ls-remote`.
 - **`use`**: Activates a specific version by updating the `default` symlink and atomically
   synchronizing executable links in `${LIBSCRIPT_HOME}/bin` (`O(1)` lookup via
-  `libscript_sync_active_bins`) or resolving workspace pins (`.libscript-version`, `.nvmrc`,
-  `.python-version`, `rust-toolchain.toml` via `libscript resolve-env`).
+  `libscript_sync_active_bin`, tracked in `${LIBSCRIPT_HOME}/.bin_owners/<component>.list`) or
+  resolving workspace pins (`.libscript-version`, `.nvmrc`, `.python-version`, `rust-toolchain.toml`
+  via `libscript resolve-env`).
 - **`status`**: Checks installation state (and daemon health when `"service-daemon"` is declared).
 - **`uninstall`**: Completely removes the installed version
   (`${LIBSCRIPT_HOME}/<component>/<exact_version>`) and prunes orphaned shims from
-  `${LIBSCRIPT_HOME}/bin` (`libscript_prune_active_bins`).
+  `${LIBSCRIPT_HOME}/bin` (`libscript_cleanup_active_bin`).
 - **Cross-Toolchain Sub-Artifacts (`target-add`, `target-rm`, `target-ls`, `component-add`,
   `component-ls`)**: Supported on multi-target compiler toolchains (such as `_lib/languages/rust`)
   to manage cross-compilation sysroots and tooling components inside the active version prefix.

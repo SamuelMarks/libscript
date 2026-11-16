@@ -51,6 +51,7 @@ show_help() {
   printf '%s\n' '  search <query>              Search available components by name or description'
   printf '%s\n' '  process-downloads [file]    Process an aria2-formatted download list'
   printf '%s\n' '  env <component> <version>   Print environment variables for a component'
+  printf '%s\n' '  depends <package_name...>   Resolve and install component or OS dependencies (target-aware)'
   printf '%s\n' '  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)'
   printf '%s\n' '  package-as <format> [args]  Package libscript usage (e.g., docker, docker_compose)'
   printf '%s\n' '  scaffold [options]          Generate a new component-package-manager interactively or from JSON'
@@ -173,6 +174,12 @@ normalize_component_alias() {
     freebsd-distro|freebsd_distro) printf '%s\n' '_lib/freebsd/distro' ;;
     illumos-distro|illumos_distro) printf '%s\n' '_lib/illumos/distro' ;;
     reactos-distro|reactos_distro) printf '%s\n' '_lib/reactos/distro' ;;
+    freebsd-usr-bin|freebsd-usr-bin-windows|freebsd_usr_bin) printf '%s\n' '_lib/utilities/freebsd-usr-bin' ;;
+    toybox|toybox-windows) printf '%s\n' '_lib/utilities/toybox' ;;
+    gawk-windows|awk) printf '%s\n' '_lib/utilities/gawk' ;;
+    busybox-windows) printf '%s\n' '_lib/utilities/busybox' ;;
+    jq-windows) printf '%s\n' '_lib/utilities/jq' ;;
+    dash-windows) printf '%s\n' '_lib/utilities/dash' ;;
     ai-tools/ollama|_lib/ai-tools/ollama) printf '%s\n' "_lib/app-servers/ollama" ;;
     *) printf '%s\n' "${1:-}" ;;
   esac
@@ -331,6 +338,19 @@ case "$CMD" in
     fi
     ;;
   install-deps) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" "$@" ;;
+  depends)
+    if [ $# -eq 0 ]; then
+      printf '%s\n' 'Error: at least one package_name is required for depends' >&2
+      exit 1
+    fi
+    SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/pkg_mgr.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "$SCRIPT_NAME"
+    unset SCRIPT_NAME || true
+    libscript_depends "$@"
+    exit $?
+    ;;
   db-search) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" "$@" ;;
   update-db) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" "$@" ;;
   semver) libscript_source_cli_cmd "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" "$@" ;;

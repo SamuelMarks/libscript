@@ -297,3 +297,10 @@ For developer toolchains managed at Tier 1 (Node.js, Python, Rust, Ruby, Go, Jav
    `rust-toolchain.toml`) without mutating global shell profiles (`~/.bashrc`, `/etc/profile`).
 3. **Zero Inter-Tool Conflicts**: Python 3.10 and Python 3.13t, or Node 20 and Node 22, can run
    concurrently in adjacent terminal windows on the same host without collisions.
+4. **Target-Aware Native Port Resolution (`Windows` vs. `MS-DOS`)**: Calling
+   `libscript depends <pkg>` (or `depends <pkg>` in `.sh` / `:libscript_depends <pkg>` in `.cmd`)
+   routes `jq`, `gawk`/`awk`, `busybox`, `toybox`, `dash`/`sh`, and `freebsd-usr-bin` applets
+   (`sed`, `grep`, `cut`, `tr`, `sort`, `uniq`, `wc`, `head`, `tail`, `xargs`, `find`, `cmp`,
+   `diff`, `patch`, `bmake`) through their `_lib/utilities/*` component-level package managers
+   (`PKG_MGR=libscript` in `_lib/_common/pkg_map.tsv`), selecting `dos32` executables on
+   `TARGET_OS=msdos` and native PE (`X64`/`X86`/`ARM64`) executables on `TARGET_OS=windows`.

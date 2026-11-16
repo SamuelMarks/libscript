@@ -1,10 +1,10 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for gawk implementing the Version Manager Contract.
+:: Windows and MS-DOS setup for gawk backed by SamuelMarks/gawk-windows (PE on Windows, dos32 on MS-DOS).
 ::
 :: ## Usage
-:: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+:: Managed by libscript. Provides download, install, ls, ls-remote, use, and uninstall capabilities.
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -48,16 +48,19 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%GAWK_INSTALL_METHOD%"=="" (
-    if not "%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"=="" (
+    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
+        set "GAWK_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+    ) else if not "%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"=="" (
         set "GAWK_INSTALL_METHOD=%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"
     ) else (
-        set "GAWK_INSTALL_METHOD=system"
+        set "GAWK_INSTALL_METHOD=libscript_native"
     )
 )
 if "%ACTION%"=="" set "ACTION=install"
-if "%GAWK_VERSION%"=="" set "GAWK_VERSION=5.3.1"
+if "%GAWK_VERSION%"=="" set "GAWK_VERSION=latest"
 
 if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
@@ -77,10 +80,10 @@ if "%GAWK_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_ls_remote
-:: Queries available remote versions of gawk.
+:: Queries available remote versions of gawk from SamuelMarks/gawk-windows.
 :action_ls_remote
 set "RELEASES_URL=%GAWK_RELEASES_URL%"
-if "!RELEASES_URL!"=="" set "RELEASES_URL=https://example.com/releases"
+if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMarks/gawk-windows/releases/latest"
 echo [ls-remote] Fetching available gawk versions from !RELEASES_URL!...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
 exit /b 0
@@ -93,6 +96,7 @@ set "TARGET_DIR=%LIBSCRIPT_HOME%\gawk\!EXACT_VERSION!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
+    set "STACK="
     call "%~f0"
 )
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "gawk" "%GAWK_VERSION%" "!EXACT_VERSION!"
@@ -100,18 +104,16 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias
 exit /b 0
 
 :: ## action_download
-:: Downloads the gawk release artifact to the local cache directory.
+:: Downloads the target-appropriate gawk release artifact to the local cache directory.
 :action_download
 call :resolve_version
-set "URL=%GAWK_DOWNLOAD_URL%"
-if "!URL!"=="" set "URL=https://example.com/releases/gawk-{VERSION}-windows.zip"
-call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
+call :resolve_gawk_url
 set "DL_DIR=%DOWNLOAD_DIR%"
 if "!DL_DIR!"=="" set "DL_DIR=%TEMP%\libscript_downloads"
 set "DL_DIR=!DL_DIR!\gawk"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
-echo [download] Pre-downloading gawk %GAWK_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
+echo [download] Pre-downloading gawk !EXACT_VERSION! ^(!TARGET_OS!^) from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
 exit /b !errorlevel!
 
@@ -120,15 +122,13 @@ exit /b !errorlevel!
 :action_install
 if /i "%GAWK_INSTALL_METHOD%"=="from-source" (
     call :resolve_version
-    set "TARGET_DIR=%LIBSCRIPT_HOME%\gawk\!EXACT_VERSION!"
     set "SRC_URL=%GAWK_DOWNLOAD_URL%"
-    if "!SRC_URL!"=="" set "SRC_URL=https://ftp.gnu.org/gnu/gawk/gawk-{VERSION}.tar.xz"
-    call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
+    if "!SRC_URL!"=="" set "SRC_URL=https://ftp.gnu.org/gnu/gawk/gawk-!EXACT_VERSION!.tar.xz"
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "gawk" "!EXACT_VERSION!" "gawk" "c" "autotools" "!SRC_URL!"
     exit /b !errorlevel!
 )
-if "%GAWK_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends gawk
+if /i "%GAWK_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget gawk
     exit /b !errorlevel!
 )
 if /i "%GAWK_INSTALL_METHOD%"=="winget" (
@@ -145,11 +145,7 @@ if /i "%GAWK_INSTALL_METHOD%"=="scoop" (
 )
 call :resolve_version
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gawk\!EXACT_VERSION!"
-set "_BIN_FOUND=0"
-if exist "!TARGET_DIR!\bin\gawk.exe" set "_BIN_FOUND=1"
-if exist "!TARGET_DIR!\bin\gawk.cmd" set "_BIN_FOUND=1"
-if exist "!TARGET_DIR!\bin\gawk.bat" set "_BIN_FOUND=1"
-if "!_BIN_FOUND!"=="1" (
+if exist "!TARGET_DIR!\bin\gawk.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] gawk !EXACT_VERSION! is already installed at !TARGET_DIR!.
         call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "gawk" "%GAWK_VERSION%" "!EXACT_VERSION!"
@@ -157,78 +153,129 @@ if "!_BIN_FOUND!"=="1" (
         exit /b 0
     )
 )
-set "URL=%GAWK_DOWNLOAD_URL%"
-if "!URL!"=="" set "URL=https://example.com/releases/gawk-{VERSION}-windows.zip"
-call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
-if "!URL!"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends gawk
-    exit /b !errorlevel!
-)
+call :resolve_gawk_url
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
 set "DL_DIR=%DOWNLOAD_DIR%"
 if "!DL_DIR!"=="" set "DL_DIR=%TEMP%\libscript_downloads"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 set "CACHED_DL=!DL_DIR!\gawk\!ARCHIVE_NAME!"
 if exist "!CACHED_DL!" (
-    echo [install] Using cached archive !CACHED_DL!...
+    echo [install] Using cached artifact !CACHED_DL!...
     set "TMP_FILE=!CACHED_DL!"
 ) else (
-    set "TMP_FILE=%TEMP%\gawk-!RANDOM!.archive"
+    set "TMP_FILE=%TEMP%\gawk-!RANDOM!-!ARCHIVE_NAME!"
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
-    if errorlevel 1 exit /b 1
+    if errorlevel 1 (
+        if "%GAWK_DOWNLOAD_URL%"=="" (
+            call :resolve_gawk_fallback_exe_url
+            set "TMP_FILE=%TEMP%\gawk-!RANDOM!.exe"
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
+            if errorlevel 1 exit /b 1
+        ) else (
+            exit /b 1
+        )
+    )
 )
-set "_IS_ARCHIVE=0"
-if /i "!URL:~-4!"==".zip" set "_IS_ARCHIVE=zip"
-if /i "!URL:~-7!"==".tar.gz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-4!"==".tgz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-7!"==".tar.xz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-4!"==".txz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-8!"==".tar.bz2" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-5!"==".tbz2" set "_IS_ARCHIVE=tar"
-if not "!_IS_ARCHIVE!"=="0" (
-    if "!_IS_ARCHIVE!"=="zip" (
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
-    ) else (
-        tar -xf "!TMP_FILE!" -C "!TARGET_DIR!" --strip-components=1 2>nul || tar -xf "!TMP_FILE!" -C "!TARGET_DIR!"
-    )
-    for /d %%D in ("!TARGET_DIR!\*") do (
-        if /i not "%%~nxD"=="bin" (
-            set "_DO_FLAT=0"
-            if exist "%%~fD\bin\gawk.exe" set "_DO_FLAT=1"
-            if exist "%%~fD\bin\gawk.bat" set "_DO_FLAT=1"
-            if exist "%%~fD\bin\gawk.cmd" set "_DO_FLAT=1"
-            if exist "%%~fD\gawk.exe" set "_DO_FLAT=1"
-            if exist "%%~fD\gawk.cmd" set "_DO_FLAT=1"
-            if exist "%%~fD\gawk.bat" set "_DO_FLAT=1"
-            if "!_DO_FLAT!"=="1" (
-                move /y "%%~fD" "!TARGET_DIR!_flat" >nul
-                xcopy /E /I /Y "!TARGET_DIR!_flat\*" "!TARGET_DIR!\" >nul
-                if exist "!TARGET_DIR!_flat" rmdir /s /q "!TARGET_DIR!_flat" >nul 2>&1
-            )
-        )
-    )
-    if not exist "!TARGET_DIR!\bin\gawk.exe" (
-        if exist "!TARGET_DIR!\gawk.exe" (
-            copy /y "!TARGET_DIR!\gawk.exe" "!TARGET_DIR!\bin\gawk.exe" >nul
-        )
-    )
-    if not exist "!TARGET_DIR!\bin\gawk.cmd" (
-        if exist "!TARGET_DIR!\gawk.cmd" (
-            copy /y "!TARGET_DIR!\gawk.cmd" "!TARGET_DIR!\bin\gawk.cmd" >nul
-        )
-    )
-    if not exist "!TARGET_DIR!\bin\gawk.bat" (
-        if exist "!TARGET_DIR!\gawk.bat" (
-            copy /y "!TARGET_DIR!\gawk.bat" "!TARGET_DIR!\bin\gawk.bat" >nul
-        )
-    )
-) else (
-    copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\gawk.exe" >nul
-)
+call :stage_gawk_artifact "!TMP_FILE!" "!URL!" "!TARGET_DIR!"
+if errorlevel 1 exit /b 1
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "gawk" "%GAWK_VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "gawk" "default" "!EXACT_VERSION!"
 exit /b 0
+
+:: ## resolve_win_arch
+:: Maps ARCH into SamuelMarks/gawk-windows asset architecture tags (X64, X86, ARM64).
+:resolve_win_arch
+set "WIN_ARCH=X64"
+if /i "%ARCH%"=="i686" set "WIN_ARCH=X86"
+if /i "%ARCH%"=="i386" set "WIN_ARCH=X86"
+if /i "%ARCH%"=="x86" set "WIN_ARCH=X86"
+if /i "%ARCH%"=="aarch64" set "WIN_ARCH=ARM64"
+if /i "%ARCH%"=="arm64" set "WIN_ARCH=ARM64"
+exit /b 0
+
+:: ## resolve_gawk_url
+:: Selects the MS-DOS dos32 archive URL when TARGET_OS=msdos or the Windows PE archive URL on Windows.
+:resolve_gawk_url
+call :resolve_win_arch
+set "URL=%GAWK_DOWNLOAD_URL%"
+if not "!URL!"=="" (
+    call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
+    exit /b 0
+)
+if /i "%TARGET_OS%"=="msdos" (
+    set "URL=https://github.com/SamuelMarks/gawk-windows/releases/download/v!EXACT_VERSION!/gawk-!EXACT_VERSION!-dos32.zip"
+    exit /b 0
+)
+set "URL=https://github.com/SamuelMarks/gawk-windows/releases/download/v!EXACT_VERSION!/gawk-!EXACT_VERSION!-!WIN_ARCH!.zip"
+exit /b 0
+
+:: ## resolve_gawk_fallback_exe_url
+:: Provides fallback standalone .exe URLs for MS-DOS and Windows gawk releases.
+:resolve_gawk_fallback_exe_url
+call :resolve_win_arch
+if /i "%TARGET_OS%"=="msdos" (
+    set "URL=https://github.com/SamuelMarks/gawk-windows/releases/download/v!EXACT_VERSION!/gawk-!EXACT_VERSION!-dos32.exe"
+    exit /b 0
+)
+set "URL=https://github.com/SamuelMarks/gawk-windows/releases/download/v!EXACT_VERSION!/gawk-!EXACT_VERSION!-!WIN_ARCH!.exe"
+exit /b 0
+
+:: ## stage_gawk_artifact
+:: Extracts or copies gawk into TARGET_DIR\bin\gawk.exe and creates bin\awk.exe alias.
+:stage_gawk_artifact
+set "_SGA_FILE=%~1"
+set "_SGA_URL=%~2"
+set "_SGA_DST=%~3"
+if not exist "!_SGA_DST!\bin" mkdir "!_SGA_DST!\bin"
+if /i "!_SGA_URL:~-4!"==".zip" (
+    call :extract_zip "!_SGA_FILE!" "!_SGA_DST!"
+    if errorlevel 1 exit /b 1
+    if exist "!_SGA_DST!\gawk.exe" copy /y "!_SGA_DST!\gawk.exe" "!_SGA_DST!\bin\gawk.exe" >nul
+    if exist "!_SGA_DST!\GAWK.EXE" copy /y "!_SGA_DST!\GAWK.EXE" "!_SGA_DST!\bin\gawk.exe" >nul
+    for %%E in (DOS32A.EXE DOS4GW.EXE) do (
+        if exist "!_SGA_DST!\%%E" copy /y "!_SGA_DST!\%%E" "!_SGA_DST!\bin\%%E" >nul
+    )
+) else (
+    copy /y "!_SGA_FILE!" "!_SGA_DST!\bin\gawk.exe" >nul
+)
+if exist "!_SGA_DST!\bin\gawk.exe" (
+    if not exist "!_SGA_DST!\bin\awk.exe" copy /y "!_SGA_DST!\bin\gawk.exe" "!_SGA_DST!\bin\awk.exe" >nul
+)
+exit /b 0
+
+:: ## extract_zip
+:: Extracts a zip archive using PowerShell-free native tools first (7za, 7z, unzip, tar) with PowerShell fallback.
+:extract_zip
+set "_EZ_SRC=%~1"
+set "_EZ_DST=%~2"
+where 7za >nul 2>&1
+if not errorlevel 1 (
+    7za x "!_EZ_SRC!" -o"!_EZ_DST!" -y >nul
+    exit /b !errorlevel!
+)
+where 7z >nul 2>&1
+if not errorlevel 1 (
+    7z x "!_EZ_SRC!" -o"!_EZ_DST!" -y >nul
+    exit /b !errorlevel!
+)
+where unzip >nul 2>&1
+if not errorlevel 1 (
+    unzip -q -o "!_EZ_SRC!" -d "!_EZ_DST!"
+    exit /b !errorlevel!
+)
+where tar >nul 2>&1
+if not errorlevel 1 (
+    tar -xf "!_EZ_SRC!" -C "!_EZ_DST!" 2>nul
+    if not errorlevel 1 exit /b 0
+)
+where powershell >nul 2>&1
+if not errorlevel 1 (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!_EZ_SRC!' -DestinationPath '!_EZ_DST!' -Force"
+    exit /b !errorlevel!
+)
+echo [ERROR] No zip extraction binary ^(7za, 7z, unzip, tar^) available. 1>&2
+exit /b 1
 
 :: ## resolve_version
 :: Resolves latest or lts version alias into EXACT_VERSION.
@@ -237,21 +284,22 @@ if /i "%GAWK_VERSION%"=="latest" goto :resolve_remote_gh_tag
 if /i "%GAWK_VERSION%"=="lts" goto :resolve_remote_gh_tag
 if /i "%GAWK_VERSION%"=="stable" goto :resolve_remote_gh_tag
 set "EXACT_VERSION=%GAWK_VERSION%"
+if /i "!EXACT_VERSION:~0,1!"=="v" set "EXACT_VERSION=!EXACT_VERSION:~1!"
 exit /b 0
 
 :: ## resolve_remote_gh_tag
-:: Queries GitHub Releases API for the latest tag with offline fallback.
+:: Queries SamuelMarks/gawk-windows GitHub Releases API for the latest tag with offline fallback 5.4.60.
 :resolve_remote_gh_tag
 set "EXACT_VERSION="
-if not "" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos//releases/latest"') do (
-        set "EXACT_VERSION=%%T"
-    )
+set "_REL_API=%GAWK_RELEASES_URL%"
+if "!_REL_API!"=="" set "_REL_API=https://api.github.com/repos/SamuelMarks/gawk-windows/releases/latest"
+for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
+    set "EXACT_VERSION=%%T"
 )
-if not "v" == "" (
-    if not "!EXACT_VERSION!"=="" set "EXACT_VERSION=!EXACT_VERSION:v=!"
+if not "!EXACT_VERSION!"=="" (
+    if /i "!EXACT_VERSION:~0,1!"=="v" set "EXACT_VERSION=!EXACT_VERSION:~1!"
 )
-if "!EXACT_VERSION!"=="" set "EXACT_VERSION=5.3.1"
+if "!EXACT_VERSION!"=="" set "EXACT_VERSION=5.4.60"
 exit /b 0
 
 :: ## action_other

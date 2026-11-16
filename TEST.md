@@ -76,9 +76,12 @@ architectural invariants:
 9. **`VERSION_MANAGER_CONTRACT` & `EMPTY_SERVICE_STUB`**: Enforces capability-typed files per
    `manifest.json` (`service.{sh,cmd}` strictly when `"service-daemon"` is declared; rejects no-op
    `exit 0` service stubs).
-10. **`SILENT_CURL_NET`, `RAW_GCLOUD_TPU` & `EXP_IN_LIB`**: Bans unguarded `curl -s` without `-f` or
-    `libscript_download`, requires Cloud TPU operations to route through TFRC-guarded providers, and
-    keeps empirical paper campaigns inside `experiments/<suite-id>/`.
+10. **`RAW_NETWORK_FETCH`, `RAW_GCLOUD_TPU` & `EXP_IN_LIB`**: Bans raw `curl`/`wget`/`aria2c`
+    fetches outside `_lib/_common/pkg_mgr.{sh,cmd}` (`libscript_download` /
+    `libscript_fetch_stdout`), requires `gcloud compute tpus tpu-vm` calls to route through
+    TFRC-guarded providers (`_lib/cloud-providers/gcp-tpu-vm/`), and keeps new empirical paper
+    campaigns inside `experiments/<suite-id>/` (outside the 3 grandfathered compatibility wrappers
+    in `_lib/toolchains/*-suite/`).
 
 ### Domain & Subsystem Hermetic Test Suites (`tests/test_*.{sh,cmd}`)
 
@@ -88,8 +91,12 @@ architectural contracts across POSIX and Windows Batch:
 - `tests/test_vm_replacements.{sh,cmd}`: Capability-typed manifests, `O(1)` `${LIBSCRIPT_HOME}/bin`
   symlink sync/prune, `resolve-env` pin walking, and `nodejs`/`python`/`rust` version manager
   parity.
-- `tests/test_experiment_plugins.{sh,cmd}`: Open/Closed `experiments/` discovery, scaffolding, JSON
-  schema validation, and 2x `.suite_stamp` idempotency.
+- `tests/test_win_dos_component_pm.{sh,cmd}`: Target-aware `depends` resolution for native Windows
+  PE (`X64`/`X86`/`ARM64`) and MS-DOS (`dos32` + `DOS32A.EXE`) across `jq`, `gawk`, `busybox`,
+  `toybox`, `dash`, and `freebsd-usr-bin`.
+- `tests/test_experiment_plugins.{sh,cmd}`: Open/Closed `experiments/` discovery, scaffolding
+  (including `--template=installer-e2e` and `experiments/openedx/`), JSON schema validation, and 2x
+  `.suite_stamp` idempotency.
 - `tests/test_unikernel_marketplace.{sh,cmd}`: UEFI/GPT & Azure VHD unikernel wrapping, Open edX
   8-appliance constellation staging, and `publish-marketplace` SPDX/secret/port compliance gates.
 - `tests/test_tpu_k8s_gcs_stack.{sh,cmd}`: 4-role GCS ML storage synthesis, `tpu-trainer`,

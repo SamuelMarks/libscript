@@ -236,6 +236,11 @@ audit_single_file() {
             raw_uname_hits = (raw_uname_hits ? raw_uname_hits "; " : "") NR ":" $0
           }
         }
+        if ($0 !~ /^[[:space:]]*#/ && $0 !~ /libscript-allow-raw-tpu/) {
+          if ($0 ~ /gcloud[[:space:]]+compute[[:space:]]+tpus[[:space:]]+tpu-vm/ && $0 !~ /(echo[[:space:]]|printf[[:space:]])/) {
+            raw_tpu_hits = (raw_tpu_hits ? raw_tpu_hits "; " : "") NR ":" $0
+          }
+        }
         if ($0 !~ /^[[:space:]]*#/) {
           allow_pkg_next = 0
           allow_fetch_next = 0
@@ -308,6 +313,7 @@ audit_single_file() {
         if (raw_hw_hits != "") print "RAW_HW_DETECT|Raw hardware core/RAM query found (delegate to _lib/_common/hw_tune.sh): " raw_hw_hits
         if (ext_vm_hits != "") print "EXTERNAL_VERSION_MANAGER|Direct third-party version manager invocation found (delegate to LibScript native components): " ext_vm_hits
         if (raw_uname_hits != "") print "RAW_UNAME|Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh): " raw_uname_hits
+        if (raw_tpu_hits != "") print "RAW_GCLOUD_TPU|Ad-hoc gcloud compute tpus tpu-vm call found (delegate to _lib/cloud-providers/gcp-tpu-vm): " raw_tpu_hits
         if (unguarded_src_hits != "") print "UNGUARDED_SOURCE_SH|Sourcing LibScript .sh file without setting SCRIPT_NAME first: " unguarded_src_hits
         if (unnecessary_dq_hits != "") print "UNNECESSARY_DOUBLE_QUOTES|Double quotes used where single quotes suffice: " unnecessary_dq_hits
         if (sc2015_hits != "") print "SC2015_AND_OR|SC2015-prone A && B || true chain (use explicit if ...; then ... || true; fi): " sc2015_hits
@@ -399,6 +405,12 @@ audit_single_file() {
           RAW_UNAME)
             case "$file" in
               *_lib/_common/os_info.sh|*devtools/*|*tests/*|*vagrant/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          RAW_GCLOUD_TPU)
+            case "$file" in
+              *_lib/cloud-providers/gcp*|*_lib/cloud/core/tags.sh|*_lib/ml-training/_common/tfrc_guard.sh|*devtools/*|*tests/*) ;;
               *) log_failure "$file" "$v_rule" "$v_msg" ;;
             esac
             ;;
@@ -938,7 +950,7 @@ audit_single_file() {
   case "$file" in
     _lib/*/*/manifest.json)
       if command -v jq >/dev/null 2>&1; then
-        _bad_os=$(jq -r '((.os_whitelist // []) + (.os_blacklist // []))[]' "$file" 2>/dev/null | grep -Ev '^(all|linux|macos|darwin|mac|windows|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|reactos|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)$' || true)
+        _bad_os=$(jq -r '((.os_whitelist // []) + (.os_blacklist // []))[]' "$file" 2>/dev/null | grep -Ev '^(all|linux|macos|darwin|mac|windows|msdos|dos|freebsd|openbsd|netbsd|dragonfly|bsd|sunos|illumos|solaris|reactos|alpine|debian|ubuntu|rhel|fedora|centos|rocky|almalinux|arch|artix|manjaro|gentoo|void|suse|opensuse|solus|clearlinux|nixos)$' || true)
         if [ -n "$_bad_os" ]; then
           log_failure "$file" "JSON_VALIDITY" "Invalid OS identifier in manifest.json: $_bad_os"
         fi
@@ -1089,6 +1101,12 @@ if [ "${1:-}" = "--all" ]; then
     for comp_dir in "$cat_dir"/*; do
       [ -d "$comp_dir" ] || continue
       [ "$(basename "$comp_dir")" = "_common" ] && continue
+      case "$comp_dir" in
+        _lib/toolchains/edgcpp-backends-suite|_lib/toolchains/gemma-tpu-suite|_lib/toolchains/win-port-suite) ;;
+        _lib/*/*-suite)
+          log_failure "$comp_dir" "EXP_IN_LIB" "New empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
+          ;;
+      esac
       for req_file in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
         if [ ! -f "$comp_dir/$req_file" ]; then
           log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required Version Manager Contract file: $req_file"

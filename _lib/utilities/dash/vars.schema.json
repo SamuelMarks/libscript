@@ -2,18 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/utilities/dash/vars.schema.json",
   "title": "Dash variables",
-  "description": "Configuration variables for Dash",
+  "description": "Configuration variables for Dash across POSIX, Windows native (MSVC), and MS-DOS.",
   "type": "object",
   "properties": {
     "DASH_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install DASH. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
-      "default": "system"
+      "description": "How to install Dash. 'libscript_native' installs isolated prebuilt binaries (SamuelMarks/dash-windows on Windows/MS-DOS), 'system' uses OS package manager, and 'from-source' compiles from source.",
+      "enum": ["libscript_native", "system", "from-source"],
+      "default": "libscript_native"
     },
     "DASH_VERSION": {
-      "description": "Specific version of dash to install.",
+      "description": "Specific version of dash to install (e.g., 0.5.12 or latest).",
       "type": "string",
-      "default": "latest"
+      "default": "latest",
+      "version_aliases": ["latest", "lts"]
     },
     "DASH_DOWNLOAD_URL": {
       "type": "string",

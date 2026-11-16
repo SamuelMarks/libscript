@@ -182,6 +182,14 @@ if /i "%cmd%"=="package-as" ( call "!SCRIPT_DIR!\cli\commands\packaging\package-
 if /i "%cmd%"=="build-image" ( call "!SCRIPT_DIR!\cli\commands\packaging\synthesize-image.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="build-installer" ( call "!SCRIPT_DIR!\cli\commands\packaging\synthesize-image.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="install-deps" ( call "!SCRIPT_DIR!\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="depends" (
+    if "!_REST_ARGS!"=="" (
+        echo Error: at least one package_name is required for depends 1>&2
+        exit /b 1
+    )
+    call "!SCRIPT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends !_REST_ARGS!
+    exit /b !errorlevel!
+)
 if /i "%cmd%"=="db-search" ( call "!SCRIPT_DIR!\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="update-db" ( call "!SCRIPT_DIR!\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="semver" ( call "!SCRIPT_DIR!\cli\commands\core\semver.cmd" %* & exit /b !errorlevel! )
@@ -356,6 +364,16 @@ if /i "!action_pkg_norm!"=="gemma-tpu-suite" set "action_pkg_norm=_lib/toolchain
 if /i "!action_pkg_norm!"=="freebsd-distro" set "action_pkg_norm=_lib/freebsd/distro"
 if /i "!action_pkg_norm!"=="illumos-distro" set "action_pkg_norm=_lib/illumos/distro"
 if /i "!action_pkg_norm!"=="reactos-distro" set "action_pkg_norm=_lib/reactos/distro"
+if /i "!action_pkg_norm!"=="freebsd-usr-bin" set "action_pkg_norm=_lib/utilities/freebsd-usr-bin"
+if /i "!action_pkg_norm!"=="freebsd-usr-bin-windows" set "action_pkg_norm=_lib/utilities/freebsd-usr-bin"
+if /i "!action_pkg_norm!"=="freebsd_usr_bin" set "action_pkg_norm=_lib/utilities/freebsd-usr-bin"
+if /i "!action_pkg_norm!"=="toybox" set "action_pkg_norm=_lib/utilities/toybox"
+if /i "!action_pkg_norm!"=="toybox-windows" set "action_pkg_norm=_lib/utilities/toybox"
+if /i "!action_pkg_norm!"=="gawk-windows" set "action_pkg_norm=_lib/utilities/gawk"
+if /i "!action_pkg_norm!"=="awk" set "action_pkg_norm=_lib/utilities/gawk"
+if /i "!action_pkg_norm!"=="busybox-windows" set "action_pkg_norm=_lib/utilities/busybox"
+if /i "!action_pkg_norm!"=="jq-windows" set "action_pkg_norm=_lib/utilities/jq"
+if /i "!action_pkg_norm!"=="dash-windows" set "action_pkg_norm=_lib/utilities/dash"
 
 set "action_pkg=!action_pkg_norm:/=\!"
 if /i "!action_pkg!"=="cloud" (
@@ -475,6 +493,7 @@ echo.
 echo Commands:
 echo   list                                      List all available components
 echo   search ^<query^>                            Search available components by name or description
+echo   depends ^<package_name...^>                 Resolve and install component or OS dependencies
 echo   install-deps [file]                       Install all dependencies defined in a JSON file (default: libscript.json)
 echo   package-as ^<format^> [args...]             Package libscript usage (e.g., docker, docker_compose)
 echo   scaffold [options]                        Generate a new component-package-manager interactively or from JSON

@@ -135,6 +135,8 @@ if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_standards_remediation.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_dos_component_pm.cmd"
 exit /b %ERRORLEVEL%
 
 :: ## update_results

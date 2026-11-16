@@ -11,7 +11,7 @@ maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and 
 
 LibScript natively replaces external version managers like `nvm`, `fnm`, `volta`, `pyenv`, `uv`,
 `rustup`, `rvm`, and `sdkman`. It provides universal capability-typed lifecycle operations across
-all 360+ Tier 1 recipes and 542+ documented subsystems.
+all 360+ Tier 1 recipes, 547+ documented components, and 580+ subsystems.
 
 ### The Universal Lifecycle Verbs
 
@@ -190,6 +190,9 @@ Available curated profiles include:
 - **illumos & SunOS Syntheses (`profiles/illumos/`)**: `minimal-server.json`, `cde-retro-x11.json`,
   `desktop-mate-x11.json`, `desktop-xfce-x11.json`, `hardened-runit.json`, `pkgsrc-developer.json`,
   `zfs-cloud.json`
+- **ReactOS Win32 NT Syntheses (`profiles/reactos/`)**: `minimal-headless-i686.json`,
+  `desktop-classic-i686.json`, `developer-win32-i686.json`, `btrfs-appliance-i686.json`,
+  `nightly-x86_64.json`
 - **Cloud, MicroVM & Open edX Unikernel Constellation Appliances**: `cloud-aws-ami-base.json`,
   `cloud-azure-vhd-base.json`, `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`,
   `hypervisor-proxmox-template.json`, `firecracker-microvm-appliance.json`,
@@ -234,9 +237,10 @@ into deployable media:
 # 4. Hybrid live bootable ISO (UEFI + BIOS) with SquashFS and OverlayFS
 ./libscript.sh package-as iso
 
-# 5. Bootable FreeBSD and illumos images with UFS or ZFS pools
-./libscript.sh package-as bsd-img          # FreeBSD UFS/ZFS image
+# 5. Bootable FreeBSD, illumos, and ReactOS distribution images
+./libscript.sh package-as bsd-img          # FreeBSD UFS/ZFS disk image (or freebsd-distro)
 ./libscript.sh package-as illumos-distro   # illumos / SunOS ZFS root pool image
+./libscript.sh package-as reactos-distro   # ReactOS i686 / x86_64 ISO & disk image (or reactos-iso / reactos-vhd / reactos-vmdk)
 
 # 6. Unikernel images (direct ELF for Firecracker/QEMU or UEFI/GPT & Azure VHD cloud-boot disks)
 ./libscript.sh package-as unikernel
@@ -281,7 +285,7 @@ LibScript provides an automated engine for building turn-key live bootable insta
 `msi-rs`:
 
 ```sh
-# 1. Build a live hybrid installer ISO (--target linux|freebsd|illumos|all, --mode all|headless|tui|gui)
+# 1. Build a live hybrid installer ISO (--target linux|freebsd|illumos|reactos|all, --mode all|headless|tui|gui)
 ./devtools/build_live_installer.sh --target linux --mode all --output build/live-installer.iso
 # Windows Batch:
 devtools\build_live_installer.cmd --target linux --mode all --output build\live-installer.iso
@@ -544,10 +548,13 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 # 2. Execute the 2x consecutive execution idempotency matrix
 ./tests/test_idempotency_matrix.sh
 
-# 3. Headless QEMU boot verification tests for Linux, FreeBSD, and illumos
+# 3. Headless QEMU boot verification tests for Linux, FreeBSD, illumos, ReactOS, and RTOS
 ./tests/os_boot_test.sh build/disk.qcow2 60
 ./tests/freebsd_boot_test.sh build/freebsd.qcow2 60
 ./tests/illumos_boot_test.sh build/illumos.qcow2 60
+./tests/reactos_boot_test.sh build/reactos.iso 90
+./tests/zephyr_boot_test.sh build/zephyr.elf 30
+./tests/freertos_boot_test.sh build/freertos.elf 30
 
 # 4. Graphical desktop Wayland and PipeWire headless smoke test
 ./tests/os_gui_smoke_test.sh build/disk.qcow2
@@ -566,7 +573,7 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 The unified `experiment` runner (`./libscript.sh experiment` / `libscript.cmd experiment`) combines
 the Open/Closed `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`) with cloud
 instance provisioning and the Bento (`SamuelMarks/bento` @ `multi-os-qemu-aarch64`) Vagrant test
-matrix across all 360+ Tier 1 recipes and 542+ documented subsystems.
+matrix across all 360+ Tier 1 recipes, 547+ documented components, and 580+ subsystems.
 
 ### Open/Closed Experiment Plugin Verbs (`experiments/<suite-id>/`)
 
@@ -575,10 +582,12 @@ matrix across all 360+ Tier 1 recipes and 542+ documented subsystems.
 ./libscript.sh experiment list
 ./libscript.sh experiment validate
 ./libscript.sh experiment scaffold my-new-study
+./libscript.sh experiment scaffold wordpress --template=installer-e2e
 
-# Run or test self-contained plugins (edgcpp-backends, gemma-tpu, libtpu-pjrt, os-component-matrix, win-port)
+# Run or test self-contained plugins (edgcpp-backends, gemma-tpu, libtpu-pjrt, openedx, os-component-matrix, win-port)
 ./libscript.sh experiment test libtpu-pjrt
 ./libscript.sh experiment run os-component-matrix --update-readme
+./libscript.sh experiment run openedx --target-os=windows-11 --pkg-format=msi --pkg-source=github-release
 ```
 
 ### Lifecycle Steps (`a_provision_instance` .. `i_deprovision_instance`)

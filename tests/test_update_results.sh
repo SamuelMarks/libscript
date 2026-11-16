@@ -87,17 +87,23 @@ SYNTH_DIR="${TMP_TEST_DIR}/synth_repo"
 mkdir -p "${SYNTH_DIR}/_lib/virtualization/apple_vm" \
          "${SYNTH_DIR}/_lib/utilities/no_darwin" \
          "${SYNTH_DIR}/_lib/init-systems/illumos_init" \
+         "${SYNTH_DIR}/_lib/reactos/distro" \
          "${SYNTH_DIR}/tests_tmp"
 : > "${SYNTH_DIR}/libscript.sh"
 printf '%s\n' '{"name":"apple_vm","provides":["apple_vm"],"os_whitelist":["linux","macos","windows"]}' > "${SYNTH_DIR}/_lib/virtualization/apple_vm/manifest.json"
 printf '%s\n' '{"name":"no_darwin","provides":["no_darwin"],"os_blacklist":["windows","macos"]}' > "${SYNTH_DIR}/_lib/utilities/no_darwin/manifest.json"
 printf '%s\n' '{"name":"illumos_init","provides":["illumos_init"],"os_whitelist":["illumos"]}' > "${SYNTH_DIR}/_lib/init-systems/illumos_init/manifest.json"
+printf '%s\n' '{"name":"reactos-distro","provides":["reactos-distro"],"os_whitelist":["all"]}' > "${SYNTH_DIR}/_lib/reactos/distro/manifest.json"
+printf '# Native Windows & MS-DOS Execution Plan (%sTODO_PLAN.md%s)\n\n- [ ] %s_lib/virtualization/apple_vm%s: keep untouched\n' "${_bt}" "${_bt}" "${_bt}" "${_bt}" > "${SYNTH_DIR}/TODO_PLAN.md"
+: > "${SYNTH_DIR}/tests_tmp/apple_vm.linux.alpine.success"
 printf '# Synth\n\n## Supported Components\n\n## License\n' > "${SYNTH_DIR}/README.md"
 
-sh "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "${SYNTH_DIR}"
-assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}apple_vm${_bt}[[:space:]]*\\|[[:space:]]*${_bt}virtualization${_bt}[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|" "update_results.sh maps os_whitelist macos to darwin column"
+sh "${LIBSCRIPT_ROOT_DIR}/tests/update_results.sh" "${SYNTH_DIR}" --sync-plans
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}apple_vm${_bt}[[:space:]]*\\|[[:space:]]*${_bt}virtualization${_bt}[[:space:]]*\\|[[:space:]]*✅[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|" "update_results.sh maps os_whitelist macos to darwin column"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}no_darwin${_bt}[[:space:]]*\\|[[:space:]]*${_bt}utilities${_bt}[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_blacklist macos to darwin column"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}illumos_init${_bt}[[:space:]]*\\|[[:space:]]*${_bt}init-systems${_bt}[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_whitelist illumos to sunos column"
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}reactos/distro${_bt}[[:space:]]*\\|[[:space:]]*${_bt}reactos${_bt}[[:space:]]*\\|" "update_results.sh disambiguates reactos/distro in Tier 2"
+assert_file_contains "${SYNTH_DIR}/TODO_PLAN.md" "^- \\[ \\] ${_bt}_lib/virtualization/apple_vm${_bt}: keep untouched$" "update_results.sh preserves Native Windows & MS-DOS Execution Plan TODO_PLAN.md"
 
 if [ "$FAILURES" -gt 0 ]; then
   printf '[FAIL] test_update_results failed with %d error(s).

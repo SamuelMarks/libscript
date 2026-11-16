@@ -1,0 +1,31 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "freebsd-usr-bin",
+  "title": "FreeBSD usr.bin Suite",
+  "description": "FreeBSD usr.bin command-line utilities (~200 POSIX tools including sed, grep, cut, tr, sort, uniq, wc, head, tail, xargs, find, diff, patch, bmake) ported natively to Windows (MSVC) and MS-DOS (dos32).",
+  "category": "utilities",
+  "provides": [
+    "freebsd-usr-bin",
+    "freebsd-usr-bin-windows",
+    "sed",
+    "grep",
+    "cut",
+    "tr",
+    "sort",
+    "uniq",
+    "wc",
+    "head",
+    "tail",
+    "xargs",
+    "find",
+    "cmp",
+    "diff",
+    "patch",
+    "bmake",
+    "bsdtar",
+    "bsdunzip"
+  ],
+  "capabilities": ["versioned-artifact"],
+  "os_whitelist": ["all"],
+  "repository": "https://github.com/SamuelMarks/freebsd-usr-bin-windows"
+}

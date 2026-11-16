@@ -33,8 +33,8 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
 
-GAWK_VERSION="${GAWK_VERSION:-5.3.1}"
-if [ "${GAWK_VERSION}" = "latest" ]; then
+GAWK_VERSION="${GAWK_VERSION:-latest}"
+if [ "${GAWK_VERSION}" = 'latest' ]; then
   EXACT_VERSION='latest'
 else
   EXACT_VERSION="${GAWK_VERSION}"

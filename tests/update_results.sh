@@ -132,7 +132,7 @@ classify_tier() {
       printf '1.5
 '
       ;;
-    kernel|bootloaders|storage|freebsd|illumos|virtualization)
+    kernel|bootloaders|storage|freebsd|illumos|reactos|virtualization)
       printf '2
 '
       ;;
@@ -181,12 +181,14 @@ discover_all_entries() {
       _comp="${_dir##*/}"
       case "${_cat}" in _*) continue ;; esac
       case "${_comp}" in _*) continue ;; esac
-      # Disambiguate freebsd/distro and illumos/distro from orchestration/distro
+      # Disambiguate freebsd/distro, illumos/distro, and reactos/distro from orchestration/distro
       _display_comp="${_comp}"
       if [ "${_cat}" = "freebsd" ] && [ "${_comp}" = "distro" ]; then
         _display_comp='freebsd/distro'
       elif [ "${_cat}" = "illumos" ] && [ "${_comp}" = "distro" ]; then
         _display_comp='illumos/distro'
+      elif [ "${_cat}" = "reactos" ] && [ "${_comp}" = "distro" ]; then
+        _display_comp='reactos/distro'
       fi
       _tier=$(classify_tier "${_cat}" "${_comp}")
       _mfile=""
@@ -285,8 +287,9 @@ update_supported_components() {
     if [ -f "${_readme_file}" ]; then
       case "${_comp}" in
         */*)
-          _existing_line=$(awk -F'|' -v comp="${_comp}" '
+          _existing_line=$(awk -F'|' -v comp="${_comp}" -v cat="${_cat}" -v scomp="${_short_comp}" '
             $2 ~ "^[ \t]*`" comp "`[ \t]*$" { print; exit }
+            $2 ~ "^[ \t]*`" scomp "`[ \t]*$" && $3 ~ "^[ \t]*`" cat "`[ \t]*$" { print; exit }
           ' "${_readme_file}" 2>/dev/null || true)
           ;;
         *)
@@ -388,6 +391,7 @@ update_supported_components() {
       case "${_comp}" in
         freebsd/distro) _marker_comp='freebsd-distro' ;;
         illumos/distro) _marker_comp='illumos-distro' ;;
+        reactos/distro) _marker_comp='reactos-distro' ;;
         bootloaders/*) _marker_comp="bootloaders-${_short_comp}" ;;
         payloads/schedulers/*) _marker_comp="scheduler-${_short_comp}" ;;
         traits/*) _marker_comp="trait-${_short_comp}" ;;
@@ -803,6 +807,9 @@ update_todo_plan() {
   _tests_tmp_dir="${_repo_root}/tests_tmp"
 
   if [ ! -f "${_todo_file}" ]; then
+    return 0
+  fi
+  if head -n 1 "${_todo_file}" | grep -q 'Native Windows & MS-DOS Execution Plan'; then
     return 0
   fi
 

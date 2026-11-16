@@ -78,8 +78,10 @@ Every software recipe in `_lib/` declares explicit `"capabilities"` in `manifest
   required strictly when `"service-daemon"` is declared in `manifest.json` (never add no-op
   `service.*` stubs to pure compilers or CLI tools).
 - `test.sh` / `test.cmd`: Component-specific smoke tests and binary verification.
-- Empirical paper campaigns belong strictly in `experiments/<suite-id>/`
-  (`./libscript.sh experiment scaffold <suite-id>`), never inside `_lib/toolchains/*-suite/`.
+- New empirical paper campaigns belong strictly in `experiments/<suite-id>/`
+  (`./libscript.sh experiment scaffold <suite-id>`), never as new `_lib/*/*-suite/` directories
+  (enforced by `EXP_IN_LIB`; only the 3 legacy compatibility wrappers in
+  `_lib/toolchains/{edgcpp-backends-suite,gemma-tpu-suite,win-port-suite}/` are grandfathered).
 
 To rapidly scaffold a new Tier 1 component directory that satisfies all Version Manager Contract,
 `THIS_FILE`, `.cmd` parity, and schema invariants out-of-the-box, use:

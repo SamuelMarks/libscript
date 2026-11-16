@@ -27,12 +27,21 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ -z "${ARCH+x}" ]; then
-  ARCH="${LIBSCRIPT_TARGET_ARCH:-$(uname -m 2>/dev/null || printf 'x86_64')}"
-  case "${ARCH}" in
-    'aarch64') export ARCH_ALT='arm64' ;;
-    *) export ARCH_ALT="${ARCH}" ;;
+  case "${LIBSCRIPT_TARGET_OS:-}" in
+    msdos|dos|dos32)
+      ARCH="${LIBSCRIPT_TARGET_ARCH:-i386}"
+      export ARCH_ALT='dos32'
+      export ARCH
+      ;;
+    *)
+      ARCH="${LIBSCRIPT_TARGET_ARCH:-$(uname -m 2>/dev/null || printf 'x86_64')}"
+      case "${ARCH}" in
+        'aarch64') export ARCH_ALT='arm64' ;;
+        *) export ARCH_ALT="${ARCH}" ;;
+      esac
+      export ARCH
+      ;;
   esac
-  export ARCH
 fi
 
 if [ -z "${KERNEL_RELEASE+x}" ]; then
@@ -53,6 +62,7 @@ if [ -z "${UNAME+x}" ]; then
         sunos|illumos|solaris) UNAME='SunOS' ;;
         reactos) UNAME='ReactOS' ;;
         windows) UNAME='Windows_NT' ;;
+        msdos|dos|dos32) UNAME='MS-DOS' ;;
         *) UNAME="$(uname 2>/dev/null || printf 'Linux')" ;;
       esac
     else
@@ -132,6 +142,13 @@ if [ -z "${UNAME+x}" ]; then
       'Windows_NT')
         export PKG_MGR="${LIBSCRIPT_WINDOWS_PKG_MGR:-winget}"
         TARGET_OS='windows'
+        ;;
+      'MS-DOS'|'DOS'*|'FreeDOS'*|'DJGPP'*)
+        export PKG_MGR="${LIBSCRIPT_PKG_MGR:-libscript}"
+        export IS_MSDOS='1'
+        export TARGET_OS_FLAVOR='msdos'
+        export ARCH_ALT='dos32'
+        TARGET_OS='msdos'
         ;;
       'ReactOS')
         export PKG_MGR="${LIBSCRIPT_REACTOS_PKG_MGR:-rapps}"
@@ -228,6 +245,9 @@ if [ -z "${INIT_SYS+x}" ]; then
         ;;
       'Windows_NT')
         export INIT_SYS='windows-scm'
+        ;;
+      'MS-DOS'|'DOS'*|'FreeDOS'*|'DJGPP'*)
+        export INIT_SYS='none'
         ;;
       'ReactOS')
         export INIT_SYS='nt-scm'

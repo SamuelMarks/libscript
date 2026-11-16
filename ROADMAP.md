@@ -3,28 +3,47 @@
 LibScript aims to become the universal substrate for software delivery, independent of cloud vendor
 or operating system.
 
-## Phase 13: Observability Control Plane & Transactional OS Updates (Next)
+## Phase 14: Observability Control Plane, Zero-Emulation Win32/DOS Completion & Transactional OS Updates (Next)
 
 - [ ] Lightweight, decentralized Web Dashboard / Control Plane for real-time cluster visualization,
       topology state inspection, and multi-node log streaming on top of `libscript-rest-api`.
 - [ ] Real-time multicloud resource cost estimation and usage reporting across AWS, Azure, GCP,
       Hetzner, DigitalOcean, Linode, and Vultr.
-- [ ] Hardware-Aware Auto-Tuning: Dynamically adjusting compiler flags (`-march`), database memory
-      pools, and storage scheduler parameters based on detected CPU ISA extensions and NVMe
-      topology.
+- [ ] Complete Zero-PowerShell / Zero-`wmic` Win32 & MS-DOS (`dos32`) `_lib/_common/` substrate
+      porting (`find_replace.cmd`, `envsubst_safe.cmd`, `uuid_gen.cmd`, `daemon_launcher.cmd`,
+      `priv.cmd`, FAT16/32 fallback — tracked in [TODO_PORT_FOR_WIN.md](TODO_PORT_FOR_WIN.md)).
+- [ ] Extended Hardware-Aware Auto-Tuning: Extending `_lib/_common/hw_tune.{sh,cmd}` CPU/RAM/ISA
+      detection to dynamically tune compiler flags (`-march`), NVMe I/O schedulers, and kernel
+      sysctl profiles.
 - [ ] Transactional A/B sysroot update partitions and `ostree`-style atomic rollback for immutable
       Tier 2 OS deployments.
 
 ---
 
-## Completed Phases (Phases 3–12)
+## Completed Phases (Phases 3–13)
+
+### Phase 13: ReactOS Modular Distribution Synthesis, Declarative `installer-e2e` & Native Windows/MS-DOS (`dos32`) Component PMs (Completed)
+
+- [x] Modular ReactOS (`i686` & `x86_64`) distribution synthesis (`_lib/reactos/distro/`, `rapps`,
+      `rosbe`, `execution-plan.reactos.schema.json`, `profiles/reactos/*.json`) supporting upstream
+      ISO repacking (`unattend.inf` + `GuiRunOnce`), RosBE CMake/Ninja source builds, strict PE
+      bitness guards (`0x014c` vs. `0x8664`), `--target reactos` quad-boot `msi-rs` live media, and
+      5-platform verification (`tests/run_reactos_distro_matrix.{sh,cmd}`).
+- [x] Declarative cross-OS `installer-e2e` experiment substrate
+      (`_lib/_common/experiment/pkg_ui_runner.{sh,cmd}`, `schemas/installer-experiment.schema.json`,
+      `--template=installer-e2e`) and built-in `experiments/openedx/` Vagrant/UI verification suite.
+- [x] Native Windows PE (`X64`/`X86`/`ARM64`) and MS-DOS (`dos32` + `DOS32A.EXE`) component-level
+      package managers (`_lib/utilities/{jq,gawk,busybox,toybox,dash,freebsd-usr-bin}/` +
+      `_lib/toolchains/openwatcom/`), target-aware `depends` dispatch (`IS_MSDOS=1`), FreeDOS/MS-DOS
+      Vagrant environments (`vagrant/{freedos-1.4,msdos-1.25,msdos-2.0,msdos-4.0}/`), and
+      `tests/test_win_dos_component_pm.{sh,cmd}`.
 
 ### Phase 12: Capability-Typed `O(1)` Version Managers, `experiments/` Plugin Engine, Multicloud Unikernel Marketplace & TPU/GKE/GCS ML Stack (Completed)
 
 - [x] Capability-typed `manifest.json` contract (`versioned-artifact`, `service-daemon`,
-      `sysroot-library`, `cloud-operator`, `os-synthesizer`) across all `554` `_lib/` descriptors,
-      removing `760` dead `service.{sh,cmd}` stubs and enforcing `EMPTY_SERVICE_STUB` in
-      `devtools/audit/audit_standards.{sh,ps1}`.
+      `sysroot-library`, `cloud-operator`, `os-synthesizer`) across all `547+` documented `_lib/`
+      components (`559` manifest descriptors), removing `760` dead `service.{sh,cmd}` stubs and
+      enforcing `EMPTY_SERVICE_STUB` in `devtools/audit/audit_standards.{sh,ps1}`.
 - [x] Zero-shim `O(1)` `${LIBSCRIPT_HOME}/bin` symlink farm (`_lib/_common/versioning.{sh,cmd}`),
       `.libscript-version` workspace pin resolution (`libscript resolve-env`), and native
       replacement upgrades for `nodejs` (`.nvmrc`/`.node-version`/`corepack`), `python`
@@ -32,7 +51,8 @@ or operating system.
       `target-add`/`component-add`).
 - [x] Open/Closed top-level `experiments/<suite-id>/` plugin engine (`experiments/engine.{sh,cmd}`)
       and shared `_lib/_common/experiment/` C11/POSIX/Batch benchmark substrate covering
-      `edgcpp-backends`, `gemma-tpu`, `libtpu-pjrt`, `os-component-matrix`, and `win-port`.
+      `edgcpp-backends`, `gemma-tpu`, `libtpu-pjrt`, `openedx`, `os-component-matrix`, and
+      `win-port`.
 - [x] UEFI/GPT (`--cloud-boot=uefi-gpt|efi-stub`) and 1 MiB-aligned Hyper-V Gen2 VHD
       (`--cloud-boot=azure-vhd`) unikernel disk image synthesis, `_lib/cloud/image-import`, the
       8-appliance Open edX unikernel constellation (`profiles/openedx-unikernel/*.json` +
@@ -45,87 +65,28 @@ or operating system.
       (`/api/v1/experiments`, `/api/v1/marketplace/publish`,
       `/api/v1/components/{name}/capabilities`).
 
-### Phase 3: Advanced PaaS & Cluster Mesh (Completed)
+### Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks (Completed)
 
-- [x] High-availability cluster orchestration blueprints (Master/Slave election, Raft-based state,
-      Cross-cloud mesh: `postgres-ha`, `redis-cluster`, `valkey-cluster`, `openedx-ha`,
-      `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`).
-- [x] Automated global load balancer and reverse proxy configuration (`traits/ingress/`, `netctl`).
-- [x] Provider Expansion: Added DigitalOcean, Linode, Vultr, Hetzner, OCI, OVH, and Proxmox VE to
-      the multicloud wrapper (`_lib/cloud-providers/`).
-- [x] Unified Deployment Grammar: High-level declarative DSLs (`payloads/payload.schema.json` and
-      `topologies/topology.schema.json`) to describe globally distributed stacks and clusters.
-- [x] Encrypted cross-node mesh networking / Zero-Trust Sidecars (`traits/mesh/` WireGuard &
-      Tailscale overlays).
-- [x] Git-driven deployment workflows (`libscript deploy`).
-- [x] Cross-cloud persistent volume and state management (`traits/storage/`, `traits/backup/`).
-
-### Phase 4: Terminal UI & Structured Telemetry (Completed)
-
-- [x] Terminal User Interface (TUI) for OS synthesis (`libscript config os`) and stack packaging via
-      `package-as tui`.
-- [x] Integrated log aggregation, health probing, and structured metrics via `traits/logging/`,
-      `traits/metrics/`, and component `hooks/{probe,log_stream,metrics}`.
-
-### Phase 5: Hardware Acceleration & AI Infrastructure (Completed)
-
-- [x] Abstracted provisioning for TPU and GPU Virtual Machines (`payloads/ai/gcp-tpu-vm/`,
-      `gcp-gpu-vm/`).
-- [x] GKE integration for distributed AI workloads via XPK (`payloads/ai/gke-xpk-training/`,
-      `gke-xpk-inference/`, `topologies/gke-tpu-cluster/`).
-- [x] Automation for inference engines (`vLLM`, `JetStream`, `Ollama`).
-- [x] Real-Time Operating System (RTOS) & MCU Firmware Synthesis (`_lib/kernel/zephyr/`,
-      `_lib/kernel/freertos/`, `_lib/bootloaders/mcuboot/`, `cli/commands/package_as/firmware`,
-      `topologies/iot-mqtt-edge-pod/`, and `payloads/schedulers/rtos_firmware`).
-- [x] Bare-metal generic GPU passthrough setup for local development.
-
-### Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix (Completed)
-
-- [x] Specification & schema (`execution-plan.freebsd.schema.json`) with modular profiles.
-- [x] Pluggable Init Systems (`bsd-rc`, `openrc`, `runit`, `s6`, `dinit`).
-- [x] Display & Desktop modular staging (Wayland, X11, Sway, XFCE4, Plasma 6, seatd, PipeWire).
-- [x] Multi-format disk image export (Raw GPT, QCOW2, Vagrant `.box`, VHD, VMDK, ISO).
-- [x] Headless boot, GUI smoketests, Vagrant lifecycle, and 2-pass idempotency test harness.
-- [x] Vagrant-only multi-platform verification matrix across
-      `{macOS, Windows, FreeBSD, SunOS, Linux}`.
-
-### Phase 7: Illumos-Based Modular Distribution & Verification Matrix (Completed)
-
-- [x] Specification & schema (`execution-plan.illumos.schema.json`) with modular profiles
-      (`minimal-server`, `zfs-cloud`, `desktop-mate-x11`, `desktop-xfce-x11`, `cde-retro-x11`,
-      `hardened-runit`, `pkgsrc-developer`).
-- [x] Pluggable Init Systems (`smf`, `runit`, `s6`, `dinit`, `inittab-sysv`).
-- [x] Display & Desktop modular staging (X11 Xorg, MATE, XFCE4, CDE, LightDM, SLiM, XDM, Boomer
-      kernel audio).
-- [x] Canonical ZFS root pool (`rpool`) dataset layout and `/etc/vfstab` integration.
-- [x] Multi-format disk image export (Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO).
-- [x] Headless boot milestone smoketests, GUI smoketests, Vagrant lifecycle, and 2-pass idempotency
-      test harness.
-- [x] Vagrant-only multi-platform verification matrix across
-      `{macOS, Windows, FreeBSD, SunOS, Linux}`.
-
-### Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`) (Completed)
-
-- [x] Specification and execution schema (`execution-plan.live.schema.json`).
-- [x] Live installer image builder (`devtools/build_live_installer.sh` / `.cmd`).
-- [x] Tri-modal operator interface: Headless unattended (`msiexec`), curses TUI, and kiosk GUI
-      (`msi-gui` on Wayland `cage` / X11 `openbox`).
-- [x] Multiboot co-installation across Linux, FreeBSD, and illumos on a single machine with
-      automated bootloader chaining.
-- [x] Automated visual screenshot capture harness (`devtools/capture_msi_live_screenshots.sh` /
-      `.cmd`).
-- [x] Air-gapped offline payload baking and USB physical drive writer (`devtools/write_usb.sh` /
-      `.cmd`).
-- [x] Engineering specification and checklist tracked in
-      [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
-
-### Phase 9: Native C11 REST API & OpenAPI 3.2.0 Control Plane (Completed)
-
-- [x] High-performance pure C11 HTTP daemon (`c-rest-framework`) in `libscript-rest-api/`.
-- [x] Strongly typed OpenAPI 3.2.0 specification (`libscript-rest-api/openapi.yaml`).
-- [x] REST endpoints for component lifecycle, stack synthesis, artifact packaging, topologies,
-      payloads, traits, hooks, and job status polling.
-- [x] Native CMake build system, architecture guide, and daemon integration scripts.
+- [x] Tier 4 Declarative Workload Engine (`payloads/`) and pluggable scheduler drivers for
+      **Kubernetes** (`kubernetes`, `k8s-marathon`, `kubernetes-k0s`, `kubernetes-thw`), **Apache
+      Mesos & Marathon** (`mesos`, `marathon`), **HashiCorp Nomad** (`nomad`), **Slurm/Ray**
+      (`slurm_ray`), **Google Cloud XPK / TPU VM** (`xpk`, `tpu_vm`), **MicroVMs/Unikernels & RTOS**
+      (`microvm`, `rtos_firmware`), and **8+ Native OS Init Systems** (`native`).
+- [x] Tier 3.5 High-Availability Topology Engine (`topologies/engine.{sh,cmd}`), distributed lease
+      locking (`topologies/lock.{sh,cmd}`), and automated split-brain fencing
+      (`topologies/fence.{sh,cmd}`).
+- [x] Turnkey HA blueprints for `postgres-ha`, `redis-cluster`, `valkey-cluster`, `openedx-ha`,
+      `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and
+      `gke-tpu-cluster`.
+- [x] Unified Cross-Cutting Node Traits (`traits/engine.{sh,cmd}`): `storage`, `secrets`
+      (zero-env-leak FIFO injection), `mesh` (WireGuard/Tailscale), `firewall` (anti-lockout
+      `nftables`/`iptables`/`pf`/`netsh`), `discovery` (Cloud DNS + `/etc/hosts`), `tls`, `ingress`,
+      `logging`, `metrics`, `backup` (ZFS/Btrfs CoW snapshots + S3/GCS/Azure/Restic shipping), and
+      `maintenance`.
+- [x] Dual-Layer Component Lifecycle Hooks (`_lib/_common/hooks.{sh,cmd}`): physical hooks
+      (`configure`, `probe`, `announce`, `log_stream`, `metrics`, `backup`, `restore`, `upgrade`,
+      `rollback`, `maintenance`) and logical multi-tenant hooks (`provision_tenant`,
+      `deprovision_tenant`, `backup_tenant`, `restore_tenant`).
 
 ### Phase 10: Generic 3-Mode Build Substrate & Multi-Compiler C/C++ Differential Verification (Completed)
 
@@ -144,28 +105,87 @@ or operating system.
 - [x] Linux kernel multi-toolchain Kbuild engine, ELF/`System.map` ABI differential harness
       (`_lib/kernel/linux/compare_compilers.{sh,cmd}`), and declarative kernel compiler profiles.
 
-### Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks (Completed)
+### Phase 9: Native C11 REST API & OpenAPI 3.2.0 Control Plane (Completed)
 
-- [x] Tier 4 Declarative Workload Engine (`payloads/`) and pluggable scheduler drivers for
-      **Kubernetes** (`kubernetes`, `k8s-marathon`, `kubernetes-k0s`, `kubernetes-thw`), **Apache
-      Mesos & Marathon** (`mesos`, `marathon`), **HashiCorp Nomad** (`nomad`), **Slurm/Ray**
-      (`slurm_ray`), **Google Cloud XPK** (`xpk`), **MicroVMs/Unikernels** (`microvm`), and **8+
-      Native OS Init Systems** (`native`).
-- [x] Tier 3.5 High-Availability Topology Engine (`topologies/engine.{sh,cmd}`), distributed lease
-      locking (`topologies/lock.{sh,cmd}`), and automated split-brain fencing
-      (`topologies/fence.{sh,cmd}`).
-- [x] Turnkey HA blueprints for `postgres-ha`, `redis-cluster`, `valkey-cluster`, `openedx-ha`,
-      `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and
-      `gke-tpu-cluster`.
-- [x] Unified Cross-Cutting Node Traits (`traits/engine.{sh,cmd}`): `storage`, `secrets`
-      (zero-env-leak FIFO injection), `mesh` (WireGuard/Tailscale), `firewall` (anti-lockout
-      `nftables`/`iptables`/`pf`/`netsh`), `discovery` (Cloud DNS + `/etc/hosts`), `tls`, `ingress`,
-      `logging`, `metrics`, `backup` (ZFS/Btrfs CoW snapshots + S3/GCS/Azure/Restic shipping), and
-      `maintenance`.
-- [x] Dual-Layer Component Lifecycle Hooks (`_lib/_common/hooks.{sh,cmd}`): physical hooks
-      (`configure`, `probe`, `announce`, `log_stream`, `metrics`, `backup`, `restore`, `upgrade`,
-      `rollback`, `maintenance`) and logical multi-tenant hooks (`provision_tenant`,
-      `deprovision_tenant`, `backup_tenant`, `restore_tenant`).
+- [x] High-performance pure C11 HTTP daemon (`c-rest-framework`) in `libscript-rest-api/`.
+- [x] Strongly typed OpenAPI 3.2.0 specification (`libscript-rest-api/openapi.yaml`).
+- [x] REST endpoints for component lifecycle, stack synthesis, artifact packaging, topologies,
+      payloads, traits, hooks, and job status polling.
+- [x] Native CMake build system, architecture guide, and daemon integration scripts.
+
+### Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`) (Completed)
+
+- [x] Specification and execution schema (`execution-plan.live.schema.json`).
+- [x] Live installer image builder (`devtools/build_live_installer.sh` / `.cmd`).
+- [x] Tri-modal operator interface: Headless unattended (`msiexec`), curses TUI, and kiosk GUI
+      (`msi-gui` on Wayland `cage` / X11 `openbox`).
+- [x] Multiboot co-installation across Linux, FreeBSD, illumos, and ReactOS on a single machine with
+      automated bootloader chaining.
+- [x] Automated visual screenshot capture harness (`devtools/capture_msi_live_screenshots.sh` /
+      `.cmd`).
+- [x] Air-gapped offline payload baking and USB physical drive writer (`devtools/write_usb.sh` /
+      `.cmd`).
+- [x] Engineering specification and checklist tracked in
+      [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+
+### Phase 7: Illumos-Based Modular Distribution & Verification Matrix (Completed)
+
+- [x] Specification & schema (`execution-plan.illumos.schema.json`) with modular profiles
+      (`minimal-server`, `zfs-cloud`, `desktop-mate-x11`, `desktop-xfce-x11`, `cde-retro-x11`,
+      `hardened-runit`, `pkgsrc-developer`).
+- [x] Pluggable Init Systems (`smf`, `runit`, `s6`, `dinit`, `inittab-sysv`).
+- [x] Display & Desktop modular staging (X11 Xorg, MATE, XFCE4, CDE, LightDM, SLiM, XDM, Boomer
+      kernel audio).
+- [x] Canonical ZFS root pool (`rpool`) dataset layout and `/etc/vfstab` integration.
+- [x] Multi-format disk image export (Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO).
+- [x] Headless boot milestone smoketests, GUI smoketests, Vagrant lifecycle, and 2-pass idempotency
+      test harness.
+- [x] Vagrant-only multi-platform verification matrix across
+      `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+
+### Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix (Completed)
+
+- [x] Specification & schema (`execution-plan.freebsd.schema.json`) with modular profiles.
+- [x] Pluggable Init Systems (`bsd-rc`, `openrc`, `runit`, `s6`, `dinit`).
+- [x] Display & Desktop modular staging (Wayland, X11, Sway, XFCE4, Plasma 6, seatd, PipeWire).
+- [x] Multi-format disk image export (Raw GPT, QCOW2, Vagrant `.box`, VHD, VMDK, ISO).
+- [x] Headless boot, GUI smoketests, Vagrant lifecycle, and 2-pass idempotency test harness.
+- [x] Vagrant-only multi-platform verification matrix across
+      `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+
+### Phase 5: Hardware Acceleration & AI Infrastructure (Completed)
+
+- [x] Abstracted provisioning for TPU and GPU Virtual Machines (`payloads/ai/gcp-tpu-vm/`,
+      `gcp-gpu-vm/`).
+- [x] GKE integration for distributed AI workloads via XPK (`payloads/ai/gke-xpk-training/`,
+      `gke-xpk-inference/`, `topologies/gke-tpu-cluster/`).
+- [x] Automation for inference engines (`vLLM`, `JetStream`, `Ollama`).
+- [x] Real-Time Operating System (RTOS) & MCU Firmware Synthesis (`_lib/kernel/zephyr/`,
+      `_lib/kernel/freertos/`, `_lib/bootloaders/mcuboot/`, `cli/commands/package_as/firmware`,
+      `topologies/iot-mqtt-edge-pod/`, and `payloads/schedulers/rtos_firmware`).
+- [x] Bare-metal generic GPU passthrough setup for local development.
+
+### Phase 4: Terminal UI & Structured Telemetry (Completed)
+
+- [x] Terminal User Interface (TUI) for OS synthesis (`libscript config os`) and stack packaging via
+      `package-as tui`.
+- [x] Integrated log aggregation, health probing, and structured metrics via `traits/logging/`,
+      `traits/metrics/`, and component `hooks/{probe,log_stream,metrics}`.
+
+### Phase 3: Advanced PaaS & Cluster Mesh (Completed)
+
+- [x] High-availability cluster orchestration blueprints (Master/Slave election, Raft-based state,
+      Cross-cloud mesh: `postgres-ha`, `redis-cluster`, `valkey-cluster`, `openedx-ha`,
+      `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`).
+- [x] Automated global load balancer and reverse proxy configuration (`traits/ingress/`, `netctl`).
+- [x] Provider Expansion: Added DigitalOcean, Linode, Vultr, Hetzner, OCI, OVH, and Proxmox VE to
+      the multicloud wrapper (`_lib/cloud-providers/`).
+- [x] Unified Deployment Grammar: High-level declarative DSLs (`payloads/payload.schema.json` and
+      `topologies/topology.schema.json`) to describe globally distributed stacks and clusters.
+- [x] Encrypted cross-node mesh networking / Zero-Trust Sidecars (`traits/mesh/` WireGuard &
+      Tailscale overlays).
+- [x] Git-driven deployment workflows (`libscript deploy`).
+- [x] Cross-cloud persistent volume and state management (`traits/storage/`, `traits/backup/`).
 
 _For earlier completed phases (Phases 1 and 2) and detailed release notes, see
 [CHANGELOG.md](CHANGELOG.md)._

@@ -6,6 +6,20 @@ All notable changes to the LibScript framework are documented here.
 
 ### Added
 
+- **Native Windows (PE) & MS-DOS (`dos32`) Component-Level Package Managers (`_lib/utilities/`,
+  `depends`)**:
+  - Target-aware `msdos` (`IS_MSDOS=1`, `PKG_MGR=libscript`) detection in
+    `_lib/_common/os_info.{sh,cmd}` and `_lib/_common/pkg_map.tsv` routing across 6 standalone
+    utilities (`jq`, `gawk`, `busybox`, `toybox`, `dash`, and `freebsd-usr-bin`) plus
+    `_lib/toolchains/openwatcom/`, staging `dos32` + `DOS32A.EXE` binaries on MS-DOS and native PE
+    (`X64`/`X86`/`ARM64`) binaries on Windows.
+  - Pre-configured Vagrant environments for `vagrant/{freedos-1.4,msdos-1.25,msdos-2.0,msdos-4.0}/`
+    and hermetic verification harness `tests/test_win_dos_component_pm.{sh,cmd}`.
+- **Declarative `installer-e2e` Experiment Substrate & `experiments/openedx/`**:
+  - Zero-code cross-OS installer and guest-UI evaluation runner
+    (`_lib/_common/experiment/pkg_ui_runner.{sh,cmd}`, `schemas/installer-experiment.schema.json`),
+    `./libscript.sh experiment scaffold <app> --template=installer-e2e`, and built-in
+    `experiments/openedx/` suite.
 - **Built-in ReactOS Modular Distribution Synthesis (`_lib/reactos/`, `rapps`, `rosbe`)**:
   - Declarative `execution-plan.reactos.schema.json` and 5 curated `i686` / `x86_64` profiles under
     `profiles/reactos/`, supporting hybrid upstream ISO repacking (`unattend.inf` + `GuiRunOnce`

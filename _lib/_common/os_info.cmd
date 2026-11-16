@@ -52,25 +52,48 @@ goto :find_root
 :: ## detect_os_info
 :: Detects the host operating system, distribution, and CPU architecture.
 :detect_os_info
+set "_ORIG_OS=%OS%"
 set "OS=Windows_NT"
 set "TARGET_OS=windows"
 set "PKG_OS=windows"
 set "IS_REACTOS=0"
+set "IS_MSDOS=0"
 set "TARGET_OS_FLAVOR=windows"
 set "UNAME=Windows_NT"
 set "UNAME_LOWER=windows"
 set "INIT_SYS=windows-scm"
 set "KERNEL_RELEASE=10.0"
 
+if /i "%_ORIG_OS%"=="MS-DOS" set "IS_MSDOS=1"
+if /i "%_ORIG_OS%"=="DOS" set "IS_MSDOS=1"
+if /i "%LIBSCRIPT_TARGET_OS%"=="msdos" set "IS_MSDOS=1"
+if /i "%LIBSCRIPT_TARGET_OS%"=="dos" set "IS_MSDOS=1"
+if /i "%LIBSCRIPT_TARGET_OS%"=="dos32" set "IS_MSDOS=1"
+if "!IS_MSDOS!"=="0" (
+    ver 2>nul | findstr /I "MS-DOS FreeDOS DR-DOS PC-DOS" >nul 2>&1
+    if not errorlevel 1 set "IS_MSDOS=1"
+)
+
 ver 2>nul | findstr /I "ReactOS" >nul 2>&1
 if not errorlevel 1 set "IS_REACTOS=1"
 if "!IS_REACTOS!"=="0" (
-    reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2>nul | findstr /I "ReactOS" >nul 2>&1
-    if not errorlevel 1 set "IS_REACTOS=1"
+    if "!IS_MSDOS!"=="0" (
+        reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2>nul | findstr /I "ReactOS" >nul 2>&1
+        if not errorlevel 1 set "IS_REACTOS=1"
+    )
 )
 if /i "%LIBSCRIPT_TARGET_OS%"=="reactos" set "IS_REACTOS=1"
 
-if "!IS_REACTOS!"=="1" (
+if "!IS_MSDOS!"=="1" (
+    set "OS=MS-DOS"
+    set "TARGET_OS=msdos"
+    set "PKG_OS=msdos"
+    set "TARGET_OS_FLAVOR=msdos"
+    set "INIT_SYS=none"
+    set "KERNEL_RELEASE=6.22"
+    set "UNAME=MS-DOS"
+    set "UNAME_LOWER=msdos"
+) else if "!IS_REACTOS!"=="1" (
     set "TARGET_OS_FLAVOR=reactos"
     set "INIT_SYS=nt-scm"
     set "KERNEL_RELEASE=5.2"
@@ -82,7 +105,10 @@ if "!IS_REACTOS!"=="1" (
 )
 set "UNAME_A=!UNAME! !KERNEL_RELEASE! %PROCESSOR_ARCHITECTURE%"
 
-if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
+if "!IS_MSDOS!"=="1" (
+    set "ARCH=i386"
+    set "ARCH_ALT=dos32"
+) else if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     set "ARCH=x86_64"
     set "ARCH_ALT=amd64"
 ) else if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
@@ -101,6 +127,9 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     set "ARCH=%PROCESSOR_ARCHITECTURE%"
     set "ARCH_ALT=%PROCESSOR_ARCHITECTURE%"
 )
+if not "%LIBSCRIPT_TARGET_ARCH%"=="" (
+    set "ARCH=%LIBSCRIPT_TARGET_ARCH%"
+)
 set "TARGET_ARCH=!ARCH!"
 set "LIBSCRIPT_ARCH=!ARCH!"
 
@@ -113,7 +142,11 @@ if exist "!_ROS_BOOT_BIN!" (
     if errorlevel 1 set "NEW_PATH=!_ROS_BOOT_BIN!;!NEW_PATH!"
 )
 
-if "!IS_REACTOS!"=="1" (
+if defined LIBSCRIPT_PKG_MGR (
+    set "PKG_MGR=%LIBSCRIPT_PKG_MGR%"
+) else if "!IS_MSDOS!"=="1" (
+    set "PKG_MGR=libscript"
+) else if "!IS_REACTOS!"=="1" (
     set "PKG_MGR=rapps"
 ) else (
     where rapps.exe >nul 2>&1
@@ -132,7 +165,7 @@ if "!IS_REACTOS!"=="1" (
                 if not errorlevel 1 (
                     set "PKG_MGR=scoop"
                 ) else (
-                    set "PKG_MGR="
+                    set "PKG_MGR=libscript"
                 )
             )
         )
@@ -144,6 +177,7 @@ endlocal & (
     set "TARGET_OS=%TARGET_OS%"
     set "PKG_OS=%PKG_OS%"
     set "IS_REACTOS=%IS_REACTOS%"
+    set "IS_MSDOS=%IS_MSDOS%"
     set "TARGET_OS_FLAVOR=%TARGET_OS_FLAVOR%"
     set "UNAME=%UNAME%"
     set "UNAME_LOWER=%UNAME_LOWER%"

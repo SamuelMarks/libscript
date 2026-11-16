@@ -71,12 +71,12 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                 | Description                                                                                                                                                             | Default  | Aliases/Examples |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `BUSYBOX_INSTALL_METHOD` | How to install BUSYBOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |                  |
-| `BUSYBOX_VERSION`        | Specific version of busybox to install.                                                                                                                                 | `latest` |                  |
-| `BUSYBOX_DOWNLOAD_URL`   | Override URL for downloading busybox binary or archive artifacts.                                                                                                       | `none`   |                  |
-| `BUSYBOX_RELEASES_URL`   | Override URL for querying busybox available remote releases.                                                                                                            | `none`   |                  |
+| Variable                 | Description                                                                                                                                                                                                                     | Default            | Aliases/Examples |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------- |
+| `BUSYBOX_INSTALL_METHOD` | How to install BusyBox. 'libscript_native' installs isolated prebuilt binaries (SamuelMarks/busybox-windows on Windows/MS-DOS, static musl on Linux), 'system' uses OS package manager, and 'from-source' compiles from source. | `libscript_native` |                  |
+| `BUSYBOX_VERSION`        | Specific version of busybox to install (e.g., 1.39.0 on Windows or latest).                                                                                                                                                     | `latest`           | latest, lts      |
+| `BUSYBOX_DOWNLOAD_URL`   | Override URL for downloading busybox binary or archive artifacts.                                                                                                                                                               | `none`             |                  |
+| `BUSYBOX_RELEASES_URL`   | Override URL for querying busybox available remote releases.                                                                                                                                                                    | `none`             |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.

@@ -491,6 +491,10 @@ function Audit-File {
         }
     }
 
+    if ($normPath -match '^_lib/[^/]+/[^/]+-suite/' -and $normPath -notmatch '^_lib/toolchains/(edgcpp-backends-suite|gemma-tpu-suite|win-port-suite)/') {
+        Log-Violation -File $FilePath -Rule "EXP_IN_LIB" -Details "New empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
+    }
+
     # 8g. Raw Network Fetch & Raw Package Manager Audit
     if ($normPath -notmatch '(^|/)(devtools|tests|docker)/') {
         if ($ext -eq "sh") {
@@ -547,6 +551,12 @@ function Audit-File {
             if ($normPath -notmatch '(_lib/_common/os_info\.sh|vagrant/)') {
                 if ($rawUnameLines.Count -gt 0) {
                     Log-Violation -File $FilePath -Rule "RAW_UNAME" -Details "Raw uname invocation found (use pre-evaluated UNAME, UNAME_LOWER, ARCH, or KERNEL_RELEASE from _lib/_common/os_info.sh)."
+                }
+            }
+            if ($normPath -notmatch '(_lib/cloud-providers/gcp|_lib/cloud/core/tags\.sh$|_lib/ml-training/_common/tfrc_guard\.sh$)') {
+                $rawTpuSh = Select-String -Path $FilePath -Pattern '^\s*[^#]*gcloud\s+compute\s+tpus\s+tpu-vm' | Where-Object { $_.Line -notmatch '(echo\s|printf\s|libscript-allow-raw-tpu)' }
+                if ($rawTpuSh) {
+                    Log-Violation -File $FilePath -Rule "RAW_GCLOUD_TPU" -Details "Ad-hoc gcloud compute tpus tpu-vm call found (delegate to _lib/cloud-providers/gcp-tpu-vm)."
                 }
             }
         } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
