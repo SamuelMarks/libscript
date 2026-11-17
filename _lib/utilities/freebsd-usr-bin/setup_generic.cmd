@@ -49,7 +49,13 @@ goto :find_root
 :root_found
 
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
-if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%LIBSCRIPT_HOME%"=="" (
+    if "%IS_MSDOS%"=="1" (
+        set "LIBSCRIPT_HOME=C:\LIBSCRIP"
+    ) else (
+        set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+    )
+)
 if "%FREEBSD_USR_BIN_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
         set "FREEBSD_USR_BIN_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
@@ -74,7 +80,8 @@ goto :action_other
 :: Lists locally installed versions of freebsd-usr-bin.
 :action_ls
 if "%FREEBSD_USR_BIN_INSTALL_METHOD%"=="libscript_native" (
-    if exist "%LIBSCRIPT_HOME%\freebsd-usr-bin" dir /b "%LIBSCRIPT_HOME%\freebsd-usr-bin"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos_83.cmd" :libscript_dos83_comp "freebsd-usr-bin" >nul
+    if exist "%LIBSCRIPT_HOME%\!DOS83_COMP!" dir /b "%LIBSCRIPT_HOME%\!DOS83_COMP!"
 ) else (
     where sed >nul 2>&1 && echo freebsd-usr-bin utilities available on PATH
 )
@@ -93,7 +100,8 @@ exit /b 0
 :: Activates a specific installed version of freebsd-usr-bin and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\freebsd-usr-bin\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "freebsd-usr-bin" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
@@ -145,7 +153,8 @@ if /i "%FREEBSD_USR_BIN_INSTALL_METHOD%"=="scoop" (
     exit /b !errorlevel!
 )
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\freebsd-usr-bin\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "freebsd-usr-bin" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 set "_PROBE_BIN=sed"
 if not "!APPLET!"=="" set "_PROBE_BIN=!APPLET!"
 if exist "!TARGET_DIR!\bin\!_PROBE_BIN!.exe" (

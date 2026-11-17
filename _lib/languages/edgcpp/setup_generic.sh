@@ -305,75 +305,17 @@ NCURSES6_TINFO_5.0.19991023 {
 EOF
           gcc -shared -fPIC -O2 "${_shim_c}" -Wl,--version-script="${_shim_map}" -o "${_target_dir}/lib/libedg_el9_compat.so" 2>/dev/null || true
           rm -f "${_shim_c}" "${_shim_map}"
-          if command -v python3 >/dev/null 2>&1; then
-            for _eb in cpfe cpfe-cp eccp cdisp mk_errinfo edg_decode; do
-              if [ -f "${_target_dir}/bin/${_eb}" ]; then
-                python3 -c '
-import struct, sys
-path = sys.argv[1]
-replacements = {"GLIBC_2.36": "GLIBC_2.34", "GLIBCXX_3.4.32": "GLIBCXX_3.4.29"}
-with open(path, "rb") as f:
-    data = bytearray(f.read())
-if data[:4] == b"\x7fELF" and data[4] == 2:
-    e_shoff = struct.unpack_from("<Q", data, 40)[0]
-    e_shentsize = struct.unpack_from("<H", data, 58)[0]
-    e_shnum = struct.unpack_from("<H", data, 60)[0]
-    verneed_off = verneed_cnt = verneed_link = 0
-    for i in range(e_shnum):
-        sh = e_shoff + i * e_shentsize
-        if struct.unpack_from("<I", data, sh + 4)[0] == 0x6ffffffe:
-            verneed_off = struct.unpack_from("<Q", data, sh + 24)[0]
-            verneed_link = struct.unpack_from("<I", data, sh + 40)[0]
-            verneed_cnt = struct.unpack_from("<I", data, sh + 44)[0]
-    if verneed_off:
-        dynstr_off = struct.unpack_from("<Q", data, e_shoff + verneed_link * e_shentsize + 24)[0]
-        def get_str(off):
-            end = data.find(0, dynstr_off + off)
-            return bytes(data[dynstr_off + off:end]).decode("latin1")
-        def elf_hash(s):
-            h = 0
-            for ch in s.encode("latin1"):
-                h = ((h << 4) + ch) & 0xffffffff
-                g = h & 0xf0000000
-                if g: h ^= (g >> 24)
-                h &= (~g) & 0xffffffff
-            return h
-        pos = verneed_off
-        str_offsets = {}
-        for _ in range(verneed_cnt):
-            vn_version, vn_cnt, vn_file, vn_aux, vn_next = struct.unpack_from("<HHIII", data, pos)
-            apos = pos + vn_aux
-            for _ in range(vn_cnt):
-                vna_hash, vna_flags, vna_other, vna_name, vna_next = struct.unpack_from("<IHHII", data, apos)
-                str_offsets[get_str(vna_name)] = vna_name
-                if vna_next == 0: break
-                apos += vna_next
-            if vn_next == 0: break
-            pos += vn_next
-        pos = verneed_off
-        for _ in range(verneed_cnt):
-            vn_version, vn_cnt, vn_file, vn_aux, vn_next = struct.unpack_from("<HHIII", data, pos)
-            apos = pos + vn_aux
-            for _ in range(vn_cnt):
-                vna_hash, vna_flags, vna_other, vna_name, vna_next = struct.unpack_from("<IHHII", data, apos)
-                name = get_str(vna_name)
-                if name in replacements:
-                    target = replacements[name]
-                    new_name_off = str_offsets.get(target, vna_name)
-                    if target not in str_offsets:
-                        b_targ = target.encode("latin1") + b"\x00"
-                        data[dynstr_off + vna_name:dynstr_off + vna_name + len(b_targ)] = b_targ
-                    struct.pack_into("<IHHII", data, apos, elf_hash(target), vna_flags, vna_other, new_name_off, vna_next)
-                if vna_next == 0: break
-                apos += vna_next
-            if vn_next == 0: break
-            pos += vn_next
-        with open(path, "wb") as f:
-            f.write(data)
-' "${_target_dir}/bin/${_eb}" 2>/dev/null || true
-              fi
-            done
-          fi
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/elf_verneed_patch.sh"
+          export SCRIPT_NAME
+          # shellcheck disable=SC1090
+          . "${SCRIPT_NAME}"
+          unset SCRIPT_NAME || true
+          for _eb in cpfe cpfe-cp eccp cdisp mk_errinfo edg_decode; do
+            if [ -f "${_target_dir}/bin/${_eb}" ]; then
+              libscript_patch_elf_verneed "${_target_dir}/bin/${_eb}" \
+                "GLIBC_2.36=GLIBC_2.34" "GLIBCXX_3.4.32=GLIBCXX_3.4.29"
+            fi
+          done
         fi
       fi
     fi

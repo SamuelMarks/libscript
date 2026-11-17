@@ -117,7 +117,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/win-cmd-rs/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'win-cmd-rs' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -139,7 +139,7 @@ case "$ACTION" in
   install)
     if [ "${WIN_CMD_RS_INSTALL_METHOD}" = "from-source" ]; then
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/win-cmd-rs/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'win-cmd-rs' "${EXACT_VERSION}")
       if [ -x "${TARGET_DIR}/bin/wincheck" ] && [ -x "${TARGET_DIR}/bin/wincmd" ] && [ "${FORCE_REINSTALL:-0}" != "1" ]; then
         exit 0
       fi
@@ -160,7 +160,7 @@ case "$ACTION" in
         exit 0
       fi
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/win-cmd-rs/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'win-cmd-rs' "${EXACT_VERSION}")
       _def_src_url='https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v{VERSION}.tar.gz'
       SRC_URL="${WIN_CMD_RS_DOWNLOAD_URL:-${_def_src_url}}"
       SRC_URL=$(resolve_artifact_url "$SRC_URL")
@@ -173,7 +173,21 @@ case "$ACTION" in
       libscript_depends_via "${WIN_CMD_RS_INSTALL_METHOD}" 'win-cmd-rs'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/win-cmd-rs/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'win-cmd-rs' "${EXACT_VERSION}")
+      if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${IS_MSDOS:-0}" = '1' ]; then
+        if [ -f "${TARGET_DIR}/bin/wincmd.exe" ] && [ "${FORCE_REINSTALL:-0}" != '1' ]; then
+          libscript_symlink_alias 'win-cmd-rs' "${VERSION}" "${EXACT_VERSION}"
+          libscript_symlink_alias 'win-cmd-rs' 'default' "${EXACT_VERSION}"
+          exit 0
+        fi
+        mkdir -p "${TARGET_DIR}/bin"
+        if ! "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-wincmd --target=dos32 --out="${TARGET_DIR}/bin/wincmd.exe" >/dev/null 2>&1; then
+          "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-wincmd --target=host --out="${TARGET_DIR}/bin/wincmd.exe" >/dev/null
+        fi
+        libscript_symlink_alias 'win-cmd-rs' "${VERSION}" "${EXACT_VERSION}"
+        libscript_symlink_alias 'win-cmd-rs' 'default' "${EXACT_VERSION}"
+        exit 0
+      fi
       if [ -x "${TARGET_DIR}/bin/wincheck" ] && [ "${FORCE_REINSTALL:-0}" != "1" ]; then
         printf '[INFO] %s %s is already installed at %s.\n' 'win-cmd-rs' "${EXACT_VERSION}" "${TARGET_DIR}"
         libscript_symlink_alias 'win-cmd-rs' "${VERSION}" "${EXACT_VERSION}"

@@ -62,5 +62,5 @@ if /I "%~1"=="live" (
 )
 
 set "PACKAGE_NAME=reactos-distro"
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 exit /b !errorlevel!

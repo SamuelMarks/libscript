@@ -3,7 +3,7 @@
 :: ## Overview
 :: Standardized entrypoint for component uninstallation on Windows. Resolves root, checks privileges, and delegates to uninstall scripts.
 :: ## Usage
-:: Your component's `uninstall.cmd` should call this. ```batch @echo off call "%~dp0\..\..\..\_lib\_common\uninstall_base.cmd" ```
+:: Your component's `uninstall.cmd` should call this. ```batch @echo off call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_base.cmd" ```
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

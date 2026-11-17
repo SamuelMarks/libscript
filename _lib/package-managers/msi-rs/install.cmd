@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
-    set "LIBSCRIPT_ROOT_DIR=%~dp0\..\..\.."
+    set "LIBSCRIPT_ROOT_DIR=%~dp0..\..\.."
 )
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

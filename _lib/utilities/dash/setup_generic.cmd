@@ -92,7 +92,8 @@ exit /b 0
 :: Activates a specific installed version of dash and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\dash\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
@@ -122,6 +123,19 @@ exit /b !errorlevel!
 :action_install
 if /i "%DASH_INSTALL_METHOD%"=="from-source" (
     call :resolve_version
+    if "%IS_MSDOS%"=="1" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
+        set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
+        if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-dash-dos --target dos32 --out "!TARGET_DIR!\bin\dash.exe" >nul 2>&1
+        if not exist "!TARGET_DIR!\bin\dash.exe" (
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-dash-dos --target host --out "!TARGET_DIR!\bin\dash.exe" >nul 2>&1
+        )
+        if exist "!TARGET_DIR!\bin\dash.exe" copy /y "!TARGET_DIR!\bin\dash.exe" "!TARGET_DIR!\bin\sh.exe" >nul
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "%DASH_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "dash" "default" "!EXACT_VERSION!"
+        exit /b 0
+    )
     set "SRC_URL=%DASH_DOWNLOAD_URL%"
     if "!SRC_URL!"=="" set "SRC_URL=http://gondor.apana.org.au/~herbert/dash/files/dash-!EXACT_VERSION!.tar.gz"
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "dash" "!EXACT_VERSION!" "dash" "c" "autotools" "!SRC_URL!"
@@ -144,7 +158,8 @@ if /i "%DASH_INSTALL_METHOD%"=="scoop" (
     exit /b !errorlevel!
 )
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\dash\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "dash" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\dash.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] dash !EXACT_VERSION! is already installed at !TARGET_DIR!.

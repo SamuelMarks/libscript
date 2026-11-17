@@ -51,10 +51,10 @@ goto :find_root
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "bento-builder"
 
-call "%~dp0\..\..\..\_lib\orchestration\qemu\env.cmd"
-call "%~dp0\..\..\..\_lib\orchestration\virtualbox\env.cmd"
-call "%~dp0\..\..\..\_lib\orchestration\packer\env.cmd"
-call "%~dp0\..\..\..\_lib\orchestration\vagrant\env.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\qemu\env.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\virtualbox\env.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\packer\env.cmd"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\vagrant\env.cmd"
 
 endlocal & (
     set "PATH=%PATH%"

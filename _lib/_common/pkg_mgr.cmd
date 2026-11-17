@@ -50,10 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-        set "LIBSCRIPT_ROOT_DIR=%~dp0..\.."
-)
-
 :: Source logging
 set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\log.cmd"
 set "MAPPER_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd"
@@ -290,7 +286,7 @@ goto :depends_loop
 :: Returns 0 if a requested dependency is backed by a dedicated Windows/MS-DOS native component-level package manager.
 :is_native_win_dos_port
 set "_native_pkg=%~1"
-for %%P in (jq jq-windows gawk gawk-windows awk busybox busybox-windows toybox toybox-windows dash dash-windows sh freebsd-usr-bin freebsd-usr-bin-windows sed grep cut tr sort uniq wc head tail xargs find cmp diff patch bmake bsdtar bsdunzip) do (
+for %%P in (jq jq-windows gawk gawk-windows awk busybox busybox-windows toybox toybox-windows dash dash-windows sh freebsd-usr-bin freebsd-usr-bin-windows sed grep cut tr sort uniq wc head tail xargs find cmp diff patch bmake bsdtar bsdunzip curl 7zip 7za 7z sha256sum file) do (
     if /i "!_native_pkg!"=="%%P" exit /b 0
 )
 exit /b 1
@@ -323,6 +319,10 @@ if /i "!_lic_req!"=="gawk-windows" set "_lic_bin_chk=gawk"
 if /i "!_lic_req!"=="busybox-windows" set "_lic_bin_chk=busybox"
 if /i "!_lic_req!"=="toybox-windows" set "_lic_bin_chk=toybox"
 if /i "!_lic_req!"=="dash-windows" set "_lic_bin_chk=dash"
+if /i "!_lic_req!"=="7zip" set "_lic_bin_chk=7za"
+if /i "!_lic_req!"=="7z" set "_lic_bin_chk=7za"
+if /i "!_lic_req!"=="sha256sum" set "_lic_bin_chk=toybox"
+if /i "!_lic_req!"=="file" set "_lic_bin_chk=toybox"
 
 if not "%FORCE_REINSTALL%"=="1" (
     for %%V in (default latest) do (
@@ -358,6 +358,8 @@ set "GAWK_INSTALL_METHOD=libscript_native"
 set "BUSYBOX_INSTALL_METHOD=libscript_native"
 set "TOYBOX_INSTALL_METHOD=libscript_native"
 set "DASH_INSTALL_METHOD=libscript_native"
+set "CURL_INSTALL_METHOD=libscript_native"
+set "7ZIP_INSTALL_METHOD=libscript_native"
 set "FREEBSD_USR_BIN_INSTALL_METHOD=libscript_native"
 if not "!_lic_applet!"=="" set "FREEBSD_USR_BIN_APPLET=!_lic_applet!"
 set "ACTION=install"
@@ -390,7 +392,8 @@ if "!auth_header!"=="" if defined LIBSCRIPT_DOWNLOAD_AUTH_HEADER set "auth_heade
 if "!dest!"=="" for %%F in ("!url!") do set "dest=%%~nxF"
 
 :: 1. Checksum Resolution
-set "checksum_db=!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt"
+set "checksum_db=%LIBSCRIPT_CHECKSUM_DB%"
+if "!checksum_db!"=="" set "checksum_db=!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt"
 set "expected_checksum=!provided_checksum!"
 if "!expected_checksum!"=="" (
         if exist "!checksum_db!" (
@@ -502,20 +505,16 @@ if "!download_needed!"=="1" (
                 echo Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests. >&2
                 exit /b 1
         )
+        if "!IS_MSDOS!"=="1" if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\wattcp_cfg.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\wattcp_cfg.cmd" >nul 2>&1
+        )
 
         call "!LOG_CMD!" :log_info "[DOWNLOADING] !url!"
     
         set "download_success=0"
     
-        REM Strategy A: curl (PATH or ReactOS bootstrap bin)
-        set "_curl_bin="
-        where curl >nul 2>&1
-        if !errorlevel! equ 0 set "_curl_bin=curl"
-        if "!_curl_bin!"=="" (
-                set "_ros_sd=%SystemDrive%"
-                if "!_ros_sd!"=="" set "_ros_sd=C:"
-                if exist "!_ros_sd!\libscript\bootstrap\bin\curl.exe" set "_curl_bin=!_ros_sd!\libscript\bootstrap\bin\curl.exe"
-        )
+        REM Strategy A: curl (PATH, LIBSCRIPT_HOME, ReactOS bootstrap, or lazy _lib/utilities/curl bootstrap)
+        call :resolve_pkg_mgr_curl
         if not "!_curl_bin!"=="" (
                 if not "!auth_header!"=="" (
                         "!_curl_bin!" -L -H "!auth_header!" "!url!" -o "!cache_file!"
@@ -525,7 +524,7 @@ if "!download_needed!"=="1" (
                 if !errorlevel! equ 0 set "download_success=1"
         )
 
-        REM Strategy A2: wget
+        REM Strategy A2: wget or busybox wget
         if !download_success! equ 0 (
                 where wget >nul 2>&1
                 if !errorlevel! equ 0 (
@@ -533,21 +532,29 @@ if "!download_needed!"=="1" (
                         if !errorlevel! equ 0 set "download_success=1"
                 )
         )
-    
-        REM Strategy B: powershell
         if !download_success! equ 0 (
-                where powershell >nul 2>&1
-                if !errorlevel! equ 0 (
-                        powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '!url!' -OutFile '!cache_file!'"
+                set "_bb_dl=%LIBSCRIPT_HOME%"
+                if "!_bb_dl!"=="" set "_bb_dl=%USERPROFILE%\.libscript"
+                if exist "!_bb_dl!\busybox\default\bin\busybox.exe" (
+                        "!_bb_dl!\busybox\default\bin\busybox.exe" wget -q -O "!cache_file!" "!url!"
                         if !errorlevel! equ 0 set "download_success=1"
                 )
         )
-    
-        REM Strategy C: certutil
+
+        REM Strategy B: certutil (native Win32, pre-1803/ReactOS safe without PowerShell/.NET)
         if !download_success! equ 0 (
                 where certutil >nul 2>&1
                 if !errorlevel! equ 0 (
                         certutil -urlcache -split -f "!url!" "!cache_file!" >nul
+                        if !errorlevel! equ 0 set "download_success=1"
+                )
+        )
+
+        REM Strategy C: PowerShell last-resort fallback
+        if !download_success! equ 0 (
+                where powershell >nul 2>&1
+                if !errorlevel! equ 0 (
+                        powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '!url!' -OutFile '!cache_file!'"
                         if !errorlevel! equ 0 set "download_success=1"
                 )
         )
@@ -611,8 +618,46 @@ if not "!dest!"=="" (
 )
 exit /b 0
 
+:: ## resolve_pkg_mgr_curl
+:: Resolves curl.exe from PATH, LIBSCRIPT_HOME, ReactOS bootstrap bin, or _lib/utilities/curl component bootstrap.
+:resolve_pkg_mgr_curl
+set "_curl_bin="
+where curl >nul 2>&1
+if !errorlevel! equ 0 (
+    set "_curl_bin=curl"
+    exit /b 0
+)
+set "_rpc_home=%LIBSCRIPT_HOME%"
+if "!_rpc_home!"=="" set "_rpc_home=%USERPROFILE%\.libscript"
+if exist "!_rpc_home!\bin\curl.exe" (
+    set "_curl_bin=!_rpc_home!\bin\curl.exe"
+    exit /b 0
+)
+if exist "!_rpc_home!\curl\default\bin\curl.exe" (
+    set "_curl_bin=!_rpc_home!\curl\default\bin\curl.exe"
+    exit /b 0
+)
+set "_ros_sd=%SystemDrive%"
+if "!_ros_sd!"=="" set "_ros_sd=C:"
+if exist "!_ros_sd!\libscript\bootstrap\bin\curl.exe" (
+    set "_curl_bin=!_ros_sd!\libscript\bootstrap\bin\curl.exe"
+    exit /b 0
+)
+if not "%_LS_BOOTSTRAP_CURL%"=="1" (
+    if /i not "%PACKAGE_NAME%"=="curl" (
+        set "_LS_BOOTSTRAP_CURL=1"
+        call :libscript_install_component_dep curl >nul 2>&1
+        set "_LS_BOOTSTRAP_CURL="
+        if exist "!_rpc_home!\curl\default\bin\curl.exe" (
+            set "_curl_bin=!_rpc_home!\curl\default\bin\curl.exe"
+            exit /b 0
+        )
+    )
+)
+exit /b 1
+
 :: ## compute_sha256
-:: Computes the lowercase SHA-256 hex digest of a file into actual_checksum using sha256sum, certutil, or PowerShell.
+:: Computes the lowercase SHA-256 hex digest of a file into actual_checksum using sha256sum, toybox, certutil, or PowerShell.
 :compute_sha256
 set "_cs_file=%~1"
 set "actual_checksum="
@@ -620,6 +665,10 @@ if not exist "!_cs_file!" exit /b 1
 set "_sha_bin="
 where sha256sum >nul 2>&1
 if !errorlevel! equ 0 set "_sha_bin=sha256sum"
+set "_cs_home=%LIBSCRIPT_HOME%"
+if "!_cs_home!"=="" set "_cs_home=%USERPROFILE%\.libscript"
+if "!_sha_bin!"=="" if exist "!_cs_home!\bin\sha256sum.exe" set "_sha_bin=!_cs_home!\bin\sha256sum.exe"
+if "!_sha_bin!"=="" if exist "!_cs_home!\toybox\default\bin\sha256sum.exe" set "_sha_bin=!_cs_home!\toybox\default\bin\sha256sum.exe"
 if "!_sha_bin!"=="" (
     set "_ros_sd=%SystemDrive%"
     if "!_ros_sd!"=="" set "_ros_sd=C:"
@@ -628,10 +677,23 @@ if "!_sha_bin!"=="" (
 if not "!_sha_bin!"=="" (
     for /f "tokens=1" %%a in ('"!_sha_bin!" "!_cs_file!" 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
 )
+if "!actual_checksum!"=="" if exist "!_cs_home!\toybox\default\bin\toybox.exe" (
+    for /f "tokens=1" %%a in ('"!_cs_home!\toybox\default\bin\toybox.exe" sha256sum "!_cs_file!" 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
+)
 if "!actual_checksum!"=="" (
     where certutil >nul 2>&1
     if !errorlevel! equ 0 (
         for /f "skip=1 tokens=1" %%a in ('certutil -hashfile "!_cs_file!" SHA256 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
+    )
+)
+if "!actual_checksum!"=="" (
+    if not "%_LS_BOOTSTRAP_TOYBOX%"=="1" if /i not "%PACKAGE_NAME%"=="toybox" (
+        set "_LS_BOOTSTRAP_TOYBOX=1"
+        call :libscript_install_component_dep toybox >nul 2>&1
+        set "_LS_BOOTSTRAP_TOYBOX="
+        if exist "!_cs_home!\toybox\default\bin\toybox.exe" (
+            for /f "tokens=1" %%a in ('"!_cs_home!\toybox\default\bin\toybox.exe" sha256sum "!_cs_file!" 2^>nul') do if not defined actual_checksum set "actual_checksum=%%a"
+        )
     )
 )
 if "!actual_checksum!"=="" (
@@ -688,16 +750,21 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\!_rp_sub!\cli.cmd" (
 exit /b 1
 
 :: ## libscript_extract_archive
-:: Extracts .zip, .7z, .tar.gz, .tgz, or .tar.xz archives using 7za/7z, tar, unzip, or PowerShell fallback.
+:: Extracts .zip, .7z, .tar.gz, .tgz, or .tar.xz archives using 7za/7z (_lib/utilities/7zip), tar, unzip, or PowerShell fallback.
 :libscript_extract_archive
 set "_lea_arc=%~1"
 set "_lea_dest=%~2"
 if "!_lea_arc!"=="" exit /b 1
 if "!_lea_dest!"=="" exit /b 1
 if not exist "!_lea_dest!" mkdir "!_lea_dest!"
+set "_lea_home=%LIBSCRIPT_HOME%"
+if "!_lea_home!"=="" set "_lea_home=%USERPROFILE%\.libscript"
 set "_7z_bin="
 where 7za >nul 2>&1 && set "_7z_bin=7za"
 if "!_7z_bin!"=="" where 7z >nul 2>&1 && set "_7z_bin=7z"
+if "!_7z_bin!"=="" if exist "!_lea_home!\bin\7za.exe" set "_7z_bin=!_lea_home!\bin\7za.exe"
+if "!_7z_bin!"=="" if exist "!_lea_home!\7zip\default\bin\7za.exe" set "_7z_bin=!_lea_home!\7zip\default\bin\7za.exe"
+if "!_7z_bin!"=="" if exist "!_lea_home!\7zip\default\bin\7z.exe" set "_7z_bin=!_lea_home!\7zip\default\bin\7z.exe"
 if "!_7z_bin!"=="" (
     set "_ros_sd=%SystemDrive%"
     if "!_ros_sd!"=="" set "_ros_sd=C:"
@@ -717,6 +784,23 @@ if !errorlevel! equ 0 (
     unzip -oq "!_lea_arc!" -d "!_lea_dest!" 2>nul
     if !errorlevel! equ 0 exit /b 0
 )
+if exist "!_lea_home!\freebsd-usr-bin\default\bin\bsdtar.exe" (
+    "!_lea_home!\freebsd-usr-bin\default\bin\bsdtar.exe" -xf "!_lea_arc!" -C "!_lea_dest!" 2>nul
+    if !errorlevel! equ 0 exit /b 0
+)
+if exist "!_lea_home!\freebsd-usr-bin\default\bin\bsdunzip.exe" (
+    "!_lea_home!\freebsd-usr-bin\default\bin\bsdunzip.exe" -oq "!_lea_arc!" -d "!_lea_dest!" 2>nul
+    if !errorlevel! equ 0 exit /b 0
+)
+if not "%_LS_BOOTSTRAP_7ZIP%"=="1" if /i not "%PACKAGE_NAME%"=="7zip" (
+    set "_LS_BOOTSTRAP_7ZIP=1"
+    call :libscript_install_component_dep 7zip >nul 2>&1
+    set "_LS_BOOTSTRAP_7ZIP="
+    if exist "!_lea_home!\7zip\default\bin\7za.exe" (
+        "!_lea_home!\7zip\default\bin\7za.exe" x -y -o"!_lea_dest!" "!_lea_arc!" >nul
+        if !errorlevel! equ 0 exit /b 0
+    )
+)
 where powershell >nul 2>&1
 if !errorlevel! equ 0 (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path '!_lea_arc!' -DestinationPath '!_lea_dest!' -Force" >nul 2>&1
@@ -732,15 +816,15 @@ call :libscript_download %*
 exit /b %errorlevel%
 
 :: ## libscript_fetch_stdout
-:: Fetches the contents of a URL to stdout while respecting offline mode and curl/powershell fallbacks.
+:: Fetches the contents of a URL to stdout via curl (_lib/utilities/curl) before falling back to libscript_download.
 :libscript_fetch_stdout
 set "_lfs_url=%~1"
 if "!_lfs_url!"=="" exit /b 1
 if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
-where curl >nul 2>&1
-if !errorlevel! equ 0 (
-    curl -fsSL "!_lfs_url!" 2>nul
+call :resolve_pkg_mgr_curl
+if not "!_curl_bin!"=="" (
+    "!_curl_bin!" -fsSL "!_lfs_url!" 2>nul
     exit /b !errorlevel!
 )
 set "_lfs_tmp=%TEMP%\libscript_fetch_%RANDOM%.tmp"
@@ -753,17 +837,24 @@ if exist "!_lfs_tmp!" (
 exit /b 1
 
 :: ## libscript_resolve_github_tag
-:: Resolves the latest release tag_name from a GitHub API releases/latest URL, stripping any leading 'v'.
+:: Resolves the latest release tag_name from a GitHub API releases/latest URL via curl + jq without PowerShell.
 :libscript_resolve_github_tag
 set "_lrgt_url=%~1"
 if "!_lrgt_url!"=="" exit /b 1
 if "%LIBSCRIPT_OFFLINE%"=="1" exit /b 1
 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" exit /b 1
-where curl >nul 2>&1
-if !errorlevel! equ 0 (
-    where jq >nul 2>&1
-    if !errorlevel! equ 0 (
-        for /f "usebackq delims=" %%T in (`curl -fsSL "!_lrgt_url!" 2^>nul ^| jq -r ".tag_name // empty"`) do (
+call :resolve_pkg_mgr_curl
+set "_lrgt_jq="
+where jq >nul 2>&1 && set "_lrgt_jq=jq"
+if "!_lrgt_jq!"=="" (
+    set "_lrgt_home=%LIBSCRIPT_HOME%"
+    if "!_lrgt_home!"=="" set "_lrgt_home=%USERPROFILE%\.libscript"
+    if exist "!_lrgt_home!\bin\jq.exe" set "_lrgt_jq=!_lrgt_home!\bin\jq.exe"
+    if "!_lrgt_jq!"=="" if exist "!_lrgt_home!\jq\default\bin\jq.exe" set "_lrgt_jq=!_lrgt_home!\jq\default\bin\jq.exe"
+)
+if not "!_curl_bin!"=="" (
+    if not "!_lrgt_jq!"=="" (
+        for /f "usebackq delims=" %%T in (`"!_curl_bin!" -fsSL "!_lrgt_url!" 2^>nul ^| "!_lrgt_jq!" -r ".tag_name // empty"`) do (
             set "_tag_val=%%T"
             if "!_tag_val:~0,1!"=="v" set "_tag_val=!_tag_val:~1!"
             echo !_tag_val!

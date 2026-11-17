@@ -51,3 +51,41 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: call devtools\ci\precommit_dance.cmd
+
+  windows-zero-powershell:
+    name: Zero-PowerShell Windows .cmd Suite
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: libscript
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          path: libscript
+
+      - name: Run Windows .cmd Suite with PowerShell Removed from PATH
+        shell: cmd
+        run: call tests\run_zero_powershell_suite.cmd
+
+  msdos-qemu-smoke:
+    name: Headless QEMU FreeDOS / MS-DOS 4.0 DOS32A Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: libscript
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          path: libscript
+
+      - name: Install QEMU x86 System Emulator
+        shell: sh
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qemu-system-x86 zip
+
+      - name: Run Headless QEMU MS-DOS DOS32A Smoke Suite
+        shell: sh
+        run: ./tests/test_qemu_msdos_smoke.sh && ./tests/run_zero_powershell_suite.sh

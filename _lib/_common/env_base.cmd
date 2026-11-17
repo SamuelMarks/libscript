@@ -53,7 +53,15 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%LIBSCRIPT_HOME%"=="" (
+    if "%IS_MSDOS%"=="1" (
+        set "LIBSCRIPT_HOME=C:\LIBSCRIP"
+    ) else if "%LIBSCRIPT_DOS_83%"=="1" (
+        set "LIBSCRIPT_HOME=C:\LIBSCRIP"
+    ) else (
+        set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+    )
+)
 set "_EB_PKG=%~1"
 if not "!_EB_PKG!"=="" if exist "!_EB_PKG!" (
     for %%D in ("!_EB_PKG!") do set "_EB_PKG=%%~nxD"
@@ -81,7 +89,13 @@ if "!_EB_VER!"=="" set "_EB_VER=latest"
 set "_NEW_PATH=!PATH!"
 if not "!_EB_PKG!"=="" if /i not "!_EB_PKG!"=="_common" if /i not "!_EB_PKG!"=="_noop" (
     set "_EB_ADDED=0"
-    for %%C in ("!LIBSCRIPT_HOME!\!_EB_PKG!\!_EB_VER!\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\v!_EB_VER!\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\default\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\latest\bin") do (
+    set "DOS83_COMP=!_EB_PKG!"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "!_EB_PKG!" >nul 2>&1
+    )
+    set "_EB_ACT_VER="
+    if exist "!LIBSCRIPT_HOME!\!DOS83_COMP!\ACTIVE.VER" set /p _EB_ACT_VER=<"!LIBSCRIPT_HOME!\!DOS83_COMP!\ACTIVE.VER"
+    for %%C in ("!LIBSCRIPT_HOME!\!DOS83_COMP!\!_EB_VER!\bin" "!LIBSCRIPT_HOME!\!DOS83_COMP!\!_EB_ACT_VER!\bin" "!LIBSCRIPT_HOME!\!DOS83_COMP!\default\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\!_EB_VER!\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\v!_EB_VER!\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\default\bin" "!LIBSCRIPT_HOME!\!_EB_PKG!\latest\bin") do (
         set "_CAND=%%~C"
         if exist "!_CAND!" (
             if "!_EB_ADDED!"=="0" (

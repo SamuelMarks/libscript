@@ -1179,6 +1179,7 @@ cut	libscript	freebsd-usr-bin
 dash	libscript	dash
 dash-windows	libscript	dash
 diff	libscript	freebsd-usr-bin
+file	libscript	toybox
 find	libscript	freebsd-usr-bin
 freebsd-usr-bin	libscript	freebsd-usr-bin
 freebsd-usr-bin-windows	libscript	freebsd-usr-bin
@@ -1193,6 +1194,8 @@ openssl	libscript	openssl
 patch	libscript	freebsd-usr-bin
 sed	libscript	freebsd-usr-bin
 sh	libscript	dash
+sha256sum	libscript	toybox
+shellcheck	libscript	shellcheck
 sort	libscript	freebsd-usr-bin
 sqlite	libscript	sqlite-tools
 sqlite3	libscript	sqlite-tools
@@ -1205,6 +1208,8 @@ uniq	libscript	freebsd-usr-bin
 unzip	libscript	unzip
 wc	libscript	freebsd-usr-bin
 wget	libscript	wget
+win-cmd-rs	libscript	win-cmd-rs
+wincmd	libscript	win-cmd-rs
 xargs	libscript	freebsd-usr-bin
 xz	libscript	xz
 zip	libscript	zip

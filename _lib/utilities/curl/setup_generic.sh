@@ -106,6 +106,26 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${IS_MSDOS:-0}" = '1' ]; then
+      EXACT_VERSION="${CURL_VERSION:-8.10.1}"
+      [ "${EXACT_VERSION}" = 'latest' ] && EXACT_VERSION='8.10.1'
+      TARGET_DIR=$(libscript_get_version_dir 'curl' "${EXACT_VERSION}")
+      if [ ! -f "${TARGET_DIR}/bin/curl.exe" ] || [ "${FORCE_REINSTALL:-0}" = '1' ]; then
+        mkdir -p "${TARGET_DIR}/bin"
+        _cached_dos="${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}}/curl/curl-${EXACT_VERSION}-dos32.exe"
+        if [ -s "${_cached_dos}" ]; then
+          cp -f "${_cached_dos}" "${TARGET_DIR}/bin/curl.exe"
+        elif ! "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-watt-curl --target=dos32 --out="${TARGET_DIR}/bin/curl.exe" >/dev/null 2>&1; then
+          "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-watt-curl --target=host --out="${TARGET_DIR}/bin/curl.exe" >/dev/null
+        fi
+      fi
+      if [ "${LIBSCRIPT_OFFLINE:-0}" != '1' ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" >/dev/null
+      fi
+      libscript_symlink_alias 'curl' "${VERSION:-latest}" "${EXACT_VERSION}"
+      libscript_symlink_alias 'curl' 'default' "${EXACT_VERSION}"
+      exit 0
+    fi
     if [ "${CURL_INSTALL_METHOD}" = "from-source" ]; then
       EXACT_VERSION="${CURL_VERSION:-8.10.1}"
       [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="8.10.1"

@@ -39,14 +39,9 @@ for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" "_lib/_common/
 # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
-if ! command -v uv >/dev/null 2>&1; then
-  if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
-    if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
-      libscript_depends 'python' || true
-    fi
-  fi
-fi
+libscript_python_ensure_runtime
 
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   if [ "${UNAME:-}" = "Darwin" ]; then

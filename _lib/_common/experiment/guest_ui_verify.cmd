@@ -36,11 +36,6 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-where sh >nul 2>&1
-if not errorlevel 1 (
-    sh "!SCRIPT_DIR!\guest_ui_verify.sh" %*
-    exit /b !errorlevel!
-)
 set "GUV_ACT=%~1"
 if /i "!GUV_ACT!"=="plan" ( call :guv_build_ordered_plan "%~2" "%~3" & exit /b !errorlevel! )
 if /i "!GUV_ACT!"=="verify" ( call :guv_run_verification "%~2" "%~3" "%~4" "%~5" "%~6" "%~7" "%~8" & exit /b !errorlevel! )

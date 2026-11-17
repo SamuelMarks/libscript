@@ -50,10 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\..\.."
-)
-
 call "!SCRIPT_DIR!\_common_installer_args.cmd" %*
 
 set "wxs_file=%OUT_FILE%.wxs"
@@ -76,17 +72,15 @@ set "wxs_file=%OUT_FILE%.wxs"
 )
 
 echo Generated %wxs_file%
-where candle >nul 2>&1
-if errorlevel 1 where candle.exe >nul 2>&1
-if errorlevel 1 (
-    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
-        call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
-    )
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
 )
 where candle >nul 2>&1
 if errorlevel 1 where candle.exe >nul 2>&1
+if errorlevel 1 where wix.exe >nul 2>&1
 if errorlevel 1 (
     if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+        set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
@@ -95,8 +89,14 @@ if errorlevel 1 (
 )
 where candle >nul 2>&1
 if errorlevel 1 where candle.exe >nul 2>&1
-if %errorlevel% equ 0 (
-    candle "%wxs_file%"
-    if exist "%OUT_FILE%.wixobj" light "%OUT_FILE%.wixobj" -out "%OUT_FILE%.msi"
+if not errorlevel 1 (
+    candle -nologo -out "%OUT_FILE%.wixobj" "%wxs_file%"
+    if exist "%OUT_FILE%.wixobj" light -nologo -sval -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj"
+    exit /b !errorlevel!
 )
-exit /b %errorlevel%
+where wix.exe >nul 2>&1
+if not errorlevel 1 (
+    wix.exe build -out "%OUT_FILE%.msi" "%wxs_file%"
+    exit /b !errorlevel!
+)
+exit /b 0

@@ -275,6 +275,23 @@ if [ -z "${INIT_SYS+x}" ]; then
   fi
 fi
 
+if [ "${IS_MSDOS:-0}" = '1' ] || [ "${LIBSCRIPT_DOS_83:-0}" = '1' ]; then
+  if [ -z "${LIBSCRIPT_HOME:-}" ]; then
+    case "${UNAME:-}" in
+      'MS-DOS'*|'DOS'*|'FreeDOS'*|'DJGPP'*|'Windows_NT'|'MINGW'*|'MSYS'*|'CYGWIN'*)
+        LIBSCRIPT_HOME='C:\LIBSCRIP'
+        export LIBSCRIPT_HOME
+        ;;
+      *)
+        if [ "${LIBSCRIPT_DOS_83:-0}" = '1' ]; then
+          LIBSCRIPT_HOME="${TMPDIR:-/tmp}/LIBSCRIP"
+          export LIBSCRIPT_HOME
+        fi
+        ;;
+    esac
+  fi
+fi
+
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_oi_caller_dir:-}" ] && SCRIPT_DIR="$_oi_caller_dir"

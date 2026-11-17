@@ -52,7 +52,11 @@ goto :find_root
 :root_found
 
 if "%LIBSCRIPT_HOME%"=="" (
-    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+    if "%IS_MSDOS%"=="1" (
+        set "LIBSCRIPT_HOME=C:\LIBSCRIP"
+    ) else (
+        set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+    )
 )
 
 if "%FREEBSD_USR_BIN_VERSION%"=="" (
@@ -60,8 +64,11 @@ if "%FREEBSD_USR_BIN_VERSION%"=="" (
 )
 
 set "_CAND_P=%LIBSCRIPT_HOME%\freebsd-usr-bin\%FREEBSD_USR_BIN_VERSION%\bin"
-echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+if exist "%LIBSCRIPT_HOME%\FBSDUBIN\%FREEBSD_USR_BIN_VERSION%\bin" set "_CAND_P=%LIBSCRIPT_HOME%\FBSDUBIN\%FREEBSD_USR_BIN_VERSION%\bin"
+if exist "!_CAND_P!" (
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+)
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "freebsd-usr-bin" "%FREEBSD_USR_BIN_VERSION%"
 

@@ -92,7 +92,8 @@ exit /b 0
 :: Activates a specific installed version of toybox and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\toybox\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "toybox" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
@@ -144,10 +145,12 @@ if /i "%TOYBOX_INSTALL_METHOD%"=="scoop" (
     exit /b !errorlevel!
 )
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\toybox\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "toybox" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\toybox.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] toybox !EXACT_VERSION! is already installed at !TARGET_DIR!.
+        call :materialize_toybox_shims "!TARGET_DIR!"
         call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
         call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
         exit /b 0
@@ -179,8 +182,42 @@ if exist "!CACHED_DL!" (
 call :stage_toybox_artifact "!TMP_FILE!" "!URL!" "!TARGET_DIR!"
 if errorlevel 1 exit /b 1
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
+call :materialize_toybox_shims "!TARGET_DIR!"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "%TOYBOX_VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "toybox" "default" "!EXACT_VERSION!"
+exit /b 0
+
+:: ## materialize_toybox_shims
+:: Materializes per-applet NTFS hardlinks or .bat trampolines in TARGET_DIR\bin when TOYBOX_INSTALL_SHIMS=1 and freebsd-usr-bin is not installed.
+:materialize_toybox_shims
+set "_MTS_DIR=%~1"
+set "_MTS_DO=0"
+if "%TOYBOX_INSTALL_SHIMS%"=="1" set "_MTS_DO=1"
+if /i "%TOYBOX_INSTALL_SHIMS%"=="true" set "_MTS_DO=1"
+if "!_MTS_DO!"=="0" exit /b 0
+if exist "%LIBSCRIPT_HOME%\freebsd-usr-bin\default\bin\sed.exe" (
+    echo [INFO] freebsd-usr-bin is installed; skipping toybox applet shims.
+    exit /b 0
+)
+if not exist "!_MTS_DIR!\bin" mkdir "!_MTS_DIR!\bin"
+for %%A in (basename cat cmp comm cp cut date diff dirname env file find grep head ln ls mkdir mktemp mv paste patch printf readlink realpath rm rmdir sed sha1sum sha256sum sleep sort stat tail tee touch tr uname uniq wc which xargs) do (
+    if /i "%TARGET_OS%"=="msdos" (
+        > "!_MTS_DIR!\bin\%%A.bat" (
+            echo @echo off
+            echo toybox.exe %%A %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9
+        )
+    ) else (
+        if not exist "!_MTS_DIR!\bin\%%A.exe" (
+            mklink /H "!_MTS_DIR!\bin\%%A.exe" "!_MTS_DIR!\bin\toybox.exe" >nul 2>&1
+        )
+        if not exist "!_MTS_DIR!\bin\%%A.exe" (
+            > "!_MTS_DIR!\bin\%%A.bat" (
+                echo @echo off
+                echo "%%~dp0toybox.exe" %%A %%*
+            )
+        )
+    )
+)
 exit /b 0
 
 :: ## resolve_win_arch

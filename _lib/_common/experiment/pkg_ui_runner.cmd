@@ -37,12 +37,6 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
-where sh >nul 2>&1
-if not errorlevel 1 (
-    sh "!SCRIPT_DIR!\pkg_ui_runner.sh" %*
-    exit /b !errorlevel!
-)
-
 set "PUR_SUITE_DIR=%SUITE_DIR%"
 set "PUR_PHASE=run"
 if not "%EXPERIMENT_PHASE%"=="" set "PUR_PHASE=%EXPERIMENT_PHASE%"

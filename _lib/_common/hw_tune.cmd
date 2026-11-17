@@ -59,25 +59,50 @@ if not "%FIRST_ARG%"=="" (
 goto :libscript_detect_hardware
 
 :: ## libscript_detect_hardware
-:: Detects CPU core count and system memory in MiB on Windows.
+:: Detects CPU core count and system memory in MiB on Windows and MS-DOS without requiring deprecated wmic.exe.
 :libscript_detect_hardware
+if "%IS_MSDOS%"=="1" goto :libscript_detect_msdos
 set "_CORES=%NUMBER_OF_PROCESSORS%"
-if "%_CORES%"=="" set "_CORES=2"
-set "_MEM_MB=4096"
-for /f "tokens=2 delims==" %%M in ('wmic computersystem get TotalPhysicalMemory /value 2^>nul ^| findstr "="') do (
-    set "_RAW_MEM=%%M"
-    set "_MEM_MB=!_RAW_MEM:~0,-6!"
+if "%_CORES%"=="" (
+    set "_REG_CORES=0"
+    where reg >nul 2>&1
+    if not errorlevel 1 (
+        for /f "delims=" %%K in ('reg query "HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor" 2^>nul ^| findstr /R /C:"CentralProcessor\\[0-9]"') do set /a "_REG_CORES+=1"
+    )
+    if !_REG_CORES! gtr 0 ( set "_CORES=!_REG_CORES!" ) else ( set "_CORES=2" )
 )
-if "%_MEM_MB%"=="" set "_MEM_MB=4096"
-set /a "_PG_SHARED=%_MEM_MB% / 4"
+set "_MEM_MB="
+where wmic >nul 2>&1
+if not errorlevel 1 (
+    for /f "tokens=2 delims==" %%M in ('wmic computersystem get TotalPhysicalMemory /value 2^>nul ^| findstr "="') do (
+        set "_RAW_MEM=%%M"
+        set "_MEM_MB=!_RAW_MEM:~0,-6!"
+    )
+)
+if "!_MEM_MB!"=="" (
+    where systeminfo >nul 2>&1
+    if not errorlevel 1 (
+        for /f "tokens=4" %%S in ('systeminfo 2^>nul ^| findstr /I /C:"Total Physical Memory:"') do (
+            set "_SYS_MEM=%%S"
+            set "_SYS_MEM=!_SYS_MEM:,=!"
+            set "_SYS_MEM=!_SYS_MEM:.=!"
+            if not "!_SYS_MEM!"=="" set "_MEM_MB=!_SYS_MEM!"
+        )
+    )
+)
+if "!_MEM_MB!"=="" set "_MEM_MB=4096"
+set /a "_PG_SHARED=!_MEM_MB! / 4"
 if !_PG_SHARED! lss 128 set "_PG_SHARED=128"
-set /a "_PG_CACHE=%_MEM_MB% * 3 / 4"
+set /a "_PG_CACHE=!_MEM_MB! * 3 / 4"
 set /a "_NGINX_CONNS=%_CORES% * 1024"
 set "_CPU_MODEL=%PROCESSOR_IDENTIFIER%"
 if "!_CPU_MODEL!"=="" set "_CPU_MODEL=windows-cpu"
 set "_PHYS_CORES=%_CORES%"
-for /f "tokens=2 delims==" %%P in ('wmic cpu get NumberOfCores /value 2^>nul ^| findstr "="') do (
-    set "_PHYS_CORES=%%P"
+where wmic >nul 2>&1
+if not errorlevel 1 (
+    for /f "tokens=2 delims==" %%P in ('wmic cpu get NumberOfCores /value 2^>nul ^| findstr "="') do (
+        set "_PHYS_CORES=%%P"
+    )
 )
 if "!_PHYS_CORES!"=="" set "_PHYS_CORES=%_CORES%"
 endlocal & (
@@ -112,13 +137,33 @@ if not exist "!_HT_DIR!" mkdir "!_HT_DIR!"
 ) > "!_HT_DIR!\hardware-tuning.conf"
 exit /b 0
 
+:: ## libscript_detect_msdos
+:: Exports deterministic single-core DOS32A hardware tuning defaults on MS-DOS targets.
+:libscript_detect_msdos
+endlocal & (
+    set "LIBSCRIPT_HW_CORES=1"
+    set "LIBSCRIPT_HW_PHYS_CORES=1"
+    set "LIBSCRIPT_HW_PERF_CORES=1"
+    set "LIBSCRIPT_HW_NUMA_NODES=1"
+    set "LIBSCRIPT_HW_CPU_MODEL=i386-dos32a"
+    set "LIBSCRIPT_HW_MEM_MB=64"
+    set "LIBSCRIPT_TUNE_PG_SHARED_BUFFERS=16MB"
+    set "LIBSCRIPT_TUNE_PG_EFFECTIVE_CACHE_SIZE=32MB"
+    set "LIBSCRIPT_TUNE_NGINX_WORKER_PROCESSES=1"
+    set "LIBSCRIPT_TUNE_NGINX_WORKER_CONNECTIONS=256"
+)
+exit /b 0
+
 :: ## libscript_detect_ac_power
 :: Detects AC mains vs. battery status on Windows (`true`, `false`, or `unknown`).
 :libscript_detect_ac_power
 set "_AC_STATE=unknown"
-for /f "tokens=2 delims==" %%B in ('wmic path Win32_Battery get BatteryStatus /value 2^>nul ^| findstr "="') do (
-    if "%%B"=="2" set "_AC_STATE=true"
-    if "%%B"=="1" set "_AC_STATE=false"
+where wmic >nul 2>&1
+if not errorlevel 1 (
+    for /f "tokens=2 delims==" %%B in ('wmic path Win32_Battery get BatteryStatus /value 2^>nul ^| findstr "="') do (
+        if "%%B"=="2" set "_AC_STATE=true"
+        if "%%B"=="1" set "_AC_STATE=false"
+    )
 )
 if not defined LIBSCRIPT_HW_AC_POWER set "LIBSCRIPT_HW_AC_POWER=!_AC_STATE!"
 exit /b 0

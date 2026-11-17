@@ -1,9 +1,9 @@
 @echo off
 :: # find_replace_exec.cmd
 :: ## Overview
-:: Windows Batch executable literal string replacer.
+:: Windows Batch executable literal string replacer delegating to `_lib\_common\find_replace.cmd`.
 :: ## Usage
-:: find_replace_exec "find" "replace" filename
+:: find_replace_exec.cmd "find" "replace" filename
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -17,8 +17,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -54,14 +53,5 @@ if "%~3"=="" (
     exit /b 1
 )
 
-set "SEARCH=%~1"
-set "REPLACE=%~2"
-set "FILE=%~3"
-
-if not exist "%FILE%" (
-    echo Error: Cannot read file "%FILE%" >&2
-    exit /b 1
-)
-
-powershell -NoProfile -Command "$content = [System.IO.File]::ReadAllText($env:FILE); $newContent = $content.Replace($env:SEARCH, $env:REPLACE); [Console]::Out.Write($newContent)"
-exit /b 0
+call "!SCRIPT_DIR!\find_replace.cmd" :find_replace "%~1" "%~2" "%~3"
+exit /b !ERRORLEVEL!

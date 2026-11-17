@@ -180,8 +180,25 @@ mv "${POD_DIR}/pod-manifest.json.tmp" "${POD_DIR}/pod-manifest.json"
 
 cat << 'LAUNCH_EOF' > "${POD_DIR}/launch-pod.sh"
 #!/bin/sh
-set -eu
-POD_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+# ## Overview
+# Launches the synthesized multi-unikernel pod and configures its host bridge.
+#
+# ## Usage
+# ./launch-pod.sh
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+POD_ROOT=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 sh "${POD_ROOT}/net/setup-bridge.sh"
 jq -r '.appliances[].image' "${POD_ROOT}/pod-manifest.json" | while IFS= read -r _img; do
   printf '[POD] Verified unikernel image ready: %s\n' "$_img"

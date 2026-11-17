@@ -94,20 +94,19 @@ set SCP_CMD=scp -P %PORT% -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev
 
 echo [INFO] Building MSI via msi-rs on guest...
 (
-echo $ErrorActionPreference = 'Stop'
-echo Set-Location C:\libscript\tmp\stage_component_nodejs_offline
-echo ^& "C:\msi-rs\target\release\candle.exe" -nologo -arch x64 -out nodejs_offline_main.wixobj nodejs_offline_main.wxs
-echo ^& "C:\msi-rs\target\release\candle.exe" -nologo -arch x64 -out nodejs_offline_payload.wixobj nodejs_offline_payload.wxs
-echo ^& "C:\msi-rs\target\release\light.exe" -nologo -sval -ext WixUIExtension -out nodejs-msirs.msi nodejs_offline_main.wixobj nodejs_offline_payload.wixobj
-echo if (-not (Test-Path nodejs-msirs.msi^^)^^) {
-echo   Write-Error "Failed to build nodejs-msirs.msi"
-echo   exit 1
-echo } else {
-echo   Write-Host "Successfully built nodejs-msirs.msi"
-echo   Copy-Item nodejs-msirs.msi -Destination C:\libscript\tmp\nodejs-msirs.msi -Force
-echo }
-) > "!LIBSCRIPT_ROOT_DIR!\tmp\build_msirs.ps1"
+echo @echo off
+echo cd /d C:\libscript\tmp\stage_component_nodejs_offline ^|^| exit /b 1
+echo call C:\libscript\_lib\package-managers\msi-rs\env.cmd ^>nul 2^>^&1
+echo where candle.exe ^>nul 2^>^&1 ^|^| call C:\libscript\libscript.cmd install msi-rs latest
+echo call C:\libscript\_lib\package-managers\msi-rs\env.cmd ^>nul 2^>^&1
+echo candle.exe -nologo -arch x64 -out nodejs_offline_main.wixobj nodejs_offline_main.wxs ^|^| exit /b 1
+echo candle.exe -nologo -arch x64 -out nodejs_offline_payload.wixobj nodejs_offline_payload.wxs ^|^| exit /b 1
+echo light.exe -nologo -sval -ext WixUIExtension -out nodejs-msirs.msi nodejs_offline_main.wixobj nodejs_offline_payload.wixobj ^|^| exit /b 1
+echo if not exist nodejs-msirs.msi exit /b 1
+echo copy /y nodejs-msirs.msi C:\libscript\tmp\nodejs-msirs.msi ^>nul
+echo echo Successfully built nodejs-msirs.msi
+) > "!LIBSCRIPT_ROOT_DIR!\tmp\build_msirs_guest.cmd"
 
-%SCP_CMD% "!LIBSCRIPT_ROOT_DIR!\tmp\build_msirs.ps1" vagrant@%VM_IP%:C:/build_msirs.ps1
-%SSH_CMD% "powershell -ExecutionPolicy Bypass -File C:\build_msirs.ps1"
-exit /b 0
+%SCP_CMD% "!LIBSCRIPT_ROOT_DIR!\tmp\build_msirs_guest.cmd" vagrant@%VM_IP%:C:/build_msirs_guest.cmd
+%SSH_CMD% "cmd.exe /c C:\build_msirs_guest.cmd"
+exit /b !errorlevel!

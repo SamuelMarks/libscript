@@ -63,17 +63,17 @@ if "%ACTION%"=="install" (
     )
     echo Provisioning Bento Builder environment on Windows...
     set "STACK="
-    call "%~dp0\..\..\..\_lib\orchestration\qemu\setup.cmd" install
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\qemu\setup.cmd" install
     set "STACK="
     if /i not "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
-        call "%~dp0\..\..\..\_lib\orchestration\virtualbox\setup.cmd" install
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\virtualbox\setup.cmd" install
         set "STACK="
     )
-    call "%~dp0\..\..\..\_lib\orchestration\packer\setup.cmd" install
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\packer\setup.cmd" install
     set "STACK="
-    call "%~dp0\..\..\..\_lib\orchestration\vagrant\setup.cmd" install
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\vagrant\setup.cmd" install
     set "STACK="
-    call "%~dp0\..\..\..\_lib\languages\ruby\setup.cmd" install
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\ruby\setup.cmd" install
     set "STACK="
 
     where 7z >nul 2>&1

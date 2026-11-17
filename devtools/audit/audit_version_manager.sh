@@ -87,6 +87,13 @@ audit_component_dir() {
         fi
       done
       ;;
+    *)
+      for _forbid in service.sh service.cmd; do
+        if [ -f "${_comp_dir}/${_forbid}" ]; then
+          log_vm_violation "$_rel_dir" "UNDECLARED_SERVICE_STUB" "Component defines '${_forbid}' without declaring 'service-daemon' capability in manifest.json."
+        fi
+      done
+      ;;
   esac
 
   # 2. Verify cli.sh and cli.cmd route via component_core or implement mandatory verbs

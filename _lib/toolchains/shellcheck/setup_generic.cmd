@@ -181,7 +181,7 @@ set "STAGE_DIR=%TEMP%\shellcheck-stage-!RANDOM!"
 if not exist "!STAGE_DIR!" mkdir "!STAGE_DIR!"
 
 if /i "!URL:~-4!"==".zip" (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!STAGE_DIR!' -Force"
+    call :extract_sc_zip "!TMP_FILE!" "!STAGE_DIR!"
     if errorlevel 1 (
         rmdir /s /q "!STAGE_DIR!" 2>nul
         exit /b 1
@@ -192,6 +192,10 @@ if /i "!URL:~-4!"==".zip" (
         copy /y "!STAGE_DIR!\shellcheck-v!EXACT_VERSION!\shellcheck.exe" "!TARGET_DIR!\bin\shellcheck.exe" >nul
     ) else if exist "!STAGE_DIR!\bin\shellcheck.exe" (
         copy /y "!STAGE_DIR!\bin\shellcheck.exe" "!TARGET_DIR!\bin\shellcheck.exe" >nul
+    ) else (
+        for /r "!STAGE_DIR!" %%X in (shellcheck.exe) do (
+            if exist "%%~fX" copy /y "%%~fX" "!TARGET_DIR!\bin\shellcheck.exe" >nul
+        )
     )
     if exist "!STAGE_DIR!\LICENSE.txt" copy /y "!STAGE_DIR!\LICENSE.txt" "!TARGET_DIR!\LICENSE.txt" >nul
     if exist "!STAGE_DIR!\README.txt" copy /y "!STAGE_DIR!\README.txt" "!TARGET_DIR!\README.txt" >nul
@@ -289,3 +293,34 @@ exit /b 0
 :action_other
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "shellcheck" "%ACTION%" "%SHELLCHECK_VERSION%" "%SHELLCHECK_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\shellcheck\%SHELLCHECK_VERSION%\\bin\\shellcheck.exe\"" "%LIBSCRIPT_HOME%\shellcheck\%SHELLCHECK_VERSION%"
 exit /b !errorlevel!
+
+:: ## extract_sc_zip
+:: Extracts a zip archive using native extractors (7za, 7z, bsdunzip, unzip, tar) before falling back to PowerShell.
+:extract_sc_zip
+set "_SC_ZIP=%~1"
+set "_SC_DST=%~2"
+for %%Z in (7za.exe 7z.exe) do (
+    where %%Z >nul 2>&1
+    if not errorlevel 1 (
+        %%Z x "!_SC_ZIP!" -o"!_SC_DST!" -y >nul 2>&1
+        if not errorlevel 1 exit /b 0
+    )
+)
+for %%U in (bsdunzip.exe unzip.exe) do (
+    where %%U >nul 2>&1
+    if not errorlevel 1 (
+        %%U -q -o "!_SC_ZIP!" -d "!_SC_DST!" >nul 2>&1
+        if not errorlevel 1 exit /b 0
+    )
+)
+where tar.exe >nul 2>&1
+if not errorlevel 1 (
+    tar.exe -xf "!_SC_ZIP!" -C "!_SC_DST!" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+where powershell.exe >nul 2>&1
+if not errorlevel 1 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!_SC_ZIP!' -DestinationPath '!_SC_DST!' -Force"
+    exit /b !errorlevel!
+)
+exit /b 1

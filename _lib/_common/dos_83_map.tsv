@@ -1,0 +1,30 @@
+# MS-DOS FAT16 8.3 Component Directory Lookup Table
+# Columns: <component> <8.3_short_dir>
+freebsd-usr-bin	FBSDUBIN
+sqlite-tools	SQLITETL
+sqlite	SQLITE
+win-cmd-rs	WINCMDRS
+msi-rs	MSIRS
+auto-win-msvc	AUTOWIN
+openwatcom	OWATCOM
+libarchive	LIBARCHV
+meilisearch	MEILISRC
+shellcheck	SHLCHECK
+bento-builder	BENTOBLD
+kubernetes-thw	K8STHW
+unikernel_pod	UNIKPOD
+postgresql	PGSQL
+postgres	POSTGRES
+mongodb	MONGODB
+rabbitmq	RABBITMQ
+edgcpp-backends-suite	EDGBKSTE
+gemma-tpu-suite	GEMTPSTE
+win-port-suite	WINPTSTE
+libtpu-rs	LIBTPURS
+7zip	7ZIP
+busybox	BUSYBOX
+toybox	TOYBOX
+gawk	GAWK
+dash	DASH
+curl	CURL
+jq	JQ

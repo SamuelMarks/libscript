@@ -30,12 +30,17 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
-  printf '%s\n' "Usage: $(basename -- "${THIS_FILE}")"
+  printf '%s\n' "Usage: $(basename -- "${THIS_FILE}") [--fix]"
   printf '%s\n' 'Performs an audit and validation of all defined application stacks.'
   printf '\n'
   printf '%s\n' 'Options:'
+  printf '%s\n' '  --fix               Append missing Orchestrated Components section stub to README.md.'
   printf '%s\n' '  --help, -h, /?, -?  Show this help message.'
   exit 0
+fi
+FIX_MODE=0
+if [ "${1:-}" = "--fix" ]; then
+  FIX_MODE=1
 fi
 for stack_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/web-apps/* "$LIBSCRIPT_ROOT_DIR"/topologies/* "$LIBSCRIPT_ROOT_DIR"/payloads/*/*; do
     if [ ! -d "$stack_dir" ]; then continue; fi
@@ -51,8 +56,7 @@ for stack_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/web-apps/* "$LIBSCRIPT_ROOT_DIR"/top
     # Check if they list orchestrated components
     if ! grep -i -q "components" "$README_PATH" && ! grep -i -q "orchestrates" "$README_PATH" && ! grep -i -q "libscript.json" "$README_PATH"; then
         printf '%s\n' "WARNING: Stack $stack_name README may not explicitly list orchestrated _lib components or libscript.json usage."
-        # Inject a placeholder if they don't have one
-        if ! grep -q "## Orchestrated Components" "$README_PATH"; then
+        if [ "$FIX_MODE" -eq 1 ] && ! grep -q "## Orchestrated Components" "$README_PATH"; then
              printf "\n## Orchestrated Components\nThis stack orchestrates the following LibScript components:\n- (Please document required components here)\n" >> "$README_PATH"
         fi
     fi

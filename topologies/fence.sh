@@ -43,7 +43,7 @@ STATE_FILE="${3:-}"
 execute_split_brain_fence() {
   if [ -n "$STATE_FILE" ] && [ -f "$STATE_FILE" ]; then
     jq --arg nid "$NODE_ID" '
-      .nodes = (.nodes | map(if .node_id == $nid then .state = "FENCED" | .role = "follower" else . end))
+      .nodes = (.nodes | map(if ((.id // .node_id) == $nid) then .state = "FENCED" | .role = "follower" else . end))
     ' "$STATE_FILE" > "${STATE_FILE}.tmp" && mv -f "${STATE_FILE}.tmp" "$STATE_FILE"
   fi
   printf '{"action":"fence","node_id":"%s","policy":"%s","status":"FENCED"}\n' "$NODE_ID" "$POLICY"

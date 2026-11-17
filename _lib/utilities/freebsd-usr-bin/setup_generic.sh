@@ -136,7 +136,8 @@ stage_fub_payload() {
 case "$ACTION" in
   ls)
     if [ "${FREEBSD_USR_BIN_INSTALL_METHOD}" = 'libscript_native' ]; then
-      [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/freebsd-usr-bin" ] && ls -1 "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/freebsd-usr-bin"
+      _fub_cdir="$(libscript_dos83_home)/$(libscript_dos83_comp 'freebsd-usr-bin')"
+      [ -d "${_fub_cdir}" ] && ls -1 "${_fub_cdir}"
     else
       if command -v sed >/dev/null 2>&1; then
         printf '%s\n' 'freebsd-usr-bin utilities available on PATH'
@@ -150,7 +151,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/freebsd-usr-bin/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'freebsd-usr-bin' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -184,7 +185,7 @@ case "$ACTION" in
       libscript_depends_via "${FREEBSD_USR_BIN_INSTALL_METHOD}" 'freebsd-usr-bin'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/freebsd-usr-bin/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'freebsd-usr-bin' "${EXACT_VERSION}")
       _probe_bin="${APPLET:-sed}"
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
         _probe_bin="${_probe_bin}.exe"

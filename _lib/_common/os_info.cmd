@@ -64,14 +64,18 @@ set "UNAME_LOWER=windows"
 set "INIT_SYS=windows-scm"
 set "KERNEL_RELEASE=10.0"
 
-if /i "%_ORIG_OS%"=="MS-DOS" set "IS_MSDOS=1"
-if /i "%_ORIG_OS%"=="DOS" set "IS_MSDOS=1"
+set "_NATIVE_DOS=0"
+if /i "%_ORIG_OS%"=="MS-DOS" ( set "IS_MSDOS=1" & set "_NATIVE_DOS=1" )
+if /i "%_ORIG_OS%"=="DOS" ( set "IS_MSDOS=1" & set "_NATIVE_DOS=1" )
 if /i "%LIBSCRIPT_TARGET_OS%"=="msdos" set "IS_MSDOS=1"
 if /i "%LIBSCRIPT_TARGET_OS%"=="dos" set "IS_MSDOS=1"
 if /i "%LIBSCRIPT_TARGET_OS%"=="dos32" set "IS_MSDOS=1"
 if "!IS_MSDOS!"=="0" (
     ver 2>nul | findstr /I "MS-DOS FreeDOS DR-DOS PC-DOS" >nul 2>&1
-    if not errorlevel 1 set "IS_MSDOS=1"
+    if not errorlevel 1 (
+        set "IS_MSDOS=1"
+        set "_NATIVE_DOS=1"
+    )
 )
 
 ver 2>nul | findstr /I "ReactOS" >nul 2>&1
@@ -172,6 +176,13 @@ if defined LIBSCRIPT_PKG_MGR (
     )
 )
 
+set "_OUT_HOME=%LIBSCRIPT_HOME%"
+set "_OUT_DOS83=%LIBSCRIPT_DOS_83%"
+if "!IS_MSDOS!"=="1" (
+    if "!_OUT_HOME!"=="" set "_OUT_HOME=C:\LIBSCRIP"
+    if "!_NATIVE_DOS!"=="1" if "!_OUT_DOS83!"=="" set "_OUT_DOS83=1"
+)
+
 endlocal & (
     set "OS=%OS%"
     set "TARGET_OS=%TARGET_OS%"
@@ -191,6 +202,8 @@ endlocal & (
     set "PKG_MGR=%PKG_MGR%"
     set "PATH=%NEW_PATH%"
     set "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR%"
+    set "LIBSCRIPT_HOME=%_OUT_HOME%"
+    set "LIBSCRIPT_DOS_83=%_OUT_DOS83%"
     set "STACK=%STACK%"
 )
 exit /b 0

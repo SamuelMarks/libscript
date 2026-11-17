@@ -112,6 +112,7 @@ case "$ACTION" in
             ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
           else
             libscript_depends 'bash' 'curl' 'unzip'
+            # libscript-allow-upstream-bash: upstream bun.sh installer script requires bash
             libscript_fetch_stdout "https://bun.sh/install" | bash || true
             if [ -f "$HOME/.bun/bin/bun" ]; then
               ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"

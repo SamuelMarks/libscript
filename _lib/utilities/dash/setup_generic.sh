@@ -147,7 +147,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/dash/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'dash' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -170,6 +170,17 @@ case "$ACTION" in
   install)
     if [ "${DASH_INSTALL_METHOD}" = 'from-source' ]; then
       resolve_exact_version
+      if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${IS_MSDOS:-0}" = '1' ]; then
+        TARGET_DIR=$(libscript_get_version_dir 'dash' "${EXACT_VERSION}")
+        mkdir -p "${TARGET_DIR}/bin"
+        if ! "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-dash-dos --target=dos32 --out="${TARGET_DIR}/bin/dash.exe" >/dev/null 2>&1; then
+          "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/build_dos32.sh" ls-dash-dos --target=host --out="${TARGET_DIR}/bin/dash.exe" >/dev/null
+        fi
+        cp -f "${TARGET_DIR}/bin/dash.exe" "${TARGET_DIR}/bin/sh.exe"
+        libscript_symlink_alias 'dash' "${VERSION}" "${EXACT_VERSION}"
+        libscript_symlink_alias 'dash' 'default' "${EXACT_VERSION}"
+        exit 0
+      fi
       SRC_URL="${DASH_DOWNLOAD_URL:-http://gondor.apana.org.au/~herbert/dash/files/dash-${EXACT_VERSION}.tar.gz}"
       libscript_build_component_from_source 'dash' "$EXACT_VERSION" 'dash' 'c' 'autotools' "$SRC_URL"
       libscript_symlink_alias 'dash' "${VERSION}" "${EXACT_VERSION}"
@@ -181,7 +192,7 @@ case "$ACTION" in
       libscript_depends_via "${DASH_INSTALL_METHOD}" 'dash'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/dash/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'dash' "${EXACT_VERSION}")
       _expected_bin="${TARGET_DIR}/bin/dash"
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
         _expected_bin="${TARGET_DIR}/bin/dash.exe"

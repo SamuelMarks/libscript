@@ -174,8 +174,11 @@ EOF
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" resolve-env --dir="${TEST_TMP}/ws/sub/pkg" --write="${TEST_TMP}/ws_env.sh"
 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" resolve-env --dir="${TEST_TMP}/ws/sub/pkg" --write="${TEST_TMP}/ws_env.sh"
 _ws_check=$(
+  SCRIPT_NAME="${TEST_TMP}/ws_env.sh"
+  export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
-  . "${TEST_TMP}/ws_env.sh"
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
   printf '%s|%s|%s|%s\n' "$(rustc --version)" "$(node -v)" "$(python3 --version)" "${NPM_CONFIG_PREFIX}"
 )
 case "$_ws_check" in

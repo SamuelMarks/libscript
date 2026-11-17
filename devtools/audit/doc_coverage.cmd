@@ -80,9 +80,19 @@ if not defined PS_CMD (
 )
 
 if defined PS_CMD (
-    "%PS_CMD%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\doc_coverage.ps1" %*
-    exit /b %ERRORLEVEL%
+    "%PS_CMD%" -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\doc_coverage.ps1" %*
+    exit /b !ERRORLEVEL!
 )
 
-echo [PASS] 100%% Documentation Coverage Audit Passed!
-exit /b 0
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
+)
+where dash >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    set "STACK="
+    dash "!SCRIPT_DIR!\doc_coverage.sh" %*
+    exit /b !ERRORLEVEL!
+)
+
+echo [ERROR] Neither PowerShell nor LibScript dash found to execute doc_coverage audit. 1>&2
+exit /b 1

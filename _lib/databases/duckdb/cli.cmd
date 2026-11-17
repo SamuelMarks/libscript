@@ -57,7 +57,7 @@ set "ACTION=%~1"
 if "%ACTION%"=="execute" goto :execute
 if "%ACTION%"=="repl" goto :repl
 
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 exit /b %errorlevel%
 
 :: ## execute

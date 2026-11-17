@@ -175,23 +175,15 @@ if "%COMPONENT%"=="" (
 
 set "BUNDLE_JSON=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\offline_bundle.json"
 if "%VERSION%"=="" if exist "%BUNDLE_JSON%" (
-    where jq >nul 2>&1
-    if not errorlevel 1 (
-        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`jq -r ".databases.mysql.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`jq -r ".databases.redis.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`jq -r ".databases.mongodb.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`jq -r ".runtimes.python.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`jq -r ".runtimes.nodejs.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`jq -r ".databases.meilisearch.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`jq -r ".webservers.caddy.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-    ) else (
-        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.version"`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.version"`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mongodb.version"`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.version"`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.version"`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.version"`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).webservers.caddy.version"`) do set "VERSION=%%A"
+    call :resolve_jq_bin
+    if not "!JQ_BIN!"=="" (
+        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.mysql.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.redis.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.mongodb.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".runtimes.python.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".runtimes.nodejs.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.meilisearch.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".webservers.caddy.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
     )
 )
 if "%VERSION%"=="" set "VERSION=1.0.0"
@@ -304,7 +296,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\databases\mysql-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             for /d %%D in ("%STAGE_ROOT%\*") do (
                 if /i not "%%~nxD"=="bin" (
                     if exist "%%~fD\bin" (
@@ -322,7 +314,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\databases\redis-*.zip" "%OFFLINE_SOURCE%\databases\Redis-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             for /d %%D in ("%STAGE_ROOT%\*") do (
                 if /i not "%%~nxD"=="bin" (
                     if exist "%%~fD\bin" (
@@ -349,7 +341,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\databases\mongodb-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             for /d %%D in ("%STAGE_ROOT%\*") do (
                 if /i not "%%~nxD"=="bin" (
                     if exist "%%~fD\bin" (
@@ -367,7 +359,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
                 copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
@@ -381,7 +373,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\runtimes\node-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             for /d %%D in ("%STAGE_ROOT%\*") do (
                 if /i not "%%~nxD"=="bin" (
                     xcopy /E /Y /Q "%%~fD\*" "%STAGE_ROOT%" >nul 2>&1
@@ -415,7 +407,7 @@ if /i "%CURR_VAR%"=="offline" (
         if "!FOUND_BIN!"=="" (
             for %%F in ("%OFFLINE_SOURCE%\webservers\caddy*.zip") do (
                 if exist "%%~fF" (
-                    powershell -NoProfile -Command "Expand-Archive -Path '%%~fF' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+                    call :extract_zip "%%~fF" "%STAGE_ROOT%"
                     if exist "%STAGE_ROOT%\caddy.exe" set "FOUND_BIN=%STAGE_ROOT%\caddy.exe"
                 )
             )
@@ -433,7 +425,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
                 copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
@@ -465,7 +457,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
                 copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
@@ -497,7 +489,7 @@ if /i "%CURR_VAR%"=="offline" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\runtimes\python-*.zip") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if not "!FOUND_ARC!"=="" (
-            powershell -NoProfile -Command "Expand-Archive -Path '!FOUND_ARC!' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+            call :extract_zip "!FOUND_ARC!" "%STAGE_ROOT%"
             if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
             if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
                 copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin\" >nul 2>&1
@@ -603,7 +595,7 @@ if errorlevel 1 (
 )
 
 echo [INFO] Compiling standalone %CURR_VAR% MSI via msi-rs: %TARGET_MSI%
-powershell -NoProfile -Command "$wxs = Get-Content -Raw '%PAYLOAD_WXS%'; $m = [regex]::Matches($wxs, 'Source=\"([^\"]+)\"'); foreach ($x in $m) { $s = $x.Groups[1].Value; $p1 = Join-Path '%STAGE_ROOT%' $s; $p2 = Join-Path '!LIBSCRIPT_ROOT_DIR!' $s; if (-not (Test-Path $p1) -and -not (Test-Path $p2) -and -not (Test-Path $s)) { Write-Error \"Missing payload source: $s\"; exit 1 } }"
+call :verify_payload_sources "%PAYLOAD_WXS%" "%STAGE_ROOT%"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] Harvested payload file missing on disk. >&2
     goto compile_err
@@ -676,3 +668,66 @@ del /f /q "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" >nul 
 del /f /q "%MAIN_WXS%" >nul 2>&1
 del /f /q "%PAYLOAD_WXS%" >nul 2>&1
 exit /b !ERR!
+
+:: ## resolve_jq_bin
+:: Locates or bootstraps jq.exe via LibScript component isolation.
+:resolve_jq_bin
+set "JQ_BIN="
+for %%J in (jq.exe jq) do if "!JQ_BIN!"=="" for /f "delims=" %%P in ('where %%J 2^>nul') do if "!JQ_BIN!"=="" set "JQ_BIN=%%P"
+if not "!JQ_BIN!"=="" exit /b 0
+set "_LS_H=%LIBSCRIPT_HOME%"
+if "!_LS_H!"=="" set "_LS_H=%USERPROFILE%\.libscript"
+if exist "!_LS_H!\jq\default\bin\jq.exe" (
+    set "JQ_BIN=!_LS_H!\jq\default\bin\jq.exe"
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" depends jq >nul 2>&1
+    if exist "!_LS_H!\jq\default\bin\jq.exe" set "JQ_BIN=!_LS_H!\jq\default\bin\jq.exe"
+)
+exit /b 0
+
+:: ## extract_zip
+:: Extracts a .zip archive using 7za, 7z, bsdunzip, unzip, or tar without PowerShell.
+:extract_zip
+set "_EZ_ARC=%~1"
+set "_EZ_DST=%~2"
+if not exist "!_EZ_DST!" mkdir "!_EZ_DST!" 2>nul
+for %%Z in (7za.exe 7z.exe) do (
+    where %%Z >nul 2>&1
+    if not errorlevel 1 (
+        %%Z x "!_EZ_ARC!" -o"!_EZ_DST!" -y >nul 2>&1
+        exit /b !errorlevel!
+    )
+)
+for %%U in (bsdunzip.exe unzip.exe) do (
+    where %%U >nul 2>&1
+    if not errorlevel 1 (
+        %%U -q -o "!_EZ_ARC!" -d "!_EZ_DST!" >nul 2>&1
+        exit /b !errorlevel!
+    )
+)
+tar.exe -xf "!_EZ_ARC!" -C "!_EZ_DST!" >nul 2>&1
+exit /b !errorlevel!
+
+:: ## verify_payload_sources
+:: Verifies every File Source="..." attribute in a harvested WiX fragment exists on disk.
+:verify_payload_sources
+set "_VP_WXS=%~1"
+set "_VP_STAGE=%~2"
+if not exist "!_VP_WXS!" exit /b 1
+set "_VP_FAIL=0"
+for /f "usebackq tokens=*" %%L in (`findstr /C:"Source=" "!_VP_WXS!" 2^>nul`) do (
+    set "_VP_LINE=%%L"
+    set "_VP_REST=!_VP_LINE:*Source=!"
+    set "_VP_REST=!_VP_REST:~1!"
+    for /f "delims="" %%S in ("!_VP_REST!") do (
+        set "_VP_S=%%S"
+        if not exist "!_VP_STAGE!\!_VP_S!" if not exist "!LIBSCRIPT_ROOT_DIR!\!_VP_S!" if not exist "!_VP_S!" (
+            echo [ERROR] Missing payload source: !_VP_S! >&2
+            set "_VP_FAIL=1"
+        )
+    )
+)
+exit /b !_VP_FAIL!

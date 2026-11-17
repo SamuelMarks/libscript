@@ -104,6 +104,7 @@ case "$ACTION" in
         mkdir -p "${TARGET_DIR}"
         export SDKMAN_DIR="${TARGET_DIR}"
         if command -v bash >/dev/null 2>&1; then
+          # libscript-allow-upstream-bash: upstream get.sdkman.io installer requires bash
           libscript_fetch_stdout "https://get.sdkman.io?rcupdate=false" | bash || true
         else
           libscript_fetch_stdout "https://get.sdkman.io?rcupdate=false" | sh || true

@@ -69,11 +69,7 @@ case "$ACTION" in
     elif [ "${UNAME:-}" = "FreeBSD" ]; then
       libscript_depends 'uvicorn'
     else
-      if ! command -v uv >/dev/null 2>&1; then
-        if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
-          libscript_depends 'python'
-        fi
-      fi
+      libscript_python_ensure_runtime
       mkdir -p "${_uv_target}"
       libscript_python_venv "${_uv_target}"
       if command -v uv >/dev/null 2>&1; then

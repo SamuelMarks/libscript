@@ -48,4 +48,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0\test_base.cmd"
+call "!SCRIPT_DIR!\test_base.cmd"

@@ -101,6 +101,35 @@ resolve_default_toybox_url() {
   printf '%s\n' ''
 }
 
+# ## materialize_toybox_shims
+# Materializes per-applet hardlinks/symlinks or .bat trampolines in TARGET_DIR/bin when TOYBOX_INSTALL_SHIMS=1 and freebsd-usr-bin is not installed.
+materialize_toybox_shims() {
+  _mts_dir="$1"
+  _mts_bin="$2"
+  case "${TOYBOX_INSTALL_SHIMS:-0}" in
+    1|true|TRUE|yes|YES) ;;
+    *) return 0 ;;
+  esac
+  _mts_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  if [ -f "${_mts_home}/freebsd-usr-bin/default/bin/sed" ] || [ -f "${_mts_home}/freebsd-usr-bin/default/bin/sed.exe" ]; then
+    printf '[INFO] freebsd-usr-bin is installed; skipping toybox applet shims.\n'
+    return 0
+  fi
+  mkdir -p "${_mts_dir}/bin"
+  for _mts_app in basename cat cmp comm cp cut date diff dirname env file find grep head ln ls mktemp mv paste patch printf readlink realpath rm rmdir sed sha1sum sha256sum sleep sort stat tail tee touch tr uname uniq wc which xargs mkdir; do
+    if [ "${TARGET_OS:-}" = 'msdos' ]; then
+      printf '@echo off\r\n%s %s %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9\r\n' "${_mts_bin}" "${_mts_app}" > "${_mts_dir}/bin/${_mts_app}.bat"
+    elif [ "${TARGET_OS:-}" = 'windows' ]; then
+      printf '@echo off\r\n"%%~dp0%s" %s %%*\r\n' "${_mts_bin}" "${_mts_app}" > "${_mts_dir}/bin/${_mts_app}.bat"
+      chmod +x "${_mts_dir}/bin/${_mts_app}.bat" 2>/dev/null || true
+    else
+      if ! ln -f "${_mts_dir}/bin/${_mts_bin}" "${_mts_dir}/bin/${_mts_app}" 2>/dev/null; then
+        ln -sf "${_mts_bin}" "${_mts_dir}/bin/${_mts_app}"
+      fi
+    fi
+  done
+}
+
 case "$ACTION" in
   ls)
     if [ "${TOYBOX_INSTALL_METHOD}" = 'libscript_native' ]; then
@@ -118,7 +147,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/toybox/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'toybox' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -152,13 +181,14 @@ case "$ACTION" in
       libscript_depends_via "${TOYBOX_INSTALL_METHOD}" 'toybox'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/toybox/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'toybox' "${EXACT_VERSION}")
       _bin_name='toybox'
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
         _bin_name='toybox.exe'
       fi
       if [ -f "${TARGET_DIR}/bin/${_bin_name}" ] && [ "${FORCE_REINSTALL:-0}" != '1' ]; then
         printf '[INFO] toybox %s is already installed at %s.\n' "${EXACT_VERSION}" "${TARGET_DIR}"
+        materialize_toybox_shims "${TARGET_DIR}" "${_bin_name}"
         libscript_symlink_alias 'toybox' "${VERSION}" "${EXACT_VERSION}"
         libscript_symlink_alias 'toybox' 'default' "${EXACT_VERSION}"
         exit 0
@@ -221,6 +251,7 @@ case "$ACTION" in
       if [ "$TMP_FILE" != "$CACHED_DL" ]; then
         rm -f "$TMP_FILE"
       fi
+      materialize_toybox_shims "${TARGET_DIR}" "${_bin_name}"
       libscript_symlink_alias 'toybox' "${VERSION}" "${EXACT_VERSION}"
       libscript_symlink_alias 'toybox' 'default' "${EXACT_VERSION}"
     fi

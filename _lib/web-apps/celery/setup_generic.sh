@@ -40,13 +40,10 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
 if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
-  if ! command -v uv >/dev/null 2>&1; then
-    if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
-      libscript_depends 'python' || true
-    fi
-  fi
+  libscript_python_ensure_runtime
 
   if [ "${UNAME:-}" = "Darwin" ]; then
     mkdir -p "${PYTHON_VENV}"

@@ -61,4 +61,4 @@ if /i "%~1"=="benchmark" (
 )
 
 set "PACKAGE_NAME=edgcpp-backends-suite"
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*

@@ -43,6 +43,7 @@ SCRIPT_NAME="${DIR}/setup_generic.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 if [ "${VAGRANT_MULTI_NODE:-0}" != "1" ]; then
   exit 0
@@ -97,6 +98,7 @@ for LIB in 'ch2_jumpbox_only.sh' 'ch4_jumpbox_to_targets.sh' 'ch5_jumpbox_to_tar
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+unset SCRIPT_NAME || true
 
 if [ -n "${KUBERNETES_THW_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --listen "unix:${KUBERNETES_THW_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then

@@ -108,6 +108,7 @@ case "$ACTION" in
         libscript_fetch_stdout https://rvm.io/pkuczynski.asc | gpg --import - || true
         export rvm_path="${TARGET_DIR}"
         if command -v bash >/dev/null 2>&1; then
+          # libscript-allow-upstream-bash: upstream RVM installer requires bash
           libscript_fetch_stdout https://get.rvm.io | bash -s stable || true
         else
           libscript_fetch_stdout https://get.rvm.io | sh -s stable || true

@@ -60,12 +60,12 @@ if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
 
 echo === Checking Bento Builder components on Windows ===
 set "STACK="
-call "%~dp0\..\..\..\_lib\orchestration\qemu\test.cmd" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\qemu\test.cmd" 2>nul
 set "STACK="
-call "%~dp0\..\..\..\_lib\orchestration\virtualbox\test.cmd" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\virtualbox\test.cmd" 2>nul
 set "STACK="
-call "%~dp0\..\..\..\_lib\orchestration\packer\test.cmd" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\packer\test.cmd" 2>nul
 set "STACK="
-call "%~dp0\..\..\..\_lib\orchestration\vagrant\test.cmd" 2>nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\vagrant\test.cmd" 2>nul
 echo === Checks finished ===
 exit /b 0

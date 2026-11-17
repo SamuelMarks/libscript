@@ -24,6 +24,12 @@
     "BUSYBOX_RELEASES_URL": {
       "type": "string",
       "description": "Override URL for querying busybox available remote releases."
+    },
+    "BUSYBOX_INSTALL_SHIMS": {
+      "type": "string",
+      "description": "When set to '1', materializes per-applet hardlinks or .bat/.exe trampolines in bin/ when freebsd-usr-bin is not installed.",
+      "enum": ["0", "1", "true", "false"],
+      "default": "0"
     }
   }
 }

@@ -92,7 +92,8 @@ exit /b 0
 :: Activates a specific installed version of busybox and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\busybox\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "busybox" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
@@ -144,10 +145,12 @@ if /i "%BUSYBOX_INSTALL_METHOD%"=="scoop" (
     exit /b !errorlevel!
 )
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\busybox\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "busybox" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if exist "!TARGET_DIR!\bin\busybox.exe" (
     if not "%FORCE_REINSTALL%"=="1" (
         echo [INFO] busybox !EXACT_VERSION! is already installed at !TARGET_DIR!.
+        call :materialize_busybox_shims "!TARGET_DIR!"
         call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
         call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
         exit /b 0
@@ -179,8 +182,42 @@ if exist "!CACHED_DL!" (
 call :stage_busybox_artifact "!TMP_FILE!" "!URL!" "!TARGET_DIR!"
 if errorlevel 1 exit /b 1
 if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
+call :materialize_busybox_shims "!TARGET_DIR!"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "%BUSYBOX_VERSION%" "!EXACT_VERSION!"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "busybox" "default" "!EXACT_VERSION!"
+exit /b 0
+
+:: ## materialize_busybox_shims
+:: Materializes per-applet NTFS hardlinks or .bat trampolines in TARGET_DIR\bin when BUSYBOX_INSTALL_SHIMS=1 and freebsd-usr-bin is not installed.
+:materialize_busybox_shims
+set "_MBS_DIR=%~1"
+set "_MBS_DO=0"
+if "%BUSYBOX_INSTALL_SHIMS%"=="1" set "_MBS_DO=1"
+if /i "%BUSYBOX_INSTALL_SHIMS%"=="true" set "_MBS_DO=1"
+if "!_MBS_DO!"=="0" exit /b 0
+if exist "%LIBSCRIPT_HOME%\freebsd-usr-bin\default\bin\sed.exe" (
+    echo [INFO] freebsd-usr-bin is installed; skipping busybox applet shims.
+    exit /b 0
+)
+if not exist "!_MBS_DIR!\bin" mkdir "!_MBS_DIR!\bin"
+for %%A in (ash awk basename cat cmp comm cp cut date diff dirname env find grep gunzip gzip head ln ls mkdir mktemp mv patch printf rm rmdir sed sh sha1sum sha256sum sleep sort stat tail tar tee touch tr uname uniq unzip wc wget which xargs) do (
+    if /i "%TARGET_OS%"=="msdos" (
+        > "!_MBS_DIR!\bin\%%A.bat" (
+            echo @echo off
+            echo busybox.exe %%A %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9
+        )
+    ) else (
+        if not exist "!_MBS_DIR!\bin\%%A.exe" (
+            mklink /H "!_MBS_DIR!\bin\%%A.exe" "!_MBS_DIR!\bin\busybox.exe" >nul 2>&1
+        )
+        if not exist "!_MBS_DIR!\bin\%%A.exe" (
+            > "!_MBS_DIR!\bin\%%A.bat" (
+                echo @echo off
+                echo "%%~dp0busybox.exe" %%A %%*
+            )
+        )
+    )
+)
 exit /b 0
 
 :: ## resolve_win_arch

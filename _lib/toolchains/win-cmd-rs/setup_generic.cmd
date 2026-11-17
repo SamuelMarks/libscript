@@ -89,7 +89,8 @@ exit /b 0
 :: Activates a specific installed version of win-cmd-rs and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\win-cmd-rs\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
@@ -161,7 +162,25 @@ if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="scoop" (
     exit /b !errorlevel!
 )
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\win-cmd-rs\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
+if "%IS_MSDOS%"=="1" (
+    if exist "!TARGET_DIR!\bin\wincmd.exe" if not "%FORCE_REINSTALL%"=="1" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
+        exit /b 0
+    )
+    if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-wincmd --target dos32 --out "!TARGET_DIR!\bin\wincmd.exe" >nul 2>&1
+    if not exist "!TARGET_DIR!\bin\wincmd.exe" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-wincmd --target host --out "!TARGET_DIR!\bin\wincmd.exe" >nul 2>&1
+    )
+    if exist "!TARGET_DIR!\bin\wincmd.exe" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
+        exit /b 0
+    )
+)
 set "_BIN_FOUND=0"
 if exist "!TARGET_DIR!\bin\wincheck.exe" set "_BIN_FOUND=1"
 if exist "!TARGET_DIR!\bin\wincheck.cmd" set "_BIN_FOUND=1"

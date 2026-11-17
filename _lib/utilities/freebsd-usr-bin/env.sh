@@ -40,6 +40,11 @@ else
   EXACT_VERSION="${FREEBSD_USR_BIN_VERSION}"
 fi
 
-libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/freebsd-usr-bin/${EXACT_VERSION}/bin"
+_fub_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+if [ -d "${_fub_home}/FBSDUBIN/${EXACT_VERSION}/bin" ]; then
+  libscript_path_prepend "${_fub_home}/FBSDUBIN/${EXACT_VERSION}/bin"
+elif [ -d "${_fub_home}/freebsd-usr-bin/${EXACT_VERSION}/bin" ]; then
+  libscript_path_prepend "${_fub_home}/freebsd-usr-bin/${EXACT_VERSION}/bin"
+fi
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK

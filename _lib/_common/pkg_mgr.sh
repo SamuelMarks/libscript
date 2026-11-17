@@ -719,7 +719,7 @@ libscript_download() {
   if [ -z "$dest" ]; then dest="$(basename "$url")"; fi
 
   # 1. Checksum Resolution
-  checksum_db="${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt"
+  checksum_db="${LIBSCRIPT_CHECKSUM_DB:-${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt}"
   expected_checksum="$provided_checksum"
   checksum_from_db=0
 
@@ -816,6 +816,14 @@ libscript_download() {
         exit 1
       fi
       return 1
+    fi
+
+    if { [ "${IS_MSDOS:-0}" = '1' ] || [ "${TARGET_OS:-}" = 'msdos' ]; } && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" ]; then
+      _pm_wcfg=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" 2>/dev/null || true)
+      if [ -n "${_pm_wcfg}" ]; then
+        WATTCP_CFG=$(dirname -- "${_pm_wcfg}")
+        export WATTCP_CFG
+      fi
     fi
 
     log_info "[DOWNLOADING] ${url}"
@@ -915,12 +923,17 @@ libscript_download() {
       fi
     fi
   elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ] && [ -f "$cache_file" ]; then
-    # Auto-populate checksum DB if missing
-    if command -v sha256sum >/dev/null 2>&1; then
-        if ! grep -qF "$url" "$checksum_db" 2>/dev/null; then
+    # Auto-populate checksum DB if missing (excluding local file:// fixtures)
+    case "$url" in
+      file://*) ;;
+      *)
+        if command -v sha256sum >/dev/null 2>&1; then
+          if ! grep -qF "$url" "$checksum_db" 2>/dev/null; then
             printf '%s\n' "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
+          fi
         fi
-    fi
+        ;;
+    esac
   fi
 
   # Auto-populate DB with dynamically fetched checksum if we didn't have it in DB

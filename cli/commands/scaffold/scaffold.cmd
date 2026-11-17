@@ -196,23 +196,6 @@ if "!SCAF_URL_WINDOWS!"=="" set "SCAF_URL_WINDOWS=https://example.com/releases/!
 if "!SCAF_RELEASES_URL!"=="" set "SCAF_RELEASES_URL=https://example.com/releases"
 if "!SCAF_TEST_CMD!"=="" set "SCAF_TEST_CMD=!SCAF_BINARY_NAME! --version"
 
-:: If sh is available on the host (Git for Windows / MSYS2 / WSL), delegate synthesis to scaffold.sh for byte-identical templates
-where sh >nul 2>&1
-if not errorlevel 1 (
-    if /i "!SCAF_MODE!"=="json" (
-        set "_SH_ARGS=--from-json=!SCAF_FROM_JSON!"
-    ) else (
-        set "_SH_ARGS=--non-interactive --name=!SCAF_NAME! --category=!SCAF_CATEGORY! --title=!SCAF_TITLE! --binary-name=!SCAF_BINARY_NAME! --install-method=!SCAF_INSTALL_METHOD! --version-scheme=!SCAF_VERSION_SCHEME! --os=!SCAF_OS_WHITELIST! --capabilities=!SCAF_CAPABILITIES! --service=!SCAF_IS_SERVICE!"
-        if not "!SCAF_GITHUB_REPO!"=="" set "_SH_ARGS=!_SH_ARGS! --github-repo=!SCAF_GITHUB_REPO!"
-        if not "!SCAF_PORTS!"=="" set "_SH_ARGS=!_SH_ARGS! --ports=!SCAF_PORTS!"
-    )
-    if "!SCAF_FORCE!"=="1" set "_SH_ARGS=!_SH_ARGS! --force"
-    if "!SCAF_DRY_RUN!"=="1" set "_SH_ARGS=!_SH_ARGS! --dry-run"
-    if not "!SCAF_EXPORT_JSON!"=="" set "_SH_ARGS=!_SH_ARGS! --export-json=!SCAF_EXPORT_JSON!"
-    sh "!SCRIPT_DIR!\scaffold.sh" !_SH_ARGS!
-    exit /b !errorlevel!
-)
-
 if not "!SCAF_EXPORT_JSON!"=="" (
     call :export_spec_to_json "!SCAF_EXPORT_JSON!"
 )
@@ -228,12 +211,34 @@ echo [SUCCESS] Component !SCAF_CATEGORY!/!SCAF_NAME! scaffolded at !COMP_TARGET_
 exit /b 0
 
 :: ## parse_json_spec
-:: Parses a JSON specification file using jq or PowerShell ConvertFrom-Json.
+:: Parses a JSON specification file using native jq first, falling back to PowerShell ConvertFrom-Json.
 :parse_json_spec
 set "_SPEC_FILE=%~1"
 if not exist "!_SPEC_FILE!" (
     echo [ERROR] JSON specification file not found: !_SPEC_FILE! >&2
     exit /b 1
+)
+where jq >nul 2>&1
+if errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+    )
+)
+where jq >nul 2>&1
+if not errorlevel 1 (
+    for /f "usebackq delims=" %%V in (`jq -r ".name // empty" "!_SPEC_FILE!"`) do set "SCAF_NAME=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".title // empty" "!_SPEC_FILE!"`) do set "SCAF_TITLE=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".category // empty" "!_SPEC_FILE!"`) do set "SCAF_CATEGORY=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".description // empty" "!_SPEC_FILE!"`) do set "SCAF_DESCRIPTION=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".binary_name // empty" "!_SPEC_FILE!"`) do set "SCAF_BINARY_NAME=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".default_install_method // empty" "!_SPEC_FILE!"`) do set "SCAF_INSTALL_METHOD=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".version_scheme // empty" "!_SPEC_FILE!"`) do set "SCAF_VERSION_SCHEME=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".github_repo // empty" "!_SPEC_FILE!"`) do set "SCAF_GITHUB_REPO=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".download_url_template_unix // empty" "!_SPEC_FILE!"`) do set "SCAF_URL_UNIX=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".download_url_template_windows // empty" "!_SPEC_FILE!"`) do set "SCAF_URL_WINDOWS=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".releases_url // empty" "!_SPEC_FILE!"`) do set "SCAF_RELEASES_URL=%%V"
+    for /f "usebackq delims=" %%V in (`jq -r ".pkg_mappings.rapps // empty" "!_SPEC_FILE!"`) do set "SCAF_PKG_RAPPS=%%V"
+    exit /b 0
 )
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "SCAF_NAME=%%V"
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "$j = Get-Content -Raw '!_SPEC_FILE!' | ConvertFrom-Json; if ($j.title) { $j.title }"`) do set "SCAF_TITLE=%%V"
@@ -306,11 +311,67 @@ set "_OUT_JSON=%~1"
 echo [OK] Exported component scaffold JSON spec to !_OUT_JSON!
 exit /b 0
 
+:: ## compute_comp_prefix
+:: Converts component name to uppercase and maps non-alphanumeric characters to underscores in pure Batch.
+:compute_comp_prefix
+set "_CP_IN=%~1"
+set "COMP_PREFIX="
+
+:: ## cp_loop
+:: Iterates character-by-character through _CP_IN to synthesize COMP_PREFIX.
+:cp_loop
+if "!_CP_IN!"=="" exit /b 0
+set "_CP_CH=!_CP_IN:~0,1!"
+set "_CP_IN=!_CP_IN:~1!"
+set "_CP_OUT=_"
+for %%C in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9) do (
+    if /i "!_CP_CH!"=="%%C" set "_CP_OUT=%%C"
+)
+set "COMP_PREFIX=!COMP_PREFIX!!_CP_OUT!"
+goto :cp_loop
+
+:: ## resolve_scaffold_awk
+:: Resolves native gawk or awk from PATH or _lib\utilities\gawk without PowerShell.
+:resolve_scaffold_awk
+set "_SCAF_AWK="
+where gawk >nul 2>&1
+if not errorlevel 1 (
+    set "_SCAF_AWK=gawk"
+    exit /b 0
+)
+where awk >nul 2>&1
+if not errorlevel 1 (
+    set "_SCAF_AWK=awk"
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\gawk\env.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\gawk\env.cmd" >nul 2>&1
+)
+where gawk >nul 2>&1
+if not errorlevel 1 (
+    set "_SCAF_AWK=gawk"
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :depends gawk >nul 2>&1
+)
+where gawk >nul 2>&1
+if not errorlevel 1 (
+    set "_SCAF_AWK=gawk"
+    exit /b 0
+)
+where awk >nul 2>&1
+if not errorlevel 1 (
+    set "_SCAF_AWK=awk"
+    exit /b 0
+)
+exit /b 1
+
 :: ## synthesize_component_batch
-:: Generates the full Version Manager Contract component files when sh is unavailable on Windows.
+:: Generates the full Version Manager Contract component files using native Batch and gawk emit_templates.awk.
 :synthesize_component_batch
 set "_CDIR=%~1"
-for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "('!SCAF_NAME!'.ToUpper() -replace '[^A-Z0-9]', '_')"`) do set "COMP_PREFIX=%%P"
+call :compute_comp_prefix "!SCAF_NAME!"
 set "_CAPS_JSON=[\"versioned-artifact\"]"
 if /i "!SCAF_IS_SERVICE!"=="true" set "_CAPS_JSON=[\"versioned-artifact\", \"service-daemon\"]"
 if not exist "!_CDIR!\manifest.json" (
@@ -390,6 +451,16 @@ if not exist "!_CDIR!\README.md" (
         echo - Windows
         echo ^<!-- END_PLATFORMS --^>
     ) > "!_CDIR!\README.md"
+)
+call :resolve_scaffold_awk
+if not errorlevel 1 (
+    "!_SCAF_AWK!" -f "!SCRIPT_DIR!\emit_templates.awk" "!SCRIPT_DIR!\scaffold.sh"
+    exit /b !errorlevel!
+)
+where powershell >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Neither gawk/awk nor PowerShell is available to emit component templates. 1>&2
+    exit /b 1
 )
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$shFile = '!SCRIPT_DIR!\scaffold.sh'; $cdir = '!_CDIR!'; " ^

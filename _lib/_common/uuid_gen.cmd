@@ -1,7 +1,9 @@
 @echo off
 :: # uuid_gen.cmd
 :: ## Overview
-:: Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging. Generates reproducible GUIDs based on namespace and component name/version using built-in Windows PowerShell or certutil without external interpreter dependencies.
+:: Deterministic RFC 4122 UUIDv5 generator utility for LibScript Windows Installer packaging.
+:: Generates reproducible GUIDs based on namespace and component name/version using native Win32
+:: `certutil` SHA-1 hashing (zero PowerShell dependency), with `openssl` and PowerShell fallbacks.
 :: ## Usage
 :: uuid_gen.cmd [NAMESPACE_UUID] <NAME>
 
@@ -17,8 +19,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -68,9 +69,73 @@ if "%SEED_NAME%"=="" (
 call :generate_uuid_v5 "%NAMESPACE%" "%SEED_NAME%"
 exit /b %ERRORLEVEL%
 
+:: ## format_sha1_uuidv5
+:: Formats a 40-char hex SHA-1 digest into an uppercase RFC 4122 UUIDv5 string.
+:format_sha1_uuidv5
+set "_HEX=%~1"
+set "_HEX=!_HEX: =!"
+set "_C16=!_HEX:~16,1!"
+set "_VARIANT=8"
+if /i "!_C16!"=="0" set "_VARIANT=8"
+if /i "!_C16!"=="4" set "_VARIANT=8"
+if /i "!_C16!"=="8" set "_VARIANT=8"
+if /i "!_C16!"=="c" set "_VARIANT=8"
+if /i "!_C16!"=="1" set "_VARIANT=9"
+if /i "!_C16!"=="5" set "_VARIANT=9"
+if /i "!_C16!"=="9" set "_VARIANT=9"
+if /i "!_C16!"=="d" set "_VARIANT=9"
+if /i "!_C16!"=="2" set "_VARIANT=A"
+if /i "!_C16!"=="6" set "_VARIANT=A"
+if /i "!_C16!"=="a" set "_VARIANT=A"
+if /i "!_C16!"=="e" set "_VARIANT=A"
+if /i "!_C16!"=="3" set "_VARIANT=B"
+if /i "!_C16!"=="7" set "_VARIANT=B"
+if /i "!_C16!"=="b" set "_VARIANT=B"
+if /i "!_C16!"=="f" set "_VARIANT=B"
+set "_UUID=!_HEX:~0,8!-!_HEX:~8,4!-5!_HEX:~13,3!-!_VARIANT!!_HEX:~17,3!-!_HEX:~20,12!"
+set "_UUID=!_UUID:a=A!"
+set "_UUID=!_UUID:b=B!"
+set "_UUID=!_UUID:c=C!"
+set "_UUID=!_UUID:d=D!"
+set "_UUID=!_UUID:e=E!"
+set "_UUID=!_UUID:f=F!"
+echo !_UUID!
+exit /b 0
+
 :: ## generate_uuid_v5
-:: Generates an RFC 4122 UUIDv5 string using native Windows PowerShell SHA1 cryptography.
+:: Generates an RFC 4122 UUIDv5 string using native Windows certutil SHA-1 or PowerShell fallback.
 :generate_uuid_v5
+set "_NS_RAW=%~1"
+set "_SEED=%~2"
+set "_NS_HEX=!_NS_RAW:-=!"
+
+where certutil >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    set "_TMP_BASE=%TEMP%\ls_uuid_%RANDOM%_%RANDOM%"
+    <nul set /p ="!_SEED!" > "!_TMP_BASE!.seed"
+    certutil -encodehex -f "!_TMP_BASE!.seed" "!_TMP_BASE!.seed.hex" 12 >nul 2>&1
+    set "_SEED_HEX="
+    if exist "!_TMP_BASE!.seed.hex" (
+        for /f "usebackq delims=" %%H in ("!_TMP_BASE!.seed.hex") do set "_SEED_HEX=!_SEED_HEX!%%H"
+    )
+    > "!_TMP_BASE!.in.hex" echo !_NS_HEX!!_SEED_HEX!
+    certutil -decodehex -f "!_TMP_BASE!.in.hex" "!_TMP_BASE!.in.bin" >nul 2>&1
+    set "_SHA1="
+    if exist "!_TMP_BASE!.in.bin" (
+        for /f "skip=1 delims=" %%S in ('certutil -hashfile "!_TMP_BASE!.in.bin" SHA1 2^>nul') do (
+            if not defined _SHA1 set "_SHA1=%%S"
+        )
+    )
+    del /f /q "!_TMP_BASE!.seed" "!_TMP_BASE!.seed.hex" "!_TMP_BASE!.in.hex" "!_TMP_BASE!.in.bin" >nul 2>&1
+    if defined _SHA1 (
+        set "_SHA1=!_SHA1: =!"
+        if not "!_SHA1:~39,1!"=="" (
+            call :format_sha1_uuidv5 "!_SHA1!"
+            exit /b 0
+        )
+    )
+)
+
 where powershell >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     powershell -NoProfile -Command ^
@@ -85,5 +150,5 @@ if %ERRORLEVEL% equ 0 (
     exit /b 0
 )
 
-echo [ERROR] Built-in Windows PowerShell is required to generate UUIDv5. >&2
+echo [ERROR]Neither certutil nor PowerShell is available to generate UUIDv5. >&2
 exit /b 1

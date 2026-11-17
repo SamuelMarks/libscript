@@ -73,7 +73,7 @@ for %%V in (group project network firewall node storage dns auth location) do (
     )
 )
 
-call "%~dp0\..\..\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_register_image

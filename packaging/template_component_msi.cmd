@@ -48,8 +48,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("!SCRIPT_DIR!\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-
 set "COMPONENT="
 set "VERSION=1.0.0"
 set "VARIANT=offline"
@@ -147,25 +145,25 @@ if not exist "%REGISTRY_JSON%" (
     exit /b 1
 )
 
-:: Extract registry fields via PowerShell
-for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c) { $c.upgrade_code } else { '' }"`) do set "UPGRADE_CODE=%%A"
+call :resolve_jq_bin
+if "!JQ_BIN!"=="" (
+    echo [ERROR] jq is required for template_component_msi.cmd ^(run: libscript.cmd depends jq^) >&2
+    exit /b 1
+)
 
-for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c) { $c.component_guid } else { '' }"`) do set "COMPONENT_GUID=%%A"
-
-for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.title) { $c.title.Replace('&amp;', '&').Replace('&', '&amp;') } else { '%COMPONENT%' }"`) do set "TITLE=%%A"
-
-for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.service_name) { $c.service_name } else { '' }"`) do set "SERVICE_NAME=%%A"
-
-for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.default_port) { $c.default_port } else { '' }"`) do set "DEFAULT_PORT=%%A"
-
+set "UPGRADE_CODE="
+set "COMPONENT_GUID="
+set "TITLE=%COMPONENT%"
+set "SERVICE_NAME="
+set "DEFAULT_PORT="
 set "SHARED_ATTR="
-for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.shared_dll_ref_count -ne $false) { 'yes' } else { 'no' }"`) do (
+
+for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r --arg c "%COMPONENT%" ".components[$c].upgrade_code // empty" "%REGISTRY_JSON%" 2^>nul`) do set "UPGRADE_CODE=%%A"
+for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r --arg c "%COMPONENT%" ".components[$c].component_guid // empty" "%REGISTRY_JSON%" 2^>nul`) do set "COMPONENT_GUID=%%A"
+for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r --arg c "%COMPONENT%" "(.components[$c].title // $c) | gsub(\"&amp;\"; \"&\") | gsub(\"&\"; \"&amp;\")" "%REGISTRY_JSON%" 2^>nul`) do set "TITLE=%%A"
+for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r --arg c "%COMPONENT%" ".components[$c].service_name // empty" "%REGISTRY_JSON%" 2^>nul`) do set "SERVICE_NAME=%%A"
+for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r --arg c "%COMPONENT%" "(.components[$c].default_port // \"\") | tostring" "%REGISTRY_JSON%" 2^>nul`) do set "DEFAULT_PORT=%%A"
+for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r --arg c "%COMPONENT%" "if (.components[$c].shared_dll_ref_count // true) != false then \"yes\" else \"no\" end" "%REGISTRY_JSON%" 2^>nul`) do (
     if "%%A"=="yes" set "SHARED_ATTR=SharedDllRefCount="yes""
 )
 
@@ -191,13 +189,13 @@ if /i "%VARIANT%"=="offline" (
 set "DOWNLOAD_URL="
 set "BUNDLE_JSON=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\offline_bundle.json"
 if exist "%BUNDLE_JSON%" (
-    if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.url"`) do set "DOWNLOAD_URL=%%A"
-    if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.url"`) do set "DOWNLOAD_URL=%%A"
-    if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.url"`) do set "DOWNLOAD_URL=%%A"
-    if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.url"`) do set "DOWNLOAD_URL=%%A"
-    if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mongodb.url"`) do set "DOWNLOAD_URL=%%A"
-    if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.url"`) do set "DOWNLOAD_URL=%%A"
-    if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).webservers.caddy.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".runtimes.python.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".runtimes.nodejs.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.mysql.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.redis.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.mongodb.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.meilisearch.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".webservers.caddy.url // empty" "%BUNDLE_JSON%" 2^>nul`) do set "DOWNLOAD_URL=%%A"
 )
 
 set "DIR_NAME=%COMPONENT%"
@@ -321,7 +319,7 @@ if /i "%VARIANT%"=="online" if not "%DOWNLOAD_URL%"=="" (
         echo     ^<CustomAction Id="CA_Download_%COMPONENT%"
         echo                   Directory="INSTALLFOLDER"
         :: libscript-allow-raw-fetch
-        echo                   ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;if (-not (Test-Path '[INSTALLFOLDER]bin\*.exe')) { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $tmp = [IO.Path]::GetTempFileName() + '.zip'; Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile $tmp; Expand-Archive -Path $tmp -DestinationPath '[INSTALLFOLDER]' -Force; Remove-Item $tmp -Force }&quot;"
+        echo                   ExeCommand="cmd.exe /c &quot;if not exist &quot;[INSTALLFOLDER]bin\*.exe&quot; (curl.exe -fsSL &quot;%DOWNLOAD_URL%&quot; -o &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot; &amp;&amp; tar.exe -xf &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot; -C &quot;[INSTALLFOLDER]&quot; &amp;&amp; del /f /q &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot;)&quot;"
         echo                   Execute="deferred"
         echo                   Return="ignore"
         echo                   Impersonate="no" /^>
@@ -397,4 +395,23 @@ if not "%SERVICE_NAME%"=="" (
 ) >> "%OUT_FILE%"
 
 echo [INFO] Generated standalone WiX manifest: %OUT_FILE%
+exit /b 0
+
+:: ## resolve_jq_bin
+:: Locates or bootstraps jq.exe via LibScript component isolation.
+:resolve_jq_bin
+set "JQ_BIN="
+for %%J in (jq.exe jq) do if "!JQ_BIN!"=="" for /f "delims=" %%P in ('where %%J 2^>nul') do if "!JQ_BIN!"=="" set "JQ_BIN=%%P"
+if not "!JQ_BIN!"=="" exit /b 0
+set "_LS_H=%LIBSCRIPT_HOME%"
+if "!_LS_H!"=="" set "_LS_H=%USERPROFILE%\.libscript"
+if exist "!_LS_H!\jq\default\bin\jq.exe" (
+    set "JQ_BIN=!_LS_H!\jq\default\bin\jq.exe"
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" depends jq >nul 2>&1
+    if exist "!_LS_H!\jq\default\bin\jq.exe" set "JQ_BIN=!_LS_H!\jq\default\bin\jq.exe"
+)
 exit /b 0

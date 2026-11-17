@@ -73,9 +73,44 @@ if %ERRORLEVEL% EQU 0 (
 
 where powershell.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_posix.ps1" %*
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_posix.ps1" %*
     exit /b !ERRORLEVEL!
 )
 
-echo [PASS] Windows companions verified with delayed expansion and STACK guards.
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
+)
+where dash >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    set "STACK="
+    dash "!SCRIPT_DIR!\audit_posix.sh" %*
+    exit /b !ERRORLEVEL!
+)
+
+call :native_batch_posix_audit
+exit /b !ERRORLEVEL!
+
+:: ## native_batch_posix_audit
+:: Audits .sh/.cmd companion pairing and canonical headers using native Windows Batch and findstr.
+:native_batch_posix_audit
+set "_AP_ERRS=0"
+for /f "delims=" %%F in ('git -C "!LIBSCRIPT_ROOT_DIR!" ls-files "*.sh" 2^>nul') do (
+    set "_SH_REL=%%F"
+    set "_CMD_REL=!_SH_REL:~0,-3!.cmd"
+    set "_BAT_REL=!_SH_REL:~0,-3!.bat"
+    if not exist "!LIBSCRIPT_ROOT_DIR!\!_CMD_REL!" if not exist "!LIBSCRIPT_ROOT_DIR!\!_BAT_REL!" (
+        echo [FAIL] [%%F] Missing paired Windows batch companion: !_CMD_REL! 1>&2
+        set /a "_AP_ERRS+=1"
+    )
+    findstr /B /C:"#!/bin/sh" "!LIBSCRIPT_ROOT_DIR!\%%F" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] [%%F] Missing strict #!/bin/sh shebang 1>&2
+        set /a "_AP_ERRS+=1"
+    )
+)
+if !_AP_ERRS! gtr 0 (
+    echo [ERROR] Native Batch POSIX audit failed with !_AP_ERRS! violation^(s^)! 1>&2
+    exit /b 1
+)
+echo [PASS] Native Batch POSIX and companion audit passed.
 exit /b 0

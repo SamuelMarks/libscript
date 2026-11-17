@@ -17,8 +17,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -52,7 +51,15 @@ goto :find_root
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
+where jq >nul 2>&1
+if errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+    )
+)
+
 set "ACTION=%~1"
+if "!ACTION!"=="" set "ACTION=compile"
 set "TARGET=%~2"
 set "SCHEDULER=%LIBSCRIPT_SCHEDULER%"
 if "%SCHEDULER%"=="" set "SCHEDULER=kubernetes"
@@ -72,14 +79,28 @@ shift
 goto :parse_eng_args
 
 :: ## eng_args_done
-:: Normalizes scheduler alias and dispatches to the target scheduler script.
+:: Normalizes scheduler alias, verifies driver existence, and dispatches to the target scheduler script.
 :eng_args_done
+set "_VALID_ACTION=0"
+for %%V in (compile submit status logs stop destroy) do (
+    if /i "!ACTION!"=="%%V" set "_VALID_ACTION=1"
+)
+if "!_VALID_ACTION!"=="0" (
+    echo [ERROR] Unknown payload action: !ACTION! 1>&2
+    exit /b 1
+)
 if /i "!SCHEDULER!"=="tpu-vm" set "SCHEDULER=tpu_vm"
 if /i "!SCHEDULER!"=="gcp-tpu-vm" set "SCHEDULER=tpu_vm"
 if /i "!SCHEDULER!"=="gke-xpk" set "SCHEDULER=xpk"
 if /i "!SCHEDULER!"=="local" set "SCHEDULER=native"
 
-call "%SCRIPT_DIR%\schedulers\!SCHEDULER!.cmd" "!ACTION!" "!TARGET!" !_EXTRA_ARGS!
+set "SCHED_SCRIPT=!SCRIPT_DIR!\schedulers\!SCHEDULER!.cmd"
+if not exist "!SCHED_SCRIPT!" (
+    echo [ERROR] Unknown scheduler driver: !SCHEDULER! 1>&2
+    exit /b 1
+)
+
+call "!SCHED_SCRIPT!" "!ACTION!" "!TARGET!" !_EXTRA_ARGS!
 exit /b %errorlevel%
 
 :: ## help

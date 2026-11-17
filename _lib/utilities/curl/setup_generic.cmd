@@ -145,6 +145,30 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if "%IS_MSDOS%"=="1" (
+    set "_EX_V=%CURL_VERSION%"
+    if "!_EX_V!"=="" set "_EX_V=8.10.1"
+    if /i "!_EX_V!"=="latest" set "_EX_V=8.10.1"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_get_version_dir "curl" "!_EX_V!" >nul
+    set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
+    if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+    if not exist "!TARGET_DIR!\bin\curl.exe" (
+        if exist "%DOWNLOAD_DIR%\curl\curl-!_EX_V!-dos32.exe" (
+            copy /y "%DOWNLOAD_DIR%\curl\curl-!_EX_V!-dos32.exe" "!TARGET_DIR!\bin\curl.exe" >nul
+        ) else (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\build_dos32.cmd" ls-watt-curl --target dos32 --out "!TARGET_DIR!\bin\curl.exe" >nul 2>&1
+            if not exist "!TARGET_DIR!\bin\curl.exe" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\build_dos32.cmd" ls-watt-curl --target host --out "!TARGET_DIR!\bin\curl.exe" >nul 2>&1
+            )
+        )
+    )
+    if not "%LIBSCRIPT_OFFLINE%"=="1" if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\wattcp_cfg.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos32\wattcp_cfg.cmd" >nul 2>&1
+    )
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "curl" "%CURL_VERSION%" "!_EX_V!"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "curl" "default" "!_EX_V!"
+    exit /b 0
+)
 if /i "%CURL_INSTALL_METHOD%"=="from-source" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "curl" "%CURL_VERSION%" "curl" "c"
     exit /b !errorlevel!

@@ -69,7 +69,7 @@ if "%SKIP_STATE%"=="0" (
     )
 )
 
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 set "CLI_ERR=%ERRORLEVEL%"
 
 if "%SKIP_STATE%"=="0" (

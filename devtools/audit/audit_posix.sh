@@ -79,6 +79,22 @@ audit_batch() {
         print "[FAIL] [" prev_f "] Banned bashism: `echo -e` used instead of `printf`"
         errs++
       }
+      if (has_echo_n) {
+        print "[FAIL] [" prev_f "] Non-portable `echo -n` used instead of `printf`"
+        errs++
+      }
+      if (has_pipefail) {
+        print "[FAIL] [" prev_f "] Non-POSIX `pipefail` option detected"
+        errs++
+      }
+      if (has_dirname_z0) {
+        print "[FAIL] [" prev_f "] Relative path resolved via `dirname $0` instead of canonical `THIS_FILE` / `SCRIPT_DIR`"
+        errs++
+      }
+      if (has_raw_bash && prev_f !~ /(audit_posix\.sh|audit_standards\.sh)$/) {
+        print "[FAIL] [" prev_f "] Direct `bash` invocation in POSIX /bin/sh script without `# libscript-allow-upstream-bash`"
+        errs++
+      }
       if (has_sort_v) {
         print "[FAIL] [" prev_f "] Non-POSIX `sort -V` detected; use `libscript_sort_versions`"
         errs++
@@ -116,6 +132,7 @@ audit_batch() {
       first_line = $0
       has_feu = 0; has_this = 0; bad_stack_quote = 0; unreachable_stack = 0;
       has_dbl_bracket = 0; has_func_kw = 0; has_source_kw = 0; has_echo_e = 0;
+      has_echo_n = 0; has_pipefail = 0; has_dirname_z0 = 0; has_raw_bash = 0; allow_bash_next = 0;
       has_sort_v = 0; has_sed_i = 0; has_gnu_bre = 0; dq_hit = ""; sc2015_hit = ""; has_unguarded_home = 0;
       in_hd = 0; hd_delim = ""; hd_tab = 0; saw_ret_line = -10;
       is_env_sh = (FILENAME ~ /(^|\/)_lib\/[^\/]+\/[^\/]+\/env\.sh$/)
@@ -147,7 +164,13 @@ audit_batch() {
       if ($0 ~ /^[[:space:]]*function[[:space:]]+[a-zA-Z0-9_]+([[:space:]]*\([[:space:]]*\))?[[:space:]]*\{?[[:space:]]*$/) has_func_kw = 1
       if ($0 ~ /^[[:space:]]*source[[:space:]]+|[;&|][[:space:]]*source[[:space:]]+/) has_source_kw = 1
       if ($0 ~ /^[[:space:]]*echo[[:space:]]+-e[[:space:]]+|[;&|][[:space:]]*echo[[:space:]]+-e[[:space:]]+/) has_echo_e = 1
+      if ($0 ~ /^[[:space:]]*#[[:space:]]*libscript-allow-upstream-bash/) allow_bash_next = 1
       if ($0 !~ /^[[:space:]]*#/) {
+        if ($0 ~ /(^|[[:space:];|&(])echo[[:space:]]+-n([[:space:]]|$)/) has_echo_n = 1
+        if ($0 ~ /set[[:space:]]+-o[[:space:]]+pipefail/) has_pipefail = 1
+        if ($0 ~ /dirname[[:space:]]+(--[[:space:]]+)?["\x27]?\$(\{0\}|0)/) has_dirname_z0 = 1
+        if (!allow_bash_next && ($0 ~ /\|[[:space:]]*bash([[:space:]]|$)/ || $0 ~ /(^|[[:space:];|&(])bash[[:space:]]+-c[[:space:]]/)) has_raw_bash = 1
+        allow_bash_next = 0
         if ($0 ~ /(^|[^A-Za-z0-9_])sort[[:space:]]+-V([^A-Za-z0-9_]|$)/) has_sort_v = 1
         if ($0 ~ /(^|[^A-Za-z0-9_])sed[[:space:]]+-i/) has_sed_i = 1
         if ($0 ~ /(^|[[:space:];|&(])grep[[:space:]]+/ && $0 !~ /grep[[:space:]]+-[a-zA-Z]*[EF]/ && $0 ~ /\\[+|?]/) has_gnu_bre = 1

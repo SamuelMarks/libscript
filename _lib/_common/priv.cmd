@@ -76,16 +76,18 @@ goto %1
 :: -----------------------------------------------------------------------------
 :: :check_admin
 :: -----------------------------------------------------------------------------
-:: Returns: errorlevel 0 (Admin) or 1 (Non-Admin)
+:: Returns: errorlevel 0 (Admin or MS-DOS ring 0) or 1 (Non-Admin)
 :: ## check_admin
-:: Checks whether the current process is running with Windows Administrator privileges.
+:: Checks whether the current process is running in MS-DOS ring 0 or with Windows Administrator privileges.
 :check_admin
+if "%IS_MSDOS%"=="1" exit /b 0
+if /i "%TARGET_OS%"=="msdos" exit /b 0
+if /i "%LIBSCRIPT_TARGET_OS%"=="msdos" exit /b 0
 net session >nul 2>&1
-if %errorlevel% == 0 (
-    exit /b 0
-) else (
-    exit /b 1
-)
+if %errorlevel% == 0 exit /b 0
+fltmc >nul 2>&1
+if %errorlevel% == 0 exit /b 0
+exit /b 1
 
 :: -----------------------------------------------------------------------------
 :: :priv <command> [args...]
@@ -93,36 +95,41 @@ if %errorlevel% == 0 (
 :: Param: %~2 - The command to run
 :: Param: %~3-9 - Arguments for the command
 :: ## priv
-:: Executes a command with elevated privileges if required.
+:: Executes a command directly on MS-DOS or when already elevated, otherwise elevates via Win32 ls-elevate.exe.
 :priv
+if "%LIBSCRIPT_SKIP_SYSTEM_DEPS%"=="1" exit /b 0
 set "CMD_TO_RUN=%~2"
 if "!CMD_TO_RUN!"=="" (
     echo Error: :priv requires a command.
     exit /b 1
 )
 
-:: Check if already elevated
 call :check_admin
 if %errorlevel% == 0 (
-    REM Already elevated, run directly
     shift
     %CMD_TO_RUN% %2 %3 %4 %5 %6 %7 %8 %9
     exit /b %errorlevel%
-) else (
-    REM Not elevated, use PowerShell to RunAs Admin
-    echo Requesting administrative privileges for: !CMD_TO_RUN!
-    
-    REM Construct the argument string for PowerShell
-    set "PS_ARGS="
-    set "all_args=%*"
-    REM Skip the label name (%1) and command name (%2)
-    for /f "tokens=2,*" %%a in ("!all_args!") do set "PS_ARGS=%%b"
-    
-    REM Use PowerShell Start-Process with -Verb RunAs
-    REM -Wait ensures we get the exit code if possible (though RunAs sometimes hides it)
-    powershell -Command "Start-Process -FilePath '!CMD_TO_RUN!' -ArgumentList '!PS_ARGS!' -Verb RunAs -Wait"
-    exit /b %errorlevel%
 )
+
+echo Requesting administrative privileges for: !CMD_TO_RUN!
+set "PS_ARGS="
+set "all_args=%*"
+for /f "tokens=2,*" %%a in ("!all_args!") do set "PS_ARGS=%%b"
+
+set "LS_HELPER_BIN="
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\win32\build_helper.cmd" :resolve_helper ls-elevate
+if not errorlevel 1 if not "!LS_HELPER_BIN!"=="" (
+    "!LS_HELPER_BIN!" "!CMD_TO_RUN!" !PS_ARGS!
+    exit /b !errorlevel!
+)
+
+where powershell >nul 2>&1
+if not errorlevel 1 (
+    powershell -NoProfile -Command "Start-Process -FilePath '!CMD_TO_RUN!' -ArgumentList '!PS_ARGS!' -Verb RunAs -Wait"
+    exit /b !errorlevel!
+)
+echo [ERROR] Cannot elevate '!CMD_TO_RUN!': ls-elevate.exe and PowerShell are unavailable. 1>&2
+exit /b 1
 
 :: -----------------------------------------------------------------------------
 :: :priv_as <user> <command> [args...]

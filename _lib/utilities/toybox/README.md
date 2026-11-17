@@ -51,6 +51,7 @@ running the setup script.
 | `TOYBOX_VERSION`        | Specific version of toybox to install (e.g., 0.8.15 on Windows/MS-DOS or latest).                                                                                                                 | `latest`           | latest, lts      |
 | `TOYBOX_DOWNLOAD_URL`   | Override URL for downloading toybox binary or archive artifacts.                                                                                                                                  | `none`             |                  |
 | `TOYBOX_RELEASES_URL`   | Override URL for querying toybox available remote releases.                                                                                                                                       | `none`             |                  |
+| `TOYBOX_INSTALL_SHIMS`  | When set to '1', materializes per-applet hardlinks or .bat/.exe trampolines in bin/ when freebsd-usr-bin is not installed.                                                                        | `0`                |                  |
 
 Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`,
 and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.

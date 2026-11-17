@@ -60,6 +60,6 @@ if exist "%LIBSCRIPT_HOME%\msi-rs\%EXACT_VER%" rmdir /s /q "%LIBSCRIPT_HOME%\msi
 if exist "%LIBSCRIPT_HOME%\msi-rs\%VER%" rmdir /s /q "%LIBSCRIPT_HOME%\msi-rs\%VER%" 2>nul
 if exist "%LIBSCRIPT_HOME%\msi-rs\default" rmdir /s /q "%LIBSCRIPT_HOME%\msi-rs\default" 2>nul
 
-if exist "%~dp0\..\..\_common\uninstall_generic.cmd" (
-    call "%~dp0\..\..\_common\uninstall_generic.cmd" %*
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" %*
 )

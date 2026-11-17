@@ -59,10 +59,18 @@ if "!_URL!"=="" exit /b 1
 
 for %%F in ("!_URL!") do set "_FILENAME=%%~nxF"
 
-if exist "!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt" (
-    for /f "tokens=1,2" %%A in ('findstr /I /C:"!_FILENAME!" "!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt" 2^>nul') do (
-        if not "%%A"=="" (
-            echo %%A
+set "_FC_DB=%LIBSCRIPT_CHECKSUM_DB%"
+if "!_FC_DB!"=="" set "_FC_DB=!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt"
+if exist "!_FC_DB!" (
+    for /f "tokens=1,2" %%A in ('findstr /I /C:"!_URL!" "!_FC_DB!" 2^>nul') do (
+        if not "%%B"=="" (
+            echo %%B
+            exit /b 0
+        )
+    )
+    for /f "tokens=1,2" %%A in ('findstr /I /C:"!_FILENAME!" "!_FC_DB!" 2^>nul') do (
+        if not "%%B"=="" (
+            echo %%B
             exit /b 0
         )
     )

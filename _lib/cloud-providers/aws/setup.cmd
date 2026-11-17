@@ -73,7 +73,7 @@ if /i "%ACTION%"=="register-image" goto do_register_image
 if /i "%ACTION%"=="--register-image" goto do_register_image
 if /i "%ACTION%"=="image" goto do_register_image
 
-call "%~dp0\..\..\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_register_image

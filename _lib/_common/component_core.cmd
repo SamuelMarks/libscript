@@ -3,7 +3,7 @@
 :: ## Overview
 :: Unified CLI routing and lifecycle management for Windows components. Mirrors component_core.sh with full argument parsing, automated dependency resolution, and Version Manager Contract verb support.
 :: ## Usage
-:: call "%~dp0\..\..\_common\component_core.cmd" %*
+:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 
 setlocal EnableDelayedExpansion
 set "CALLER_FILE=!THIS_FILE!"

@@ -31,23 +31,49 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # versioning.sh
 # Common utilities for managing native libscript installations and version aliases.
 
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos_83.sh" ]; then
+  _ver_d83_this="${THIS_FILE}"
+  _ver_d83_dir="${SCRIPT_DIR}"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos_83.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+  unset SCRIPT_NAME || true
+  THIS_FILE="${_ver_d83_this}"
+  SCRIPT_DIR="${_ver_d83_dir}"
+  unset _ver_d83_this _ver_d83_dir || true
+fi
+
 # ## libscript_get_version_dir
 # Resolves and prints the installation directory path for a specific component version.
 libscript_get_version_dir() {
   component="$1"
   version="$2"
-  printf '%s\n' "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${component}/${version}"
+  _gvd_home=$(libscript_dos83_home)
+  _gvd_comp=$(libscript_dos83_comp "${component}")
+  _gvd_ver=$(libscript_dos83_ver "${version}")
+  printf '%s\n' "${_gvd_home}/${_gvd_comp}/${_gvd_ver}"
 }
 
 # ## libscript_sync_active_bin
 # Atomically synchronizes executable symlinks in LIBSCRIPT_HOME/bin for a component's active default version.
 libscript_sync_active_bin() {
-  _sab_comp="$1"
-  _sab_home="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}"
+  _sab_orig_comp="$1"
+  _sab_comp=$(libscript_dos83_comp "${_sab_orig_comp}")
+  _sab_home=$(libscript_dos83_home)
   _sab_def_bin="${_sab_home}/${_sab_comp}/default/bin"
+  if [ ! -d "${_sab_def_bin}" ] && [ -f "${_sab_home}/${_sab_comp}/ACTIVE.VER" ]; then
+    _sab_act_v=$(head -n 1 "${_sab_home}/${_sab_comp}/ACTIVE.VER" | tr -d '\r\n')
+    [ -n "${_sab_act_v}" ] && _sab_def_bin="${_sab_home}/${_sab_comp}/${_sab_act_v}/bin"
+  fi
   _sab_bin_dir="${_sab_home}/bin"
-  _sab_owners_dir="${_sab_home}/.bin_owners"
-  _sab_owner_file="${_sab_owners_dir}/${_sab_comp}.list"
+  if libscript_dos83_enabled; then
+    _sab_owners_dir="${_sab_home}/BINOWNER"
+    _sab_owner_file="${_sab_owners_dir}/${_sab_comp}.LST"
+  else
+    _sab_owners_dir="${_sab_home}/.bin_owners"
+    _sab_owner_file="${_sab_owners_dir}/${_sab_comp}.list"
+  fi
 
   mkdir -p "${_sab_bin_dir}" "${_sab_owners_dir}"
 
@@ -60,20 +86,24 @@ libscript_sync_active_bin() {
     done < "${_sab_owner_file}"
   fi
 
-  : > "${_sab_owner_file}.tmp"
+  : > "${_sab_owner_file}.TMP"
   if [ -d "${_sab_def_bin}" ]; then
     set +f
     for _sab_entry in "${_sab_def_bin}"/*; do
       [ -e "${_sab_entry}" ] || continue
-      if [ -x "${_sab_entry}" ] && [ ! -d "${_sab_entry}" ]; then
+      if { [ -x "${_sab_entry}" ] || [ "${IS_MSDOS:-0}" = '1' ]; } && [ ! -d "${_sab_entry}" ]; then
         _sab_bname=$(basename -- "${_sab_entry}")
-        ln -sf "../${_sab_comp}/default/bin/${_sab_bname}" "${_sab_bin_dir}/${_sab_bname}"
-        printf '%s\n' "${_sab_bname}" >> "${_sab_owner_file}.tmp"
+        if [ "${LIBSCRIPT_DOS_83:-0}" = '1' ]; then
+          cp -f "${_sab_entry}" "${_sab_bin_dir}/${_sab_bname}"
+        else
+          ln -sf "${_sab_entry}" "${_sab_bin_dir}/${_sab_bname}"
+        fi
+        printf '%s\n' "${_sab_bname}" >> "${_sab_owner_file}.TMP"
       fi
     done
     set -f
   fi
-  mv "${_sab_owner_file}.tmp" "${_sab_owner_file}"
+  mv "${_sab_owner_file}.TMP" "${_sab_owner_file}"
 }
 
 # ## libscript_cleanup_active_bin
@@ -207,25 +237,38 @@ libscript_resolve_workspace_version() {
 # ## libscript_symlink_alias
 # Updates the default or named version symlink/junction to point to the target version.
 libscript_symlink_alias() {
-  component="$1"
+  _sa_orig_comp="$1"
   alias_name="$2"
-  exact_version="$3"
+  _sa_orig_ver="$3"
+  _sa_home=$(libscript_dos83_home)
+  component=$(libscript_dos83_comp "${_sa_orig_comp}")
+  exact_version=$(libscript_dos83_ver "${_sa_orig_ver}")
   
-  base_dir="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/${component}"
+  base_dir="${_sa_home}/${component}"
   mkdir -p "${base_dir}"
+  libscript_dos83_link_compat "${_sa_home}" "${_sa_orig_comp}" "${component}"
   
-  if [ "${alias_name}" != "${exact_version}" ]; then
+  if [ "${LIBSCRIPT_DOS_83:-0}" = '1' ]; then
+    _sa_alias_83=$(libscript_dos83_ver "${alias_name}")
+    printf '%s\n' "${exact_version}" > "${base_dir}/${_sa_alias_83}.VER"
+    if [ "${alias_name}" = 'default' ]; then
+      printf '%s\n' "${exact_version}" > "${base_dir}/ACTIVE.VER"
+    fi
+  elif [ "${alias_name}" != "${exact_version}" ]; then
     if [ -L "${base_dir}/${alias_name}" ] || [ -f "${base_dir}/${alias_name}" ]; then
       rm -f "${base_dir}/${alias_name}"
     elif [ -d "${base_dir}/${alias_name}" ]; then
       rm -rf "${base_dir:?}/${alias_name:?}"
     fi
     if ! (cd "${base_dir}" && ln -sfn "${exact_version}" "${alias_name}" 2>/dev/null); then
-      (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}")
+      (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}" 2>/dev/null) || printf '%s\n' "${exact_version}" > "${base_dir}/${alias_name}.ver"
+    fi
+    if [ "${IS_MSDOS:-0}" = '1' ] && [ "${alias_name}" = 'default' ]; then
+      printf '%s\n' "${exact_version}" > "${base_dir}/ACTIVE.VER"
     fi
   fi
   if [ "${alias_name}" = "default" ]; then
-    libscript_sync_active_bin "${component}"
+    libscript_sync_active_bin "${_sa_orig_comp}"
   fi
 }
 

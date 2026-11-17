@@ -50,4 +50,4 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=wayland-protocols"
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*

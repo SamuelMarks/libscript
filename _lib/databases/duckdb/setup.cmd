@@ -51,4 +51,4 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=duckdb"
-call "%~dp0\..\..\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*

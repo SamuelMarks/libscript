@@ -65,90 +65,128 @@ goto :eof
 :: ## libscript_get_version_dir
 :: Resolves and prints the installation directory path for a specific component version.
 :libscript_get_version_dir
-set "component=%~1"
-set "version=%~2"
-if "%LIBSCRIPT_HOME%"=="" (
-    set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"
-) else (
-    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
-)
-set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_BASE_DIR%\%component%\%version%"
-echo %LIBSCRIPT_VERSION_DIR%
+set "_gvd_in_c=%~1"
+set "_gvd_in_v=%~2"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_home >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "!_gvd_in_c!" >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_ver "!_gvd_in_v!" >nul
+set "LIBSCRIPT_VERSION_DIR=!DOS83_HOME!\!DOS83_COMP!\!DOS83_VER!"
+echo !LIBSCRIPT_VERSION_DIR!
 endlocal & set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_VERSION_DIR%"
 exit /b 0
 
 :: ## libscript_symlink_alias
 :: Updates the default or named version symlink/junction to point to the target version.
 :libscript_symlink_alias
-set "component=%~1"
+set "_sa_orig_comp=%~1"
 set "alias_name=%~2"
-set "exact_version=%~3"
+set "_sa_orig_ver=%~3"
 
-if "%alias_name%"=="%exact_version%" goto :eof
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_home >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "!_sa_orig_comp!" >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_ver "!_sa_orig_ver!" >nul
+set "LIBSCRIPT_BASE_DIR=!DOS83_HOME!"
+set "component=!DOS83_COMP!"
+set "exact_version=!DOS83_VER!"
 
-if "%LIBSCRIPT_HOME%"=="" (
-    set "LIBSCRIPT_BASE_DIR=%USERPROFILE%\.libscript"
-) else (
-    set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
-)
+if "%alias_name%"=="%exact_version%" if not "%LIBSCRIPT_DOS_83%"=="1" goto :eof
+
 set "base_dir=%LIBSCRIPT_BASE_DIR%\%component%"
-
 if not exist "%base_dir%" mkdir "%base_dir%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_link_compat "!LIBSCRIPT_BASE_DIR!" "!_sa_orig_comp!" "!component!"
 
 set "alias_path=%base_dir%\%alias_name%"
 set "exact_path=%base_dir%\%exact_version%"
 
+if "%LIBSCRIPT_DOS_83%"=="1" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_ver "%alias_name%" >nul
+    > "%base_dir%\!DOS83_VER!.VER" echo %exact_version%
+    if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo %exact_version%
+    if /i "%alias_name%"=="default" call :libscript_sync_active_bin "!_sa_orig_comp!"
+    goto :eof
+)
+
 if exist "%alias_path%" (
-    dir /al "%alias_path%" >nul 2>&1
+    set "_IS_JUNCTION=0"
+    where fsutil >nul 2>&1
     if not errorlevel 1 (
+        fsutil reparsepoint query "%alias_path%" >nul 2>&1
+        if not errorlevel 1 set "_IS_JUNCTION=1"
+    )
+    if "!_IS_JUNCTION!"=="0" (
+        dir /al "%base_dir%" 2>nul | findstr /I /C:"%alias_name%" >nul 2>&1
+        if not errorlevel 1 set "_IS_JUNCTION=1"
+    )
+    if "!_IS_JUNCTION!"=="1" (
         rmdir "%alias_path%" >nul 2>&1
     ) else (
         dir /b "%alias_path%" 2>nul | findstr "." >nul 2>&1
         if errorlevel 1 rmdir "%alias_path%" >nul 2>&1
     )
 )
-if not exist "%alias_path%" mklink /J "%alias_path%" "%exact_path%" >nul
-if /i "%alias_name%"=="default" call :libscript_sync_active_bin "%component%"
+if "%IS_MSDOS%"=="1" (
+    > "%base_dir%\%alias_name%.ver" echo %exact_version%
+    if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo %exact_version%
+    mklink /J "%alias_path%" "%exact_path%" >nul 2>&1
+) else if not exist "%alias_path%" (
+    mklink /J "%alias_path%" "%exact_path%" >nul 2>&1
+    if errorlevel 1 (
+        > "%base_dir%\%alias_name%.ver" echo %exact_version%
+        if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo %exact_version%
+    )
+)
+if /i "%alias_name%"=="default" call :libscript_sync_active_bin "!_sa_orig_comp!"
 goto :eof
 
 :: ## libscript_sync_active_bin
-:: Synchronizes .cmd shim dispatchers in LIBSCRIPT_HOME\bin for a component's active default version.
+:: Synchronizes .cmd/.bat shim dispatchers in LIBSCRIPT_HOME\bin for a component's active default version.
 :libscript_sync_active_bin
-set "_sab_comp=%~1"
-if "%LIBSCRIPT_HOME%"=="" (
-    set "_sab_home=%USERPROFILE%\.libscript"
-) else (
-    set "_sab_home=%LIBSCRIPT_HOME%"
-)
+set "_sab_in_c=%~1"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_home >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "!_sab_in_c!" >nul
+set "_sab_home=!DOS83_HOME!"
+set "_sab_comp=!DOS83_COMP!"
 set "_sab_bin=!_sab_home!\bin"
-set "_sab_owners=!_sab_home!\.bin_owners"
-set "_sab_owner_file=!_sab_owners!\!_sab_comp!.list"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_enabled
+if not errorlevel 1 (
+    set "_sab_owners=!_sab_home!\BINOWNER"
+    set "_sab_owner_file=!_sab_owners!\!_sab_comp!.LST"
+    set "_sab_shim_ext=.BAT"
+) else (
+    set "_sab_owners=!_sab_home!\.bin_owners"
+    set "_sab_owner_file=!_sab_owners!\!_sab_comp!.list"
+    set "_sab_shim_ext=.cmd"
+)
 if not exist "!_sab_bin!" mkdir "!_sab_bin!"
 if not exist "!_sab_owners!" mkdir "!_sab_owners!"
 
+set "_sab_ver_sub=default"
+if not exist "!_sab_home!\!_sab_comp!\default" if exist "!_sab_home!\!_sab_comp!\ACTIVE.VER" (
+    set /p _sab_ver_sub=<"!_sab_home!\!_sab_comp!\ACTIVE.VER"
+)
+
 if exist "!_sab_owner_file!" (
     for /f "usebackq delims=" %%O in ("!_sab_owner_file!") do (
-        if not exist "!_sab_home!\!_sab_comp!\default\bin\%%O.exe" if not exist "!_sab_home!\!_sab_comp!\default\bin\%%O.cmd" if not exist "!_sab_home!\!_sab_comp!\default\%%O.exe" (
-            if exist "!_sab_bin!\%%O.cmd" del /f /q "!_sab_bin!\%%O.cmd" >nul 2>&1
+        if not exist "!_sab_home!\!_sab_comp!\!_sab_ver_sub!\bin\%%O.exe" if not exist "!_sab_home!\!_sab_comp!\!_sab_ver_sub!\bin\%%O.cmd" if not exist "!_sab_home!\!_sab_comp!\!_sab_ver_sub!\%%O.exe" (
+            if exist "!_sab_bin!\%%O!_sab_shim_ext!" del /f /q "!_sab_bin!\%%O!_sab_shim_ext!" >nul 2>&1
         )
     )
 )
-type nul > "!_sab_owner_file!.tmp"
-for %%D in ("!_sab_home!\!_sab_comp!\default\bin" "!_sab_home!\!_sab_comp!\default") do (
+type nul > "!_sab_owner_file!.TMP"
+for %%D in ("!_sab_home!\!_sab_comp!\!_sab_ver_sub!\bin" "!_sab_home!\!_sab_comp!\!_sab_ver_sub!") do (
     if exist "%%~fD" (
         for %%E in ("%%~fD\*.exe" "%%~fD\*.cmd" "%%~fD\*.bat") do (
             set "_shim_name=%%~nE"
             set "_shim_target=%%~fE"
             (
                 echo @echo off
-                echo "!_shim_target!" %%*
-                echo exit /b %%ERRORLEVEL%%
-            ) > "!_sab_bin!\!_shim_name!.cmd"
-            echo !_shim_name!>> "!_sab_owner_file!.tmp"
+                echo "!_shim_target!" %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9
+            ) > "!_sab_bin!\!_shim_name!!_sab_shim_ext!"
+            echo !_shim_name!>> "!_sab_owner_file!.TMP"
         )
     )
 )
-move /y "!_sab_owner_file!.tmp" "!_sab_owner_file!" >nul 2>&1
+move /y "!_sab_owner_file!.TMP" "!_sab_owner_file!" >nul 2>&1
 exit /b 0
 
 :: ## libscript_cleanup_active_bin

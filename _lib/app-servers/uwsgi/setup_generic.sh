@@ -103,12 +103,7 @@ case "$ACTION" in
           exit 0
         fi
       fi
-      if ! command -v uv >/dev/null 2>&1; then
-        if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
-          log_info 'Python runtime required for uwsgi. Installing python...'
-          libscript_depends 'python' || true
-        fi
-      fi
+      libscript_python_ensure_runtime
       if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
         libscript_depends 'c' || true
       fi

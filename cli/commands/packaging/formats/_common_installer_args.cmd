@@ -230,7 +230,7 @@ set "_UPGRADE_ID=%APP_NAME%|%_SVC_NAME%|x64"
 set "_PRODUCT_ID=%APP_NAME%|%_SVC_NAME%|x64|%APP_VERSION%"
 
 if "%UPGRADE_CODE%"=="PUT-GUID-HERE" (
-    for /f "usebackq tokens=*" %%G in (`powershell -NoProfile -Command "$b = [System.Text.Encoding]::UTF8.GetBytes('%_UPGRADE_ID%'); $h = [System.Security.Cryptography.SHA256]::Create().ComputeHash($b); $x = [System.BitConverter]::ToString($h).Replace('-', '').ToLower(); Write-Output ($x.Substring(0,8) + '-' + $x.Substring(8,4) + '-5' + $x.Substring(13,3) + '-a' + $x.Substring(17,3) + '-' + $x.Substring(20,12))"`) do set "UPGRADE_CODE=%%G"
+    for /f "usebackq tokens=*" %%G in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uuid_gen.cmd" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "%_UPGRADE_ID%"`) do set "UPGRADE_CODE=%%G"
 )
 
 exit /b 0

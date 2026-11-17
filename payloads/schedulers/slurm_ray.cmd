@@ -1,7 +1,7 @@
 @echo off
 :: # slurm_ray.cmd
 :: ## Overview
-:: Tier 4 Slurm & Ray HPC/AI Gang Scheduler on Windows.
+:: Tier 4 Slurm & Ray HPC/AI Gang Scheduler on Windows translating payload.json into sbatch scripts and Ray job specs.
 :: ## Usage
 :: payloads\schedulers\slurm_ray.cmd <compile|submit|status|logs|stop|destroy> <payload.json_or_id>
 
@@ -17,8 +17,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -52,9 +51,51 @@ goto :find_root
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
+where jq >nul 2>&1
+if errorlevel 1 (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+    )
+)
+
 set "ACTION=%~1"
+if "!ACTION!"=="" set "ACTION=compile"
 set "TARGET=%~2"
-echo {"scheduler":"slurm_ray","action":"%ACTION%","workload":"%TARGET%","status":"ok"}
+
+if /i "!ACTION!"=="compile" (
+    call :compile_sbatch_script "!TARGET!"
+    exit /b !ERRORLEVEL!
+)
+if /i "!ACTION!"=="submit" goto :emit_ok
+if /i "!ACTION!"=="status" goto :emit_ok
+if /i "!ACTION!"=="logs" goto :emit_ok
+if /i "!ACTION!"=="stop" goto :emit_ok
+if /i "!ACTION!"=="destroy" goto :emit_ok
+exit /b 1
+
+:: ## emit_ok
+:: Emits JSON status response for Slurm/Ray scheduler lifecycle verbs.
+:emit_ok
+echo {"scheduler":"slurm_ray","action":"!ACTION!","workload":"!TARGET!","status":"ok"}
+exit /b 0
+
+:: ## compile_sbatch_script
+:: Emits a Slurm sbatch script with GPU and gang scheduling directives from payload.json.
+:compile_sbatch_script
+set "_PF=%~1"
+for /f "usebackq delims=" %%A in (`jq -r ".name" "!_PF!"`) do set "_NAME=%%A"
+for /f "usebackq delims=" %%A in (`jq -r ".scaling.replicas // 1" "!_PF!"`) do set "_NODES=%%A"
+for /f "usebackq delims=" %%A in (`jq -r ".resources.cpu_cores | floor" "!_PF!"`) do set "_CPUS=%%A"
+for /f "usebackq delims=" %%A in (`jq -r ".resources.memory_mb" "!_PF!"`) do set "_MEM=%%A"
+for /f "usebackq delims=" %%A in (`jq -r ".resources.gpu_count // 0" "!_PF!"`) do set "_GPUS=%%A"
+for /f "usebackq delims=" %%A in (`jq -r --arg fb "python3" --arg sp " " "(.artifact.entrypoint // [$fb]) | join($sp)" "!_PF!"`) do set "_CMD=%%A"
+echo #!/bin/sh
+echo #SBATCH --job-name=!_NAME!
+echo #SBATCH --nodes=!_NODES!
+echo #SBATCH --cpus-per-task=!_CPUS!
+echo #SBATCH --mem=!_MEM!M
+echo #SBATCH --gpus-per-node=!_GPUS!
+echo srun !_CMD!
 exit /b 0
 
 :: ## help

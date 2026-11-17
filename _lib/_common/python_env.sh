@@ -416,6 +416,25 @@ libscript_python_ensure_venv_owner() {
   fi
 }
 
+# ## libscript_python_ensure_runtime
+# Ensures either `uv` or a `python3` runtime with working `venv`/`ensurepip` support is installed via LibScript.
+libscript_python_ensure_runtime() {
+  if command -v uv >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v python3 >/dev/null 2>&1 && python3 -m ensurepip --version >/dev/null 2>&1; then
+    return 0
+  fi
+  if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
+    if type libscript_depends >/dev/null 2>&1; then
+      libscript_depends 'python' || true
+    else
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install python "${PYTHON_VERSION:-latest}" || true
+    fi
+  fi
+  return 0
+}
+
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
 [ -n "${_pe_caller_dir:-}" ] && SCRIPT_DIR="$_pe_caller_dir"

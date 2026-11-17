@@ -244,23 +244,24 @@ exit /b 0
 :after_args
 
 if "%TARGET_DIR%"=="" set "TARGET_DIR=_lib\web-apps\openedx"
+call :resolve_jq_bin
 set "STACK_NAME="
-if exist "%TARGET_DIR%\packaging.json" (
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "STACK_NAME=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.title) { $j.title.Replace('&', 'and') }"`) do set "APP_NAME=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.version) { $j.version }"`) do set "APP_VERSION=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.publisher) { $j.publisher.Replace('&', 'and') }"`) do set "APP_PUBLISHER=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.upgrade_code) { $j.upgrade_code }"`) do set "UPGRADE_CODE=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.app_default) { $j.directories.app_default }"`) do set "INSTALL_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.data_default) { $j.directories.data_default }"`) do set "DATA_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.logs_default) { $j.directories.logs_default }"`) do set "LOGS_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.icon) { $j.branding.icon }"`) do if not defined ICON_PATH set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_top) { $j.branding.banner_top }"`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_side) { $j.branding.banner_side }"`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.license_rtf) { $j.branding.license_rtf }"`) do if not defined LICENSE_PATH set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-) else if exist "%TARGET_DIR%\manifest.json" (
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\manifest.json' -Raw | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "STACK_NAME=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\manifest.json' -Raw | ConvertFrom-Json; if ($j.title) { $j.title.Replace('&', 'and') } elseif ($j.name) { $j.name }"`) do set "APP_NAME=%%A"
+if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".name // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "STACK_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "(.title // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "APP_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".version // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "APP_VERSION=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "(.publisher // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "APP_PUBLISHER=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".upgrade_code // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "UPGRADE_CODE=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".directories.app_default // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "INSTALL_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".directories.data_default // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "DATA_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".directories.logs_default // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LOGS_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.icon // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined ICON_PATH set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.banner_top // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.banner_side // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.license_rtf // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined LICENSE_PATH set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+) else if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\manifest.json" (
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".name // empty" "%TARGET_DIR%\manifest.json" 2^>nul`) do set "STACK_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "(.title // .name // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\manifest.json" 2^>nul`) do set "APP_NAME=%%A"
 )
 if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
 set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript\%STACK_NAME%\assets"
@@ -331,13 +332,13 @@ if not exist "!ICON_PATH!" (
 )
 if not exist "!BANNER_TOP_PATH!" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
-    set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
-    powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; $b = New-Object System.Drawing.Bitmap 493, 58; $b.Save('%TMP_BRANDING_DIR%\banner_top.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
+    if exist "%TMP_BRANDING_DIR%\banner_top.bmp" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
 )
 if not exist "!BANNER_SIDE_PATH!" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
-    set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
-    powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; $b = New-Object System.Drawing.Bitmap 164, 312; $b.Save('%TMP_BRANDING_DIR%\banner_side.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
+    if exist "%TMP_BRANDING_DIR%\banner_side.bmp" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
 )
 if not exist "!LICENSE_PATH!" set "LICENSE_PATH="
 
@@ -355,8 +356,8 @@ if /I "%VARIANT%"=="offline" (
     if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%CLEAN_BRANCH%-%TARGET_ARCH%-%VARIANT%"
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
     set "WELCOME_DESC="
-    if exist "%TARGET_DIR%\packaging.json" (
-        for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.wizard_copy -and $j.wizard_copy.welcome_description_offline) { $j.wizard_copy.welcome_description_offline }"`) do set "WELCOME_DESC=%%A"
+    if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
+        for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".wizard_copy.welcome_description_offline // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "WELCOME_DESC=%%A"
     )
     if "!WELCOME_DESC!"=="" set "WELCOME_DESC=The Setup Wizard will deploy %APP_NAME% and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
@@ -366,8 +367,8 @@ if /I "%VARIANT%"=="offline" (
     if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%CLEAN_BRANCH%-%TARGET_ARCH%-%VARIANT%"
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
     set "WELCOME_DESC="
-    if exist "%TARGET_DIR%\packaging.json" (
-        for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.wizard_copy -and $j.wizard_copy.welcome_description_online) { $j.wizard_copy.welcome_description_online }"`) do set "WELCOME_DESC=%%A"
+    if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
+        for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".wizard_copy.welcome_description_online // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "WELCOME_DESC=%%A"
     )
     if "!WELCOME_DESC!"=="" set "WELCOME_DESC=The Setup Wizard will download and install %APP_NAME% and required runtimes on your computer."
     set "COMP_TAG="
@@ -379,12 +380,12 @@ set "SHORTCUT_2_TEXT=Create %APP_NAME% management console shortcut"
 set "LAUNCH_1_TEXT=Launch %APP_NAME% in Web Browser"
 set "LAUNCH_2_TEXT=Launch %APP_NAME% Administration Dashboard"
 
-if exist "%TARGET_DIR%\packaging.json" (
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.wizard_copy -and $j.wizard_copy.exit_description) { $j.wizard_copy.exit_description }"`) do set "EXIT_DESC=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.shortcuts -and $j.shortcuts.Count -ge 1) { 'Create ' + $j.shortcuts[0].title + ' shortcut' }"`) do set "SHORTCUT_1_TEXT=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.shortcuts -and $j.shortcuts.Count -ge 2) { 'Create ' + $j.shortcuts[1].title + ' shortcut' }"`) do set "SHORTCUT_2_TEXT=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.browser_launch -and $j.browser_launch.targets -and $j.browser_launch.targets.Count -ge 1) { $j.browser_launch.targets[0].title }"`) do set "LAUNCH_1_TEXT=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.browser_launch -and $j.browser_launch.targets -and $j.browser_launch.targets.Count -ge 2) { $j.browser_launch.targets[1].title }"`) do set "LAUNCH_2_TEXT=%%A"
+if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".wizard_copy.exit_description // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "EXIT_DESC=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.shortcuts | length) >= 1 then \"Create \" + .shortcuts[0].title + \" shortcut\" else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "SHORTCUT_1_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.shortcuts | length) >= 2 then \"Create \" + .shortcuts[1].title + \" shortcut\" else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "SHORTCUT_2_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.browser_launch.targets | length) >= 1 then .browser_launch.targets[0].title else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LAUNCH_1_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.browser_launch.targets | length) >= 2 then .browser_launch.targets[1].title else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LAUNCH_2_TEXT=%%A"
 )
 
 set "WXS_FILE=%OUT_FILE%.wxs"
@@ -400,9 +401,8 @@ set "MULTI_LICENSE_EXEC_SEQ_FILE=%TMP_WORK_DIR%\multi_license_exec_seq.xml"
 set "LAST_LICENSE_DLG=Dlg_License"
 
 set "LICENSE_MODE=consolidated_eula"
-if exist "%TARGET_DIR%\packaging.json" (
-    powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding -and $j.branding.license_mode) { $j.branding.license_mode } else { 'consolidated_eula' }" > "%TMP_WORK_DIR%\lic_mode.txt" 2>nul
-    if exist "%TMP_WORK_DIR%\lic_mode.txt" set /p LICENSE_MODE=<"%TMP_WORK_DIR%\lic_mode.txt"
+if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
+    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.license_mode // \"consolidated_eula\"" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LICENSE_MODE=%%A"
 )
 
 if /I "%LICENSE_MODE%"=="chained_dialogs" (
@@ -558,8 +558,8 @@ setlocal DisableDelayedExpansion
     echo       ^</Directory^>
     echo     ^</Directory^>
 
-    echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" /^>
-    echo     ^<CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;foreach ($p in @(8000, 8001, 3306, 6379, 27017, 7700)) { try { $s = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $s.Close(); Write-Warning &quot;Port $p is currently occupied&quot; } catch {} }&quot;" Execute="immediate" Return="ignore" /^>
+    echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;curl.exe -fsSI --max-time 5 https://github.com &gt;nul 2&gt;&amp;1 &amp;&amp; curl.exe -fsSI --max-time 5 https://pypi.org &gt;nul 2&gt;&amp;1&quot;" Execute="immediate" Return="ignore" /^>
+    echo     ^<CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;for %%P in (8000 8001 3306 6379 27017 7700) do netstat -ano 2&gt;nul | findstr /R /C:&quot;:%%P .*LISTENING&quot; &gt;nul &amp;&amp; echo [WARN] Port %%P is currently occupied&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]\libscript\_lib\web-apps\openedx\status_runtimes.cmd runtimes/python ^&amp; [INSTALLFOLDER]\libscript\_lib\web-apps\openedx\status_runtimes.cmd runtimes/nodejs&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="CA_DetectDatabases" Directory="TARGETDIR" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]\libscript\_lib\web-apps\openedx\status_databases.cmd databases/mysql&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." /^>
@@ -1022,7 +1022,9 @@ if /I "%VARIANT%"=="offline" (
     if exist "%TARGET_DIR%\offline_bundle.json" (
         set "CACHE_FILE_COUNT=0"
         if exist "%CACHE_DIR%" (
-            for /f "usebackq delims=" %%C in (`powershell -NoProfile -Command "@(Get-ChildItem -Path '%CACHE_DIR%' -Recurse -File | Where-Object { $_.Name -ne 'manifest.json' -and $_.Name -ne 'checksums.sha256' }).Count"`) do set "CACHE_FILE_COUNT=%%C"
+            for /r "%CACHE_DIR%" %%C in (*) do (
+                if /i not "%%~nxC"=="manifest.json" if /i not "%%~nxC"=="checksums.sha256" set /a CACHE_FILE_COUNT+=1
+            )
         )
         if "!CACHE_FILE_COUNT!"=="0" (
             echo [INFO] Auto-hydrating offline cache for %STACK_NAME% from %TARGET_DIR%\offline_bundle.json...
@@ -1175,4 +1177,23 @@ del /f /q "%WXS_FILE%" >nul 2>&1
 del /f /q "%PAYLOAD_WXS%" >nul 2>&1
 del /f /q "%OUT_FILE%_payload.manifest" >nul 2>&1
 exit /b !ERR!
+
+:: ## resolve_jq_bin
+:: Locates or bootstraps jq.exe via LibScript component isolation.
+:resolve_jq_bin
+set "JQ_BIN="
+for %%J in (jq.exe jq) do if "!JQ_BIN!"=="" for /f "delims=" %%P in ('where %%J 2^>nul') do if "!JQ_BIN!"=="" set "JQ_BIN=%%P"
+if not "!JQ_BIN!"=="" exit /b 0
+set "_LS_H=%LIBSCRIPT_HOME%"
+if "!_LS_H!"=="" set "_LS_H=%USERPROFILE%\.libscript"
+if exist "!_LS_H!\jq\default\bin\jq.exe" (
+    set "JQ_BIN=!_LS_H!\jq\default\bin\jq.exe"
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" depends jq >nul 2>&1
+    if exist "!_LS_H!\jq\default\bin\jq.exe" set "JQ_BIN=!_LS_H!\jq\default\bin\jq.exe"
+)
+exit /b 0
 

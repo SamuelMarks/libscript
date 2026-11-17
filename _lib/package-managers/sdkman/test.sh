@@ -50,6 +50,7 @@ fi
 # Upstream SDKMAN (`sdkman-init.sh`) is authored exclusively for Bash/Zsh and is not POSIX /bin/sh compatible;
 # keep this test harness strictly POSIX /bin/sh and invoke `sdkman-init.sh` inside an isolated bash subshell only if present.
 if command -v bash >/dev/null 2>&1; then
+  # libscript-allow-upstream-bash: upstream sdkman-init.sh requires bash/zsh
   bash -c "set +u +e; export SDKMAN_DIR=\"\${LIBSCRIPT_HOME:-\$HOME/.libscript}/sdkman/latest\"; . \"\$SDKMAN_DIR/bin/sdkman-init.sh\"; sdk version"
 else
   printf '%s\n' 'sdkman requires bash, which is not available.'

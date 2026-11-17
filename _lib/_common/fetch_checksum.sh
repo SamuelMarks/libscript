@@ -46,6 +46,15 @@ libscript_fetch_checksum() {
     return 1
   fi
 
+  _fc_db="${LIBSCRIPT_CHECKSUM_DB:-${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt}"
+  if [ -f "$_fc_db" ]; then
+    _fc_local=$(grep -F "$url" "$_fc_db" 2>/dev/null | head -n 1 | awk '{print $2}' || true)
+    if [ -n "$_fc_local" ]; then
+      printf '%s\n' "$_fc_local"
+      return 0
+    fi
+  fi
+
   # 1. NodeJS
   if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
     base_url="${url%/*}"

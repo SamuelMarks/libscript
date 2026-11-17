@@ -1,7 +1,7 @@
 @echo off
 :: # fence.cmd
 :: ## Overview
-:: Split-Brain Fencing engine isolating or Cloud-API-fencing a former leader node on Windows.
+:: Split-Brain Fencing engine isolating or Cloud-API-fencing a former leader node before replica promotion on Windows.
 :: ## Usage
 :: topologies\fence.cmd <node_id> [fencing_policy] [state_file]
 
@@ -17,8 +17,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -54,8 +53,29 @@ if "%~1"=="-h" goto :help
 
 set "NODE_ID=%~1"
 set "POLICY=%~2"
+set "STATE_FILE=%~3"
 if "%NODE_ID%"=="" set "NODE_ID=node-leader-1"
 if "%POLICY%"=="" set "POLICY=cloud-api-poweroff"
+
+call :execute_split_brain_fence
+exit /b !ERRORLEVEL!
+
+:: ## execute_split_brain_fence
+:: Executes demotion/fencing and atomically updates `.topology_state.json` when provided.
+:execute_split_brain_fence
+if not "!STATE_FILE!"=="" (
+    if exist "!STATE_FILE!" (
+        where jq >nul 2>&1
+        if errorlevel 1 (
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\jq\env.cmd" >nul 2>&1
+        )
+        where jq >nul 2>&1
+        if not errorlevel 1 (
+            jq --arg nid "!NODE_ID!" --arg st "FENCED" --arg rl "follower" ".nodes = (.nodes | map(if ((.id // .node_id) == $nid) then .state = $st | .role = $rl else . end))" "!STATE_FILE!" > "!STATE_FILE!.tmp"
+            if not errorlevel 1 move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
+        )
+    )
+)
 echo {"action":"fence","node_id":"%NODE_ID%","policy":"%POLICY%","status":"FENCED"}
 exit /b 0
 

@@ -122,6 +122,13 @@ if "!_HAS_SVC_DAEMON!"=="1" (
             set /a ERRORS+=1
         )
     )
+) else (
+    for %%F in (service.sh service.cmd) do (
+        if exist "!_CD!\%%F" (
+            echo [VM CONTRACT VIOLATION] [UNDECLARED_SERVICE_STUB] !_CD!: Defines %%F without service-daemon capability in manifest.json >&2
+            set /a ERRORS+=1
+        )
+    )
 )
 
 if exist "!_CD!\setup.cmd" (

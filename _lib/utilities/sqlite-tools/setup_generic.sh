@@ -117,7 +117,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite-tools/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'sqlite-tools' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -139,7 +139,7 @@ case "$ACTION" in
   install)
     if [ "${SQLITE_TOOLS_INSTALL_METHOD}" = "from-source" ]; then
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite-tools/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'sqlite-tools' "${EXACT_VERSION}")
       _def_src_url='https://www.sqlite.org/2024/sqlite-autoconf-{VERSION}.tar.gz'
       SRC_URL="${SQLITE_TOOLS_DOWNLOAD_URL:-${_def_src_url}}"
       SRC_URL=$(resolve_artifact_url "$SRC_URL")
@@ -152,7 +152,7 @@ case "$ACTION" in
       libscript_depends_via "${SQLITE_TOOLS_INSTALL_METHOD}" 'sqlite-tools'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/sqlite-tools/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'sqlite-tools' "${EXACT_VERSION}")
       if [ -x "${TARGET_DIR}/bin/sqlite3" ] && [ "${FORCE_REINSTALL:-0}" != "1" ]; then
         printf '[INFO] %s %s is already installed at %s.\n' 'sqlite-tools' "${EXACT_VERSION}" "${TARGET_DIR}"
         libscript_symlink_alias 'sqlite-tools' "${VERSION}" "${EXACT_VERSION}"
@@ -218,6 +218,12 @@ case "$ACTION" in
       if [ ! -x "$TARGET_DIR/bin/sqlite3" ] && [ -f "$TARGET_DIR/sqlite3" ]; then
         chmod +x "$TARGET_DIR/sqlite3"
         ln -sf "../sqlite3" "$TARGET_DIR/bin/sqlite3"
+      fi
+      if [ ! -f "$TARGET_DIR/bin/sqlite3.exe" ] && [ -f "$TARGET_DIR/sqlite3.exe" ]; then
+        mv -f "$TARGET_DIR/sqlite3.exe" "$TARGET_DIR/bin/sqlite3.exe"
+      fi
+      if [ -f "$TARGET_DIR/DOS32A.EXE" ] && [ ! -f "$TARGET_DIR/bin/DOS32A.EXE" ]; then
+        mv -f "$TARGET_DIR/DOS32A.EXE" "$TARGET_DIR/bin/DOS32A.EXE"
       fi
       if [ ! -x "$TARGET_DIR/bin/sqlite3" ]; then
         for _entry in $(ls -1 "$TARGET_DIR" 2>/dev/null || true); do

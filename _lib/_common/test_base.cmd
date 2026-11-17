@@ -3,7 +3,7 @@
 :: ## Overview
 :: Standardized entrypoint for component testing on Windows. Resolves root, sets paths, and provides assertion helpers.
 :: ## Usage
-:: Your component's `test.cmd` should call this. ```batch @echo off call "%~dp0\..\..\..\_lib\_common\test_base.cmd" ```
+:: Your component's `test.cmd` should call this. ```batch @echo off call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\test_base.cmd" ```
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

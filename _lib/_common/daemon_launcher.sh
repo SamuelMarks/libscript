@@ -72,6 +72,19 @@ is_port_listening() {
   return 1
 }
 
+if [ "${IS_MSDOS:-0}" = '1' ] || [ "${TARGET_OS:-}" = 'msdos' ] || [ "${LIBSCRIPT_TARGET_OS:-}" = 'msdos' ]; then
+  if [ -z "$DATA_DIR" ]; then
+    DATA_DIR="${LIBSCRIPT_HOME:-/tmp/libscrip}/RUN"
+  fi
+  mkdir -p "$DATA_DIR"
+  if [ "${LIBSCRIPT_MSDOS_FOREGROUND:-0}" = '1' ] && [ -n "$EXECUTABLE" ] && [ -x "$EXECUTABLE" ]; then
+    "$EXECUTABLE"
+    exit $?
+  fi
+  printf '%s\n' '[INFO] [MS-DOS] Single-tasking mode: skipping detached background daemon launch.'
+  exit 0
+fi
+
 if [ "$PORT" -gt 0 ] 2>/dev/null && is_port_listening "$PORT"; then
   exit 0
 fi

@@ -118,17 +118,74 @@ if not "%COMP_CSV%"=="" (
     )
 )
 
-echo staged> "!STAMP_FILE!"
+call :verify_pe_tree "!SYSROOT!\iso_root" "!TARGET_ARCH!"
+if errorlevel 1 exit /b 1
+
+echo staged> "!STAMP_FILE!.tmp"
+move /y "!STAMP_FILE!.tmp" "!STAMP_FILE!" >nul
 echo [OK]       ReactOS default apps ^& packages staged ^(arch=!TARGET_ARCH!^).
 exit /b 0
 
+:: ## verify_pe_tree
+:: Recursively verifies all .exe and .dll binaries under a sysroot directory match the expected PE architecture.
+:verify_pe_tree
+set "_VT_DIR=%~1"
+set "_VT_ARCH=%~2"
+if not exist "!_VT_DIR!" exit /b 0
+set "_VT_FAIL=0"
+for /r "!_VT_DIR!" %%F in (*.exe *.dll) do (
+    call :check_pe_arch "%%~fF" "!_VT_ARCH!"
+    if errorlevel 1 (
+        echo [ERROR]    PE architecture mismatch in ReactOS payload ^(expected !_VT_ARCH!^): %%~fF 1>&2
+        set "_VT_FAIL=1"
+    )
+)
+exit /b !_VT_FAIL!
+
 :: ## check_pe_arch
-:: Inspects PE header Machine field (0x014c vs 0x8664) when PowerShell is available on the Windows build host.
+:: Inspects PE COFF Machine field (0x014c vs 0x8664 vs 0xaa64) via C89 ls-pe-arch helper or file.exe / toybox without PowerShell.
 :check_pe_arch
 set "_PEF=%~1"
 set "_EXP=%~2"
 if not exist "!_PEF!" exit /b 0
-where powershell >nul 2>&1
+set "LS_HELPER_BIN="
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\win32\build_helper.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\win32\build_helper.cmd" ls-pe-arch >nul 2>&1
+)
+if not "!LS_HELPER_BIN!"=="" if exist "!LS_HELPER_BIN!" (
+    "!LS_HELPER_BIN!" "!_PEF!" "!_EXP!" >nul 2>&1
+    exit /b !errorlevel!
+)
+set "_FILE_CMD="
+where file.exe >nul 2>&1
+if not errorlevel 1 set "_FILE_CMD=file.exe"
+if "!_FILE_CMD!"=="" (
+    set "_TB_HOME=%LIBSCRIPT_HOME%"
+    if "!_TB_HOME!"=="" set "_TB_HOME=%USERPROFILE%\.libscript"
+    if exist "!_TB_HOME!\freebsd-usr-bin\default\bin\file.exe" set "_FILE_CMD="!_TB_HOME!\freebsd-usr-bin\default\bin\file.exe""
+    if "!_FILE_CMD!"=="" if exist "!_TB_HOME!\toybox\default\bin\toybox.exe" set "_FILE_CMD="!_TB_HOME!\toybox\default\bin\toybox.exe" file"
+)
+if "!_FILE_CMD!"=="" exit /b 0
+set "_NORM_EXP=!_EXP!"
+if /I "!_NORM_EXP!"=="amd64" set "_NORM_EXP=x86_64"
+if /I "!_NORM_EXP!"=="x64" set "_NORM_EXP=x86_64"
+if /I "!_NORM_EXP!"=="x86" set "_NORM_EXP=i686"
+if /I "!_NORM_EXP!"=="i386" set "_NORM_EXP=i686"
+if /I "!_NORM_EXP!"=="aarch64" set "_NORM_EXP=arm64"
+set "_DESC="
+for /f "delims=" %%L in ('!_FILE_CMD! "!_PEF!" 2^>nul') do set "_DESC=%%L"
+echo "!_DESC!" | findstr /I /C:"PE32" >nul 2>&1
 if errorlevel 1 exit /b 0
-powershell -NoProfile -Command "$b=[IO.File]::ReadAllBytes('!_PEF!'); if($b.Length -ge 64 -and $b[0] -eq 77 -and $b[1] -eq 90){ $o=[BitConverter]::ToInt32($b,60); if($o -ge 0 -and ($o+6) -le $b.Length -and $b[$o] -eq 80 -and $b[$o+1] -eq 69){ $m=[BitConverter]::ToUInt16($b,$o+4); $a=if($m -eq 0x014c){'i686'}elseif($m -eq 0x8664){'x86_64'}else{'other'}; $e=if('!_EXP!' -eq 'amd64'){'x86_64'}else{'!_EXP!'}; if($a -ne $e){ exit 1 } } }"
-exit /b !errorlevel!
+if /I "!_NORM_EXP!"=="i686" (
+    echo "!_DESC!" | findstr /I /C:"PE32 executable" | findstr /I /C:"80386" >nul 2>&1
+    exit /b !errorlevel!
+)
+if /I "!_NORM_EXP!"=="x86_64" (
+    echo "!_DESC!" | findstr /I /C:"PE32+ executable" | findstr /I /C:"x86-64" >nul 2>&1
+    exit /b !errorlevel!
+)
+if /I "!_NORM_EXP!"=="arm64" (
+    echo "!_DESC!" | findstr /I "Aarch64 ARM64" >nul 2>&1
+    exit /b !errorlevel!
+)
+exit /b 0

@@ -1,7 +1,8 @@
 @echo off
 :: # envsubst_safe.cmd
 :: ## Overview
-:: Safe Windows Batch alternative to `envsubst`. Interpolates `${VAR}` and `$VAR` tokens from the current environment while leaving undefined variable references intact instead of replacing them with empty strings.
+:: Safe Windows Batch alternative to `envsubst` powered by native `gawk`/`awk` (with PowerShell fallback).
+:: Interpolates `${VAR}` and `$VAR` tokens from the current environment while leaving undefined variable references intact.
 :: ## Usage
 :: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\envsubst_safe.cmd" "<template_or_file>" [output_file]
 
@@ -16,8 +17,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:!THIS_FILE!:"
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -55,6 +55,30 @@ if /i "%~1"==":envsubst_safe" (
 call :envsubst_safe "%~1" "%~2"
 exit /b !errorlevel!
 
+:: ## resolve_awk
+:: Locates gawk or awk on PATH or from the isolated LibScript gawk environment.
+:resolve_awk
+set "_ES_AWK="
+where gawk >nul 2>&1
+if not errorlevel 1 (
+    set "_ES_AWK=gawk"
+    exit /b 0
+)
+where awk >nul 2>&1
+if not errorlevel 1 (
+    set "_ES_AWK=awk"
+    exit /b 0
+)
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\gawk\env.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\gawk\env.cmd" >nul 2>&1
+    where gawk >nul 2>&1
+    if not errorlevel 1 (
+        set "_ES_AWK=gawk"
+        exit /b 0
+    )
+)
+exit /b 1
+
 :: ## envsubst_safe
 :: Performs safe environment variable interpolation on a file or string.
 :envsubst_safe
@@ -64,6 +88,60 @@ if "!_ES_IN!"=="" (
     echo No input provided. 1>&2
     exit /b 2
 )
+
+call :resolve_awk
+if defined _ES_AWK (
+    set "_ES_PROG=%TEMP%\ls_es_%RANDOM%_%RANDOM%.awk"
+    (
+        echo BEGIN { for ^(n in ENVIRON^) env[n] = ENVIRON[n] }
+        echo {
+        echo   line = $0; pos = 1
+        echo   while ^(pos ^<= length^(line^)^) {
+        echo     if ^(substr^(line, pos, 2^) == "${"^) {
+        echo       if ^(match^(substr^(line, pos^), /^\$\{[A-Za-z_][A-Za-z0-9_]*\}/^)^) {
+        echo         v = substr^(line, pos, RLENGTH^)
+        echo         vn = substr^(v, 3, length^(v^) - 3^)
+        echo         rep = ^(vn in env^) ? env[vn] : v
+        echo         line = substr^(line, 1, pos - 1^) rep substr^(line, pos + RLENGTH^)
+        echo         pos += length^(rep^)
+        echo         continue
+        echo       }
+        echo     } else if ^(substr^(line, pos, 1^) == "$"^) {
+        echo       if ^(match^(substr^(line, pos^), /^\$[A-Za-z_][A-Za-z0-9_]*/^)^) {
+        echo         v = substr^(line, pos, RLENGTH^)
+        echo         vn = substr^(v, 2^)
+        echo         rep = ^(vn in env^) ? env[vn] : v
+        echo         line = substr^(line, 1, pos - 1^) rep substr^(line, pos + RLENGTH^)
+        echo         pos += length^(rep^)
+        echo         continue
+        echo       }
+        echo     }
+        echo     pos++
+        echo   }
+        echo   print line
+        echo }
+    ) > "!_ES_PROG!"
+    if exist "!_ES_IN!" (
+        if "!_ES_OUT!"=="" (
+            "!_ES_AWK!" -f "!_ES_PROG!" "!_ES_IN!"
+        ) else (
+            "!_ES_AWK!" -f "!_ES_PROG!" "!_ES_IN!" > "!_ES_OUT!"
+        )
+    ) else (
+        set "_ES_SRC=%TEMP%\ls_es_in_%RANDOM%_%RANDOM%.txt"
+        echo !_ES_IN!> "!_ES_SRC!"
+        if "!_ES_OUT!"=="" (
+            "!_ES_AWK!" -f "!_ES_PROG!" "!_ES_SRC!"
+        ) else (
+            "!_ES_AWK!" -f "!_ES_PROG!" "!_ES_SRC!" > "!_ES_OUT!"
+        )
+        del /f /q "!_ES_SRC!" >nul 2>&1
+    )
+    set "_ES_RC=!ERRORLEVEL!"
+    del /f /q "!_ES_PROG!" >nul 2>&1
+    exit /b !_ES_RC!
+)
+
 where powershell >nul 2>&1
 if not errorlevel 1 (
     if exist "!_ES_IN!" (
@@ -77,6 +155,7 @@ if not errorlevel 1 (
     )
     exit /b 0
 )
+
 if exist "!_ES_IN!" (
     if "!_ES_OUT!"=="" (
         type "!_ES_IN!"

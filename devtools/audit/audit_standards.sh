@@ -151,7 +151,7 @@ audit_single_file() {
           shebang_count++
           shebang_lines = (shebang_lines ? shebang_lines ", " : "") NR
         }
-        if ($0 !~ /^[[:space:]]*#/ && $0 ~ /(^|[[:space:];|&(])mkdir[[:space:]]+[^-\r\n]/ && tolower($0) !~ /lock|while|if[[:space:]]+!|if[[:space:]]+not[[:space:]]+exist|vagrant[[:space:]]+ssh/) {
+        if ($0 !~ /^[[:space:]]*#/ && ($0 ~ /(^|[[:space:];|&(])mkdir[[:space:]]+[^-\r\n]/ || ($0 ~ /(^|[[:space:];|&(])(priv[[:space:]]+)?mkdir[[:space:]]+-m[[:space:]]+/ && $0 !~ /[[:space:]]-[a-zA-Z]*p/)) && tolower($0) !~ /lock|while|if[[:space:]]+!|if[[:space:]]+not[[:space:]]+exist|vagrant[[:space:]]+ssh/) {
           mkdir_hits = (mkdir_hits ? mkdir_hits "; " : "") NR ":" $0
         }
         if ($0 !~ /^[[:space:]]*#/ && $0 ~ /(^|[[:space:];|&(])ln[[:space:]]+-s[[:space:]]+[^-\r\n]/) {
@@ -662,6 +662,9 @@ audit_single_file() {
         if ($0 ~ /SCRIPT_DIR[%!][^\\\/"[:space:])]/) {
           script_dir_hits = (script_dir_hits ? script_dir_hits "; " : "") NR ":" $0
         }
+        if (index($0, "%~dp0\\") > 0) {
+          dp0_double_bs_hits = (dp0_double_bs_hits ? dp0_double_bs_hits "; " : "") NR ":" $0
+        }
         if ($0 ~ /SCRIPT_DIR:~-1(%|!)""==""/ || $0 ~ /SCRIPT_DIR:~-1%"==""/ || index($0, "SCRIPT_DIR:~-1%\"==\"\\\\\"") > 0) {
           bad_script_dir_strip = (bad_script_dir_strip ? bad_script_dir_strip "; " : "") NR ":" $0
         }
@@ -747,6 +750,7 @@ audit_single_file() {
         if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir in batch script: " mkdir_hits
         if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
         if (script_dir_hits != "") print "BATCH_SCRIPT_DIR_SEPARATOR|Missing backslash after SCRIPT_DIR: " script_dir_hits
+        if (dp0_double_bs_hits != "") print "BATCH_DP0_DOUBLE_BACKSLASH|Double backslash %~dp0\\ found (use !LIBSCRIPT_ROOT_DIR! or !SCRIPT_DIR!\\): " dp0_double_bs_hits
         if (bad_script_dir_strip != "") print "BATCH_SCRIPT_DIR_STRIP|Corrupted SCRIPT_DIR:~-1 backslash check: " bad_script_dir_strip
         if (tab_path_hits != "") print "BATCH_TAB_CORRUPTION|Literal TAB character in path variable expansion: " tab_path_hits
         if (endlocal_delayed_hits != "") print "BATCH_ENDLOCAL_DELAYED|Delayed expansion !PATH! inside endlocal block: " endlocal_delayed_hits
@@ -872,12 +876,13 @@ audit_single_file() {
       ;;
   esac
 
-  # 8c. Enforce Zero-Dependency Substrate in core orchestration (_lib/_common/, _lib/*/_common/, _lib/orchestration/, _lib/init-systems/, _lib/databases/, _lib/cloud/core/, cli/)
+  # 8c. Enforce Zero-Dependency Substrate across _lib/ and cli/ (excluding component test harnesses)
   case "$file" in
-    _lib/_common/*.sh|_lib/*/_common/*.sh|_lib/orchestration/*.sh|_lib/init-systems/*.sh|_lib/databases/*.sh|_lib/cloud/core/*.sh|cli/*.sh)
+    _lib/*/test*.sh) ;;
+    _lib/*.sh|cli/*.sh)
       interp_hits=$(grep -nE '(^[[:space:]]*|\$\()(python3?[[:space:]]+-c|node[[:space:]]+-e|perl[[:space:]]+-e|ruby[[:space:]]+-e)[[:space:]]|libscript-allow-interp' "$file" 2>/dev/null || true)
       if [ -n "$interp_hits" ]; then
-        log_failure "$file" "ZERO_DEP_SUBSTRATE" "Core orchestration script invokes external interpreter inline: $interp_hits"
+        log_failure "$file" "ZERO_DEP_SUBSTRATE" "Core or recipe script invokes external interpreter inline: $interp_hits"
       fi
       ;;
   esac
@@ -1083,14 +1088,20 @@ if [ "${1:-}" = "--all" ]; then
       log_failure "$_src_lib" "SOURCE_CONTEXT_SAFETY" "Sourced _common library must save and restore caller THIS_FILE / SCRIPT_DIR."
     fi
   done
-  # Enforce .sh <-> .cmd verb parity across domain engines
-  for _eng_pair in "topologies/engine:up status scale destroy" "payloads/engine:compile submit status logs stop destroy" "traits/engine:list enable disable apply verify teardown" "experiments/engine:list scaffold validate run render-latex update-readme"; do
+  # Enforce .sh <-> .cmd verb parity across domain engines (ignoring comments and Usage help lines)
+  for _eng_pair in "topologies/engine:up status scale drain failover upgrade destroy" "payloads/engine:compile submit status logs stop destroy" "traits/engine:list enable disable apply verify teardown" "experiments/engine:list scaffold validate run render-latex update-readme"; do
     _ep_base="${_eng_pair%%:*}"
     _ep_verbs="${_eng_pair#*:}"
     if [ -f "${_ep_base}.sh" ] && [ -f "${_ep_base}.cmd" ]; then
       for _v in $_ep_verbs; do
-        if ! grep -qi "$_v" "${_ep_base}.cmd"; then
-          log_failure "${_ep_base}.cmd" "CLI_VERB_PARITY" "Missing subcommand '${_v}' present in ${_ep_base}.sh."
+        if ! awk -v v="$_v" '
+          { sub(/\r$/, "", $0); l = tolower($0) }
+          l ~ /^[[:space:]]*(::|rem([[:space:]]|$))/ { next }
+          l ~ /^[[:space:]]*echo[[:space:]]+usage:/ { next }
+          index(l, tolower(v)) > 0 { found = 1 }
+          END { exit(found ? 0 : 1) }
+        ' "${_ep_base}.cmd"; then
+          log_failure "${_ep_base}.cmd" "CLI_VERB_PARITY" "Missing subcommand '${_v}' dispatch present in ${_ep_base}.sh."
         fi
       done
     fi
@@ -1102,9 +1113,14 @@ if [ "${1:-}" = "--all" ]; then
       [ -d "$comp_dir" ] || continue
       [ "$(basename "$comp_dir")" = "_common" ] && continue
       case "$comp_dir" in
-        _lib/toolchains/edgcpp-backends-suite|_lib/toolchains/gemma-tpu-suite|_lib/toolchains/win-port-suite) ;;
+        _lib/toolchains/edgcpp-backends-suite|_lib/toolchains/gemma-tpu-suite|_lib/toolchains/win-port-suite|_lib/toolchains/libtpu-rs) ;;
         _lib/*/*-suite)
           log_failure "$comp_dir" "EXP_IN_LIB" "New empirical campaign suites belong in experiments/<suite-id>/, not inside _lib/."
+          ;;
+        *)
+          if [ -d "$comp_dir/suites" ]; then
+            log_failure "$comp_dir" "EXP_IN_LIB" "New empirical subsuites belong in experiments/<suite-id>/, not inside $comp_dir/suites/."
+          fi
           ;;
       esac
       for req_file in cli.sh cli.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
@@ -1130,6 +1146,13 @@ if [ "${1:-}" = "--all" ]; then
           for req_file in service.sh service.cmd; do
             if [ ! -f "$comp_dir/$req_file" ]; then
               log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required service-daemon file: $req_file"
+            fi
+          done
+          ;;
+        *)
+          for forbid_file in service.sh service.cmd; do
+            if [ -f "$comp_dir/$forbid_file" ]; then
+              log_failure "$comp_dir/$forbid_file" "VERSION_MANAGER_CONTRACT" "Component defines $forbid_file without 'service-daemon' in manifest.json."
             fi
           done
           ;;

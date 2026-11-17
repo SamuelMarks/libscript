@@ -89,11 +89,24 @@ echo Compiles OpenEdX-Setup.msi and OpenEdX-Setup-Offline.msi via WiX Toolset.
 exit /b 0
 
 :: ## args_done
-:: Configures WiX PATH isolation and dispatches online/offline compilation.
+:: Configures msi-rs / WiX PATH isolation and dispatches online/offline compilation.
 :args_done
-set "WIX_HOME=%LIBSCRIPT_HOME%\wix\3.14\bin"
-if "%LIBSCRIPT_HOME%"=="" set "WIX_HOME=%USERPROFILE%\.libscript\wix\3.14\bin"
-if exist "!WIX_HOME!" set "PATH=!WIX_HOME!;!PATH!"
+set "_LS_HOME=%LIBSCRIPT_HOME%"
+if "!_LS_HOME!"=="" set "_LS_HOME=%USERPROFILE%\.libscript"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+)
+if exist "!_LS_HOME!\msi-rs\default\bin" set "PATH=!_LS_HOME!\msi-rs\default\bin;!PATH!"
+set "WIX_HOME=!_LS_HOME!\wix\3.14\bin"
+if exist "!WIX_HOME!" set "PATH=!PATH!;!WIX_HOME!"
+
+where candle.exe >nul 2>&1
+if errorlevel 1 where wix.exe >nul 2>&1
+if errorlevel 1 if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+)
 
 if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
 
@@ -130,7 +143,20 @@ if not exist "!MAIN_WXS!" (
 
 where candle.exe >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] candle.exe not found on PATH. Install wix via libscript.cmd install wix. 1>&2
+    where wix.exe >nul 2>&1
+    if not errorlevel 1 (
+        pushd "!SCRIPT_DIR!"
+        echo [INFO] Building !OUT_MSI! via msi-rs wix.exe...
+        if exist "!PAYLOAD_WXS!" (
+            wix.exe build -out "!OUT_MSI!" "!BASE_NAME!.wxs" "!BASE_NAME!_payload.wxs"
+        ) else (
+            wix.exe build -out "!OUT_MSI!" "!BASE_NAME!.wxs"
+        )
+        set "BUILD_RC=!ERRORLEVEL!"
+        popd
+        exit /b !BUILD_RC!
+    )
+    echo [ERROR] Neither msi-rs ^(candle.exe/wix.exe^) nor WiX found on PATH. Install via libscript.cmd install msi-rs. 1>&2
     exit /b 1
 )
 

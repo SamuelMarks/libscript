@@ -54,5 +54,5 @@ set "KEY=!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11\.vagrant\machines\default\vmwar
 set "SSH_CMD=ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ""%KEY%"" vagrant@%VM_IP%"
 
 echo [INFO] Installing msi-rs on VM via LibScript...
-%SSH_CMD% "powershell -Command ""$ErrorActionPreference = 'Stop'; Set-Location C:\libscript; & 'C:\libscript\libscript.cmd' install msi-rs latest"""
-exit /b 0
+%SSH_CMD% "cmd.exe /c cd /d C:\libscript && call C:\libscript\libscript.cmd install msi-rs latest"
+exit /b !errorlevel!

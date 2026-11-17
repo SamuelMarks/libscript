@@ -108,12 +108,11 @@ ssh "root@${HOST}" << 'EOF'
   modprobe nf_nat || true
   modprobe nf_conntrack || true
 
-  mkdir -p /etc/modules-load.d/
-  if ! grep -q "br-netfilter" /etc/modules-load.d/modules.conf 2>/dev/null; then
-    echo "br-netfilter" >> /etc/modules-load.d/modules.conf
+  mkdir -p /etc/modules-load.d/ /etc/sysctl.d/
+  if ! grep -qxF "br-netfilter" /etc/modules-load.d/modules.conf 2>/dev/null; then
+    printf 'br-netfilter\n' >> /etc/modules-load.d/modules.conf
   fi
-  echo "net.bridge.bridge-nf-call-iptables = 1" > /etc/sysctl.d/kubernetes.conf
-  echo "net.bridge.bridge-nf-call-ip6tables = 1" >> /etc/sysctl.d/kubernetes.conf
+  printf 'net.bridge.bridge-nf-call-iptables = 1\nnet.bridge.bridge-nf-call-ip6tables = 1\n' > /etc/sysctl.d/kubernetes.conf
   sysctl -p /etc/sysctl.d/kubernetes.conf || true
   mkdir -p /etc/containerd/
   cp -f containerd-config.toml /etc/containerd/config.toml || true

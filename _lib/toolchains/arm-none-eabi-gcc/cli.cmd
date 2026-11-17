@@ -52,4 +52,4 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=arm-none-eabi-gcc"
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*

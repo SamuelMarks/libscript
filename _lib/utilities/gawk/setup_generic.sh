@@ -152,7 +152,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gawk/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'gawk' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -186,7 +186,7 @@ case "$ACTION" in
       libscript_depends_via "${GAWK_INSTALL_METHOD}" 'gawk'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/gawk/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'gawk' "${EXACT_VERSION}")
       _expected_bin="${TARGET_DIR}/bin/gawk"
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
         _expected_bin="${TARGET_DIR}/bin/gawk.exe"

@@ -45,9 +45,12 @@ if [ -d "${_SC_HOME_BASE}/${EXACT_VERSION}/bin" ]; then
   libscript_path_prepend "${_SC_HOME_BASE}/${EXACT_VERSION}/bin"
 elif [ -d "${_SC_HOME_BASE}/default/bin" ]; then
   libscript_path_prepend "${_SC_HOME_BASE}/default/bin"
-else
-  libscript_path_prepend "${_SC_HOME_BASE}/${EXACT_VERSION}/bin"
+elif [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin"
 fi
 
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
+[ -n "${_EB_CALLER_DIR:-}" ] && SCRIPT_DIR="${_EB_CALLER_DIR}"
+[ -n "${_EB_CALLER_THIS:-}" ] && THIS_FILE="${_EB_CALLER_THIS}"
+unset _EB_CALLER_THIS _EB_CALLER_DIR || true

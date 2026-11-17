@@ -3,7 +3,7 @@
 :: ## Overview
 :: This module provides utilities for managing Python virtual environments, resolving Python executable versions, and ensuring virtual environment readiness.
 :: ## Usage
-:: ```batch @echo off call "%~dp0\python_env.cmd" libscript_python_resolve "3.11" call "%~dp0\python_env.cmd" libscript_python_venv "C:\path\to\venv" "3.11" call "%~dp0\python_env.cmd" libscript_python_ensure_venv_owner "C:\path\to\project" "3.12" ```
+:: ```batch @echo off call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_resolve "3.11" call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "C:\path\to\venv" "3.11" call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_ensure_venv_owner "C:\path\to\project" "3.12" ```
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -56,6 +56,8 @@ if /i "%~1"=="libscript_python_ensure_venv_owner" goto :libscript_python_ensure_
 if /i "%~1"==":libscript_python_ensure_venv_owner" goto :libscript_python_ensure_venv_owner
 if /i "%~1"=="libscript_python_sync_deps" goto :libscript_python_sync_deps
 if /i "%~1"==":libscript_python_sync_deps" goto :libscript_python_sync_deps
+if /i "%~1"=="libscript_python_ensure_runtime" goto :libscript_python_ensure_runtime
+if /i "%~1"==":libscript_python_ensure_runtime" goto :libscript_python_ensure_runtime
 goto :EOF
 
 :: ## libscript_python_resolve
@@ -151,11 +153,11 @@ if "%_backend%"=="uv" (
 ) else if "%_backend%"=="venv" (
     set "_python_exe="
     if not "%_python_version%"=="" (
-        for /f "delims=" %%I in ('call "%~dp0\python_env.cmd" libscript_python_resolve "%_python_version%"') do (
+        for /f "delims=" %%I in ('call "!SCRIPT_DIR!\python_env.cmd" libscript_python_resolve "%_python_version%"') do (
             set "_python_exe=%%I"
         )
     ) else (
-        for /f "delims=" %%I in ('call "%~dp0\python_env.cmd" libscript_python_resolve') do (
+        for /f "delims=" %%I in ('call "!SCRIPT_DIR!\python_env.cmd" libscript_python_resolve') do (
             set "_python_exe=%%I"
         )
     )
@@ -333,4 +335,19 @@ if not exist "!_venv_dir!\pyproject.toml" (
 if "!_venv_ver!"=="" set "_venv_ver=%PYTHON_VERSION%"
 if "!_venv_ver!"=="" set "_venv_ver=3.12"
 call :libscript_python_sync_deps "" "!_venv_dir!" "!_venv_ver!"
+exit /b 0
+
+:: ## libscript_python_ensure_runtime
+:: Ensures either uv or a Python 3 runtime with ensurepip support is available via LibScript.
+:libscript_python_ensure_runtime
+where uv >nul 2>&1
+if not errorlevel 1 exit /b 0
+where python >nul 2>&1
+if not errorlevel 1 (
+    python -m ensurepip --version >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+if not "%LIBSCRIPT_SKIP_SYSTEM_DEPS%"=="1" (
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install python latest
+)
 exit /b 0

@@ -89,7 +89,8 @@ exit /b 0
 :: Activates a specific installed version of sqlite-tools and updates alias junctions.
 :action_use
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\sqlite-tools\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "sqlite-tools" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 if not exist "!TARGET_DIR!" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
@@ -144,7 +145,8 @@ if /i "%SQLITE_TOOLS_INSTALL_METHOD%"=="scoop" (
     exit /b !errorlevel!
 )
 call :resolve_version
-set "TARGET_DIR=%LIBSCRIPT_HOME%\sqlite-tools\!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "sqlite-tools" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
 set "_BIN_FOUND=0"
 if exist "!TARGET_DIR!\bin\sqlite3.exe" set "_BIN_FOUND=1"
 if exist "!TARGET_DIR!\bin\sqlite3.cmd" set "_BIN_FOUND=1"

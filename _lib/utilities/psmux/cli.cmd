@@ -89,5 +89,5 @@ exit /b %errorlevel%
 :: ## delegate
 :: Delegates execution to the shared component_core router.
 :delegate
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 exit /b %errorlevel%

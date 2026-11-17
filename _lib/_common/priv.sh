@@ -35,7 +35,7 @@ unset SCRIPT_NAME || true
 
 
 
-if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
+if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ] || [ "${TARGET_OS}" = "msdos" ] || [ "${IS_MSDOS:-0}" = "1" ]; then
   PRIV=''
 elif [ "${PRIV+x}" = 'x' ]; then
   true;

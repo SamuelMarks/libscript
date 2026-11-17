@@ -165,7 +165,7 @@ case "$ACTION" in
     ;;
   use)
     resolve_exact_version
-    TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/jq/${EXACT_VERSION}"
+    TARGET_DIR=$(libscript_get_version_dir 'jq' "${EXACT_VERSION}")
     if [ ! -d "$TARGET_DIR" ]; then
       printf 'Version %s not installed. Installing...\n' "$EXACT_VERSION"
       ACTION='install' "$0"
@@ -200,7 +200,7 @@ case "$ACTION" in
       libscript_depends_via "${JQ_INSTALL_METHOD}" 'jq'
     else
       resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/jq/${EXACT_VERSION}"
+      TARGET_DIR=$(libscript_get_version_dir 'jq' "${EXACT_VERSION}")
       _expected_bin="${TARGET_DIR}/bin/jq"
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then
         _expected_bin="${TARGET_DIR}/bin/jq.exe"

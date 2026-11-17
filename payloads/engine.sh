@@ -67,6 +67,14 @@ TARGET="${2:-}"
 SCHEDULER="${LIBSCRIPT_SCHEDULER:-kubernetes}"
 shift 2 2>/dev/null || shift $#
 
+case "$ACTION" in
+  compile|submit|status|logs|stop|destroy) ;;
+  *)
+    printf '[ERROR] Unknown payload action: %s\n' "$ACTION" >&2
+    exit 1
+    ;;
+esac
+
 EXTRA_ARGS=""
 while [ $# -gt 0 ]; do
   case "$1" in

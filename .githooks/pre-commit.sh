@@ -32,6 +32,21 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Ensure we run from the git repository root
 cd "$(git rev-parse --show-toplevel)"
 
+for _pc_fb_dir in \
+  "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin" \
+  "/opt/homebrew/bin" \
+  "/usr/local/bin" \
+  "${HOME:-/root}/.local/bin" \
+  "${HOME:-/root}/.cabal/bin"; do
+  if [ -d "${_pc_fb_dir}" ]; then
+    case ":${PATH}:" in
+      *":${_pc_fb_dir}:"*) ;;
+      *) PATH="${PATH}:${_pc_fb_dir}" ;;
+    esac
+  fi
+done
+export PATH
+
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
   _pc_saved_this="${THIS_FILE:-}"
   _pc_saved_dir="${SCRIPT_DIR:-}"

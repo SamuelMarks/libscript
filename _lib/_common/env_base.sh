@@ -110,10 +110,25 @@ if [ -n "$_eb_pkg" ] && [ "$_eb_pkg" != "_common" ] && [ "$_eb_pkg" != "_noop" ]
   else
     export "${_eb_pkg_up}_VERSION=${_eb_ver}"
   fi
-  if [ -d "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin" ]; then
+  _eb_d83_pkg="$_eb_pkg"
+  if type libscript_dos83_comp >/dev/null 2>&1; then
+    _eb_d83_pkg=$(libscript_dos83_comp "$_eb_pkg")
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos_83.sh" ] && { [ "${IS_MSDOS:-0}" = '1' ] || [ "${LIBSCRIPT_DOS_83:-0}" = '1' ]; }; then
+    _eb_d83_pkg=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos_83.sh" comp "$_eb_pkg" 2>/dev/null || printf '%s' "$_eb_pkg")
+  fi
+  if [ -d "${_eb_home}/${_eb_d83_pkg}/${_eb_ver}/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_d83_pkg}/${_eb_ver}/bin"
+  elif [ -f "${_eb_home}/${_eb_d83_pkg}/ACTIVE.VER" ]; then
+    _eb_act_v=$(head -n 1 "${_eb_home}/${_eb_d83_pkg}/ACTIVE.VER" | tr -d '\r\n')
+    if [ -n "$_eb_act_v" ] && [ -d "${_eb_home}/${_eb_d83_pkg}/${_eb_act_v}/bin" ]; then
+      libscript_path_prepend "${_eb_home}/${_eb_d83_pkg}/${_eb_act_v}/bin"
+    fi
+  elif [ -d "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin" ]; then
     libscript_path_prepend "${_eb_home}/${_eb_pkg}/${_eb_ver}/bin"
   elif [ -d "${_eb_home}/${_eb_pkg}/v${_eb_ver}/bin" ]; then
     libscript_path_prepend "${_eb_home}/${_eb_pkg}/v${_eb_ver}/bin"
+  elif [ -d "${_eb_home}/${_eb_d83_pkg}/default/bin" ]; then
+    libscript_path_prepend "${_eb_home}/${_eb_d83_pkg}/default/bin"
   elif [ -d "${_eb_home}/${_eb_pkg}/default/bin" ]; then
     libscript_path_prepend "${_eb_home}/${_eb_pkg}/default/bin"
   elif [ -d "${_eb_home}/${_eb_pkg}/latest/bin" ]; then

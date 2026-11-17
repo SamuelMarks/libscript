@@ -972,7 +972,7 @@ goto :find_root
 :root_found
 
 set "PACKAGE_NAME=__SCAF_NAME__"
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 EOF
 }
 
@@ -1073,7 +1073,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0\..\..\_common\setup_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\setup_base.cmd" %*
 EOF
 
   write_component_file "${_comp_dir}/setup_generic.sh" 1 0 << 'EOF'
@@ -2100,7 +2100,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0\..\..\_common\uninstall_base.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_base.cmd" %*
 EOF
 
   write_component_file "${_comp_dir}/uninstall_generic.sh" 1 0 << 'EOF'
@@ -2195,8 +2195,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "%~dp0\..\..\_common\uninstall_generic.cmd" (
-    call "%~dp0\..\..\_common\uninstall_generic.cmd" %*
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uninstall_generic.cmd" %*
 )
 EOF
 
