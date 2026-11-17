@@ -94,6 +94,11 @@ architectural contracts across POSIX and Windows Batch:
 - `tests/test_win_dos_component_pm.{sh,cmd}`: Target-aware `depends` resolution for native Windows
   PE (`X64`/`X86`/`ARM64`) and MS-DOS (`dos32` + `DOS32A.EXE`) across `jq`, `gawk`, `busybox`,
   `toybox`, `dash`, and `freebsd-usr-bin`.
+- `tests/test_register_bento_boxes.{sh,cmd}`, `tests/test_qemu_msdos_smoke.{sh,cmd}`,
+  `tests/run_freedos_tests.{sh,cmd}` & `tests/run_msdos_tests.{sh,cmd}`: Host-arch-aware `../bento`
+  DOS `.box` registration (`bento/msdos-{1.25,2.0,4.0}`, `bento/freedos-{1.3,1.4}`), live headless
+  QEMU + `COM1` smoke execution inside `COMMAND.COM`/`FreeCOM` with `LIBSCRIPT_DOS_83=1` `D:`
+  staging, and Vagrant `:msdos`/`:freedos` component matrix runners.
 - `tests/test_experiment_plugins.{sh,cmd}`: Open/Closed `experiments/` discovery, scaffolding
   (including `--template=installer-e2e` and `experiments/openedx/`), JSON schema validation, and 2x
   `.suite_stamp` idempotency.

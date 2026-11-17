@@ -614,7 +614,7 @@ snapshot_vagrant_box() {
   _os_list=$(printf '%s' "${CORE_EXPERIMENT_TARGET_OS}" | tr ',' ' ')
   for _tgt_os in ${_os_list}; do
     log_info "[snapshot_vagrant_box] Capturing clean snapshot '${CORE_EXPERIMENT_SNAPSHOT_NAME}' for Vagrant box '${_tgt_os}'..."
-    _snap_cmd="cd ~/libscript/vagrant/linux 2>/dev/null || cd ~/libscript; vagrant snapshot list '${_tgt_os}' 2>/dev/null | grep -qx '${CORE_EXPERIMENT_SNAPSHOT_NAME}' || vagrant snapshot save '${_tgt_os}' '${CORE_EXPERIMENT_SNAPSHOT_NAME}'"
+    _snap_cmd="if [ -d ~/libscript/vagrant/'${_tgt_os}' ]; then cd ~/libscript/vagrant/'${_tgt_os}'; vagrant snapshot list 2>/dev/null | grep -q '${CORE_EXPERIMENT_SNAPSHOT_NAME}' || vagrant snapshot save '${CORE_EXPERIMENT_SNAPSHOT_NAME}'; else cd ~/libscript/vagrant/linux 2>/dev/null || cd ~/libscript; vagrant snapshot list '${_tgt_os}' 2>/dev/null | grep -qx '${CORE_EXPERIMENT_SNAPSHOT_NAME}' || vagrant snapshot save '${_tgt_os}' '${CORE_EXPERIMENT_SNAPSHOT_NAME}'; fi"
     cloud_exec_remote "${_snap_cmd}"
   done
 

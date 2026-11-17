@@ -24,7 +24,9 @@ You can natively manage these Vagrant environments using `libscript`:
 
 To build the required Vagrant boxes for **Windows** (`bento/windows-11`), **Alpine**
 (`bento/alpine-3.24`), latest **FreeBSD** (`bento/freebsd-15.1`), latest **Debian**
-(`bento/debian-13`), and **Rocky Linux** (`bento/rockylinux-10.2`), use the custom Bento fork:
+(`bento/debian-13`), **Rocky Linux** (`bento/rockylinux-10.2`), **FreeDOS** (`bento/freedos-1.3`,
+`bento/freedos-1.4`), and **Microsoft MS-DOS** (`bento/msdos-1.25`, `bento/msdos-2.0`,
+`bento/msdos-4.0`), use the custom Bento fork:
 
 - **Repository**:
   [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)

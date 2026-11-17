@@ -1,7 +1,8 @@
-# Vagrant `anondos/freedos-1.4` (`GUEST-DOS32`)
+# Vagrant `bento/freedos-1.4` (`GUEST-DOS32`)
 
-Provides reproducible 32-bit protected-mode (`DOS32A.EXE` + OpenWatcom v2 `wcl386` `LE`) `CTest`
-execution over the `COM1` serial communicator for `win_port` Experiment 3C (`E3C`).
+Provides reproducible 16-bit and 32-bit protected-mode (`DOS4GW.EXE` / `DOS32A.EXE` + OpenWatcom v2
+`wcl386` `LE`) execution inside the `../bento` FreeDOS 1.4 box using `Bento::VagrantFreedos`
+(`:freedos` Telnet/Serial `COM1` communicator and bidirectional `:freedos_sync` `D:` drive).
 
 ## Usage
 

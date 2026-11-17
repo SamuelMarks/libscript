@@ -1,9 +1,12 @@
 @echo off
 :: # run_local_tests.cmd
+::
 :: ## Overview
-:: Runs local tests using Vagrant across all toolchains, languages, and databases
+:: Runs local tests using Vagrant across all toolchains, languages, databases, and DOS targets
+:: (including msdos-1.25, msdos-2.0, msdos-4.0, freedos-1.3, and freedos-1.4 via Bento COM1).
+::
 :: ## Usage
-:: Run this script to verify libscript installation and testing on isolated Vagrant VMs. Results are written to the tests_tmp directory.
+:: tests\run_local_tests.cmd [TARGETS...|all] [--os OS_NAME] [--reuse-vm] [--boot-only]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,6 +54,7 @@ goto :find_root
 
 set "OS_TARGET=alpine-3.24"
 set "REUSE_VM=0"
+set "BOOT_ONLY=0"
 set "COMPONENT_VERSION=latest"
 set "PKG_MGR="
 set "INSTALL_METHOD="
@@ -153,6 +157,12 @@ if /I "%~1"=="--fast" (
     shift
     goto :parse_args
 )
+if /I "%~1"=="--boot-only" (
+    set "BOOT_ONLY=1"
+    set "REUSE_VM=1"
+    shift
+    goto :parse_args
+)
 set "ARGS=!ARGS! %1"
 shift
 goto :parse_args
@@ -161,11 +171,8 @@ goto :parse_args
 :: Continues execution after command-line argument parsing completes.
 :done_args
 
-set "THIS_DIR=%~dp0"
-:: Remove trailing slash
-set "THIS_DIR=%THIS_DIR:~0,-1%"
-
-set "REPO_ROOT=%THIS_DIR%\.."
+set "THIS_DIR=%SCRIPT_DIR%"
+set "REPO_ROOT=%LIBSCRIPT_ROOT_DIR%"
 set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
 
 if not exist "%TESTS_TMP_DIR%" mkdir "%TESTS_TMP_DIR%"
@@ -209,23 +216,36 @@ for %%A in (!ARGS!) do (
     )
 )
 
-:: Extract OS_ID for log naming (e.g. alpine from alpine-3.24)
 for /f "tokens=1 delims=-" %%I in ("!OS_TARGET!") do set "OS_ID=%%I"
 set "OS_TAG=!OS_ID!"
-if /I "!OS_ID!"=="alpine" set "OS_TAG=linux.alpine"
-if /I "!OS_ID!"=="debian" set "OS_TAG=linux.debian"
-if /I "!OS_ID!"=="rhel" set "OS_TAG=linux.rhel"
-if /I "!OS_ID!"=="almalinux" set "OS_TAG=linux.rhel"
-if /I "!OS_ID!"=="rocky" set "OS_TAG=linux.rhel"
-if /I "!OS_ID!"=="rockylinux" set "OS_TAG=linux.rhel"
-if /I "!OS_ID!"=="freebsd" set "OS_TAG=freebsd"
-if /I "!OS_ID!"=="windows" set "OS_TAG=windows"
-if /I "!OS_ID!"=="omnios" set "OS_TAG=sunos"
-if /I "!OS_ID!"=="sunos" set "OS_TAG=sunos"
-if /I "!OS_ID!"=="solaris" set "OS_TAG=sunos"
-if /I "!OS_ID!"=="illumos" set "OS_TAG=sunos"
-if /I "!OS_ID!"=="macos" set "OS_TAG=darwin"
-if /I "!OS_ID!"=="darwin" set "OS_TAG=darwin"
+set "OS_FAMILY="
+if /I "!OS_ID!"=="alpine" ( set "OS_TAG=linux.alpine" & set "OS_FAMILY=linux" )
+if /I "!OS_ID!"=="debian" ( set "OS_TAG=linux.debian" & set "OS_FAMILY=linux" )
+if /I "!OS_ID!"=="rhel" ( set "OS_TAG=linux.rhel" & set "OS_FAMILY=linux" )
+if /I "!OS_ID!"=="almalinux" ( set "OS_TAG=linux.rhel" & set "OS_FAMILY=linux" )
+if /I "!OS_ID!"=="rocky" ( set "OS_TAG=linux.rhel" & set "OS_FAMILY=linux" )
+if /I "!OS_ID!"=="rockylinux" ( set "OS_TAG=linux.rhel" & set "OS_FAMILY=linux" )
+if /I "!OS_ID!"=="freebsd" ( set "OS_TAG=freebsd" & set "OS_FAMILY=bsd" )
+if /I "!OS_ID!"=="windows" ( set "OS_TAG=windows" & set "OS_FAMILY=windows" )
+if /I "!OS_ID!"=="msdos" ( set "OS_TAG=msdos" & set "OS_FAMILY=dos" )
+if /I "!OS_ID!"=="freedos" ( set "OS_TAG=msdos" & set "OS_FAMILY=dos" )
+if /I "!OS_ID!"=="omnios" ( set "OS_TAG=sunos" & set "OS_FAMILY=sunos" )
+if /I "!OS_ID!"=="sunos" ( set "OS_TAG=sunos" & set "OS_FAMILY=sunos" )
+if /I "!OS_ID!"=="solaris" ( set "OS_TAG=sunos" & set "OS_FAMILY=sunos" )
+if /I "!OS_ID!"=="illumos" ( set "OS_TAG=sunos" & set "OS_FAMILY=sunos" )
+if /I "!OS_ID!"=="macos" ( set "OS_TAG=darwin" & set "OS_FAMILY=darwin" )
+if /I "!OS_ID!"=="darwin" ( set "OS_TAG=darwin" & set "OS_FAMILY=darwin" )
+
+if /I "!OS_FAMILY!"=="dos" (
+    if "!BENTO_DIR!"=="" set "BENTO_DIR=%REPO_ROOT%\..\bento"
+    if exist "!BENTO_DIR!\lib\" (
+        for %%D in ("!BENTO_DIR!") do set "BENTO_DIR=%%~fD"
+        echo ;!RUBYLIB!; | findstr /I /C:";!BENTO_DIR!\lib;" >nul 2>&1
+        if errorlevel 1 (
+            if "!RUBYLIB!"=="" ( set "RUBYLIB=!BENTO_DIR!\lib" ) else ( set "RUBYLIB=!BENTO_DIR!\lib;!RUBYLIB!" )
+        )
+    )
+)
 
 if "!REUSE_VM!"=="1" (
     echo === Ensuring !OS_TARGET! Vagrant VM is running ===
@@ -248,32 +268,73 @@ if "!REUSE_VM!"=="1" (
             vagrant ssh --no-tty -c "sudo pkg install --accept network/rsync developer/versioning/git" >nul 2>&1
         )
     )
-    echo === Syncing LibScript repository to !OS_TARGET! ===
-    vagrant rsync
+    if /I not "!OS_FAMILY!"=="dos" (
+        echo === Syncing LibScript repository to !OS_TARGET! ===
+        vagrant rsync
+    )
+    if "!BOOT_ONLY!"=="1" (
+        echo Boot-only check succeeded for !OS_TARGET!.
+        exit /b 0
+    )
 )
 
-:: Enumerate targets and test them
 for %%T in (!TARGETS!) do (
     set "TARGET_NAME=%%T"
-    
     echo ============================================================
     echo Running test for !TARGET_NAME! on !OS_TARGET!...
     echo ============================================================
-        
+
     set "STDOUT_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stdout"
     set "STDERR_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stderr"
     set "SUCCESS_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.success"
     set "FAILURE_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.failure"
-    
+    set "IDEMP_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.idempotent.success"
+
     if exist "!SUCCESS_FILE!" del /f "!SUCCESS_FILE!"
     if exist "!FAILURE_FILE!" del /f "!FAILURE_FILE!"
 
     if "!REUSE_VM!"=="1" (
         cd /d "%REPO_ROOT%\vagrant\!OS_TARGET!"
         if not "!SNAPSHOT_NAME!"=="" (
-            vagrant snapshot restore "!SNAPSHOT_NAME!" >nul 2>&1
+            vagrant snapshot restore "!SNAPSHOT_NAME!" --no-provision >nul 2>&1
         )
-        if /I "!OS_ID!"=="windows" (
+        if /I "!OS_FAMILY!"=="dos" (
+            set "_DOS_STAGE=%REPO_ROOT%\vagrant\!OS_TARGET!\LIBSCRIP"
+            set "_DOS_BAT=%REPO_ROOT%\vagrant\!OS_TARGET!\DOSVERF.BAT"
+            if exist "!_DOS_STAGE!" rmdir /s /q "!_DOS_STAGE!" >nul 2>&1
+            if exist "!_DOS_BAT!" del /f /q "!_DOS_BAT!" >nul 2>&1
+            set "_DOS_OK=1"
+            for /L %%P in (1,1,!IDEMPOTENCY_RUNS!) do (
+                if "!_DOS_OK!"=="1" (
+                    set "LIBSCRIPT_TARGET_OS=msdos"
+                    set "LIBSCRIPT_DOS_83=1"
+                    set "LIBSCRIPT_HOME=!_DOS_STAGE!"
+                    set "STACK="
+                    call "%REPO_ROOT%\libscript.cmd" install "!TARGET_NAME!" "!COMPONENT_VERSION!" >> "!STDOUT_FILE!" 2>> "!STDERR_FILE!"
+                    if errorlevel 1 set "_DOS_OK=0"
+                )
+            )
+            if "!_DOS_OK!"=="1" (
+                (
+                    echo @ECHO OFF
+                    echo VER
+                    echo DIR D:\LIBSCRIP
+                    echo ECHO [PASS] DOS_COMPONENT_VERIFIED !TARGET_NAME!
+                ) > "!_DOS_BAT!"
+                vagrant ssh -c "D:\DOSVERF.BAT" >> "!STDOUT_FILE!" 2>> "!STDERR_FILE!"
+                if errorlevel 1 set "_DOS_OK=0"
+            )
+            if exist "!_DOS_STAGE!" rmdir /s /q "!_DOS_STAGE!" >nul 2>&1
+            if exist "!_DOS_BAT!" del /f /q "!_DOS_BAT!" >nul 2>&1
+            if "!_DOS_OK!"=="1" (
+                echo Success > "!SUCCESS_FILE!"
+                echo Success > "!IDEMP_FILE!"
+                echo [OK] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
+            ) else (
+                echo Failure > "!FAILURE_FILE!"
+                echo [FAILED] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
+            )
+        ) else if /I "!OS_ID!"=="windows" (
             vagrant ssh --no-tty -c "Set-Location C:\libscript; cmd.exe /c \"C:\libscript\libscript.cmd install !TARGET_NAME! !COMPONENT_VERSION!\" ; $iExit = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !TARGET_NAME!\" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
             if !errorlevel! equ 0 (
                 echo Success > "!SUCCESS_FILE!"
@@ -298,18 +359,12 @@ for %%T in (!TARGETS!) do (
     ) else (
         set "LIBSCRIPT_TEST_TARGET=!TARGET_NAME!"
         set "LIBSCRIPT_REPO_ROOT=%REPO_ROOT%"
-        
-        REM Create an isolated environment for this run
         set "RUN_DIR=%TESTS_TMP_DIR%\runs\!TARGET_NAME!-!OS_TARGET!"
         if not exist "!RUN_DIR!" mkdir "!RUN_DIR!"
         copy /Y "%REPO_ROOT%\vagrant\!OS_TARGET!\Vagrantfile" "!RUN_DIR!\Vagrantfile" >nul
-        
         cd /d "!RUN_DIR!"
-        
-        REM Ensure clean state (in case of previous aborted runs in this dir)
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
-        
         vagrant up > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
         if !errorlevel! equ 0 (
             echo Success > "!SUCCESS_FILE!"
@@ -318,7 +373,6 @@ for %%T in (!TARGETS!) do (
             echo Failure > "!FAILURE_FILE!"
             echo [FAILED] !TARGET_NAME!
         )
-        
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
     )
@@ -334,20 +388,9 @@ goto :eof
 :: ## show_help
 :: Displays command-line help and options.
 :show_help
-echo Usage: %~nx0 [TARGETS...^|all] [--os OS_NAME] [--reuse-vm] [--fast]
+echo Usage: %~nx0 [TARGETS...^|all] [--os OS_NAME] [--reuse-vm] [--boot-only] [--fast]
 echo.
 echo Runs local tests using Vagrant across specified categories or individual targets
-echo to verify libscript installation and testing.
-echo.
-echo Arguments:
-echo   TARGETS...     A list of categories (e.g., databases, languages) or specific targets.
-echo                  If no arguments are provided, defaults to: databases languages toolchains
-echo   all            Run tests across all categories in the _lib directory.
-echo   --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24).
-echo                  Example: --os debian-13, --os rockylinux-10.2, --os omnios
-echo   --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target.
-echo   --fast         Alias for --reuse-vm.
-echo   --help, -h, /? Show this help message.
-echo.
-echo Results are written to the tests_tmp directory.
+echo to verify libscript installation, testing, and 2x idempotency.
 endlocal
+exit /b 0

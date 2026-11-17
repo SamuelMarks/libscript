@@ -61,6 +61,14 @@ bundle exec bin/bento build -o qemu.vm os_pkrvars/freebsd/freebsd-15-aarch64
 
 # Rocky Linux 10.2 (aarch64)
 bundle exec bin/bento build -o qemu.vm os_pkrvars/rockylinux/rockylinux-10.2-aarch64
+
+# FreeDOS 1.3 / 1.4 & Microsoft MS-DOS 1.25 / 2.0 / 4.0 (aarch64 TCG)
+./freedos-builder.sh all
+MSDOS_VERSION=4.0 ./msdos-builder.sh all
+MSDOS_VERSION=2.0 ./msdos-builder.sh all
+MSDOS_VERSION=1.25 ./msdos-builder.sh all
+# (Or via Packer templates: os_pkrvars/freedos/freedos-{1.3,1.4}-aarch64.pkrvars.hcl
+#  and os_pkrvars/msdos/msdos-{1.25,2.0,4.0}-aarch64.pkrvars.hcl)
 ```
 
 #### On x86_64 Hosts (Linux, Windows, Intel macOS)
@@ -85,6 +93,11 @@ bundle exec bin/bento build -o qemu.vm os_pkrvars/rockylinux/rockylinux-10.2-x86
 
 # illumos OmniOS r151050 (x86_64)
 bundle exec bin/bento build -o qemu.vm os_pkrvars/omnios/omnios-r151050-x86_64
+
+# FreeDOS 1.3 / 1.4 & Microsoft MS-DOS 1.25 / 2.0 / 4.0 (POSIX or Windows .cmd)
+./freedos-builder.sh all
+MSDOS_VERSION=4.0 ./msdos-builder.sh all
+# On Windows: freedos-builder.cmd all  &&  msdos-builder.cmd --version 4.0 all
 ```
 
 After the build completes, Vagrant `.box` files will be generated in the `builds/build_complete/`
@@ -122,6 +135,16 @@ vagrant box add --name bento/rockylinux-10.2 --provider libvirt builds/build_com
 # Add illumos OmniOS
 vagrant box add --name bento/omnios-r151050 --provider qemu builds/build_complete/omnios-r151050-*.qemu.box
 vagrant box add --name bento/omnios-r151050 --provider libvirt builds/build_complete/omnios-r151050-*.libvirt.box
+
+# Add FreeDOS 1.3 / 1.4 & Microsoft MS-DOS 1.25 / 2.0 / 4.0
+vagrant box add --name bento/freedos-1.3 --provider qemu builds/build_complete/freedos-1.3-*.qemu.box
+vagrant box add --name bento/freedos-1.4 --provider qemu builds/build_complete/freedos-1.4-*.qemu.box
+vagrant box add --name bento/msdos-1.25 --provider qemu builds/build_complete/msdos-1.25-*.qemu.box
+vagrant box add --name bento/msdos-2.0 --provider qemu builds/build_complete/msdos-2.0-*.qemu.box
+vagrant box add --name bento/msdos-4.0 --provider qemu builds/build_complete/msdos-4.0-*.qemu.box
+
+# Or register all non-DOS + DOS boxes idempotently from LibScript:
+# ./tests/register_bento_boxes.sh        (Windows: tests\register_bento_boxes.cmd)
 ```
 
 ## 3. Using the Boxes in a Vagrantfile
@@ -200,6 +223,18 @@ Vagrant.configure("2") do |config|
 end
 ```
 
+### FreeDOS & Microsoft MS-DOS Guests (`bento/freedos-*`, `bento/msdos-*`)
+
+FreeDOS (`1.3`, `1.4`) and Microsoft MS-DOS (`1.25`, `2.0`, `4.0`) guests auto-load
+`Bento::VagrantFreedos` (`require "bento/vagrant_freedos"`) and `Bento::VagrantMsdos`
+(`require "bento/vagrant_msdos"`) directly from `../bento/lib` (`BENTO_DIR`), exposing:
+
+- Serial/Telnet `COM1` communicators (`config.vm.communicator = :freedos` or `:msdos`) with a full
+  `vagrant ssh -c "D:\\..."` CLI polyfill (`C:\BENTO\VAGAGENT.BAT`, `SERGET.COM`, and
+  `DOS4GW.EXE`/`DOS32A.EXE`).
+- Bidirectional FAT16 `D:` drive folder synchronization (`type: :freedos_sync` or
+  `type: :msdos_sync`, `drive: "D:"`, `crlf_convert: true`).
+
 ### Pre-Configured Repository Vagrant Environments (`vagrant/`)
 
 Ready-to-run `Vagrantfile` environments live directly under `vagrant/`:
@@ -207,8 +242,8 @@ Ready-to-run `Vagrantfile` environments live directly under `vagrant/`:
 - `vagrant/alpine-3.24/`, `vagrant/debian-13/`, `vagrant/rockylinux-10.2/` (Linux targets)
 - `vagrant/freebsd-15.1/`, `vagrant/omnios/` (BSD & illumos targets)
 - `vagrant/windows-11/`, `vagrant/macos-14-arm64/` (Windows & Apple Silicon macOS targets)
-- `vagrant/freedos-1.4/`, `vagrant/msdos-1.25/`, `vagrant/msdos-2.0/`, `vagrant/msdos-4.0/` (FreeDOS
-  & MS-DOS legacy/`dos32` targets)
+- `vagrant/freedos-1.3/`, `vagrant/freedos-1.4/`, `vagrant/msdos-1.25/`, `vagrant/msdos-2.0/`,
+  `vagrant/msdos-4.0/`, and `vagrant/_common/` (FreeDOS & MS-DOS `16-bit`/`dos32` `COM1` targets)
 - `vagrant/k8s-thw-alpine/`, `vagrant/k8s-thw-debian/` (Multi-node Kubernetes-The-Hard-Way
   topologies)
 - `vagrant/up_multiple.{sh,cmd}` (Multi-box parallel launcher)

@@ -1,7 +1,10 @@
 @echo off
 :: # env.cmd
+::
 :: ## Overview
-:: Windows environment configuration for Bento Builder stack.
+:: Windows environment configuration for Bento Builder stack, exporting BENTO_DIR and RUBYLIB so
+:: Bento::VagrantMsdos and Bento::VagrantFreedos load cleanly inside Vagrant on Windows.
+::
 :: ## Usage
 :: Call this script to configure the Bento Builder environment on Windows.
 
@@ -56,7 +59,31 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\virtualbox\env.cmd"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\packer\env.cmd"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\vagrant\env.cmd"
 
+set "_RESOLVED_BENTO=!BENTO_DIR!"
+if "!_RESOLVED_BENTO!"=="" (
+    for %%D in ("!LIBSCRIPT_ROOT_DIR!\..\bento" "%USERPROFILE%\bento") do (
+        if "!_RESOLVED_BENTO!"=="" if exist "%%~fD\os_pkrvars\" set "_RESOLVED_BENTO=%%~fD"
+        if "!_RESOLVED_BENTO!"=="" if exist "%%~fD\bento.gemspec" set "_RESOLVED_BENTO=%%~fD"
+    )
+) else if exist "!_RESOLVED_BENTO!\" (
+    for %%D in ("!_RESOLVED_BENTO!") do set "_RESOLVED_BENTO=%%~fD"
+)
+
+set "_RESOLVED_RUBYLIB=!RUBYLIB!"
+if not "!_RESOLVED_BENTO!"=="" if exist "!_RESOLVED_BENTO!\lib\" (
+    echo ;!_RESOLVED_RUBYLIB!; | findstr /I /C:";!_RESOLVED_BENTO!\lib;" >nul 2>&1
+    if errorlevel 1 (
+        if "!_RESOLVED_RUBYLIB!"=="" (
+            set "_RESOLVED_RUBYLIB=!_RESOLVED_BENTO!\lib"
+        ) else (
+            set "_RESOLVED_RUBYLIB=!_RESOLVED_BENTO!\lib;!_RESOLVED_RUBYLIB!"
+        )
+    )
+)
+
 endlocal & (
     set "PATH=%PATH%"
+    if not "%_RESOLVED_BENTO%"=="" set "BENTO_DIR=%_RESOLVED_BENTO%"
+    if not "%_RESOLVED_RUBYLIB%"=="" set "RUBYLIB=%_RESOLVED_RUBYLIB%"
 )
 exit /b 0

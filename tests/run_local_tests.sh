@@ -41,6 +41,7 @@ INSTALL_METHOD="${INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-}}"
 TOOLCHAIN="${TOOLCHAIN:-${LIBSCRIPT_BUILD_TOOLCHAIN:-}}"
 SNAPSHOT_NAME="${SNAPSHOT_NAME:-vanilla}"
 IDEMPOTENCY_RUNS="${IDEMPOTENCY_RUNS:-2}"
+BOOT_ONLY=0
 
 # First pass to capture OS_TARGET and handle help
 while [ $# -gt 0 ]; do
@@ -141,6 +142,11 @@ while [ $# -gt 0 ]; do
             REUSE_VM=1
             shift
             ;;
+        --boot-only)
+            BOOT_ONLY=1
+            REUSE_VM=1
+            shift
+            ;;
         *)
             TARGETS="$TARGETS $1"
             shift
@@ -227,10 +233,23 @@ case "$OS_ID" in
     rhel|almalinux|centos|fedora|rocky|rockylinux) OS_TAG="linux.rhel"; OS_FAMILY="linux" ;;
     freebsd|bsd) OS_TAG="freebsd"; OS_FAMILY="bsd" ;;
     windows) OS_TAG="windows"; OS_FAMILY="windows" ;;
+    msdos*|freedos*) OS_TAG='msdos'; OS_FAMILY='dos' ;;
     omnios|sunos|solaris|illumos) OS_TAG="sunos"; OS_FAMILY="sunos" ;;
     macos*|darwin*) OS_TAG="darwin"; OS_FAMILY="darwin" ;;
     *) OS_TAG="$OS_ID"; OS_FAMILY="" ;;
 esac
+
+if [ "$OS_FAMILY" = "dos" ]; then
+    BENTO_DIR="${BENTO_DIR:-$REPO_ROOT/../bento}"
+    if [ -d "$BENTO_DIR/lib" ]; then
+        BENTO_DIR=$(cd -- "$BENTO_DIR" && pwd)
+        export BENTO_DIR
+        case ":${RUBYLIB:-}:" in
+            *":${BENTO_DIR}/lib:"*) ;;
+            *) RUBYLIB="${BENTO_DIR}/lib${RUBYLIB:+:${RUBYLIB}}"; export RUBYLIB ;;
+        esac
+    fi
+fi
 
 if [ "$REUSE_VM" = "1" ]; then
     echo "=== Ensuring $OS_TARGET Vagrant VM is running ==="
@@ -246,12 +265,20 @@ if [ "$REUSE_VM" = "1" ]; then
             vagrant ssh --no-tty -c "sudo pkg install --accept network/rsync developer/versioning/git" >/dev/null 2>&1 || true
         fi
     fi
-    echo "=== Syncing LibScript repository to $OS_TARGET ==="
-    vagrant rsync
+    if [ "$OS_FAMILY" != "dos" ]; then
+        echo "=== Syncing LibScript repository to $OS_TARGET ==="
+        vagrant rsync
+    fi
+    if [ "$BOOT_ONLY" = "1" ]; then
+        echo "Boot-only check succeeded for $OS_TARGET."
+        exit 0
+    fi
 fi
 
 TARGET_ARCH=""
-if [ "$OS_ID" = "windows" ]; then
+if [ "$OS_FAMILY" = "dos" ]; then
+    TARGET_ARCH='dos32'
+elif [ "$OS_ID" = "windows" ]; then
     TARGET_ARCH=$(cd "$REPO_ROOT/vagrant/$OS_TARGET" && vagrant ssh --no-tty -c "powershell -Command \"\$env:PROCESSOR_ARCHITECTURE\"" 2>/dev/null | tr -d '\r\n' | tr '[:upper:]' '[:lower:]' || echo "amd64")
 else
     TARGET_ARCH=$(cd "$REPO_ROOT/vagrant/$OS_TARGET" && vagrant ssh --no-tty -c "uname -m" 2>/dev/null | tr -d '\r\n' || echo "x86_64")
@@ -348,7 +375,36 @@ for target in $UNIQUE_TARGETS; do
         [ "$INSTALL_METHOD" = "from-source" ] && _cli_overrides="$_cli_overrides --from-source"
         [ -n "$TOOLCHAIN" ] && _cli_overrides="$_cli_overrides --toolchain='$TOOLCHAIN'"
 
-        if [ "$OS_ID" = "windows" ]; then
+        if [ "$OS_FAMILY" = "dos" ]; then
+            _dos_stage_dir="$REPO_ROOT/vagrant/$OS_TARGET/LIBSCRIP"
+            _dos_verify_bat="$REPO_ROOT/vagrant/$OS_TARGET/DOSVERF.BAT"
+            rm -rf "$_dos_stage_dir" "$_dos_verify_bat"
+            _dos_ok=1
+            _pass_idx=0
+            while [ "$_pass_idx" -lt "${IDEMPOTENCY_RUNS:-2}" ]; do
+                _pass_idx=$((_pass_idx + 1))
+                if ! env LIBSCRIPT_TARGET_OS='msdos' LIBSCRIPT_DOS_83='1' LIBSCRIPT_HOME="$_dos_stage_dir" \
+                    "$REPO_ROOT/libscript.sh" install "$target" "$COMPONENT_VERSION" >> "$stdout_file" 2>> "$stderr_file"; then
+                    _dos_ok=0
+                    break
+                fi
+            done
+            if [ "$_dos_ok" -eq 1 ]; then
+                printf '@ECHO OFF\r\nVER\r\nDIR D:\\LIBSCRIP\r\nECHO [PASS] DOS_COMPONENT_VERIFIED %s\r\n' "$target" > "$_dos_verify_bat"
+                if ! vagrant ssh -c 'D:\DOSVERF.BAT' >> "$stdout_file" 2>> "$stderr_file"; then
+                    _dos_ok=0
+                fi
+            fi
+            rm -rf "$_dos_stage_dir" "$_dos_verify_bat"
+            if [ "$_dos_ok" -eq 1 ]; then
+                echo 'Success' > "$success_file"
+                [ "${IDEMPOTENCY_RUNS:-1}" -ge 2 ] 2>/dev/null && echo 'Success' > "$idemp_file"
+                echo "[OK] $target ($COMPONENT_VERSION)"
+            else
+                echo 'Failure' > "$failure_file"
+                echo "[FAILED] $target ($COMPONENT_VERSION)"
+            fi
+        elif [ "$OS_ID" = "windows" ]; then
             # shellcheck disable=SC2016
             test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target' '$COMPONENT_VERSION'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
             if [ "${IDEMPOTENCY_RUNS:-1}" -ge 2 ] 2>/dev/null; then

@@ -1,13 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Discovers built Vagrant .qemu.box / .libvirt.box / .utm.box images in ../bento/builds/build_complete/,
-# validates Packer templates in ../bento/os_pkrvars/, and registers all 7 target OS boxes
-# (bento/omnios, bento/alpine-3.24, bento/debian-13, bento/rockylinux-10.2,
-# bento/freebsd-15.1, bento/macos-14-arm64, bento/windows-11) in the host's Vagrant installation.
+# Discovers built `../bento` `.box` images, validates non-DOS/DOS Packer templates & builders, and registers boxes idempotently.
 # ## Usage
-# ./tests/register_bento_boxes.sh [--bento-dir <path>] [--force] [--validate-only]
-set -feu
+# ./tests/register_bento_boxes.sh [--bento-dir <path>] [--bento-prefix <prefix>] [--arch <aarch64|x86_64>] [--force] [--validate-only]
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -18,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -30,15 +26,43 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-BENTO_DIR="${LIBSCRIPT_ROOT_DIR}/../bento"
+BENTO_DIR="${BENTO_DIR:-${LIBSCRIPT_ROOT_DIR}/../bento}"
+BENTO_PREFIX="${BENTO_PREFIX:-bento}"
+BENTO_HOST_ARCH="${BENTO_HOST_ARCH:-}"
 FORCE_FLAG=""
 VALIDATE_ONLY=0
+
+# ## show_usage
+# Prints command-line usage instructions for register_bento_boxes.sh.
+show_usage() {
+  printf 'Usage: %s [--bento-dir <path>] [--bento-prefix <prefix>] [--arch <aarch64|x86_64>] [--force] [--validate-only]\n' "$0"
+}
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --bento-dir)
       BENTO_DIR="$2"
       shift 2
+      ;;
+    --bento-dir=*)
+      BENTO_DIR="${1#*=}"
+      shift
+      ;;
+    --bento-prefix)
+      BENTO_PREFIX="$2"
+      shift 2
+      ;;
+    --bento-prefix=*)
+      BENTO_PREFIX="${1#*=}"
+      shift
+      ;;
+    --arch)
+      BENTO_HOST_ARCH="$2"
+      shift 2
+      ;;
+    --arch=*)
+      BENTO_HOST_ARCH="${1#*=}"
+      shift
       ;;
     --force)
       FORCE_FLAG='--force'
@@ -48,9 +72,8 @@ while [ $# -gt 0 ]; do
       VALIDATE_ONLY=1
       shift
       ;;
-    --help|-h)
-      printf 'Usage: %s [--bento-dir <path>] [--force] [--validate-only]
-' "$0"
+    --help|-h|/\?|-\?)
+      show_usage
       exit 0
       ;;
     *)
@@ -59,15 +82,67 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# ## detect_bento_host_arch
+# Resolves the canonical Bento host architecture string (`aarch64` or `x86_64`).
+detect_bento_host_arch() {
+  if [ -n "$BENTO_HOST_ARCH" ]; then
+    case "$BENTO_HOST_ARCH" in
+      arm64|aarch64) printf '%s\n' 'aarch64' ;;
+      amd64|x86_64) printf '%s\n' 'x86_64' ;;
+      *) printf '%s\n' "$BENTO_HOST_ARCH" ;;
+    esac
+    return 0
+  fi
+  _raw_arch=$(uname -m 2>/dev/null || printf '%s' 'x86_64')
+  case "$_raw_arch" in
+    arm64|aarch64) printf '%s\n' 'aarch64' ;;
+    *) printf '%s\n' 'x86_64' ;;
+  esac
+}
+
+BENTO_HOST_ARCH=$(detect_bento_host_arch)
+
+# ## resolve_box_artifact
+# Resolves a built Vagrant `.box` file in `builds/build_complete/` preferring the host architecture with cross-arch fallback.
+resolve_box_artifact() {
+  _stem="$1"
+  _ext="${2:-qemu.box}"
+  _bc_dir="${BENTO_DIR}/builds/build_complete"
+  for _cand_arch in "$BENTO_HOST_ARCH" "aarch64" "x86_64" "i386"; do
+    if [ -f "${_bc_dir}/${_stem}-${_cand_arch}.${_ext}" ]; then
+      printf '%s\n' "${_bc_dir}/${_stem}-${_cand_arch}.${_ext}"
+      return 0
+    fi
+  done
+  printf '%s\n' "${_bc_dir}/${_stem}-${BENTO_HOST_ARCH}.${_ext}"
+}
+
 # ## validate_bento_pkrvars
-# Validates that all 7 target OS Packer variable templates exist in ../bento/os_pkrvars/.
+# Validates that all non-DOS and DOS target OS Packer variable templates and standalone DOS builders exist in `../bento/`.
 validate_bento_pkrvars() {
   if [ ! -d "$BENTO_DIR" ]; then
     printf '[WARN] Bento directory not found at %s; skipping pkrvars check.\n' "$BENTO_DIR" >&2
     return 0
   fi
-  printf '==> Validating 7-OS Packer templates in %s...\n' "$BENTO_DIR"
-  for _pkr in "os_pkrvars/omnios/omnios-braich-aarch64.pkrvars.hcl" "os_pkrvars/alpine/alpine-3.24-aarch64.pkrvars.hcl" "os_pkrvars/debian/debian-13-aarch64.pkrvars.hcl" "os_pkrvars/rockylinux/rockylinux-10-aarch64.pkrvars.hcl" "os_pkrvars/freebsd/freebsd-15-aarch64.pkrvars.hcl" "os_pkrvars/macos/macos-27-aarch64.pkrvars.hcl" "os_pkrvars/macos/macos-14-aarch64.pkrvars.hcl" "os_pkrvars/windows/windows-11-aarch64.pkrvars.hcl"; do
+  printf '==> Validating Bento Packer templates & DOS builders in %s (host arch: %s)...\n' "$BENTO_DIR" "$BENTO_HOST_ARCH"
+  for _pkr in \
+    "os_pkrvars/omnios/omnios-braich-aarch64.pkrvars.hcl" \
+    "os_pkrvars/alpine/alpine-3.24-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/debian/debian-13-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/rockylinux/rockylinux-10-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/freebsd/freebsd-15-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/macos/macos-27-aarch64.pkrvars.hcl" \
+    "os_pkrvars/macos/macos-14-aarch64.pkrvars.hcl" \
+    "os_pkrvars/windows/windows-11-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/freedos/freedos-1.3-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/freedos/freedos-1.4-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/msdos/msdos-1.25-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/msdos/msdos-2.0-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "os_pkrvars/msdos/msdos-4.0-${BENTO_HOST_ARCH}.pkrvars.hcl" \
+    "freedos-builder.sh" \
+    "freedos-builder.cmd" \
+    "msdos-builder.sh" \
+    "msdos-builder.cmd"; do
     if [ -f "${BENTO_DIR}/${_pkr}" ]; then
       printf '[PASS] Found %s\n' "$_pkr"
     else
@@ -76,8 +151,26 @@ validate_bento_pkrvars() {
   done
 }
 
+# ## ensure_libvirt_qemu_links
+# Idempotently links `libvirt` provider directories to `qemu` inside `~/.vagrant.d/boxes` for `arm64` and `amd64`.
+ensure_libvirt_qemu_links() {
+  _box_name="$1"
+  _vag_home="${VAGRANT_HOME:-${HOME:-/root}/.vagrant.d}"
+  _vslash_name=$(printf '%s' "$_box_name" | sed 's|/|-VAGRANTSLASH-|g')
+  for _vag_arch in arm64 amd64; do
+    if [ -d "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/qemu" ] && [ ! -d "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt" ]; then
+      rm -f "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt" 2>/dev/null || true
+      ln -sf "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/qemu" "${_vag_home}/boxes/${_vslash_name}/0/${_vag_arch}/libvirt"
+    fi
+  done
+  if [ -d "${_vag_home}/boxes/${_vslash_name}/0/qemu" ] && [ ! -d "${_vag_home}/boxes/${_vslash_name}/0/libvirt" ]; then
+    rm -f "${_vag_home}/boxes/${_vslash_name}/0/libvirt" 2>/dev/null || true
+    ln -sf "${_vag_home}/boxes/${_vslash_name}/0/qemu" "${_vag_home}/boxes/${_vslash_name}/0/libvirt"
+  fi
+}
+
 # ## register_box_if_needed
-# Registers a .qemu.box or .utm.box artifact into host Vagrant if not already present (or if --force is passed).
+# Registers a `.qemu.box`, `.libvirt.box`, or `.utm.box` artifact into host Vagrant if not already present (or if `--force` is passed).
 register_box_if_needed() {
   _box_name="$1"
   _box_file="$2"
@@ -96,11 +189,7 @@ register_box_if_needed() {
     return 0
   fi
 
-  _vslash_name=$(printf '%s' "$_box_name" | sed 's|/|-VAGRANTSLASH-|g')
-  if [ -d "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/qemu" ] && [ ! -d "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt" ]; then
-    rm -f "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt" 2>/dev/null || true
-    ln -sf "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/qemu" "${HOME}/.vagrant.d/boxes/${_vslash_name}/0/arm64/libvirt"
-  fi
+  ensure_libvirt_qemu_links "$_box_name"
 }
 
 validate_bento_pkrvars
@@ -117,30 +206,61 @@ fi
 EXISTING_BOXES=$(vagrant box list 2>/dev/null || true)
 BUILD_COMPLETE="${BENTO_DIR}/builds/build_complete"
 
-register_box_if_needed "bento/omnios" "${BUILD_COMPLETE}/omnios-braich-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "bento/alpine-3.24" "${BUILD_COMPLETE}/alpine-3.24-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "bento/debian-13" "${BUILD_COMPLETE}/debian-13.6-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/omnios" "$(resolve_box_artifact 'omnios-braich' 'qemu.box')" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/alpine-3.24" "$(resolve_box_artifact 'alpine-3.24' 'qemu.box')" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/debian-13" "$(resolve_box_artifact 'debian-13.6' 'qemu.box')" "$EXISTING_BOXES" "qemu"
 
-if [ -f "${BUILD_COMPLETE}/rockylinux-10.2-aarch64.qemu.box" ]; then
-  register_box_if_needed "bento/rockylinux-10.2" "${BUILD_COMPLETE}/rockylinux-10.2-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-elif [ -f "${BUILD_COMPLETE}/almalinux-9.8-aarch64.qemu.box" ]; then
-  register_box_if_needed "bento/rockylinux-10.2" "${BUILD_COMPLETE}/almalinux-9.8-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-fi
-
-register_box_if_needed "bento/freebsd-15.1" "${BUILD_COMPLETE}/freebsd-15.1-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-if [ -f "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" ]; then
-  register_box_if_needed "bento/macos-27.2-arm64" "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" "$EXISTING_BOXES" "utm"
-  register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+ROCKY_BOX=$(resolve_box_artifact 'rockylinux-10.2' 'qemu.box')
+ALMA_BOX=$(resolve_box_artifact 'almalinux-9.8' 'qemu.box')
+if [ -f "$ROCKY_BOX" ]; then
+  register_box_if_needed "${BENTO_PREFIX}/rockylinux-10.2" "$ROCKY_BOX" "$EXISTING_BOXES" "qemu"
+elif [ -f "$ALMA_BOX" ]; then
+  register_box_if_needed "${BENTO_PREFIX}/rockylinux-10.2" "$ALMA_BOX" "$EXISTING_BOXES" "qemu"
 else
-  register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-14-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+  register_box_if_needed "${BENTO_PREFIX}/rockylinux-10.2" "$ROCKY_BOX" "$EXISTING_BOXES" "qemu"
 fi
-register_box_if_needed "bento/windows-11" "${BUILD_COMPLETE}/windows-11-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "anondos/msdos-1.25" "${BUILD_COMPLETE}/msdos-1.25-i386.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "anondos/msdos-2.0" "${BUILD_COMPLETE}/msdos-2.0-i386.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "anondos/msdos-4.0" "${BUILD_COMPLETE}/msdos-4.0-i386.qemu.box" "$EXISTING_BOXES" "qemu"
-register_box_if_needed "anondos/freedos-1.4" "${BUILD_COMPLETE}/freedos-1.4-i386.qemu.box" "$EXISTING_BOXES" "qemu"
 
-printf '=== Host Vagrant Box Inventory ===
-'
+register_box_if_needed "${BENTO_PREFIX}/freebsd-15.1" "$(resolve_box_artifact 'freebsd-15.1' 'qemu.box')" "$EXISTING_BOXES" "qemu"
+if [ -f "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" ]; then
+  register_box_if_needed "${BENTO_PREFIX}/macos-27.2-arm64" "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+  register_box_if_needed "${BENTO_PREFIX}/macos-14-arm64" "${BUILD_COMPLETE}/macos-27.2-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+else
+  register_box_if_needed "${BENTO_PREFIX}/macos-14-arm64" "${BUILD_COMPLETE}/macos-14-aarch64.utm.box" "$EXISTING_BOXES" "utm"
+fi
+register_box_if_needed "${BENTO_PREFIX}/windows-11" "$(resolve_box_artifact 'windows-11' 'qemu.box')" "$EXISTING_BOXES" "qemu"
+
+MSDOS_125_BOX=$(resolve_box_artifact 'msdos-1.25' 'qemu.box')
+MSDOS_20_BOX=$(resolve_box_artifact 'msdos-2.0' 'qemu.box')
+MSDOS_40_BOX=$(resolve_box_artifact 'msdos-4.0' 'qemu.box')
+FREEDOS_13_BOX=$(resolve_box_artifact 'freedos-1.3' 'qemu.box')
+FREEDOS_14_BOX=$(resolve_box_artifact 'freedos-1.4' 'qemu.box')
+
+register_box_if_needed "${BENTO_PREFIX}/msdos-1.25" "$MSDOS_125_BOX" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/msdos-2.0" "$MSDOS_20_BOX" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/msdos-4.0" "$MSDOS_40_BOX" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/freedos-1.3" "$FREEDOS_13_BOX" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "${BENTO_PREFIX}/freedos-1.4" "$FREEDOS_14_BOX" "$EXISTING_BOXES" "qemu"
+
+if [ -f "$FREEDOS_14_BOX" ]; then
+  register_box_if_needed "${BENTO_PREFIX}/freedos" "$FREEDOS_14_BOX" "$EXISTING_BOXES" "qemu"
+elif [ -f "$FREEDOS_13_BOX" ]; then
+  register_box_if_needed "${BENTO_PREFIX}/freedos" "$FREEDOS_13_BOX" "$EXISTING_BOXES" "qemu"
+fi
+
+if [ "$BENTO_PREFIX" != "anondos" ]; then
+  register_box_if_needed "anondos/msdos-1.25" "$MSDOS_125_BOX" "$EXISTING_BOXES" "qemu"
+  register_box_if_needed "anondos/msdos-2.0" "$MSDOS_20_BOX" "$EXISTING_BOXES" "qemu"
+  register_box_if_needed "anondos/msdos-4.0" "$MSDOS_40_BOX" "$EXISTING_BOXES" "qemu"
+  register_box_if_needed "anondos/freedos-1.3" "$FREEDOS_13_BOX" "$EXISTING_BOXES" "qemu"
+  if [ -f "$FREEDOS_14_BOX" ]; then
+    register_box_if_needed "anondos/freedos-1.4" "$FREEDOS_14_BOX" "$EXISTING_BOXES" "qemu"
+  elif [ -f "$FREEDOS_13_BOX" ]; then
+    register_box_if_needed "anondos/freedos-1.4" "$FREEDOS_13_BOX" "$EXISTING_BOXES" "qemu"
+  else
+    register_box_if_needed "anondos/freedos-1.4" "$FREEDOS_14_BOX" "$EXISTING_BOXES" "qemu"
+  fi
+fi
+
+printf '=== Host Vagrant Box Inventory ===\n'
 vagrant box list
 exit 0

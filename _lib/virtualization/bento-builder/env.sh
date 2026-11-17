@@ -1,6 +1,7 @@
 #!/bin/sh
 # ## Overview
-# Environment configuration for Bento Builder stack.
+# Environment configuration for Bento Builder stack, exporting `BENTO_DIR` and `RUBYLIB` so
+# `Bento::VagrantMsdos` and `Bento::VagrantFreedos` load cleanly inside Vagrant without global gem pollution.
 #
 # ## Usage
 # Source this file to configure the Bento Builder environment.
@@ -33,6 +34,35 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 unset SCRIPT_NAME || true
+THIS_FILE="${_EB_CALLER_THIS}"
+SCRIPT_DIR="${_EB_CALLER_DIR}"
+
+if [ -z "${BENTO_DIR:-}" ]; then
+  for _b_cand in "${LIBSCRIPT_ROOT_DIR}/../bento" "${HOME:-/root}/bento"; do
+    if [ -f "${_b_cand}/bento.gemspec" ] || [ -f "${_b_cand}/builds.yml" ] || [ -d "${_b_cand}/os_pkrvars" ]; then
+      BENTO_DIR=$(cd -- "${_b_cand}" && pwd)
+      export BENTO_DIR
+      break
+    fi
+  done
+elif [ -d "${BENTO_DIR}" ]; then
+  BENTO_DIR=$(cd -- "${BENTO_DIR}" && pwd)
+  export BENTO_DIR
+fi
+
+if [ -n "${BENTO_DIR:-}" ] && [ -d "${BENTO_DIR}/lib" ]; then
+  case ":${RUBYLIB:-}:" in
+    *":${BENTO_DIR}/lib:"*) ;;
+    *)
+      if [ -n "${RUBYLIB:-}" ]; then
+        RUBYLIB="${BENTO_DIR}/lib:${RUBYLIB}"
+      else
+        RUBYLIB="${BENTO_DIR}/lib"
+      fi
+      export RUBYLIB
+      ;;
+  esac
+fi
 
 export INSTALL_QEMU="${INSTALL_QEMU:-1}"
 export INSTALL_VIRTUALBOX="${INSTALL_VIRTUALBOX:-1}"

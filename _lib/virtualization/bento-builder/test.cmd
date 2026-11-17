@@ -1,10 +1,12 @@
 @echo off
 :: # test.cmd
+::
 :: ## Overview
-:: Test suite for Bento Builder stack on Windows.
+:: Test suite for Bento Builder stack on Windows, verifying hypervisor components, BENTO_DIR and
+:: RUBYLIB 2x idempotency, Bento DOS plugin presence, and idempotent DOS box build routing.
 ::
 :: ## Usage
-:: Call this script to run tests for Bento Builder on Windows.
+:: call _lib\virtualization\bento-builder\test.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -50,22 +52,50 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
-if exist "C:\Program Files\qemu" set "PATH=C:\Program Files\qemu;!PATH!"
-if exist "C:\Program Files\Oracle\VirtualBox" set "PATH=C:\Program Files\Oracle\VirtualBox;!PATH!"
-if exist "C:\Program Files\Vagrant\bin" set "PATH=C:\Program Files\Vagrant\bin;!PATH!"
-if exist "C:\HashiCorp\Vagrant\bin" set "PATH=C:\HashiCorp\Vagrant\bin;!PATH!"
-if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
-if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+echo === Checking Bento Builder environment ^& DOS plugin routing on Windows ===
+set "TEST_TMP=%TEMP%\ls_bento_bld_%RANDOM%_%RANDOM%"
+if not exist "!TEST_TMP!\bento\lib\bento" mkdir "!TEST_TMP!\bento\lib\bento"
+if not exist "!TEST_TMP!\bento\builds\build_complete" mkdir "!TEST_TMP!\bento\builds\build_complete"
+if not exist "!TEST_TMP!\bin" mkdir "!TEST_TMP!\bin"
 
-echo === Checking Bento Builder components on Windows ===
+echo # gemspec> "!TEST_TMP!\bento\bento.gemspec"
+echo # msdos> "!TEST_TMP!\bento\lib\bento\vagrant_msdos.rb"
+echo # freedos> "!TEST_TMP!\bento\lib\bento\vagrant_freedos.rb"
+echo MOCK-BOX> "!TEST_TMP!\bento\builds\build_complete\msdos-4.0-x86_64.qemu.box"
+echo @exit /b 0> "!TEST_TMP!\bin\vagrant.cmd"
+
+set "BENTO_DIR=!TEST_TMP!\bento"
+set "RUBYLIB="
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\qemu\test.cmd" 2>nul
+call "!SCRIPT_DIR!\env.cmd"
+set "RUBYLIB_1=!RUBYLIB!"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\virtualbox\test.cmd" 2>nul
+call "!SCRIPT_DIR!\env.cmd"
+set "RUBYLIB_2=!RUBYLIB!"
+if "!RUBYLIB_1!"=="" goto :fail_test
+if not "!RUBYLIB_1!"=="!RUBYLIB_2!" goto :fail_test
+
+set "ORIG_PATH=!PATH!"
+set "PATH=!TEST_TMP!\bin;!PATH!"
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\packer\test.cmd" 2>nul
-set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\vagrant\test.cmd" 2>nul
-echo === Checks finished ===
+call "!SCRIPT_DIR!\cli.cmd" build msdos-4.0 "--bento-dir=!TEST_TMP!\bento" > "!TEST_TMP!\bld.log" 2>&1
+if errorlevel 1 goto :fail_test
+findstr /C:"[SKIP] msdos-4.0 box already built" "!TEST_TMP!\bld.log" >nul || goto :fail_test
+set "PATH=!ORIG_PATH!"
+
+if exist "!LIBSCRIPT_ROOT_DIR!\..\bento\bento.gemspec" (
+    if not exist "!LIBSCRIPT_ROOT_DIR!\..\bento\lib\bento\vagrant_msdos.rb" goto :fail_test
+    if not exist "!LIBSCRIPT_ROOT_DIR!\..\bento\lib\bento\vagrant_freedos.rb" goto :fail_test
+)
+
+if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
+echo === All Bento Builder checks completed successfully! ===
 exit /b 0
+
+:: ## fail_test
+:: Cleans up temporary test directory and exits with status 1.
+:fail_test
+if defined ORIG_PATH set "PATH=!ORIG_PATH!"
+if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
+echo [FAIL] Bento Builder Windows test failed. 1>&2
+exit /b 1

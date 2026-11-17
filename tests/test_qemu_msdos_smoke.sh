@@ -1,11 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Headless QEMU FreeDOS / MS-DOS 4.0 (`dos32`) smoke test verifying strict FAT16 8.3 staging (`LIBSCRIPT_DOS_83=1`), C89 `wincmd`/`dash`/`curl` substrate, and `COM1` boot output.
+# Headless QEMU FreeDOS & MS-DOS (`dos32`) smoke test verifying `LIBSCRIPT_DOS_83=1` staging and live `../bento` `COM1` execution.
 # ## Usage
-# ./tests/test_qemu_msdos_smoke.sh
+# ./tests/test_qemu_msdos_smoke.sh [--use-bento-disk|--use-bento-vagrant|--synthetic-only] [--bento-dir <path>]
 
 set -feu
-
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -16,7 +15,6 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
@@ -27,8 +25,40 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+SMOKE_MODE='auto'
+BENTO_DIR="${BENTO_DIR:-${LIBSCRIPT_ROOT_DIR}/../bento}"
+
+# ## show_smoke_usage
+# Prints command-line options for test_qemu_msdos_smoke.sh.
+show_smoke_usage() {
+  printf 'Usage: %s [--use-bento-disk|--use-bento-vagrant|--synthetic-only] [--bento-dir <path>]\n' "$0"
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --use-bento-disk) SMOKE_MODE='bento-disk'; shift ;;
+    --use-bento-vagrant) SMOKE_MODE='bento-vagrant'; shift ;;
+    --synthetic-only) SMOKE_MODE='synthetic-floppy'; shift ;;
+    --bento-dir) BENTO_DIR="$2"; shift 2 ;;
+    --bento-dir=*) BENTO_DIR="${1#*=}"; shift ;;
+    --help|-h|/\?|-\?) show_smoke_usage; exit 0 ;;
+    *) shift ;;
+  esac
+done
+
 TEST_WORK=$(mktemp -d "${TMPDIR:-/tmp}/ls_qemu_dos.XXXXXX")
-trap 'rm -rf "${TEST_WORK}"' EXIT INT TERM
+
+# ## cleanup_smoke
+# Terminates any ephemeral QEMU processes spawned during the smoke run and removes TEST_WORK.
+cleanup_smoke() {
+  for _pid_file in "${TEST_WORK}"/*.pid; do
+    if [ -f "$_pid_file" ]; then
+      kill "$(cat "$_pid_file" 2>/dev/null || true)" 2>/dev/null || true
+    fi
+  done
+  rm -rf "${TEST_WORK}" 2>/dev/null || true
+}
+trap 'cleanup_smoke' EXIT INT TERM
 
 # ## fail_smoke
 # Prints an error diagnostic and exits with status 1.
@@ -58,6 +88,70 @@ verify_fat16_83_tree() {
   if [ -n "${_v83_bad}" ]; then
     fail_smoke "Strict FAT16 8.3 violation under ${_v83_root}: ${_v83_bad}"
   fi
+}
+
+# ## discover_bento_dos_disk
+# Resolves a prebuilt or `.qemu.box`-extracted Bento disk image (`format|path`) for a given stem list.
+discover_bento_dos_disk() {
+  _stems="$1"
+  _prefer_raw="${2:-0}"
+  _cache_sub="${TEST_WORK}/box_extract"
+  mkdir -p "${_cache_sub}"
+  for _st in $_stems; do
+    if [ "$_prefer_raw" = "1" ] && [ -f "${BENTO_DIR}/builds/${_st}.img" ]; then
+      printf 'raw|%s\n' "${BENTO_DIR}/builds/${_st}.img"
+      return 0
+    fi
+    if [ -f "${BENTO_DIR}/builds/${_st}.qcow2" ]; then
+      printf 'qcow2|%s\n' "${BENTO_DIR}/builds/${_st}.qcow2"
+      return 0
+    fi
+    if [ -f "${BENTO_DIR}/builds/${_st}.img" ]; then
+      printf 'raw|%s\n' "${BENTO_DIR}/builds/${_st}.img"
+      return 0
+    fi
+    for _ba in aarch64 x86_64 i386; do
+      _bx="${BENTO_DIR}/builds/build_complete/${_st}-${_ba}.qemu.box"
+      if [ -f "$_bx" ]; then
+        mkdir -p "${_cache_sub}/${_st}"
+        if [ ! -f "${_cache_sub}/${_st}/box_0.img" ]; then
+          tar -xzf "$_bx" -C "${_cache_sub}/${_st}" box_0.img 2>/dev/null || true
+        fi
+        if [ -f "${_cache_sub}/${_st}/box_0.img" ]; then
+          printf 'qcow2|%s\n' "${_cache_sub}/${_st}/box_0.img"
+          return 0
+        fi
+      fi
+    done
+  done
+  return 1
+}
+
+# ## run_bounded_bento_ssh
+# Waits `_boot_delay` seconds for guest `COMMAND.COM`/`FreeCOM` readiness, then executes `_dos_cmd` with a 20s watchdog.
+run_bounded_bento_ssh() {
+  _builder_sh="$1"
+  _port_var="$2"
+  _port_num="$3"
+  _boot_delay="$4"
+  _dos_cmd="$5"
+  _out_file="$6"
+  sleep "$_boot_delay"
+  (
+    env "${_port_var}=${_port_num}" sh "$_builder_sh" ssh -c "$_dos_cmd" > "$_out_file" 2>&1
+  ) &
+  _ssh_pid=$!
+  _waited=0
+  while kill -0 "$_ssh_pid" 2>/dev/null; do
+    if [ "$_waited" -ge 20 ]; then
+      kill "$_ssh_pid" 2>/dev/null || true
+      return 1
+    fi
+    sleep 1
+    _waited=$((_waited + 1))
+  done
+  wait "$_ssh_pid" || return 1
+  grep -q '\[PASS\] QEMU_DOS32A_SMOKE' "$_out_file"
 }
 
 DOS_HOME="${TEST_WORK}/LIBSCRIP"
@@ -139,7 +233,6 @@ else
   JQ_OUT='dos32a:4'
 fi
 
-# Verify Watt-32 WATTCP.CFG online vs offline behavior + file:// fetch
 LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="${TEST_WORK}/OFFNET" "${LIBSCRIPT_ROOT_DIR}/_lib/_common/dos32/wattcp_cfg.sh" >/dev/null
 [ ! -f "${TEST_WORK}/OFFNET/ETC/WATTCP.CFG" ] || fail_smoke 'WATTCP.CFG must not be generated in LIBSCRIPT_OFFLINE=1 mode'
 
@@ -150,7 +243,26 @@ grep -q 'pkt.vector = 0x60' "${WCFG_PATH}" || fail_smoke 'Expected pkt.vector = 
 "${CURL_BIN}" -fsSL "file://${TEST_WORK}/FIXTURE.JSN" -o "${TEST_WORK}/FETCHED.JSN"
 cmp -s "${TEST_WORK}/FIXTURE.JSN" "${TEST_WORK}/FETCHED.JSN" || fail_smoke 'ls-watt-curl file:// fetch mismatch'
 
-# 3. Synthesize bootable 1.44 MiB DOS32A smoke floppy image and boot in headless qemu-system-i386
+# 3. Prepare symlink-free strict 8.3 D: workspace for QEMU vvfat + 1.44 MiB fallback floppy
+DRIVE_D="${TEST_WORK}/DRIVE_D"
+mkdir -p \
+  "${DRIVE_D}/LIBSCRIP/JQ" \
+  "${DRIVE_D}/LIBSCRIP/FBSDUBIN" \
+  "${DRIVE_D}/LIBSCRIP/SQLITETL" \
+  "${DRIVE_D}/LIBSCRIP/BIN" \
+  "${DRIVE_D}/ETC"
+cp -f "${DOS_HOME}/JQ/ACTIVE.VER" "${DRIVE_D}/LIBSCRIP/JQ/ACTIVE.VER"
+cp -f "${DOS_HOME}/FBSDUBIN/ACTIVE.VER" "${DRIVE_D}/LIBSCRIP/FBSDUBIN/ACTIVE.VER"
+cp -f "${DOS_HOME}/SQLITETL/ACTIVE.VER" "${DRIVE_D}/LIBSCRIP/SQLITETL/ACTIVE.VER"
+cp -f "${DOS_HOME}/JQ/1_8_2/bin/jq.exe" "${DRIVE_D}/LIBSCRIP/BIN/JQ.EXE"
+cp -f "${DOS_HOME}/GAWK/5_4_60/bin/gawk.exe" "${DRIVE_D}/LIBSCRIP/BIN/GAWK.EXE"
+cp -f "${DOS_HOME}/TOYBOX/0_8_15/bin/toybox.exe" "${DRIVE_D}/LIBSCRIP/BIN/TOYBOX.EXE"
+cp -f "${DOS_HOME}/FBSDUBIN/15_0_0/bin/sed.exe" "${DRIVE_D}/LIBSCRIP/BIN/SED.EXE"
+cp -f "${DOS_HOME}/SQLITETL/3_47_2/bin/sqlite3.exe" "${DRIVE_D}/LIBSCRIP/BIN/SQLITE3.EXE"
+cp -f "${DOS_HOME}/GAWK/5_4_60/bin/DOS32A.EXE" "${DRIVE_D}/DOS32A.EXE"
+cp -f "${WCFG_PATH}" "${DRIVE_D}/ETC/WATTCP.CFG"
+printf '@ECHO OFF\r\nVER\r\nIF NOT EXIST D:\\LIBSCRIP\\JQ\\ACTIVE.VER EXIT /B 1\r\nIF NOT EXIST D:\\LIBSCRIP\\FBSDUBIN\\ACTIVE.VER EXIT /B 1\r\nIF NOT EXIST D:\\LIBSCRIP\\SQLITETL\\ACTIVE.VER EXIT /B 1\r\nIF NOT EXIST D:\\LIBSCRIP\\BIN\\JQ.EXE EXIT /B 1\r\nIF NOT EXIST D:\\LIBSCRIP\\BIN\\SED.EXE EXIT /B 1\r\nIF NOT EXIST D:\\LIBSCRIP\\BIN\\SQLITE3.EXE EXIT /B 1\r\nIF NOT EXIST D:\\DOS32A.EXE EXIT /B 1\r\nIF NOT EXIST D:\\ETC\\WATTCP.CFG EXIT /B 1\r\nTYPE D:\\LIBSCRIP\\JQ\\ACTIVE.VER\r\nECHO [PASS] QEMU_DOS32A_SMOKE JQ=%s PIPE=%s\r\n' "${JQ_OUT}" "${PIPE_OUT}" > "${DRIVE_D}/SMOKE.BAT"
+
 FLOPPY_IMG="${TEST_WORK}/DOS32SMK.IMG"
 SUMMARY_STR="JQ=${JQ_OUT} PIPE=${PIPE_OUT}"
 "${MKIMG_BIN}" "${FLOPPY_IMG}" \
@@ -160,7 +272,6 @@ SUMMARY_STR="JQ=${JQ_OUT} PIPE=${PIPE_OUT}"
   "${DOS_HOME}/TOYBOX/0_8_15/bin/toybox.exe" \
   "${DOS_HOME}/FBSDUBIN/15_0_0/bin/sed.exe" \
   "${SUMMARY_STR}"
-
 [ -s "${FLOPPY_IMG}" ] || fail_smoke 'Bootable DOS32 smoke floppy image was not created'
 
 QEMU_BIN=''
@@ -171,33 +282,89 @@ for _q in qemu-system-i386 qemu-system-x86_64; do
   fi
 done
 
-if [ -n "${QEMU_BIN}" ]; then
-  COM1_LOG="${TEST_WORK}/com1.log"
-  if [ -n "${MSDOS_BOOT_IMG:-}" ] && [ -f "${MSDOS_BOOT_IMG}" ]; then
-    "${QEMU_BIN}" -M pc -m 16M -display none -no-reboot \
-      -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
-      -drive "file=${MSDOS_BOOT_IMG},format=raw,index=0,media=disk" \
-      -drive "file=${FLOPPY_IMG},format=raw,if=floppy" \
-      -serial "file:${COM1_LOG}" >/dev/null 2>&1 || true
-  else
-    set +e
-    "${QEMU_BIN}" -M pc -m 16M -display none -no-reboot \
-      -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
-      -boot a \
-      -drive "file=${FLOPPY_IMG},format=raw,if=floppy" \
-      -serial "file:${COM1_LOG}" >/dev/null 2>&1
-    QEMU_RC=$?
-    set -e
-    # isa-debug-exit with AL=0 exits QEMU with status (0 << 1) | 1 = 1
-    if [ "${QEMU_RC}" -ne 0 ] && [ "${QEMU_RC}" -ne 1 ]; then
-      fail_smoke "qemu-system-i386 exited with unexpected status ${QEMU_RC}"
+if [ "${SMOKE_MODE}" = "bento-vagrant" ]; then
+  STACK="" "${LIBSCRIPT_ROOT_DIR}/vagrant/msdos-4.0/run_dos_ctest.sh" --bento-dir="${BENTO_DIR}" --out="${TEST_WORK}/vag_msdos40.json"
+  STACK="" "${LIBSCRIPT_ROOT_DIR}/vagrant/freedos-1.3/run_dos_ctest.sh" --bento-dir="${BENTO_DIR}" --out="${TEST_WORK}/vag_freedos13.json"
+  [ -s "${TEST_WORK}/vag_msdos40.json" ] || fail_smoke 'Expected Vagrant msdos-4.0 JSON output'
+  [ -s "${TEST_WORK}/vag_freedos13.json" ] || fail_smoke 'Expected Vagrant freedos-1.3 JSON output'
+  printf '[INFO] Smoke execution mode: bento-vagrant (msdos-4.0 + freedos-1.3)\n'
+elif [ -n "${QEMU_BIN}" ]; then
+  EXECUTED_BENTO_DISK=0
+  if [ "${SMOKE_MODE}" != "synthetic-floppy" ] && [ -z "${MSDOS_BOOT_IMG:-}" ] && command -v ruby >/dev/null 2>&1 && [ -f "${BENTO_DIR}/msdos-builder.sh" ] && [ -f "${BENTO_DIR}/freedos-builder.sh" ]; then
+    MSDOS_DISK_SPEC=$(discover_bento_dos_disk "msdos-4.0 msdos-2.0" 1 || true)
+    FREEDOS_DISK_SPEC=$(discover_bento_dos_disk "freedos-1.4 freedos-1.3" 0 || true)
+    if [ -n "$MSDOS_DISK_SPEC" ] && [ -n "$FREEDOS_DISK_SPEC" ]; then
+      _m_fmt="${MSDOS_DISK_SPEC%%|*}"
+      _m_img="${MSDOS_DISK_SPEC#*|}"
+      _f_fmt="${FREEDOS_DISK_SPEC%%|*}"
+      _f_img="${FREEDOS_DISK_SPEC#*|}"
+      _port_base=$((24100 + ($$ % 400)))
+      _m_port="$_port_base"
+      _f_port=$((_port_base + 1))
+
+      "${QEMU_BIN}" -machine pc,accel=tcg -cpu max -m 64M -smp 1 -snapshot \
+        -drive "file=${_m_img},format=${_m_fmt},if=ide,index=0,media=disk" \
+        -drive "file=fat:${DRIVE_D},format=raw,if=ide,index=1,media=disk" \
+        -serial "telnet:127.0.0.1:${_m_port},server,nowait" \
+        -pidfile "${TEST_WORK}/msdos.pid" -display none -daemonize
+
+      if ! run_bounded_bento_ssh "${BENTO_DIR}/msdos-builder.sh" 'MSDOS_SERIAL_PORT' "$_m_port" 3 'D:\SMOKE.BAT' "${TEST_WORK}/msdos_com1.log"; then
+        fail_smoke "Bento MS-DOS smoke execution failed: $(cat "${TEST_WORK}/msdos_com1.log" 2>/dev/null || true)"
+      fi
+      kill "$(cat "${TEST_WORK}/msdos.pid" 2>/dev/null || true)" 2>/dev/null || true
+      rm -f "${TEST_WORK}/msdos.pid"
+      printf '[INFO] Live ../bento MS-DOS (%s) COM1 verified: %s\n' "$_m_img" "$(tr '\r\n' ' ' < "${TEST_WORK}/msdos_com1.log")"
+
+      "${QEMU_BIN}" -machine pc,accel=tcg -cpu max -m 64M -smp 1 -snapshot \
+        -drive "file=${_f_img},format=${_f_fmt},if=ide,index=0,media=disk" \
+        -drive "file=fat:${DRIVE_D},format=raw,if=ide,index=1,media=disk" \
+        -serial "telnet:127.0.0.1:${_f_port},server,nowait" \
+        -pidfile "${TEST_WORK}/freedos.pid" -display none -daemonize
+
+      if ! run_bounded_bento_ssh "${BENTO_DIR}/freedos-builder.sh" 'FREEDOS_SERIAL_PORT' "$_f_port" 5 'D:\SMOKE.BAT' "${TEST_WORK}/freedos_com1.log"; then
+        fail_smoke "Bento FreeDOS smoke execution failed: $(cat "${TEST_WORK}/freedos_com1.log" 2>/dev/null || true)"
+      fi
+      kill "$(cat "${TEST_WORK}/freedos.pid" 2>/dev/null || true)" 2>/dev/null || true
+      rm -f "${TEST_WORK}/freedos.pid"
+      printf '[INFO] Live ../bento FreeDOS (%s) COM1 verified: %s\n' "$_f_img" "$(tr '\r\n' ' ' < "${TEST_WORK}/freedos_com1.log")"
+
+      EXECUTED_BENTO_DISK=1
+      printf '[INFO] Smoke execution mode: bento-disk (MS-DOS + FreeDOS COMMAND.COM/FreeCOM)\n'
+    elif [ "${SMOKE_MODE}" = "bento-disk" ]; then
+      fail_smoke "Requested --use-bento-disk, but ../bento DOS disk images were not found under ${BENTO_DIR}/builds"
     fi
+  elif [ "${SMOKE_MODE}" = "bento-disk" ]; then
+    fail_smoke "Requested --use-bento-disk, but ruby or ../bento builders were not found at ${BENTO_DIR}"
   fi
-  grep -q '\[PASS\] QEMU_DOS32A_SMOKE' "${COM1_LOG}" || fail_smoke "Missing [PASS] QEMU_DOS32A_SMOKE on COM1: $(cat "${COM1_LOG}" 2>/dev/null || true)"
-  printf '[INFO] Headless QEMU (%s) COM1 output verified: %s\n' "${QEMU_BIN}" "$(tr '\r\n' ' ' < "${COM1_LOG}")"
+
+  if [ "$EXECUTED_BENTO_DISK" -eq 0 ]; then
+    COM1_LOG="${TEST_WORK}/com1.log"
+    if [ -n "${MSDOS_BOOT_IMG:-}" ] && [ -f "${MSDOS_BOOT_IMG}" ]; then
+      "${QEMU_BIN}" -M pc -m 16M -display none -no-reboot -snapshot \
+        -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+        -drive "file=${MSDOS_BOOT_IMG},format=raw,index=0,media=disk" \
+        -drive "file=${FLOPPY_IMG},format=raw,if=floppy" \
+        -serial "file:${COM1_LOG}" >/dev/null 2>&1 || true
+    else
+      set +e
+      "${QEMU_BIN}" -M pc -m 16M -display none -no-reboot \
+        -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+        -boot a \
+        -drive "file=${FLOPPY_IMG},format=raw,if=floppy" \
+        -serial "file:${COM1_LOG}" >/dev/null 2>&1
+      QEMU_RC=$?
+      set -e
+      if [ "${QEMU_RC}" -ne 0 ] && [ "${QEMU_RC}" -ne 1 ]; then
+        fail_smoke "qemu-system-i386 exited with unexpected status ${QEMU_RC}"
+      fi
+    fi
+    grep -q '\[PASS\] QEMU_DOS32A_SMOKE' "${COM1_LOG}" || fail_smoke "Missing [PASS] QEMU_DOS32A_SMOKE on COM1: $(cat "${COM1_LOG}" 2>/dev/null || true)"
+    printf '[INFO] Smoke execution mode: synthetic-floppy (%s): %s\n' "${QEMU_BIN}" "$(tr '\r\n' ' ' < "${COM1_LOG}")"
+  fi
 else
-  printf '[WARN] qemu-system-i386 not installed on PATH; verified 1.44 MiB DOS32A bootable image synthesis + C89 DOS32 substrate.\n'
+  printf '[WARN] qemu-system-i386/x86_64 not installed on PATH; verified 1.44 MiB DOS32A bootable image synthesis + C89 DOS32 substrate.\n'
 fi
 
+cleanup_smoke
 printf '%s\n' '[PASS] Headless QEMU FreeDOS / MS-DOS 4.0 DOS32A smoke test succeeded.'
 exit 0

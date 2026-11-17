@@ -296,6 +296,41 @@ verify_edgcpp_backends_multi_host_campaign() {
   rm -rf "${_t_dir}"
 }
 
+# ## verify_bento_dos_matrix_targets
+# Verifies `bento_matrix` dry-run, snapshot/deploy/test steps, and 2x idempotent state persistence across `msdos-4.0` and `freedos-1.4`.
+verify_bento_dos_matrix_targets() {
+  _t_dir="${TMPDIR:-/tmp}/test_cloud_bento_dos_$$"
+  _st_dos="${_t_dir}/state_dos.json"
+  _loc_dos="${_t_dir}/dos_results"
+  rm -rf "${_t_dir}"
+  mkdir -p "${_t_dir}"
+
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment bento_matrix \
+    --target-os='msdos-4.0' \
+    --component='jq@1.8.2' \
+    --state-file="${_st_dos}" \
+    --local-dir="${_loc_dos}"
+  grep -q '"target_os": "msdos-4.0"' "${_st_dos}"
+  grep -q '"d_deploy_vagrant_box": true' "${_st_dos}"
+  grep -q '"e_snapshot_vagrant_box": true' "${_st_dos}"
+  grep -q '"f_test_libscript_components": true' "${_st_dos}"
+
+  # 2x idempotent rerun on msdos-4.0
+  _dos_rerun="$(LIBSCRIPT_LOG_LEVEL=0 DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment --steps='d_deploy_vagrant_box,e_snapshot_vagrant_box,f_test_libscript_components' --target-os='msdos-4.0' --component='jq@1.8.2' --state-file="${_st_dos}" --local-dir="${_loc_dos}" 2>&1)"
+  printf '%s\n' "${_dos_rerun}" | grep -q 'already deployed'
+
+  # Multi-DOS list including freedos-1.3 and freedos-1.4
+  DRY_RUN=1 "${LIBSCRIPT_ROOT_DIR}/libscript.sh" experiment bento_matrix \
+    --target-os='msdos-1.25,msdos-2.0,msdos-4.0,freedos-1.3,freedos-1.4' \
+    --component='jq' \
+    --state-file="${_st_dos}" \
+    --local-dir="${_loc_dos}"
+  grep -q '"target_os": "msdos-1.25,msdos-2.0,msdos-4.0,freedos-1.3,freedos-1.4"' "${_st_dos}"
+  grep -q '"target_os": "msdos-1.25,msdos-2.0,msdos-4.0,freedos-1.3,freedos-1.4"' "${_loc_dos}/transfer-manifest.json"
+
+  rm -rf "${_t_dir}"
+}
+
 verify_step_by_step_execution
 verify_bento_multi_os_experiment_runner
 verify_single_component_version_pkg_mgr_execution
@@ -303,4 +338,5 @@ verify_combined_all_steps_execution
 verify_libtpu_dual_isa_and_tpu_vm_campaign
 verify_win_port_multi_host_campaign
 verify_edgcpp_backends_multi_host_campaign
+verify_bento_dos_matrix_targets
 printf '[PASS] Named rapid cloud experimentation lifecycle tests succeeded!\n'

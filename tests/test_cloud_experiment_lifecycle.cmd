@@ -70,6 +70,9 @@ if errorlevel 1 exit /b 1
 call :verify_edgcpp_backends_multi_host_campaign
 if errorlevel 1 exit /b 1
 
+call :verify_bento_dos_matrix_targets
+if errorlevel 1 exit /b 1
+
 echo [PASS] Named rapid cloud experimentation lifecycle tests succeeded on Windows!
 exit /b 0
 
@@ -172,4 +175,18 @@ if errorlevel 1 exit /b 1
 if not exist "!_loc_eb!\results\generated_metrics.tex" exit /b 1
 del /f /q "!_st_eb!" >nul 2>&1
 rmdir /s /q "!_loc_eb!" >nul 2>&1
+exit /b 0
+
+:: ## verify_bento_dos_matrix_targets
+:: Verifies bento_matrix dry-run and state persistence across msdos-4.0 and freedos-1.4 on Windows.
+:verify_bento_dos_matrix_targets
+set "_st_dos=%TEMP%\cloud_dos_%RANDOM%.json"
+set "_loc_dos=%TEMP%\cloud_dos_res_%RANDOM%"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment bento_matrix --target-os=msdos-4.0 --component=jq@1.8.2 --dry-run "--state-file=!_st_dos!" "--local-dir=!_loc_dos!"
+if errorlevel 1 exit /b 1
+if not exist "!_st_dos!" exit /b 1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" experiment bento_matrix --target-os=msdos-1.25,msdos-2.0,msdos-4.0,freedos-1.3,freedos-1.4 --component=jq --dry-run "--state-file=!_st_dos!" "--local-dir=!_loc_dos!"
+if errorlevel 1 exit /b 1
+del /f /q "!_st_dos!" >nul 2>&1
+rmdir /s /q "!_loc_dos!" >nul 2>&1
 exit /b 0

@@ -1,18 +1,100 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 # ## Overview
-# 32-bit Protected-Mode MS-DOS / FreeDOS (`anondos/msdos-2.0`) Vagrant configuration using `COM1` serial communicator and `DOS32A.EXE` for `win_port` E3C CTest verification.
+# MS-DOS 2.0 (`bento/msdos-2.0`) Vagrant configuration using `../bento`'s
+# `Bento::VagrantMsdos` (`:msdos` communicator over Telnet/Serial `COM1` + bidirectional
+# `:msdos_sync` `D:` drive) and `DOS32A.EXE` for 16-bit and 32-bit DOS testing.
+#
 # ## Usage
 # cd vagrant/msdos-2.0 && vagrant up
 
+require "rbconfig"
+
+bento_msdos_loaded = false
+begin
+  require "bento/vagrant_msdos"
+  bento_msdos_loaded = true
+rescue LoadError
+  [ENV["BENTO_DIR"], File.expand_path("../../../bento", __dir__)].compact.each do |cand|
+    bento_lib = File.join(cand, "lib")
+    if File.directory?(bento_lib) && !$LOAD_PATH.include?(bento_lib)
+      $LOAD_PATH.unshift(bento_lib)
+    end
+  end
+  begin
+    require "bento/vagrant_msdos"
+    bento_msdos_loaded = true
+  rescue LoadError
+    bento_msdos_loaded = false
+  end
+end
+
 Vagrant.configure("2") do |config|
+  if bento_msdos_loaded
+    config.vm.guest = :msdos
+    config.vm.communicator = :msdos
+  end
+  config.vm.allow_fstab_modification = false
+  config.ssh.insert_key = false
+
   config.vm.define "msdos-2.0-ctest" do |dos|
-    dos.vm.box = "anondos/msdos-2.0"
-    dos.vm.communicator = :msdos_com1 if Vagrant.has_plugin?("vagrant-msdos")
-    dos.vm.synced_folder ".", "/vagrant", disabled: true
-    dos.vm.provider "qemu" do |qe|
+    box_prefix = ENV["BENTO_PREFIX"] || "bento"
+    serial_port = (ENV["MSDOS_SERIAL_PORT"] || 2326).to_i
+
+    dos.vm.box = "#{box_prefix}/msdos-2.0"
+    dos.vm.allow_fstab_modification = false
+    dos.ssh.insert_key = false
+
+    if bento_msdos_loaded
+      dos.vm.guest = :msdos
+      dos.vm.communicator = :msdos
+      if dos.respond_to?(:msdos)
+        dos.msdos.host = "127.0.0.1"
+        dos.msdos.port = serial_port
+        dos.msdos.dos_version = "2.0" if dos.msdos.respond_to?(:dos_version=)
+        dos.msdos.sync_drive = "D:"
+        dos.msdos.work_dir = "D:"
+      end
+      dos.vm.synced_folder ".", "/vagrant",
+        type: :msdos_sync,
+        drive: "D:",
+        sync_direction: :bidirectional,
+        crlf_convert: true,
+        exclude: [".git/", ".vagrant/", "builds/", "tests_tmp/", "vagrant/"]
+    else
+      dos.vm.communicator = :msdos_com1 if Vagrant.has_plugin?("vagrant-msdos")
+      dos.vm.synced_folder ".", "/vagrant", disabled: true
+    end
+
+    dos.vm.provider :qemu do |qe|
+      host_cpu = RbConfig::CONFIG["host_cpu"].to_s.downcase
+      is_arm = host_cpu.include?("arm") || host_cpu.include?("aarch64")
+      is_win = RUBY_PLATFORM =~ /mswin|mingw|cygwin/
+      accel = is_arm ? "tcg" : (RUBY_PLATFORM.include?("darwin") ? "hvf:tcg" : (is_win ? "whpx:tcg" : "kvm:tcg"))
+
       qe.arch = "i386" if qe.respond_to?(:arch=)
-      qe.qemu_args = %w(-cpu 486 -m 64M -nographic -serial stdio)
+      qe.machine = "pc,accel=#{accel}" if qe.respond_to?(:machine=)
+      qe.cpu = (is_arm ? "max" : "pentium2") if qe.respond_to?(:cpu=)
+      qe.smp = "1" if qe.respond_to?(:smp=)
+      qe.memory = "64M" if qe.respond_to?(:memory=)
+      qe.net_device = "pcnet" if qe.respond_to?(:net_device=)
+      qe.drive_interface = "ide" if qe.respond_to?(:drive_interface=)
+      qe.firmware_format = nil if qe.respond_to?(:firmware_format=)
+      if qe.respond_to?(:extra_qemu_args=)
+        qe.extra_qemu_args = [
+          "-vga", "std",
+          "-rtc", "base=localtime",
+          "-serial", "telnet:127.0.0.1:#{serial_port},server,nowait"
+        ]
+      end
+    end
+
+    dos.vm.provider :virtualbox do |vb|
+      vb.memory = 64
+      vb.cpus = 1
+      vb.check_guest_additions = false if vb.respond_to?(:check_guest_additions=)
+      vb.customize ["modifyvm", :id, "--uart1", "0x3f8", "4"]
+      vb.customize ["modifyvm", :id, "--uartmode1", "tcpserver", serial_port.to_s]
     end
   end
 end

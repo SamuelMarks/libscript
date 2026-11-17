@@ -1,7 +1,8 @@
-# Vagrant `anondos/msdos-2.0` (`GUEST-DOS32`)
+# Vagrant `bento/msdos-2.0` (`GUEST-DOS32`)
 
-Provides reproducible 32-bit protected-mode (`DOS32A.EXE` + OpenWatcom v2 `wcl386` `LE`) `CTest`
-execution over the `COM1` serial communicator for `win_port` Experiment 3C (`E3C`).
+Provides reproducible 16-bit and 32-bit protected-mode (`DOS32A.EXE` + OpenWatcom v2 `wcl386` `LE`)
+execution inside the `../bento` MS-DOS 2.0 box using `Bento::VagrantMsdos` (`:msdos` Telnet/Serial
+`COM1` communicator and bidirectional `:msdos_sync` `D:` drive).
 
 ## Usage
 
