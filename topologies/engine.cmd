@@ -199,7 +199,7 @@ set "_JQ_UP=%TEMP%\ls_topo_up_%RANDOM%_%RANDOM%.jq"
     echo     .node_groups[] as $g ^|
     echo     range^(0; $g.count^) as $i ^|
     echo     {
-    echo       id: "\^($g.name^)-\^($i^|tostring^)",
+    echo       id: "\($g.name)-\($i|tostring)",
     echo       group: $g.name,
     echo       role: ^($g.role // ^(if ^($g.roles // ^[^] ^| index^("leader"^)^) and $i == 0 then "leader" else ^($g.roles[1] // $g.roles[0] // "worker"^) end^)^),
     echo       state: "HEALTHY",
@@ -259,7 +259,7 @@ set "_JQ_SC=%TEMP%\ls_topo_sc_%RANDOM%_%RANDOM%.jq"
     echo   $existing[0:$cnt]
     echo else
     echo   $existing + ^[range^(^($existing ^| length^); $cnt^) ^| {
-    echo     id: "\^($gn^)-\^(tostring^)",
+    echo     id: "\($gn)-\(tostring)",
     echo     group: $gn,
     echo     role: ^($group_def.role // $group_def.roles[0] // "worker"^),
     echo     state: "HEALTHY",

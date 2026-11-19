@@ -64,7 +64,7 @@ if [ "$_nodejs_added" -eq 0 ]; then
   _nodejs_active_dir="${_nodejs_home}/${NODEJS_VERSION}"
   libscript_path_prepend "${_nodejs_active_dir}/bin"
 fi
-if [ -n "$_nodejs_active_dir" ]; then
+if [ "$_nodejs_added" -eq 1 ] && [ -n "$_nodejs_active_dir" ] && [ -d "$_nodejs_active_dir" ]; then
   export NPM_CONFIG_PREFIX="${NPM_CONFIG_PREFIX:-${_nodejs_active_dir}}"
   export COREPACK_HOME="${COREPACK_HOME:-${_nodejs_active_dir}/corepack}"
 fi

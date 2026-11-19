@@ -140,10 +140,17 @@ set "DB_SCHEMA=app"
 set "DB_USER=app"
 set "HAS_CHAINER=false"
 
-for /f "usebackq tokens=1,* delims==" %%K in (`"!JQ_BIN!" -r --arg ver_ovr "!VERSION_OVERRIDE!" -f "!TMP_JQ!" "!PKG_JSON!"`) do (
+set "TMP_OUT=%TEMP%\ls_tpl_msi_%RANDOM%_%RANDOM%.out"
+"!JQ_BIN!" -r --arg ver_ovr "!VERSION_OVERRIDE!" -f "!TMP_JQ!" "!PKG_JSON!" > "!TMP_OUT!"
+if errorlevel 1 (
+    del /f /q "!TMP_JQ!" "!TMP_OUT!" >nul 2>&1
+    echo [ERROR] Failed to parse !PKG_JSON! with jq >&2
+    exit /b 1
+)
+for /f "usebackq tokens=1,* delims==" %%K in ("!TMP_OUT!") do (
     set "%%K=%%L"
 )
-del /f /q "!TMP_JQ!" >nul 2>&1
+del /f /q "!TMP_JQ!" "!TMP_OUT!" >nul 2>&1
 
 set "PRODUCT_CODE="
 for /f "usebackq delims=" %%U in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uuid_gen.cmd" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "!APP_NAME!.!VARIANT!.!APP_VERSION!"`) do set "PRODUCT_CODE=%%U"

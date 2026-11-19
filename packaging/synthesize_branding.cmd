@@ -114,8 +114,15 @@ set "TMP_BR_JQ=%TEMP%\ls_brand_%RANDOM%.jq"
     echo "EULA_COMPS=\($eula_comps)"
 ) > "!TMP_BR_JQ!"
 
-for /f "usebackq tokens=1,* delims==" %%K in (`"!JQ_BIN!" -r -f "!TMP_BR_JQ!" "!PKG_JSON!"`) do set "%%K=%%L"
-del /f /q "!TMP_BR_JQ!" >nul 2>&1
+set "TMP_BR_OUT=%TEMP%\ls_brand_%RANDOM%_%RANDOM%.out"
+"!JQ_BIN!" -r -f "!TMP_BR_JQ!" "!PKG_JSON!" > "!TMP_BR_OUT!"
+if errorlevel 1 (
+    del /f /q "!TMP_BR_JQ!" "!TMP_BR_OUT!" >nul 2>&1
+    echo [ERROR] Failed to parse !PKG_JSON! with jq >&2
+    exit /b 1
+)
+for /f "usebackq tokens=1,* delims==" %%K in ("!TMP_BR_OUT!") do set "%%K=%%L"
+del /f /q "!TMP_BR_JQ!" "!TMP_BR_OUT!" >nul 2>&1
 
 set /a "PR_R=0x!PRIMARY_HEX:~0,2!, PR_G=0x!PRIMARY_HEX:~2,2!, PR_B=0x!PRIMARY_HEX:~4,2!" 2>nul
 set /a "SC_R=0x!SECONDARY_HEX:~0,2!, SC_G=0x!SECONDARY_HEX:~2,2!, SC_B=0x!SECONDARY_HEX:~4,2!" 2>nul

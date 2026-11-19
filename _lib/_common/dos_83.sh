@@ -120,16 +120,18 @@ export STACK
 [ -n "${_d83_caller_this:-}" ] && THIS_FILE="$_d83_caller_this"
 unset SCRIPT_NAME _d83_caller_this _d83_caller_dir || true
 
-if ! (return 0 2>/dev/null); then
-  if [ $# -ge 1 ]; then
-    _d83_sub="${1#:}"
-    shift
-    case "${_d83_sub}" in
-      libscript_dos83_home|home) libscript_dos83_home "$@" ;;
-      libscript_dos83_comp|comp) libscript_dos83_comp "$@" ;;
-      libscript_dos83_ver|ver) libscript_dos83_ver "$@" ;;
-      libscript_dos83_enabled|enabled) libscript_dos83_enabled "$@" ;;
-      *) exit 1 ;;
-    esac
-  fi
-fi
+case "$(basename -- "${0}")" in
+  dos_83.sh)
+    if [ $# -ge 1 ]; then
+      _d83_sub="${1#:}"
+      shift
+      case "${_d83_sub}" in
+        libscript_dos83_home|home) libscript_dos83_home "$@" ;;
+        libscript_dos83_comp|comp) libscript_dos83_comp "$@" ;;
+        libscript_dos83_ver|ver) libscript_dos83_ver "$@" ;;
+        libscript_dos83_enabled|enabled) libscript_dos83_enabled "$@" ;;
+        *) exit 1 ;;
+      esac
+    fi
+    ;;
+esac

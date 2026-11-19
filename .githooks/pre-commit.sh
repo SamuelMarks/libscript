@@ -253,9 +253,9 @@ SHELLCHECK_OPT_ARGS=""
 if shellcheck --list-optional 2>/dev/null | grep -q "useless-use-of-cat"; then
   SHELLCHECK_OPT_ARGS="-o useless-use-of-cat"
 fi
-if printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "node_modules|\.git/|gen/.*" >/dev/null 2>&1; then
+if printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "(^|/)(node_modules|\.git|gen)/" >/dev/null 2>&1; then
   # shellcheck disable=SC2086
-  printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "node_modules|\.git/|gen/.*" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS
+  printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "(^|/)(node_modules|\.git|gen)/" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS
 fi
 
 # 5. Regenerate Markdown Readmes

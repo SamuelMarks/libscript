@@ -177,13 +177,13 @@ set "BUNDLE_JSON=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\offline_bundle.json"
 if "%VERSION%"=="" if exist "%BUNDLE_JSON%" (
     call :resolve_jq_bin
     if not "!JQ_BIN!"=="" (
-        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.mysql.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.redis.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.mongodb.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".runtimes.python.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".runtimes.nodejs.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".databases.meilisearch.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
-        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".webservers.caddy.version // empty" "%BUNDLE_JSON%" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".databases.mysql.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".databases.redis.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".databases.mongodb.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".runtimes.python.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".runtimes.nodejs.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".databases.meilisearch.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
+        if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".webservers.caddy.version // empty" "%BUNDLE_JSON%"" 2^>nul`) do set "VERSION=%%A"
     )
 )
 if "%VERSION%"=="" set "VERSION=1.0.0"

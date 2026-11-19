@@ -41,6 +41,7 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 DASH_INSTALL_METHOD="${DASH_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-libscript_native}}}"
 ACTION="${ACTION:-install}"

@@ -73,8 +73,13 @@ if "!_NODE_ADDED!"=="0" (
     echo ";!_NEW_PATH!;" | findstr /I /C:";!_NODE_BIN!;" >nul 2>&1
     if errorlevel 1 set "_NEW_PATH=!_NODE_BIN!;!_NEW_PATH!"
 )
-if "%NPM_CONFIG_PREFIX%"=="" set "NPM_CONFIG_PREFIX=!_NODE_ROOT!"
-if "%COREPACK_HOME%"=="" set "COREPACK_HOME=!_NODE_ROOT!\corepack"
-
+set "_NODE_ACTIVE_ROOT="
+if exist "!_NODE_ROOT!" set "_NODE_ACTIVE_ROOT=!_NODE_ROOT!"
+if "!_NODE_ACTIVE_ROOT!"=="" if exist "%LIBSCRIPT_BASE_DIR%\nodejs\v!_NODE_VER_CLEAN!" set "_NODE_ACTIVE_ROOT=%LIBSCRIPT_BASE_DIR%\nodejs\v!_NODE_VER_CLEAN!"
+if "!_NODE_ACTIVE_ROOT!"=="" if exist "%LIBSCRIPT_BASE_DIR%\nodejs\default" set "_NODE_ACTIVE_ROOT=%LIBSCRIPT_BASE_DIR%\nodejs\default"
+if not "!_NODE_ACTIVE_ROOT!"=="" (
+    if "%NPM_CONFIG_PREFIX%"=="" set "NPM_CONFIG_PREFIX=!_NODE_ACTIVE_ROOT!"
+    if "%COREPACK_HOME%"=="" set "COREPACK_HOME=!_NODE_ACTIVE_ROOT!\corepack"
+)
 endlocal & set "NODEJS_VERSION=%NODEJS_VERSION%" & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_BASE_DIR%" & set "NPM_CONFIG_PREFIX=%NPM_CONFIG_PREFIX%" & set "COREPACK_HOME=%COREPACK_HOME%" & set "PATH=%_NEW_PATH%"
 exit /b 0

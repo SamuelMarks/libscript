@@ -56,6 +56,15 @@ static int wc_ci_ncmp(const char *a, const char *b, size_t n) {
     return 0;
 }
 
+static void wc_copy(char *dst, size_t cap, const char *src) {
+    size_t n;
+    if (cap == 0) return;
+    n = strlen(src);
+    if (n >= cap) n = cap - 1;
+    memcpy(dst, src, n);
+    dst[n] = '\0';
+}
+
 static int parse_url(const char *raw, ParsedUrl *u) {
     const char *p;
     const char *slash;
@@ -65,7 +74,7 @@ static int parse_url(const char *raw, ParsedUrl *u) {
     memset(u, 0, sizeof(*u));
     if (wc_ci_ncmp(raw, "file://", 7) == 0) {
         strcpy(u->scheme, "file");
-        strncpy(u->path, raw + 7, sizeof(u->path) - 1);
+        wc_copy(u->path, sizeof(u->path), raw + 7);
         return 0;
     }
     if (wc_ci_ncmp(raw, "http://", 7) == 0) {
@@ -92,7 +101,7 @@ static int parse_url(const char *raw, ParsedUrl *u) {
         u->host[(size_t)(colon - u->host)] = '\0';
     }
     if (slash) {
-        strncpy(u->path, slash, sizeof(u->path) - 1);
+        wc_copy(u->path, sizeof(u->path), slash);
     } else {
         strcpy(u->path, "/");
     }
@@ -226,15 +235,24 @@ static int fetch_http_once(const ParsedUrl *u, const char *extra_hdr, int head_o
                         if (parse_http_response(hdr_buf, hdr_used, &status_code, redirect_url, redir_cap, &hdr_end) == 0) {
                             header_parsed = 1;
                             if (head_only) {
-                                fwrite(hdr_buf, 1, hdr_end, out);
+                                if (fwrite(hdr_buf, 1, hdr_end, out) != hdr_end) {
+                                    sock_close(&sock);
+                                    return 23;
+                                }
                                 break;
                             }
                             if (redirect_url[0] == '\0' && (!fail_on_err || status_code < 400) && hdr_used > hdr_end) {
-                                fwrite(hdr_buf + hdr_end, 1, hdr_used - hdr_end, out);
+                                if (fwrite(hdr_buf + hdr_end, 1, hdr_used - hdr_end, out) != hdr_used - hdr_end) {
+                                    sock_close(&sock);
+                                    return 23;
+                                }
                             }
                         }
                     } else if (!head_only && redirect_url[0] == '\0' && (!fail_on_err || status_code < 400)) {
-                        fwrite(rbuf, 1, (size_t)n, out);
+                        if (fwrite(rbuf, 1, (size_t)n, out) != (size_t)n) {
+                            sock_close(&sock);
+                            return 23;
+                        }
                     }
                 }
             }
@@ -308,15 +326,36 @@ static int fetch_http_once(const ParsedUrl *u, const char *extra_hdr, int head_o
                 if (parse_http_response(hdr_buf, hdr_used, &status_code, redirect_url, redir_cap, &hdr_end) == 0) {
                     header_parsed = 1;
                     if (head_only) {
-                        fwrite(hdr_buf, 1, hdr_end, out);
+                        if (fwrite(hdr_buf, 1, hdr_end, out) != hdr_end) {
+#if defined(_WIN32)
+                            closesocket(fd);
+#else
+                            close(fd);
+#endif
+                            return 23;
+                        }
                         break;
                     }
                     if (redirect_url[0] == '\0' && (!fail_on_err || status_code < 400) && hdr_used > hdr_end) {
-                        fwrite(hdr_buf + hdr_end, 1, hdr_used - hdr_end, out);
+                        if (fwrite(hdr_buf + hdr_end, 1, hdr_used - hdr_end, out) != hdr_used - hdr_end) {
+#if defined(_WIN32)
+                            closesocket(fd);
+#else
+                            close(fd);
+#endif
+                            return 23;
+                        }
                     }
                 }
             } else if (!head_only && redirect_url[0] == '\0' && (!fail_on_err || status_code < 400)) {
-                fwrite(rbuf, 1, (size_t)n, out);
+                if (fwrite(rbuf, 1, (size_t)n, out) != (size_t)n) {
+#if defined(_WIN32)
+                    closesocket(fd);
+#else
+                    close(fd);
+#endif
+                    return 23;
+                }
             }
         }
 #if defined(_WIN32)
@@ -387,12 +426,11 @@ int main(int argc, char **argv) {
         }
     }
 
-    strncpy(cur_url, url, sizeof(cur_url) - 1);
-    cur_url[sizeof(cur_url) - 1] = '\0';
+    wc_copy(cur_url, sizeof(cur_url), url);
 
     for (hops = 0; hops < 8; hops++) {
         ParsedUrl pu;
-        char next_url[1536];
+        char next_url[1024];
         if (parse_url(cur_url, &pu) != 0) {
             rc = 3;
             break;
@@ -406,8 +444,7 @@ int main(int argc, char **argv) {
             if (next_url[0] == '/') {
                 sprintf(cur_url, "%s://%s:%d%s", pu.scheme, pu.host, pu.port, next_url);
             } else {
-                strncpy(cur_url, next_url, sizeof(cur_url) - 1);
-                cur_url[sizeof(cur_url) - 1] = '\0';
+                wc_copy(cur_url, sizeof(cur_url), next_url);
             }
             continue;
         }

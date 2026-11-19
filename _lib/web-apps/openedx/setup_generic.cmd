@@ -508,7 +508,7 @@ if "!ACTION!"=="install" (
         "!OPENEDX_INSTALL_DIR!\.venv\Scripts\python.exe" -m pip install --no-index --no-build-isolation --no-deps -e "!OPENEDX_INSTALL_DIR!\codebase" >> "!OPENEDX_INSTALL_DIR!\logs\install.log" 2>&1
     )
 
-    for /f "usebackq tokens=*" %%A in (`"!PY_EXE!" -c "import site; print(site.getsitepackages()[1])" 2^>nul`) do set "_sp_dir=%%A"
+    for /f "usebackq tokens=*" %%A in (`""!PY_EXE!" -c "import site; print(site.getsitepackages()[1])"" 2^>nul`) do set "_sp_dir=%%A"
     if not defined _sp_dir set "_sp_dir=!OPENEDX_INSTALL_DIR!\.venv\Lib\site-packages"
     if not exist "!_sp_dir!\imghdr.py" (
         if not exist "!_sp_dir!" mkdir "!_sp_dir!" 2>nul

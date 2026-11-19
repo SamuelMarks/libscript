@@ -854,11 +854,22 @@ if "!_lrgt_jq!"=="" (
 )
 if not "!_curl_bin!"=="" (
     if not "!_lrgt_jq!"=="" (
-        for /f "usebackq delims=" %%T in (`"!_curl_bin!" -fsSL "!_lrgt_url!" 2^>nul ^| "!_lrgt_jq!" -r ".tag_name // empty"`) do (
-            set "_tag_val=%%T"
-            if "!_tag_val:~0,1!"=="v" set "_tag_val=!_tag_val:~1!"
-            echo !_tag_val!
-            exit /b 0
+        set "_lrgt_tmp=%TEMP%\ls_gh_tag_%RANDOM%_%RANDOM%.json"
+        set "_lrgt_out=%TEMP%\ls_gh_tag_%RANDOM%_%RANDOM%.out"
+        "!_curl_bin!" -fsSL "!_lrgt_url!" -o "!_lrgt_tmp!" 2>nul
+        if exist "!_lrgt_tmp!" (
+            "!_lrgt_jq!" -r ".tag_name // empty" "!_lrgt_tmp!" > "!_lrgt_out!" 2>nul
+            del /f /q "!_lrgt_tmp!" >nul 2>&1
+            if exist "!_lrgt_out!" (
+                set "_tag_val="
+                for /f "usebackq delims=" %%T in ("!_lrgt_out!") do if "!_tag_val!"=="" set "_tag_val=%%T"
+                del /f /q "!_lrgt_out!" >nul 2>&1
+                if not "!_tag_val!"=="" (
+                    if "!_tag_val:~0,1!"=="v" set "_tag_val=!_tag_val:~1!"
+                    echo !_tag_val!
+                    exit /b 0
+                )
+            )
         )
     )
 )

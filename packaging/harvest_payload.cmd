@@ -157,14 +157,14 @@ set "TMP_FLT_AWK=%TEMP%\ls_harvest_flt_%RANDOM%.awk"
     echo   sub^(/^\.\//, "", rel^)
     echo   if ^(rel == ""^) next
     echo   if ^(src_mode == "1"^) {
-    echo     if ^(rel ~ /^\.git/ ^|^| rel ~ /^\.vagrant/ ^|^| rel ~ /\.(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
+    echo     if ^(rel ~ /^^\.git/ ^|^| rel ~ /^^\.vagrant/ ^|^| rel ~ /\.(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
     echo     if ^(inc_msi == "0" ^&^& rel ~ /\.msi$/^) next
     echo     print rel
     echo   } else {
-    echo     if ^(rel ~ /^(\.git^|\.vagrant^|tests_tmp\/^|dist\/^|build\/^|tmp\/^|node_modules\/^|cache\/)/^) next
-    echo     if ^(rel ~ /\/(\.git^|\.github^|\.githooks^|\.vagrant^|tests_tmp^|dist^|build^|tmp^|node_modules^|cache)(\/^|$)/^) next
+    echo     if ^(rel ~ /^^^(\.git^|\.vagrant^|tests_tmp\/^|dist\/^|build\/^|tmp\/^|node_modules\/^|cache\/^)/^) next
+    echo     if ^(rel ~ /\/^(\.git^|\.github^|\.githooks^|\.vagrant^|tests_tmp^|dist^|build^|tmp^|node_modules^|cache^)^(\/^|$^)/^) next
     echo     if ^(rel ~ /\.(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
-    echo     if ^(rel ~ /^packaging\/screenshots\/release_test\// ^|^| rel == "TODO_PLAN.md"^) next
+    echo     if ^(rel ~ /^^packaging\/screenshots\/release_test\// ^|^| rel == "TODO_PLAN.md"^) next
     echo     if ^(rel ~ /\.msi$/^) { if ^(inc_msi == "1"^) print rel; next }
     echo     print rel
     echo   }

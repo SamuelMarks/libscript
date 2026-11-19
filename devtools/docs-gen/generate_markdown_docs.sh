@@ -213,7 +213,10 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|topologi
         jq -r '.properties | to_entries[] | "| `\(.key)` | \((.value.description // "") | gsub("[\r\n]+"; " ")) | `\(if (.value.default | type) == "array" and (.value.default | length) == 0 then "none" else (.value.default // "none") end)` | \([(.value.deprecated_aliases[]?), (.value.version_aliases[]?), (.value.examples[]?)] | join(", ")) |"' "$schema" | sed 's/ |"$/ |/' >> "$vars_tmp"
 
         if case "$dir" in *"_lib/"*) true ;; *) false ;; esac; then
-            printf '\n%s\n' 'Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`, and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.' >> "$vars_tmp"
+            cat <<'EOF' >> "$vars_tmp"
+
+Global framework variables (such as `LIBSCRIPT_HOME`, `LIBSCRIPT_CACHE_DIR`, `LIBSCRIPT_OFFLINE`, and `LIBSCRIPT_DEFAULT_INSTALL_METHOD`) are documented in `_lib/_common/README.md`.
+EOF
         fi
 
         vars_norm=$(normalize_markdown_section < "$vars_tmp")

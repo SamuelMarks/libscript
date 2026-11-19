@@ -132,6 +132,8 @@ export STACK
 [ -n "${_bd_caller_this:-}" ] && THIS_FILE="$_bd_caller_this"
 unset SCRIPT_NAME _bd_caller_this _bd_caller_dir || true
 
-if ! (return 0 2>/dev/null); then
-  libscript_build_dos32_tool "$@"
-fi
+case "$(basename -- "${0}")" in
+  build_dos32.sh)
+    libscript_build_dos32_tool "$@"
+    ;;
+esac

@@ -247,21 +247,21 @@ if "%TARGET_DIR%"=="" set "TARGET_DIR=_lib\web-apps\openedx"
 call :resolve_jq_bin
 set "STACK_NAME="
 if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".name // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "STACK_NAME=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "(.title // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "APP_NAME=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".version // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "APP_VERSION=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "(.publisher // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "APP_PUBLISHER=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".upgrade_code // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "UPGRADE_CODE=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".directories.app_default // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "INSTALL_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".directories.data_default // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "DATA_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".directories.logs_default // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LOGS_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.icon // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined ICON_PATH set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.banner_top // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.banner_side // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.license_rtf // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do if not defined LICENSE_PATH set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".name // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "STACK_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "(.title // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "APP_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".version // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "APP_VERSION=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "(.publisher // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "APP_PUBLISHER=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".upgrade_code // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "UPGRADE_CODE=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".directories.app_default // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "INSTALL_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".directories.data_default // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "DATA_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".directories.logs_default // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "LOGS_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".branding.icon // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do if not defined ICON_PATH set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".branding.banner_top // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".branding.banner_side // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".branding.license_rtf // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do if not defined LICENSE_PATH set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
 ) else if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\manifest.json" (
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".name // empty" "%TARGET_DIR%\manifest.json" 2^>nul`) do set "STACK_NAME=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "(.title // .name // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\manifest.json" 2^>nul`) do set "APP_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".name // empty" "%TARGET_DIR%\manifest.json"" 2^>nul`) do set "STACK_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "(.title // .name // empty) | gsub(\"&\"; \"and\")" "%TARGET_DIR%\manifest.json"" 2^>nul`) do set "APP_NAME=%%A"
 )
 if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
 set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript\%STACK_NAME%\assets"
@@ -357,7 +357,7 @@ if /I "%VARIANT%"=="offline" (
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
     set "WELCOME_DESC="
     if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
-        for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".wizard_copy.welcome_description_offline // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "WELCOME_DESC=%%A"
+        for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".wizard_copy.welcome_description_offline // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "WELCOME_DESC=%%A"
     )
     if "!WELCOME_DESC!"=="" set "WELCOME_DESC=The Setup Wizard will deploy %APP_NAME% and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
@@ -368,7 +368,7 @@ if /I "%VARIANT%"=="offline" (
     if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
     set "WELCOME_DESC="
     if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
-        for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".wizard_copy.welcome_description_online // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "WELCOME_DESC=%%A"
+        for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".wizard_copy.welcome_description_online // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "WELCOME_DESC=%%A"
     )
     if "!WELCOME_DESC!"=="" set "WELCOME_DESC=The Setup Wizard will download and install %APP_NAME% and required runtimes on your computer."
     set "COMP_TAG="
@@ -381,11 +381,11 @@ set "LAUNCH_1_TEXT=Launch %APP_NAME% in Web Browser"
 set "LAUNCH_2_TEXT=Launch %APP_NAME% Administration Dashboard"
 
 if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".wizard_copy.exit_description // empty" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "EXIT_DESC=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.shortcuts | length) >= 1 then \"Create \" + .shortcuts[0].title + \" shortcut\" else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "SHORTCUT_1_TEXT=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.shortcuts | length) >= 2 then \"Create \" + .shortcuts[1].title + \" shortcut\" else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "SHORTCUT_2_TEXT=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.browser_launch.targets | length) >= 1 then .browser_launch.targets[0].title else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LAUNCH_1_TEXT=%%A"
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r "if (.browser_launch.targets | length) >= 2 then .browser_launch.targets[1].title else empty end" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LAUNCH_2_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".wizard_copy.exit_description // empty" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "EXIT_DESC=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "if (.shortcuts | length) >= 1 then \"Create \" + .shortcuts[0].title + \" shortcut\" else empty end" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "SHORTCUT_1_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "if (.shortcuts | length) >= 2 then \"Create \" + .shortcuts[1].title + \" shortcut\" else empty end" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "SHORTCUT_2_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "if (.browser_launch.targets | length) >= 1 then .browser_launch.targets[0].title else empty end" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "LAUNCH_1_TEXT=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r "if (.browser_launch.targets | length) >= 2 then .browser_launch.targets[1].title else empty end" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "LAUNCH_2_TEXT=%%A"
 )
 
 set "WXS_FILE=%OUT_FILE%.wxs"
@@ -402,7 +402,7 @@ set "LAST_LICENSE_DLG=Dlg_License"
 
 set "LICENSE_MODE=consolidated_eula"
 if not "!JQ_BIN!"=="" if exist "%TARGET_DIR%\packaging.json" (
-    for /f "usebackq delims=" %%A in (`"!JQ_BIN!" -r ".branding.license_mode // \"consolidated_eula\"" "%TARGET_DIR%\packaging.json" 2^>nul`) do set "LICENSE_MODE=%%A"
+    for /f "usebackq delims=" %%A in (`""!JQ_BIN!" -r ".branding.license_mode // \"consolidated_eula\"" "%TARGET_DIR%\packaging.json"" 2^>nul`) do set "LICENSE_MODE=%%A"
 )
 
 if /I "%LICENSE_MODE%"=="chained_dialogs" (

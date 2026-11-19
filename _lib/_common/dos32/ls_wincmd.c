@@ -216,15 +216,24 @@ static void format_arg_tilde(const char *raw_val, const char *mods, char *out, s
     }
     if (want_n || want_x) {
         const char *base = slash ? (slash + 1) : full;
+        size_t cur_len = strlen(out);
+        size_t avail = (cur_len + 1 < cap) ? (cap - cur_len - 1) : 0;
         dot = strrchr(base, '.');
         if (want_n && want_x) {
-            strncat(out, base, cap - strlen(out) - 1);
+            size_t blen = strlen(base);
+            if (blen > avail) blen = avail;
+            memcpy(out + cur_len, base, blen);
+            out[cur_len + blen] = '\0';
         } else if (want_n) {
             size_t nlen = dot ? (size_t)(dot - base) : strlen(base);
-            if (strlen(out) + nlen >= cap) nlen = cap - strlen(out) - 1;
-            strncat(out, base, nlen);
+            if (nlen > avail) nlen = avail;
+            memcpy(out + cur_len, base, nlen);
+            out[cur_len + nlen] = '\0';
         } else if (want_x && dot) {
-            strncat(out, dot, cap - strlen(out) - 1);
+            size_t xlen = strlen(dot);
+            if (xlen > avail) xlen = avail;
+            memcpy(out + cur_len, dot, xlen);
+            out[cur_len + xlen] = '\0';
         }
     }
 }
@@ -910,7 +919,10 @@ static int exec_single_command(Interp *st, char **lines, int line_count, int *pc
                     str_copy(subcmd, sizeof(subcmd), spec + 1);
                     sprintf(tmpf, "%s%clswcmd_%u.tmp", getenv("TEMP") ? getenv("TEMP") : "/tmp", LS_SEP, (unsigned int)++st->rng_state);
                     sprintf(sysline, "%s > \"%s\"", subcmd, tmpf);
-                    (void)system(sysline);
+                    {
+                        int sys_rc = system(sysline);
+                        st->errorlevel = sys_rc;
+                    }
                     tf = fopen(tmpf, "r");
                     if (tf) {
                         while (fgets(fline, sizeof(fline), tf) && !st->exit_flag) {
