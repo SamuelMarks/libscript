@@ -150,7 +150,7 @@ set "TMP_BMP_AWK=%TEMP%\ls_bmp_%RANDOM%.awk"
     echo         if ^(y == 0^) printf "%%c%%c%%c", pr_b, pr_g, pr_r; else printf "%%c%%c%%c", 255, 255, 255
     echo       } else {
     echo         if ^(y ^< 6^) printf "%%c%%c%%c", pr_b, pr_g, pr_r
-    echo         else if ^(^((y ^>= 88 ^&^& y ^<= 90 ^&^& x ^>= 16 ^&^& x ^<= 148^) ^|^| ^(y ^>= 192 ^&^& y ^<= 194 ^&^& x ^>= 16 ^&^& x ^<= 148^)^)^) printf "%%c%%c%%c", sc_b, sc_g, sc_r
+    echo         else if ^(^(y ^>= 88 ^&^& y ^<= 90 ^&^& x ^>= 16 ^&^& x ^<= 148^) ^|^| ^(y ^>= 192 ^&^& y ^<= 194 ^&^& x ^>= 16 ^&^& x ^<= 148^)^) printf "%%c%%c%%c", sc_b, sc_g, sc_r
     echo         else printf "%%c%%c%%c", dk_b, dk_g, dk_r
     echo       }
     echo     }
@@ -160,9 +160,11 @@ set "TMP_BMP_AWK=%TEMP%\ls_bmp_%RANDOM%.awk"
 ) > "!TMP_BMP_AWK!"
 
 "!AWK_BIN!" !AWK_BIN_FLAG! -v mode=side -v width=164 -v height=312 -v pr_r=!PR_R! -v pr_g=!PR_G! -v pr_b=!PR_B! -v sc_r=!SC_R! -v sc_g=!SC_G! -v sc_b=!SC_B! -v dk_r=!DK_R! -v dk_g=!DK_G! -v dk_b=!DK_B! -f "!TMP_BMP_AWK!" > "!OUTPUT_DIR!\banner_side.bmp"
+if errorlevel 1 ( del /f /q "!TMP_BMP_AWK!" >nul 2>&1 & echo [ERROR] Failed to synthesize banner_side.bmp >&2 & exit /b 1 )
 echo [OK] Generated side banner: !OUTPUT_DIR!\banner_side.bmp ^(164x312^)
 
 "!AWK_BIN!" !AWK_BIN_FLAG! -v mode=top -v width=493 -v height=58 -v pr_r=!PR_R! -v pr_g=!PR_G! -v pr_b=!PR_B! -v sc_r=!SC_R! -v sc_g=!SC_G! -v sc_b=!SC_B! -v dk_r=!DK_R! -v dk_g=!DK_G! -v dk_b=!DK_B! -f "!TMP_BMP_AWK!" > "!OUTPUT_DIR!\banner_top.bmp"
+if errorlevel 1 ( del /f /q "!TMP_BMP_AWK!" >nul 2>&1 & echo [ERROR] Failed to synthesize banner_top.bmp >&2 & exit /b 1 )
 echo [OK] Generated top banner: !OUTPUT_DIR!\banner_top.bmp ^(493x58^)
 del /f /q "!TMP_BMP_AWK!" >nul 2>&1
 
@@ -201,7 +203,9 @@ set "TMP_ICO_AWK=%TEMP%\ls_ico_%RANDOM%.awk"
 ) > "!TMP_ICO_AWK!"
 
 "!AWK_BIN!" !AWK_BIN_FLAG! -v pr_r=!PR_R! -v pr_g=!PR_G! -v pr_b=!PR_B! -v dk_r=!DK_R! -v dk_g=!DK_G! -v dk_b=!DK_B! -f "!TMP_ICO_AWK!" > "!OUTPUT_DIR!\app.ico"
+set "_ICO_RC=!ERRORLEVEL!"
 del /f /q "!TMP_ICO_AWK!" >nul 2>&1
+if !_ICO_RC! neq 0 ( echo [ERROR] Failed to synthesize app.ico >&2 & exit /b 1 )
 echo [OK] Generated multi-res icon: !OUTPUT_DIR!\app.ico
 
 (

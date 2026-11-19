@@ -88,6 +88,7 @@ mkdir -p "${SYNTH_DIR}/_lib/virtualization/apple_vm" \
          "${SYNTH_DIR}/_lib/utilities/no_darwin" \
          "${SYNTH_DIR}/_lib/init-systems/illumos_init" \
          "${SYNTH_DIR}/_lib/reactos/distro" \
+         "${SYNTH_DIR}/_lib/ml-training/tpu-trainer" \
          "${SYNTH_DIR}/tests_tmp"
 : > "${SYNTH_DIR}/libscript.sh"
 printf '%s\n' '{"name":"apple_vm","provides":["apple_vm"],"os_whitelist":["linux","macos","windows"]}' > "${SYNTH_DIR}/_lib/virtualization/apple_vm/manifest.json"
@@ -103,6 +104,13 @@ assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}apple_vm${_b
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}no_darwin${_bt}[[:space:]]*\\|[[:space:]]*${_bt}utilities${_bt}[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_blacklist macos to darwin column"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}illumos_init${_bt}[[:space:]]*\\|[[:space:]]*${_bt}init-systems${_bt}[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*❓[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|[[:space:]]*-[[:space:]]*\\|" "update_results.sh maps os_whitelist illumos to sunos column"
 assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}reactos/distro${_bt}[[:space:]]*\\|[[:space:]]*${_bt}reactos${_bt}[[:space:]]*\\|" "update_results.sh disambiguates reactos/distro in Tier 2"
+assert_file_contains "${SYNTH_DIR}/README.md" "\\|[[:space:]]*${_bt}tpu-trainer${_bt}[[:space:]]*\\|[[:space:]]*${_bt}ml-training${_bt}[[:space:]]*\\|" "update_results.sh discovers tpu-trainer in Tier 4"
+if grep -Eq "\\|[[:space:]]*${_bt}ml-training${_bt}[[:space:]]*\\|[[:space:]]*${_bt}ml-training${_bt}[[:space:]]*\\|" "${SYNTH_DIR}/README.md"; then
+  printf '[FAIL] update_results.sh emitted spurious synthetic ml-training row\n' >&2
+  FAILURES=$((FAILURES + 1))
+else
+  printf '[PASS] update_results.sh does not emit spurious synthetic ml-training row\n'
+fi
 assert_file_contains "${SYNTH_DIR}/TODO_PLAN.md" "^- \\[ \\] ${_bt}_lib/virtualization/apple_vm${_bt}: keep untouched$" "update_results.sh preserves Native Windows & MS-DOS Execution Plan TODO_PLAN.md"
 
 if [ "$FAILURES" -gt 0 ]; then

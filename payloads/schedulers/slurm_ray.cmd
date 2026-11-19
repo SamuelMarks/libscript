@@ -89,7 +89,7 @@ for /f "usebackq delims=" %%A in (`jq -r ".resources.cpu_cores | floor" "!_PF!"`
 for /f "usebackq delims=" %%A in (`jq -r ".resources.memory_mb" "!_PF!"`) do set "_MEM=%%A"
 for /f "usebackq delims=" %%A in (`jq -r ".resources.gpu_count // 0" "!_PF!"`) do set "_GPUS=%%A"
 for /f "usebackq delims=" %%A in (`jq -r --arg fb "python3" --arg sp " " "(.artifact.entrypoint // [$fb]) | join($sp)" "!_PF!"`) do set "_CMD=%%A"
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo #SBATCH --job-name=!_NAME!
 echo #SBATCH --nodes=!_NODES!
 echo #SBATCH --cpus-per-task=!_CPUS!

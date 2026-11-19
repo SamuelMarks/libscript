@@ -65,6 +65,7 @@ set "TOPO_FILE=%~2"
 shift
 shift
 set "EXTRA_ARG="
+set "EXTRA_ARG2="
 set "LIVE_MODE=%LIBSCRIPT_TOPOLOGY_LIVE%"
 if "!LIVE_MODE!"=="" set "LIVE_MODE=0"
 
@@ -79,7 +80,11 @@ if /i "%~1"=="--live" (
 ) else if /i "%~1"=="--dry-run" (
     set "LIVE_MODE=0"
 ) else (
-    if "!EXTRA_ARG!"=="" set "EXTRA_ARG=%~1"
+    if "!EXTRA_ARG!"=="" (
+        set "EXTRA_ARG=%~1"
+    ) else if "!EXTRA_ARG2!"=="" (
+        set "EXTRA_ARG2=%~1"
+    )
 )
 shift
 goto :parse_topo_args
@@ -236,10 +241,13 @@ if not exist "!STATE_FILE!" (
     call :release_lock
     exit /b 1
 )
+set "GRP="
+set "NEW_CNT="
 for /f "tokens=1,2 delims==" %%G in ("!EXTRA_ARG!") do (
     set "GRP=%%G"
     set "NEW_CNT=%%H"
 )
+if "!NEW_CNT!"=="" if not "!EXTRA_ARG2!"=="" set "NEW_CNT=!EXTRA_ARG2!"
 if "!GRP!"=="" (
     echo [ERROR] Scale syntax: scale ^<topology.json^> ^<group^>=^<count^> 1>&2
     call :release_lock
@@ -253,7 +261,7 @@ if "!NEW_CNT!"=="" (
 set "_JQ_SC=%TEMP%\ls_topo_sc_%RANDOM%_%RANDOM%.jq"
 (
     echo ^($topo[0].node_groups ^| map^(select^(.name == $gn^)^)[0] // {}^) as $group_def ^|
-    echo ^(.nodes ^| map^(select^(.group != $gn^)^)^) as $others ^|
+    echo ^(.nodes ^| map^(select^(.group ^^!= $gn^)^)^) as $others ^|
     echo ^(.nodes ^| map^(select^(.group == $gn^)^)^) as $existing ^|
     echo ^(if ^($existing ^| length^) ^>= $cnt then
     echo   $existing[0:$cnt]
@@ -297,7 +305,7 @@ set "DEAD_LEADER=!EXTRA_ARG!"
 call "!SCRIPT_DIR!\fence.cmd" "!DEAD_LEADER!" "cloud-api-poweroff" "!STATE_FILE!" >nul
 set "_JQ_FO=%TEMP%\ls_topo_fo_%RANDOM%_%RANDOM%.jq"
 (
-    echo ^([.nodes[] ^| select^(.id != $dead and .state == "HEALTHY"^)][0].id // ""^) as $cand ^|
+    echo ^([.nodes[] ^| select^(.id ^^!= $dead and .state == "HEALTHY"^)][0].id // ""^) as $cand ^|
     echo .nodes = ^(.nodes ^| map^(
     echo   if .id == $cand then .role = "leader" ^| .updated_at = $ts
     echo   elif .id == $dead then .state = "FENCED" ^| .role = "fenced" ^| .updated_at = $ts

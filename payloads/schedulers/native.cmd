@@ -130,18 +130,18 @@ if /i "!_IS!"=="systemd" (
     exit /b 0
 )
 if /i "!_IS!"=="openrc" (
-    echo #!/sbin/openrc-run
+    echo #^^!/sbin/openrc-run
     echo name="!_NAME!"
     echo command="!_CMD!"
     exit /b 0
 )
 if /i "!_IS!"=="runit" (
-    echo #!/bin/sh
+    echo #^^!/bin/sh
     echo exec !_CMD!
     exit /b 0
 )
 if /i "!_IS!"=="s6" (
-    echo #!/bin/sh
+    echo #^^!/bin/sh
     echo exec !_CMD!
     exit /b 0
 )

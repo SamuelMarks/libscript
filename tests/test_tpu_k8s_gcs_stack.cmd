@@ -59,7 +59,7 @@ if errorlevel 1 ( call :fail_ml "Idempotent 2x topology up failed" & exit /b 1 )
 jq -e ".status == \"HEALTHY\" and (.completed_hooks | length == 5)" "%LIBSCRIPT_TOPOLOGY_STATE_DIR%\.topology_state.json" >nul
 if errorlevel 1 ( call :fail_ml "Topology choreography hooks not recorded" & exit /b 1 )
 
-call "%LIBSCRIPT_ROOT_DIR%\topologies\engine.cmd" scale "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\topology.json" tpu-slice-pool=4 >nul
+call "%LIBSCRIPT_ROOT_DIR%\topologies\engine.cmd" scale "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\topology.json" "tpu-slice-pool=4" >nul
 if errorlevel 1 ( call :fail_ml "Topology scale failed" & exit /b 1 )
 
 jq -e "[.nodes[] | select(.group == \"tpu-slice-pool\")] | length == 4" "%LIBSCRIPT_TOPOLOGY_STATE_DIR%\.topology_state.json" >nul

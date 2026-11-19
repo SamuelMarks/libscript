@@ -29,6 +29,7 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/utilities/no_darwin") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/init-systems/illumos_init") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/reactos/distro") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/ml-training/tpu-trainer") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "topologies/compS") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "_lib/_common/helper") -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $testTmp "tests_tmp") -Force | Out-Null
@@ -112,6 +113,12 @@ MIT
     }
     if ($updatedReadme -notmatch "\|\s*``reactos/distro``\s*\|\s*``reactos``\s*\|") {
         throw "Error: reactos/distro was not disambiguated in README.md"
+    }
+    if ($updatedReadme -notmatch "\|\s*``tpu-trainer``\s*\|\s*``ml-training``\s*\|") {
+        throw "Error: tpu-trainer component not discovered in README.md"
+    }
+    if ($updatedReadme -match "\|\s*``ml-training``\s*\|\s*``ml-training``\s*\|") {
+        throw "Error: spurious synthetic ml-training row emitted in README.md"
     }
 
     # Verification 4: TODO_PLAN.md updated completed items

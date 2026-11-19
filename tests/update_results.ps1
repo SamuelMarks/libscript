@@ -241,9 +241,6 @@ function Update-SupportedComponents {
     if (Test-Path -LiteralPath (Join-Path $libPath "runtimes")) {
         $entries += [PSCustomObject]@{ Tier = '1'; Category = 'runtimes'; Comp = 'runtimes/provision_isolated_runtime'; Short = 'provision_isolated_runtime'; Manifest = '' }
     }
-    if (Test-Path -LiteralPath (Join-Path $libPath "ml-training")) {
-        $entries += [PSCustomObject]@{ Tier = '4'; Category = 'ml-training'; Comp = 'ml-training'; Short = 'ml-training'; Manifest = '' }
-    }
     $topoDir = Join-Path $RootPath "topologies"
     if (Test-Path -LiteralPath $topoDir) {
         Get-ChildItem -LiteralPath $topoDir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith("_") } | ForEach-Object {

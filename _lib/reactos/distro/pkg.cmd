@@ -51,6 +51,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+
 if /I "%~1"=="--check-pe" (
     call :check_pe_arch "%~2" "%~3"
     exit /b !errorlevel!
@@ -188,4 +193,11 @@ if /I "!_NORM_EXP!"=="arm64" (
     echo "!_DESC!" | findstr /I "Aarch64 ARM64" >nul 2>&1
     exit /b !errorlevel!
 )
+exit /b 0
+
+:: ## show_help
+:: Displays command-line usage instructions for ReactOS package staging.
+:show_help
+echo Usage: %~nx0 [sysroot_path] [target_arch] [rapps_csv] [msi_csv] [components_csv]
+echo        %~nx0 --check-pe ^<pe_file^> [i686^|x86_64^|arm64]
 exit /b 0

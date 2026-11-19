@@ -72,14 +72,20 @@ set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" up "!TEST_TMP!!_BS!topo.json" >nul
 if errorlevel 1 goto :cleanup_fail
 set "STACK="
-call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" scale "!TEST_TMP!!_BS!topo.json" db=3 >nul
+call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" scale "!TEST_TMP!!_BS!topo.json" "db=3" >nul
 if errorlevel 1 goto :cleanup_fail
+jq -e --arg gn "db" "[.nodes[] | select(.group == $gn)] | length == 3" "!LIBSCRIPT_TOPOLOGY_STATE_DIR!!_BS!.topology_state.json" >nul
+if errorlevel 1 ( echo [FAIL] Expected 3 db nodes after scale 1>&2 & goto :cleanup_fail )
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" drain "!TEST_TMP!!_BS!topo.json" db-2 >nul
 if errorlevel 1 goto :cleanup_fail
+jq -e --arg nid "db-2" --arg st "DRAINED" ".nodes[] | select(.id == $nid) | .state == $st" "!LIBSCRIPT_TOPOLOGY_STATE_DIR!!_BS!.topology_state.json" >nul
+if errorlevel 1 ( echo [FAIL] Expected db-2 DRAINED 1>&2 & goto :cleanup_fail )
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" failover "!TEST_TMP!!_BS!topo.json" db-0 >nul
 if errorlevel 1 goto :cleanup_fail
+jq -e --arg nid "db-0" --arg st "FENCED" ".nodes[] | select(.id == $nid) | .state == $st" "!LIBSCRIPT_TOPOLOGY_STATE_DIR!!_BS!.topology_state.json" >nul
+if errorlevel 1 ( echo [FAIL] Expected db-0 FENCED after failover 1>&2 & goto :cleanup_fail )
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!!_BS!topologies!_BS!engine.cmd" upgrade "!TEST_TMP!!_BS!topo.json" >nul
 if errorlevel 1 goto :cleanup_fail

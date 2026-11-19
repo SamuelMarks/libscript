@@ -85,6 +85,12 @@ verify_pe_tree() {
   return 0
 }
 
+if [ "${1:-}" = '--help' ] || [ "${1:-}" = '-h' ]; then
+  printf 'Usage: %s [sysroot_path] [target_arch] [rapps_csv] [msi_csv] [components_csv] [check_pe_dir]\n' "$0"
+  printf '       %s --check-pe <pe_file> [i686|x86_64]\n' "$0"
+  exit 0
+fi
+
 if [ "${1:-}" = '--check-pe' ]; then
   check_pe_arch "${2:-}" "${3:-i686}"
   exit $?

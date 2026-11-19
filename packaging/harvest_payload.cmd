@@ -154,16 +154,16 @@ set "TMP_FLT_AWK=%TEMP%\ls_harvest_flt_%RANDOM%.awk"
     echo   if ^(tolower^(substr^(rel, 1, length^(root_dir^) + 1^)^) == tolower^(root_dir "/"^)^) {
     echo     rel = substr^(rel, length^(root_dir^) + 2^)
     echo   }
-    echo   sub^(/^\.\//, "", rel^)
+    echo   sub^(/^^\.\//, "", rel^)
     echo   if ^(rel == ""^) next
     echo   if ^(src_mode == "1"^) {
-    echo     if ^(rel ~ /^^\.git/ ^|^| rel ~ /^^\.vagrant/ ^|^| rel ~ /\.(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
+    echo     if ^(rel ~ /^^\.git/ ^|^| rel ~ /^^\.vagrant/ ^|^| rel ~ /\.^(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
     echo     if ^(inc_msi == "0" ^&^& rel ~ /\.msi$/^) next
     echo     print rel
     echo   } else {
     echo     if ^(rel ~ /^^^(\.git^|\.vagrant^|tests_tmp\/^|dist\/^|build\/^|tmp\/^|node_modules\/^|cache\/^)/^) next
     echo     if ^(rel ~ /\/^(\.git^|\.github^|\.githooks^|\.vagrant^|tests_tmp^|dist^|build^|tmp^|node_modules^|cache^)^(\/^|$^)/^) next
-    echo     if ^(rel ~ /\.(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
+    echo     if ^(rel ~ /\.^(tmp^|log^|ppm^|bak^|swp^|wixobj^|wxs^)$/^) next
     echo     if ^(rel ~ /^^packaging\/screenshots\/release_test\// ^|^| rel == "TODO_PLAN.md"^) next
     echo     if ^(rel ~ /\.msi$/^) { if ^(inc_msi == "1"^) print rel; next }
     echo     print rel
@@ -227,7 +227,7 @@ if not "!WIX_FRAGMENT!"=="" (
     for %%W in ("!WIX_FRAGMENT!") do if not exist "%%~dpW" mkdir "%%~dpW" 2>nul
     set "TMP_WIX_AWK=%TEMP%\ls_harvest_wix_%RANDOM%.awk"
     (
-        echo function sanitize^(s,   res^) { res = s; gsub^(/[^a-zA-Z0-9_]/, "_", res^); return res }
+        echo function sanitize^(s,   res^) { res = s; gsub^(/[^^a-zA-Z0-9_]/, "_", res^); return res }
         echo function str_hash32^(s, seed, mult, mod,   res, i, len, c^) {
         echo   res = seed; len = length^(s^)
         echo   for ^(i = 1; i ^<= len; i++^) { c = ord[substr^(s, i, 1^)]; res = ^(res * mult + c^) %% mod }
@@ -249,11 +249,12 @@ if not "!WIX_FRAGMENT!"=="" (
         echo   cand = prefix trimmed "_" h; used_ids[cand] = raw_path; return cand
         echo }
         echo BEGIN {
+        echo   q = sprintf^("%%c", 34^)
         echo   for ^(i = 1; i ^<= 255; i++^) ord[sprintf^("%%c", i^)] = i
         echo   gsub^(/\\/, "/", root^); sub^(/\/$/, "", root^)
         echo   gsub^(/\\/, "/", inc_cache^); sub^(/\/$/, "", inc_cache^)
-        echo   print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-        echo   print "<Wix xmlns=\"http://schemas.microsoft.com/wix/2006/wi\">"
+        echo   print "<?xml version=" q "1.0" q " encoding=" q "UTF-8" q "?>"
+        echo   print "<Wix xmlns=" q "http://schemas.microsoft.com/wix/2006/wi" q ">"
         echo   print "  <Fragment>"
         echo }
         echo {
@@ -274,8 +275,8 @@ if not "!WIX_FRAGMENT!"=="" (
         echo   for ^(i = 1; i ^<= d_count; i++^) {
         echo     d = dirs[i]; d_id = make_id^("DIR_", d^); p = dir_parent[d]
         echo     p_id = ^(p == ""^) ? dir_id : make_id^("DIR_", p^)
-        echo     print "    <DirectoryRef Id=\"" p_id "\">"
-        echo     print "      <Directory Id=\"" d_id "\" Name=\"" dir_name[d] "\" />"
+        echo     print "    <DirectoryRef Id=" q p_id q ">"
+        echo     print "      <Directory Id=" q d_id q " Name=" q dir_name[d] q " />"
         echo     print "    </DirectoryRef>"
         echo   }
         echo   for ^(i = 1; i ^<= NR; i++^) {
@@ -292,24 +293,24 @@ if not "!WIX_FRAGMENT!"=="" (
         echo     if ^(substr^(f, 1, 15^) == "cache/runtimes/" ^|^| substr^(f, 1, 17^) == "cache/webservers/"^) disk_id = "2"
         echo     else if ^(substr^(f, 1, 16^) == "cache/databases/"^) disk_id = "3"
         echo     else if ^(substr^(f, 1, 15^) == "cache/codebase/" ^|^| substr^(f, 1, 13^) == "cache/wheels/" ^|^| substr^(f, 1, 10^) == "cache/npm/" ^|^| substr^(f, 1, 19^) == "cache/applications/"^) disk_id = "4"
-        echo     print "    <DirectoryRef Id=\"" target_dir "\">"
-        echo     print "      <Component Id=\"" c_id "\" Guid=\"*\">"
-        echo     print "        <File Id=\"" f_id "\" Name=\"" base_name "\" Source=\"" src "\" KeyPath=\"yes\" DiskId=\"" disk_id "\" />"
+        echo     print "    <DirectoryRef Id=" q target_dir q ">"
+        echo     print "      <Component Id=" q c_id q " Guid=" q "*" q ">"
+        echo     print "        <File Id=" q f_id q " Name=" q base_name q " Source=" q src q " KeyPath=" q "yes" q " DiskId=" q disk_id q " />"
         echo     print "      </Component>"
         echo     print "    </DirectoryRef>"
         echo   }
-        echo   print "    <ComponentGroup Id=\"" comp_group "\">"
+        echo   print "    <ComponentGroup Id=" q comp_group q ">"
         echo   for ^(i = 1; i ^<= NR; i++^) {
         echo     f = files[i]; if ^(f == ""^) continue
         echo     if ^(inc_cache ^^!= "" ^&^& substr^(f, 1, 6^) == "cache/"^) continue
-        echo     print "      <ComponentRef Id=\"" make_id^("CMP_H_", f^) "\" />"
+        echo     print "      <ComponentRef Id=" q make_id^("CMP_H_", f^) q " />"
         echo   }
         echo   print "    </ComponentGroup>"
         echo   if ^(inc_cache ^^!= ""^) {
-        echo     print "    <ComponentGroup Id=\"LibscriptOfflineCacheComponents\">"
+        echo     print "    <ComponentGroup Id=" q "LibscriptOfflineCacheComponents" q ">"
         echo     for ^(i = 1; i ^<= NR; i++^) {
         echo       f = files[i]; if ^(f == ""^) continue
-        echo       if ^(substr^(f, 1, 6^) == "cache/"^) print "      <ComponentRef Id=\"" make_id^("CMP_H_", f^) "\" />"
+        echo       if ^(substr^(f, 1, 6^) == "cache/"^) print "      <ComponentRef Id=" q make_id^("CMP_H_", f^) q " />"
         echo     }
         echo     print "    </ComponentGroup>"
         echo   }
@@ -318,8 +319,14 @@ if not "!WIX_FRAGMENT!"=="" (
         echo }
     ) > "!TMP_WIX_AWK!"
     "!AWK_BIN!" -v "root=!ROOT_DIR!" -v "dir_id=!DIRECTORY_ID!" -v "comp_group=!COMPONENT_GROUP!" -v "inc_cache=!CACHE_REAL!" -f "!TMP_WIX_AWK!" "!TMP_FLT!" > "!WIX_FRAGMENT!.tmp"
-    move /y "!WIX_FRAGMENT!.tmp" "!WIX_FRAGMENT!" >nul
+    set "_WIX_RC=!ERRORLEVEL!"
     del /f /q "!TMP_WIX_AWK!" >nul 2>&1
+    if !_WIX_RC! neq 0 (
+        del /f /q "!WIX_FRAGMENT!.tmp" "!TMP_FLT!" >nul 2>&1
+        echo [ERROR] Failed to synthesize WiX XML fragment via !AWK_BIN! >&2
+        exit /b 1
+    )
+    move /y "!WIX_FRAGMENT!.tmp" "!WIX_FRAGMENT!" >nul
     echo [INFO] Generated WiX XML fragment: !WIX_FRAGMENT!
 )
 

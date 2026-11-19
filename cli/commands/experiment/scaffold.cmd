@@ -62,10 +62,15 @@ if "!OUT_ROOT!"=="" set "OUT_ROOT=!LIBSCRIPT_ROOT_DIR!\experiments"
 :parse_args
 if "%~1"=="" goto :args_done
 set "_a=%~1"
+if /i "!_a!"=="--title" ( set "TITLE=%~2" & shift & shift & goto :parse_args )
 if /i "!_a:~0,8!"=="--title=" ( set "TITLE=!_a:~8!" & shift & goto :parse_args )
+if /i "!_a!"=="--out-root" ( set "OUT_ROOT=%~2" & shift & shift & goto :parse_args )
 if /i "!_a:~0,11!"=="--out-root=" ( set "OUT_ROOT=!_a:~11!" & shift & goto :parse_args )
+if /i "!_a!"=="--substrate" ( set "SUBSTRATE=%~2" & shift & shift & goto :parse_args )
 if /i "!_a:~0,12!"=="--substrate=" ( set "SUBSTRATE=!_a:~12!" & shift & goto :parse_args )
+if /i "!_a!"=="--template" ( set "TEMPLATE=%~2" & shift & shift & goto :parse_args )
 if /i "!_a:~0,11!"=="--template=" ( set "TEMPLATE=!_a:~11!" & shift & goto :parse_args )
+if /i "!_a!"=="--packaging-manifest" ( set "PKG_MANIFEST=%~2" & shift & shift & goto :parse_args )
 if /i "!_a:~0,21!"=="--packaging-manifest=" ( set "PKG_MANIFEST=!_a:~21!" & shift & goto :parse_args )
 if "!SUITE_ID!"=="" set "SUITE_ID=!_a!"
 shift
@@ -162,6 +167,7 @@ exit /b 0
 :: ## emit_run_sh
 :: Writes the POSIX /bin/sh experiment runner script for the scaffolded suite.
 :emit_run_sh
+setlocal DisableDelayedExpansion
 (
     echo #!/bin/sh
     echo # ## Overview
@@ -171,12 +177,12 @@ exit /b 0
     echo set -feu
     echo if [ "${SCRIPT_NAME-}" ]; then THIS_FILE="${SCRIPT_NAME}"; elif [ "${BASH_SOURCE-}" ]; then THIS_FILE="${BASH_SOURCE}"; elif [ "${ZSH_VERSION-}" ]; then
     echo   # shellcheck disable=SC2296
-    echo   THIS_FILE="${^(%%^):-%%x}"
+    echo   THIS_FILE="${(%%):-%%x}"
     echo else THIS_FILE="${0}"; fi
     echo case "${STACK+x}" in *':'^"${THIS_FILE}^"':'*^) if ^(return 0 2^>/dev/null^); then return; else exit 0; fi ;; esac
     echo export STACK="${STACK:-}${THIS_FILE}:"
-    echo SCRIPT_DIR=$^(cd -- "$^(dirname -- "${THIS_FILE}"^)" ^&^& pwd^)
-    echo : "${LIBSCRIPT_ROOT_DIR:=$^(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%%/*}"; [ -z "$n" ] ^&^& n="/"; [ "$d" = "$n" ] ^&^& break; d="$n"; done; printf '%%s' "$d"^)}"
+    echo SCRIPT_DIR=$^(cd -- "$(dirname -- "${THIS_FILE}")" ^&^& pwd^)
+    echo : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%%s' "$d")}"
     echo SUITE_ID=$^(jq -r '.id' "${SCRIPT_DIR}/suite.json"^)
     echo RESULTS_DIR="${LIBSCRIPT_ROOT_DIR}/build/experiments/${SUITE_ID}"
     echo for _arg in "$@"; do case "$_arg" in --results-dir=*^) RESULTS_DIR="${_arg#*=}" ;; esac; done
@@ -185,11 +191,13 @@ exit /b 0
     echo jq -n --arg s "$SUITE_ID" '{suite_id:$s,trials:5,median_ns:125000,status:"converged"}' ^> "${RESULTS_DIR}/metrics.json"
     echo printf '%%s' "$SUITE_ID" ^> "${RESULTS_DIR}/.suite_stamp"
 ) > "%~1"
+endlocal
 exit /b 0
 
 :: ## emit_run_cmd
 :: Writes the Windows Batch experiment runner script for the scaffolded suite.
 :emit_run_cmd
+setlocal DisableDelayedExpansion
 (
     echo @echo off
     echo :: # run.cmd
@@ -225,11 +233,13 @@ exit /b 0
     echo ^> "!RESULTS_DIR!\.suite_stamp" echo !SUITE_ID!
     echo exit /b 0
 ) > "%~1"
+endlocal
 exit /b 0
 
 :: ## emit_test_sh
 :: Writes the POSIX /bin/sh 2x-idempotency test script for the scaffolded suite.
 :emit_test_sh
+setlocal DisableDelayedExpansion
 (
     echo #!/bin/sh
     echo # ## Overview
@@ -239,22 +249,24 @@ exit /b 0
     echo set -feu
     echo if [ "${SCRIPT_NAME-}" ]; then THIS_FILE="${SCRIPT_NAME}"; elif [ "${BASH_SOURCE-}" ]; then THIS_FILE="${BASH_SOURCE}"; elif [ "${ZSH_VERSION-}" ]; then
     echo   # shellcheck disable=SC2296
-    echo   THIS_FILE="${^(%%^):-%%x}"
+    echo   THIS_FILE="${(%%):-%%x}"
     echo else THIS_FILE="${0}"; fi
     echo case "${STACK+x}" in *':'^"${THIS_FILE}^"':'*^) if ^(return 0 2^>/dev/null^); then return; else exit 0; fi ;; esac
     echo export STACK="${STACK:-}${THIS_FILE}:"
-    echo SCRIPT_DIR=$^(cd -- "$^(dirname -- "${THIS_FILE}"^)" ^&^& pwd^)
-    echo : "${LIBSCRIPT_ROOT_DIR:=$^(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%%/*}"; [ -z "$n" ] ^&^& n="/"; [ "$d" = "$n" ] ^&^& break; d="$n"; done; printf '%%s' "$d"^)}"
+    echo SCRIPT_DIR=$^(cd -- "$(dirname -- "${THIS_FILE}")" ^&^& pwd^)
+    echo : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%%s' "$d")}"
     echo _t=$^(mktemp -d^)
     echo sh "${SCRIPT_DIR}/run.sh" --results-dir="${_t}" ^>/dev/null
     echo sh "${SCRIPT_DIR}/run.sh" --results-dir="${_t}" ^>/dev/null
     echo rm -rf "${_t}"
 ) > "%~1"
+endlocal
 exit /b 0
 
 :: ## emit_test_cmd
 :: Writes the Windows Batch 2x-idempotency test script for the scaffolded suite.
 :emit_test_cmd
+setlocal DisableDelayedExpansion
 (
     echo @echo off
     echo :: # test.cmd
@@ -281,14 +293,15 @@ exit /b 0
     echo :: ## root_found
     echo :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
     echo :root_found
-    echo set "_T=%TEMP%\exp_test_!RANDOM!"
-    echo call "!SCRIPT_DIR!/run.cmd" "--results-dir=!_T!" ^>nul
+    echo set "_T=%%TEMP%%\exp_test_!RANDOM!"
+    echo call "!SCRIPT_DIR!\run.cmd" "--results-dir=!_T!" ^>nul
     echo if errorlevel 1 exit /b 1
-    echo call "!SCRIPT_DIR!/run.cmd" "--results-dir=!_T!" ^>nul
+    echo call "!SCRIPT_DIR!\run.cmd" "--results-dir=!_T!" ^>nul
     echo set "_RC=!ERRORLEVEL!"
     echo if exist "!_T!" rmdir /s /q "!_T!" ^>nul 2^>^&1
     echo exit /b !_RC!
 ) > "%~1"
+endlocal
 exit /b 0
 
 :: ## help
