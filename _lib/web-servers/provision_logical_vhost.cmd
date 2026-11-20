@@ -52,6 +52,7 @@ goto :find_root
 
 set "SERVER_NAME="
 set "UPSTREAM_PORT="
+goto :ParseArgs
 
 :: ## ParseArgs
 :: Parses command-line arguments and populates configuration variables.

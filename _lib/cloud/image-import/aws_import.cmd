@@ -60,6 +60,7 @@ if not "%IMAGE_IMPORT_ARCH%"=="" set "ARCH_VAL=%IMAGE_IMPORT_ARCH%"
 set "OUT_RECEIPT="
 set "DRY_RUN=0"
 if "%IMAGE_IMPORT_DRY_RUN%"=="1" set "DRY_RUN=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for aws_import.cmd.

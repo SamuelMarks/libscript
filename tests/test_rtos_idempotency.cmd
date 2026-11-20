@@ -69,5 +69,5 @@ set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\kernel\freertos\build_firmware.cmd" "--board=win32_sim" "--sysroot=!TMP_IDEM!\frsys" || exit /b 1
 if not exist "!TMP_IDEM!\frsys\boot\freertos.elf" exit /b 1
 rmdir /s /q "!TMP_IDEM!" 2>nul
-echo [PASS] RTOS 2x Consecutive Idempotency Suite PASSED on Windows!
+echo [PASS] RTOS 2x Consecutive Idempotency Suite PASSED on Windows^^!
 exit /b 0

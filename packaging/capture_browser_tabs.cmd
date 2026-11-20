@@ -48,6 +48,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :run_capture
 
 :: ## run_capture
 :: Invokes Edge browser automation PowerShell script.

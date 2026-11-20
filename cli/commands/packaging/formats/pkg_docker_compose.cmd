@@ -50,6 +50,7 @@ goto :find_root
 
 set "IS_OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "IS_OFFLINE=1"
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.

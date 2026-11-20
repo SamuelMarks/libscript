@@ -139,7 +139,7 @@ if not exist "!_ESF_TARGET!" (
 for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_ESF_TARGET!" SHA256 2^>nul') do (
     set "_ESF_H=%%H"
     if not "!_ESF_H:~0,8!"=="CertUtil" (
-        echo !_ESF_H!
+        echo.!_ESF_H!
         exit /b 0
     )
 )
@@ -251,6 +251,7 @@ findstr /I /C:"0000000000000000000000000000000000000000000000000000000000000000"
 if not errorlevel 1 exit /b 1
 set "_EVL_CNT=0"
 for /f "delims=" %%M in ('findstr /R /C:"\"id\"[ ]*:" /C:"\"repo\"[ ]*:" /C:"\"name\"[ ]*:" "!_EVL_LOCK!" 2^>nul') do set /a "_EVL_CNT+=1"
+REM wincheck disable=CMD2003
 if !_EVL_CNT! lss !_EVL_MIN! exit /b 1
 exit /b 0
 
@@ -325,7 +326,7 @@ if not "!_ERC_DIR!"=="" (
 set "_ERC_EXEC=!_ERC_BIN!"
 set "_ERC_TMP="
 if exist "!_ERC_BIN!" (
-    set "_ERC_TMP=%TEMP%\libscript_cold_%RANDOM%_%~nx3"
+    set "_ERC_TMP=%TEMP%\libscript_cold_!RANDOM!_%~nx3"
     copy /y "!_ERC_BIN!" "!_ERC_TMP!" >nul
     set "_ERC_EXEC=!_ERC_TMP!"
 )
@@ -347,6 +348,7 @@ for /f "delims=" %%B in ('call "%~f0" :libscript_now_ns') do set "_T1=%%B"
 if not "!_ERC_TMP!"=="" del /f /q "!_ERC_TMP!" >nul 2>&1
 if not "!_ERC_RC!"=="0" exit /b !_ERC_RC!
 set /a "_DT_CS=(!_T1:~0,-7! - !_T0:~0,-7!)" 2>nul || set "_DT_CS=1"
+REM wincheck disable=CMD2003
 if !_DT_CS! lss 1 set "_DT_CS=1"
 (
     echo {
@@ -379,12 +381,13 @@ type nul > "!_ERW_OUT!.tmp"
 for /L %%I in (1,1,!_ERW_N!) do (
     if defined LIBSCRIPT_BENCH_PROBE_BIN (
         if exist "!LIBSCRIPT_BENCH_PROBE_BIN!" (
-            for /f "tokens=1" %%E in ('"!LIBSCRIPT_BENCH_PROBE_BIN!" --exec cmd.exe /c "!_ERW_CMD!" 2^>nul') do echo %%E>> "!_ERW_OUT!.tmp"
+            for /f "tokens=1" %%E in ('"!LIBSCRIPT_BENCH_PROBE_BIN!" --exec cmd.exe /c "!_ERW_CMD!" 2^>nul') do echo.%%E>> "!_ERW_OUT!.tmp"
         ) else (
             for /f "delims=" %%A in ('call "%~f0" :libscript_now_ns') do set "_WT0=%%A"
             call "!_ERW_CMD!" >nul 2>&1
             for /f "delims=" %%B in ('call "%~f0" :libscript_now_ns') do set "_WT1=%%B"
             set /a "_WDT=(!_WT1:~0,-7! - !_WT0:~0,-7!)" 2>nul || set "_WDT=1"
+            REM wincheck disable=CMD2003
             if !_WDT! lss 1 set "_WDT=1"
             echo !_WDT!0000000>> "!_ERW_OUT!.tmp"
         )
@@ -393,6 +396,7 @@ for /L %%I in (1,1,!_ERW_N!) do (
         call "!_ERW_CMD!" >nul 2>&1
         for /f "delims=" %%B in ('call "%~f0" :libscript_now_ns') do set "_WT1=%%B"
         set /a "_WDT=(!_WT1:~0,-7! - !_WT0:~0,-7!)" 2>nul || set "_WDT=1"
+        REM wincheck disable=CMD2003
         if !_WDT! lss 1 set "_WDT=1"
         echo !_WDT!0000000>> "!_ERW_OUT!.tmp"
     )
@@ -430,9 +434,10 @@ type nul > "!_PAD_TMP!"
 set "_CNT=0"
 for /f "usebackq tokens=1" %%V in ("!_ECS_IN!") do (
     set "_RAW=00000000000000000000%%V"
-    echo !_RAW:~-20!>> "!_PAD_TMP!"
+    echo.!_RAW:~-20!>> "!_PAD_TMP!"
     set /a "_CNT+=1"
 )
+REM wincheck disable=CMD2003
 if !_CNT! lss 1 (
     del /f /q "!_PAD_TMP!" >nul 2>&1
     exit /b 1
@@ -442,6 +447,7 @@ set /a "_I_P25=((_CNT - 1) * 25 + 50) / 100 + 1"
 set /a "_I_P50=(_CNT + 1) / 2"
 set /a "_I_P75=((_CNT - 1) * 75 + 50) / 100 + 1"
 set /a "_I_P99=(_CNT * 99 + 99) / 100"
+REM wincheck disable=CMD2003
 if !_I_P99! gtr !_CNT! set "_I_P99=!_CNT!"
 set "_IDX=0"
 set "_LIST="
@@ -450,12 +456,12 @@ for /f "usebackq tokens=1" %%S in ("!_SRT_TMP!") do (
     set "_UNPAD=%%S"
     for /f "tokens=* delims=0" %%Z in ("!_UNPAD!") do set "_UNPAD=%%Z"
     if "!_UNPAD!"=="" set "_UNPAD=0"
-    if !_IDX! equ 1 set "_MIN=!_UNPAD!"
-    if !_IDX! equ !_I_P25! set "_P25=!_UNPAD!"
-    if !_IDX! equ !_I_P50! set "_P50=!_UNPAD!"
-    if !_IDX! equ !_I_P75! set "_P75=!_UNPAD!"
-    if !_IDX! equ !_I_P99! set "_P99=!_UNPAD!"
-    if !_IDX! equ !_CNT! set "_MAX=!_UNPAD!"
+    if "!_IDX!" equ "1" set "_MIN=!_UNPAD!"
+    if "!_IDX!" equ "!_I_P25!" set "_P25=!_UNPAD!"
+    if "!_IDX!" equ "!_I_P50!" set "_P50=!_UNPAD!"
+    if "!_IDX!" equ "!_I_P75!" set "_P75=!_UNPAD!"
+    if "!_IDX!" equ "!_I_P99!" set "_P99=!_UNPAD!"
+    if "!_IDX!" equ "!_CNT!" set "_MAX=!_UNPAD!"
     if "!_LIST!"=="" (set "_LIST=!_UNPAD!") else (set "_LIST=!_LIST!, !_UNPAD!")
 )
 set /a "_IQR=!_P75! - !_P25!" 2>nul || set "_IQR=0"
@@ -494,6 +500,7 @@ for /f "delims=" %%B in ('call "%~f0" :libscript_exp_normalize_rss_bytes "!_EER_
 call :libscript_exp_ensure_bench_probe
 set "_DB=0"
 set /a "_DB=!_PB! - !_BB!" 2>nul || set "_DB=0"
+REM wincheck disable=CMD2003
 if !_DB! lss 0 set "_DB=0"
 set "_PMIB=0"
 set "_BMIB=0"
@@ -530,24 +537,24 @@ set "_ENR_RAW=%~2"
 set "_ENR_OS=%~3"
 if "!_ENR_OS!"=="" set "_ENR_OS=Windows_NT"
 if /I "!_ENR_OS!"=="Darwin" (
-    echo !_ENR_RAW!
+    echo.!_ENR_RAW!
     exit /b 0
 )
 if /I "!_ENR_OS!"=="Windows_NT" (
-    echo !_ENR_RAW!
+    echo.!_ENR_RAW!
     exit /b 0
 )
 if /I "!_ENR_OS!"=="SunOS_bytes" (
-    echo !_ENR_RAW!
+    echo.!_ENR_RAW!
     exit /b 0
 )
 if /I "!_ENR_OS!"=="SunOS_pages" (
     set /a "_ENR_B=!_ENR_RAW! * 4096"
-    echo !_ENR_B!
+    echo.!_ENR_B!
     exit /b 0
 )
 set /a "_ENR_B=!_ENR_RAW! * 1024"
-echo !_ENR_B!
+echo.!_ENR_B!
 exit /b 0
 
 :: ## libscript_exp_wine_session

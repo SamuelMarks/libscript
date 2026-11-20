@@ -90,6 +90,7 @@ if "%CORE_EXPERIMENT_FRESH_VM_PER_BACKEND%"=="" set "CORE_EXPERIMENT_FRESH_VM_PE
 set "CORE_EXPERIMENT_STEPS="
 set "_SUBSUITES_EXPLICIT=0"
 set "_TPU_PROV_STARTED=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses arbitrary-length CLI options via shift without truncating at %9 or splitting quoted '=' / ',' values.
@@ -177,7 +178,7 @@ goto :parse_args
 :: Finalizes suite defaults and TFRC zero-cost configuration after argument parsing.
 :after_parse_args
 if /i "!CORE_EXPERIMENT_PROVIDER!"=="gcp-tpu" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
-echo !CORE_EXPERIMENT_STEPS! | findstr /I "tpu_matrix gemma_tpu_campaign" >nul 2>&1
+echo.!CORE_EXPERIMENT_STEPS! | findstr /I "tpu_matrix gemma_tpu_campaign" >nul 2>&1
 if not errorlevel 1 (
     set "CORE_EXPERIMENT_SUITE=gemma_tpu"
     if /i "!CORE_EXPERIMENT_PROVIDER!"=="azure" set "CORE_EXPERIMENT_PROVIDER=gcp-tpu-vm"
@@ -599,6 +600,7 @@ if errorlevel 1 (
     goto :cleanup_teardown
 )
 call :send_logs_to_host
+goto :cleanup_teardown
 
 :: ## cleanup_teardown
 :: Guaranteed teardown handler ensuring TPU VM and Queued Resource deletion plus postflight audit even on benchmark failure.

@@ -68,7 +68,7 @@ if "%REMOTE_STATE_URI%"=="" (
         echo [ERROR] State is locked by another process. ^(%STATE_FILE%.lock exists^) 1>&2
         exit /b 1
     )
-    echo %time% > "%STATE_FILE%.lock"
+    echo.!TIME! > "%STATE_FILE%.lock"
     exit /b 0
 )
 echo [STATE] Locking remote state at %REMOTE_STATE_URI%...

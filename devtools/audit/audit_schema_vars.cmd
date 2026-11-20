@@ -67,7 +67,7 @@ exit /b 0
 :: Executes the primary orchestration workflow for this script.
 :main
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_schema_vars.ps1" %*
     exit /b !ERRORLEVEL!
 )
@@ -75,7 +75,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
 )
 where dash >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     set "STACK="
     dash "!SCRIPT_DIR!\audit_schema_vars.sh" %*
     exit /b !ERRORLEVEL!

@@ -56,6 +56,7 @@ set "VMM=qemu"
 set "CLOUD_BOOT=none"
 set "ALLOW_STUB=0"
 if "%LIBSCRIPT_ALLOW_STUB%"=="1" set "ALLOW_STUB=1"
+goto :parse_flags
 
 :: ## parse_flags
 :: Parses CLI flags for unikernel.cmd.

@@ -89,7 +89,7 @@ if "%ACTION%"=="install" (
     exit /b 0
 ) else if "%ACTION%"=="test" (
     meilisearch --version
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

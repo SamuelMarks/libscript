@@ -51,6 +51,7 @@ goto :find_root
 set "TARGET=install"
 set "LINES=50"
 set "FOLLOW=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -141,13 +142,13 @@ if not exist "%LOG_FILE%" (
 )
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     if "%FOLLOW%"=="1" (
         powershell -NoProfile -Command "Get-Content -Path '%LOG_FILE%' -Tail %LINES% -Wait"
     ) else (
         powershell -NoProfile -Command "Get-Content -Path '%LOG_FILE%' -Tail %LINES%"
     )
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 echo [ERROR] PowerShell interpreter not found. >&2

@@ -103,5 +103,5 @@ set "LIBSCRIPT_INIT_SYSTEM="
 echo [PASS] Cross-init daemon abstraction lifecycle verified
 
 rmdir /s /q "%TEST_SANDBOX%" 2>nul
-echo === All Behavioral Version Manager Contract Checks Passed! ===
+echo === All Behavioral Version Manager Contract Checks Passed^^! ===
 exit /b 0

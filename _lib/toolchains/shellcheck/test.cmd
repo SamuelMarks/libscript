@@ -56,7 +56,7 @@ if errorlevel 1 exit /b 1
 
 set "_PROBE=%TEMP%\libscript_shellcheck_probe_%RANDOM%.sh"
 (
-    echo #!/bin/sh
+    echo #^^!/bin/sh
     echo set -feu
     echo printf 'ok\n'
 ) > "!_PROBE!"

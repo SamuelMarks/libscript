@@ -62,6 +62,7 @@ set "TOOLCHAIN="
 set "SNAPSHOT_NAME=vanilla"
 set "IDEMPOTENCY_RUNS=2"
 set "ARGS="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -336,17 +337,17 @@ for %%T in (!TARGETS!) do (
             )
         ) else if /I "!OS_ID!"=="windows" (
             vagrant ssh --no-tty -c "Set-Location C:\libscript; cmd.exe /c \"C:\libscript\libscript.cmd install !TARGET_NAME! !COMPONENT_VERSION!\" ; $iExit = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !TARGET_NAME!\" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
-            if !errorlevel! equ 0 (
+            if "!errorlevel!"=="0" (
                 echo Success > "!SUCCESS_FILE!"
                 echo [OK] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             ) else (
                 echo Failure > "!FAILURE_FILE!"
                 echo [FAILED] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             )
-            vagrant ssh --no-tty -c "powershell -Command \"cd C:\libscript; & C:\libscript\libscript.cmd uninstall !TARGET_NAME! *>&1 | Out-Null; Remove-Item -Recurse -Force \"\"\"$env:USERPROFILE\.libscript\!TARGET_NAME!\"\"\" -ErrorAction SilentlyContinue\"" >nul 2>&1
+            vagrant ssh --no-tty -c "powershell -Command \"cd C:\libscript; cmd.exe /c C:\libscript\libscript.cmd uninstall !TARGET_NAME! *> $null; Remove-Item -Recurse -Force '$env:USERPROFILE\.libscript\!TARGET_NAME!' -ErrorAction SilentlyContinue\"" >nul 2>&1
         ) else (
             vagrant ssh --no-tty -c "export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript LIBSCRIPT_PKG_MGR='!PKG_MGR!' LIBSCRIPT_GLOBAL_INSTALL_METHOD='!INSTALL_METHOD!' LIBSCRIPT_BUILD_TOOLCHAIN='!TOOLCHAIN!'; timeout 300 /opt/repos/libscript/libscript.sh install !TARGET_NAME! !COMPONENT_VERSION! && timeout 120 /opt/repos/libscript/libscript.sh test !TARGET_NAME!" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
-            if !errorlevel! equ 0 (
+            if "!errorlevel!"=="0" (
                 echo Success > "!SUCCESS_FILE!"
                 echo [OK] !TARGET_NAME! ^(!COMPONENT_VERSION!^)
             ) else (
@@ -366,7 +367,7 @@ for %%T in (!TARGETS!) do (
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
         vagrant up > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             echo Success > "!SUCCESS_FILE!"
             echo [OK] !TARGET_NAME!
         ) else (

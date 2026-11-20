@@ -50,6 +50,7 @@ goto :find_root
 :root_found
 
 set "EXTRA_SSH_ARGS="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for detached execution and port forwarding.

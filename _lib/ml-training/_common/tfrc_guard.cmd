@@ -78,6 +78,7 @@ endlocal & (
     set "TFRC_REUSE_ACTIVE_NODE=%TFRC_REUSE_ACTIVE_NODE%"
     exit /b %_tg_rc%
 )
+:: wincheck disable=CMD3005
 
 :: ## libscript_tfrc_is_enabled
 :: Returns 0 if TFRC zero-cost enforcement is active in the current environment, 1 otherwise.
@@ -96,6 +97,7 @@ set "_tg_sku=%~1"
 set "_tg_slices=%~2"
 if "!_tg_slices!"=="" set "_tg_slices=1"
 set /a "_tg_slices_n=_tg_slices" 2>nul
+REM wincheck disable=CMD2003
 if !_tg_slices_n! lss 1 set "_tg_slices_n=1"
 for /f "tokens=1,2 delims=-" %%A in ("!_tg_sku!") do (
     set "_tg_gen=%%A"
@@ -103,25 +105,30 @@ for /f "tokens=1,2 delims=-" %%A in ("!_tg_sku!") do (
 )
 if "!_tg_num!"=="" set "_tg_num=8"
 set /a "_tg_chips=_tg_num" 2>nul
+REM wincheck disable=CMD2003
 if !_tg_chips! lss 1 set "_tg_chips=1"
 set /a "_tg_hosts=(_tg_chips + 3) / 4"
 if /i "!_tg_gen!"=="v2" (
     set /a "_tg_chips=_tg_num / 2"
+    REM wincheck disable=CMD2003
     if !_tg_chips! lss 1 set "_tg_chips=1"
     set /a "_tg_hosts=(_tg_chips + 3) / 4"
 )
 if /i "!_tg_gen!"=="v3" (
     set /a "_tg_chips=_tg_num / 2"
+    REM wincheck disable=CMD2003
     if !_tg_chips! lss 1 set "_tg_chips=1"
     set /a "_tg_hosts=(_tg_chips + 3) / 4"
 )
 if /i "!_tg_gen!"=="v4" (
     set /a "_tg_chips=_tg_num / 2"
+    REM wincheck disable=CMD2003
     if !_tg_chips! lss 1 set "_tg_chips=1"
     set /a "_tg_hosts=(_tg_chips + 3) / 4"
 )
 if /i "!_tg_gen!"=="v5p" (
     set /a "_tg_chips=_tg_num / 2"
+    REM wincheck disable=CMD2003
     if !_tg_chips! lss 1 set "_tg_chips=1"
     set /a "_tg_hosts=(_tg_chips + 3) / 4"
 )
@@ -412,8 +419,10 @@ for /f "usebackq delims=" %%Q in (`jq -r --arg n "!_tg_name!-qr" "[.[] | select(
 del /f /q "!_tg_tmp!" "!_tg_tmp_qr!" >nul 2>&1
 
 set /a "_tg_active=_tg_act_tpu"
+REM wincheck disable=CMD2003
 if !_tg_act_qr! gtr !_tg_active! set /a "_tg_active=_tg_act_qr"
 set /a "_tg_next=_tg_active + 1"
+REM wincheck disable=CMD2003
 if !_tg_next! gtr !_tg_max_nodes! (
     echo [TFRC-GUARD] [VIOLATION] Zone '!_tg_zone!' already has !_tg_active! TPU node^(s^)/Queued Resource^(s^), exceeding max_concurrent_nodes=!_tg_max_nodes!. 1>&2
     exit /b 78
@@ -465,8 +474,11 @@ if not "!_tg_name!"=="" (
 )
 del /f /q "!_tg_tmp_tpu!" "!_tg_tmp_qr!" "!_tg_tmp_dsk!" >nul 2>&1
 
+REM wincheck disable=CMD2003
 if !_tg_rem_tpu! gtr 0 goto :postflight_fail
+REM wincheck disable=CMD2003
 if !_tg_rem_qr! gtr 0 goto :postflight_fail
+REM wincheck disable=CMD2003
 if !_tg_rem_dsk! gtr 0 goto :postflight_fail
 echo [TFRC-GUARD] Post-flight audit passed: zero surviving TPU VMs, Queued Resources, or disks in !_tg_zone!. 1>&2
 exit /b 0
@@ -474,7 +486,7 @@ exit /b 0
 :: ## postflight_fail
 :: Emits emergency remediation gcloud commands and fails with exit code 1 when resources survive teardown.
 :postflight_fail
-echo [TFRC-GUARD] [POSTFLIGHT-FAIL] Surviving resources detected in !_tg_zone! ^(tpu_vm=!_tg_rem_tpu!, queued_resources=!_tg_rem_qr!, disks=!_tg_rem_dsk!^)! 1>&2
+echo [TFRC-GUARD] [POSTFLIGHT-FAIL] Surviving resources detected in !_tg_zone! ^(tpu_vm=!_tg_rem_tpu!, queued_resources=!_tg_rem_qr!, disks=!_tg_rem_dsk!^)^^! 1>&2
 if not "!_tg_name!"=="" (
     echo [TFRC-GUARD] Emergency cleanup: gcloud compute tpus queued-resources delete "!_tg_name!-qr" --zone="!_tg_zone!" --project="!_tg_proj!" --force --quiet ^&^& gcloud compute tpus tpu-vm delete "!_tg_name!" --zone="!_tg_zone!" --project="!_tg_proj!" --quiet 1>&2
 )

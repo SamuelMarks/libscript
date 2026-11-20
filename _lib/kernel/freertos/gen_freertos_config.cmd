@@ -97,5 +97,5 @@ set "HDR=!OUT_DIR!\FreeRTOSConfig.h"
 >> "!HDR!" echo #define configUSE_TIMERS 1
 >> "!HDR!" echo #define configCHECK_FOR_STACK_OVERFLOW 2
 >> "!HDR!" echo #endif
-> "!OUT_DIR!\heap_selection.txt" echo !HEAP_IMPL!
+> "!OUT_DIR!\heap_selection.txt" echo.!HEAP_IMPL!
 exit /b 0

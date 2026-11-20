@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where msys2 >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "C:\msys64\usr\bin\bash.exe" exit /b 0
 

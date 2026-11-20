@@ -63,5 +63,5 @@ if not exist "%TEST_OUT%\banner_side.bmp" (
 )
 
 rd /s /q "%TEST_OUT%"
-echo [SUCCESS] Branding synthesis verification succeeded on Windows!
+echo [SUCCESS] Branding synthesis verification succeeded on Windows^^!
 exit /b 0

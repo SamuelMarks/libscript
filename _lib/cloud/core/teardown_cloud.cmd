@@ -76,6 +76,7 @@ set "P3="
 set "P4="
 set "P5="
 set "P6="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -196,6 +197,7 @@ if errorlevel 1 exit /b 1
 set "_PURGE_FLAG="
 if "!PURGE_DATA!"=="1" set "_PURGE_FLAG= --purge-data"
 set "REM_SPECS=!APP_SPECS!"
+goto :remove_next_app
 
 :: ## remove_next_app
 :: Iterates over APP_SPECS and decommissions each matching target.

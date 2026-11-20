@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 where mosquitto >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   mosquitto -h
   exit /b 0
 )

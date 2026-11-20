@@ -65,5 +65,5 @@ echo === LibScript 2x Consecutive Run Idempotency Matrix ^(Windows^) ===
 echo [PASS 1] Executing initial staging...
 echo [PASS 2] Executing second consecutive pass on identical workspace...
 echo [PASS] Verified: Second pass produced exact zero-op idempotency
-echo === Idempotency Matrix Verification Succeeded! ===
+echo === Idempotency Matrix Verification Succeeded^^! ===
 exit /b 0

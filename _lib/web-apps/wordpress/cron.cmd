@@ -61,6 +61,7 @@ if "%CMD%"=="install" goto do_install
 if "%CMD%"=="uninstall" goto do_uninstall
 if "%CMD%"=="status" goto do_status
 if "%CMD%"=="help" goto show_help
+goto :do_run
 
 :: ## do_run
 :: Executes due scheduled tasks immediately.

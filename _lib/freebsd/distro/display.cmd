@@ -86,7 +86,7 @@ echo [DISPLAY]  Configuring display protocol: %PROTOCOL% (driver: %DRIVER%)...
 
 if "%PROTOCOL%"=="none" (
     echo [DISPLAY]  Headless mode active, zero display packages staged.
-    echo %DATE% %TIME%> "%STAMP_FILE%"
+    echo !DATE! !TIME!> "%STAMP_FILE%"
     exit /b 0
 )
 

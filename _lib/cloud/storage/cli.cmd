@@ -52,6 +52,7 @@ goto :find_root
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -157,7 +158,7 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 
 if "%CMD%"=="list" (
     call "%~dp0api.cmd" :libscript_storage_list "%LIBSCRIPT_CLOUD%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 if "%LIBSCRIPT_BUCKET%"=="" (
@@ -167,11 +168,11 @@ if "%LIBSCRIPT_BUCKET%"=="" (
 
 if "%CMD%"=="create" (
     call "%~dp0api.cmd" :libscript_storage_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_STORAGE_PUBLIC_WEB%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if "%CMD%"=="delete" (
     call "%~dp0api.cmd" :libscript_storage_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if "%CMD%"=="sync" (
     if "%LIBSCRIPT_SYNC_DIR%"=="" (
@@ -179,7 +180,7 @@ if "%CMD%"=="sync" (
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_storage_sync "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_SYNC_DIR%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

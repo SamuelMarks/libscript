@@ -75,5 +75,5 @@ echo ==> Testing WordPress Cron Scheduler on Windows...
 call "%WP_DIR%\cron.cmd" help
 if errorlevel 1 exit /b 1
 
-echo ==> All WordPress tools verified successfully on Windows!
+echo ==> All WordPress tools verified successfully on Windows^^!
 exit /b 0

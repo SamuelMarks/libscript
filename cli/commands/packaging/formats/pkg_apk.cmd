@@ -60,6 +60,7 @@ set "LICENSE_PATH="
 set "OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "OFFLINE=1"
 set "DEPS_COUNT=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses packaging flags and component/version pairs.
@@ -192,7 +193,7 @@ exit /b 0
 :: ## after_args
 :: Populates default component list if none were supplied on the command line.
 :after_args
-if !DEPS_COUNT! equ 0 (
+if "!DEPS_COUNT!" equ "0" (
     for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
         if /I not "%%~nxC"=="_common" (
             for /d %%M in ("%%~fC\*") do (
@@ -210,7 +211,7 @@ call :sanitize_slug "!APP_NAME!"
 set "SAFE_APP=!SLUG_OUT!"
 set "META_DEPENDS="
 
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo set -e
 echo OUT_DIR="!OUT_DIR!"
 echo mkdir -p "$OUT_DIR"
@@ -245,7 +246,7 @@ echo if [ "$(id -u)" = "0" ]; then ABUILD_OPTS="-F"; else ABUILD_OPTS=""; fi
 echo cd "$BUILD_DIR" ^&^& abuild $ABUILD_OPTS -P "$BUILD_DIR/out" rootpkg
 echo find "$BUILD_DIR/out" -name "*.apk" -exec cp {} "$OUT_DIR/" \;
 echo rm -rf "$BUILD_DIR"
-echo printf '%%s\n' "Done!"
+echo printf '%%s\n' "Done^!"
 exit /b 0
 
 :: ## emit_apk_pkg
@@ -281,16 +282,16 @@ echo   touch "$pkgdir/var/LIB/libscript/.!PKG_NAME!_installed"
 echo }
 echo EOF
 echo cat ^<^< 'EOF' ^> "$BUILD_DIR/!PKG_NAME!.post-install"
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo if command -v libscript.sh ^>/dev/null; then libscript.sh install-service !PKG! !VER!; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript ^&^& ./libscript.sh install-service !PKG! !VER!; fi
 echo EOF
 echo chmod +x "$BUILD_DIR/!PKG_NAME!.post-install"
 echo cat ^<^< 'EOF' ^> "$BUILD_DIR/!PKG_NAME!.pre-deinstall"
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo if command -v libscript.sh ^>/dev/null; then libscript.sh uninstall !PKG! --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript ^&^& ./libscript.sh uninstall !PKG! --purge-data; fi
 echo EOF
 echo chmod +x "$BUILD_DIR/!PKG_NAME!.pre-deinstall"
-echo if [ ! -f "$HOME/.abuild/abuild.conf" ]; then abuild-keygen -a -n 2^>/dev/null ^|^| true; fi
+echo if [ ^^! -f "$HOME/.abuild/abuild.conf" ]; then abuild-keygen -a -n 2^>/dev/null ^|^| true; fi
 echo if [ "$(id -u)" = "0" ]; then ABUILD_OPTS="-F"; else ABUILD_OPTS=""; fi
 echo cd "$BUILD_DIR" ^&^& abuild $ABUILD_OPTS -P "$BUILD_DIR/out" rootpkg
 echo find "$BUILD_DIR/out" -name "*.apk" -exec cp {} "$OUT_DIR/" \;

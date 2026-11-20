@@ -65,6 +65,7 @@ if /I "!FREERTOS_VER!"=="latest" set "FREERTOS_VER=11.1.0"
 if /I "!FREERTOS_VER!"=="lts" set "FREERTOS_VER=10.5.1"
 set "SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
 if "!SYSROOT!"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\freertos-!PORT!\sysroot"
+goto :parse_fr_args
 
 :: ## parse_fr_args
 :: Parses CLI flags for FreeRTOS build_firmware.cmd.

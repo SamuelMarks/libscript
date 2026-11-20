@@ -77,7 +77,7 @@ if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\env.cmd" (
 )
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
+if not "%ERRORLEVEL%"=="0" (
     echo [ERROR] PowerShell not found. Cannot generate markdown docs on Windows.
     exit /b 1
 )

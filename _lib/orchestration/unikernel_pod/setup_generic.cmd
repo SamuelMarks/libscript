@@ -66,6 +66,7 @@ set "TARGET_SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\target-sysroot"
 if not "%LIBSCRIPT_TARGET_SYSROOT%"=="" set "TARGET_SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
 set "POD_DIR=!TARGET_SYSROOT!\unikernel-pod"
 if not "%UNIKERNEL_POD_OUT_DIR%"=="" set "POD_DIR=%UNIKERNEL_POD_OUT_DIR%"
+goto :parse_pod_args
 
 :: ## parse_pod_args
 :: Parses CLI flags for unikernel_pod setup_generic.cmd.

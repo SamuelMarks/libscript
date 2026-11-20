@@ -70,7 +70,7 @@ if exist "%OUT_FILE%" (
 echo [PROXMOX-IMG] Synthesizing Proxmox VE template for VMID %VMID%...
 
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     if exist "%INPUT%" (
         qemu-img convert -f raw -O qcow2 -o cluster_size=64k,lazy_refcounts=on "%INPUT%" "%OUT_FILE%"
     ) else (

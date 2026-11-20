@@ -57,7 +57,7 @@ if "%SVC_NAME%"=="" (
 
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active "%SVC_NAME%" >nul 2>&1
-if !ERRORLEVEL! equ 0 (
+if "!ERRORLEVEL!" equ "0" (
     echo Service %SVC_NAME% is running.
     exit /b 0
 )

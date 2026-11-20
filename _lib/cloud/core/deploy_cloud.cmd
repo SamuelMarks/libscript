@@ -82,6 +82,7 @@ set "_p3="
 set "_p4="
 set "_p5="
 set "_p6="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line flags and positional parameters.
@@ -197,6 +198,7 @@ if "!APP_SPECS!"=="" (
 
 set "MANIFEST_FILES="
 set "_REM_MF=!APP_SPECS!"
+goto :collect_manifests_loop
 :: ## collect_manifests_loop
 :: Collects libscript.json paths across all configured APP_SPECS.
 :collect_manifests_loop
@@ -291,7 +293,7 @@ if "!_SKIP_RT_SYNC!"=="1" (
     call :run_with_auth_check "!CLI!" node sync "!NODE!" "!CTX!"
     if errorlevel 1 exit /b 1
     if "!DRY_RUN_MODE!"=="0" (
-        call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_RT_HASH!' > ~/.libscript_deployments/_libscript_runtime.sha256" >nul 2>&1
+        call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%%s\n' '!_RT_HASH!' > ~/.libscript_deployments/_libscript_runtime.sha256" >nul 2>&1
     )
 )
 
@@ -355,7 +357,7 @@ if exist "!REPO_PATH!\libscript.json" (
                 if errorlevel 1 exit /b 1
             )
             if "!DRY_RUN_MODE!"=="0" (
-                call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_ROOT_MF_HASH!' > ~/.libscript_deployments/_root_manifest.sha256" >nul 2>&1
+                call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%%s\n' '!_ROOT_MF_HASH!' > ~/.libscript_deployments/_root_manifest.sha256" >nul 2>&1
             )
         )
     )
@@ -370,6 +372,7 @@ if "!DRY_RUN_MODE!"=="0" (
     )
 )
 set "REM_SPECS=!APP_SPECS!"
+goto :deploy_loop
 
 :: ## deploy_loop
 :: Iterates over APP_SPECS and deploys each selected application onto the shared node.
@@ -390,6 +393,7 @@ if "!IP!"=="" set "IP=203.0.113.10"
 set "REPORT_COUNT=0"
 set "OVERALL_VERIFY_FAILED=0"
 set "REM_SPECS=!APP_SPECS!"
+goto :verify_next
 
 :: ## verify_next
 :: Iterates through each deployed app for DNS binding, health verification, and report row generation.
@@ -425,7 +429,7 @@ echo +----------------------------+------------------------+--------------------
 echo ^| Application                ^| Remote Directory       ^| DNS Name / Public Endpoint       ^| Healthcheck ^| Ingress   ^|
 echo +----------------------------+------------------------+----------------------------------+-------------+-----------+
 for /L %%I in (1,1,!REPORT_COUNT!) do (
-    echo !REPORT_ROW_%%I!
+    echo.!REPORT_ROW_%%I!
 )
 echo +----------------------------+------------------------+----------------------------------+-------------+-----------+
 echo ^| SSH Access : ssh !ADMIN_USER!@!IP!
@@ -435,7 +439,7 @@ if defined LOG_FILE (
     echo +------------------------------------------------------------------------------------------------------------------+>> "!LOG_FILE!"
     echo ^| LIBSCRIPT CLOUD DEPLOYMENT REPORT ^(Provider: !PROVIDER! ^| Node: !NODE! ^| Context: !CTX! ^| IP: !IP!^)>> "!LOG_FILE!"
     for /L %%I in (1,1,!REPORT_COUNT!) do (
-        echo !REPORT_ROW_%%I!>> "!LOG_FILE!"
+        echo.!REPORT_ROW_%%I!>> "!LOG_FILE!"
     )
     echo +------------------------------------------------------------------------------------------------------------------+>> "!LOG_FILE!"
 )
@@ -447,7 +451,7 @@ exit /b 0
 set "_L_TAG=%~1"
 set "_L_MSG=%~2"
 echo [%_L_TAG%] %_L_MSG%
-if defined LOG_FILE echo %DATE% %TIME% [%_L_TAG%] %_L_MSG%>> "!LOG_FILE!"
+if defined LOG_FILE echo !DATE! !TIME! [%_L_TAG%] %_L_MSG%>> "!LOG_FILE!"
 exit /b 0
 
 :: ## run_with_auth_check
@@ -470,7 +474,7 @@ if exist "!_AUTH_TMP!" (
             if "!_LINE:~0,22!"=="[STOP]     processing " set "_SKIP_LINE=1"
             if "!_LINE!"=="hello world!" set "_SKIP_LINE=1"
         )
-        if "!_SKIP_LINE!"=="0" echo !_LINE!
+        if "!_SKIP_LINE!"=="0" echo.!_LINE!
     )
 )
 if "!_RWAC_RC!"=="0" (
@@ -667,7 +671,7 @@ if "!_SKIP_UNCHANGED!"=="1" (
     call :run_with_auth_check "!CLI!" node exec "!NODE!" "!CTX!" "cd ~/!_SP_DEST! && sudo HOME=$HOME SERVICE_USER='!ADMIN_USER!' REMOTE_USER='!ADMIN_USER!' !_REMOTE_OLLAMA_ENV! REMOTE_HOME=$HOME LIBSCRIPT_HOME=$HOME/.libscript LIBSCRIPT_ROOT_DIR=$HOME/libscript LIBSCRIPT_FORCE_RESTART=1 LIBSCRIPT_APP_HASH='!_APP_HASH!' LIBSCRIPT_SKIP_DB_INIT=1 $HOME/libscript/libscript.sh start libscript.json --skip-db-init"
     if errorlevel 1 exit /b 1
     if "!DRY_RUN_MODE!"=="0" (
-        call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%s\n' '!_APP_HASH!' > ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
+        call "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p ~/.libscript_deployments && printf '%%s\n' '!_APP_HASH!' > ~/.libscript_deployments/!_SP_DEST!.sha256" >nul 2>&1
     )
 )
 
@@ -703,7 +707,7 @@ call "!CLI!" node exec "!NODE!" "!CTX!" "if [ -d '!_DEPLOY_DATA_MOUNT!' ] || sud
 if not "!_LOCAL_JAEB_DB!"=="" if exist "!_LOCAL_JAEB_DB!" (
     for %%Z in ("!_LOCAL_JAEB_DB!") do set "_LOCAL_JAEB_SZ=%%~zZ"
     if not "!_LOCAL_JAEB_SZ!"=="0" (
-        call "!CLI!" node exec "!NODE!" "!CTX!" "[ -s !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb ] && [ \"$(wc -c < !_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb | tr -d '[:space:]')\" = '!_LOCAL_JAEB_SZ!' ]" >nul 2>&1
+        call "!CLI!" node exec "!NODE!" "!CTX!" "[ -s '!_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb' ] && [ $(wc -c < '!_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb' | tr -d '[:space:]') = '!_LOCAL_JAEB_SZ!' ]" >nul 2>&1
         if not errorlevel 1 (
             call :log "REUSE" "Remote Jaeb DuckDB '!_EXT_BASE!/jaeb/!_EXT_SLUG!.duckdb' already matches local size (!_LOCAL_JAEB_SZ! bytes)."
         ) else (
@@ -772,6 +776,7 @@ exit /b !_V_RC!
 if "!MANIFEST_FILES!"=="" exit /b 0
 set "_MF_CNT=0"
 for %%F in (!MANIFEST_FILES!) do set /a _MF_CNT+=1
+REM wincheck disable=CMD2003
 if !_MF_CNT! lss 2 exit /b 0
 set "_DUP_PORTS="
 for /f "delims=" %%P in ('jq -s -r "[ .[] | (.services | if type == \"object\" then [to_entries[].value.port? // empty] elif type == \"array\" then [.[].port? // empty] else [] end) | map(tostring) | unique | .[] ] | group_by(.) | map(select(length > 1) | .[0]) | join(\" \")" !MANIFEST_FILES! 2^>nul') do set "_DUP_PORTS=%%P"
@@ -810,7 +815,7 @@ if not "!_CAC_GIT!"=="nogit" (
     for /r "!_CAC_DIR!" %%F in (*) do (
         echo "%%~fF" | findstr /I /C:"\.nyc_output\" /C:"\docs\web\" /C:"\docs\api\" /C:"\site\" /C:"\.vitest" >nul 2>&1
         if errorlevel 1 (
-            echo %%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
+            echo.%%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
         )
     )
 )

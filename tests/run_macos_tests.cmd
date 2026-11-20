@@ -85,6 +85,7 @@ exit /b 0
 :: Parses command-line targets into the test execution variable.
 :start_tests
 set "TARGETS=%*"
+goto :run_tests
 
 :: ## run_tests
 :: Orchestrates VM verification, repository rsync, and component testing loop.
@@ -175,7 +176,7 @@ if errorlevel 1 (
 ) else (
     echo Success > "!success_file!"
     echo Idempotent > "!idempotent_file!"
-    echo [OK] !target! (2x install + test verified)
+    echo [OK] !target! ^(2x install + test verified^)
 )
 
 popd

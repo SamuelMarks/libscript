@@ -86,15 +86,15 @@ if exist "!_tc_spec!" (
 if /i "!_tc_spec!"=="default" (
     set "LIBSCRIPT_RESOLVED_CC_ID=default"
     where gcc >nul 2>&1
-    if !errorlevel! equ 0 (
+    if "!errorlevel!" equ "0" (
         set "LIBSCRIPT_RESOLVED_CC_BIN=gcc"
     ) else (
         where clang >nul 2>&1
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             set "LIBSCRIPT_RESOLVED_CC_BIN=clang"
         ) else (
             where cl >nul 2>&1
-            if !errorlevel! equ 0 (
+            if "!errorlevel!" equ "0" (
                 set "LIBSCRIPT_RESOLVED_CC_BIN=cl"
             ) else (
                 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install c latest

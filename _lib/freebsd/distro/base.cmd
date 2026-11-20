@@ -92,7 +92,7 @@ for %%d in (run log db tmp service) do (
     if not exist "%SYSROOT%\var\%%d" mkdir "%SYSROOT%\var\%%d"
 )
 
-echo %VERSION%> "%SYSROOT%\etc\libscript-freebsd-version"
+echo.%VERSION%> "%SYSROOT%\etc\libscript-freebsd-version"
 
 echo %DATE% %TIME%> "%STAMP_FILE%"
 echo [OK]       FreeBSD base bootstrap completed.

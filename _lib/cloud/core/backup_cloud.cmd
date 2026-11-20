@@ -74,6 +74,7 @@ set "APP_SPECS="
 set "DRY_RUN_MODE=0"
 if /i "%DRY_RUN%"=="true" set "DRY_RUN_MODE=1"
 if "%DRY_RUN%"=="1" set "DRY_RUN_MODE=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -170,6 +171,7 @@ if errorlevel 1 exit /b 1
 call "!CLI!" node exec "!NODE!" "!RG_CTX!" "sudo rm -rf '!_EXPORT_STAGE!' && mkdir -p '!_EXPORT_STAGE!'"
 if errorlevel 1 exit /b 1
 set "REM_SPECS=!APP_SPECS!"
+goto :export_next_app
 
 :: ## export_next_app
 :: Iterates over APP_SPECS and exports state for each matching app.

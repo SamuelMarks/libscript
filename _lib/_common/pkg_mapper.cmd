@@ -61,6 +61,7 @@ endlocal & (
     set "MAPPED_PKG=%MAPPED_PKG%"
     exit /b %_PM_RC%
 )
+:: wincheck disable=CMD3005
 
 :: ## map_package
 :: Translates a generic package identifier into the native Windows package manager ID via pkg_map.tsv.

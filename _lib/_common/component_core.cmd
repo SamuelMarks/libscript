@@ -83,11 +83,11 @@ if /i "%ACTION%"=="/?" goto :show_help
 if /i "%ACTION%"=="-?" goto :show_help
 
 if /i "%ACTION%"=="--version" (
-    if defined LIBSCRIPT_VERSION (echo %LIBSCRIPT_VERSION%) else (echo dev)
+    if defined LIBSCRIPT_VERSION (echo.%LIBSCRIPT_VERSION%) else (echo dev)
     exit /b 0
 )
 if /i "%ACTION%"=="-v" (
-    if defined LIBSCRIPT_VERSION (echo %LIBSCRIPT_VERSION%) else (echo dev)
+    if defined LIBSCRIPT_VERSION (echo.%LIBSCRIPT_VERSION%) else (echo dev)
     exit /b 0
 )
 
@@ -165,6 +165,7 @@ if not "!VERSION!"=="" (
     set "!pkg_up!_VERSION=!VERSION!"
     set "LIBSCRIPT_VERSION=!VERSION!"
 )
+:: wincheck disable=CMD3005
 
 :: ## parse_loop
 :: Iterates through remaining CLI flags and exports dynamic configuration variables.
@@ -413,7 +414,7 @@ if /i "!ACTION!"=="ls" (
 if /i "!ACTION!"=="ls-remote" (
     if exist "%MANIFEST_FILE%" (
         where jq >nul 2>&1
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             jq -r ".versions[]? // empty" "%MANIFEST_FILE%" 2>nul
             exit /b 0
         )
@@ -446,7 +447,7 @@ if /i "!ACTION!"=="which" (
     )
     for %%F in ("!INSTALLED_DIR!\bin\*.exe" "!INSTALLED_DIR!\bin\*.cmd" "!INSTALLED_DIR!\bin\*.bat") do (
         if exist "%%~fF" (
-            echo %%~fF
+            echo.%%~fF
             exit /b 0
         )
     )
@@ -638,19 +639,19 @@ echo   logs, install-service, uninstall-service, uninstall, test, env, which, ru
 echo.
 if exist "%MANIFEST_FILE%" (
     where jq >nul 2>&1
-    if !errorlevel! equ 0 (
+    if "!errorlevel!" equ "0" (
         for /f "delims=" %%A in ('jq -r "if .title and .description then .title + \": \" + .description elif .title then .title elif .description then .description else \"\" end" "%MANIFEST_FILE%"') do (
-            if not "%%A"=="" echo   %%A
+            if not "%%A"=="" echo.  %%A
         )
         for /f "delims=" %%A in ('jq -r --arg p "Supported Versions: " --arg s ", " "if .versions then $p + (.versions | join($s)) else empty end" "%MANIFEST_FILE%"') do (
-            if not "%%A"=="" echo   %%A
+            if not "%%A"=="" echo.  %%A
         )
     )
 )
 echo.
 echo Component Options:
 where jq >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     if exist "%SCHEMA_FILE%" (
         jq -r "(.properties // {}) | to_entries[] | \"  --\" + .key + \"=\" + ((.value.default // \"none\") | tostring) + \"\t\" + (.value.description // \"\")" "%SCHEMA_FILE%" 2>nul
     )

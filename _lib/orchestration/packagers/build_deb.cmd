@@ -111,7 +111,7 @@ if /i "%VARIANT%"=="offline" (
 echo 2.0> "%WORK_DIR%\debian-binary"
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pushd "%WORK_DIR%\control"
     tar -czf "%WORK_DIR%\control.tar.gz" . >nul 2>&1
     popd

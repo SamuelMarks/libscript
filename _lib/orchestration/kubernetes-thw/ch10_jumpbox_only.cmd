@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 set "DIR=!SCRIPT_DIR!"
 
-cd %DIR%\kubernetes-the-hard-way
+cd /d "%DIR%\kubernetes-the-hard-way"
 
 for /f "tokens=1" %%a in ('findstr /c:"server" "%DIR%\kubernetes-the-hard-way\machines.txt"') do set KUBERNETES_PUBLIC_ADDRESS=%%a
 

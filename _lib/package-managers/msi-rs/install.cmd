@@ -285,6 +285,7 @@ if exist "%CACHE_ZIP%" (
     cd /d "%~dp0"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 )
+:: wincheck disable=CMD3005
 
 :: ## link_aliases
 :: Creates default and latest directory junctions pointing to the installed msi-rs version.

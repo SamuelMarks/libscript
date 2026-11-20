@@ -92,7 +92,7 @@ set "provider=%~2"
 set "domain=%~3"
 
 if "%provider%"=="aws" (
-    echo %domain% | findstr /b /c:"arn:aws:acm" >nul
+    echo.%domain% | findstr /b /c:"arn:aws:acm" >nul
     if not errorlevel 1 (
         if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "%domain%"

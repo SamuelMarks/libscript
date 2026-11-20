@@ -80,5 +80,5 @@ if not exist "%TEST_TMP%\mkt\gcp\main.tf" (
 )
 
 rmdir /s /q "%TEST_TMP%" >nul 2>&1
-echo [PASS] Windows Unikernel Marketplace tests passed!
+echo [PASS] Windows Unikernel Marketplace tests passed^^!
 exit /b 0

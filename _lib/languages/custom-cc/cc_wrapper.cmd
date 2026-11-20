@@ -64,11 +64,11 @@ set "_real_cc=%CUSTOM_CC_REAL_BIN%"
 if "!_real_cc!"=="" set "_real_cc=%CUSTOM_CC_BIN%"
 if "!_real_cc!"=="" (
     where gcc >nul 2>&1
-    if !errorlevel! equ 0 (
+    if "!errorlevel!" equ "0" (
         set "_real_cc=gcc"
     ) else (
         where clang >nul 2>&1
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             set "_real_cc=clang"
         ) else (
             set "_real_cc=cl"

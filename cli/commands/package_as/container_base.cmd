@@ -97,7 +97,7 @@ echo LibScript Container Layer Stub > "%DOCKER_STAGE%\layer.tar"
 echo LibScript Container Repositories Stub > "%DOCKER_STAGE%\repositories"
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pushd "%DOCKER_STAGE%"
     tar -cf "%OUT_FILE%" manifest.json repositories config.json layer.tar >nul 2>&1
     popd

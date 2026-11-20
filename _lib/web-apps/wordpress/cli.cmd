@@ -142,11 +142,11 @@ exit /b %ERRORLEVEL%
 where wp >nul 2>&1
 if not errorlevel 1 (
     wp %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if exist "!LIBSCRIPT_ROOT_DIR!\cache\wp-cli.phar" (
     php "!LIBSCRIPT_ROOT_DIR!\cache\wp-cli.phar" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 echo [ERROR] WP-CLI executable or phar not found. >&2
 exit /b 1

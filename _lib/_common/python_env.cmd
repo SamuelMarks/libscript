@@ -85,7 +85,7 @@ if "%_backend%"=="uv" (
         where py >nul 2>nul
         if not errorlevel 1 (
             for /f "delims=" %%I in ('py -%_version% -c "import sys; print(sys.executable)" 2^>nul') do (
-                echo %%I
+                echo.%%I
                 exit /b 0
             )
         )
@@ -108,14 +108,14 @@ if "%_backend%"=="uv" (
     where python3 >nul 2>nul
     if not errorlevel 1 (
         for /f "delims=" %%I in ('where python3') do (
-            echo %%I
+            echo.%%I
             exit /b 0
         )
     )
     where python >nul 2>nul
     if not errorlevel 1 (
         for /f "delims=" %%I in ('where python') do (
-            echo %%I
+            echo.%%I
             exit /b 0
         )
     )
@@ -191,7 +191,7 @@ if "%_backend%"=="uv" (
 )
 
 if exist "%_target_dir%" (
-    > "%_target_dir%\.libscript_venv_interp" echo %_backend%:%_python_version%
+    > "%_target_dir%\.libscript_venv_interp" echo.%_backend%:%_python_version%
 )
 
 if not "!_req_file!"=="" if exist "!_req_file!" (
@@ -205,8 +205,8 @@ if not "!_req_file!"=="" if exist "!_req_file!" (
         "%_target_dir%\Scripts\pip.exe" install -r "!_req_file!"
     )
     if not errorlevel 1 (
-        > "%_target_dir%\.libscript_lock_hash" echo !_req_hash!
-        > "%_target_dir%\.libscript_py_hash" echo !_req_hash!
+        > "%_target_dir%\.libscript_lock_hash" echo.!_req_hash!
+        > "%_target_dir%\.libscript_py_hash" echo.!_req_hash!
     ) else (
         exit /b 1
     )
@@ -314,8 +314,8 @@ if "!_psd_rc!"=="0" if exist "!_psd_dir!\requirements-prod.txt" (
 
 if "!_psd_rc!"=="0" if exist "!_psd_dir!\.venv" (
     if not "!_PY_DEPS_HASH!"=="none" (
-        > "!_psd_dir!\.venv\.libscript_lock_hash" echo !_PY_DEPS_HASH!
-        > "!_psd_dir!\.venv\.libscript_py_hash" echo !_PY_DEPS_HASH!
+        > "!_psd_dir!\.venv\.libscript_lock_hash" echo.!_PY_DEPS_HASH!
+        > "!_psd_dir!\.venv\.libscript_py_hash" echo.!_PY_DEPS_HASH!
     )
 )
 exit /b !_psd_rc!

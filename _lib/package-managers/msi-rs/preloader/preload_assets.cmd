@@ -78,13 +78,13 @@ echo [PRELOAD] Staging offline components into %TARGET_DIR%\opt\libscript\cache.
 if not exist "%TARGET_DIR%\opt\libscript\cache" mkdir "%TARGET_DIR%\opt\libscript\cache"
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\preload_assets.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\preload_assets.sh" %*
     exit /b !errorlevel!
 )

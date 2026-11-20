@@ -89,6 +89,6 @@ call "%SCRIPT_DIR%\run_freebsd_distro_on_sunos.cmd"
     echo }
 ) > "%SUMMARY_FILE%"
 
-echo [OK]       All 5 Vagrant platforms verified successfully!
+echo [OK]       All 5 Vagrant platforms verified successfully^^!
 echo [OK]       Summary written to %SUMMARY_FILE%
 exit /b 0

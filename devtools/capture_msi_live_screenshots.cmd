@@ -97,13 +97,13 @@ echo [INFO] Destination: %CC0_ROOT%
 
 :: If WSL or bash is available, delegate to POSIX script for unified execution
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "%SCRIPT_DIR%\capture_msi_live_screenshots.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "%SCRIPT_DIR%\capture_msi_live_screenshots.sh" %*
     exit /b !errorlevel!
 )

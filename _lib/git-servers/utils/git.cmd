@@ -51,7 +51,7 @@ goto :find_root
 
 if not "%~1"=="" (
     call :%*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 exit /b 0
 

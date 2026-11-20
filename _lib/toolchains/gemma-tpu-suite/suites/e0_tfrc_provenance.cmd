@@ -64,9 +64,10 @@ set "_dirty_hash=clean"
 git -C "!REPO_DIR!" rev-parse HEAD >nul 2>&1
 if not errorlevel 1 (
     for /f "usebackq delims=" %%G in (`git -C "!REPO_DIR!" rev-parse HEAD 2^>nul`) do set "_git_sha=%%G"
-    set "_dirty_tmp=%TEMP%\e0_dirty_%RANDOM%.txt"
+    set "_dirty_tmp=%TEMP%\e0_dirty_!RANDOM!.txt"
     git -C "!REPO_DIR!" status --porcelain > "!_dirty_tmp!" 2>nul
     for %%S in ("!_dirty_tmp!") do (
+        REM wincheck disable=CMD2003
         if %%~zS gtr 0 (
             git -C "!REPO_DIR!" diff HEAD >> "!_dirty_tmp!" 2>nul
             for /f "skip=1 tokens=1" %%D in ('certutil -hashfile "!_dirty_tmp!" SHA256 2^>nul') do (

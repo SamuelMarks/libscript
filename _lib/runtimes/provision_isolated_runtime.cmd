@@ -51,6 +51,7 @@ goto :find_root
 
 set "RUNTIME_TYPE="
 set "ISOLATION_PATH="
+goto :ParseArgs
 
 :: ## ParseArgs
 :: Parses command-line arguments and populates configuration variables.

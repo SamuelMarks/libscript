@@ -54,6 +54,7 @@ set "PKG_TARGET=all"
 set "USE_WIX=0"
 set "COMPARE_WIX=0"
 set "LIVE_VAGRANT=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line options for test_msi_vagrant_matrix.cmd.
@@ -147,5 +148,5 @@ if "!LIVE_VAGRANT!"=="1" (
     echo ==^> [5/5] Matrix verification complete ^(pass --live-vagrant to boot full guest VMs^).
 )
 
-echo [PASS] Cross-platform msi-rs Vagrant matrix succeeded!
+echo [PASS] Cross-platform msi-rs Vagrant matrix succeeded^^!
 exit /b 0

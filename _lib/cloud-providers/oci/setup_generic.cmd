@@ -344,7 +344,7 @@ if "!DRY_RUN!"=="true" (
 set "_IP="
 for /f "delims=" %%I in ('oci compute instance list-vnics --instance-id "!_NODE!" --query "data[0].\"public-ip\"" --raw-output 2^>nul') do set "_IP=%%I"
 if /i "!_SUB!"=="ip" (
-    echo !_IP!
+    echo.!_IP!
     exit /b 0
 )
 if /i "!_SUB!"=="exec" (

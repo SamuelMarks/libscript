@@ -109,6 +109,6 @@ if exist "%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript" (
     echo [PASS] Companion cc0-assets branding assets verified
 )
 
-echo === All Windows branding tests passed! ===
+echo === All Windows branding tests passed^^! ===
 rmdir /s /q "%TEST_TMP_DIR%"
 exit /b 0

@@ -95,12 +95,12 @@ if not "!ERRORLEVEL!"=="65" goto :fail
 jq -e ".status == \"failed_cpu_fallback\"" "!_WDIR!\out_fb\raw\e1_inference_jax_native.json" >nul || goto :fail
 
 rmdir /s /q "!_WDIR!" >nul 2>&1
-echo [PASS] All Windows 7-backend Gemma 4 TPU matrix and ^>9 arg forwarding tests passed!
+echo [PASS] All Windows 7-backend Gemma 4 TPU matrix and ^>9 arg forwarding tests passed^^!
 exit /b 0
 
 :: ## fail
 :: Cleans up temporary test workspace and exits with status 1 on failure.
 :fail
 rmdir /s /q "!_WDIR!" >nul 2>&1
-echo [FAIL] Windows 7-backend Gemma 4 TPU matrix test failed! 1>&2
+echo [FAIL] Windows 7-backend Gemma 4 TPU matrix test failed^^! 1>&2
 exit /b 1

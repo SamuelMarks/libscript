@@ -54,7 +54,7 @@ goto :find_root
 IF "%~1"=="--dry-run" (
     echo === LibScript Vagrant Box Lifecycle Verification ^(Win32 Simulated^) ===
     echo [PASS] Verified: Vagrant box metadata and descriptor structure.
-    echo === Vagrant Box Lifecycle Verification Succeeded! ===
+    echo === Vagrant Box Lifecycle Verification Succeeded^^! ===
     goto end
 )
 

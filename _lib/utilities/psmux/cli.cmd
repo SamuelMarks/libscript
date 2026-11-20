@@ -72,13 +72,13 @@ if "%~1"=="-h" (
 )
 
 where psmux >nul 2>nul
-if %errorlevel% neq 0 (
+if "%errorlevel%" neq "0" (
     if exist "%ProgramFiles%\psmux\psmux.cmd" set "PATH=%ProgramFiles%\psmux;!PATH!"
     if exist "%USERPROFILE%\.local\bin\psmux.cmd" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
 )
 
 where psmux >nul 2>nul
-if %errorlevel% neq 0 (
+if "%errorlevel%" neq "0" (
     call "!LOG_CMD!" :log_error "psmux not found. Please ensure it is installed and in your PATH."
     exit /b 1
 )

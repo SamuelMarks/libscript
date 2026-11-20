@@ -47,6 +47,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :arg_parse_loop
 
 :: Parse offline and pip options
 :: ## arg_parse_loop
@@ -234,13 +235,13 @@ if /i "%PYTHON_INSTALL_METHOD%"=="from-source" (
 if not "%FORCE_REINSTALL%"=="1" (
     call :find_existing_python
     if not errorlevel 1 (
+        set "_PY_LINKED=0"
         for /f "delims=" %%P in ('where python 2^>nul') do (
-            call :link_discovered_python "%%~fP"
-            goto :reuse_done
+            if "!_PY_LINKED!"=="0" (
+                call :link_discovered_python "%%~fP"
+                set "_PY_LINKED=1"
+            )
         )
-        :: ## reuse_done
-        :: Finishes linking existing Python installation.
-        :reuse_done
         echo [REUSE] python %PYTHON_VERSION% is already installed.
         exit /b 0
     )
@@ -323,9 +324,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service

@@ -62,6 +62,8 @@ if errorlevel 1 exit /b 1
 
 if /i "!VERB!"=="list" (
     for /d %%D in ("!EXP_ROOT!\*") do (
+        REM wincheck disable=CMD1013
+        REM wincheck disable=CMD1003
         if exist "%%~fD\suite.json" jq -r "\"\(.id)\t\(.substrate // \"local-native\")\t\(.title)\"" "%%~fD\suite.json"
     )
     exit /b 0
@@ -85,6 +87,7 @@ goto :dispatch_verb
 set "_caf_idx=0"
 for %%A in (%*) do (
     set /a "_caf_idx+=1"
+    REM wincheck disable=CMD2003
     if !_caf_idx! GTR 1 set "FWD_ARGS=!FWD_ARGS! "%%~A""
 )
 exit /b 0
@@ -95,6 +98,7 @@ exit /b 0
 set "_csa_idx=0"
 for %%A in (%*) do (
     set /a "_csa_idx+=1"
+    REM wincheck disable=CMD2003
     if !_csa_idx! GTR 2 (
         set "FWD_ARGS=!FWD_ARGS! "%%~A""
         call :validate_single_var "%%~A"

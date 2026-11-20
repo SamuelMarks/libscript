@@ -100,17 +100,17 @@ for %%S in (
 )
 
 if "!POSTGRES_URL!"=="" (
-    echo [FAIL] POSTGRES_URL was not tunneled across endlocal! >&2
+    echo [FAIL] POSTGRES_URL was not tunneled across endlocal^^! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )
 if "!PYTHON_VERSION!"=="" (
-    echo [FAIL] PYTHON_VERSION was not tunneled across endlocal! >&2
+    echo [FAIL] PYTHON_VERSION was not tunneled across endlocal^^! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )
 if "!NODEJS_VERSION!"=="" (
-    echo [FAIL] NODEJS_VERSION was not tunneled across endlocal! >&2
+    echo [FAIL] NODEJS_VERSION was not tunneled across endlocal^^! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )
@@ -120,7 +120,7 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --hydrate "%TEST_TMP%\l
 set "PATH_PASS_2=!PATH!"
 
 if not "!PATH_PASS_1!"=="!PATH_PASS_2!" (
-    echo [FAIL] PATH mutated on second hydration ^(idempotency violation^)! >&2
+    echo [FAIL] PATH mutated on second hydration ^(idempotency violation^)^^! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )
@@ -129,7 +129,7 @@ set "STACK="
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --manifest "%TEST_TMP%\libscript.json" dotenv > "%TEST_TMP%\dotenv_out.txt"
 findstr /B /C:"SERVICE_PATH=" "%TEST_TMP%\dotenv_out.txt" >nul 2>&1
 if errorlevel 1 (
-    echo [FAIL] SERVICE_PATH missing from dotenv manifest output! >&2
+    echo [FAIL] SERVICE_PATH missing from dotenv manifest output^^! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )
@@ -140,7 +140,7 @@ set "STACK="
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_printer.cmd" --expand TEST_SEED_CMD
 echo "!TEST_SEED_CMD!" | findstr /C:"/mnt/data/t1d_analytics.duckdb" >nul 2>&1
 if errorlevel 1 (
-    echo [FAIL] --expand did not expand T1D_DB_PATH in TEST_SEED_CMD! >&2
+    echo [FAIL] --expand did not expand T1D_DB_PATH in TEST_SEED_CMD^^! >&2
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )

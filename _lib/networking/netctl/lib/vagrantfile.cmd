@@ -52,7 +52,7 @@ goto :find_root
 
 if not "%~1"=="" (
     call :%*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 exit /b 0
 
@@ -68,7 +68,7 @@ if not exist "%state_file%" (
 )
 
 where jq >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     for /f "tokens=*" %%P in ('jq -r ".listen[]" "%state_file%" 2^>nul') do (
         set "listen_str=%%P"
         if not "!listen_str:~0,5!"=="unix:" (

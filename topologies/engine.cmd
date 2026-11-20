@@ -68,6 +68,7 @@ set "EXTRA_ARG="
 set "EXTRA_ARG2="
 set "LIVE_MODE=%LIBSCRIPT_TOPOLOGY_LIVE%"
 if "!LIVE_MODE!"=="" set "LIVE_MODE=0"
+goto :parse_topo_args
 
 :: ## parse_topo_args
 :: Parses optional flags (--live, --mock, --dry-run) and positional action arguments.
@@ -163,7 +164,7 @@ if /i "!_PROV!"=="gcp-tpu" (
             call :release_lock
             exit /b 1
         )
-        echo !_ACCEL! | findstr /R "v5p v6e" >nul 2>&1
+        echo.!_ACCEL! | findstr /R "v5p v6e" >nul 2>&1
         if not errorlevel 1 (
             echo [ERROR] TFRC violation: paid accelerator type in '!_ACCEL!' 1>&2
             call :release_lock
@@ -216,7 +217,7 @@ set "_JQ_UP=%TEMP%\ls_topo_up_%RANDOM%_%RANDOM%.jq"
 jq --arg ts "!NOW_UTC!" --arg live "!LIVE_MODE!" -f "!_JQ_UP!" "!TOPO_FILE!" > "!STATE_FILE!.tmp"
 set "_UP_RC=!ERRORLEVEL!"
 del /f /q "!_JQ_UP!" >nul 2>&1
-if !_UP_RC! equ 0 move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
+if "!_UP_RC!" equ "0" move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
 call :release_lock
 type "!STATE_FILE!"
 exit /b !_UP_RC!
@@ -279,7 +280,7 @@ set "_JQ_SC=%TEMP%\ls_topo_sc_%RANDOM%_%RANDOM%.jq"
 jq --arg gn "!GRP!" --argjson cnt "!NEW_CNT!" --arg ts "!NOW_UTC!" --slurpfile topo "!TOPO_FILE!" -f "!_JQ_SC!" "!STATE_FILE!" > "!STATE_FILE!.tmp"
 set "_SC_RC=!ERRORLEVEL!"
 del /f /q "!_JQ_SC!" >nul 2>&1
-if !_SC_RC! equ 0 move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
+if "!_SC_RC!" equ "0" move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
 call :release_lock
 type "!STATE_FILE!"
 exit /b !_SC_RC!
@@ -306,6 +307,7 @@ call "!SCRIPT_DIR!\fence.cmd" "!DEAD_LEADER!" "cloud-api-poweroff" "!STATE_FILE!
 set "_JQ_FO=%TEMP%\ls_topo_fo_%RANDOM%_%RANDOM%.jq"
 (
     echo ^([.nodes[] ^| select^(.id ^^!= $dead and .state == "HEALTHY"^)][0].id // ""^) as $cand ^|
+    REM wincheck disable=CMD1003
     echo .nodes = ^(.nodes ^| map^(
     echo   if .id == $cand then .role = "leader" ^| .updated_at = $ts
     echo   elif .id == $dead then .state = "FENCED" ^| .role = "fenced" ^| .updated_at = $ts
@@ -315,7 +317,7 @@ set "_JQ_FO=%TEMP%\ls_topo_fo_%RANDOM%_%RANDOM%.jq"
 jq --arg dead "!DEAD_LEADER!" --arg ts "!NOW_UTC!" -f "!_JQ_FO!" "!STATE_FILE!" > "!STATE_FILE!.tmp"
 set "_FO_RC=!ERRORLEVEL!"
 del /f /q "!_JQ_FO!" >nul 2>&1
-if !_FO_RC! equ 0 move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
+if "!_FO_RC!" equ "0" move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
 call :release_lock
 type "!STATE_FILE!"
 exit /b !_FO_RC!

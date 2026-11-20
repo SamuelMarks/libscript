@@ -55,7 +55,7 @@ if errorlevel 1 exit /b 1
 call :verify_5way_experiments_and_latex
 if errorlevel 1 exit /b 1
 
-echo [PASS] All EDG C/C++ Backends experimental protocol tests succeeded on Windows!
+echo [PASS] All EDG C/C++ Backends experimental protocol tests succeeded on Windows^^!
 exit /b 0
 
 :: ## verify_torture_and_stl_harness

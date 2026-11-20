@@ -82,7 +82,7 @@ if exist "%STAMP_FILE%" if exist "%OUT_VHD%" (
 
 echo [PACKAGE]  Exporting FreeBSD VHD: %OUT_VHD%...
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     qemu-img convert -O vpc -o subformat=dynamic "%INPUT%" "%OUT_VHD%"
 ) else (
     echo [WARN]     qemu-img not found, writing placeholder file...

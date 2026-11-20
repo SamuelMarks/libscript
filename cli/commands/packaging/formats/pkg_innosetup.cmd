@@ -80,7 +80,7 @@ set "iss_file=%OUT_FILE%.iss"
 
 echo Generated %iss_file%
 where iscc >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo Compiling %iss_file% with iscc...
     iscc "%iss_file%"
 )

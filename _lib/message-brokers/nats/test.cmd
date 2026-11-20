@@ -51,13 +51,13 @@ goto :find_root
 :root_found
 
 where nats-server >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   nats-server --version
   exit /b 0
 )
 
 where nats >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   nats --version
   exit /b 0
 )

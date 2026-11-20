@@ -55,7 +55,7 @@ if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Micros
 if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
 if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
 where jq >nul 2>&1
-if !errorlevel! neq 0 (
+if "!errorlevel!" neq "0" (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install jq latest >nul 2>&1
     if exist "%USERPROFILE%\.libscript\jq\latest\bin" set "PATH=%USERPROFILE%\.libscript\jq\latest\bin;!PATH!"
@@ -86,79 +86,79 @@ if /I "%~1"=="status" goto :noop
 if /I "%~1"=="health" goto :noop
 if /I "%~1"=="uninstall" (
     call "%NETCTL_DIR%\uninstall.cmd"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if /I "%~1"=="test" (
     call "%NETCTL_DIR%\test.cmd"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 if /I "%~1"=="init" (
     call "%NETCTL_DIR%lib\state.cmd" init
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="domain" (
     call "%NETCTL_DIR%lib\state.cmd" domain "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="tls" (
     call "%NETCTL_DIR%lib\state.cmd" tls "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="cert-store-dir" (
     call "%NETCTL_DIR%lib\state.cmd" cert-store-dir "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="cert_store_dir" (
     call "%NETCTL_DIR%lib\state.cmd" cert_store_dir "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="acme-webroot" (
     call "%NETCTL_DIR%lib\state.cmd" acme-webroot "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="acme_webroot" (
     call "%NETCTL_DIR%lib\state.cmd" acme_webroot "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy-connect-timeout" (
     call "%NETCTL_DIR%lib\state.cmd" proxy-connect-timeout "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy_connect_timeout" (
     call "%NETCTL_DIR%lib\state.cmd" proxy_connect_timeout "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy-send-timeout" (
     call "%NETCTL_DIR%lib\state.cmd" proxy-send-timeout "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy_send_timeout" (
     call "%NETCTL_DIR%lib\state.cmd" proxy_send_timeout "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy-read-timeout" (
     call "%NETCTL_DIR%lib\state.cmd" proxy-read-timeout "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy_read_timeout" (
     call "%NETCTL_DIR%lib\state.cmd" proxy_read_timeout "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy-buffering" (
     call "%NETCTL_DIR%lib\state.cmd" proxy-buffering "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy_buffering" (
     call "%NETCTL_DIR%lib\state.cmd" proxy_buffering "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="ensure-cert" (
     call :netctl_ensure_letsencrypt_cert "%~2" "%~3" "%~4" "%~5"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="listen" (
     call "%NETCTL_DIR%lib\state.cmd" listen "%~2"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="static" (
     call "%NETCTL_DIR%lib\state.cmd" static "%~2" "%~3"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="spa" (
     call "%NETCTL_DIR%lib\state.cmd" spa "%~2" "%~3"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="proxy" (
     call "%NETCTL_DIR%lib\state.cmd" proxy "%~2" "%~3"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="ws" (
     call "%NETCTL_DIR%lib\state.cmd" ws "%~2" "%~3"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="rewrite" (
     call "%NETCTL_DIR%lib\state.cmd" rewrite "%~2" "%~3"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="apply" (
     shift
     goto :apply_manifest
@@ -177,7 +177,7 @@ if /I "%~1"=="init" (
     goto :reload_proxy
 ) else if /I "%~1"=="emit" (
     call "%NETCTL_DIR%lib\%~2.cmd"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if /I "%~1"=="-h" (
     goto usage
 ) else if /I "%~1"=="--help" (
@@ -190,14 +190,16 @@ if /I "%~1"=="init" (
     set SINGULAR_MODE=1
 )
 
-if "!SINGULAR_MODE!"=="1" (
-    set NETCTL_STATE_FILE=%TEMP%\netctl_state_%RANDOM%.json
-    set "STACK="
-    call "%NETCTL_DIR%lib\state.cmd" init
-    
+if not "!SINGULAR_MODE!"=="1" exit /b 0
+
+set "NETCTL_STATE_FILE=%TEMP%\netctl_state_!RANDOM!.json"
+set "STACK="
+call "%NETCTL_DIR%lib\state.cmd" init
+goto :loop
+
 :: ## loop
 :: Iterates through singular-mode CLI flags to populate temporary netctl state.
-    :loop
+:loop
     if "%~1"=="" goto done_loop
     if /I "%~1"=="--domain" (
         set "STACK="
@@ -363,13 +365,12 @@ if "!SINGULAR_MODE!"=="1" (
 
 :: ## done_loop
 :: Emits the requested reverse-proxy configuration and removes temporary state files.
-    :done_loop
-    if not "!EMIT_FORMAT!"=="" (
-        set "STACK="
-        call "%NETCTL_DIR%lib\!EMIT_FORMAT!.cmd"
-    )
-    if exist "!NETCTL_STATE_FILE!" del "!NETCTL_STATE_FILE!"
+:done_loop
+if not "!EMIT_FORMAT!"=="" (
+    set "STACK="
+    call "%NETCTL_DIR%lib\!EMIT_FORMAT!.cmd"
 )
+if exist "!NETCTL_STATE_FILE!" del "!NETCTL_STATE_FILE!"
 exit /b 0
 
 :: ## apply_manifest
@@ -382,6 +383,7 @@ set "APPLY_FORMAT="
 set "APPLY_OUT="
 set "APPLY_RELOAD=0"
 if "!APPLY_FORCE_RELOAD!"=="1" set "APPLY_RELOAD=1"
+goto :apply_arg_loop
 
 :: ## apply_arg_loop
 :: Parses optional flags for the apply subcommand.

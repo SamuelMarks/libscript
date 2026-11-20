@@ -75,20 +75,20 @@ git add -u
 
 :: Run the pre-commit script across the repository
 call .githooks\pre-commit.cmd --all
-if %ERRORLEVEL% neq 0 (
-    echo Error: The pre-commit hook failed with exit code %ERRORLEVEL%.
+if "%ERRORLEVEL%" neq "0" (
+    echo Error: The pre-commit hook failed with exit code !ERRORLEVEL!.
     exit /b 1
 )
 
 :: Check if anything changed in index or working tree
 git diff --no-ext-diff --cached --exit-code
-if %ERRORLEVEL% neq 0 (
+if "%ERRORLEVEL%" neq "0" (
     echo Error: The pre-commit hook modified staged files. Please run the pre-commit hook locally and commit the changes.
     git status --short -uno
     exit /b 1
 )
 git diff --no-ext-diff --exit-code
-if %ERRORLEVEL% neq 0 (
+if "%ERRORLEVEL%" neq "0" (
     echo Error: The pre-commit hook modified working tree files. Please run the pre-commit hook locally and commit the changes.
     git status --short -uno
     exit /b 1

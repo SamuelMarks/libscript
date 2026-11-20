@@ -72,16 +72,17 @@ for /f "delims=" %%f in ('dir /s /b /a:-d "!SCRIPT_DIR!\cli.cmd" 2^>nul') do (
                 set /p desc=^<"%temp%\desc.txt"
             )
             set "match_found=0"
-            echo !rel_dir! | findstr /i "%query%" >nul
+            echo.!rel_dir! | findstr /i "%query%" >nul
             if not errorlevel 1 set "match_found=1"
-            echo !desc! | findstr /i "%query%" >nul
+            echo.!desc! | findstr /i "%query%" >nul
             if not errorlevel 1 set "match_found=1"
             
             if "!match_found!"=="1" (
                 if "!desc!" neq "" (
                     echo   !rel_dir! - !desc!
                 ) else (
-                    echo   !rel_dir!
+                    REM wincheck disable=CMD1003
+                    echo(  !rel_dir!
                 )
             )
         )

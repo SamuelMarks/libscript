@@ -54,9 +54,9 @@ if "%APP_PUBLISHER%"=="" set "APP_PUBLISHER=MyCompany"
 if "%OUT_FILE%"=="" set "OUT_FILE=installer"
 if "%nsis_admin%"=="" set "nsis_admin=admin"
 
-echo !define APP_NAME "%APP_NAME%"
-echo !define APP_VERSION "%APP_VERSION%"
-echo !define APP_PUBLISHER "%APP_PUBLISHER%"
+echo ^^!define APP_NAME "%APP_NAME%"
+echo ^^!define APP_VERSION "%APP_VERSION%"
+echo ^^!define APP_PUBLISHER "%APP_PUBLISHER%"
 echo Name "%APP_NAME% %APP_VERSION%"
 echo OutFile "%OUT_FILE%.exe"
 echo InstallDir "$PROGRAMFILES\%APP_NAME%"
@@ -97,7 +97,7 @@ echo SectionEnd
 
 echo.
 echo Section /o "Deploy Micro-Frontends (MFEs)" SEC_openedx_mfes
-echo   ExecWait 'cmd.exe /c "$INSTDIR\stacks\cms\openedx\mfe.cmd" build all && "$INSTDIR\stacks\cms\openedx\mfe.cmd" deploy all'
+echo   ExecWait 'cmd.exe /c "call \"$INSTDIR\stacks\cms\openedx\mfe.cmd\" build all ^&^& call \"$INSTDIR\stacks\cms\openedx\mfe.cmd\" deploy all"'
 echo SectionEnd
 
 echo.

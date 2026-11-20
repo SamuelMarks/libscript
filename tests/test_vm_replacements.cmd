@@ -91,7 +91,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [PASS] Windows Version Manager Replacement tests passed!
+echo [PASS] Windows Version Manager Replacement tests passed^^!
 call :cleanup
 exit /b 0
 

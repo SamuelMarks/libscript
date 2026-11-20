@@ -159,6 +159,7 @@ if /I "!TARGET_ARCH!"=="aarch64" set "LIBSCRIPT_TARGET_TRIPLET=aarch64-none-elf"
 if /I "!TARGET_ARCH!"=="arm64" set "LIBSCRIPT_TARGET_TRIPLET=aarch64-none-elf"
 if /I "!TARGET_ARCH!"=="riscv32" set "LIBSCRIPT_TARGET_TRIPLET=riscv32-unknown-elf"
 if /I "!TARGET_ARCH!"=="riscv64" set "LIBSCRIPT_TARGET_TRIPLET=riscv64-unknown-elf"
+goto :triplet_done
 
 :: ## triplet_done
 :: Applies freestanding or hosted compiler security flags once target triplet is resolved.

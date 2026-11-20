@@ -97,9 +97,9 @@ exit /b 0
 call :action_install
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mesos\%EXACT_VERSION%"
 set "LATEST_DIR=%LIBSCRIPT_HOME%\mesos\latest"
-if not "%TARGET_DIR%"=="%LATEST_DIR%" (
-    if not exist "%LATEST_DIR%\bin" mkdir "%LATEST_DIR%\bin"
-    xcopy /y /q "%TARGET_DIR%\bin\*" "%LATEST_DIR%\bin" >nul 2>&1
+if not "!TARGET_DIR!"=="!LATEST_DIR!" (
+    if not exist "!LATEST_DIR!\bin" mkdir "!LATEST_DIR!\bin"
+    xcopy /y /q "!TARGET_DIR!\bin\*" "!LATEST_DIR!\bin" >nul 2>&1
 )
 echo Activated Apache Mesos %EXACT_VERSION%.
 exit /b 0
@@ -132,9 +132,9 @@ if exist "%TARGET_DIR%\bin\mesos-master.cmd" (
 )
 if not defined PREFIX (
     set "LATEST_DIR=%LIBSCRIPT_HOME%\mesos\latest"
-    if not "%TARGET_DIR%"=="%LATEST_DIR%" (
-        if not exist "%LATEST_DIR%\bin" mkdir "%LATEST_DIR%\bin"
-        xcopy /y /q "%TARGET_DIR%\bin\*" "%LATEST_DIR%\bin" >nul 2>&1
+    if not "!TARGET_DIR!"=="!LATEST_DIR!" (
+        if not exist "!LATEST_DIR!\bin" mkdir "!LATEST_DIR!\bin"
+        xcopy /y /q "!TARGET_DIR!\bin\*" "!LATEST_DIR!\bin" >nul 2>&1
     )
 )
 exit /b 0

@@ -99,7 +99,7 @@ set "_UUID=!_UUID:c=C!"
 set "_UUID=!_UUID:d=D!"
 set "_UUID=!_UUID:e=E!"
 set "_UUID=!_UUID:f=F!"
-echo !_UUID!
+echo.!_UUID!
 exit /b 0
 
 :: ## generate_uuid_v5
@@ -110,15 +110,15 @@ set "_SEED=%~2"
 set "_NS_HEX=!_NS_RAW:-=!"
 
 where certutil >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    set "_TMP_BASE=%TEMP%\ls_uuid_%RANDOM%_%RANDOM%"
+if "%ERRORLEVEL%" equ "0" (
+    set "_TMP_BASE=%TEMP%\ls_uuid_!RANDOM!_!RANDOM!"
     <nul set /p ="!_SEED!" > "!_TMP_BASE!.seed"
     certutil -encodehex -f "!_TMP_BASE!.seed" "!_TMP_BASE!.seed.hex" 12 >nul 2>&1
     set "_SEED_HEX="
     if exist "!_TMP_BASE!.seed.hex" (
         for /f "usebackq delims=" %%H in ("!_TMP_BASE!.seed.hex") do set "_SEED_HEX=!_SEED_HEX!%%H"
     )
-    > "!_TMP_BASE!.in.hex" echo !_NS_HEX!!_SEED_HEX!
+    > "!_TMP_BASE!.in.hex" echo.!_NS_HEX!!_SEED_HEX!
     certutil -decodehex -f "!_TMP_BASE!.in.hex" "!_TMP_BASE!.in.bin" >nul 2>&1
     set "_SHA1="
     if exist "!_TMP_BASE!.in.bin" (
@@ -137,14 +137,14 @@ if %ERRORLEVEL% equ 0 (
 )
 
 where powershell >nul 2>nul
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     powershell -NoProfile -Command ^
         "$ns = [Guid]::Parse('%~1'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%~2'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new([byte[]]($hash[0..15])).ToString().ToUpper()"
     exit /b 0
 )
 
 where pwsh >nul 2>nul
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pwsh -NoProfile -Command ^
         "$ns = [Guid]::Parse('%~1'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%~2'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new([byte[]]($hash[0..15])).ToString().ToUpper()"
     exit /b 0

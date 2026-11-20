@@ -72,7 +72,7 @@ for %%G in (guest_capture_agent.sh guest_capture_agent.cmd guest_capture_agent.p
     if exist "!SCRIPT_DIR!\%%G" call "!SCRIPT_DIR!\vagrant_substrate.cmd" upload "!_ws!" "!SCRIPT_DIR!\%%G" "!_guest_dir!/%%G"
 )
 set "IM_GPKG=!_guest_dir!/!_pkg_base!"
-echo !IM_GPKG!
+echo.!IM_GPKG!
 exit /b 0
 
 :: ## im_run_headless_install

@@ -215,11 +215,12 @@ if not errorlevel 1 (
 
 rmdir /s /q "!TEST_WS!" >nul 2>&1
 
+REM wincheck disable=CMD2003
 if !FAILURES! gtr 0 (
     echo [FAIL] Windows Tier 1.5/2/3 System, Orchestration ^& Cloud Test Suite failed ^(!FAILURES!/!CHECKS! checks failed^) 1>&2
     exit /b 1
 )
-echo [SUCCESS] All !CHECKS! Windows behavioral checks passed!
+echo [SUCCESS] All !CHECKS! Windows behavioral checks passed^^!
 exit /b 0
 
 :: ## pass_check

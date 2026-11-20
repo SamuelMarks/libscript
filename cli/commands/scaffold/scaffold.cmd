@@ -87,6 +87,7 @@ set "SCAF_ENABLE_HOOKS=false"
 set "SCAF_MULTITENANT=false"
 set "SCAF_TEST_CMD="
 set "SCAF_PKG_RAPPS="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for the Windows component scaffolder.
@@ -316,6 +317,7 @@ exit /b 0
 :compute_comp_prefix
 set "_CP_IN=%~1"
 set "COMP_PREFIX="
+goto :cp_loop
 
 :: ## cp_loop
 :: Iterates character-by-character through _CP_IN to synthesize COMP_PREFIX.
@@ -436,20 +438,20 @@ if not exist "!_CDIR!\README.md" (
         echo.
         echo ## Configuration Options
         echo.
-        echo ^<!-- BEGIN_VARS --^>
+        echo ^<^^!-- BEGIN_VARS --^>
         echo ^| Variable ^| Description ^| Default ^|
         echo ^|---^|---^|---^|
         echo ^| `!COMP_PREFIX!_INSTALL_METHOD` ^| How to install !SCAF_NAME!. ^| `!SCAF_INSTALL_METHOD!` ^|
         echo ^| `!COMP_PREFIX!_VERSION` ^| Specific version of !SCAF_NAME! to install. ^| `!SCAF_DEFAULT_VERSION!` ^|
-        echo ^<!-- END_VARS --^>
+        echo ^<^^!-- END_VARS --^>
         echo.
         echo ## Platform Support
         echo.
-        echo ^<!-- BEGIN_PLATFORMS --^>
+        echo ^<^^!-- BEGIN_PLATFORMS --^>
         echo - Linux
         echo - macOS
         echo - Windows
-        echo ^<!-- END_PLATFORMS --^>
+        echo ^<^^!-- END_PLATFORMS --^>
     ) > "!_CDIR!\README.md"
 )
 call :resolve_scaffold_awk
@@ -487,7 +489,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "  '__SCAF_TEST_CMD__' = '!SCAF_TEST_CMD!'; " ^
     "  '__COMP_PREFIX__' = '!COMP_PREFIX!' " ^
     "}; " ^
-    "$matches = [regex]::Matches($content, 'write_component_file\s+\"\$\{_comp_dir\}/([^\"]+)\"\s+(\d+)\s+(\d+)\s+<<\s+''EOF''\r?\n([\s\S]*?)\r?\nEOF'); " ^
+    "$matches = [regex]::Matches($content, 'write_component_file\s+\x22\$\{_comp_dir\}/([^\x22]+)\x22\s+(\d+)\s+(\d+)\s+<<\s+''EOF''\r?\n([\s\S]*?)\r?\nEOF'); " ^
     "foreach ($m in $matches) { " ^
     "  $fname = $m.Groups[1].Value; $isCrlf = ($m.Groups[3].Value -eq '1'); $body = $m.Groups[4].Value; " ^
     "  if (($fname -eq 'service.sh' -or $fname -eq 'service.cmd') -and '!SCAF_IS_SERVICE!' -ne 'true') { continue }; " ^
@@ -495,7 +497,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "  $outPath = Join-Path $cdir $fname; " ^
     "  if (-not (Test-Path $outPath) -or '!SCAF_FORCE!' -eq '1') { " ^
     "    $lines = $body -split '\r?\n'; " ^
-    "    $sep = if ($isCrlf) { \"`r`n\" } else { \"`n\" }; " ^
+    "    $sep = if ($isCrlf) { [string][char]13 + [char]10 } else { [string][char]10 }; " ^
     "    [System.IO.File]::WriteAllText($outPath, ($lines -join $sep) + $sep, (New-Object System.Text.UTF8Encoding $false)) " ^
     "  } " ^
     "}"

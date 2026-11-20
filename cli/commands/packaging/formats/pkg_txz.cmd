@@ -60,6 +60,7 @@ set "LICENSE_PATH="
 set "OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "OFFLINE=1"
 set "DEPS_COUNT=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses packaging flags and component/version pairs.
@@ -192,7 +193,7 @@ exit /b 0
 :: ## after_args
 :: Populates default component list if none were supplied on the command line.
 :after_args
-if !DEPS_COUNT! equ 0 (
+if "!DEPS_COUNT!" equ "0" (
     for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
         if /I not "%%~nxC"=="_common" (
             for /d %%M in ("%%~fC\*") do (
@@ -208,7 +209,7 @@ if !DEPS_COUNT! equ 0 (
 
 set "META_DEPENDS="
 
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo set -e
 echo OUT_DIR="!OUT_DIR!"
 echo mkdir -p "$OUT_DIR"
@@ -235,14 +236,15 @@ echo www: "!APP_URL!"
 echo prefix: "/"
 if defined META_DEPENDS (
     echo deps: {
-    echo   !META_DEPENDS!
+    REM wincheck disable=CMD1003
+    echo(  !META_DEPENDS!
     echo }
 )
 echo EOF
 echo cd "$BUILD_DIR/root" ^&^& find . -type f -o -type l ^| sed -e 's^|^./^|' ^> "$BUILD_DIR/meta/pkg-plist"
 echo pkg create -m "$BUILD_DIR/meta" -r "$BUILD_DIR/root" -o "$OUT_DIR"
 echo rm -rf "$BUILD_DIR"
-echo printf '%%s\n' "Done!"
+echo printf '%%s\n' "Done^!"
 exit /b 0
 
 :: ## emit_txz_pkg

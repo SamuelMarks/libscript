@@ -89,7 +89,7 @@ if "%CONTAINER%"=="" set "CONTAINER=%AZURE_CONTAINER%"
 if "%CONTAINER%"=="" set "CONTAINER=images"
 set "IMAGE_NAME=%~5"
 if "%IMAGE_NAME%"=="" set "IMAGE_NAME=%AZURE_IMAGE_NAME%"
-if "%IMAGE_NAME%"=="" set "IMAGE_NAME=libscript-image-%RANDOM%"
+if "%IMAGE_NAME%"=="" set "IMAGE_NAME=libscript-image-!RANDOM!"
 
 if not exist "%IMG_PATH%" (
     echo [ERROR] Target disk image not found: %IMG_PATH%
@@ -98,7 +98,7 @@ if not exist "%IMG_PATH%" (
 
 echo [CLOUD] Uploading %IMG_PATH% to Azure Blob Storage ^(%STORAGE_ACCT%/%CONTAINER%^)...
 where az >nul 2>&1
-if %ERRORLEVEL%==0 (
+if "%ERRORLEVEL%"=="0" (
     az storage blob upload --account-name "%STORAGE_ACCT%" --container-name "%CONTAINER%" --name "%~nx2" --file "%IMG_PATH%" --type page
     echo [CLOUD] Registering Azure Managed Image %IMAGE_NAME%...
     az image create --resource-group "libscript-rg" --name "%IMAGE_NAME%" --os-type Linux --source "%IMG_PATH%"

@@ -119,7 +119,7 @@ echo [INFO] Starting Open edX platform services...
 
 :: Start LMS
 powershell -NoProfile -Command "try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', %OPENEDX_LMS_PORT%); $c.Close(); exit 0 } catch { exit 1 }"
-if %ERRORLEVEL%==0 (
+if "%ERRORLEVEL%"=="0" (
     echo [INFO] Open edX LMS is already listening on port %OPENEDX_LMS_PORT%
 ) else (
     echo [INFO] Launching Open edX LMS and Studio CMS on ports %OPENEDX_LMS_PORT% and %OPENEDX_CMS_PORT%...
@@ -159,7 +159,7 @@ if exist "!SVC_SCRIPT_DIR!\workers.cmd" call "!SVC_SCRIPT_DIR!\workers.cmd" star
 
 echo [INFO] Waiting for LMS and CMS to become responsive...
 powershell -NoProfile -Command "$ports = @(%OPENEDX_LMS_PORT%, %OPENEDX_CMS_PORT%); $timeout = 30; $sw = [System.Diagnostics.Stopwatch]::StartNew(); while ($sw.Elapsed.TotalSeconds -lt $timeout) { $allUp = $true; foreach ($p in $ports) { try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $c.Close() } catch { $allUp = $false } }; if ($allUp) { Write-Host '[PASS] Open edX platform services started and listening.'; exit 0 }; Start-Sleep -Seconds 2 }; Write-Error '[ERROR] Timeout waiting for Open edX services to start listening.'; exit 1"
-if %ERRORLEVEL% neq 0 (
+if "%ERRORLEVEL%" neq "0" (
     echo [ERROR] Services failed to start properly. Check logs. >&2
     exit /b 1
 )

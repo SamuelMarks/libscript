@@ -98,7 +98,7 @@ for %%f in ("%POOL_DIR%\*.deb") do (
 )
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%"=="0" (
     copy /y "%PACKAGES_FILE%" "%PACKAGES_FILE%.gz" >nul 2>&1
 ) else (
     echo [MOCK-GZ] Gzip Packages Stub > "%PACKAGES_FILE%.gz"

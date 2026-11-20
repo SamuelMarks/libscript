@@ -57,6 +57,7 @@ set "ADMIN_USER="
 set "ADMIN_PASS="
 set "SCHEMA_NAME="
 set "TENANT_USER="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.

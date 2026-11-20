@@ -69,7 +69,8 @@ for /f "delims=" %%f in ('dir /s /b /a:-d "!SCRIPT_DIR!\cli.cmd" 2^>nul') do (
             if "!desc!" neq "" (
                 echo   !rel_dir! - !desc!
             ) else (
-                echo   !rel_dir!
+                REM wincheck disable=CMD1003
+                echo(  !rel_dir!
             )
         )
     )

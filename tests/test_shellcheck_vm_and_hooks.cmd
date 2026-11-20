@@ -158,11 +158,11 @@ if errorlevel 1 (
 rmdir /s /q "!TEST_WS!" >nul 2>&1
 
 if not "!FAILURES!"=="0" (
-    echo [FAIL] ShellCheck Windows Suite failed (!FAILURES!/!CHECKS! checks failed) 1>&2
+    echo [FAIL] ShellCheck Windows Suite failed ^(!FAILURES!/!CHECKS! checks failed^) 1>&2
     exit /b 1
 )
 
-echo === All !CHECKS! ShellCheck Windows Checks Passed! ===
+echo === All !CHECKS! ShellCheck Windows Checks Passed^^! ===
 exit /b 0
 
 :: ## pass_check

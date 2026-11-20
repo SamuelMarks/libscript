@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where composer >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     composer --version >nul 2>&1
     if not errorlevel 1 exit /b 0
 )
@@ -80,6 +80,7 @@ if errorlevel 1 (
     echo @echo off
     echo set "PHP_CMD=php"
     echo where php ^>nul 2^>^&1
+    REM wincheck disable=CMD1003
     echo if errorlevel 1 ^(
     echo     for /d %%%%P in ^("%%LOCALAPPDATA%%\Microsoft\WinGet\Packages\PHP.PHP.*"^) do ^(
     echo         if exist "%%%%P\php.exe" set "PHP_CMD=%%%%P\php.exe"

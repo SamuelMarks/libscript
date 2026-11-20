@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where choco >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo choco is already installed.
     exit /b 0
 )
@@ -64,7 +64,7 @@ if exist "%ProgramData%\chocolatey\bin\choco.exe" (
 )
 
 where choco >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 echo Failed to install Chocolatey.
 exit /b 1

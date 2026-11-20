@@ -54,6 +54,7 @@ set "STRICT_BUILD=%LIBSCRIPT_STRICT_IMAGE_BUILD%"
 if "!STRICT_BUILD!"=="" set "STRICT_BUILD=0"
 set "ALLOW_STUB=%LIBSCRIPT_ALLOW_STUB%"
 if "!ALLOW_STUB!"=="" set "ALLOW_STUB=1"
+goto :parse_flags
 
 :: ## parse_flags
 :: Parses leading --strict and --allow-stub flags.
@@ -116,8 +117,8 @@ echo FreeLoader v3.0 ReactOS !VERSION! ^(!ARCH!^)> "!ISO_ROOT!\freeldr.sys"
     echo Options=/MININT
 ) > "!ISO_ROOT!\freeldr.ini"
 echo MSCF-REACTOS-CAB-!VERSION!-!ARCH!> "!ISO_ROOT!\reactos\reactos.cab"
-echo !VERSION!> "!ISO_ROOT!\reactos\libscript-reactos-version"
-echo !ARCH!> "!ISO_ROOT!\reactos\libscript-reactos-arch"
+echo.!VERSION!> "!ISO_ROOT!\reactos\libscript-reactos-version"
+echo.!ARCH!> "!ISO_ROOT!\reactos\libscript-reactos-arch"
 echo staged> "!STAMP_FILE!"
 echo [OK]       ReactOS base ^(!VERSION!, !ARCH!^) staged at !SYSROOT!
 exit /b 0

@@ -54,6 +54,7 @@ set "DB_HOST=127.0.0.1"
 set "DB_PORT=3306"
 set "DB_NAME="
 set "DB_URL="
+goto :ParseArgs
 
 :: ## ParseArgs
 :: Parses command-line arguments and populates configuration variables.

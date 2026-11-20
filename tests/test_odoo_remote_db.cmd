@@ -57,7 +57,7 @@ echo ==> Testing Odoo DBaaS Strategy on Windows...
 
 :: Check if powershell is available for testing
 where powershell >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
+if "%ERRORLEVEL%" NEQ "0" (
     echo [ERROR] PowerShell is required to run Windows integration tests.
     exit /b 1
 )
@@ -68,11 +68,11 @@ if not exist "%TMP_DIR%" mkdir "%TMP_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\odoo" --out "%TMP_DIR%\odoo.wxs"
 
 findstr /c:"USER_DB_STRATEGY=\"remote\"" "%TMP_DIR%\odoo.wxs" >nul
-if %ERRORLEVEL% NEQ 0 (
+if "%ERRORLEVEL%" NEQ "0" (
     echo [ERROR] USER_DB_STRATEGY remote switch not correctly mapped.
     exit /b 1
 )
-echo [PASS] Remote simulated DB strategy effectively omits postgres via properties!
+echo [PASS] Remote simulated DB strategy effectively omits postgres via properties^^!
 
 :: Simulate remote DB properties
 set "ODOO_DB_HOST=192.168.200.99"
@@ -96,21 +96,21 @@ echo ==> Simulating silent install with remote IP...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\odoo\setup_generic.cmd" --skip-deps
 
 if not exist "%ODOO_WWWROOT%\odoo.conf" (
-    echo [ERROR] odoo.conf was not created!
+    echo [ERROR] odoo.conf was not created^^!
     exit /b 1
 )
 
 findstr /c:"db_host = 192.168.200.99" "%ODOO_WWWROOT%\odoo.conf" >nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] db_host not properly written to odoo.conf!
+if "%ERRORLEVEL%" NEQ "0" (
+    echo [ERROR] db_host not properly written to odoo.conf^^!
     exit /b 1
 )
 
 findstr /c:"db_name = odoo_prod" "%ODOO_WWWROOT%\odoo.conf" >nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] db_name not properly written to odoo.conf!
+if "%ERRORLEVEL%" NEQ "0" (
+    echo [ERROR] db_name not properly written to odoo.conf^^!
     exit /b 1
 )
 
-echo [PASS] Odoo setup effectively maps remote IP to connection config on Windows!
+echo [PASS] Odoo setup effectively maps remote IP to connection config on Windows^^!
 exit /b 0

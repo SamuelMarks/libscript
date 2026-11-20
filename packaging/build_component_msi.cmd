@@ -60,6 +60,7 @@ set "OFFLINE_SOURCE=!LIBSCRIPT_ROOT_DIR!\cache"
 set "HYDRATE=0"
 if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
 set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -190,15 +191,15 @@ if "%VERSION%"=="" set "VERSION=1.0.0"
 
 if /i "%VARIANT%"=="online" (
     call :build_single_variant online
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if /i "%VARIANT%"=="offline" (
     call :build_single_variant offline
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if /i "%VARIANT%"=="all" (
     call :build_single_variant online
-    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
+    if "!ERRORLEVEL!" neq "0" exit /b !ERRORLEVEL!
     call :build_single_variant offline
     exit /b !ERRORLEVEL!
 )
@@ -541,11 +542,11 @@ set "MAIN_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wxs"
 set "PAYLOAD_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wxs"
 
 call "!SCRIPT_DIR!\template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant "%CURR_VAR%" --out "%MAIN_WXS%"
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+if "!ERRORLEVEL!" neq "0" exit /b !ERRORLEVEL!
 copy /y "%MAIN_WXS%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_main.wxs" >nul 2>&1
 
 call "!SCRIPT_DIR!\harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+if "!ERRORLEVEL!" neq "0" exit /b !ERRORLEVEL!
 
 if defined OUT_FILE (
     set "TARGET_MSI=%OUT_FILE%"
@@ -596,22 +597,22 @@ if errorlevel 1 (
 
 echo [INFO] Compiling standalone %CURR_VAR% MSI via msi-rs: %TARGET_MSI%
 call :verify_payload_sources "%PAYLOAD_WXS%" "%STAGE_ROOT%"
-if !ERRORLEVEL! neq 0 (
+if "!ERRORLEVEL!" neq "0" (
     echo [ERROR] Harvested payload file missing on disk. >&2
     goto compile_err
 )
 candle.exe -nologo -arch %TARGET_ARCH% -out "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
-if !ERRORLEVEL! neq 0 (
+if "!ERRORLEVEL!" neq "0" (
     echo [ERROR] msi-rs candle compilation failed for %MAIN_WXS%. >&2
     goto compile_err
 )
 candle.exe -nologo -arch %TARGET_ARCH% -out "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
-if !ERRORLEVEL! neq 0 (
+if "!ERRORLEVEL!" neq "0" (
     echo [ERROR] msi-rs candle compilation failed for %PAYLOAD_WXS%. >&2
     goto compile_err
 )
 light.exe -nologo -sval -ext WixUIExtension -b "%STAGE_ROOT%" -b "!LIBSCRIPT_ROOT_DIR!" -out "%TARGET_MSI%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
-if !ERRORLEVEL! neq 0 (
+if "!ERRORLEVEL!" neq "0" (
     echo [ERROR] msi-rs light linking failed. >&2
     goto compile_err
 )
@@ -630,12 +631,14 @@ if not exist "%TARGET_MSI%" (
 )
 for %%S in ("%TARGET_MSI%") do set "MSI_SIZE=%%~zS"
 if /i "%CURR_VAR%"=="offline" (
+    REM wincheck disable=CMD2003
     if !MSI_SIZE! LSS 1048576 (
         echo [ERROR] Offline MSI validation failed: %TARGET_MSI% is abnormally small ^(!MSI_SIZE! bytes ^< 1048576 bytes^). >&2
         set "ERR=1"
         goto cleanup
     )
 ) else (
+    REM wincheck disable=CMD2003
     if !MSI_SIZE! LSS 16384 (
         echo [ERROR] Online MSI validation failed: %TARGET_MSI% is abnormally small ^(!MSI_SIZE! bytes ^< 16384 bytes^). >&2
         set "ERR=1"
@@ -722,7 +725,7 @@ for /f "usebackq tokens=*" %%L in (`findstr /C:"Source=" "!_VP_WXS!" 2^>nul`) do
     set "_VP_LINE=%%L"
     set "_VP_REST=!_VP_LINE:*Source=!"
     set "_VP_REST=!_VP_REST:~1!"
-    for /f "delims="" %%S in ("!_VP_REST!") do (
+    for /f "delims=" %%S in ("!_VP_REST!") do (
         set "_VP_S=%%S"
         if not exist "!_VP_STAGE!\!_VP_S!" if not exist "!LIBSCRIPT_ROOT_DIR!\!_VP_S!" if not exist "!_VP_S!" (
             echo [ERROR] Missing payload source: !_VP_S! >&2

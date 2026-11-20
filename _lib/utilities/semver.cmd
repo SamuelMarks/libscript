@@ -63,7 +63,7 @@ if "%c%"=="" (
 )
 
 where jq >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     jq -e -L "!SCRIPT_DIR!" -n --arg v "%v%" --arg c "%c%" "include \"semver\"; semver_satisfies($v; $c)" >nul 2>&1
     exit /b !errorlevel!
 )

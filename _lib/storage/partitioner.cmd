@@ -105,7 +105,7 @@ powershell -NoProfile -Command ^
     "    Write-Output '[INFO] Disk %DISK_NUM% already partitioned. Preserving.' " ^
     "}"
 
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     echo [OK] Partitioning of disk %DISK_NUM% completed successfully.
     exit /b 0
 ) else (

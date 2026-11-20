@@ -68,10 +68,10 @@ set "SSH_CMD=ssh -p %SSH_PORT% -o StrictHostKeyChecking=no -o UserKnownHostsFile
 
 echo [INFO] Initiating remote compilation for %OUT_FILE%.wxs via Vagrant guest...
 
-echo $env:Path += ';C:\libscript\tools\wix' > %TEMP%\remote_build.ps1
-echo candle.exe -nologo -out "C:\Users\vagrant\Desktop\%OUT_FILE%.wixobj" "C:\libscript\packaging\%OUT_FILE%.wxs" >> %TEMP%\remote_build.ps1
-echo candle.exe -nologo -out "C:\Users\vagrant\Desktop\%OUT_FILE%_payload.wixobj" "C:\libscript\packaging\%OUT_FILE%_payload.wxs" >> %TEMP%\remote_build.ps1
-echo light.exe -nologo -sval -ext WixUIExtension -out "C:\Users\vagrant\Desktop\%OUT_FILE%.msi" "C:\Users\vagrant\Desktop\%OUT_FILE%.wixobj" "C:\Users\vagrant\Desktop\%OUT_FILE%_payload.wixobj" >> %TEMP%\remote_build.ps1
+echo $env:Path += ';C:\libscript\tools\wix' > "%TEMP%\remote_build.ps1"
+echo candle.exe -nologo -out "C:\Users\vagrant\Desktop\%OUT_FILE%.wixobj" "C:\libscript\packaging\%OUT_FILE%.wxs" >> "%TEMP%\remote_build.ps1"
+echo candle.exe -nologo -out "C:\Users\vagrant\Desktop\%OUT_FILE%_payload.wixobj" "C:\libscript\packaging\%OUT_FILE%_payload.wxs" >> "%TEMP%\remote_build.ps1"
+echo light.exe -nologo -sval -ext WixUIExtension -out "C:\Users\vagrant\Desktop\%OUT_FILE%.msi" "C:\Users\vagrant\Desktop\%OUT_FILE%.wixobj" "C:\Users\vagrant\Desktop\%OUT_FILE%_payload.wixobj" >> "%TEMP%\remote_build.ps1"
 
 scp -P "%SSH_PORT%" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "%SSH_KEY%" "%TEMP%\remote_build.ps1" "vagrant@127.0.0.1:C:/Users/vagrant/Desktop/remote_build.ps1"
 

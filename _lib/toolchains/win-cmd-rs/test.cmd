@@ -1,7 +1,7 @@
 @echo off
 :: # test.cmd
 :: ## Overview
-:: Test suite for the win-cmd-rs component on Windows.
+:: Test suite for the win-cmd-rs component on Windows (wincheck static analyzer and wincmd interpreter).
 ::
 :: ## Usage
 :: Execute this script to perform a component-specific smoke test.
@@ -52,9 +52,60 @@ goto :find_root
 
 call "!SCRIPT_DIR!\env.cmd"
 wincheck --version
+if errorlevel 1 exit /b 1
+
+set "_WCR_SMOKE=%TEMP%\wcr-smoke-!RANDOM!"
+if not exist "!_WCR_SMOKE!" mkdir "!_WCR_SMOKE!"
+
+> "!_WCR_SMOKE!\clean.cmd" echo @echo off
+>> "!_WCR_SMOKE!\clean.cmd" echo setlocal EnableDelayedExpansion
+>> "!_WCR_SMOKE!\clean.cmd" echo echo^(ok
+>> "!_WCR_SMOKE!\clean.cmd" echo exit /b 0
+
+wincheck --severity error "!_WCR_SMOKE!\clean.cmd"
+if errorlevel 1 (
+    rmdir /s /q "!_WCR_SMOKE!" >nul 2>&1
+    echo [FAIL] wincheck rejected valid clean.cmd fixture 1>&2
+    exit /b 1
+)
+echo [PASS] wincheck accepted valid .cmd script
+
+> "!_WCR_SMOKE!\broken.cmd" echo @echo off
+>> "!_WCR_SMOKE!\broken.cmd" echo if 1==1 ^(
+>> "!_WCR_SMOKE!\broken.cmd" echo     :: illegal block comment
+>> "!_WCR_SMOKE!\broken.cmd" echo     echo bad
+>> "!_WCR_SMOKE!\broken.cmd" echo ^)
+
+wincheck --severity error "!_WCR_SMOKE!\broken.cmd" >nul 2>&1
+if not errorlevel 1 (
+    rmdir /s /q "!_WCR_SMOKE!" >nul 2>&1
+    echo [FAIL] wincheck failed to flag CMD1001 broken.cmd fixture 1>&2
+    exit /b 1
+)
+echo [PASS] wincheck detected CMD1001 defect in broken .cmd script
+
+> "!_WCR_SMOKE!\arith.cmd" echo @echo off
+>> "!_WCR_SMOKE!\arith.cmd" echo setlocal EnableDelayedExpansion
+>> "!_WCR_SMOKE!\arith.cmd" echo set /a "X=6*7"
+>> "!_WCR_SMOKE!\arith.cmd" echo echo.!X!
+
 where wincmd.exe >nul 2>&1
 if not errorlevel 1 (
-    for /f "delims=" %%R in ('wincmd.exe /C "SET /A X=6*7 & ECHO %%X%%" 2^>nul') do (
-        if "%%R"=="42" echo [PASS] wincmd arithmetic evaluation ^(6*7=42^) verified
+    wincmd.exe --version
+    if errorlevel 1 (
+        rmdir /s /q "!_WCR_SMOKE!" >nul 2>&1
+        exit /b 1
     )
+    set "_WCMD_GOT="
+    for /f "delims=" %%R in ('wincmd.exe /C "!_WCR_SMOKE!\arith.cmd" 2^>nul') do (
+        set "_WCMD_GOT=%%R"
+    )
+    if not "!_WCMD_GOT!"=="42" (
+        rmdir /s /q "!_WCR_SMOKE!" >nul 2>&1
+        echo [FAIL] Expected wincmd arithmetic output 42, got "!_WCMD_GOT!" 1>&2
+        exit /b 1
+    )
+    echo [PASS] wincmd arithmetic evaluation ^(6*7=42^) verified
 )
+rmdir /s /q "!_WCR_SMOKE!" >nul 2>&1
+exit /b 0

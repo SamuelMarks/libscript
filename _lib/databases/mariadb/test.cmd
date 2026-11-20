@@ -51,13 +51,13 @@ goto :find_root
 :root_found
 
 where mariadb >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   mariadb --version
   exit /b 0
 )
 
 where mysql >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   mysql --version
   exit /b 0
 )

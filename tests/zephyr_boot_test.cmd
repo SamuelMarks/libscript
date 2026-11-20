@@ -62,5 +62,5 @@ findstr /C:"LIBSCRIPT_ZEPHYR_BOOT_OK" "!TMP_ZBOOT!\sim.log" >nul 2>&1 || (
     exit /b 1
 )
 rmdir /s /q "!TMP_ZBOOT!" 2>nul
-echo [PASS] Zephyr RTOS Windows boot test succeeded!
+echo [PASS] Zephyr RTOS Windows boot test succeeded^^!
 exit /b 0

@@ -52,6 +52,7 @@ goto :find_root
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -138,7 +139,7 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 
 if "%CMD%"=="list" (
     call "%~dp0api.cmd" :libscript_cert_list "%LIBSCRIPT_CLOUD%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 if "%LIBSCRIPT_DOMAIN%"=="" (
@@ -148,11 +149,11 @@ if "%LIBSCRIPT_DOMAIN%"=="" (
 
 if "%CMD%"=="create" (
     call "%~dp0api.cmd" :libscript_cert_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DOMAIN%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if "%CMD%"=="delete" (
     call "%~dp0api.cmd" :libscript_cert_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DOMAIN%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

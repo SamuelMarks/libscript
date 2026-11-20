@@ -85,7 +85,7 @@ if exist "!SCRIPT_DIR!\status_databases.cmd" (
     call "!SCRIPT_DIR!\status_databases.cmd" "caches/redis" >nul 2>&1
     if not errorlevel 1 echo   -^> Redis Service: REGISTERED
     call "!SCRIPT_DIR!\status_databases.cmd" "search/meilisearch" >nul 2>&1
-    if not errorlevel 1 echo   -^> Meilisearch: ACTIVE (port 7700)
+    if not errorlevel 1 echo   -^> Meilisearch: ACTIVE ^(port 7700^)
 )
 
 :: 2. Ensure Real LMS & Studio Services via Reusable user.cmd, service.cmd & healthcheck.cmd
@@ -163,7 +163,7 @@ echo   -^> PASSED: Studio CMS verified operational without server error.
 popd
 echo.
 echo ======================================================================
-echo [SUCCESS] Real Open edX LMS and Studio/CMS Services Verified on Windows!
+echo [SUCCESS] Real Open edX LMS and Studio/CMS Services Verified on Windows^^!
 echo ======================================================================
 rmdir /s /q "%TMP_DIR%" 2>nul
 exit /b 0

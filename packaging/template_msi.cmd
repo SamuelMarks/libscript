@@ -60,6 +60,7 @@ set "VARIANT=online"
 set "VERSION_OVERRIDE="
 if not defined TARGET_ARCH set "TARGET_ARCH=x64"
 set "MSI_DIR=!LIBSCRIPT_ROOT_DIR!\dist\msi"
+goto :arg_loop
 
 :: ## arg_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -185,7 +186,7 @@ for %%D in ("!OUT_FILE!") do if not exist "%%~dpD" mkdir "%%~dpD" 2>nul
 
 if /i "!HAS_DB!"=="true" (
     (
-        echo     ^<!-- Universal Database Contract Properties --^>
+        echo     ^<^^!-- Universal Database Contract Properties --^>
         echo     ^<Property Id="PROP_DB_TYPE" Value="!DB_ENGINE!" Secure="yes" /^>
         echo     ^<Property Id="USER_DB_HOST" Value="127.0.0.1" Secure="yes" /^>
         echo     ^<Property Id="USER_DB_PORT" Value="!DB_PORT!" Secure="yes" /^>

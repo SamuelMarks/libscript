@@ -54,6 +54,7 @@ set "COMPUTE_SRC_HASH_DIR="
 set "COMPUTE_PKG_HASH_DIR="
 if "%FORCE_REBUILD%"=="" set "FORCE_REBUILD=0"
 if "%FORCE_REINSTALL%"=="" set "FORCE_REINSTALL=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -107,14 +108,14 @@ goto parse_args
 :run_provision
 if not "!COMPUTE_SRC_HASH_DIR!"=="" (
     call :compute_frontend_fingerprint "!COMPUTE_SRC_HASH_DIR!"
-    echo !_FE_FP!
+    echo.!_FE_FP!
     exit /b 0
 )
 if not "!COMPUTE_PKG_HASH_DIR!"=="" (
     pushd "!COMPUTE_PKG_HASH_DIR!" 2>nul
     call :compute_pkg_lock_hash
     popd
-    echo !_PKG_FP!
+    echo.!_PKG_FP!
     exit /b 0
 )
 if "!APP_DIR!"=="" (
@@ -180,17 +181,17 @@ set "_CFF_TMP=%TEMP%\libscript_fe_fp_%RANDOM%.txt"
 if exist "!_CFF_TMP!" del /f /q "!_CFF_TMP!" >nul 2>&1
 for %%F in (package.json package-lock.json pnpm-lock.yaml yarn.lock angular.json vite.config.ts vite.config.js vite.config.mts tsconfig.json tsconfig.app.json tsconfig.spec.json index.html) do (
     if exist "%%F" (
-        for %%Z in ("%%F") do echo %%~nxZ:%%~zZ:%%~tZ>> "!_CFF_TMP!"
+        for %%Z in ("%%F") do echo.%%~nxZ:%%~zZ:%%~tZ>> "!_CFF_TMP!"
     )
 )
 if exist "src" (
     for /r "src" %%S in (*) do (
-        echo %%~nxS:%%~zS:%%~tS>> "!_CFF_TMP!"
+        echo.%%~nxS:%%~zS:%%~tS>> "!_CFF_TMP!"
     )
 )
 if exist "public" (
     for /r "public" %%P in (*) do (
-        echo %%~nxP:%%~zP:%%~tP>> "!_CFF_TMP!"
+        echo.%%~nxP:%%~zP:%%~tP>> "!_CFF_TMP!"
     )
 )
 if exist "!_CFF_TMP!" (
@@ -220,7 +221,7 @@ if exist "!nd_dir!\package.json" (
     )
     if not "%FORCE_REINSTALL%"=="1" if exist "node_modules\.libscript_pkg_hash" if "!_CACHED_PKG_FP!"=="!_PKG_FP!" (
         echo [REUSE] Frontend dependencies in !nd_dir! are up-to-date ^(hash !_PKG_FP!^).
-        > ".libscript_deps.sha256" echo !_PKG_FP!
+        > ".libscript_deps.sha256" echo.!_PKG_FP!
         popd
         exit /b 0
     )
@@ -231,8 +232,8 @@ if exist "!nd_dir!\package.json" (
     )
     if not errorlevel 1 if exist "node_modules" (
         call :compute_pkg_lock_hash
-        > "node_modules\.libscript_pkg_hash" echo !_PKG_FP!
-        > ".libscript_deps.sha256" echo !_PKG_FP!
+        > "node_modules\.libscript_pkg_hash" echo.!_PKG_FP!
+        > ".libscript_deps.sha256" echo.!_PKG_FP!
     )
     popd
 )
@@ -241,9 +242,11 @@ exit /b 0
 :: ## provision_single_frontend
 :: Builds and stages a single frontend or KMP service entry.
 :provision_single_frontend
+goto :build_single_frontend
 :: ## build_single_frontend
 :: Alias for provision_single_frontend.
 :build_single_frontend
+goto :build_one_fe
 :: ## build_one_fe
 :: Alias for building a single frontend entry.
 :build_one_fe
@@ -335,7 +338,7 @@ if "!is_kmp!"=="1" (
         echo [REUSE] KMP Gradle build for '!svc_id!' in '!src_dir!' is up-to-date.
     ) else (
         call :run_kmp_build "!src_dir!" "!kmp_target!" "!build_cmd!"
-        > "!src_dir!\.libscript_kmp_build.sha256" echo !_FE_FP!
+        > "!src_dir!\.libscript_kmp_build.sha256" echo.!_FE_FP!
     )
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
     exit /b 0
@@ -371,8 +374,8 @@ if exist "!src_dir!\package.json" (
     )
     if "!_can_reuse_fe!"=="1" (
         echo [REUSE] Frontend build for '!svc_id!' ^(!framework!^) in '!src_dir!' is up-to-date ^(hash !_FE_FP!^).
-        > "!src_dir!\.libscript_build.sha256" echo !_FE_FP!
-        if exist "!src_dir!\dist" > "!src_dir!\dist\.libscript_src_hash" echo !_FE_FP!
+        > "!src_dir!\.libscript_build.sha256" echo.!_FE_FP!
+        if exist "!src_dir!\dist" > "!src_dir!\dist\.libscript_src_hash" echo.!_FE_FP!
     ) else (
         echo [BUILD] Building frontend '!svc_id!' ^(!framework!^) in '!src_dir!'...
         if exist "!src_dir!\dist" rmdir /s /q "!src_dir!\dist" 2>nul
@@ -414,8 +417,8 @@ if exist "!src_dir!\package.json" (
         popd
         call :check_fe_artifact "!src_dir!" "!APP_DIR!" "!out_dir!" "!art_chk!"
         if "!_ART_EXISTS!"=="1" (
-            > "!src_dir!\.libscript_build.sha256" echo !_FE_FP!
-            if exist "!src_dir!\dist" > "!src_dir!\dist\.libscript_src_hash" echo !_FE_FP!
+            > "!src_dir!\.libscript_build.sha256" echo.!_FE_FP!
+            if exist "!src_dir!\dist" > "!src_dir!\dist\.libscript_src_hash" echo.!_FE_FP!
         )
     )
     call :stage_assets "!src_dir!" "!target_webroot!" "!out_dir!"
@@ -543,7 +546,7 @@ exit /b 0
 set "h_cmd="
 for /f "delims=" %%c in ('echo !hook! ^| jq -r ".command // empty" 2^>nul') do set "h_cmd=%%c"
 if "!h_cmd!"=="" exit /b 0
-echo !h_cmd! | findstr /i "collectstatic paver" >nul 2>&1
+echo.!h_cmd! | findstr /i "collectstatic paver" >nul 2>&1
 if not errorlevel 1 (
     pushd "!APP_DIR!"
     call !h_cmd!

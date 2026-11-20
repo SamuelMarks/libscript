@@ -1,10 +1,10 @@
 @echo off
 :: # setup_generic.cmd
 :: ## Overview
-:: Windows setup for win-cmd-rs implementing the Version Manager Contract.
+:: Windows and MS-DOS setup for win-cmd-rs implementing the Version Manager Contract.
 ::
 :: ## Usage
-:: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+:: Managed by libscript. Provides download, install, ls, ls-remote, use, and uninstall capabilities.
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -48,41 +48,52 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\os_info.cmd"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 if "%WIN_CMD_RS_INSTALL_METHOD%"=="" (
-    if not "%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"=="" (
+    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
+        set "WIN_CMD_RS_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+    ) else if not "%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"=="" (
         set "WIN_CMD_RS_INSTALL_METHOD=%LIBSCRIPT_GLOBAL_INSTALL_METHOD%"
     ) else (
-        set "WIN_CMD_RS_INSTALL_METHOD=from-source"
+        set "WIN_CMD_RS_INSTALL_METHOD=libscript_native"
     )
 )
 if "%ACTION%"=="" set "ACTION=install"
 if "%WIN_CMD_RS_VERSION%"=="" set "WIN_CMD_RS_VERSION=latest"
 
-if "%ACTION%"=="ls" goto :action_ls
-if "%ACTION%"=="ls-remote" goto :action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
+if /i "%ACTION%"=="ls" goto :action_ls
+if /i "%ACTION%"=="ls-remote" goto :action_ls_remote
+if /i "%ACTION%"=="use" goto :action_use
+if /i "%ACTION%"=="download" goto :action_download
+if /i "%ACTION%"=="install" goto :action_install
 goto :action_other
 
 :: ## action_ls
 :: Lists locally installed versions of win-cmd-rs.
 :action_ls
-if "%WIN_CMD_RS_INSTALL_METHOD%"=="libscript_native" (
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="libscript_native" (
     if exist "%LIBSCRIPT_HOME%\win-cmd-rs" dir /b "%LIBSCRIPT_HOME%\win-cmd-rs"
-) else (
-    where wincheck >nul 2>&1 && wincheck --version
+    exit /b 0
 )
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="from-source" (
+    if exist "%LIBSCRIPT_HOME%\win-cmd-rs" dir /b "%LIBSCRIPT_HOME%\win-cmd-rs"
+    exit /b 0
+)
+where wincheck >nul 2>&1 && wincheck --version
 exit /b 0
 
 :: ## action_ls_remote
-:: Queries available remote versions of win-cmd-rs.
+:: Queries available remote versions of win-cmd-rs from GitHub Releases.
 :action_ls_remote
 set "RELEASES_URL=%WIN_CMD_RS_RELEASES_URL%"
-if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMarks/win-cmd-rs/releases/latest"
+if "!RELEASES_URL!"=="" set "RELEASES_URL=https://api.github.com/repos/SamuelMarks/win-cmd-rs/releases"
 echo [ls-remote] Fetching available win-cmd-rs versions from !RELEASES_URL!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+if not "%LIBSCRIPT_OFFLINE%"=="1" (
+    if not "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!RELEASES_URL!"
+    )
+)
 exit /b 0
 
 :: ## action_use
@@ -91,207 +102,344 @@ exit /b 0
 call :resolve_version
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
 set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
-if not exist "!TARGET_DIR!" (
+if not exist "!TARGET_DIR!\bin\wincheck.exe" (
     echo Version !EXACT_VERSION! not installed. Installing...
     set "ACTION=install"
+    set "STACK="
     call "%~f0"
+    if errorlevel 1 exit /b 1
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
+call :update_aliases
 exit /b 0
 
 :: ## action_download
-:: Downloads the win-cmd-rs release artifact to the local cache directory.
+:: Downloads the win-cmd-rs release archive into the local cache directory idempotently.
 :action_download
 call :resolve_version
-set "URL=%WIN_CMD_RS_DOWNLOAD_URL%"
-if "!URL!"=="" set "URL=https://github.com/SamuelMarks/win-cmd-rs/releases/download/v{VERSION}/win-cmd-rs-{VERSION}-windows.zip"
-call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
+call :resolve_url
 set "DL_DIR=%DOWNLOAD_DIR%"
-if "!DL_DIR!"=="" set "DL_DIR=%TEMP%\libscript_downloads"
+if "!DL_DIR!"=="" (
+    if not "%LIBSCRIPT_CACHE_DIR%"=="" (
+        set "DL_DIR=%LIBSCRIPT_CACHE_DIR%"
+    ) else (
+        set "DL_DIR=%LIBSCRIPT_ROOT_DIR%\cache\downloads"
+    )
+)
 set "DL_DIR=!DL_DIR!\win-cmd-rs"
 if not exist "!DL_DIR!" mkdir "!DL_DIR!"
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
-echo [download] Pre-downloading win-cmd-rs %WIN_CMD_RS_VERSION% from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!"
+if exist "!DL_DIR!\!ARCHIVE_NAME!" (
+    if not "%FORCE_REINSTALL%"=="1" (
+        echo [download] Cached win-cmd-rs archive already present at !DL_DIR!\!ARCHIVE_NAME!.
+        exit /b 0
+    )
+)
+echo [download] Pre-downloading win-cmd-rs !EXACT_VERSION! from !URL! to !DL_DIR!\!ARCHIVE_NAME!...
+set "PACKAGE_NAME=win-cmd-rs"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!DL_DIR!\!ARCHIVE_NAME!" "%WIN_CMD_RS_CHECKSUM%"
 exit /b !errorlevel!
 
 :: ## action_install
-:: Installs win-cmd-rs via from-source, system package manager, or libscript_native isolation.
+:: Installs win-cmd-rs via libscript_native release archives, system package manager, or Cargo source build.
 :action_install
-if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="from-source" (
-    call :resolve_version
-    set "TARGET_DIR=%LIBSCRIPT_HOME%\win-cmd-rs\!EXACT_VERSION!"
-    if exist "!TARGET_DIR!\bin\wincheck.exe" if exist "!TARGET_DIR!\bin\wincmd.exe" exit /b 0
-    set "_WCR_R=%WIN_CMD_RS_REPO_DIR%"
-    if "!_WCR_R!"=="" if exist "%LIBSCRIPT_ROOT_DIR%\..\win-cmd-rs\Cargo.toml" set "_WCR_R=%LIBSCRIPT_ROOT_DIR%\..\win-cmd-rs"
-    if not "!_WCR_R!"=="" if exist "!_WCR_R!\Cargo.toml" (
-        where cargo >nul 2>&1 || call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install rust latest
-        pushd "!_WCR_R!"
-        set "CARGO_PROFILE_RELEASE_OPT_LEVEL=3" && cargo build --release --bins
-        popd
-        if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
-        if exist "!_WCR_R!\target\release\wincmd.exe" copy /y "!_WCR_R!\target\release\wincmd.exe" "!TARGET_DIR!\bin\" >nul
-        if exist "!_WCR_R!\target\release\wincheck.exe" copy /y "!_WCR_R!\target\release\wincheck.exe" "!TARGET_DIR!\bin\" >nul
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
-        exit /b 0
-    )
-    call :resolve_version
-    set "TARGET_DIR=%LIBSCRIPT_HOME%\win-cmd-rs\!EXACT_VERSION!"
-    set "SRC_URL=%WIN_CMD_RS_DOWNLOAD_URL%"
-    if "!SRC_URL!"=="" set "SRC_URL=https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v{VERSION}.tar.gz"
-    call set "SRC_URL=%%SRC_URL:{VERSION}=!EXACT_VERSION!%%"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "win-cmd-rs" "!EXACT_VERSION!" "wincheck" "rust" "cargo" "!SRC_URL!"
-    exit /b !errorlevel!
-)
-if "%WIN_CMD_RS_INSTALL_METHOD%"=="system" (
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="from-source" goto :install_from_source
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="source" goto :install_from_source
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="cargo" goto :install_from_source
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="system" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="winget" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via winget win-cmd-rs
-    exit /b !errorlevel!
-)
-if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="choco" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco win-cmd-rs
-    exit /b !errorlevel!
-)
-if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="scoop" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends_via scoop win-cmd-rs
-    exit /b !errorlevel!
-)
-call :resolve_version
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
-set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
-if "%IS_MSDOS%"=="1" (
-    if exist "!TARGET_DIR!\bin\wincmd.exe" if not "%FORCE_REINSTALL%"=="1" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
-        exit /b 0
-    )
-    if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-wincmd --target dos32 --out "!TARGET_DIR!\bin\wincmd.exe" >nul 2>&1
-    if not exist "!TARGET_DIR!\bin\wincmd.exe" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\dos32\build_dos32.cmd" ls-wincmd --target host --out "!TARGET_DIR!\bin\wincmd.exe" >nul 2>&1
-    )
-    if exist "!TARGET_DIR!\bin\wincmd.exe" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
-        exit /b 0
-    )
-)
-set "_BIN_FOUND=0"
-if exist "!TARGET_DIR!\bin\wincheck.exe" set "_BIN_FOUND=1"
-if exist "!TARGET_DIR!\bin\wincheck.cmd" set "_BIN_FOUND=1"
-if exist "!TARGET_DIR!\bin\wincheck.bat" set "_BIN_FOUND=1"
-if "!_BIN_FOUND!"=="1" (
-    if not "%FORCE_REINSTALL%"=="1" (
-        echo [INFO] win-cmd-rs !EXACT_VERSION! is already installed at !TARGET_DIR!.
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
-        exit /b 0
-    )
-)
-set "URL=%WIN_CMD_RS_DOWNLOAD_URL%"
-if "!URL!"=="" set "URL=https://github.com/SamuelMarks/win-cmd-rs/releases/download/v{VERSION}/win-cmd-rs-{VERSION}-windows.zip"
-call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
-if "!URL!"=="" (
+    set "LIBSCRIPT_PKG_MGR=winget"
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="choco" (
+    set "LIBSCRIPT_PKG_MGR=choco"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
+    exit /b !errorlevel!
+)
+if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="scoop" (
+    set "LIBSCRIPT_PKG_MGR=scoop"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
+    exit /b !errorlevel!
+)
+
+call :resolve_version
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
+if exist "!TARGET_DIR!\bin\wincheck.exe" (
+    if exist "!TARGET_DIR!\bin\wincmd.exe" (
+        if not "%FORCE_REINSTALL%"=="1" (
+            echo [INFO] win-cmd-rs !EXACT_VERSION! is already installed at !TARGET_DIR!.
+            call :update_aliases
+            exit /b 0
+        )
+    )
+)
+
 if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+call :resolve_url
+if errorlevel 1 goto :install_from_source
+
 set "DL_DIR=%DOWNLOAD_DIR%"
-if "!DL_DIR!"=="" set "DL_DIR=%TEMP%\libscript_downloads"
+if "!DL_DIR!"=="" (
+    if not "%LIBSCRIPT_CACHE_DIR%"=="" (
+        set "DL_DIR=%LIBSCRIPT_CACHE_DIR%"
+    ) else (
+        set "DL_DIR=%LIBSCRIPT_ROOT_DIR%\cache\downloads"
+    )
+)
 for %%F in ("!URL!") do set "ARCHIVE_NAME=%%~nxF"
 set "CACHED_DL=!DL_DIR!\win-cmd-rs\!ARCHIVE_NAME!"
 if exist "!CACHED_DL!" (
     echo [install] Using cached archive !CACHED_DL!...
     set "TMP_FILE=!CACHED_DL!"
 ) else (
-    set "TMP_FILE=%TEMP%\win-cmd-rs-!RANDOM!.archive"
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!"
-    if errorlevel 1 exit /b 1
+    set "TMP_FILE=%TEMP%\win-cmd-rs-!RANDOM!-!ARCHIVE_NAME!"
+    set "PACKAGE_NAME=win-cmd-rs"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!URL!" "!TMP_FILE!" "%WIN_CMD_RS_CHECKSUM%"
+    if errorlevel 1 (
+        if exist "!TMP_FILE!" del /f /q "!TMP_FILE!" >nul 2>&1
+        if "%WIN_CMD_RS_DOWNLOAD_URL%"=="" (
+            if exist "%LIBSCRIPT_ROOT_DIR%\..\win-cmd-rs\Cargo.toml" goto :install_from_source
+            if not "%WIN_CMD_RS_REPO_DIR%"=="" goto :install_from_source
+        )
+        exit /b 1
+    )
 )
-set "_IS_ARCHIVE=0"
-if /i "!URL:~-4!"==".zip" set "_IS_ARCHIVE=zip"
-if /i "!URL:~-7!"==".tar.gz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-4!"==".tgz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-7!"==".tar.xz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-4!"==".txz" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-8!"==".tar.bz2" set "_IS_ARCHIVE=tar"
-if /i "!URL:~-5!"==".tbz2" set "_IS_ARCHIVE=tar"
-if not "!_IS_ARCHIVE!"=="0" (
-    if "!_IS_ARCHIVE!"=="zip" (
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!TMP_FILE!' -DestinationPath '!TARGET_DIR!' -Force"
-    ) else (
-        tar -xf "!TMP_FILE!" -C "!TARGET_DIR!" --strip-components=1 2>nul || tar -xf "!TMP_FILE!" -C "!TARGET_DIR!"
-    )
-    for /d %%D in ("!TARGET_DIR!\*") do (
-        if /i not "%%~nxD"=="bin" (
-            set "_DO_FLAT=0"
-            if exist "%%~fD\bin\wincheck.exe" set "_DO_FLAT=1"
-            if exist "%%~fD\bin\wincheck.bat" set "_DO_FLAT=1"
-            if exist "%%~fD\bin\wincheck.cmd" set "_DO_FLAT=1"
-            if exist "%%~fD\wincheck.exe" set "_DO_FLAT=1"
-            if exist "%%~fD\wincheck.cmd" set "_DO_FLAT=1"
-            if exist "%%~fD\wincheck.bat" set "_DO_FLAT=1"
-            if "!_DO_FLAT!"=="1" (
-                move /y "%%~fD" "!TARGET_DIR!_flat" >nul
-                xcopy /E /I /Y "!TARGET_DIR!_flat\*" "!TARGET_DIR!\" >nul
-                if exist "!TARGET_DIR!_flat" rmdir /s /q "!TARGET_DIR!_flat" >nul 2>&1
-            )
-        )
-    )
-    if not exist "!TARGET_DIR!\bin\wincheck.exe" (
-        if exist "!TARGET_DIR!\wincheck.exe" (
-            copy /y "!TARGET_DIR!\wincheck.exe" "!TARGET_DIR!\bin\wincheck.exe" >nul
-        )
-    )
-    if not exist "!TARGET_DIR!\bin\wincheck.cmd" (
-        if exist "!TARGET_DIR!\wincheck.cmd" (
-            copy /y "!TARGET_DIR!\wincheck.cmd" "!TARGET_DIR!\bin\wincheck.cmd" >nul
-        )
-    )
-    if not exist "!TARGET_DIR!\bin\wincheck.bat" (
-        if exist "!TARGET_DIR!\wincheck.bat" (
-            copy /y "!TARGET_DIR!\wincheck.bat" "!TARGET_DIR!\bin\wincheck.bat" >nul
-        )
+
+set "STAGE_DIR=%TEMP%\win-cmd-rs-stage-!RANDOM!"
+if not exist "!STAGE_DIR!" mkdir "!STAGE_DIR!"
+
+if /i "!URL:~-4!"==".zip" (
+    call :extract_wcr_zip "!TMP_FILE!" "!STAGE_DIR!"
+    if errorlevel 1 (
+        rmdir /s /q "!STAGE_DIR!" >nul 2>&1
+        if /i not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b 1
     )
 ) else (
-    copy /y "!TMP_FILE!" "!TARGET_DIR!\bin\wincheck.exe" >nul
+    copy /y "!TMP_FILE!" "!STAGE_DIR!\wincheck.exe" >nul
 )
-if not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" 2>nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "%WIN_CMD_RS_VERSION%" "!EXACT_VERSION!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
+
+call :stage_extracted_binaries "!STAGE_DIR!" "!TARGET_DIR!"
+set "_STAGE_RC=!errorlevel!"
+rmdir /s /q "!STAGE_DIR!" >nul 2>&1
+if /i not "!TMP_FILE!"=="!CACHED_DL!" del /f /q "!TMP_FILE!" >nul 2>&1
+if not "!_STAGE_RC!"=="0" exit /b 1
+
+call :update_aliases
+exit /b 0
+
+:: ## stage_extracted_binaries
+:: Locates extracted wincheck.exe, wincmd.exe, optional CWSDPMI.EXE, and docs inside STAGE_DIR and copies them to TARGET_DIR.
+:stage_extracted_binaries
+set "_SEB_STAGE=%~1"
+set "_SEB_TGT=%~2"
+if not exist "!_SEB_TGT!\bin" mkdir "!_SEB_TGT!\bin"
+for /r "!_SEB_STAGE!" %%X in (wincheck.exe WINCHECK.EXE) do (
+    if exist "%%~fX" (
+        copy /y "%%~fX" "!_SEB_TGT!\bin\wincheck.exe" >nul
+        if "%IS_MSDOS%"=="1" copy /y "%%~fX" "!_SEB_TGT!\bin\WINCHECK.EXE" >nul
+    )
+)
+for /r "!_SEB_STAGE!" %%Y in (wincmd.exe WINCMD.EXE) do (
+    if exist "%%~fY" (
+        copy /y "%%~fY" "!_SEB_TGT!\bin\wincmd.exe" >nul
+        if "%IS_MSDOS%"=="1" copy /y "%%~fY" "!_SEB_TGT!\bin\WINCMD.EXE" >nul
+    )
+)
+for /r "!_SEB_STAGE!" %%D in (CWSDPMI.EXE cwsdpmi.exe) do (
+    if exist "%%~fD" copy /y "%%~fD" "!_SEB_TGT!\bin\CWSDPMI.EXE" >nul
+)
+if not "!IS_MSDOS!"=="1" (
+    for %%M in (README.md USAGE.md LICENSE-MIT LICENSE-APACHE) do (
+        for /r "!_SEB_STAGE!" %%L in (%%M) do (
+            if exist "%%~fL" copy /y "%%~fL" "!_SEB_TGT!\%%M" >nul
+        )
+    )
+)
+if not exist "!_SEB_TGT!\bin\wincheck.exe" (
+    echo Error: wincheck.exe was not found in extracted archive 1>&2
+    exit /b 1
+)
+if not exist "!_SEB_TGT!\bin\wincmd.exe" (
+    echo Error: wincmd.exe was not found in extracted archive 1>&2
+    exit /b 1
+)
+exit /b 0
+
+:: ## install_from_source
+:: Compiles wincmd.exe and wincheck.exe from a local checkout or upstream source archive using Cargo.
+:install_from_source
+call :resolve_version
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_get_version_dir "win-cmd-rs" "!EXACT_VERSION!" >nul
+set "TARGET_DIR=!LIBSCRIPT_VERSION_DIR!"
+if exist "!TARGET_DIR!\bin\wincheck.exe" (
+    if exist "!TARGET_DIR!\bin\wincmd.exe" (
+        if not "%FORCE_REINSTALL%"=="1" (
+            echo [INFO] win-cmd-rs !EXACT_VERSION! is already installed at !TARGET_DIR!.
+            call :update_aliases
+            exit /b 0
+        )
+    )
+)
+where cargo >nul 2>&1
+if errorlevel 1 (
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install rust latest
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\env.cmd" (
+        set "STACK="
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\env.cmd"
+    )
+)
+set "_SRC_DIR=%WIN_CMD_RS_REPO_DIR%"
+if "!_SRC_DIR!"=="" (
+    if exist "%LIBSCRIPT_ROOT_DIR%\..\win-cmd-rs\Cargo.toml" (
+        set "_SRC_DIR=%LIBSCRIPT_ROOT_DIR%\..\win-cmd-rs"
+    )
+)
+set "_CLEAN_SRC=0"
+if "!_SRC_DIR!"=="" (
+    set "_SRC_TMP=%TEMP%\win-cmd-rs-src-!RANDOM!"
+    if not exist "!_SRC_TMP!" mkdir "!_SRC_TMP!"
+    set "PACKAGE_NAME=win-cmd-rs"
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/SamuelMarks/win-cmd-rs/archive/refs/tags/v!EXACT_VERSION!.zip" "!_SRC_TMP!\src.zip" "%WIN_CMD_RS_CHECKSUM%"
+    if errorlevel 1 exit /b 1
+    call :extract_wcr_zip "!_SRC_TMP!\src.zip" "!_SRC_TMP!\tree"
+    if errorlevel 1 exit /b 1
+    for /d %%D in ("!_SRC_TMP!\tree\*") do set "_SRC_DIR=%%~fD"
+    set "_CLEAN_SRC=1"
+)
+if not exist "!TARGET_DIR!\bin" mkdir "!TARGET_DIR!\bin"
+set "CARGO_TARGET_DIR=%TEMP%\wcr-build-!RANDOM!"
+cargo build --release --bins --manifest-path "!_SRC_DIR!\Cargo.toml"
+set "_CB_RC=!errorlevel!"
+if "!_CB_RC!"=="0" (
+    copy /y "!CARGO_TARGET_DIR!\release\wincheck.exe" "!TARGET_DIR!\bin\wincheck.exe" >nul
+    copy /y "!CARGO_TARGET_DIR!\release\wincmd.exe" "!TARGET_DIR!\bin\wincmd.exe" >nul
+)
+if exist "!CARGO_TARGET_DIR!" rmdir /s /q "!CARGO_TARGET_DIR!" >nul 2>&1
+if "!_CLEAN_SRC!"=="1" if exist "!_SRC_TMP!" rmdir /s /q "!_SRC_TMP!" >nul 2>&1
+if not "!_CB_RC!"=="0" exit /b !_CB_RC!
+call :update_aliases
 exit /b 0
 
 :: ## resolve_version
-:: Resolves latest or lts version alias into EXACT_VERSION.
+:: Resolves latest, stable, or lts version aliases into EXACT_VERSION and strips any leading 'v'.
 :resolve_version
-if /i "%WIN_CMD_RS_VERSION%"=="latest" goto :resolve_remote_gh_tag
-if /i "%WIN_CMD_RS_VERSION%"=="lts" goto :resolve_remote_gh_tag
-if /i "%WIN_CMD_RS_VERSION%"=="stable" goto :resolve_remote_gh_tag
-set "EXACT_VERSION=%WIN_CMD_RS_VERSION%"
+set "_RAW_VER=%WIN_CMD_RS_VERSION%"
+if /i "!_RAW_VER!"=="latest" goto :resolve_remote_tag
+if /i "!_RAW_VER!"=="stable" goto :resolve_remote_tag
+if /i "!_RAW_VER!"=="lts" goto :resolve_remote_tag
+if /i "!_RAW_VER:~0,1!"=="v" set "_RAW_VER=!_RAW_VER:~1!"
+set "EXACT_VERSION=!_RAW_VER!"
 exit /b 0
 
-:: ## resolve_remote_gh_tag
-:: Queries GitHub Releases API for the latest tag with offline fallback.
-:resolve_remote_gh_tag
+:: ## resolve_remote_tag
+:: Queries GitHub Releases API for the latest tag with offline cache inspection and 0.0.1 fallback.
+:resolve_remote_tag
 set "EXACT_VERSION="
-if not "SamuelMarks/win-cmd-rs" == "" (
-    for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "https://api.github.com/repos/SamuelMarks/win-cmd-rs/releases/latest"') do (
-        set "EXACT_VERSION=%%T"
+set "_REL_API=%WIN_CMD_RS_RELEASES_URL%"
+if "!_REL_API!"=="" set "_REL_API=https://api.github.com/repos/SamuelMarks/win-cmd-rs/releases/latest"
+if not "%LIBSCRIPT_OFFLINE%"=="1" (
+    if not "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
+        for /f "delims=" %%T in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_resolve_github_tag "!_REL_API!"') do (
+            set "EXACT_VERSION=%%T"
+        )
     )
 )
-if not "v" == "" (
-    if not "!EXACT_VERSION!"=="" set "EXACT_VERSION=!EXACT_VERSION:v=!"
+if "!EXACT_VERSION!"=="" (
+    if exist "%LIBSCRIPT_HOME%\win-cmd-rs" (
+        for /d %%C in ("%LIBSCRIPT_HOME%\win-cmd-rs\*") do (
+            set "_CN=%%~nxC"
+            if /i not "!_CN!"=="default" if /i not "!_CN!"=="latest" if /i not "!_CN!"=="stable" if /i not "!_CN!"=="lts" (
+                if exist "%%~fC\bin\wincheck.exe" set "EXACT_VERSION=!_CN!"
+            )
+        )
+    )
 )
-if "!EXACT_VERSION!"=="" set "EXACT_VERSION=0.1.0"
+if "!EXACT_VERSION!"=="" set "EXACT_VERSION=0.0.1"
+if /i "!EXACT_VERSION:~0,1!"=="v" set "EXACT_VERSION=!EXACT_VERSION:~1!"
+exit /b 0
+
+:: ## resolve_url
+:: Resolves the Windows or MS-DOS release archive URL and substitutes template variables.
+:resolve_url
+set "_WCR_ARCH=%LIBSCRIPT_TARGET_ARCH%"
+if "!_WCR_ARCH!"=="" set "_WCR_ARCH=%ARCH%"
+if "!_WCR_ARCH!"=="" set "_WCR_ARCH=%PROCESSOR_ARCHITECTURE%"
+set "_WCR_TARGET=x86_64-pc-windows-msvc"
+if /i "%IS_MSDOS%"=="1" (
+    set "_WCR_TARGET=i586-pc-msdosdjgpp"
+) else if /i "%LIBSCRIPT_TARGET_OS%"=="msdos" (
+    set "_WCR_TARGET=i586-pc-msdosdjgpp"
+) else if /i "!_WCR_ARCH!"=="ARM64" (
+    set "_WCR_TARGET=aarch64-pc-windows-msvc"
+) else if /i "!_WCR_ARCH!"=="aarch64" (
+    set "_WCR_TARGET=aarch64-pc-windows-msvc"
+) else if /i "!_WCR_ARCH!"=="AMD64" (
+    set "_WCR_TARGET=x86_64-pc-windows-msvc"
+) else if /i "!_WCR_ARCH!"=="x86_64" (
+    set "_WCR_TARGET=x86_64-pc-windows-msvc"
+) else if /i "!_WCR_ARCH!"=="x64" (
+    set "_WCR_TARGET=x86_64-pc-windows-msvc"
+) else (
+    if "%WIN_CMD_RS_DOWNLOAD_URL%"=="" exit /b 1
+)
+set "URL=%WIN_CMD_RS_DOWNLOAD_URL%"
+if "!URL!"=="" (
+    set "URL=https://github.com/SamuelMarks/win-cmd-rs/releases/download/v!EXACT_VERSION!/win-cmd-rs-v!EXACT_VERSION!-!_WCR_TARGET!.zip"
+) else (
+    call set "URL=%%URL:{VERSION}=!EXACT_VERSION!%%"
+    call set "URL=%%URL:{RUST_TARGET}=!_WCR_TARGET!%%"
+    call set "URL=%%URL:{EXT}=zip%%"
+)
+exit /b 0
+
+:: ## update_aliases
+:: Updates version alias and default directory junctions and synchronizes active bin shims.
+:update_aliases
+set "_ALIAS_NAME=%WIN_CMD_RS_VERSION%"
+if /i "!_ALIAS_NAME:~0,1!"=="v" set "_ALIAS_NAME=!_ALIAS_NAME:~1!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "!_ALIAS_NAME!" "!EXACT_VERSION!"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "win-cmd-rs" "default" "!EXACT_VERSION!"
 exit /b 0
 
 :: ## action_other
-:: Delegates service and lifecycle actions to setup_base.cmd.
+:: Delegates generic lifecycle actions such as uninstall to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "win-cmd-rs" "%ACTION%" "%WIN_CMD_RS_VERSION%" "%WIN_CMD_RS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%\\bin\\wincheck.exe\"" "%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "win-cmd-rs" "%ACTION%" "%WIN_CMD_RS_VERSION%" "%WIN_CMD_RS_INSTALL_METHOD%" "" "" "" "\"%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%\bin\wincheck.exe\"" "%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%"
 exit /b !errorlevel!
+
+:: ## extract_wcr_zip
+:: Extracts a zip archive using native zero-PowerShell extractors (7za, 7z, bsdunzip, unzip, tar) before PowerShell fallback.
+:extract_wcr_zip
+set "_WCR_ZIP=%~1"
+set "_WCR_DST=%~2"
+for %%Z in (7za.exe 7z.exe) do (
+    where %%Z >nul 2>&1
+    if not errorlevel 1 (
+        %%Z x "!_WCR_ZIP!" -o"!_WCR_DST!" -y >nul 2>&1
+        if not errorlevel 1 exit /b 0
+    )
+)
+for %%U in (bsdunzip.exe unzip.exe) do (
+    where %%U >nul 2>&1
+    if not errorlevel 1 (
+        %%U -q -o "!_WCR_ZIP!" -d "!_WCR_DST!" >nul 2>&1
+        if not errorlevel 1 exit /b 0
+    )
+)
+where tar.exe >nul 2>&1
+if not errorlevel 1 (
+    tar.exe -xf "!_WCR_ZIP!" -C "!_WCR_DST!" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+)
+where powershell.exe >nul 2>&1
+if not errorlevel 1 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '!_WCR_ZIP!' -DestinationPath '!_WCR_DST!' -Force"
+    exit /b !errorlevel!
+)
+exit /b 1

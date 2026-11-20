@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where vagrant >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "C:\Program Files\Vagrant\bin\vagrant.exe" exit /b 0
 if exist "C:\HashiCorp\Vagrant\bin\vagrant.exe" exit /b 0

@@ -61,6 +61,7 @@ set "OVERRIDE_MCUBOOT=0"
 set "_ORIG_ARGS=%*"
 
 if /i "%~1"=="os" shift
+goto :parse_cfg_args
 
 :: ## parse_cfg_args
 :: Parses CLI flags for the Windows OS configuration driver.

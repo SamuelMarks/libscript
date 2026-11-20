@@ -93,7 +93,7 @@ if exist "%SCRIPT_DIR%\run_windows_tests.cmd" (
     echo }
 ) > "%SUMMARY_FILE%"
 
-echo [OK] Vagrant testing for msi-rs completed successfully!
+echo [OK] Vagrant testing for msi-rs completed successfully^^!
 echo [OK] Summary written to %SUMMARY_FILE%
 exit /b 0
 

@@ -60,13 +60,13 @@ if exist "%ProgramFiles%\Git\bin\sh.exe" (
 )
 
 where sh >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     sh -c "echo sh operational"
     exit /b 0
 )
 
 where busybox >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     busybox sh -c "echo sh operational"
     exit /b 0
 )

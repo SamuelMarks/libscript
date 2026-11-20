@@ -56,6 +56,6 @@ if "!SYSROOT!"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\rtos-sysroot"
 if not exist "!SYSROOT!\lib" mkdir "!SYSROOT!\lib"
 if not exist "!SYSROOT!\include" mkdir "!SYSROOT!\include"
 > "!SYSROOT!\include\sqlite3_rtos.h" echo int libscript_sqlite_rtos_vfs_ready^(void^);
-> "!SYSROOT!\lib\libsqlite3_rtos.a" echo !<arch>
+> "!SYSROOT!\lib\libsqlite3_rtos.a" echo ^^!^<arch^>
 echo [OK] Staged RTOS SQLite static library -^> !SYSROOT!\lib\libsqlite3_rtos.a
 exit /b 0

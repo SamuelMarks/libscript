@@ -56,7 +56,7 @@ if "%~1"=="" (
 set "COMPONENT=%~1"
 
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" status "%COMPONENT%" >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     exit /b 0
 ) else (
     exit /b 1

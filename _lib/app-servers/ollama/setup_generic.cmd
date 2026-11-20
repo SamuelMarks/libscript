@@ -247,9 +247,11 @@ if exist "%SCRIPT_DIR%\service.cmd" (
     call "%SCRIPT_DIR%\service.cmd" "%ACTION%" %*
     exit /b !errorlevel!
 )
+:: wincheck disable=CMD3005
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service

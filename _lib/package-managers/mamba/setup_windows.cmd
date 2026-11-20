@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where mamba >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 set "ARCH=64"
 if "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ARCH=arm64"

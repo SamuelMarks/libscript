@@ -64,13 +64,13 @@ if "!_FC_DB!"=="" set "_FC_DB=!LIBSCRIPT_ROOT_DIR!\_lib\checksums.txt"
 if exist "!_FC_DB!" (
     for /f "tokens=1,2" %%A in ('findstr /I /C:"!_URL!" "!_FC_DB!" 2^>nul') do (
         if not "%%B"=="" (
-            echo %%B
+            echo.%%B
             exit /b 0
         )
     )
     for /f "tokens=1,2" %%A in ('findstr /I /C:"!_FILENAME!" "!_FC_DB!" 2^>nul') do (
         if not "%%B"=="" (
-            echo %%B
+            echo.%%B
             exit /b 0
         )
     )
@@ -81,7 +81,7 @@ if not errorlevel 1 (
     for %%U in ("!_URL!") do set "_BASE_URL=%%~dpU"
     for /f "tokens=1,2" %%A in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_fetch_stdout "!_URL!/../SHASUMS256.txt" 2^>nul ^| findstr /I /C:"!_FILENAME!"') do (
         if not "%%A"=="" (
-            echo %%A
+            echo.%%A
             exit /b 0
         )
     )
@@ -91,7 +91,7 @@ for /f "tokens=1" %%A in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" 
     set "_CAND=%%A"
     if not "!_CAND!"=="" (
         if not "!_CAND:~63,1!"=="" if "!_CAND:~64,1!"=="" (
-            echo !_CAND!
+            echo.!_CAND!
             exit /b 0
         )
     )

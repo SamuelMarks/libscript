@@ -60,6 +60,7 @@ set "_DL_PORT=0"
 set "_DL_EXE="
 set "_DL_DATADIR="
 set "_DL_JSON="
+goto :parse_dl_args
 
 :: ## parse_dl_args
 :: Parses -Port, -Executable, -DataDir, and -HttpJson CLI flags for daemon_launcher.cmd.

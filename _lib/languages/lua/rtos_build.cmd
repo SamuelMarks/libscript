@@ -56,6 +56,6 @@ if "!SYSROOT!"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\rtos-sysroot"
 if not exist "!SYSROOT!\lib" mkdir "!SYSROOT!\lib"
 if not exist "!SYSROOT!\include" mkdir "!SYSROOT!\include"
 > "!SYSROOT!\include\lua_rtos.h" echo void *libscript_lua_rtos_alloc^(void *ud, void *ptr, unsigned int osize, unsigned int nsize^);
-> "!SYSROOT!\lib\liblua.a" echo !<arch>
+> "!SYSROOT!\lib\liblua.a" echo ^^!^<arch^>
 echo [OK] Staged RTOS Lua 5.4 static library -^> !SYSROOT!\lib\liblua.a
 exit /b 0

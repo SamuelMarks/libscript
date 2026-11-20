@@ -95,7 +95,7 @@ powershell -NoProfile -Command ^
     "    Format-Volume -DriveLetter '%TARGET_VOL:~0,1%' -FileSystem %FS_TYPE% -NewFileSystemLabel '%VOL_LABEL%' -Confirm:$false; " ^
     "}"
 
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     echo [OK] Formatting of %TARGET_VOL% as %FS_TYPE% completed successfully.
     exit /b 0
 ) else (

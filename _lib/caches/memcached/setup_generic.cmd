@@ -80,7 +80,7 @@ if "%MEMCACHED_DOWNLOAD_URL%"=="" (
 if "%MEMCACHED_DOWNLOAD_URL%"=="" (
     if "%_tmp_ver%"=="latest" set "_tmp_ver=1.6.45"
     if "!_tmp_ver:~0,1!"=="v" set "_tmp_ver=!_tmp_ver:~1!"
-    if not "%_tmp_ver%"=="" (
+    if not "!_tmp_ver!"=="" (
         set "MEMCACHED_DOWNLOAD_URL=https://github.com/SamuelMarks/memcached-windows/releases/download/v!_tmp_ver!/Memcached-!_tmp_ver!-win64.zip"
     )
 )
@@ -213,12 +213,15 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
+goto :action_uninstall
 :: ## action_uninstall
 :: Uninstalls the component version from LIBSCRIPT_HOME.
 :action_uninstall

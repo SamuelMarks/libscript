@@ -47,6 +47,7 @@ if "%GEMMA_TPU_SUITE_REQUIRE_HBM%"=="" set "GEMMA_TPU_SUITE_REQUIRE_HBM=1"
 if "%GEMMA_TPU_SUITE_RESUME%"=="" set "GEMMA_TPU_SUITE_RESUME=1"
 if "%GEMMA_TPU_SUITE_LOCAL_EXEC%"=="" set "GEMMA_TPU_SUITE_LOCAL_EXEC=0"
 if "%GEMMA_TPU_SUITE_DRY_RUN%"=="" set "GEMMA_TPU_SUITE_DRY_RUN=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses quoted or space-separated CLI flags for benchmark_experiments.cmd.

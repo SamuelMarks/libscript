@@ -54,6 +54,7 @@ if /I "%~1"=="-h" goto :show_help
 
 set "KERNEL_KIND=linux"
 if not "%LIBSCRIPT_TARGET_OS%"=="" set "KERNEL_KIND=%LIBSCRIPT_TARGET_OS%"
+goto :parse_dk_opts
 
 :: ## parse_dk_opts
 :: Parses optional --kernel and --allow-stub flags.

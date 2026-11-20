@@ -353,7 +353,7 @@ is_installed() {
 # Returns 0 if a requested dependency is backed by a dedicated Windows/MS-DOS native component-level package manager.
 libscript_is_native_win_dos_port() {
   case "${1:-}" in
-    jq|jq-windows|gawk|gawk-windows|awk|busybox|busybox-windows|toybox|toybox-windows|dash|dash-windows|sh|freebsd-usr-bin|freebsd-usr-bin-windows|sed|grep|cut|tr|sort|uniq|wc|head|tail|xargs|find|cmp|diff|patch|bmake|bsdtar|bsdunzip)
+    jq|jq-windows|gawk|gawk-windows|awk|busybox|busybox-windows|toybox|toybox-windows|dash|dash-windows|sh|freebsd-usr-bin|freebsd-usr-bin-windows|sed|grep|cut|tr|sort|uniq|wc|head|tail|xargs|find|cmp|diff|patch|bmake|bsdtar|bsdunzip|win-cmd-rs|wincmd|wincheck)
       return 0
       ;;
     *)
@@ -386,6 +386,7 @@ libscript_install_component_dep() {
   [ "$_lic_req" = 'busybox-windows' ] && _lic_bin_check='busybox'
   [ "$_lic_req" = 'toybox-windows' ] && _lic_bin_check='toybox'
   [ "$_lic_req" = 'dash-windows' ] && _lic_bin_check='dash'
+  [ "$_lic_req" = 'win-cmd-rs' ] && _lic_bin_check='wincheck'
   if [ "${FORCE_REINSTALL:-0}" != '1' ]; then
     for _lic_vdir in 'default' 'latest'; do
       if [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; then

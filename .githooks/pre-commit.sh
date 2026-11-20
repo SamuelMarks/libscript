@@ -32,19 +32,27 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Ensure we run from the git repository root
 cd "$(git rev-parse --show-toplevel)"
 
-for _pc_fb_dir in \
-  "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin" \
-  "/opt/homebrew/bin" \
-  "/usr/local/bin" \
-  "${HOME:-/root}/.local/bin" \
-  "${HOME:-/root}/.cabal/bin"; do
-  if [ -d "${_pc_fb_dir}" ]; then
-    case ":${PATH}:" in
-      *":${_pc_fb_dir}:"*) ;;
-      *) PATH="${PATH}:${_pc_fb_dir}" ;;
-    esac
-  fi
-done
+_pc_ls_bin="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin"
+if [ -d "${_pc_ls_bin}" ]; then
+  case ":${PATH}:" in
+    *":${_pc_ls_bin}:"*) ;;
+    *) PATH="${PATH}:${_pc_ls_bin}" ;;
+  esac
+fi
+if [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
+  for _pc_fb_dir in \
+    '/opt/homebrew/bin' \
+    '/usr/local/bin' \
+    "${HOME:-/root}/.local/bin" \
+    "${HOME:-/root}/.cabal/bin"; do
+    if [ -d "${_pc_fb_dir}" ]; then
+      case ":${PATH}:" in
+        *":${_pc_fb_dir}:"*) ;;
+        *) PATH="${PATH}:${_pc_fb_dir}" ;;
+      esac
+    fi
+  done
+fi
 export PATH
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/env.sh" ]; then
@@ -119,6 +127,51 @@ ensure_shellcheck_bootstrapped() {
   load_shellcheck_env
   if ! command -v shellcheck >/dev/null 2>&1; then
     printf '%s\n' '[ERROR] shellcheck still not found on PATH after bootstrap.' >&2
+    return 1
+  fi
+  return 0
+}
+
+# ## load_wincheck_env
+# Sources the isolated win-cmd-rs version manager environment while preserving caller path and recursion state.
+load_wincheck_env() {
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/win-cmd-rs/env.sh" ]; then
+    _wc_saved_this="${THIS_FILE:-}"
+    _wc_saved_dir="${SCRIPT_DIR:-}"
+    _wc_saved_stack="${STACK:-}"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/win-cmd-rs/env.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}" >/dev/null 2>&1 || true
+    unset SCRIPT_NAME || true
+    THIS_FILE="$_wc_saved_this"
+    SCRIPT_DIR="$_wc_saved_dir"
+    STACK="$_wc_saved_stack"
+    export STACK
+    unset _wc_saved_this _wc_saved_dir _wc_saved_stack || true
+  fi
+}
+
+# ## ensure_wincheck_bootstrapped
+# Ensures wincheck is available on PATH, bootstrapping win-cmd-rs idempotently via LibScript when nonexistent.
+ensure_wincheck_bootstrapped() {
+  load_wincheck_env
+  if command -v wincheck >/dev/null 2>&1; then
+    return 0
+  fi
+  printf '%s\n' '[BOOTSTRAP] wincheck not found on PATH; installing via LibScript version manager...'
+  if ! (
+    unset SCRIPT_NAME || true
+    LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1 \
+    STACK="" \
+    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install win-cmd-rs "${WIN_CMD_RS_VERSION:-latest}"
+  ); then
+    printf '%s\n' '[ERROR] Failed to bootstrap win-cmd-rs (wincheck) via LibScript version manager.' >&2
+    return 1
+  fi
+  load_wincheck_env
+  if ! command -v wincheck >/dev/null 2>&1; then
+    printf '%s\n' '[ERROR] wincheck still not found on PATH after bootstrap.' >&2
     return 1
   fi
   return 0
@@ -256,6 +309,16 @@ fi
 if printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "(^|/)(node_modules|\.git|gen)/" >/dev/null 2>&1; then
   # shellcheck disable=SC2086
   printf "%s\n" "$CHECK_FILES" | grep -E "(\.sh$|^\.githooks/pre-commit$)" | grep -vE "(^|/)(node_modules|\.git|gen)/" | xargs -n 50 -P 4 shellcheck -s sh $SHELLCHECK_OPT_ARGS
+fi
+
+# 4b. WinCheck (bootstrapped via _lib/toolchains/win-cmd-rs when nonexistent)
+if printf "%s\n" "$CHECK_FILES" | grep -E "\.(cmd|bat)$" | grep -vE "(^|/)(node_modules|\.git|gen|tests_tmp|cache|build)/" >/dev/null 2>&1; then
+  ensure_wincheck_bootstrapped
+  printf '%s\n' 'Running wincheck...'
+  _wc_excl="${LIBSCRIPT_WINCHECK_EXCLUDE:-CMD1002,CMD2001,CMD2012,CMD2013,CMD3009,CMD4010}"
+  printf "%s\n" "$CHECK_FILES" | grep -E "\.(cmd|bat)$" | grep -vE "(^|/)(node_modules|\.git|gen|tests_tmp|cache|build)/" | while IFS= read -r _wc_f; do
+    [ -f "$_wc_f" ] && printf '%s\n' "$_wc_f"
+  done | xargs -n 80 -P 4 wincheck --exclude "$_wc_excl"
 fi
 
 # 5. Regenerate Markdown Readmes

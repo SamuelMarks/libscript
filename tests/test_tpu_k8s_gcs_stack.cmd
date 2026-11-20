@@ -122,5 +122,5 @@ jq -e ".status == \"ok\"" "%TEST_TMP%\destroy.json" >nul
 if errorlevel 1 ( call :fail_ml "tpu_vm destroy status assertion failed" & exit /b 1 )
 
 rmdir /s /q "%TEST_TMP%" >nul 2>&1
-echo [PASS] All Pillar 3 ML / TPU / Kubernetes / GCS stack tests passed!
+echo [PASS] All Pillar 3 ML / TPU / Kubernetes / GCS stack tests passed^^!
 exit /b 0

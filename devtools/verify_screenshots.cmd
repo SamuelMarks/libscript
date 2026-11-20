@@ -51,6 +51,7 @@ goto :find_root
 
 set "TARGET=all"
 set "CC0_BASE=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments for target component and base screenshot directory.

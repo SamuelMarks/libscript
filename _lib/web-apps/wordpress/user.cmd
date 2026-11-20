@@ -56,6 +56,7 @@ if "%CMD%"=="create" goto do_create
 if "%CMD%"=="set-password" goto do_setpass
 if "%CMD%"=="delete" goto do_delete
 if "%CMD%"=="help" goto show_help
+goto :do_create
 
 :: ## do_create
 :: Creates a new WordPress user account via WP-CLI.
@@ -67,6 +68,7 @@ set "U_EMAIL=%~1"
 shift
 set "U_PASS=WpPass_%U_NAME%_%RANDOM%"
 set "U_ROLE=administrator"
+goto :parse_create_opt
 
 :: ## parse_create_opt
 :: Parses optional flags (--role, --password, --display-name) for user creation.
@@ -95,7 +97,7 @@ shift
 set "U_NAME=%~1"
 shift
 set "U_PASS=%~1"
-if "%U_PASS%"=="" set "U_PASS=WpPass_%U_NAME%_%RANDOM%"
+if "%U_PASS%"=="" set "U_PASS=WpPass_%U_NAME%_!RANDOM!"
 call "!SCRIPT_DIR!\dbshell.cmd" query "UPDATE wp_users SET user_pass = MD5('%U_PASS%') WHERE user_login = '%U_NAME%';" >nul 2>&1
 echo [OK] Password updated for user %U_NAME%
 exit /b 0

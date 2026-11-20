@@ -65,6 +65,7 @@ exit /b !ERRORLEVEL!
 :dispatch_bento_action
 set "ACTION=%~1"
 shift
+goto :parse_bento_args
 
 :: ## parse_bento_args
 :: Iterates through remaining CLI arguments for build/box/register actions.

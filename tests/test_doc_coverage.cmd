@@ -71,5 +71,5 @@ if errorlevel 1 (
 echo [PASS] Doc Coverage 100%% shield rendered and verified.
 
 rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-echo === All Doc Coverage Shield ^& Hook Checks Passed! ===
+echo === All Doc Coverage Shield ^& Hook Checks Passed^^! ===
 exit /b 0

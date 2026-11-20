@@ -48,6 +48,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :detect_python
 
 :: ## detect_python
 :: Checks for compatible Python executable in PATH.
@@ -58,6 +59,7 @@ for /f "tokens=*" %%I in ('where python.exe 2^>nul') do (
     set "FOUND_PY=%%I"
     goto check_py_ver
 )
+REM wincheck disable=CMD3006
 goto detect_node
 
 :: ## check_py_ver
@@ -69,6 +71,7 @@ if defined FOUND_PY (
         echo Detected Python: !FOUND_PY! ^(!PY_VER!^)
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## detect_node
 :: Checks for compatible Node.js executable in PATH.
@@ -77,6 +80,7 @@ for /f "tokens=*" %%I in ('where node.exe 2^>nul') do (
     set "FOUND_NODE=%%I"
     goto check_node_ver
 )
+REM wincheck disable=CMD3006
 goto finish
 
 :: ## check_node_ver
@@ -88,6 +92,7 @@ if defined FOUND_NODE (
         echo Detected Node.js: !FOUND_NODE! ^(!NODE_VER!^)
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## finish
 :: Finalizes runtime detection.

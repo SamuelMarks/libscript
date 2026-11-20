@@ -46,6 +46,7 @@ endlocal & (
     set "STAGE_B_PEAK_HOST_RSS_BYTES=%STAGE_B_PEAK_HOST_RSS_BYTES%"
     exit /b %_sab_rc%
 )
+:: wincheck disable=CMD3005
 
 :: ## gemma_tpu_stage_a_probe
 :: Emits Stage A framework TPU pre-flight probe JSON without modifying target repository modules.
@@ -120,7 +121,7 @@ goto :stage_b_ok
 :: ## stage_b_cpu_fallback
 :: Writes atomic failed_cpu_fallback JSON artifact and exits with code 65 (EX_DATAERR).
 :stage_b_cpu_fallback
-echo [STAGE-B] [CPU-FALLBACK] Backend !_sab_bid! ^(!_sab_subsuite!/!_sab_wload!^) completed with accelerator_fd_opened=!_sab_fd! and peak_tpu_hbm_bytes=!_sab_hbm!! 1>&2
+echo [STAGE-B] [CPU-FALLBACK] Backend !_sab_bid! ^(!_sab_subsuite!/!_sab_wload!^) completed with accelerator_fd_opened=!_sab_fd! and peak_tpu_hbm_bytes=!_sab_hbm!^^! 1>&2
 jq -n --arg suite "!_sab_subsuite!" --arg backend "!_sab_bid!" --arg workload "!_sab_wload!" --argjson fd !_sab_fd! --argjson hbm !_sab_hbm! --argjson duty !_sab_duty! --argjson rss !_sab_rss! "{subsuite: $suite, backend_id: $backend, workload_id: $workload, status: \"failed_cpu_fallback\", telemetry: {accelerator_fd_opened: $fd, peak_tpu_hbm_bytes: $hbm, tpu_duty_cycle_pct: $duty, peak_host_rss_bytes: $rss}}" > "!_sab_out_json!.tmp"
 jq -e . "!_sab_out_json!.tmp" >nul
 move /y "!_sab_out_json!.tmp" "!_sab_out_json!" >nul

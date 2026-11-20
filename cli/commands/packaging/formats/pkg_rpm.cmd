@@ -60,6 +60,7 @@ set "LICENSE_PATH="
 set "OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "OFFLINE=1"
 set "DEPS_COUNT=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses packaging flags and component/version pairs.
@@ -192,7 +193,7 @@ exit /b 0
 :: ## after_args
 :: Populates default component list if none were supplied on the command line.
 :after_args
-if !DEPS_COUNT! equ 0 (
+if "!DEPS_COUNT!" equ "0" (
     for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
         if /I not "%%~nxC"=="_common" (
             for /d %%M in ("%%~fC\*") do (
@@ -210,7 +211,7 @@ call :sanitize_slug "!APP_NAME!"
 set "SAFE_APP=!SLUG_OUT!"
 set "META_DEPENDS="
 
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo set -e
 echo OUT_DIR="!OUT_DIR!"
 echo mkdir -p "$OUT_DIR"
@@ -245,7 +246,7 @@ echo EOF
 echo rpmbuild --define "_topdir $BUILD_DIR" -bb "$BUILD_DIR/SPECS/!META_PKG!.spec"
 echo find "$BUILD_DIR/RPMS" -name "*.rpm" -exec cp {} "$OUT_DIR/" \;
 echo rm -rf "$BUILD_DIR"
-echo printf '%%s\n' "Done!"
+echo printf '%%s\n' "Done^!"
 exit /b 0
 
 :: ## emit_rpm_pkg

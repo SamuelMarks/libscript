@@ -52,12 +52,12 @@ goto :find_root
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 [action]
-    echo Recipe for Eudev (Musl).
+    echo Recipe for Eudev ^(Musl^).
     exit /b 0
 )
 if "%~1"=="-h" (
     echo Usage: %~nx0 [action]
-    echo Recipe for Eudev (Musl).
+    echo Recipe for Eudev ^(Musl^).
     exit /b 0
 )
 

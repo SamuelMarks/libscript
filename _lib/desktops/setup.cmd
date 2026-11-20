@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === Desktop Dispatcher Status (Win32) ===
+    echo === Desktop Dispatcher Status ^(Win32^) ===
     echo Desktop environment configuration executes inside Linux container or VM builder.
     goto end
 )

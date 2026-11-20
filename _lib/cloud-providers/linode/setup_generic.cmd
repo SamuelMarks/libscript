@@ -149,7 +149,7 @@ if /i "!_SUB!"=="ip" (
 set "_IP="
 for /f "tokens=*" %%I in ('linode-cli linodes list --label "!_NODE!" --format ipv4 --text --no-headers 2^>nul') do set "_IP=%%I"
 if /i "!_SUB!"=="ip" (
-    echo !_IP!
+    echo.!_IP!
     exit /b 0
 )
 if /i "!_SUB!"=="exec" (

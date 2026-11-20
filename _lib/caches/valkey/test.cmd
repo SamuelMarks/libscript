@@ -51,13 +51,13 @@ goto :find_root
 :root_found
 
 where valkey-server >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   valkey-server --version
   exit /b 0
 )
 
 where valkey >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   valkey --version
   exit /b 0
 )

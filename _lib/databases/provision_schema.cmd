@@ -61,6 +61,7 @@ set "TENANT_USER="
 set "TENANT_PASS="
 set "CHARSET=utf8mb4"
 set "COLLATION=utf8mb4_unicode_ci"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.

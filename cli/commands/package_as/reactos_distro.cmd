@@ -55,6 +55,7 @@ set "PROFILE=!LIBSCRIPT_ROOT_DIR!\profiles\reactos\desktop-classic-i686.json"
 set "OUTPUT="
 set "SIZE_GIB=8"
 set "SYSROOT="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI options for reactos_distro.cmd.

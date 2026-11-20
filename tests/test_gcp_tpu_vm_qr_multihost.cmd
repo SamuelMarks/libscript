@@ -99,7 +99,7 @@ findstr /I /C:"--worker=all --ssh-flag=-L6006:6006" "!_G_LOG!" >nul || goto :fai
 for /f "usebackq delims=" %%H in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\remote_sync.cmd" compute-hash "!_WDIR!\repo"`) do set "_RH=%%H"
 call "!_T_CLI!" sync-repo node-1 "!_WDIR!\repo" "./workspace" --all-workers
 if errorlevel 1 goto :fail
-> "!_WDIR!\state\sync_hash" echo !_RH!
+> "!_WDIR!\state\sync_hash" echo.!_RH!
 type nul > "!_G_LOG!"
 call "!_T_CLI!" sync-repo node-1 "!_WDIR!\repo" "./workspace" --all-workers
 if errorlevel 1 goto :fail
@@ -123,12 +123,12 @@ call "!_T_CLI!" delete node-1
 if errorlevel 1 goto :fail
 
 rmdir /s /q "!_WDIR!" >nul 2>&1
-echo [PASS] All Windows GCP TPU VM Queued Resource and multi-host tests passed!
+echo [PASS] All Windows GCP TPU VM Queued Resource and multi-host tests passed^^!
 exit /b 0
 
 :: ## fail
 :: Cleans up temporary test directory and exits non-zero on failure.
 :fail
 rmdir /s /q "!_WDIR!" >nul 2>&1
-echo [FAIL] Windows GCP TPU VM Queued Resource test failed! 1>&2
+echo [FAIL] Windows GCP TPU VM Queued Resource test failed^^! 1>&2
 exit /b 1

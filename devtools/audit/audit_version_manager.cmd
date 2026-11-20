@@ -174,10 +174,11 @@ exit /b 0
 :: Summarizes audit errors and exits with appropriate status code.
 :finish_audit
 
+REM wincheck disable=CMD2003
 if !ERRORS! GTR 0 (
     echo [FAIL] Version Manager Contract Audit failed with !ERRORS! violation^(s^) across !AUDITED! components. >&2
     exit /b 1
 )
 
-echo [PASS] All !AUDITED! components strictly adhere to the LibScript Version Manager Contract!
+echo [PASS] All !AUDITED! components strictly adhere to the LibScript Version Manager Contract^^!
 exit /b 0

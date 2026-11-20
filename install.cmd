@@ -73,7 +73,7 @@ echo  LibScript Environment Bootstrap
 echo ========================================
 
 echo To use LibScript, add the following directory to your PATH:
-echo   !LIBSCRIPT_ROOT_DIR!
+echo(  !LIBSCRIPT_ROOT_DIR!
 echo.
 echo Bootstrap complete.
 exit /b 0

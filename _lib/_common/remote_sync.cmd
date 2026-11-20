@@ -86,7 +86,7 @@ exit /b 0
 :: Prints OpenSSH connection and ControlMaster multiplexing options with a short ControlPath.
 :libscript_ssh_mux_opts
 if "%LIBSCRIPT_DISABLE_SSH_MUX%"=="1" (
-    echo !SSH_BASE_OPTS!
+    echo.!SSH_BASE_OPTS!
     exit /b 0
 )
 set "_smo_tmp=%TMPDIR%"
@@ -158,7 +158,7 @@ ssh !SSH_BASE_OPTS! "!_sar_target!" "mkdir -p !_sar_dest!"
 
 where rsync >nul 2>&1
 if not errorlevel 1 (
-    set "_sar_excl_file=%TEMP%\libscript_sar_excl_%RANDOM%.txt"
+    set "_sar_excl_file=%TEMP%\libscript_sar_excl_!RANDOM!.txt"
     git -C "!_sar_src!" rev-parse --is-inside-work-tree >nul 2>&1
     if not errorlevel 1 (
         git -C "!_sar_src!" ls-files --others -i --exclude-standard --directory > "!_sar_excl_file!" 2>nul
@@ -168,7 +168,7 @@ if not errorlevel 1 (
     )
     rsync -avz --delete --filter="P build" --filter="P coverage" --filter="P .coverage" --filter="P .nyc_output" --filter="P composeApp/build" --filter="P cmake-build-debug" --filter="P cmake-build-release" --filter="P cmake-build-relwithdebinfo" --filter="P cmake-build-minsizerel" --filter="P cmake-build-*" --filter="P CMakeFiles" --filter="P CMakeCache.txt" --filter="P node_modules" --filter="P target" --filter="P .venv" --filter="P venv" --filter="P dist" --filter="P out" --filter="P webroot" --filter="P .angular" --filter="P .vite" --filter="P .next" --filter="P .nuxt" --filter="P .turbo" --filter="P .parcel-cache" --filter="P .gradle" --filter="P .kotlin" --filter="P .cache" --filter="P __pycache__" --filter="P .pytest_cache" --filter="P .mypy_cache" --filter="P .ruff_cache" --filter="P .tox" --filter="P .nox" --filter="P .terraform" --filter="P .env" --filter="P .env.secrets" --filter="P .env.libscript" --filter="P .libscript_build.sha256" --filter="P .libscript_src_hash" --filter="P .libscript_py_hash" --filter="P .libscript_kmp_build.sha256" --filter="P data" --filter="P logs" --filter="P *.duckdb" --filter="P *.duckdb.wal" "!_sar_gi_arg!" --exclude=".git" --exclude="build" --exclude="coverage/" --exclude=".coverage" --exclude=".nyc_output/" --exclude="composeApp/build/" --exclude="cmake-build-debug" --exclude="cmake-build-release" --exclude="cmake-build-relwithdebinfo" --exclude="cmake-build-minsizerel" --exclude="cmake-build-*" --exclude="CMakeFiles" --exclude="CMakeCache.txt" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude="dist" --exclude="out" --exclude="webroot" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".gradle" --exclude=".kotlin" --exclude=".cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".pytest_cache" --exclude=".mypy_cache" --exclude=".ruff_cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".DS_Store" --exclude="logs" --exclude="*.log" --exclude="*.duckdb" --exclude="*.duckdb.wal" --exclude=".env.libscript" -e "ssh !SSH_BASE_OPTS!" "!_sar_src!/" "!_sar_target!:!_sar_rsync_dest!"
     if not errorlevel 1 (
-        > "!_sar_hash_file!" echo !_sar_cur_hash!
+        > "!_sar_hash_file!" echo.!_sar_cur_hash!
         exit /b 0
     )
 )
@@ -179,7 +179,7 @@ where tar >nul 2>&1
 if not errorlevel 1 (
     tar -czf - --exclude=".git" --exclude="build" --exclude="coverage" --exclude=".coverage" --exclude=".nyc_output" --exclude="composeApp/build" --exclude="cmake-build-debug" --exclude="cmake-build-release" --exclude="cmake-build-relwithdebinfo" --exclude="cmake-build-minsizerel" --exclude="cmake-build-*" --exclude="CMakeFiles" --exclude="CMakeCache.txt" --exclude="node_modules" --exclude="target" --exclude=".venv" --exclude="venv" --exclude="dist" --exclude="out" --exclude="webroot" --exclude=".angular" --exclude=".vite" --exclude=".next" --exclude=".nuxt" --exclude=".turbo" --exclude=".parcel-cache" --exclude=".gradle" --exclude=".kotlin" --exclude=".cache" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".pytest_cache" --exclude=".mypy_cache" --exclude=".ruff_cache" --exclude=".tox" --exclude=".nox" --exclude=".terraform" --exclude=".DS_Store" --exclude="logs" --exclude="*.log" --exclude="*.duckdb" --exclude="*.duckdb.wal" --exclude=".env.libscript" -C "!_sar_src!" . | ssh !SSH_BASE_OPTS! "!_sar_target!" "tar -xzf - -C !_sar_dest!"
     if not errorlevel 1 (
-        > "!_sar_hash_file!" echo !_sar_cur_hash!
+        > "!_sar_hash_file!" echo.!_sar_cur_hash!
         exit /b 0
     )
     exit /b 1
@@ -187,7 +187,7 @@ if not errorlevel 1 (
 
 scp !SSH_BASE_OPTS! -r "!_sar_src!\*" "!_sar_target!:!_sar_rsync_dest!"
 if not errorlevel 1 (
-    > "!_sar_hash_file!" echo !_sar_cur_hash!
+    > "!_sar_hash_file!" echo.!_sar_cur_hash!
     exit /b 0
 )
 exit /b 1
@@ -235,7 +235,7 @@ ssh !SSH_BASE_OPTS! "!_srr_target!" "mkdir -p !_srr_dest!"
 
 where rsync >nul 2>&1
 if not errorlevel 1 (
-    set "_srr_excl_file=%TEMP%\libscript_srr_excl_%RANDOM%.txt"
+    set "_srr_excl_file=%TEMP%\libscript_srr_excl_!RANDOM!.txt"
     git -C "!_srr_src!" rev-parse --is-inside-work-tree >nul 2>&1
     if not errorlevel 1 (
         git -C "!_srr_src!" ls-files --others -i --exclude-standard --directory > "!_srr_excl_file!" 2>nul
@@ -245,7 +245,7 @@ if not errorlevel 1 (
     )
     rsync -avz --delete --filter="P cache" --filter="P build" --filter="P cmake-build-debug" --filter="P cmake-build-release" --filter="P cmake-build-*" --filter="P target" --filter="P node_modules" --filter="P .venv" --filter="P venv" --filter="P logs" --filter="P tmp" --filter="P tests_tmp" "!_srr_gi_arg!" --exclude=".git" --exclude="cache" --exclude="build" --exclude="cmake-build-debug" --exclude="cmake-build-release" --exclude="cmake-build-*" --exclude="target" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude="logs" --exclude="tmp" --exclude="tests_tmp" --exclude=".vagrant" --exclude="*.iso" --exclude="*.img" --exclude="*.qcow2" --exclude="*.vhdx" --exclude="*.vmdk" --exclude="*.msi" --exclude=".DS_Store" -e "ssh !SSH_BASE_OPTS!" "!_srr_src!/" "!_srr_target!:!_srr_dest!/"
     if not errorlevel 1 (
-        > "!_srr_hash_file!" echo !_srr_cur_hash!
+        > "!_srr_hash_file!" echo.!_srr_cur_hash!
         exit /b 0
     )
 )
@@ -255,7 +255,7 @@ if not errorlevel 1 (
     ssh !SSH_BASE_OPTS! "!_srr_target!" "find !_srr_dest! -mindepth 1 \( -name cache -o -name build -o -name cmake-build-debug -o -name cmake-build-release -o -name 'cmake-build-*' -o -name target -o -name node_modules -o -name .venv -o -name venv -o -name logs -o -name tmp -o -name tests_tmp \) -prune -o -type f -exec rm -f {} + 2>/dev/null || true; find !_srr_dest! -mindepth 1 -depth \( -name cache -o -name build -o -name cmake-build-debug -o -name cmake-build-release -o -name 'cmake-build-*' -o -name target -o -name node_modules -o -name .venv -o -name venv -o -name logs -o -name tmp -o -name tests_tmp \) -prune -o -type d -empty -exec rmdir {} + 2>/dev/null || true"
     tar -czf - --exclude=".git" --exclude="cache" --exclude="build" --exclude="cmake-build-debug" --exclude="cmake-build-release" --exclude="cmake-build-*" --exclude="target" --exclude="node_modules" --exclude=".venv" --exclude="venv" --exclude="logs" --exclude="tmp" --exclude="tests_tmp" --exclude=".vagrant" --exclude="*.iso" --exclude="*.img" --exclude="*.qcow2" --exclude="*.vhdx" --exclude="*.vmdk" --exclude="*.msi" --exclude=".DS_Store" -C "!_srr_src!" . | ssh !SSH_BASE_OPTS! "!_srr_target!" "tar -xzf - -C !_srr_dest!"
     if not errorlevel 1 (
-        > "!_srr_hash_file!" echo !_srr_cur_hash!
+        > "!_srr_hash_file!" echo.!_srr_cur_hash!
         exit /b 0
     )
     exit /b 1
@@ -263,7 +263,7 @@ if not errorlevel 1 (
 
 scp !SSH_BASE_OPTS! -r "!_srr_src!\*" "!_srr_target!:!_srr_dest!/"
 if not errorlevel 1 (
-    > "!_srr_hash_file!" echo !_srr_cur_hash!
+    > "!_srr_hash_file!" echo.!_srr_cur_hash!
     exit /b 0
 )
 exit /b 1
@@ -283,7 +283,7 @@ if exist "!_cth_dir!\libscript.json" (
         if "!_cth_m!"=="nom" set "_cth_m=%%H"
     )
 )
-set "_cth_lock_tmp=%TEMP%\libscript_cth_locks_%RANDOM%.txt"
+set "_cth_lock_tmp=%TEMP%\libscript_cth_locks_!RANDOM!.txt"
 if exist "!_cth_lock_tmp!" del /f /q "!_cth_lock_tmp!" >nul 2>&1
 for %%L in ("!_cth_dir!\package.json" "!_cth_dir!\package-lock.json" "!_cth_dir!\pnpm-lock.yaml" "!_cth_dir!\yarn.lock" "!_cth_dir!\requirements.txt" "!_cth_dir!\requirements-prod.txt" "!_cth_dir!\pyproject.toml" "!_cth_dir!\uv.lock" "!_cth_dir!\angular.json" "!_cth_dir!\vite.config.*") do (
     if exist "%%~fL" type "%%~fL" >> "!_cth_lock_tmp!" 2>nul
@@ -300,7 +300,7 @@ if exist "!_cth_lock_tmp!" (
     )
     del /f /q "!_cth_lock_tmp!" >nul 2>&1
 )
-echo !_cth_git!-!_cth_dirty!-!_cth_m!-!_cth_locks!
+echo.!_cth_git!-!_cth_dirty!-!_cth_m!-!_cth_locks!
 exit /b 0
 
 :: ## libscript_scp_to_remote

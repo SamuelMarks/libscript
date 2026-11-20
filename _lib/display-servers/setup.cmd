@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === Display Server Status (Win32) ===
+    echo === Display Server Status ^(Win32^) ===
     echo Display server configuration executes inside Linux container or VM builder.
     goto end
 )

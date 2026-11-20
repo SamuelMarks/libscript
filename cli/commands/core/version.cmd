@@ -58,7 +58,7 @@ goto :eof
 :: Prints the current LibScript version string.
 :show_version
 if defined LIBSCRIPT_VERSION (
-    echo %LIBSCRIPT_VERSION%
+    echo.%LIBSCRIPT_VERSION%
 ) else (
     echo dev
 )

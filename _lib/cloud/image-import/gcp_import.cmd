@@ -58,6 +58,7 @@ set "IMG_NAME="
 set "OUT_RECEIPT="
 set "DRY_RUN=0"
 if "%IMAGE_IMPORT_DRY_RUN%"=="1" set "DRY_RUN=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for gcp_import.cmd.

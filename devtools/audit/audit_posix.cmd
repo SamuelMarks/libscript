@@ -66,13 +66,13 @@ exit /b 0
 :: Dispatches execution to the PowerShell POSIX and companion parity auditor.
 :main
 where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_posix.ps1" %*
     exit /b !ERRORLEVEL!
 )
 
 where powershell.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_posix.ps1" %*
     exit /b !ERRORLEVEL!
 )
@@ -81,7 +81,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
 )
 where dash >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     set "STACK="
     dash "!SCRIPT_DIR!\audit_posix.sh" %*
     exit /b !ERRORLEVEL!
@@ -104,12 +104,13 @@ for /f "delims=" %%F in ('git -C "!LIBSCRIPT_ROOT_DIR!" ls-files "*.sh" 2^>nul')
     )
     findstr /B /C:"#!/bin/sh" "!LIBSCRIPT_ROOT_DIR!\%%F" >nul 2>&1
     if errorlevel 1 (
-        echo [FAIL] [%%F] Missing strict #!/bin/sh shebang 1>&2
+        echo [FAIL] [%%F] Missing strict #^^!/bin/sh shebang 1>&2
         set /a "_AP_ERRS+=1"
     )
 )
+REM wincheck disable=CMD2003
 if !_AP_ERRS! gtr 0 (
-    echo [ERROR] Native Batch POSIX audit failed with !_AP_ERRS! violation^(s^)! 1>&2
+    echo [ERROR] Native Batch POSIX audit failed with !_AP_ERRS! violation^(s^)^^! 1>&2
     exit /b 1
 )
 echo [PASS] Native Batch POSIX and companion audit passed.

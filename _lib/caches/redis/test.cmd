@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 where redis-server >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   redis-server --version
   exit /b 0
 )

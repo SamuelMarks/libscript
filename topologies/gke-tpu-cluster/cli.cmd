@@ -100,7 +100,7 @@ if "%CLUSTER_NAME%"=="" (
     exit /b 1
 )
 call gcloud container clusters describe "%CLUSTER_NAME%" --zone="%GCP_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     call "%LOG_CMD%" :log_info "GKE TPU cluster %CLUSTER_NAME% already exists in %GCP_ZONE%. Skipping creation."
     exit /b 0
 )

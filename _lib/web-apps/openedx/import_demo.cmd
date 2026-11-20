@@ -66,7 +66,7 @@ if "%OPENEDX_INSTALL_DIR:~-1%"==" " set "OPENEDX_INSTALL_DIR=%OPENEDX_INSTALL_DI
 if "%OPENEDX_INSTALL_DIR:~-1%"=="\" set "OPENEDX_INSTALL_DIR=%OPENEDX_INSTALL_DIR:~0,-1%"
 if not "%OPENEDX_DATA_DIR%"=="" (
     if "%OPENEDX_DATA_DIR:~-1%"==" " set "OPENEDX_DATA_DIR=%OPENEDX_DATA_DIR:~0,-1%"
-    if "%OPENEDX_DATA_DIR:~-1%"=="\" set "OPENEDX_DATA_DIR=%OPENEDX_DATA_DIR:~0,-1%"
+    if "!OPENEDX_DATA_DIR:~-1!"=="\" set "OPENEDX_DATA_DIR=!OPENEDX_DATA_DIR:~0,-1!"
 )
 
 set "PYTHON_BIN=%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe"
@@ -101,6 +101,7 @@ goto show_help
 shift
 set "COURSE_ID=course-v1:edX+DemoX+Demo_Course"
 set "REPO_URL=https://github.com/openedx/edx-demo-course.git"
+goto :parse_course_args
 
 :: ## parse_course_args
 :: Parses command-line arguments for demo course import.

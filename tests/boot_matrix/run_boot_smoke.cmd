@@ -59,7 +59,7 @@ for %%K in (linux freebsd illumos unikraft nanos osv rumprun mirageos) do (
     call "!LIBSCRIPT_ROOT_DIR!\cli\commands\package_as\direct_kernel.cmd" --kernel=%%K --allow-stub "!TMP_BOOT!\sys_%%K" "!TMP_BOOT!\dk_%%K" >nul || exit /b 1
 )
 if exist "!TMP_BOOT!" rmdir /s /q "!TMP_BOOT!" 2>nul
-echo [PASS] Boot smoke descriptors verified across all 8 kernels on Windows!
+echo [PASS] Boot smoke descriptors verified across all 8 kernels on Windows^^!
 exit /b 0
 
 :: ## show_help

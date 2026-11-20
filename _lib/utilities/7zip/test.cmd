@@ -51,6 +51,6 @@ goto :find_root
 :root_found
 
 7z i
-if %errorlevel% neq 0 (
+if "%errorlevel%" neq "0" (
     7za i
 )

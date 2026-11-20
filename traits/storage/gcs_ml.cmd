@@ -42,6 +42,7 @@ set "OUT_DIR="
 set "ZONE_VAL=%TPU_ZONE%"
 set "DRY_RUN=0"
 if "%LIBSCRIPT_DRY_RUN%"=="1" set "DRY_RUN=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for gcs_ml.cmd.

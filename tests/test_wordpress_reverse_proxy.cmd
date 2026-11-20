@@ -56,5 +56,5 @@ if "%LIBSCRIPT_ROOT_DIR%"=="" (
 echo ==> Testing WordPress Reverse Proxy Headers on Windows...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress\setup_generic.cmd" --server-name "wp.example.com" --site-url "https://wp.example.com"
 
-echo ==> Reverse proxy verification succeeded on Windows!
+echo ==> Reverse proxy verification succeeded on Windows^^!
 exit /b 0

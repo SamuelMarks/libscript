@@ -92,7 +92,7 @@ call :assert_contains "%COMPOSE_OFFLINE%" "nc -z 127.0.0.1 7700" "Local utility 
 call :assert_contains "%COMPOSE_OFFLINE%" "openedx/healthcheck.sh" "Local Open edX healthcheck script invocation"
 
 if exist "%TEST_TMP_DIR%" rd /s /q "%TEST_TMP_DIR%"
-echo === All Container Offline Export Tests Passed Successfully! ===
+echo === All Container Offline Export Tests Passed Successfully^^! ===
 exit /b 0
 
 :: ## assert_contains

@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where gcloud >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "C:\GoogleCloudSDK\google-cloud-sdk\bin\gcloud.cmd" goto :create_shims
 if exist "%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto :create_shims
@@ -59,6 +59,7 @@ if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto 
 
 echo Installing Google Cloud SDK via pkg_mgr...
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends Google.CloudSDK
+goto :create_shims
 
 :: ## create_shims
 :: Creates executable command shims in the local binary directory.

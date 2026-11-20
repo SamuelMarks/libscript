@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === VFS Mount Status (Win32) ===
+    echo === VFS Mount Status ^(Win32^) ===
     echo Linux VFS mounts are managed inside Linux container or Vagrant VM builder.
     goto end
 )

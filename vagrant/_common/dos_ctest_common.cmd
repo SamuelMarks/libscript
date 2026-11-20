@@ -209,7 +209,8 @@ set /a "_HH=1!_T_STR:~0,2!-100"
 set /a "_MM=1!_T_STR:~3,2!-100"
 set /a "_SS=1!_T_STR:~6,2!-100"
 set /a "_CC=1!_T_STR:~9,2!-100"
-set /a "%~1=((_HH*3600+_MM*60+_SS)*100)+_CC"
+set /a "_CS_OUT=((_HH*3600+_MM*60+_SS)*100)+_CC"
+set "%~1=!_CS_OUT!"
 exit /b 0
 
 :: ## run_dos_com1_harness
@@ -219,10 +220,13 @@ for %%O in ("!DOS_OUT_JSON!") do set "OUT_PARENT=%%~dpO"
 if not "!OUT_PARENT!"=="" if not exist "!OUT_PARENT!" mkdir "!OUT_PARENT!"
 
 set "_LE_KIB=0"
-        set "_HAS_LE_BIN=0"
-        if not "!DOS_LE_BIN!"=="" if exist "!DOS_LE_BIN!" set "_HAS_LE_BIN=1"
-        if "!_HAS_LE_BIN!"=="1" (
-    for %%B in ("!DOS_LE_BIN!") do set /a "_LE_KIB=%%~zB / 1024"
+set "_HAS_LE_BIN=0"
+if not "!DOS_LE_BIN!"=="" if exist "!DOS_LE_BIN!" set "_HAS_LE_BIN=1"
+if "!_HAS_LE_BIN!"=="1" (
+    for %%B in ("!DOS_LE_BIN!") do (
+        set "_B_SZ=%%~zB"
+        if not "!_B_SZ!"=="" set /a "_LE_KIB=_B_SZ / 1024"
+    )
 )
 
 set "_PLUGIN_NAME=Bento::VagrantMsdos"
@@ -301,8 +305,10 @@ if not "!DOS_DRY_RUN!"=="1" (
             set "_EXIT_RC=!ERRORLEVEL!"
             call :compute_time_cs _T1_CS
             set /a "_DIFF_CS=_T1_CS - _T0_CS"
+            REM wincheck disable=CMD2003
             if !_DIFF_CS! lss 0 set /a "_DIFF_CS+=8640000"
             set /a "_BOOT_MS=_DIFF_CS * 10"
+            REM wincheck disable=CMD2003
             if !_BOOT_MS! leq 0 set "_BOOT_MS=100"
             set "_SYNTHETIC=false"
             set "_PASSED=1"

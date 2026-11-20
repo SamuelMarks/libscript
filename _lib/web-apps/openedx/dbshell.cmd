@@ -99,13 +99,13 @@ where mysql >nul 2>nul
 if not errorlevel 1 (
     if defined MYSQL_PASSWORD set "MYSQL_PWD=%MYSQL_PASSWORD%"
     mysql -h %MYSQL_HOST% -P %MYSQL_PORT% -u %MYSQL_USER% %MYSQL_DATABASE% %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 where mariadb >nul 2>nul
 if not errorlevel 1 (
     if defined MYSQL_PASSWORD set "MYSQL_PWD=%MYSQL_PASSWORD%"
     mariadb -h %MYSQL_HOST% -P %MYSQL_PORT% -u %MYSQL_USER% %MYSQL_DATABASE% %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 echo [ERROR] Neither mysql nor mariadb executable found in PATH. >&2
 exit /b 1
@@ -118,12 +118,12 @@ set "MONGO_URI=mongodb://%MONGODB_HOST%:%MONGODB_PORT%/%MONGODB_DATABASE%"
 where mongosh >nul 2>nul
 if not errorlevel 1 (
     mongosh "%MONGO_URI%" %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 where mongo >nul 2>nul
 if not errorlevel 1 (
     mongo "%MONGO_URI%" %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 echo [ERROR] Neither mongosh nor mongo executable found in PATH. >&2
 exit /b 1
@@ -135,12 +135,12 @@ shift
 where redis-cli >nul 2>nul
 if not errorlevel 1 (
     redis-cli -h %REDIS_HOST% -p %REDIS_PORT% %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 where valkey-cli >nul 2>nul
 if not errorlevel 1 (
     valkey-cli -h %REDIS_HOST% -p %REDIS_PORT% %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 echo [ERROR] Neither redis-cli nor valkey-cli executable found in PATH. >&2
 exit /b 1
@@ -158,13 +158,13 @@ where mysql >nul 2>nul
 if not errorlevel 1 (
     if defined MYSQL_PASSWORD set "MYSQL_PWD=%MYSQL_PASSWORD%"
     mysql -h %MYSQL_HOST% -P %MYSQL_PORT% -u %MYSQL_USER% -e "%SQL_QUERY%" %MYSQL_DATABASE%
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 where mariadb >nul 2>nul
 if not errorlevel 1 (
     if defined MYSQL_PASSWORD set "MYSQL_PWD=%MYSQL_PASSWORD%"
     mariadb -h %MYSQL_HOST% -P %MYSQL_PORT% -u %MYSQL_USER% -e "%SQL_QUERY%" %MYSQL_DATABASE%
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 echo [ERROR] No MySQL client available to execute query. >&2
 exit /b 1

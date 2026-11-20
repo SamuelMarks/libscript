@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === LFS Temp Tools Status (Win32) ===
+    echo === LFS Temp Tools Status ^(Win32^) ===
     echo LFS build stages execute within Linux container or Vagrant VM builder.
     goto end
 )

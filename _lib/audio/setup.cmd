@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === Audio Stack Status (Win32) ===
+    echo === Audio Stack Status ^(Win32^) ===
     echo Audio stack configuration executes inside Linux container or VM builder.
     goto end
 )

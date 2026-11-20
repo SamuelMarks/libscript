@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where mvn >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 set "DEST_DIR=%USERPROFILE%\.local\maven"
 if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"

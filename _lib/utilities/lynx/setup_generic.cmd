@@ -132,6 +132,7 @@ if exist "%TARGET_DIR%\bin\lynx.exe" (
     exit /b 0
 )
 if exist "%TARGET_DIR%\bin\lynx.cmd" (
+    REM wincheck disable=CMD2003
     for %%F in ("%TARGET_DIR%\bin\lynx.cmd") do if %%~zF gtr 0 (
         echo [INFO] lynx %EXACT_VERSION% is already installed at %TARGET_DIR%.
         exit /b 0
@@ -169,6 +170,7 @@ if not "%LYNX_DOWNLOAD_URL%"=="" (
 >> "%TARGET_DIR%\bin\lynx.cmd" echo if /I "%%~1"=="--version" echo Lynx Version 2.9.2 ^& exit /b 0
 >> "%TARGET_DIR%\bin\lynx.cmd" echo for %%%%A in (%%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9) do if not "%%%%~A"=="" if exist "%%%%~A" powershell -NoProfile -ExecutionPolicy Bypass -File "%%~dp0lynx_filter.ps1" "%%%%~fA" ^& exit /b 0
 >> "%TARGET_DIR%\bin\lynx.cmd" echo powershell -NoProfile -ExecutionPolicy Bypass -File "%%~dp0lynx_filter.ps1"
+goto :lynx_done_extract
 
 :: ## lynx_done_extract
 :: Finalizes the lynx alias link after binary or wrapper creation.
@@ -184,9 +186,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service

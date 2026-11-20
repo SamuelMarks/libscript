@@ -57,7 +57,7 @@ if exist "%LIBSCRIPT_DATA_DIR%\.k8s_encryption_key" (
   rem Relying on pseudo-random generation for batch or a dummy string for pure batch.
   set ENCRYPTION_KEY=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
   if not exist "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"
-  echo !ENCRYPTION_KEY! > "%LIBSCRIPT_DATA_DIR%\.k8s_encryption_key"
+  echo.!ENCRYPTION_KEY! > "%LIBSCRIPT_DATA_DIR%\.k8s_encryption_key"
 )
 
 rem Use canonical envsubst_safe.cmd and remote_sync.cmd abstractions

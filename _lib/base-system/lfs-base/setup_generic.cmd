@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === LFS Base System Status (Win32) ===
+    echo === LFS Base System Status ^(Win32^) ===
     echo LFS rootfs assembly executes inside Linux container or Vagrant VM builder.
     goto end
 )

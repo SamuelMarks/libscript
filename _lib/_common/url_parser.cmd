@@ -136,7 +136,7 @@ exit /b 0
 call :libscript_url_parser "%~1"
 set "repo=!protocol!!host!"
 set "branch=%~2"
-echo !repo!
+echo.!repo!
 exit /b 0
 
 :: ## export_out

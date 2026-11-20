@@ -62,5 +62,5 @@ for %%P in (freebsd linux macos windows sunos) do (
     echo   "overall_status": "PASS"
     echo }
 ) > "!LIBSCRIPT_ROOT_DIR!\tests_tmp\reactos_matrix_summary.json"
-echo [OK]       All 5 platforms verified successfully for ReactOS!
+echo [OK]       All 5 platforms verified successfully for ReactOS^^!
 exit /b 0

@@ -82,7 +82,7 @@ if exist "%STAMP_FILE%" if exist "%OUT_VMDK%" (
 
 echo [PACKAGE]  Exporting FreeBSD VMDK: %OUT_VMDK%...
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     qemu-img convert -O vmdk -o subformat=streamOptimized "%INPUT%" "%OUT_VMDK%"
 ) else (
     echo [WARN]     qemu-img not found, writing placeholder file...

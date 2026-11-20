@@ -60,6 +60,7 @@ set "LICENSE_PATH="
 set "OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "OFFLINE=1"
 set "DEPS_COUNT=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses packaging flags and component/version pairs.
@@ -192,7 +193,7 @@ exit /b 0
 :: ## after_args
 :: Populates default component list if none were supplied on the command line.
 :after_args
-if !DEPS_COUNT! equ 0 (
+if "!DEPS_COUNT!" equ "0" (
     for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
         if /I not "%%~nxC"=="_common" (
             for /d %%M in ("%%~fC\*") do (
@@ -210,7 +211,7 @@ call :sanitize_slug "!APP_NAME!"
 set "SAFE_APP=!SLUG_OUT!"
 set "META_DEPENDS="
 
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo set -e
 echo OUT_DIR="!OUT_DIR!"
 echo mkdir -p "$OUT_DIR"
@@ -236,7 +237,7 @@ echo Homepage: !APP_URL!
 echo EOF
 echo dpkg-deb --root-owner-group --build "$BUILD_DIR" "$OUT_DIR/!META_PKG!_!APP_VERSION!_all.deb"
 echo rm -rf "$BUILD_DIR"
-echo printf '%%s\n' "Done!"
+echo printf '%%s\n' "Done^!"
 exit /b 0
 
 :: ## emit_deb_pkg
@@ -269,7 +270,7 @@ echo Description: !APP_NAME! deployment - !PKG!
 echo Homepage: !APP_URL!
 echo EOF
 echo cat ^<^< 'EOF' ^> "$BUILD_DIR/DEBIAN/postinst"
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo set -e
 echo if [ "$1" = "configure" ]; then
 echo   if command -v libscript.sh ^>/dev/null; then libscript.sh install-service !PKG! !VER!; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript ^&^& ./libscript.sh install-service !PKG! !VER!; fi
@@ -277,7 +278,7 @@ echo fi
 echo EOF
 echo chmod 0755 "$BUILD_DIR/DEBIAN/postinst"
 echo cat ^<^< 'EOF' ^> "$BUILD_DIR/DEBIAN/prerm"
-echo #!/bin/sh
+echo #^^!/bin/sh
 echo set -e
 echo if [ "$1" = "purge" ] ^|^| [ "$1" = "remove" ]; then
 echo   if command -v libscript.sh ^>/dev/null; then libscript.sh uninstall !PKG!; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript ^&^& ./libscript.sh uninstall !PKG!; fi

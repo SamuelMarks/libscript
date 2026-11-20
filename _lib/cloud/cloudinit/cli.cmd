@@ -52,6 +52,7 @@ goto :find_root
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.

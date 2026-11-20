@@ -77,13 +77,13 @@ if not exist "%REPO_ROOT%\tests_tmp" mkdir "%REPO_ROOT%\tests_tmp"
 echo [VAGRANT-MATRIX] Starting Vagrant Multi-Platform Verification on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "%SCRIPT_DIR%\test_live_installer_matrix.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "%SCRIPT_DIR%\test_live_installer_matrix.sh" %*
     exit /b !errorlevel!
 )

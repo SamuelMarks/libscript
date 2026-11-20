@@ -62,11 +62,11 @@ set "BAD_IP=192.0.2.254"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_logical_db.cmd" --host "!BAD_IP!" --port 3306 --db-name testdb > "%TEMP%\test_remote_db_failure.out" 2>&1
 
 findstr /c:"Attempting creation, but will skip gracefully on permission denied" "%TEMP%\test_remote_db_failure.out" >nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Script did not attempt graceful fallback on bad remote IP!
+if "%ERRORLEVEL%" NEQ "0" (
+    echo [ERROR] Script did not attempt graceful fallback on bad remote IP^^!
     type "%TEMP%\test_remote_db_failure.out"
     exit /b 1
 )
 
-echo [PASS] Bad remote IP safely bypassed without crashing!
+echo [PASS] Bad remote IP safely bypassed without crashing^^!
 exit /b 0

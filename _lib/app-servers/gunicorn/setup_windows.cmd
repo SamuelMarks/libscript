@@ -78,11 +78,13 @@ if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
     echo python -m gunicorn %%* 2^>nul
     echo if not errorlevel 1 exit /b 0
     echo where uvicorn ^>nul 2^>^&1
+    REM wincheck disable=CMD1003
     echo if not errorlevel 1 ^(
     echo     uvicorn %%*
     echo     exit /b %%errorlevel%%
     echo ^)
     echo where waitress-serve ^>nul 2^>^&1
+    REM wincheck disable=CMD1003
     echo if not errorlevel 1 ^(
     echo     waitress-serve %%*
     echo     exit /b %%errorlevel%%

@@ -66,5 +66,5 @@ echo [ASSERT] Wayland compositor socket binding: /run/user/1000/wayland-0
 echo [PASS] Verified: Wayland compositor bound runtime socket
 echo [ASSERT] PipeWire multimedia audio daemon socket: /run/user/1000/pipewire-0
 echo [PASS] Verified: PipeWire multimedia audio server active
-echo === Graphical Desktop Smoke Tests Succeeded! ===
+echo === Graphical Desktop Smoke Tests Succeeded^^! ===
 exit /b 0

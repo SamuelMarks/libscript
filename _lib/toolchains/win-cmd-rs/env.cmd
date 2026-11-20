@@ -59,15 +59,21 @@ if "%WIN_CMD_RS_VERSION%"=="" (
     set "WIN_CMD_RS_VERSION=latest"
 )
 
-set "_CAND_P=%LIBSCRIPT_HOME%\win-cmd-rs\%WIN_CMD_RS_VERSION%\bin"
+set "_NORM_WCR_VER=%WIN_CMD_RS_VERSION%"
+if /i "!_NORM_WCR_VER:~0,1!"=="v" (
+    if /i not "!_NORM_WCR_VER!"=="latest" set "_NORM_WCR_VER=!_NORM_WCR_VER:~1!"
+)
+
+set "_CAND_P=%LIBSCRIPT_HOME%\win-cmd-rs\!_NORM_WCR_VER!\bin"
+if not exist "!_CAND_P!" (
+    if exist "%LIBSCRIPT_HOME%\win-cmd-rs\default\bin" (
+        set "_CAND_P=%LIBSCRIPT_HOME%\win-cmd-rs\default\bin"
+    )
+)
 echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
 if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "win-cmd-rs" "%WIN_CMD_RS_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "win-cmd-rs" "!_NORM_WCR_VER!"
 
-endlocal & (
-    set "WIN_CMD_RS_VERSION=%WIN_CMD_RS_VERSION%"
-    set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%"
-    set "PATH=%PATH%"
-)
+endlocal & set "WIN_CMD_RS_VERSION=%WIN_CMD_RS_VERSION%" & set "LIBSCRIPT_HOME=%LIBSCRIPT_HOME%" & set "PATH=%PATH%"
 exit /b 0

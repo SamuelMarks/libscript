@@ -60,6 +60,7 @@ set "LICENSE_PATH="
 set "OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "OFFLINE=1"
 set "DEPS_COUNT=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses packaging flags and component/version pairs.
@@ -192,7 +193,7 @@ exit /b 0
 :: ## after_args
 :: Populates default component list if none were supplied on the command line.
 :after_args
-if !DEPS_COUNT! equ 0 (
+if "!DEPS_COUNT!" equ "0" (
     for /d %%C in ("!LIBSCRIPT_ROOT_DIR!\_lib\*") do (
         if /I not "%%~nxC"=="_common" (
             for /d %%M in ("%%~fC\*") do (
@@ -239,7 +240,7 @@ if not exist "!COMP_DIR!\root\opt\libscript" mkdir "!COMP_DIR!\root\opt\libscrip
 if not exist "!COMP_DIR!\scripts" mkdir "!COMP_DIR!\scripts"
 
 (
-    echo #!/bin/sh
+    echo #^^!/bin/sh
     echo set -feu
     echo export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     echo if command -v libscript.sh ^>/dev/null 2^>^&1; then
@@ -250,7 +251,7 @@ if not exist "!COMP_DIR!\scripts" mkdir "!COMP_DIR!\scripts"
 ) > "!COMP_DIR!\scripts\postinstall"
 
 (
-    echo #!/bin/sh
+    echo #^^!/bin/sh
     echo set -feu
     echo sudo libscript.sh uninstall "!PKG!"
 ) > "!COMP_DIR!\root\opt\libscript\uninstall_!PKG!.command"

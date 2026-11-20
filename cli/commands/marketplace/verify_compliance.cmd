@@ -55,6 +55,7 @@ goto :find_root
 set "OFFER_FILE="
 set "SYSROOT_SCAN_DIR="
 set "OUT_SBOM="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for verify_compliance.cmd.

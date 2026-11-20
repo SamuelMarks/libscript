@@ -1209,6 +1209,7 @@ unzip	libscript	unzip
 wc	libscript	freebsd-usr-bin
 wget	libscript	wget
 win-cmd-rs	libscript	win-cmd-rs
+wincheck	libscript	win-cmd-rs
 wincmd	libscript	win-cmd-rs
 xargs	libscript	freebsd-usr-bin
 xz	libscript	xz

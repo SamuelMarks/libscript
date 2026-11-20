@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where pulseaudio >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     pulseaudio --version
     exit /b 0
 )

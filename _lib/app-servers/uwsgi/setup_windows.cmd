@@ -67,6 +67,7 @@ if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
     echo     exit /b 0
     echo ^)
     echo where uwsgi.exe ^>nul 2^>^&1
+    REM wincheck disable=CMD1003
     echo if not errorlevel 1 ^(
     echo     uwsgi.exe %%*
     echo     exit /b %%errorlevel%%

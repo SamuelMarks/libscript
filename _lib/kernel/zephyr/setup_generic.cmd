@@ -119,5 +119,5 @@ exit /b !errorlevel!
 :: ## action_other
 :: Delegates generic service/uninstall actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "zephyr" "%ACTION%" "%ZEPHYR_VERSION%" "libscript_native" "" "" "" "\"%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!\bin\zephyr-env-check.cmd\"" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "zephyr" "%ACTION%" "%ZEPHYR_VERSION%" "libscript_native" "" "" "" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!\bin\zephyr-env-check.cmd" "%LIBSCRIPT_HOME%\zephyr\!EXACT_VERSION!"
 exit /b !errorlevel!

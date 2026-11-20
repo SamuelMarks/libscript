@@ -72,7 +72,7 @@ exit /b 0
 set "ROOT_DIR=%~dp0..\.."
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
+if "%ERRORLEVEL%" NEQ "0" (
     echo [ERROR] PowerShell not found. Cannot audit windows components.
     exit /b 1
 )

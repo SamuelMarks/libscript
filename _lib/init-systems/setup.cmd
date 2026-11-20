@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === Init Dispatcher Status (Win32) ===
+    echo === Init Dispatcher Status ^(Win32^) ===
     echo Init supervisor configuration executes inside Linux container or VM builder.
     goto end
 )

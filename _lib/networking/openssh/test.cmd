@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where ssh >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     ssh -V
     exit /b 0
 )

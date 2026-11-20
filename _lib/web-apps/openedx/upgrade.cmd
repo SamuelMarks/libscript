@@ -90,6 +90,7 @@ goto show_help
 shift
 set "FROM_REL=current"
 set "TO_REL=release/verawood.1"
+goto :parse_upgrade_args
 
 :: ## parse_upgrade_args
 :: Parses command-line arguments for the release upgrade pipeline.
@@ -113,7 +114,7 @@ exit /b 1
 :: ## run_upgrade_pipeline
 :: Executes complete release upgrade workflow across all tiers.
 :run_upgrade_pipeline
-echo [INFO] === Commencing Open edX Upgrade Pipeline (%FROM_REL% -> %TO_REL%) ===
+echo [INFO] === Commencing Open edX Upgrade Pipeline (%FROM_REL% -^> %TO_REL%) ===
 
 set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%\codebase"
 if not exist "%CODEBASE_DIR%" set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%"

@@ -49,10 +49,10 @@ goto :find_root
 :root_found
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
+if "%ERRORLEVEL%" NEQ "0" (
     echo [ERROR] PowerShell not found. Cannot configure Odoo on Windows.
     exit /b 1
 )
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
-if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+if "!ERRORLEVEL!" NEQ "0" exit /b !ERRORLEVEL!

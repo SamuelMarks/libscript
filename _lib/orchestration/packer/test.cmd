@@ -57,7 +57,7 @@ for /d %%P in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\HashiCorp.Packer*") do 
 )
 
 where packer >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     packer --version
     exit /b 0
 )

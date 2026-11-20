@@ -87,7 +87,7 @@ echo [DESKTOP]  Configuring desktop environment: %DESKTOP%...
 
 if "%DESKTOP%"=="xfce4" (
     (
-        echo #!/bin/sh
+        echo #^^!/bin/sh
         echo exec startxfce4
     ) > "%USER_HOME%\.xinitrc"
 )

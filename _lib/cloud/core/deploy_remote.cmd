@@ -75,6 +75,7 @@ set "SHARED_DB="
 if "%FORCE_REINSTALL%"=="" set "FORCE_REINSTALL=0"
 if "%FORCE_REBUILD%"=="" set "FORCE_REBUILD=0"
 if "%DRY_RUN_MODE%"=="" set "DRY_RUN_MODE=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -124,6 +125,7 @@ set "REMAINING_PATHS=!APPS_PATHS!"
 set "REMAINING_DOMAINS=!APPS_DOMAINS!"
 set "HEALTH_APPS="
 set "REPORT_COUNT=0"
+goto :loop_apps
 
 :: ## loop_apps
 :: Iterates over all application definitions in the deployment topology.
@@ -239,7 +241,7 @@ echo +----------------------------+--------------------------------+------------
 echo ^| Application                ^| DNS / Public Endpoint          ^| Sync Status       ^| Healthcheck      ^|
 echo +----------------------------+--------------------------------+-------------------+------------------+
 for /L %%I in (1,1,!REPORT_COUNT!) do (
-    echo !REPORT_ROW_%%I!
+    echo.!REPORT_ROW_%%I!
 )
 echo +----------------------------+--------------------------------+-------------------+------------------+
 exit /b 0
@@ -265,7 +267,7 @@ set "_calc_hash="
 if exist "!tgt_dir!\.git" (
     set "_dr_git=nogit"
     for /f %%H in ('git -C "!tgt_dir!" rev-parse HEAD 2^>nul') do set "_dr_git=%%H"
-    set "_dr_tmp=%TEMP%\libscript_dr_chk_%RANDOM%.txt"
+    set "_dr_tmp=%TEMP%\libscript_dr_chk_!RANDOM!.txt"
     git -C "!tgt_dir!" status --porcelain > "!_dr_tmp!" 2>nul
     git -C "!tgt_dir!" diff HEAD >> "!_dr_tmp!" 2>nul
     for /f "delims=" %%u in ('git -C "!tgt_dir!" ls-files --others --exclude-standard 2^>nul') do (
@@ -299,8 +301,11 @@ if "!_calc_hash!"=="" (
     )
 )
 if "!_calc_hash!"=="" (
-    set /a _dir_bytes=0
-    for %%F in ("!tgt_dir!\*") do set /a _dir_bytes+=%%~zF 2>nul
+    set /a "_dir_bytes=0"
+    for %%F in ("!tgt_dir!\*") do (
+        set "_f_sz=%%~zF"
+        if not "!_f_sz!"=="" set /a "_dir_bytes+=_f_sz" 2>nul
+    )
     set "_calc_hash=dir-size-!_dir_bytes!"
 )
 set "%~2=!_calc_hash!"
@@ -317,7 +322,7 @@ if "!needs_db!"=="1" (
         set "safe_db_name=!aname:-=_!"
         echo [INFO] Ensuring DB !safe_db_name! exists on !TARGET_HOST!...
         ssh "!TARGET_HOST!" "if [ -f $HOME/libscript/_lib/databases/postgres/env.sh ]; then STACK='' SCRIPT_NAME=$HOME/libscript/_lib/databases/postgres/env.sh . $HOME/libscript/_lib/databases/postgres/env.sh >/dev/null 2>&1 || true; fi; $HOME/libscript/_lib/databases/provision_schema.sh --engine postgres --host 127.0.0.1 --port 5432 --admin-user postgres --schema !safe_db_name! --user postgres --password postgres >/dev/null 2>&1 || createdb !safe_db_name! 2>/dev/null || true"
-        ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -v '^DATABASE_URL=' $HOME/apps/!aname!/.env > $HOME/apps/!aname!/.env.tmp 2>/dev/null || true; printf 'DATABASE_URL=postgres://localhost:5432/%s\n' '!safe_db_name!' >> $HOME/apps/!aname!/.env.tmp && mv $HOME/apps/!aname!/.env.tmp $HOME/apps/!aname!/.env"
+        ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -v '^DATABASE_URL=' $HOME/apps/!aname!/.env > $HOME/apps/!aname!/.env.tmp 2>/dev/null || true; printf 'DATABASE_URL=postgres://localhost:5432/%%s\n' '!safe_db_name!' >> $HOME/apps/!aname!/.env.tmp && mv $HOME/apps/!aname!/.env.tmp $HOME/apps/!aname!/.env"
     )
 )
 exit /b 0

@@ -56,7 +56,7 @@ for %%J in (metadata.json exp0_coverage.json exp0_bug4_ablation.json exp1_compil
 if not "!PAPER_DIR!"=="" if exist "!PAPER_DIR!\edgecpp_backends.tex" (
     findstr /R /C:"\\tbd" /C:"???" "!PAPER_DIR!\edgecpp_backends.tex" >nul 2>&1
     if not errorlevel 1 (
-        echo [ERROR] [E7] Unresolved \tbd or ??? placeholder found in edgecpp_backends.tex! 1>&2
+        echo [ERROR] [E7] Unresolved \tbd or ??? placeholder found in edgecpp_backends.tex^^! 1>&2
         exit /b 1
     )
 )

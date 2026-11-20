@@ -137,7 +137,7 @@ if not "!FAILURES!"=="0" (
     exit /b 1
 )
 
-echo [SUCCESS] All !CHECKS! Windows behavioral checks passed!
+echo [SUCCESS] All !CHECKS! Windows behavioral checks passed^^!
 exit /b 0
 
 :: ## pass_check

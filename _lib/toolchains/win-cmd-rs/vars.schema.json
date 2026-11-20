@@ -2,32 +2,50 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/win-cmd-rs/vars.schema.json",
   "title": "win-cmd-rs variables",
-  "description": "Configuration variables for win-cmd-rs",
+  "description": "Configuration variables for win-cmd-rs (wincmd interpreter and wincheck batch static analyzer).",
   "type": "object",
   "properties": {
     "WIN_CMD_RS_INSTALL_METHOD": {
       "type": "string",
-      "description": "How to install win-cmd-rs. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, and 'from-source' compiles from source.",
-      "enum": ["libscript_native", "system", "from-source"],
-      "default": "from-source"
+      "description": "How to install win-cmd-rs. 'libscript_native' downloads prebuilt GitHub Release binaries into isolated version directories, 'system' uses the OS package manager, and 'from-source' compiles with Cargo.",
+      "enum": [
+        "libscript_native",
+        "system",
+        "from-source",
+        "source",
+        "cargo",
+        "brew",
+        "nix",
+        "guix",
+        "spack",
+        "winget",
+        "choco",
+        "scoop"
+      ],
+      "default": "libscript_native"
     },
     "WIN_CMD_RS_VERSION": {
-      "description": "Specific version of win-cmd-rs to install.",
+      "description": "Specific version or alias of win-cmd-rs to install.",
       "type": "string",
       "default": "latest",
-      "version_aliases": ["latest", "lts"]
+      "version_aliases": ["latest", "stable", "lts", "0.0.1"]
     },
     "WIN_CMD_RS_DOWNLOAD_URL": {
       "type": "string",
-      "description": "Override URL for downloading win-cmd-rs binary or archive artifacts."
+      "description": "Override URL or template ({VERSION}, {RUST_TARGET}, {EXT}) for downloading win-cmd-rs release archives."
     },
     "WIN_CMD_RS_RELEASES_URL": {
       "type": "string",
-      "description": "Override URL for querying win-cmd-rs available remote releases."
+      "description": "Override URL for querying available remote win-cmd-rs GitHub releases.",
+      "default": "https://api.github.com/repos/SamuelMarks/win-cmd-rs/releases/latest"
+    },
+    "WIN_CMD_RS_CHECKSUM": {
+      "type": "string",
+      "description": "Optional explicit SHA-256 digest override for verifying custom win-cmd-rs release archives."
     },
     "WIN_CMD_RS_REPO_DIR": {
       "type": "string",
-      "description": "Optional local checkout path for win-cmd-rs.",
+      "description": "Optional local checkout path for compiling win-cmd-rs offline when using the from-source method.",
       "default": ""
     }
   }

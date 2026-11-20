@@ -70,7 +70,7 @@ if exist "%OUT_FILE%" (
 echo [HYPERV-IMG] Synthesizing Hyper-V %GEN% appliance: %OUT_FILE%...
 
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     if /i "%GEN%"=="gen1" (
         qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "%INPUT%" "%OUT_FILE%"
     ) else (

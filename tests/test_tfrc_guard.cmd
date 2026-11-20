@@ -67,6 +67,7 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" create test-
 set "_rc=!ERRORLEVEL!"
 popd
 if not "!_rc!"=="78" goto :fail
+REM wincheck disable=CMD2003
 for %%S in ("!GCLOUD_LOG!") do if %%~zS gtr 0 goto :fail
 
 :: 2. Project mismatch -> exits 78
@@ -138,12 +139,12 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\ml-training\_common\tfrc_guard.cmd" :libscript_t
 if not errorlevel 1 goto :fail
 
 rmdir /s /q "!_WDIR!" >nul 2>&1
-echo [PASS] All Windows TFRC zero-cost guardrail tests passed!
+echo [PASS] All Windows TFRC zero-cost guardrail tests passed^^!
 exit /b 0
 
 :: ## fail
 :: Cleans up temporary test workspace and exits with status 1 on assertion failure.
 :fail
 rmdir /s /q "!_WDIR!" >nul 2>&1
-echo [FAIL] Windows TFRC zero-cost guardrail test failed! 1>&2
+echo [FAIL] Windows TFRC zero-cost guardrail test failed^^! 1>&2
 exit /b 1

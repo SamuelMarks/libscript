@@ -56,6 +56,7 @@ if "%TARGET_SPEC%"=="" (
 shift
 
 set "OUTPUT_DIR="
+goto :arg_loop
 :: ## arg_loop
 :: Parses command-line arguments and populates configuration variables.
 :arg_loop
@@ -205,7 +206,7 @@ set "TMP_ICO_AWK=%TEMP%\ls_ico_%RANDOM%.awk"
 "!AWK_BIN!" !AWK_BIN_FLAG! -v pr_r=!PR_R! -v pr_g=!PR_G! -v pr_b=!PR_B! -v dk_r=!DK_R! -v dk_g=!DK_G! -v dk_b=!DK_B! -f "!TMP_ICO_AWK!" > "!OUTPUT_DIR!\app.ico"
 set "_ICO_RC=!ERRORLEVEL!"
 del /f /q "!TMP_ICO_AWK!" >nul 2>&1
-if !_ICO_RC! neq 0 ( echo [ERROR] Failed to synthesize app.ico >&2 & exit /b 1 )
+if "!_ICO_RC!" neq "0" ( echo [ERROR] Failed to synthesize app.ico >&2 & exit /b 1 )
 echo [OK] Generated multi-res icon: !OUTPUT_DIR!\app.ico
 
 (

@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where mix >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 echo Installing Mix via LibScript elixir component...
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install elixir latest

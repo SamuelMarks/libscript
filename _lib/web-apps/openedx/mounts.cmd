@@ -90,10 +90,10 @@ if not exist "%CONF_DIR%" mkdir "%CONF_DIR%"
 if exist "%MOUNTS_FILE%" (
     findstr /x /c:"%SPEC%" "%MOUNTS_FILE%" >nul 2>&1
     if errorlevel 1 (
-        echo %SPEC%>>"%MOUNTS_FILE%"
+        echo.%SPEC%>>"%MOUNTS_FILE%"
     )
 ) else (
-    echo %SPEC%>"%MOUNTS_FILE%"
+    echo.%SPEC%>"%MOUNTS_FILE%"
 )
 echo [PASS] Added mount: %SPEC%
 exit /b 0

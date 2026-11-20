@@ -64,7 +64,7 @@ for /f "usebackq tokens=*" %%A in ("%TODO_FILE%") do (
     set "LINE=%%A"
     if "!LINE:~0,6!"=="- [ ] " (
         set "ITEM=!LINE:~6!"
-        echo !ITEM! | findstr /c:"**`_lib/" >nul
+        echo.!ITEM! | findstr /c:"**`_lib/" >nul
         if not errorlevel 1 (
             for /f "tokens=2 delims=/" %%B in ("!ITEM!") do (
                 for /f "tokens=1 delims=`*" %%C in ("%%B") do (
@@ -74,9 +74,11 @@ for /f "usebackq tokens=*" %%A in ("%TODO_FILE%") do (
         )
         set "BATCH=!BATCH! !ITEM!"
         set /a COUNT+=1
+        REM wincheck disable=CMD2003
         if !COUNT! GEQ 5 goto :done
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## done
 :: Completes loop iteration and continues post-processing.
@@ -84,7 +86,7 @@ for /f "usebackq tokens=*" %%A in ("%TODO_FILE%") do (
 if not "!BATCH!"=="" (
     REM Trim leading space
     set "BATCH=!BATCH:~1!"
-    echo !BATCH!
+    echo.!BATCH!
 )
 endlocal
 goto :eof

@@ -64,8 +64,8 @@ exit /b 0
 set "_TUI_TITLE=%~1"
 set "_TUI_TEXT=%~2"
 echo. >&2
-echo === !_TUI_TITLE! === >&2
-echo !_TUI_TEXT! >&2
+echo(=== !_TUI_TITLE! === >&2
+echo.!_TUI_TEXT! >&2
 echo. >&2
 set /p "_TUI_DUMMY=Press ENTER to continue..." <con >con 2>&1
 exit /b 0
@@ -78,8 +78,9 @@ set "_TUI_TEXT=%~2"
 shift
 shift
 echo. >&2
-echo === !_TUI_TITLE! === >&2
-echo !_TUI_TEXT! >&2
+echo(=== !_TUI_TITLE! === >&2
+echo.!_TUI_TEXT! >&2
+goto :tui_menu_loop
 :: ## tui_menu_loop
 :: Iterates through menu tag/description pairs and prints each choice.
 :tui_menu_loop
@@ -93,7 +94,7 @@ goto :tui_menu_loop
 :tui_menu_prompt
 set "_TUI_CHOICE="
 set /p "_TUI_CHOICE=Select option: "
-echo !_TUI_CHOICE!
+echo.!_TUI_CHOICE!
 exit /b 0
 
 :: ## tui_input
@@ -105,6 +106,6 @@ set "_TUI_DEFAULT=%~3"
 set "_TUI_VAL="
 set /p "_TUI_VAL=!_TUI_PROMPT! [!_TUI_DEFAULT!]: "
 if "!_TUI_VAL!"=="" set "_TUI_VAL=!_TUI_DEFAULT!"
-echo !_TUI_VAL!
+echo.!_TUI_VAL!
 exit /b 0
 

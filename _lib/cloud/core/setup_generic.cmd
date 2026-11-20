@@ -56,27 +56,27 @@ if /i "%action%"=="status" goto handle_list_managed
 if /i "%action%"=="diff" goto handle_diff
 if /i "%action%"=="backup" (
     call "%~dp0backup_cloud.cmd" %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="restore" (
     call "%~dp0restore_cloud.cmd" %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="dashboard" (
     call "%~dp0dashboard.cmd" dashboard %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="cost" (
     call "%~dp0dashboard.cmd" cost %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="usage" (
     call "%~dp0dashboard.cmd" usage %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="logs-aggregate" (
     call "%~dp0dashboard.cmd" logs-aggregate %*
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%action%"=="aws" goto :route_provider
 if /i "%action%"=="azure" goto :route_provider
@@ -103,7 +103,7 @@ exit /b %errorlevel%
 if /i "%~1"=="storage" (
     set "LIBSCRIPT_CLOUD=%action%"
     call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\storage\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 set "CLI_PATH=!LIBSCRIPT_ROOT_DIR!\_lib\cloud-providers\%action%\cli.cmd"
 if not exist "%CLI_PATH%" (

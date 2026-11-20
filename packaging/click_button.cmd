@@ -48,6 +48,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :setup_target
 
 :: ## setup_target
 :: Configures target button text and log location.
@@ -61,6 +62,7 @@ if not exist "%TEMP%" set "LOG_FILE=!SCRIPT_DIR!\click.log"
 if not "%~1"=="" (
   echo %~1> "%TEMP%\target_btn.txt"
 )
+:: wincheck disable=CMD3005
 
 :: ## run_click
 :: Executes the click automation via PowerShell Win32 API bridge.

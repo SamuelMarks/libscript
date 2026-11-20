@@ -68,5 +68,5 @@ echo [INFO] Executing Windows Setup Pass 2...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress\setup_generic.cmd" --wwwroot "%TMP_DIR%" --server-name "wordpress.local"
 
 rd /s /q "%TMP_DIR%" >nul 2>&1
-echo ==> Two-pass idempotency verification succeeded on Windows!
+echo ==> Two-pass idempotency verification succeeded on Windows^^!
 exit /b 0

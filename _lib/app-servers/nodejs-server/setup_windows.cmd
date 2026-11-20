@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where node >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo Node.js server environment verified.
     exit /b 0
 )

@@ -92,7 +92,7 @@ goto :emit_home
 :: ## emit_home
 :: Exports DOS83_HOME across endlocal scope and echoes the resolved path.
 :emit_home
-echo !_OUT_H!
+echo.!_OUT_H!
 endlocal & set "DOS83_HOME=%_OUT_H%"
 exit /b 0
 
@@ -128,7 +128,7 @@ goto :emit_comp
 :: ## emit_comp
 :: Exports DOS83_COMP across endlocal scope and echoes the mapped directory name.
 :emit_comp
-echo !_OUT_C!
+echo.!_OUT_C!
 endlocal & set "DOS83_COMP=%_OUT_C%"
 exit /b 0
 
@@ -152,7 +152,7 @@ goto :emit_ver
 :: ## emit_ver
 :: Exports DOS83_VER across endlocal scope and echoes the normalized version directory name.
 :emit_ver
-echo !_OUT_V!
+echo.!_OUT_V!
 endlocal & set "DOS83_VER=%_OUT_V%"
 exit /b 0
 

@@ -71,7 +71,7 @@ call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_home >nul
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_comp "!_gvd_in_c!" >nul
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_ver "!_gvd_in_v!" >nul
 set "LIBSCRIPT_VERSION_DIR=!DOS83_HOME!\!DOS83_COMP!\!DOS83_VER!"
-echo !LIBSCRIPT_VERSION_DIR!
+echo.!LIBSCRIPT_VERSION_DIR!
 endlocal & set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_VERSION_DIR%"
 exit /b 0
 
@@ -100,8 +100,8 @@ set "exact_path=%base_dir%\%exact_version%"
 
 if "%LIBSCRIPT_DOS_83%"=="1" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\dos_83.cmd" :libscript_dos83_ver "%alias_name%" >nul
-    > "%base_dir%\!DOS83_VER!.VER" echo %exact_version%
-    if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo %exact_version%
+    > "%base_dir%\!DOS83_VER!.VER" echo.%exact_version%
+    if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo.%exact_version%
     if /i "%alias_name%"=="default" call :libscript_sync_active_bin "!_sa_orig_comp!"
     goto :eof
 )
@@ -125,14 +125,14 @@ if exist "%alias_path%" (
     )
 )
 if "%IS_MSDOS%"=="1" (
-    > "%base_dir%\%alias_name%.ver" echo %exact_version%
-    if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo %exact_version%
+    > "%base_dir%\%alias_name%.ver" echo.%exact_version%
+    if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo.%exact_version%
     mklink /J "%alias_path%" "%exact_path%" >nul 2>&1
 ) else if not exist "%alias_path%" (
     mklink /J "%alias_path%" "%exact_path%" >nul 2>&1
     if errorlevel 1 (
-        > "%base_dir%\%alias_name%.ver" echo %exact_version%
-        if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo %exact_version%
+        > "%base_dir%\%alias_name%.ver" echo.%exact_version%
+        if /i "%alias_name%"=="default" > "%base_dir%\ACTIVE.VER" echo.%exact_version%
     )
 )
 if /i "%alias_name%"=="default" call :libscript_sync_active_bin "!_sa_orig_comp!"
@@ -182,7 +182,7 @@ for %%D in ("!_sab_home!\!_sab_comp!\!_sab_ver_sub!\bin" "!_sab_home!\!_sab_comp
                 echo @echo off
                 echo "!_shim_target!" %%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9
             ) > "!_sab_bin!\!_shim_name!!_sab_shim_ext!"
-            echo !_shim_name!>> "!_sab_owner_file!.TMP"
+            echo.!_shim_name!>> "!_sab_owner_file!.TMP"
         )
     )
 )
@@ -236,6 +236,7 @@ set "_rwv_comp=%~1"
 set "_rwv_dir=%~2"
 if "!_rwv_dir!"=="" set "_rwv_dir=%CD%"
 if "!_rwv_dir:~-1!"=="\" set "_rwv_dir=!_rwv_dir:~0,-1!"
+goto :rwv_ascend
 
 :: ## rwv_ascend
 :: Internal loop ascending parent directories for workspace version resolution.
@@ -258,7 +259,7 @@ if exist "!_rwv_dir!\.libscript-version" (
             )
         )
     )
-    if "!_rwv_found!"=="" if !_rwv_cnt! EQU 1 if not "!_rwv_single!"=="" set "_rwv_found=!_rwv_single!"
+    if "!_rwv_found!"=="" if "!_rwv_cnt!" EQU "1" if not "!_rwv_single!"=="" set "_rwv_found=!_rwv_single!"
 )
 if not "!_rwv_found!"=="" goto :rwv_emit
 if exist "!_rwv_dir!\libscript.json" (
@@ -280,7 +281,7 @@ goto :rwv_ascend
 :: ## rwv_emit
 :: Prints the resolved workspace version and exports LIBSCRIPT_WORKSPACE_VERSION across endlocal.
 :rwv_emit
-echo !_rwv_found!
+echo.!_rwv_found!
 endlocal & set "LIBSCRIPT_WORKSPACE_VERSION=%_rwv_found%"
 exit /b 0
 
@@ -307,7 +308,7 @@ if /i "!_civ_comp!"=="nodejs" (
                     set "_nv=%%V"
                     set "_nv=!_nv:v=!"
                     if /i "!_civ_req!"=="latest" exit /b 0
-                    echo !_nv! | findstr /b /c:"!_civ_prefix!." >nul 2>&1
+                    echo.!_nv! | findstr /b /c:"!_civ_prefix!." >nul 2>&1
                     if not errorlevel 1 exit /b 0
                 )
             )
@@ -319,7 +320,7 @@ if /i "!_civ_comp!"=="nodejs" (
             set "_nv=%%V"
             set "_nv=!_nv:v=!"
             if /i "!_civ_req!"=="latest" exit /b 0
-            echo !_nv! | findstr /b /c:"!_civ_prefix!." >nul 2>&1
+            echo.!_nv! | findstr /b /c:"!_civ_prefix!." >nul 2>&1
             if not errorlevel 1 exit /b 0
         )
     )
@@ -333,7 +334,7 @@ if /i "!_civ_comp!"=="python" (
         if errorlevel 1 (
             if /i "!_civ_req!"=="latest" exit /b 0
             for /f "tokens=2" %%V in ('"%%~fP" --version 2^>^&1') do (
-                echo %%V | findstr /b /c:"!_civ_prefix!." >nul 2>&1
+                echo.%%V | findstr /b /c:"!_civ_prefix!." >nul 2>&1
                 if not errorlevel 1 exit /b 0
                 if "%%V"=="!_civ_prefix!" exit /b 0
             )

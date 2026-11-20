@@ -86,13 +86,13 @@ if "%BUILD_DIR%"=="" set "BUILD_DIR=%REPO_ROOT%\build\live-linux-%FLAVOR%"
 echo [BUILD] Synthesizing live Linux (%FLAVOR%) image on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\live_linux.sh" "%FLAVOR%" "%OUTPUT_PATH%" "%BUILD_DIR%"
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\live_linux.sh" "%FLAVOR%" "%OUTPUT_PATH%" "%BUILD_DIR%"
     exit /b !errorlevel!
 )

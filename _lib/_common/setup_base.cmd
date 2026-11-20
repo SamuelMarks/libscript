@@ -99,7 +99,7 @@ if not defined LIBSCRIPT_TARGET_SYSROOT (
     if errorlevel 1 (
         call "!LOG_CMD!" :log_info "Elevating to administrator..."
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :priv "%~f0"
-        exit /b %errorlevel%
+        exit /b !ERRORLEVEL!
     )
 )
 
@@ -127,7 +127,7 @@ if exist "%TARGET_DIR%\setup_windows.cmd" (
     exit /b 1
 )
 
-if !SETUP_ERR! equ 0 exit /b 0
+if "!SETUP_ERR!" equ "0" exit /b 0
 
 :: Resolve package name for fallback
 if "%PACKAGE_NAME%"=="" (
@@ -142,8 +142,6 @@ if not errorlevel 1 exit /b 0
 
 exit /b !SETUP_ERR!
 
-:: Helper functions (reachable via call :label)
-goto :eof
 
 :: ## libscript_install_binary
 :: Installs a downloaded binary into the component version directory and updates aliases.
@@ -172,7 +170,7 @@ if not errorlevel 1 (
     call "!LOG_CMD!" :log_info "%bin_name% installed to %dest_dir%"
     
     REM Check if dest_dir is in PATH
-    echo %PATH% | findstr /i /c:"%dest_dir%" >nul
+    echo.%PATH% | findstr /i /c:"%dest_dir%" >nul
     if errorlevel 1 (
         call "!LOG_CMD!" :log_warn "%dest_dir% is not in your PATH."
     )

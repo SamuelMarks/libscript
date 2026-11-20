@@ -63,6 +63,7 @@ if "%~1"=="-h" (
 
 set "WORKER_TYPE=auto"
 set "CMD_ARGS="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -90,14 +91,14 @@ for %%I in ("!SCRIPT_DIR!\..\..") do set "REPO_ROOT=%%~fI"
 
 if "%WORKER_TYPE%"=="auto" (
     docker --version >nul 2>&1
-    if !errorlevel! equ 0 (
+    if "!errorlevel!" equ "0" (
         set "WORKER_TYPE=docker"
     ) else (
         wsl.exe --status >nul 2>&1
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             set "WORKER_TYPE=wsl2"
         ) else (
-            echo [ERROR] No supported virtualization backend (docker, wsl2) detected on Windows.
+            echo [ERROR] No supported virtualization backend ^(docker, wsl2^) detected on Windows.
             exit /b 86
         )
     )

@@ -73,7 +73,7 @@ if errorlevel 1 exit /b 1
 call :verify_bento_dos_matrix_targets
 if errorlevel 1 exit /b 1
 
-echo [PASS] Named rapid cloud experimentation lifecycle tests succeeded on Windows!
+echo [PASS] Named rapid cloud experimentation lifecycle tests succeeded on Windows^^!
 exit /b 0
 
 :: ## verify_step_by_step_execution

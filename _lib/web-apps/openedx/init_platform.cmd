@@ -50,15 +50,15 @@ goto :find_root
 :root_found
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\init_platform.ps1" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     pwsh -NoProfile -File "!SCRIPT_DIR!\init_platform.ps1" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 echo [ERROR] PowerShell interpreter not found to execute init_platform.ps1. >&2

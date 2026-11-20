@@ -68,5 +68,5 @@ call "%LIBSCRIPT_ROOT_DIR%\netctl.cmd" --listen 80 --listen 443 --proxy /api htt
 if errorlevel 1 exit /b 1
 
 if exist "%TMP_DIR%" rmdir /s /q "%TMP_DIR%" 2>nul
-echo [PASS] All README.md ad-hoc usage scripts verified on Windows!
+echo [PASS] All README.md ad-hoc usage scripts verified on Windows^^!
 exit /b 0

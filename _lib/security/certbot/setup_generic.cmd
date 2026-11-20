@@ -167,9 +167,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service

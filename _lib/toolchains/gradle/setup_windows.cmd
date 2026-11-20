@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where gradle >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 set "DEST_DIR=%USERPROFILE%\.local\gradle"
 if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"

@@ -146,7 +146,7 @@ exit /b 0
 :: ## do_printroot
 :: Prints the root Open edX installation directory.
 :do_printroot
-echo %OPENEDX_INSTALL_DIR%
+echo.%OPENEDX_INSTALL_DIR%
 exit /b 0
 
 :: ## do_patches
@@ -156,7 +156,7 @@ set "SUB=%~2"
 if "%SUB%"=="" set "SUB=list"
 if /i "%SUB%"=="list" (
     for %%S in (openedx-common-settings openedx-lms-production-settings openedx-cms-production-settings openedx-lms-development-settings openedx-cms-development-settings lms-env cms-env openedx-auth caddyfile) do (
-        echo %%S
+        echo.%%S
     )
     exit /b 0
 )

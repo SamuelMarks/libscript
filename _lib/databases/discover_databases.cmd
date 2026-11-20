@@ -52,6 +52,7 @@ goto :find_root
 
 set "MODE=eval"
 set "TARGET_ENGINE="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.

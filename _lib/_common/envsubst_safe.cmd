@@ -91,7 +91,7 @@ if "!_ES_IN!"=="" (
 
 call :resolve_awk
 if defined _ES_AWK (
-    set "_ES_PROG=%TEMP%\ls_es_%RANDOM%_%RANDOM%.awk"
+    set "_ES_PROG=%TEMP%\ls_es_!RANDOM!_!RANDOM!.awk"
     (
         echo BEGIN { for ^(n in ENVIRON^) env[n] = ENVIRON[n] }
         echo {
@@ -128,8 +128,8 @@ if defined _ES_AWK (
             "!_ES_AWK!" -f "!_ES_PROG!" "!_ES_IN!" > "!_ES_OUT!"
         )
     ) else (
-        set "_ES_SRC=%TEMP%\ls_es_in_%RANDOM%_%RANDOM%.txt"
-        echo !_ES_IN!> "!_ES_SRC!"
+        set "_ES_SRC=%TEMP%\ls_es_in_!RANDOM!_!RANDOM!.txt"
+        echo.!_ES_IN!> "!_ES_SRC!"
         if "!_ES_OUT!"=="" (
             "!_ES_AWK!" -f "!_ES_PROG!" "!_ES_SRC!"
         ) else (
@@ -163,6 +163,6 @@ if exist "!_ES_IN!" (
         copy /y "!_ES_IN!" "!_ES_OUT!" >nul
     )
 ) else (
-    echo !_ES_IN!
+    echo.!_ES_IN!
 )
 exit /b 0

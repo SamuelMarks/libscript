@@ -54,7 +54,7 @@ call :run_ollama_service_unit_tests
 if errorlevel 1 exit /b 1
 
 where ollama >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   ollama --version
   exit /b 0
 )

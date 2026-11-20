@@ -65,7 +65,7 @@ if "%ACTION%"=="compile" (
 )
 if "%ACTION%"=="submit" (
     if exist "%TARGET%" (
-        set "_K8S_MAN=%TEMP%\libscript_k8s_%RANDOM%.json"
+        set "_K8S_MAN=%TEMP%\libscript_k8s_!RANDOM!.json"
         call :compile_k8s_yaml "%TARGET%" > "!_K8S_MAN!"
         if "!LIVE_K8S!"=="1" (
             where kubectl >nul 2>&1
@@ -80,7 +80,7 @@ if "%ACTION%"=="destroy" (
     if "!LIVE_K8S!"=="1" if exist "%TARGET%" (
         where kubectl >nul 2>&1
         if not errorlevel 1 (
-            set "_K8S_MAN=%TEMP%\libscript_k8s_%RANDOM%.json"
+            set "_K8S_MAN=%TEMP%\libscript_k8s_!RANDOM!.json"
             call :compile_k8s_yaml "%TARGET%" > "!_K8S_MAN!"
             jq "del(.marathon_equivalent)" "!_K8S_MAN!" | kubectl delete --ignore-not-found -f - 1>&2
             del /f /q "!_K8S_MAN!" >nul 2>&1

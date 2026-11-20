@@ -60,6 +60,7 @@ set "IMG_VER=1.0.0"
 set "OUT_RECEIPT="
 set "DRY_RUN=0"
 if "%IMAGE_IMPORT_DRY_RUN%"=="1" set "DRY_RUN=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for azure_import.cmd.

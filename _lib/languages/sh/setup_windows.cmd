@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where sh >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "%ProgramFiles%\Git\bin\sh.exe" exit /b 0
 if exist "%ProgramFiles%\Git\usr\bin\sh.exe" exit /b 0

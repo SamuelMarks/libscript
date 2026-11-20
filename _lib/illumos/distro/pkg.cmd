@@ -87,7 +87,7 @@ if "%PROVIDER%"=="ips" (
     if not exist "%SYSROOT%\var\pkg" mkdir "%SYSROOT%\var\pkg"
     if not exist "%SYSROOT%\etc\pkg" mkdir "%SYSROOT%\etc\pkg"
     (
-        echo # IPS Package Publisher Configuration (managed by LibScript^)
+        echo # IPS Package Publisher Configuration ^(managed by LibScript^)
         echo [publisher]
         echo prefix = omnios
         echo uri = %PUB_URL%
@@ -96,7 +96,7 @@ if "%PROVIDER%"=="ips" (
     ) > "%SYSROOT%\etc\pkg\publishers.conf"
 ) else if "%PROVIDER%"=="pkgin" (
     if not exist "%SYSROOT%\opt\local\etc\pkgin" mkdir "%SYSROOT%\opt\local\etc\pkgin"
-    echo %PUB_URL%> "%SYSROOT%\opt\local\etc\pkgin/repositories.conf"
+    echo.%PUB_URL%> "%SYSROOT%\opt\local\etc\pkgin/repositories.conf"
 )
 
 echo %DATE% %TIME%> "%STAMP_FILE%"

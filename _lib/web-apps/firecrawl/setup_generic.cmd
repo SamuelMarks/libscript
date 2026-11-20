@@ -63,7 +63,7 @@ if defined FIRECRAWL_DEST (
     set /p DEST=<"!LIBSCRIPT_DATA_DIR!\.firecrawl_dest"
 ) else (
     set "DEST=!LIBSCRIPT_DATA_DIR!\app"
-    >"!LIBSCRIPT_DATA_DIR!\.firecrawl_dest" echo !DEST!
+    >"!LIBSCRIPT_DATA_DIR!\.firecrawl_dest" echo.!DEST!
 )
 
 where git >nul 2>&1

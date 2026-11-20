@@ -58,6 +58,7 @@ if not exist "!LOG_CMD!" (
 set "ACTION=%~1"
 set "GPU_NAME=%~2"
 set "REST_ARGS="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -154,7 +155,7 @@ if not "%GPU_DATA_DISK_SIZE%"=="" (
 
 call "!LOG_CMD!" :log_info "Checking if GPU VM %GPU_NAME% exists in zone %GPU_ZONE%..."
 gcloud compute instances describe "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     call "!LOG_CMD!" :log_info "GPU VM %GPU_NAME% already exists. Skipping creation."
 ) else (
     call "!LOG_CMD!" :log_info "Creating GPU VM %GPU_NAME% (%GPU_MACHINE_TYPE%, %GPU_ACCELERATOR%) in %GPU_ZONE%..."
@@ -185,14 +186,14 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
 )
 call "!LOG_CMD!" :log_info "Deleting GPU VM %GPU_NAME% in zone %GPU_ZONE%..."
 gcloud compute instances describe "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     gcloud compute instances delete "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG% --quiet
 ) else (
     call "!LOG_CMD!" :log_info "GPU VM %GPU_NAME% already deleted or not found."
 )
 call "!LOG_CMD!" :log_info "GPU VM %GPU_NAME% deleted."
 gcloud compute disks describe "%GPU_NAME%-data" --zone="%GPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp volume "%GPU_NAME%-data" "%GPU_ZONE%"
         if errorlevel 1 exit /b 1
@@ -235,6 +236,7 @@ shift
 shift
 set "DETACHED="
 set "FORWARD_PORT="
+goto :arg_loop
 :: ## arg_loop
 :: Parses command-line arguments and populates configuration variables.
 :arg_loop
@@ -257,6 +259,7 @@ if not "%FORWARD_PORT%"=="" (
 )
 
 set "REST_ARGS="
+goto :gather_ssh_args
 :: ## gather_ssh_args
 :: Collects remaining command-line arguments to forward to the remote SSH invocation.
 :gather_ssh_args

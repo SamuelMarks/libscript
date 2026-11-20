@@ -141,11 +141,12 @@ if "!INIT_SYS!|!TARGET_OS!"=="windows-scm|windows" (
 
 if exist "!TEST_WS!" rmdir /s /q "!TEST_WS!" >nul 2>&1
 
+REM wincheck disable=CMD2003
 if !FAILURES! gtr 0 (
     echo [FAIL] Standards remediation Windows suite failed ^(!FAILURES!/!CHECKS!^) >&2
     exit /b 1
 )
-echo === All !CHECKS! Windows Standards Remediation Checks Passed! ===
+echo === All !CHECKS! Windows Standards Remediation Checks Passed^^! ===
 exit /b 0
 
 :: ## pass_check

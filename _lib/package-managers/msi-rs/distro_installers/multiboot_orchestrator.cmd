@@ -85,13 +85,13 @@ for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 echo [MULTIBOOT] Starting Multiboot Orchestration on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\multiboot_orchestrator.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\multiboot_orchestrator.sh" %*
     exit /b !errorlevel!
 )

@@ -58,6 +58,7 @@ if defined LIBSCRIPT_TARGET_ARCH (
 ) else (
     if not defined TARGET_ARCH set "TARGET_ARCH=x64"
 )
+:: wincheck disable=CMD3005
 
 :: ## parse_loop
 :: Iterates over command line arguments and populates options.
@@ -254,13 +255,13 @@ if not "%UPGRADE_CODE:~0,1%"=="{" set "UPGRADE_CODE={%UPGRADE_CODE%}"
     echo.
     echo     ^<UI Id="WixUI_ProxyDialog"^>
     echo       ^<Dialog Id="ProxySelectionDlg" Width="370" Height="270" Title="Select Reverse Proxy"^>
-    echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)"^>
+    echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="^!(loc.WixUINext)"^>
     echo           ^<Publish Event="NewDialog" Value="VerifyReadyDlg"^>1^</Publish^>
     echo         ^</Control^>
-    echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)"^>
+    echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="^!(loc.WixUIBack)"^>
     echo           ^<Publish Event="NewDialog" Value="WelcomeDlg"^>1^</Publish^>
     echo         ^</Control^>
-    echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)"^>
+    echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="^!(loc.WixUICancel)"^>
     echo           ^<Publish Event="SpawnDialog" Value="CancelDlg"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Reverse Proxy Configuration" /^>
@@ -318,8 +319,8 @@ if /i "%VARIANT%"=="online" if not "%DOWNLOAD_URL%"=="" (
     (
         echo     ^<CustomAction Id="CA_Download_%COMPONENT%"
         echo                   Directory="INSTALLFOLDER"
-        :: libscript-allow-raw-fetch
-        echo                   ExeCommand="cmd.exe /c &quot;if not exist &quot;[INSTALLFOLDER]bin\*.exe&quot; (curl.exe -fsSL &quot;%DOWNLOAD_URL%&quot; -o &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot; &amp;&amp; tar.exe -xf &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot; -C &quot;[INSTALLFOLDER]&quot; &amp;&amp; del /f /q &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot;)&quot;"
+        REM libscript-allow-raw-fetch
+        echo                   ExeCommand="cmd.exe /c &quot;if not exist &quot;[INSTALLFOLDER]bin\*.exe&quot; ^(curl.exe -fsSL &quot;%DOWNLOAD_URL%&quot; -o &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot; &amp;&amp; tar.exe -xf &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot; -C &quot;[INSTALLFOLDER]&quot; &amp;&amp; del /f /q &quot;%%TEMP%%\%COMPONENT%_dl.zip&quot;^)&quot;"
         echo                   Execute="deferred"
         echo                   Return="ignore"
         echo                   Impersonate="no" /^>

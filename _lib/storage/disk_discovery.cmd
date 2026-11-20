@@ -100,7 +100,7 @@ if "%WIPE_DISK%"=="" (
 
 echo [INFO] Sanitizing and wiping disk number %WIPE_DISK%...
 powershell -NoProfile -Command "Clear-Disk -Number %WIPE_DISK% -RemoveData -RemoveOEM -Confirm:$false"
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     echo [OK] Disk %WIPE_DISK% successfully sanitized.
     exit /b 0
 ) else (

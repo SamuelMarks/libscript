@@ -56,7 +56,7 @@ if "%ACTION%"=="install" (
     if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin;!PATH!"
     if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
     where packer >nul 2>&1
-    if !errorlevel! equ 0 (
+    if "!errorlevel!" equ "0" (
         echo Packer is already installed.
         exit /b 0
     )

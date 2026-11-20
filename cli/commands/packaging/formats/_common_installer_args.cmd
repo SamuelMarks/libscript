@@ -83,6 +83,7 @@ set "WELCOME_TEXT=Welcome to the LibScript Deployment Installer"
 set "FINISH_TITLE="
 set "FINISH_TEXT="
 set "OFFLINE=0"
+goto :args_loop
 
 :: ## args_loop
 :: Iterates through command-line arguments and populates installer configuration options.

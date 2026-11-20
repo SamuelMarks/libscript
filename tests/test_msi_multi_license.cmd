@@ -90,7 +90,7 @@ call :assert_wxs "AGREE_ALL_LICENSES=\"1\"" "Blanket opt-in property AGREE_ALL_L
 call :assert_wxs "<Custom Action=\"CA_AbortNoLicense\" Before=\"InstallInitialize\">" "License agreement check scheduled before InstallInitialize" || goto :fail
 
 rmdir /s /q "!TMP_BASE!" >nul 2>&1
-echo === All WiX MSI multi-license tests passed successfully! ===
+echo === All WiX MSI multi-license tests passed successfully^^! ===
 exit /b 0
 
 :: ## assert_wxs

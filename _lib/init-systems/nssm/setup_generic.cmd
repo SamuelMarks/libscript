@@ -135,6 +135,7 @@ for /f "delims=" %%N in ('where nssm 2^>nul') do (
     exit /b 0
 )
 
+REM wincheck disable=CMD3006
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 set "DL_URL=%NSSM_DOWNLOAD_URL%"
 if "%DL_URL%"=="" set "DL_URL=https://github.com/dkxce/NSSM/releases/download/v2.24/nssm-2.24.zip"
@@ -163,9 +164,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Removes the registered system service for the component.
 :action_uninstall_service

@@ -88,5 +88,5 @@ call "%TEMP%\test_uri_5.cmd"
 if not "%DB_ENGINE%"=="redis" ( echo Failed ENGINE & exit /b 1 )
 if not "%DB_PASSWORD%"=="super_s3cr3t" ( echo Failed PASSWORD & exit /b 1 )
 
-echo [SUCCESS] Connection URI Parser verification succeeded on Windows!
+echo [SUCCESS] Connection URI Parser verification succeeded on Windows^^!
 exit /b 0

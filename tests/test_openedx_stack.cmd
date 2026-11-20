@@ -82,9 +82,9 @@ call "%OPENEDX_DIR%\hooks\configure.cmd" >nul
 if errorlevel 1 exit /b 1
 
 if not exist "%LIBSCRIPT_ROOT_DIR%\devtools\wait_ports.cmd" (
-    echo [ERROR] devtools\wait_ports.cmd missing! >&2
+    echo [ERROR] devtools\wait_ports.cmd missing^^! >&2
     exit /b 1
 )
 
-echo ==^> All Open edX stack tools verified successfully on Windows!
+echo ==^> All Open edX stack tools verified successfully on Windows^^!
 exit /b 0

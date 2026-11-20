@@ -53,6 +53,7 @@ goto :find_root
 
 set "OUT_DIR=!SCRIPT_DIR!"
 set "MODE=all"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for MSI compilation.

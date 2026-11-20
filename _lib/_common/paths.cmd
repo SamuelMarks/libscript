@@ -18,7 +18,7 @@ if defined STACK (
 set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "!SCRIPT_DIR:~-1!"=="\" set "SCRIPT_DIR=!SCRIPT_DIR:~0,-1!"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=!SCRIPT_DIR!"
@@ -48,6 +48,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :resolve_component_paths
 
 :: ## resolve_component_paths
 :: Computes standard installation, binary, configuration, and data paths for a component.
@@ -58,7 +59,7 @@ if "%PACKAGE_NAME%"=="" (
 
 if "!LIBSCRIPT_ROOT_DIR!"=="" (
     set "SCRIPT_DIR=%~dp0"
-    if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+    if "!SCRIPT_DIR:~-1!"=="\" set "SCRIPT_DIR=!SCRIPT_DIR:~0,-1!"
     for %%I in ("!SCRIPT_DIR!\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 )
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Test suite for the win-cmd-rs component.
+# Test suite for the win-cmd-rs component (wincheck batch static analyzer and wincmd interpreter).
 #
 # ## Usage
 # Execute this script to perform a component-specific smoke test.
@@ -31,11 +31,30 @@ SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
+unset SCRIPT_NAME || true
 
 wincheck --version
+
+_WCR_TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/win-cmd-rs-smoke.XXXXXX")
+trap 'rm -rf "${_WCR_TEST_DIR}"' EXIT INT TERM
+
+printf '@echo off\r\nsetlocal EnableDelayedExpansion\r\necho(ok\r\nexit /b 0\r\n' > "${_WCR_TEST_DIR}/clean.cmd"
+wincheck --severity error "${_WCR_TEST_DIR}/clean.cmd"
+printf '%s\n' '[PASS] wincheck accepted valid .cmd script'
+
+printf '@echo off\r\nif 1==1 (\r\n    :: illegal block comment\r\n    echo bad\r\n)\r\n' > "${_WCR_TEST_DIR}/broken.cmd"
+if wincheck --severity error "${_WCR_TEST_DIR}/broken.cmd" >/dev/null 2>&1; then
+  printf '%s\n' '[FAIL] wincheck failed to flag CMD1001 broken .cmd script' >&2
+  exit 1
+fi
+printf '%s\n' '[PASS] wincheck detected CMD1001 defect in broken .cmd script'
+
 if command -v wincmd >/dev/null 2>&1; then
-  _wcmd_out=$(wincmd /C 'SET /A X=6*7 & ECHO %X%' 2>/dev/null | tr -d '\r\n' || true)
-  if [ "${_wcmd_out}" = "42" ]; then
-    printf '%s\n' '[PASS] wincmd arithmetic evaluation (6*7=42) verified'
+  wincmd --version
+  _wcmd_out=$(wincmd /V:ON /C '@SET /A "X=6*7" >NUL & @ECHO !X!' 2>/dev/null | tr -d '\r\n' || true)
+  if [ "${_wcmd_out}" != '42' ]; then
+    printf '[FAIL] Expected wincmd arithmetic output 42, got "%s"\n' "${_wcmd_out}" >&2
+    exit 1
   fi
+  printf '%s\n' '[PASS] wincmd arithmetic evaluation (6*7=42) verified'
 fi

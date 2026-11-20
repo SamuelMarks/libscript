@@ -92,7 +92,7 @@ call :resolve_awk
 if defined _FR_AWK (
     set "old=!SEARCH!"
     set "new=!REPLACE!"
-    set "_FR_PROG=%TEMP%\ls_fr_%RANDOM%_%RANDOM%.awk"
+    set "_FR_PROG=%TEMP%\ls_fr_!RANDOM!_!RANDOM!.awk"
     (
         echo { rec = rec $0 RS }
         echo END {

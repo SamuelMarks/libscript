@@ -47,6 +47,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :arg_parse_loop
 
 :: Parse offline and npm options
 :: ## arg_parse_loop
@@ -147,7 +148,7 @@ if exist "%LIBSCRIPT_HOME%\nodejs" (
                     set "_FLM_DIR=%%~fD"
                     exit /b 0
                 )
-                echo !_NV! | findstr /b /c:"!_FLM_REQ!." >nul 2>&1
+                echo.!_NV! | findstr /b /c:"!_FLM_REQ!." >nul 2>&1
                 if not errorlevel 1 (
                     set "_FLM_DIR=%%~fD"
                     exit /b 0
@@ -320,9 +321,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service

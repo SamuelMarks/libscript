@@ -117,12 +117,12 @@ if /i "%ACTION%"=="install" (
     set "STACK="
 
     where 7z >nul 2>&1
-    if !errorlevel! neq 0 (
+    if "!errorlevel!" neq "0" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install 7zip latest
     )
     where git >nul 2>&1
-    if !errorlevel! neq 0 (
+    if "!errorlevel!" neq "0" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install git-servers/utils latest
     )
@@ -256,6 +256,7 @@ if /i "!_TGT:~0,7!"=="freedos" (
     echo [ERROR] Missing !RESOLVED_BENTO_DIR!\freedos-builder.cmd 1>&2
     exit /b 1
 )
+:: wincheck disable=CMD3005
 
 :: ## finish_register
 :: Invokes tests\register_bento_boxes.cmd against RESOLVED_BENTO_DIR.

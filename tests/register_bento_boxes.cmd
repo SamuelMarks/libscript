@@ -243,26 +243,8 @@ if not exist "!BENTO_DIR!\" (
     echo [WARN] Bento directory not found at !BENTO_DIR!; skipping pkrvars check. >&2
     exit /b 0
 )
-echo ==^> Validating Bento Packer templates ^& DOS builders in !BENTO_DIR! (host arch: !BENTO_HOST_ARCH!)...
-for %%P in (
-    "os_pkrvars\omnios\omnios-braich-aarch64.pkrvars.hcl"
-    "os_pkrvars\alpine\alpine-3.24-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\debian\debian-13-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\rockylinux\rockylinux-10-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\freebsd\freebsd-15-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\macos\macos-27-aarch64.pkrvars.hcl"
-    "os_pkrvars\macos\macos-14-aarch64.pkrvars.hcl"
-    "os_pkrvars\windows\windows-11-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\freedos\freedos-1.3-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\freedos\freedos-1.4-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\msdos\msdos-1.25-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\msdos\msdos-2.0-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "os_pkrvars\msdos\msdos-4.0-!BENTO_HOST_ARCH!.pkrvars.hcl"
-    "freedos-builder.sh"
-    "freedos-builder.cmd"
-    "msdos-builder.sh"
-    "msdos-builder.cmd"
-) do (
+echo ==^> Validating Bento Packer templates ^& DOS builders in !BENTO_DIR! ^(host arch: !BENTO_HOST_ARCH!^)...
+for %%P in ("os_pkrvars\omnios\omnios-braich-aarch64.pkrvars.hcl" "os_pkrvars\alpine\alpine-3.24-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\debian\debian-13-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\rockylinux\rockylinux-10-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\freebsd\freebsd-15-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\macos\macos-27-aarch64.pkrvars.hcl" "os_pkrvars\macos\macos-14-aarch64.pkrvars.hcl" "os_pkrvars\windows\windows-11-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\freedos\freedos-1.3-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\freedos\freedos-1.4-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\msdos\msdos-1.25-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\msdos\msdos-2.0-!BENTO_HOST_ARCH!.pkrvars.hcl" "os_pkrvars\msdos\msdos-4.0-!BENTO_HOST_ARCH!.pkrvars.hcl" "freedos-builder.sh" "freedos-builder.cmd" "msdos-builder.sh" "msdos-builder.cmd") do (
     if exist "!BENTO_DIR!\%%~P" (
         echo [PASS] Found %%~P
     ) else (

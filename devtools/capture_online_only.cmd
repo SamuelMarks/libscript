@@ -76,15 +76,15 @@ goto :main
 set "REPO_ROOT=%SCRIPT_DIR%\.."
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\capture_online_only.ps1" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     pwsh -NoProfile -File "%SCRIPT_DIR%\capture_online_only.ps1" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 echo [ERROR] PowerShell interpreter not found. >&2

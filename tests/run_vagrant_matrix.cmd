@@ -59,7 +59,7 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\test_matrix_driver.cmd"
 echo ==^> LibScript Vagrant Test Matrix Orchestrator
 
 where vagrant >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
+if "%ERRORLEVEL%" NEQ "0" (
     echo [ERROR] Vagrant is not installed or not in PATH. 1>&2
     exit /b 1
 )
@@ -93,7 +93,7 @@ for %%D in (%VAGRANT_DIRS%) do (
             vagrant destroy -f >nul 2>nul
             
             vagrant up
-            if !ERRORLEVEL! EQU 0 (
+            if "!ERRORLEVEL!" EQU "0" (
                 echo [OK] %%S passed in %%D
             ) else (
                 echo [FAIL] %%S failed in %%D 1>&2
@@ -109,6 +109,7 @@ for %%D in (%VAGRANT_DIRS%) do (
 
 cd /d "%PREV_WD%"
 
+REM wincheck disable=CMD2003
 if %FAILURES% GTR 0 (
     echo.
     echo [MATRIX FAIL] Vagrant testing completed with %FAILURES% failures. 1>&2
@@ -116,5 +117,5 @@ if %FAILURES% GTR 0 (
 )
 
 echo.
-echo [MATRIX SUCCESS] All vagrant tests executed successfully with zero privilege escalation!
+echo [MATRIX SUCCESS] All vagrant tests executed successfully with zero privilege escalation^^!
 exit /b 0

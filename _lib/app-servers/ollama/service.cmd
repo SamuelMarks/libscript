@@ -354,7 +354,7 @@ if "!_POM_KEEP!"=="" exit /b 0
 where ollama >nul 2>&1
 if errorlevel 1 exit /b 0
 for /f "skip=1 tokens=1" %%I in ('ollama list 2^>nul') do (
-    echo !_POM_KEEP! | findstr /i /c:"%%I" >nul 2>&1
+    echo.!_POM_KEEP! | findstr /i /c:"%%I" >nul 2>&1
     if errorlevel 1 (
         echo [INFO] [OLLAMA] [PRUNE] Removing unconfigured model '%%I'...
         ollama rm "%%I" >nul 2>&1

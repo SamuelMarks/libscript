@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where rabbitmqctl >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 echo RabbitMQ server environment configured.
 exit /b 0

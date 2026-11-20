@@ -51,6 +51,7 @@ goto :find_root
 echo Running generic uninstaller for %PACKAGE_NAME%
 
 set "PURGE_DATA=0"
+goto :parse_args
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
 :parse_args

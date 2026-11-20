@@ -86,7 +86,7 @@ if exist "%STAGE_DIR%" (
 )
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pushd "%WORK_DIR%\pkg\"
     tar -czf "%TARGET_RPM%" . >nul 2>&1
     popd

@@ -110,5 +110,5 @@ findstr /C:"createUser" "%MOCK_MONGOSH_LOG%" >nul || ( echo Failed mongodb & exi
 rmdir /S /Q "%MOCK_DIR%"
 if exist "%TEST_DB%" del "%TEST_DB%"
 
-echo [SUCCESS] Schema Provisioning verification succeeded on Windows!
+echo [SUCCESS] Schema Provisioning verification succeeded on Windows^^!
 exit /b 0

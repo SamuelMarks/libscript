@@ -52,7 +52,7 @@ goto :find_root
 
 call "!SCRIPT_DIR!\env.cmd"
 where scheme >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     scheme --version
 ) else (
     guile --version

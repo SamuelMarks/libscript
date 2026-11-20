@@ -20,6 +20,9 @@ LibScript repository.
     `CHECKSUM_INTEGRITY`, `JSON_VALIDITY`, `SCHEMA_DESCRIPTIONS`
 - `audit_posix.sh` / `audit_posix.cmd`: Dedicated POSIX `/bin/sh` compliance, bashism prohibition,
   quoting hygiene, and Windows companion pairing audit.
+- `audit_cmd.sh` / `audit_cmd.cmd`: Cross-platform Windows Batch (`.cmd` and `.bat`) AST/CST static
+  analysis audit backed by `_lib/toolchains/win-cmd-rs` (`wincheck`), with automatic zero-PowerShell
+  bootstrapping when `wincheck` is missing from `PATH`.
 - `audit_version_manager.sh` / `audit_version_manager.cmd`: Audits all
   `_lib/<category>/<component>/` directories for strict compliance with the Version Manager
   Contract.

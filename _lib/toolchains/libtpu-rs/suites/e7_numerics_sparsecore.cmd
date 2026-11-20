@@ -46,6 +46,7 @@ set "_SHA=1111111111111111111111111111111111111111"
 for /f "tokens=2 delims=:," %%H in ('findstr /I /C:"git_commit_sha" "!RESULTS_DIR!\.e7_prov.json"') do (
     set "_TMPH=%%~H"
     set "_TMPH=!_TMPH: =!"
+    REM wincheck disable=CMD1013
     set "_TMPH=!_TMPH:"=!"
     if not "!_TMPH!"=="" set "_SHA=!_TMPH!"
 )

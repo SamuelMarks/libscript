@@ -343,7 +343,7 @@ if "!DRY_RUN!"=="true" (
 set "_IP="
 for /f "tokens=2" %%I in ('ovhcloud cloud instance get "!_NODE!" --cloud-project "%OVH_PROJECT_ID%" 2^>nul ^| findstr /C:"ip"') do set "_IP=%%I"
 if /i "!_SUB!"=="ip" (
-    echo !_IP!
+    echo.!_IP!
     exit /b 0
 )
 if /i "!_SUB!"=="exec" (

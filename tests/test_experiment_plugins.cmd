@@ -42,5 +42,5 @@ for %%S in (edgcpp-backends win-port libtpu-pjrt gemma-tpu os-component-matrix) 
     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" experiment validate %%S >nul
     if errorlevel 1 exit /b 1
 )
-echo [PASS] Windows Open/Closed Experiment Plugin tests passed!
+echo [PASS] Windows Open/Closed Experiment Plugin tests passed^^!
 exit /b 0

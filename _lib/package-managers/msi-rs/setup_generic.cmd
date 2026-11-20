@@ -302,6 +302,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\msi-rs\Cargo.toml" (
     cd /d "%~dp0"
     rmdir /s /q "%BUILD_DIR%" >nul 2>&1
 )
+:: wincheck disable=CMD3005
 
 :: ## link_aliases
 :: Creates default and latest directory junctions pointing to the installed msi-rs version.
@@ -340,12 +341,15 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
+goto :action_uninstall
 :: ## action_uninstall
 :: Uninstalls the component version from LIBSCRIPT_HOME.
 :action_uninstall

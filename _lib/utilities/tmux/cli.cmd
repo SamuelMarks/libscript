@@ -73,11 +73,11 @@ if "%~1"=="-h" (
 
 set "TMUX_CMD="
 where psmux >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     set "TMUX_CMD=psmux"
 ) else (
     where tmux >nul 2>nul
-    if %errorlevel% equ 0 (
+    if "!ERRORLEVEL!" equ "0" (
         set "TMUX_CMD=tmux"
     )
 )
@@ -105,6 +105,7 @@ if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
 shift
 shift
 set "REST_ARGS="
+goto :loop
 :: ## loop
 :: Parses command-line arguments and populates configuration variables.
 :loop
@@ -117,7 +118,7 @@ goto loop
 :: Executes a command inside the specified tmux session.
 :run
 !TMUX_CMD! has-session -t "%SESSION_NAME%" >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     call "!LOG_CMD!" :log_info "Session %SESSION_NAME% already exists. Attaching..."
     !TMUX_CMD! attach-session -t "%SESSION_NAME%"
 ) else (

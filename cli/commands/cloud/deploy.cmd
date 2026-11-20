@@ -60,6 +60,7 @@ set "HOOK_DIR="
 set "DRY_RUN_MODE=0"
 if /i "%DRY_RUN%"=="true" set "DRY_RUN_MODE=1"
 if "%DRY_RUN%"=="1" set "DRY_RUN_MODE=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for git-driven deployments.
@@ -276,7 +277,7 @@ if not exist "!_H_PATH!" mkdir "!_H_PATH!"
     echo ^)
 ) > "!_H_PATH!\post-receive.cmd"
 (
-    echo #!/bin/sh
+    echo #^^!/bin/sh
     echo set -feu
     echo while read -r oldrev newrev refname; do
     echo   branch="${refname#refs/heads/}"

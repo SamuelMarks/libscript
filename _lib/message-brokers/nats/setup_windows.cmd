@@ -50,10 +50,10 @@ goto :find_root
 :root_found
 
 where nats-server >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 where nats >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 set "ARCH=amd64"
 if "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ARCH=arm64"

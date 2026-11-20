@@ -59,6 +59,7 @@ case "$target" in
   audit)
     "$SCRIPT_DIR/devtools/audit/audit_standards.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_posix.sh"
+    "$SCRIPT_DIR/devtools/audit/audit_cmd.sh" --all
     "$SCRIPT_DIR/devtools/audit/audit_version_manager.sh"
     "$SCRIPT_DIR/devtools/audit/audit_schema_vars.sh" --all
     "$SCRIPT_DIR/devtools/audit/doc_coverage.sh" --strict
@@ -71,6 +72,7 @@ case "$target" in
     "$SCRIPT_DIR/tests/test_cli_arg_forwarding.sh"
     "$SCRIPT_DIR/tests/test_rest_api.sh"
     "$SCRIPT_DIR/tests/test_shellcheck_vm_and_hooks.sh"
+    "$SCRIPT_DIR/tests/test_win_cmd_rs_vm_and_hooks.sh"
     "$SCRIPT_DIR/tests/test_cloud_experiment_lifecycle.sh"
     "$SCRIPT_DIR/tests/test_experiment_harness.sh"
     "$SCRIPT_DIR/tests/test_libtpu_experiments.sh"

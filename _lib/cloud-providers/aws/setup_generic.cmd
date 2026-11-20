@@ -201,9 +201,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
@@ -214,24 +216,31 @@ exit /b !errorlevel!
 :: ## action_group
 :: Delegates group/project actions to aws cli.cmd.
 :action_group
+goto :action_network
 :: ## action_network
 :: Delegates network actions to aws cli.cmd.
 :action_network
+goto :action_firewall
 :: ## action_firewall
 :: Delegates firewall actions to aws cli.cmd.
 :action_firewall
+goto :action_storage
 :: ## action_storage
 :: Delegates storage actions to aws cli.cmd.
 :action_storage
+goto :action_dns
 :: ## action_dns
 :: Delegates dns actions to aws cli.cmd.
 :action_dns
+goto :action_auth
 :: ## action_auth
 :: Delegates auth actions to aws cli.cmd.
 :action_auth
+goto :action_location
 :: ## action_location
 :: Delegates location actions to aws cli.cmd.
 :action_location
+goto :action_node
 :: ## action_node
 :: Delegates node actions to aws cli.cmd.
 :action_node

@@ -73,7 +73,7 @@ IF /I "%LIBSCRIPT_TARGET_OS%"=="rtos-freertos" (
 )
 
 IF "%~1"=="status" (
-    echo === LFS Kernel Status (Win32) ===
+    echo === LFS Kernel Status ^(Win32^) ===
     echo Kernel compilation and module generation execute inside Linux container or VM builder.
     goto end
 )

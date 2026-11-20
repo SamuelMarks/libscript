@@ -65,5 +65,5 @@ echo === LibScript Headless OS Boot Verification ^(Windows^) ===
 echo [SIMULATED] Verified boot milestone: Kernel banner
 echo [SIMULATED] Verified boot milestone: Init system start
 echo [SIMULATED] Verified boot milestone: Multi-user login prompt reached
-echo === Headless Boot Verification Succeeded! ===
+echo === Headless Boot Verification Succeeded^^! ===
 exit /b 0

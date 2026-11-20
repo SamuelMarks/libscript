@@ -272,7 +272,8 @@ if "!_HM_DIR:~-1!"=="\" set "_HM_DIR=!_HM_DIR:~0,-1!"
 for %%E in ("!_HM_DIR!\.env" "!_HM_DIR!\.env.secrets" "!_HM_DIR!\.env.libscript") do (
     if exist "%%~fE" (
         for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
-            if not "%%A"=="" if not "%%A:~0,1%"=="#" (
+            set "_env_k=%%A"
+            if not "!_env_k!"=="" if not "!_env_k:~0,1!"=="#" (
                 if not defined %%A set "%%A=%%~B"
             )
         )
@@ -382,9 +383,9 @@ if /i "!_EV_FMT!"=="cmd" (
 ) else if /i "!_EV_FMT!"=="docker" (
     echo ENV !_EV_KEY!="!_EV_VAL!"
 ) else if /i "!_EV_FMT!"=="docker_compose" (
-    echo !_EV_KEY!=!_EV_VAL!
+    echo.!_EV_KEY!=!_EV_VAL!
 ) else if /i "!_EV_FMT!"=="dotenv" (
-    echo !_EV_KEY!=!_EV_VAL!
+    echo.!_EV_KEY!=!_EV_VAL!
 ) else if /i "!_EV_FMT!"=="json" (
     echo { "!_EV_KEY!": "!_EV_VAL:\=\\!" }
 ) else (

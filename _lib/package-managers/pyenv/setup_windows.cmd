@@ -50,12 +50,12 @@ goto :find_root
 :root_found
 
 where pyenv >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "%USERPROFILE%\.pyenv\pyenv-win\bin\pyenv.bat" exit /b 0
 
 where choco >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo Installing pyenv-win via pkg_mgr...
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco pyenv-win
@@ -77,7 +77,7 @@ if exist "%USERPROFILE%\.pyenv\pyenv-win\bin\pyenv.bat" (
 )
 
 where pyenv >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 echo Failed to install pyenv.
 exit /b 1

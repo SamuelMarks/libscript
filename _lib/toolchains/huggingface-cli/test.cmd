@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 where hf >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     hf --version
     exit /b 0
 )

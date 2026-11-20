@@ -149,7 +149,7 @@ if errorlevel 1 (
 )
 
 call :cleanup
-echo [PASS] All component scaffolder tests passed on Windows!
+echo [PASS] All component scaffolder tests passed on Windows^^!
 exit /b 0
 
 :: ## cleanup

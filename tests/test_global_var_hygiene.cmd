@@ -59,10 +59,12 @@ if not exist "!BASE_SCHEMA!" (
 )
 
 for /f "delims=" %%C in ('jq -r ".properties | keys | length" "!BASE_SCHEMA!"') do set "PROP_COUNT=%%C"
+REM wincheck disable=CMD2003
 if !PROP_COUNT! GTR 32 (
     echo [FAIL] base_vars.schema.json exceeds 32 core properties: !PROP_COUNT! >&2
     exit /b 1
 )
+REM wincheck disable=CMD2003
 if !PROP_COUNT! LSS 20 (
     echo [FAIL] base_vars.schema.json unexpectedly small: !PROP_COUNT! >&2
     exit /b 1

@@ -69,7 +69,7 @@ for %%R in (rtos-zephyr rtos-freertos) do (
     call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" build-image --kernel=%%R --hybrid-pod --format=firmware-elf --components=mosquitto,postgres,sqlite --dry-run >nul || exit /b 1
 )
 
-echo [PASS] Kernel x Component x Format Matrix PASSED on Windows!
+echo [PASS] Kernel x Component x Format Matrix PASSED on Windows^^!
 exit /b 0
 
 :: ## show_help

@@ -82,7 +82,7 @@ if exist "%STAMP_FILE%" if exist "%OUT_QCOW2%" (
 
 echo [PACKAGE]  Exporting FreeBSD QCOW2 image: %OUT_QCOW2%...
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     qemu-img convert -O qcow2 -c "%INPUT%" "%OUT_QCOW2%"
 ) else (
     echo [WARN]     qemu-img not found, writing placeholder file...

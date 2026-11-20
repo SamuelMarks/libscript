@@ -60,6 +60,7 @@ set "BOARD=%LIBSCRIPT_RTOS_BOARD%"
 if "!BOARD!"=="" set "BOARD=qemu_x86_64"
 set "SYSROOT="
 set "OUT_PATH="
+goto :parse_fw_args
 
 :: ## parse_fw_args
 :: Parses options and positional arguments for firmware.cmd.

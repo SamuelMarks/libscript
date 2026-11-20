@@ -167,7 +167,7 @@ if /i "!_ACT!"=="zone" (
     set "_DOM=%~4"
     if "!_DOM!"=="" set "_DOM=%~3"
     if /i "!_SUB!"=="create" (
-        call :run_aws route53 create-hosted-zone --name "!_DOM!" --caller-reference "libscript-%RANDOM%"
+        call :run_aws route53 create-hosted-zone --name "!_DOM!" --caller-reference "libscript-!RANDOM!"
         exit /b 0
     )
     call :run_aws route53 list-hosted-zones --output table
@@ -190,7 +190,7 @@ if /i "!_ACT!"=="record" (
     exit /b 0
 )
 if /i "!_ACT!"=="create-zone" (
-    call :run_aws route53 create-hosted-zone --name "!_SUB!" --caller-reference "libscript-%RANDOM%"
+    call :run_aws route53 create-hosted-zone --name "!_SUB!" --caller-reference "libscript-!RANDOM!"
     exit /b 0
 )
 if /i "!_ACT!"=="list" (

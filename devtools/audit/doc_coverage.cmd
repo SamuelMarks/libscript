@@ -73,10 +73,10 @@ exit /b 0
 :main
 set "PS_CMD="
 where powershell.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 set "PS_CMD=powershell.exe"
+if "%ERRORLEVEL%" EQU "0" set "PS_CMD=powershell.exe"
 if not defined PS_CMD (
     where pwsh >nul 2>&1
-    if %ERRORLEVEL% EQU 0 set "PS_CMD=pwsh"
+    if "!ERRORLEVEL!" EQU "0" set "PS_CMD=pwsh"
 )
 
 if defined PS_CMD (
@@ -88,7 +88,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
 )
 where dash >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     set "STACK="
     dash "!SCRIPT_DIR!\doc_coverage.sh" %*
     exit /b !ERRORLEVEL!

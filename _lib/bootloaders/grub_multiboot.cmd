@@ -68,13 +68,13 @@ exit /b 0
 :main
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\grub_multiboot.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\grub_multiboot.sh" %*
     exit /b !errorlevel!
 )

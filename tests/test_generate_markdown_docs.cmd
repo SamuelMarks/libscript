@@ -143,5 +143,5 @@ echo [PASS] 2x consecutive runs of generate_markdown_docs.cmd succeeded idempote
 
 set "ROOT_DIR="
 rmdir /s /q "%TMP_WS%" 2>nul
-echo === All Markdown Docs Generator Checks Passed! ===
+echo === All Markdown Docs Generator Checks Passed^^! ===
 exit /b 0

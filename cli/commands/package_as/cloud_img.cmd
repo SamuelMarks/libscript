@@ -55,6 +55,7 @@ if not defined LIBSCRIPT_ROOT_DIR (
 set "PROVIDER=all"
 set "INPUT=!LIBSCRIPT_ROOT_DIR!\build\target.img"
 set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\build\cloud_images"
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -82,6 +83,7 @@ if /i "%PROVIDER%"=="all" goto do_all
 if /i "%PROVIDER%"=="aws" goto do_aws
 if /i "%PROVIDER%"=="azure" goto do_azure
 if /i "%PROVIDER%"=="gcp" goto do_gcp
+goto :do_all
 
 :: ## do_all
 :: Executes packaging or repository generation across all supported formats.

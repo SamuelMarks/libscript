@@ -56,6 +56,7 @@ goto :find_root
 set "RESOLVE_DIR=%CD%"
 set "RESOLVE_FMT=cmd"
 set "RESOLVE_WRITE="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for resolve_env.cmd.
@@ -87,7 +88,7 @@ if "%LIBSCRIPT_HOME%"=="" (
 ) else (
     set "_RES_HOME=%LIBSCRIPT_HOME%"
 )
-if "!RESOLVE_DIR:~-1!"=="\" set "RESOLVE_DIR=!RESOLVE_DIR:~0,-1%"
+if "!RESOLVE_DIR:~-1!"=="\" set "RESOLVE_DIR=!RESOLVE_DIR:~0,-1!"
 
 set "_TMP_OUT=%TEMP%\libscript_resolve_env_%RANDOM%.tmp"
 type nul > "!_TMP_OUT!"
@@ -95,6 +96,7 @@ if /i "!RESOLVE_FMT!"=="cmd" echo @echo off>> "!_TMP_OUT!"
 
 set "_CUR_DIR=!RESOLVE_DIR!"
 set "_SEEN= "
+goto :ascend_loop
 
 :: ## ascend_loop
 :: Ascends directory tree collecting .libscript-version key=value pins.
@@ -106,7 +108,7 @@ if exist "!_CUR_DIR!\.libscript-version" (
         if not "!_K:~0,1!"=="#" if not "!_V!"=="" (
             for /f "tokens=* delims= " %%X in ("!_K!") do set "_K=%%X"
             for /f "tokens=* delims= " %%Y in ("!_V!") do set "_V=%%Y"
-            echo !_SEEN! | findstr /I /C:" !_K! " >nul 2>&1
+            echo.!_SEEN! | findstr /I /C:" !_K! " >nul 2>&1
             if errorlevel 1 (
                 set "_SEEN=!_SEEN!!_K! "
                 call :emit_pin "!_K!" "!_V!"

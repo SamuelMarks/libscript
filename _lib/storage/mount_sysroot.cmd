@@ -97,13 +97,14 @@ powershell -NoProfile -Command ^
     "    Get-Disk -Number $vhd.DiskNumber | Get-Partition | Set-Partition -NewDriveLetter '%DRIVE_LETTER:~0,1%' " ^
     "}"
 
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     echo [OK] Target disk %TARGET_PATH% mounted.
     exit /b 0
 ) else (
     echo [ERROR] Failed to mount %TARGET_PATH%. >&2
     exit /b 1
 )
+:: wincheck disable=CMD3005
 
 :: ## do_unmount
 :: Dismounts a VHD or VHDX file.
@@ -114,7 +115,7 @@ if "%TARGET_PATH%"=="" (
 )
 echo [INFO] Dismounting virtual disk %TARGET_PATH%...
 powershell -NoProfile -Command "Dismount-VHD -Path '%TARGET_PATH%'"
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     echo [OK] Target disk %TARGET_PATH% dismounted.
     exit /b 0
 ) else (

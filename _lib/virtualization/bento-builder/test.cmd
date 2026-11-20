@@ -89,7 +89,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\..\bento\bento.gemspec" (
 )
 
 if exist "!TEST_TMP!" rmdir /s /q "!TEST_TMP!" >nul 2>&1
-echo === All Bento Builder checks completed successfully! ===
+echo === All Bento Builder checks completed successfully^^! ===
 exit /b 0
 
 :: ## fail_test

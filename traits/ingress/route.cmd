@@ -54,11 +54,11 @@ if "%~1"=="-h" goto :help
 
 if /i "%~1"=="remove-ingress" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" remove-ingress "%~2"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="unroute" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\networking\netctl\cli.cmd" remove-ingress "%~2"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 set "FORMAT=%~1" 
 set "ROUTE_PATH=%~3"

@@ -52,7 +52,7 @@ goto :find_root
 
 call "!SCRIPT_DIR!\env.cmd"
 where pkgin >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     pkgin -v
 ) else (
     bmake -V MAKE_VERSION

@@ -58,12 +58,12 @@ if "!TARGET_DEV!"=="" (
 )
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\install_reactos.sh" "%TARGET_DEV%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\install_reactos.sh" "%TARGET_DEV%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )

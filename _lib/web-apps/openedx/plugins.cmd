@@ -108,7 +108,7 @@ if "%PNAME%"=="" (
 )
 findstr /x /c:"%PNAME%" "%ENABLED_FILE%" >nul 2>&1
 if errorlevel 1 (
-    echo %PNAME%>>"%ENABLED_FILE%"
+    echo.%PNAME%>>"%ENABLED_FILE%"
 )
 echo [PASS] Plugin %PNAME% enabled.
 exit /b 0
@@ -141,7 +141,7 @@ exit /b 0
 :: ## plugins_printroot
 :: Prints the root directory for installed Open edX plugins.
 :plugins_printroot
-echo %PLUGINS_DIR%
+echo.%PLUGINS_DIR%
 exit /b 0
 
 :: ## show_help

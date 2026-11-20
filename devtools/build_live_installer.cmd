@@ -81,13 +81,13 @@ for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 echo [ORCHESTRATE] Building Live Media for msi-rs on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "%SCRIPT_DIR%\build_live_installer.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "%SCRIPT_DIR%\build_live_installer.sh" %*
     exit /b !errorlevel!
 )

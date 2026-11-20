@@ -52,6 +52,7 @@ goto :find_root
 set "TARGET_DIR=_lib\web-apps\openedx"
 set "VARIANT=online"
 set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\tmp\compare_msi"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line options for compare_msirs_wix.cmd.

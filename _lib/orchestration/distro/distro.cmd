@@ -62,6 +62,7 @@ if /i "%ACTION%"=="build-alpine" goto do_alpine
 if /i "%ACTION%"=="alpine" goto do_alpine
 if /i "%ACTION%"=="build-redhat" goto do_redhat
 if /i "%ACTION%"=="redhat" goto do_redhat
+goto :show_help
 
 :: ## show_help
 :: Displays command-line usage instructions and available options.

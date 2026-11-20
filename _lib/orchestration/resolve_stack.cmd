@@ -109,7 +109,7 @@ if exist "!CATALOG_JSON!" if exist "!CATALOG_META!" (
 if "!_USE_CACHE!"=="1" (
     set "TMP_ARR=!CATALOG_JSON!"
 ) else (
-    set "TMP_RAW=%TEMP%\libscript_manifests_raw_%RANDOM%.jsonl"
+    set "TMP_RAW=%TEMP%\libscript_manifests_raw_!RANDOM!.jsonl"
     set "TMP_ARR=!CATALOG_JSON!"
     if exist "!TMP_RAW!" del /f /q "!TMP_RAW!" >nul 2>&1
     for /R "!LIB_DIR!" %%F in (manifest.json) do (
@@ -118,7 +118,7 @@ if "!_USE_CACHE!"=="1" (
     if exist "!TMP_RAW!" (
         jq -s "." "!TMP_RAW!" > "!TMP_ARR!" 2>nul
         del /f /q "!TMP_RAW!" >nul 2>&1
-        echo !_MF_SIG!>"!CATALOG_META!"
+        echo.!_MF_SIG!>"!CATALOG_META!"
     ) else (
         echo []> "!TMP_ARR!"
     )

@@ -52,8 +52,8 @@ goto :find_root
 if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "Apache2.4"
-if !ERRORLEVEL! equ 0 exit /b 0
+if "!ERRORLEVEL!" equ "0" exit /b 0
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "httpd"
-if !ERRORLEVEL! equ 0 exit /b 0
+if "!ERRORLEVEL!" equ "0" exit /b 0
 
 exit /b 1

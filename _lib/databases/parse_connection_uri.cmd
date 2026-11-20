@@ -85,9 +85,9 @@ exit /b 1
 :: ## parse_with_jq
 :: Parses connection URI components, percent-encoded credentials, and SSL query parameters via jq.
 :parse_with_jq
-set "_JQ_PROG=%TEMP%\ls_puri_%RANDOM%_%RANDOM%.jq"
+set "_JQ_PROG=%TEMP%\ls_puri_!RANDOM!_!RANDOM!.jq"
 (
-    echo def pct_dec: gsub^("%%20";" "^)^|gsub^("%%21";"!"^)^|gsub^("%%40";"@"^)^|gsub^("%%23";"#"^)^|gsub^("%%24";"$"^)^|gsub^("%%25";"%%"^)^|gsub^("%%5[Ee]";"^"^)^|gsub^("%%26";"&"^)^|gsub^("%%2[Aa]";"*"^)^|gsub^("%%3[Dd]";"="^);
+    echo def pct_dec: gsub^("%%20";" "^)^|gsub^("%%21";"^^!"^)^|gsub^("%%40";"@"^)^|gsub^("%%23";"#"^)^|gsub^("%%24";"$"^)^|gsub^("%%25";"%%"^)^|gsub^("%%5[Ee]";"^"^)^|gsub^("%%26";"&"^)^|gsub^("%%2[Aa]";"*"^)^|gsub^("%%3[Dd]";"="^);
     echo ^($uri ^| split^("://"^)^) as $p ^|
     echo ^($p[0] // ""^) as $engine ^|
     echo ^($p[1:] ^| join^("://"^)^) as $rest ^|
@@ -115,6 +115,7 @@ set "_JQ_PROG=%TEMP%\ls_puri_%RANDOM%_%RANDOM%.jq"
     echo if $mode == "--json" then
     echo   tojson
     echo elif $mode == "--export" then
+    REM wincheck disable=CMD1003
     echo   ^(
     echo     "export DB_ENGINE=" + ^(.engine^|@json^),
     echo     "export DB_HOST=" + ^(.host^|@json^),
@@ -132,21 +133,22 @@ set "_JQ_PROG=%TEMP%\ls_puri_%RANDOM%_%RANDOM%.jq"
     echo     "export DB_CHARSET=" + ^(.charset^|@json^)
     echo   ^)
     echo else
+    REM wincheck disable=CMD1003
     echo   ^(
-    echo     "set " + ^(("DB_ENGINE=" + .engine^)^|@json^),
-    echo     "set " + ^(("DB_HOST=" + .host^)^|@json^),
-    echo     "set " + ^(("DB_PORT=" + .port^)^|@json^),
-    echo     "set " + ^(("DB_USER=" + .user^)^|@json^),
-    echo     "set " + ^(("DB_PASS=" + .pass^)^|@json^),
-    echo     "set " + ^(("DB_NAME=" + .dbname^)^|@json^),
-    echo     "set " + ^(("DB_QUERY=" + .query^)^|@json^),
-    echo     "set " + ^(("DB_USE_SSL=" + ^(.use_ssl^|tostring^)^)^|@json^),
-    echo     "set " + ^(("DB_SSL_CA=" + .ssl_ca^)^|@json^),
-    echo     "set " + ^(("DB_SSL_CERT=" + .ssl_cert^)^|@json^),
-    echo     "set " + ^(("DB_SSL_KEY=" + .ssl_key^)^|@json^),
-    echo     "set " + ^(("DB_SSL_MODE=" + .ssl_mode^)^|@json^),
-    echo     "set " + ^(("DB_TIMEOUT=" + .timeout^)^|@json^),
-    echo     "set " + ^(("DB_CHARSET=" + .charset^)^|@json^)
+    echo     "set " + ^(^("DB_ENGINE=" + .engine^)^|@json^),
+    echo     "set " + ^(^("DB_HOST=" + .host^)^|@json^),
+    echo     "set " + ^(^("DB_PORT=" + .port^)^|@json^),
+    echo     "set " + ^(^("DB_USER=" + .user^)^|@json^),
+    echo     "set " + ^(^("DB_PASS=" + .pass^)^|@json^),
+    echo     "set " + ^(^("DB_NAME=" + .dbname^)^|@json^),
+    echo     "set " + ^(^("DB_QUERY=" + .query^)^|@json^),
+    echo     "set " + ^(^("DB_USE_SSL=" + ^(.use_ssl^|tostring^)^)^|@json^),
+    echo     "set " + ^(^("DB_SSL_CA=" + .ssl_ca^)^|@json^),
+    echo     "set " + ^(^("DB_SSL_CERT=" + .ssl_cert^)^|@json^),
+    echo     "set " + ^(^("DB_SSL_KEY=" + .ssl_key^)^|@json^),
+    echo     "set " + ^(^("DB_SSL_MODE=" + .ssl_mode^)^|@json^),
+    echo     "set " + ^(^("DB_TIMEOUT=" + .timeout^)^|@json^),
+    echo     "set " + ^(^("DB_CHARSET=" + .charset^)^|@json^)
     echo   ^)
     echo end
 ) > "!_JQ_PROG!"

@@ -54,9 +54,7 @@ for %%J in ("!RESULTS_DIR!\raw\*.json") do (
         set /a "_CHECKED+=1"
     )
 )
-        set /a "_CHECKED+=1"
-    )
-)
+REM wincheck disable=CMD2003
 if !_CHECKED! lss 1 exit /b 1
 
 set "_TEX_OUT=!RESULTS_DIR!\generated_metrics.tex"

@@ -106,7 +106,7 @@ if /i "%VARIANT%"=="offline" (
 ) > "%WORK_DIR%\.PKGINFO"
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pushd "%WORK_DIR%"
     tar -czf "%TARGET_APK%" .PKGINFO -C "%WORK_DIR%\pkg" . >nul 2>&1
     popd

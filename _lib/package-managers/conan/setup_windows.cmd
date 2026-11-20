@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where conan >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     conan --version >nul 2>&1
     if not errorlevel 1 exit /b 0
 )

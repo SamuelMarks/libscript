@@ -50,6 +50,6 @@ goto :find_root
 :root_found
 
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\status_service.cmd" "W3SVC"
-if !ERRORLEVEL! equ 0 exit /b 0
+if "!ERRORLEVEL!" equ "0" exit /b 0
 
 exit /b 1

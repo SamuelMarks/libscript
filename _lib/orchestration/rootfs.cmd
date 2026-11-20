@@ -88,7 +88,7 @@ echo [INFO] Staging target rootfs at: %TARGET_DIR%
 call "!SCRIPT_DIR!\create_fhs_layout.cmd" "%TARGET_DIR%"
 if errorlevel 1 (
     echo [ERROR] create_fhs_layout failed.
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 type nul > "%STAMP_DIR%\.stamp.rootfs_staged"

@@ -91,6 +91,6 @@ call "%SCRIPT_DIR%\run_illumos_distro_on_sunos.cmd"
     echo }
 ) > "%SUMMARY_FILE%"
 
-echo [OK]       All 5 Vagrant platforms verified successfully for illumos!
+echo [OK]       All 5 Vagrant platforms verified successfully for illumos^^!
 echo [OK]       Summary written to %SUMMARY_FILE%
 exit /b 0

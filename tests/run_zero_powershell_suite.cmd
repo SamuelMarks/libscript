@@ -64,6 +64,7 @@ if not exist "!POISON_BIN!" mkdir "!POISON_BIN!" 2>nul
 
 set "CLEAN_PATH="
 set "_REM_PATH=!PATH!"
+goto :strip_loop
 
 :: ## strip_loop
 :: Iteratively removes PowerShell and pwsh directories from PATH.
@@ -128,6 +129,9 @@ if not errorlevel 1 (
 
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\reactos\distro\pkg.cmd" --help >nul || goto :zps_fail
+
+set "STACK="
+call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_cmd.cmd" "!LIBSCRIPT_ROOT_DIR!\tests\run_zero_powershell_suite.cmd" "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_cmd.cmd" || goto :zps_fail
 
 rmdir /s /q "!ZPS_WORK!" >nul 2>&1
 echo [PASS] All Windows .cmd tests and packaging generators succeeded with PowerShell removed from PATH.

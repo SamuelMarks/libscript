@@ -56,6 +56,7 @@ set "OFFER_FILE="
 set "OUT_DIR="
 set "STAGE_ONLY=0"
 set "DRY_RUN=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for aws.cmd.

@@ -79,10 +79,10 @@ if "%GCP_ZONE%"=="" (
 )
 
 call gcloud auth print-access-token >nul 2>&1
-if %errorlevel% neq 0 call gcloud auth login
+if "%errorlevel%" neq "0" call gcloud auth login
 
 call gcloud container clusters describe "%CLUSTER_NAME%" --zone="%GCP_ZONE%" --project="%GCP_PROJECT_ID%" >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo [INFO] GKE cluster %CLUSTER_NAME% already exists in %GCP_ZONE%. Skipping creation.
 ) else (
     echo [INFO] Creating GKE cluster %CLUSTER_NAME% via topologies\gke-tpu-cluster...

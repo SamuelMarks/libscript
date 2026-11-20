@@ -54,6 +54,7 @@ set "json_file="
 set "REMOVE_UNITS=0"
 set "VERIFY_INGRESS=0"
 set "PUBLIC_URL=%LIBSCRIPT_PUBLIC_URL%"
+goto :parse_args_loop
 
 :: ## parse_args_loop
 :: Parses positional and flag arguments for daemonize.cmd.
@@ -314,7 +315,7 @@ if exist "!pid_file!" (
 ) else (
     echo [INFO] [DAEMON] [START] Starting service '!name!' ^(workdir: !svc_workdir!^)...
 )
-> "!svc_data!\runtime.sha256" echo !_DM_RT_FP!
+> "!svc_data!\runtime.sha256" echo.!_DM_RT_FP!
 set "LIBSCRIPT_SERVICE_MANIFEST_DIR=!MANIFEST_DIR!"
 set "LIBSCRIPT_SERVICE_ENV_FILES="
 for /f "delims=" %%f in ('echo !svc! ^| jq -r ".env_files[]?" 2^>nul') do (
@@ -419,6 +420,7 @@ if "!hc_cmd!"=="" (
         call :poll_svc_port
     )
 )
+goto :after_hc_net
 :: ## after_hc_net
 :: Continues health check completion after URL or port validation.
 :after_hc_net
@@ -430,12 +432,13 @@ exit /b 0
 where curl >nul 2>&1
 if errorlevel 1 exit /b 0
 set "port_attempt=1"
+goto :poll_port_loop
 :: ## poll_port_loop
 :: Performs a single TCP/HTTP port readiness poll iteration.
 :poll_port_loop
 curl -s -m !hc_timeout! -o nul "http://127.0.0.1:!svc_port!" 2>nul
 if not errorlevel 1 exit /b 0
-if !port_attempt! lss !hc_retries! (
+if "!port_attempt!" lss "!hc_retries!" (
     timeout /t !hc_interval! /nobreak >nul 2>&1
     set /a port_attempt+=1
     goto :poll_port_loop
@@ -450,6 +453,7 @@ exit /b 0
 set "hc_attempt=1"
 set "hc_url_ok=0"
 set "hc_body_file=!svc_data!\hc_body.json"
+goto :poll_hc_loop
 :: ## poll_hc_loop
 :: Performs a single HTTP poll iteration against the service health URL.
 :poll_hc_loop
@@ -468,11 +472,12 @@ if not "!hc_expect_status!"=="" (
         goto :poll_hc_done
     )
 )
-if !hc_attempt! lss !hc_retries! (
+if "!hc_attempt!" lss "!hc_retries!" (
     timeout /t !hc_interval! /nobreak >nul 2>&1
     set /a hc_attempt+=1
     goto :poll_hc_loop
 )
+goto :poll_hc_done
 :: ## poll_hc_done
 :: Evaluates final poll results and optional jq JSON assertions.
 :poll_hc_done

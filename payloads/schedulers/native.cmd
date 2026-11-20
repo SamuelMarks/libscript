@@ -65,6 +65,7 @@ set "INIT_SYS=%LIBSCRIPT_INIT_SYSTEM%"
 if "!INIT_SYS!"=="" set "INIT_SYS=sc"
 shift
 shift
+goto :parse_native_args
 
 :: ## parse_native_args
 :: Parses optional --init override flags.

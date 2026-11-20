@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === Greeter Dispatcher Status (Win32) ===
+    echo === Greeter Dispatcher Status ^(Win32^) ===
     echo Display manager configuration executes inside Linux container or VM builder.
     goto end
 )

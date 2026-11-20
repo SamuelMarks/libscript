@@ -11,8 +11,11 @@ standards across the repository before commits are recorded.
   runs Prettier formatting, cspell checks, dos2unix/unix2dos normalization, LibScript engineering
   standards & POSIX audits, automatic `shellcheck` bootstrapping via `_lib/toolchains/shellcheck`
   (installing `shellcheck` idempotently into `${LIBSCRIPT_HOME}/shellcheck` when nonexistent on
-  `PATH`) followed by POSIX `shellcheck -s sh` static analysis, component README regeneration, and
-  updates the `% doc coverage` shield in `README.md`.
+  `PATH`) followed by POSIX `shellcheck -s sh` static analysis, automatic `wincheck` bootstrapping
+  via `_lib/toolchains/win-cmd-rs` (installing `wincheck` and `wincmd` idempotently into
+  `${LIBSCRIPT_HOME}/win-cmd-rs` when nonexistent on `PATH`) followed by Windows Batch `.cmd`/`.bat`
+  static analysis, component README regeneration, and updates the `% doc coverage` shield in
+  `README.md`.
 
 ## Usage
 

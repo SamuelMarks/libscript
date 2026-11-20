@@ -64,6 +64,7 @@ set "CMD_TEMPLATE="
 set "MODEL_OVERRIDE="
 set "FRESH_VM=0"
 set "RESUME_FLAG=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags and optional manifest path supporting both quoted --key=val and space-separated tokens.

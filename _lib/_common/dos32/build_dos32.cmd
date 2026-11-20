@@ -60,6 +60,7 @@ shift
 
 set "_TARGET=host"
 set "_OUT="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses optional --target and --out parameters.
@@ -135,7 +136,7 @@ if exist "!_OUT!" goto :emit_out
 
 where cl.exe >nul 2>&1
 if not errorlevel 1 (
-    cl.exe /nologo /O2 /Fe:"!_OUT!" "!_SRC!" !_EXTRA_LIBS! /Fo:"%TEMP%\dos32_%RANDOM%.obj" >nul 2>&1
+    cl.exe /nologo /O2 /Fe:"!_OUT!" "!_SRC!" !_EXTRA_LIBS! /Fo:"%TEMP%\dos32_!RANDOM!.obj" >nul 2>&1
     if exist "!_OUT!" goto :emit_out
 )
 
@@ -155,6 +156,6 @@ exit /b 1
 :: ## emit_out
 :: Prints and exports DOS32_HELPER_BIN across endlocal scope.
 :emit_out
-echo !_OUT!
+echo.!_OUT!
 endlocal & set "DOS32_HELPER_BIN=%_OUT%"
 exit /b 0

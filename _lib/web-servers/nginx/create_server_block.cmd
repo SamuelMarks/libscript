@@ -71,7 +71,7 @@ echo     server_name %NGINX_SERVER_NAME%;
 echo     listen %NGINX_LISTEN%;
 echo.
 if not "%LOCATIONS%"=="" (
-    echo %LOCATIONS%
+    echo.%LOCATIONS%
 )
 echo }
 exit /b 0

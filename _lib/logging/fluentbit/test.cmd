@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 where fluent-bit >nul 2>nul
-if %errorlevel% neq 0 (
+if "%errorlevel%" neq "0" (
   if exist "%~dp0cli.cmd" (
       call "%~dp0cli.cmd" --help >nul
   )

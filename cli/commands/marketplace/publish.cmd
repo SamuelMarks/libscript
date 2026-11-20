@@ -59,6 +59,7 @@ set "STAGE_ONLY=0"
 set "DRY_RUN=0"
 set "ALLOW_STUB=0"
 if "%LIBSCRIPT_ALLOW_STUB%"=="1" set "ALLOW_STUB=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for publish.cmd.
@@ -106,6 +107,6 @@ for %%C in (!CLOUDS_CSV:,= !) do (
     if /i "%%C"=="azure" call "!SCRIPT_DIR!\azure.cmd" "!OFFER_FILE!" --out-dir="!OUT_DIR!\azure" --dry-run
     if /i "%%C"=="gcp" call "!SCRIPT_DIR!\gcp.cmd" "!OFFER_FILE!" --out-dir="!OUT_DIR!\gcp" --dry-run
 )
-echo !CLOUDS_CSV!> "!OUT_DIR!\.publish_stamp"
+echo.!CLOUDS_CSV!> "!OUT_DIR!\.publish_stamp"
 echo [OK] Multicloud marketplace offer !OFFER_ID! staged at !OUT_DIR!
 exit /b 0

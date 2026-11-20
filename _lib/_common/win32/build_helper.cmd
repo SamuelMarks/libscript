@@ -89,6 +89,7 @@ for /f "delims=" %%P in ('where "!_RH_NAME!.exe" 2^>nul') do (
     goto :return_helper
 )
 
+REM wincheck disable=CMD3006
 set "_RH_HOME=%LIBSCRIPT_HOME%"
 if "!_RH_HOME!"=="" set "_RH_HOME=%USERPROFILE%\.libscript"
 if exist "!_RH_HOME!\bin\!_RH_NAME!.exe" (

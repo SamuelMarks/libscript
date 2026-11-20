@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where httpd >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "%APPDATA%\Apache24\bin\httpd.exe" goto :create_shims
 if exist "C:\Apache24\bin\httpd.exe" goto :create_shims
@@ -62,6 +62,7 @@ if not errorlevel 1 (
     set "STACK="
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends_via choco apache-httpd
 )
+:: wincheck disable=CMD3005
 
 :: ## create_shims
 :: Creates executable command shims in the local binary directory.

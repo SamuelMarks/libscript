@@ -54,6 +54,7 @@ if not defined LIBSCRIPT_ROOT_DIR (
 
 set "REPO_BASE=!LIBSCRIPT_ROOT_DIR!\build\packages"
 set "ACTION=all"
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -81,6 +82,7 @@ if /i "%ACTION%"=="all" goto do_all
 if /i "%ACTION%"=="apk" goto do_apk
 if /i "%ACTION%"=="deb" goto do_deb
 if /i "%ACTION%"=="rpm" goto do_rpm
+goto :do_all
 
 :: ## do_all
 :: Executes packaging or repository generation across all supported formats.

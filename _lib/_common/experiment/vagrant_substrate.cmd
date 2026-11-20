@@ -41,9 +41,9 @@ set "VS_ACT=%~1"
 if "!VS_ACT!"=="" goto :vs_help
 if /i "!VS_ACT!"=="--help" goto :vs_help
 if /i "!VS_ACT!"=="-h" goto :vs_help
-if /i "!VS_ACT!"=="resolve-os" ( call :vs_resolve_target_os "%~2" & echo !VS_OUT! & exit /b 0 )
-if /i "!VS_ACT!"=="os-family" ( call :vs_guest_os_family "%~2" & echo !VS_FAM! & exit /b 0 )
-if /i "!VS_ACT!"=="resolve-provider" ( call :vs_resolve_provider "%~2" & if errorlevel 1 exit /b 1 & echo !VS_PROV! & exit /b 0 )
+if /i "!VS_ACT!"=="resolve-os" ( call :vs_resolve_target_os "%~2" & echo.!VS_OUT! & exit /b 0 )
+if /i "!VS_ACT!"=="os-family" ( call :vs_guest_os_family "%~2" & echo.!VS_FAM! & exit /b 0 )
+if /i "!VS_ACT!"=="resolve-provider" ( call :vs_resolve_provider "%~2" & if errorlevel 1 exit /b 1 & echo.!VS_PROV! & exit /b 0 )
 if /i "!VS_ACT!"=="provision" ( call :vs_register_bento_box "%~2" "%~3" "%~4" "%~5" "%~6" & exit /b !errorlevel! )
 if /i "!VS_ACT!"=="prepare-workspace" ( call :vs_prepare_workspace "%~2" "%~3" "%~4" "%~5" "%~6" "%~7" & exit /b !errorlevel! )
 if /i "!VS_ACT!"=="boot" ( call :vs_boot_vm "%~2" "%~3" "%~4" & exit /b !errorlevel! )
@@ -135,7 +135,7 @@ if errorlevel 1 (
 vagrant box list 2>nul | findstr /I /C:"!_box! " | findstr /I /C:"(!_prov!," >nul 2>&1
 if not errorlevel 1 (
     echo [SKIP] Vagrant box !_box! ^(!_prov!^) is already registered. >&2
-    echo !_box!
+    echo.!_box!
     exit /b 0
 )
 
@@ -146,7 +146,7 @@ if not "!_bdir!"=="" (
     for %%B in ("!_bdir!\builds\build_complete\!_os!*.!_prov!.box" "!_bdir!\builds\build_complete\!_os!*.box") do (
         if exist "%%~fB" (
             vagrant box add --name "!_box!" --provider "!_prov!" "%%~fB" >&2
-            echo !_box!
+            echo.!_box!
             exit /b 0
         )
     )
@@ -157,7 +157,7 @@ if not "!_url_tpl!"=="" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_url_tpl!" "!_cache!"
     vagrant box add --name "!_box!" --provider "!_prov!" "!_cache!" >&2
 )
-echo !_box!
+echo.!_box!
 exit /b 0
 
 :: ## vs_prepare_workspace
@@ -192,7 +192,7 @@ if not exist "!_ws!" mkdir "!_ws!"
     echo   end
     echo end
 ) > "!_ws!\Vagrantfile"
-echo !_ws!
+echo.!_ws!
 exit /b 0
 
 :: ## vs_exec_guest
@@ -202,6 +202,7 @@ set "_ws=%~1"
 set "_fam=%~2"
 set "_cmd=%~3"
 set "_att=0"
+goto :veg_retry
 :: ## veg_retry
 :: Retries guest WinRM or SSH execution after a brief backoff interval.
 :veg_retry
@@ -215,6 +216,7 @@ set "_rc=!errorlevel!"
 popd
 if "!_rc!"=="0" exit /b 0
 set /a "_att+=1"
+REM wincheck disable=CMD2003
 if !_att! LSS 5 (
     ping -n 4 127.0.0.1 >nul 2>&1
     goto :veg_retry

@@ -94,5 +94,5 @@ if not errorlevel 1 (
 )
 
 rmdir /s /q "!TEST_TMP!" 2>nul
-echo [PASS] Multi-component PATH inheritance verified on Windows!
+echo [PASS] Multi-component PATH inheritance verified on Windows^^!
 exit /b 0

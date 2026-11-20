@@ -60,7 +60,7 @@ if exist "C:\HashiCorp\Vagrant\bin" (
 )
 
 where vagrant >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     vagrant --version
     exit /b 0
 )

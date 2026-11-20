@@ -103,10 +103,10 @@ if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
 where npx >nul 2>&1
 if not errorlevel 1 if not "%LIBSCRIPT_OFFLINE%"=="1" (
     echo Running spellcheck...
-    set "TMP_SPELL=%TEMP%\staged_spell_%RANDOM%.txt"
+    set "TMP_SPELL=%TEMP%\staged_spell_!RANDOM!.txt"
     !GIT_FILE_CMD! > "!TMP_SPELL!" 2>nul
     if exist "!TMP_SPELL!" (
-        for %%S in ("!TMP_SPELL!") do if %%~zS gtr 0 (
+        for %%S in ("!TMP_SPELL!") do if not "%%~zS"=="0" (
             call npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "!TMP_SPELL!"
             if errorlevel 1 (
                 del /f /q "!TMP_SPELL!" >nul 2>&1
@@ -167,6 +167,13 @@ echo Running shellcheck...
 call :run_shellcheck_audit
 if errorlevel 1 (
     echo [ERROR] ShellCheck audit failed.
+    exit /b 1
+)
+
+:: 4b. WinCheck (bootstrapped via _lib\toolchains\win-cmd-rs when nonexistent)
+call :run_wincheck_audit
+if errorlevel 1 (
+    echo [ERROR] WinCheck batch audit failed.
     exit /b 1
 )
 
@@ -267,11 +274,12 @@ if not errorlevel 1 set "SHELLCHECK_OPT_ARGS=-o useless-use-of-cat"
 set "_SC_LIST_TMP=%TEMP%\libscript_sc_files_%RANDOM%.txt"
 !GIT_FILE_CMD! -- "*.sh" ".githooks/pre-commit" > "!_SC_LIST_TMP!" 2>nul
 if not exist "!_SC_LIST_TMP!" exit /b 0
-for %%S in ("!_SC_LIST_TMP!") do if %%~zS equ 0 (
+for %%S in ("!_SC_LIST_TMP!") do if "%%~zS"=="0" (
     del /f /q "!_SC_LIST_TMP!" >nul 2>&1
     exit /b 0
 )
 
+REM wincheck disable=CMD3006
 set "_SC_PS="
 where pwsh >nul 2>&1
 if not errorlevel 1 set "_SC_PS=pwsh"
@@ -303,7 +311,7 @@ for /f "usebackq delims=" %%F in ("!_SC_LIST_TMP!") do (
     if "!_SC_MATCH!"=="1" if exist "%%F" (
         set "_SC_BATCH=!_SC_BATCH! "%%F""
         set /a "_SC_COUNT+=1"
-        if !_SC_COUNT! geq 40 (
+        if "!_SC_COUNT!"=="40" (
             shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
             if errorlevel 1 set "_SC_FAILED=1"
             set "_SC_BATCH="
@@ -312,9 +320,122 @@ for /f "usebackq delims=" %%F in ("!_SC_LIST_TMP!") do (
     )
 )
 del /f /q "!_SC_LIST_TMP!" >nul 2>&1
-if !_SC_COUNT! gtr 0 (
+if not "!_SC_COUNT!"=="0" (
     shellcheck -s sh !SHELLCHECK_OPT_ARGS! !_SC_BATCH!
     if errorlevel 1 set "_SC_FAILED=1"
 )
 if "!_SC_FAILED!"=="1" exit /b 1
+exit /b 0
+
+:: ## load_wincheck_env
+:: Loads the isolated win-cmd-rs version manager PATH while preserving STACK state.
+:load_wincheck_env
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\win-cmd-rs\env.cmd" (
+    set "_WC_SAVED_STACK=%STACK%"
+    set "STACK="
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\win-cmd-rs\env.cmd" >nul 2>&1
+    set "STACK=!_WC_SAVED_STACK!"
+)
+exit /b 0
+
+:: ## ensure_wincheck_bootstrapped
+:: Ensures wincheck is available on PATH on Windows, installing win-cmd-rs via LibScript when nonexistent.
+:ensure_wincheck_bootstrapped
+call :load_wincheck_env
+where wincheck >nul 2>&1
+if not errorlevel 1 exit /b 0
+
+echo [BOOTSTRAP] wincheck not found on PATH; installing via LibScript version manager...
+set "_WC_BOOT_VER=%WIN_CMD_RS_VERSION%"
+if "!_WC_BOOT_VER!"=="" set "_WC_BOOT_VER=latest"
+set "_PC_WC_SAVED_STACK=%STACK%"
+set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
+set "STACK="
+call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install win-cmd-rs "!_WC_BOOT_VER!"
+set "_WC_INST_RC=!errorlevel!"
+set "STACK=!_PC_WC_SAVED_STACK!"
+if not "!_WC_INST_RC!"=="0" (
+    echo [ERROR] Failed to bootstrap win-cmd-rs via LibScript version manager. 1>&2
+    exit /b 1
+)
+call :load_wincheck_env
+where wincheck >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] wincheck still not found on PATH after bootstrap. 1>&2
+    exit /b 1
+)
+exit /b 0
+
+:: ## run_wincheck_audit
+:: Executes WinCheck across candidate Windows Batch scripts using 4 parallel workers when PowerShell is available, falling back to pure Batch.
+:run_wincheck_audit
+set "_WC_LIST_TMP=%TEMP%\libscript_wc_files_!RANDOM!.txt"
+!GIT_FILE_CMD! -- "*.cmd" "*.bat" > "!_WC_LIST_TMP!" 2>nul
+if not exist "!_WC_LIST_TMP!" exit /b 0
+for %%S in ("!_WC_LIST_TMP!") do if "%%~zS"=="0" (
+    del /f /q "!_WC_LIST_TMP!" >nul 2>&1
+    exit /b 0
+)
+
+REM wincheck disable=CMD3006
+call :ensure_wincheck_bootstrapped
+if errorlevel 1 (
+    del /f /q "!_WC_LIST_TMP!" >nul 2>&1
+    exit /b 1
+)
+echo Running wincheck...
+set "_WC_EXCL=%LIBSCRIPT_WINCHECK_EXCLUDE%"
+if "!_WC_EXCL!"=="" set "_WC_EXCL=CMD1002,CMD2001,CMD2012,CMD2013,CMD3009,CMD4010"
+
+set "_WC_PS="
+where pwsh.exe >nul 2>&1
+if not errorlevel 1 set "_WC_PS=pwsh.exe"
+if not defined _WC_PS (
+    where powershell.exe >nul 2>&1
+    if not errorlevel 1 set "_WC_PS=powershell.exe"
+)
+
+if defined _WC_PS (
+    set "_LS_WC_LIST=!_WC_LIST_TMP!"
+    set "_LS_WC_EXCL=!_WC_EXCL!"
+    "!_WC_PS!" -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $wcExe = (Get-Command wincheck -ErrorAction Stop).Source; $cwd = (Get-Location).Path; $raw = [System.IO.File]::ReadAllLines($env:_LS_WC_LIST); $files = New-Object 'System.Collections.Generic.List[string]'; foreach ($f in $raw) { if ([string]::IsNullOrWhiteSpace($f)) { continue }; $n = $f.Replace([char]92, [char]47); if ($n -match '(^|/)(node_modules|\.git|gen|tests_tmp|cache|build)/') { continue }; $full = [System.IO.Path]::Combine($cwd, $f); if ([System.IO.File]::Exists($full)) { [void]$files.Add($f) } }; if ($files.Count -eq 0) { exit 0 }; $excl = $env:_LS_WC_EXCL; $running = New-Object 'System.Collections.Generic.List[object]'; $failed = $false; for ($i = 0; $i -lt $files.Count; $i += 80) { while ($running.Count -ge 4) { $doneIdx = -1; for ($k = 0; $k -lt $running.Count; $k++) { if ($running[$k].Proc.HasExited) { $doneIdx = $k; break } }; if ($doneIdx -lt 0) { Start-Sleep -Milliseconds 20; continue }; $item = $running[$doneIdx]; $running.RemoveAt($doneIdx); $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; $end = [Math]::Min($i + 79, $files.Count - 1); $quoted = for ($j = $i; $j -le $end; $j++) { [char]34 + $files[$j] + [char]34 }; $argStr = '--exclude ' + $excl + ' ' + ($quoted -join ' '); $psi = New-Object System.Diagnostics.ProcessStartInfo; $psi.FileName = $wcExe; $psi.Arguments = $argStr; $psi.UseShellExecute = $false; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true; $p = [System.Diagnostics.Process]::Start($psi); [void]$running.Add(@{ Proc = $p; Out = $p.StandardOutput.ReadToEndAsync(); Err = $p.StandardError.ReadToEndAsync() }) }; foreach ($item in $running) { $item.Proc.WaitForExit(); $outStr = $item.Out.GetAwaiter().GetResult(); $errStr = $item.Err.GetAwaiter().GetResult(); if ($outStr) { [Console]::Out.Write($outStr) }; if ($errStr) { [Console]::Error.Write($errStr) }; if ($item.Proc.ExitCode -ne 0) { $failed = $true }; $item.Proc.Dispose() }; if ($failed) { exit 1 } else { exit 0 }"
+    set "_WC_RC=!ERRORLEVEL!"
+    del /f /q "!_WC_LIST_TMP!" >nul 2>&1
+    exit /b !_WC_RC!
+)
+
+set "_WC_BATCH="
+set "_WC_COUNT=0"
+set "_WC_FAILED=0"
+for /f "usebackq delims=" %%F in ("!_WC_LIST_TMP!") do (
+    set "_WC_CAND=%%F"
+    set "_WC_NORM=!_WC_CAND:\=/!"
+    set "_WC_MATCH=1"
+    if not "!_WC_NORM:node_modules/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
+    if not "!_WC_NORM:.git/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
+    if /i "!_WC_NORM:~0,4!"=="gen/" set "_WC_MATCH=0"
+    if not "!_WC_NORM:/gen/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
+    if /i "!_WC_NORM:~0,10!"=="tests_tmp/" set "_WC_MATCH=0"
+    if not "!_WC_NORM:/tests_tmp/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
+    if /i "!_WC_NORM:~0,6!"=="cache/" set "_WC_MATCH=0"
+    if not "!_WC_NORM:/cache/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
+    if /i "!_WC_NORM:~0,6!"=="build/" set "_WC_MATCH=0"
+    if not "!_WC_NORM:/build/=!"=="!_WC_NORM!" set "_WC_MATCH=0"
+    if "!_WC_MATCH!"=="1" if exist "%%F" (
+        set "_WC_BATCH=!_WC_BATCH! "%%F""
+        set /a "_WC_COUNT+=1"
+        if "!_WC_COUNT!"=="40" (
+            wincheck --exclude "!_WC_EXCL!" !_WC_BATCH!
+            if errorlevel 1 set "_WC_FAILED=1"
+            set "_WC_BATCH="
+            set "_WC_COUNT=0"
+        )
+    )
+)
+del /f /q "!_WC_LIST_TMP!" >nul 2>&1
+if not "!_WC_COUNT!"=="0" (
+    wincheck --exclude "!_WC_EXCL!" !_WC_BATCH!
+    if errorlevel 1 set "_WC_FAILED=1"
+)
+if "!_WC_FAILED!"=="1" exit /b 1
 exit /b 0

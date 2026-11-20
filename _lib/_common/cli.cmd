@@ -60,7 +60,9 @@ exit /b 0
 :: ## help
 :: Displays usage assistance.
 :help
+goto :--help
 :--help
+goto :-h
 :-h
 echo Usage: %~n0 [command] [options]
 exit /b 0
@@ -73,6 +75,7 @@ set "CUSTOM_TAGS="
 set "BOOTSTRAP_SCRIPT="
 set "DRY_RUN=false"
 set "ARGS="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.

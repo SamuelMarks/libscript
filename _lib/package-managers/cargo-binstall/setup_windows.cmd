@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where cargo-binstall >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo cargo-binstall is already installed.
     exit /b 0
 )

@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where swift >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 for /d %%S in ("%LOCALAPPDATA%\Programs\Swift\Toolchains\*") do (
     if exist "%%S\usr\bin\swift.exe" (
@@ -67,6 +67,7 @@ for /d %%S in ("%ProgramFiles%\Swift\Toolchains\*") do (
 
 echo Installing Swift Toolchain via pkg_mgr...
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
+goto :create_shims
 
 :: ## create_shims
 :: Creates executable command shims for the installed Swift toolchain in the user bin directory.

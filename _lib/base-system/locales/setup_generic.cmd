@@ -266,7 +266,7 @@ if "!_LIST_LOC!"=="" set "_LIST_LOC=en_US.UTF-8 UTF-8"
 if not exist "%LIBSCRIPT_TARGET_SYSROOT%\etc" mkdir "%LIBSCRIPT_TARGET_SYSROOT%\etc"
 if not exist "%LIBSCRIPT_TARGET_SYSROOT%\var\lib\libscript\stamps" mkdir "%LIBSCRIPT_TARGET_SYSROOT%\var\lib\libscript\stamps"
 > "%LIBSCRIPT_TARGET_SYSROOT%\etc\locale.conf" echo LANG=!_DEF_LOC!
-> "%LIBSCRIPT_TARGET_SYSROOT%\etc\locale.gen" echo !_LIST_LOC:,=^
+> "%LIBSCRIPT_TARGET_SYSROOT%\etc\locale.gen" echo ^^!_LIST_LOC:,=^
 
 !
 > "%LIBSCRIPT_TARGET_SYSROOT%\var\lib\libscript\stamps\.stamp.locales" echo staged

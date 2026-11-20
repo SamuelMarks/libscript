@@ -85,6 +85,7 @@ exit /b 0
 :: Parses command-line targets into the test execution variable.
 :start_tests
 set "TARGETS=%*"
+goto :run_tests
 
 :: ## run_tests
 :: Orchestrates VM verification, repository rsync, and component testing loop.

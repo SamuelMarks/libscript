@@ -62,6 +62,7 @@ if "!ZEPHYR_VER!"=="" set "ZEPHYR_VER=3.7.0"
 if "!ZEPHYR_VER!"=="latest" set "ZEPHYR_VER=3.7.0"
 set "SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
 if "!SYSROOT!"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\zephyr-!BOARD!\sysroot"
+goto :parse_bf_args
 
 :: ## parse_bf_args
 :: Parses command-line flags for build_firmware.cmd.

@@ -66,6 +66,7 @@ if "%CMD%"=="dump" goto do_dump
 if "%CMD%"=="get" goto do_get
 if "%CMD%"=="set" goto do_set
 if "%CMD%"=="help" goto show_help
+goto :do_get
 
 :: ## do_get
 :: Retrieves a specific WordPress configuration option value.
@@ -80,6 +81,7 @@ for /f "tokens=2 delims='" %%a in ('findstr /i "'%KEY%'" "%WP_CONFIG%"') do (
     echo %%a
     exit /b 0
 )
+REM wincheck disable=CMD3006
 exit /b 1
 
 :: ## do_set

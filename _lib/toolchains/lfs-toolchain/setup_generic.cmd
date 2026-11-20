@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === LFS Toolchain Status (Win32) ===
+    echo === LFS Toolchain Status ^(Win32^) ===
     echo Toolchain builds are executed via Linux container or Vagrant VM builder.
     goto end
 )

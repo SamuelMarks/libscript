@@ -67,6 +67,7 @@ for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 set "FORMAT=qcow2"
 set "PROFILE=%REPO_ROOT%\profiles\illumos\minimal-server.json"
 set "OUTPUT="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -120,25 +121,25 @@ echo [DISTRO]   Synthesizing illumos sysroot from %PROFILE%...
 call "%REPO_ROOT%\_lib\illumos\distro\assemble.cmd" "%PROFILE%" "%SYSROOT%"
 
 if "%FORMAT%"=="qcow2" (
-    if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.qcow2"
-    call "!SCRIPT_DIR!\illumos_qcow2.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    if "!OUTPUT!"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.qcow2"
+    call "!SCRIPT_DIR!\illumos_qcow2.cmd" "%SYSROOT%" "!OUTPUT!" 20
 ) else if "%FORMAT%"=="box" (
-    if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.box"
+    if "!OUTPUT!"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.box"
     set "QCOW_TMP=%REPO_ROOT%\build\illumos.qcow2"
-    call "!SCRIPT_DIR!\illumos_qcow2.cmd" "%SYSROOT%" "%QCOW_TMP%" 20
-    call "!SCRIPT_DIR!\illumos_vagrant_box.cmd" "%QCOW_TMP%" "%OUTPUT%" "qemu"
+    call "!SCRIPT_DIR!\illumos_qcow2.cmd" "%SYSROOT%" "!QCOW_TMP!" 20
+    call "!SCRIPT_DIR!\illumos_vagrant_box.cmd" "!QCOW_TMP!" "!OUTPUT!" "qemu"
 ) else if "%FORMAT%"=="raw" (
-    if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.raw"
-    call "!SCRIPT_DIR!\illumos_raw.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    if "!OUTPUT!"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.raw"
+    call "!SCRIPT_DIR!\illumos_raw.cmd" "%SYSROOT%" "!OUTPUT!" 20
 ) else if "%FORMAT%"=="vhd" (
-    if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.vhd"
-    call "!SCRIPT_DIR!\illumos_vhd.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    if "!OUTPUT!"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.vhd"
+    call "!SCRIPT_DIR!\illumos_vhd.cmd" "%SYSROOT%" "!OUTPUT!" 20
 ) else if "%FORMAT%"=="vmdk" (
-    if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.vmdk"
-    call "!SCRIPT_DIR!\illumos_vmdk.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    if "!OUTPUT!"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.vmdk"
+    call "!SCRIPT_DIR!\illumos_vmdk.cmd" "%SYSROOT%" "!OUTPUT!" 20
 ) else if "%FORMAT%"=="iso" (
-    if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.iso"
-    call "!SCRIPT_DIR!\illumos_iso.cmd" "%SYSROOT%" "%OUTPUT%"
+    if "!OUTPUT!"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.iso"
+    call "!SCRIPT_DIR!\illumos_iso.cmd" "%SYSROOT%" "!OUTPUT!"
 )
 
 echo [OK]       Packaging complete: %OUTPUT%

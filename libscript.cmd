@@ -52,6 +52,7 @@ goto :find_root
 
 :: Source logging (must be after SCRIPT_DIR)
 set "LOG_CMD=!SCRIPT_DIR!\_lib\_common\log.cmd"
+goto :opt_loop
 
 :: Global Option Parsing
 :: ## opt_loop
@@ -122,6 +123,7 @@ if "!is_opt!"=="1" (
     shift
     goto :opt_loop
 )
+:: wincheck disable=CMD3005
 
 :: ## run_cmd
 :: Dispatches the requested CLI verb to the resolved component script.
@@ -136,7 +138,7 @@ if /i "%cmd%"=="-?" goto show_help
 
 if /i "%cmd%"=="--version" (
     if defined LIBSCRIPT_VERSION (
-        echo %LIBSCRIPT_VERSION%
+        echo.%LIBSCRIPT_VERSION%
     ) else (
         echo dev
     )
@@ -144,7 +146,7 @@ if /i "%cmd%"=="--version" (
 )
 if /i "%cmd%"=="-v" (
     if defined LIBSCRIPT_VERSION (
-        echo %LIBSCRIPT_VERSION%
+        echo.%LIBSCRIPT_VERSION%
     ) else (
         echo dev
     )
@@ -239,7 +241,7 @@ if /i "%cmd%"=="prepare-storage" set "is_docker_cmd=1"
 if /i "%cmd%"=="uninstall-service" (
     if "%~2"=="" set "is_docker_cmd=1"
     if /i "%~2"=="libscript.json" set "is_docker_cmd=1"
-    echo %~2 | findstr /i "\.json$" >nul && set "is_docker_cmd=1"
+    echo.%~2 | findstr /i "\.json$" >nul && set "is_docker_cmd=1"
 )
 
 if "!is_docker_cmd!"=="1" (
@@ -304,6 +306,7 @@ if "%is_action%"=="1" (
     set "action_pkg=%cmd%"
     goto match_component
 )
+:: wincheck disable=CMD3005
 
 :: ## match_component
 :: Resolves a short component name to its relative category/component path under _lib/.
@@ -441,12 +444,12 @@ for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\topologies\*" "!SCRIPT_DIR!\p
     )
 )
 
-if !match_count! equ 1 (
+if "!match_count!" equ "1" (
     set "target=!last_match!"
     goto run_target
 )
 
-if !match_count! equ 0 (
+if "!match_count!" equ "0" (
     echo Error: Unknown component '!action_pkg!'. >&2
     exit /b 1
 )
@@ -481,6 +484,7 @@ if exist "!target!\cli.cmd" (
     echo Error: Local CLI not found in "!target!" >&2
     exit /b 1
 )
+:: wincheck disable=CMD3005
 
 :: ## show_help
 :: Displays command-line usage instructions and available options.

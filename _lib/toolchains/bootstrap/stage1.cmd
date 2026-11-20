@@ -104,8 +104,8 @@ for %%T in (m4 ncurses sh coreutils diffutils file findutils gawk grep gzip make
     )
 )
 
-echo completed > "%STAGE1_STAMP!.tmp"
-move /y "%STAGE1_STAMP!.tmp" "%STAGE1_STAMP%" >nul
-echo [OK]    Stage 1 Minimal Userland finished: %STAGE1_STAMP%
+echo completed > "!STAGE1_STAMP!.tmp"
+move /y "!STAGE1_STAMP!.tmp" "!STAGE1_STAMP!" >nul
+echo [OK]    Stage 1 Minimal Userland finished: !STAGE1_STAMP!
 
 endlocal

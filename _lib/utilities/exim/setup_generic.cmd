@@ -61,10 +61,10 @@ if "%ACTION%"=="install" (
     )
     echo [INFO] Exim is POSIX-specific. Routing to hMailServer for native Windows SMTP relay...
     call "!SCRIPT_DIR!\..\hmailserver\setup.cmd" install
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 ) else if "%ACTION%"=="test" (
     call "!SCRIPT_DIR!\..\hmailserver\test.cmd"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

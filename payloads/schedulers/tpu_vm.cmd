@@ -49,6 +49,7 @@ if "!BACKEND!"=="" set "BACKEND=jax_native"
 
 shift
 shift
+goto :parse_args
 
 :: ## parse_args
 :: Parses flags for tpu_vm.cmd.

@@ -55,7 +55,7 @@ if not exist "%DIR%\kubernetes-the-hard-way\.git" (
   if exist "%DIR%\kubernetes-the-hard-way" rmdir /s /q "%DIR%\kubernetes-the-hard-way" >nul 2>&1
   git clone --depth 1 https://github.com/kelseyhightower/kubernetes-the-hard-way.git "%DIR%\kubernetes-the-hard-way"
 )
-cd %DIR%\\kubernetes-the-hard-way
+cd /d "%DIR%\kubernetes-the-hard-way"
 if not exist downloads mkdir downloads
 rem On Windows, downloading the Linux binaries so we can scp them to the nodes later.
 rem We use AMD64 by default.

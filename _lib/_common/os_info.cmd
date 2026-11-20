@@ -48,6 +48,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :detect_os_info
 
 :: ## detect_os_info
 :: Detects the host operating system, distribution, and CPU architecture.

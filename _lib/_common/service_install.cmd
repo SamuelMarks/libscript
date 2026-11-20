@@ -274,6 +274,7 @@ set "LIBSCRIPT_OVERRIDE_CHANGED=0"
 set "_EOV_MOUNT=%DATA_DISK_MOUNT%"
 if "!_EOV_MOUNT!"=="" set "_EOV_MOUNT=%DATA_MOUNT_DIR%"
 if "!_EOV_MOUNT!"=="" set "_EOV_MOUNT=/mnt/data"
+goto :ovr_arg_loop
 
 :: ## ovr_arg_loop
 :: Iterates through all remaining KEY=VALUE positional arguments and writes them to .env.service.
@@ -298,7 +299,7 @@ if not "!_KV!"=="" (
             move /y "!_ENV_FILE!.tmp" "!_ENV_FILE!" >nul 2>&1
         )
         if "!_FOUND_EXACT!"=="0" set "LIBSCRIPT_OVERRIDE_CHANGED=1"
-        echo !_KV!>> "!_ENV_FILE!"
+        echo.!_KV!>> "!_ENV_FILE!"
         setx %%A "%%B" /M >nul 2>&1
         if /i "!_OVR_SVC!"=="ollama" (
             if /i "%%A"=="OLLAMA_MODELS" (

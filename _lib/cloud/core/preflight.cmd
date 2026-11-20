@@ -86,7 +86,7 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="azure" (
     where az >nul 2>nul
     if errorlevel 1 (
-        echo Error: Azure CLI ('az'^) is not installed. Run 'libscript install azure'. >&2
+        echo Error: Azure CLI ^('az'^) is not installed. Run 'libscript install azure'. >&2
         exit /b 1
     )
     az account show >nul 2>nul
@@ -97,7 +97,7 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="digitalocean" (
     where doctl >nul 2>nul
     if errorlevel 1 (
-        echo Error: DigitalOcean CLI ('doctl'^) is not installed. Run 'libscript install digitalocean'. >&2
+        echo Error: DigitalOcean CLI ^('doctl'^) is not installed. Run 'libscript install digitalocean'. >&2
         exit /b 1
     )
     doctl account get >nul 2>nul
@@ -108,7 +108,7 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="linode" (
     where linode-cli >nul 2>nul
     if errorlevel 1 (
-        echo Error: Linode CLI ('linode-cli'^) is not installed. Run 'libscript install linode'. >&2
+        echo Error: Linode CLI ^('linode-cli'^) is not installed. Run 'libscript install linode'. >&2
         exit /b 1
     )
     linode-cli account view >nul 2>nul
@@ -119,7 +119,7 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="vultr" (
     where vultr-cli >nul 2>nul
     if errorlevel 1 (
-        echo Error: Vultr CLI ('vultr-cli'^) is not installed. Run 'libscript install vultr'. >&2
+        echo Error: Vultr CLI ^('vultr-cli'^) is not installed. Run 'libscript install vultr'. >&2
         exit /b 1
     )
     vultr-cli account >nul 2>nul
@@ -130,7 +130,7 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="oci" (
     where oci >nul 2>nul
     if errorlevel 1 (
-        echo Error: Oracle Cloud CLI ('oci'^) is not installed. Run 'libscript install oci'. >&2
+        echo Error: Oracle Cloud CLI ^('oci'^) is not installed. Run 'libscript install oci'. >&2
         exit /b 1
     )
     oci iam region list >nul 2>nul
@@ -141,7 +141,7 @@ if "%provider%"=="aws" (
 ) else if "%provider%"=="ovh" (
     where ovhcloud >nul 2>nul
     if errorlevel 1 (
-        echo Error: OVHcloud CLI ('ovhcloud'^) is not installed. Run 'libscript install ovh'. >&2
+        echo Error: OVHcloud CLI ^('ovhcloud'^) is not installed. Run 'libscript install ovh'. >&2
         exit /b 1
     )
     ovhcloud account info >nul 2>nul

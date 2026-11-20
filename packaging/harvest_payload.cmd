@@ -57,6 +57,7 @@ set "DIRECTORY_ID=LIBSCRIPT_FOLDER"
 set "ROOT_DIR=!LIBSCRIPT_ROOT_DIR!"
 set "INCLUDE_CACHE="
 set "INCLUDE_MSI=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for payload harvesting and WiX XML fragment synthesis.
@@ -175,8 +176,8 @@ set "TMP_FLT_AWK=%TEMP%\ls_harvest_flt_%RANDOM%.awk"
 del /f /q "!TMP_FLT_AWK!" "!TMP_RAW!" >nul 2>&1
 
 if not "!CACHE_REAL!"=="" if exist "!CACHE_REAL!" (
-    set "TMP_CACHE_RAW=%TEMP%\ls_harvest_cache_%RANDOM%.txt"
-    set "TMP_CACHE_AWK=%TEMP%\ls_harvest_cache_%RANDOM%.awk"
+    set "TMP_CACHE_RAW=%TEMP%\ls_harvest_cache_!RANDOM!.txt"
+    set "TMP_CACHE_AWK=%TEMP%\ls_harvest_cache_!RANDOM!.awk"
     dir /s /b /a-d "!CACHE_REAL!" > "!TMP_CACHE_RAW!" 2>nul
     (
         echo BEGIN { gsub^(/\\/, "/", c_dir^); sub^(/\/$/, "", c_dir^) }
@@ -193,7 +194,7 @@ if not "!CACHE_REAL!"=="" if exist "!CACHE_REAL!" (
 
 set "FILE_COUNT=0"
 for /f "usebackq delims=" %%L in ("!TMP_FLT!") do set /a FILE_COUNT+=1
-if !FILE_COUNT! equ 0 (
+if "!FILE_COUNT!" equ "0" (
     del /f /q "!TMP_FLT!" >nul 2>&1
     echo [ERROR] Harvested 0 files. Payload is empty. >&2
     exit /b 1
@@ -225,7 +226,7 @@ if not "!OUTPUT_DIR!"=="" (
 
 if not "!WIX_FRAGMENT!"=="" (
     for %%W in ("!WIX_FRAGMENT!") do if not exist "%%~dpW" mkdir "%%~dpW" 2>nul
-    set "TMP_WIX_AWK=%TEMP%\ls_harvest_wix_%RANDOM%.awk"
+    set "TMP_WIX_AWK=%TEMP%\ls_harvest_wix_!RANDOM!.awk"
     (
         echo function sanitize^(s,   res^) { res = s; gsub^(/[^^a-zA-Z0-9_]/, "_", res^); return res }
         echo function str_hash32^(s, seed, mult, mod,   res, i, len, c^) {
@@ -321,7 +322,7 @@ if not "!WIX_FRAGMENT!"=="" (
     "!AWK_BIN!" -v "root=!ROOT_DIR!" -v "dir_id=!DIRECTORY_ID!" -v "comp_group=!COMPONENT_GROUP!" -v "inc_cache=!CACHE_REAL!" -f "!TMP_WIX_AWK!" "!TMP_FLT!" > "!WIX_FRAGMENT!.tmp"
     set "_WIX_RC=!ERRORLEVEL!"
     del /f /q "!TMP_WIX_AWK!" >nul 2>&1
-    if !_WIX_RC! neq 0 (
+    if "!_WIX_RC!" neq "0" (
         del /f /q "!WIX_FRAGMENT!.tmp" "!TMP_FLT!" >nul 2>&1
         echo [ERROR] Failed to synthesize WiX XML fragment via !AWK_BIN! >&2
         exit /b 1

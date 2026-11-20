@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where VBoxManage >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     VBoxManage --version
     VBoxManage list extpacks 2>nul
     exit /b 0

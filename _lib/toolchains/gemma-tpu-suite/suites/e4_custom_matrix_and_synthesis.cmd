@@ -54,7 +54,7 @@ for /f "usebackq delims=" %%H in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\remot
 set "_tpl_f=%TEMP%\e4_tpl_%RANDOM%.txt"
 type nul > "!_tpl_f!"
 if not "%GEMMA_TPU_SUITE_SKIP_CUSTOM_EXEC%"=="1" (
-    if not "!GEMMA_TPU_SUITE_COMMAND_TEMPLATE!"=="" echo !GEMMA_TPU_SUITE_COMMAND_TEMPLATE!>> "!_tpl_f!"
+    if not "!GEMMA_TPU_SUITE_COMMAND_TEMPLATE!"=="" echo.!GEMMA_TPU_SUITE_COMMAND_TEMPLATE!>> "!_tpl_f!"
     if exist "!REPO_DIR!\libscript.json" (
         jq -r "(.ml.command_matrix // [])[]" "!REPO_DIR!\libscript.json" >> "!_tpl_f!" 2>nul
     )
@@ -102,6 +102,8 @@ move /y "!RESULTS_DIR!\comparison_summary.csv.tmp" "!RESULTS_DIR!\comparison_sum
     echo.
     echo ^| Backend ^| Inference tok/s ^| SQL Exec Acc ^| Train tok/s/chip ^| Peak HBM ^(B^) ^| vs HF ^| vs JAX ^|
     echo ^| :--- ^| ---: ^| ---: ^| ---: ^| ---: ^| ---: ^| ---: ^|
+    REM wincheck disable=CMD1013
+    REM wincheck disable=CMD1003
     jq -r ".backends[] | \"| `\(.backend_id)` | \(.inference_tokens_per_sec) | \(.sql_execution_accuracy) | \(.train_tokens_per_sec_per_chip) | \(.peak_tpu_hbm_bytes) | \(.speedup_vs_hf_transformers)x | \(.speedup_vs_jax_native)x |\"" "!RESULTS_DIR!\comparison_summary.json"
 ) > "!RESULTS_DIR!\comparison_summary.md.tmp"
 move /y "!RESULTS_DIR!\comparison_summary.md.tmp" "!RESULTS_DIR!\comparison_summary.md" >nul

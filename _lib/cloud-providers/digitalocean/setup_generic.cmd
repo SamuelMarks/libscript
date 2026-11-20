@@ -149,7 +149,7 @@ if /i "!_SUB!"=="ip" (
 set "_IP="
 for /f "tokens=*" %%I in ('doctl compute droplet get "!_NODE!" --format PublicIPv4 --no-header 2^>nul') do set "_IP=%%I"
 if /i "!_SUB!"=="ip" (
-    echo !_IP!
+    echo.!_IP!
     exit /b 0
 )
 if /i "!_SUB!"=="exec" (

@@ -41,8 +41,8 @@ set "PR_ACT=%~1"
 if "!PR_ACT!"=="" goto :pr_help
 if /i "!PR_ACT!"=="--help" goto :pr_help
 if /i "!PR_ACT!"=="-h" goto :pr_help
-if /i "!PR_ACT!"=="infer-format" ( call :pr_infer_format_for_os "%~2" "%~3" & if errorlevel 1 exit /b 1 & echo !PR_FMT! & exit /b 0 )
-if /i "!PR_ACT!"=="sha256" ( call :pr_compute_sha256 "%~2" & echo !PR_SHA! & exit /b 0 )
+if /i "!PR_ACT!"=="infer-format" ( call :pr_infer_format_for_os "%~2" "%~3" & if errorlevel 1 exit /b 1 & echo.!PR_FMT! & exit /b 0 )
+if /i "!PR_ACT!"=="sha256" ( call :pr_compute_sha256 "%~2" & echo.!PR_SHA! & exit /b 0 )
 if /i "!PR_ACT!"=="resolve" ( call :pr_resolve_artifact "%~2" "%~3" "%~4" "%~5" "%~6" "%~7" "%~8" "%~9" & exit /b !errorlevel! )
 echo [ERROR] Unknown pkg_resolver action: !PR_ACT! >&2
 exit /b 1
@@ -98,7 +98,7 @@ if not "!_force!"=="1" (
     for %%E in ("!_cdir!\*.!_fmt!") do (
         if exist "%%~fE" (
             echo [SKIP] Reusing cached GitHub Release artifact: %%~fE >&2
-            echo %%~fE
+            echo.%%~fE
             exit /b 0
         )
     )
@@ -106,7 +106,7 @@ if not "!_force!"=="1" (
 if not "%LIBSCRIPT_MOCK_GITHUB_RELEASE_FILE%"=="" (
     if exist "%LIBSCRIPT_MOCK_GITHUB_RELEASE_FILE%" (
         copy /y "%LIBSCRIPT_MOCK_GITHUB_RELEASE_FILE%" "!_cdir!\!_app!-mock.!_fmt!" >nul
-        echo !_cdir!\!_app!-mock.!_fmt!
+        echo.!_cdir!\!_app!-mock.!_fmt!
         exit /b 0
     )
 )
@@ -125,7 +125,7 @@ if "!_asset_url!"=="" (
 )
 set "_dest=!_cdir!\!_aname!"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_asset_url!" "!_dest!"
-echo !_dest!
+echo.!_dest!
 exit /b 0
 
 :: ## pr_build_anew_on_host
@@ -147,13 +147,13 @@ set "_out_pkg=!_out_dir!\!_app!-!_ver!-!_var!.!_fmt!"
 if not "!_force!"=="1" (
     if exist "!_out_pkg!" (
         echo [SKIP] Reusing host-built !_fmt! package: !_out_pkg! >&2
-        echo !_out_pkg!
+        echo.!_out_pkg!
         exit /b 0
     )
 )
 if "%LIBSCRIPT_MOCK_ARTIFACT_BUILD%"=="1" (
     echo MOCK_PACKAGE:!_app!:!_fmt!:!_ver!> "!_out_pkg!"
-    echo !_out_pkg!
+    echo.!_out_pkg!
     exit /b 0
 )
 if /i "!_fmt!"=="msi" (
@@ -164,7 +164,7 @@ if /i "!_fmt!"=="msi" (
             for %%M in ("!_out_dir!\*.msi") do (
                 if not "%%~fM"=="!_out_pkg!" copy /y "%%~fM" "!_out_pkg!" >nul
             )
-            echo !_out_pkg!
+            echo.!_out_pkg!
             exit /b 0
         )
     )
@@ -175,7 +175,7 @@ if not exist "!_out_pkg!" (
     echo [ERROR] Host package build did not produce !_out_pkg! >&2
     exit /b 1
 )
-echo !_out_pkg!
+echo.!_out_pkg!
 exit /b 0
 
 :: ## pr_resolve_artifact

@@ -83,13 +83,13 @@ if "%TARGET_DIR%"=="" set "TARGET_DIR=C:\libscript_freebsd_target"
 echo [INSTALL-FREEBSD] Initiating FreeBSD installation on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\install_freebsd.sh" "%TARGET_DEV%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\install_freebsd.sh" "%TARGET_DEV%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )

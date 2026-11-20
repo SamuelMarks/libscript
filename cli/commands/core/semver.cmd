@@ -61,7 +61,7 @@ if /i "%~1"=="semver" (
 
 if "!v1!"=="" (
     echo Usage: %~nx0 [semver] ^<v1^> ^<operator^> ^<v2^> 1>&2
-    echo Operators: = != ^> ^< ^>= ^<= 1>&2
+    echo Operators: = ^^!= ^> ^< ^>= ^<= 1>&2
     exit /b 1
 )
 
@@ -88,14 +88,19 @@ if "!b1!"=="" set "b1=0"
 if "!b2!"=="" set "b2=0"
 if "!b3!"=="" set "b3=0"
 if "!b4!"=="" set "b4=0"
+goto :compare_semver
 
 :: ## compare_semver
 :: Compares two semantic version strings and outputs their ordering relationship.
 :compare_semver
 set "cmp=0"
+REM wincheck disable=CMD2003
 if !a1! GTR !b1! (set "cmp=1") else if !a1! LSS !b1! (set "cmp=-1") else (
+    REM wincheck disable=CMD2003
     if !a2! GTR !b2! (set "cmp=1") else if !a2! LSS !b2! (set "cmp=-1") else (
+        REM wincheck disable=CMD2003
         if !a3! GTR !b3! (set "cmp=1") else if !a3! LSS !b3! (set "cmp=-1") else (
+            REM wincheck disable=CMD2003
             if !a4! GTR !b4! (set "cmp=1") else if !a4! LSS !b4! (set "cmp=-1") else (
                 set "cmp=0"
             )
@@ -103,18 +108,22 @@ if !a1! GTR !b1! (set "cmp=1") else if !a1! LSS !b1! (set "cmp=-1") else (
     )
 )
 
-if "!op!"=="="  ( if !cmp! EQU 0 (exit /b 0) else (exit /b 1) )
-if "!op!"=="==" ( if !cmp! EQU 0 (exit /b 0) else (exit /b 1) )
-if "!op!"=="-eq" ( if !cmp! EQU 0 (exit /b 0) else (exit /b 1) )
-if "!op!"=="!=" ( if not !cmp! EQU 0 (exit /b 0) else (exit /b 1) )
-if "!op!"=="-ne" ( if not !cmp! EQU 0 (exit /b 0) else (exit /b 1) )
-if "!op!"==">"  ( if !cmp! EQU 1 (exit /b 0) else (exit /b 1) )
-if "!op!"=="-gt" ( if !cmp! EQU 1 (exit /b 0) else (exit /b 1) )
-if "!op!"=="<"  ( if !cmp! EQU -1 (exit /b 0) else (exit /b 1) )
-if "!op!"=="-lt" ( if !cmp! EQU -1 (exit /b 0) else (exit /b 1) )
+if "!op!"=="="  ( if "!cmp!" EQU "0" (exit /b 0) else (exit /b 1) )
+if "!op!"=="==" ( if "!cmp!" EQU "0" (exit /b 0) else (exit /b 1) )
+if "!op!"=="-eq" ( if "!cmp!" EQU "0" (exit /b 0) else (exit /b 1) )
+if "!op!"=="!=" ( if not "!cmp!" EQU "0" (exit /b 0) else (exit /b 1) )
+if "!op!"=="-ne" ( if not "!cmp!" EQU "0" (exit /b 0) else (exit /b 1) )
+if "!op!"==">"  ( if "!cmp!" EQU "1" (exit /b 0) else (exit /b 1) )
+if "!op!"=="-gt" ( if "!cmp!" EQU "1" (exit /b 0) else (exit /b 1) )
+if "!op!"=="<"  ( if "!cmp!" EQU "-1" (exit /b 0) else (exit /b 1) )
+if "!op!"=="-lt" ( if "!cmp!" EQU "-1" (exit /b 0) else (exit /b 1) )
+REM wincheck disable=CMD2003
 if "!op!"==">=" ( if !cmp! GEQ 0 (exit /b 0) else (exit /b 1) )
+REM wincheck disable=CMD2003
 if "!op!"=="-ge" ( if !cmp! GEQ 0 (exit /b 0) else (exit /b 1) )
+REM wincheck disable=CMD2003
 if "!op!"=="<=" ( if !cmp! LEQ 0 (exit /b 0) else (exit /b 1) )
+REM wincheck disable=CMD2003
 if "!op!"=="-le" ( if !cmp! LEQ 0 (exit /b 0) else (exit /b 1) )
 
 echo Unknown operator: !op! 1>&2

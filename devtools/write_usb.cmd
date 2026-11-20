@@ -84,12 +84,12 @@ if "%DRIVE_LETTER%"=="" (
 )
 
 if not exist "%IMAGE_PATH%" (
-    echo [ERROR] Source image "%IMAGE_PATH%" does not exist! >&2
+    echo [ERROR] Source image "%IMAGE_PATH%" does not exist^^! >&2
     exit /b 1
 )
 
 if /i "%DRIVE_LETTER:~0,1%"=="C" (
-    echo [ERROR] Safety interlock: Cannot write to system drive C:! >&2
+    echo [ERROR] Safety interlock: Cannot write to system drive C:^^! >&2
     exit /b 1
 )
 
@@ -103,7 +103,7 @@ powershell -NoProfile -Command ^
     "    Write-Error ('[ERROR] Drive ' + '%DRIVE_LETTER:~0,1%' + ' is not a USB drive!'); exit 1; " ^
     "}"
 
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     echo [OK] USB flashing completed successfully.
     exit /b 0
 ) else (

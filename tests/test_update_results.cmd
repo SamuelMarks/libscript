@@ -94,7 +94,7 @@ if errorlevel 1 (
 echo [PASS] 2x consecutive runs of update_results.cmd are 100%% idempotent.
 
 where pwsh >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\tests\test_update_results.ps1"
     if errorlevel 1 (
         rmdir /s /q "%TMP_TEST_DIR%" 2>nul
@@ -109,5 +109,5 @@ if %ERRORLEVEL% equ 0 (
 )
 
 rmdir /s /q "%TMP_TEST_DIR%" 2>nul
-echo === All Tiered README Table Generator Checks Passed! ===
+echo === All Tiered README Table Generator Checks Passed^^! ===
 exit /b 0

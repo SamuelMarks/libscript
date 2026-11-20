@@ -86,10 +86,10 @@ if exist "%STAMP_FILE%" (
 
 echo [CONFIG]   Configuring core illumos files (hostname=%HOSTNAME%, dhcp=%USE_DHCP%)...
 
-echo %HOSTNAME%> "%SYSROOT%\etc\nodename"
+echo.%HOSTNAME%> "%SYSROOT%\etc\nodename"
 
 (
-    echo # IPv4 and IPv6 hosts table (managed by LibScript^)
+    echo # IPv4 and IPv6 hosts table ^(managed by LibScript^)
     echo 127.0.0.1       localhost
     echo ::1             localhost
     echo 127.0.0.1       %HOSTNAME%
@@ -106,13 +106,13 @@ echo %HOSTNAME%> "%SYSROOT%\etc\nodename"
 ) > "%SYSROOT%\etc\default\login"
 
 (
-    echo # DNS resolver configuration (managed by LibScript^)
+    echo # DNS resolver configuration ^(managed by LibScript^)
     echo nameserver 1.1.1.1
     echo nameserver 8.8.8.8
 ) > "%SYSROOT%\etc\resolv.conf"
 
 (
-    echo # illumos Loader Configuration (managed by LibScript^)
+    echo # illumos Loader Configuration ^(managed by LibScript^)
     echo autoboot_delay="2"
     echo boot_multicons="YES"
     echo boot_serial="YES"

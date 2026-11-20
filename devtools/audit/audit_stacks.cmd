@@ -71,7 +71,7 @@ exit /b 0
 set "ROOT_DIR=!LIBSCRIPT_ROOT_DIR!"
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_stacks.ps1" %*
     exit /b !ERRORLEVEL!
 )
@@ -79,7 +79,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
 )
 where dash >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     set "STACK="
     dash "!SCRIPT_DIR!\audit_stacks.sh" %*
     exit /b !ERRORLEVEL!

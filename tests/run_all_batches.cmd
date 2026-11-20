@@ -49,6 +49,7 @@ goto :find_root
 :root_found
 
 set "OS_TARGET=alpine-3.24"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -90,13 +91,14 @@ if not exist "TODO_PLAN.md" (
         )
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## loop
 :: Parses command-line arguments and populates configuration variables.
 :loop
 for /f "delims=" %%I in ('call "%SCRIPT_DIR%\run_next_batch.cmd"') do set "BATCH=%%I"
 if "!BATCH!"=="" (
-    echo No more components to test!
+    echo No more components to test^^!
     goto :end_loop
 )
 

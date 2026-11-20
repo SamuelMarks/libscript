@@ -52,7 +52,7 @@ goto :find_root
 
 
 IF "%~1"=="status" (
-    echo === Networking Stack Status (Win32) ===
+    echo === Networking Stack Status ^(Win32^) ===
     echo Networking stack configuration executes inside Linux container or VM builder.
     goto end
 )

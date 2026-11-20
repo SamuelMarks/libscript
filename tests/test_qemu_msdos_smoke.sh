@@ -175,6 +175,12 @@ rm -f "${STAGE_SRC}/sed.exe"
 cp -f "${STAGE_SRC}/DOS32A.EXE" "${STAGE_SRC}/sqlite3.exe"
 (cd "${STAGE_SRC}" && zip -q "${DL_FIX}/sqlite-tools/sqlite-tools-3.47.2-dos32.zip" sqlite3.exe)
 rm -f "${STAGE_SRC}/sqlite3.exe"
+mkdir -p "${DL_FIX}/win-cmd-rs"
+cp -f "${STAGE_SRC}/DOS32A.EXE" "${STAGE_SRC}/WINCHECK.EXE"
+cp -f "${STAGE_SRC}/DOS32A.EXE" "${STAGE_SRC}/WINCMD.EXE"
+cp -f "${STAGE_SRC}/DOS32A.EXE" "${STAGE_SRC}/CWSDPMI.EXE"
+(cd "${STAGE_SRC}" && zip -q "${DL_FIX}/win-cmd-rs/win-cmd-rs-v0.0.1-i586-pc-msdosdjgpp.zip" WINCHECK.EXE WINCMD.EXE CWSDPMI.EXE)
+rm -f "${STAGE_SRC}/WINCHECK.EXE" "${STAGE_SRC}/WINCMD.EXE" "${STAGE_SRC}/CWSDPMI.EXE"
 
 env LIBSCRIPT_TARGET_OS='msdos' LIBSCRIPT_DOS_83='1' LIBSCRIPT_OFFLINE='1' \
   LIBSCRIPT_HOME="${DOS_HOME}" DOWNLOAD_DIR="${DL_FIX}" \

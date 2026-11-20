@@ -263,7 +263,7 @@ set "_TZ_VAL=%TZDATA_TIMEZONE%"
 if "!_TZ_VAL!"=="" set "_TZ_VAL=UTC"
 if not exist "%LIBSCRIPT_TARGET_SYSROOT%\etc" mkdir "%LIBSCRIPT_TARGET_SYSROOT%\etc"
 if not exist "%LIBSCRIPT_TARGET_SYSROOT%\var\lib\libscript\stamps" mkdir "%LIBSCRIPT_TARGET_SYSROOT%\var\lib\libscript\stamps"
-> "%LIBSCRIPT_TARGET_SYSROOT%\etc\timezone" echo !_TZ_VAL!
+> "%LIBSCRIPT_TARGET_SYSROOT%\etc\timezone" echo.!_TZ_VAL!
 > "%LIBSCRIPT_TARGET_SYSROOT%\var\lib\libscript\stamps\.stamp.tzdata" echo staged
 exit /b 0
 

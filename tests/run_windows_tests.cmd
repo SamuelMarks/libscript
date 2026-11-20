@@ -84,6 +84,7 @@ exit /b 0
 :: Parses command-line targets into the test execution variable.
 :start_tests
 set "TARGETS=%*"
+goto :run_tests
 
 :: ## run_tests
 :: Orchestrates VM verification, repository rsync, and component testing loop.
@@ -164,7 +165,7 @@ if exist "!success_file!" del "!success_file!" >nul 2>&1
 if exist "!failure_file!" del "!failure_file!" >nul 2>&1
 if exist "!idempotent_file!" del "!idempotent_file!" >nul 2>&1
 
-set "test_cmd=cmd.exe /c "C:\libscript\libscript.cmd install !target! && C:\libscript\libscript.cmd test !target! && C:\libscript\libscript.cmd install !target! && C:\libscript\libscript.cmd test !target!""
+set "test_cmd=cmd.exe /c \"call C:\libscript\libscript.cmd install !target! && call C:\libscript\libscript.cmd test !target! && call C:\libscript\libscript.cmd install !target! && call C:\libscript\libscript.cmd test !target!\""
 
 pushd "%VAGRANT_DIR%"
 vagrant ssh -c "!test_cmd!" > "!stdout_file!" 2> "!stderr_file!"

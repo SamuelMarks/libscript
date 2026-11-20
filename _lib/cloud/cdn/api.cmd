@@ -142,13 +142,13 @@ if "%provider%"=="aws" (
         if not "%domain%"=="" (
             if not "%cert_id%"=="" (
                 gcloud compute target-https-proxies create "%bucket%-https-proxy" --url-map="%bucket%-urlmap" --ssl-certificates="%cert_id%"
-                gcloud compute forwarding-rules create "%bucket%-https-rule" --target-https-proxy="%bucket%-https-proxy%" --ports=443 --global
+                gcloud compute forwarding-rules create "%bucket%-https-rule" --target-https-proxy="%bucket%-https-proxy" --ports=443 --global
                 echo HTTPS CDN created.
                 exit /b 0
             )
         )
         gcloud compute target-http-proxies create "%bucket%-http-proxy" --url-map="%bucket%-urlmap"
-        gcloud compute forwarding-rules create "%bucket%-http-rule" --target-http-proxy="%bucket%-http-proxy%" --ports=80 --global
+        gcloud compute forwarding-rules create "%bucket%-http-rule" --target-http-proxy="%bucket%-http-proxy" --ports=80 --global
         echo HTTP CDN created.
     )
 ) else if "%provider%"=="azure" (

@@ -57,7 +57,7 @@ if exist "%SystemRoot%\System32\inetsrv\appcmd.exe" (
 
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" is-active w3svc >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo IIS W3SVC service verified.
     exit /b 0
 )

@@ -71,6 +71,6 @@ if errorlevel 1 (
 ctest --test-dir "!TEST_TMP!\build" --output-on-failure
 set "_RC=!ERRORLEVEL!"
 rmdir /s /q "!TEST_TMP!" 2>nul
-if !_RC! neq 0 exit /b !_RC!
+if "!_RC!" neq "0" exit /b !_RC!
 echo [PASS] Windows C11 libscript-rest-api build and CTest verification succeeded.
 exit /b 0

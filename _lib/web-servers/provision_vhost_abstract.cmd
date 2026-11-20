@@ -57,6 +57,7 @@ set "LISTEN_PORT=80"
 set "TARGET="
 set "DOC_ROOT="
 set "CONF_FILE="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -193,7 +194,7 @@ if not exist "%CONF_FILE%" (
         echo }
         echo $0 == begin_marker {
         echo   in_block = 1
-        echo   while (^(getline line ^< "%NEW_BLOCK_FILE%"^) ^> 0^) {
+        echo   while ^(^(getline line ^< "%NEW_BLOCK_FILE%"^) ^> 0^) {
         echo     print line
         echo   }
         echo   close^("%NEW_BLOCK_FILE%"^)
@@ -204,13 +205,13 @@ if not exist "%CONF_FILE%" (
         echo   in_block = 0
         echo   next
         echo }
-        echo ^!in_block {
+        echo ^^!in_block {
         echo   print $0
         echo }
         echo END {
-        echo   if (^\!replaced^) {
+        echo   if ^(^^!replaced^) {
         echo     print ""
-        echo     while (^(getline line ^< "%NEW_BLOCK_FILE%"^) ^> 0^) {
+        echo     while ^(^(getline line ^< "%NEW_BLOCK_FILE%"^) ^> 0^) {
         echo       print line
         echo     }
         echo     close^("%NEW_BLOCK_FILE%"^)
@@ -218,7 +219,7 @@ if not exist "%CONF_FILE%" (
         echo }
     ) > "%AWK_SCRIPT%"
 
-    REM Use AWK (expected to be present in libscript msi-rs build environments)
+    REM Use AWK expected to be present in libscript msi-rs build environments
     awk -f "%AWK_SCRIPT%" "%BACKUP_FILE%" > "%CONF_FILE%"
     del /f /q "%AWK_SCRIPT%"
 )
@@ -241,11 +242,11 @@ if /I "%PROXY_ENGINE%"=="nginx" (
 )
 
 echo [INFO] Testing %PROXY_ENGINE% configuration...
-%TEST_CMD%
-if %ERRORLEVEL% EQU 0 (
+!TEST_CMD!
+if "%ERRORLEVEL%" EQU "0" (
     echo [INFO] Syntax OK. Reloading...
     set "STACK="
-    %RELOAD_CMD%
+    !RELOAD_CMD!
     if exist "%BACKUP_FILE%" del /f /q "%BACKUP_FILE%"
     echo [PASS] Interpolation successful.
 ) else (

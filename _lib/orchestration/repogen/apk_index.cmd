@@ -96,7 +96,7 @@ for %%f in ("%TARGET_DIR%\*.apk") do (
 )
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%"=="0" (
     pushd "%TARGET_DIR%"
     tar -czf "%INDEX_TAR%" "APKINDEX" >nul 2>&1
     popd

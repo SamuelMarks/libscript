@@ -86,7 +86,7 @@ if "%GCP_ZONE%"=="" (
 call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud-providers\gcp-cli\cli.cmd" auth
 
 call gcloud container clusters describe "%XPK_CLUSTER_NAME%" --zone="%GCP_ZONE%" --project="%GCP_PROJECT_ID%" >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo [INFO] GKE cluster %XPK_CLUSTER_NAME% already exists in %GCP_ZONE%. Skipping creation.
 ) else (
     echo [INFO] Provisioning XPK cluster: %XPK_CLUSTER_NAME%...

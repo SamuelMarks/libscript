@@ -86,7 +86,7 @@ if "%GCS_BUCKET%"=="" set "GCS_BUCKET=%GCP_GCS_BUCKET%"
 if "%GCS_BUCKET%"=="" set "GCS_BUCKET=libscript-images"
 set "GCE_IMAGE=%~4"
 if "%GCE_IMAGE%"=="" set "GCE_IMAGE=%GCP_IMAGE_NAME%"
-if "%GCE_IMAGE%"=="" set "GCE_IMAGE=libscript-image-%RANDOM%"
+if "%GCE_IMAGE%"=="" set "GCE_IMAGE=libscript-image-!RANDOM!"
 
 if not exist "%IMG_PATH%" (
     echo [ERROR] Target disk image not found: %IMG_PATH%
@@ -95,7 +95,7 @@ if not exist "%IMG_PATH%" (
 
 echo [CLOUD] Uploading %IMG_PATH% to gs://%GCS_BUCKET%/...
 where gcloud >nul 2>&1
-if %ERRORLEVEL%==0 (
+if "%ERRORLEVEL%"=="0" (
     gcloud storage cp "%IMG_PATH%" "gs://%GCS_BUCKET%/"
     echo [CLOUD] Creating custom GCE image %GCE_IMAGE%...
     gcloud compute images create "%GCE_IMAGE%" --source-uri="gs://%GCS_BUCKET%/%~nx2" --labels="managed-by=libscript"

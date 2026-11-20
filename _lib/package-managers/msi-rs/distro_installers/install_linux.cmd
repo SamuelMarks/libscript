@@ -89,13 +89,13 @@ if "%TARGET_DIR%"=="" set "TARGET_DIR=C:\libscript_target"
 echo [INSTALL-LINUX] Initiating Linux (%FLAVOR%) installation on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\install_linux.sh" "%TARGET_DEV%" "%FLAVOR%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\install_linux.sh" "%TARGET_DEV%" "%FLAVOR%" "%TARGET_DIR%"
     exit /b !errorlevel!
 )

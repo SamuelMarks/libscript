@@ -49,6 +49,7 @@ goto :find_root
 :root_found
 
 set "TARGET_OS=debian-13"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -83,7 +84,7 @@ if not exist "!VAGRANT_DIR!" (
 cd /d "!VAGRANT_DIR!"
 
 echo === Step 0: Package Compilation (!TARGET_OS!) ===
-echo !TARGET_OS! | findstr /b /i "debian ubuntu" >nul
+echo.!TARGET_OS! | findstr /b /i "debian ubuntu" >nul
 if not errorlevel 1 (
     echo [INFO] Building .deb package inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
@@ -91,7 +92,7 @@ if not errorlevel 1 (
     vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as deb _lib/web-apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb build/openedx-setup.deb"
     goto step1
 )
-echo !TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
+echo.!TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
 if not errorlevel 1 (
     echo [INFO] Building .rpm package inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
@@ -100,7 +101,7 @@ if not errorlevel 1 (
     vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as rpm _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm build/openedx-setup.rpm"
     goto step1
 )
-echo !TARGET_OS! | findstr /b /i "alpine" >nul
+echo.!TARGET_OS! | findstr /b /i "alpine" >nul
 if not errorlevel 1 (
     echo [INFO] Building .apk package inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
@@ -111,7 +112,7 @@ if not errorlevel 1 (
 )
 if "%REMOTE_TMPDIR%"=="" set "REMOTE_TMPDIR=/tmp"
 if "%REMOTE_OPT_LIBSCRIPT%"=="" set "REMOTE_OPT_LIBSCRIPT=/opt/libscript"
-echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
+echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
     echo [INFO] Building package archive for OmniOS inside VM...
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
@@ -119,7 +120,7 @@ if not errorlevel 1 (
     vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib || tar -czf !REMOTE_TMPDIR!/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib; }"
     goto step1
 )
-echo !TARGET_OS! | findstr /b /i "windows" >nul
+echo.!TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     echo [INFO] Building .msi package natively on host...
     cd /d "!LIBSCRIPT_ROOT_DIR!"
@@ -131,6 +132,7 @@ if not errorlevel 1 (
     cd /d "!VAGRANT_DIR!"
     goto step1
 )
+:: wincheck disable=CMD3005
 
 :: ## step1
 :: Initializes the Vagrant guest VM and purges any pre-existing package installation.
@@ -142,31 +144,32 @@ if errorlevel 1 (
     vagrant up --no-provision || ( echo [ERROR] Vagrant up failed. >&2 & exit /b 1 )
 )
 
-echo !TARGET_OS! | findstr /b /i "debian ubuntu" >nul
+echo.!TARGET_OS! | findstr /b /i "debian ubuntu" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo apt-get remove --purge -y openedx-setup-lib-web-apps-openedx openedx-setup 2>/dev/null || true"
     goto sync_pkg
 )
-echo !TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
+echo.!TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo dnf remove -y openedx-setup 2>/dev/null || true"
     goto sync_pkg
 )
-echo !TARGET_OS! | findstr /b /i "alpine" >nul
+echo.!TARGET_OS! | findstr /b /i "alpine" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo apk del openedx-setup 2>/dev/null || true"
     goto sync_pkg
 )
-echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
+echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
     goto sync_pkg
 )
-echo !TARGET_OS! | findstr /b /i "windows" >nul
+echo.!TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     vagrant ssh -c "cmd.exe /c \"msiexec /x C:\libscript\build\OpenEdX-Setup.msi /qn 2>nul || exit /b 0\""
     goto sync_pkg
 )
+:: wincheck disable=CMD3005
 
 :: ## sync_pkg
 :: Synchronizes compiled installer packages into the Vagrant guest VM.
@@ -175,27 +178,27 @@ echo [INFO] Syncing packages to target machine...
 vagrant rsync || ( echo [ERROR] Failed to rsync to Vagrant. >&2 & exit /b 1 )
 
 echo === Step 2: Installation (!TARGET_OS!) ===
-echo !TARGET_OS! | findstr /b /i "debian ubuntu" >nul
+echo.!TARGET_OS! | findstr /b /i "debian ubuntu" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo apt-get update && sudo apt-get install -y /opt/repos/libscript/build/openedx-setup.deb || { sudo dpkg -i /opt/repos/libscript/build/openedx-setup.deb; sudo apt-get install -f -y; }"
     goto verify
 )
-echo !TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
+echo.!TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo dnf install -y /opt/repos/libscript/build/openedx-setup.rpm"
     goto verify
 )
-echo !TARGET_OS! | findstr /b /i "alpine" >nul
+echo.!TARGET_OS! | findstr /b /i "alpine" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo apk add --allow-untrusted /opt/repos/libscript/build/openedx-setup.apk"
     goto verify
 )
-echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
+echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo mkdir -p !REMOTE_OPT_LIBSCRIPT! && { command -v gtar >/dev/null 2>&1 && sudo gtar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT! || sudo tar -xzf !REMOTE_TMPDIR!/openedx-setup.tar.gz -C !REMOTE_OPT_LIBSCRIPT!; } && sudo !REMOTE_OPT_LIBSCRIPT!/libscript.sh install-service _lib/web-apps/openedx"
     goto verify
 )
-echo !TARGET_OS! | findstr /b /i "windows" >nul
+echo.!TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     vagrant ssh -c "cmd.exe /c \"msiexec /i C:\libscript\build\OpenEdX-Setup.msi /qn /l*v C:\libscript\install.log & exit /b 0\""
     goto verify
@@ -207,11 +210,11 @@ exit /b 1
 :: Verifies that the packaged Open edX services are installed and active on the guest OS.
 :verify
 echo === Step 3: Verification (!TARGET_OS!) ===
-echo !TARGET_OS! | findstr /b /i "windows" >nul
+echo.!TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     vagrant ssh -c "powershell -Command \"Get-Service -Name '*openedx*' -ErrorAction SilentlyContinue; exit 0\""
 ) else (
-    echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
+    echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
     if not errorlevel 1 (
         vagrant ssh -c "svcs -a 2>/dev/null | grep -i openedx || true"
     ) else (
@@ -221,31 +224,32 @@ if not errorlevel 1 (
 echo [PASS] Smoke tests passed.
 
 echo === Step 4: Uninstallation (!TARGET_OS!) ===
-echo !TARGET_OS! | findstr /b /i "debian ubuntu" >nul
+echo.!TARGET_OS! | findstr /b /i "debian ubuntu" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo apt-get remove --purge -y openedx-setup-lib-web-apps-openedx openedx-setup-meta 2>/dev/null || sudo apt-get remove --purge -y openedx-setup-lib-web-apps-openedx 2>/dev/null || sudo apt-get remove --purge -y openedx-setup 2>/dev/null || true"
     goto end_uninstall
 )
-echo !TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
+echo.!TARGET_OS! | findstr /b /i "rockylinux almalinux fedora centos" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo dnf remove -y openedx-setup"
     goto end_uninstall
 )
-echo !TARGET_OS! | findstr /b /i "alpine" >nul
+echo.!TARGET_OS! | findstr /b /i "alpine" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo apk del openedx-setup-lib-web-apps-openedx openedx-setup 2>/dev/null || sudo apk del openedx-setup-lib-web-apps-openedx || true"
     goto end_uninstall
 )
-echo !TARGET_OS! | findstr /b /i "omnios illumos" >nul
+echo.!TARGET_OS! | findstr /b /i "omnios illumos" >nul
 if not errorlevel 1 (
     vagrant ssh -c "sudo /opt/libscript/libscript.sh uninstall _lib/web-apps/openedx --purge-data 2>/dev/null || true"
     goto end_uninstall
 )
-echo !TARGET_OS! | findstr /b /i "windows" >nul
+echo.!TARGET_OS! | findstr /b /i "windows" >nul
 if not errorlevel 1 (
     vagrant ssh -c "cmd.exe /c \"msiexec /x C:\libscript\build\OpenEdX-Setup.msi /qn 2>nul || exit /b 0\""
     goto end_uninstall
 )
+:: wincheck disable=CMD3005
 
 :: ## end_uninstall
 :: Finalizes uninstallation verification and exits cleanly.

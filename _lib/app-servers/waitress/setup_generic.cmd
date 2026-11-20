@@ -80,7 +80,7 @@ if "%ACTION%"=="install" (
     exit /b 0
 ) else if "%ACTION%"=="test" (
     waitress-serve --help >nul 2>&1
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

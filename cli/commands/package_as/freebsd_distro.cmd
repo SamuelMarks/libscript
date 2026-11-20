@@ -67,6 +67,7 @@ for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 set "FORMAT=qcow2"
 set "PROFILE=%REPO_ROOT%\profiles\freebsd\minimal-server.json"
 set "OUTPUT="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.

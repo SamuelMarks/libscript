@@ -58,6 +58,7 @@ set "BACKUP_DIR=%USERPROFILE%\.libscript\wordpress\backups"
 if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 
 set "OUT_FILE="
+goto :parse_args
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
 :parse_args
@@ -73,7 +74,7 @@ goto parse_args
 :run_backup
 if "%OUT_FILE%"=="" (
     for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value 2^>nul') do set "DT=%%I"
-    if not defined DT set "DT=%RANDOM%"
+    if not defined DT set "DT=!RANDOM!"
     set "OUT_FILE=%BACKUP_DIR%\wordpress_backup_!DT:~0,8!_!DT:~8,6!.zip"
 )
 

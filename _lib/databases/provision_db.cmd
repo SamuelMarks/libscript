@@ -68,7 +68,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
 for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\.env.libscript") do (
     if exist "%%~fE" (
         for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
-            if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%~B"
+            set "_env_k=%%A"
+            if not "!_env_k!"=="" if not "!_env_k:~0,1!"=="#" set "%%A=%%~B"
         )
     )
 )
@@ -227,7 +228,7 @@ if not errorlevel 1 (
                 echo [INFO] [REUSE] PostgreSQL seed_file '!sf_win!' unchanged for '!db_name!'; skipping.
             ) else (
                 psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -f "!sf_win!" >nul 2>&1
-                > "!_DB_STATE_DIR!\pg_!db_name!_seed.sha256" echo !_SF_SIG!
+                > "!_DB_STATE_DIR!\pg_!db_name!_seed.sha256" echo.!_SF_SIG!
             )
         )
     )
@@ -263,7 +264,7 @@ if not "!_cpp_min_tbl!"=="" (
     set "_cpp_has_req=1"
     set "_cpp_cnt=0"
     for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2^>nul') do set "_cpp_cnt=%%c"
-    if !_cpp_cnt! lss !_cpp_min_tbl! exit /b 1
+    if "!_cpp_cnt!" lss "!_cpp_min_tbl!" exit /b 1
 )
 for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
     set "_cpp_has_req=1"
@@ -272,7 +273,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "%%t" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "_cpp_min_r=%%r"
     set "_cpp_rc=-1"
     for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM \"%%t\";" 2^>nul') do set "_cpp_rc=%%c"
-    if !_cpp_rc! lss !_cpp_min_r! exit /b 1
+    if "!_cpp_rc!" lss "!_cpp_min_r!" exit /b 1
     echo [INFO] [DB:POSTGRES] [CONFIRM] Table '!db_name!.%%t' verified ^(!_cpp_rc! rows^).
 )
 if "!_cpp_has_req!"=="0" exit /b 1
@@ -536,7 +537,7 @@ if not "!_cdp_min_tbl!"=="" (
     set "_cdp_has_req=1"
     call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar"
     set "_cdp_cnt=!QDS_OUT!"
-    if !_cdp_cnt! lss !_cdp_min_tbl! exit /b 1
+    if "!_cdp_cnt!" lss "!_cdp_min_tbl!" exit /b 1
 )
 for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul') do (
     set "_cdp_has_req=1"
@@ -544,7 +545,7 @@ for /f "delims=" %%t in ('echo !db_entry! ^| jq -r ".required_tables[]?" 2^>nul'
     for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "%%t" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "_cdp_min_r=%%r"
     call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM \"%%t\";" "scalar"
     set "_cdp_rc=!QDS_OUT!"
-    if !_cdp_rc! lss !_cdp_min_r! exit /b 1
+    if "!_cdp_rc!" lss "!_cdp_min_r!" exit /b 1
     echo [INFO] [DB:DUCKDB] [CONFIRM] Table '!db_name!.%%t' verified ^(!_cdp_rc! rows^).
 )
 if "!_cdp_has_req!"=="0" exit /b 1

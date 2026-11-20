@@ -181,7 +181,7 @@ exit /b !errorlevel!
 :build_sqlite_from_source
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_resolve_build_toolchain "sqlite" "%EXACT_VERSION%"
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_check_source_build_idempotency "sqlite" "%EXACT_VERSION%" "sqlite3.exe"
-if !errorlevel! equ 0 exit /b 0
+if "!errorlevel!" equ "0" exit /b 0
 
 set "_amal_url=%SQLITE_AMALGAMATION_URL%"
 if "!_amal_url!"=="" set "_amal_url=https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip"
@@ -208,9 +208,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service

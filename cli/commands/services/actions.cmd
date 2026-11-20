@@ -203,7 +203,7 @@ if /i "!action!"=="stop" (
 set "is_json=0"
 if "!arg1!"=="" set "is_json=1"
 if /i "!arg1!"=="libscript.json" set "is_json=1"
-echo !arg1! | findstr /i "\.json$" >nul && set "is_json=1"
+echo.!arg1! | findstr /i "\.json$" >nul && set "is_json=1"
 
 if "!is_json!"=="1" (
     set "json_file=!arg1!"
@@ -360,6 +360,7 @@ if "!is_json!"=="1" (
 
     exit /b 0
 )
+:: wincheck disable=CMD3005
 
 :: ## loop_services
 :: Iterates through specified services and triggers execution.

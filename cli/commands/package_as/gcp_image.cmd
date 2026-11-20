@@ -80,7 +80,7 @@ if exist "%INPUT%" (
 )
 
 where tar >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pushd "%GCP_STAGE%"
     tar -czf "%OUT_FILE%" disk.raw >nul 2>&1
     popd

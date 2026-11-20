@@ -143,5 +143,5 @@ if errorlevel 1 (
 echo [PASS] Idempotency confirmed on subsequent execution
 
 rmdir /s /q "!TMP_BASE!" >nul 2>&1
-echo === All license harvester tests completed successfully! ===
+echo === All license harvester tests completed successfully^^! ===
 exit /b 0

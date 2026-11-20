@@ -69,6 +69,7 @@ if "%_CORES%"=="" (
     if not errorlevel 1 (
         for /f "delims=" %%K in ('reg query "HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor" 2^>nul ^| findstr /R /C:"CentralProcessor\\[0-9]"') do set /a "_REG_CORES+=1"
     )
+    REM wincheck disable=CMD2003
     if !_REG_CORES! gtr 0 ( set "_CORES=!_REG_CORES!" ) else ( set "_CORES=2" )
 )
 set "_MEM_MB="
@@ -92,6 +93,7 @@ if "!_MEM_MB!"=="" (
 )
 if "!_MEM_MB!"=="" set "_MEM_MB=4096"
 set /a "_PG_SHARED=!_MEM_MB! / 4"
+REM wincheck disable=CMD2003
 if !_PG_SHARED! lss 128 set "_PG_SHARED=128"
 set /a "_PG_CACHE=!_MEM_MB! * 3 / 4"
 set /a "_NGINX_CONNS=%_CORES% * 1024"

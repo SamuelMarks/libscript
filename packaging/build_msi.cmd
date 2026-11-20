@@ -77,6 +77,7 @@ if not defined LIBSCRIPT_USE_WIX set "LIBSCRIPT_USE_WIX=0"
 set "USE_WIX=%LIBSCRIPT_USE_WIX%"
 if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
 set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -309,17 +310,17 @@ if not defined LICENSE_PATH (
 
 :: Generate dynamically on the fly if needed
 set "TMP_BRANDING_DIR=%TEMP%\%STACK_NAME%_branding_%RANDOM%"
-if "%ICON_PATH%"=="" (
+if "!ICON_PATH!"=="" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     call "!LIBSCRIPT_ROOT_DIR!\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
     if exist "%TMP_BRANDING_DIR%\app.ico" set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
-    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%.ico" if "%ICON_PATH%"=="" set "ICON_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%.ico"
-    if exist "%TMP_BRANDING_DIR%\banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
-    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_banner_top.bmp"
-    if exist "%TMP_BRANDING_DIR%\banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
-    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_banner_side.bmp"
-    if exist "%TMP_BRANDING_DIR%\license.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\license.rtf"
-    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%.ico" if "!ICON_PATH!"=="" set "ICON_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%.ico"
+    if exist "%TMP_BRANDING_DIR%\banner_top.bmp" if "!BANNER_TOP_PATH!"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_banner_top.bmp" if "!BANNER_TOP_PATH!"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_banner_top.bmp"
+    if exist "%TMP_BRANDING_DIR%\banner_side.bmp" if "!BANNER_SIDE_PATH!"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_banner_side.bmp" if "!BANNER_SIDE_PATH!"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_banner_side.bmp"
+    if exist "%TMP_BRANDING_DIR%\license.rtf" if "!LICENSE_PATH!"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\license.rtf"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf" if "!LICENSE_PATH!"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf"
 )
 if not exist "!ICON_PATH!" (
     if exist "%TMP_BRANDING_DIR%\app.ico" (
@@ -342,7 +343,7 @@ if not exist "!BANNER_SIDE_PATH!" (
 )
 if not exist "!LICENSE_PATH!" set "LICENSE_PATH="
 
-echo %APP_VERSION% | findstr /I "verawood" >nul 2>&1
+echo.%APP_VERSION% | findstr /I "verawood" >nul 2>&1
 if not errorlevel 1 set "APP_VERSION=22.1.0.0"
 
 set "CLEAN_BRANCH=%REPO_BRANCH%"
@@ -1010,6 +1011,7 @@ setlocal DisableDelayedExpansion
     echo ^</Wix^>
 ) > "%WXS_FILE%"
 endlocal
+setlocal EnableDelayedExpansion
 
 echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 
@@ -1129,11 +1131,13 @@ if not exist "%OUT_FILE%.msi" (
 set "MSI_SIZE=0"
 for %%S in ("%OUT_FILE%.msi") do set "MSI_SIZE=%%~zS"
 if /I "%VARIANT%"=="offline" (
+    REM wincheck disable=CMD2003
     if !MSI_SIZE! LSS 5242880 (
         echo [ERROR] Offline MSI validation failed. The generated MSI is abnormally small ^(!MSI_SIZE! bytes ^< 5242880 bytes^). >&2
         goto compile_err
     )
 ) else (
+    REM wincheck disable=CMD2003
     if !MSI_SIZE! LSS 100000 (
         echo [ERROR] Online MSI validation failed. The generated MSI is abnormally small ^(!MSI_SIZE! bytes ^< 100000 bytes^). >&2
         goto compile_err
@@ -1150,11 +1154,13 @@ if errorlevel 1 (
         goto compile_err
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## skip_msiinfo
 :: Continues post-build validation when msiinfo is not required or already completed.
 :skip_msiinfo
 echo [PASS] Successfully built %OUT_FILE%.msi
+goto :compile_done
 :: ## compile_done
 :: Validates the compiled MSI binary size and copies it to the output destination.
 :compile_done

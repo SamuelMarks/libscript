@@ -62,7 +62,7 @@ if exist "%USERPROFILE%\.libscript\huggingface-cli\latest\bin\huggingface-cli.cm
 )
 
 where huggingface-cli >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     huggingface-cli --version >nul 2>&1
     if not errorlevel 1 exit /b 0
 )

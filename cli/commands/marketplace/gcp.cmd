@@ -54,6 +54,7 @@ goto :find_root
 
 set "OFFER_FILE="
 set "OUT_DIR="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for gcp.cmd.

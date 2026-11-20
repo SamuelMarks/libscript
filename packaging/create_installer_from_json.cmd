@@ -54,6 +54,7 @@ set "ALL_DEPS=0"
 set "OUTPUT_FOLDER=!LIBSCRIPT_ROOT_DIR!\tmp"
 set "FILENAME="
 set "BASE=alpine:latest debian:bookworm-slim"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.

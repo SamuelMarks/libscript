@@ -72,5 +72,5 @@ set "OUTPUT=!OUTPUT:[LocalAppDataFolder]=%LOCALAPPDATA%\!"
 :: Clean up any double backslashes
 set "OUTPUT=!OUTPUT:\\=\!"
 
-echo !OUTPUT!
+echo.!OUTPUT!
 exit /b 0

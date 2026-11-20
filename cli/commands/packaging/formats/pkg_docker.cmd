@@ -60,6 +60,7 @@ set "VER=latest"
 set "OVERRIDE_URL="
 set "ARTIFACT_TYPE="
 set "LAYER_FILTER="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line flags and positional arguments.
@@ -192,16 +193,20 @@ if defined PKG (
 if "%IS_OFFLINE%"=="0" if defined BUNDLE_FILE (
     where jq >nul 2>&1
     if not errorlevel 1 (
-        for /f "tokens=1,2,3" %%a in ('jq -r ".runtimes[]? | "\(.extract_dir // "runtimes"^) \(.filename^) \(.url^)"" "!BUNDLE_FILE!" 2^>nul') do (
+        set "_JQ_RT=.runtimes[]? | ((.extract_dir // \"runtimes\") + \" \" + .filename + \" \" + .url)"
+        for /f "tokens=1,2,3" %%a in ('jq -r "!_JQ_RT!" "!BUNDLE_FILE!" 2^>nul') do (
             if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
-        for /f "tokens=1,2,3" %%a in ('jq -r ".databases[]? | "\(.extract_dir // "databases"^) \(.filename^) \(.url^)"" "!BUNDLE_FILE!" 2^>nul') do (
+        set "_JQ_DB=.databases[]? | ((.extract_dir // \"databases\") + \" \" + .filename + \" \" + .url)"
+        for /f "tokens=1,2,3" %%a in ('jq -r "!_JQ_DB!" "!BUNDLE_FILE!" 2^>nul') do (
             if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
-        for /f "tokens=1,2,3" %%a in ('jq -r ".wheels.packages[]? | "wheels \(.filename^) \(.url^)"" "!BUNDLE_FILE!" 2^>nul') do (
+        set "_JQ_WH=.wheels.packages[]? | (\"wheels \" + .filename + \" \" + .url)"
+        for /f "tokens=1,2,3" %%a in ('jq -r "!_JQ_WH!" "!BUNDLE_FILE!" 2^>nul') do (
             if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
-        for /f "tokens=1,2,3" %%a in ('jq -r "if .codebase.archive_url then "codebase \(.codebase.archive_filename^) \(.codebase.archive_url^)" else empty end" "!BUNDLE_FILE!" 2^>nul') do (
+        set "_JQ_CB=if .codebase.archive_url then (\"codebase \" + .codebase.archive_filename + \" \" + .codebase.archive_url) else empty end"
+        for /f "tokens=1,2,3" %%a in ('jq -r "!_JQ_CB!" "!BUNDLE_FILE!" 2^>nul') do (
             if not "%%c"=="" if not "%%c"=="null" echo ADD %%c !DOCKER_CACHE_DIR!/%%a/%%b
         )
     )

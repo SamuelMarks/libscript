@@ -48,6 +48,7 @@ goto :find_root
 :: ## root_found
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
+goto :run_inspect
 
 :: ## run_inspect
 :: Invokes UIAutomation inspection PowerShell script.

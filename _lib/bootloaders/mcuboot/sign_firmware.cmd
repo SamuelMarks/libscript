@@ -61,6 +61,7 @@ set "SLOT_SIZE=%MCUBOOT_SLOT_SIZE%"
 if "!SLOT_SIZE!"=="" set "SLOT_SIZE=0x40000"
 set "HEADER_SIZE=%MCUBOOT_HEADER_SIZE%"
 if "!HEADER_SIZE!"=="" set "HEADER_SIZE=0x200"
+goto :parse_sign_args
 
 :: ## parse_sign_args
 :: Parses positional and flag arguments for sign_firmware.cmd.

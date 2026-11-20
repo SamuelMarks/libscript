@@ -55,6 +55,7 @@ set "MANIFEST_PATH="
 set "PACKAGING_PATH="
 if "%FORCE_REINSTALL%"=="" set "FORCE_REINSTALL=0"
 if "%FORCE_REBUILD%"=="" set "FORCE_REBUILD=0"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.

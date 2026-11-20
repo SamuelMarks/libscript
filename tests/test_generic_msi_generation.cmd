@@ -88,6 +88,7 @@ call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%TMP_DIR%\mock_orchestra
 findstr /C:"Enterprise Suite Orchestrator" "%TMP_DIR%\orchestrator.wxs" >nul
 if errorlevel 1 ( echo [ERROR] Missing Title in orchestrator.wxs >&2 & exit /b 1 )
 
+REM wincheck disable=CMD1013
 findstr /C:"PROP_TOPOLOGY\" Value=\"suite_orchestrator\"" "%TMP_DIR%\orchestrator.wxs" >nul
 if errorlevel 1 ( echo [ERROR] Missing Topology in orchestrator.wxs >&2 & exit /b 1 )
 
@@ -95,5 +96,5 @@ findstr /C:"EmbeddedChainer" "%TMP_DIR%\orchestrator.wxs" >nul
 if errorlevel 1 ( echo [ERROR] Missing EmbeddedChainer in orchestrator.wxs >&2 & exit /b 1 )
 
 rd /s /q "%TMP_DIR%"
-echo [SUCCESS] Declarative MSI synthesis verification succeeded on Windows!
+echo [SUCCESS] Declarative MSI synthesis verification succeeded on Windows^^!
 exit /b 0

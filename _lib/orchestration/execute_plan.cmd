@@ -83,6 +83,7 @@ if "!DRY_RUN!"=="0" (
 for /f %%S in ('jq ".stages | length" "!PLAN_FILE!"') do set "TOTAL_STAGES=%%S"
 set /a LAST_STAGE=!TOTAL_STAGES!-1
 
+REM wincheck disable=CMD2003
 if !LAST_STAGE! GEQ 0 (
     for /L %%I in (0,1,!LAST_STAGE!) do (
         call :run_stage %%I || exit /b 1
@@ -122,6 +123,7 @@ echo.
 echo [STAGE] === !STAGE_NAME! ===
 for /f %%T in ('jq ".stages[!S_IDX!].tasks | length" "!PLAN_FILE!"') do set "TOTAL_TASKS=%%T"
 set /a LAST_TASK=!TOTAL_TASKS!-1
+REM wincheck disable=CMD2003
 if !LAST_TASK! LSS 0 exit /b 0
 for /L %%K in (0,1,!LAST_TASK!) do (
     call :run_task !S_IDX! %%K || exit /b 1

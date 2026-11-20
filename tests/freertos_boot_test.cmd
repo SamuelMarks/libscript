@@ -62,5 +62,5 @@ findstr /C:"LIBSCRIPT_FREERTOS_BOOT_OK" "!TMP_FR!\sim.log" >nul 2>&1 || (
     exit /b 1
 )
 rmdir /s /q "!TMP_FR!" 2>nul
-echo [PASS] FreeRTOS Windows simulator boot test succeeded!
+echo [PASS] FreeRTOS Windows simulator boot test succeeded^^!
 exit /b 0

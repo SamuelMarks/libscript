@@ -175,6 +175,7 @@ exit /b !errorlevel!
 shift
 set "_audit_mode=preflight"
 set "_audit_name="
+goto :tfrc_audit_args
 :: ## tfrc_audit_args
 :: Parses CLI options for the tfrc-audit subcommand.
 :tfrc_audit_args
@@ -248,11 +249,14 @@ if "!_TPU_TFRC!"=="1" (
     if errorlevel 1 exit /b !errorlevel!
 )
 set "i=1"
+goto :create_loop
 :: ## create_loop
 :: Iterates across TPU_COUNT to provision or idempotently reuse each requested node or slice.
 :create_loop
+REM wincheck disable=CMD2003
 if !i! gtr %TPU_COUNT% exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
+REM wincheck disable=CMD2003
 if %TPU_COUNT% gtr 1 set "INSTANCE_NAME=%TPU_NAME%-!i!"
 
 set "DISK_FLAG="
@@ -298,6 +302,7 @@ goto :do_create_qr
 call "!LOG_CMD!" :log_info "Existing Queued Resource !INSTANCE_NAME!-qr is in state=!_qr_state!; deleting before recreate..."
 call :run_qr_gcloud delete "!INSTANCE_NAME!-qr" --zone="%TPU_ZONE%" %PROJECT_FLAG% --force --quiet >nul 2>&1 || rem
 call gcloud compute tpus tpu-vm delete "!INSTANCE_NAME!" --zone="%TPU_ZONE%" %PROJECT_FLAG% --quiet >nul 2>&1 || rem
+goto :do_create_qr
 
 :: ## do_create_qr
 :: Invokes gcloud compute tpus queued-resources create for the target node.
@@ -333,6 +338,7 @@ goto :do_create_vm
 :recreate_vm
 call "!LOG_CMD!" :log_info "Existing TPU VM !INSTANCE_NAME! is in state=!_vm_state!; deleting before recreate..."
 call gcloud compute tpus tpu-vm delete "!INSTANCE_NAME!" --zone="%TPU_ZONE%" %PROJECT_FLAG% --quiet >nul 2>&1 || rem
+goto :do_create_vm
 
 :: ## do_create_vm
 :: Invokes gcloud compute tpus tpu-vm create for the target node.
@@ -343,6 +349,7 @@ if errorlevel 1 (
     call "!LOG_CMD!" :log_error "Provisioning failed."
     exit /b 1
 )
+:: wincheck disable=CMD3005
 
 :: ## create_next
 :: Advances the node counter during multi-slice provisioning.
@@ -360,6 +367,7 @@ if "%TPU_NAME%"=="" (
 shift
 shift
 set "ALL_FLAG="
+goto :del_arg_loop
 :: ## del_arg_loop
 :: Parses command-line flags for the delete subcommand.
 :del_arg_loop
@@ -374,11 +382,14 @@ goto :del_arg_loop
 set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
+goto :del_loop
 :: ## del_loop
 :: Iterates over target node names and deletes Queued Resources, TPU VMs, and LibScript-labeled disks idempotently.
 :del_loop
+REM wincheck disable=CMD2003
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
+REM wincheck disable=CMD2003
 if !LIMIT! gtr 1 if %TPU_COUNT% gtr 1 set "INSTANCE_NAME=%TPU_NAME%-!i!"
 
 call :run_qr_gcloud describe "!INSTANCE_NAME!-qr" --zone="%TPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
@@ -433,6 +444,7 @@ set "WAIT_TIMEOUT=%TPU_WAIT_TIMEOUT_SEC%"
 if "!WAIT_TIMEOUT!"=="" set "WAIT_TIMEOUT=1800"
 set "WAIT_POLL=%TPU_WAIT_POLL_SEC%"
 if "!WAIT_POLL!"=="" set "WAIT_POLL=15"
+goto :wait_ready_args
 :: ## wait_ready_args
 :: Parses --timeout-sec and --poll-sec flags for wait-ready.
 :wait_ready_args
@@ -468,7 +480,9 @@ goto :wait_ready_args
 :wait_ready_poll_init
 set "ELAPSED=0"
 set /a "POLL_STEP=!WAIT_POLL!"
+REM wincheck disable=CMD2003
 if !POLL_STEP! lss 1 set "POLL_STEP=1"
+goto :wait_ready_poll
 
 :: ## wait_ready_poll
 :: Checks Queued Resource state on each poll iteration and aborts immediately on FAILED or SUSPENDED.
@@ -491,10 +505,12 @@ if /i "!_wr_state!"=="SUSPENDED" (
     call "!LOG_CMD!" :log_error "Queued Resource %TPU_NAME%-qr entered terminal state=!_wr_state!."
     exit /b 1
 )
+REM wincheck disable=CMD2003
 if !ELAPSED! geq !WAIT_TIMEOUT! (
     call "!LOG_CMD!" :log_error "Timed out after !WAIT_TIMEOUT!s waiting for %TPU_NAME% (last state=!_wr_state!)."
     exit /b 1
 )
+REM wincheck disable=CMD2003
 if !WAIT_POLL! gtr 0 (
     set /a "_ping_cnt=!WAIT_POLL! + 1"
     ping -n !_ping_cnt! 127.0.0.1 >nul 2>&1
@@ -506,9 +522,11 @@ goto :wait_ready_poll
 :: Initializes bounded SSH connectivity verification across all workers.
 :wait_ready_ssh_init
 set "SSH_TRY=0"
+goto :wait_ready_ssh
 :: ## wait_ready_ssh
 :: Retries SSH true probe across --worker=all up to 5 attempts.
 :wait_ready_ssh
+REM wincheck disable=CMD2003
 if !SSH_TRY! geq 5 (
     call "!LOG_CMD!" :log_error "SSH connectivity check failed across workers on %TPU_NAME%."
     exit /b 1
@@ -516,6 +534,7 @@ if !SSH_TRY! geq 5 (
 call gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% --worker=all --command="true" >nul 2>&1
 if not errorlevel 1 exit /b 0
 set /a "SSH_TRY+=1"
+REM wincheck disable=CMD2003
 if !WAIT_POLL! gtr 0 ping -n 3 127.0.0.1 >nul 2>&1
 goto :wait_ready_ssh
 
@@ -548,6 +567,7 @@ shift
 set "SYNC_LOCAL="
 set "SYNC_REMOTE="
 set "SYNC_WORKER_FLAG="
+goto :sync_repo_args
 :: ## sync_repo_args
 :: Parses positional paths and --all-workers for sync-repo.
 :sync_repo_args
@@ -624,6 +644,7 @@ shift
 shift
 set "TTL_MINUTES=%TFRC_MAX_TTL_MINUTES%"
 if "!TTL_MINUTES!"=="" set "TTL_MINUTES=180"
+goto :arm_ttl_args
 :: ## arm_ttl_args
 :: Parses --minutes or --minutes=<int> options for arm-ttl.
 :arm_ttl_args
@@ -670,6 +691,7 @@ set "DETACHED="
 set "FORWARD_PORT="
 set "WORKER_FLAG="
 set "EXPLICIT_CMD="
+goto :ssh_arg_loop
 :: ## ssh_arg_loop
 :: Parses command-line flags for the TPU ssh subcommand including --key=val forms.
 :ssh_arg_loop
@@ -718,6 +740,7 @@ if /i "!_sa!"=="--command" (
     shift
     goto :ssh_arg_loop
 )
+:: wincheck disable=CMD3005
 
 :: ## ssh_prep
 :: Builds SSH_FLAGS and collects remaining positional command tokens.
@@ -736,6 +759,7 @@ if not "!EXPLICIT_CMD!"=="" (
     set "REST_ARGS= !EXPLICIT_CMD!"
     goto :ssh_run
 )
+:: wincheck disable=CMD3005
 :: ## ssh_loop
 :: Collects remaining command tokens for remote execution.
 :ssh_loop
@@ -778,6 +802,7 @@ shift
 shift
 set "PORT=9012"
 set "DURATION=1000"
+goto :profile_arg_loop
 :: ## profile_arg_loop
 :: Parses --port and --duration options for profile capture.
 :profile_arg_loop
@@ -816,6 +841,7 @@ shift
 set "SCP_FLAGS="
 set "SRC="
 set "DEST="
+goto :scp_arg_loop
 :: ## scp_arg_loop
 :: Parses --all-workers, --worker=*, --recurse, and positional paths for scp.
 :scp_arg_loop

@@ -119,5 +119,5 @@ exit /b !errorlevel!
 :: ## action_other
 :: Delegates generic service/uninstall actions to setup_base.cmd.
 :action_other
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "freertos" "%ACTION%" "%FREERTOS_VERSION%" "libscript_native" "" "" "" "\"%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!\bin\freertos-env-check.cmd\"" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\setup_base.cmd" :libscript_handle_generic_action "freertos" "%ACTION%" "%FREERTOS_VERSION%" "libscript_native" "" "" "" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!\bin\freertos-env-check.cmd" "%LIBSCRIPT_HOME%\freertos\!EXACT_VERSION!"
 exit /b !errorlevel!

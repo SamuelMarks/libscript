@@ -86,7 +86,7 @@ if exist "%STAMP_FILE%" (
 echo [ZFS]      Configuring illumos ZFS dataset hierarchy (pool: %POOL_NAME%, compression: %COMPRESSION%)...
 
 (
-    echo # Illumos ZFS Root Pool Layout (managed by LibScript^)
+    echo # Illumos ZFS Root Pool Layout ^(managed by LibScript^)
     echo %POOL_NAME%                    mountpoint=none,canmount=off
     echo %POOL_NAME%/ROOT               mountpoint=none,canmount=off
     echo %POOL_NAME%/ROOT/illumos       mountpoint=legacy,canmount=noauto,compression=%COMPRESSION%,bootfs=yes
@@ -97,7 +97,7 @@ echo [ZFS]      Configuring illumos ZFS dataset hierarchy (pool: %POOL_NAME%, co
 ) > "%SYSROOT%\etc\zfs-datasets.conf"
 
 (
-    echo # /etc/vfstab: Virtual File System Table (managed by LibScript^)
+    echo # /etc/vfstab: Virtual File System Table ^(managed by LibScript^)
     echo /devices        -               /devices        devfs   -       no      -
     echo /proc           -               /proc           proc    -       no      -
     echo ctfs            -               /system/contract ctfs   -       no      -

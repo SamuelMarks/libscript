@@ -83,7 +83,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
 for %%E in ("!MANIFEST_DIR!\.env" "!MANIFEST_DIR!\.env.secrets" "!MANIFEST_DIR!\.env.libscript") do (
     if exist "%%~fE" (
         for /f "usebackq tokens=1* delims==" %%A in ("%%~fE") do (
-            if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%~B"
+            set "_env_k=%%A"
+            if not "!_env_k!"=="" if not "!_env_k:~0,1!"=="#" set "%%A=%%~B"
         )
     )
 )
@@ -190,7 +191,7 @@ if not "!raw_wd!"=="." (
 
 set "skip=0"
 if not "!cond!"=="" (
-    echo !cond! | findstr /b /c:"unless_exists " >nul
+    echo.!cond! | findstr /b /c:"unless_exists " >nul
     if not errorlevel 1 (
         set "file=!cond:unless_exists =!"
         set "file_win=!file:/=\!"
@@ -198,7 +199,7 @@ if not "!cond!"=="" (
         if exist "!file_win!" set "skip=1"
         if "!skip!"=="1" echo [INFO] [HOOK:!hook_type!] Skipping hook '!name!': !file! exists
     )
-    echo !cond! | findstr /b /c:"if_exists " >nul
+    echo.!cond! | findstr /b /c:"if_exists " >nul
     if not errorlevel 1 (
         set "file=!cond:if_exists =!"
         set "file_win=!file:/=\!"
@@ -210,7 +211,7 @@ if not "!cond!"=="" (
             set "skip=1"
         )
     )
-    echo !cond! | findstr /b /c:"unless_command " >nul
+    echo.!cond! | findstr /b /c:"unless_command " >nul
     if not errorlevel 1 (
         set "chk_cmd=!cond:unless_command =!"
         where "!chk_cmd!" >nul 2>nul
@@ -219,7 +220,7 @@ if not "!cond!"=="" (
             set "skip=1"
         )
     )
-    echo !cond! | findstr /b /c:"unless_env " >nul
+    echo.!cond! | findstr /b /c:"unless_env " >nul
     if not errorlevel 1 (
         set "_u_expr=!cond:unless_env =!"
         for /f "tokens=1,2 delims==" %%K in ("!_u_expr!") do (

@@ -60,6 +60,7 @@ if not exist "%TESTS_TMP_DIR%" mkdir "%TESTS_TMP_DIR%"
 
 set "DRY_RUN=0"
 set "ARGS="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command line arguments and switches.
@@ -132,6 +133,7 @@ for %%A in (!ARGS!) do (
         if "!FOUND!"=="0" echo Warning: Target '%%A' not found.
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## execute_targets
 :: Iterates through targets and executes native install and test lifecycle.
@@ -149,9 +151,9 @@ for %%T in (!TARGETS!) do (
     if defined MANIFEST_PATH (
         if exist "!MANIFEST_PATH!" (
             findstr /i /c:""windows"" "!MANIFEST_PATH!" >nul 2>&1
-            if !errorlevel! equ 0 (
+            if "!errorlevel!" equ "0" (
                 findstr /i /c:""os_blacklist"" "!MANIFEST_PATH!" >nul 2>&1
-                if !errorlevel! equ 0 (
+                if "!errorlevel!" equ "0" (
                     REM Simple check if windows appears in blacklist
                     findstr /c:"os_blacklist" "!MANIFEST_PATH!" >nul 2>&1
                 )
@@ -180,12 +182,12 @@ for %%T in (!TARGETS!) do (
         set "LIBSCRIPT_ROOT_DIR=%REPO_ROOT%"
         call "%REPO_ROOT%\libscript.cmd" install !TARGET_NAME! > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
         set "RUN_EXIT=!errorlevel!"
-        if !RUN_EXIT! equ 0 (
+        if "!RUN_EXIT!" equ "0" (
             call "%REPO_ROOT%\libscript.cmd" test !TARGET_NAME! >> "!STDOUT_FILE!" 2>> "!STDERR_FILE!"
             set "RUN_EXIT=!errorlevel!"
         )
 
-        if !RUN_EXIT! equ 0 (
+        if "!RUN_EXIT!" equ "0" (
             echo Success > "!SUCCESS_FILE!"
             echo [OK] !TARGET_NAME!
         ) else (
@@ -194,6 +196,7 @@ for %%T in (!TARGETS!) do (
         )
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## finalize_reporting
 :: Invokes update_results.cmd to refresh root README matrix.

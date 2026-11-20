@@ -62,7 +62,7 @@ call lynx -nomargins -stdin -dump -nolist "!_LYNX_IN!" > "!_LYNX_OUT!" 2>nul
 findstr /C:"Hello Open edX" "!_LYNX_OUT!" >nul 2>&1
 set "_LYNX_RC=!errorlevel!"
 del /f /q "!_LYNX_IN!" "!_LYNX_OUT!" >nul 2>&1
-if !_LYNX_RC! neq 0 (
+if "!_LYNX_RC!" neq "0" (
     echo [FAIL] lynx HTML-to-text conversion failed. >&2
     exit /b 1
 )

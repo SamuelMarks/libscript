@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 set "DIR=!SCRIPT_DIR!"
 
-cd %DIR%\\kubernetes-the-hard-way
+cd /d "%DIR%\kubernetes-the-hard-way"
 kubectl create secret generic %DIR%\\kubernetes-the-hard-way --from-literal="mykey=mydata"
 ssh root@server "etcdctl get /registry/secrets/default/%DIR%\\kubernetes-the-hard-way | hexdump -C"
 kubectl create deployment nginx --image=nginx

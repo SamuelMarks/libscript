@@ -101,6 +101,6 @@ if /i "!_WC_MODE!"=="static" (
     ) > "!_WC_FILE!.TMP"
 )
 move /y "!_WC_FILE!.TMP" "!_WC_FILE!" >nul
-echo !_WC_FILE!
+echo.!_WC_FILE!
 endlocal & set "WATTCP.CFG=%_WC_DIR%" & set "WATTCP_CFG=%_WC_DIR%"
 exit /b 0

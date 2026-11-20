@@ -192,8 +192,8 @@ set "_fe_err_log=%TEMP%\edgcpp_fe_%RANDOM%.log"
 set "_be_err_log=%TEMP%\edgcpp_be_%RANDOM%.log"
 if exist "!_cpfe_bin!" (
     if exist "!WRAPPER_SOURCE_FILE!" (
-        set "_tmp_nb_obj=%TEMP%\edgcpp_nb_%RANDOM%.o"
-        set "_tmp_nb_ll=%TEMP%\edgcpp_nb_%RANDOM%.ll"
+        set "_tmp_nb_obj=%TEMP%\edgcpp_nb_!RANDOM!.o"
+        set "_tmp_nb_ll=%TEMP%\edgcpp_nb_!RANDOM!.ll"
         if /i "!_cli_style!"=="multibackend" (
             if "!EDGCPP_ACTIVE_CODEGEN_BACKEND!"=="fe_only" (
                 "!_cpfe_bin!" !WRAPPER_STD_FLAG! --gnu_version=!_gnu_ver! --timing --no_code_gen "!WRAPPER_SOURCE_FILE!" >"!_fe_err_log!" 2>&1
@@ -284,11 +284,11 @@ if "!WRAPPER_LANG!"=="c++" (
 if "!_backend_cc!"=="" (
     if "!WRAPPER_LANG!"=="c++" (
         where clang++ >nul 2>&1
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             set "_backend_cc=clang++"
         ) else (
             where g++ >nul 2>&1
-            if !errorlevel! equ 0 (
+            if "!errorlevel!" equ "0" (
                 set "_backend_cc=g++"
             ) else (
                 set "_backend_cc=cl"
@@ -296,11 +296,11 @@ if "!_backend_cc!"=="" (
         )
     ) else (
         where clang >nul 2>&1
-        if !errorlevel! equ 0 (
+        if "!errorlevel!" equ "0" (
             set "_backend_cc=clang"
         ) else (
             where gcc >nul 2>&1
-            if !errorlevel! equ 0 (
+            if "!errorlevel!" equ "0" (
                 set "_backend_cc=gcc"
             ) else (
                 set "_backend_cc=cl"

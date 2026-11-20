@@ -54,7 +54,7 @@ if exist "%~dp0env.cmd" call "%~dp0env.cmd"
 if exist "%USERPROFILE%\.local\bin" set "PATH=%USERPROFILE%\.local\bin;%PATH%"
 
 where psql >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   psql --version
   exit /b 0
 )

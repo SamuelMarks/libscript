@@ -3530,7 +3530,13 @@
     "wjson",
     "wparams",
     "wsprintf",
-    "wwork"
+    "wwork",
+    "CWSDPMI",
+    "msdosdjgpp",
+    "rustdoc",
+    "sarif",
+    "Scrt",
+    "softprops"
   ],
   "ignorePaths": [
     "node_modules",

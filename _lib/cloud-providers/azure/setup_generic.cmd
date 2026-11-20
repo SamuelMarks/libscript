@@ -201,9 +201,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service
@@ -671,6 +673,7 @@ shift
 shift
 shift
 shift
+goto :node_create_args
 :: ## node_create_args
 :: Iterates through optional flags passed to node create.
 :node_create_args

@@ -54,12 +54,12 @@ if exist "C:\ProgramData\chocolatey\bin" set "PATH=C:\ProgramData\chocolatey\bin
 if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
 
 where qemu-system-x86_64 >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     qemu-system-x86_64 --version
     exit /b 0
 )
 where qemu-img >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     qemu-img --version
     exit /b 0
 )

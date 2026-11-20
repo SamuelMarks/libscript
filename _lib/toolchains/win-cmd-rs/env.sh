@@ -4,6 +4,7 @@
 #
 # ## Usage
 # Source this script to prepend the isolated win-cmd-rs bin directory to PATH.
+
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -34,12 +35,23 @@ export SCRIPT_NAME
 unset SCRIPT_NAME || true
 
 WIN_CMD_RS_VERSION="${WIN_CMD_RS_VERSION:-latest}"
-if [ "${WIN_CMD_RS_VERSION}" = "latest" ]; then
-  EXACT_VERSION='latest'
-else
+if [ "${WIN_CMD_RS_VERSION}" = 'latest' ] || [ "${WIN_CMD_RS_VERSION}" = 'stable' ] || [ "${WIN_CMD_RS_VERSION}" = 'lts' ]; then
   EXACT_VERSION="${WIN_CMD_RS_VERSION}"
+else
+  EXACT_VERSION="${WIN_CMD_RS_VERSION#v}"
 fi
 
-libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/win-cmd-rs/${EXACT_VERSION}/bin"
+_WCR_HOME_BASE="${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/win-cmd-rs"
+if [ -d "${_WCR_HOME_BASE}/${EXACT_VERSION}/bin" ]; then
+  libscript_path_prepend "${_WCR_HOME_BASE}/${EXACT_VERSION}/bin"
+elif [ -d "${_WCR_HOME_BASE}/default/bin" ]; then
+  libscript_path_prepend "${_WCR_HOME_BASE}/default/bin"
+elif [ -d "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin" ]; then
+  libscript_path_prepend "${LIBSCRIPT_HOME:-${HOME:-/root}/.libscript}/bin"
+fi
+
 STACK="${STACK%"${THIS_FILE}":}"
 export STACK
+[ -n "${_EB_CALLER_DIR:-}" ] && SCRIPT_DIR="${_EB_CALLER_DIR}"
+[ -n "${_EB_CALLER_THIS:-}" ] && THIS_FILE="${_EB_CALLER_THIS}"
+unset _EB_CALLER_DIR _EB_CALLER_THIS || true

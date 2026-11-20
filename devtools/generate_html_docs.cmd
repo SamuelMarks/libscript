@@ -72,13 +72,13 @@ set "REPO_ROOT=%SCRIPT_DIR%\.."
 set "LIBSCRIPT_EXTENDED_SCHEMAS=topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\generate_html_docs.ps1" %*
     exit /b !ERRORLEVEL!
 )
 
 where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     pwsh -NoProfile -File "%SCRIPT_DIR%\generate_html_docs.ps1" %*
     exit /b !ERRORLEVEL!
 )

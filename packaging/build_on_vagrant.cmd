@@ -88,5 +88,5 @@ vagrant ssh -c "powershell -Command \"Copy-Item C:\libscript\packaging\*.msi C:\
 copy /y "!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11\OpenEdX-Setup.msi" "!LIBSCRIPT_ROOT_DIR!\packaging\"
 copy /y "!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11\OpenEdX-Setup-Offline.msi" "!LIBSCRIPT_ROOT_DIR!\packaging\"
 
-echo [PASS] Done!
+echo [PASS] Done^^!
 exit /b 0

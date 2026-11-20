@@ -65,5 +65,5 @@ set "LIBSCRIPT_OFFLINE=1"
 echo === LibScript Offline Air-Gapped Verification ^(Windows^) ===
 echo [PASS] Verified: Air-gapped modality strictly enforced ^(LIBSCRIPT_OFFLINE=1^)
 echo [PASS] Verified: Zero remote downloads initiated
-echo === Offline Air-Gapped Verification Succeeded! ===
+echo === Offline Air-Gapped Verification Succeeded^^! ===
 exit /b 0

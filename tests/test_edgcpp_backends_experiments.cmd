@@ -56,7 +56,7 @@ call :test_negative_integrity_gates
 if errorlevel 1 goto :fail_out
 
 if exist "!WORK_DIR!" rmdir /s /q "!WORK_DIR!" >nul 2>&1
-echo [PASS] All edgcpp_backends Windows E0-E7 empirical, idempotency, driver, and negative-gate tests succeeded!
+echo [PASS] All edgcpp_backends Windows E0-E7 empirical, idempotency, driver, and negative-gate tests succeeded^^!
 exit /b 0
 
 :: ## fail_out
@@ -134,7 +134,7 @@ popd
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\suites\e0_phase0_gates.cmd" "!_DIRTY!" "!WORK_DIR!\dirty_out" "windows_x64" >nul 2>&1
 if not errorlevel 1 (
-    echo [FAIL] E0 accepted dirty git worktree! >&2
+    echo [FAIL] E0 accepted dirty git worktree^^! >&2
     exit /b 1
 )
 
@@ -142,7 +142,7 @@ set "EDGCPP_BACKENDS_SUITE_SYNTHETIC=0"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\suites\e6_corpus_and_kernel.cmd" "C:\none" "!WORK_DIR!\bad_k" "windows_x64" >nul 2>&1
 if not errorlevel 1 (
-    echo [FAIL] E6 allowed fake Linux kernel Kbuild on Windows! >&2
+    echo [FAIL] E6 allowed fake Linux kernel Kbuild on Windows^^! >&2
     exit /b 1
 )
 
@@ -157,7 +157,7 @@ if not exist "!_BAD_PAPER!" mkdir "!_BAD_PAPER!"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\toolchains\edgcpp-backends-suite\suites\e7_latex_verify.cmd" "!WORK_DIR!\run_results" "!_BAD_PAPER!" "0" >nul 2>&1
 if not errorlevel 1 (
-    echo [FAIL] E7 accepted unresolved placeholder in edgecpp_backends.tex! >&2
+    echo [FAIL] E7 accepted unresolved placeholder in edgecpp_backends.tex^^! >&2
     exit /b 1
 )
 exit /b 0

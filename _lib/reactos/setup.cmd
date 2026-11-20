@@ -58,6 +58,7 @@ if "!ALLOW_STUB!"=="" set "ALLOW_STUB=0"
 set "FROM_SOURCE=%REACTOS_BUILD_FROM_SOURCE%"
 if "!FROM_SOURCE!"=="" set "FROM_SOURCE=0"
 set "ACTION_ARG="
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI options for ReactOS setup.cmd.

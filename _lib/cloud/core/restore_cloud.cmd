@@ -72,6 +72,7 @@ set "BACKUP_ID=latest"
 set "IMPORT_MODE=0"
 set "LOCAL_SRC="
 set "APP_SPECS="
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -176,6 +177,7 @@ if "%CERT_STORE_DIR%"=="" (
 )
 call "!CLI!" node exec "!NODE!" "!RG_CTX!" "if [ -d '!_IMPORT_STAGE!/certs/live' ]; then sudo mkdir -p '!CERT_STORE_DIR!/live' && sudo chmod -R u+w '!CERT_STORE_DIR!/live' 2>/dev/null || true; sudo cp -a '!_IMPORT_STAGE!/certs/live/.' '!CERT_STORE_DIR!/live/' 2>/dev/null || true; fi" >nul 2>&1
 set "REM_SPECS=!APP_SPECS!"
+goto :import_next_app
 
 :: ## import_next_app
 :: Iterates over APP_SPECS and imports state for each matching app.
@@ -228,7 +230,7 @@ echo +----------------------------+--------------------------------+------------
 echo ^| Application                ^| DNS / Public Endpoint          ^| Import Status     ^| Healthcheck      ^|
 echo +----------------------------+--------------------------------+-------------------+------------------+
 for /L %%I in (1,1,!IMPORT_REPORT_COUNT!) do (
-    echo !IMPORT_ROW_%%I!
+    echo.!IMPORT_ROW_%%I!
 )
 echo +----------------------------+--------------------------------+-------------------+------------------+
 exit /b 0

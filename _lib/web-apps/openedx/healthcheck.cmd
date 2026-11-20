@@ -88,6 +88,7 @@ if "%ARG1%"=="--json" goto run_probes
 if "%ARG1%"=="help" goto show_help
 if "%ARG1%"=="--help" goto show_help
 if "%ARG1%"=="-h" goto show_help
+goto :run_probes
 
 :: ## run_probes
 :: Executes full-stack diagnostic health probes across all services.

@@ -51,7 +51,7 @@ goto :find_root
 
 call :run_corpus_matrix_windows
 if errorlevel 1 exit /b 1
-echo [PASS] All 13 C11 and C++17 corpus targets built and verified with edgcpp v7.0.1 on Windows!
+echo [PASS] All 13 C11 and C++17 corpus targets built and verified with edgcpp v7.0.1 on Windows^^!
 exit /b 0
 
 :: ## run_corpus_matrix_windows

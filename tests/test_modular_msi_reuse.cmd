@@ -79,12 +79,12 @@ echo [PASS] All 10 standalone component MSIs built successfully.
 echo [INFO] Building Master Orchestrator MSIs...
 call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" _lib\web-apps\openedx --version "22.1.0" --variant "online" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0" >nul 2>&1
 if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0.msi" (
-    echo [FAIL] Missing openedx-22.1.0.msi (online) >&2
+    echo [FAIL] Missing openedx-22.1.0.msi ^(online^) >&2
     exit /b 1
 )
 call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" _lib\web-apps\openedx --version "22.1.0" --variant "offline" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0" >nul 2>&1
 if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0.msi" (
-    echo [FAIL] Missing openedx-offline-22.1.0.msi (offline) >&2
+    echo [FAIL] Missing openedx-offline-22.1.0.msi ^(offline^) >&2
     exit /b 1
 )
 echo [PASS] Master Orchestrator MSIs built successfully.
@@ -92,7 +92,7 @@ echo [PASS] Master Orchestrator MSIs built successfully.
 set "EXE_FOUND=0"
 for /r "%LIBSCRIPT_ROOT_DIR%\dist\msi" %%F in (*.exe) do set "EXE_FOUND=1"
 if "%EXE_FOUND%"=="1" (
-    echo [FAIL] Found .exe file(s) in dist\msi. Zero-.EXE mandate violated! >&2
+    echo [FAIL] Found .exe file^(s^) in dist\msi. Zero-.EXE mandate violated^^! >&2
     exit /b 1
 )
 echo [PASS] Zero-.EXE mandate verified in dist\msi\ (only pure .msi packages produced).

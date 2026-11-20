@@ -55,6 +55,7 @@ unset STACK || true
 "${LIBSCRIPT_ROOT_DIR}/tests/test_win_dos_component_pm.sh" || exit 1
 "${LIBSCRIPT_ROOT_DIR}/tests/test_standards_adherence.sh" || exit 1
 "${LIBSCRIPT_ROOT_DIR}/tests/test_qemu_msdos_smoke.sh" || exit 1
+STACK="" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_cmd.sh" "${LIBSCRIPT_ROOT_DIR}/tests/run_zero_powershell_suite.cmd" "${LIBSCRIPT_ROOT_DIR}/devtools/audit/audit_cmd.cmd" || exit 1
 
 printf '%s\n' '[PASS] Zero-PowerShell suite completed with poison shims active.'
 exit 0

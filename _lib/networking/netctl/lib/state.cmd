@@ -80,7 +80,7 @@ exit /b 1
 if not exist "%NETCTL_STATE_FILE%" (
     echo {"domain":"_","listen":[],"tls":"","cert_store_dir":"","acme_webroot":"","routes":{}} > "%NETCTL_STATE_FILE%"
 ) else (
-    for %%I in ("%NETCTL_STATE_FILE%") do if %%~zI equ 0 (
+    for %%I in ("%NETCTL_STATE_FILE%") do if "%%~zI" equ "0" (
         echo {"domain":"_","listen":[],"tls":"","cert_store_dir":"","acme_webroot":"","routes":{}} > "%NETCTL_STATE_FILE%"
     )
 )

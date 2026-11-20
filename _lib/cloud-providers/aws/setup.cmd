@@ -86,7 +86,7 @@ if "%S3_BUCKET%"=="" set "S3_BUCKET=%AWS_S3_BUCKET%"
 if "%S3_BUCKET%"=="" set "S3_BUCKET=libscript-images"
 set "AMI_NAME=%~4"
 if "%AMI_NAME%"=="" set "AMI_NAME=%AWS_AMI_NAME%"
-if "%AMI_NAME%"=="" set "AMI_NAME=libscript-ami-%RANDOM%"
+if "%AMI_NAME%"=="" set "AMI_NAME=libscript-ami-!RANDOM!"
 
 if not exist "%IMG_PATH%" (
     echo [ERROR] Target disk image not found: %IMG_PATH%
@@ -95,7 +95,7 @@ if not exist "%IMG_PATH%" (
 
 echo [CLOUD] Uploading %IMG_PATH% to s3://%S3_BUCKET%/...
 where aws >nul 2>&1
-if %ERRORLEVEL%==0 (
+if "%ERRORLEVEL%"=="0" (
     aws s3 cp "%IMG_PATH%" "s3://%S3_BUCKET%/"
     echo [CLOUD] Registering EC2 AMI %AMI_NAME%...
     aws ec2 register-image --name "%AMI_NAME%" --architecture x86_64 --root-device-name "/dev/sda1"

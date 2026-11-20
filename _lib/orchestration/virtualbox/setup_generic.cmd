@@ -53,7 +53,7 @@ if "%ACTION%"=="" set ACTION=install
 
 if "%ACTION%"=="install" (
     where VBoxManage >nul 2>&1
-    if !errorlevel! neq 0 (
+    if "!errorlevel!" neq "0" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends virtualbox
     ) else (
         echo VirtualBox is already installed.

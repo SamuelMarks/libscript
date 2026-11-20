@@ -59,7 +59,7 @@ if /i "%ACTION%"=="gpu-passthrough" (
 if "%ACTION%"=="install" (
     if exist "C:\Program Files\qemu" set "PATH=C:\Program Files\qemu;!PATH!"
     where qemu-system-x86_64 >nul 2>&1
-    if !errorlevel! equ 0 (
+    if "!errorlevel!" equ "0" (
         echo QEMU is already installed.
         exit /b 0
     )

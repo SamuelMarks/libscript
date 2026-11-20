@@ -81,6 +81,7 @@ if "%WORDPRESS_ENABLE_PHPMYADMIN%"=="" set "WORDPRESS_ENABLE_PHPMYADMIN=1"
 if "%WORDPRESS_ENABLE_CRON_OFFLOAD%"=="" set "WORDPRESS_ENABLE_CRON_OFFLOAD=1"
 if "%WORDPRESS_PHP_MEMORY_LIMIT%"=="" set "WORDPRESS_PHP_MEMORY_LIMIT=256M"
 if "%WORDPRESS_PHP_UPLOAD_MAX_FILESIZE%"=="" set "WORDPRESS_PHP_UPLOAD_MAX_FILESIZE=128M"
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line flags and parameters for WordPress provisioning on Windows.
@@ -123,7 +124,7 @@ echo [INFO] Provisioning WordPress %WORDPRESS_VERSION% on Windows...
 :: 1. Stage Directory Structure & Download WordPress Core via Reusable pkg_mgr.cmd
 if not exist "%WORDPRESS_WWWROOT%" mkdir "%WORDPRESS_WWWROOT%"
 if not exist "%WORDPRESS_WWWROOT%\index.php" (
-    set "TMP_WP_ZIP=%TEMP%\wordpress_%RANDOM%.zip"
+    set "TMP_WP_ZIP=%TEMP%\wordpress_!RANDOM!.zip"
     if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" (
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://wordpress.org/latest.zip" "!TMP_WP_ZIP!" 2>nul
     )
@@ -156,7 +157,7 @@ if defined WORDPRESS_DBAAS_URL (
 ) else if "%WORDPRESS_REUSE_OPENEDX_DB%"=="1" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\discover_databases.cmd" --check --engine mysql >nul 2>&1
     if not errorlevel 1 (
-        echo [INFO] Shared MySQL database detected! Provisioning isolated WordPress schema in shared instance...
+        echo [INFO] Shared MySQL database detected^^! Provisioning isolated WordPress schema in shared instance...
         for /f "tokens=1,2 delims==" %%a in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\discover_databases.cmd" --eval --engine mysql') do (
             if "%%a"=="DETECTED_DB_HOST" set "WORDPRESS_DB_HOST=%%b"
             if "%%a"=="DETECTED_DB_PORT" set "WORDPRESS_DB_PORT=%%b"
@@ -186,14 +187,14 @@ for /f "tokens=1-8" %%a in ('powershell -NoProfile -Command "!SALTS_CMD!"') do (
     set "SALT_7=%%g"
     set "SALT_8=%%h"
 )
-if "%SALT_1%"=="" set "SALT_1=libscript_salt_fallback_1_%RANDOM%"
-if "%SALT_2%"=="" set "SALT_2=libscript_salt_fallback_2_%RANDOM%"
-if "%SALT_3%"=="" set "SALT_3=libscript_salt_fallback_3_%RANDOM%"
-if "%SALT_4%"=="" set "SALT_4=libscript_salt_fallback_4_%RANDOM%"
-if "%SALT_5%"=="" set "SALT_5=libscript_salt_fallback_5_%RANDOM%"
-if "%SALT_6%"=="" set "SALT_6=libscript_salt_fallback_6_%RANDOM%"
-if "%SALT_7%"=="" set "SALT_7=libscript_salt_fallback_7_%RANDOM%"
-if "%SALT_8%"=="" set "SALT_8=libscript_salt_fallback_8_%RANDOM%"
+if "%SALT_1%"=="" set "SALT_1=libscript_salt_fallback_1_!RANDOM!"
+if "%SALT_2%"=="" set "SALT_2=libscript_salt_fallback_2_!RANDOM!"
+if "%SALT_3%"=="" set "SALT_3=libscript_salt_fallback_3_!RANDOM!"
+if "%SALT_4%"=="" set "SALT_4=libscript_salt_fallback_4_!RANDOM!"
+if "%SALT_5%"=="" set "SALT_5=libscript_salt_fallback_5_!RANDOM!"
+if "%SALT_6%"=="" set "SALT_6=libscript_salt_fallback_6_!RANDOM!"
+if "%SALT_7%"=="" set "SALT_7=libscript_salt_fallback_7_!RANDOM!"
+if "%SALT_8%"=="" set "SALT_8=libscript_salt_fallback_8_!RANDOM!"
 
 :: 4. Synthesize wp-config.php
 echo [INFO] Generating hardened wp-config.php on Windows...

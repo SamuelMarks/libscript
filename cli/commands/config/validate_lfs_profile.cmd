@@ -60,7 +60,7 @@ SET "PROFILE_FILE=%~1"
 IF NOT EXIST "%PROFILE_FILE%" (
     IF EXIST "!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%" (
         SET "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%"
-    ) ELSE IF EXIST "!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%.json" (
+    ) ELSE IF EXIST "!LIBSCRIPT_ROOT_DIR!\profiles\!PROFILE_FILE!.json" (
         SET "PROFILE_FILE=!LIBSCRIPT_ROOT_DIR!\profiles\%PROFILE_FILE%.json"
     ) ELSE (
         echo [ERROR] Profile not found: %~1 >&2
@@ -97,6 +97,7 @@ IF ERRORLEVEL 1 (
 
 echo [PASS] Top-level schema validation passed for %PROFILE_FILE%
 echo [PASS] All modular axes and compatibility rules satisfied.
+goto :end
 
 :: ## end
 :: Exits the batch script cleanly and returns control to the caller.

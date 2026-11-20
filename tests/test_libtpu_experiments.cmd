@@ -63,7 +63,7 @@ call :test_tbd_placeholder_and_unsafe_gates
 if errorlevel 1 goto :fail_out
 
 if exist "!WORK_DIR!" rmdir /s /q "!WORK_DIR!" >nul 2>&1
-echo [PASS] Windows libtpu-rs E0-E8 empirical suites, gates, and 2x idempotency tests succeeded!
+echo [PASS] Windows libtpu-rs E0-E8 empirical suites, gates, and 2x idempotency tests succeeded^^!
 exit /b 0
 
 :: ## fail_out
@@ -114,7 +114,7 @@ exit /b 0
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --subsuites=E8 "--results-dir=!WORK_DIR!\results" "--paper-dir=!WORK_DIR!\paper_tbd" >nul 2>&1
 if not errorlevel 1 (
-    echo [FAIL] E8 accepted manuscript containing unresolved placeholder! >&2
+    echo [FAIL] E8 accepted manuscript containing unresolved placeholder^^! >&2
     exit /b 1
 )
 
@@ -132,7 +132,7 @@ popd
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" libtpu-rs experiments --synthetic-fixtures --force --subsuites=E0 "--repo-dir=!_BAD_CORE!" "--results-dir=!WORK_DIR!\bad_results" >nul 2>&1
 if not errorlevel 1 (
-    echo [FAIL] E0 accepted unsafe block inside safe core! >&2
+    echo [FAIL] E0 accepted unsafe block inside safe core^^! >&2
     exit /b 1
 )
 exit /b 0

@@ -72,7 +72,7 @@ for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%SQLITE_TRANSCRIPT_FILE%" 
 rmdir /s /q "%SQLITE_TEST_DIR%" 2>nul
 
 if "%~1"=="--digest-only" (
-    echo !_digest!
+    echo.!_digest!
 ) else (
     echo [PASS] SQLite 6-stage torture suite passed ^(digest=!_digest!^)
 )
@@ -91,7 +91,7 @@ exit /b 0
 :: ## run_sql_stage
 :: Executes a SQL stage and appends output to the transcript file.
 :run_sql_stage
-echo === %~1 ===>> "%SQLITE_TRANSCRIPT_FILE%"
+echo(=== %~1 ===>> "%SQLITE_TRANSCRIPT_FILE%"
 "%SQLITE_TEST_BIN%" -batch -noheader "%SQLITE_TEST_DB%" "%~2" >> "%SQLITE_TRANSCRIPT_FILE%"
 exit /b !errorlevel!
 

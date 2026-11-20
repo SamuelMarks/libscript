@@ -86,6 +86,7 @@ set "DIST_DIR=dist"
 set "REL_TITLE="
 set "IS_DRAFT=false"
 set "IS_PRERELEASE=false"
+goto :args_loop
 
 :: ## args_loop
 :: Iterates through command-line arguments and populates installer configuration options.
@@ -159,26 +160,22 @@ for %%F in ("%_SUMS_DIR%\*") do (
         if not "!FSIZE!"=="0" (
             set "FILE_HASH="
             where powershell >nul 2>&1
-            if !ERRORLEVEL! equ 0 (
+            if "!ERRORLEVEL!" equ "0" (
                 for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('%%F');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do (
                     set "FILE_HASH=%%H"
                 )
             )
             if not defined FILE_HASH (
                 where certutil >nul 2>&1
-                if !ERRORLEVEL! equ 0 (
+                if "!ERRORLEVEL!"=="0" (
                     for /f "tokens=* skip=1" %%H in ('certutil -hashfile "%%F" SHA256 2^>nul') do (
                         if not defined FILE_HASH (
                             set "line=%%H"
-                            if not "!line:CertUtil=!"=="!line!" goto :skip_hash_item
-                            set "FILE_HASH=!line: =!"
+                            if "!line:CertUtil=!"=="!line!" set "FILE_HASH=!line: =!"
                         )
                     )
                 )
             )
-            :: ## skip_hash_item
-            :: Continues once certutil header/footer lines are skipped.
-            :skip_hash_item
             if defined FILE_HASH (
                 >> "%TMP_SUMS%" echo !FILE_HASH!  !FNAME!
             )
@@ -204,8 +201,8 @@ exit /b 0
 echo [INFO] Publishing release assets for tag "%REL_TAG%" from "%DIST_DIR%"...
 
 where gh >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo [ERROR] GitHub CLI (gh) not found in PATH. >&2
+if "%ERRORLEVEL%" neq "0" (
+    echo [ERROR] GitHub CLI ^(gh^) not found in PATH. >&2
     exit /b 1
 )
 
@@ -219,23 +216,23 @@ for %%F in ("%DIST_DIR%\*") do (
     )
 )
 
-if %ASSET_COUNT% equ 0 (
+if "%ASSET_COUNT%" equ "0" (
     echo [ERROR] No valid non-empty assets found in "%DIST_DIR%" to publish. >&2
     exit /b 1
 )
 
 gh release view "%REL_TAG%" >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     echo [INFO] Release "%REL_TAG%" already exists. Uploading assets with clobber...
     gh release upload "%REL_TAG%" !ASSET_FILES! --clobber
-    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
+    if "!ERRORLEVEL!" neq "0" exit /b !ERRORLEVEL!
 ) else (
     echo [INFO] Creating new release "%REL_TAG%"...
     set "REL_FLAGS="
     if "%IS_DRAFT%"=="true" set "REL_FLAGS=!REL_FLAGS! --draft"
     if "%IS_PRERELEASE%"=="true" set "REL_FLAGS=!REL_FLAGS! --prerelease"
     gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes !REL_FLAGS! !ASSET_FILES!
-    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
+    if "!ERRORLEVEL!" neq "0" exit /b !ERRORLEVEL!
 )
 
 echo [SUCCESS] Release assets successfully published for %REL_TAG%

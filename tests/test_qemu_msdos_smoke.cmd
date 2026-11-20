@@ -165,7 +165,8 @@ if not "!QEMU_EXE!"=="" if /i not "!SMOKE_MODE!"=="synthetic-only" if /i not "!S
     set "_CAN_BENTO_DISK=0"
     if not "!MSDOS_IMG!"=="" if not "!FREEDOS_IMG!"=="" if exist "!BENTO_DIR!\msdos-builder.cmd" if exist "!BENTO_DIR!\freedos-builder.cmd" set "_CAN_BENTO_DISK=1"
     if "!_CAN_BENTO_DISK!"=="1" (
-        set /a "MSDOS_PORT=24500 + (%RANDOM% %% 300)"
+        set "_RND=!RANDOM!"
+        set /a "MSDOS_PORT=24500 + (_RND - (_RND / 300) * 300)"
         set /a "FREE_PORT=!MSDOS_PORT! + 1"
         start "" /B "!QEMU_EXE!" -machine pc,accel=tcg -cpu max -m 64M -smp 1 -snapshot -drive "file=!MSDOS_IMG!,format=!MSDOS_FMT!,if=ide,index=0,media=disk" -drive "file=fat:!DRIVE_D!,format=raw,if=ide,index=1,media=disk" -serial "telnet:127.0.0.1:!MSDOS_PORT!,server,nowait" -display none
         set "MSDOS_SERIAL_PORT=!MSDOS_PORT!"
@@ -195,6 +196,7 @@ if "!EXECUTED_BENTO_DISK!"=="0" (
         )
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## smoke_done
 :: Cleans up temporary test directory and exits with status 0.

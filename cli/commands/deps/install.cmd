@@ -156,12 +156,14 @@ for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selecte
 )
 
 set /a _DL_WAIT_ITER=0
+goto :wait_parallel_downloads
 :: ## wait_parallel_downloads
 :: Polls active background download lock files until all parallel downloads complete.
 :wait_parallel_downloads
 set "_DL_REMAINING=0"
 if exist "!_DL_LOCK_DIR!\*.lock" set "_DL_REMAINING=1"
 if "!_DL_REMAINING!"=="1" (
+    REM wincheck disable=CMD2003
     if !_DL_WAIT_ITER! lss 300 (
         set /a _DL_WAIT_ITER+=1
         ping 127.0.0.1 -n 2 >nul
@@ -257,7 +259,8 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_db.cmd" (
 )
 if exist "!_MANIFEST_DIR!\.env.libscript" (
     for /f "usebackq tokens=1* delims==" %%A in ("!_MANIFEST_DIR!\.env.libscript") do (
-        if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%~B"
+        set "_env_k=%%A"
+        if not "!_env_k!"=="" if not "!_env_k:~0,1!"=="#" set "%%A=%%~B"
     )
 )
 

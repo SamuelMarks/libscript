@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 where guix >nul 2>nul
-if %errorlevel% neq 0 (
+if "%errorlevel%" neq "0" (
   echo guix is not installed, skipping test.
   exit /b 0
 )

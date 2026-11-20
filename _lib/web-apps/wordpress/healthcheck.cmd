@@ -132,6 +132,7 @@ if "%STATUS_CORE%"=="OK" (
     echo [WARN] WordPress core files or database not yet configured.
     exit /b 0
 )
+:: wincheck disable=CMD3005
 
 :: ## show_help
 :: Displays usage instructions for the WordPress healthcheck utility.

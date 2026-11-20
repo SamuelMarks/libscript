@@ -65,6 +65,7 @@ set "DRY_RUN=0"
 if "%LIBSCRIPT_DRY_RUN%"=="1" set "DRY_RUN=1"
 set "ALLOW_STUB=0"
 if "%LIBSCRIPT_ALLOW_STUB%"=="1" set "ALLOW_STUB=1"
+goto :parse_args
 
 :: ## parse_args
 :: Parses CLI flags for synthesize-image.cmd.

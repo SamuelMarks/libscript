@@ -52,6 +52,7 @@ if /i "%~1"=="experiment" shift
 if /i "%~1"=="rapid-experiment" shift
 
 set "_FWD_ARGS="
+goto :build_fwd_args
 :: ## build_fwd_args
 :: Reconstructs quoted arguments after optional verb shift so arbitrary >9 token lists with '=' and ',' are preserved.
 :build_fwd_args

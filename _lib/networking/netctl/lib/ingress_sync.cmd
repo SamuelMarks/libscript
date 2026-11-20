@@ -60,6 +60,7 @@ endlocal & (
     set "NETCTL_PROXY_BUFFERING=%NETCTL_PROXY_BUFFERING%"
     exit /b %_NIS_RC%
 )
+:: wincheck disable=CMD3005
 
 :: ## netctl_synchronize_ingress
 :: Extracts .ingress proxy settings from libscript.json, normalizes units, exports NETCTL_PROXY_*, and invokes netctl.cmd apply.

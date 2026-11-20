@@ -84,13 +84,13 @@ if not exist "%PS_SCRIPT%" (
 )
 
 where pwsh >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
     exit /b !ERRORLEVEL!
 )
 
 where powershell >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
     exit /b !ERRORLEVEL!
 )

@@ -61,7 +61,7 @@ if exist "%DEST_DIR%\rebar3.escript" if exist "%BIN_DIR%\rebar3.cmd" exit /b 0
 :: Ensure Erlang / escript is present
 set "ESCRIPT_BIN="
 where escript >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     set "ESCRIPT_BIN=escript"
 ) else (
     for /d %%E in ("%ProgramFiles%\Erlang*" "%ProgramFiles%\erl*") do (

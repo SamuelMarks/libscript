@@ -84,9 +84,9 @@ if "%IS_MSDOS%"=="1" exit /b 0
 if /i "%TARGET_OS%"=="msdos" exit /b 0
 if /i "%LIBSCRIPT_TARGET_OS%"=="msdos" exit /b 0
 net session >nul 2>&1
-if %errorlevel% == 0 exit /b 0
+if "%errorlevel%" == "0" exit /b 0
 fltmc >nul 2>&1
-if %errorlevel% == 0 exit /b 0
+if "%errorlevel%" == "0" exit /b 0
 exit /b 1
 
 :: -----------------------------------------------------------------------------
@@ -105,10 +105,10 @@ if "!CMD_TO_RUN!"=="" (
 )
 
 call :check_admin
-if %errorlevel% == 0 (
+if "%errorlevel%" == "0" (
     shift
     %CMD_TO_RUN% %2 %3 %4 %5 %6 %7 %8 %9
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 echo Requesting administrative privileges for: !CMD_TO_RUN!

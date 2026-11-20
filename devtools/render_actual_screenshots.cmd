@@ -80,21 +80,21 @@ if not exist "%CC0_LIVE_DIR%" mkdir "%CC0_LIVE_DIR%"
 set "PS_SCRIPT=%SCRIPT_DIR%\render_actual_screenshots.ps1"
 
 where powershell.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 where pwsh.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 where pwsh >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "%ERRORLEVEL%" EQU "0" (
     pwsh -NoProfile -File "%PS_SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 echo [OK] Screenshots verified in %CC0_MSI_DIR%

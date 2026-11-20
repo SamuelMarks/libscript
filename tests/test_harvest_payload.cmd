@@ -60,7 +60,7 @@ set "WIX_FILE=%TEST_TMP_DIR%\fragment.wxs"
 
 call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_payload.cmd" --manifest-file "%MANIFEST_FILE%" --wix-fragment "%WIX_FILE%"
 if errorlevel 1 (
-    echo [FAIL] harvest_payload.cmd failed with exit code %ERRORLEVEL% >&2
+    echo [FAIL] harvest_payload.cmd failed with exit code !ERRORLEVEL! >&2
     exit /b 1
 )
 
@@ -70,6 +70,7 @@ if not exist "%MANIFEST_FILE%" (
     exit /b 1
 )
 for %%F in ("%MANIFEST_FILE%") do (
+    REM wincheck disable=CMD2003
     if %%~zF LEQ 0 (
         echo [FAIL] Manifest file is empty >&2
         exit /b 1

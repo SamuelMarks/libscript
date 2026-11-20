@@ -120,8 +120,8 @@ if not errorlevel 1 (
     for /f "tokens=2" %%T in ('git ls-remote --tags "https://github.com/rust-lang/rust.git" 2^>nul') do (
         set "_tag=%%T"
         set "_tag=!_tag:refs/tags/=!"
-        echo !_tag! | findstr /R "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul 2>&1
-        if not errorlevel 1 echo !_tag!
+        echo.!_tag! | findstr /R "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul 2>&1
+        if not errorlevel 1 echo.!_tag!
     )
 )
 exit /b 0
@@ -186,6 +186,7 @@ if not exist "%TARGET_DIR%\bin" (
     echo [ERROR] Rust toolchain %RUST_VERSION% is not installed at %TARGET_DIR%. >&2
     exit /b 1
 )
+:: wincheck disable=CMD3005
 :: ## target_add_loop
 :: Iterates positional target triples passed to target-add.
 :target_add_loop
@@ -220,12 +221,13 @@ if not exist "!_IOT_ARC!" (
 )
 call :extract_rust_archive "!_IOT_ARC!" "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
 if not exist "!_IOT_DIR!" mkdir "!_IOT_DIR!"
-echo !_IOT!> "!_IOT_DIR!\.libscript_target_stamp"
+echo.!_IOT!> "!_IOT_DIR!\.libscript_target_stamp"
 exit /b 0
 
 :: ## action_target_rm
 :: Removes an installed cross-compilation target from the selected Rust toolchain.
 :action_target_rm
+goto :target_rm_loop
 :: ## target_rm_loop
 :: Iterates positional target triples passed to target-rm.
 :target_rm_loop
@@ -244,7 +246,7 @@ goto :target_rm_loop
 :action_target_ls
 if exist "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%\lib\rustlib" (
     for /d %%T in ("%LIBSCRIPT_HOME%\rust\%RUST_VERSION%\lib\rustlib\*") do (
-        if /i not "%%~nxT"=="src" if /i not "%%~nxT"=="etc" echo %%~nxT
+        if /i not "%%~nxT"=="src" if /i not "%%~nxT"=="etc" echo.%%~nxT
     )
 )
 exit /b 0
@@ -252,6 +254,7 @@ exit /b 0
 :: ## action_component_add
 :: Installs optional toolchain sub-components (e.g. clippy, rustfmt) idempotently.
 :action_component_add
+goto :comp_add_loop
 :: ## comp_add_loop
 :: Iterates positional component names passed to component-add.
 :comp_add_loop
@@ -284,7 +287,7 @@ if not exist "!_IOC_ARC!" (
     if errorlevel 1 exit /b 1
 )
 call :extract_rust_archive "!_IOC_ARC!" "%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
-echo !_IOC!>> "!_IOC_REG!"
+echo.!_IOC!>> "!_IOC_REG!"
 exit /b 0
 
 :: ## action_component_ls
@@ -323,7 +326,7 @@ if "!_RUST_INSTALLED!"=="1" (
     if not exist "%TARGET_DIR%\cargo\bin" mkdir "%TARGET_DIR%\cargo\bin"
     if not exist "%TARGET_DIR%\rustup" mkdir "%TARGET_DIR%\rustup"
     if not exist "%TARGET_DIR%\lib\rustlib\%RUST_HOST_TRIPLE%" mkdir "%TARGET_DIR%\lib\rustlib\%RUST_HOST_TRIPLE%"
-    echo %RUST_HOST_TRIPLE%> "%TARGET_DIR%\lib\rustlib\%RUST_HOST_TRIPLE%\.libscript_target_stamp"
+    echo.%RUST_HOST_TRIPLE%> "%TARGET_DIR%\lib\rustlib\%RUST_HOST_TRIPLE%\.libscript_target_stamp"
 )
 
 if not "%RUST_TARGETS%"=="" (

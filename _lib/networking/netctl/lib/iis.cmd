@@ -87,14 +87,14 @@ echo     ^</rewrite^>
 :: The web.config handles the rewriting and proxying.
 :: We will emit comments on how to complete the IIS setup.
 
-echo     ^<!-- To complete IIS Setup for Static paths and Listeners: --^>
+echo     ^<^^!-- To complete IIS Setup for Static paths and Listeners: --^>
 for /f "usebackq delims=" %%i in (`jq -r ".listen[]" "%NETCTL_STATE_FILE%"`) do (
-    echo     ^<!-- appcmd set site /site.name:"Default Web Site" /+bindings.[protocol='http',bindingInformation='*:%%i:'] --^>
+    echo     ^<^^!-- appcmd set site /site.name:"Default Web Site" /+bindings.[protocol='http',bindingInformation='*:%%i:'] --^>
 )
 
 for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r --arg sep "|" ".routes | to_entries[] | (.key + $sep + (.value.type // \"\") + $sep + (.value.target // \"\") + $sep + (.value.pattern // \"\"))" "%NETCTL_STATE_FILE%"`) do (
     if "%%b"=="static" (
-        echo     ^<!-- appcmd add vdir /app.name:"Default Web Site/" /path:"%%a" /physicalPath:"%%c" --^>
+        echo     ^<^^!-- appcmd add vdir /app.name:"Default Web Site/" /path:"%%a" /physicalPath:"%%c" --^>
     )
 )
 

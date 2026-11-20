@@ -79,7 +79,7 @@ set "nsi_file=%OUT_FILE%.nsi"
 
 echo Generated %nsi_file%
 where makensis >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo Compiling %nsi_file% with makensis...
     makensis "%nsi_file%"
 )

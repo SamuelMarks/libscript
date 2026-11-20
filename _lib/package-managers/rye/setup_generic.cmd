@@ -84,7 +84,6 @@ if "%ACTION%"=="down" goto :action_service
 if "%ACTION%"=="install-service" goto :action_install_service
 if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
-goto :action_install
 
 :: ## action_ls
 :: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
@@ -168,6 +167,7 @@ if not exist "%TARGET_DIR%\bin" (
         set "STACK="
         call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/astral-sh/rye/releases/download/0.44.0/rye-x86_64-pc-windows-msvc.exe" "%TARGET_DIR%\bin\rye.exe"
         if exist "%TARGET_DIR%\bin\rye.exe" (
+            REM wincheck disable=CMD2003
             for %%F in ("%TARGET_DIR%\bin\rye.exe") do if %%~zF lss 100000 del /f /q "%TARGET_DIR%\bin\rye.exe" >nul 2>&1
         )
         if not exist "%TARGET_DIR%\bin\rye.exe" (
@@ -191,9 +191,11 @@ exit /b 0
 :: ## action_service
 :: Routes service daemon control actions (start, stop, restart, status) to the common handler.
 :action_service
+goto :action_install_service
 :: ## action_install_service
 :: Registers and configures the component as a persistent system service.
 :action_install_service
+goto :action_uninstall_service
 :: ## action_uninstall_service
 :: Stops and removes the registered system service for the component.
 :action_uninstall_service

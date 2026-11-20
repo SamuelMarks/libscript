@@ -77,12 +77,13 @@ exit /b 1
 :: Iterates over all artifact file paths passed on the command line.
 :main
 set "ERRORS=0"
+goto :process_loop
 :: ## process_loop
 :: Iterates through build artifacts to compute checksums and stage release files.
 :process_loop
 if "%~1"=="" goto :finish
 call :process_single "%~1"
-if %ERRORLEVEL% neq 0 set /a ERRORS+=1
+if "%ERRORLEVEL%" neq "0" set /a ERRORS+=1
 shift
 goto :process_loop
 
@@ -104,12 +105,14 @@ if "%FILE_SIZE%"=="0" (
     echo [ERROR] Artifact file is empty: %TARGET_FILE% >&2
     exit /b 1
 )
+REM wincheck disable=CMD2003
 if !FILE_SIZE! LSS 1024 (
     echo [FAIL] Artifact is abnormally small ^(!FILE_SIZE! bytes ^< 1 KB^): %TARGET_FILE% >&2
     exit /b 1
 )
 echo "%FILE_NAME%" | findstr /I "offline" | findstr /I ".msi" >nul 2>&1
 if not errorlevel 1 (
+    REM wincheck disable=CMD2003
     if !FILE_SIZE! LSS 1048576 (
         echo [FAIL] Offline MSI artifact is abnormally small ^(!FILE_SIZE! bytes ^< 1 MB^): %TARGET_FILE% >&2
         exit /b 1
@@ -119,7 +122,7 @@ if not errorlevel 1 (
 set "SHA256_HASH="
 :: Prefer PowerShell .NET SHA256 if available
 where powershell >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=[System.IO.File]::OpenRead('%TARGET_FILE%');$h=[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash($s)).Replace('-','').ToLower();$s.Close();$h" 2^>nul`) do (
         set "SHA256_HASH=%%H"
     )
@@ -128,7 +131,7 @@ if %ERRORLEVEL% equ 0 (
 :: Fallback to certutil if powershell not available or failed
 if not defined SHA256_HASH (
     where certutil >nul 2>&1
-    if %ERRORLEVEL% equ 0 (
+    if "!ERRORLEVEL!" equ "0" (
         for /f "tokens=* skip=1" %%H in ('certutil -hashfile "%TARGET_FILE%" SHA256 2^>nul') do (
             if not defined SHA256_HASH (
                 set "line=%%H"
@@ -138,6 +141,7 @@ if not defined SHA256_HASH (
         )
     )
 )
+:: wincheck disable=CMD3005
 :: ## skip_hash
 :: Skips checksum generation for hash metadata files.
 :skip_hash
@@ -154,5 +158,6 @@ exit /b 0
 :: ## finish
 :: Concludes execution and exits with aggregate error status.
 :finish
+REM wincheck disable=CMD2003
 if %ERRORS% gtr 0 exit /b 1
 exit /b 0

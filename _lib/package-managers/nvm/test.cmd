@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 where nvm >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   nvm --version
   exit /b 0
 )

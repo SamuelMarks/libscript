@@ -100,6 +100,7 @@ shift
 set "PASSWORD="
 set "IS_STAFF=False"
 set "IS_SUPERUSER=False"
+goto :parse_create_args
 
 :: ## parse_create_args
 :: Parses user creation options and flags.
@@ -137,7 +138,7 @@ if "%PASSWORD%"=="" (
 )
 
 call "%USER_HELPER%" create "%OPENEDX_INSTALL_DIR%" "%USERNAME%" "%EMAIL%" "%PASSWORD%" "%IS_STAFF%" "%IS_SUPERUSER%"
-if errorlevel 1 exit /b %errorlevel%
+if errorlevel 1 exit /b !ERRORLEVEL!
 echo [INFO] User '%USERNAME%' created/updated successfully.
 exit /b 0
 
@@ -157,7 +158,7 @@ if "%PASSWORD%"=="" (
 )
 
 call "%USER_HELPER%" set_password "%OPENEDX_INSTALL_DIR%" "%USERNAME%" "%PASSWORD%"
-if errorlevel 1 exit /b %errorlevel%
+if errorlevel 1 exit /b !ERRORLEVEL!
 echo [INFO] Password updated for '%USERNAME%'.
 exit /b 0
 

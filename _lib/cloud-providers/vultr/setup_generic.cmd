@@ -149,7 +149,7 @@ if /i "!_SUB!"=="ip" (
 set "_IP="
 for /f "tokens=3" %%I in ('vultr-cli instance get "!_NODE!" 2^>nul ^| findstr /C:"MAIN IP"') do set "_IP=%%I"
 if /i "!_SUB!"=="ip" (
-    echo !_IP!
+    echo.!_IP!
     exit /b 0
 )
 if /i "!_SUB!"=="exec" (

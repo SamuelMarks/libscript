@@ -66,14 +66,13 @@ echo [INFO] Syncing libscript from %REPO_ROOT% to %TARGET_HOST%:%TARGET_PATH%...
 :: Using robocopy for local/network paths or rsync if available in the path.
 :: Assuming rsync is available (e.g. via Git Bash or WSL) for a true cross-platform sync
 where rsync >nul 2>nul
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%"=="0" (
     rsync -avz --exclude ".git" --exclude "vagrant/.vagrant" "%REPO_ROOT%/" "%TARGET_HOST%:%TARGET_PATH%"
 ) else (
     echo [WARN] rsync not found. Attempting robocopy ^(local network paths only^).
     robocopy "%REPO_ROOT%" "%TARGET_PATH%" /MIR /XD .git vagrant\.vagrant
-    if %ERRORLEVEL% leq 7 (
-        set ERRORLEVEL=0
-    )
+    if errorlevel 8 exit /b 1
+    cmd /c "exit /b 0"
 )
 
 echo [PASS] Sync completed.

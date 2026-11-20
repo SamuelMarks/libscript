@@ -74,13 +74,15 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" (
 
 if exist "!MANIFEST_DIR!\.env" (
     for /f "usebackq tokens=1* delims==" %%A in ("!MANIFEST_DIR!\.env") do (
-        if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%B"
+        set "_env_k=%%A"
+        if not "!_env_k!"=="" if not "!_env_k:~0,1!"=="#" set "%%A=%%B"
     )
 )
 
 if exist "!MANIFEST_DIR!\.env.libscript" (
     for /f "usebackq tokens=1* delims==" %%A in ("!MANIFEST_DIR!\.env.libscript") do (
-        if not "%%A"=="" if not "%%A:~0,1%"=="#" set "%%A=%%B"
+        set "_env_k=%%A"
+        if not "!_env_k!"=="" if not "!_env_k:~0,1!"=="#" set "%%A=%%B"
     )
 )
 
@@ -271,6 +273,7 @@ if errorlevel 1 (
 set "pg_tbl_count=0"
 for /f "delims= " %%t in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" 2^>nul') do set "pg_tbl_count=%%t"
 if not "!min_tables!"=="" (
+    REM wincheck disable=CMD2003
     if !pg_tbl_count! lss !min_tables! (
         echo [ERROR] PostgreSQL database '!db_name!' has !pg_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
         set "_db_entry_failed=1"
@@ -295,6 +298,7 @@ set "min_rows_req=1"
 for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "!req_tbl!" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "min_rows_req=%%r"
 set "pg_row_count=-1"
 for /f "delims= " %%c in ('psql -h "!db_host!" -p "!db_port!" -U "!db_user!" -d "!db_name!" -Atc "SELECT count(*) FROM \"!req_tbl!\";" 2^>nul') do set "pg_row_count=%%c"
+REM wincheck disable=CMD2003
 if !pg_row_count! lss !min_rows_req! (
     echo [ERROR] PostgreSQL database '!db_name!' required table '!req_tbl!' has insufficient rows ^(!pg_row_count! ^< !min_rows_req!^) >&2
     set "_db_entry_failed=1"
@@ -336,6 +340,7 @@ if "!duck_size!"=="0" (
 call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog');" "scalar"
 set "duck_tbl_count=!QDS_OUT!"
 if not "!min_tables!"=="" (
+    REM wincheck disable=CMD2003
     if !duck_tbl_count! lss !min_tables! (
         echo [ERROR] DuckDB database '!db_path!' has !duck_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
         set "_db_entry_failed=1"
@@ -360,6 +365,7 @@ set "min_rows_req=1"
 for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "!req_tbl!" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "min_rows_req=%%r"
 call :query_duckdb_scalar "!db_path!" "SELECT COUNT(*) FROM \"!req_tbl!\";" "scalar"
 set "duck_row_count=!QDS_OUT!"
+REM wincheck disable=CMD2003
 if !duck_row_count! lss !min_rows_req! (
     echo [ERROR] DuckDB database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!duck_row_count! ^< !min_rows_req!^) >&2
     set "_db_entry_failed=1"
@@ -389,6 +395,7 @@ if errorlevel 1 exit /b 0
 set "sqlite_tbl_count=0"
 for /f "delims= " %%t in ('sqlite3 "!db_path!" "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%%';" 2^>nul') do set "sqlite_tbl_count=%%t"
 if not "!min_tables!"=="" (
+    REM wincheck disable=CMD2003
     if !sqlite_tbl_count! lss !min_tables! (
         echo [ERROR] SQLite database '!db_path!' has !sqlite_tbl_count! tables ^(expected ^>= !min_tables!^) >&2
         set "_db_entry_failed=1"
@@ -413,6 +420,7 @@ set "min_rows_req=1"
 for /f "delims=" %%r in ('echo !db_entry! ^| jq -r --arg tbl "!req_tbl!" "if (.min_rows | type) == \"number\" then .min_rows elif (.min_rows | type) == \"object\" then (.min_rows[$tbl] // 1) else 1 end" 2^>nul') do set "min_rows_req=%%r"
 set "sqlite_row_count=-1"
 for /f "delims= " %%c in ('sqlite3 "!db_path!" "SELECT count(*) FROM \"!req_tbl!\";" 2^>nul') do set "sqlite_row_count=%%c"
+REM wincheck disable=CMD2003
 if !sqlite_row_count! lss !min_rows_req! (
     echo [ERROR] SQLite database '!db_path!' required table '!req_tbl!' has insufficient rows ^(!sqlite_row_count! ^< !min_rows_req!^) >&2
     set "_db_entry_failed=1"

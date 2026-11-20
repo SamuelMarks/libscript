@@ -111,7 +111,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
 )
 
 gcloud filestore instances describe "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     call "!LOG_CMD!" :log_info "Filestore '%INSTANCE_NAME%' already exists in %FILESTORE_ZONE%."
 ) else (
     gcloud filestore instances create "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" --tier="%FILESTORE_TIER%" --file-share="name=vol1,capacity=%FILESTORE_CAPACITY_GB%GB" --network="name=%FILESTORE_NETWORK%" %PROJECT_FLAG% %TAGS_ARG%
@@ -131,7 +131,7 @@ if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
 )
 call "!LOG_CMD!" :log_info "Deleting GCP Filestore %INSTANCE_NAME% in %FILESTORE_ZONE%..."
 gcloud filestore instances describe "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     gcloud filestore instances delete "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" --quiet %PROJECT_FLAG%
 ) else (
     call "!LOG_CMD!" :log_info "Filestore '%INSTANCE_NAME%' already deleted or not found."

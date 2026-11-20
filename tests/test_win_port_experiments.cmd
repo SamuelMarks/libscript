@@ -47,7 +47,7 @@ if errorlevel 1 (
 )
 
 if exist "!TEST_DIR!" rmdir /s /q "!TEST_DIR!" >nul 2>&1
-echo [PASS] Windows win_port E0-E7 empirical suites, 285-macro gate, dual-manuscript, and 2x idempotency tests succeeded!
+echo [PASS] Windows win_port E0-E7 empirical suites, 285-macro gate, dual-manuscript, and 2x idempotency tests succeeded^^!
 exit /b 0
 
 :: ## run_win_port_suite_and_idempotency_tests
@@ -94,7 +94,7 @@ if errorlevel 1 exit /b 1
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" win-port-suite experiments --synthetic-fixtures --subsuites=E7 "--results-dir=!TEST_DIR!\results" "--paper-dir=!TEST_DIR!\paper" >nul 2>&1
 if not errorlevel 1 (
-    echo [FAIL] E7 failed to reject unresolved placeholder! >&2
+    echo [FAIL] E7 failed to reject unresolved placeholder^^! >&2
     exit /b 1
 )
 

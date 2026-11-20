@@ -116,7 +116,7 @@ if not errorlevel 1 (
 )
 
 echo ==========================================================
-echo [SUCCESS] All Windows cache hydration unit tests passed!
+echo [SUCCESS] All Windows cache hydration unit tests passed^^!
 echo ==========================================================
 
 rmdir /s /q "%TEST_TMP_DIR%" 2>nul

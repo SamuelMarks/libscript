@@ -56,6 +56,7 @@ set "ALLOW_STUB=%LIBSCRIPT_ALLOW_STUB%"
 if "!ALLOW_STUB!"=="" set "ALLOW_STUB=1"
 set "BAKE_QEMU=%REACTOS_QEMU_BAKE%"
 if "!BAKE_QEMU!"=="" set "BAKE_QEMU=0"
+goto :parse_flags
 
 :: ## parse_flags
 :: Parses --strict, --allow-stub, and --bake-qemu CLI flags.

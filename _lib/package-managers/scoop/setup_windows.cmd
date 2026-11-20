@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where scoop >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo scoop is already installed.
     exit /b 0
 )
@@ -66,7 +66,7 @@ if exist "%USERPROFILE%\scoop\shims\scoop.cmd" (
 )
 
 where scoop >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 echo Failed to install scoop.
 exit /b 1

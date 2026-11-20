@@ -54,6 +54,7 @@ set "STRICT_BUILD=%LIBSCRIPT_STRICT_IMAGE_BUILD%"
 if "!STRICT_BUILD!"=="" set "STRICT_BUILD=0"
 set "ALLOW_STUB=%LIBSCRIPT_ALLOW_STUB%"
 if "!ALLOW_STUB!"=="" set "ALLOW_STUB=1"
+goto :parse_flags
 
 :: ## parse_flags
 :: Parses --strict and --allow-stub CLI options.

@@ -64,6 +64,7 @@ endlocal & (
     set "TPU_VERSION=%TPU_VERSION%"
     exit /b %_tm_rc%
 )
+:: wincheck disable=CMD3005
 
 :: ## libscript_tpu_backend_spec
 :: Resolves pipe-delimited virtualenv, wheel index, package, and env specification for one of the 7 Gemma 4 TPU backends.
@@ -92,7 +93,7 @@ if "!TPU_BACKEND_SPEC!"=="" (
     echo [ERROR] Unsupported TPU matrix backend identifier: !_tm_bid! 1>&2
     exit /b 1
 )
-echo !TPU_BACKEND_SPEC!
+echo.!TPU_BACKEND_SPEC!
 exit /b 0
 
 :: ## libscript_tpu_evict_shm_if_needed
@@ -112,6 +113,7 @@ if not exist "!_tm_shm_root!\cache\keras" mkdir "!_tm_shm_root!\cache\keras"
 set "_tm_free_kb=%TPU_MOCK_SHM_FREE_KB%"
 if "!_tm_free_kb!"=="" exit /b 0
 set /a "_tm_min_kb=_tm_min_gb * 1048576" 2>nul
+REM wincheck disable=CMD2003
 if !_tm_free_kb! geq !_tm_min_kb! exit /b 0
 
 echo [TPU-MATRIX] Free space !_tm_free_kb! KiB ^< watermark !_tm_min_kb! KiB; evicting completed venvs ^(preserving cache/{hf,keras}^)... 1>&2
@@ -144,8 +146,8 @@ if /i "!_tm_flinks!"=="none" set "_tm_flinks="
 set "_tm_vdir=!_tm_shm_root!\venvs\!_tm_vgroup!"
 set "_tm_stamp_f=!_tm_vdir!\.libscript_wheels.sha256"
 
-set "_tm_sig_tmp=%TEMP%\tpu_sig_%RANDOM%.txt"
-> "!_tm_sig_tmp!" echo !_tm_vgroup!^|!_tm_flinks!^|!_tm_pkgs!
+set "_tm_sig_tmp=%TEMP%\tpu_sig_!RANDOM!.txt"
+> "!_tm_sig_tmp!" echo.!_tm_vgroup!^|!_tm_flinks!^|!_tm_pkgs!
 if exist "!_tm_ws!\pyproject.toml" type "!_tm_ws!\pyproject.toml" >> "!_tm_sig_tmp!" 2>nul
 set "_tm_stamp=0"
 for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "!_tm_sig_tmp!" SHA256 2^>nul') do (
@@ -163,7 +165,7 @@ if exist "!_tm_stamp_f!" if exist "!_tm_py_exe!" (
     if "!_tm_prev!"=="!_tm_stamp!" (
         echo [TPU-MATRIX] Reusing isolated venv !_tm_vdir! for backend !_tm_bid! ^(stamp=!_tm_stamp!^). 1>&2
         set "TPU_BACKEND_VENV_DIR=!_tm_vdir!"
-        echo !_tm_vdir!
+        echo.!_tm_vdir!
         exit /b 0
     )
 )
@@ -191,10 +193,10 @@ if exist "!_tm_ws!\pyproject.toml" (
     if errorlevel 1 exit /b 1
 )
 
-> "!_tm_stamp_f!.tmp" echo !_tm_stamp!
+> "!_tm_stamp_f!.tmp" echo.!_tm_stamp!
 move /y "!_tm_stamp_f!.tmp" "!_tm_stamp_f!" >nul
 set "TPU_BACKEND_VENV_DIR=!_tm_vdir!"
-echo !_tm_vdir!
+echo.!_tm_vdir!
 exit /b 0
 
 :: ## libscript_tpu_multihost_env
@@ -220,7 +222,7 @@ if exist "!_tm_topo_file!" (
 )
 
 set "TPU_MULTIHOST_ENV=!_tm_base_env! TPU_WORKER_ID=!_tm_widx! TPU_NUM_WORKERS=!_tm_wcnt! TPU_WORKER_HOSTNAMES=!_tm_ips!"
-if !_tm_wcnt! gtr 1 (
+if "!_tm_wcnt!" gtr "1" (
     for %%J in (jax_native maxtext keras_jax) do (
         if /i "!_tm_bid!"=="%%J" set "TPU_MULTIHOST_ENV=!TPU_MULTIHOST_ENV! JAX_COORDINATOR_ADDRESS=!_tm_ip0!:8476 MEGASCALE_COORDINATOR_ADDRESS=!_tm_ip0!:8476 PROCESS_ID=!_tm_widx! NUM_PROCESSES=!_tm_wcnt!"
     )
@@ -228,7 +230,7 @@ if !_tm_wcnt! gtr 1 (
         if /i "!_tm_bid!"=="%%P" set "TPU_MULTIHOST_ENV=!TPU_MULTIHOST_ENV! PJRT_DEVICE=TPU MASTER_ADDR=!_tm_ip0! MASTER_PORT=8477 PT_XLA_PJRT_DIST_SERVICE_ADDR=!_tm_ip0!:8477"
     )
 )
-echo !TPU_MULTIHOST_ENV!
+echo.!TPU_MULTIHOST_ENV!
 exit /b 0
 
 :: ## libscript_tpu_bootstrap_remote
@@ -259,7 +261,7 @@ call :libscript_tpu_backend_spec "!_tm_bid!" >nul
 for /f "tokens=4 delims=|" %%R in ("!TPU_BACKEND_SPEC!") do set "_tm_req_rt=%%R"
 
 if "!_tm_cur_rt!"=="" if not "!_tm_req_rt!"=="" if /i not "!_tm_req_rt!"=="auto" (
-    set "_tm_ct_tmp=%TEMP%\tpu_cur_topo_%RANDOM%.json"
+    set "_tm_ct_tmp=%TEMP%\tpu_cur_topo_!RANDOM!.json"
     call "!_tm_tpu_cli!" topology-info "!_tm_tpu!" > "!_tm_ct_tmp!" 2>nul
     if not errorlevel 1 (
         for /f "usebackq delims=" %%V in (`jq -r ".runtime_version // \"\"" "!_tm_ct_tmp!" 2^>nul`) do set "_tm_cur_rt=%%V"
@@ -307,7 +309,7 @@ set "_tm_log_dir=%~4"
 set "_tm_tpu_cli=%LIBSCRIPT_ROOT_DIR%\_lib\cloud-providers\gcp-tpu-vm\cli.cmd"
 if not exist "!_tm_log_dir!" mkdir "!_tm_log_dir!"
 
-set "_tm_topo_f=%TEMP%\tpu_lk_topo_%RANDOM%.json"
+set "_tm_topo_f=%TEMP%\tpu_lk_topo_!RANDOM!.json"
 call "!_tm_tpu_cli!" topology-info "!_tm_tpu!" > "!_tm_topo_f!"
 if errorlevel 1 (
     del /f /q "!_tm_topo_f!" >nul 2>&1
@@ -323,7 +325,7 @@ for /f "usebackq delims=" %%L in (`jq -r ".worker_ips // \"127.0.0.1\"" "!_tm_to
 call :libscript_tpu_multihost_env "!_tm_bid!" "!_tm_topo_f!" "0" >nul
 del /f /q "!_tm_topo_f!" >nul 2>&1
 
-if !_tm_wcnt! leq 1 (
+if "!_tm_wcnt!" leq "1" (
     call "!_tm_tpu_cli!" ssh "!_tm_tpu!" "--command=export !TPU_MULTIHOST_ENV!; !_tm_cmd!" > "!_tm_log_dir!\worker_0.log" 2>&1
     exit /b !errorlevel!
 )

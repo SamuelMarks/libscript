@@ -77,7 +77,7 @@ for %%T in (candle light smoke dark msiexec msi-gui msiinfo) do (
 where candle.exe >nul 2>&1
 if not errorlevel 1 where light.exe >nul 2>&1
 if not errorlevel 1 (
-    set "TMP_TEST=%TEMP%\msi_rs_roundtrip_%RANDOM%"
+    set "TMP_TEST=%TEMP%\msi_rs_roundtrip_!RANDOM!"
     if not exist "!TMP_TEST!" mkdir "!TMP_TEST!" >nul 2>&1
     echo hello 1 > "!TMP_TEST!\test1.txt"
     echo hello 2 > "!TMP_TEST!\test2.txt"
@@ -129,7 +129,7 @@ if not errorlevel 1 (
         )
         echo [PASS] msi-rs roundtrip compilation and msiinfo inspection verified
     ) else (
-        echo [PASS] msi-rs roundtrip compilation verified (sample.msi generated)
+        echo [PASS] msi-rs roundtrip compilation verified ^(sample.msi generated^)
     )
     popd
     rmdir /s /q "!TMP_TEST!" 2>nul

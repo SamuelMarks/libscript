@@ -62,5 +62,5 @@ findstr /C:"\"pure_win32_subsystem\": true" "!_W!\pe.json" >nul 2>&1 || exit /b 
 call "%LIBSCRIPT_ROOT_DIR%\_lib\toolchains\_common\experiment_harness.cmd" :libscript_exp_compute_median_stddev "!_W!\s.txt" "!_W!\bad_opt.json" "50" "-O0" "-O2" >nul 2>&1
 if not errorlevel 1 exit /b 1
 rmdir /s /q "!_W!" >nul 2>&1
-echo [PASS] Windows SIGPLAN RULE-1..RULE-7 harness tests succeeded!
+echo [PASS] Windows SIGPLAN RULE-1..RULE-7 harness tests succeeded^^!
 exit /b 0

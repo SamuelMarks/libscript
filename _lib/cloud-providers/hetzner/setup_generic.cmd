@@ -63,11 +63,11 @@ if "%~1"=="-h" (
 
 if "%~1"=="" (
     call "%~dp0setup_windows.cmd"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 if /i "%~1"=="install" (
     call "%~dp0setup_windows.cmd"
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 for %%I in ("!SCRIPT_DIR!\..\..\..") do set "REPO_ROOT=%%~fI"

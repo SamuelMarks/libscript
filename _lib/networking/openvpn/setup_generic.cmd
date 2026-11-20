@@ -52,7 +52,7 @@ goto :find_root
 if exist "%USERPROFILE%\.libscript\openvpn\latest\bin\openvpn.cmd" exit /b 0
 if exist "%USERPROFILE%\.libscript\openvpn\latest\bin\openvpn.exe" exit /b 0
 where openvpn >nul 2>&1
-if %errorlevel% equ 0 exit /b 0
+if "%errorlevel%" equ "0" exit /b 0
 
 if exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" goto :create_shims
 if exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" goto :create_shims
@@ -79,6 +79,7 @@ if not exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" if not exist "%ProgramFile
         )
     )
 )
+:: wincheck disable=CMD3005
 
 :: ## create_shims
 :: Creates executable command shims in the local binary directory.

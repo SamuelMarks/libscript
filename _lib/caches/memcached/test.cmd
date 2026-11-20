@@ -54,7 +54,7 @@ if exist "%~dp0env.cmd" (
 )
 
 where memcached >nul 2>nul
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
   memcached -V
   exit /b 0
 )

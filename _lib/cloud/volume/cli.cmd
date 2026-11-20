@@ -52,6 +52,7 @@ goto :find_root
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift
+goto :parse_args
 
 :: ## parse_args
 :: Parses command-line arguments and populates configuration variables.
@@ -142,12 +143,12 @@ if "%LIBSCRIPT_CLOUD%"=="" (
 
 if "%CMD%"=="list" (
     call "%~dp0api.cmd" :libscript_volume_list "%LIBSCRIPT_CLOUD%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 if "%CMD%"=="create" (
     call "%~dp0api.cmd" :libscript_volume_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_SIZE%" "%LIBSCRIPT_VOLUME_ZONE%" "%LIBSCRIPT_VOLUME_TYPE%" "%LIBSCRIPT_VOLUME_NAME%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 if "%CMD%"=="delete" (
@@ -156,7 +157,7 @@ if "%CMD%"=="delete" (
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_volume_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 if "%CMD%"=="attach" (
@@ -165,7 +166,7 @@ if "%CMD%"=="attach" (
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_volume_attach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%" "%LIBSCRIPT_DEVICE%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 if "%CMD%"=="detach" (
@@ -174,7 +175,7 @@ if "%CMD%"=="detach" (
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_volume_detach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%"
-    exit /b %errorlevel%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

@@ -82,13 +82,13 @@ if exist "%STAMP_FILE%" (
 echo [WORKLOAD-OPENEDX] Preloading Open edX stack on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\openedx.sh" "%TARGET_DIR%"
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\openedx.sh" "%TARGET_DIR%"
     exit /b !errorlevel!
 )

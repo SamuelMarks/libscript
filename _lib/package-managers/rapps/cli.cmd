@@ -139,6 +139,7 @@ exit /b 0
 :: Trims leading and trailing spaces from the named variable.
 :trim_var
 set "_TV_VAL=!%~1!"
+goto :trim_l
 :: ## trim_l
 :: Strips leading whitespace characters iteratively.
 :trim_l
@@ -146,6 +147,7 @@ if "!_TV_VAL:~0,1!"==" " (
     set "_TV_VAL=!_TV_VAL:~1!"
     goto :trim_l
 )
+:: wincheck disable=CMD3005
 :: ## trim_r
 :: Strips trailing whitespace characters iteratively.
 :trim_r
@@ -177,6 +179,7 @@ if "!_PF_ARCH!"=="" set "_PF_ARCH=i686"
 set "_PF_DEST=%LIBSCRIPT_RAPPS_CACHE_DIR%"
 if "!_PF_DEST!"=="" set "_PF_DEST=!LIBSCRIPT_ROOT_DIR!\cache\rapps"
 set "_PF_INI="
+goto :pf_args
 :: ## pf_args
 :: Parses CLI flags for the prefetch subcommand.
 :pf_args
@@ -213,7 +216,7 @@ if not exist "!_PF_INI!" (
     exit /b 1
 )
 call :parse_ini "!_PF_INI!" "!_PF_ARCH!" > "!_PF_DEST!\!_PF_ID!.meta"
-echo !_R_SILENT!> "!_PF_DEST!\!_PF_ID!.flags"
+echo.!_R_SILENT!> "!_PF_DEST!\!_PF_ID!.flags"
 if not "%LIBSCRIPT_OFFLINE%"=="1" if not "!_R_URL!"=="" (
     set "_SHA_CHK=!_R_SHA!"
     if "!_SHA_CHK!"=="" set "_SHA_CHK=SKIP"
@@ -231,9 +234,9 @@ set "_SQ=%~1"
 call :ensure_db
 for %%F in ("!_DB_DIR!\*.txt") do (
     if "!_SQ!"=="" (
-        echo %%~nF
+        echo.%%~nF
     ) else (
-        findstr /I /C:"!_SQ!" "%%~fF" >nul 2>&1 && echo %%~nF
+        findstr /I /C:"!_SQ!" "%%~fF" >nul 2>&1 && echo.%%~nF
     )
 )
 exit /b 0

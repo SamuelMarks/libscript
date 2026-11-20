@@ -66,6 +66,7 @@ if "%SCHEDULER%"=="" set "SCHEDULER=kubernetes"
 shift
 shift
 set "_EXTRA_ARGS="
+goto :parse_eng_args
 
 :: ## parse_eng_args
 :: Parses --scheduler and extra arguments for payloads\engine.cmd.

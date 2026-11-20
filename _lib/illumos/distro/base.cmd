@@ -96,7 +96,7 @@ for %%d in (contract object volatile) do (
 )
 
 echo illumos %VERSION% (%ARCH%)> "%SYSROOT%\etc\release"
-echo %VERSION%> "%SYSROOT%\etc\libscript-illumos-version"
+echo.%VERSION%> "%SYSROOT%\etc\libscript-illumos-version"
 
 echo %DATE% %TIME%> "%STAMP_FILE%"
 echo [OK]       illumos base bootstrap completed.

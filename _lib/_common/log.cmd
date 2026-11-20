@@ -142,6 +142,7 @@ set "level_name=%~1"
 set "level_num=%~2"
 set "msg=%~3"
 
+REM wincheck disable=CMD2003
 if !level_num! LSS !LIBSCRIPT_LOG_LEVEL! exit /b
 
 :: Standard timestamp ISO-8601-like
@@ -153,11 +154,11 @@ if /i "%LIBSCRIPT_LOG_FORMAT%"=="json" (
     set "clean_msg=!msg:"=\"!"
     set "json_out={"timestamp":"!timestamp!","level":"!level_name!","message":"!clean_msg!"}"
     
-    if defined LIBSCRIPT_LOG_FILE echo !json_out!>> "%LIBSCRIPT_LOG_FILE%"
-    echo !json_out!
+    if defined LIBSCRIPT_LOG_FILE echo.!json_out!>> "%LIBSCRIPT_LOG_FILE%"
+    echo.!json_out!
 ) else (
     set "text_out=[!level_name!] !msg!"
     if defined LIBSCRIPT_LOG_FILE echo !timestamp! !text_out!>> "%LIBSCRIPT_LOG_FILE%"
-    echo !text_out! 1>&2
+    echo.!text_out! 1>&2
 )
 exit /b

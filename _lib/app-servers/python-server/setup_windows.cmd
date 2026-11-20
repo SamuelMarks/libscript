@@ -50,7 +50,7 @@ goto :find_root
 :root_found
 
 where python >nul 2>&1
-if %errorlevel% equ 0 (
+if "%errorlevel%" equ "0" (
     echo Python server environment verified.
     exit /b 0
 )

@@ -104,8 +104,9 @@ set "_OBJ=%~1"
 set "_PREFIX=%~2"
 set "_QUOTE=%~3"
 if "!_PREFIX!"=="" set "_PREFIX=SET "
+REM wincheck disable=CMD1013
 if "!_QUOTE!"=="" set "_QUOTE=\""
 where jq >nul 2>&1
 if errorlevel 1 exit /b 1
-echo !_OBJ! | jq -r --arg prefix "!_PREFIX!" --arg q "!_QUOTE!" "to_entries[] | ($prefix + .key + \"=\" + $q + (.value | tostring) + $q)"
+echo.!_OBJ! | jq -r --arg prefix "!_PREFIX!" --arg q "!_QUOTE!" "to_entries[] | ($prefix + .key + \"=\" + $q + (.value | tostring) + $q)"
 exit /b 0

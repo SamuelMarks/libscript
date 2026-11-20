@@ -70,14 +70,14 @@ if exist "%OUT_FILE%" (
 echo [QEMU-IMG] Synthesizing QCOW2 disk image: %OUT_FILE%...
 
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     if exist "%INPUT%" (
         qemu-img convert -f raw -O qcow2 -o cluster_size=64k,lazy_refcounts=on "%INPUT%" "%OUT_FILE%"
     ) else (
         qemu-img create -f qcow2 -o cluster_size=64k,lazy_refcounts=on "%OUT_FILE%" %SIZE_GIB%G >nul 2>&1
     )
 ) else (
-    echo QEMU QCOW2 Image Stub (cluster_size=64k, lazy_refcounts=on) > "%OUT_FILE%"
+    echo QEMU QCOW2 Image Stub ^(cluster_size=64k, lazy_refcounts=on^) > "%OUT_FILE%"
 )
 
 echo [OK] QEMU QCOW2 disk synthesized: %OUT_FILE%

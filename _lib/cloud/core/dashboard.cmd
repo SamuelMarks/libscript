@@ -78,7 +78,7 @@ exit /b 0
 :render_dashboard
 call :cost_report > "%OUT_DIR%\status.json"
 (
-    echo ^<!DOCTYPE html^>
+    echo ^<^^!DOCTYPE html^>
     echo ^<html^>^<head^>^<title^>LibScript Decentralized Control Plane^</title^>^</head^>
     echo ^<body^>^<h1^>LibScript Decentralized Control Plane^</h1^>^</body^>^</html^>
 ) > "%OUT_DIR%\index.html"

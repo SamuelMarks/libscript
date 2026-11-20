@@ -56,6 +56,7 @@ set "COMPONENT="
 set "VERIFY_ONLY="
 set "WHEELS="
 set "CODEBASE="
+goto :parse_loop
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.

@@ -72,7 +72,7 @@ if exist "%OUT_FILE%" (
 echo [AZURE-VHD] Synthesizing 1 MiB-aligned fixed VHD for Azure: %OUT_FILE%...
 
 where qemu-img >nul 2>&1
-if %ERRORLEVEL% equ 0 (
+if "%ERRORLEVEL%" equ "0" (
     if exist "%INPUT%" (
         qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "%INPUT%" "%OUT_FILE%"
     ) else (

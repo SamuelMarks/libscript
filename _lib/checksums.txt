@@ -205,3 +205,11 @@ https://github.com/SamuelMarks/msi-rs/releases/download/v0.0.1/msi-tools-v0.0.1-
 https://github.com/SamuelMarks/msi-rs/releases/download/v0.0.1/msi-tools-v0.0.1-x86_64-pc-windows-msvc.zip 1f5c6dfda3ee6b7ef89923f02319a2b50555ba48a6e88da315e6a0a6e33bfed1
 https://github.com/SamuelMarks/msi-rs/releases/download/v0.0.1/msi-tools-v0.0.1-x86_64-unknown-linux-gnu.tar.gz bcc82d9b6b0300f6eba1449d3225721f11939e4806aa1236256b8c65f5911308
 https://github.com/SamuelMarks/msi-rs/releases/download/v0.0.1/msi-tools-v0.0.1-x86_64-unknown-linux-musl.tar.gz 83407f055c61b4889d6663cd402901a2a8f369ea16dfbcddf3caa23e49e92805
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-aarch64-apple-darwin.tar.gz 3a6307de163f5928e1f18383542a56b6b161638c681fb9d493b0e978cfbad92f
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-aarch64-pc-windows-msvc.zip 02698c32b752d0b7feca7839ecf25089d4b4499ac13f22cded32b6ed92970a63
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-aarch64-unknown-linux-gnu.tar.gz 533a0344550459b50e6d802b6bd152d26fbadf22cd163c81fab46cfdb94a0e3b
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-i586-pc-msdosdjgpp.zip 5a8ab403e3fea27406ea26df935b0494b51cd2665e2fdf86966a1e97eb329c5b
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-x86_64-apple-darwin.tar.gz dbb6df55a248d4bd1a39d54a50383d4dde4e53f0ed707077f2fb4658b349111b
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc.zip 099f8d5ca8cd561fe8ed9dba5c0ad696660c3dc1f436b2b4890fb7e9ed5cdd98
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-x86_64-unknown-linux-gnu.tar.gz 8ba405565a0d2317be26bf97e824afbd9d88872e65562cee671ba4a7c00d542c
+https://github.com/SamuelMarks/win-cmd-rs/releases/download/v0.0.1/win-cmd-rs-v0.0.1-x86_64-unknown-linux-musl.tar.gz af2bc0d5f28d6152bd4d0881bbd7443002be7fb67e3621086527653537b817fe

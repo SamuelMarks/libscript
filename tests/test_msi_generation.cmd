@@ -84,6 +84,6 @@ echo [PASS] Generated %WXS_FILE%
 findstr /i "MsiHiddenProperties" "%WXS_FILE%" >nul || (echo [FAIL] Missing MsiHiddenProperties & exit /b 1)
 findstr /i "INSTALLFOLDER" "%WXS_FILE%" >nul || (echo [FAIL] Missing INSTALLFOLDER & exit /b 1)
 
-echo [PASS] All Windows WiX assertions passed!
+echo [PASS] All Windows WiX assertions passed^^!
 rmdir /s /q "%TEST_TMP_DIR%"
 exit /b 0

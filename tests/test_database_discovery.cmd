@@ -104,5 +104,5 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\discover_databases.cmd" --eval >nul 2>
 
 rmdir /S /Q "%MOCK_DIR%"
 
-echo [SUCCESS] Database discovery verification succeeded on Windows!
+echo [SUCCESS] Database discovery verification succeeded on Windows^^!
 exit /b 0

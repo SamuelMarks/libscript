@@ -92,6 +92,6 @@ if exist "!_INST_DIR!\targets.list" (
         exit /b 0
     )
 )
-echo !_NORM!>> "!_INST_DIR!\targets.list"
+echo.!_NORM!>> "!_INST_DIR!\targets.list"
 echo [OK] Enabled RosBE target !_NORM!.
 exit /b 0

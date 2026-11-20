@@ -85,7 +85,7 @@ if "%ACTION%"=="install" (
     exit /b 0
 ) else if "%ACTION%"=="test" (
     gunicorn --version
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 exit /b 0

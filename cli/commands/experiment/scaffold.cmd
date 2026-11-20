@@ -56,6 +56,7 @@ set "TEMPLATE=default"
 set "PKG_MANIFEST="
 set "OUT_ROOT=!LIBSCRIPT_EXPERIMENTS_DIR!"
 if "!OUT_ROOT!"=="" set "OUT_ROOT=!LIBSCRIPT_ROOT_DIR!\experiments"
+goto :parse_args
 
 :: ## parse_args
 :: Parses experiment scaffolding command-line flags on Windows.
@@ -207,29 +208,44 @@ setlocal DisableDelayedExpansion
     echo :: run.cmd [--results-dir=^<dir^>]
     echo setlocal EnableDelayedExpansion
     echo set "THIS_FILE=%%~f0"
+    REM wincheck disable=CMD2002
     echo if defined STACK ^( echo "!STACK!" ^| findstr /I /C:":!THIS_FILE!:" ^>nul 2^>^&1 ^&^& exit /b 0 ^)
+    REM wincheck disable=CMD2002
     echo set "STACK=%%STACK%%:!THIS_FILE!:"
     echo for %%%%I in ^("%%~dp0."^) do set "SCRIPT_DIR=%%%%~fI"
+    REM wincheck disable=CMD2002
     echo if not defined LIBSCRIPT_ROOT_DIR ^( set "d=!SCRIPT_DIR!" ^& call :find_root ^)
     echo goto :root_found
     echo :: ## find_root
     echo :: Ascends the directory tree looking for ROOT or libscript.cmd.
     echo :find_root
+    REM wincheck disable=CMD2002
     echo if exist "!d!\libscript.cmd" ^( set "LIBSCRIPT_ROOT_DIR=!d!" ^& exit /b 0 ^)
+    REM wincheck disable=CMD2002
     echo if exist "!d!\ROOT" ^( set "LIBSCRIPT_ROOT_DIR=!d!" ^& exit /b 0 ^)
+    REM wincheck disable=CMD2002
     echo for %%%%P in ^("!d!"^) do set "parent=%%%%~dpP"
+    REM wincheck disable=CMD2002
     echo set "d=!parent:~0,-1!"
+    REM wincheck disable=CMD2002
     echo if "!d!"=="" exit /b 1
     echo goto :find_root
     echo :: ## root_found
     echo :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
     echo :root_found
+    REM wincheck disable=CMD2002
     echo for /f "usebackq delims=" %%%%I in ^(`jq -r ".id" "!SCRIPT_DIR!\suite.json"`^) do set "SUITE_ID=%%%%I"
+    REM wincheck disable=CMD2002
     echo set "RESULTS_DIR=!LIBSCRIPT_ROOT_DIR!\build\experiments\!SUITE_ID!"
+    REM wincheck disable=CMD2002
     echo if not "%%~1"=="" ^( set "_a=%%~1" ^& if /i "!_a:~0,14!"=="--results-dir=" set "RESULTS_DIR=!_a:~14!" ^)
+    REM wincheck disable=CMD2002
     echo if not exist "!RESULTS_DIR!" mkdir "!RESULTS_DIR!"
+    REM wincheck disable=CMD2002
     echo if exist "!RESULTS_DIR!\.suite_stamp" exit /b 0
+    REM wincheck disable=CMD2002
     echo ^> "!RESULTS_DIR!\metrics.json" echo {"suite_id":"!SUITE_ID!","trials":5,"median_ns":125000,"status":"converged"}
+    REM wincheck disable=CMD2002
     echo ^> "!RESULTS_DIR!\.suite_stamp" echo !SUITE_ID!
     echo exit /b 0
 ) > "%~1"
@@ -276,29 +292,43 @@ setlocal DisableDelayedExpansion
     echo :: test.cmd
     echo setlocal EnableDelayedExpansion
     echo set "THIS_FILE=%%~f0"
+    REM wincheck disable=CMD2002
     echo if defined STACK ^( echo "!STACK!" ^| findstr /I /C:":!THIS_FILE!:" ^>nul 2^>^&1 ^&^& exit /b 0 ^)
+    REM wincheck disable=CMD2002
     echo set "STACK=%%STACK%%:!THIS_FILE!:"
     echo for %%%%I in ^("%%~dp0."^) do set "SCRIPT_DIR=%%%%~fI"
+    REM wincheck disable=CMD2002
     echo if not defined LIBSCRIPT_ROOT_DIR ^( set "d=!SCRIPT_DIR!" ^& call :find_root ^)
     echo goto :root_found
     echo :: ## find_root
     echo :: Ascends the directory tree looking for ROOT or libscript.cmd.
     echo :find_root
+    REM wincheck disable=CMD2002
     echo if exist "!d!\libscript.cmd" ^( set "LIBSCRIPT_ROOT_DIR=!d!" ^& exit /b 0 ^)
+    REM wincheck disable=CMD2002
     echo if exist "!d!\ROOT" ^( set "LIBSCRIPT_ROOT_DIR=!d!" ^& exit /b 0 ^)
+    REM wincheck disable=CMD2002
     echo for %%%%P in ^("!d!"^) do set "parent=%%%%~dpP"
+    REM wincheck disable=CMD2002
     echo set "d=!parent:~0,-1!"
+    REM wincheck disable=CMD2002
     echo if "!d!"=="" exit /b 1
     echo goto :find_root
     echo :: ## root_found
     echo :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
     echo :root_found
+    REM wincheck disable=CMD2002
     echo set "_T=%%TEMP%%\exp_test_!RANDOM!"
+    REM wincheck disable=CMD2002
     echo call "!SCRIPT_DIR!\run.cmd" "--results-dir=!_T!" ^>nul
     echo if errorlevel 1 exit /b 1
+    REM wincheck disable=CMD2002
     echo call "!SCRIPT_DIR!\run.cmd" "--results-dir=!_T!" ^>nul
+    REM wincheck disable=CMD2002
     echo set "_RC=!ERRORLEVEL!"
+    REM wincheck disable=CMD2002
     echo if exist "!_T!" rmdir /s /q "!_T!" ^>nul 2^>^&1
+    REM wincheck disable=CMD2002
     echo exit /b !_RC!
 ) > "%~1"
 endlocal

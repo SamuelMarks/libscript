@@ -51,7 +51,7 @@ goto :find_root
 
 call :run_multi_version_kernel_tests
 if errorlevel 1 exit /b 1
-echo [PASS] All 8 Linux kernel versions built and verified with edgcpp v7.0.1 on Windows!
+echo [PASS] All 8 Linux kernel versions built and verified with edgcpp v7.0.1 on Windows^^!
 exit /b 0
 
 :: ## run_multi_version_kernel_tests

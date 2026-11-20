@@ -89,7 +89,7 @@ for /f "usebackq tokens=1,2,3,4 delims=|" %%a in (`jq -r --arg sep "|" ".routes 
         echo     RewriteEngine On
         echo     RewriteCond %%{HTTP:Upgrade} websocket [NC]
         echo     RewriteCond %%{HTTP:Connection} upgrade [NC]
-        echo     RewriteRule ^%%a^(.*^) "!ws_t!$1" [P,L]
+        echo     RewriteRule "^%%a(.*)$" "!ws_t!$1" [P,L]
         echo     ProxyPass "%%a" "%%c"
         echo     ProxyPassReverse "%%a" "%%c"
     ) else if "%%b"=="rewrite" (

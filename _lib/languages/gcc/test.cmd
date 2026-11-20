@@ -51,7 +51,7 @@ goto :find_root
 
 if exist "!SCRIPT_DIR!\env.cmd" call "!SCRIPT_DIR!\env.cmd"
 where gcc >nul 2>&1
-if !errorlevel! equ 0 (
+if "!errorlevel!" equ "0" (
     gcc --version
     exit /b 0
 )

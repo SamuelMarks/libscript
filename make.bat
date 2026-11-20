@@ -84,6 +84,8 @@ call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_standards.cmd" --all
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_posix.cmd"
 if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_cmd.cmd" --all
+if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_version_manager.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\devtools\audit\audit_schema_vars.cmd" --all
@@ -107,6 +109,8 @@ if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_rest_api.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_shellcheck_vm_and_hooks.cmd"
+if errorlevel 1 exit /b 1
+call "%LIBSCRIPT_ROOT_DIR%\tests\test_win_cmd_rs_vm_and_hooks.cmd"
 if errorlevel 1 exit /b 1
 call "%LIBSCRIPT_ROOT_DIR%\tests\test_cloud_experiment_lifecycle.cmd"
 if errorlevel 1 exit /b 1

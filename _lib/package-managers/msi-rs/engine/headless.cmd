@@ -80,13 +80,13 @@ for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 echo [HEADLESS] Starting headless automated installer on Windows...
 
 where wsl >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     wsl sh "!SCRIPT_DIR!\headless.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
-if !errorlevel! EQU 0 (
+if "!errorlevel!" EQU "0" (
     sh "!SCRIPT_DIR!\headless.sh" %*
     exit /b !errorlevel!
 )
