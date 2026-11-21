@@ -113,7 +113,7 @@ Manage any language, runtime, database, or cluster orchestrator with the exact s
 
 ```mermaid
 flowchart LR
-    subgraph DevShell[Active Shell / Workspace]
+    subgraph DevShell["Active Shell / Workspace"]
         CMD["./libscript.sh use nodejs 22.14.0"]
         BinFarm["O(1) Active Bin: ~/.libscript/bin"]
     end
@@ -126,8 +126,8 @@ flowchart LR
         Pg16["postgres/16/bin/postgres"]
     end
 
-    CMD -->|Syncs Symlinks| Node22
-    Node22 -->|Zero-Shim O(1) Lookup| BinFarm
+    CMD -->|"Syncs Symlinks"| Node22
+    Node22 -->|"Zero-Shim O(1) Lookup"| BinFarm
 ```
 
 ```sh

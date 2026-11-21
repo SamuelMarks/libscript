@@ -129,16 +129,30 @@ if exist "%TARGET_DIR%\setup_windows.cmd" (
 
 if "!SETUP_ERR!" equ "0" exit /b 0
 
+if not "%ACTION%"=="" (
+    if /i not "%ACTION%"=="install" exit /b !SETUP_ERR!
+)
+
 :: Resolve package name for fallback
 if "%PACKAGE_NAME%"=="" (
     for %%I in ("%TARGET_DIR%") do set "PACKAGE_NAME=%%~nxI"
 )
 
+if "%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"=="1" exit /b !SETUP_ERR!
+if defined _LS_ACTIVE_COMP_DEPS (
+    echo "!_LS_ACTIVE_COMP_DEPS!" | findstr /I /C:":!PACKAGE_NAME!:" >nul 2>&1
+    if not errorlevel 1 exit /b !SETUP_ERR!
+)
+
 :: Fallback to Windows Package Managers via pkg_mgr.cmd
 call "!LOG_CMD!" :log_info "Native setup failed. Attempting package manager fallback for !PACKAGE_NAME!..."
+set "_SB_SAVED_FORCE_SYS=%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"
+set "LIBSCRIPT_FORCE_SYSTEM_PKG_MGR=1"
 set "STACK="
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "!PACKAGE_NAME!"
-if not errorlevel 1 exit /b 0
+set "_SB_FB_ERR=!errorlevel!"
+set "LIBSCRIPT_FORCE_SYSTEM_PKG_MGR=!_SB_SAVED_FORCE_SYS!"
+if "!_SB_FB_ERR!" equ "0" exit /b 0
 
 exit /b !SETUP_ERR!
 

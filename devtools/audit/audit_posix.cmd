@@ -65,9 +65,9 @@ exit /b 0
 :: ## main
 :: Dispatches execution to the PowerShell POSIX and companion parity auditor.
 :main
-where pwsh >nul 2>&1
+where pwsh.exe >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (
-    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_posix.ps1" %*
+    pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_posix.ps1" %*
     exit /b !ERRORLEVEL!
 )
 

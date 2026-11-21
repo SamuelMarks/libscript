@@ -277,9 +277,106 @@ update_supported_components() {
   _entries_file=$(mktemp "${TMPDIR:-/tmp}/entries.XXXXXX")
   discover_all_entries "${_repo_root}" >"${_entries_file}"
 
+  _enriched_entries=$(mktemp "${TMPDIR:-/tmp}/entries_enriched.XXXXXX")
+  if [ -d "${_tests_tmp_dir}" ]; then
+    _markers_list=$(mktemp "${TMPDIR:-/tmp}/markers_list.XXXXXX")
+    ls -1 "${_tests_tmp_dir}" >"${_markers_list}" 2>/dev/null || true
+    awk '
+      function has_exact(c, target) {
+        return ((c "." target) in exact)
+      }
+      function has_glob(c, rx,   i, n) {
+        n = cnt[c] + 0
+        for (i = 1; i <= n; i++) {
+          if (sfx[c, i] ~ rx) return 1
+        }
+        return 0
+      }
+      NR == FNR {
+        exact[$0] = 1
+        dot = index($0, ".")
+        if (dot > 1) {
+          p = substr($0, 1, dot - 1)
+          s = substr($0, dot + 1)
+          cnt[p]++
+          sfx[p, cnt[p]] = s
+        }
+        next
+      }
+      {
+        n_f = split($0, f, "|")
+        tier = f[1]; cat = f[2]; comp = f[3]; mfile = f[4]
+        sc = comp
+        sub(/^.*\//, "", sc)
+        mc = sc
+        if (comp == "freebsd/distro") mc = "freebsd-distro"
+        else if (comp == "illumos/distro") mc = "illumos-distro"
+        else if (comp == "reactos/distro") mc = "reactos-distro"
+        else if (comp ~ /^bootloaders\//) mc = "bootloaders-" sc
+        else if (comp ~ /^payloads\/schedulers\//) mc = "scheduler-" sc
+        else if (comp ~ /^traits\//) mc = "trait-" sc
+
+        idemp = (has_exact(mc, "idempotent.success") || has_exact(sc, "idempotent.success")) ? "true" : "false"
+
+        m_apk = ""
+        if (has_exact(mc, "linux.alpine.success") || has_exact(sc, "linux.alpine.success") || has_exact(sc, "alpine.success") || has_exact(sc, "apk.success")) m_apk = "✅"
+        else if (has_exact(mc, "linux.alpine.skipped") || has_exact(sc, "linux.alpine.skipped")) m_apk = "-"
+        else if (has_exact(mc, "linux.alpine.failure") || has_exact(sc, "linux.alpine.failure") || has_exact(sc, "alpine.failure") || has_exact(sc, "apk.failure")) m_apk = "❌"
+
+        m_deb = ""
+        if (has_exact(mc, "linux.debian.success") || has_exact(sc, "linux.debian.success") || has_exact(sc, "linux.ubuntu.success") || has_exact(sc, "debian.success") || has_exact(sc, "ubuntu.success") || has_exact(sc, "deb.success")) m_deb = "✅"
+        else if (has_exact(mc, "linux.debian.skipped") || has_exact(sc, "linux.debian.skipped")) m_deb = "-"
+        else if (has_exact(mc, "linux.debian.failure") || has_exact(sc, "linux.debian.failure") || has_exact(sc, "linux.ubuntu.failure") || has_exact(sc, "debian.failure") || has_exact(sc, "ubuntu.failure") || has_exact(sc, "deb.failure")) m_deb = "❌"
+
+        m_rpm = ""
+        if (has_glob(mc, "^linux\\.rocky.*\\.success$") || has_glob(sc, "^linux\\.(rocky.*|rhel|fedora|almalinux|centos)\\.success$") || has_glob(sc, "^(rhel|fedora|almalinux|centos|rocky|rockylinux|rpm)\\.success$")) m_rpm = "✅"
+        else if (has_exact(mc, "linux.rocky.skipped") || has_exact(sc, "linux.rocky.skipped")) m_rpm = "-"
+        else if (has_glob(mc, "^linux\\.rocky.*\\.failure$") || has_glob(sc, "^linux\\.(rocky.*|rhel|fedora|almalinux|centos)\\.failure$") || has_glob(sc, "^(rhel|fedora|almalinux|centos|rocky|rockylinux|rpm)\\.failure$")) m_rpm = "❌"
+
+        m_win = ""
+        if (has_glob(mc, "^windows.*\\.success$") || has_glob(sc, "^win.*\\.success$")) m_win = "✅"
+        else if (has_glob(mc, "^windows.*\\.skipped$") || has_glob(sc, "^windows.*\\.skipped$")) m_win = "-"
+        else if (has_glob(mc, "^windows.*\\.failure$") || has_glob(sc, "^win.*\\.failure$")) m_win = "❌"
+
+        m_sun = ""
+        if (has_glob(mc, "^sunos.*\\.success$") || has_glob(sc, "^(sunos|solaris|illumos).*\\.success$")) m_sun = "✅"
+        else if (has_glob(mc, "^sunos.*\\.skipped$") || has_glob(sc, "^sunos.*\\.skipped$")) m_sun = "-"
+        else if (has_glob(mc, "^sunos.*\\.failure$") || has_glob(sc, "^(sunos|solaris|illumos).*\\.failure$")) m_sun = "❌"
+
+        m_fbsd = ""
+        if (mc != sc) {
+          if (has_glob(mc, "^freebsd.*\\.success$")) m_fbsd = "✅"
+          else if (has_glob(mc, "^freebsd.*\\.skipped$")) m_fbsd = "-"
+          else if (has_glob(mc, "^freebsd.*\\.failure$")) m_fbsd = "❌"
+        } else {
+          if (has_glob(sc, "^(freebsd|bsd|linux\\.freebsd).*\\.success$")) m_fbsd = "✅"
+          else if (has_glob(sc, "^freebsd.*\\.skipped$")) m_fbsd = "-"
+          else if (has_glob(sc, "^(freebsd|bsd|linux\\.freebsd).*\\.failure$")) m_fbsd = "❌"
+        }
+
+        m_mac = ""
+        if (mc != sc) {
+          if (has_glob(mc, "^(darwin|macos).*\\.success$")) m_mac = "✅"
+          else if (has_exact(mc, "darwin.unsupported") || has_glob(mc, "^(darwin|macos).*\\.skipped$")) m_mac = "-"
+          else if (has_glob(mc, "^(darwin|macos).*\\.failure$")) m_mac = "❌"
+        } else {
+          if (has_glob(sc, "^(darwin|macos).*\\.success$")) m_mac = "✅"
+          else if (has_exact(sc, "darwin.unsupported") || has_glob(sc, "^(darwin|macos).*\\.skipped$")) m_mac = "-"
+          else if (has_glob(sc, "^(darwin|macos).*\\.failure$")) m_mac = "❌"
+        }
+
+        printf "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n", tier, cat, comp, mfile, idemp, m_apk, m_deb, m_rpm, m_win, m_sun, m_fbsd, m_mac
+      }
+    ' "${_markers_list}" "${_entries_file}" >"${_enriched_entries}"
+    rm -f "${_markers_list}"
+  else
+    awk '{ printf "%s|false|||||||\n", $0 }' "${_entries_file}" >"${_enriched_entries}"
+  fi
+  rm -f "${_entries_file}"
+
   _first_json_entry=1
 
-  while IFS='|' read -r _tier _cat _comp _mfile; do
+  while IFS='|' read -r _tier _cat _comp _mfile _m_idemp _m_apk _m_deb _m_rpm _m_win _m_sun _m_fbsd _m_mac; do
     [ -z "${_comp}" ] && continue
     _short_comp="${_comp##*/}"
 
@@ -385,104 +482,14 @@ update_supported_components() {
       [ -n "${_e_macos}" ] && [ "${_macos_status}" != "-" ] && _macos_status="${_e_macos}"
     fi
 
-    _idempotent='false'
-    if [ -d "${_tests_tmp_dir}" ]; then
-      _marker_comp="${_short_comp}"
-      case "${_comp}" in
-        freebsd/distro) _marker_comp='freebsd-distro' ;;
-        illumos/distro) _marker_comp='illumos-distro' ;;
-        reactos/distro) _marker_comp='reactos-distro' ;;
-        bootloaders/*) _marker_comp="bootloaders-${_short_comp}" ;;
-        payloads/schedulers/*) _marker_comp="scheduler-${_short_comp}" ;;
-        traits/*) _marker_comp="trait-${_short_comp}" ;;
-      esac
-      if [ -f "${_tests_tmp_dir}/${_marker_comp}.idempotent.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.idempotent.success" ]; then
-        _idempotent='true'
-      fi
-
-      # Alpine / apk
-      if [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.apk.success" ]; then
-        _apk_status="✅"
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.alpine.skipped" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.alpine.skipped" ]; then
-        _apk_status='-'
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.alpine.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.alpine.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.alpine.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.apk.failure" ]; then
-        _apk_status="❌"
-      fi
-
-      # Debian / Ubuntu / deb
-      if [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.debian.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.debian.success" ] || ls "${_tests_tmp_dir}/${_short_comp}".linux.ubuntu.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_short_comp}.debian.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.ubuntu.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.deb.success" ]; then
-        _deb_status="✅"
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.debian.skipped" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.debian.skipped" ]; then
-        _deb_status='-'
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.debian.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.debian.failure" ] || ls "${_tests_tmp_dir}/${_short_comp}".linux.ubuntu.failure >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_short_comp}.debian.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.ubuntu.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.deb.failure" ]; then
-        _deb_status="❌"
-      fi
-
-      # RHEL / Fedora / AlmaLinux / CentOS / Rocky Linux / rpm
-      if [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.rocky.success" ] || ls "${_tests_tmp_dir}/${_marker_comp}".linux.rocky*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.rhel.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.fedora.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.almalinux.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.centos.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_short_comp}.rhel.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.fedora.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.almalinux.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.centos.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.rockylinux.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.rpm.success" ]; then
-        _rpm_status="✅"
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.rocky.skipped" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.rocky.skipped" ]; then
-        _rpm_status='-'
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.linux.rocky.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.linux.rocky.failure" ] || ls "${_tests_tmp_dir}/${_marker_comp}".linux.rocky*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.rhel.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.fedora.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.almalinux.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.centos.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.rocky*.failure >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_short_comp}.rhel.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.fedora.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.almalinux.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.centos.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.rocky.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.rockylinux.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.rpm.failure" ]; then
-        _rpm_status="❌"
-      fi
-
-      # Windows
-      if [ -f "${_tests_tmp_dir}/${_marker_comp}.windows.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.windows.success" ] || ls "${_tests_tmp_dir}/${_marker_comp}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".win*.success >/dev/null 2>&1; then
-        _win_status="✅"
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.windows.skipped" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.windows.skipped" ] || ls "${_tests_tmp_dir}/${_marker_comp}".windows*.skipped >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".windows*.skipped >/dev/null 2>&1; then
-        _win_status='-'
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.windows.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.windows.failure" ] || ls "${_tests_tmp_dir}/${_marker_comp}".windows*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".windows*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".win*.failure >/dev/null 2>&1; then
-        _win_status="❌"
-      fi
-
-      # SunOS / Solaris / Illumos
-      if [ -f "${_tests_tmp_dir}/${_marker_comp}.sunos.success" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.sunos.success" ] || ls "${_tests_tmp_dir}/${_marker_comp}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".solaris*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".illumos*.success >/dev/null 2>&1; then
-        _sunos_status="✅"
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.sunos.skipped" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.sunos.skipped" ] || ls "${_tests_tmp_dir}/${_marker_comp}".sunos*.skipped >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".sunos*.skipped >/dev/null 2>&1; then
-        _sunos_status='-'
-      elif [ -f "${_tests_tmp_dir}/${_marker_comp}.sunos.failure" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.sunos.failure" ] || ls "${_tests_tmp_dir}/${_marker_comp}".sunos*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".sunos*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".solaris*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".illumos*.failure >/dev/null 2>&1; then
-        _sunos_status="❌"
-      fi
-
-      # FreeBSD / BSD
-      if [ "${_marker_comp}" != "${_short_comp}" ]; then
-        if [ -f "${_tests_tmp_dir}/${_marker_comp}.freebsd.success" ] || ls "${_tests_tmp_dir}/${_marker_comp}".freebsd*.success >/dev/null 2>&1; then
-          _freebsd_status="✅"
-        elif [ -f "${_tests_tmp_dir}/${_marker_comp}.freebsd.skipped" ] || ls "${_tests_tmp_dir}/${_marker_comp}".freebsd*.skipped >/dev/null 2>&1; then
-          _freebsd_status='-'
-        elif [ -f "${_tests_tmp_dir}/${_marker_comp}.freebsd.failure" ] || ls "${_tests_tmp_dir}/${_marker_comp}".freebsd*.failure >/dev/null 2>&1; then
-          _freebsd_status="❌"
-        fi
-      else
-        if [ -f "${_tests_tmp_dir}/${_short_comp}.freebsd.success" ] || ls "${_tests_tmp_dir}/${_short_comp}".freebsd*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".bsd*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.freebsd*.success >/dev/null 2>&1; then
-          _freebsd_status="✅"
-        elif [ -f "${_tests_tmp_dir}/${_short_comp}.freebsd.skipped" ] || ls "${_tests_tmp_dir}/${_short_comp}".freebsd*.skipped >/dev/null 2>&1; then
-          _freebsd_status='-'
-        elif [ -f "${_tests_tmp_dir}/${_short_comp}.freebsd.failure" ] || ls "${_tests_tmp_dir}/${_short_comp}".freebsd*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".bsd*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".linux.freebsd*.failure >/dev/null 2>&1; then
-          _freebsd_status="❌"
-        fi
-      fi
-
-      # macOS / Darwin
-      if [ "${_marker_comp}" != "${_short_comp}" ]; then
-        if [ -f "${_tests_tmp_dir}/${_marker_comp}.darwin.success" ] || ls "${_tests_tmp_dir}/${_marker_comp}".darwin*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_marker_comp}".macos*.success >/dev/null 2>&1; then
-          _macos_status="✅"
-        elif [ -f "${_tests_tmp_dir}/${_marker_comp}.darwin.skipped" ] || [ -f "${_tests_tmp_dir}/${_marker_comp}.darwin.unsupported" ] || ls "${_tests_tmp_dir}/${_marker_comp}".darwin*.skipped >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_marker_comp}".macos*.skipped >/dev/null 2>&1; then
-          _macos_status='-'
-        elif [ -f "${_tests_tmp_dir}/${_marker_comp}.darwin.failure" ] || ls "${_tests_tmp_dir}/${_marker_comp}".darwin*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_marker_comp}".macos*.failure >/dev/null 2>&1; then
-          _macos_status="❌"
-        fi
-      else
-        if [ -f "${_tests_tmp_dir}/${_short_comp}.darwin.success" ] || ls "${_tests_tmp_dir}/${_short_comp}".darwin*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".macos*.success >/dev/null 2>&1; then
-          _macos_status="✅"
-        elif [ -f "${_tests_tmp_dir}/${_short_comp}.darwin.skipped" ] || [ -f "${_tests_tmp_dir}/${_short_comp}.darwin.unsupported" ] || ls "${_tests_tmp_dir}/${_short_comp}".darwin*.skipped >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".macos*.skipped >/dev/null 2>&1; then
-          _macos_status='-'
-        elif [ -f "${_tests_tmp_dir}/${_short_comp}.darwin.failure" ] || ls "${_tests_tmp_dir}/${_short_comp}".darwin*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_short_comp}".macos*.failure >/dev/null 2>&1; then
-          _macos_status="❌"
-        fi
-      fi
-    fi
+    _idempotent="${_m_idemp:-false}"
+    [ -n "${_m_apk:-}" ] && _apk_status="${_m_apk}"
+    [ -n "${_m_deb:-}" ] && _deb_status="${_m_deb}"
+    [ -n "${_m_rpm:-}" ] && _rpm_status="${_m_rpm}"
+    [ -n "${_m_win:-}" ] && _win_status="${_m_win}"
+    [ -n "${_m_sun:-}" ] && _sunos_status="${_m_sun}"
+    [ -n "${_m_fbsd:-}" ] && _freebsd_status="${_m_fbsd}"
+    [ -n "${_m_mac:-}" ] && _macos_status="${_m_mac}"
 
     # shellcheck disable=SC2016
     _row_str=$(printf '| `%s` | `%s` | %s | %s | %s | %s | %s | %s | %s |
@@ -526,9 +533,9 @@ update_supported_components() {
   }
 JSON_ROW
     fi
-  done <"${_entries_file}"
+  done <"${_enriched_entries}"
 
-  rm -f "${_entries_file}"
+  rm -f "${_enriched_entries}"
 
   {
     cat <<'HDR_MAIN'

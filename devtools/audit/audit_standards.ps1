@@ -389,6 +389,9 @@ function Audit-File {
             if ($bLine -match '(?i)^\s*(\)\s*else\s+)?if\s+.*\s+if\s+.*\(\s*$' -and $bLine -notmatch '(?i)powershell|python|jq|sqlite3') {
                 $chainedIf[$ind] = $lineIdx
             }
+            if ($bLine -notmatch '(?i)^\s*(::|rem(\s|$))' -and $bLine -match '(?i)(^|[\s(&])for\s+/r\s+[^%]*![a-z0-9_]+!') {
+                Log-Violation -File $FilePath -Rule "BATCH_FOR_R_DELAYED" -Details "FOR /R root path uses !VAR! delayed expansion at line $lineIdx (parsed before !VAR! in cmd.exe; use pushd + FOR /R + popd)."
+            }
         }
     }
 

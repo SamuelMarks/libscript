@@ -681,6 +681,9 @@ audit_single_file() {
         if (tolower($0) ~ /^[[:space:]]+endlocal[[:space:]]*&&?[[:space:]]*(\(|set[[:space:]])/) {
           endlocal_delayed_hits = (endlocal_delayed_hits ? endlocal_delayed_hits "; " : "") NR ":" $0
         }
+        if (tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$))/ && tolower($0) ~ /(^|[[:space:](&])for[[:space:]]+\/r[[:space:]]+[^%]*![a-z0-9_]+!/) {
+          for_r_delayed_hits = (for_r_delayed_hits ? for_r_delayed_hits "; " : "") NR ":" $0
+        }
         match($0, /^[[:space:]]*/)
         ind = RLENGTH
         if (tolower($0) ~ /^[[:space:]]*[)][[:space:]]*else([[:space:]]|$)/ && (ind in chained_if)) {
@@ -754,6 +757,7 @@ audit_single_file() {
         if (bad_script_dir_strip != "") print "BATCH_SCRIPT_DIR_STRIP|Corrupted SCRIPT_DIR:~-1 backslash check: " bad_script_dir_strip
         if (tab_path_hits != "") print "BATCH_TAB_CORRUPTION|Literal TAB character in path variable expansion: " tab_path_hits
         if (endlocal_delayed_hits != "") print "BATCH_ENDLOCAL_DELAYED|Delayed expansion !PATH! inside endlocal block: " endlocal_delayed_hits
+        if (for_r_delayed_hits != "") print "BATCH_FOR_R_DELAYED|FOR /R root path uses !VAR! delayed expansion (parsed before !VAR! in cmd.exe; use pushd + FOR /R + popd): " for_r_delayed_hits
         if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits

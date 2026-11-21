@@ -205,7 +205,10 @@ if "%LIBSCRIPT_IMAGE_BUILD%"=="1" if defined LIBSCRIPT_TARGET_SYSROOT (
 call :is_native_win_dos_port "!_generic_pkg!"
 set "_is_native_port=!errorlevel!"
 set "_route_comp_pm=0"
-if /i "!PKG_MGR!"=="libscript" set "_route_comp_pm=1"
+if /i "!PKG_MGR!"=="libscript" (
+    if "%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"=="1" exit /b 1
+    set "_route_comp_pm=1"
+)
 if "!_is_native_port!"=="0" (
     if not "%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"=="1" (
         if not defined LIBSCRIPT_PKG_MGR set "_route_comp_pm=1"
@@ -257,8 +260,10 @@ if /i "!PKG_MGR!"=="winget" (
         )
     )
     if "!_inst_rc!" neq "0" (
-        call :libscript_install_component_dep "!_generic_pkg!"
-        set "_inst_rc=!errorlevel!"
+        if not "%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"=="1" (
+            call :libscript_install_component_dep "!_generic_pkg!"
+            set "_inst_rc=!errorlevel!"
+        )
     )
 ) else if /i "!PKG_MGR!"=="choco" (
     choco install -y "!MAPPED_PKG!"
@@ -276,9 +281,14 @@ if /i "!PKG_MGR!"=="winget" (
     call :install_via_rapps "!MAPPED_PKG!"
     set "_inst_rc=!errorlevel!"
 ) else (
-    call :libscript_install_component_dep "!_generic_pkg!"
-    set "_inst_rc=!errorlevel!"
+    if not "%LIBSCRIPT_FORCE_SYSTEM_PKG_MGR%"=="1" (
+        call :libscript_install_component_dep "!_generic_pkg!"
+        set "_inst_rc=!errorlevel!"
+    ) else (
+        set "_inst_rc=1"
+    )
 )
+if "!_inst_rc!" neq "0" exit /b !_inst_rc!
 shift
 goto :depends_loop
 
@@ -351,6 +361,13 @@ if "%LIBSCRIPT_DRY_RUN_PKG_MGR%"=="1" (
     exit /b 0
 )
 
+if defined _LS_ACTIVE_COMP_DEPS (
+    echo "!_LS_ACTIVE_COMP_DEPS!" | findstr /I /C:":!_lic_comp!:" >nul 2>&1
+    if not errorlevel 1 exit /b 1
+)
+
+set "_lic_prev_active=%_LS_ACTIVE_COMP_DEPS%"
+set "_LS_ACTIVE_COMP_DEPS=%_LS_ACTIVE_COMP_DEPS%:!_lic_comp!:"
 set "_lic_saved_def_im=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
 set "_lic_saved_app=%FREEBSD_USR_BIN_APPLET%"
 set "LIBSCRIPT_DEFAULT_INSTALL_METHOD=libscript_native"
@@ -368,6 +385,7 @@ set "ACTION=install"
 set "STACK="
 call "!_lic_setup!"
 set "_lic_rc=!errorlevel!"
+set "_LS_ACTIVE_COMP_DEPS=!_lic_prev_active!"
 set "LIBSCRIPT_DEFAULT_INSTALL_METHOD=!_lic_saved_def_im!"
 set "FREEBSD_USR_BIN_APPLET=!_lic_saved_app!"
 if "!_lic_rc!" neq "0" exit /b !_lic_rc!

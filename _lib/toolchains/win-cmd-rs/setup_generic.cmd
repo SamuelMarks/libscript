@@ -146,6 +146,7 @@ if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="from-source" goto :install_from_source
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="source" goto :install_from_source
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="cargo" goto :install_from_source
 if /i "%WIN_CMD_RS_INSTALL_METHOD%"=="system" (
+    set "LIBSCRIPT_FORCE_SYSTEM_PKG_MGR=1"
     call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends win-cmd-rs
     exit /b !errorlevel!
 )
@@ -237,28 +238,33 @@ exit /b 0
 :stage_extracted_binaries
 set "_SEB_STAGE=%~1"
 set "_SEB_TGT=%~2"
+for %%T in ("!_SEB_TGT!") do set "_SEB_TGT=%%~fT"
 if not exist "!_SEB_TGT!\bin" mkdir "!_SEB_TGT!\bin"
-for /r "!_SEB_STAGE!" %%X in (wincheck.exe WINCHECK.EXE) do (
-    if exist "%%~fX" (
-        copy /y "%%~fX" "!_SEB_TGT!\bin\wincheck.exe" >nul
-        if "%IS_MSDOS%"=="1" copy /y "%%~fX" "!_SEB_TGT!\bin\WINCHECK.EXE" >nul
-    )
-)
-for /r "!_SEB_STAGE!" %%Y in (wincmd.exe WINCMD.EXE) do (
-    if exist "%%~fY" (
-        copy /y "%%~fY" "!_SEB_TGT!\bin\wincmd.exe" >nul
-        if "%IS_MSDOS%"=="1" copy /y "%%~fY" "!_SEB_TGT!\bin\WINCMD.EXE" >nul
-    )
-)
-for /r "!_SEB_STAGE!" %%D in (CWSDPMI.EXE cwsdpmi.exe) do (
-    if exist "%%~fD" copy /y "%%~fD" "!_SEB_TGT!\bin\CWSDPMI.EXE" >nul
-)
-if not "!IS_MSDOS!"=="1" (
-    for %%M in (README.md USAGE.md LICENSE-MIT LICENSE-APACHE) do (
-        for /r "!_SEB_STAGE!" %%L in (%%M) do (
-            if exist "%%~fL" copy /y "%%~fL" "!_SEB_TGT!\%%M" >nul
+if exist "!_SEB_STAGE!" (
+    pushd "!_SEB_STAGE!"
+    for /r %%X in (wincheck.exe WINCHECK.EXE) do (
+        if exist "%%~fX" (
+            copy /y "%%~fX" "!_SEB_TGT!\bin\wincheck.exe" >nul
+            if "%IS_MSDOS%"=="1" copy /y "%%~fX" "!_SEB_TGT!\bin\WINCHECK.EXE" >nul
         )
     )
+    for /r %%Y in (wincmd.exe WINCMD.EXE) do (
+        if exist "%%~fY" (
+            copy /y "%%~fY" "!_SEB_TGT!\bin\wincmd.exe" >nul
+            if "%IS_MSDOS%"=="1" copy /y "%%~fY" "!_SEB_TGT!\bin\WINCMD.EXE" >nul
+        )
+    )
+    for /r %%D in (CWSDPMI.EXE cwsdpmi.exe) do (
+        if exist "%%~fD" copy /y "%%~fD" "!_SEB_TGT!\bin\CWSDPMI.EXE" >nul
+    )
+    if not "!IS_MSDOS!"=="1" (
+        for %%M in (README.md USAGE.md LICENSE-MIT LICENSE-APACHE) do (
+            for /r %%L in (%%M) do (
+                if exist "%%~fL" copy /y "%%~fL" "!_SEB_TGT!\%%M" >nul
+            )
+        )
+    )
+    popd
 )
 if not exist "!_SEB_TGT!\bin\wincheck.exe" (
     echo Error: wincheck.exe was not found in extracted archive 1>&2
@@ -418,24 +424,26 @@ exit /b !errorlevel!
 :extract_wcr_zip
 set "_WCR_ZIP=%~1"
 set "_WCR_DST=%~2"
-for %%Z in (7za.exe 7z.exe) do (
+for %%Z in (7za.exe 7z.exe 7za 7z) do (
     where %%Z >nul 2>&1
     if not errorlevel 1 (
         %%Z x "!_WCR_ZIP!" -o"!_WCR_DST!" -y >nul 2>&1
         if not errorlevel 1 exit /b 0
     )
 )
-for %%U in (bsdunzip.exe unzip.exe) do (
+for %%U in (bsdunzip.exe unzip.exe bsdunzip unzip) do (
     where %%U >nul 2>&1
     if not errorlevel 1 (
         %%U -q -o "!_WCR_ZIP!" -d "!_WCR_DST!" >nul 2>&1
         if not errorlevel 1 exit /b 0
     )
 )
-where tar.exe >nul 2>&1
-if not errorlevel 1 (
-    tar.exe -xf "!_WCR_ZIP!" -C "!_WCR_DST!" >nul 2>&1
-    if not errorlevel 1 exit /b 0
+for %%T in (tar.exe tar) do (
+    where %%T >nul 2>&1
+    if not errorlevel 1 (
+        %%T -xf "!_WCR_ZIP!" -C "!_WCR_DST!" >nul 2>&1
+        if not errorlevel 1 exit /b 0
+    )
 )
 where powershell.exe >nul 2>&1
 if not errorlevel 1 (

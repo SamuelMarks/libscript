@@ -74,7 +74,12 @@ exit /b 0
 set "ORIG_PWD=%CD%"
 set "ROOT_DIR=%~dp0..\.."
 
-where powershell >nul 2>&1
+where pwsh.exe >nul 2>&1
+if "%ERRORLEVEL%" EQU "0" (
+    pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_standards.ps1" %*
+    exit /b !ERRORLEVEL!
+)
+where powershell.exe >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_standards.ps1" %*
     exit /b !ERRORLEVEL!

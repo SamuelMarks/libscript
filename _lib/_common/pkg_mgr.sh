@@ -428,16 +428,23 @@ libscript_install_component_dep() {
     return 0
   fi
 
+  case ":${_LS_ACTIVE_COMP_DEPS:-}:" in
+    *":${_lic_comp}:"*)
+      return 1
+      ;;
+  esac
+  _lic_next_active="${_LS_ACTIVE_COMP_DEPS:-}:${_lic_comp}:"
+
   _lic_prefix=$(printf '%s' "$_lic_comp" | tr '[:lower:]-' '[:upper:]_')
   if [ -n "$_lic_applet" ]; then
     (
       unset SCRIPT_NAME || true
-      env STACK='' LIBSCRIPT_DEFAULT_INSTALL_METHOD='libscript_native' "${_lic_prefix}_INSTALL_METHOD=libscript_native" FREEBSD_USR_BIN_APPLET="$_lic_applet" ACTION='install' "${_lic_setup}"
+      env STACK='' _LS_ACTIVE_COMP_DEPS="${_lic_next_active}" LIBSCRIPT_DEFAULT_INSTALL_METHOD='libscript_native' "${_lic_prefix}_INSTALL_METHOD=libscript_native" FREEBSD_USR_BIN_APPLET="$_lic_applet" ACTION='install' "${_lic_setup}"
     ) || return 1
   else
     (
       unset SCRIPT_NAME || true
-      env STACK='' LIBSCRIPT_DEFAULT_INSTALL_METHOD='libscript_native' "${_lic_prefix}_INSTALL_METHOD=libscript_native" ACTION='install' "${_lic_setup}"
+      env STACK='' _LS_ACTIVE_COMP_DEPS="${_lic_next_active}" LIBSCRIPT_DEFAULT_INSTALL_METHOD='libscript_native' "${_lic_prefix}_INSTALL_METHOD=libscript_native" ACTION='install' "${_lic_setup}"
     ) || return 1
   fi
 
@@ -479,7 +486,14 @@ libscript_depends() {
   fi
   pkgs_to_install=''
   for pkg in "$@"; do
-    if [ "${PKG_MGR:-}" = 'libscript' ] || { { [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; } && [ "${LIBSCRIPT_FORCE_SYSTEM_PKG_MGR:-0}" != '1' ] && [ -z "${LIBSCRIPT_PKG_MGR:-}" ] && libscript_is_native_win_dos_port "${pkg}"; }; then
+    if [ "${PKG_MGR:-}" = 'libscript' ]; then
+      if [ "${LIBSCRIPT_FORCE_SYSTEM_PKG_MGR:-0}" = '1' ]; then
+        return 1
+      fi
+      libscript_install_component_dep "${pkg}" || return 1
+      continue
+    fi
+    if { [ "${TARGET_OS:-}" = 'msdos' ] || [ "${TARGET_OS:-}" = 'windows' ]; } && [ "${LIBSCRIPT_FORCE_SYSTEM_PKG_MGR:-0}" != '1' ] && [ -z "${LIBSCRIPT_PKG_MGR:-}" ] && libscript_is_native_win_dos_port "${pkg}"; then
       libscript_install_component_dep "${pkg}" || return 1
       continue
     fi

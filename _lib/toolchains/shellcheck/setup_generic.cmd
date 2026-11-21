@@ -193,9 +193,12 @@ if /i "!URL:~-4!"==".zip" (
     ) else if exist "!STAGE_DIR!\bin\shellcheck.exe" (
         copy /y "!STAGE_DIR!\bin\shellcheck.exe" "!TARGET_DIR!\bin\shellcheck.exe" >nul
     ) else (
-        for /r "!STAGE_DIR!" %%X in (shellcheck.exe) do (
+        for %%T in ("!TARGET_DIR!") do set "TARGET_DIR=%%~fT"
+        pushd "!STAGE_DIR!"
+        for /r %%X in (shellcheck.exe) do (
             if exist "%%~fX" copy /y "%%~fX" "!TARGET_DIR!\bin\shellcheck.exe" >nul
         )
+        popd
     )
     if exist "!STAGE_DIR!\LICENSE.txt" copy /y "!STAGE_DIR!\LICENSE.txt" "!TARGET_DIR!\LICENSE.txt" >nul
     if exist "!STAGE_DIR!\README.txt" copy /y "!STAGE_DIR!\README.txt" "!TARGET_DIR!\README.txt" >nul

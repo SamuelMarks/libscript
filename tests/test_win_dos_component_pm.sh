@@ -89,6 +89,37 @@ make_zip_fixture "${DL_FIXTURES}/freebsd-usr-bin/sed-15.0.0-windows.zip" 'sed.ex
 make_zip_fixture "${DL_FIXTURES}/freebsd-usr-bin/freebsd-usr-bin-15.0.0-dos32.zip" 'SED.EXE' 'MSDOS-DOS32-FBSD-SUITE-15.0.0' 1
 make_zip_fixture "${DL_FIXTURES}/freebsd-usr-bin/freebsd-usr-bin-15.0.0-X64.zip" 'sed.exe' 'WIN32-PE-X64-FBSD-SUITE-15.0.0' 0
 
+mkdir -p "${DL_FIXTURES}/win-cmd-rs"
+_wcr_dos_stage="${TEST_WORK}/wcr_dos_stage/win-cmd-rs-v0.0.1-i586-pc-msdosdjgpp"
+mkdir -p "${_wcr_dos_stage}"
+printf '%s\n' 'MSDOS-DJGPP-WINCHECK-0.0.1' > "${_wcr_dos_stage}/WINCHECK.EXE"
+printf '%s\n' 'MSDOS-DJGPP-WINCMD-0.0.1' > "${_wcr_dos_stage}/WINCMD.EXE"
+printf '%s\n' 'CWSDPMI-STUB' > "${_wcr_dos_stage}/CWSDPMI.EXE"
+(
+  cd "${TEST_WORK}/wcr_dos_stage"
+  zip -r -q "${DL_FIXTURES}/win-cmd-rs/win-cmd-rs-v0.0.1-i586-pc-msdosdjgpp.zip" 'win-cmd-rs-v0.0.1-i586-pc-msdosdjgpp'
+)
+rm -rf "${TEST_WORK}/wcr_dos_stage"
+
+_wcr_win_stage="${TEST_WORK}/wcr_win_stage/win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc"
+mkdir -p "${_wcr_win_stage}"
+printf '%s\n' 'WIN32-PE-X64-WINCHECK-0.0.1' > "${_wcr_win_stage}/wincheck.exe"
+printf '%s\n' 'WIN32-PE-X64-WINCMD-0.0.1' > "${_wcr_win_stage}/wincmd.exe"
+(
+  cd "${TEST_WORK}/wcr_win_stage"
+  zip -r -q "${DL_FIXTURES}/win-cmd-rs/win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc.zip" 'win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc'
+)
+rm -rf "${TEST_WORK}/wcr_win_stage"
+
+_wcr_bad_stage="${TEST_WORK}/wcr_bad_stage/win-cmd-rs-v9.9.9-x86_64-pc-windows-msvc"
+mkdir -p "${_wcr_bad_stage}"
+printf '%s\n' 'EMPTY-README' > "${_wcr_bad_stage}/README.md"
+(
+  cd "${TEST_WORK}/wcr_bad_stage"
+  zip -r -q "${DL_FIXTURES}/win-cmd-rs/win-cmd-rs-v9.9.9-x86_64-pc-windows-msvc.zip" 'win-cmd-rs-v9.9.9-x86_64-pc-windows-msvc'
+)
+rm -rf "${TEST_WORK}/wcr_bad_stage"
+
 # 2. Verify MS-DOS target: `depends jq awk busybox toybox sh sed` gets MS-DOS dos32 binaries
 DOS_HOME="${TEST_WORK}/dos_home"
 env LIBSCRIPT_TARGET_OS='msdos' LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="$DOS_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" depends jq awk busybox toybox sh sed
@@ -153,5 +184,41 @@ FUNC_HOME="${TEST_WORK}/func_home"
   esac
 ) || fail_test 'In-process depends jq function failed to install and prepend PATH'
 
-printf '%s\n' '[PASS] All 6 Windows native & MS-DOS component-level package managers verified.'
+# 6. Verify win-cmd-rs nested-directory zip staging, 2x idempotency, and non-recursive failure exit
+env LIBSCRIPT_TARGET_OS='msdos' LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="$DOS_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" install win-cmd-rs 0.0.1
+[ -f "${DOS_HOME}/win-cmd-rs/default/bin/wincheck.exe" ] || fail_test 'MS-DOS win-cmd-rs did not stage wincheck.exe from nested zip'
+[ -f "${DOS_HOME}/win-cmd-rs/default/bin/wincmd.exe" ] || fail_test 'MS-DOS win-cmd-rs did not stage wincmd.exe from nested zip'
+[ -f "${DOS_HOME}/win-cmd-rs/default/bin/CWSDPMI.EXE" ] || fail_test 'MS-DOS win-cmd-rs did not stage CWSDPMI.EXE from nested zip'
+
+env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="$WIN_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" install win-cmd-rs 0.0.1
+env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OFFLINE='1' LIBSCRIPT_HOME="$WIN_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" install win-cmd-rs 0.0.1
+[ "$(cat "${WIN_HOME}/win-cmd-rs/default/bin/wincheck.exe")" = 'WIN32-PE-X64-WINCHECK-0.0.1' ] || fail_test 'Windows win-cmd-rs wincheck.exe payload mismatch'
+[ "$(cat "${WIN_HOME}/win-cmd-rs/default/bin/wincmd.exe")" = 'WIN32-PE-X64-WINCMD-0.0.1' ] || fail_test 'Windows win-cmd-rs wincmd.exe payload mismatch'
+
+if env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OFFLINE='1' PKG_MGR='libscript' LIBSCRIPT_HOME="$WIN_HOME" DOWNLOAD_DIR="$DL_FIXTURES" "$LIBSCRIPT_ROOT_DIR/libscript.sh" install win-cmd-rs 9.9.9 >/dev/null 2>&1; then
+  fail_test 'Expected corrupt win-cmd-rs 9.9.9 archive without binaries to fail cleanly'
+fi
+
+# 7. Verify audit_standards.sh catches BATCH_FOR_R_DELAYED in .cmd files
+_bad_cmd="${TEST_WORK}/bad_for_r.cmd"
+_bad_sh="${TEST_WORK}/bad_for_r.sh"
+cat <<'EOF_SH' > "${_bad_sh}"
+#!/bin/sh
+# ## Overview
+# Fixture companion script.
+# ## Usage
+# ./bad_for_r.sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then THIS_FILE="${SCRIPT_NAME}"; else THIS_FILE="${0}"; fi
+case "${STACK+x}" in *':'"${THIS_FILE}"':'*) exit 0 ;; esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+EOF_SH
+printf '@echo off\r\n:: ## Overview\r\n:: Fixture batch script.\r\n:: ## Usage\r\n:: bad_for_r.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nfor /r "!STAGE_DIR!" %%%%X in (wincheck.exe) do echo %%%%X\r\nexit /b 0\r\n' > "${_bad_cmd}"
+_std_out=$(STACK='' "$LIBSCRIPT_ROOT_DIR/devtools/audit/audit_standards.sh" "${_bad_cmd}" 2>&1 || true)
+case "${_std_out}" in
+  *BATCH_FOR_R_DELAYED*) ;;
+  *) fail_test "audit_standards.sh did not report BATCH_FOR_R_DELAYED: ${_std_out}" ;;
+esac
+
+printf '%s\n' '[PASS] All 7 Windows native & MS-DOS component-level package managers verified.'
 exit 0

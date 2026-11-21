@@ -98,7 +98,11 @@ if not exist "!CACHE_DIR!" mkdir "!CACHE_DIR!" >nul 2>&1
 set "CATALOG_JSON=!CACHE_DIR!\manifests_catalog_v2.json"
 set "CATALOG_META=!CACHE_DIR!\manifests_catalog_v2.meta"
 set "_MF_SIG=0"
-for /R "!LIB_DIR!" %%F in (manifest.json) do set /a _MF_SIG+=1
+if exist "!LIB_DIR!" (
+    pushd "!LIB_DIR!"
+    for /R %%F in (manifest.json) do set /a _MF_SIG+=1
+    popd
+)
 
 set "_USE_CACHE=0"
 if exist "!CATALOG_JSON!" if exist "!CATALOG_META!" (
@@ -112,8 +116,12 @@ if "!_USE_CACHE!"=="1" (
     set "TMP_RAW=%TEMP%\libscript_manifests_raw_!RANDOM!.jsonl"
     set "TMP_ARR=!CATALOG_JSON!"
     if exist "!TMP_RAW!" del /f /q "!TMP_RAW!" >nul 2>&1
-    for /R "!LIB_DIR!" %%F in (manifest.json) do (
-        jq "{ _manifest_dir: (input_filename | gsub(\"\\\\\"; \"/\") | sub(\"^.*/_lib/\"; \"_lib/\") | sub(\"/manifest\\.json$\"; \"\")) } + ." "%%F" >> "!TMP_RAW!" 2>nul
+    if exist "!LIB_DIR!" (
+        pushd "!LIB_DIR!"
+        for /R %%F in (manifest.json) do (
+            jq "{ _manifest_dir: (input_filename | gsub(\"\\\\\"; \"/\") | sub(\"^.*/_lib/\"; \"_lib/\") | sub(\"/manifest\\.json$\"; \"\")) } + ." "%%~fF" >> "!TMP_RAW!" 2>nul
+        )
+        popd
     )
     if exist "!TMP_RAW!" (
         jq -s "." "!TMP_RAW!" > "!TMP_ARR!" 2>nul

@@ -66,7 +66,12 @@ exit /b 0
 :: ## main
 :: Executes the primary orchestration workflow for this script.
 :main
-where powershell >nul 2>&1
+where pwsh.exe >nul 2>&1
+if "%ERRORLEVEL%" EQU "0" (
+    pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_schema_vars.ps1" %*
+    exit /b !ERRORLEVEL!
+)
+where powershell.exe >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\audit_schema_vars.ps1" %*
     exit /b !ERRORLEVEL!

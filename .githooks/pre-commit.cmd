@@ -281,8 +281,8 @@ for %%S in ("!_SC_LIST_TMP!") do if "%%~zS"=="0" (
 
 REM wincheck disable=CMD3006
 set "_SC_PS="
-where pwsh >nul 2>&1
-if not errorlevel 1 set "_SC_PS=pwsh"
+where pwsh.exe >nul 2>&1
+if not errorlevel 1 set "_SC_PS=pwsh.exe"
 if not defined _SC_PS (
     where powershell.exe >nul 2>&1
     if not errorlevel 1 set "_SC_PS=powershell.exe"

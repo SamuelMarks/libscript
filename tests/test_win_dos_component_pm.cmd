@@ -99,6 +99,101 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: 3. Verify win-cmd-rs nested-directory zip extraction (FOR /R + pushd regression) and 2x idempotency
+set "_WCR_STAGE=!TEST_WORK!\wcr_stage\win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc"
+if not exist "!_WCR_STAGE!" mkdir "!_WCR_STAGE!"
+if not exist "!TEST_WORK!\downloads\win-cmd-rs" mkdir "!TEST_WORK!\downloads\win-cmd-rs"
+echo WIN32-PE-X64-WINCHECK-0.0.1> "!_WCR_STAGE!\wincheck.exe"
+echo WIN32-PE-X64-WINCMD-0.0.1> "!_WCR_STAGE!\wincmd.exe"
+set "_WCR_ZIP_OK=!TEST_WORK!\downloads\win-cmd-rs\win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc.zip"
+call :pack_zip_dir "!TEST_WORK!\wcr_stage" "win-cmd-rs-v0.0.1-x86_64-pc-windows-msvc" "!_WCR_ZIP_OK!"
+if exist "!_WCR_ZIP_OK!" (
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install win-cmd-rs 0.0.1
+    if errorlevel 1 (
+        echo [FAIL] Windows install win-cmd-rs 0.0.1 from nested zip failed 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install win-cmd-rs 0.0.1
+    if errorlevel 1 (
+        echo [FAIL] Second idempotent Windows install win-cmd-rs 0.0.1 failed 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+    findstr /C:"WIN32-PE-X64-WINCHECK-0.0.1" "!TEST_WORK!\win_home\win-cmd-rs\default\bin\wincheck.exe" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] Windows win-cmd-rs wincheck.exe payload mismatch 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+    findstr /C:"WIN32-PE-X64-WINCMD-0.0.1" "!TEST_WORK!\win_home\win-cmd-rs\default\bin\wincmd.exe" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] Windows win-cmd-rs wincmd.exe payload mismatch 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+)
+
+:: 4. Verify failed native setup terminates cleanly without setup_base.cmd / pkg_mgr.cmd infinite recursion
+set "_WCR_BAD=!TEST_WORK!\wcr_bad\win-cmd-rs-v9.9.9-x86_64-pc-windows-msvc"
+if not exist "!_WCR_BAD!" mkdir "!_WCR_BAD!"
+echo EMPTY-README> "!_WCR_BAD!\README.md"
+set "_WCR_ZIP_BAD=!TEST_WORK!\downloads\win-cmd-rs\win-cmd-rs-v9.9.9-x86_64-pc-windows-msvc.zip"
+call :pack_zip_dir "!TEST_WORK!\wcr_bad" "win-cmd-rs-v9.9.9-x86_64-pc-windows-msvc" "!_WCR_ZIP_BAD!"
+if exist "!_WCR_ZIP_BAD!" (
+    set "STACK="
+    set "PKG_MGR=libscript"
+    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install win-cmd-rs 9.9.9 >nul 2>&1
+    if not errorlevel 1 (
+        echo [FAIL] Expected corrupt win-cmd-rs 9.9.9 archive without binaries to return non-zero 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+)
+
 rmdir /s /q "!TEST_WORK!" 2>nul
 echo [PASS] Windows and MS-DOS component-level package manager routing verified.
+exit /b 0
+
+:: ## pack_zip_dir
+:: Creates a zip archive containing a relative subdirectory using zero-PowerShell tools (tar, 7za, 7z, or zip).
+:pack_zip_dir
+set "_PZD_BASE=%~1"
+set "_PZD_SUB=%~2"
+set "_PZD_OUT=%~3"
+for %%T in ("!_PZD_OUT!") do set "_PZD_OUT=%%~fT"
+pushd "!_PZD_BASE!"
+for %%C in (tar.exe tar) do (
+    where %%C >nul 2>&1
+    if not errorlevel 1 (
+        %%C -a -cf "!_PZD_OUT!" "!_PZD_SUB!" >nul 2>&1
+        if exist "!_PZD_OUT!" (
+            popd
+            exit /b 0
+        )
+    )
+)
+for %%Z in (7za.exe 7z.exe 7za 7z) do (
+    where %%Z >nul 2>&1
+    if not errorlevel 1 (
+        %%Z a "!_PZD_OUT!" "!_PZD_SUB!" >nul 2>&1
+        if exist "!_PZD_OUT!" (
+            popd
+            exit /b 0
+        )
+    )
+)
+for %%U in (zip.exe zip) do (
+    where %%U >nul 2>&1
+    if not errorlevel 1 (
+        %%U -r -q "!_PZD_OUT!" "!_PZD_SUB!" >nul 2>&1
+        if exist "!_PZD_OUT!" (
+            popd
+            exit /b 0
+        )
+    )
+)
+popd
 exit /b 0

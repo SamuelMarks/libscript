@@ -89,15 +89,15 @@ echo [PASS] wincheck detected CMD1001 defect in broken .cmd script
 >> "!_WCR_SMOKE!\arith.cmd" echo set /a "X=6*7"
 >> "!_WCR_SMOKE!\arith.cmd" echo echo.!X!
 
-where wincmd.exe >nul 2>&1
+where wincmd >nul 2>&1
 if not errorlevel 1 (
-    wincmd.exe --version
+    wincmd --version
     if errorlevel 1 (
         rmdir /s /q "!_WCR_SMOKE!" >nul 2>&1
         exit /b 1
     )
     set "_WCMD_GOT="
-    for /f "delims=" %%R in ('wincmd.exe /C "!_WCR_SMOKE!\arith.cmd" 2^>nul') do (
+    for /f "delims=" %%R in ('wincmd --script "!_WCR_SMOKE!\arith.cmd" 2^>nul') do (
         set "_WCMD_GOT=%%R"
     )
     if not "!_WCMD_GOT!"=="42" (

@@ -138,13 +138,15 @@ set "_VT_DIR=%~1"
 set "_VT_ARCH=%~2"
 if not exist "!_VT_DIR!" exit /b 0
 set "_VT_FAIL=0"
-for /r "!_VT_DIR!" %%F in (*.exe *.dll) do (
+pushd "!_VT_DIR!"
+for /r %%F in (*.exe *.dll) do (
     call :check_pe_arch "%%~fF" "!_VT_ARCH!"
     if errorlevel 1 (
         echo [ERROR]    PE architecture mismatch in ReactOS payload ^(expected !_VT_ARCH!^): %%~fF 1>&2
         set "_VT_FAIL=1"
     )
 )
+popd
 exit /b !_VT_FAIL!
 
 :: ## check_pe_arch

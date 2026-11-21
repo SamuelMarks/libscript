@@ -75,8 +75,8 @@ set "PS_CMD="
 where powershell.exe >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" set "PS_CMD=powershell.exe"
 if not defined PS_CMD (
-    where pwsh >nul 2>&1
-    if "!ERRORLEVEL!" EQU "0" set "PS_CMD=pwsh"
+    where pwsh.exe >nul 2>&1
+    if "!ERRORLEVEL!" EQU "0" set "PS_CMD=pwsh.exe"
 )
 
 if defined PS_CMD (

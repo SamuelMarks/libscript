@@ -59,7 +59,10 @@ function Test-InternalRuntimeVar {
             $VarName -eq "LIBSCRIPT_MOCK_SYSTEMD" -or
             $VarName -eq "LIBSCRIPT_DUMMY_NO_RUN" -or
             $VarName -eq "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB" -or
-            $VarName -eq "LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE")
+            $VarName -eq "LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE" -or
+            $VarName -eq "LIBSCRIPT_TARGET_OS" -or
+            $VarName -eq "LIBSCRIPT_TARGET_ARCH" -or
+            $VarName -eq "LIBSCRIPT_FORCE_SYSTEM_PKG_MGR")
 }
 
 # ## Get-SchemaKeys

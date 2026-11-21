@@ -70,8 +70,10 @@ if not exist "!_CAND_P!" (
         set "_CAND_P=%LIBSCRIPT_HOME%\win-cmd-rs\default\bin"
     )
 )
-echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
-if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+if exist "!_CAND_P!" (
+    echo ";!PATH!;" | findstr /I /C:";!_CAND_P!;" >nul 2>&1
+    if errorlevel 1 set "PATH=!_CAND_P!;!PATH!"
+)
 set "CALLER_SCRIPT_DIR=%SCRIPT_DIR%"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\env_base.cmd" "win-cmd-rs" "!_NORM_WCR_VER!"
 

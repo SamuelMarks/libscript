@@ -812,11 +812,15 @@ if not "!_CAC_GIT!"=="nogit" (
         )
     )
 ) else (
-    for /r "!_CAC_DIR!" %%F in (*) do (
-        echo "%%~fF" | findstr /I /C:"\.nyc_output\" /C:"\docs\web\" /C:"\docs\api\" /C:"\site\" /C:"\.vitest" >nul 2>&1
-        if errorlevel 1 (
-            echo.%%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
+    if exist "!_CAC_DIR!" (
+        pushd "!_CAC_DIR!"
+        for /r %%F in (*) do (
+            echo "%%~fF" | findstr /I /C:"\.nyc_output\" /C:"\docs\web\" /C:"\docs\api\" /C:"\site\" /C:"\.vitest" >nul 2>&1
+            if errorlevel 1 (
+                echo.%%~nxF:%%~zF:%%~tF>> "!_CAC_TMP!"
+            )
         )
+        popd
     )
 )
 for %%E in ("!_CAC_DIR!\libscript.json" "!_CAC_DIR!\.env" "!_CAC_DIR!\.env.secrets" "!REPO_PATH!\libscript.json" "!_CAC_DIR!\package.json" "!_CAC_DIR!\package-lock.json" "!_CAC_DIR!\pyproject.toml" "!_CAC_DIR!\uv.lock" "!_CAC_DIR!\requirements*.txt" "!_CAC_DIR!\angular.json" "!_CAC_DIR!\vite.config.*") do (

@@ -397,7 +397,7 @@ case "${ACTION}" in
         exit 0
         ;;
       system)
-        libscript_depends 'win-cmd-rs'
+        LIBSCRIPT_FORCE_SYSTEM_PKG_MGR=1 libscript_depends 'win-cmd-rs'
         ;;
       nix|guix|spack|brew|winget|choco|scoop)
         libscript_depends_via "${WIN_CMD_RS_INSTALL_METHOD}" 'win-cmd-rs'
