@@ -600,6 +600,7 @@ audit_single_file() {
         raw_sync_hits = ""; raw_venv_hits = ""; raw_uuid_hits = "";
         allow_sync_next = 0; allow_venv_next = 0; allow_uuid_next = 0;
         in_endlocal = 0; in_ls_remote = 0; spliced_guard_hits = ""; lone_cr_hits = "";
+        del_exp_active = 0; quoted_dbl_caret_bang_hits = "";
       }
       {
         sub(/\r$/, "", $0)
@@ -714,6 +715,27 @@ audit_single_file() {
         if (tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$))/ && tolower($0) ~ /(^|[[:space:](&])for[[:space:]]+\/r[[:space:]]+[^%]*![a-z0-9_]+!/) {
           for_r_delayed_hits = (for_r_delayed_hits ? for_r_delayed_hits "; " : "") NR ":" $0
         }
+        if (tolower($0) ~ /^[[:space:]]*setlocal[[:space:]]+enabledelayedexpansion([[:space:]]|$)/) {
+          del_exp_active = 1
+        } else if (tolower($0) ~ /^[[:space:]]*setlocal[[:space:]]+(disable)(delayed)(expansion)([[:space:]]|$)/) {
+          del_exp_active = 0
+        }
+        if (del_exp_active && index($0, "^^!") > 0 && tolower($0) !~ /^[[:space:]]*(::|rem([[:space:]]|$))/) {
+          in_q = 0
+          for (qi = 1; qi <= length($0); qi++) {
+            qc = substr($0, qi, 1)
+            if (!in_q) {
+              if (qc == "^") { qi++; continue }
+              if (qc == "\"") { in_q = 1 }
+            } else {
+              if (qc == "\"") { in_q = 0 }
+              else if (substr($0, qi, 3) == "^^!") {
+                quoted_dbl_caret_bang_hits = (quoted_dbl_caret_bang_hits ? quoted_dbl_caret_bang_hits "; " : "") NR ":" $0
+                break
+              }
+            }
+          }
+        }
         match($0, /^[[:space:]]*/)
         ind = RLENGTH
         if (tolower($0) ~ /^[[:space:]]*[)][[:space:]]*else([[:space:]]|$)/ && (ind in chained_if)) {
@@ -788,6 +810,7 @@ audit_single_file() {
         if (tab_path_hits != "") print "BATCH_TAB_CORRUPTION|Literal TAB character in path variable expansion: " tab_path_hits
         if (endlocal_delayed_hits != "") print "BATCH_ENDLOCAL_DELAYED|Delayed expansion !PATH! inside endlocal block: " endlocal_delayed_hits
         if (for_r_delayed_hits != "") print "BATCH_FOR_R_DELAYED|FOR /R root path uses !VAR! delayed expansion (parsed before !VAR! in cmd.exe; use pushd + FOR /R + popd): " for_r_delayed_hits
+        if (quoted_dbl_caret_bang_hits != "") print "BATCH_QUOTED_DOUBLE_CARET_BANG|Double-caret ^^! inside double quotes under EnableDelayedExpansion (cmd.exe Pass 1 preserves ^^ inside quotes so Pass 2 unescapes !; use single ^! inside quotes): " quoted_dbl_caret_bang_hits
         if (chained_if_else_hits != "") print "BATCH_CHAINED_IF_ELSE|Chained if ... if ... ( ... ) else ( ... ) skips else when outer if is false: " chained_if_else_hits
         if (raw_fetch_hits != "") print "RAW_NETWORK_FETCH|Raw network call in batch script (delegate to pkg_mgr.cmd): " raw_fetch_hits
         if (raw_pkg_hits != "") print "RAW_PACKAGE_MANAGER|Raw winget/choco/scoop call in batch script (delegate to pkg_mgr.cmd): " raw_pkg_hits

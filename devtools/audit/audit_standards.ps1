@@ -386,10 +386,16 @@ function Audit-File {
         if ($allContent -match '(?mi)^[ \t]+endlocal[ \t]*&&?[ \t]*(\(|set[ \t])') {
             Log-Violation -File $FilePath -Rule "BATCH_ENDLOCAL_DELAYED" -Details "Indented endlocal & (...) inside parenthesized block expands %VAR% before block executes."
         }
+        $delExpActive = $false
         $chainedIf = @{}
         $lineIdx = 0
         foreach ($bLine in ($allContent -split "`r?`n")) {
             $lineIdx++
+            if ($bLine -match '(?i)^\s*setlocal\s+EnableDelayedExpansion(\s|$)') {
+                $delExpActive = $true
+            } elseif ($bLine -match '(?i)^\s*setlocal\s+DisableDelayedExpansion(\s|$)') {
+                $delExpActive = $false
+            }
             $ind = ($bLine -replace '^(\s*).*$', '$1').Length
             if ($bLine -match '(?i)^\s*\)\s*else(\s|$)' -and $chainedIf.ContainsKey($ind)) {
                 Log-Violation -File $FilePath -Rule "BATCH_CHAINED_IF_ELSE" -Details "Chained 'if ... if ... ( ... ) else ( ... )' at line $($chainedIf[$ind])->$lineIdx skips else when outer if is false."
@@ -402,6 +408,22 @@ function Audit-File {
             }
             if ($bLine -notmatch '(?i)^\s*(::|rem(\s|$))' -and $bLine -match '(?i)(^|[\s(&])for\s+/r\s+[^%]*![a-z0-9_]+!') {
                 Log-Violation -File $FilePath -Rule "BATCH_FOR_R_DELAYED" -Details "FOR /R root path uses !VAR! delayed expansion at line $lineIdx (parsed before !VAR! in cmd.exe; use pushd + FOR /R + popd)."
+            }
+            if ($delExpActive -and $bLine.Contains('^^!') -and $bLine -notmatch '(?i)^\s*(::|rem(\s|$))') {
+                $inQ = $false
+                for ($qi = 0; $qi -lt $bLine.Length; $qi++) {
+                    $qc = $bLine[$qi]
+                    if (-not $inQ) {
+                        if ($qc -eq [char]94) { $qi++; continue }
+                        if ($qc -eq [char]34) { $inQ = $true }
+                    } else {
+                        if ($qc -eq [char]34) { $inQ = $false }
+                        elseif (($qi + 2) -lt $bLine.Length -and $bLine.Substring($qi, 3) -eq '^^!') {
+                            Log-Violation -File $FilePath -Rule "BATCH_QUOTED_DOUBLE_CARET_BANG" -Details "Double-caret '^^!' inside double quotes at line $lineIdx under EnableDelayedExpansion (cmd.exe Pass 1 preserves '^^' inside quotes so Pass 2 unescapes '!'; use single '^!' inside quotes)."
+                            break
+                        }
+                    }
+                }
             }
         }
     }

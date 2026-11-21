@@ -87,7 +87,7 @@ exit /b 1
 :parse_with_jq
 set "_JQ_PROG=%TEMP%\ls_puri_!RANDOM!_!RANDOM!.jq"
 (
-    echo def pct_dec: gsub^("%%20";" "^)^|gsub^("%%21";"^^!"^)^|gsub^("%%40";"@"^)^|gsub^("%%23";"#"^)^|gsub^("%%24";"$"^)^|gsub^("%%25";"%%"^)^|gsub^("%%5[Ee]";"^"^)^|gsub^("%%26";"&"^)^|gsub^("%%2[Aa]";"*"^)^|gsub^("%%3[Dd]";"="^);
+    echo def pct_dec: gsub^("%%20";" "^)^|gsub^("%%21";"^!"^)^|gsub^("%%40";"@"^)^|gsub^("%%23";"#"^)^|gsub^("%%24";"$"^)^|gsub^("%%25";"%%"^)^|gsub^("%%5[Ee]";"^^"^)^|gsub^("%%26";"&"^)^|gsub^("%%2[Aa]";"*"^)^|gsub^("%%3[Dd]";"="^);
     echo ^($uri ^| split^("://"^)^) as $p ^|
     echo ^($p[0] // ""^) as $engine ^|
     echo ^($p[1:] ^| join^("://"^)^) as $rest ^|
