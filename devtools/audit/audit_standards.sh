@@ -77,14 +77,44 @@ is_excluded_path() {
 # ## audit_single_file
 # Runs all static standard checks on an individual file.
 audit_single_file() {
-  file="${1#"${REPO_ROOT}/"}"
-  file="${file#./}"
+  raw_file="$1"
+  explicit_target="${2:-0}"
+  in_repo=0
+
+  case "$raw_file" in
+    "${REPO_ROOT}/"*|"${REPO_ROOT}\\"*)
+      file="${raw_file#"${REPO_ROOT}"?}"
+      file="${file#./}"
+      in_repo=1
+      ;;
+    /*|[A-Za-z]:[\\/]*)
+      file="$raw_file"
+      if _asf_dir=$(cd -- "$(dirname -- "$raw_file")" 2>/dev/null && pwd); then
+        _asf_abs="${_asf_dir}/$(basename -- "$raw_file")"
+        case "$_asf_abs" in
+          "${REPO_ROOT}/"*)
+            file="${_asf_abs#"${REPO_ROOT}/"}"
+            file="${file#./}"
+            in_repo=1
+            ;;
+        esac
+      fi
+      ;;
+    *)
+      file="${raw_file#./}"
+      in_repo=1
+      ;;
+  esac
 
   if [ ! -f "$file" ]; then
     return 0
   fi
 
-  if is_excluded_path "$file"; then
+  case "$file" in
+    .git/*|*/.git/*) return 0 ;;
+  esac
+
+  if [ "$explicit_target" != '1' ] && [ "$in_repo" = '1' ] && is_excluded_path "$file"; then
     return 0
   fi
 
@@ -1076,7 +1106,7 @@ if [ "${1:-}" = "--all" ]; then
   _all_candidates=$(mktemp)
   git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" "*.json" "_lib/checksums.txt" ".githooks/pre-commit" > "$_all_candidates"
   if [ -s "$_all_candidates" ]; then
-    if ! STACK="" xargs -n 500 -P 4 "$THIS_FILE" < "$_all_candidates" >/dev/null; then
+    if ! STACK="" LIBSCRIPT_AUDIT_BATCH=1 xargs -n 500 -P 4 "$THIS_FILE" < "$_all_candidates" >/dev/null; then
       rm -f "$_all_candidates"
       exit 1
     fi
@@ -1180,15 +1210,28 @@ elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
   done
   IFS="$OIFS"
 else
+  _explicit_target='1'
+  if [ "${LIBSCRIPT_AUDIT_BATCH:-0}" = '1' ]; then
+    _explicit_target='0'
+  fi
   for candidate in "$@"; do
     case "$candidate" in
       *.gitattributes|*.githooks/pre-commit) audit_gitattributes_eol ;;
     esac
-    if [ -f "${ORIG_PWD}/${candidate}" ]; then
-      audit_single_file "${ORIG_PWD}/${candidate}"
-    elif [ -f "$candidate" ]; then
-      audit_single_file "$candidate"
-    fi
+    case "$candidate" in
+      /*|[A-Za-z]:[\\/]*)
+        if [ -f "$candidate" ]; then
+          audit_single_file "$candidate" "$_explicit_target"
+        fi
+        ;;
+      *)
+        if [ -f "${ORIG_PWD}/${candidate}" ]; then
+          audit_single_file "${ORIG_PWD}/${candidate}" "$_explicit_target"
+        elif [ -f "$candidate" ]; then
+          audit_single_file "$candidate" "$_explicit_target"
+        fi
+        ;;
+    esac
   done
 fi
 

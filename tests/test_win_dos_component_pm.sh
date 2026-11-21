@@ -199,10 +199,12 @@ if env LIBSCRIPT_TARGET_OS='windows' LIBSCRIPT_TARGET_ARCH='x86_64' LIBSCRIPT_OF
   fail_test 'Expected corrupt win-cmd-rs 9.9.9 archive without binaries to fail cleanly'
 fi
 
-# 7. Verify audit_standards.sh catches BATCH_FOR_R_DELAYED in .cmd files
-_bad_cmd="${TEST_WORK}/bad_for_r.cmd"
-_bad_sh="${TEST_WORK}/bad_for_r.sh"
-cat <<'EOF_SH' > "${_bad_sh}"
+# 7. Verify audit_standards.sh catches BATCH_FOR_R_DELAYED in .cmd files (including under /tmp/ paths)
+mkdir -p "${TEST_WORK}/tmp"
+for _bad_base in "${TEST_WORK}/bad_for_r" "${TEST_WORK}/tmp/bad_for_r"; do
+  _bad_cmd="${_bad_base}.cmd"
+  _bad_sh="${_bad_base}.sh"
+  cat <<'EOF_SH' > "${_bad_sh}"
 #!/bin/sh
 # ## Overview
 # Fixture companion script.
@@ -213,12 +215,13 @@ if [ "${SCRIPT_NAME-}" ]; then THIS_FILE="${SCRIPT_NAME}"; else THIS_FILE="${0}"
 case "${STACK+x}" in *':'"${THIS_FILE}"':'*) exit 0 ;; esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 EOF_SH
-printf '@echo off\r\n:: ## Overview\r\n:: Fixture batch script.\r\n:: ## Usage\r\n:: bad_for_r.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nfor /r "!STAGE_DIR!" %%%%X in (wincheck.exe) do echo %%%%X\r\nexit /b 0\r\n' > "${_bad_cmd}"
-_std_out=$(STACK='' "$LIBSCRIPT_ROOT_DIR/devtools/audit/audit_standards.sh" "${_bad_cmd}" 2>&1 || true)
-case "${_std_out}" in
-  *BATCH_FOR_R_DELAYED*) ;;
-  *) fail_test "audit_standards.sh did not report BATCH_FOR_R_DELAYED: ${_std_out}" ;;
-esac
+  printf '@echo off\r\n:: ## Overview\r\n:: Fixture batch script.\r\n:: ## Usage\r\n:: bad_for_r.cmd\r\nsetlocal EnableDelayedExpansion\r\nset "THIS_FILE=%%~f0"\r\nif defined STACK (\r\n    echo "!STACK!" | findstr /I /C:":!THIS_FILE!:" >nul 2>&1\r\n    if not errorlevel 1 exit /b 0\r\n)\r\nset "STACK=%%STACK%%:!THIS_FILE!:"\r\nfor /r "!STAGE_DIR!" %%%%X in (wincheck.exe) do echo %%%%X\r\nexit /b 0\r\n' > "${_bad_cmd}"
+  _std_out=$(STACK='' "$LIBSCRIPT_ROOT_DIR/devtools/audit/audit_standards.sh" "${_bad_cmd}" 2>&1 || true)
+  case "${_std_out}" in
+    *BATCH_FOR_R_DELAYED*) ;;
+    *) fail_test "audit_standards.sh did not report BATCH_FOR_R_DELAYED for ${_bad_cmd}: ${_std_out}" ;;
+  esac
+done
 
 printf '%s\n' '[PASS] All 7 Windows native & MS-DOS component-level package managers verified.'
 exit 0

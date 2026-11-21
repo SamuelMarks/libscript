@@ -153,8 +153,66 @@ if exist "!_WCR_ZIP_BAD!" (
     )
 )
 
+:: 5. Verify audit_standards.cmd catches BATCH_FOR_R_DELAYED in .cmd files (including under \tmp\ paths)
+set "_HAS_STD_RUNNER=0"
+for %%R in (pwsh.exe powershell.exe dash.exe sh.exe) do (
+    where %%R >nul 2>&1
+    if not errorlevel 1 set "_HAS_STD_RUNNER=1"
+)
+if "!_HAS_STD_RUNNER!"=="1" (
+    if not exist "!TEST_WORK!\tmp" mkdir "!TEST_WORK!\tmp"
+    call :write_bad_for_r_fixture "!TEST_WORK!\bad_for_r"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_standards.cmd" "!TEST_WORK!\bad_for_r.cmd" > "!TEST_WORK!\std_out_1.txt" 2>&1
+    findstr /C:"BATCH_FOR_R_DELAYED" "!TEST_WORK!\std_out_1.txt" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] audit_standards.cmd did not report BATCH_FOR_R_DELAYED for bad_for_r.cmd 1>&2
+        type "!TEST_WORK!\std_out_1.txt" 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+    call :write_bad_for_r_fixture "!TEST_WORK!\tmp\bad_for_r"
+    set "STACK="
+    call "!LIBSCRIPT_ROOT_DIR!\devtools\audit\audit_standards.cmd" "!TEST_WORK!\tmp\bad_for_r.cmd" > "!TEST_WORK!\std_out_2.txt" 2>&1
+    findstr /C:"BATCH_FOR_R_DELAYED" "!TEST_WORK!\std_out_2.txt" >nul 2>&1
+    if errorlevel 1 (
+        echo [FAIL] audit_standards.cmd did not report BATCH_FOR_R_DELAYED for tmp\bad_for_r.cmd 1>&2
+        type "!TEST_WORK!\std_out_2.txt" 1>&2
+        rmdir /s /q "!TEST_WORK!" 2>nul
+        exit /b 1
+    )
+)
+
 rmdir /s /q "!TEST_WORK!" 2>nul
 echo [PASS] Windows and MS-DOS component-level package manager routing verified.
+exit /b 0
+
+:: ## write_bad_for_r_fixture
+:: Writes a .cmd/.sh fixture pair containing FOR /R with delayed expansion root path.
+:write_bad_for_r_fixture
+set "_WBF_SH=%~1.sh"
+set "_WBF_CMD=%~1.cmd"
+set "_FR_KW=for /r"
+> "!_WBF_SH!" echo #^^!/bin/sh
+>> "!_WBF_SH!" echo # ## Overview
+>> "!_WBF_SH!" echo # Fixture companion script.
+>> "!_WBF_SH!" echo # ## Usage
+>> "!_WBF_SH!" echo # ./bad_for_r.sh
+>> "!_WBF_SH!" echo exit 0
+> "!_WBF_CMD!" echo @echo off
+>> "!_WBF_CMD!" echo :: ## Overview
+>> "!_WBF_CMD!" echo :: Fixture batch script.
+>> "!_WBF_CMD!" echo :: ## Usage
+>> "!_WBF_CMD!" echo :: bad_for_r.cmd
+>> "!_WBF_CMD!" echo setlocal EnableDelayedExpansion
+>> "!_WBF_CMD!" echo set "THIS_FILE=%%~f0"
+>> "!_WBF_CMD!" echo if defined STACK (
+>> "!_WBF_CMD!" echo     echo "^^!STACK^^!" ^| findstr /I /C:":^^!THIS_FILE^^!:" ^>nul 2^>^&1
+>> "!_WBF_CMD!" echo     if not errorlevel 1 exit /b 0
+>> "!_WBF_CMD!" echo )
+>> "!_WBF_CMD!" echo set "STACK=%%STACK%%:^^!THIS_FILE^^!:"
+>> "!_WBF_CMD!" echo !_FR_KW! "^^!STAGE_DIR^^!" %%%%X in (wincheck.exe) do echo %%%%X
+>> "!_WBF_CMD!" echo exit /b 0
 exit /b 0
 
 :: ## pack_zip_dir

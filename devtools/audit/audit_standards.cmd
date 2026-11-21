@@ -59,7 +59,7 @@ goto :main
 :: ## show_help
 :: Displays command-line usage instructions and available options.
 :show_help
-echo Usage: %~nx0 [--all ^| --staged]
+echo Usage: %~nx0 [--all ^| --staged ^| ^<file^>...]
 echo Audits files for adherence to LibScript engineering standards.
 echo.
 echo Options:
@@ -87,11 +87,24 @@ if "%ERRORLEVEL%" EQU "0" (
 if exist "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" (
     call "!LIBSCRIPT_ROOT_DIR!\_lib\utilities\dash\env.cmd" >nul 2>&1
 )
+set "_AS_SH=!SCRIPT_DIR:\=/!/audit_standards.sh"
+where dash.exe >nul 2>&1
+if "%ERRORLEVEL%" EQU "0" (
+    set "STACK="
+    dash.exe "!_AS_SH!" %*
+    exit /b !ERRORLEVEL!
+)
 where dash >nul 2>&1
 if "%ERRORLEVEL%" EQU "0" (
     set "STACK="
-    dash "!SCRIPT_DIR!\audit_standards.sh" %*
+    dash "!_AS_SH!" %*
     exit /b !ERRORLEVEL!
 )
-echo [ERROR] Neither PowerShell nor LibScript dash found. Cannot audit standards on Windows. 1>&2
+where sh.exe >nul 2>&1
+if "%ERRORLEVEL%" EQU "0" (
+    set "STACK="
+    sh.exe "!_AS_SH!" %*
+    exit /b !ERRORLEVEL!
+)
+echo [ERROR] Neither PowerShell nor POSIX sh/dash found. Cannot audit standards on Windows. 1>&2
 exit /b 1

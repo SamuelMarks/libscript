@@ -66,21 +66,32 @@ function Test-ExcludedPath {
 # ## Audit-File
 # Performs standard validation checks on a single file.
 function Audit-File {
-    param([string]$FilePath)
+    param(
+        [string]$FilePath,
+        [bool]$ExplicitTarget = $false
+    )
 
+    $inRepo = $false
     $rootPrefix = $rootDir.Path.TrimEnd('\', '/')
     if ($FilePath.StartsWith("$rootPrefix\", [System.StringComparison]::OrdinalIgnoreCase) -or $FilePath.StartsWith("$rootPrefix/", [System.StringComparison]::OrdinalIgnoreCase)) {
         $FilePath = $FilePath.Substring($rootPrefix.Length + 1)
-    }
-    if ($FilePath.StartsWith(".\") -or $FilePath.StartsWith("./")) {
-        $FilePath = $FilePath.Substring(2)
+        $inRepo = $true
+    } elseif (-not [System.IO.Path]::IsPathRooted($FilePath)) {
+        if ($FilePath.StartsWith(".\") -or $FilePath.StartsWith("./")) {
+            $FilePath = $FilePath.Substring(2)
+        }
+        $inRepo = $true
     }
 
-    if (-not (Test-Path $FilePath -PathType Leaf)) {
+    if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) {
         return
     }
 
-    if (Test-ExcludedPath $FilePath) {
+    if ($FilePath.Replace([char]92, [char]47) -match '(^|/)\.git/') {
+        return
+    }
+
+    if (-not $ExplicitTarget -and $inRepo -and (Test-ExcludedPath $FilePath)) {
         return
     }
 
@@ -673,6 +684,7 @@ function Test-GitAttributesEol {
 
 # Determine target files
 $targetFiles = @()
+$isExplicitMode = $false
 if ($args -contains "--all") {
     Test-GitAttributesEol
     $targetFiles = git ls-files --cached --others --exclude-standard "*.sh" "*.cmd" "*.bat" "*.ps1" ".githooks/pre-commit"
@@ -682,6 +694,7 @@ if ($args -contains "--all") {
         Test-GitAttributesEol
     }
 } else {
+    $isExplicitMode = $true
     $targetFiles = $args
     if ($targetFiles | Where-Object { $_ -match '(\.gitattributes|\.githooks[\\/]pre-commit)$' }) {
         Test-GitAttributesEol
@@ -695,12 +708,19 @@ if (-not $targetFiles) {
 
 foreach ($target in $targetFiles) {
     if ($target) {
-        if (Test-Path $target) {
-            Audit-File -FilePath $target
-        } else {
+        if ($isExplicitMode -and (-not [System.IO.Path]::IsPathRooted($target))) {
             $candOrig = Join-Path $origPwd $target
-            if (Test-Path $candOrig) {
-                Audit-File -FilePath $candOrig
+            if (Test-Path -LiteralPath $candOrig -PathType Leaf) {
+                Audit-File -FilePath $candOrig -ExplicitTarget $true
+                continue
+            }
+        }
+        if (Test-Path -LiteralPath $target -PathType Leaf) {
+            Audit-File -FilePath $target -ExplicitTarget $isExplicitMode
+        } elseif (-not [System.IO.Path]::IsPathRooted($target)) {
+            $candOrig = Join-Path $origPwd $target
+            if (Test-Path -LiteralPath $candOrig -PathType Leaf) {
+                Audit-File -FilePath $candOrig -ExplicitTarget $isExplicitMode
             }
         }
     }
